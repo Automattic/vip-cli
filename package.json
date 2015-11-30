@@ -11,10 +11,17 @@
     "wordpress.com",
     "wordpress.com vip",
     "vip",
-	"cli"
+    "cli"
   ],
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
   "scripts": {
+
+  },
+  "bin": {
+    "vip": "bin/vip.js"
+  },
+  "dependencies": {
+    "commander": "2.9.0"
   }
 }
