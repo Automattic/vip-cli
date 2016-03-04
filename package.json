@@ -22,6 +22,9 @@
     "vip": "bin/vip.js"
   },
   "dependencies": {
-    "commander": "2.9.0"
+    "async": "1.5.2",
+    "commander": "2.9.0",
+    "promptly": "1.0.0",
+    "xkeychain": "0.0.6"
   }
 }
