@@ -1,7 +1,6 @@
 var utils = {
 	setCredentials: function( credentials, callback ) {
 		var keychain = require( 'xkeychain' );
-		console.log( credentials );
 
 		credentials.userId      = credentials.userId || '';
 		credentials.accessToken = credentials.accessToken || '';
