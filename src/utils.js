@@ -7,12 +7,12 @@ var utils = {
 
 		var tokenString = credentials.userId + '|' + credentials.accessToken;
 
-		return keychain.setPassword({ account: 'VIP CLI', service: 'VIP CLI', password: tokenString }, callback );
+		return keychain.setPassword({ account: 'default', service: 'VIP CLI', password: tokenString }, callback );
 	},
 	getCredentials: function( callback ){
 		var keychain = require( 'xkeychain' );
 
-		keychain.getPassword({ account: 'VIP CLI', service: 'VIP CLI' }, function( err, password ) {
+		keychain.getPassword({ account: 'default', service: 'VIP CLI' }, function( err, password ) {
 			if ( err ) {
 				return callback( err );
 			}
