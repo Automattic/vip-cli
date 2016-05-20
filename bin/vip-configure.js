@@ -8,7 +8,6 @@ var promptly = require( 'promptly' );
 var utils = require( '../src/utils' );
 
 program
-	.version('0.0.1')
 	.parse( process.argv );
 
 async.series({

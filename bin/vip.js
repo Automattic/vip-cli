@@ -7,9 +7,10 @@
 process.title = 'vip';
 
 var program = require( 'commander' );
+var package = require( '../package.json' );
 
 program
-	.version( '0.0.1' )
+	.version( package.version )
 	.command( 'configure', 'configure the cli settings' )
 	.parse( process.argv );
 
