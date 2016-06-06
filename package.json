@@ -16,9 +16,7 @@
   ],
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
-  "scripts": {
-
-  },
+  "scripts": {},
   "bin": {
     "vip": "bin/vip.js"
   },
@@ -26,6 +24,6 @@
     "async": "1.5.2",
     "commander": "2.9.0",
     "promptly": "1.0.0",
-    "xkeychain": "0.0.6"
+    "vip": "automattic/vip-js-sdk"
   }
 }

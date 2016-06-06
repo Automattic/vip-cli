@@ -12,7 +12,7 @@ program
 
 async.series({
 	userId: promptly.prompt.bind( null, 'User ID:' ),
-	accessToken: promptly.prompt.bind( null, 'Access Token: ' )
+	accessToken: promptly.password.bind( null, 'Access Token:' )
 }, function( err, results ) {
 	if ( err ) {
 		return console.log( 'Error: ', err );
