@@ -20,7 +20,7 @@ program
 // internal VIP commands
 if (!!is_vip) {
 	program
-		.command( 'api', 'test api endpoints' );
+		.command( 'api', 'Authenticated API requests' );
 
 	program
 		.command( 'deploy <site> <sha>' )
