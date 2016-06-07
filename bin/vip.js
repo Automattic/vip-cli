@@ -20,6 +20,9 @@ program
 // internal VIP commands
 if (!!is_vip) {
 	program
+		.command( 'api', 'test api endpoints' );
+
+	program
 		.command( 'deploy <site> <sha>' )
 		.description( 'deploy given git SHA')
 		.action( (site, sha) => {
