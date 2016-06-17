@@ -63,6 +63,11 @@ var utils = {
 					}
 
 					site = res.body.data[0];
+
+					if ( ! site ) {
+						return console.error( "Couldn't find site:", domain );
+					}
+
 					console.log( "Client Site:", site.client_site_id );
 					console.log( "Primary Domain:", site.domain_name );
 					cb( site );
@@ -78,7 +83,12 @@ var utils = {
 					return console.error( err.response.error );
 				}
 
-				var site = res.body.data[0];
+				site = res.body.data[0];
+
+				if ( ! site ) {
+					return console.error( "Couldn't find site:", domain );
+				}
+
 				console.log( "Client Site:", site.client_site_id );
 				console.log( "Primary Domain:", site.domain_name );
 				cb( site );
