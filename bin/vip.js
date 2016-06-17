@@ -23,6 +23,33 @@ if (!!is_vip) {
 		.command( 'api', 'Authenticated API requests' );
 
 	program
+		.command( 'db <site>' )
+		.description( 'Connect to a given VIP Go database' )
+		.action( site => {
+			const spawn = require('child_process').spawn;
+
+			// Get details
+			api
+				.get( '/sites/' + site + '/masterdb' )
+				.end( ( err, res ) => {
+					if ( err ) {
+						return console.error( err.response.error );
+					}
+
+					var args = [
+						`-h${res.body.host}`,
+						`-P${res.body.port}`,
+						`-u${res.body.username}`,
+						`-D${res.body.name}`,
+						`-p${res.body.password}`,
+					];
+
+					// Fork to mysql CLI client
+					spawn( 'mysql', args, { stdio: 'inherit' } );
+				});
+			});
+
+	program
 		.command( 'deploy <site> <sha>' )
 		.description( 'deploy given git SHA')
 		.action( (site, sha) => {
