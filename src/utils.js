@@ -48,7 +48,42 @@ var utils = {
 		r.accessToken = decoded;
 
 		return callback( null, r );
-	}
+	},
+	site: function( domain, cb ) {
+		var api = require( './api' );
+
+		var site;
+		if ( ! isNaN( parseInt( domain ) ) ) {
+			return api
+				.get( '/sites/' + domain )
+				.query({ pagesize: 1 })
+				.end( ( err, res ) => {
+					if ( err ) {
+						return console.error( err.response.error );
+					}
+
+					site = res.body.data[0];
+					console.log( "Client Site:", site.client_site_id );
+					console.log( "Primary Domain:", site.domain_name );
+					cb( site );
+				});
+		}
+
+		return api
+			.get( '/sites' )
+			.query({ search: domain })
+			.query({ pagesize: 1 })
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( err.response.error );
+				}
+
+				var site = res.body.data[0];
+				console.log( "Client Site:", site.client_site_id );
+				console.log( "Primary Domain:", site.domain_name );
+				cb( site );
+			});
+	},
 };
 
 module.exports = utils;

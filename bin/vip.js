@@ -7,7 +7,9 @@
 process.title = 'vip';
 
 var program = require( 'commander' );
+var promptly = require( 'promptly' );
 var package = require( '../package.json' );
+var utils = require( '../src/utils' );
 var api = require( '../src/api' );
 
 // TODO
@@ -26,28 +28,38 @@ if (!!is_vip) {
 		.command( 'db <site>' )
 		.description( 'Connect to a given VIP Go database' )
 		.action( site => {
-			const spawn = require('child_process').spawn;
-
-			// Get details
-			api
-				.get( '/sites/' + site + '/masterdb' )
-				.end( ( err, res ) => {
+			utils.site( site, s => {
+				promptly.confirm( 'Are you sure?', ( err, t ) => {
 					if ( err ) {
-						return console.error( err.response.error );
+						return console.error( err );
 					}
 
-					var args = [
-						`-h${res.body.host}`,
-						`-P${res.body.port}`,
-						`-u${res.body.username}`,
-						`-D${res.body.name}`,
-						`-p${res.body.password}`,
-					];
+					if ( ! t ) {
+						return;
+					}
 
-					// Fork to mysql CLI client
-					spawn( 'mysql', args, { stdio: 'inherit' } );
+					api
+						.get( '/sites/' + s.client_site_id + '/masterdb' )
+						.end( ( err, res ) => {
+							if ( err ) {
+								return console.error( err.response.error );
+							}
+
+							var args = [
+								`-h${res.body.host}`,
+								`-P${res.body.port}`,
+								`-u${res.body.username}`,
+								`-D${res.body.name}`,
+								`-p${res.body.password}`,
+							];
+
+							// Fork to mysql CLI client
+							const spawn = require('child_process').spawn;
+							spawn( 'mysql', args, { stdio: 'inherit' } );
+						});
 				});
 			});
+		});
 
 	program
 		.command( 'deploy <site> <sha>' )
