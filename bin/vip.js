@@ -29,7 +29,9 @@ if (!!is_vip) {
 		.description( 'Connect to a given VIP Go database' )
 		.action( site => {
 			utils.site( site, s => {
-				promptly.confirm( 'Are you sure?', ( err, t ) => {
+				var ays = s.environment_name == "production" ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
+
+				promptly.confirm( ays, ( err, t ) => {
 					if ( err ) {
 						return console.error( err );
 					}

@@ -70,6 +70,7 @@ var utils = {
 
 					console.log( "Client Site:", site.client_site_id );
 					console.log( "Primary Domain:", site.domain_name );
+					console.log( "Environment:", site.environment_name );
 					cb( site );
 				});
 		}
@@ -91,6 +92,7 @@ var utils = {
 
 				console.log( "Client Site:", site.client_site_id );
 				console.log( "Primary Domain:", site.domain_name );
+				console.log( "Environment:", site.environment_name );
 				cb( site );
 			});
 	},
