@@ -87,12 +87,9 @@ var utils = {
 				site = res.body.data[0];
 
 				if ( ! site ) {
-					return console.error( "Couldn't find site:", domain );
+					return cb();
 				}
 
-				console.log( "Client Site:", site.client_site_id );
-				console.log( "Primary Domain:", site.domain_name );
-				console.log( "Environment:", site.environment_name );
 				cb( site );
 			});
 	},
