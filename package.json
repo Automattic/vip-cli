@@ -24,6 +24,7 @@
     "async": "1.5.2",
     "commander": "2.9.0",
     "promptly": "1.0.0",
-    "vip": "automattic/vip-js-sdk"
+    "vip": "automattic/vip-js-sdk",
+    "which": "^1.2.10"
   }
 }

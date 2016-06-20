@@ -8,6 +8,7 @@ process.title = 'vip';
 
 var program = require( 'commander' );
 var promptly = require( 'promptly' );
+var which = require( 'which' );
 var package = require( '../package.json' );
 var utils = require( '../src/utils' );
 var api = require( '../src/api' );
@@ -28,6 +29,12 @@ if (!!is_vip) {
 		.command( 'db <site>' )
 		.description( 'Connect to a given VIP Go database' )
 		.action( site => {
+			try {
+				var mysql_exists = which.sync( 'mysql' );
+			} catch (e) {
+				return console.error( 'MySQL client is required and not installed.' );
+			}
+
 			utils.findSite( site, s => {
 				if ( ! s ) {
 					return console.error( "Couldn't find site:", site );
