@@ -49,7 +49,7 @@ var utils = {
 
 		return callback( null, r );
 	},
-	site: function( domain, cb ) {
+	findSite: function( domain, cb ) {
 		var api = require( './api' );
 
 		var site;

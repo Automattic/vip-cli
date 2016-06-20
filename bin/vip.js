@@ -28,7 +28,7 @@ if (!!is_vip) {
 		.command( 'db <site>' )
 		.description( 'Connect to a given VIP Go database' )
 		.action( site => {
-			utils.site( site, s => {
+			utils.findSite( site, s => {
 				if ( ! s ) {
 					return console.error( "Couldn't find site:", site );
 				}
