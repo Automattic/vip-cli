@@ -64,7 +64,7 @@ var utils = {
 			.query({ pagesize: 1 })
 			.end( ( err, res ) => {
 				if ( err ) {
-					return console.error( err.response.error );
+					return cb( err.response.error );
 				}
 
 				site = res.body.data[0];
@@ -73,7 +73,7 @@ var utils = {
 					return cb();
 				}
 
-				cb( site );
+				cb( null, site );
 			});
 	},
 };

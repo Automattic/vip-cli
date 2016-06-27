@@ -35,7 +35,11 @@ if (!!is_vip) {
 				return console.error( 'MySQL client is required and not installed.' );
 			}
 
-			utils.findSite( site, s => {
+			utils.findSite( site, ( err, s ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
 				if ( ! s ) {
 					return console.error( "Couldn't find site:", site );
 				}
