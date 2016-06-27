@@ -48,7 +48,34 @@ var utils = {
 		r.accessToken = decoded;
 
 		return callback( null, r );
-	}
+	},
+	findSite: function( domain, cb ) {
+		var request, api = require( './api' );
+		if ( ! isNaN( parseInt( domain ) ) ) {
+			request = api
+				.get( '/sites/' + domain );
+		} else {
+			request = api
+				.get( '/sites' )
+				.query({ search: domain });
+		}
+
+		return request
+			.query({ pagesize: 1 })
+			.end( ( err, res ) => {
+				if ( err ) {
+					return cb( err.response.error );
+				}
+
+				site = res.body.data[0];
+
+				if ( ! site ) {
+					return cb();
+				}
+
+				cb( null, site );
+			});
+	},
 };
 
 module.exports = utils;
