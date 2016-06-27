@@ -50,34 +50,17 @@ var utils = {
 		return callback( null, r );
 	},
 	findSite: function( domain, cb ) {
-		var api = require( './api' );
-
-		var site;
+		var request, api = require( './api' );
 		if ( ! isNaN( parseInt( domain ) ) ) {
-			return api
-				.get( '/sites/' + domain )
-				.query({ pagesize: 1 })
-				.end( ( err, res ) => {
-					if ( err ) {
-						return console.error( err.response.error );
-					}
-
-					site = res.body.data[0];
-
-					if ( ! site ) {
-						return console.error( "Couldn't find site:", domain );
-					}
-
-					console.log( "Client Site:", site.client_site_id );
-					console.log( "Primary Domain:", site.domain_name );
-					console.log( "Environment:", site.environment_name );
-					cb( site );
-				});
+			request = api
+				.get( '/sites/' + domain );
+		} else {
+			request = api
+				.get( '/sites' )
+				.query({ search: domain });
 		}
 
-		return api
-			.get( '/sites' )
-			.query({ search: domain })
+		return request
 			.query({ pagesize: 1 })
 			.end( ( err, res ) => {
 				if ( err ) {
