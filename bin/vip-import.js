@@ -3,6 +3,7 @@
 var fs = require( 'fs' );
 var program = require( 'commander' );
 var async = require( 'async' );
+var progress = require( 'progress' );
 var mysql = require( 'mysql' );
 var api = require( '../src/api' );
 var utils = require( '../src/utils' );
@@ -14,9 +15,9 @@ function list(v) {
 program
 	.command( 'files <site> <directory>' )
 	.description( 'Import files to a VIP Go site' )
-	.option( '-t, --types', 'Types of files to import', list, ['jpg', 'jpeg', 'png', 'gif'] )
-	.option( '-p, --parallel', 'Number of parallel uploads', parseInt, 5 )
-	.action( ( site, directory ) => {
+	.option( '-t, --types <types>', 'Types of files to import', ['jpg', 'jpeg', 'png', 'gif'], list )
+	.option( '-p, --parallel <threads>', 'Number of parallel uploads', 5, parseInt )
+	.action( ( site, directory, options ) => {
 		utils.findAndConfirmSite( site, site => {
 			api
 				.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
@@ -25,9 +26,26 @@ program
 						return console.error( err.response.error );
 					}
 
-					// TODO: List files recursively
-					// TODO: Upload files in parallel
 					// TODO: Progress bar
+
+					// Simple async queue with limit 5
+					var queue = async.priorityQueue( ( file, cb ) => {
+						var file = fs.realpathSync( file );
+						var stats = fs.lstatSync( file );
+						var depth = file.split( '/' ).length;
+
+						if ( stats.isDirectory() ) {
+							var files = fs.readdirSync( file );
+							files = files.map( f => file + '/' + f );
+							queue.push( files, 0 - depth );
+						} else {
+							// TODO: Upload file
+						}
+
+						cb();
+					}, options.parallel );
+
+					queue.push( directory, 1 );
 				});
 		});
 	});
@@ -36,8 +54,6 @@ program
 	.command( 'sql <site> <file>' )
 	.description( 'Import SQL to a VIP Go site' )
 	.action( ( site, file ) => {
-		var progress = require( 'progress' );
-
 		utils.findAndConfirmSite( site, site => {
 
 			// Get mysql info
