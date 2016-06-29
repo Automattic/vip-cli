@@ -1,5 +1,6 @@
 const fs = require( 'fs' );
 const crypto = require( 'crypto' );
+const promptly = require( 'promptly' );
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
@@ -75,6 +76,33 @@ var utils = {
 
 				cb( null, site );
 			});
+	},
+	findAndConfirmSite: function( site, cb ) {
+		utils.findSite( site, ( err, s ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! s ) {
+				return console.error( "Couldn't find site:", site );
+			}
+
+			console.log( "Client Site:", s.client_site_id );
+			console.log( "Primary Domain:", s.domain_name );
+			console.log( "Environment:", s.environment_name );
+
+			promptly.confirm( "Are you sure?", ( err, t ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				if ( ! t ) {
+					return;
+				}
+
+				cb( s );
+			});
+		});
 	},
 };
 

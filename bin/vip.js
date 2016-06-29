@@ -23,7 +23,8 @@ program
 // internal VIP commands
 if (!!is_vip) {
 	program
-		.command( 'api', 'Authenticated API requests' );
+		.command( 'api', 'Authenticated API requests' )
+		.command( 'import', 'import to VIP Go' );
 
 	program
 		.command( 'db <site>' )
