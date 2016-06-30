@@ -39,6 +39,13 @@ program
 							files = files.map( f => file + '/' + f );
 							queue.push( files, 0 - depth );
 						} else {
+							var ext = file.split( '.' );
+							ext = ext[ ext.length - 1 ];
+
+							if ( ! ext || options.types.indexOf( ext ) < 0 ) {
+								return cb( new Error( "Unsupported filetype: " + file ) );
+							}
+
 							// TODO: Upload file
 						}
 
