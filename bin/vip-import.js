@@ -17,6 +17,7 @@ program
 	.description( 'Import files to a VIP Go site' )
 	.option( '-t, --types <types>', 'Types of files to import', ['jpg', 'jpeg', 'png', 'gif'], list )
 	.option( '-p, --parallel <threads>', 'Number of parallel uploads', 5, parseInt )
+	.option( '-i, --intermediate', 'Upload intermediate images' )
 	.action( ( site, directory, options ) => {
 		utils.findAndConfirmSite( site, site => {
 			api
@@ -44,6 +45,10 @@ program
 
 							if ( ! ext || options.types.indexOf( ext ) < 0 ) {
 								return cb( new Error( "Unsupported filetype: " + file ) );
+							}
+
+							if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
+								return cb( new Error( 'Skipping intermediate image: ' + file ) );
 							}
 
 							// TODO: Upload file
