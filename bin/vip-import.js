@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+var http = require( 'https' );
 var fs = require( 'fs' );
 var program = require( 'commander' );
 var async = require( 'async' );
@@ -7,6 +8,7 @@ var progress = require( 'progress' );
 var mysql = require( 'mysql' );
 var api = require( '../src/api' );
 var utils = require( '../src/utils' );
+var request = require( 'superagent' );
 
 function list(v) {
 	return v.split(',');
@@ -15,10 +17,15 @@ function list(v) {
 program
 	.command( 'files <site> <directory>' )
 	.description( 'Import files to a VIP Go site' )
-	.option( '-t, --types <types>', 'Types of files to import', ['jpg', 'jpeg', 'png', 'gif'], list )
-	.option( '-p, --parallel <threads>', 'Number of parallel uploads', 5, parseInt )
+	.option( '-t, --types <types>', 'Types of files to import. Default: jpg,jpeg,png,gif', ['jpg', 'jpeg', 'png', 'gif'], list )
+	.option( '-p, --parallel <threads>', 'Number of parallel uploads. Default: 5', 5, parseInt )
 	.option( '-i, --intermediate', 'Upload intermediate images' )
+	.option( '-f, --fast', 'Skip existing file check' )
 	.action( ( site, directory, options ) => {
+		if ( 0 > directory.indexOf( 'uploads' ) ) {
+			return console.error( 'Invalid uploads directory. Uploads must be in uploads/' );
+		}
+
 		utils.findAndConfirmSite( site, site => {
 			api
 				.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
@@ -27,6 +34,11 @@ program
 						return console.error( err.response.error );
 					}
 
+					if ( ! res.body || ! res.body.data || ! res.body.data[0] || ! res.body.data[0].meta_value ) {
+						return console.error( 'Could not get files access token' );
+					}
+
+					var access_token = res.body.data[0].meta_value;
 					// TODO: Progress bar
 
 					// Simple async queue with limit 5
@@ -40,6 +52,7 @@ program
 							files = files.map( f => file + '/' + f );
 							queue.push( files, 0 - depth );
 						} else {
+							var filepath = file.split( 'uploads' );
 							var ext = file.split( '.' );
 							ext = ext[ ext.length - 1 ];
 
@@ -51,10 +64,64 @@ program
 								return cb( new Error( 'Skipping intermediate image: ' + file ) );
 							}
 
-							// TODO: Upload file
-						}
+							if ( ! filepath[1] ) {
+								return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
+							}
 
-						cb();
+							var url = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
+							var filename = file.split( '/' );
+							filename = filename[ filename.length - 1 ];
+
+							var upload = ( file, cb ) => {
+								var data = fs.readFileSync( file );
+
+								var req = http.request({
+									hostname: 'files.vipv2.net',
+									method: 'PUT',
+									path: '/wp-content/uploads' + filepath[1],
+									headers: {
+										'X-Client-Site-ID': site.client_site_id,
+										'X-Access-Token': access_token,
+										'Content-Length': Buffer.byteLength( data ),
+									}
+								}, res => {
+									console.log( "Uploading: ", file );
+
+									if ( res.statusCode !== 200 ) {
+										console.log( "Response Code: ", res.statusCode );
+									}
+
+									cb();
+								});
+
+								req.write( data );
+								req.end();
+							};
+
+							// Upload file
+							if ( options.fast ) {
+								return upload( file, cb );
+							} else {
+								request
+									.get( url )
+									.set({ 'X-Client-Site-ID': site.client_site_id })
+									.set({ 'X-Access-Token': access_token })
+									.set({ 'X-Action': 'file_exists' })
+									.timeout( 2000 )
+									.end( ( err, res ) => {
+										if ( res && res.notFound ) {
+											return upload( file, cb );
+										} else if ( err ) {
+											console.log( err );
+											return cb( err );
+										} else {
+											console.log( "File exists: ", file );
+										}
+
+										cb();
+									});
+							}
+						}
 					}, options.parallel );
 
 					queue.push( directory, 1 );
