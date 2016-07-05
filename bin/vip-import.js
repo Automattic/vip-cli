@@ -94,6 +94,13 @@ program
 									cb();
 								});
 
+								req.on('socket', function (socket) {
+									socket.setTimeout(10000);  
+									socket.on('timeout', function() {
+									    req.abort();
+									});
+								});
+
 								req.write( data );
 								req.end();
 							};
