@@ -39,7 +39,7 @@ program
 					}
 
 					var access_token = res.body.data[0].meta_value;
-					// TODO: Progress bar
+					var bar = new progress( 'Importing [:bar] :percent :etas', { total: 1500 } );
 
 					// Simple async queue with limit 5
 					var queue = async.priorityQueue( ( file, cb ) => {
@@ -85,10 +85,10 @@ program
 										'Content-Length': Buffer.byteLength( data ),
 									}
 								}, res => {
-									console.log( "Uploading: ", file );
+									bar.tick();
 
 									if ( res.statusCode !== 200 ) {
-										console.log( "Response Code: ", res.statusCode );
+										return cb( res.statusCode, file );
 									}
 
 									cb();
@@ -112,12 +112,11 @@ program
 										if ( res && res.notFound ) {
 											return upload( file, cb );
 										} else if ( err ) {
-											console.log( err );
+											bar.tick();
 											return cb( err );
-										} else {
-											console.log( "File exists: ", file );
 										}
 
+										bar.tick();
 										cb();
 									});
 							}
