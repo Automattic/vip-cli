@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-var http = require( 'https' );
-var fs = require( 'fs' );
-var program = require( 'commander' );
-var async = require( 'async' );
+var http     = require( 'https' );
+var fs       = require( 'fs' );
+var program  = require( 'commander' );
+var async    = require( 'async' );
 var progress = require( 'progress' );
-var mysql = require( 'mysql' );
-var api = require( '../src/api' );
-var utils = require( '../src/utils' );
-var request = require( 'superagent' );
+var mysql    = require( 'mysql' );
+var api      = require( '../src/api' );
+var utils    = require( '../src/utils' );
+var request  = require( 'superagent' );
 
 function list(v) {
 	return v.split(',');
@@ -43,17 +43,19 @@ program
 
 					// Simple async queue with limit 5
 					var queue = async.priorityQueue( ( file, cb ) => {
-						var file = fs.realpathSync( file );
+						var file  = fs.realpathSync( file );
 						var stats = fs.lstatSync( file );
 						var depth = file.split( '/' ).length;
 
 						if ( stats.isDirectory() ) {
 							var files = fs.readdirSync( file );
-							files = files.map( f => file + '/' + f );
+							files     = files.map( f => file + '/' + f );
+
 							queue.push( files, 0 - depth );
 						} else {
 							var filepath = file.split( 'uploads' );
-							var ext = file.split( '.' );
+							var ext      = file.split( '.' );
+
 							ext = ext[ ext.length - 1 ];
 
 							if ( ! ext || options.types.indexOf( ext ) < 0 ) {
@@ -68,8 +70,9 @@ program
 								return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
 							}
 
-							var url = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
+							var url      = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
 							var filename = file.split( '/' );
+
 							filename = filename[ filename.length - 1 ];
 
 							var upload = ( file, cb ) => {
@@ -77,9 +80,9 @@ program
 
 								var req = http.request({
 									hostname: 'files.vipv2.net',
-									method: 'PUT',
-									path: '/wp-content/uploads' + filepath[1],
-									headers: {
+									method:   'PUT',
+									path:     '/wp-content/uploads' + filepath[1],
+									headers:  {
 										'X-Client-Site-ID': site.client_site_id,
 										'X-Access-Token': access_token,
 										'Content-Length': Buffer.byteLength( data ),
@@ -94,9 +97,9 @@ program
 									cb();
 								});
 
-								req.on('socket', function (socket) {
-									socket.setTimeout(10000);  
-									socket.on('timeout', function() {
+								req.on( 'socket', function ( socket ) {
+									socket.setTimeout( 10000 );
+									socket.on( 'timeout', function() {
 									    req.abort();
 									});
 								});
@@ -181,6 +184,7 @@ program
 
 								// Report progress
 								bar.tick();
+
 								cb();
 							});
 						}, err => {
