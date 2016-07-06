@@ -9,7 +9,7 @@ process.title = 'vip';
 var program = require( 'commander' );
 var promptly = require( 'promptly' );
 var which = require( 'which' );
-var package = require( '../package.json' );
+var packageJSON = require( '../package.json' );
 var utils = require( '../src/utils' );
 var api = require( '../src/api' );
 
@@ -17,7 +17,7 @@ var api = require( '../src/api' );
 var is_vip = true;
 
 program
-	.version( package.version )
+	.version( packageJSON.version )
 	.command( 'configure', 'configure the cli settings' )
 
 // internal VIP commands
