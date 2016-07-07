@@ -203,11 +203,22 @@ program
 							});
 						}, err => {
 							connection.end();
-							// TODO: Queue cache flush
 
 							if ( err ) {
 								console.error( err );
 							}
+
+							api
+								.post( '/sites/' + site.client_site_id + '/wp-cli' )
+								.send({
+									command: "cache",
+									args: [ "flush" ],
+									namedvars: {
+										"skip-plugins": true,
+										"skip-themes": true,
+									},
+								})
+								.end();
 						});
 					});
 				});
