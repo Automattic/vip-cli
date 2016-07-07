@@ -28,8 +28,9 @@ if (!!is_vip) {
 
 	program
 		.command( 'db <site>' )
+		.option( '-e, --export', 'Export the given database to stdout' )
 		.description( 'Connect to a given VIP Go database' )
-		.action( site => {
+		.action( ( site, options ) => {
 			try {
 				var mysql_exists = which.sync( 'mysql' );
 			} catch (e) {
@@ -45,8 +46,37 @@ if (!!is_vip) {
 					return console.error( "Couldn't find site:", site );
 				}
 
-				var ays = s.environment_name == "production" ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
+				var connect = function(site, dump) {
+					api
+						.get( '/sites/' + s.client_site_id + '/masterdb' )
+						.end( ( err, res ) => {
+							if ( err ) {
+								return console.error( err.response.error );
+							}
 
+							var args = [
+								`-h${res.body.host}`,
+								`-P${res.body.port}`,
+								`-u${res.body.username}`,
+								res.body.name,
+								`-p${res.body.password}`,
+							];
+
+							// Fork to mysql CLI client
+							const spawn = require('child_process').spawn;
+							var binary = dump ? 'mysqldump' : 'mysql';
+							spawn( binary, args, { stdio: 'inherit' } );
+						});
+				};
+
+				if ( options.export ) {
+					console.log( '-- Site:', s.client_site_id );
+					console.log( '-- Domain:', s.domain_name );
+					console.log( '-- Environment:', s.environment_name );
+					return connect( s, true );
+				}
+
+				var ays = s.environment_name == "production" ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
 				console.log( "Client Site:", s.client_site_id );
 				console.log( "Primary Domain:", s.domain_name );
 				console.log( "Environment:", s.environment_name );
@@ -59,25 +89,7 @@ if (!!is_vip) {
 						return;
 					}
 
-					api
-						.get( '/sites/' + s.client_site_id + '/masterdb' )
-						.end( ( err, res ) => {
-							if ( err ) {
-								return console.error( err.response.error );
-							}
-
-							var args = [
-								`-h${res.body.host}`,
-								`-P${res.body.port}`,
-								`-u${res.body.username}`,
-								`-D${res.body.name}`,
-								`-p${res.body.password}`,
-							];
-
-							// Fork to mysql CLI client
-							const spawn = require('child_process').spawn;
-							spawn( 'mysql', args, { stdio: 'inherit' } );
-						});
+					connect( s, false );
 				});
 			});
 		});
