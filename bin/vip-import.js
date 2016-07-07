@@ -9,6 +9,8 @@ const mysql    = require( 'mysql' );
 const api      = require( '../src/api' );
 const utils    = require( '../src/utils' );
 const request  = require( 'superagent' );
+const exec     = require('child_process').exec;
+const escape   = require( 'shell-escape' );
 
 function list(v) {
 	return v.split(',');
@@ -39,101 +41,113 @@ program
 					}
 
 					var access_token = res.body.data[0].meta_value;
-					var bar = new progress( 'Importing [:bar] :percent :etas', { total: 1500, incomplete: ' ', renderThrottle: 100 } );
 
-					// Simple async queue with limit 5
-					var queue = async.priorityQueue( ( file, cb ) => {
-						var file  = fs.realpathSync( file );
-						var stats = fs.lstatSync( file );
-						var depth = file.split( '/' ).length;
+					var cd = escape([ 'cd', directory ]);
+					exec( cd + '; find -type f | wc -l', ( error, stdout, stderr ) => {
+						if ( ! error ) {
+							var bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: parseInt( stdout ), incomplete: ' ', renderThrottle: 100 } );
+						}
 
-						if ( stats.isDirectory() ) {
-							var files = fs.readdirSync( file );
-							files     = files.map( f => file + '/' + f );
+						// Simple async queue with limit 5
+						var queue = async.priorityQueue( ( file, cb ) => {
+							var file  = fs.realpathSync( file );
+							var stats = fs.lstatSync( file );
+							var depth = file.split( '/' ).length;
 
-							queue.push( files, 0 - depth );
-						} else {
-							var filepath = file.split( 'uploads' );
-							var ext      = file.split( '.' );
+							if ( stats.isDirectory() ) {
+								var files = fs.readdirSync( file );
+								files     = files.map( f => file + '/' + f );
 
-							ext = ext[ ext.length - 1 ];
-
-							if ( ! ext || options.types.indexOf( ext ) < 0 ) {
-								return cb( new Error( "Unsupported filetype: " + file ) );
-							}
-
-							if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
-								return cb( new Error( 'Skipping intermediate image: ' + file ) );
-							}
-
-							if ( ! filepath[1] ) {
-								return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
-							}
-
-							var url      = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
-							var filename = file.split( '/' );
-
-							filename = filename[ filename.length - 1 ];
-
-							var upload = ( file, cb ) => {
-								var data = fs.readFileSync( file );
-
-								var req = http.request({
-									hostname: 'files.vipv2.net',
-									method:   'PUT',
-									path:     '/wp-content/uploads' + filepath[1],
-									headers:  {
-										'X-Client-Site-ID': site.client_site_id,
-										'X-Access-Token': access_token,
-										'Content-Length': Buffer.byteLength( data ),
-									}
-								}, res => {
-									bar.tick();
-
-									if ( res.statusCode !== 200 ) {
-										return cb( res.statusCode, file );
-									}
-
-									cb();
-								});
-
-								req.on( 'socket', function ( socket ) {
-									socket.setTimeout( 10000 );
-									socket.on( 'timeout', function() {
-									    req.abort();
-									});
-								});
-
-								req.write( data );
-								req.end();
-							};
-
-							// Upload file
-							if ( options.fast ) {
-								return upload( file, cb );
+								queue.push( files, 0 - depth );
 							} else {
-								request
-									.get( url )
-									.set({ 'X-Client-Site-ID': site.client_site_id })
-									.set({ 'X-Access-Token': access_token })
-									.set({ 'X-Action': 'file_exists' })
-									.timeout( 2000 )
-									.end( err => {
-										if ( err && err.status === 404 ) {
-											return upload( file, cb );
-										} else if ( err ) {
+								var filepath = file.split( 'uploads' );
+								var ext      = file.split( '.' );
+
+								ext = ext[ ext.length - 1 ];
+
+								if ( ! ext || options.types.indexOf( ext ) < 0 ) {
+									return cb( new Error( "Unsupported filetype: " + file ) );
+								}
+
+								if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
+									return cb( new Error( 'Skipping intermediate image: ' + file ) );
+								}
+
+								if ( ! filepath[1] ) {
+									return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
+								}
+
+								var url      = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
+								var filename = file.split( '/' );
+
+								filename = filename[ filename.length - 1 ];
+
+								var upload = ( file, cb ) => {
+									var data = fs.readFileSync( file );
+
+									var req = http.request({
+										hostname: 'files.vipv2.net',
+										method:   'PUT',
+										path:     '/wp-content/uploads' + filepath[1],
+										headers:  {
+											'X-Client-Site-ID': site.client_site_id,
+											'X-Access-Token': access_token,
+											'Content-Length': Buffer.byteLength( data ),
+										}
+									}, res => {
+										if ( bar ) {
 											bar.tick();
-											return cb( err );
 										}
 
-										bar.tick();
+										if ( res.statusCode !== 200 ) {
+											return cb( res.statusCode, file );
+										}
+
 										cb();
 									});
-							}
-						}
-					}, options.parallel );
 
-					queue.push( directory, 1 );
+									req.on( 'socket', function ( socket ) {
+										socket.setTimeout( 10000 );
+										socket.on( 'timeout', function() {
+									    	req.abort();
+										});
+									});
+
+									req.write( data );
+									req.end();
+								};
+
+								// Upload file
+								if ( options.fast ) {
+									return upload( file, cb );
+								} else {
+									request
+										.get( url )
+										.set({ 'X-Client-Site-ID': site.client_site_id })
+										.set({ 'X-Access-Token': access_token })
+										.set({ 'X-Action': 'file_exists' })
+										.timeout( 2000 )
+										.end( err => {
+											if ( err && err.status === 404 ) {
+												return upload( file, cb );
+											} else if ( err ) {
+												if ( bar ) {
+													bar.tick();
+												}
+												return cb( err );
+											}
+
+											if ( bar ) {
+												bar.tick();
+											}
+											cb();
+										});
+								}
+							}
+						}, options.parallel );
+
+						queue.push( directory, 1 );
+					});
 				});
 		});
 	});

@@ -26,6 +26,7 @@
     "mysql": "^2.11.1",
     "progress": "^1.1.8",
     "promptly": "1.0.0",
+    "shell-escape": "^0.2.0",
     "superagent": "^2.0.0",
     "vip": "automattic/vip-js-sdk",
     "which": "^1.2.10"
