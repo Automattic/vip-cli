@@ -39,7 +39,7 @@ program
 					}
 
 					var access_token = res.body.data[0].meta_value;
-					var bar = new progress( 'Importing [:bar] :percent :etas', { total: 1500 } );
+					var bar = new progress( 'Importing [:bar] :percent :etas', { total: 1500, incomplete: ' ', renderThrottle: 100 } );
 
 					// Simple async queue with limit 5
 					var queue = async.priorityQueue( ( file, cb ) => {
@@ -166,7 +166,7 @@ program
 						database: db.name,
 					});
 
-					var bar = new progress( 'Importing [:bar] :percent :etas', { total: sql.length } );
+					var bar = new progress( 'Importing [:bar] :percent :etas', { total: sql.length, incomplete: ' ', renderThrottle: 100 } );
 
 					// Test DB connection
 					connection.query( 'SELECT 1', err => {
