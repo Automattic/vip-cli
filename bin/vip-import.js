@@ -118,8 +118,8 @@ program
 									.set({ 'X-Access-Token': access_token })
 									.set({ 'X-Action': 'file_exists' })
 									.timeout( 2000 )
-									.end( ( err, res ) => {
-										if ( res && res.notFound ) {
+									.end( err => {
+										if ( err && err.status === 404 ) {
 											return upload( file, cb );
 										} else if ( err ) {
 											bar.tick();
