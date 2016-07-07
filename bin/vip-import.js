@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-var http     = require( 'https' );
-var fs       = require( 'fs' );
-var program  = require( 'commander' );
-var async    = require( 'async' );
-var progress = require( 'progress' );
-var mysql    = require( 'mysql' );
-var api      = require( '../src/api' );
-var utils    = require( '../src/utils' );
-var request  = require( 'superagent' );
+const http     = require( 'https' );
+const fs       = require( 'fs' );
+const program  = require( 'commander' );
+const async    = require( 'async' );
+const progress = require( 'progress' );
+const mysql    = require( 'mysql' );
+const api      = require( '../src/api' );
+const utils    = require( '../src/utils' );
+const request  = require( 'superagent' );
 
 function list(v) {
 	return v.split(',');
