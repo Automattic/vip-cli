@@ -91,12 +91,13 @@ var utils = {
 			console.log( "Primary Domain:", s.domain_name );
 			console.log( "Environment:", s.environment_name );
 
-			promptly.confirm( "Are you sure?", ( err, t ) => {
+			promptly.confirm( "Are you sure?", ( err, yes ) => {
 				if ( err ) {
 					return console.error( err );
 				}
 
-				if ( ! t ) {
+				if ( ! yes ) {
+					// Bails. Do not pass go. Do not collect $200.
 					return;
 				}
 
