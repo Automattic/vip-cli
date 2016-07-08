@@ -59,6 +59,7 @@ program
 								files     = files.map( f => file + '/' + f );
 
 								queue.push( files, 0 - depth );
+								return cb();
 							} else {
 								var filepath = file.split( 'uploads' );
 								var ext      = file.split( '.' );
