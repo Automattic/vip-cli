@@ -17,10 +17,10 @@
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
   "scripts": {
-    "postinstall": "./node_modules/babel-cli/bin/babel.js -q . --out-dir=. --ignore=node_modules"
+    "postinstall": "babel -q src --out-dir=build"
   },
   "bin": {
-    "vip": "bin/vip.js"
+    "vip": "build/bin/vip.js"
   },
   "dependencies": {
     "async": "^1.5.2",
