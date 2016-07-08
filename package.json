@@ -17,6 +17,7 @@
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
   "scripts": {
+    "preinstall": "mkdir -p build/bin && touch build/bin/vip.js",
     "postinstall": "babel -q src --out-dir=build"
   },
   "bin": {
