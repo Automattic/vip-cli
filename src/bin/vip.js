@@ -9,7 +9,7 @@ process.title = 'vip';
 var program = require( 'commander' );
 var promptly = require( 'promptly' );
 var which = require( 'which' );
-var packageJSON = require( '../package.json' );
+var packageJSON = require( '../../package.json' );
 var utils = require( '../src/utils' );
 var api = require( '../src/api' );
 
