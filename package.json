@@ -1,7 +1,7 @@
 {
   "name": "wpvip-cli",
   "description": "Official CLI tools for WordPress.com VIP",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Automattic, Inc.",
   "contributors": [
     "Nick Daugherty <ndaugherty987@gmail.com>",
