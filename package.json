@@ -16,7 +16,9 @@
   ],
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "postinstall": "./node_modules/babel-cli/bin/babel.js -q . --out-dir=. --ignore=node_modules"
+  },
   "bin": {
     "vip": "bin/vip.js"
   },
@@ -30,5 +32,9 @@
     "superagent": "^2.0.0",
     "vip": "automattic/vip-js-sdk",
     "which": "^1.2.10"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-preset-es2015": "^6.9.0"
   }
 }
