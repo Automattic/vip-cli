@@ -110,6 +110,35 @@ if (!!is_vip) {
 					}
 				})
 		})
+
+	tab.on( 'deploy', ( data, done ) => {
+		api
+			.get( '/search' )
+			.query( 'search', data.lastPartial )
+			.end( ( end, res ) => {
+				if ( err ) {
+					return done( err );
+				}
+
+				var mapped, sites = [];
+
+				// Add initial domain to suggestions list
+				sites = res.body.data.map( s => {
+					return s.domain_name;
+				});
+
+				// Add mapped domains to suggestions list
+				for( let i = 0; i < res.body.data.length; i++ ) {
+					mapped = res.body.data[i].mapped_domains.map( d => {
+						return d.domain_name;
+					});
+
+					sites = sites.concat( mapped );
+				}
+
+				return done( null, sites );
+			});
+	});
 }
 
 // Tab complete top level commands!
