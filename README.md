@@ -5,5 +5,5 @@ CLI Tools for WordPress.com VIP
 ## Install
 
 ```
-npm install -g automattic/vip-cli
+npm install -g wpvip-cli
 ```
