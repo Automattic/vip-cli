@@ -7,6 +7,7 @@
 process.title = 'vip';
 
 var program = require( 'commander' );
+var tab = require( 'tabtab' )();
 var promptly = require( 'promptly' );
 var which = require( 'which' );
 var packageJSON = require( '../../package.json' );
@@ -111,8 +112,17 @@ if (!!is_vip) {
 		})
 }
 
-program.parse( process.argv );
+// Tab complete top level commands!
+tab.on( 'vip', ( data, done ) => {
+	var commands = program.commands.map( c => {
+		if ( data.prev === c.parent.name() ) {
+			return c.name();
+		}
+	});
 
-if ( ! process.argv.slice( 2 ).length ) {
-	program.outputHelp();
-}
+	return done( null, commands );
+});
+
+tab.start();
+
+program.parse( process.argv );
