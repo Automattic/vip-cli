@@ -7,7 +7,7 @@
 process.title = 'vip';
 
 var program = require( 'commander' );
-var tab = require( 'tabtab' )();
+var tab = require( 'tabtab' )({ name: 'vip' });
 var promptly = require( 'promptly' );
 var which = require( 'which' );
 var packageJSON = require( '../../package.json' );
