@@ -15,7 +15,18 @@ var utils = require( '../src/utils' );
 var api = require( '../src/api' );
 
 // TODO
-var is_vip = true;
+var is_vip = false;
+
+utils.getCredentials( ( err, user ) => {
+	if ( err || ! user ) {
+		// TODO: Run `vip configure`
+		return;
+	}
+
+	if ( user.role && 2 >= user.role ) {
+		is_vip = true;
+	}
+});
 
 program
 	.version( packageJSON.version )
