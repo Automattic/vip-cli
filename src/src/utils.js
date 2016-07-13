@@ -68,7 +68,7 @@ var utils = {
 					return cb( err.response.error );
 				}
 
-				site = res.body.data[0];
+				var site = res.body.data[0];
 
 				if ( ! site ) {
 					return cb();
