@@ -1,27 +1,54 @@
 const fs = require( 'fs' );
 const crypto = require( 'crypto' );
 const promptly = require( 'promptly' );
+const vip = require( 'vip' );
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
 
 var utils = {
-	setCredentials: function( credentials, callback ) {
-		credentials.userId      = credentials.userId || '';
-		credentials.accessToken = credentials.accessToken || '';
-
-		var cryptkey = crypto.createHash( 'sha256' ).update( credentials.userId + s_token_ky + credentials.userId ).digest();
+	encrypt: function( data, key ) {
+		var cryptkey = crypto.createHash( 'sha256' ).update( key + s_token_ky + key ).digest();
 		var encipher = crypto.createCipheriv( 'aes-256-cbc', cryptkey, s_token_iv );
-		var encryptdata = encipher.update( credentials.accessToken, 'utf8', 'binary' );
+		var encryptdata = encipher.update( data, 'utf8', 'binary' );
 		encryptdata += encipher.final( 'binary' );
 		var encoded = new Buffer( encryptdata, 'binary' ).toString( 'base64' );
+		return encoded;
+	},
+	decrypt: function( data, key ) {
+		var cryptkey = crypto.createHash( 'sha256' ).update( key + s_token_ky + key ).digest();
+		var decipher = crypto.createDecipheriv( 'aes-256-cbc', cryptkey, s_token_iv );
+		var encr_data = new Buffer( data, 'base64' ).toString( 'binary' );
+		var decoded = decipher.update( encr_data, 'binary', 'utf8' );
+		decoded += decipher.final( 'utf8' );
+		return decoded;
+	},
+	setCredentials: function( credentials, callback ) {
+		credentials.userId = credentials.userId || '';
+		credentials.accessToken = credentials.accessToken || '';
 
-		credentials.accessToken = encoded;
+		const api = new vip();
 
-		var credentials = JSON.stringify( credentials );
-		fs.writeFileSync('/tmp/.vip-go-api', credentials );
+		api.auth.apiUserId = credentials.userId;
+		api.auth.token = credentials.accessToken;
 
-		return callback( null, credentials );
+		api
+			.get( '/api_users/' + api.auth.apiUserId )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err );
+				}
+
+				credentials.role = res.body.data[0].api_user_role_id;
+
+				var encoded = this.encrypt( credentials.accessToken, credentials.userId );
+				credentials.accessToken = encoded;
+
+				credentials = JSON.stringify( credentials );
+				fs.writeFileSync('/tmp/.vip-go-api', credentials );
+
+				return callback( null, credentials );
+			});
 	},
 	getCredentials: function( callback ){
 		try {
@@ -37,11 +64,7 @@ var utils = {
 		}
 
 		try {
-			var cryptkey = crypto.createHash( 'sha256' ).update( r.userId + s_token_ky + r.userId ).digest();
-			var decipher = crypto.createDecipheriv( 'aes-256-cbc', cryptkey, s_token_iv );
-			var encr_data = new Buffer( r.accessToken, 'base64' ).toString( 'binary' );
-			var decoded = decipher.update( encr_data, 'binary', 'utf8' );
-			decoded += decipher.final( 'utf8' );
+			var decoded = this.decrypt( r.accessToken, r.userId );
 		} catch (e) {
 			fs.unlinkSync( '/tmp/.vip-go-api' );
 		}
