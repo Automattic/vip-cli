@@ -18,8 +18,8 @@ var is_vip = false;
 
 utils.getCredentials( ( err, user ) => {
 	if ( err || ! user ) {
-		if ( 0 > process.argv.indexOf( 'configure' ) ) {
-			return program.executeSubCommand( process.argv.concat( 'configure' ), [ 'configure' ] );
+		if ( 0 > process.argv.indexOf( 'login' ) ) {
+			return program.executeSubCommand( process.argv.concat( 'login' ), [ 'login' ] );
 		}
 	} else if ( user.role && 2 >= user.role ) {
 		is_vip = true;
@@ -27,7 +27,7 @@ utils.getCredentials( ( err, user ) => {
 
 	program
 		.version( packageJSON.version )
-		.command( 'configure', 'configure the cli settings' )
+		.command( 'login', 'setup an access token to use with the CLI' )
 
 	// internal VIP commands
 	if (!!is_vip) {
