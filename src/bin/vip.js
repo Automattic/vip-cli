@@ -13,6 +13,7 @@ var which = require( 'which' );
 var packageJSON = require( '../../package.json' );
 var utils = require( '../src/utils' );
 var api = require( '../src/api' );
+var db = require( '../src/db' );
 
 var is_vip = false;
 
@@ -55,34 +56,15 @@ utils.getCredentials( ( err, user ) => {
 						return console.error( "Couldn't find site:", site );
 					}
 
-					var connect = function(site, dump) {
-						api
-							.get( '/sites/' + s.client_site_id + '/masterdb' )
-							.end( ( err, res ) => {
-								if ( err ) {
-									return console.error( err.response.error );
-								}
-
-								var args = [
-									`-h${res.body.host}`,
-									`-P${res.body.port}`,
-									`-u${res.body.username}`,
-									res.body.name,
-									`-p${res.body.password}`,
-								];
-
-								// Fork to mysql CLI client
-								const spawn = require('child_process').spawn;
-								var binary = dump ? 'mysqldump' : 'mysql';
-								spawn( binary, args, { stdio: 'inherit' } );
-							});
-					};
-
 					if ( options.export ) {
 						console.log( '-- Site:', s.client_site_id );
 						console.log( '-- Domain:', s.domain_name );
 						console.log( '-- Environment:', s.environment_name );
-						return connect( s, true );
+						return db.exportDB( s, err => {
+							if ( err ) {
+								return console.error( err );
+							}
+						});
 					}
 
 					var ays = s.environment_name == "production" ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
@@ -98,7 +80,11 @@ utils.getCredentials( ( err, user ) => {
 							return;
 						}
 
-						connect( s, false );
+						return db.getCLI( s, err => {
+							if ( err ) {
+								return console.error( err );
+							}
+						});
 					});
 				});
 			});
