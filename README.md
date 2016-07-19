@@ -6,4 +6,5 @@ CLI Tools for WordPress.com VIP
 
 ```
 npm install -g wpvip-cli
+vip login
 ```
