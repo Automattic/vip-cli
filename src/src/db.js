@@ -1,7 +1,20 @@
-const spawn = require('child_process').spawn;
+const fs = require( 'fs' );
+const spawn = require('child_process').spawnSync;
 const api = require( '../src/api' );
 
 module.exports = {
+	importDB: function( site, file, callback ) {
+		this.getConnection( site, ( err, args ) => {
+			if ( err ) {
+				return callback( err );
+			}
+
+			var stream = fs.createReadStream( file );
+			stream.on( 'open', () => {
+				spawn( 'mysql', args, { stdio: [ stream, process.stdout, process.stderr ] } );
+			});
+		});
+	},
 	exportDB: function( site, callback ) {
 		this.getConnection( site, ( err, args ) => {
 			if ( err ) {
