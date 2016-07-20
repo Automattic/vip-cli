@@ -1,6 +1,7 @@
 const fs = require( 'fs' );
-const spawn = require('child_process').spawnSync;
+const spawn = require('child_process').spawn;
 const api = require( '../src/api' );
+const PV = require( 'node-pv' );
 
 module.exports = {
 	importDB: function( site, file, callback ) {
@@ -9,10 +10,15 @@ module.exports = {
 				return callback( err );
 			}
 
-			var stream = fs.createReadStream( file );
-			stream.on( 'open', () => {
-				spawn( 'mysql', args, { stdio: [ stream, process.stdout, process.stderr ] } );
+			var pv = new PV();
+
+			pv.on('info', info => {
+				process.stderr.write( info );
 			});
+
+			var stream = fs.createReadStream( file );
+			var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
+			stream.pipe(pv).pipe( importdb.stdin );
 		});
 	},
 	exportDB: function( site, callback ) {
