@@ -10,7 +10,10 @@ module.exports = {
 				return callback( err );
 			}
 
-			var pv = new PV();
+			var stats = fs.lstatSync( file );
+			var pv = new PV({
+				size: stats.size
+			});
 
 			pv.on('info', info => {
 				process.stderr.write( info );
