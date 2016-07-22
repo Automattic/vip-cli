@@ -17,10 +17,17 @@ var db = require( '../src/db' );
 
 var is_vip = false;
 
+var noAuth = [
+	'login',
+	'logout',
+];
+
 utils.getCredentials( ( err, user ) => {
 	if ( err || ! user ) {
-		if ( 0 > process.argv.indexOf( 'login' ) ) {
-			return program.executeSubCommand( process.argv.concat( 'login' ), [ 'login' ] );
+		if ( process.argv.length > 2 ) {
+			if ( ! noAuth.indexOf( process.argv[2] ) ) {
+				return program.executeSubCommand( process.argv.concat( 'login' ), [ 'login' ] );
+			}
 		}
 	} else if ( user.role && 2 >= user.role ) {
 		is_vip = true;
@@ -29,6 +36,13 @@ utils.getCredentials( ( err, user ) => {
 	program
 		.version( packageJSON.version )
 		.command( 'login', 'setup an access token to use with the CLI' )
+
+	program
+		.command( 'logout' )
+		.description( 'delete the stored access token' )
+		.action( () => {
+			utils.deleteCredentials();
+		});
 
 	// internal VIP commands
 	if (!!is_vip) {
