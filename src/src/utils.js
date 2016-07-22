@@ -23,6 +23,13 @@ var utils = {
 		decoded += decipher.final( 'utf8' );
 		return decoded;
 	},
+	deleteCredentials: function() {
+		try {
+			fs.unlinkSync( '/tmp/.vip-go-api' );
+		} catch ( e ) {
+			// We don't care if the file already doesn't exist.
+		}
+	},
 	setCredentials: function( credentials, callback ) {
 		credentials.userId = credentials.userId || '';
 		credentials.accessToken = credentials.accessToken || '';
