@@ -4,8 +4,8 @@ const api = new vip();
 const utils = require( './utils' );
 
 utils.getCredentials( function( err, credentials ) {
-	if (err) {
-		return console.error(err);
+	if ( err ) {
+		return;
 	}
 
 	api.auth.apiUserId = credentials.userId;
