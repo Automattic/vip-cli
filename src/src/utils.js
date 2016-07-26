@@ -81,7 +81,7 @@ var utils = {
 		} else {
 			request = api
 				.get( '/sites' )
-				.query({ search: domain });
+				.query({ domain_name: domain });
 		}
 
 		return request
