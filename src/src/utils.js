@@ -136,7 +136,7 @@ var utils = {
 		});
 	},
 	getSandboxForSite: function( site, cb ) {
-		this.findAndConfirmSite( site, site => {
+		this.findSite( site, site => {
 			var api = require( './api' );
 			api
 				.get( '/sandboxes' )

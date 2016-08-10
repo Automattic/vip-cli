@@ -54,9 +54,7 @@ utils.getCredentials( ( err, user ) => {
 		program
 			.command( 'cli <site> [command...]' )
 			.description( 'Run a CLI command on a given sandbox' )
-			.option( '-y, --yes', 'Are you sure?' )
 			.action( ( site, command, options ) => {
-				// TODO: If options.yes, don't ask for confirmation
 				utils.getSandboxForSite( site, ( err, sandbox ) => {
 					if ( err ) {
 						return console.error( err );
