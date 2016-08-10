@@ -58,6 +58,10 @@ utils.getCredentials( ( err, user ) => {
 			.action( ( site, command, options ) => {
 				// TODO: If options.yes, don't ask for confirmation
 				utils.getSandboxForSite( site, ( err, sandbox ) => {
+					if ( err ) {
+						return console.error( err );
+					}
+
 					var run = [
 						'exec',
 						'-u', '1001',
