@@ -14,6 +14,7 @@ var packageJSON = require( '../../package.json' );
 var utils = require( '../src/utils' );
 var api = require( '../src/api' );
 var db = require( '../src/db' );
+const spawn = require('child_process').spawn;
 
 var is_vip = false;
 
@@ -49,6 +50,38 @@ utils.getCredentials( ( err, user ) => {
 		program
 			.command( 'api', 'Authenticated API requests' )
 			.command( 'import', 'import to VIP Go' );
+
+		program
+			.command( 'cli <site> [command...]' )
+			.description( 'Run a CLI command on a given sandbox' )
+			.action( ( site, command, options ) => {
+				utils.getSandboxForSite( site, ( err, sandbox ) => {
+					if ( err ) {
+						return console.error( err );
+					}
+
+					var run = [
+						'exec',
+						'-u', '1001',
+						'-it', sandbox.container_name,
+						'env', 'TERM=xterm',
+					];
+
+					if ( command.length < 1 ) {
+						run.push( 'bash' );
+					} else {
+						run = run.concat( command );
+
+						// TODO: Define this in wp-cli.yml
+						if ( "wp" == command[0] ) {
+							run.push( '--path=/var/www' );
+						}
+					}
+
+					// TODO: Handle file references as arguments
+					spawn( 'docker', run, { stdio: 'inherit' } );
+				});
+			});
 
 		program
 			.command( 'db <site>' )
