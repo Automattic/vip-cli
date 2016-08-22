@@ -2,6 +2,7 @@ const fs = require( 'fs' );
 const spawn = require('child_process').spawn;
 const api = require( '../src/api' );
 const PV = require( 'node-pv' );
+const Throttle = require( 'throttle' );
 
 module.exports = {
 	importDB: function( site, file, callback ) {
@@ -19,9 +20,10 @@ module.exports = {
 				process.stderr.write( info );
 			});
 
+			var throttle = new Throttle( 1 * 1024 * 1024 ); // 1mbps
 			var stream = fs.createReadStream( file );
 			var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
-			stream.pipe(pv).pipe( importdb.stdin );
+			stream.pipe(throttle).pipe(pv).pipe( importdb.stdin );
 		});
 	},
 	exportDB: function( site, callback ) {
