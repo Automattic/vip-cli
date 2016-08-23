@@ -42,14 +42,9 @@ program
 					}
 
 					var access_token = res.body.data[0].meta_value;
+					var bar, filecount = 0;
 
-					var cd = escape([ 'cd', directory ]);
-					exec( cd + '; find -type f | wc -l', ( error, stdout, stderr ) => {
-						if ( ! error ) {
-							var bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: parseInt( stdout ), incomplete: ' ', renderThrottle: 100 } );
-						}
-
-						// Simple async queue with limit 5
+					var processFiles = function( importing, callback ) {
 						var queue = async.priorityQueue( ( file, cb ) => {
 							var file  = fs.realpathSync( file );
 							var stats = fs.lstatSync( file );
@@ -61,7 +56,7 @@ program
 
 								queue.push( files, 0 - depth );
 								return cb();
-							} else {
+							} else if ( stats.isFile() ) {
 								var filepath = file.split( 'uploads' );
 								var ext      = file.split( '.' );
 
@@ -77,6 +72,13 @@ program
 
 								if ( ! filepath[1] ) {
 									return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
+								}
+
+								// Count this file
+								filecount++;
+
+								if ( ! importing ) {
+									return cb();
 								}
 
 								var url      = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
@@ -97,9 +99,7 @@ program
 											'Content-Length': Buffer.byteLength( data ),
 										}
 									}, res => {
-										if ( bar ) {
-											bar.tick();
-										}
+										bar.tick();
 
 										if ( res.statusCode !== 200 ) {
 											return cb( res.statusCode, file );
@@ -133,22 +133,30 @@ program
 											if ( err && err.status === 404 ) {
 												return upload( file, cb );
 											} else if ( err ) {
-												if ( bar ) {
-													bar.tick();
-												}
+												bar.tick();
 												return cb( err );
 											}
 
-											if ( bar ) {
-												bar.tick();
-											}
+											bar.tick();
 											cb();
 										});
 								}
+							} else {
+								return cb();
 							}
-						}, options.parallel );
+						});
 
+						if ( callback ) {
+							queue.drain = callback;
+						}
+
+						// Start it
 						queue.push( directory, 1 );
+					};
+
+					processFiles( false, function() {
+						bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 } );
+						processFiles( true )
 					});
 				});
 		});
