@@ -96,7 +96,6 @@ program
 										headers:  {
 											'X-Client-Site-ID': site.client_site_id,
 											'X-Access-Token': access_token,
-											'Content-Length': Buffer.byteLength( data ),
 										}
 									}, res => {
 										bar.tick();
