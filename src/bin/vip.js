@@ -197,7 +197,10 @@ utils.getCredentials( ( err, user ) => {
 
 	program.parse( process.argv );
 
-	if ( ! process.argv.slice( 2 ).length ) {
-		program.outputHelp();
+	var cmds = program.commands.map(c => c._name);
+	var subCmd = program.args[0];
+
+	if ( ! process.argv.slice( 2 ).length || 0 > cmds.indexOf(subCmd) ) {
+		program.help();
 	}
 });
