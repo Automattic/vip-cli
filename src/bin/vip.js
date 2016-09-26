@@ -198,7 +198,7 @@ utils.getCredentials( ( err, user ) => {
 	program.parse( process.argv );
 
 	var cmds = program.commands.map(c => c._name);
-	var subCmd = program.args.pop()._name;
+	var subCmd = program.args.pop()._name || process.argv[2];
 
 	if ( ! process.argv.slice( 2 ).length || 0 > cmds.indexOf(subCmd) ) {
 		program.help();
