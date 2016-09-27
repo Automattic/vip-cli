@@ -5,13 +5,16 @@ const fs       = require( 'fs' );
 const program  = require( 'commander' );
 const async    = require( 'async' );
 const progress = require( 'progress' );
-const api      = require( '../src/api' );
-const utils    = require( '../src/utils' );
 const request  = require( 'superagent' );
 const exec     = require('child_process').exec;
 const escape   = require( 'shell-escape' );
-const db = require( '../src/db' );
 const which = require( 'which' );
+
+// Ours
+const api      = require( '../src/api' );
+const utils    = require( '../src/utils' );
+const db = require( '../src/db' );
+const imports = require( '../src/import' );
 
 function list(v) {
 	return v.split(',');
@@ -46,104 +49,87 @@ program
 
 					var processFiles = function( importing, callback ) {
 						var queue = async.priorityQueue( ( file, cb ) => {
-							var file  = fs.realpathSync( file );
-							var stats = fs.lstatSync( file );
-							var depth = file.split( '/' ).length;
+							async.waterfall([
+								function( cb ) {
+									fs.realpath( file, cb );
+								},
 
-							if ( stats.isDirectory() ) {
-								var files = fs.readdirSync( file );
-								files     = files.map( f => file + '/' + f );
-
-								queue.push( files, 0 - depth );
-								return cb();
-							} else if ( stats.isFile() ) {
-								var filepath = file.split( 'uploads' );
-								var ext      = file.split( '.' );
-
-								ext = ext[ ext.length - 1 ];
-
-								if ( ! ext || options.types.indexOf( ext ) < 0 ) {
-									return cb( new Error( "Unsupported filetype: " + file ) );
+								function( file, cb ) {
+									fs.lstat( file, function( err, stats ) {
+										cb( err, file, stats );
+									});
 								}
+							], function( err, file, stats ) {
+								if ( stats.isDirectory() ) {
+									var files = fs.readdirSync( file );
 
-								if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
-									return cb( new Error( 'Skipping intermediate image: ' + file ) );
-								}
+									fs.readdir( file, ( err, files ) => {
+										if ( files.length > 10000 ) {
+											// TODO: Limit queue size to 5k-ish (if there are less than 10000 items, don't both)
+											// 1. Insert first 5k items
+											// 2. Insert dummy file/pointer to 5K+1 (lower priority than files, higher priority than directories)
+											// 3. Handle pointers separately - add next 5k files + next pointer if necessary
+										}
 
-								if ( ! filepath[1] ) {
-									return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
-								}
+										files = files.map( f => file + '/' + f );
 
-								// Count this file
-								filecount++;
+										var depth = file.split( '/' ).length;
+										queue.push( files, 0 - depth );
+										return cb();
+									});
+								} else if ( stats.isFile() ) {
+									var filepath = file.split( 'uploads' );
+									var ext      = file.split( '.' );
 
-								if ( ! importing ) {
+									ext = ext[ ext.length - 1 ];
+
+									if ( ! ext || options.types.indexOf( ext ) < 0 ) {
+										return cb( new Error( "Unsupported filetype: " + file ) );
+									}
+
+									if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
+										return cb( new Error( 'Skipping intermediate image: ' + file ) );
+									}
+
+									if ( ! filepath[1] ) {
+										return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
+									}
+
+									if ( ! importing ) {
+										filecount++;
+
+										if ( 0 === filecount % 10000 ) {
+											console.log( filecount );
+										}
+
+										return cb();
+									}
+
+									if ( options.fast ) {
+										bar.tick();
+										return imports.upload( site, file, access_token, cb );
+									} else {
+										request
+											.get( 'https://files.vipv2.net/wp-content/uploads' + filepath[1] )
+											.set({ 'X-Client-Site-ID': site.client_site_id })
+											.set({ 'X-Access-Token': access_token })
+											.set({ 'X-Action': 'file_exists' })
+											.timeout( 2000 )
+											.end( err => {
+												bar.tick();
+
+												if ( err && err.status === 404 ) {
+													return imports.upload( site, file, access_token, cb );
+												}
+
+												return cb( err );
+											});
+									}
+								} else {
 									return cb();
 								}
-
-								var url      = 'https://files.vipv2.net/wp-content/uploads' + filepath[1];
-								var filename = file.split( '/' );
-
-								filename = filename[ filename.length - 1 ];
-
-								var upload = ( file, cb ) => {
-									var data = fs.readFileSync( file );
-
-									var req = http.request({
-										hostname: 'files.vipv2.net',
-										method:   'PUT',
-										path:     '/wp-content/uploads' + filepath[1],
-										headers:  {
-											'X-Client-Site-ID': site.client_site_id,
-											'X-Access-Token': access_token,
-										}
-									}, res => {
-										bar.tick();
-
-										if ( res.statusCode !== 200 ) {
-											return cb( res.statusCode, file );
-										}
-
-										cb();
-									});
-
-									req.on( 'socket', function ( socket ) {
-										socket.setTimeout( 10000 );
-										socket.on( 'timeout', function() {
-									    	req.abort();
-										});
-									});
-
-									req.write( data );
-									req.end();
-								};
-
-								// Upload file
-								if ( options.fast ) {
-									return upload( file, cb );
-								} else {
-									request
-										.get( url )
-										.set({ 'X-Client-Site-ID': site.client_site_id })
-										.set({ 'X-Access-Token': access_token })
-										.set({ 'X-Action': 'file_exists' })
-										.timeout( 2000 )
-										.end( err => {
-											if ( err && err.status === 404 ) {
-												return upload( file, cb );
-											} else if ( err ) {
-												bar.tick();
-												return cb( err );
-											}
-
-											bar.tick();
-											cb();
-										});
-								}
-							} else {
-								return cb();
-							}
-						});
+							});
+						}, 5 );
 
 						if ( callback ) {
 							queue.drain = callback;
@@ -153,8 +139,11 @@ program
 						queue.push( directory, 1 );
 					};
 
+					// TODO: Cache file count to disk, hash directory so we know if the contents change?
+					console.log( 'Counting files...' );
 					processFiles( false, function() {
 						bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 } );
+						console.log( 'Importing ' + filecount + ' files...' );
 						processFiles( true )
 					});
 				});
