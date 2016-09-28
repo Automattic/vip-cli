@@ -49,6 +49,21 @@ program
 
 					var processFiles = function( importing, callback ) {
 						var queue = async.priorityQueue( ( file, cb ) => {
+							// Handle pointers separately - add next 5k files + next pointer if necessary
+							if ( 'ptr:' === file.substring( 0, 4 ) ) {
+								var parts = file.split(':');
+								var offset = parseInt( parts[1] );
+								var file = parts[2];
+
+								return imports.queueDir( file, offset, function( q ) {
+									q.forEach(i => {
+										queue.push( i.item, i.priority );
+									});
+
+									return cb();
+								});
+							}
+
 							async.waterfall([
 								function( cb ) {
 									fs.realpath( file, cb );
@@ -61,20 +76,11 @@ program
 								}
 							], function( err, file, stats ) {
 								if ( stats.isDirectory() ) {
-									var files = fs.readdirSync( file );
+									imports.queueDir( file, 0, function( q ) {
+										q.forEach(i => {
+											queue.push( i.item, i.priority );
+										});
 
-									fs.readdir( file, ( err, files ) => {
-										if ( files.length > 10000 ) {
-											// TODO: Limit queue size to 5k-ish (if there are less than 10000 items, don't both)
-											// 1. Insert first 5k items
-											// 2. Insert dummy file/pointer to 5K+1 (lower priority than files, higher priority than directories)
-											// 3. Handle pointers separately - add next 5k files + next pointer if necessary
-										}
-
-										files = files.map( f => file + '/' + f );
-
-										var depth = file.split( '/' ).length;
-										queue.push( files, 0 - depth );
 										return cb();
 									});
 								} else if ( stats.isFile() ) {
