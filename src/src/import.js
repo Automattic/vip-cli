@@ -25,5 +25,41 @@ module.exports = {
 			req.write( data );
 			req.end();
 		});
+	},
+	queueDir: function( dir, offset, cb ) {
+		var priority = 0 - dir.split( '/' ).length;
+
+		fs.readdir( dir, ( err, files ) => {
+			if ( files.length - offset < 10000 ) {
+				// If there are less than 2 full rounds of files left, just do them all now
+				files = files.slice( offset, offset + 10000 );
+				files = files.map(f => dir + '/' + f);
+
+				return cb([{
+					item: files,
+					priority: priority
+				}]);
+			}
+
+			// Queue next 5k files
+			files = files.slice( offset, offset + 5000 );
+			offset += 5000;
+
+			// Queue files with absolute path
+			files = files.map(f => dir + '/' + f);
+
+			var ptr = 'ptr:' + offset + ':' + dir;
+			return cb([
+				{
+					priority: priority,
+					item: files
+				},
+				{
+					// Process the pointer after this batch of files
+					priority: priority + 1,
+					item: ptr
+				}
+			]);
+		});
 	}
 };
