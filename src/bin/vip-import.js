@@ -55,6 +55,7 @@ program
 								var offset = parseInt( parts[1] );
 								var file = parts[2];
 
+								// Queue next batch of files in this directory
 								return imports.queueDir( file, offset, function( q ) {
 									q.forEach(i => {
 										queue.push( i.item, i.priority );
@@ -76,6 +77,7 @@ program
 								}
 							], function( err, file, stats ) {
 								if ( stats.isDirectory() ) {
+									// Init directory queueing with offset=0
 									imports.queueDir( file, 0, function( q ) {
 										q.forEach(i => {
 											queue.push( i.item, i.priority );

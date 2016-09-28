@@ -43,8 +43,10 @@ module.exports = {
 
 			// Queue next 5k files
 			files = files.slice( offset, offset + 5000 );
-			files = files.map(f => dir + '/' + f);
 			offset += 5000;
+
+			// Queue files with absolute path
+			files = files.map(f => dir + '/' + f);
 
 			var ptr = 'ptr:' + offset + ':' + dir;
 			return cb([
@@ -53,6 +55,7 @@ module.exports = {
 					item: files
 				},
 				{
+					// Process the pointer after this batch of files
 					priority: priority + 1,
 					item: ptr
 				}
