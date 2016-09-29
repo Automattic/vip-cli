@@ -11,10 +11,10 @@ const escape   = require( 'shell-escape' );
 const which = require( 'which' );
 
 // Ours
-const api      = require( '../src/api' );
-const utils    = require( '../src/utils' );
-const db = require( '../src/db' );
-const imports = require( '../src/import' );
+const api      = require( '../lib/api' );
+const utils    = require( '../lib/utils' );
+const db = require( '../lib/db' );
+const imports = require( '../lib/import' );
 
 function list(v) {
 	return v.split(',');

@@ -1,11 +1,11 @@
 #! /usr/bin/env node
 
 var program = require('commander');
-
-var async    = require( 'async' );
 var promptly = require( 'promptly' );
+var async    = require( 'async' );
 
-var utils = require( '../src/utils' );
+// Ours
+var utils = require( '../lib/utils' );
 
 program
 	.parse( process.argv );
