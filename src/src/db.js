@@ -4,48 +4,8 @@ const api = require( '../src/api' );
 const PV = require( 'node-pv' );
 const Throttle = require( 'throttle' );
 
-module.exports = {
-	importDB: function( site, file, callback ) {
-		this.getConnection( site, ( err, args ) => {
-			if ( err ) {
-				return callback( err );
-			}
-
-			var stats = fs.lstatSync( file );
-			var pv = new PV({
-				size: stats.size
-			});
-
-			pv.on('info', info => {
-				process.stderr.write( info );
-			});
-
-			var throttle = new Throttle( 1 * 1024 * 1024 ); // 1mbps
-			var stream = fs.createReadStream( file );
-			var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
-			stream.pipe(throttle).pipe(pv).pipe( importdb.stdin );
-		});
-	},
-	exportDB: function( site, callback ) {
-		this.getConnection( site, ( err, args ) => {
-			if ( err ) {
-				return callback( err );
-			}
-
-			spawn( 'mysqldump', args, { stdio: 'inherit' } );
-		});
-	},
-	getCLI: function( site, callback ) {
-		this.getConnection( site, ( err, args ) => {
-			if ( err ) {
-				return callback( err );
-			}
-
-			spawn( 'mysql', args, { stdio: 'inherit' } );
-		});
-	},
-	getConnection: function( site, callback ) {
-		api
+function getConnection( site, callback ) {
+	api
 		.get( '/sites/' + site.client_site_id + '/masterdb' )
 		.end( ( err, res ) => {
 			if ( err ) {
@@ -62,5 +22,46 @@ module.exports = {
 
 			callback( null, args );
 		});
-	},
-};
+}
+
+export function importDB( site, file, callback ) {
+	getConnection( site, ( err, args ) => {
+		if ( err ) {
+			return callback( err );
+		}
+
+		var stats = fs.lstatSync( file );
+		var pv = new PV({
+			size: stats.size
+		});
+
+		pv.on('info', info => {
+			process.stderr.write( info );
+		});
+
+		var throttle = new Throttle( 1 * 1024 * 1024 ); // 1mbps
+		var stream = fs.createReadStream( file );
+		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
+		stream.pipe(throttle).pipe(pv).pipe( importdb.stdin );
+	});
+}
+
+export function exportDB( site, callback ) {
+	getConnection( site, ( err, args ) => {
+		if ( err ) {
+			return callback( err );
+		}
+
+		spawn( 'mysqldump', args, { stdio: 'inherit' } );
+	});
+}
+
+export function getCLI( site, connection ) {
+	getConnection( site, ( err, args ) => {
+		if ( err ) {
+			return callback( err );
+		}
+
+		spawn( 'mysql', args, { stdio: 'inherit' } );
+	});
+}
