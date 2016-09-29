@@ -1,10 +1,10 @@
 #! /usr/bin/env node
 
 var program = require('commander');
-
-var async    = require( 'async' );
 var promptly = require( 'promptly' );
+var async    = require( 'async' );
 
+// Ours
 var utils = require( '../src/utils' );
 
 program

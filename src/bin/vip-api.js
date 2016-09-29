@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 var program = require( 'commander' );
-var api = require( '../src/api' );
 var querystring = require('querystring');
+
+// Ours
+var api = require( '../src/api' );
 
 function parseData(d) {
 	try {

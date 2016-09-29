@@ -7,17 +7,18 @@
 process.title = 'vip';
 
 var program = require( 'commander' );
-var tab = require( 'tabtab' )({ name: 'vip' });
 var promptly = require( 'promptly' );
+var tab = require( 'tabtab' )({ name: 'vip' });
 var which = require( 'which' );
+const spawn = require('child_process').spawn;
+
+// Ours
 var packageJSON = require( '../../package.json' );
 var utils = require( '../src/utils' );
 var api = require( '../src/api' );
 var db = require( '../src/db' );
-const spawn = require('child_process').spawn;
 
 var is_vip = false;
-
 var noAuth = [
 	'login',
 	'logout',
