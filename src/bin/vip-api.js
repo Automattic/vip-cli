@@ -4,7 +4,7 @@ var program = require( 'commander' );
 var querystring = require('querystring');
 
 // Ours
-var api = require( '../src/api' );
+var api = require( '../lib/api' );
 
 function parseData(d) {
 	try {

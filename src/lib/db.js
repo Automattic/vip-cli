@@ -1,8 +1,10 @@
 const fs = require( 'fs' );
 const spawn = require('child_process').spawn;
-const api = require( '../src/api' );
 const PV = require( 'node-pv' );
 const Throttle = require( 'throttle' );
+
+// Ours
+const api = require( './api' );
 
 function getConnection( site, callback ) {
 	api

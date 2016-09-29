@@ -14,9 +14,9 @@ const spawn = require('child_process').spawn;
 
 // Ours
 var packageJSON = require( '../../package.json' );
-var utils = require( '../src/utils' );
-var api = require( '../src/api' );
-var db = require( '../src/db' );
+var utils = require( '../lib/utils' );
+var api = require( '../lib/api' );
+var db = require( '../lib/db' );
 
 var is_vip = false;
 var noAuth = [

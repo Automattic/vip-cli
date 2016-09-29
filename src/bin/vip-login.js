@@ -5,7 +5,7 @@ var promptly = require( 'promptly' );
 var async    = require( 'async' );
 
 // Ours
-var utils = require( '../src/utils' );
+var utils = require( '../lib/utils' );
 
 program
 	.parse( process.argv );
