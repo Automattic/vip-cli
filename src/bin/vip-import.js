@@ -160,6 +160,7 @@ program
 
 program
 	.command( 'sql <site> <file>' )
+	.alias( 'database' )
 	.description( 'Import SQL to a VIP Go site' )
 	.action( ( site, file ) => {
 		try {
@@ -175,22 +176,21 @@ program
 				}
 
 				api
-				.post( '/sites/' + site.client_site_id + '/wp-cli' )
-				.send({
-					command: "cache",
-					args: [ "flush" ],
-					namedvars: {
-						"skip-plugins": true,
-						"skip-themes": true,
-					},
-				})
-				.end();
+					.post( '/sites/' + site.client_site_id + '/wp-cli' )
+					.send({
+						command: "cache",
+						args: [ "flush" ],
+						namedvars: {
+							"skip-plugins": true,
+							"skip-themes": true,
+						},
+					})
+					.end();
 			});
 		});
 	});
 
-	program.parse( process.argv );
-
-	if ( ! process.argv.slice( 2 ).length ) {
-		program.outputHelp();
-	}
+program.parse( process.argv );
+if ( ! process.argv.slice( 2 ).length ) {
+	program.outputHelp();
+}

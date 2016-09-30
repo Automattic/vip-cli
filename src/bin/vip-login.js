@@ -1,14 +1,13 @@
-#! /usr/bin/env node
+#!/usr/bin/env node
 
-var program = require('commander');
-var promptly = require( 'promptly' );
-var async    = require( 'async' );
+const program = require('commander');
+const promptly = require( 'promptly' );
+const async    = require( 'async' );
 
 // Ours
-var utils = require( '../lib/utils' );
+const utils = require( '../lib/utils' );
 
-program
-	.parse( process.argv );
+program.parse( process.argv );
 
 utils.getCredentials( ( err, user ) => {
 	var userprompt = user && user.userId ? 'User ID (' + user.userId + '):' : 'User ID:';
