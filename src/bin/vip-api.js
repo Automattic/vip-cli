@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-var program = require( 'commander' );
-var querystring = require('querystring');
+const program = require( 'commander' );
+const querystring = require('querystring');
 
 // Ours
-var api = require( '../lib/api' );
+const api = require( '../lib/api' );
 
 function parseData(d) {
 	try {
@@ -63,7 +63,6 @@ program
 	});
 
 program.parse( process.argv );
-
 if ( ! process.argv.slice( 2 ).length ) {
 	program.outputHelp();
 }
