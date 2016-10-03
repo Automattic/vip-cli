@@ -50,6 +50,7 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'db <site>', 'Connect to a given VIP Go database' )
 			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
 			.command( 'import', 'Import to VIP Go' )
+			.command( 'sandbox <action> <site>', 'Interacting with existing sandbox containers' )
 
 		tab.on( 'deploy', ( data, done ) => {
 			api

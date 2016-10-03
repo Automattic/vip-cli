@@ -10,7 +10,7 @@ export function runCommand( container, command, cb ) {
 		'env', 'TERM=xterm',
 	];
 
-	if ( command.length < 1 ) {
+	if ( ! command || command.length < 1 ) {
 		run.push( 'bash' );
 	} else {
 		run = run.concat( command );
@@ -56,6 +56,7 @@ export function getSandboxForSite( site, cb ) {
 		.query({
 			'api_user_id': api.auth.apiUserId,
 			'client_site_id': site.client_site_id,
+			'state': 'any',
 		})
 		.end( ( err, res ) => {
 			if ( err ) {
