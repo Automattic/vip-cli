@@ -140,28 +140,3 @@ export function findAndConfirmSite( site, cb ) {
 		});
 	});
 }
-
-export function getSandboxForSite( site, cb ) {
-	this.findSite( site, ( err, site ) => {
-		var api = require( './api' );
-		api
-			.get( '/sandboxes' )
-			.query({
-				'user_id': api.auth.apiUserId,
-				'client_site_id': site.client_site_id,
-			})
-			.end( ( err, res ) => {
-				if ( err ) {
-					return cb( err );
-				}
-
-				var data = res.body.data;
-
-				if ( ! data || ! data[0] ) {
-					return cb( new Error( 'No sandbox exists for given site' ) );
-				}
-
-				return cb( null, data[0].containers[0] );
-			});
-	});
-}
