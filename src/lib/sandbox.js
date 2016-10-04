@@ -29,24 +29,14 @@ export function createSandboxForSite( site, cb ) {
 	api
 		.post( '/sandboxes' )
 		.send({ 'client_site_id': site.client_site_id })
-		.end( ( err, res ) => {
-			// Poll for sandbox
-			var poll = setInterval( () => {
-				getSandboxForSite( site, ( err, sandbox ) => {
-					if ( err ) {
-						// API error, bail
-						clearInterval( poll );
-						return cb( err );
-					}
+		.end( err => {
+			if ( err ) {
+				return cb( err );
+			}
 
-					if ( ! sandbox ) {
-						return console.log( 'Waiting for sandbox container to start...' );
-					}
-
-					clearInterval( poll );
-					cb( err, sandbox );
-				});
-			}, 1000 );
+			waitForRunningSandbox( site, ( err, sandbox ) => {
+				cb( err, sandbox );
+			});
 		});
 }
 
@@ -71,4 +61,23 @@ export function getSandboxForSite( site, cb ) {
 
 			return cb( null, data[0].containers[0] );
 		});
+}
+
+export function waitForRunningSandbox( site, cb ) {
+	var poll = setInterval( () => {
+		getSandboxForSite( site, ( err, sbox ) => {
+			if ( err ) {
+				// API error, bail
+				clearInterval( poll );
+				return cb( err );
+			}
+
+			if ( ! sbox || sbox.state !== 'running' ) {
+				return console.log( 'Waiting for sandbox to start...' );
+			}
+
+			clearInterval( poll );
+			cb( err, sbox );
+		});
+	}, 1000 );
 }

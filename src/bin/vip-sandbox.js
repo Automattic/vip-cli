@@ -9,25 +9,6 @@ const api = require( '../lib/api' );
 const sandbox = require( '../lib/sandbox' );
 const utils = require( '../lib/utils' );
 
-function waitForRunningSandbox( site, cb ) {
-	var poll = setInterval( () => {
-		sandbox.getSandboxForSite( site, ( err, sbox ) => {
-			if ( err ) {
-				// API error, bail
-				clearInterval( poll );
-				return cb( err );
-			}
-
-			if ( ! sbox || sbox.state !== 'running' ) {
-				return console.log( 'Waiting for sandbox to start...' );
-			}
-
-			clearInterval( poll );
-			cb( err, sbox );
-		});
-	}, 1000 );
-}
-
 program
 	.command( 'list' )
 	.description( 'List existing sandboxes' )
@@ -86,7 +67,7 @@ program
 									return console.error( err );
 								}
 
-								waitForRunningSandbox( site, ( err, sbox ) => {
+								sandbox.waitForRunningSandbox( site, ( err, sbox ) => {
 									sandbox.runCommand( sbox );
 								});
 							});
@@ -98,7 +79,7 @@ program
 									return console.error( err.response.error );
 								}
 
-								waitForRunningSandbox( site, ( err, sbox ) => {
+								sandbox.waitForRunningSandbox( site, ( err, sbox ) => {
 									sandbox.runCommand( sbox );
 								});
 							});
