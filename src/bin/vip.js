@@ -51,6 +51,7 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
 			.command( 'import', 'Import to VIP Go' )
 			.command( 'sandbox <action> <site>', 'Interacting with existing sandbox containers' )
+			.command( 'stacks <action>', 'Maintain software stacks on the current host' )
 
 		tab.on( 'deploy', ( data, done ) => {
 			api
