@@ -60,6 +60,14 @@ program
 	.description( 'Start existing sandbox' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! site ) {
+				return console.error( 'Specified site does not exist. Try the ID.' );
+			}
+
 			sandbox.getSandboxForSite( site, ( err, sbox ) =>  {
 				if ( err ) {
 					return console.error( err );
@@ -108,6 +116,14 @@ program
 	.description( 'Stop existing sandbox' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! site ) {
+				return console.error( 'Specified site does not exist. Try the ID.' );
+			}
+
 			sandbox.getSandboxForSite( site, ( err, sbox ) => {
 				if ( err ) {
 					return console.error( err );
@@ -141,6 +157,14 @@ program
 	.description( 'Pause existing sandbox' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! site ) {
+				return console.error( 'Specified site does not exist. Try the ID.' );
+			}
+
 			sandbox.getSandboxForSite( site, ( err, sbox ) => {
 				if ( err ) {
 					return console.error( err );
@@ -173,6 +197,14 @@ program
 	.description( 'Delete existing sandbox' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! site ) {
+				return console.error( 'Specified site does not exist. Try the ID.' );
+			}
+
 			sandbox.getSandboxForSite( site, ( err, sbox ) => {
 				if ( err ) {
 					return console.error( err );
