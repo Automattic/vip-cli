@@ -46,11 +46,10 @@ utils.getCredentials( ( err, user ) => {
 	if (!!is_vip) {
 		program
 			.command( 'api <method> <endpoint>', 'Authenticated API requests' )
-			.command( 'cli <site> [command...]', 'Run a CLI command on agiven sandbox' )
 			.command( 'db <site>', 'Connect to a given VIP Go database' )
 			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
 			.command( 'import', 'Import to VIP Go' )
-			.command( 'sandbox <action> <site>', 'Interacting with existing sandbox containers' )
+			.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
 			.command( 'stacks <action>', 'Maintain software stacks on the current host' )
 
 		tab.on( 'deploy', ( data, done ) => {

@@ -18,7 +18,7 @@ program
 
 program
 	.command( 'start <site>' )
-	.description( 'Start existing sandbox' )
+	.description( 'Start a sandbox' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
@@ -35,7 +35,13 @@ program
 				}
 
 				if ( ! sbox ) {
-					return console.error( 'Sandbox does not exist for requested site.' );
+					return sandbox.createSandboxForSite( site, ( err, sbox ) => {
+						if ( err ) {
+							return console.error( err );
+						}
+
+						sandbox.runOnExistingContainer( site, sbox );
+					});
 				}
 
 				sandbox.runOnExistingContainer( site, sbox );
