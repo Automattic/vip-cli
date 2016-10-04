@@ -1,9 +1,45 @@
-const spawn = require('child_process').spawn;
+const spawn = require('child_process').spawnSync;
 
 // Ours
 const api = require( './api' );
 
-export function runCommand( container, command, cb ) {
+export function runOnExistingContainer( site, sbox, command ) {
+	switch( sbox.state ) {
+		case 'stopped':
+			return api
+			.post( '/containers/' + sbox.container_id + '/start' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				waitForRunningSandbox( site, ( err, sbox ) => {
+					runCommand( sbox, command );
+				});
+			});
+		case 'paused':
+			return api
+			.post( '/containers/' + sbox.container_id + '/unpause' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( err.response.error );
+				}
+
+				waitForRunningSandbox( site, ( err, sbox ) => {
+					runCommand( sbox, command );
+				});
+			});
+		case 'stopping':
+		case 'pausing':
+			return console.error( 'Sandbox state transition - try again in a few seconds...' );
+		case 'running':
+			return runCommand( sbox, command );
+		default:
+			return console.error( 'Cannot start sandbox for requested site' );
+	}
+}
+
+export function runCommand( container, command ) {
 	var run = [
 		'exec',
 		'-it', container.container_name,
@@ -23,6 +59,12 @@ export function runCommand( container, command, cb ) {
 
 	// TODO: Handle file references as arguments
 	spawn( 'docker', run, { stdio: 'inherit' } );
+
+	// Stop the container when we're done with it
+	// We don't strictly care about the response as long as it works most of the time :)
+	api
+		.post( '/containers/' + container.container_id + '/stop' )
+		.end();
 }
 
 export function createSandboxForSite( site, cb ) {
