@@ -1,4 +1,5 @@
 const spawn = require('child_process').spawnSync;
+const Table = require( 'cli-table' );
 
 // Ours
 const api = require( './api' );
@@ -69,16 +70,40 @@ export function runCommand( container, command ) {
 
 export function createSandboxForSite( site, cb ) {
 	api
-		.post( '/sandboxes' )
-		.send({ 'client_site_id': site.client_site_id })
-		.end( err => {
+		.get( '/sandboxes' )
+		.query({ 'api_user_id': api.auth.apiUserId, 'state': 'any' })
+		.end( ( err, res ) => {
 			if ( err ) {
 				return cb( err );
 			}
 
-			waitForRunningSandbox( site, ( err, sandbox ) => {
-				cb( err, sandbox );
-			});
+			var total = res.body.totalrecs;
+			var running = res.body.data.filter(s => {
+				return s.containers[0].state == 'running';
+			}).length;
+
+			if ( running >= 6 ) {
+				console.error( 'Error: Too many running sandbox containers. Clean some of them up with `vip sandbox stop <site>` before creating another.' );
+				listSandboxes();
+				return;
+			}
+
+			if ( total >= 6 ) {
+				console.log( 'Warning: There are more than 5 total sandbox containers on this host. Consider deleting some unused ones with `vip sandbox delete <site>`' );
+			}
+
+			api
+				.post( '/sandboxes' )
+				.send({ 'client_site_id': site.client_site_id })
+				.end( err => {
+					if ( err ) {
+						return cb( err );
+					}
+
+					waitForRunningSandbox( site, ( err, sandbox ) => {
+						cb( err, sandbox );
+					});
+				});
 		});
 }
 
@@ -122,4 +147,28 @@ export function waitForRunningSandbox( site, cb ) {
 			cb( err, sbox );
 		});
 	}, 1000 );
+}
+
+export function listSandboxes() {
+	api
+		.get( '/sandboxes' )
+		.query({
+			api_user_id: api.auth.apiUserId,
+			state: 'any',
+		})
+		.end( ( err, res ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			var table = new Table({
+				head: [ 'ID', 'Site Name', 'State' ],
+			});
+
+			res.body.data.forEach(s => {
+				table.push([ s.site.client_site_id, s.site.name || s.site.domain_name, s.containers[0].state ]);
+			});
+
+			console.log( table.toString() );
+		});
 }
