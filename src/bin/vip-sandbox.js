@@ -44,11 +44,11 @@ program
 				}
 
 				var table = new Table({
-					head: [ 'Site Name', 'State' ],
+					head: [ 'ID', 'Site Name', 'State' ],
 				});
 
 				res.body.data.forEach(s => {
-					table.push([ s.site.name || s.site.domain_name, s.containers[0].state ]);
+					table.push([ s.site.client_site_id, s.site.name || s.site.domain_name, s.containers[0].state ]);
 				});
 
 				console.log( table.toString() );
