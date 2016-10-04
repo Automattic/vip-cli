@@ -58,36 +58,7 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				switch( sbox.state ) {
-					case 'stopped':
-						return api
-							.post( '/containers/' + sbox.container_id + '/start' )
-							.end( ( err, res ) => {
-								if ( err ) {
-									return console.error( err );
-								}
-
-								sandbox.waitForRunningSandbox( site, ( err, sbox ) => {
-									sandbox.runCommand( sbox );
-								});
-							});
-					case 'paused':
-						return api
-							.post( '/containers/' + sbox.container_id + '/unpause' )
-							.end( ( err, res ) => {
-								if ( err ) {
-									return console.error( err.response.error );
-								}
-
-								sandbox.waitForRunningSandbox( site, ( err, sbox ) => {
-									sandbox.runCommand( sbox );
-								});
-							});
-					case 'running':
-						return sandbox.runCommand( sbox );
-					default:
-						return console.error( 'Cannot start sandbox for requested site' );
-				}
+				sandbox.runOnExistingContainer( site, sbox );
 			});
 		});
 	});

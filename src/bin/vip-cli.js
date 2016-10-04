@@ -29,11 +29,11 @@ program
 							return console.error( err );
 						}
 
-						sandbox.runCommand( sbox, command );
+						sandbox.runOnExistingContainer( site, sbox, command );
 					});
 				}
 
-				sandbox.runCommand( sbox, command );
+				sandbox.runOnExistingContainer( site, sbox, command );
 			});
 		});
 	});
