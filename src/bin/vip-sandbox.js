@@ -52,7 +52,8 @@ program
 program
 	.command( 'stop <site>' )
 	.description( 'Stop existing sandbox' )
-	.action( site => {
+	.option( '--all', 'Stop all running sandbox containers' )
+	.action( ( site, options ) => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
 				return console.error( err );
@@ -62,7 +63,7 @@ program
 				return console.error( 'Specified site does not exist. Try the ID.' );
 			}
 
-			sandbox.getSandboxForSite( site, ( err, sbox ) => {
+			sandbox.getSandboxesForSite( site, ( err, sbox ) => {
 				if ( err ) {
 					return console.error( err );
 				}
@@ -71,21 +72,35 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				switch( sbox.state ) {
-					case 'running':
-					case 'paused':
-						return api
-							.post( '/containers/' + sbox.container_id + '/stop' )
-							.end( err => {
-								if ( err ) {
-									console.error( err.response.error );
-								}
-							});
-					case 'stopped':
-						return console.error( 'Requested container is already stopped' );
-					default:
-						return console.error( 'Cannot stop sandbox for requested site' );
+				if ( ! options.all ) {
+					sbox = sbox.slice(0, 1);
 				}
+
+				sbox.forEach(sbox => {
+					switch( sbox.state ) {
+						case 'running':
+						case 'paused':
+							return api
+								.post( '/containers/' + sbox.container_id + '/stop' )
+								.end( err => {
+									if ( err ) {
+										console.error( err.response.error );
+									}
+								});
+					}
+
+					// We don't care about non-running containers for bulk actions
+					if ( options.all ) {
+						return;
+					}
+
+					switch( sbox.state ) {
+						case 'stopped':
+							return console.error( 'Requested container is already stopped' );
+						default:
+							return console.error( 'Cannot stop sandbox for requested site' );
+					}
+				});
 			});
 		});
 	});
@@ -93,7 +108,8 @@ program
 program
 	.command( 'pause <site>' )
 	.description( 'Pause existing sandbox' )
-	.action( site => {
+	.option( '--all', 'Pause all running sandbox containers' )
+	.action( ( site, options ) => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
 				return console.error( err );
@@ -103,7 +119,7 @@ program
 				return console.error( 'Specified site does not exist. Try the ID.' );
 			}
 
-			sandbox.getSandboxForSite( site, ( err, sbox ) => {
+			sandbox.getSandboxesForSite( site, ( err, sbox ) => {
 				if ( err ) {
 					return console.error( err );
 				}
@@ -112,8 +128,12 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				switch( sbox.state ) {
-					case 'running':
+				if ( ! options.all ) {
+					sbox = sbox.slice(0, 1);
+				}
+
+				sbox.forEach(sbox => {
+					if ( sbox.state == 'running' ) {
 						return api
 							.post( '/containers/' + sbox.container_id + '/pause' )
 							.end( err => {
@@ -121,11 +141,20 @@ program
 									console.error( err.response.error );
 								}
 							});
-					case 'paused':
-						return console.error( 'Requested sandbox is already paused' );
-					default:
-						return console.error( 'Cannot pause sandbox for requested site' );
-				}
+					}
+
+					// We don't care about non-running containers for bulk actions
+					if ( options.all ) {
+						return;
+					}
+
+					switch( sbox.state ) {
+						case 'paused':
+							return console.error( 'Requested sandbox is already paused' );
+						default:
+							return console.error( 'Cannot pause sandbox for requested site' );
+					}
+				});
 			});
 		});
 	});
@@ -133,7 +162,8 @@ program
 program
 	.command( 'delete <site>' )
 	.description( 'Delete existing sandbox' )
-	.action( site => {
+	.option( '--all', 'Delete all stopped sandbox containers' )
+	.action( ( site, options ) => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
 				return console.error( err );
@@ -143,7 +173,7 @@ program
 				return console.error( 'Specified site does not exist. Try the ID.' );
 			}
 
-			sandbox.getSandboxForSite( site, ( err, sbox ) => {
+			sandbox.getSandboxesForSite( site, ( err, sbox ) => {
 				if ( err ) {
 					return console.error( err );
 				}
@@ -152,8 +182,8 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				if ( sbox.state !== 'stopped' ) {
-					return console.error( 'Requested sandbox must be stopped before it can be deleted' );
+				if ( ! options.all ) {
+					sbox = sbox.slice(0, 1);
 				}
 
 				promptly.confirm( 'Warning: Deleting this container will destroy uncomitted work. Are you sure?', ( err, yes ) => {
@@ -161,13 +191,19 @@ program
 						return;
 					}
 
-					api
-						.post( '/containers/' + sbox.container_id + '/delete' )
-						.end( err => {
-							if ( err ) {
-								return console.error( err.response.error );
-							}
-						});
+					sbox.forEach(sbox => {
+						if ( sbox.state !== 'stopped' ) {
+							return console.error( 'Requested sandbox must be stopped before it can be deleted' );
+						}
+
+						api
+							.post( '/containers/' + sbox.container_id + '/delete' )
+							.end( err => {
+								if ( err ) {
+									return console.error( err.response.error );
+								}
+							});
+					});
 				});
 			});
 		});

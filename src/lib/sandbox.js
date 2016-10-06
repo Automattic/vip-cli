@@ -108,6 +108,16 @@ export function createSandboxForSite( site, cb ) {
 }
 
 export function getSandboxForSite( site, cb ) {
+	getSandboxesForSite( site, ( err, containers ) => {
+		if ( ! containers ) {
+			return cb( err, null );
+		}
+
+		return cb( err, containers[0] );
+	});
+}
+
+export function getSandboxesForSite( site, cb ) {
 	api
 		.get( '/sandboxes' )
 		.query({
@@ -126,7 +136,7 @@ export function getSandboxForSite( site, cb ) {
 				return cb( null );
 			}
 
-			return cb( null, data[0].containers[0] );
+			return cb( null, data[0].containers );
 		});
 }
 
@@ -162,11 +172,11 @@ export function listSandboxes() {
 			}
 
 			var table = new Table({
-				head: [ 'ID', 'Site Name', 'State' ],
+				head: [ 'ID', 'Site Name', 'State', 'Count' ],
 			});
 
 			res.body.data.forEach(s => {
-				table.push([ s.site.client_site_id, s.site.name || s.site.domain_name, s.containers[0].state ]);
+				table.push([ s.site.client_site_id, s.site.name || s.site.domain_name, s.containers[0].state, s.containers.length ]);
 			});
 
 			console.log( table.toString() );
