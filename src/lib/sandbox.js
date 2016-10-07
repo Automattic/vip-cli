@@ -159,26 +159,51 @@ export function waitForRunningSandbox( site, cb ) {
 	}, 1000 );
 }
 
-export function listSandboxes() {
+export function listSandboxes( opts, cb ) {
+	var query = {
+		api_user_id: api.auth.apiUserId,
+		state: 'any',
+	};
+
+	if ( opts && opts.client_site_id ) {
+		query.client_site_id = opts.client_site_id;
+	}
+
 	api
 		.get( '/sandboxes' )
-		.query({
-			api_user_id: api.auth.apiUserId,
-			state: 'any',
-		})
+		.query( query )
 		.end( ( err, res ) => {
 			if ( err ) {
 				return console.error( err );
 			}
 
+			var headers = [ 'Site ID', 'Site Name', 'State' ];
+
+			if ( opts && opts.index ) {
+				headers.unshift( '#' );
+			}
+
 			var table = new Table({
-				head: [ 'ID', 'Site Name', 'State', 'Count' ],
+				head: headers,
 			});
 
+			var i = 1;
 			res.body.data.forEach(s => {
-				table.push([ s.site.client_site_id, s.site.name || s.site.domain_name, s.containers[0].state, s.containers.length ]);
+				s.containers.forEach(c => {
+					var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
+
+					if ( opts && opts.index ) {
+						row.unshift( i++ );
+					}
+
+					table.push(row);
+				});
 			});
 
 			console.log( table.toString() );
+
+			if ( cb ) {
+				cb();
+			}
 		});
 }

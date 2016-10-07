@@ -9,6 +9,22 @@ const api = require( '../lib/api' );
 const sandbox = require( '../lib/sandbox' );
 const utils = require( '../lib/utils' );
 
+function maybePrompt( site, prompt, cb ) {
+	if ( prompt ) {
+		sandbox.listSandboxes( { client_site_id: site, index: true }, () => {
+			promptly.prompt( 'Which container?', { default: 1 }, ( err, container ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				cb( container );
+			});
+		});
+	} else {
+		cb()
+	}
+}
+
 program
 	.command( 'list' )
 	.description( 'List existing sandboxes' )
@@ -72,34 +88,38 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				if ( ! options.all ) {
-					sbox = sbox.slice(0, 1);
-				}
-
-				sbox.forEach(sbox => {
-					switch( sbox.state ) {
-						case 'running':
-						case 'paused':
-							return api
-								.post( '/containers/' + sbox.container_id + '/stop' )
-								.end( err => {
-									if ( err ) {
-										console.error( err.response.error );
-									}
-								});
+				maybePrompt( site.client_site_id, sbox.length > 1 && ! options.all, container => {
+					if ( container < 1 || container > sbox.length ) {
+						return console.error( 'Invalid container' );
+					} else if ( container ) {
+						sbox = sbox.slice(container - 1, container);
 					}
 
-					// We don't care about non-running containers for bulk actions
-					if ( options.all ) {
-						return;
-					}
+					sbox.forEach(sbox => {
+						switch( sbox.state ) {
+							case 'running':
+							case 'paused':
+								return api
+									.post( '/containers/' + sbox.container_id + '/stop' )
+									.end( err => {
+										if ( err ) {
+											console.error( err.response.error );
+										}
+									});
+						}
 
-					switch( sbox.state ) {
-						case 'stopped':
-							return console.error( 'Requested container is already stopped' );
-						default:
-							return console.error( 'Cannot stop sandbox for requested site' );
-					}
+						// We don't care about non-running containers for bulk actions
+						if ( options.all ) {
+							return;
+						}
+
+						switch( sbox.state ) {
+							case 'stopped':
+								return console.error( 'Requested container is already stopped' );
+							default:
+								return console.error( 'Cannot stop sandbox for requested site' );
+						}
+					});
 				});
 			});
 		});
@@ -128,32 +148,36 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				if ( ! options.all ) {
-					sbox = sbox.slice(0, 1);
-				}
-
-				sbox.forEach(sbox => {
-					if ( sbox.state == 'running' ) {
-						return api
-							.post( '/containers/' + sbox.container_id + '/pause' )
-							.end( err => {
-								if ( err ) {
-									console.error( err.response.error );
-								}
-							});
+				maybePrompt( site.client_site_id, sbox.length > 1 && ! options.all, container => {
+					if ( container < 1 || container > sbox.length ) {
+						return console.error( 'Invalid container' );
+					} else if ( container ) {
+						sbox = sbox.slice(container - 1, container);
 					}
 
-					// We don't care about non-running containers for bulk actions
-					if ( options.all ) {
-						return;
-					}
+					sbox.forEach(sbox => {
+						if ( sbox.state == 'running' ) {
+							return api
+								.post( '/containers/' + sbox.container_id + '/pause' )
+								.end( err => {
+									if ( err ) {
+										console.error( err.response.error );
+									}
+								});
+						}
 
-					switch( sbox.state ) {
-						case 'paused':
-							return console.error( 'Requested sandbox is already paused' );
-						default:
-							return console.error( 'Cannot pause sandbox for requested site' );
-					}
+						// We don't care about non-running containers for bulk actions
+						if ( options.all ) {
+							return;
+						}
+
+						switch( sbox.state ) {
+							case 'paused':
+								return console.error( 'Requested sandbox is already paused' );
+							default:
+								return console.error( 'Cannot pause sandbox for requested site' );
+						}
+					});
 				});
 			});
 		});
@@ -182,27 +206,31 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				if ( ! options.all ) {
-					sbox = sbox.slice(0, 1);
-				}
-
-				promptly.confirm( 'Warning: Deleting this container will destroy uncomitted work. Are you sure?', ( err, yes ) => {
-					if ( ! yes ) {
-						return;
+				maybePrompt( site.client_site_id, sbox.length > 1 && ! options.all, container => {
+					if ( container < 1 || container > sbox.length ) {
+						return console.error( 'Invalid container' );
+					} else if ( container ) {
+						sbox = sbox.slice(container - 1, container);
 					}
 
-					sbox.forEach(sbox => {
-						if ( sbox.state !== 'stopped' ) {
-							return console.error( 'Requested sandbox must be stopped before it can be deleted' );
+					promptly.confirm( 'Warning: Deleting this container will destroy uncomitted work. Are you sure?', ( err, yes ) => {
+						if ( ! yes ) {
+							return;
 						}
 
-						api
-							.post( '/containers/' + sbox.container_id + '/delete' )
-							.end( err => {
-								if ( err ) {
-									return console.error( err.response.error );
-								}
-							});
+						sbox.forEach(sbox => {
+							if ( sbox.state !== 'stopped' ) {
+								return console.error( 'Requested sandbox must be stopped before it can be deleted' );
+							}
+
+							api
+								.post( '/containers/' + sbox.container_id + '/delete' )
+								.end( err => {
+									if ( err ) {
+										return console.error( err.response.error );
+									}
+								});
+						});
 					});
 				});
 			});
