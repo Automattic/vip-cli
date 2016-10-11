@@ -113,7 +113,7 @@ export function findSite( domain, cb ) {
 }
 
 export function findAndConfirmSite( site, cb ) {
-	utils.findSite( site, ( err, s ) => {
+	findSite( site, ( err, s ) => {
 		if ( err ) {
 			return console.error( err );
 		}
