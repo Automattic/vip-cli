@@ -51,11 +51,6 @@ export function runCommand( container, command ) {
 		run.push( 'bash' );
 	} else {
 		run = run.concat( command );
-
-		// TODO: Define this in wp-cli.yml
-		if ( "wp" == command[0] ) {
-			run.push( '--path=/var/www' );
-		}
 	}
 
 	// TODO: Handle file references as arguments
