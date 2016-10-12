@@ -8,10 +8,10 @@ export function runOnExistingContainer( site, sbox, command ) {
 	switch( sbox.state ) {
 		case 'stopped':
 			return api
-			.post( '/containers/' + sbox.container_id + '/start' )
+			.post( '/sandboxes/' + sbox.id )
 			.end( ( err, res ) => {
 				if ( err ) {
-					return console.error( err );
+					return console.error( err.response.error );
 				}
 
 				waitForRunningSandbox( site, ( err, sbox ) => {
@@ -136,7 +136,12 @@ export function getSandboxesForSite( site, cb ) {
 				return cb( null );
 			}
 
-			return cb( null, data[0].containers );
+			var containers = data[0].containers.map(c => {
+				c.id = data[0].id;
+				return c;
+			});
+
+			return cb( null, containers );
 		});
 }
 
