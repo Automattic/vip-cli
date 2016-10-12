@@ -100,7 +100,7 @@ program
 							case 'running':
 							case 'paused':
 								return api
-									.post( '/containers/' + sbox.container_id + '/stop' )
+									.post( '/sandboxes/' + sbox.id + '/stop' )
 									.end( err => {
 										if ( err ) {
 											console.error( err.response.error );
