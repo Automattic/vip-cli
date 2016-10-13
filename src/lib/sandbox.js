@@ -1,5 +1,6 @@
 const spawn = require('child_process').spawnSync;
 const Table = require( 'cli-table' );
+const colors = require( 'colors/safe' );
 
 // Ours
 const api = require( './api' );
@@ -185,11 +186,30 @@ export function listSandboxes( opts, cb ) {
 
 			var table = new Table({
 				head: headers,
+				style: {
+					head: ['blue'],
+				}
 			});
 
 			var i = 1;
 			res.body.data.forEach(s => {
 				s.containers.forEach(c => {
+					switch ( c.state ) {
+						case 'stopped':
+						case 'stopping':
+							c.state = colors['red'](c.state);
+							break;
+
+						case 'paused':
+						case 'pausing':
+							c.state = colors['yellow'](c.state);
+							break;
+
+						case 'running':
+							c.state = colors['green'](c.state);
+							break;
+					}
+
 					var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
 
 					if ( opts && opts.index ) {
