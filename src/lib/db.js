@@ -2,6 +2,12 @@ const fs = require( 'fs' );
 const spawn = require('child_process').spawn;
 const PV = require( 'node-pv' );
 const Throttle = require( 'throttle' );
+const path = require('path');
+
+// zlib
+const zlib = require('zlib');
+const gunzip = zlib.createGunzip();
+const unzip = zlib.createUnzip();
 
 // Ours
 const api = require( './api' );
@@ -44,6 +50,18 @@ export function importDB( site, file, callback ) {
 		var throttle = new Throttle( 1 * 1024 * 1024 ); // 1mbps
 		var stream = fs.createReadStream( file );
 		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
+
+		// Handle compressed mysqldumps
+		switch( path.extname(file) ) {
+			case '.gz':
+				stream = stream.pipe(gunzip);
+				break;
+
+			case '.zip':
+				stream = stream.pipe(unzip);
+				break;
+		}
+
 		stream.pipe(throttle).pipe(pv).pipe( importdb.stdin );
 	});
 }
