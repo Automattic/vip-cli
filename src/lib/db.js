@@ -32,7 +32,13 @@ function getConnection( site, callback ) {
 		});
 }
 
-export function importDB( site, file, callback ) {
+export function importDB( site, file, opts, callback ) {
+
+	// Default opts
+	opts = Object.assign({
+		throttle: 1, // 1 MB
+	}, opts);
+
 	getConnection( site, ( err, args ) => {
 		if ( err ) {
 			return callback( err );
@@ -47,7 +53,7 @@ export function importDB( site, file, callback ) {
 			process.stderr.write( info );
 		});
 
-		var throttle = new Throttle( 1 * 1024 * 1024 ); // 1mbps
+		var throttle = new Throttle( 1024 * 1024 * opts.throttle );
 		var stream = fs.createReadStream( file );
 		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
 
