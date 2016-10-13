@@ -162,15 +162,20 @@ program
 	.command( 'sql <site> <file>' )
 	.alias( 'database' )
 	.description( 'Import SQL to a VIP Go site' )
-	.action( ( site, file ) => {
+	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
+	.action( ( site, file, options ) => {
 		try {
 			var mysql_exists = which.sync( 'mysql' );
 		} catch (e) {
 			return console.error( 'MySQL client is required and not installed.' );
 		}
 
+		var opts = {
+			throttle: options.throttle,
+		};
+
 		utils.findAndConfirmSite( site, site => {
-			db.importDB( site, file, err => {
+			db.importDB( site, file, opts, err => {
 				if ( err ) {
 					return console.error( err );
 				}
