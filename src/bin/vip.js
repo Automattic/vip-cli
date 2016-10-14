@@ -14,6 +14,8 @@ const packageJSON = require( '../../package.json' );
 const utils = require( '../lib/utils' );
 const api = require( '../lib/api' );
 
+var hostname = require('os').hostname();
+var is_sandbox = hostname.substring(hostname.length - 9) === 'vipv2.net';
 var is_vip = false;
 var noAuth = [
 	'login',
@@ -49,8 +51,12 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'db <site>', 'Connect to a given VIP Go database' )
 			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
 			.command( 'import', 'Import to VIP Go' )
-			.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
-			.command( 'stacks <action>', 'Maintain software stacks on the current host' )
+
+		if (!!is_sandbox) {
+			program
+				.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
+				.command( 'stacks <action>', 'Maintain software stacks on the current host' )
+		}
 
 		tab.on( 'deploy', ( data, done ) => {
 			api
