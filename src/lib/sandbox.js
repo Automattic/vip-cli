@@ -175,7 +175,7 @@ export function listSandboxes( opts, cb ) {
 		.query( query )
 		.end( ( err, res ) => {
 			if ( err ) {
-				return console.error( err );
+				return console.error( err.response.error );
 			}
 
 			var headers = [ 'Site ID', 'Site Name', 'State' ];

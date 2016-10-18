@@ -17,7 +17,7 @@ function getConnection( site, callback ) {
 		.get( '/sites/' + site.client_site_id + '/masterdb' )
 		.end( ( err, res ) => {
 			if ( err ) {
-				return callback( err );
+				return callback( err.response.error );
 			}
 
 			var args = [
