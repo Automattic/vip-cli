@@ -58,7 +58,7 @@ export function exportDB( site, callback ) {
 	});
 }
 
-export function getCLI( site, connection ) {
+export function getCLI( site, callback ) {
 	getConnection( site, ( err, args ) => {
 		if ( err ) {
 			return callback( err );
