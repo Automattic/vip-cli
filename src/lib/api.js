@@ -13,6 +13,8 @@ utils.getCredentials( function( err, credentials ) {
 	api.auth.token = credentials.accessToken;
 });
 
+export const auth = api.auth;
+
 function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
