@@ -2,6 +2,7 @@ const fs = require( 'fs' );
 const crypto = require( 'crypto' );
 const promptly = require( 'promptly' );
 const vip = require( 'vip' );
+const url = require( 'url' );
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
@@ -90,9 +91,10 @@ export function findSite( domain, cb ) {
 		request = api
 			.get( '/sites/' + domain );
 	} else {
+		var u = url.parse( domain );
 		request = api
 			.get( '/sites' )
-			.query({ domain_name: domain });
+			.query({ domain_name: u.host || domain });
 	}
 
 	return request
