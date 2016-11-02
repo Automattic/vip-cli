@@ -42,7 +42,7 @@ program
 
 program
 	.command( 'start <site>' )
-	.description( 'Start a sandbox' )
+	.description( 'Start a sandbox and switch you to the container namespace' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
