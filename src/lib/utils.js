@@ -3,6 +3,7 @@ const crypto = require( 'crypto' );
 const promptly = require( 'promptly' );
 const vip = require( 'vip' );
 const url = require( 'url' );
+const path = require( 'path' );
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
@@ -141,4 +142,15 @@ export function findAndConfirmSite( site, cb ) {
 			cb( s );
 		});
 	});
+}
+
+export function mkdirp( dir ) {
+	var parent = path.dirname( dir );
+
+	try {
+		fs.statSync( dir );
+	} catch (e) {
+		mkdirp( parent );
+		fs.mkdirSync( dir );
+	}
 }
