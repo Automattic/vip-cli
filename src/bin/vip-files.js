@@ -31,7 +31,7 @@ program
 						return console.error( err.response.error );
 					}
 
-					var bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: res.body.totalrecs, incomplete: ' ', renderThrottle: 100 } );
+					var bar = new progress( 'Exporting [:bar] :percent (:current/:total) :etas', { total: res.body.totalrecs, incomplete: ' ', renderThrottle: 100 } );
 
 					async.timesSeries( Math.ceil( res.body.totalrecs / 100 ), function( i, cb ) {
 						api
