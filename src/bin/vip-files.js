@@ -13,7 +13,7 @@ const utils = require('../lib/utils');
 
 program
 	.arguments( '<site>' )
-	.option( '-d, --directory <dir>', 'Download directory' )
+	.option( '-d, --directory <dir>', 'Destination directory' )
 	.action( (site, options) => {
 		// TODO: validate options.directory
 		utils.findSite( site, ( err, site ) => {
