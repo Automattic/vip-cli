@@ -50,6 +50,7 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'api <method> <endpoint>', 'Authenticated API requests' )
 			.command( 'db <site>', 'Connect to a given VIP Go database' )
 			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
+			.command( 'files <site>', 'Export files for a site' )
 			.command( 'import', 'Import to VIP Go' )
 
 		if (!!is_sandbox) {
