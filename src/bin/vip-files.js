@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const program = require('commander');
-const http = require( 'http' );
+const https = require( 'https' );
 const fs = require( 'fs' );
 const path = require( 'path' );
 const async = require( 'async' );
@@ -52,11 +52,15 @@ program
 
 									// Download the file
 									var filedata = {
-										host: site.domain_name,
-										path: file.file_path
+										host: 'files.vipv2.net',
+										servername: 'files.vipv2.net',
+										path: file.file_path,
+										headers: {
+											'Host': site.domain_name
+										}
 									};
 
-									http.get( filedata, download => {
+									https.get( filedata, download => {
 										download.pipe( newFile );
 									});
 
