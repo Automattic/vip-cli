@@ -5,6 +5,7 @@ const http = require( 'http' );
 const fs = require( 'fs' );
 const path = require( 'path' );
 const async = require( 'async' );
+const progress = require( 'progress' );
 
 // Ours
 const api = require('../lib/api');
@@ -30,8 +31,8 @@ program
 						return console.error( err.response.error );
 					}
 
-					// TODO: Set up progress bar
-					
+					var bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: res.body.totalrecs, incomplete: ' ', renderThrottle: 100 } );
+
 					async.timesSeries( Math.ceil( res.body.totalrecs / 100 ), function( i, cb ) {
 						api
 							.get( '/sites/' + site.client_site_id + '/files' )
@@ -58,6 +59,8 @@ program
 									http.get( filedata, download => {
 										download.pipe( newFile );
 									});
+
+									bar.tick();
 								});
 
 								cb();
