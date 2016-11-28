@@ -43,7 +43,7 @@ program
 								}
 
 								// Download all the files
-								response.body.data.forEach(file => {
+								async.eachLimit( response.body.data, 5, ( file, callback ) => {
 									var dest = options.directory + file.file_path;
 									var dir = path.dirname( dest );
 
@@ -62,12 +62,15 @@ program
 
 									https.get( filedata, download => {
 										download.pipe( newFile );
+										download.on("end", () => {
+											bar.tick();
+											newFile.close( callback );
+										}).on("error", err => {
+											fs.unlink( dest );
+											callback( err );
+										});
 									});
-
-									bar.tick();
-								});
-
-								cb();
+								}, err => cb( err ) );
 							});
 					});
 				});
