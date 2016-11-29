@@ -9,7 +9,12 @@ export function get( file, callback ) {
 		return callback( e );
 	}
 
-	data = JSON.parse( data );
+	try {
+		data = JSON.parse( data );
+	} catch (e) {
+		return callback( e );
+	}
+
 	return callback( null, data );
 }
 
@@ -20,7 +25,11 @@ export function set( file, update = {}, callback ) {
 		if ( err ) {
 			data = {}
 		} else {
-			data = JSON.parse( data )
+			try {
+				data = JSON.parse( data )
+			} catch (e) {
+				return callback( e );
+			}
 		}
 
 		data = Object.assign( data, update );

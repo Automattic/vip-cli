@@ -57,6 +57,10 @@ export function runCommand( container, command ) {
 
 	// TODO: Handle file references as arguments
 	config.get( 'sbox', ( err, list ) => {
+		if ( err ) {
+			return console.error( err );
+		}
+
 		if ( ! list ) {
 			list = {};
 		}
@@ -68,19 +72,31 @@ export function runCommand( container, command ) {
 		}
 
 		config.set( 'sbox', list, err => {
+			if ( err ) {
+				return console.error( err );
+			}
+
 			spawn( 'docker', run, { stdio: 'inherit' } );
 
 			config.get( 'sbox', ( err, list ) => {
-				list[ container.container_name ]--;
-				config.set( 'sbox', list );
-
-				if ( list[ container.container_name ] == 0 ) {
-					// Stop the container when we're done with it
-					// We don't strictly care about the response as long as it works most of the time :)
-					api
-						.post( '/containers/' + container.container_id + '/stop' )
-						.end();
+				if ( err ) {
+					return console.error( err );
 				}
+
+				list[ container.container_name ]--;
+				config.set( 'sbox', list, err => {
+					if ( err ) {
+						return console.error( err );
+					}
+
+					if ( list[ container.container_name ] == 0 ) {
+						// Stop the container when we're done with it
+						// We don't strictly care about the response as long as it works most of the time :)
+						api
+							.post( '/containers/' + container.container_id + '/stop' )
+							.end();
+					}
+				});
 			});
 		});
 	});
