@@ -4,6 +4,7 @@ const colors = require( 'colors/safe' );
 
 // Ours
 const api = require( './api' );
+const config = require( './config' );
 
 export function runOnExistingContainer( site, sbox, command ) {
 	switch( sbox.state ) {
@@ -55,13 +56,50 @@ export function runCommand( container, command ) {
 	}
 
 	// TODO: Handle file references as arguments
-	spawn( 'docker', run, { stdio: 'inherit' } );
+	config.get( 'sbox', ( err, list ) => {
+		if ( err ) {
+			return console.error( err );
+		}
 
-	// Stop the container when we're done with it
-	// We don't strictly care about the response as long as it works most of the time :)
-	api
-		.post( '/containers/' + container.container_id + '/stop' )
-		.end();
+		if ( ! list ) {
+			list = {};
+		}
+
+		if ( ! list[ container.container_name ] ) {
+			list[ container.container_name ] = 1;
+		} else {
+			list[ container.container_name ]++;
+		}
+
+		config.set( 'sbox', list, err => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			spawn( 'docker', run, { stdio: 'inherit' } );
+
+			config.get( 'sbox', ( err, list ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				list[ container.container_name ]--;
+				config.set( 'sbox', list, err => {
+					if ( err ) {
+						return console.error( err );
+					}
+
+					if ( list[ container.container_name ] == 0 ) {
+						// Stop the container when we're done with it
+						// We don't strictly care about the response as long as it works most of the time :)
+						api
+							.post( '/containers/' + container.container_id + '/stop' )
+							.end();
+					}
+				});
+			});
+		});
+	});
 }
 
 export function createSandboxForSite( site, cb ) {
