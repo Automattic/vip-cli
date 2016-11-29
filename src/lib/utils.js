@@ -8,6 +8,8 @@ const path = require( 'path' );
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
 
+const config = require( './config' );
+
 export function encrypt( data, key ) {
 	var cryptkey = crypto.createHash( 'sha256' ).update( key + s_token_ky + key ).digest();
 	var encipher = crypto.createCipheriv( 'aes-256-cbc', cryptkey, s_token_iv );
@@ -27,11 +29,7 @@ export function decrypt( data, key ) {
 }
 
 export function deleteCredentials() {
-	try {
-		fs.unlinkSync( '/tmp/.vip-go-api' );
-	} catch ( e ) {
-		// We don't care if the file already doesn't exist.
-	}
+	config.del( 'login' );
 }
 
 export function setCredentials( credentials, callback ) {
@@ -55,35 +53,31 @@ export function setCredentials( credentials, callback ) {
 			var encoded = this.encrypt( credentials.accessToken, credentials.userId );
 			credentials.accessToken = encoded;
 
-			credentials = JSON.stringify( credentials );
-			fs.writeFileSync('/tmp/.vip-go-api', credentials );
-
-			return callback( null, credentials );
+			config.set( 'login', credentials, err => callback( err, credentials ) );
 		});
 }
 
 export function getCredentials( callback ) {
-	try {
-		var r = fs.readFileSync( '/tmp/.vip-go-api', 'utf8' );
-	} catch (e) {
-		return callback( 'Could not get credentials' );
-	}
+	config.get( 'login', function( err, r ) {
+		if ( err ) {
+			return callback( 'Could not get credentials' );
+		}
 
-	r = JSON.parse( r );
+		if ( ! r.accessToken ) {
+			console.log( 'no access token' );
+			return callback( 'Invalid login credentials' );
+		}
 
-	if ( ! r.accessToken ) {
-		return;
-	}
+		try {
+			var decoded = decrypt( r.accessToken, r.userId );
+		} catch (e) {
+			config.del( 'login' )
+			return callback( 'Could not decrypt credentials' );
+		}
 
-	try {
-		var decoded = this.decrypt( r.accessToken, r.userId );
-	} catch (e) {
-		fs.unlinkSync( '/tmp/.vip-go-api' );
-	}
-
-	r.accessToken = decoded;
-
-	return callback( null, r );
+		r.accessToken = decoded;
+		return callback( null, r );
+	});
 }
 
 export function findSite( domain, cb ) {
