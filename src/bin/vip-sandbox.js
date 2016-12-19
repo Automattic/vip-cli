@@ -194,32 +194,18 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				maybePrompt( site.client_site_id, sbox.length > 1 && ! options.all, container => {
-					if ( container < 1 || container > sbox.length ) {
-						return console.error( 'Invalid container' );
-					} else if ( container ) {
-						sbox = sbox.slice(container - 1, container);
+				maybeConfirm( 'This will delete all containers for site '  + sbox[0].client_site_id + '. Are you sure?', sbox.length > 1, ( err, yes ) => {
+					if ( ! yes ) {
+						return;
 					}
 
-					promptly.confirm( 'Warning: Deleting this container will destroy uncomitted work. Are you sure?', ( err, yes ) => {
-						if ( ! yes ) {
-							return;
-						}
-
-						sbox.forEach(sbox => {
-							if ( sbox.state !== 'stopped' ) {
-								return console.error( 'Requested sandbox must be stopped before it can be deleted' );
+					return api
+						.del( '/sandboxes/' + sbox[0].id )
+						.end( err => {
+							if ( err ) {
+								console.error( err.response.error );
 							}
-
-							api
-								.post( '/containers/' + sbox.container_id + '/delete' )
-								.end( err => {
-									if ( err ) {
-										return console.error( err.response.error );
-									}
-								});
 						});
-					});
 				});
 			});
 		});
