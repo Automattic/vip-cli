@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+echo 'Removing tab-completion...'
+tabtab uninstall --name vip --auto || echo "-- Failed to remove tab-completion :("
+
+echo 'Removing config...'
+rm -rfi ~/.vip-cli
