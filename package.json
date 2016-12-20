@@ -36,6 +36,7 @@
     "superagent": "^2.0.0",
     "tabtab": "^2.0.0",
     "throttle": "^1.0.3",
+    "update-notifier": "^1.0.3",
     "vip": "automattic/vip-js-sdk",
     "which": "^1.2.10"
   },

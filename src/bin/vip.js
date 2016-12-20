@@ -8,11 +8,15 @@ process.title = 'vip';
 
 const program = require( 'commander' );
 const tab = require( 'tabtab' )({ name: 'vip' });
+const updateNotifier = require( 'update-notifier' );
 
 // Ours
-const packageJSON = require( '../../package.json' );
+const pkg = require( '../../package.json' );
 const utils = require( '../lib/utils' );
 const api = require( '../lib/api' );
+
+// Do update notifications
+updateNotifier({ pkg }).notify();
 
 var hostname = require('os').hostname();
 var is_sandbox = hostname.substring(hostname.length - 9) === 'vipv2.net';
@@ -34,7 +38,7 @@ utils.getCredentials( ( err, user ) => {
 	}
 
 	program
-		.version( packageJSON.version )
+		.version( pkg.version )
 		.command( 'login', 'Setup an access token to use with the CLI' )
 
 	program
