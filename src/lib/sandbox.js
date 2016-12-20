@@ -57,10 +57,8 @@ export function runCommand( container, command ) {
 
 	// TODO: Handle file references as arguments
 	config.get( 'sbox', ( err, list ) => {
-		if ( err ) {
-			if ( err.code !== "ENOENT" ) {
-				return console.error( err );
-			}
+		if ( err && err.code !== "ENOENT" ) {
+			return console.error( err );
 		}
 
 		if ( ! list ) {
