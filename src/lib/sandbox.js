@@ -49,10 +49,30 @@ export function runCommand( container, command ) {
 		'env', 'TERM=xterm',
 	];
 
+	let notice = '';
+
 	if ( ! command || command.length < 1 ) {
 		run.push( 'bash' );
+
+		notice = 'Logging in to sandbox container:'
+			+ '\n'
+			+ container.container_name;
 	} else {
 		run = run.concat( command );
+
+		notice = 'Running command:'
+			+ '\n'
+			+ command
+			+ '\n' + '\n'
+			+ 'On container:'
+			+ '\n'
+			+ container.container_name;
+	}
+
+	if ( notice ) {
+		console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+		console.log( notice );
+		console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
 	}
 
 	// TODO: Handle file references as arguments
