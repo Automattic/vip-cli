@@ -18,7 +18,8 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "tabtab install --name vip --auto || echo 'Could not install tab completions'",
-    "prepublish": "babel -q src --out-dir=build"
+    "prepublish": "npm run build",
+    "build": "babel -q src --out-dir=build"
   },
   "bin": {
     "vip": "build/bin/vip.js"
