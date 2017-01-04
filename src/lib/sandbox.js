@@ -5,6 +5,7 @@ const colors = require( 'colors/safe' );
 // Ours
 const api = require( './api' );
 const config = require( './config' );
+const utils = require( './utils' );
 
 export function runOnExistingContainer( site, sbox, command ) {
 	switch( sbox.state ) {
@@ -49,30 +50,24 @@ export function runCommand( container, command ) {
 		'env', 'TERM=xterm',
 	];
 
-	let notice = '';
+	const notice = [];
 
 	if ( ! command || command.length < 1 ) {
 		run.push( 'bash' );
 
-		notice = 'Logging in to sandbox container:'
-			+ '\n'
-			+ container.container_name;
+		notice.push( 'Logging in to sandbox:' );
 	} else {
 		run = run.concat( command );
 
-		notice = 'Running command:'
-			+ '\n'
-			+ command
-			+ '\n' + '\n'
-			+ 'On container:'
-			+ '\n'
-			+ container.container_name;
+		notice.push( 'Running command on container:' );
+		notice.push( `-- Command: ${ command }` );
 	}
 
-	if ( notice ) {
-		console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
-		console.log( notice );
-		console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+	if ( notice.length > 0 ) {
+		notice.push( `-- Container: ${ container.container_name }` );
+		notice.push( `-- Site: ${ container.domain_name } (#${ container.client_site_id })` );
+
+		utils.displayNotice( notice );
 	}
 
 	// TODO: Handle file references as arguments
