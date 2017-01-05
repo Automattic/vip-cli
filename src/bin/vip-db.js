@@ -39,9 +39,13 @@ program
 			}
 
 			var ays = s.environment_name == "production" ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
-			console.log( "Client Site:", s.client_site_id );
-			console.log( "Primary Domain:", s.domain_name );
-			console.log( "Environment:", s.environment_name );
+
+			utils.displayNotice( [
+				'Connecting to database:',
+				`-- Site: ${ s.domain_name } (#${ s.client_site_id })`,
+				'-- Environment: ' + s.environment_name,
+			] );
+
 			promptly.confirm( ays, ( err, t ) => {
 				if ( err ) {
 					return console.error( err );

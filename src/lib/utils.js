@@ -148,3 +148,13 @@ export function mkdirp( dir ) {
 		fs.mkdirSync( dir );
 	}
 }
+
+export function displayNotice( notice ) {
+	if ( ! Array.isArray( notice ) ) {
+		notice = [ notice ];
+	}
+
+	console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+	notice.forEach( msg => console.log( msg ) );
+	console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+}
