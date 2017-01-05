@@ -48,6 +48,25 @@ program
 			});
 	});
 
+program
+	.command( 'deploy' )
+	.description( 'Deploy software stacks across all hosts' )
+	.action( () => {
+		api
+			.post( '/actions/software_update' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( '❌ Failed to deploy software stacks; ', err );
+				}
+
+				if ( res.body.status !== 'success' ) {
+					return console.error( '❌ Failed to deploy software stacks; ', res.body );
+				}
+
+				console.log( `✅ Successfully created host action (#${ res.body.result }); software stacks will be deployed across all hosts shortly.` );
+			} );
+	} );
+
 program.parse(process.argv);
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();
