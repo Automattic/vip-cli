@@ -61,6 +61,7 @@ utils.getCredentials( ( err, user ) => {
 			program
 				.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
 				.command( 'stacks <action>', 'Maintain software stacks on the current host' )
+				.command( 'site <action>', 'Perform actions on a site' )
 		}
 
 		tab.on( 'deploy', ( data, done ) => {
