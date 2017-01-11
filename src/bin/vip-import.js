@@ -33,7 +33,7 @@ program
 			return console.error( 'Invalid uploads directory. Uploads must be in uploads/' );
 		}
 
-		utils.findAndConfirmSite( site, site => {
+		utils.findAndConfirmSite( site, 'Importing files for site:', site => {
 			api
 				.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
 				.end( ( err, res ) => {
@@ -177,7 +177,7 @@ program
 			throttle: options.throttle,
 		};
 
-		utils.findAndConfirmSite( site, site => {
+		utils.findAndConfirmSite( site, 'Importing SQL for site:', site => {
 			db.importDB( site, file, opts, err => {
 				if ( err ) {
 					return console.error( err );
