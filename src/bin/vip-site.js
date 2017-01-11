@@ -33,7 +33,7 @@ program
 								if ( ! action ) {
 									clearInterval( updateCheckInterval );
 									console.log( '' );
-									console.log( 'Update complate 🎉🎉🎉' );
+									console.log( 'Update complete 🎉🎉🎉' );
 									return;
 								}
 
@@ -44,7 +44,8 @@ program
 
 								output.push( '' );
 								output.push( '## wp-cli (`core update-db`) Status:' );
-								output.push( `Action #${ action.host_action_id }: ${ action.status }` );
+								output.push( `Action #${ action.host_action_id }: ${ action.status } on host #${ hostId }` );
+								output.push( '' );
 
 								log( output.join( '\n' ) );
 							} )
