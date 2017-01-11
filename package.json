@@ -16,6 +16,9 @@
   ],
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
+  "engines": {
+    "node" : ">=0.12"
+  },
   "scripts": {
     "postinstall": "tabtab install --name vip --auto || echo 'Could not install tab completions'",
     "postuninstall": "./scripts/postuninstall",
