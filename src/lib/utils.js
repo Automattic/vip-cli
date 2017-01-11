@@ -109,7 +109,7 @@ export function findSite( domain, cb ) {
 		});
 }
 
-export function findAndConfirmSite( site, cb ) {
+export function findAndConfirmSite( site, action, cb ) {
 	findSite( site, ( err, s ) => {
 		if ( err ) {
 			return console.error( err );
@@ -119,9 +119,11 @@ export function findAndConfirmSite( site, cb ) {
 			return console.error( "Couldn't find site:", site );
 		}
 
-		console.log( "Client Site:", s.client_site_id );
-		console.log( "Primary Domain:", s.domain_name );
-		console.log( "Environment:", s.environment_name );
+		displayNotice( [
+			action,
+			`-- Site: ${ s.domain_name } (#${ s.client_site_id })`,
+			'-- Environment: ' + s.environment_name,
+		] );
 
 		promptly.confirm( "Are you sure?", ( err, yes ) => {
 			if ( err ) {
