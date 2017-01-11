@@ -30,13 +30,6 @@ program
 						const hostId = webContainers[0].host_id;
 						hostUtils.getHostAction( hostId, actionId )
 							.then( action => {
-								if ( ! action ) {
-									clearInterval( updateCheckInterval );
-									console.log( '' );
-									console.log( 'Update complete 🎉🎉🎉' );
-									return;
-								}
-
 								const output = [];
 								output.push( `## Container Status (updated ${ new Date().toISOString() }):` );
 
@@ -44,10 +37,21 @@ program
 
 								output.push( '' );
 								output.push( '## wp-cli (`core update-db`) Status:' );
-								output.push( `Action #${ action.host_action_id }: ${ action.status } on host #${ hostId }` );
+
+								if ( action ) {
+									output.push( `Action #${ action.host_action_id }: ${ action.status } on host #${ hostId }` );
+								} else {
+									output.push( `Action #${ actionId }: completed on host #${ hostId }` );
+								}
 								output.push( '' );
 
 								log( output.join( '\n' ) );
+
+								if ( ! action ) {
+									clearInterval( updateCheckInterval );
+									console.log( '' );
+									console.log( 'Update complete 🎉🎉🎉' );
+								}
 							} )
 							.catch( err => console.log( 'Failed to get host action: ' + err.message ) );
 					} )
