@@ -1,4 +1,5 @@
 const program = require( 'commander' );
+const log = require( 'single-line-log' ).stdout;
 
 // Ours
 const api = require( '../lib/api' );
@@ -41,7 +42,7 @@ program
 										return;
 									}
 
-									console.log( 'Updating software stacks. status: ', res.body.data[0].status  );
+									log( 'Software Stack update: ' + res.body.data[0].status + "\n" );
 								});
 						}, 1000 );
 					});
