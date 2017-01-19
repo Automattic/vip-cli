@@ -204,7 +204,7 @@ export function waitForRunningSandbox( site, cb ) {
 			}
 
 			if ( ! sbox || sbox.state !== 'running' ) {
-				return console.log( 'Waiting for sandbox to start...' );
+				return utils.showLoading( 'Waiting for sandbox to start' );
 			}
 
 			clearInterval( poll );
