@@ -4,6 +4,7 @@ const promptly = require( 'promptly' );
 const vip = require( 'vip' );
 const url = require( 'url' );
 const path = require( 'path' );
+const log = require( 'single-line-log' );
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
@@ -159,4 +160,16 @@ export function displayNotice( notice ) {
 	console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
 	notice.forEach( msg => console.log( msg ) );
 	console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+}
+
+let loadingIndex = 0;
+const loadingSprite = [ '.', 'o', 'O', '@', '*' ];
+export function showLoading( msg ) {
+	if ( loadingIndex >= loadingSprite.length ) {
+		loadingIndex = 0;
+	}
+	const loading = loadingSprite[ loadingIndex ];
+	loadingIndex++;
+
+	log( `${ msg } ${ loading }` )
 }
