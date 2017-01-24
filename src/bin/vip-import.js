@@ -21,10 +21,77 @@ function list(v) {
 	return v.split(',');
 }
 
+const default_types = [
+	'jpg','jpeg','jpe',
+	'gif',
+	'png',
+	'bmp',
+	'tiff','tif',
+	'ico',
+	'asf',
+	'asx',
+	'wmv','wmx','wm',
+	'avi',
+	'divx',
+	'flv',
+	'mov',
+	'qt',
+	'mpeg','mpg','mpe','mp4','m4v',
+	'ogv',
+	'webm',
+	'mkv',
+	'3gp','3gpp','3g2','3gp2',
+	'txt',
+	'asc',
+	'c','cc','h',
+	'srt',
+	'csv','tsv',
+	'ics',
+	'rtx',
+	'css',
+	'vtt',
+	'dfxp',
+	'mp3',
+	'm4a','m4b',
+	'ra',
+	'ram',
+	'wav',
+	'ogg',
+	'oga',
+	'mid','midi',
+	'wma',
+	'wax',
+	'mka',
+	'rtf',
+	'js',
+	'pdf',
+	'class',
+	'tar','zip','gz','gzip','rar','7z',
+	'psd',
+	'xcf',
+	'doc',
+	'pot',
+	'pps',
+	'ppt',
+	'wri',
+	'xla','xls','xlt','xlw',
+	'mdb','mpp',
+	'docx','docm','dotx','dotm',
+	'xlsx','xlsm','xlsb','xltx','xltm','xlam',
+	'pptx','pptm','ppsx','ppsm','potx','potm','ppam',
+	'sldx','sldm',
+	'onetoc','onetoc2','onetmp','onepkg','oxps',
+	'xps',
+	'odt','odp','ods','odg','odc','odb','odf',
+	'wp','wpd',
+	'key','numbers','pages'
+];
+
 program
 	.command( 'files <site> <directory>' )
 	.description( 'Import files to a VIP Go site' )
-	.option( '-t, --types <types>', 'Types of files to import. Default: jpg,jpeg,png,gif', ['jpg', 'jpeg', 'png', 'gif'], list )
+	.option( '-t, --types <types>', 'Types of files to import', default_types, list )
+	.option( '-e, --extra-types <types>', 'Additional file types to allow that are not included in WordPress defaults', [], list )
 	.option( '-p, --parallel <threads>', 'Number of parallel uploads. Default: 5', 5, parseInt )
 	.option( '-i, --intermediate', 'Upload intermediate images' )
 	.option( '-f, --fast', 'Skip existing file check' )
@@ -94,7 +161,7 @@ program
 
 									ext = ext[ ext.length - 1 ];
 
-									if ( ! ext || options.types.indexOf( ext.toLowerCase() ) < 0 ) {
+									if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
 										return cb( new Error( "Unsupported filetype: " + file ) );
 									}
 
