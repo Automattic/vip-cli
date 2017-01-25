@@ -33,7 +33,6 @@ const default_types = [
 	'wmv','wmx','wm',
 	'avi',
 	'divx',
-	'flv',
 	'mov',
 	'qt',
 	'mpeg','mpg','mpe','mp4','m4v',
@@ -84,7 +83,7 @@ const default_types = [
 	'xps',
 	'odt','odp','ods','odg','odc','odb','odf',
 	'wp','wpd',
-	'key','numbers','pages'
+	'key','numbers','pages',
 ];
 
 program
