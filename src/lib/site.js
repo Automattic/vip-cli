@@ -1,10 +1,18 @@
 // Ours
 const api = require( '../lib/api' );
 
-export function update( site ) {
+export function update( site, opts ) {
+	opts = opts || {};
+	site = site || {};
+
+	let url = Object.keys( opts ).length > 0 ?
+		`/actions/upgrade_wp` :
+		`/actions/${site.client_site_id}/upgrade_wp`;
+
 	return new Promise( ( resolve, reject ) => {
 		api
-			.post( '/actions/' + site.client_site_id + '/upgrade_wp' )
+			.post( url )
+			.query( opts )
 			.end( ( err, res ) => {
 				if ( err ) {
 					let message = err.response.error;

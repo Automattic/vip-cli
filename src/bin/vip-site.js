@@ -8,6 +8,46 @@ const utils       = require( '../lib/utils' );
 const siteUtils   = require( '../lib/site' );
 const hostUtils   = require( '../lib/host' );
 
+
+program
+	.command( 'upgrade' )
+	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
+	.option( '-s, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
+	.option( '-e, --environment <env>', 'Environment to target' )
+	.option( '-w, --wp <version>', 'WordPress version to target' )
+	.action( ( options ) => {
+			// TODO: Optionally pass in a site ID for single site upgrade
+			let query = {};
+
+			if ( options.pagesize ) {
+				query.pagesize = options.pagesize;
+			}
+
+			if ( options.environment ) {
+				query.environment_name = options.environment;
+			}
+
+			if ( options.wp ) {
+				query.wp = options.wp;
+			}
+
+			utils.displayNotice( [
+				'Triggering web server update/rebuild:',
+				query,
+			] );
+
+			// TODO: Return host action IDs in api response so we can poll them
+			siteUtils.update( null, query )
+				.then( data => {
+					console.log( data.sites );
+					return data.sites.map( d => d.domain_name );
+				})
+				.then( ids => {
+					console.log( ids );
+				})
+				.catch( err => console.error( err.message ) );
+	});
+
 program
 	.command( 'search <query>' )
 	.description( 'Search sites' )
