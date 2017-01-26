@@ -12,7 +12,10 @@ const hostUtils   = require( '../lib/host' );
 program
 	.command( 'upgrade' )
 	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
-	.option( '-s, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
+	.option( '-c, --client <client_id>', 'Client to target' )
+	.option( '-l, --launched', 'Target launched sites only?' )
+	.option( '-s, --search <search>', 'Search for sites to upgrade' )
+	.option( '-n, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
 	.option( '-e, --environment <env>', 'Environment to target' )
 	.option( '-w, --wp <version>', 'WordPress version to target' )
 	.action( ( options ) => {
@@ -29,6 +32,18 @@ program
 
 			if ( options.wp ) {
 				query.wp = options.wp;
+			}
+
+			if ( options.client ) {
+				query.client_id = options.client;
+			}
+
+			if ( options.launched ) {
+				query.launched = 1;
+			}
+
+			if ( options.search ) {
+				query.search = options.search;
 			}
 
 			utils.displayNotice( [
