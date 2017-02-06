@@ -24,7 +24,7 @@
     "postuninstall": "./scripts/postuninstall",
     "prepublish": "npm run build",
     "build": "babel -q src --out-dir=build",
-    "test": "eslint --quiet src test"
+    "test": "eslint src test"
   },
   "bin": {
     "vip": "build/bin/vip.js"
