@@ -81,7 +81,7 @@
         "warn"
       ],
       "no-console": [
-        "warn"
+        "off"
       ],
       "indent": [
         "error",
