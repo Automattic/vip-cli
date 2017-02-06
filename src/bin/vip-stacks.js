@@ -35,7 +35,7 @@ program
 									if ( err ) {
 										clearInterval( poll );
 
-										if ( 404 != err.status ) {
+										if ( 404 !== err.status ) {
 											console.error( err.response.error );
 										}
 

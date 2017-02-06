@@ -2,7 +2,6 @@
 
 const program = require( 'commander' );
 const promptly = require( 'promptly' );
-const Table = require( 'cli-table' );
 
 // Ours
 const api = require( '../lib/api' );
@@ -144,7 +143,7 @@ program
 					}
 
 					sbox.forEach( sbox => {
-						if ( sbox.state == 'running' ) {
+						if ( sbox.state === 'running' ) {
 							return api
 								.post( '/containers/' + sbox.container_id + '/pause' )
 								.end( err => {

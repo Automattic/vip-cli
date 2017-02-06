@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-const http     = require( 'https' );
 const fs       = require( 'fs' );
 const program  = require( 'commander' );
 const async    = require( 'async' );
 const progress = require( 'progress' );
 const request  = require( 'superagent' );
-const exec     = require( 'child_process' ).exec;
-const escape   = require( 'shell-escape' );
 const which = require( 'which' );
 
 
@@ -235,7 +232,7 @@ program
 	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
 	.action( ( site, file, options ) => {
 		try {
-			var mysql_exists = which.sync( 'mysql' );
+			which.sync( 'mysql' );
 		} catch ( e ) {
 			return console.error( 'MySQL client is required and not installed.' );
 		}

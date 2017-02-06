@@ -5,7 +5,6 @@ const promptly = require( 'promptly' );
 const which = require( 'which' );
 
 // Ours
-const api = require( '../lib/api' );
 const db = require( '../lib/db' );
 const utils = require( '../lib/utils' );
 
@@ -13,7 +12,7 @@ program
 	.arguments( '<site>' )
 	.action( ( site, options ) => {
 		try {
-			var mysql_exists = which.sync( 'mysql' );
+			which.sync( 'mysql' );
 		} catch ( e ) {
 			return console.error( 'MySQL client is required and not installed.' );
 		}
@@ -38,7 +37,7 @@ program
 				});
 			}
 
-			var ays = s.environment_name == 'production' ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
+			var ays = s.environment_name === 'production' ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
 
 			utils.displayNotice( [
 				'Connecting to database:',

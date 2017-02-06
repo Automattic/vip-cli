@@ -104,7 +104,7 @@ export function runCommand( container, command ) {
 						return console.error( err );
 					}
 
-					if ( list[ container.container_name ] == 0 ) {
+					if ( list[ container.container_name ] === 0 ) {
 						// Stop the container when we're done with it
 						// We don't strictly care about the response as long as it works most of the time :)
 						api
@@ -128,7 +128,7 @@ export function createSandboxForSite( site, cb ) {
 
 			var total = res.body.totalrecs;
 			var running = res.body.data.filter( s => {
-				return s.containers[0].state == 'running';
+				return s.containers[0].state === 'running';
 			}).length;
 
 			if ( running >= 6 ) {
