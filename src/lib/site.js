@@ -20,8 +20,8 @@ export function update( site ) {
 				}
 
 				return resolve( res.body );
-		} );
-	} );
+			});
+	});
 }
 
 export function getContainers( site ) {
@@ -38,6 +38,6 @@ export function getContainers( site ) {
 				}
 
 				return resolve( res.body.data );
-			} );
-	} );
+			});
+	});
 }

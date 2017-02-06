@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const program = require('commander');
+const program = require( 'commander' );
 const https = require( 'https' );
 const fs = require( 'fs' );
 const path = require( 'path' );
@@ -8,20 +8,20 @@ const async = require( 'async' );
 const progress = require( 'progress' );
 
 // Ours
-const api = require('../lib/api');
-const utils = require('../lib/utils');
+const api = require( '../lib/api' );
+const utils = require( '../lib/utils' );
 
 program
 	.arguments( '<site>' )
 	.option( '-d, --directory <dir>', 'Destination directory' )
-	.action( (site, options) => {
+	.action( ( site, options ) => {
 		// TODO: validate options.directory
 		utils.findSite( site, ( err, site ) => {
 			if ( ! options.directory ) {
 				options.directory = '/tmp/' + site.client_site_id;
 			}
 
-			console.log( "Exporting to:", options.directory )
+			console.log( 'Exporting to:', options.directory );
 
 			api
 				.get( '/sites/' + site.client_site_id + '/files' )
@@ -31,7 +31,7 @@ program
 						return console.error( err.response.error );
 					}
 
-					var bar = new progress( 'Exporting [:bar] :percent (:current/:total) :etas', { total: res.body.totalrecs, incomplete: ' ', renderThrottle: 100 } );
+					var bar = new progress( 'Exporting [:bar] :percent (:current/:total) :etas', { total: res.body.totalrecs, incomplete: ' ', renderThrottle: 100 });
 
 					async.timesSeries( Math.ceil( res.body.totalrecs / 100 ), function( i, cb ) {
 						api
@@ -56,16 +56,16 @@ program
 										servername: 'files.vipv2.net',
 										path: file.file_path,
 										headers: {
-											'Host': site.domain_name
-										}
+											'Host': site.domain_name,
+										},
 									};
 
 									https.get( filedata, download => {
 										download.pipe( newFile );
-										download.on("end", () => {
+										download.on( 'end', () => {
 											bar.tick();
 											newFile.close( callback );
-										}).on("error", err => {
+										}).on( 'error', err => {
 											fs.unlink( dest );
 											callback( err );
 										});
@@ -77,7 +77,7 @@ program
 		});
 	});
 
-program.parse(process.argv);
+program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();
 }

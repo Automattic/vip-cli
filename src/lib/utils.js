@@ -71,8 +71,8 @@ export function getCredentials( callback ) {
 
 		try {
 			var decoded = decrypt( r.accessToken, r.userId );
-		} catch (e) {
-			config.del( 'login' )
+		} catch ( e ) {
+			config.del( 'login' );
 			return callback( 'Could not decrypt credentials' );
 		}
 
@@ -126,7 +126,7 @@ export function findAndConfirmSite( site, action, cb ) {
 			'-- Environment: ' + s.environment_name,
 		] );
 
-		promptly.confirm( "Are you sure?", ( err, yes ) => {
+		promptly.confirm( 'Are you sure?', ( err, yes ) => {
 			if ( err ) {
 				return console.error( err );
 			}
@@ -146,7 +146,7 @@ export function mkdirp( dir ) {
 
 	try {
 		fs.statSync( dir );
-	} catch (e) {
+	} catch ( e ) {
 		mkdirp( parent );
 		fs.mkdirSync( dir );
 	}
@@ -171,5 +171,5 @@ export function showLoading( msg ) {
 	const loading = loadingSprite[ loadingIndex ];
 	loadingIndex++;
 
-	log( `${ msg } ${ loading }` )
+	log( `${ msg } ${ loading }` );
 }

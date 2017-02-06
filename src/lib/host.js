@@ -14,6 +14,6 @@ export function getHostAction( hostId, actionId ) {
 				}
 
 				return resolve( res.body.data[0] );
-			} );
-	} );
+			});
+	});
 }

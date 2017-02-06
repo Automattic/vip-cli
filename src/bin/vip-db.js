@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-const program = require('commander');
+const program = require( 'commander' );
 const promptly = require( 'promptly' );
 const which = require( 'which' );
 
 // Ours
-const api = require('../lib/api');
+const api = require( '../lib/api' );
 const db = require( '../lib/db' );
-const utils = require('../lib/utils');
+const utils = require( '../lib/utils' );
 
 program
 	.arguments( '<site>' )
 	.action( ( site, options ) => {
 		try {
 			var mysql_exists = which.sync( 'mysql' );
-		} catch (e) {
+		} catch ( e ) {
 			return console.error( 'MySQL client is required and not installed.' );
 		}
 
@@ -27,7 +27,7 @@ program
 				return console.error( "Couldn't find site:", site );
 			}
 
-			if ( ! require('tty').isatty(1) ) {
+			if ( ! require( 'tty' ).isatty( 1 ) ) {
 				console.log( '-- Site:', s.client_site_id );
 				console.log( '-- Domain:', s.domain_name );
 				console.log( '-- Environment:', s.environment_name );
@@ -38,7 +38,7 @@ program
 				});
 			}
 
-			var ays = s.environment_name == "production" ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
+			var ays = s.environment_name == 'production' ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
 
 			utils.displayNotice( [
 				'Connecting to database:',
@@ -64,7 +64,7 @@ program
 		});
 	});
 
-program.parse(process.argv);
+program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();
 }

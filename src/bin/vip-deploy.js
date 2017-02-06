@@ -9,13 +9,13 @@ program
 	.arguments( '<site> <sha>' )
 	.action( ( site, sha, options ) => {
 		api
-			.post('/sites/' + site + '/revisions/' + sha + '/deploy' )
+			.post( '/sites/' + site + '/revisions/' + sha + '/deploy' )
 			.end( err => {
-				if (err) {
-					console.error(err.response.error)
+				if ( err ) {
+					console.error( err.response.error );
 				}
-			})
-	})
+			});
+	});
 
 program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
