@@ -120,7 +120,8 @@ program
 							if ( 'ptr:' === file.substring( 0, 4 ) ) {
 								var parts = file.split( ':' );
 								var offset = parseInt( parts[1] );
-								var file = parts[2];
+
+								file = parts[2];
 
 								// Queue next batch of files in this directory
 								return imports.queueDir( file, offset, function( q ) {
