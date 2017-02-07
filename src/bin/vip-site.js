@@ -1,5 +1,5 @@
 const program = require( 'commander' );
-const log = require('single-line-log').stdout;
+const log = require( 'single-line-log' ).stdout;
 
 // Ours
 const utils       = require( '../lib/utils' );
@@ -25,7 +25,7 @@ program
 				siteUtils.getContainers( site )
 					.then( containers => {
 						return containers.filter( container => container.container_type_id === 1 ); // WEB = 1
-					} )
+					})
 					.then( webContainers => {
 						const hostId = webContainers[0].host_id;
 						hostUtils.getHostAction( hostId, actionId )
@@ -52,9 +52,9 @@ program
 									console.log( '' );
 									console.log( 'Update complete 🎉🎉🎉' );
 								}
-							} )
+							})
 							.catch( err => console.log( 'Failed to get host action: ' + err.message ) );
-					} )
+					})
 					.catch( err => console.log( 'Failed to check status: ' + err.message ) );
 			};
 
@@ -71,15 +71,15 @@ program
 					console.log( '' );
 
 					return data.result;
-				} )
+				})
 				.then( actionId => {
 					updateCheckInterval = setInterval( () => checkStatus( actionId ), 2000 );
-				} )
+				})
 				.catch( err => console.error( err.message ) );
-		} )
-	} );
+		});
+	});
 
-program.parse(process.argv);
+program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();
 }

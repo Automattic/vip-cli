@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-const http     = require( 'https' );
 const fs       = require( 'fs' );
 const program  = require( 'commander' );
 const async    = require( 'async' );
 const progress = require( 'progress' );
 const request  = require( 'superagent' );
-const exec     = require('child_process').exec;
-const escape   = require( 'shell-escape' );
 const which = require( 'which' );
 
 
@@ -17,8 +14,8 @@ const utils    = require( '../lib/utils' );
 const db = require( '../lib/db' );
 const imports = require( '../lib/import' );
 
-function list(v) {
-	return v.split(',');
+function list( v ) {
+	return v.split( ',' );
 }
 
 const default_types = [
@@ -118,13 +115,14 @@ program
 						var queue = async.priorityQueue( ( file, cb ) => {
 							// Handle pointers separately - add next 5k files + next pointer if necessary
 							if ( 'ptr:' === file.substring( 0, 4 ) ) {
-								var parts = file.split(':');
+								var parts = file.split( ':' );
 								var offset = parseInt( parts[1] );
-								var file = parts[2];
+
+								file = parts[2];
 
 								// Queue next batch of files in this directory
 								return imports.queueDir( file, offset, function( q ) {
-									q.forEach(i => {
+									q.forEach( i => {
 										queue.push( i.item, i.priority );
 									});
 
@@ -132,7 +130,7 @@ program
 								});
 							}
 
-							async.waterfall([
+							async.waterfall( [
 								function( cb ) {
 									fs.realpath( file, cb );
 								},
@@ -141,14 +139,14 @@ program
 									fs.lstat( file, function( err, stats ) {
 										cb( err, file, stats );
 									});
-								}
+								},
 							], function( err, file, stats ) {
 								if ( err ) {
 									return cb( err );
 								} else if ( stats.isDirectory() ) {
 									// Init directory queueing with offset=0
 									imports.queueDir( file, 0, function( q ) {
-										q.forEach(i => {
+										q.forEach( i => {
 											queue.push( i.item, i.priority );
 										});
 
@@ -161,7 +159,7 @@ program
 									ext = ext[ ext.length - 1 ];
 
 									if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
-										return cb( new Error( "Unsupported filetype: " + file ) );
+										return cb( new Error( 'Unsupported filetype: ' + file ) );
 									}
 
 									if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
@@ -219,9 +217,9 @@ program
 					// TODO: Cache file count to disk, hash directory so we know if the contents change?
 					console.log( 'Counting files...' );
 					processFiles( false, function() {
-						bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 } );
+						bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 });
 						console.log( 'Importing ' + filecount + ' files...' );
-						processFiles( true )
+						processFiles( true );
 					});
 				});
 		});
@@ -234,8 +232,8 @@ program
 	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
 	.action( ( site, file, options ) => {
 		try {
-			var mysql_exists = which.sync( 'mysql' );
-		} catch (e) {
+			which.sync( 'mysql' );
+		} catch ( e ) {
 			return console.error( 'MySQL client is required and not installed.' );
 		}
 
@@ -252,11 +250,11 @@ program
 				api
 					.post( '/sites/' + site.client_site_id + '/wp-cli' )
 					.send({
-						command: "cache",
-						args: [ "flush" ],
+						command: 'cache',
+						args: [ 'flush' ],
 						namedvars: {
-							"skip-plugins": true,
-							"skip-themes": true,
+							'skip-plugins': true,
+							'skip-themes': true,
 						},
 					})
 					.end();

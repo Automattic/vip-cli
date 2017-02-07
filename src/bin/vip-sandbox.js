@@ -2,7 +2,6 @@
 
 const program = require( 'commander' );
 const promptly = require( 'promptly' );
-const Table = require( 'cli-table' );
 
 // Ours
 const api = require( '../lib/api' );
@@ -14,12 +13,12 @@ function maybeConfirm( prompt, doPrompt, cb ) {
 		return promptly.confirm( prompt, cb );
 	}
 
-	cb(null, true);
+	cb( null, true );
 }
 
 function maybePrompt( site, prompt, cb ) {
 	if ( prompt ) {
-		sandbox.listSandboxes( { client_site_id: site, index: true }, () => {
+		sandbox.listSandboxes({ client_site_id: site, index: true }, () => {
 			promptly.prompt( 'Which container?', { default: 1 }, ( err, container ) => {
 				if ( err ) {
 					return console.error( err );
@@ -29,7 +28,7 @@ function maybePrompt( site, prompt, cb ) {
 			});
 		});
 	} else {
-		cb()
+		cb();
 	}
 }
 
@@ -140,11 +139,11 @@ program
 					if ( container < 1 || container > sbox.length ) {
 						return console.error( 'Invalid container' );
 					} else if ( container ) {
-						sbox = sbox.slice(container - 1, container);
+						sbox = sbox.slice( container - 1, container );
 					}
 
-					sbox.forEach(sbox => {
-						if ( sbox.state == 'running' ) {
+					sbox.forEach( sbox => {
+						if ( sbox.state === 'running' ) {
 							return api
 								.post( '/containers/' + sbox.container_id + '/pause' )
 								.end( err => {
@@ -160,10 +159,10 @@ program
 						}
 
 						switch( sbox.state ) {
-							case 'paused':
-								return console.error( 'Requested sandbox is already paused' );
-							default:
-								return console.error( 'Cannot pause sandbox for requested site' );
+						case 'paused':
+							return console.error( 'Requested sandbox is already paused' );
+						default:
+							return console.error( 'Cannot pause sandbox for requested site' );
 						}
 					});
 				});
@@ -211,7 +210,7 @@ program
 		});
 	});
 
-program.parse(process.argv);
+program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.outputHelp();
 }

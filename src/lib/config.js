@@ -7,15 +7,15 @@ export function get( file, callback ) {
 
 	try {
 		data = fs.readFileSync( dir + '/' + file, 'utf8' );
-	} catch (e) {
+	} catch ( e ) {
 		return callback( e );
 	}
 
 	try {
 		data = JSON.parse( data );
-	} catch (e) {
+	} catch ( e ) {
 		if ( e.name === 'SyntaxError' ) {
-			return callback( null, {} );
+			return callback( null, {});
 		}
 		return callback( e );
 	}
@@ -28,7 +28,7 @@ export function set( file, update = {}, callback ) {
 
 	get( file, ( err, data ) => {
 		if ( err ) {
-			data = {}
+			data = {};
 		}
 
 		data = Object.assign( data, update );

@@ -18,8 +18,8 @@ const api = require( '../lib/api' );
 // Do update notifications
 updateNotifier({ pkg }).notify();
 
-var hostname = require('os').hostname();
-var is_sandbox = hostname.substring(hostname.length - 9) === 'vipv2.net';
+var hostname = require( 'os' ).hostname();
+var is_sandbox = hostname.substring( hostname.length - 9 ) === 'vipv2.net';
 var is_vip = false;
 var noAuth = [
 	'login',
@@ -39,7 +39,7 @@ utils.getCredentials( ( err, user ) => {
 
 	program
 		.version( pkg.version )
-		.command( 'login', 'Setup an access token to use with the CLI' )
+		.command( 'login', 'Setup an access token to use with the CLI' );
 
 	program
 		.command( 'logout' )
@@ -49,19 +49,19 @@ utils.getCredentials( ( err, user ) => {
 		});
 
 	// internal VIP commands
-	if (!!is_vip) {
+	if ( is_vip ) {
 		program
 			.command( 'api <method> <endpoint>', 'Authenticated API requests' )
 			.command( 'db <site>', 'Connect to a given VIP Go database' )
 			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
 			.command( 'files <site>', 'Export files for a site' )
-			.command( 'import', 'Import to VIP Go' )
+			.command( 'import', 'Import to VIP Go' );
 
-		if (!!is_sandbox) {
+		if ( is_sandbox ) {
 			program
 				.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
 				.command( 'stacks <action>', 'Maintain software stacks on the current host' )
-				.command( 'site <action>', 'Perform actions on a site' )
+				.command( 'site <action>', 'Perform actions on a site' );
 		}
 
 		tab.on( 'deploy', ( data, done ) => {
@@ -91,7 +91,7 @@ utils.getCredentials( ( err, user ) => {
 
 					return done( null, sites );
 				});
-			});
+		});
 	}
 
 	// Tab complete top level commands!
@@ -108,10 +108,10 @@ utils.getCredentials( ( err, user ) => {
 	tab.start();
 
 	program.parse( process.argv );
-	var cmds = program.commands.map(c => c._name);
+	var cmds = program.commands.map( c => c._name );
 	var subCmd = program.args.pop()._name || process.argv[2];
 
-	if ( ! process.argv.slice( 2 ).length || 0 > cmds.indexOf(subCmd) ) {
+	if ( ! process.argv.slice( 2 ).length || 0 > cmds.indexOf( subCmd ) ) {
 		program.help();
 	}
 });

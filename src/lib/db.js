@@ -1,11 +1,11 @@
 const fs = require( 'fs' );
-const spawn = require('child_process').spawn;
+const spawn = require( 'child_process' ).spawn;
 const PV = require( 'node-pv' );
 const Throttle = require( 'throttle' );
-const path = require('path');
+const path = require( 'path' );
 
 // zlib
-const zlib = require('zlib');
+const zlib = require( 'zlib' );
 const gunzip = zlib.createGunzip();
 const unzip = zlib.createUnzip();
 
@@ -37,7 +37,7 @@ export function importDB( site, file, opts, callback ) {
 	// Default opts
 	opts = Object.assign({
 		throttle: 1, // 1 MB
-	}, opts);
+	}, opts );
 
 	getConnection( site, ( err, args ) => {
 		if ( err ) {
@@ -46,29 +46,29 @@ export function importDB( site, file, opts, callback ) {
 
 		var stats = fs.lstatSync( file );
 		var pv = new PV({
-			size: stats.size
+			size: stats.size,
 		});
 
-		pv.on('info', info => {
+		pv.on( 'info', info => {
 			process.stderr.write( info );
 		});
 
 		var throttle = new Throttle( 1024 * 1024 * opts.throttle );
 		var stream = fs.createReadStream( file );
-		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
+		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
 
 		// Handle compressed mysqldumps
-		switch( path.extname(file) ) {
-			case '.gz':
-				stream = stream.pipe(gunzip);
-				break;
+		switch( path.extname( file ) ) {
+		case '.gz':
+			stream = stream.pipe( gunzip );
+			break;
 
-			case '.zip':
-				stream = stream.pipe(unzip);
-				break;
+		case '.zip':
+			stream = stream.pipe( unzip );
+			break;
 		}
 
-		stream.pipe(throttle).pipe(pv).pipe( importdb.stdin );
+		stream.pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
 	});
 }
 
@@ -78,7 +78,7 @@ export function exportDB( site, callback ) {
 			return callback( err );
 		}
 
-		spawn( 'mysqldump', args, { stdio: 'inherit' } );
+		spawn( 'mysqldump', args, { stdio: 'inherit' });
 	});
 }
 
@@ -88,6 +88,6 @@ export function getCLI( site, callback ) {
 			return callback( err );
 		}
 
-		spawn( 'mysql', args, { stdio: 'inherit' } );
+		spawn( 'mysql', args, { stdio: 'inherit' });
 	});
 }
