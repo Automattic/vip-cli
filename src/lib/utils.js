@@ -163,7 +163,7 @@ export function displayNotice( notice ) {
 }
 
 let loadingIndex = 0;
-const loadingSprite = [ '.', 'o', 'O', '@', '*' ];
+const loadingSprite = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 export function showLoading( msg ) {
 	if ( loadingIndex >= loadingSprite.length ) {
 		loadingIndex = 0;
