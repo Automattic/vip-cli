@@ -132,6 +132,25 @@ function decSboxFile( container, cb ) {
 	});
 }
 
+export function stop( container, cb ) {
+	config.get( 'sbox', ( err, list ) => {
+		if ( err ) {
+			return cb( err );
+		}
+
+		list[ container.container_name ] = 0;
+		config.set( 'sbox', list, err => {
+			if ( err ) {
+				return cb( err );
+			}
+
+			api
+				.post( '/containers/' + container.container_id + '/stop' )
+				.end();
+		});
+	});
+}
+
 export function createSandboxForSite( site, cb ) {
 	api
 		.get( '/sandboxes' )
