@@ -72,17 +72,17 @@ export function runCommand( container, command ) {
 
 	// TODO: Handle file references as arguments
 	process.on( 'SIGHUP', () => {
-		decSboxFile( container );
+		decrementSboxFile( container );
 	});
 
-	incSboxFile( container, err => {
+	incrementSboxFile( container, err => {
 		if ( err ) {
 			return console.error( err );
 		}
 
 		spawn( 'docker', run, { stdio: 'inherit' });
 
-		decSboxFile( container, err => {
+		decrementSboxFile( container, err => {
 			if ( err ) {
 				return console.error( err );
 			}
@@ -90,7 +90,7 @@ export function runCommand( container, command ) {
 	});
 }
 
-function incSboxFile( container, cb ) {
+function incrementSboxFile( container, cb ) {
 	config.get( 'sbox', ( err, list ) => {
 		if ( err && err.code !== 'ENOENT' ) {
 			return cb( err );
@@ -112,7 +112,7 @@ function incSboxFile( container, cb ) {
 	});
 }
 
-function decSboxFile( container, cb ) {
+function decrementSboxFile( container, cb ) {
 	config.get( 'sbox', ( err, list ) => {
 		if ( err ) {
 			return cb( err );
