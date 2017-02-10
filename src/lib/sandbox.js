@@ -71,6 +71,9 @@ export function runCommand( container, command ) {
 	}
 
 	// TODO: Handle file references as arguments
+	process.on( 'SIGHUP', () => {
+		decSboxFile( container );
+	});
 
 	incSboxFile( container, err => {
 		if ( err ) {
