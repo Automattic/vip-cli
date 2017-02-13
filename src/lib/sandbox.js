@@ -43,9 +43,14 @@ export function runOnExistingContainer( site, sbox, command ) {
 	});
 }
 
-export function runCommand( container, command ) {
+export function runCommand( container, command, opts ) {
+	opts = Object.assign( opts || {}, {
+		'user': 'nobody',
+	});
+
 	var run = [
 		'exec',
+		'--user', opts.user,
 		'-it', container.container_name,
 		'env', 'TERM=xterm',
 	];

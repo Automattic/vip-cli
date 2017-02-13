@@ -42,6 +42,7 @@ program
 program
 	.command( 'start <site>' )
 	.description( 'Start a sandbox and switch you to the container namespace' )
+	.option( '-r, --root', 'Start sandbox as root' )
 	.action( site => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
