@@ -228,6 +228,7 @@ program
 program
 	.command( 'sql <site> <file>' )
 	.alias( 'database' )
+	.alias( 'db' )
 	.description( 'Import SQL to a VIP Go site' )
 	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
 	.action( ( site, file, options ) => {
@@ -240,6 +241,12 @@ program
 		var opts = {
 			throttle: options.throttle,
 		};
+
+		try {
+			var stats = fs.lstatSync( file );
+		} catch( e ) {
+			return console.error( 'Failed to get import file (%s) due to the following error:\n%s', file, e.message );
+		}
 
 		utils.findAndConfirmSite( site, 'Importing SQL for site:', site => {
 			db.importDB( site, file, opts, err => {
