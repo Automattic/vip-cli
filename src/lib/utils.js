@@ -4,7 +4,7 @@ const promptly = require( 'promptly' );
 const vip = require( 'vip' );
 const url = require( 'url' );
 const path = require( 'path' );
-const log = require( 'single-line-log' );
+const log = require( 'single-line-log' ).stdout;
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
