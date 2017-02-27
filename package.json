@@ -20,7 +20,7 @@
     "node": ">=0.12"
   },
   "scripts": {
-    "postinstall": "tabtab install --name vip --auto || echo 'Could not install tab completions'",
+    "postinstall": "tabtab install --name vip --auto || echo 'Note: Could not install tab completions, moving on...'",
     "postuninstall": "./scripts/postuninstall",
     "prepublish": "npm run build",
     "build": "babel -q src --out-dir=build",
