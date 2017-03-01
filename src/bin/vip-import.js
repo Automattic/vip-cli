@@ -230,8 +230,8 @@ program
 							let extHeader = "Skipped with unsupported extension:";
 							let intHeader = "Skipped intermediate images:";
 
-							extHeader += '\n' + '='.repeat(extHeader.length) + '\n\n';
-							intHeader += '\n' + '='.repeat(intHeader.length) + '\n\n';
+							extHeader += '\n' + '='.repeat( extHeader.length ) + '\n\n';
+							intHeader += '\n' + '='.repeat( intHeader.length ) + '\n\n';
 
 							fs.appendFileSync( logfile, extHeader );
 
