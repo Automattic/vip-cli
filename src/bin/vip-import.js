@@ -111,6 +111,8 @@ program
 					var access_token = res.body.data[0].meta_value;
 					var bar, filecount = 0;
 					var logfile = `/tmp/import-${site.client_site_id}-${Date.now()}.log`;
+					var extensions = fs.createWriteStream( logfile + '.ext' );
+					var intermediates = fs.createWriteStream( logfile + '.int' );
 
 					var processFiles = function( importing, callback ) {
 						var queue = async.priorityQueue( ( file, cb ) => {
@@ -160,15 +162,11 @@ program
 									ext = ext[ ext.length - 1 ];
 
 									if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
-										return fs.appendFile( logfile + '-ext', file + '\n', function() {
-											return cb( new Error( "Unsupported filetype: " + file ) );
-										});
+										return extensions.write( file + '\n', cb );
 									}
 
 									if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
-										return fs.appendFile( logfile + '-int', file + '\n', function() {
-											return cb( new Error( 'Skipping intermediate image: ' + file ) );
-										});
+										return intermediates.write( file + '\n', cb );
 									}
 
 									if ( ! filepath[1] ) {
@@ -225,6 +223,9 @@ program
 						bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 });
 						console.log( 'Importing ' + filecount + ' files...' );
 						processFiles( true, function() {
+							extensions.end();
+							intermediates.end();
+
 							let data;
 							let extHeader = "Skipped with unsupported extension:";
 							let intHeader = "Skipped intermediate images:";
@@ -235,9 +236,9 @@ program
 							fs.appendFileSync( logfile, extHeader );
 
 							try {
-								data = fs.readFileSync( logfile + '-ext' );
+								data = fs.readFileSync( logfile + '.ext' );
 								fs.appendFileSync( logfile, data + '\n\n' );
-								fs.unlinkSync( logfile + '-ext' );
+								fs.unlinkSync( logfile + '.ext' );
 							} catch ( e ) {
 								fs.appendFileSync( logfile, "None\n\n" );
 							}
@@ -246,9 +247,9 @@ program
 							fs.appendFileSync( logfile, intHeader );
 
 							try {
-								data = fs.readFileSync( logfile + '-int' );
+								data = fs.readFileSync( logfile + '.int' );
 								fs.appendFileSync( logfile, data + '\n\n' );
-								fs.unlinkSync( logfile + '-int' );
+								fs.unlinkSync( logfile + '.int' );
 							} catch ( e ) {
 								fs.appendFileSync( logfile, "None\n\n" );
 							}
