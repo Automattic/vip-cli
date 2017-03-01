@@ -3,15 +3,20 @@ const fs = require( 'fs' );
 const dir = require( 'os' ).homedir() + '/.vip-cli';
 
 export function get( file, callback ) {
+	let data = {};
+
 	try {
-		var data = fs.readFileSync( dir + '/' + file, 'utf8' );
-	} catch (e) {
+		data = fs.readFileSync( dir + '/' + file, 'utf8' );
+	} catch ( e ) {
 		return callback( e );
 	}
 
 	try {
 		data = JSON.parse( data );
-	} catch (e) {
+	} catch ( e ) {
+		if ( e.name === 'SyntaxError' ) {
+			return callback( null, {});
+		}
 		return callback( e );
 	}
 
@@ -21,15 +26,9 @@ export function get( file, callback ) {
 export function set( file, update = {}, callback ) {
 	callback = callback || function() {};
 
-	fs.readFile( dir + '/' + file, ( err, data ) => {
+	get( file, ( err, data ) => {
 		if ( err ) {
-			data = {}
-		} else {
-			try {
-				data = JSON.parse( data )
-			} catch (e) {
-				return callback( e );
-			}
+			data = {};
 		}
 
 		data = Object.assign( data, update );

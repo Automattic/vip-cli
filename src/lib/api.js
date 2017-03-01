@@ -19,7 +19,7 @@ function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
 		if ( res.status === 401 ) {
-			return console.error( "Invalid or expired token. Please login with `vip login`" );
+			return console.error( 'Invalid or expired token. Please login with `vip login`' );
 		}
 
 		callback.call( request, err, res );
@@ -27,17 +27,17 @@ function handleAuth( request ) {
 }
 
 export function get( url ) {
-	return api.get(url).use(handleAuth);
+	return api.get( url ).use( handleAuth );
 }
 
 export function post( url ) {
-	return api.post(url).use(handleAuth);
+	return api.post( url ).use( handleAuth );
 }
 
 export function put( url ) {
-	return api.put(url).use(handleAuth);
+	return api.put( url ).use( handleAuth );
 }
 
 export function del( url ) {
-	return api.del(url).use(handleAuth);
+	return api.del( url ).use( handleAuth );
 }

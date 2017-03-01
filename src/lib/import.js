@@ -6,12 +6,12 @@ export function upload( site, file, token, cb ) {
 		var filepath = file.split( 'uploads' );
 		var req = http.request({
 			hostname: 'files.vipv2.net',
-			method:   'PUT',
-			path:     '/wp-content/uploads' + filepath[1],
-			headers:  {
+			method: 'PUT',
+			path: '/wp-content/uploads' + filepath[1],
+			headers: {
 				'X-Client-Site-ID': site.client_site_id,
 				'X-Access-Token': token,
-			}
+			},
 		}, cb );
 
 		req.on( 'socket', function ( socket ) {
@@ -33,12 +33,12 @@ export function queueDir( dir, offset, cb ) {
 		if ( files.length - offset < 10000 ) {
 			// If there are less than 2 full rounds of files left, just do them all now
 			files = files.slice( offset, offset + 10000 );
-			files = files.map(f => dir + '/' + f);
+			files = files.map( f => dir + '/' + f );
 
-			return cb([{
+			return cb( [{
 				item: files,
-				priority: priority
-			}]);
+				priority: priority,
+			}] );
 		}
 
 		// Queue next 5k files
@@ -46,19 +46,19 @@ export function queueDir( dir, offset, cb ) {
 		offset += 5000;
 
 		// Queue files with absolute path
-		files = files.map(f => dir + '/' + f);
+		files = files.map( f => dir + '/' + f );
 
 		var ptr = 'ptr:' + offset + ':' + dir;
-		return cb([
+		return cb( [
 			{
 				priority: priority,
-				item: files
+				item: files,
 			},
 			{
 				// Process the pointer after this batch of files
 				priority: priority + 1,
-				item: ptr
-			}
-		]);
+				item: ptr,
+			},
+		] );
 	});
 }

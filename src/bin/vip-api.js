@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 const program = require( 'commander' );
-const querystring = require('querystring');
+const querystring = require( 'querystring' );
 
 // Ours
 const api = require( '../lib/api' );
 
-function parseData(d) {
+function parseData( d ) {
 	try {
-		return JSON.parse(d);
-	} catch (e) {
-		return querystring.parse(d);
+		return JSON.parse( d );
+	} catch ( e ) {
+		return querystring.parse( d );
 	}
 }
 
@@ -19,9 +19,9 @@ program
 	.description( 'Authenticated GET request' )
 	.action( endpoint => {
 		api
-			.get(endpoint)
-			.end( (err, res) => {
-				console.log(JSON.stringify(res.body, null, "\t"));
+			.get( endpoint )
+			.end( ( err, res ) => {
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
@@ -29,12 +29,12 @@ program
 	.command( 'POST <endpoint>' )
 	.description( 'Authenticated POST request' )
 	.option( '-d, --data <data>', 'Add data to the request body', parseData )
-	.action( (endpoint, options) => {
+	.action( ( endpoint, options ) => {
 		api
-			.post(endpoint)
-			.send(options.data)
-			.end( (err, res) => {
-				console.log(JSON.stringify(res.body, null, "\t"));
+			.post( endpoint )
+			.send( options.data )
+			.end( ( err, res ) => {
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
@@ -42,12 +42,12 @@ program
 	.command( 'PUT <endpoint>' )
 	.description( 'Authenticated PUT request' )
 	.option( '-d, --data <data>', 'Add data to the request body', parseData )
-	.action( (endpoint, options) => {
+	.action( ( endpoint, options ) => {
 		api
-			.put(endpoint)
-			.send(options.data)
-			.end( (err, res) => {
-				console.log(JSON.stringify(res.body, null, "\t"));
+			.put( endpoint )
+			.send( options.data )
+			.end( ( err, res ) => {
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
@@ -56,9 +56,9 @@ program
 	.description( 'Authenticated DELETE request' )
 	.action( endpoint => {
 		api
-			.del(endpoint)
-			.end( (err, res) => {
-				console.log(JSON.stringify(res.body, null, "\t"));
+			.del( endpoint )
+			.end( ( err, res ) => {
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 

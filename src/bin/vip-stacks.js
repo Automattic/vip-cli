@@ -11,7 +11,7 @@ program
 		api
 			.get( '/hosts' )
 			.query({
-				search: require('os').hostname(),
+				search: require( 'os' ).hostname(),
 				host_type_id: 5,
 			})
 			.end( ( err, res ) => {
@@ -35,14 +35,14 @@ program
 									if ( err ) {
 										clearInterval( poll );
 
-										if ( 404 != err.status ) {
+										if ( 404 !== err.status ) {
 											console.error( err.response.error );
 										}
 
 										return;
 									}
 
-									log( 'Software Stack update: ' + res.body.data[0].status + "\n" );
+									log( 'Software Stack update: ' + res.body.data[0].status + '\n' );
 								});
 						}, 1000 );
 					});
@@ -65,10 +65,10 @@ program
 				}
 
 				console.log( `✅ Successfully created host action (#${ res.body.result }); software stacks will be deployed across all hosts shortly.` );
-			} );
-	} );
+			});
+	});
 
-program.parse(process.argv);
+program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();
 }
