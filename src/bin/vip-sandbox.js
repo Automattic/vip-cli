@@ -100,13 +100,11 @@ program
 						return;
 					}
 
-					return api
-						.post( '/sandboxes/' + sbox[0].id + '/stop' )
-						.end( err => {
-							if ( err ) {
-								console.error( err.response.error );
-							}
-						});
+					sandbox.stop( sbox[0], err => {
+						if ( err ) {
+							return console.error( err );
+						}
+					});
 				});
 			});
 		});

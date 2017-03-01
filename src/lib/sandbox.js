@@ -71,9 +71,29 @@ export function runCommand( container, command ) {
 	}
 
 	// TODO: Handle file references as arguments
+	process.on( 'SIGHUP', () => {
+		decrementSboxFile( container );
+	});
+
+	incrementSboxFile( container, err => {
+		if ( err ) {
+			return console.error( err );
+		}
+
+		spawn( 'docker', run, { stdio: 'inherit' });
+
+		decrementSboxFile( container, err => {
+			if ( err ) {
+				return console.error( err );
+			}
+		});
+	});
+}
+
+function incrementSboxFile( container, cb ) {
 	config.get( 'sbox', ( err, list ) => {
 		if ( err && err.code !== 'ENOENT' ) {
-			return console.error( err );
+			return cb( err );
 		}
 
 		if ( ! list ) {
@@ -87,32 +107,49 @@ export function runCommand( container, command ) {
 		}
 
 		config.set( 'sbox', list, err => {
+			return cb( err );
+		});
+	});
+}
+
+function decrementSboxFile( container, cb ) {
+	config.get( 'sbox', ( err, list ) => {
+		if ( err ) {
+			return cb( err );
+		}
+
+		list[ container.container_name ]--;
+		config.set( 'sbox', list, err => {
 			if ( err ) {
-				return console.error( err );
+				return cb( err );
 			}
 
-			spawn( 'docker', run, { stdio: 'inherit' });
+			if ( list[ container.container_name ] === 0 ) {
+				// Stop the container when we're done with it
+				// We don't strictly care about the response as long as it works most of the time :)
+				api
+					.post( '/containers/' + container.container_id + '/stop' )
+					.end();
+			}
+		});
+	});
+}
 
-			config.get( 'sbox', ( err, list ) => {
-				if ( err ) {
-					return console.error( err );
-				}
+export function stop( container, cb ) {
+	config.get( 'sbox', ( err, list ) => {
+		if ( err ) {
+			return cb( err );
+		}
 
-				list[ container.container_name ]--;
-				config.set( 'sbox', list, err => {
-					if ( err ) {
-						return console.error( err );
-					}
+		list[ container.container_name ] = 0;
+		config.set( 'sbox', list, err => {
+			if ( err ) {
+				return cb( err );
+			}
 
-					if ( list[ container.container_name ] === 0 ) {
-						// Stop the container when we're done with it
-						// We don't strictly care about the response as long as it works most of the time :)
-						api
-							.post( '/containers/' + container.container_id + '/stop' )
-							.end();
-					}
-				});
-			});
+			api
+				.post( '/containers/' + container.container_id + '/stop' )
+				.end();
 		});
 	});
 }
