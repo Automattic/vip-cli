@@ -1,10 +1,47 @@
 const program = require( 'commander' );
 const log = require( 'single-line-log' ).stdout;
+const Table = require( 'cli-table' );
 
 // Ours
+const api         = require( '../lib/api' );
 const utils       = require( '../lib/utils' );
 const siteUtils   = require( '../lib/site' );
 const hostUtils   = require( '../lib/host' );
+
+program
+	.command( 'search <query>' )
+	.description( 'Search sites' )
+	.action( query => {
+		api.get( '/sites' )
+			.query({ 'search': query, pagesize: 10 })
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( err.response.error );
+				}
+
+				var table = new Table({
+					head: [
+						'ID',
+						'Name',
+						'Domain',
+					],
+					style: {
+						head: ['blue'],
+					},
+				});
+
+				res.body.data.forEach( s => {
+					table.push( [
+						s.client_site_id,
+						s.name || s.domain_name,
+						s.primary_domain.domain_name,
+					] );
+				});
+
+				console.log( table.toString() );
+				console.log( res.body.result + ' of ' + res.body.totalrecs + ' results.' );
+			});
+	});
 
 program
 	.command( 'update <site>' )
