@@ -64,11 +64,8 @@ program
 										download.pipe( newFile );
 										download.on( 'end', () => {
 											bar.tick();
-											newFile.close( callback );
-										}).on( 'error', err => {
-											fs.unlink( dest );
-											callback( err );
-										});
+											callback();
+										}).on( 'error', callback );
 									});
 								}, err => cb( err ) );
 							});
