@@ -65,7 +65,7 @@ program
 										download.on( 'end', () => {
 											bar.tick();
 											callback();
-										});
+										}).on( 'error', callback );
 									});
 								}, err => cb( err ) );
 							});
