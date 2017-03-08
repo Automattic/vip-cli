@@ -8,7 +8,6 @@ const utils       = require( '../lib/utils' );
 const siteUtils   = require( '../lib/site' );
 const hostUtils   = require( '../lib/host' );
 
-
 program
 	.command( 'upgrade' )
 	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
@@ -54,11 +53,54 @@ program
 			// TODO: Return host action IDs in api response so we can poll them
 			siteUtils.update( null, query )
 				.then( data => {
-					console.log( data.sites );
-					return data.sites.map( d => d.domain_name );
+					let failed = data.failed.map( d => d.name || d.domain_name );
+					console.log( 'Warning: Failed to queue upgrades for ', failed.join( ', ' ) );
+
+					// Continue with sites that were successfully queued
+					return data.sites;
 				})
-				.then( ids => {
-					console.log( ids );
+				.then( sites => {
+					var updatingInterval = setInterval( () => {
+						let upgrading = sites.map( site => {
+							return siteUtils.getContainers( site )
+								.then( containers => containers.filter( container => container.container_type_id === 1 ) );
+						});
+
+						// TODO: Get default software_stack_name
+						Promise.all( upgrading )
+							.then( sites => {
+								var table = new Table({
+									head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
+									style: {
+										head: ['blue'],
+									},
+								});
+
+								sites.forEach( site => {
+									site.forEach( container => {
+										table.push([
+											container.domain_name,
+											container.container_id,
+											container.state,
+											container.software_stack_name,
+										]);
+									});
+								});
+
+								// TODO: Auto detect that we're finished below
+								let output = table.toString();
+								output += '\nCtrl+C to quit\n';
+								log( output );
+
+								// TODO: Check each container state === running AND software_stack_name === latest
+								if ( false ) {
+									clearInterval( updatingInterval );
+									console.log();
+									console.log( 'Update complete' );
+								}
+							})
+							.catch( err => console.error( err.message ) );
+					}, 2000 );
 				})
 				.catch( err => console.error( err.message ) );
 	});
