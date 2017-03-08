@@ -18,91 +18,91 @@ program
 	.option( '-e, --environment <env>', 'Environment to target' )
 	.option( '-w, --wp <version>', 'WordPress version to target' )
 	.action( ( options ) => {
-			// TODO: Optionally pass in a site ID for single site upgrade
-			let query = {};
+		// TODO: Optionally pass in a site ID for single site upgrade
+		let query = {};
 
-			if ( options.pagesize ) {
-				query.pagesize = options.pagesize;
-			}
+		if ( options.pagesize ) {
+			query.pagesize = options.pagesize;
+		}
 
-			if ( options.environment ) {
-				query.environment_name = options.environment;
-			}
+		if ( options.environment ) {
+			query.environment_name = options.environment;
+		}
 
-			if ( options.wp ) {
-				query.wp = options.wp;
-			}
+		if ( options.wp ) {
+			query.wp = options.wp;
+		}
 
-			if ( options.client ) {
-				query.client_id = options.client;
-			}
+		if ( options.client ) {
+			query.client_id = options.client;
+		}
 
-			if ( options.launched ) {
-				query.launched = 1;
-			}
+		if ( options.launched ) {
+			query.launched = 1;
+		}
 
-			if ( options.search ) {
-				query.search = options.search;
-			}
+		if ( options.search ) {
+			query.search = options.search;
+		}
 
-			utils.displayNotice( [
-				'Triggering web server update/rebuild:',
-				query,
-			] );
+		utils.displayNotice( [
+			'Triggering web server update/rebuild:',
+			query,
+		] );
 
-			// TODO: Return host action IDs in api response so we can poll them
-			siteUtils.update( null, query )
-				.then( data => {
-					let failed = data.failed.map( d => d.name || d.domain_name );
-					console.log( 'Warning: Failed to queue upgrades for ', failed.join( ', ' ) );
+		// TODO: Return host action IDs in api response so we can poll them
+		siteUtils.update( null, query )
+			.then( data => {
+				let failed = data.failed.map( d => d.name || d.domain_name );
+				console.log( 'Warning: Failed to queue upgrades for ', failed.join( ', ' ) );
 
-					// Continue with sites that were successfully queued
-					return data.sites;
-				})
-				.then( sites => {
-					var updatingInterval = setInterval( () => {
-						let upgrading = sites.map( site => {
-							return siteUtils.getContainers( site )
-								.then( containers => containers.filter( container => container.container_type_id === 1 ) );
-						});
+				// Continue with sites that were successfully queued
+				return data.sites;
+			})
+			.then( sites => {
+				var updatingInterval = setInterval( () => {
+					let upgrading = sites.map( site => {
+						return siteUtils.getContainers( site )
+							.then( containers => containers.filter( container => container.container_type_id === 1 ) );
+					});
 
-						// TODO: Get default software_stack_name
-						Promise.all( upgrading )
-							.then( sites => {
-								var table = new Table({
-									head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
-									style: {
-										head: ['blue'],
-									},
+					// TODO: Get default software_stack_name
+					Promise.all( upgrading )
+						.then( sites => {
+							var table = new Table({
+								head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
+								style: {
+									head: ['blue'],
+								},
+							});
+
+							sites.forEach( site => {
+								site.forEach( container => {
+									table.push( [
+										container.domain_name,
+										container.container_id,
+										container.state,
+										container.software_stack_name,
+									] );
 								});
+							});
 
-								sites.forEach( site => {
-									site.forEach( container => {
-										table.push([
-											container.domain_name,
-											container.container_id,
-											container.state,
-											container.software_stack_name,
-										]);
-									});
-								});
+							// TODO: Auto detect that we're finished below
+							let output = table.toString();
+							output += '\nCtrl+C to quit\n';
+							log( output );
 
-								// TODO: Auto detect that we're finished below
-								let output = table.toString();
-								output += '\nCtrl+C to quit\n';
-								log( output );
-
-								// TODO: Check each container state === running AND software_stack_name === latest
-								if ( false ) {
-									clearInterval( updatingInterval );
-									console.log();
-									console.log( 'Update complete' );
-								}
-							})
-							.catch( err => console.error( err.message ) );
-					}, 2000 );
-				})
-				.catch( err => console.error( err.message ) );
+							// TODO: Check each container state === running AND software_stack_name === latest
+							if ( false ) {
+								clearInterval( updatingInterval );
+								console.log();
+								console.log( 'Update complete' );
+							}
+						})
+						.catch( err => console.error( err.message ) );
+				}, 2000 );
+			})
+			.catch( err => console.error( err.message ) );
 	});
 
 program
