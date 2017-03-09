@@ -9,6 +9,119 @@ const siteUtils   = require( '../lib/site' );
 const hostUtils   = require( '../lib/host' );
 
 program
+	.command( 'upgrade' )
+	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
+	.option( '-c, --client <client_id>', 'Client to target' )
+	.option( '-l, --launched', 'Target launched sites only?' )
+	.option( '-s, --search <search>', 'Search for sites to upgrade' )
+	.option( '-n, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
+	.option( '-e, --environment <env>', 'Environment to target' )
+	.option( '-w, --wp <version>', 'WordPress version to target' )
+	.action( ( options ) => {
+		// TODO: Optionally pass in a site ID for single site upgrade
+		let query = {};
+
+		if ( options.pagesize ) {
+			query.pagesize = options.pagesize;
+		}
+
+		if ( options.environment ) {
+			query.environment_name = options.environment;
+		}
+
+		if ( options.wp ) {
+			query.wp = options.wp;
+		}
+
+		if ( options.client ) {
+			query.client_id = options.client;
+		}
+
+		if ( options.launched ) {
+			query.launched = 1;
+		}
+
+		if ( options.search ) {
+			query.search = options.search;
+		}
+
+		utils.displayNotice( [
+			'Triggering web server update/rebuild:',
+			query,
+		] );
+
+		siteUtils.update( null, query )
+			.then( data => {
+				let failed = data.failed.map( d => d.name || d.domain_name );
+				console.log( 'Warning: Failed to queue upgrades for ', failed.join( ', ' ) );
+
+				// Continue with sites that were successfully queued
+				return data.sites;
+			})
+			.then( sites => {
+				if ( sites.length <= 0 ) {
+					return console.log( "No sites to update" );
+				}
+
+				api
+					.get( '/container_types/1' )
+					.end( ( err, res ) => {
+						if ( err ) {
+							return console.error( 'Could not retrieve default software stack' );
+						}
+
+						var defaultStack = res.body.data[0].software_stack_name;
+
+						var updatingInterval = setInterval( () => {
+							let upgrading = sites.map( site => {
+								return siteUtils.getContainers( site )
+								.then( containers => containers.filter( container => container.container_type_id === 1 ) );
+							});
+
+							Promise.all( upgrading )
+							.then( sites => {
+								var table = new Table({
+									head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
+									style: {
+										head: ['blue'],
+									},
+								});
+
+								sites.forEach( site => {
+									site.forEach( container => {
+										table.push( [
+											container.domain_name,
+											container.container_id,
+											container.state,
+											container.software_stack_name,
+										] );
+									});
+								});
+
+								let done = sites.every( site => {
+									return site.every( container => {
+										return container.software_stack_name === defaultStack && container.state === 'running';
+									});
+								});
+
+								let output = table.toString();
+								log( output );
+
+								// TODO: Also check DC allocations because we might not be upgrading to the default
+								if ( done ) {
+									clearInterval( updatingInterval );
+									console.log();
+									console.log( 'Update complete' );
+								}
+							})
+							.catch( err => console.error( err.message ) );
+						}, 2000 );
+					});
+			})
+			.catch( err => console.error( err.message ) );
+	});
+
+program
 	.command( 'search <query>' )
 	.description( 'Search sites' )
 	.action( query => {
