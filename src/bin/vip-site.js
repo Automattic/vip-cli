@@ -50,7 +50,6 @@ program
 			query,
 		] );
 
-		// TODO: Return host action IDs in api response so we can poll them
 		siteUtils.update( null, query )
 			.then( data => {
 				let failed = data.failed.map( d => d.name || d.domain_name );
@@ -60,47 +59,64 @@ program
 				return data.sites;
 			})
 			.then( sites => {
-				var updatingInterval = setInterval( () => {
-					let upgrading = sites.map( site => {
-						return siteUtils.getContainers( site )
-							.then( containers => containers.filter( container => container.container_type_id === 1 ) );
-					});
+				if ( sites.length <= 0 ) {
+					return console.log( "No sites to update" );
+				}
 
-					// TODO: Get default software_stack_name
-					Promise.all( upgrading )
-						.then( sites => {
-							var table = new Table({
-								head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
-								style: {
-									head: ['blue'],
-								},
+				api
+					.get( '/container_types/1' )
+					.end( ( err, res ) => {
+						if ( err ) {
+							return console.error( 'Could not retrieve default software stack' );
+						}
+
+						var defaultStack = res.body.data[0].software_stack_name;
+
+						var updatingInterval = setInterval( () => {
+							let upgrading = sites.map( site => {
+								return siteUtils.getContainers( site )
+								.then( containers => containers.filter( container => container.container_type_id === 1 ) );
 							});
 
-							sites.forEach( site => {
-								site.forEach( container => {
-									table.push( [
-										container.domain_name,
-										container.container_id,
-										container.state,
-										container.software_stack_name,
-									] );
+							Promise.all( upgrading )
+							.then( sites => {
+								var table = new Table({
+									head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
+									style: {
+										head: ['blue'],
+									},
 								});
-							});
 
-							// TODO: Auto detect that we're finished below
-							let output = table.toString();
-							output += '\nCtrl+C to quit\n';
-							log( output );
+								sites.forEach( site => {
+									site.forEach( container => {
+										table.push( [
+											container.domain_name,
+											container.container_id,
+											container.state,
+											container.software_stack_name,
+										] );
+									});
+								});
 
-							// TODO: Check each container state === running AND software_stack_name === latest
-							if ( false ) {
-								clearInterval( updatingInterval );
-								console.log();
-								console.log( 'Update complete' );
-							}
-						})
-						.catch( err => console.error( err.message ) );
-				}, 2000 );
+								let done = sites.every( site => {
+									return site.every( container => {
+										return container.software_stack_name === defaultStack && container.state === 'running';
+									});
+								});
+
+								let output = table.toString();
+								log( output );
+
+								// TODO: Also check DC allocations because we might not be upgrading to the default
+								if ( done ) {
+									clearInterval( updatingInterval );
+									console.log();
+									console.log( 'Update complete' );
+								}
+							})
+							.catch( err => console.error( err.message ) );
+						}, 2000 );
+					});
 			})
 			.catch( err => console.error( err.message ) );
 	});
