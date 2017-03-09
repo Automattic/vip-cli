@@ -8,7 +8,9 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
-export function runOnExistingContainer( site, sbox, command ) {
+export function runOnExistingContainer( site, sbox, command, opts ) {
+	opts = opts || {};
+
 	maybeStateTransition( site, state => {
 		switch( state ) {
 		case 'stopped':
@@ -20,7 +22,7 @@ export function runOnExistingContainer( site, sbox, command ) {
 					}
 
 					waitForRunningSandbox( site, ( err, sbox ) => {
-						runCommand( sbox, command );
+						runCommand( sbox, command, opts );
 					});
 				});
 		case 'paused':
@@ -32,20 +34,25 @@ export function runOnExistingContainer( site, sbox, command ) {
 					}
 
 					waitForRunningSandbox( site, ( err, sbox ) => {
-						runCommand( sbox, command );
+						runCommand( sbox, command, opts );
 					});
 				});
 		case 'running':
-			return runCommand( sbox, command );
+			return runCommand( sbox, command, opts );
 		default:
 			return console.error( 'Cannot start sandbox for requested site' );
 		}
 	});
 }
 
-export function runCommand( container, command ) {
+export function runCommand( container, command, opts ) {
+	opts = Object.assign({
+		'user': 'nobody',
+	}, opts || {});
+
 	var run = [
 		'exec',
+		'--user', opts.user,
 		'-it', container.container_name,
 		'env', 'TERM=xterm',
 	];

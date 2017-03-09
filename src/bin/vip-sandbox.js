@@ -42,7 +42,8 @@ program
 program
 	.command( 'start <site>' )
 	.description( 'Start a sandbox and switch you to the container namespace' )
-	.action( site => {
+	.option( '-r, --root', 'Start sandbox as root' )
+	.action( ( site, options ) => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
 				return console.error( err );
@@ -50,6 +51,11 @@ program
 
 			if ( ! site ) {
 				return console.error( 'Specified site does not exist. Try the ID.' );
+			}
+
+			var opts = {};
+			if ( options.root ) {
+				opts.user = 'root';
 			}
 
 			sandbox.getSandboxForSite( site, ( err, sbox ) =>  {
@@ -63,11 +69,11 @@ program
 							return console.error( err );
 						}
 
-						sandbox.runOnExistingContainer( site, sbox );
+						sandbox.runOnExistingContainer( site, sbox, null, opts );
 					});
 				}
 
-				sandbox.runOnExistingContainer( site, sbox );
+				sandbox.runOnExistingContainer( site, sbox, null, opts );
 			});
 		});
 	});
