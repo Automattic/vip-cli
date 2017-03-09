@@ -1,6 +1,7 @@
 const spawn = require( 'child_process' ).spawnSync;
 const Table = require( 'cli-table' );
 const colors = require( 'colors/safe' );
+const log = require( 'single-line-log' ).stdout;
 
 // Ours
 const api = require( './api' );
@@ -8,39 +9,38 @@ const config = require( './config' );
 const utils = require( './utils' );
 
 export function runOnExistingContainer( site, sbox, command ) {
-	switch( sbox.state ) {
-	case 'stopped':
-		return api
-			.post( '/sandboxes/' + sbox.id )
-			.end( ( err, res ) => {
-				if ( err ) {
-					return console.error( err.response.error );
-				}
+	maybeStateTransition( site, state => {
+		switch( state ) {
+		case 'stopped':
+			return api
+				.post( '/sandboxes/' + sbox.id )
+				.end( ( err, res ) => {
+					if ( err ) {
+						return console.error( err.response.error );
+					}
 
-				waitForRunningSandbox( site, ( err, sbox ) => {
-					runCommand( sbox, command );
+					waitForRunningSandbox( site, ( err, sbox ) => {
+						runCommand( sbox, command );
+					});
 				});
-			});
-	case 'paused':
-		return api
-			.post( '/containers/' + sbox.container_id + '/unpause' )
-			.end( ( err, res ) => {
-				if ( err ) {
-					return console.error( err.response.error );
-				}
+		case 'paused':
+			return api
+				.post( '/containers/' + sbox.container_id + '/unpause' )
+				.end( ( err, res ) => {
+					if ( err ) {
+						return console.error( err.response.error );
+					}
 
-				waitForRunningSandbox( site, ( err, sbox ) => {
-					runCommand( sbox, command );
+					waitForRunningSandbox( site, ( err, sbox ) => {
+						runCommand( sbox, command );
+					});
 				});
-			});
-	case 'stopping':
-	case 'pausing':
-		return console.error( 'Sandbox state transition - try again in a few seconds...' );
-	case 'running':
-		return runCommand( sbox, command );
-	default:
-		return console.error( 'Cannot start sandbox for requested site' );
-	}
+		case 'running':
+			return runCommand( sbox, command );
+		default:
+			return console.error( 'Cannot start sandbox for requested site' );
+		}
+	});
 }
 
 export function runCommand( container, command ) {
@@ -88,6 +88,26 @@ export function runCommand( container, command ) {
 			}
 		});
 	});
+}
+
+function maybeStateTransition( site, cb ) {
+	var poll = setInterval( () => {
+		getSandboxForSite( site, ( err, container ) => {
+			if ( err ) {
+				return console.error( err.message );
+			}
+
+			switch( container.state ) {
+			case 'starting':
+			case 'stopping':
+			case 'pausing':
+				return utils.showLoading( 'Container state transition: ' + container.state );
+			default:
+				clearInterval( poll );
+				cb( container.state );
+			}
+		});
+	}, 1000 );
 }
 
 function incrementSboxFile( container, cb ) {

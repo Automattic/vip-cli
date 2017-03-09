@@ -171,5 +171,5 @@ export function showLoading( msg ) {
 	const loading = loadingSprite[ loadingIndex ];
 	loadingIndex++;
 
-	log( `${ msg } ${ loading }` );
+	log( `${ msg } ${ loading }\n` );
 }
