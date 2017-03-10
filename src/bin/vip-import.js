@@ -7,13 +7,15 @@ const progress = require( 'progress' );
 const request  = require( 'superagent' );
 const which = require( 'which' );
 
-
 // Ours
 const api      = require( '../lib/api' );
 const utils    = require( '../lib/utils' );
 const db = require( '../lib/db' );
 const imports = require( '../lib/import' );
 const files = require( '../lib/files' );
+
+// Config
+const FORCE_FAST_IMPORT_LIMIT = 100;
 
 function list( v ) {
 	return v.split( ',' );
@@ -101,7 +103,7 @@ program
 			files.list( site, { 'pagesize': 1 })
 				.then( res => res.totalrecs )
 				.then( total => {
-					if ( total < 100 ) {
+					if ( total < FORCE_FAST_IMPORT_LIMIT ) {
 						options.fast = true;
 					}
 
