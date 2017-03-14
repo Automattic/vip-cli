@@ -1,5 +1,5 @@
 // Ours
-const api = require( '../lib/api' );
+const api = require( './api' );
 
 export function update( site, opts ) {
 	opts = opts || {};
