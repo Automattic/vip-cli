@@ -45,6 +45,7 @@ program
 	.description( 'Run a wp-cli command on a sandbox container' )
 	.allowUnknownOption()
 	.action( ( site, command, options ) => {
+		// Get a list of the "unknown" options from argv
 		options = program.parseOptions( process.argv ).unknown;
 		command = command.concat( options );
 
