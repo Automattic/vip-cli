@@ -34,6 +34,7 @@ function maybePrompt( site, prompt, cb ) {
 
 program
 	.command( 'list' )
+	.alias( 'ls' )
 	.description( 'List existing sandboxes' )
 	.action( () => {
 		sandbox.listSandboxes();
