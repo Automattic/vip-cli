@@ -41,6 +41,43 @@ program
 	});
 
 program
+	.command( 'run <site> <command...>' )
+	.description( 'Run a wp-cli command on a sandbox container' )
+	.allowUnknownOption()
+	.action( ( site, command, options ) => {
+		options = program.parseOptions( process.argv ).unknown;
+		command = command.concat( options );
+
+		utils.findSite( site, ( err, site ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! site ) {
+				return console.error( 'Specified site does not exist. Try the ID.' );
+			}
+
+			sandbox.getSandboxForSite( site, ( err, sbox ) =>  {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				if ( ! sbox ) {
+					return sandbox.createSandboxForSite( site, ( err, sbox ) => {
+						if ( err ) {
+							return console.error( err );
+						}
+
+						sandbox.runOnExistingContainer( site, sbox, command );
+					});
+				}
+
+				sandbox.runOnExistingContainer( site, sbox, command );
+			});
+		});
+	});
+
+program
 	.command( 'start <site>' )
 	.description( 'Start a sandbox and switch you to the container namespace' )
 	.option( '-r, --root', 'Start sandbox as root' )
