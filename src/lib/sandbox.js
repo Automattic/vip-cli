@@ -8,44 +8,28 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
-export function runOnExistingContainer( site, sbox, command, opts ) {
+export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
 	maybeStateTransition( site, state => {
 		switch( state ) {
 		case 'stopped':
-			return api
-				.post( '/sandboxes/' + sbox.id )
-				.end( ( err, res ) => {
-					if ( err ) {
-						return console.error( err.response.error );
-					}
+			return start( sandbox, ( err, sandbox ) => {
+				if ( err ) {
+					return console.error( err.response.error );
+				}
 
-					waitForRunningSandbox( site, ( err, sbox ) => {
-						runCommand( sbox, command, opts );
-					});
-				});
-		case 'paused':
-			return api
-				.post( '/containers/' + sbox.container_id + '/unpause' )
-				.end( ( err, res ) => {
-					if ( err ) {
-						return console.error( err.response.error );
-					}
-
-					waitForRunningSandbox( site, ( err, sbox ) => {
-						runCommand( sbox, command, opts );
-					});
-				});
+				runCommand( sandbox, command, opts );
+			});
 		case 'running':
-			return runCommand( sbox, command, opts );
+			return runCommand( sandbox, command, opts );
 		default:
 			return console.error( 'Cannot start sandbox for requested site' );
 		}
 	});
 }
 
-export function runCommand( container, command, opts ) {
+export function runCommand( sandbox, command, opts ) {
 	opts = Object.assign({
 		'user': 'nobody',
 	}, opts || {});
@@ -53,7 +37,7 @@ export function runCommand( container, command, opts ) {
 	var run = [
 		'exec',
 		'--user', opts.user,
-		'-it', container.container_name,
+		'-it', sandbox.container_name,
 		'env', 'TERM=xterm',
 	];
 
@@ -71,25 +55,25 @@ export function runCommand( container, command, opts ) {
 	}
 
 	if ( notice.length > 0 ) {
-		notice.push( `-- Container: ${ container.container_name }` );
-		notice.push( `-- Site: ${ container.domain_name } (#${ container.client_site_id })` );
+		notice.push( `-- Container: ${ sandbox.container_name }` );
+		notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
 
 		utils.displayNotice( notice );
 	}
 
 	// TODO: Handle file references as arguments
 	process.on( 'SIGHUP', () => {
-		decrementSboxFile( container );
+		decrementSboxFile( sandbox );
 	});
 
-	incrementSboxFile( container, err => {
+	incrementSboxFile( sandbox, err => {
 		if ( err ) {
 			return console.error( err );
 		}
 
 		spawn( 'docker', run, { stdio: 'inherit' });
 
-		decrementSboxFile( container, err => {
+		decrementSboxFile( sandbox, err => {
 			if ( err ) {
 				return console.error( err );
 			}
@@ -117,8 +101,8 @@ function maybeStateTransition( site, cb ) {
 	}, 1000 );
 }
 
-function incrementSboxFile( container, cb ) {
-	config.get( 'sbox', ( err, list ) => {
+function incrementSboxFile( sandbox, cb ) {
+	config.get( 'sandbox', ( err, list ) => {
 		if ( err && err.code !== 'ENOENT' ) {
 			return cb( err );
 		}
@@ -127,55 +111,69 @@ function incrementSboxFile( container, cb ) {
 			list = {};
 		}
 
-		if ( ! list[ container.container_name ] ) {
-			list[ container.container_name ] = 1;
+		if ( ! list[ sandbox.id ] ) {
+			list[ sandbox.id ] = 1;
 		} else {
-			list[ container.container_name ]++;
+			list[ sandbox.id ]++;
 		}
 
-		config.set( 'sbox', list, err => {
+		config.set( 'sandbox', list, err => {
 			return cb( err );
 		});
 	});
 }
 
-function decrementSboxFile( container, cb ) {
-	config.get( 'sbox', ( err, list ) => {
+function decrementSboxFile( sandbox, cb ) {
+	config.get( 'sandbox', ( err, list ) => {
 		if ( err ) {
 			return cb( err );
 		}
 
-		list[ container.container_name ]--;
-		config.set( 'sbox', list, err => {
+		list[ sandbox.id ]--;
+		config.set( 'sandbox', list, err => {
 			if ( err ) {
 				return cb( err );
 			}
 
-			if ( list[ container.container_name ] === 0 ) {
+			if ( list[ sandbox.id ] === 0 ) {
 				// Stop the container when we're done with it
 				// We don't strictly care about the response as long as it works most of the time :)
 				api
-					.post( '/containers/' + container.container_id + '/stop' )
+					.post( '/sandboxes/' + sandbox.id + '/stop' )
 					.end();
 			}
 		});
 	});
 }
 
-export function stop( container, cb ) {
-	config.get( 'sbox', ( err, list ) => {
+function start( sandbox, cb ) {
+	return api
+		.post( '/sandboxes/' + sandbox.id )
+		.end( ( err, res ) => {
+			if ( err ) {
+				return cb( err );
+			}
+
+			waitForRunningSandbox( sandbox.client_site_id, ( err, sandbox ) => {
+				cb( null, sandbox );
+			});
+		});
+}
+
+export function stop( sandbox, cb ) {
+	config.get( 'sandbox', ( err, list ) => {
 		if ( err ) {
 			return cb( err );
 		}
 
-		list[ container.container_name ] = 0;
-		config.set( 'sbox', list, err => {
+		list[ sandbox.id ] = 0;
+		config.set( 'sandbox', list, err => {
 			if ( err ) {
 				return cb( err );
 			}
 
 			api
-				.post( '/containers/' + container.container_id + '/stop' )
+				.post( '/sandboxes/' + sandbox.id + '/stop' )
 				.end();
 		});
 	});
@@ -315,11 +313,6 @@ export function listSandboxes( opts, cb ) {
 					case 'stopped':
 					case 'stopping':
 						c.state = colors['red']( c.state );
-						break;
-
-					case 'paused':
-					case 'pausing':
-						c.state = colors['yellow']( c.state );
 						break;
 
 					case 'running':
