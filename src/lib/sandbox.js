@@ -88,7 +88,7 @@ export function runCommand( container, command, opts ) {
 		run = run.concat( command );
 
 		notice.push( 'Running command on container:' );
-		notice.push( `-- Command: ${ command }` );
+		notice.push( `-- Command: ${ command.join( ' ' ) }` );
 	}
 
 	if ( notice.length > 0 ) {
