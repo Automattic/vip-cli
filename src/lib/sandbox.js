@@ -8,6 +8,26 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
+export function getSandboxAndRun( site, command, opts ) {
+	getSandboxForSite( site, ( err, sbox ) =>  {
+		if ( err ) {
+			return console.error( err );
+		}
+
+		if ( ! sbox ) {
+			return createSandboxForSite( site, ( err, sbox ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				runOnExistingContainer( site, sbox, command, opts );
+			});
+		}
+
+		runOnExistingContainer( site, sbox, command, opts );
+	});
+}
+
 export function runOnExistingContainer( site, sbox, command, opts ) {
 	opts = opts || {};
 

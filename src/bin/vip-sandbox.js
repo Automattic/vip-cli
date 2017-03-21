@@ -58,23 +58,7 @@ program
 				return console.error( 'Specified site does not exist. Try the ID.' );
 			}
 
-			sandbox.getSandboxForSite( site, ( err, sbox ) =>  {
-				if ( err ) {
-					return console.error( err );
-				}
-
-				if ( ! sbox ) {
-					return sandbox.createSandboxForSite( site, ( err, sbox ) => {
-						if ( err ) {
-							return console.error( err );
-						}
-
-						sandbox.runOnExistingContainer( site, sbox, command );
-					});
-				}
-
-				sandbox.runOnExistingContainer( site, sbox, command );
-			});
+			sandbox.getSandboxAndRun( site, command );
 		});
 	});
 
@@ -97,23 +81,7 @@ program
 				opts.user = 'root';
 			}
 
-			sandbox.getSandboxForSite( site, ( err, sbox ) =>  {
-				if ( err ) {
-					return console.error( err );
-				}
-
-				if ( ! sbox ) {
-					return sandbox.createSandboxForSite( site, ( err, sbox ) => {
-						if ( err ) {
-							return console.error( err );
-						}
-
-						sandbox.runOnExistingContainer( site, sbox, null, opts );
-					});
-				}
-
-				sandbox.runOnExistingContainer( site, sbox, null, opts );
-			});
+			sandbox.getSandboxAndRun( site, null, opts );
 		});
 	});
 
