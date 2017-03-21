@@ -173,3 +173,11 @@ export function showLoading( msg ) {
 
 	log( `${ msg } ${ loading }\n` );
 }
+
+export function maybeConfirm( prompt, doPrompt, cb ) {
+	if ( doPrompt ) {
+		return promptly.confirm( prompt, cb );
+	}
+
+	cb( null, true );
+}

@@ -68,6 +68,7 @@ export function runOnExistingContainer( site, sbox, command, opts ) {
 export function runCommand( container, command, opts ) {
 	opts = Object.assign({
 		'user': 'nobody',
+		'confirm': false,
 	}, opts || {});
 
 	var run = [
@@ -102,17 +103,19 @@ export function runCommand( container, command, opts ) {
 		decrementSboxFile( container );
 	});
 
-	incrementSboxFile( container, err => {
-		if ( err ) {
-			return console.error( err );
-		}
-
-		spawn( 'docker', run, { stdio: 'inherit' });
-
-		decrementSboxFile( container, err => {
+	utils.maybeConfirm( "Are you sure?", opts.confirm, () => {
+		incrementSboxFile( container, err => {
 			if ( err ) {
 				return console.error( err );
 			}
+
+			spawn( 'docker', run, { stdio: 'inherit' });
+
+			decrementSboxFile( container, err => {
+				if ( err ) {
+					return console.error( err );
+				}
+			});
 		});
 	});
 }

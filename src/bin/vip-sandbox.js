@@ -8,14 +8,6 @@ const api = require( '../lib/api' );
 const sandbox = require( '../lib/sandbox' );
 const utils = require( '../lib/utils' );
 
-function maybeConfirm( prompt, doPrompt, cb ) {
-	if ( doPrompt ) {
-		return promptly.confirm( prompt, cb );
-	}
-
-	cb( null, true );
-}
-
 function maybePrompt( site, prompt, cb ) {
 	if ( prompt ) {
 		sandbox.listSandboxes({ client_site_id: site, index: true }, () => {
@@ -43,8 +35,11 @@ program
 program
 	.command( 'run <site> <command...>' )
 	.description( 'Run a wp-cli command on a sandbox container' )
+	.option( '--skip-confirm', 'Run the command without asking for confirmation' )
 	.allowUnknownOption()
 	.action( ( site, command, options ) => {
+		var confirm = ! options.skipConfirm;
+
 		// Get a list of the "unknown" options from argv
 		options = program.parseOptions( process.argv ).unknown;
 		command = command.concat( options );
@@ -58,7 +53,7 @@ program
 				return console.error( 'Specified site does not exist. Try the ID.' );
 			}
 
-			sandbox.getSandboxAndRun( site, command );
+			sandbox.getSandboxAndRun( site, command, { confirm: confirm });
 		});
 	});
 
@@ -108,7 +103,7 @@ program
 				}
 
 
-				maybeConfirm( 'This will stop all containers for site '  + sbox[0].client_site_id + '. Are you sure?', sbox.length > 1, ( err, yes ) => {
+				utils.maybeConfirm( 'This will stop all containers for site '  + sbox[0].client_site_id + '. Are you sure?', sbox.length > 1, ( err, yes ) => {
 					if ( ! yes ) {
 						return;
 					}
@@ -204,7 +199,7 @@ program
 					return console.error( 'Sandbox does not exist for requested site.' );
 				}
 
-				maybeConfirm( 'This will delete all containers for site '  + sbox[0].client_site_id + '. Are you sure?', sbox.length > 1, ( err, yes ) => {
+				utils.maybeConfirm( 'This will delete all containers for site '  + sbox[0].client_site_id + '. Are you sure?', sbox.length > 1, ( err, yes ) => {
 					if ( ! yes ) {
 						return;
 					}
