@@ -8,6 +8,26 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
+export function getSandboxAndRun( site, command, opts ) {
+	getSandboxForSite( site, ( err, sbox ) =>  {
+		if ( err ) {
+			return console.error( err );
+		}
+
+		if ( ! sbox ) {
+			return createSandboxForSite( site, ( err, sbox ) => {
+				if ( err ) {
+					return console.error( err );
+				}
+
+				runOnExistingContainer( site, sbox, command, opts );
+			});
+		}
+
+		runOnExistingContainer( site, sbox, command, opts );
+	});
+}
+
 export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
@@ -32,6 +52,7 @@ export function runOnExistingContainer( site, sandbox, command, opts ) {
 export function runCommand( sandbox, command, opts ) {
 	opts = Object.assign({
 		'user': 'nobody',
+		'confirm': false,
 	}, opts || {});
 
 	var run = [
@@ -51,7 +72,7 @@ export function runCommand( sandbox, command, opts ) {
 		run = run.concat( command );
 
 		notice.push( 'Running command on container:' );
-		notice.push( `-- Command: ${ command }` );
+		notice.push( `-- Command: ${ command.join( ' ' ) }` );
 	}
 
 	if ( notice.length > 0 ) {
@@ -66,17 +87,23 @@ export function runCommand( sandbox, command, opts ) {
 		decrementSboxFile( sandbox );
 	});
 
-	incrementSboxFile( sandbox, err => {
-		if ( err ) {
-			return console.error( err );
+	utils.maybeConfirm( "Are you sure?", opts.confirm, ( err, yes ) => {
+		if ( ! yes ) {
+			return;
 		}
 
-		spawn( 'docker', run, { stdio: 'inherit' });
-
-		decrementSboxFile( sandbox, err => {
+		incrementSboxFile( sandbox, err => {
 			if ( err ) {
 				return console.error( err );
 			}
+
+			spawn( 'docker', run, { stdio: 'inherit' });
+
+			decrementSboxFile( sandbox, err => {
+				if ( err ) {
+					return console.error( err );
+				}
+			});
 		});
 	});
 }
