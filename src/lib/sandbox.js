@@ -103,7 +103,11 @@ export function runCommand( container, command, opts ) {
 		decrementSboxFile( container );
 	});
 
-	utils.maybeConfirm( "Are you sure?", opts.confirm, () => {
+	utils.maybeConfirm( "Are you sure?", opts.confirm, ( err, yes ) => {
+		if ( ! yes ) {
+			return;
+		}
+
 		incrementSboxFile( container, err => {
 			if ( err ) {
 				return console.error( err );
