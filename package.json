@@ -26,6 +26,7 @@
     "build": "babel -q src --out-dir=build",
     "test": "eslint src test"
   },
+  "main": "build/index.js",
   "bin": {
     "vip": "build/bin/vip.js"
   },
