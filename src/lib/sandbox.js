@@ -1,7 +1,7 @@
 const spawn = require( 'child_process' ).spawnSync;
 const Table = require( 'cli-table' );
 const colors = require( 'colors/safe' );
-const log = require( 'single-line-log' ).stdout;
+const log = require( 'single-line-log' ).stderr;
 
 // Ours
 const api = require( './api' );
