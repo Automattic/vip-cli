@@ -7,11 +7,11 @@ const sandbox = require( './lib/sandbox' );
 const site = require( './lib/site' );
 
 module.exports = {
-	api: api,
-	db: db,
-	files: files,
-	host: host,
+	"api": api,
+	"db": db,
+	"files": files,
+	"host": host,
 	"import": imports,
-	sandbox: sandbox,
-	site: site,
+	"sandbox": sandbox,
+	"site": site,
 };
