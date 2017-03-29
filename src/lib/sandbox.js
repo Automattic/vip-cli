@@ -34,7 +34,7 @@ export function runOnExistingContainer( site, sandbox, command, opts ) {
 	maybeStateTransition( site, state => {
 		switch( state ) {
 		case 'stopped':
-			return start( sandbox, ( err, sandbox ) => {
+			return start( sandbox, site, ( err, sandbox ) => {
 				if ( err ) {
 					return console.error( err.response.error );
 				}
@@ -173,7 +173,7 @@ function decrementSboxFile( sandbox, cb ) {
 	});
 }
 
-function start( sandbox, cb ) {
+function start( sandbox, site, cb ) {
 	return api
 		.post( '/sandboxes/' + sandbox.id )
 		.end( ( err, res ) => {
@@ -181,7 +181,7 @@ function start( sandbox, cb ) {
 				return cb( err );
 			}
 
-			waitForRunningSandbox( sandbox, ( err, sandbox ) => {
+			waitForRunningSandbox( site, ( err, sandbox ) => {
 				cb( null, sandbox );
 			});
 		});
