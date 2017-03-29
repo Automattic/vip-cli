@@ -181,7 +181,7 @@ function start( sandbox, cb ) {
 				return cb( err );
 			}
 
-			waitForRunningSandbox( sandbox.client_site_id, ( err, sandbox ) => {
+			waitForRunningSandbox( sandbox, ( err, sandbox ) => {
 				cb( null, sandbox );
 			});
 		});
