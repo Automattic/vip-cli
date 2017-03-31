@@ -36,7 +36,7 @@ program
 					async.timesSeries( Math.ceil( res.body.totalrecs / 100 ), function( i, cb ) {
 						api
 							.get( '/sites/' + site.client_site_id + '/files' )
-							.query({ 'pagesize': 100, 'page': i })
+							.query({ 'pagesize': 100, 'page': i + 1 })
 							.end( function( err, response ) {
 								if ( err ) {
 									return cb( err );
