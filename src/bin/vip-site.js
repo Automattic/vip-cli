@@ -1,5 +1,5 @@
 const program = require( 'commander' );
-const log = require( 'single-line-log' ).stdout;
+const log = require( 'single-line-log' ).stderr;
 const Table = require( 'cli-table' );
 
 // Ours

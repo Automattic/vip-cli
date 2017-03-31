@@ -4,7 +4,7 @@ const promptly = require( 'promptly' );
 const vip = require( 'vip' );
 const url = require( 'url' );
 const path = require( 'path' );
-const log = require( 'single-line-log' ).stdout;
+const log = require( 'single-line-log' ).stderr;
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
@@ -65,7 +65,7 @@ export function getCredentials( callback ) {
 		}
 
 		if ( ! r.accessToken ) {
-			console.log( 'no access token' );
+			console.error( 'no access token' );
 			return callback( 'Invalid login credentials' );
 		}
 
@@ -126,7 +126,7 @@ export function findAndConfirmSite( site, action, cb ) {
 			'-- Environment: ' + s.environment_name,
 		] );
 
-		promptly.confirm( 'Are you sure?', ( err, yes ) => {
+		promptly.confirm( 'Are you sure?', { output: process.stderr }, ( err, yes ) => {
 			if ( err ) {
 				return console.error( err );
 			}
@@ -157,9 +157,9 @@ export function displayNotice( notice ) {
 		notice = [ notice ];
 	}
 
-	console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
-	notice.forEach( msg => console.log( msg ) );
-	console.log( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+	console.error( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
+	notice.forEach( msg => console.error( msg ) );
+	console.error( '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-' );
 }
 
 let loadingIndex = 0;
@@ -176,7 +176,7 @@ export function showLoading( msg ) {
 
 export function maybeConfirm( prompt, doPrompt, cb ) {
 	if ( doPrompt ) {
-		return promptly.confirm( prompt, cb );
+		return promptly.confirm( prompt, { output: process.stderr }, cb );
 	}
 
 	cb( null, true );

@@ -1,5 +1,5 @@
 const program = require( 'commander' );
-const log = require( 'single-line-log' ).stdout;
+const log = require( 'single-line-log' ).stderr;
 
 // Ours
 const api = require( '../lib/api' );
