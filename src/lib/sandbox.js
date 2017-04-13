@@ -220,14 +220,14 @@ export function createSandboxForSite( site, cb ) {
 				return s.containers[0].state === 'running';
 			}).length;
 
-			if ( running >= 6 ) {
+			if ( running > 5 ) {
 				console.error( 'Error: Too many running sandbox containers. Clean some of them up with `vip sandbox stop <site>` before creating another.' );
 				listSandboxes();
 				return;
 			}
 
-			if ( total >= 6 ) {
-				console.log( 'Warning: There are more than 5 total sandbox containers on this host. Consider deleting some unused ones with `vip sandbox delete <site>`' );
+			if ( total > 20 ) {
+				console.log( 'Warning: There are more than 20 total sandbox containers on this host. Consider deleting some unused ones with `vip sandbox delete <site>`' );
 			}
 
 			api
