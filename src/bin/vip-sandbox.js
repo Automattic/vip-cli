@@ -2,6 +2,7 @@
 
 const program = require( 'commander' );
 const promptly = require( 'promptly' );
+const async = require( 'async' );
 
 // Ours
 const api = require( '../lib/api' );
@@ -132,6 +133,47 @@ program
 							}
 						});
 				});
+			});
+		});
+	});
+
+program
+	.command( 'purge' )
+	.description( 'Delete all stopped sandbox containers' )
+	.action( () => {
+		const opts = {
+			state: 'stopped',
+		};
+
+		sandbox.getSandboxes( opts, ( err, data ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			const sandboxes = data.data;
+
+			if ( ! sandboxes.length ) {
+				return console.error( 'No stopped sandbox containers found.' );
+			}
+
+			utils.maybeConfirm( `This will delete all ${ sandboxes.length } sandbox containers on your host. Are you sure?`, true, ( err, yes ) => {
+					if ( ! yes ) {
+						return;
+					}
+
+					async.eachSeries( sandboxes, ( s, done ) => {
+						const container = s.containers[0];
+						console.log( `Deleting container ${ container.container_name } (#${ container.container_id })`  );
+						sandbox.deleteSandbox( s.id, done );
+					}, ( err ) => {
+						if ( err ) {
+							console.error( 'Failed to delete one or more sandboxes:' );
+							console.error( err );
+							return;
+						}
+
+						console.log( 'All done.' );
+					} );
 			});
 		});
 	});

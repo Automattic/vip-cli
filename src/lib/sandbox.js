@@ -302,23 +302,31 @@ export function waitForRunningSandbox( site, cb ) {
 	}, 1000 );
 }
 
-export function listSandboxes( opts, cb ) {
-	var query = {
+export function getSandboxes( opts = {}, cb ) {
+	const query = Object.assign( {
 		api_user_id: api.auth.apiUserId,
 		state: 'any',
-	};
-
-	if ( opts && opts.client_site_id ) {
-		query.client_site_id = opts.client_site_id;
-	}
+	}, opts );
 
 	api
 		.get( '/sandboxes' )
 		.query( query )
 		.end( ( err, res ) => {
 			if ( err ) {
-				return console.error( err.response.error );
+				return cb( err.response.error );
 			}
+
+			cb( err, res.body );
+		} );
+}
+
+export function listSandboxes( opts, cb ) {
+	getSandboxes( opts, ( err, data ) => {
+		if ( err ) {
+				return console.error( err.response.error );
+		}
+
+		const sandboxes = data.data;
 
 			var headers = [ 'Site ID', 'Site Name', 'State' ];
 
@@ -334,7 +342,7 @@ export function listSandboxes( opts, cb ) {
 			});
 
 			var i = 1;
-			res.body.data.forEach( s => {
+			sandboxes.forEach( s => {
 				s.containers.forEach( c => {
 					switch ( c.state ) {
 					case 'stopped':
@@ -362,5 +370,17 @@ export function listSandboxes( opts, cb ) {
 			if ( cb ) {
 				cb();
 			}
+		});
+}
+
+export function deleteSandbox( id, cb ) {
+	api
+		.del( '/sandboxes/' + id )
+		.end( err => {
+			if ( err ) {
+				return cb( err.response.error );
+			}
+
+			cb();
 		});
 }
