@@ -161,23 +161,23 @@ program
 			sandbox.displaySandboxes( sandboxes );
 
 			utils.maybeConfirm( `Are you sure you want to delete all ${ sandboxes.length } sandbox containers on your host?`, true, ( err, yes ) => {
-					if ( ! yes ) {
+				if ( ! yes ) {
+					return;
+				}
+
+				async.eachSeries( sandboxes, ( s, done ) => {
+					const container = s.containers[0];
+					console.log( `Deleting container ${ container.container_name } (#${ container.container_id })`  );
+					sandbox.deleteSandbox( s.id, done );
+				}, ( err ) => {
+					if ( err ) {
+						console.error( 'Failed to delete one or more sandboxes:' );
+						console.error( err );
 						return;
 					}
 
-					async.eachSeries( sandboxes, ( s, done ) => {
-						const container = s.containers[0];
-						console.log( `Deleting container ${ container.container_name } (#${ container.container_id })`  );
-						sandbox.deleteSandbox( s.id, done );
-					}, ( err ) => {
-						if ( err ) {
-							console.error( 'Failed to delete one or more sandboxes:' );
-							console.error( err );
-							return;
-						}
-
-						console.log( 'All done.' );
-					} );
+					console.log( 'All done.' );
+				});
 			});
 		});
 	});

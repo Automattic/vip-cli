@@ -303,7 +303,7 @@ export function waitForRunningSandbox( site, cb ) {
 }
 
 export function getSandboxes( opts = {}, cb ) {
-	const query = Object.assign( {
+	const query = Object.assign({
 		api_user_id: api.auth.apiUserId,
 		state: 'any',
 	}, opts );
@@ -317,13 +317,13 @@ export function getSandboxes( opts = {}, cb ) {
 			}
 
 			cb( err, res.body );
-		} );
+		});
 }
 
 export function listSandboxes( opts, cb ) {
 	getSandboxes( opts, ( err, data ) => {
 		if ( err ) {
-				return console.error( err.response.error );
+			return console.error( err.response.error );
 		}
 
 		const sandboxes = data.data;
