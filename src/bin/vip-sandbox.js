@@ -156,7 +156,11 @@ program
 				return console.error( 'No stopped sandbox containers found.' );
 			}
 
-			utils.maybeConfirm( `This will delete all ${ sandboxes.length } sandbox containers on your host. Are you sure?`, true, ( err, yes ) => {
+			console.log( 'We found the following stopped sandbox containers:' );
+
+			sandbox.displaySandboxes( sandboxes );
+
+			utils.maybeConfirm( `Are you sure you want to delete all ${ sandboxes.length } sandbox containers on your host?`, true, ( err, yes ) => {
 					if ( ! yes ) {
 						return;
 					}

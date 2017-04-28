@@ -328,49 +328,53 @@ export function listSandboxes( opts, cb ) {
 
 		const sandboxes = data.data;
 
-			var headers = [ 'Site ID', 'Site Name', 'State' ];
+		displaySandboxes( sandboxes );
+
+		if ( cb ) {
+			cb();
+		}
+	});
+}
+
+export function displaySandboxes( sandboxes, opts ) {
+	var headers = [ 'Site ID', 'Site Name', 'State' ];
+
+	if ( opts && opts.index ) {
+		headers.unshift( '#' );
+	}
+
+	var table = new Table({
+		head: headers,
+		style: {
+			head: ['blue'],
+		},
+	});
+
+	var i = 1;
+	sandboxes.forEach( s => {
+		s.containers.forEach( c => {
+			switch ( c.state ) {
+			case 'stopped':
+			case 'stopping':
+				c.state = colors['red']( c.state );
+				break;
+
+			case 'running':
+				c.state = colors['green']( c.state );
+				break;
+			}
+
+			var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
 
 			if ( opts && opts.index ) {
-				headers.unshift( '#' );
+				row.unshift( i++ );
 			}
 
-			var table = new Table({
-				head: headers,
-				style: {
-					head: ['blue'],
-				},
-			});
-
-			var i = 1;
-			sandboxes.forEach( s => {
-				s.containers.forEach( c => {
-					switch ( c.state ) {
-					case 'stopped':
-					case 'stopping':
-						c.state = colors['red']( c.state );
-						break;
-
-					case 'running':
-						c.state = colors['green']( c.state );
-						break;
-					}
-
-					var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
-
-					if ( opts && opts.index ) {
-						row.unshift( i++ );
-					}
-
-					table.push( row );
-				});
-			});
-
-			console.log( table.toString() );
-
-			if ( cb ) {
-				cb();
-			}
+			table.push( row );
 		});
+	});
+
+	console.log( table.toString() );
 }
 
 export function deleteSandbox( id, cb ) {
