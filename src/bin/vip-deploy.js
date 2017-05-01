@@ -25,6 +25,8 @@ program
 					if ( err ) {
 						console.error( err.response.error );
 					}
+
+					console.log( 'Success: Queued deploy for %s', site.primary_domain.domain_name );
 				});
 		});
 	});
