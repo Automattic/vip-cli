@@ -4,17 +4,29 @@ const program = require( 'commander' );
 
 // Ours
 const api = require( '../lib/api' );
+const utils = require( '../lib/utils' );
 
 program
 	.arguments( '<site> <sha>' )
 	.action( ( site, sha, options ) => {
-		api
-			.post( '/sites/' + site + '/revisions/' + sha + '/deploy' )
-			.end( err => {
-				if ( err ) {
-					console.error( err.response.error );
-				}
-			});
+
+		if ( sha.length < 7 || ! sha.match( /^[0-9a-f]+$/i ) ) {
+			return console.error( 'Deploy sha must be at least 7 hexadecimal digits.' );
+		}
+
+		utils.findSite( site, ( err, site ) => {
+			if ( err || ! site ) {
+				return console.error( 'Could not find specified site' );
+			}
+
+			api
+				.post( '/sites/' + site.client_site_id + '/revisions/' + sha + '/deploy' )
+				.end( err => {
+					if ( err ) {
+						console.error( err.response.error );
+					}
+				});
+		});
 	});
 
 program.parse( process.argv );
