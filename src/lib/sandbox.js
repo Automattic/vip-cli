@@ -302,65 +302,89 @@ export function waitForRunningSandbox( site, cb ) {
 	}, 1000 );
 }
 
-export function listSandboxes( opts, cb ) {
-	var query = {
+export function getSandboxes( opts = {}, cb ) {
+	const query = Object.assign({
 		api_user_id: api.auth.apiUserId,
 		state: 'any',
-	};
-
-	if ( opts && opts.client_site_id ) {
-		query.client_site_id = opts.client_site_id;
-	}
+	}, opts );
 
 	api
 		.get( '/sandboxes' )
 		.query( query )
 		.end( ( err, res ) => {
 			if ( err ) {
-				return console.error( err.response.error );
+				return cb( err.response.error );
 			}
 
-			var headers = [ 'Site ID', 'Site Name', 'State' ];
+			cb( err, res.body );
+		});
+}
+
+export function listSandboxes( opts, cb ) {
+	getSandboxes( opts, ( err, data ) => {
+		if ( err ) {
+			return console.error( err.response.error );
+		}
+
+		const sandboxes = data.data;
+
+		displaySandboxes( sandboxes );
+
+		if ( cb ) {
+			cb();
+		}
+	});
+}
+
+export function displaySandboxes( sandboxes, opts ) {
+	var headers = [ 'Site ID', 'Site Name', 'State' ];
+
+	if ( opts && opts.index ) {
+		headers.unshift( '#' );
+	}
+
+	var table = new Table({
+		head: headers,
+		style: {
+			head: ['blue'],
+		},
+	});
+
+	var i = 1;
+	sandboxes.forEach( s => {
+		s.containers.forEach( c => {
+			switch ( c.state ) {
+			case 'stopped':
+			case 'stopping':
+				c.state = colors['red']( c.state );
+				break;
+
+			case 'running':
+				c.state = colors['green']( c.state );
+				break;
+			}
+
+			var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
 
 			if ( opts && opts.index ) {
-				headers.unshift( '#' );
+				row.unshift( i++ );
 			}
 
-			var table = new Table({
-				head: headers,
-				style: {
-					head: ['blue'],
-				},
-			});
+			table.push( row );
+		});
+	});
 
-			var i = 1;
-			res.body.data.forEach( s => {
-				s.containers.forEach( c => {
-					switch ( c.state ) {
-					case 'stopped':
-					case 'stopping':
-						c.state = colors['red']( c.state );
-						break;
+	console.log( table.toString() );
+}
 
-					case 'running':
-						c.state = colors['green']( c.state );
-						break;
-					}
-
-					var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
-
-					if ( opts && opts.index ) {
-						row.unshift( i++ );
-					}
-
-					table.push( row );
-				});
-			});
-
-			console.log( table.toString() );
-
-			if ( cb ) {
-				cb();
+export function deleteSandbox( id, cb ) {
+	api
+		.del( '/sandboxes/' + id )
+		.end( err => {
+			if ( err ) {
+				return cb( err.response.error );
 			}
+
+			cb();
 		});
 }
