@@ -25,7 +25,7 @@ program
 
 			api
 				.get( '/sites/' + site.client_site_id + '/files' )
-				.query({ 'pagesize': 1 }) // Just need totalrecs here
+				.query({ 'pagesize': 0 }) // Just need totalrecs here
 				.end( function( err, res ) {
 					if ( err ) {
 						return console.error( err.response.error );

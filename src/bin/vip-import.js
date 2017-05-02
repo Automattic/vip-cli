@@ -100,7 +100,7 @@ program
 		}
 
 		utils.findAndConfirmSite( site, 'Importing files for site:', site => {
-			files.list( site, { 'pagesize': 1 })
+			files.list( site, { 'pagesize': 0 }) // just need totalrecs here
 				.then( res => res.totalrecs )
 				.then( total => {
 					if ( total < FORCE_FAST_IMPORT_LIMIT ) {
