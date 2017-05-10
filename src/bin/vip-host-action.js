@@ -70,7 +70,8 @@ function getHostActionsTable( opts ) {
 			});
 
 			log( table.toString() + '\n' );
-		});
+		})
+		.catch( err => console.error( err ) );
 }
 
 program.parse( process.argv );
