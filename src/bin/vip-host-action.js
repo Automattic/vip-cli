@@ -1,6 +1,7 @@
 const program = require( 'commander' );
 const log = require( 'single-line-log' ).stdout;
 const Table = require( 'cli-table' );
+const colors = require( 'colors/safe' );
 
 // Ours
 const api = require( '../lib/api' );
@@ -70,7 +71,7 @@ program
 
 function getHostActionsTable( opts ) {
 	let table = new Table({
-		head: [ 'ID', 'Host ID', 'Action Type', 'Status' ],
+		head: [ 'ID', 'Parent ID', 'Host ID', 'Action Type', 'Status' ],
 		style: {
 			head: ['blue'],
 		},
@@ -79,8 +80,23 @@ function getHostActionsTable( opts ) {
 	host.getHostActions( opts )
 		.then( body => {
 			body.data.forEach( action => {
+				switch ( action.status ) {
+				case 'failed':
+					action.status = colors['red']( action.status );
+					break;
+
+				case 'queued':
+					action.status = colors['yellow']( action.status );
+					break;
+
+				case 'success':
+					action.status = colors['green']( action.status );
+					break;
+				}
+
 				table.push( [
 					action.host_action_id,
+					action.parent_id || 0,
 					action.host_id,
 					action.action_type,
 					action.status,
