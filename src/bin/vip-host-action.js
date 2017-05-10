@@ -25,6 +25,20 @@ program
 	});
 
 program
+	.command( 'requeue <host> <host-action-id>' )
+	.action( ( host, action ) => {
+		api
+			.post( '/hosts/' + host + '/actions/' + action + '/requeue' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( err.response.error );
+				}
+
+				console.log( res.body );
+			});
+	});
+
+program
 	.command( 'list' )
 	.option( '-h, --host <host>', 'Host to filter' )
 	.option( '-s, --status <status>', 'Status to filter', 'any' )
