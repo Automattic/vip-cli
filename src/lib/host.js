@@ -32,7 +32,7 @@ export function getHostActions( opts ) {
 					return reject( new Error( 'Failed to get host actions: ' + err.response.error ) );
 				}
 
-				return resolve( res.body.data );
+				return resolve( res.body );
 			});
 	});
 }

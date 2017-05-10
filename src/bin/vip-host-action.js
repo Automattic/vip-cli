@@ -46,7 +46,9 @@ program
 	.option( '-s, --status <status>', 'Status to filter', 'any' )
 	.option( '-w, --watch', 'Poll the options table for updates every 1s' )
 	.action( ( options ) => {
-		let opts = {};
+		let opts = {
+			pagesize: 10,
+		};
 
 		if ( options.host ) {
 			opts.host_id = options.host;
@@ -75,8 +77,8 @@ function getHostActionsTable( opts ) {
 	});
 
 	host.getHostActions( opts )
-		.then( actions => {
-			actions.forEach( action => {
+		.then( body => {
+			body.data.forEach( action => {
 				table.push( [
 					action.host_action_id,
 					action.host_id,
@@ -85,7 +87,10 @@ function getHostActionsTable( opts ) {
 				] );
 			});
 
-			log( table.toString() + '\n' );
+			let output = table.toString() + '\n';
+			output += `Showing ${body.data.length} of ${body.totalrecs}.` + '\n';
+
+			log( output );
 		})
 		.catch( err => console.error( err ) );
 }
