@@ -1,6 +1,25 @@
 // Ours
 const api = require( '../lib/api' );
 
+export function createHostAction( host_id, action_type, payload ) {
+	return new Promise( ( resolve, reject ) => {
+		api
+			.post( '/hosts/' + host_id + '/actions' )
+			.send({
+				host_id: host_id,
+				action_type: action_type,
+				payload: payload || {},
+			})
+			.end( ( err, res ) => {
+				if ( err ) {
+					return reject( new Error( 'Failed to create host action: ' + err.response.error ) );
+				}
+
+				return resolve( res.body );
+			});
+	});
+}
+
 export function getHostActions( opts ) {
 	opts = opts || {};
 

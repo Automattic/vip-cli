@@ -7,6 +7,24 @@ const api = require( '../lib/api' );
 const host = require( '../lib/host' );
 
 program
+	.command( 'create <action>' )
+	.option( '-h, --host <host>', 'Host ID' )
+	.option( '-p, --payload <payload>', 'Payload', JSON.parse, {})
+	.action( ( action, options ) => {
+		if ( ! options.host ) {
+			// TODO: Automatically infer the host ID from container_id when there is one?
+			console.error( 'ERROR: Missing host ID' );
+			return;
+		}
+
+		host.createHostAction( options.host, action, options.payload )
+			.then( res => {
+				console.log( res );
+			})
+			.catch( err => console.error( err ) );
+	});
+
+program
 	.command( 'list' )
 	.option( '-h, --host <host>', 'Host to filter' )
 	.option( '-s, --status <status>', 'Status to filter', 'any' )
