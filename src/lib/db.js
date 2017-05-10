@@ -73,10 +73,12 @@ export function importDB( site, file, opts, callback ) {
 }
 
 export function exportDB( site, callback ) {
-	getConnection( site, ( err, args ) => {
+	getConnection( site, ( err, connectionArgs ) => {
 		if ( err ) {
 			return callback( err );
 		}
+
+		let args = connectionArgs.concat( [ '--single-transaction', '--quick' ] );
 
 		spawn( 'mysqldump', args, { stdio: 'inherit' });
 	});
