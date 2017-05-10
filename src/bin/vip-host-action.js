@@ -17,6 +17,7 @@ program
 			return;
 		}
 
+		// TODO: Add option to watch this action until it's completed
 		host.createHostAction( options.host, action, options.payload )
 			.then( res => {
 				console.log( res );
@@ -30,6 +31,7 @@ program
 		api
 			.post( '/hosts/' + host + '/actions/' + action + '/requeue' )
 			.end( ( err, res ) => {
+				// TODO: Add option to watch this action until it's completed
 				if ( err ) {
 					return console.error( err.response.error );
 				}
