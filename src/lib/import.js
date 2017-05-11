@@ -7,7 +7,7 @@ export function upload( site, file, token, cb ) {
 		var req = http.request({
 			hostname: 'files.vipv2.net',
 			method: 'PUT',
-			path: '/wp-content/uploads' + filepath[1],
+			path: encodeURI( '/wp-content/uploads' + filepath[1] ),
 			headers: {
 				'X-Client-Site-ID': site.client_site_id,
 				'X-Access-Token': token,
