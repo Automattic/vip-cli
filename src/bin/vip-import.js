@@ -123,6 +123,7 @@ program
 							var logfile = `/tmp/import-${site.client_site_id}-${Date.now()}.log`;
 							var extensions = fs.createWriteStream( logfile + '.ext' );
 							var intermediates = fs.createWriteStream( logfile + '.int' );
+							var invalidFiles = fs.createWriteStream( logfile + '.filenames' );
 
 							var processFiles = function( importing, callback ) {
 								var queue = async.priorityQueue( ( file, cb ) => {
@@ -175,6 +176,10 @@ program
 
 											if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
 												return extensions.write( file + '\n', cb );
+											}
+
+											if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+												return invalidFiles.write( file + '\n', cb );
 											}
 
 											let int_re = /-\d+x\d+(\.\w{3,4})$/;
@@ -255,10 +260,13 @@ program
 									let data;
 									let extHeader = "Skipped with unsupported extension:";
 									let intHeader = "Skipped intermediate images:";
+									let fileHeader = "Skipped invalid filenames:";
 
 									extHeader += '\n' + '='.repeat( extHeader.length ) + '\n\n';
 									intHeader += '\n' + '='.repeat( intHeader.length ) + '\n\n';
+									fileHeader += '\n' + '='.repeat( fileHeader.length ) + '\n\n';
 
+									// Append invalid file extensions
 									fs.appendFileSync( logfile, extHeader );
 
 									try {
@@ -270,12 +278,24 @@ program
 									}
 
 
+									// Append intermediate images
 									fs.appendFileSync( logfile, intHeader );
 
 									try {
 										data = fs.readFileSync( logfile + '.int' );
 										fs.appendFileSync( logfile, data + '\n\n' );
 										fs.unlinkSync( logfile + '.int' );
+									} catch ( e ) {
+										fs.appendFileSync( logfile, "None\n\n" );
+									}
+
+									// Append invalid filenames
+									fs.appendFileSync( logfile, fileHeader );
+
+									try {
+										data = fs.readFileSync( logfile + '.filenames' );
+										fs.appendFileSync( logfile, data + '\n\n' );
+										fs.unlinkSync( logfile + '.filenames' );
 									} catch ( e ) {
 										fs.appendFileSync( logfile, "None\n\n" );
 									}
