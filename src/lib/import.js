@@ -30,6 +30,10 @@ export function queueDir( dir, offset, cb ) {
 	var priority = 0 - dir.split( '/' ).length;
 
 	fs.readdir( dir, ( err, files ) => {
+		if ( files.length <= 0 ) {
+			return cb( [] );
+		}
+
 		if ( files.length - offset < 10000 ) {
 			// If there are less than 2 full rounds of files left, just do them all now
 			files = files.slice( offset, offset + 10000 );
