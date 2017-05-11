@@ -156,6 +156,8 @@ program
 									], function( err, file, stats ) {
 										if ( err ) {
 											return cb( err );
+										} else if ( stats.isSymbolicLink() ) {
+											return cb( new Error( 'Invalid file: symlink' ) );
 										} else if ( stats.isDirectory() ) {
 											// Init directory queueing with offset=0
 											imports.queueDir( file, 0, function( q ) {
