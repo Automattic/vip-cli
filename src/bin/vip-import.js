@@ -177,8 +177,17 @@ program
 												return extensions.write( file + '\n', cb );
 											}
 
-											if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
-												return intermediates.write( file + '\n', cb );
+											let int_re = /-\d+x\d+(\.\w{3,4})$/;
+											if ( ! options.intermediate && int_re.test( file ) ) {
+												// Check if the original file exists
+												let orig = file.replace( int_re, '$1' );
+
+												try {
+													fs.statSync( orig );
+													return intermediates.write( file + '\n', cb );
+												} catch ( e ) {
+													// continue
+												}
 											}
 
 											if ( ! filepath[1] ) {
