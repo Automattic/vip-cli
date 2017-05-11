@@ -220,7 +220,12 @@ program
 								}, 5 );
 
 								if ( callback ) {
-									queue.drain = callback;
+									queue.drain = function() {
+										if ( queue.workersList().length <= 0 ) {
+											// Queue is empty and all workers finished
+											callback();
+										}
+									};
 								}
 
 								// Start it
