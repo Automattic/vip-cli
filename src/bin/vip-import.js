@@ -94,6 +94,7 @@ program
 	.option( '-p, --parallel <threads>', 'Number of parallel uploads. Default: 5', 5, parseInt )
 	.option( '-i, --intermediate', 'Upload intermediate images' )
 	.option( '-f, --fast', 'Skip existing file check' )
+	.option( '-d, --dry-run', 'Check and list invalid files' )
 	.action( ( site, directory, options ) => {
 		if ( 0 > directory.indexOf( 'uploads' ) ) {
 			return console.error( 'Invalid uploads directory. Uploads must be in uploads/' );
@@ -123,6 +124,7 @@ program
 							var logfile = `/tmp/import-${site.client_site_id}-${Date.now()}.log`;
 							var extensions = fs.createWriteStream( logfile + '.ext' );
 							var intermediates = fs.createWriteStream( logfile + '.int' );
+							var invalidFiles = fs.createWriteStream( logfile + '.filenames' );
 
 							var processFiles = function( importing, callback ) {
 								var queue = async.priorityQueue( ( file, cb ) => {
@@ -156,6 +158,8 @@ program
 									], function( err, file, stats ) {
 										if ( err ) {
 											return cb( err );
+										} else if ( stats.isSymbolicLink() ) {
+											return cb( new Error( 'Invalid file: symlink' ) );
 										} else if ( stats.isDirectory() ) {
 											// Init directory queueing with offset=0
 											imports.queueDir( file, 0, function( q ) {
@@ -172,11 +176,37 @@ program
 											ext = ext[ ext.length - 1 ];
 
 											if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
-												return extensions.write( file + '\n', cb );
+												if ( options.dryRun || importing ) {
+													return extensions.write( file + '\n', cb );
+												}
+
+												return cb( new Error( 'Invalid file extension' ) );
 											}
 
-											if ( ! options.intermediate && /-\d+x\d+\.\w{3,4}$/.test( file ) ) {
-												return intermediates.write( file + '\n', cb );
+											if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+												if ( options.dryRun || importing ) {
+													return invalidFiles.write( file + '\n', cb );
+												}
+
+												return cb( new Error( 'Invalid filename' ) );
+											}
+
+											let int_re = /-\d+x\d+(\.\w{3,4})$/;
+											if ( ! options.intermediate && int_re.test( file ) ) {
+												// Check if the original file exists
+												let orig = file.replace( int_re, '$1' );
+
+												try {
+													fs.statSync( orig );
+
+													if ( options.dryRun || importing ) {
+														return intermediates.write( file + '\n', cb );
+													}
+
+													return cb( new Error( 'Skipping intermediate image: ' + file ) );
+												} catch ( e ) {
+													// continue
+												}
 											}
 
 											if ( ! filepath[1] ) {
@@ -198,7 +228,7 @@ program
 												return imports.upload( site, file, access_token, cb );
 											} else {
 												request
-												.get( 'https://files.vipv2.net/wp-content/uploads' + filepath[1] )
+												.get( encodeURI( 'https://files.vipv2.net/wp-content/uploads' + filepath[1] ) )
 												.set({ 'X-Client-Site-ID': site.client_site_id })
 												.set({ 'X-Access-Token': access_token })
 												.set({ 'X-Action': 'file_exists' })
@@ -220,51 +250,80 @@ program
 								}, 5 );
 
 								if ( callback ) {
-									queue.drain = callback;
+									queue.drain = function() {
+										if ( queue.workersList().length <= 0 ) {
+											// Queue is empty and all workers finished
+											callback();
+										}
+									};
 								}
 
 								// Start it
 								queue.push( directory, 1 );
 							};
 
+							const finish_log = function() {
+								extensions.end();
+								intermediates.end();
+
+								let data;
+								let extHeader = "Skipped with unsupported extension:";
+								let intHeader = "Skipped intermediate images:";
+								let fileHeader = "Skipped invalid filenames:";
+
+								extHeader += '\n' + '='.repeat( extHeader.length ) + '\n\n';
+								intHeader += '\n' + '='.repeat( intHeader.length ) + '\n\n';
+								fileHeader += '\n' + '='.repeat( fileHeader.length ) + '\n\n';
+
+								// Append invalid file extensions
+								fs.appendFileSync( logfile, extHeader );
+
+								try {
+									data = fs.readFileSync( logfile + '.ext' );
+									fs.appendFileSync( logfile, data + '\n\n' );
+									fs.unlinkSync( logfile + '.ext' );
+								} catch ( e ) {
+									fs.appendFileSync( logfile, "None\n\n" );
+								}
+
+
+								// Append intermediate images
+								fs.appendFileSync( logfile, intHeader );
+
+								try {
+									data = fs.readFileSync( logfile + '.int' );
+									fs.appendFileSync( logfile, data + '\n\n' );
+									fs.unlinkSync( logfile + '.int' );
+								} catch ( e ) {
+									fs.appendFileSync( logfile, "None\n\n" );
+								}
+
+								// Append invalid filenames
+								fs.appendFileSync( logfile, fileHeader );
+
+								try {
+									data = fs.readFileSync( logfile + '.filenames' );
+									fs.appendFileSync( logfile, data + '\n\n' );
+									fs.unlinkSync( logfile + '.filenames' );
+								} catch ( e ) {
+									fs.appendFileSync( logfile, "None\n\n" );
+								}
+
+								console.log( `Import log: ${logfile}` );
+							};
+
 							// TODO: Cache file count to disk, hash directory so we know if the contents change?
 							console.log( 'Counting files...' );
 							processFiles( false, function() {
+								if ( options.dryRun ) {
+									finish_log();
+									return;
+								}
+
 								bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 });
 								console.log( 'Importing ' + filecount + ' files...' );
 								processFiles( true, function() {
-									extensions.end();
-									intermediates.end();
-
-									let data;
-									let extHeader = "Skipped with unsupported extension:";
-									let intHeader = "Skipped intermediate images:";
-
-									extHeader += '\n' + '='.repeat( extHeader.length ) + '\n\n';
-									intHeader += '\n' + '='.repeat( intHeader.length ) + '\n\n';
-
-									fs.appendFileSync( logfile, extHeader );
-
-									try {
-										data = fs.readFileSync( logfile + '.ext' );
-										fs.appendFileSync( logfile, data + '\n\n' );
-										fs.unlinkSync( logfile + '.ext' );
-									} catch ( e ) {
-										fs.appendFileSync( logfile, "None\n\n" );
-									}
-
-
-									fs.appendFileSync( logfile, intHeader );
-
-									try {
-										data = fs.readFileSync( logfile + '.int' );
-										fs.appendFileSync( logfile, data + '\n\n' );
-										fs.unlinkSync( logfile + '.int' );
-									} catch ( e ) {
-										fs.appendFileSync( logfile, "None\n\n" );
-									}
-
-									console.log( `Import log: ${logfile}` );
+									finish_log();
 								});
 							});
 						});

@@ -7,7 +7,7 @@ export function upload( site, file, token, cb ) {
 		var req = http.request({
 			hostname: 'files.vipv2.net',
 			method: 'PUT',
-			path: '/wp-content/uploads' + filepath[1],
+			path: encodeURI( '/wp-content/uploads' + filepath[1] ),
 			headers: {
 				'X-Client-Site-ID': site.client_site_id,
 				'X-Access-Token': token,
@@ -30,6 +30,10 @@ export function queueDir( dir, offset, cb ) {
 	var priority = 0 - dir.split( '/' ).length;
 
 	fs.readdir( dir, ( err, files ) => {
+		if ( files.length <= 0 ) {
+			return cb( [] );
+		}
+
 		if ( files.length - offset < 10000 ) {
 			// If there are less than 2 full rounds of files left, just do them all now
 			files = files.slice( offset, offset + 10000 );
