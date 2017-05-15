@@ -21,6 +21,7 @@ program
 	.command( 'run <site> <command...>' )
 	.description( 'Run a wp-cli command on a sandbox container' )
 	.option( '--skip-confirm', 'Run the command without asking for confirmation' )
+	.option( '-h, --help' )
 	.allowUnknownOption()
 	.action( ( site, command, options ) => {
 		var confirm = ! options.skipConfirm;
