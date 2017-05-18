@@ -90,28 +90,28 @@ program
 
 								sites.forEach( site => {
 									site.forEach( container => {
-										var colorized_state = container.state;
+										let colorizedState = container.state;
 
-										switch ( colorized_state ) {
+										switch ( colorizedState ) {
 										case 'running':
 											if ( container.software_stack_name === defaultStack ) {
-												colorized_state = colors['green']( colorized_state );
+												colorizedState = colors['green']( colorizedState );
 											} else {
-												colorized_state = colors['yellow']( colorized_state );
+												colorizedState = colors['yellow']( colorizedState );
 											}
 											break;
 										case 'upgrading':
-											colorized_state = colors['blue']( colorized_state );
+											colorizedState = colors['blue']( colorizedState );
 											break;
 										case 'stopped':
 										case 'uninitialized':
-											colorized_state = colors['red']( colorized_state );
+											colorizedState = colors['red']( colorizedState );
 										}
 
 										table.push( [
 											container.domain_name,
 											container.container_id,
-											colorized_state,
+											colorizedState,
 											container.software_stack_name,
 										] );
 									});
