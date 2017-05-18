@@ -103,6 +103,9 @@ program
 										case 'upgrading':
 											colorized_state = colors['blue']( colorized_state );
 											break;
+										case 'stopped':
+										case 'uninitialized':
+											colorized_state = colors['red']( colorized_state );
 										}
 
 										table.push( [
