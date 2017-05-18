@@ -53,7 +53,10 @@ program
 		siteUtils.update( null, query )
 			.then( data => {
 				let failed = data.failed.map( d => d.name || d.domain_name );
-				console.log( 'Warning: Failed to queue upgrades for ', failed.join( ', ' ) );
+
+				if ( failed.length > 0 ) {
+					console.log( 'Warning: Failed to queue upgrades for ', failed.join( ', ' ) );
+				}
 
 				// Continue with sites that were successfully queued
 				return data.sites;
