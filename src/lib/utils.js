@@ -113,11 +113,11 @@ export function findSite( domain, cb ) {
 export function findAndConfirmSite( site, action, cb ) {
 	findSite( site, ( err, s ) => {
 		if ( err ) {
-			return console.error( err );
+			return cb( err );
 		}
 
 		if ( ! s ) {
-			return console.error( "Couldn't find site:", site );
+			return cb( new Error( "Couldn't find site:" + site ) );
 		}
 
 		displayNotice( [
@@ -128,7 +128,7 @@ export function findAndConfirmSite( site, action, cb ) {
 
 		promptly.confirm( 'Are you sure?', { output: process.stderr }, ( err, yes ) => {
 			if ( err ) {
-				return console.error( err );
+				return cb( err );
 			}
 
 			if ( ! yes ) {
@@ -136,7 +136,7 @@ export function findAndConfirmSite( site, action, cb ) {
 				return;
 			}
 
-			cb( s );
+			cb( null, s );
 		});
 	});
 }

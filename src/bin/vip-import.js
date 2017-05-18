@@ -338,6 +338,7 @@ program
 	.alias( 'db' )
 	.description( 'Import SQL to a VIP Go site' )
 	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
+	.option( '-s, --skip-confirm', 'Skip the confirmation step' )
 	.action( ( site, file, options ) => {
 		try {
 			which.sync( 'mysql' );
@@ -355,7 +356,11 @@ program
 			return console.error( 'Failed to get import file (%s) due to the following error:\n%s', file, e.message );
 		}
 
-		utils.findAndConfirmSite( site, 'Importing SQL for site:', site => {
+		const importCallback = ( err, site ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
 			db.importDB( site, file, opts, err => {
 				if ( err ) {
 					return console.error( err );
@@ -373,7 +378,13 @@ program
 					})
 					.end();
 			});
-		});
+		};
+
+		if ( ! options.skipConfirm ) {
+			utils.findAndConfirmSite( site, 'Importing SQL for site:', importCallback );
+		} else {
+			utils.findSite( site, importCallback );
+		}
 	});
 
 program.parse( process.argv );
