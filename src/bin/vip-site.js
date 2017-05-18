@@ -46,8 +46,9 @@ program
 			query.search = options.search;
 		}
 
+		// Note: This needs to come last so we appropriately nerf the query object
 		if ( options.site ) {
-			query.client_site_id = options.site;
+			query = { client_site_id: options.site };
 		}
 
 		utils.displayNotice( [
