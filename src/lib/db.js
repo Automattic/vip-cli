@@ -12,24 +12,58 @@ const unzip = zlib.createUnzip();
 // Ours
 const api = require( './api' );
 
-function getConnection( site, callback ) {
-	api
-		.get( '/sites/' + site.client_site_id + '/masterdb' )
-		.end( ( err, res ) => {
-			if ( err ) {
-				return callback( err.response.error );
-			}
+function getConnection( site, opts, callback ) {
+	if ( callback == null ) {
+		callback = opts;
+		opts = {};
+	}
 
-			var args = [
-				`-h${res.body.host}`,
-				`-P${res.body.port}`,
-				`-u${res.body.username}`,
-				res.body.name,
-				`-p${res.body.password}`,
-			];
+	opts = Object.assign({
+		masterdb: true,
+	}, opts );
 
-			callback( null, args );
-		});
+	if ( opts.masterdb ) {
+		api
+			.get( '/sites/' + site.client_site_id + '/masterdb' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err.response.error );
+				}
+
+				var args = [
+					`-h${res.body.host}`,
+					`-P${res.body.port}`,
+					`-u${res.body.username}`,
+					res.body.name,
+					`-p${res.body.password}`,
+				];
+
+				callback( null, args );
+			});
+	} else {
+		api
+			.get( '/sites/' + site.client_site_id + '/slavedb' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err.response.error );
+				}
+
+				var conns = res.body.data;
+
+				// Random DB slave
+				var connection = conns[Math.floor( Math.random()*conns.length )];
+
+				var args = [
+					`-h${connection.host}`,
+					`-P${connection.port}`,
+					`-u${connection.username}`,
+					connection.name,
+					`-p${connection.password}`,
+				];
+
+				callback( null, args );
+			});
+	}
 }
 
 export function importDB( site, file, opts, callback ) {
@@ -73,7 +107,7 @@ export function importDB( site, file, opts, callback ) {
 }
 
 export function exportDB( site, callback ) {
-	getConnection( site, ( err, connectionArgs ) => {
+	getConnection( site, { masterdb: false }, ( err, connectionArgs ) => {
 		if ( err ) {
 			return callback( err );
 		}
