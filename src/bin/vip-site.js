@@ -1,6 +1,7 @@
 const program = require( 'commander' );
 const log = require( 'single-line-log' ).stderr;
 const Table = require( 'cli-table' );
+const colors = require( 'colors/safe' );
 
 // Ours
 const api         = require( '../lib/api' );
@@ -89,10 +90,25 @@ program
 
 								sites.forEach( site => {
 									site.forEach( container => {
+										var colorized_state = container.state;
+
+										switch ( colorized_state ) {
+										case 'running':
+											if ( container.software_stack_name === defaultStack ) {
+												colorized_state = colors['green']( colorized_state );
+											} else {
+												colorized_state = colors['yellow']( colorized_state );
+											}
+											break;
+										case 'upgrading':
+											colorized_state = colors['blue']( colorized_state );
+											break;
+										}
+
 										table.push( [
 											container.domain_name,
 											container.container_id,
-											container.state,
+											colorized_state,
 											container.software_stack_name,
 										] );
 									});
