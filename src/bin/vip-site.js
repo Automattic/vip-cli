@@ -103,7 +103,11 @@ program
 
 								let done = sites.every( site => {
 									return site.every( container => {
-										return container.software_stack_name === defaultStack && container.state === 'running';
+										if ( container.state !== 'running' && container.state !== 'stopped' && container.state !== 'uninitialized' ) {
+											return false;
+										}
+
+										return container.software_stack_name === defaultStack;
 									});
 								});
 
