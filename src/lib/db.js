@@ -13,7 +13,7 @@ const unzip = zlib.createUnzip();
 const api = require( './api' );
 
 function getConnection( site, opts, callback ) {
-	if ( callback == null ) {
+	if ( 'function' === typeof opts ) {
 		callback = opts;
 		opts = {};
 	}
