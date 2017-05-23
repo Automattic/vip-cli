@@ -22,6 +22,17 @@ function getConnection( site, opts, callback ) {
 		masterdb: true,
 	}, opts );
 
+	// Convert DB object to connection args
+	var getCLIArgsForConnectionHost = function( db ) {
+		return [
+			`-h${db.host}`,
+			`-P${db.port}`,
+			`-u${db.username}`,
+			db.name,
+			`-p${db.password}`,
+		];
+	};
+
 	if ( opts.masterdb ) {
 		api
 			.get( '/sites/' + site.client_site_id + '/masterdb' )
@@ -30,13 +41,7 @@ function getConnection( site, opts, callback ) {
 					return callback( err.response.error );
 				}
 
-				var args = [
-					`-h${res.body.host}`,
-					`-P${res.body.port}`,
-					`-u${res.body.username}`,
-					res.body.name,
-					`-p${res.body.password}`,
-				];
+				var args = getCLIArgsForConnectionHost( res.body );
 
 				callback( null, args );
 			});
@@ -52,14 +57,7 @@ function getConnection( site, opts, callback ) {
 
 				// Random DB slave
 				var connection = conns[Math.floor( Math.random()*conns.length )];
-
-				var args = [
-					`-h${connection.host}`,
-					`-P${connection.port}`,
-					`-u${connection.username}`,
-					connection.name,
-					`-p${connection.password}`,
-				];
+				var args = getCLIArgsForConnectionHost( connection );
 
 				callback( null, args );
 			});
