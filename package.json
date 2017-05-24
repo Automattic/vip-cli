@@ -24,6 +24,7 @@
     "postuninstall": "./scripts/postuninstall",
     "prepublish": "npm run build",
     "build": "babel -q src --out-dir=build",
+    "build:watch": "babel src --out-dir=build --watch",
     "test": "eslint src test"
   },
   "main": "build/index.js",
