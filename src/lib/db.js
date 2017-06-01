@@ -90,6 +90,9 @@ export function getCLI( site, callback ) {
 			return callback( err );
 		}
 
+		// Block limit-less updates and selects
+		args.push( '--safe-updates' );
+
 		spawn( 'mysql', args, { stdio: 'inherit' });
 	});
 }
