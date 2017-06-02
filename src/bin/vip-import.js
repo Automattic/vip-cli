@@ -100,7 +100,7 @@ program
 			return console.error( 'Invalid uploads directory. Uploads must be in uploads/' );
 		}
 
-		utils.findAndConfirmSite( site, 'Importing files for site:', site => {
+		utils.findAndConfirmSite( site, 'Importing files for site:', ( err, site ) => {
 			files.list( site, { 'pagesize': 0 }) // just need totalrecs here
 				.then( res => res.totalrecs )
 				.then( total => {
