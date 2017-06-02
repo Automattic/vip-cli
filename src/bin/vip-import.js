@@ -65,7 +65,6 @@ const default_types = [
 	'js',
 	'pdf',
 	'class',
-	'tar','zip','gz','gzip','rar','7z',
 	'psd',
 	'xcf',
 	'doc',
