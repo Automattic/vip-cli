@@ -16,6 +16,7 @@ const files = require( '../lib/files' );
 
 // Config
 const FORCE_FAST_IMPORT_LIMIT = 100;
+const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 function list( v ) {
 	return v.split( ',' );
@@ -124,6 +125,7 @@ program
 							var extensions = fs.createWriteStream( logfile + '.ext' );
 							var intermediates = fs.createWriteStream( logfile + '.int' );
 							var invalidFiles = fs.createWriteStream( logfile + '.filenames' );
+							var filesize = fs.createWriteStream( logfile + '.filesize' );
 
 							var processFiles = function( importing, callback ) {
 								var queue = async.priorityQueue( ( file, cb ) => {
@@ -173,6 +175,10 @@ program
 											var ext      = file.split( '.' );
 
 											ext = ext[ ext.length - 1 ];
+
+											if ( stats.size > MAX_IMPORT_FILE_SIZE ) {
+												return filesize.write( file + '\n', cb );
+											}
 
 											if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
 												if ( options.dryRun || importing ) {
@@ -264,15 +270,19 @@ program
 							const finish_log = function() {
 								extensions.end();
 								intermediates.end();
+								invalidFiles.end();
+								filesize.end();
 
 								let data;
 								let extHeader = "Skipped with unsupported extension:";
 								let intHeader = "Skipped intermediate images:";
 								let fileHeader = "Skipped invalid filenames:";
+								let sizeHeader = "Skipped large files:";
 
 								extHeader += '\n' + '='.repeat( extHeader.length ) + '\n\n';
 								intHeader += '\n' + '='.repeat( intHeader.length ) + '\n\n';
 								fileHeader += '\n' + '='.repeat( fileHeader.length ) + '\n\n';
+								sizeHeader += '\n' + '='.repeat( sizeHeader.length ) + '\n\n';
 
 								// Append invalid file extensions
 								fs.appendFileSync( logfile, extHeader );
@@ -304,6 +314,17 @@ program
 									data = fs.readFileSync( logfile + '.filenames' );
 									fs.appendFileSync( logfile, data + '\n\n' );
 									fs.unlinkSync( logfile + '.filenames' );
+								} catch ( e ) {
+									fs.appendFileSync( logfile, "None\n\n" );
+								}
+
+								// Append invalid filenames
+								fs.appendFileSync( logfile, sizeHeader );
+
+								try {
+									data = fs.readFileSync( logfile + '.filesize' );
+									fs.appendFileSync( logfile, data + '\n\n' );
+									fs.unlinkSync( logfile + '.filesize' );
 								} catch ( e ) {
 									fs.appendFileSync( logfile, "None\n\n" );
 								}
