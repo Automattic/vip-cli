@@ -16,6 +16,7 @@ const files = require( '../lib/files' );
 
 // Config
 const FORCE_FAST_IMPORT_LIMIT = 100;
+const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 function list( v ) {
 	return v.split( ',' );
@@ -175,7 +176,7 @@ program
 
 											ext = ext[ ext.length - 1 ];
 
-											if ( stats.size > 1024 * 1024 * 1024 ) { // 1GB
+											if ( stats.size > MAX_IMPORT_FILE_SIZE ) {
 												return filesize.write( file + '\n', cb );
 											}
 
