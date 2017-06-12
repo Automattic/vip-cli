@@ -128,7 +128,11 @@ program
 
 								let done = sites.every( site => {
 									return site.every( container => {
-										if ( container.state !== 'running' && container.state !== 'stopped' && container.state !== 'uninitialized' ) {
+										if ( container.state === 'stopped' || container.state === 'uninitialized' ) {
+											return true;
+										}
+
+										if ( container.state !== 'running' ) {
 											return false;
 										}
 
