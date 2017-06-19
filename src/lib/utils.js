@@ -126,7 +126,7 @@ export function findAndConfirmSite( site, action, cb ) {
 			'-- Environment: ' + s.environment_name,
 		] );
 
-		promptly.confirm( 'Are you sure?', { output: process.stderr }, ( err, yes ) => {
+		promptly.confirm( 'Are you sure? (y/n)', { output: process.stderr }, ( err, yes ) => {
 			if ( err ) {
 				return cb( err );
 			}
@@ -176,7 +176,7 @@ export function showLoading( msg ) {
 
 export function maybeConfirm( prompt, doPrompt, cb ) {
 	if ( doPrompt ) {
-		return promptly.confirm( prompt, { output: process.stderr }, cb );
+		return promptly.confirm( prompt + ' (y/n)', { output: process.stderr }, cb );
 	}
 
 	cb( null, true );
