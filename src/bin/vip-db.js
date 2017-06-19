@@ -37,7 +37,7 @@ program
 				});
 			}
 
-			var ays = s.environment_name === 'production' ? 'This is the database for PRODUCTION. Are you sure?' : 'Are you sure?';
+			var ays = s.environment_name === 'production' ? 'This is the database for PRODUCTION. Are you sure? (y/n)' : 'Are you sure? (y/n)';
 
 			utils.displayNotice( [
 				'Connecting to database:',
