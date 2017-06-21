@@ -63,6 +63,31 @@ program
 		});
 	});
 
+program
+	.command( 'buffer-pool <site>' )
+	.action( ( site, options ) => {
+		try {
+			which.sync( 'mysql' );
+		} catch ( e ) {
+			return console.error( 'MySQL client is required and not installed.' );
+		}
+
+		utils.findSite( site, ( err, site ) => {
+			let factor = site.environment === 'production' ? 1.6 : 1;
+			let query = `SELECT SUM(data_length) data_bytes,
+				SUM(index_length) index_bytes,
+				SUM(data_length+index_length) total_bytes,
+				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) innodb_mb
+			FROM information_schema.tables WHERE engine='InnoDB'`;
+
+			db.query( site, query, err => {
+				if ( err ) {
+					return console.error( err );
+				}
+			});
+		});
+	});
+
 program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();

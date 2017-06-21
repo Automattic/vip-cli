@@ -96,3 +96,16 @@ export function getCLI( site, callback ) {
 		spawn( 'mysql', args, { stdio: 'inherit' });
 	});
 }
+
+export function query( site, query, callback ) {
+	getConnection( site, ( err, args ) => {
+		if ( err ) {
+			return callback( err );
+		}
+
+		args.push( '--safe-updates' );
+		args.push( '-e', query );
+
+		spawn( 'mysql', args, { stdio: 'inherit' });
+	});
+}
