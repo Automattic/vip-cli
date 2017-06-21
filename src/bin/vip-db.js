@@ -65,6 +65,7 @@ program
 
 program
 	.command( 'buffer-pool <site>' )
+	.option( '-f, --factor <factor>', 'Database growth factor', 0, parseFloat )
 	.action( ( site, options ) => {
 		try {
 			which.sync( 'mysql' );
@@ -73,10 +74,19 @@ program
 		}
 
 		utils.findSite( site, ( err, site ) => {
-			let factor = site.environment === 'production' ? 1.6 : 1;
-			let query = `SELECT SUM(data_length) data_bytes,
-				SUM(index_length) index_bytes,
-				SUM(data_length+index_length) total_bytes,
+			var factor;
+
+			if ( options.factor > 0 ) {
+				factor = options.factor;
+			} else {
+				// Set factor depending on environment
+				factor = site.environment === 'production' ? 1.2 : 0.75;
+			}
+
+			let query = `SELECT
+				CEILING(SUM(data_length)/POWER(1024,2)) data_mb,
+				CEILING(SUM(index_length)/POWER(1024,2)) index_mb,
+				CEILING(SUM(data_length+index_length)/POWER(1024,2)) total_mb,
 				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) innodb_mb
 			FROM information_schema.tables WHERE engine='InnoDB'`;
 
