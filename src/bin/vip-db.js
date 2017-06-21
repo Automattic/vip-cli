@@ -80,8 +80,13 @@ program
 				factor = options.factor;
 			} else {
 				// Set factor depending on environment
-				factor = site.environment === 'production' ? 1.2 : 0.75;
+				factor = site.environment_name === 'production' ? 1.2 : 0.75;
 			}
+
+			console.log( '-- Site:', site.client_site_id );
+			console.log( '-- Domain:', site.domain_name );
+			console.log( '-- Environment:', site.environment_name );
+			console.log( '-- Growth Factor:', factor );
 
 			let query = `SELECT
 				CEILING(SUM(data_length)/POWER(1024,2)) data_mb,
