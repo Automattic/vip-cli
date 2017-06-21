@@ -92,8 +92,8 @@ program
 				CEILING(SUM(data_length)/POWER(1024,2)) data_mb,
 				CEILING(SUM(index_length)/POWER(1024,2)) index_mb,
 				CEILING(SUM(data_length+index_length)/POWER(1024,2)) total_mb,
-				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) innodb_mb,
-			FROM information_schema.tables WHERE engine='InnoDB';`;
+				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) innodb_mb
+			FROM information_schema.tables WHERE engine='InnoDB'`;
 
 			db.query( site, query, err => {
 				if ( err ) {
