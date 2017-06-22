@@ -101,7 +101,6 @@ program
 program
 	.command( 'delete <site>' )
 	.description( 'Delete existing sandbox' )
-	.option( '--all', 'Delete all stopped sandbox containers' )
 	.action( ( site, options ) => {
 		utils.findSite( site, ( err, site ) => {
 			if ( err ) {
