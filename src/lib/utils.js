@@ -50,6 +50,7 @@ export function setCredentials( credentials, callback ) {
 			}
 
 			credentials.role = res.body.data[0].api_user_role_id;
+			credentials.caps = res.body.data[0].caps;
 
 			var encoded = this.encrypt( credentials.accessToken, credentials.userId );
 			credentials.accessToken = encoded;
