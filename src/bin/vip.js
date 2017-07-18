@@ -84,6 +84,11 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'site <action>', 'Perform actions on a site' );
 	}
 
+	if ( api.currentUserCanRead( 'tokens' ) ) {
+		program
+			.command( 'token <action>', 'Perform actions on API tokens' );
+	}
+
 	tab.on( 'deploy', ( data, done ) => {
 		api
 			.get( '/search' )
