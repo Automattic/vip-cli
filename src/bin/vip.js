@@ -18,10 +18,9 @@ const api = require( '../lib/api' );
 // Do update notifications
 updateNotifier({ pkg }).notify();
 
-var hostname = require( 'os' ).hostname();
-var is_sandbox = hostname.substring( hostname.length - 9 ) === 'vipv2.net';
-var is_vip = false;
-var noAuth = [
+const hostname = require( 'os' ).hostname();
+const isSandbox = hostname.substring( hostname.length - 9 ) === 'vipv2.net';
+const noAuth = [
 	'login',
 	'logout',
 ];
@@ -33,8 +32,6 @@ utils.getCredentials( ( err, user ) => {
 				return program.executeSubCommand( process.argv.concat( 'login' ), [ 'login' ] );
 			}
 		}
-	} else if ( user.role && 2 >= user.role ) {
-		is_vip = true;
 	}
 
 	program
@@ -48,52 +45,73 @@ utils.getCredentials( ( err, user ) => {
 			utils.deleteCredentials();
 		});
 
-	// internal VIP commands
-	if ( is_vip ) {
+	program
+		.command( 'api <method> <endpoint>', 'Authenticated API requests' );
+
+	if ( api.currentUserCanRead( 'sites/masterdb' ) ) {
 		program
-			.command( 'api <method> <endpoint>', 'Authenticated API requests' )
-			.command( 'db <site>', 'Connect to a given VIP Go database' )
-			.command( 'deploy <site> <sha>', 'Deploy given git sha' )
-			.command( 'files <site>', 'Export files for a site' )
-			.command( 'host-action', 'Create and view host actions' )
+			.command( 'db <site>', 'Connect to a given VIP Go database' );
+	}
+
+	if ( api.currentUserCanAdd( 'sites/revisions/deploy' ) ) {
+		program
+			.command( 'deploy <site> <sha>', 'Deploy given git sha' );
+	}
+
+	if ( api.currentUserCanRead( 'sites/files' ) ) {
+		program
+			.command( 'files <site>', 'Export files for a site' );
+	}
+
+	if ( api.currentUserCanRead( 'hosts/actions' ) ) {
+		program
+			.command( 'host-action', 'Create and view host actions' );
+	}
+
+	if ( api.currentUserCanRead( 'sites/masterdb' ) ) {
+		program
 			.command( 'import', 'Import to VIP Go' );
+	}
 
-		if ( is_sandbox ) {
-			program
-				.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
-				.command( 'stacks <action>', 'Maintain software stacks on the current host' )
-				.command( 'site <action>', 'Perform actions on a site' );
-		}
+	if ( isSandbox ) {
+		program
+			.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
+			.command( 'stacks <action>', 'Maintain software stacks on the current host' );
+	}
 
-		tab.on( 'deploy', ( data, done ) => {
-			api
-				.get( '/search' )
-				.query( 'search', data.lastPartial )
-				.end( ( end, res ) => {
-					if ( err ) {
-						return done( err );
-					}
+	if ( api.currentUserCanRead( 'sites' ) ) {
+		program
+			.command( 'site <action>', 'Perform actions on a site' );
+	}
 
-					var mapped, sites = [];
+	tab.on( 'deploy', ( data, done ) => {
+		api
+			.get( '/search' )
+			.query( 'search', data.lastPartial )
+			.end( ( end, res ) => {
+				if ( err ) {
+					return done( err );
+				}
 
-					// Add initial domain to suggestions list
-					sites = res.body.data.map( s => {
-						return s.domain_name;
+				var mapped, sites = [];
+
+				// Add initial domain to suggestions list
+				sites = res.body.data.map( s => {
+					return s.domain_name;
+				});
+
+				// Add mapped domains to suggestions list
+				for( let i = 0; i < res.body.data.length; i++ ) {
+					mapped = res.body.data[i].mapped_domains.map( d => {
+						return d.domain_name;
 					});
 
-					// Add mapped domains to suggestions list
-					for( let i = 0; i < res.body.data.length; i++ ) {
-						mapped = res.body.data[i].mapped_domains.map( d => {
-							return d.domain_name;
-						});
+					sites = sites.concat( mapped );
+				}
 
-						sites = sites.concat( mapped );
-					}
-
-					return done( null, sites );
-				});
-		});
-	}
+				return done( null, sites );
+			});
+	});
 
 	// Tab complete top level commands!
 	tab.on( 'vip', ( data, done ) => {

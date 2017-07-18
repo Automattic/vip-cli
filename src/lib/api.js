@@ -11,6 +11,7 @@ utils.getCredentials( function( err, credentials ) {
 
 	api.auth.apiUserId = credentials.userId;
 	api.auth.token = credentials.accessToken;
+	api.caps = credentials.caps;
 });
 
 export const auth = api.auth;
@@ -40,4 +41,21 @@ export function put( url ) {
 
 export function del( url ) {
 	return api.del( url ).use( handleAuth );
+}
+
+// caps
+export function currentUserCan( cap, action ) {
+	return api.currentUserCan( cap, action );
+}
+export function currentUserCanRead( cap ) {
+	return api.currentUserCanRead( cap );
+}
+export function currentUserCanEdit( cap ) {
+	return api.currentUserCanEdit( cap );
+}
+export function currentUserCanAdd( cap ) {
+	return api.currentUserCanAdd( cap );
+}
+export function currentUserCanDelete( cap ) {
+	return api.currentUserCanDelete( cap );
 }
