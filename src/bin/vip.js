@@ -19,7 +19,7 @@ const api = require( '../lib/api' );
 updateNotifier({ pkg }).notify();
 
 const hostname = require( 'os' ).hostname();
-const is_sandbox = hostname.substring( hostname.length - 9 ) === 'vipv2.net';
+const isSandbox = hostname.substring( hostname.length - 9 ) === 'vipv2.net';
 const noAuth = [
 	'login',
 	'logout',
@@ -73,7 +73,7 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'import', 'Import to VIP Go' );
 	}
 
-	if ( is_sandbox ) {
+	if ( isSandbox ) {
 		program
 			.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
 			.command( 'stacks <action>', 'Maintain software stacks on the current host' );
