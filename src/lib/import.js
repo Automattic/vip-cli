@@ -5,7 +5,7 @@ export function upload( site, file, token, cb ) {
 	fs.readFile( file, ( err, data ) => {
 		var filepath = file.split( 'uploads' );
 		var req = http.request({
-			hostname: 'files.vipv2.net',
+			hostname: 'dfw-files.vipv2.net',
 			method: 'PUT',
 			path: encodeURI( '/wp-content/uploads' + filepath[1] ),
 			headers: {

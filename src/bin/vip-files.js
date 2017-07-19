@@ -52,8 +52,8 @@ program
 
 									// Download the file
 									var filedata = {
-										host: 'files.vipv2.net',
-										servername: 'files.vipv2.net',
+										host: 'dfw-files.vipv2.net',
+										servername: 'dfw-files.vipv2.net',
 										path: file.file_path,
 										headers: {
 											'Host': site.domain_name,

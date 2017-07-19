@@ -233,7 +233,7 @@ program
 												return imports.upload( site, file, access_token, cb );
 											} else {
 												request
-												.get( encodeURI( 'https://files.vipv2.net/wp-content/uploads' + filepath[1] ) )
+												.get( encodeURI( 'https://dfw-files.vipv2.net/wp-content/uploads' + filepath[1] ) )
 												.set({ 'X-Client-Site-ID': site.client_site_id })
 												.set({ 'X-Access-Token': access_token })
 												.set({ 'X-Action': 'file_exists' })
