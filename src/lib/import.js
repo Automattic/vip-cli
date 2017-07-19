@@ -1,5 +1,5 @@
 const fs = require( 'fs' );
-const http = require( 'http' );
+const http = require( 'https' );
 
 export function upload( site, file, token, cb ) {
 	fs.readFile( file, ( err, data ) => {
