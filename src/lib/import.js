@@ -1,11 +1,14 @@
 const fs = require( 'fs' );
 const http = require( 'https' );
 
+// Ours
+const constants = require( '../constants' );
+
 export function upload( site, file, token, cb ) {
 	fs.readFile( file, ( err, data ) => {
 		var filepath = file.split( 'uploads' );
 		var req = http.request({
-			hostname: 'dfw-files.vipv2.net',
+			hostname: constants.FILES_SERVICE_ENDPOINT,
 			method: 'PUT',
 			path: encodeURI( '/wp-content/uploads' + filepath[1] ),
 			headers: {

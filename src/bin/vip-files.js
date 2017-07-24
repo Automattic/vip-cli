@@ -9,6 +9,7 @@ const progress = require( 'progress' );
 
 // Ours
 const api = require( '../lib/api' );
+const constants = require( '../constants' );
 const utils = require( '../lib/utils' );
 
 program
@@ -52,8 +53,8 @@ program
 
 									// Download the file
 									var filedata = {
-										host: 'dfw-files.vipv2.net',
-										servername: 'dfw-files.vipv2.net',
+										host: constants.FILES_SERVICE_ENDPOINT,
+										servername: constants.FILES_SERVICE_ENDPOINT,
 										path: file.file_path,
 										headers: {
 											'Host': site.domain_name,
