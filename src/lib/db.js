@@ -55,11 +55,17 @@ function getConnection( site, opts, callback ) {
 
 				var conns = res.body.data;
 
-				// Random DB slave
-				var connection = conns[Math.floor( Math.random()*conns.length )];
-				var args = getCLIArgsForConnectionHost( connection );
+				if ( conns.length > 0 ) {
+					// Random DB slave
+					var connection = conns[Math.floor( Math.random()*conns.length )];
+					var args = getCLIArgsForConnectionHost( connection );
 
-				callback( null, args );
+					callback( null, args );
+				} else {
+					// If there are no slaves, use the master
+					opts.masterdb = true;
+					getConnection( site, opts, callback );
+				}
 			});
 	}
 }
