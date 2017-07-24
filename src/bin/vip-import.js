@@ -9,6 +9,7 @@ const which = require( 'which' );
 
 // Ours
 const api      = require( '../lib/api' );
+const constants = require( '../constants' );
 const utils    = require( '../lib/utils' );
 const db = require( '../lib/db' );
 const imports = require( '../lib/import' );
@@ -233,7 +234,7 @@ program
 												return imports.upload( site, file, access_token, cb );
 											} else {
 												request
-												.get( encodeURI( 'https://files.vipv2.net/wp-content/uploads' + filepath[1] ) )
+												.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
 												.set({ 'X-Client-Site-ID': site.client_site_id })
 												.set({ 'X-Access-Token': access_token })
 												.set({ 'X-Action': 'file_exists' })
