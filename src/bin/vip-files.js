@@ -53,8 +53,7 @@ program
 
 									// Download the file
 									var filedata = {
-										host: constants.FILES_SERVICE_ENDPOINT,
-										servername: constants.FILES_SERVICE_ENDPOINT,
+										host: constants.VIP_GO_ANYCAST_IP,
 										path: file.file_path,
 										headers: {
 											'Host': site.domain_name,
