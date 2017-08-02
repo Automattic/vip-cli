@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const program = require( 'commander' );
-const https = require( 'https' );
+const http = require( 'http' );
 const fs = require( 'fs' );
 const path = require( 'path' );
 const async = require( 'async' );
@@ -53,15 +53,15 @@ program
 
 									// Download the file
 									var filedata = {
-										host: constants.FILES_SERVICE_ENDPOINT,
-										servername: constants.FILES_SERVICE_ENDPOINT,
+										host: constants.VIP_GO_ANYCAST_IP,
+										servername: constants.VIP_GO_ANYCAST_IP,
 										path: file.file_path,
 										headers: {
 											'Host': site.domain_name,
 										},
 									};
 
-									https.get( filedata, download => {
+									http.get( filedata, download => {
 										download.pipe( newFile );
 										download.on( 'end', () => {
 											bar.tick();
