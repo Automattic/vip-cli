@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const program = require( 'commander' );
-const http = require( 'http' );
+const https = require( 'https' );
 const fs = require( 'fs' );
 const path = require( 'path' );
 const async = require( 'async' );
@@ -61,7 +61,7 @@ program
 										},
 									};
 
-									http.get( filedata, download => {
+									https.get( filedata, download => {
 										download.pipe( newFile );
 										download.on( 'end', () => {
 											bar.tick();
