@@ -9,6 +9,7 @@ utils.getCredentials( function( err, credentials ) {
 		return;
 	}
 
+	api.proxy = process.env.PROXY;
 	api.auth.apiUserId = credentials.userId;
 	api.auth.token = credentials.accessToken;
 	api.caps = credentials.caps;
