@@ -45,7 +45,7 @@
     "tabtab": "^2.0.0",
     "throttle": "^1.0.3",
     "update-notifier": "^1.0.3",
-    "vip": "automattic/vip-js-sdk",
+    "vip": "automattic/vip-js-sdk#235a1674c7d7afc998cbe9de9ffa5dc70ef48b99",
     "which": "^1.2.10"
   },
   "devDependencies": {
