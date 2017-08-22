@@ -117,11 +117,16 @@ program
 					api
 						.get( '/containers/' + masterContainer + '/meta/innodb_buffer_pool_size' )
 						.end( ( err, res ) => {
-							if ( err ) {
-								return console.error( 'Failed API call to master container metadata!' );
-							}
+							var metadata;
 
-							var metadata = res.body.data[0].meta_value.slice( 0, -1 );
+							// set innodb buffer pool size at default
+							if ( err ) {
+								metadata = '128';
+							}
+							else {
+								metadata = res.body.data[0].meta_value.slice( 0, -1 );;
+							}
+	
 							console.log( '-- Configured InnoDB (mb): ' + metadata );	
 						});
 
