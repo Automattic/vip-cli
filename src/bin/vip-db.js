@@ -127,12 +127,9 @@ program
 								var metadata = res.body.data[0].meta_value.slice( 0, -1 );
 								console.log( '-- Configured InnoDB via API (mb): ' + metadata );
 							}
-
 						});
-
 				});
 			});
-
 	});
 
 program.parse( process.argv );
