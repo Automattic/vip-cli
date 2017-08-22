@@ -109,7 +109,7 @@ program
 				.get( '/sites/' + site.client_site_id + '/containers?is_db_master=true' )
 				.end( ( err, res ) => {
 					if ( err ) {
-						return console.error( 'Failed API call to master container!');
+						return console.error( 'Error retrieving master container!');
 					}
 					var masterContainer = res.body.data[0].container_id;
 
@@ -117,17 +117,17 @@ program
 					api
 						.get( '/containers/' + masterContainer + '/meta/innodb_buffer_pool_size' )
 						.end( ( err, res ) => {
-							var metadata;
-
-							// set innodb buffer pool size at default
-							if ( err ) {
-								metadata = '128';
+							if ( err.response.statusCode === 404 ) {
+								console.log( '-- Configured InnoDB via API: Not configured' );
+							}
+							else if ( err ) {
+								console.log( 'Error retrieving innodb_buffer_pool_size!' );
 							}
 							else {
-								metadata = res.body.data[0].meta_value.slice( 0, -1 );
+								var metadata = res.body.data[0].meta_value.slice( 0, -1 );
+								console.log( '-- Configured InnoDB via API (mb): ' + metadata );
 							}
-	
-							console.log( '-- Configured InnoDB (mb): ' + metadata );	
+
 						});
 
 				});
