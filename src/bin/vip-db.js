@@ -124,7 +124,7 @@ program
 								metadata = '128';
 							}
 							else {
-								metadata = res.body.data[0].meta_value.slice( 0, -1 );;
+								metadata = res.body.data[0].meta_value.slice( 0, -1 );
 							}
 	
 							console.log( '-- Configured InnoDB (mb): ' + metadata );	
