@@ -94,8 +94,8 @@ program
 				CEILING(SUM(data_length)/POWER(1024,2)) data_mb,
 				CEILING(SUM(index_length)/POWER(1024,2)) index_mb,
 				CEILING(SUM(data_length+index_length)/POWER(1024,2)) total_mb,
-				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) innodb_mb,
-				@@innodb_buffer_pool_size/POWER(1024,2) configured_mb
+				@@innodb_buffer_pool_size/POWER(1024,2) mariadb_current_mb,
+				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) suggested_mb 
 				FROM information_schema.tables WHERE engine='InnoDB')`;
 
 			db.query( site, query, err => {
@@ -118,14 +118,14 @@ program
 						.get( '/containers/' + masterContainer + '/meta/innodb_buffer_pool_size' )
 						.end( ( err, res ) => {
 							if ( err.response.statusCode === 404 ) {
-								console.log( '-- Configured InnoDB via API: Not configured' );
+								console.log( '-- Master DB config on API (mb): Not configured' );
 							}
 							else if ( err ) {
 								console.log( 'Error retrieving innodb_buffer_pool_size!' );
 							}
 							else {
 								var metadata = res.body.data[0].meta_value.slice( 0, -1 );
-								console.log( '-- Configured InnoDB via API (mb): ' + metadata );
+								console.log( '-- Master DB config on API (mb): ' + metadata );
 							}
 						});
 				});
