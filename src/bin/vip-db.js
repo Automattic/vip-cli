@@ -109,7 +109,7 @@ program
 				.get( '/sites/' + site.client_site_id + '/containers?is_db_master=true' )
 				.end( ( err, res ) => {
 					if ( err ) {
-						return console.error( 'Error retrieving master container!');
+						return console.error( 'Error retrieving master container!' );
 					}
 					var masterContainer = res.body.data[0].container_id;
 
@@ -129,7 +129,7 @@ program
 							}
 						});
 				});
-			});
+		});
 	});
 
 program.parse( process.argv );
