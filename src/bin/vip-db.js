@@ -5,8 +5,10 @@ const promptly = require( 'promptly' );
 const which = require( 'which' );
 
 // Ours
+const api = require( '../lib/api' );
 const db = require( '../lib/db' );
 const utils = require( '../lib/utils' );
+const siteUtils   = require( '../lib/site' );
 
 program
 	.arguments( '<site>' )
@@ -88,18 +90,45 @@ program
 			console.log( '-- Environment:', site.environment_name );
 			console.log( '-- Growth Factor:', factor );
 
-			let query = `SELECT
+			let query = `(SELECT
 				CEILING(SUM(data_length)/POWER(1024,2)) data_mb,
 				CEILING(SUM(index_length)/POWER(1024,2)) index_mb,
 				CEILING(SUM(data_length+index_length)/POWER(1024,2)) total_mb,
-				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) innodb_mb
-			FROM information_schema.tables WHERE engine='InnoDB'`;
+				@@innodb_buffer_pool_size/POWER(1024,2) mariadb_current_mb,
+				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) suggested_mb 
+				FROM information_schema.tables WHERE engine='InnoDB')`;
 
 			db.query( site, query, err => {
 				if ( err ) {
 					return console.error( err );
 				}
 			});
+
+			// get master container with API call
+			api
+				.get( '/sites/' + site.client_site_id + '/containers?is_db_master=true' )
+				.end( ( err, res ) => {
+					if ( err ) {
+						return console.error( 'Error retrieving master container!' );
+					}
+					var masterContainer = res.body.data[0].container_id;
+
+					// get master container metadata
+					api
+						.get( '/containers/' + masterContainer + '/meta/innodb_buffer_pool_size' )
+						.end( ( err, res ) => {
+							if ( err.response.statusCode === 404 ) {
+								console.log( '-- Master DB config on API (mb): Not configured' );
+							}
+							else if ( err ) {
+								console.log( 'Error retrieving innodb_buffer_pool_size!' );
+							}
+							else {
+								var metadata = res.body.data[0].meta_value.slice( 0, -1 );
+								console.log( '-- Master DB config on API (mb): ' + metadata );
+							}
+						});
+				});
 		});
 	});
 
