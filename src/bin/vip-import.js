@@ -10,6 +10,7 @@ const url = require( 'url' );
 const aws = require( 'aws-sdk' );
 const https = require( 'https' );
 const concat = require( 'concat-stream' );
+const path = require( 'path' );
 
 // Ours
 const api      = require( '../lib/api' );
@@ -94,6 +95,8 @@ const default_types = [
 function importer( producer, consumer, opts, done ) {
 	opts = Object.assign({
 		concurrency: 5,
+		types: default_types,
+		intermediate: false,
 	}, opts );
 
 	let q = async.priorityQueue( ( file, callback ) => {
@@ -108,19 +111,35 @@ function importer( producer, consumer, opts, done ) {
 					return cb();
 				},
 				function( cb ) {
-					// TODO Check extension
+					// Check extension
+					let ext = path.extname( file ).substr( 1 );
+					if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
+						return cb( new Error( 'Invalid extension: ' + file ) );
+					}
+
 					return cb();
 				},
 				function( cb ) {
-					// TODO Check filename
+					// Check filename
+					if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+						return cb( new Error( 'Invalid filename:' + file ) );
+					}
+
 					return cb();
 				},
 				function( cb ) {
-					// TODO Check intermediate image
+					// Check intermediate image
+					let int_re = /-\d+x\d+(\.\w{3,4})$/;
+					if ( ! opts.intermediate && int_re.test( file ) ) {
+						// TODO Check if the original file exists
+						return cb( new Error( 'Skipping intermediate image: ' + file ) );
+					}
+
 					return cb();
 				},
 			], err => {
 				if ( err ) {
+					console.error( err.toString() );
 					return callback( err );
 				}
 
@@ -196,9 +215,9 @@ function upload( stream, path, site, opts, callback ) {
 program
 	.command( 'new-files <site> <src>' )
 	.description( 'Import files to a VIP Go site' )
-	//.option( '-t, --types <types>', 'File extensions to import', default_types, list )
+	.option( '-t, --types <types>', 'File extensions to import', default_types, list )
 	//.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
-	//.option( '-i, --intermediate', 'Upload intermediate images' )
+	.option( '-i, --intermediate', 'Upload intermediate images' )
 	//.option( '-d, --dry-run', 'Check and list invalid files' )
 	.option( '--aws-key <key>', 'AWS Key' )
 	.option( '--aws-secret <key>', 'AWS Secret' )
@@ -273,7 +292,10 @@ program
 							upload( filestream, file, site, opts, callback );
 						};
 
-						return importer( producer, consumer );
+						return importer( producer, consumer, {
+							intermediate: options.intermediate,
+							types: options.types,
+						});
 
 					case 'http:':
 					case 'https:':
