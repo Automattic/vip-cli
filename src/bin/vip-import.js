@@ -228,6 +228,12 @@ program
 
 					switch ( src.protocol ) {
 					case 's3:':
+						// Set AWS config
+						aws.config.update({
+							accessKeyId: options.awsKey,
+							secretAccessKey: options.awsSecret,
+						});
+
 						var s3 = new aws.S3();
 						var params = {
 							Bucket: src.hostname,
@@ -238,12 +244,6 @@ program
 						if ( src.path && src.path.length > 1 && src.path.charAt( 0 ) === '/' ) {
 							params.Prefix = src.path.substr( 1 );
 						}
-
-						// Set AWS config
-						aws.config.update({
-							accessKeyId: options.awsKey,
-							secretAccessKey: options.awsSecret,
-						});
 
 						var producer = ( ptr, q, callback ) => {
 							if ( ptr ) {
