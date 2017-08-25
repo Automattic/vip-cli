@@ -268,6 +268,7 @@ program
 						};
 
 						var consumer = ( file, callback ) => {
+							console.log( file );
 							var filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
 							upload( filestream, file, site, opts, callback );
 						};
