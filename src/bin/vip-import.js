@@ -216,7 +216,7 @@ program
 	.command( 'new-files <site> <src>' )
 	.description( 'Import files to a VIP Go site' )
 	.option( '-t, --types <types>', 'File extensions to import', default_types, list )
-	//.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
+	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
 	.option( '-i, --intermediate', 'Upload intermediate images' )
 	//.option( '-d, --dry-run', 'Check and list invalid files' )
 	.option( '--aws-key <key>', 'AWS Key' )
@@ -295,6 +295,7 @@ program
 						return importer( producer, consumer, {
 							intermediate: options.intermediate,
 							types: options.types,
+							concurrency: options.parallel,
 						});
 
 					case 'http:':
