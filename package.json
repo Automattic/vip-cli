@@ -33,9 +33,11 @@
   },
   "dependencies": {
     "async": "^1.5.2",
+    "aws-sdk": "^2.102.0",
     "cli-table": "^0.3.1",
     "colors": "^1.1.2",
     "commander": "2.9.0",
+    "concat-stream": "^1.6.0",
     "node-pv": "^0.1.5",
     "progress": "^1.1.8",
     "promptly": "1.0.0",

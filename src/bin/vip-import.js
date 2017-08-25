@@ -6,6 +6,10 @@ const async    = require( 'async' );
 const progress = require( 'progress' );
 const request  = require( 'superagent' );
 const which = require( 'which' );
+const url = require( 'url' );
+const aws = require( 'aws-sdk' );
+const https = require( 'https' );
+const concat = require( 'concat-stream' );
 
 // Ours
 const api      = require( '../lib/api' );
@@ -86,6 +90,203 @@ const default_types = [
 	'wp','wpd',
 	'key','numbers','pages',
 ];
+
+function importer( producer, consumer, opts, done ) {
+	opts = Object.assign({
+		concurrency: 5,
+	}, opts );
+
+	let q = async.priorityQueue( ( file, callback ) => {
+		if ( file.init || file.ptr ) {
+			return producer( file.ptr || null, q, callback );
+		} else if ( file.path ) {
+			file = file.path;
+
+			async.parallel( [
+				function( cb ) {
+					// TODO Check file size
+					return cb();
+				},
+				function( cb ) {
+					// TODO Check extension
+					return cb();
+				},
+				function( cb ) {
+					// TODO Check filename
+					return cb();
+				},
+				function( cb ) {
+					// TODO Check intermediate image
+					return cb();
+				},
+			], err => {
+				if ( err ) {
+					return callback( err );
+				}
+
+				return consumer( file, callback );
+			});
+		} else {
+			return callback( new Error( 'Unknown object type' ) );
+		}
+	}, opts.concurrency );
+
+	// Kick off the importer
+	q.push({ init: true }, 1 );
+
+	if ( done ) {
+		q.drain = function() {
+			if ( q.workersList().length <= 0 ) {
+				// Queue is empty and all workers finished
+				done();
+			}
+		};
+	}
+}
+
+function upload( stream, path, site, opts, callback ) {
+	opts = Object.assign({
+		token: '',
+		checkExists: true,
+	}, opts );
+
+	let filepath = path.split( 'uploads' );
+
+	if ( opts.checkExists ) {
+		request
+			.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
+			.set({ 'X-Client-Site-ID': site.client_site_id })
+			.set({ 'X-Access-Token': opts.token})
+			.set({ 'X-Action': 'file_exists' })
+			.timeout( 1000 )
+			.end( err => {
+				if ( err && err.status === 404 ) {
+					opts.checkExists = false;
+					return upload( stream, path, site, opts, callback );
+				}
+
+				return callback( err );
+			});
+	} else {
+		stream.on( 'error', callback );
+		stream.pipe( concat( data => {
+			let req = https.request({
+				hostname: constants.FILES_SERVICE_ENDPOINT,
+				method: 'PUT',
+				path: encodeURI( '/wp-content/uploads' + filepath[1] ),
+				headers: {
+					'X-Client-Site-ID': site.client_site_id,
+					'X-Access-Token': opts.token,
+				},
+			}, callback );
+
+			req.on( 'socket', socket => {
+				socket.setTimeout( 10000 );
+				socket.on( 'timeout', () => {
+					req.abort();
+				});
+			});
+
+			req.write( data );
+			req.end();
+		}) );
+	}
+}
+
+program
+	.command( 'new-files <site> <src>' )
+	.description( 'Import files to a VIP Go site' )
+	//.option( '-t, --types <types>', 'File extensions to import', default_types, list )
+	//.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
+	//.option( '-i, --intermediate', 'Upload intermediate images' )
+	//.option( '-d, --dry-run', 'Check and list invalid files' )
+	.option( '--aws-key <key>', 'AWS Key' )
+	.option( '--aws-secret <key>', 'AWS Secret' )
+	.action( ( site, src, options ) => {
+		src = url.parse( src );
+
+		// TODO: Skip existing files checks for new sites
+		// TODO: Set up logger (too big files, intermediates, invalid extensions, bad characters in filename)
+
+		utils.findAndConfirmSite( site, 'Importing files for site:', ( err, site ) => {
+
+			// Get access token
+			api
+				.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
+				.end( ( err, res ) => {
+					if ( err ) {
+						return console.error( err.response.error );
+					}
+
+					if ( ! res.body || ! res.body.data || ! res.body.data[0] || ! res.body.data[0].meta_value ) {
+						return console.error( 'Could not get files access token' );
+					}
+
+					let opts = {
+						token: res.body.data[0].meta_value,
+					};
+
+					switch ( src.protocol ) {
+					case 's3:':
+						var s3 = new aws.S3();
+						var params = {
+							Bucket: src.hostname,
+							MaxKeys: 200,
+						};
+
+						// Set S3 path prefix
+						if ( src.path && src.path.length > 1 && src.path.charAt( 0 ) === '/' ) {
+							params.Prefix = src.path.substr( 1 );
+						}
+
+						// Set AWS config
+						aws.config.update({
+							accessKeyId: options.awsKey,
+							secretAccessKey: options.awsSecret,
+						});
+
+						var producer = ( ptr, q, callback ) => {
+							if ( ptr ) {
+								params.ContinuationToken = ptr;
+							}
+
+							s3.listObjectsV2( params, ( err, data ) => {
+								if ( err ) {
+									console.error( err );
+									return callback( err );
+								}
+
+								// Queue next batch
+								if ( data.IsTruncated ) {
+									q.push({ ptr: data.NextContinuationToken });
+								}
+
+								var files = data.Contents.map( f => { return { path: f.Key }; });
+								q.push( files );
+								return callback();
+							});
+						};
+
+						var consumer = ( file, callback ) => {
+							var filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
+							upload( filestream, file, site, opts, callback );
+						};
+
+						return importer( producer, consumer );
+
+					case 'http:':
+					case 'https:':
+						// TODO: Handle .tar.gz, .zip
+						src = src.href;
+						break;
+
+					default:
+						src = src.pathname;
+						break;
+					}
+				});
+		});
+	});
 
 program
 	.command( 'files <site> <directory>' )
