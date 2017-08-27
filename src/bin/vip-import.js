@@ -253,6 +253,9 @@ program
 		// TODO: Set up logger (too big files, intermediates, invalid extensions, bad characters in filename)
 
 		utils.findAndConfirmSite( site, 'Importing files for site:', ( err, site ) => {
+			if ( err || ! site ) {
+				return console.log( 'Error finding site' );
+			}
 
 			// Get access token
 			api
