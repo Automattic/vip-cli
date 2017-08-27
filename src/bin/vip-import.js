@@ -97,7 +97,12 @@ function importer( producer, consumer, opts, done ) {
 		concurrency: 5,
 		types: default_types,
 		intermediate: false,
+		dryRun: false,
 	}, opts );
+
+	if ( opts.dryRun ) {
+		console.log( 'Dry Run\n=======' );
+	}
 
 	if ( ! opts.site ) {
 		return done( new Error( 'Missing site reference' ) );
@@ -154,6 +159,11 @@ function importer( producer, consumer, opts, done ) {
 					}
 
 					console.log( file );
+
+					if ( opts.dryRun ) {
+						return callback();
+					}
+
 					upload( stream, path, opts.site, opts.token, {}, err => {
 						if ( err ) {
 							console.error( err.toString() );
@@ -243,7 +253,7 @@ program
 	.option( '-t, --types <types>', 'File extensions to import', default_types, list )
 	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
 	.option( '-i, --intermediate', 'Upload intermediate images' )
-	//.option( '-d, --dry-run', 'Check and list invalid files' )
+	.option( '-d, --dry-run', 'Check and list invalid files' )
 	.option( '--aws-key <key>', 'AWS Key' )
 	.option( '--aws-secret <key>', 'AWS Secret' )
 	.action( ( site, src, options ) => {
@@ -339,6 +349,7 @@ program
 						intermediate: options.intermediate,
 						types: options.types,
 						concurrency: options.parallel,
+						dryRun: options.dryRun,
 						token: token,
 						site: site,
 					});
