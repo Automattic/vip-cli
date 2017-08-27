@@ -99,6 +99,14 @@ function importer( producer, consumer, opts, done ) {
 		intermediate: false,
 	}, opts );
 
+	if ( ! opts.site ) {
+		return done( new Error( 'Missing site reference' ) );
+	}
+
+	if ( ! opts.token ) {
+		return done( new Error( 'Missing files service token' ) );
+	}
+
 	let q = async.priorityQueue( ( file, callback ) => {
 		if ( file.init || file.ptr ) {
 			return producer( file.ptr || null, q, callback );
@@ -143,7 +151,20 @@ function importer( producer, consumer, opts, done ) {
 					return callback( err );
 				}
 
-				return consumer( file, callback );
+				return consumer( file, ( err, stream, path ) => {
+					if ( err ) {
+						return callback( err );
+					}
+
+					console.log( file );
+					upload( stream, path, opts.site, opts.token, {}, err => {
+						if ( err ) {
+							console.error( err.toString() );
+						}
+
+						callback( err );
+					});
+				});
 			});
 		} else {
 			return callback( new Error( 'Unknown object type' ) );
@@ -163,11 +184,14 @@ function importer( producer, consumer, opts, done ) {
 	}
 }
 
-function upload( stream, path, site, opts, callback ) {
+function upload( stream, path, site, token, opts, callback ) {
 	opts = Object.assign({
-		token: '',
 		checkExists: true,
 	}, opts );
+
+	if ( ! token ) {
+		return callback( new Error( 'Missing files service token' ) );
+	}
 
 	let filepath = path.split( 'uploads' );
 
@@ -175,13 +199,13 @@ function upload( stream, path, site, opts, callback ) {
 		request
 			.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
 			.set({ 'X-Client-Site-ID': site.client_site_id })
-			.set({ 'X-Access-Token': opts.token})
+			.set({ 'X-Access-Token': token })
 			.set({ 'X-Action': 'file_exists' })
 			.timeout( 1000 )
 			.end( err => {
 				if ( err && err.status === 404 ) {
 					opts.checkExists = false;
-					return upload( stream, path, site, opts, callback );
+					return upload( stream, path, site, token, opts, callback );
 				}
 
 				return callback( err );
@@ -195,7 +219,7 @@ function upload( stream, path, site, opts, callback ) {
 				path: encodeURI( '/wp-content/uploads' + filepath[1] ),
 				headers: {
 					'X-Client-Site-ID': site.client_site_id,
-					'X-Access-Token': opts.token,
+					'X-Access-Token': token,
 				},
 			}, callback );
 
@@ -241,9 +265,7 @@ program
 						return console.error( 'Could not get files access token' );
 					}
 
-					let opts = {
-						token: res.body.data[0].meta_value,
-					};
+					let token = res.body.data[0].meta_value;
 
 					switch ( src.protocol ) {
 					case 's3:':
@@ -287,15 +309,16 @@ program
 						};
 
 						var consumer = ( file, callback ) => {
-							console.log( file );
 							var filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
-							upload( filestream, file, site, opts, callback );
+							callback( null, filestream, file );
 						};
 
 						return importer( producer, consumer, {
 							intermediate: options.intermediate,
 							types: options.types,
 							concurrency: options.parallel,
+							token: token,
+							site: site,
 						});
 
 					case 'http:':
