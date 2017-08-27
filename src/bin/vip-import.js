@@ -268,6 +268,8 @@ program
 
 					let token = res.body.data[0].meta_value;
 
+					// Set up consumer and producer
+					var consumer, producer;
 					switch ( src.protocol ) {
 					case 's3:':
 						// Set AWS config
@@ -287,7 +289,7 @@ program
 							params.Prefix = src.path.substr( 1 );
 						}
 
-						var producer = ( ptr, q, callback ) => {
+						producer = ( ptr, q, callback ) => {
 							if ( ptr ) {
 								params.ContinuationToken = ptr;
 							}
@@ -309,18 +311,11 @@ program
 							});
 						};
 
-						var consumer = ( file, callback ) => {
+						consumer = ( file, callback ) => {
 							var filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
 							callback( null, filestream, file );
 						};
-
-						return importer( producer, consumer, {
-							intermediate: options.intermediate,
-							types: options.types,
-							concurrency: options.parallel,
-							token: token,
-							site: site,
-						});
+						break;
 
 					case 'http:':
 					case 'https:':
@@ -332,6 +327,18 @@ program
 						src = src.pathname;
 						break;
 					}
+
+					if ( ! consumer || ! producer ) {
+						return console.error( 'Missing consumer or producer' );
+					}
+
+					return importer( producer, consumer, {
+						intermediate: options.intermediate,
+						types: options.types,
+						concurrency: options.parallel,
+						token: token,
+						site: site,
+					});
 				});
 		});
 	});
