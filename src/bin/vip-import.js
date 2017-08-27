@@ -113,11 +113,8 @@ function importer( producer, consumer, opts, done ) {
 		} else if ( file.path ) {
 			file = file.path;
 
+			// Validate filename
 			async.parallel( [
-				function( cb ) {
-					// TODO Check file size
-					return cb();
-				},
 				function( cb ) {
 					// Check extension
 					let ext = path.extname( file ).substr( 1 );
@@ -213,6 +210,10 @@ function upload( stream, path, site, token, opts, callback ) {
 	} else {
 		stream.on( 'error', callback );
 		stream.pipe( concat( data => {
+			if ( Buffer.byteLength( data ) > MAX_IMPORT_FILE_SIZE ) {
+				return callback( new Error( 'File exceeded max file size: ' + path ) );
+			}
+
 			let req = https.request({
 				hostname: constants.FILES_SERVICE_ENDPOINT,
 				method: 'PUT',
