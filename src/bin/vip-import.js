@@ -118,59 +118,44 @@ function importer( producer, consumer, opts, done ) {
 		} else if ( file.path ) {
 			file = file.path;
 
-			// Validate filename
-			async.parallel( [
-				function( cb ) {
-					// Check extension
-					let ext = path.extname( file ).substr( 1 );
-					if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
-						return cb( new Error( 'Invalid extension: ' + file ) );
-					}
+			// Check extension
+			let ext = path.extname( file ).substr( 1 );
+			if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
+				console.error( 'Invalid extension: ' + file );
+				return callback( new Error( 'Invalid extension: ' + file ) );
+			}
 
-					return cb();
-				},
-				function( cb ) {
-					// Check filename
-					if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
-						return cb( new Error( 'Invalid filename:' + file ) );
-					}
+			// Check filename
+			if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+				console.error( 'Invalid filename: ' + file );
+				return callback( new Error( 'Invalid filename:' + file ) );
+			}
 
-					return cb();
-				},
-				function( cb ) {
-					// Check intermediate image
-					let int_re = /-\d+x\d+(\.\w{3,4})$/;
-					if ( ! opts.intermediate && int_re.test( file ) ) {
-						// TODO Check if the original file exists
-						return cb( new Error( 'Skipping intermediate image: ' + file ) );
-					}
+			// Check intermediate image
+			let int_re = /-\d+x\d+(\.\w{3,4})$/;
+			if ( ! opts.intermediate && int_re.test( file ) ) {
+				// TODO Check if the original file exists
+				console.error( 'Skipping intermediate image: ' + file );
+				return callback( new Error( 'Skipping intermediate image: ' + file ) );
+			}
 
-					return cb();
-				},
-			], err => {
+			return consumer( file, ( err, stream, path ) => {
 				if ( err ) {
-					console.error( err.toString() );
 					return callback( err );
 				}
 
-				return consumer( file, ( err, stream, path ) => {
+				console.log( file );
+
+				if ( opts.dryRun ) {
+					return callback();
+				}
+
+				upload( stream, path, opts.site, opts.token, {}, err => {
 					if ( err ) {
-						return callback( err );
+						console.error( err.toString() );
 					}
 
-					console.log( file );
-
-					if ( opts.dryRun ) {
-						return callback();
-					}
-
-					upload( stream, path, opts.site, opts.token, {}, err => {
-						if ( err ) {
-							console.error( err.toString() );
-						}
-
-						callback( err );
-					});
+					callback( err );
 				});
 			});
 		} else {
