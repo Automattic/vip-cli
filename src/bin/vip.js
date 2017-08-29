@@ -73,9 +73,13 @@ utils.getCredentials( ( err, user ) => {
 			.command( 'import', 'Import to VIP Go' );
 	}
 
-	if ( isSandbox ) {
+	if ( isSandbox && api.currentUserCanRead( 'sandboxes' ) ) {
 		program
-			.command( 'sandbox <action> <site>', 'Maintain sandbox containers' )
+			.command( 'sandbox <action> <site>', 'Maintain sandbox containers' );
+	}
+
+	if ( api.currentUserCanAdd( 'hosts/software_update' ) || api.currentUserCanAdd( 'actions/software_update' ) ) {
+		program
 			.command( 'stacks <action>', 'Maintain software stacks on the current host' );
 	}
 
