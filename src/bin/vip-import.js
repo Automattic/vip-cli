@@ -55,9 +55,16 @@ program
 					}
 
 					let token = res.body.data[0].meta_value;
+					let importer = new imports.Importer({
+						intermediate: options.intermediate,
+						types: options.types,
+						concurrency: options.parallel,
+						dryRun: options.dryRun,
+						token: token,
+						site: site,
+					});
 
 					// Set up consumer and producer
-					var consumer, producer;
 					switch ( src.protocol ) {
 					case 's3:':
 						// Set AWS config
@@ -69,7 +76,7 @@ program
 						var s3 = new aws.S3();
 						var params = {
 							Bucket: src.hostname,
-							MaxKeys: 200,
+							MaxKeys: 500,
 						};
 
 						// Set S3 path prefix
@@ -77,32 +84,36 @@ program
 							params.Prefix = src.path.substr( 1 );
 						}
 
-						producer = ( ptr, q, callback ) => {
+						importer.setProducer( ( ptr, callback ) => {
 							if ( ptr ) {
 								params.ContinuationToken = ptr;
 							}
 
 							s3.listObjectsV2( params, ( err, data ) => {
 								if ( err ) {
-									console.error( err );
 									return callback( err );
 								}
 
-								// Queue next batch
-								if ( data.IsTruncated ) {
-									q.push({ ptr: data.NextContinuationToken });
+								if ( data.IsTruncated && data.NextContinuationToken ) {
+									importer.queuePtr( data.NextContinuationToken );
 								}
 
-								var files = data.Contents.map( f => { return { path: f.Key }; });
-								q.push( files );
-								return callback();
-							});
-						};
+								data.Contents.forEach( f => {
+									importer.queueFile( f.Key );
+								});
 
-						consumer = ( file, callback ) => {
-							var filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
-							callback( null, filestream, file );
-						};
+								callback();
+							});
+						});
+
+						importer.setConsumer( ( file, callback ) => {
+							let filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
+							let upload = importer
+								.upload( file );
+
+							filestream.pipe( upload );
+							filestream.on( 'finish', callback );
+						});
 						break;
 
 					case 'http:':
@@ -116,18 +127,7 @@ program
 						break;
 					}
 
-					if ( ! consumer || ! producer ) {
-						return console.error( 'Missing consumer or producer' );
-					}
-
-					return imports.importer( producer, consumer, {
-						intermediate: options.intermediate,
-						types: options.types,
-						concurrency: options.parallel,
-						dryRun: options.dryRun,
-						token: token,
-						site: site,
-					});
+					importer.start();
 				});
 		});
 	});
