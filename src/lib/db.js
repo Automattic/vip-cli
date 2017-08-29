@@ -63,6 +63,7 @@ function getConnection( site, opts, callback ) {
 					callback( null, args );
 				} else {
 					// If there are no slaves, use the master
+					console.error( 'No slaves are available, getting connection to master' );
 					opts.masterdb = true;
 					getConnection( site, opts, callback );
 				}
