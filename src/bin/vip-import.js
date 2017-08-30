@@ -5,7 +5,6 @@ const program  = require( 'commander' );
 const which = require( 'which' );
 const url = require( 'url' );
 const aws = require( 'aws-sdk' );
-const progress = require( 'progress' );
 const measureStream = require( 'measure-stream' );
 
 // Ours
