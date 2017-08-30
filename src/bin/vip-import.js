@@ -76,6 +76,10 @@ program
 							// Set up consumer and producer
 							switch ( src.protocol ) {
 							case 's3:':
+								if ( ! options.awsKey || ! options.awsSecret ) {
+									return console.error( 'AWS Key and AWS Secret are required for imports from S3' );
+								}
+
 								// Set AWS config
 								aws.config.update({
 									accessKeyId: options.awsKey,
