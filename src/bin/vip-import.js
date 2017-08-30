@@ -23,7 +23,7 @@ function list( v ) {
 }
 
 program
-	.command( 'new-files <site> <src>' )
+	.command( 'files <site> <src>' )
 	.description( 'Import files to a VIP Go site' )
 	.option( '-d, --dry-run', 'Check and list invalid files' )
 	.option( '-i, --intermediate', 'Upload intermediate images' )
