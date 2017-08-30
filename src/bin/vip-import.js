@@ -25,10 +25,10 @@ function list( v ) {
 program
 	.command( 'files <site> <src>' )
 	.description( 'Import files to a VIP Go site' )
-	.option( '-d, --dry-run', 'Check and list invalid files' )
-	.option( '-i, --intermediate', 'Upload intermediate images' )
+	.option( '--dry-run', 'Check and list invalid files', false )
+	.option( '--intermediate', 'Upload intermediate images', false )
+	.option( '--skip-check-exists', 'Skip file checking if the file already exists', false )
 	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
-	.option( '-s, --skip-check-exists', 'Skip file checking if the file already exists' )
 	.option( '-t, --types <types>', 'File extensions to import', imports.default_types, list )
 	.option( '--aws-key <key>', 'AWS Key' )
 	.option( '--aws-secret <key>', 'AWS Secret' )
@@ -66,8 +66,8 @@ program
 							let importer = new imports.Importer({
 								checkExists: !options.skipCheckExists,
 								concurrency: options.parallel,
-								dryRun: options.dryRun,
-								intermediate: options.intermediate,
+								dryRun: !!options.dryRun,
+								intermediate: !!options.intermediate,
 								site: site,
 								token: token,
 								types: options.types,
