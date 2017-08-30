@@ -95,13 +95,13 @@ export class Importer {
 		};
 
 		// When both queues are empty, run the done callback
-		this.consumerQ.drain = () => {
-			if ( done &&
-				this.consumerQ.workersList() <= 0 &&
-				this.consumerQ.length() <= 0 &&
-				this.producerQ.workersList() <= 0 &&
-				this.producerQ.length() <= 0 ) {
+		let finalized = false;
+		this.consumerQ.drain = this.producerQ.drain = () => {
+			if ( done && !finalized &&
+				this.consumerQ.workersList().length <= 0 &&
+				this.producerQ.workersList().length <= 0 ) {
 
+				finalized = true;
 				done( count );
 			}
 		};

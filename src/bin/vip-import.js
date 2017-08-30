@@ -6,6 +6,7 @@ const which = require( 'which' );
 const url = require( 'url' );
 const aws = require( 'aws-sdk' );
 const progress = require( 'progress' );
+const measureStream = require( 'measure-stream' );
 
 // Ours
 const api      = require( '../lib/api' );
@@ -62,6 +63,8 @@ program
 								return console.error( 'Could not get files access token' );
 							}
 
+							var start = Date.now() / 1000;
+							var totalLength = 0;
 							let token = res.body.data[0].meta_value;
 							let importer = new imports.Importer({
 								checkExists: !options.skipCheckExists,
@@ -71,6 +74,13 @@ program
 								site: site,
 								token: token,
 								types: options.types,
+							}, count => {
+								var end = Date.now() / 1000;
+								var totalSeconds = end - start;
+
+								console.log( 'File count:', count );
+								console.log( 'Total size:', totalLength );
+								console.log( 'Bytes per second:', totalLength/totalSeconds );
 							});
 
 							// Set up consumer and producer
@@ -120,13 +130,19 @@ program
 								});
 
 								importer.setConsumer( ( file, callback ) => {
+									let measure = new measureStream();
 									let filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
 									let upload = importer
 										.upload( file );
 
-									filestream.pipe( upload );
 									filestream.on( 'error', callback );
 									filestream.on( 'end', callback );
+
+									measure.on( 'finish', () => {
+										totalLength += measure.measurements.totalLength;
+									});
+
+									filestream.pipe( upload );
 								});
 								break;
 
@@ -183,13 +199,19 @@ program
 								});
 
 								importer.setConsumer( ( file, callback ) => {
+									let measure = new measureStream();
 									let filestream = fs.createReadStream( file );
 									let upload = importer
 										.upload( file );
 
-									filestream.pipe( upload );
 									filestream.on( 'error', callback );
 									filestream.on( 'end', callback );
+
+									measure.on( 'finish', () => {
+										totalLength += measure.measurements.totalLength;
+									});
+
+									filestream.pipe( measure ).pipe( upload );
 								});
 
 								break;
