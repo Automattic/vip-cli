@@ -125,7 +125,8 @@ program
 										.upload( file );
 
 									filestream.pipe( upload );
-									filestream.on( 'finish', callback );
+									filestream.on( 'error', callback );
+									filestream.on( 'end', callback );
 								});
 								break;
 
@@ -187,7 +188,8 @@ program
 										.upload( file );
 
 									filestream.pipe( upload );
-									filestream.on( 'finish', callback );
+									filestream.on( 'error', callback );
+									filestream.on( 'end', callback );
 								});
 
 								break;
