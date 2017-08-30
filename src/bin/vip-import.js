@@ -133,6 +133,59 @@ program
 
 							default:
 								src = src.pathname;
+
+								importer.setProducer( ( ptr, callback ) => {
+									let file;
+									if ( ptr && ptr.dir ) {
+										file = ptr.dir;
+									} else if ( ptr ) {
+										return callback( new Error( 'Invalid pointer' ) );
+									} else {
+										file = src;
+									}
+
+									let offset = ptr && ptr.offset ? ptr.offset : 0;
+									fs.lstat( file, ( err, stats ) => {
+										if ( err ) {
+											return callback( err );
+										}
+
+										if ( stats.isFile() ) {
+											importer.queueFile( file );
+											return callback();
+										} else if ( stats.isDirectory() ) {
+											fs.readdir( file, ( err, files ) => {
+												if ( files.length <= 0 ) {
+													return callback();
+												}
+
+												for ( let i = offset; i < offset + 500; i++ ) {
+													if ( files[i] ) {
+														importer.queuePtr({ dir: file + '/' + files[i] });
+													}
+												}
+
+												if ( files.length - offset > 500 ) {
+													importer.queuePtr({ dir: file, offset: offset + 500 });
+												}
+
+												return callback();
+											});
+										} else {
+											return callback( new Error( 'Unknown file type' ) );
+										}
+									});
+								});
+
+								importer.setConsumer( ( file, callback ) => {
+									let filestream = fs.createReadStream( file );
+									let upload = importer
+										.upload( file );
+
+									filestream.pipe( upload );
+									filestream.on( 'finish', callback );
+								});
+
 								break;
 							}
 
