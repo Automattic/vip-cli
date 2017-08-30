@@ -16,19 +16,26 @@ export class Importer {
 			types: default_types,
 		}, opts );
 
-		if ( ! opts.site ) {
+		if ( ! this.opts.site ) {
 			// TODO
 		}
 
-		if ( ! opts.token ) {
+		if ( ! this.opts.token ) {
 			// TODO
 		}
 
 		this.site = opts.site;
 		this.token = opts.token;
 
+		this.importer( this.opts, done );
+	}
+
+	importer( opts, done ) {
+		let count = 0;
+
 		// Set up the consumer queue
 		this.consumerQ = async.queue( ( file, callback ) => {
+			count++;
 
 			// Check extension
 			let ext = path.extname( file ).substr( 1 );
@@ -95,7 +102,7 @@ export class Importer {
 				this.producerQ.workersList() <= 0 &&
 				this.producerQ.length() <= 0 ) {
 
-				done();
+				done( count );
 			}
 		};
 	}
