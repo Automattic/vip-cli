@@ -9,10 +9,11 @@ const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 export class Importer {
 	constructor( opts, done ) {
 		this.opts = Object.assign({
+			checkExists: true,
 			concurrency: 5,
-			types: default_types,
-			intermediate: false,
 			dryRun: false,
+			intermediate: false,
+			types: default_types,
 		}, opts );
 
 		if ( ! opts.site ) {
@@ -52,7 +53,7 @@ export class Importer {
 				return callback();
 			}
 
-			this.fileExists( file, err => {
+			this.fileExists( file, !opts.checkExists, err => {
 				if ( err ) {
 					return callback( err );
 				}
@@ -120,7 +121,11 @@ export class Importer {
 		this.consumerQ.push( item );
 	}
 
-	fileExists( path, callback ) {
+	fileExists( path, skip, callback ) {
+		if ( skip ) {
+			return callback();
+		}
+
 		let filepath = path.split( 'uploads' );
 		request
 			.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )

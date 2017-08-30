@@ -25,10 +25,11 @@ function list( v ) {
 program
 	.command( 'new-files <site> <src>' )
 	.description( 'Import files to a VIP Go site' )
-	.option( '-t, --types <types>', 'File extensions to import', imports.default_types, list )
-	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
-	.option( '-i, --intermediate', 'Upload intermediate images' )
 	.option( '-d, --dry-run', 'Check and list invalid files' )
+	.option( '-i, --intermediate', 'Upload intermediate images' )
+	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
+	.option( '-s, --skip-check-exists', 'Skip file checking if the file already exists' )
+	.option( '-t, --types <types>', 'File extensions to import', imports.default_types, list )
 	.option( '--aws-key <key>', 'AWS Key' )
 	.option( '--aws-secret <key>', 'AWS Secret' )
 	.action( ( site, src, options ) => {
@@ -42,92 +43,101 @@ program
 				return console.log( 'Error finding site' );
 			}
 
-			// Get access token
-			api
-				.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
-				.end( ( err, res ) => {
-					if ( err ) {
-						return console.error( err.response.error );
+			files.list( site, { 'pagesize': 0 }) // just need totalrecs here
+				.then( res => res.totalrecs )
+				.then( total => {
+					if ( total < FORCE_FAST_IMPORT_LIMIT ) {
+						options.skipCheckExists = true;
 					}
 
-					if ( ! res.body || ! res.body.data || ! res.body.data[0] || ! res.body.data[0].meta_value ) {
-						return console.error( 'Could not get files access token' );
-					}
-
-					let token = res.body.data[0].meta_value;
-					let importer = new imports.Importer({
-						intermediate: options.intermediate,
-						types: options.types,
-						concurrency: options.parallel,
-						dryRun: options.dryRun,
-						token: token,
-						site: site,
-					});
-
-					// Set up consumer and producer
-					switch ( src.protocol ) {
-					case 's3:':
-						// Set AWS config
-						aws.config.update({
-							accessKeyId: options.awsKey,
-							secretAccessKey: options.awsSecret,
-						});
-
-						var s3 = new aws.S3();
-						var params = {
-							Bucket: src.hostname,
-							MaxKeys: 500,
-						};
-
-						// Set S3 path prefix
-						if ( src.path && src.path.length > 1 && src.path.charAt( 0 ) === '/' ) {
-							params.Prefix = src.path.substr( 1 );
-						}
-
-						importer.setProducer( ( ptr, callback ) => {
-							if ( ptr ) {
-								params.ContinuationToken = ptr;
+					// Get access token
+					api
+						.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
+						.end( ( err, res ) => {
+							if ( err ) {
+								return console.error( err.response.error );
 							}
 
-							s3.listObjectsV2( params, ( err, data ) => {
-								if ( err ) {
-									return callback( err );
-								}
+							if ( ! res.body || ! res.body.data || ! res.body.data[0] || ! res.body.data[0].meta_value ) {
+								return console.error( 'Could not get files access token' );
+							}
 
-								if ( data.IsTruncated && data.NextContinuationToken ) {
-									importer.queuePtr( data.NextContinuationToken );
-								}
+							let token = res.body.data[0].meta_value;
+							let importer = new imports.Importer({
+								checkExists: !options.skipCheckExists,
+								concurrency: options.parallel,
+								dryRun: options.dryRun,
+								intermediate: options.intermediate,
+								site: site,
+								token: token,
+								types: options.types,
+							});
 
-								data.Contents.forEach( f => {
-									importer.queueFile( f.Key );
+							// Set up consumer and producer
+							switch ( src.protocol ) {
+							case 's3:':
+								// Set AWS config
+								aws.config.update({
+									accessKeyId: options.awsKey,
+									secretAccessKey: options.awsSecret,
 								});
 
-								callback();
-							});
+								var s3 = new aws.S3();
+								var params = {
+									Bucket: src.hostname,
+									MaxKeys: 500,
+								};
+
+								// Set S3 path prefix
+								if ( src.path && src.path.length > 1 && src.path.charAt( 0 ) === '/' ) {
+									params.Prefix = src.path.substr( 1 );
+								}
+
+								importer.setProducer( ( ptr, callback ) => {
+									if ( ptr ) {
+										params.ContinuationToken = ptr;
+									}
+
+									s3.listObjectsV2( params, ( err, data ) => {
+										if ( err ) {
+											return callback( err );
+										}
+
+										if ( data.IsTruncated && data.NextContinuationToken ) {
+											importer.queuePtr( data.NextContinuationToken );
+										}
+
+										data.Contents.forEach( f => {
+											importer.queueFile( f.Key );
+										});
+
+										callback();
+									});
+								});
+
+								importer.setConsumer( ( file, callback ) => {
+									let filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
+									let upload = importer
+										.upload( file );
+
+									filestream.pipe( upload );
+									filestream.on( 'finish', callback );
+								});
+								break;
+
+							case 'http:':
+							case 'https:':
+								// TODO: Handle .tar.gz, .zip
+								src = src.href;
+								break;
+
+							default:
+								src = src.pathname;
+								break;
+							}
+
+							importer.start();
 						});
-
-						importer.setConsumer( ( file, callback ) => {
-							let filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
-							let upload = importer
-								.upload( file );
-
-							filestream.pipe( upload );
-							filestream.on( 'finish', callback );
-						});
-						break;
-
-					case 'http:':
-					case 'https:':
-						// TODO: Handle .tar.gz, .zip
-						src = src.href;
-						break;
-
-					default:
-						src = src.pathname;
-						break;
-					}
-
-					importer.start();
 				});
 		});
 	});
