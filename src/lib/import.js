@@ -32,7 +32,11 @@ export class Importer {
 		let progressOpts = Object.assign({}, this.opts, { dryRun: true });
 		this.importer( progressOpts, count => {
 			if ( this.opts.dryRun ) {
-				return;
+				if ( done ) {
+					return done( count );
+				} else {
+					return;
+				}
 			}
 
 			console.log( 'Importing...' );
