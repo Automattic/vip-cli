@@ -179,14 +179,14 @@ program
 													return callback();
 												}
 
-												for ( let i = offset; i < offset + 500; i++ ) {
+												for ( let i = offset; i < offset + 5000; i++ ) {
 													if ( files[i] ) {
 														importer.queuePtr({ dir: file + '/' + files[i] });
 													}
 												}
 
-												if ( files.length - offset > 500 ) {
-													importer.queuePtr({ dir: file, offset: offset + 500 });
+												if ( files.length - offset > 5000 ) {
+													importer.queuePtr({ dir: file, offset: offset + 5000 });
 												}
 
 												return callback();
