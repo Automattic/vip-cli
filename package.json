@@ -37,7 +37,6 @@
     "cli-table": "^0.3.1",
     "colors": "^1.1.2",
     "commander": "2.9.0",
-    "concat-stream": "^1.6.0",
     "measure-stream": "^0.1.2",
     "node-pv": "^0.1.5",
     "progress": "^1.1.8",

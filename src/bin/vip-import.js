@@ -9,7 +9,6 @@ const measureStream = require( 'measure-stream' );
 
 // Ours
 const api      = require( '../lib/api' );
-const constants = require( '../constants' );
 const utils    = require( '../lib/utils' );
 const db = require( '../lib/db' );
 const imports = require( '../lib/import' );
