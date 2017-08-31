@@ -106,7 +106,7 @@ export class Importer {
 
 		// Start filling consumer queue when there are less than 25x concurrency number of items
 		this.consumerQ.buffer = this.consumerQ.concurrency * 25;
-		this.consumerQ.unsaturated = () => {
+		this.consumerQ.unsaturated = this.consumerQ.empty = () => {
 			this.producerQ.resume();
 		};
 
