@@ -2,14 +2,13 @@
 
 const fs       = require( 'fs' );
 const program  = require( 'commander' );
-const async    = require( 'async' );
-const progress = require( 'progress' );
-const request  = require( 'superagent' );
 const which = require( 'which' );
+const url = require( 'url' );
+const aws = require( 'aws-sdk' );
+const measureStream = require( 'measure-stream' );
 
 // Ours
 const api      = require( '../lib/api' );
-const constants = require( '../constants' );
 const utils    = require( '../lib/utils' );
 const db = require( '../lib/db' );
 const imports = require( '../lib/import' );
@@ -17,98 +16,40 @@ const files = require( '../lib/files' );
 
 // Config
 const FORCE_FAST_IMPORT_LIMIT = 100;
-const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 function list( v ) {
 	return v.split( ',' );
 }
 
-const default_types = [
-	'jpg','jpeg','jpe',
-	'gif',
-	'png',
-	'bmp',
-	'tiff','tif',
-	'ico',
-	'asf',
-	'asx',
-	'wmv','wmx','wm',
-	'avi',
-	'divx',
-	'mov',
-	'qt',
-	'mpeg','mpg','mpe','mp4','m4v',
-	'ogv',
-	'webm',
-	'mkv',
-	'3gp','3gpp','3g2','3gp2',
-	'txt',
-	'asc',
-	'c','cc','h',
-	'srt',
-	'csv','tsv',
-	'ics',
-	'rtx',
-	'css',
-	'vtt',
-	'dfxp',
-	'mp3',
-	'm4a','m4b',
-	'ra',
-	'ram',
-	'wav',
-	'ogg',
-	'oga',
-	'mid','midi',
-	'wma',
-	'wax',
-	'mka',
-	'rtf',
-	'js',
-	'pdf',
-	'class',
-	'psd',
-	'xcf',
-	'doc',
-	'pot',
-	'pps',
-	'ppt',
-	'wri',
-	'xla','xls','xlt','xlw',
-	'mdb','mpp',
-	'docx','docm','dotx','dotm',
-	'xlsx','xlsm','xlsb','xltx','xltm','xlam',
-	'pptx','pptm','ppsx','ppsm','potx','potm','ppam',
-	'sldx','sldm',
-	'onetoc','onetoc2','onetmp','onepkg','oxps',
-	'xps',
-	'odt','odp','ods','odg','odc','odb','odf',
-	'wp','wpd',
-	'key','numbers','pages',
-];
-
 program
-	.command( 'files <site> <directory>' )
+	.command( 'files <site> <src>' )
 	.description( 'Import files to a VIP Go site' )
-	.option( '-t, --types <types>', 'Types of files to import', default_types, list )
-	.option( '-e, --extra-types <types>', 'Additional file types to allow that are not included in WordPress defaults', [], list )
-	.option( '-p, --parallel <threads>', 'Number of parallel uploads. Default: 5', 5, parseInt )
-	.option( '-i, --intermediate', 'Upload intermediate images' )
-	.option( '-f, --fast', 'Skip existing file check' )
-	.option( '-d, --dry-run', 'Check and list invalid files' )
-	.action( ( site, directory, options ) => {
-		if ( 0 > directory.indexOf( 'uploads' ) ) {
-			return console.error( 'Invalid uploads directory. Uploads must be in uploads/' );
-		}
+	.option( '--dry-run', 'Check and list invalid files', false )
+	.option( '--intermediate', 'Upload intermediate images', false )
+	.option( '--skip-check-exists', 'Skip file checking if the file already exists', false )
+	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
+	.option( '-t, --types <types>', 'File extensions to import', imports.default_types, list )
+	.option( '--aws-key <key>', 'AWS Key' )
+	.option( '--aws-secret <key>', 'AWS Secret' )
+	.action( ( site, src, options ) => {
+		src = url.parse( src );
+
+		// TODO: Skip existing files checks for new sites
+		// TODO: Set up logger (too big files, intermediates, invalid extensions, bad characters in filename)
 
 		utils.findAndConfirmSite( site, 'Importing files for site:', ( err, site ) => {
+			if ( err || ! site ) {
+				return console.log( 'Error finding site' );
+			}
+
 			files.list( site, { 'pagesize': 0 }) // just need totalrecs here
 				.then( res => res.totalrecs )
 				.then( total => {
 					if ( total < FORCE_FAST_IMPORT_LIMIT ) {
-						options.fast = true;
+						options.skipCheckExists = true;
 					}
 
+					// Get access token
 					api
 						.get( '/sites/' + site.client_site_id + '/meta/files_access_token' )
 						.end( ( err, res ) => {
@@ -120,236 +61,163 @@ program
 								return console.error( 'Could not get files access token' );
 							}
 
-							var access_token = res.body.data[0].meta_value;
-							var bar, filecount = 0;
-							var logfile = `/tmp/import-${site.client_site_id}-${Date.now()}.log`;
-							var extensions = fs.createWriteStream( logfile + '.ext' );
-							var intermediates = fs.createWriteStream( logfile + '.int' );
-							var invalidFiles = fs.createWriteStream( logfile + '.filenames' );
-							var filesize = fs.createWriteStream( logfile + '.filesize' );
+							var start = Date.now() / 1000;
+							var totalLength = 0;
+							let token = res.body.data[0].meta_value;
+							let importer = new imports.Importer({
+								checkExists: !options.skipCheckExists,
+								concurrency: options.parallel,
+								dryRun: !!options.dryRun,
+								intermediate: !!options.intermediate,
+								site: site,
+								token: token,
+								types: options.types,
+							}, count => {
+								var end = Date.now() / 1000;
+								var totalSeconds = end - start;
 
-							var processFiles = function( importing, callback ) {
-								var queue = async.priorityQueue( ( file, cb ) => {
-									// Handle pointers separately - add next 5k files + next pointer if necessary
-									if ( 'ptr:' === file.substring( 0, 4 ) ) {
-										var parts = file.split( ':' );
-										var offset = parseInt( parts[1] );
+								console.log( 'File count:', count );
+								console.log( 'Total size:', totalLength );
+								console.log( 'Bytes per second:', totalLength/totalSeconds );
+							});
 
-										file = parts[2];
+							// Set up consumer and producer
+							switch ( src.protocol ) {
+							case 's3:':
+								if ( ! options.awsKey || ! options.awsSecret ) {
+									return console.error( 'AWS Key and AWS Secret are required for imports from S3' );
+								}
 
-										// Queue next batch of files in this directory
-										return imports.queueDir( file, offset, function( q ) {
-											q.forEach( i => {
-												queue.push( i.item, i.priority );
-											});
+								// Set AWS config
+								aws.config.update({
+									accessKeyId: options.awsKey,
+									secretAccessKey: options.awsSecret,
+								});
 
-											return cb();
-										});
+								var s3 = new aws.S3();
+								var params = {
+									Bucket: src.hostname,
+									MaxKeys: 500,
+								};
+
+								// Set S3 path prefix
+								if ( src.path && src.path.length > 1 && src.path.charAt( 0 ) === '/' ) {
+									params.Prefix = src.path.substr( 1 );
+								}
+
+								importer.setProducer( ( ptr, callback ) => {
+									if ( ptr ) {
+										params.ContinuationToken = ptr;
 									}
 
-									async.waterfall( [
-										function( cb ) {
-											fs.realpath( file, cb );
-										},
-
-										function( file, cb ) {
-											fs.lstat( file, function( err, stats ) {
-												cb( err, file, stats );
-											});
-										},
-									], function( err, file, stats ) {
+									s3.listObjectsV2( params, ( err, data ) => {
 										if ( err ) {
-											return cb( err );
-										} else if ( stats.isSymbolicLink() ) {
-											return cb( new Error( 'Invalid file: symlink' ) );
+											return callback( err );
+										}
+
+										if ( data.IsTruncated && data.NextContinuationToken ) {
+											importer.queuePtr( data.NextContinuationToken );
+										}
+
+										data.Contents.forEach( f => {
+											importer.queueFile( f.Key );
+										});
+
+										callback();
+									});
+								});
+
+								importer.setConsumer( ( file, callback ) => {
+									let measure = new measureStream();
+									let filestream = s3.getObject({ Bucket: src.hostname, Key: file }).createReadStream();
+									let upload = importer
+										.upload( file );
+
+									filestream.on( 'error', callback );
+									filestream.on( 'end', callback );
+
+									measure.on( 'finish', () => {
+										totalLength += measure.measurements.totalLength;
+									});
+
+									filestream.pipe( measure ).pipe( upload );
+								});
+								break;
+
+							case 'http:':
+							case 'https:':
+								// TODO: Handle .tar.gz, .zip
+								src = src.href;
+								break;
+
+							default:
+								src = src.pathname;
+
+								importer.setProducer( ( ptr, callback ) => {
+									let file;
+									if ( ptr && ptr.dir ) {
+										file = ptr.dir;
+									} else if ( ptr ) {
+										return callback( new Error( 'Invalid pointer' ) );
+									} else {
+										file = src;
+									}
+
+									let offset = ptr && ptr.offset ? ptr.offset : 0;
+									fs.lstat( file, ( err, stats ) => {
+										if ( err ) {
+											return callback( err );
+										}
+
+										if ( stats.isFile() ) {
+											importer.queueFile( file );
+											return callback();
 										} else if ( stats.isDirectory() ) {
-											// Init directory queueing with offset=0
-											imports.queueDir( file, 0, function( q ) {
-												q.forEach( i => {
-													queue.push( i.item, i.priority );
-												});
+											fs.readdir( file, ( err, files ) => {
+												if ( files.length <= 0 ) {
+													return callback();
+												}
 
-												return cb();
+												for ( let i = offset; i < offset + 5000; i++ ) {
+													if ( files[i] ) {
+														importer.queuePtr({ dir: file + '/' + files[i] });
+													}
+												}
+
+												if ( files.length - offset > 5000 ) {
+													importer.queuePtr({ dir: file, offset: offset + 5000 });
+												}
+
+												return callback();
 											});
-										} else if ( stats.isFile() ) {
-											var filepath = file.split( 'uploads' );
-											var ext      = file.split( '.' );
-
-											ext = ext[ ext.length - 1 ];
-
-											if ( stats.size > MAX_IMPORT_FILE_SIZE ) {
-												return filesize.write( file + '\n', cb );
-											}
-
-											if ( ! ext || ( options.types.indexOf( ext.toLowerCase() ) < 0 && options.extraTypes.indexOf( ext.toLowerCase() ) < 0 ) ) {
-												if ( options.dryRun || importing ) {
-													return extensions.write( file + '\n', cb );
-												}
-
-												return cb( new Error( 'Invalid file extension' ) );
-											}
-
-											if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
-												if ( options.dryRun || importing ) {
-													return invalidFiles.write( file + '\n', cb );
-												}
-
-												return cb( new Error( 'Invalid filename' ) );
-											}
-
-											let int_re = /-\d+x\d+(\.\w{3,4})$/;
-											if ( ! options.intermediate && int_re.test( file ) ) {
-												// Check if the original file exists
-												let orig = file.replace( int_re, '$1' );
-
-												try {
-													fs.statSync( orig );
-
-													if ( options.dryRun || importing ) {
-														return intermediates.write( file + '\n', cb );
-													}
-
-													return cb( new Error( 'Skipping intermediate image: ' + file ) );
-												} catch ( e ) {
-													// continue
-												}
-											}
-
-											if ( ! filepath[1] ) {
-												return cb( new Error( 'Invalid file path. Files must be in uploads/ directory.' ) );
-											}
-
-											if ( ! importing ) {
-												filecount++;
-
-												if ( 0 === filecount % 10000 ) {
-													console.log( filecount );
-												}
-
-												return cb();
-											}
-
-											if ( options.fast ) {
-												bar.tick();
-												return imports.upload( site, file, access_token, cb );
-											} else {
-												request
-												.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
-												.set({ 'X-Client-Site-ID': site.client_site_id })
-												.set({ 'X-Access-Token': access_token })
-												.set({ 'X-Action': 'file_exists' })
-												.timeout( 2000 )
-												.end( err => {
-													bar.tick();
-
-													if ( err && err.status === 404 ) {
-														return imports.upload( site, file, access_token, cb );
-													}
-
-													return cb( err );
-												});
-											}
 										} else {
-											return cb();
+											return callback( new Error( 'Unknown file type' ) );
 										}
 									});
-								}, 5 );
-
-								if ( callback ) {
-									queue.drain = function() {
-										if ( queue.workersList().length <= 0 ) {
-											// Queue is empty and all workers finished
-											callback();
-										}
-									};
-								}
-
-								// Start it
-								queue.push( directory, 1 );
-							};
-
-							const finish_log = function() {
-								extensions.end();
-								intermediates.end();
-								invalidFiles.end();
-								filesize.end();
-
-								let data;
-								let extHeader = "Skipped with unsupported extension:";
-								let intHeader = "Skipped intermediate images:";
-								let fileHeader = "Skipped invalid filenames:";
-								let sizeHeader = "Skipped large files:";
-
-								extHeader += '\n' + '='.repeat( extHeader.length ) + '\n\n';
-								intHeader += '\n' + '='.repeat( intHeader.length ) + '\n\n';
-								fileHeader += '\n' + '='.repeat( fileHeader.length ) + '\n\n';
-								sizeHeader += '\n' + '='.repeat( sizeHeader.length ) + '\n\n';
-
-								// Append invalid file extensions
-								fs.appendFileSync( logfile, extHeader );
-
-								try {
-									data = fs.readFileSync( logfile + '.ext' );
-									fs.appendFileSync( logfile, data + '\n\n' );
-									fs.unlinkSync( logfile + '.ext' );
-								} catch ( e ) {
-									fs.appendFileSync( logfile, "None\n\n" );
-								}
-
-
-								// Append intermediate images
-								fs.appendFileSync( logfile, intHeader );
-
-								try {
-									data = fs.readFileSync( logfile + '.int' );
-									fs.appendFileSync( logfile, data + '\n\n' );
-									fs.unlinkSync( logfile + '.int' );
-								} catch ( e ) {
-									fs.appendFileSync( logfile, "None\n\n" );
-								}
-
-								// Append invalid filenames
-								fs.appendFileSync( logfile, fileHeader );
-
-								try {
-									data = fs.readFileSync( logfile + '.filenames' );
-									fs.appendFileSync( logfile, data + '\n\n' );
-									fs.unlinkSync( logfile + '.filenames' );
-								} catch ( e ) {
-									fs.appendFileSync( logfile, "None\n\n" );
-								}
-
-								// Append invalid filenames
-								fs.appendFileSync( logfile, sizeHeader );
-
-								try {
-									data = fs.readFileSync( logfile + '.filesize' );
-									fs.appendFileSync( logfile, data + '\n\n' );
-									fs.unlinkSync( logfile + '.filesize' );
-								} catch ( e ) {
-									fs.appendFileSync( logfile, "None\n\n" );
-								}
-
-								console.log( `Import log: ${logfile}` );
-							};
-
-							// TODO: Cache file count to disk, hash directory so we know if the contents change?
-							console.log( 'Counting files...' );
-							processFiles( false, function() {
-								if ( options.dryRun ) {
-									finish_log();
-									return;
-								}
-
-								bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: filecount, incomplete: ' ', renderThrottle: 100 });
-								console.log( 'Importing ' + filecount + ' files...' );
-								processFiles( true, function() {
-									finish_log();
 								});
-							});
+
+								importer.setConsumer( ( file, callback ) => {
+									let measure = new measureStream();
+									let filestream = fs.createReadStream( file );
+									let upload = importer
+										.upload( file );
+
+									filestream.on( 'error', callback );
+									filestream.on( 'end', callback );
+
+									measure.on( 'finish', () => {
+										totalLength += measure.measurements.totalLength;
+									});
+
+									filestream.pipe( measure ).pipe( upload );
+								});
+
+								break;
+							}
+
+							importer.start();
 						});
-				})
-				.catch( err => console.error( err ) );
+				});
 		});
 	});
 

@@ -1,71 +1,228 @@
-const fs = require( 'fs' );
-const http = require( 'https' );
+const async = require( 'async' );
+const path = require( 'path' );
+const request  = require( 'superagent' );
+const progress = require( 'progress' );
 
 // Ours
 const constants = require( '../constants' );
+const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
-export function upload( site, file, token, cb ) {
-	fs.readFile( file, ( err, data ) => {
-		var filepath = file.split( 'uploads' );
-		var req = http.request({
-			hostname: constants.FILES_SERVICE_ENDPOINT,
-			method: 'PUT',
-			path: encodeURI( '/wp-content/uploads' + filepath[1] ),
-			headers: {
-				'X-Client-Site-ID': site.client_site_id,
-				'X-Access-Token': token,
-			},
-		}, cb );
+export class Importer {
+	constructor( opts, done ) {
+		this.opts = Object.assign({
+			checkExists: true,
+			concurrency: 5,
+			dryRun: false,
+			intermediate: false,
+			types: default_types,
+		}, opts );
 
-		req.on( 'socket', function ( socket ) {
-			socket.setTimeout( 10000 );
-			socket.on( 'timeout', function() {
-				req.abort();
+		if ( ! this.opts.site ) {
+			// TODO
+		}
+
+		if ( ! this.opts.token ) {
+			// TODO
+		}
+
+		this.site = opts.site;
+		this.token = opts.token;
+
+		this.importer( this.opts, done );
+	}
+
+	importer( opts, done ) {
+		let count = 0;
+
+		// Set up the consumer queue
+		this.consumerQ = async.queue( ( file, callback ) => {
+			if ( ++count % 1000 === 0 ){
+				console.log( count );
+			}
+
+			// Check extension
+			let ext = path.extname( file ).substr( 1 );
+			if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
+				return callback( new Error( 'Invalid extension: ' + file ) );
+			}
+
+			// Check filename
+			if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+				return callback( new Error( 'Invalid filename:' + file ) );
+			}
+
+			// Check intermediate image
+			let int_re = /-\d+x\d+(\.\w{3,4})$/;
+			if ( ! opts.intermediate && int_re.test( file ) ) {
+				// TODO Check if the original file exists
+				return callback( new Error( 'Skipping intermediate image: ' + file ) );
+			}
+
+			if ( opts.dryRun ) {
+				return callback();
+			}
+
+			this.fileExists( file, !opts.checkExists, err => {
+				if ( err ) {
+					return callback( err );
+				}
+
+				return this.consumer( file, callback );
 			});
-		});
+		}, opts.concurrency );
 
-		req.write( data );
-		req.end();
-	});
-}
+		this.consumerQ.error = err => {
+			console.error( 'Consumer Error:', err.toString() );
+		};
 
-export function queueDir( dir, offset, cb ) {
-	var priority = 0 - dir.split( '/' ).length;
+		// Set up the producer queue (populates consumer queue)
+		this.producerQ = async.queue( ( ptr, callback ) => {
+			return this.producer( ptr, err => {
+				if ( this.consumerQ.length() > this.consumerQ.concurrency * 100 ) {
+					this.producerQ.pause();
+				}
 
-	fs.readdir( dir, ( err, files ) => {
-		if ( files.length <= 0 ) {
-			return cb( [] );
+				callback( err );
+			});
+		}, 1 );
+
+		this.producerQ.error = err => {
+			console.error( 'Producer Error:', err.toString() );
+		};
+
+		// Start filling consumer queue when there are less than 25x concurrency number of items
+		this.consumerQ.buffer = this.consumerQ.concurrency * 25;
+		this.consumerQ.unsaturated = this.consumerQ.empty = () => {
+			this.producerQ.resume();
+		};
+
+		// When both queues are empty, run the done callback
+		let finalized = false;
+		this.consumerQ.drain = this.producerQ.drain = () => {
+			if ( done && !finalized &&
+				this.consumerQ.workersList().length <= 0 &&
+				this.producerQ.workersList().length <= 0 ) {
+
+				finalized = true;
+				done( count );
+			}
+		};
+	}
+
+	start() {
+		// kick it off
+		this.producerQ.push( null );
+	}
+
+	setProducer( producer ) {
+		this.producer = producer;
+	}
+
+	setConsumer( consumer ) {
+		this.consumer = consumer;
+	}
+
+	queuePtr( ptr ) {
+		this.producerQ.push( ptr );
+	}
+
+	queueFile( item ) {
+		this.consumerQ.push( item );
+	}
+
+	fileExists( path, skip, callback ) {
+		if ( skip ) {
+			return callback();
 		}
 
-		if ( files.length - offset < 10000 ) {
-			// If there are less than 2 full rounds of files left, just do them all now
-			files = files.slice( offset, offset + 10000 );
-			files = files.map( f => dir + '/' + f );
+		let filepath = path.split( 'uploads' );
+		request
+			.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
+			.set({ 'X-Client-Site-ID': this.site.client_site_id })
+			.set({ 'X-Access-Token': this.token })
+			.set({ 'X-Action': 'file_exists' })
+			.timeout( 1000 )
+			.end( err => {
+				if ( err && err.status === 404 ) {
+					return callback();
+				} else if ( err ) {
+					return callback( err );
+				} else {
+					return callback( new Error( 'File already exists' ) );
+				}
+			});
+	}
 
-			return cb( [{
-				item: files,
-				priority: priority,
-			}] );
-		}
-
-		// Queue next 5k files
-		files = files.slice( offset, offset + 5000 );
-		offset += 5000;
-
-		// Queue files with absolute path
-		files = files.map( f => dir + '/' + f );
-
-		var ptr = 'ptr:' + offset + ':' + dir;
-		return cb( [
-			{
-				priority: priority,
-				item: files,
-			},
-			{
-				// Process the pointer after this batch of files
-				priority: priority + 1,
-				item: ptr,
-			},
-		] );
-	});
+	upload( path ) {
+		let filepath = path.split( 'uploads' );
+		return request
+			.put( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
+			.set({ 'X-Client-Site-ID': this.site.client_site_id })
+			.set({ 'X-Access-Token': this.token })
+			.timeout( 10000 );
+	}
 }
+
+export const default_types = [
+	'jpg','jpeg','jpe',
+	'gif',
+	'png',
+	'bmp',
+	'tiff','tif',
+	'ico',
+	'asf',
+	'asx',
+	'wmv','wmx','wm',
+	'avi',
+	'divx',
+	'mov',
+	'qt',
+	'mpeg','mpg','mpe','mp4','m4v',
+	'ogv',
+	'webm',
+	'mkv',
+	'3gp','3gpp','3g2','3gp2',
+	'txt',
+	'asc',
+	'c','cc','h',
+	'srt',
+	'csv','tsv',
+	'ics',
+	'rtx',
+	'css',
+	'vtt',
+	'dfxp',
+	'mp3',
+	'm4a','m4b',
+	'ra',
+	'ram',
+	'wav',
+	'ogg',
+	'oga',
+	'mid','midi',
+	'wma',
+	'wax',
+	'mka',
+	'rtf',
+	'js',
+	'pdf',
+	'class',
+	'psd',
+	'xcf',
+	'doc',
+	'pot',
+	'pps',
+	'ppt',
+	'wri',
+	'xla','xls','xlt','xlw',
+	'mdb','mpp',
+	'docx','docm','dotx','dotm',
+	'xlsx','xlsm','xlsb','xltx','xltm','xlam',
+	'pptx','pptm','ppsx','ppsm','potx','potm','ppam',
+	'sldx','sldm',
+	'onetoc','onetoc2','onetmp','onepkg','oxps',
+	'xps',
+	'odt','odp','ods','odg','odc','odb','odf',
+	'wp','wpd',
+	'key','numbers','pages',
+];
