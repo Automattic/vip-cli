@@ -28,22 +28,7 @@ export class Importer {
 		this.site = opts.site;
 		this.token = opts.token;
 
-		console.log( 'Counting files...' );
-		let progressOpts = Object.assign({}, this.opts, { dryRun: true });
-		this.importer( progressOpts, count => {
-			if ( this.opts.dryRun ) {
-				if ( done ) {
-					return done( count );
-				} else {
-					return;
-				}
-			}
-
-			console.log( 'Importing...' );
-			this.bar = new progress( 'Importing [:bar] :percent (:current/:total) :etas', { total: count, incomplete: ' ', renderThrottle: 100 });
-			this.importer( this.opts, done );
-			this.start();
-		});
+		this.importer( this.opts, done );
 	}
 
 	importer( opts, done ) {
@@ -51,10 +36,7 @@ export class Importer {
 
 		// Set up the consumer queue
 		this.consumerQ = async.queue( ( file, callback ) => {
-			count++;
-			if ( this.bar ) {
-				this.bar.tick();
-			} else if ( count % 1000 === 0 ){
+			if ( ++count % 1000 === 0 ){
 				console.log( count );
 			}
 
