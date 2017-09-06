@@ -140,7 +140,7 @@ program
 										totalLength += measure.measurements.totalLength;
 									});
 
-									filestream.pipe( upload );
+									filestream.pipe( measure ).pipe( upload );
 								});
 								break;
 
