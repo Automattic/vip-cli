@@ -12,24 +12,63 @@ const unzip = zlib.createUnzip();
 // Ours
 const api = require( './api' );
 
-function getConnection( site, callback ) {
-	api
-		.get( '/sites/' + site.client_site_id + '/masterdb' )
-		.end( ( err, res ) => {
-			if ( err ) {
-				return callback( err.response.error );
-			}
+function getConnection( site, opts, callback ) {
+	if ( 'function' === typeof opts ) {
+		callback = opts;
+		opts = {};
+	}
 
-			var args = [
-				`-h${res.body.host}`,
-				`-P${res.body.port}`,
-				`-u${res.body.username}`,
-				res.body.name,
-				`-p${res.body.password}`,
-			];
+	opts = Object.assign({
+		masterdb: true,
+	}, opts );
 
-			callback( null, args );
-		});
+	// Convert DB object to connection args
+	var getCLIArgsForConnectionHost = function( db ) {
+		return [
+			`-h${db.host}`,
+			`-P${db.port}`,
+			`-u${db.username}`,
+			db.name,
+			`-p${db.password}`,
+		];
+	};
+
+	if ( opts.masterdb ) {
+		api
+			.get( '/sites/' + site.client_site_id + '/masterdb' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err.response.error );
+				}
+
+				var args = getCLIArgsForConnectionHost( res.body );
+
+				callback( null, args );
+			});
+	} else {
+		api
+			.get( '/sites/' + site.client_site_id + '/slavedb' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err.response.error );
+				}
+
+				var conns = res.body.data;
+
+				if ( conns.length > 0 ) {
+					// Random DB slave
+					var connection = conns[Math.floor( Math.random()*conns.length )];
+					var args = getCLIArgsForConnectionHost( connection );
+
+					callback( null, args );
+				} else {
+					// If there are no slaves, use the master
+					console.error( 'No slaves are available, getting connection to master' );
+					opts.masterdb = true;
+					getConnection( site, opts, callback );
+				}
+			});
+	}
 }
 
 export function importDB( site, file, opts, callback ) {
@@ -73,7 +112,7 @@ export function importDB( site, file, opts, callback ) {
 }
 
 export function exportDB( site, callback ) {
-	getConnection( site, ( err, connectionArgs ) => {
+	getConnection( site, { masterdb: false }, ( err, connectionArgs ) => {
 		if ( err ) {
 			return callback( err );
 		}
