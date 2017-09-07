@@ -117,7 +117,7 @@ program
 					api
 						.get( '/containers/' + masterContainer + '/meta/innodb_buffer_pool_size' )
 						.end( ( err, res ) => {
-							if ( err.response.statusCode === 404 ) {
+							if ( err && err.response.statusCode === 404 ) {
 								console.log( '-- Master DB config on API (mb): Not configured' );
 							}
 							else if ( err ) {
