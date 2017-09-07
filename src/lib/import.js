@@ -97,13 +97,10 @@ export class Importer {
 		};
 
 		// When both queues are empty, run the done callback
-		let finalized = false;
+		let locked = false;
 		this.consumerQ.drain = this.producerQ.drain = () => {
-			if ( done && !finalized &&
-				this.consumerQ.workersList().length <= 0 &&
-				this.producerQ.workersList().length <= 0 ) {
-
-				finalized = true;
+			if ( done && !locked && this.consumerQ.idle() && this.producerQ.idle() ) {
+				locked = true;
 				done( count );
 			}
 		};
