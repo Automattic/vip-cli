@@ -9,7 +9,7 @@ const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 export class Importer {
 	constructor( opts, done ) {
-		this.opts = Object.assign({
+		opts = Object.assign({
 			checkExists: true,
 			concurrency: 5,
 			dryRun: false,
@@ -17,18 +17,18 @@ export class Importer {
 			types: default_types,
 		}, opts );
 
-		if ( ! this.opts.site ) {
+		if ( ! opts.site ) {
 			// TODO
 		}
 
-		if ( ! this.opts.token ) {
+		if ( ! opts.token ) {
 			// TODO
 		}
 
 		this.site = opts.site;
 		this.token = opts.token;
 
-		this.importer( this.opts, done );
+		this.importer( opts, done );
 	}
 
 	importer( opts, done ) {
