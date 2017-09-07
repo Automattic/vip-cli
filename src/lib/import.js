@@ -17,12 +17,12 @@ export class Importer {
 			types: default_types,
 		}, opts );
 
-		if ( ! opts.site ) {
-			// TODO
+		if ( ! opts.site || ! opts.site.client_site_id ) {
+			throw new Error( 'Invalid VIP Go site' );
 		}
 
 		if ( ! opts.token ) {
-			// TODO
+			throw new Error( 'Invalid VIP Go Files Service token' );
 		}
 
 		this.site = opts.site;
