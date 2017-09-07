@@ -34,7 +34,10 @@ program
 	.action( ( site, src, options ) => {
 		src = url.parse( src );
 
-		// TODO: Skip existing files checks for new sites
+		if ( src.path.search( 'uploads' ) === -1 ) {
+			return console.error( 'Source path must contain `/uploads`' );
+		}
+
 		// TODO: Set up logger (too big files, intermediates, invalid extensions, bad characters in filename)
 
 		utils.findAndConfirmSite( site, 'Importing files for site:', ( err, site ) => {
