@@ -67,22 +67,27 @@ program
 							var start = Date.now() / 1000;
 							var totalLength = 0;
 							let token = res.body.data[0].meta_value;
-							let importer = new imports.Importer({
-								checkExists: !options.skipCheckExists,
-								concurrency: options.parallel,
-								dryRun: !!options.dryRun,
-								intermediate: !!options.intermediate,
-								site: site,
-								token: token,
-								types: options.types,
-							}, count => {
-								var end = Date.now() / 1000;
-								var totalSeconds = end - start;
 
-								console.log( 'File count:', count );
-								console.log( 'Total size:', totalLength );
-								console.log( 'Bytes per second:', totalLength/totalSeconds );
-							});
+							try {
+								var importer = new imports.Importer({
+									checkExists: !options.skipCheckExists,
+									concurrency: options.parallel,
+									dryRun: !!options.dryRun,
+									intermediate: !!options.intermediate,
+									site: site,
+									token: token,
+									types: options.types,
+								}, count => {
+									var end = Date.now() / 1000;
+									var totalSeconds = end - start;
+
+									console.log( 'File count:', count );
+									console.log( 'Total size:', totalLength );
+									console.log( 'Bytes per second:', totalLength/totalSeconds );
+								});
+							} catch ( e ) {
+								return console.error( e.toString() );
+							}
 
 							// Set up consumer and producer
 							switch ( src.protocol ) {
