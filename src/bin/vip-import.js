@@ -133,6 +133,8 @@ program
 									let upload = importer
 										.upload( file );
 
+									// TODO retry on error
+									upload.on( 'error', callback );
 									filestream.on( 'error', callback );
 									filestream.on( 'end', callback );
 
@@ -202,6 +204,8 @@ program
 									let upload = importer
 										.upload( file );
 
+									// TODO retry on error
+									upload.on( 'error', callback );
 									filestream.on( 'error', callback );
 									filestream.on( 'end', callback );
 
