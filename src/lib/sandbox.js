@@ -217,7 +217,7 @@ export function createSandboxForSite( site, cb ) {
 
 			var total = res.body.totalrecs;
 			var running = res.body.data.filter( s => {
-				return s.containers[0].state === 'running';
+				return s.containers[0].state !== 'stopped';
 			}).length;
 
 			if ( running > 5 ) {
