@@ -33,36 +33,42 @@ function getConnection( site, opts, callback ) {
 		];
 	};
 
-	api
-		.get( '/sites/' + site.client_site_id + '/db' )
-		.end( ( err, res ) => {
-			if ( err ) {
-				return callback( err.response.error );
-			}
+	if ( opts.masterdb ) {
+		api
+			.get( '/sites/' + site.client_site_id + '/masterdb' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err.response.error );
+				}
 
-			const connections = res.body.data;
+				var args = getCLIArgsForConnectionHost( res.body );
 
-			if ( ! connections || ! connections.length ) {
-				return callback( new Error( 'The site either has no active database connections or something went wrong.' ) );
-			}
+				callback( null, args );
+			});
+	} else {
+		api
+			.get( '/sites/' + site.client_site_id + '/slavedb' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return callback( err.response.error );
+				}
 
-			let connection;
-			if ( opts.masterdb ) {
-				connection = connections.find( connection => true === connection.is_master_db );
-			} else {
-				// Put slave dbs first and pick the first one
-				connections.sort( ( a, b ) => a.is_master_db - b.is_master_db );
-				connection = connections[0];
-			}
+				var conns = res.body.data;
 
-			if ( ! connection ) {
-				return callback( new Error( 'Could not find a suitable database connection' ) );
-			}
+				if ( conns.length > 0 ) {
+					// Random DB slave
+					var connection = conns[Math.floor( Math.random()*conns.length )];
+					var args = getCLIArgsForConnectionHost( connection );
 
-			const args = getCLIArgsForConnectionHost( connection );
-
-			callback( null, args );
-		});
+					callback( null, args );
+				} else {
+					// If there are no slaves, use the master
+					console.error( 'No slaves are available, getting connection to master' );
+					opts.masterdb = true;
+					getConnection( site, opts, callback );
+				}
+			});
+	}
 }
 
 export function importDB( site, file, opts, callback ) {
