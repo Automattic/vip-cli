@@ -76,6 +76,7 @@ export function importDB( site, file, opts, callback ) {
 	// Default opts
 	opts = Object.assign({
 		throttle: 1, // 1 MB
+		replace: {},
 	}, opts );
 
 	getConnection( site, ( err, args ) => {
@@ -107,7 +108,16 @@ export function importDB( site, file, opts, callback ) {
 			break;
 		}
 
-		stream.pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
+		stream = stream.pipe( throttle ).pipe( pv );
+
+		Object.keys( opts.replace ).forEach( from => {
+			let to = opts.replace[from];
+			// TODO: Build & distribute go-search-replace with vip-cli
+			let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
+			stream = stream.pipe( replace );
+		});
+
+		stream.pipe( importdb.stdin );
 	});
 }
 
