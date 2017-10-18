@@ -108,16 +108,15 @@ export function importDB( site, file, opts, callback ) {
 			break;
 		}
 
-		stream = stream.pipe( throttle ).pipe( pv );
-
-		Object.keys( opts.replace ).forEach( from => {
-			let to = opts.replace[from];
-			// TODO: Build & distribute go-search-replace with vip-cli
+		// TODO: Get and build go-search-replace on npm install
+		for ( let from in opts.replace ) {
+			let to = opts.replace[ from ];
 			let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
-			stream = stream.pipe( replace );
-		});
+			stream.pipe( replace.stdin );
+			stream = replace.stdout;
+		}
 
-		stream.pipe( importdb.stdin );
+		stream.pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
 	});
 }
 
