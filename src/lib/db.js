@@ -108,7 +108,6 @@ export function importDB( site, file, opts, callback ) {
 			break;
 		}
 
-		// TODO: Get and build go-search-replace on npm install
 		for ( let from in opts.replace ) {
 			let to = opts.replace[ from ];
 			let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
