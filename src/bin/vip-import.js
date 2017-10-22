@@ -233,6 +233,21 @@ program
 		});
 	});
 
+function searchReplace( v, total ) {
+	total = total || {};
+	v = v.split( ',' );
+
+	if ( v.length < 2 ) {
+		return total;
+	}
+
+	let i = {};
+	i[ v[0] ] = v[1];
+
+	total = Object.assign( total, i );
+	return total;
+}
+
 program
 	.command( 'sql <site> <file>' )
 	.alias( 'database' )
@@ -240,8 +255,7 @@ program
 	.description( 'Import SQL to a VIP Go site' )
 	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
 	.option( '-s, --skip-confirm', 'Skip the confirmation step' )
-	.option( '--from <from>', 'Search/Replace' )
-	.option( '--to <to>', 'Search/Replace' )
+	.option( '--search-replace <from,to>', 'Search/Replace tuple', searchReplace, {})
 	.action( ( site, file, options ) => {
 		try {
 			which.sync( 'mysql' );
@@ -249,15 +263,9 @@ program
 			return console.error( 'MySQL client is required and not installed.' );
 		}
 
-		let searchReplace = {};
-
-		if ( options.from && options.to ) {
-			searchReplace[ options.from ] = options.to;
-		}
-
 		var opts = {
 			throttle: options.throttle,
-			replace: searchReplace,
+			replace: options.searchReplace,
 		};
 
 		try {
