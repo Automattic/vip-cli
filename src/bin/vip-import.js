@@ -299,7 +299,15 @@ program
 		};
 
 		if ( ! options.skipConfirm ) {
-			utils.findAndConfirmSite( site, 'Importing SQL for site:', importCallback );
+			let info = [];
+			if ( options.searchReplace ) {
+				Object.keys( options.searchReplace ).forEach( from => {
+					let to = options.searchReplace[from];
+					info.push( `-- Search Replace: ${ from } -> ${ to }` );
+				});
+			}
+
+			utils.findAndConfirmSite( site, 'Importing SQL for site:', info, importCallback );
 		} else {
 			utils.findSite( site, importCallback );
 		}
