@@ -110,6 +110,10 @@ export function importDB( site, file, opts, callback ) {
 					return callback( new Error( 'Invalid DROP DATABASE operation' ) );
 				}
 
+				if ( line.indexOf( 'ALTER USER' ) === 0 || line.indexOf( 'SET PASSWORD' ) === 0 ) {
+					return callback( new Error( 'Invalid user update' ) );
+				}
+
 				// Ensure all tables use InnoDB
 				if ( line.indexOf( 'ENGINE=MyISAM' ) > -1 ) {
 					line = line.replace( 'ENGINE=MyISAM', 'ENGINE=InnoDB' );
