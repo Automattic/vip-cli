@@ -78,6 +78,46 @@ export function importDB( site, file, opts, callback ) {
 		throttle: 1, // 1 MB
 	}, opts );
 
+	const { Transform } = require( 'stream' );
+	const validator = new Transform({
+		transform( chunk, encoding, callback ) {
+			if ( this._last === undefined ) {
+				this._last = '';
+			}
+
+			if ( encoding === 'buffer' ) {
+				chunk = chunk.toString();
+			}
+
+			this._last += chunk;
+
+			// Split chunks on \n to make search/replace easier
+			let list = this._last.split( '\n' );
+			this._last = list.pop();
+
+			for ( let i = 0; i < list.length; i++ ) {
+				let line = list[i];
+
+				// Ensure all tables use InnoDB
+				if ( line.indexOf( 'ENGINE=MyISAM' ) > -1 ) {
+					line = line.replace( 'ENGINE=MyISAM', 'ENGINE=InnoDB' );
+				}
+
+				this.push( line + '\n' );
+			}
+
+			callback();
+		},
+
+		flush( callback ) {
+			if ( this._last ) {
+				this.push( this._last );
+			}
+
+			callback();
+		},
+	});
+
 	getConnection( site, ( err, args ) => {
 		if ( err ) {
 			return callback( err );
@@ -107,7 +147,7 @@ export function importDB( site, file, opts, callback ) {
 			break;
 		}
 
-		stream.pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
+		stream.pipe( validator ).pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
 	});
 }
 
