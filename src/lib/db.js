@@ -48,10 +48,10 @@ function getConnection( site, opts, callback ) {
 
 			let connection;
 			if ( opts.masterdb ) {
-				connection = connections.find( connection => true === connection.is_master_db );
+				connection = connections.find( connection => true === connection.is_db_master );
 			} else {
 				// Put slave dbs first and pick the first one
-				connections.sort( ( a, b ) => a.is_master_db - b.is_master_db );
+				connections.sort( ( a, b ) => a.is_db_master - b.is_db_master );
 				connection = connections[0];
 			}
 
