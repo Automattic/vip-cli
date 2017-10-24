@@ -98,6 +98,18 @@ export function importDB( site, file, opts, callback ) {
 			for ( let i = 0; i < list.length; i++ ) {
 				let line = list[i];
 
+				if ( line.indexOf( 'use' ) === 0 ) {
+					return callback( new Error( 'Invalid use statement' ) );
+				}
+
+				if ( line.indexOf( 'CREATE DATABASE' ) === 0 ) {
+					return callback( new Error( 'Invalid CREATE DATABASE operation' ) );
+				}
+
+				if ( line.indexOf( 'DROP DATABASE' ) === 0 ) {
+					return callback( new Error( 'Invalid DROP DATABASE operation' ) );
+				}
+
 				// Ensure all tables use InnoDB
 				if ( line.indexOf( 'ENGINE=MyISAM' ) > -1 ) {
 					line = line.replace( 'ENGINE=MyISAM', 'ENGINE=InnoDB' );
@@ -147,7 +159,16 @@ export function importDB( site, file, opts, callback ) {
 			break;
 		}
 
-		stream.pipe( validator ).pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
+		validator.on( 'error', err => {
+			console.error( '\n' + err.toString() );
+			process.exit( 1 );
+		});
+
+		stream
+			.pipe( validator )
+			.pipe( throttle )
+			.pipe( pv )
+			.pipe( importdb.stdin );
 	});
 }
 
