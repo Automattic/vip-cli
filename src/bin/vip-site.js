@@ -10,7 +10,7 @@ const siteUtils   = require( '../lib/site' );
 const hostUtils   = require( '../lib/host' );
 
 program
-	.command( 'upgrade' )
+	.command( 'upgrade [<site>]' )
 	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
 	.option( '-c, --client <client_id>', 'Client to target' )
 	.option( '-l, --launched', 'Target launched sites only?' )
@@ -18,8 +18,7 @@ program
 	.option( '-n, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
 	.option( '-e, --environment <env>', 'Environment to target' )
 	.option( '-w, --wp <version>', 'WordPress version to target' )
-	.option( '-i, --site <client_site_id>', 'Client Site ID to target' )
-	.action( ( options ) => {
+	.action( ( site, options ) => {
 		// TODO: Optionally pass in a site ID for single site upgrade
 		let query = {};
 
@@ -48,8 +47,8 @@ program
 		}
 
 		// Note: This needs to come last so we appropriately nerf the query object
-		if ( options.site ) {
-			query = { client_site_id: options.site, pagesize: 1 };
+		if ( site ) {
+			query = { client_site_id: site, pagesize: 1 };
 		}
 
 		utils.displayNotice( [
