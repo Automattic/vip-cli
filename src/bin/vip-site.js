@@ -77,14 +77,15 @@ program
 					return console.log( "No sites to update" );
 				}
 
+				// TODO: Add endpoint to get expected stacks for each site
 				api
-					.get( '/container_types/1' )
+					.get( '/site_type_allocations/9' )
 					.end( ( err, res ) => {
 						if ( err ) {
 							return console.error( 'Could not retrieve default software stack' );
 						}
 
-						var defaultStack = res.body.data[0].software_stack_name;
+						var defaultStack = res.body.data[0].default_software_stack_id;
 
 						var updatingInterval = setInterval( () => {
 							let upgrading = sites.map( site => {
@@ -107,7 +108,7 @@ program
 
 										switch ( colorizedState ) {
 										case 'running':
-											if ( container.software_stack_name === defaultStack ) {
+											if ( container.software_stack_id === defaultStack ) {
 												colorizedState = colors['green']( colorizedState );
 											} else {
 												colorizedState = colors['yellow']( colorizedState );
@@ -140,7 +141,7 @@ program
 											return false;
 										}
 
-										return container.software_stack_name === defaultStack;
+										return container.software_stack_id === defaultStack;
 									});
 								});
 
