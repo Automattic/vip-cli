@@ -49,7 +49,7 @@ program
 
 		// Note: This needs to come last so we appropriately nerf the query object
 		if ( options.site ) {
-			query = { client_site_id: options.site };
+			query = { client_site_id: options.site, pagesize: 1 };
 		}
 
 		utils.displayNotice( [
@@ -59,6 +59,10 @@ program
 
 		siteUtils.update( null, query )
 			.then( data => {
+				if ( ! data.failed ) {
+					return data.sites;
+				}
+
 				let failed = data.failed.map( d => d.name || d.domain_name );
 
 				if ( failed.length > 0 ) {
@@ -69,7 +73,7 @@ program
 				return data.sites;
 			})
 			.then( sites => {
-				if ( sites.length <= 0 ) {
+				if ( ! sites || sites.length <= 0 ) {
 					return console.log( "No sites to update" );
 				}
 
