@@ -19,7 +19,7 @@ program
 
 program
 	.command( 'run <site> <command...>' )
-	.description( 'Run a wp-cli command on a sandbox container' )
+	.description( 'Run a wp-cli command on a sandbox container. Use a double dash (--) before the WP CLI command, example:' + "\n" + '  vip sandbox run exhibit.go-vip.co -- wp user list --field=ID' )
 	.option( '--skip-confirm', 'Run the command without asking for confirmation' )
 	.option( '-h, --help' )
 	.allowUnknownOption()
