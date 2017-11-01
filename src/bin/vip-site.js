@@ -10,7 +10,7 @@ const siteUtils   = require( '../lib/site' );
 const hostUtils   = require( '../lib/host' );
 
 program
-	.command( 'upgrade' )
+	.command( 'upgrade [<site>]' )
 	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
 	.option( '-c, --client <client_id>', 'Client to target' )
 	.option( '-l, --launched', 'Target launched sites only?' )
@@ -18,8 +18,7 @@ program
 	.option( '-n, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
 	.option( '-e, --environment <env>', 'Environment to target' )
 	.option( '-w, --wp <version>', 'WordPress version to target' )
-	.option( '-i, --site <client_site_id>', 'Client Site ID to target' )
-	.action( ( options ) => {
+	.action( ( site, options ) => {
 		// TODO: Optionally pass in a site ID for single site upgrade
 		let query = {};
 
@@ -48,8 +47,8 @@ program
 		}
 
 		// Note: This needs to come last so we appropriately nerf the query object
-		if ( options.site ) {
-			query = { client_site_id: options.site };
+		if ( site ) {
+			query = { client_site_id: site, pagesize: 1 };
 		}
 
 		utils.displayNotice( [
@@ -59,6 +58,10 @@ program
 
 		siteUtils.update( null, query )
 			.then( data => {
+				if ( ! data.failed ) {
+					return data.sites;
+				}
+
 				let failed = data.failed.map( d => d.name || d.domain_name );
 
 				if ( failed.length > 0 ) {
@@ -69,18 +72,19 @@ program
 				return data.sites;
 			})
 			.then( sites => {
-				if ( sites.length <= 0 ) {
+				if ( ! sites || sites.length <= 0 ) {
 					return console.log( "No sites to update" );
 				}
 
+				// TODO: Add endpoint to get expected stacks for each site
 				api
-					.get( '/container_types/1' )
+					.get( '/site_type_allocations/9' )
 					.end( ( err, res ) => {
 						if ( err ) {
 							return console.error( 'Could not retrieve default software stack' );
 						}
 
-						var defaultStack = res.body.data[0].software_stack_name;
+						var defaultStack = res.body.data[0].default_software_stack_id;
 
 						var updatingInterval = setInterval( () => {
 							let upgrading = sites.map( site => {
@@ -103,7 +107,7 @@ program
 
 										switch ( colorizedState ) {
 										case 'running':
-											if ( container.software_stack_name === defaultStack ) {
+											if ( container.software_stack_id === defaultStack ) {
 												colorizedState = colors['green']( colorizedState );
 											} else {
 												colorizedState = colors['yellow']( colorizedState );
@@ -136,7 +140,7 @@ program
 											return false;
 										}
 
-										return container.software_stack_name === defaultStack;
+										return container.software_stack_id === defaultStack;
 									});
 								});
 
