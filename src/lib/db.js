@@ -70,7 +70,7 @@ export function importDB( site, file, opts, callback ) {
 	// Default opts
 	opts = Object.assign({
 		throttle: 1, // 1 MB
-    replace: {},
+		replace: {},
 	}, opts );
 
 	const { Transform } = require( 'stream' );
