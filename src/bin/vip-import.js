@@ -279,6 +279,11 @@ program
 				return console.error( err );
 			}
 
+			// TODO: Allow replacements to production sites 1/1/2018
+			if ( site.environment_name === 'production' ) {
+				opts.replace = {};
+			}
+
 			db.importDB( site, file, opts, err => {
 				if ( err ) {
 					return console.error( err );
