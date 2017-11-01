@@ -20,7 +20,8 @@
     "node": ">=0.12"
   },
   "scripts": {
-    "postinstall": "./scripts/install-go-search-replace && tabtab install --name vip --auto || echo 'Note: Could not install tab completions, moving on...'",
+    "preinstall": "./scripts/install-go-search-replace",
+    "postinstall": "tabtab install --name vip --auto || echo 'Note: Could not install tab completions, moving on...'",
     "postuninstall": "./scripts/postuninstall",
     "prepublish": "npm run build",
     "build": "babel -q src --out-dir=build",
