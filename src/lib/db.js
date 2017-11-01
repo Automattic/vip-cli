@@ -70,6 +70,7 @@ export function importDB( site, file, opts, callback ) {
 	// Default opts
 	opts = Object.assign({
 		throttle: 1, // 1 MB
+		replace: {},
 	}, opts );
 
 	const { Transform } = require( 'stream' );
@@ -116,6 +117,7 @@ export function importDB( site, file, opts, callback ) {
 				this.push( line + '\n' );
 			}
 
+
 			callback();
 		},
 
@@ -155,6 +157,13 @@ export function importDB( site, file, opts, callback ) {
 		case '.zip':
 			stream = stream.pipe( unzip );
 			break;
+		}
+
+		for ( let from in opts.replace ) {
+			let to = opts.replace[ from ];
+			let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
+			stream.pipe( replace.stdin );
+			stream = replace.stdout;
 		}
 
 		validator.on( 'error', err => {

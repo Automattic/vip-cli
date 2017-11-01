@@ -233,6 +233,21 @@ program
 		});
 	});
 
+function searchReplace( v, total ) {
+	total = total || {};
+	v = v.split( ',' );
+
+	if ( v.length < 2 ) {
+		return total;
+	}
+
+	let i = {};
+	i[ v[0] ] = v[1];
+
+	total = Object.assign( total, i );
+	return total;
+}
+
 program
 	.command( 'sql <site> <file>' )
 	.alias( 'database' )
@@ -240,6 +255,7 @@ program
 	.description( 'Import SQL to a VIP Go site' )
 	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
 	.option( '-s, --skip-confirm', 'Skip the confirmation step' )
+	.option( '--search-replace <from,to>', 'Search/Replace tuple', searchReplace, {})
 	.action( ( site, file, options ) => {
 		try {
 			which.sync( 'mysql' );
@@ -249,6 +265,7 @@ program
 
 		var opts = {
 			throttle: options.throttle,
+			replace: options.searchReplace,
 		};
 
 		try {
@@ -260,6 +277,15 @@ program
 		const importCallback = ( err, site ) => {
 			if ( err ) {
 				return console.error( err );
+			}
+
+			// TODO: Allow replacements to production sites 1/1/2018
+			if ( site.environment_name === 'production' ) {
+				if ( Object.keys( opts.replace ).length ) {
+					console.log( "WARNING: Skipping search replace because this is a production site" );
+				}
+
+				opts.replace = {};
 			}
 
 			db.importDB( site, file, opts, err => {
@@ -282,7 +308,15 @@ program
 		};
 
 		if ( ! options.skipConfirm ) {
-			utils.findAndConfirmSite( site, 'Importing SQL for site:', importCallback );
+			let info = [];
+			if ( options.searchReplace ) {
+				Object.keys( options.searchReplace ).forEach( from => {
+					let to = options.searchReplace[from];
+					info.push( `-- Search Replace: ${ from } -> ${ to }` );
+				});
+			}
+
+			utils.findAndConfirmSite( site, 'Importing SQL for site:', info, importCallback );
 		} else {
 			utils.findSite( site, importCallback );
 		}

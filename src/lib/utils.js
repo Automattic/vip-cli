@@ -111,7 +111,12 @@ export function findSite( domain, cb ) {
 		});
 }
 
-export function findAndConfirmSite( site, action, cb ) {
+export function findAndConfirmSite( site, action, info, cb ) {
+	if ( 'function' === typeof( info ) ) {
+		cb = info;
+		info = [];
+	}
+
 	findSite( site, ( err, s ) => {
 		if ( err ) {
 			return cb( err );
@@ -121,11 +126,13 @@ export function findAndConfirmSite( site, action, cb ) {
 			return cb( new Error( "Couldn't find site:" + site ) );
 		}
 
-		displayNotice( [
+		let notice = [
 			action,
 			`-- Site: ${ s.domain_name } (#${ s.client_site_id })`,
 			'-- Environment: ' + s.environment_name,
-		] );
+		];
+
+		displayNotice( notice.concat( info ) );
 
 		promptly.confirm( 'Are you sure? (y/n)', { output: process.stderr }, ( err, yes ) => {
 			if ( err ) {

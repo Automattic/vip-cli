@@ -20,6 +20,7 @@
     "node": ">=0.12"
   },
   "scripts": {
+    "preinstall": " mkdir -p build && ./scripts/install-go-search-replace",
     "postinstall": "tabtab install --name vip --auto || echo 'Note: Could not install tab completions, moving on...'",
     "postuninstall": "./scripts/postuninstall",
     "prepublish": "npm run build",
@@ -29,7 +30,11 @@
   },
   "main": "build/index.js",
   "bin": {
-    "vip": "build/bin/vip.js"
+    "vip": "build/bin/vip.js",
+    "go-search-replace": "build/go-search-replace"
+  },
+  "goSearchReplace": {
+    "version": "0.0.2"
   },
   "dependencies": {
     "async": "^1.5.2",
