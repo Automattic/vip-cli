@@ -33,42 +33,36 @@ function getConnection( site, opts, callback ) {
 		];
 	};
 
-	if ( opts.masterdb ) {
-		api
-			.get( '/sites/' + site.client_site_id + '/masterdb' )
-			.end( ( err, res ) => {
-				if ( err ) {
-					return callback( err.response.error );
-				}
+	api
+		.get( '/sites/' + site.client_site_id + '/db' )
+		.end( ( err, res ) => {
+			if ( err ) {
+				return callback( err.response.error );
+			}
 
-				var args = getCLIArgsForConnectionHost( res.body );
+			const connections = res.body.data;
 
-				callback( null, args );
-			});
-	} else {
-		api
-			.get( '/sites/' + site.client_site_id + '/slavedb' )
-			.end( ( err, res ) => {
-				if ( err ) {
-					return callback( err.response.error );
-				}
+			if ( ! connections || ! connections.length ) {
+				return callback( new Error( 'The site either has no active database connections or something went wrong.' ) );
+			}
 
-				var conns = res.body.data;
+			let connection;
+			if ( opts.masterdb ) {
+				connection = connections.find( connection => true === connection.is_db_master );
+			} else {
+				// Put slave dbs first and pick the first one
+				connections.sort( ( a, b ) => a.is_db_master - b.is_db_master );
+				connection = connections[0];
+			}
 
-				if ( conns.length > 0 ) {
-					// Random DB slave
-					var connection = conns[Math.floor( Math.random()*conns.length )];
-					var args = getCLIArgsForConnectionHost( connection );
+			if ( ! connection ) {
+				return callback( new Error( 'Could not find a suitable database connection' ) );
+			}
 
-					callback( null, args );
-				} else {
-					// If there are no slaves, use the master
-					console.error( 'No slaves are available, getting connection to master' );
-					opts.masterdb = true;
-					getConnection( site, opts, callback );
-				}
-			});
-	}
+			const args = getCLIArgsForConnectionHost( connection );
+
+			callback( null, args );
+		});
 }
 
 export function importDB( site, file, opts, callback ) {
@@ -76,8 +70,65 @@ export function importDB( site, file, opts, callback ) {
 	// Default opts
 	opts = Object.assign({
 		throttle: 1, // 1 MB
-		replace: {},
+    replace: {},
 	}, opts );
+
+	const { Transform } = require( 'stream' );
+	const validator = new Transform({
+		transform( chunk, encoding, callback ) {
+			if ( this._last === undefined ) {
+				this._last = '';
+			}
+
+			if ( encoding === 'buffer' ) {
+				chunk = chunk.toString();
+			}
+
+			this._last += chunk;
+
+			// Split chunks on \n to make search/replace easier
+			let list = this._last.split( '\n' );
+			this._last = list.pop();
+
+			for ( let i = 0; i < list.length; i++ ) {
+				let line = list[i];
+
+				if ( line.indexOf( 'use' ) === 0 ) {
+					return callback( new Error( 'Invalid use statement' ) );
+				}
+
+				if ( line.indexOf( 'CREATE DATABASE' ) === 0 ) {
+					return callback( new Error( 'Invalid CREATE DATABASE operation' ) );
+				}
+
+				if ( line.indexOf( 'DROP DATABASE' ) === 0 ) {
+					return callback( new Error( 'Invalid DROP DATABASE operation' ) );
+				}
+
+				if ( line.indexOf( 'ALTER USER' ) === 0 || line.indexOf( 'SET PASSWORD' ) === 0 ) {
+					return callback( new Error( 'Invalid user update' ) );
+				}
+
+				// Ensure all tables use InnoDB
+				if ( line.indexOf( 'ENGINE=MyISAM' ) > -1 ) {
+					line = line.replace( 'ENGINE=MyISAM', 'ENGINE=InnoDB' );
+				}
+
+				this.push( line + '\n' );
+			}
+
+
+			callback();
+		},
+
+		flush( callback ) {
+			if ( this._last ) {
+				this.push( this._last );
+			}
+
+			callback();
+		},
+	});
 
 	getConnection( site, ( err, args ) => {
 		if ( err ) {
@@ -115,7 +166,16 @@ export function importDB( site, file, opts, callback ) {
 			stream = replace.stdout;
 		}
 
-		stream.pipe( throttle ).pipe( pv ).pipe( importdb.stdin );
+		validator.on( 'error', err => {
+			console.error( '\n' + err.toString() );
+			process.exit( 1 );
+		});
+
+		stream
+			.pipe( validator )
+			.pipe( throttle )
+			.pipe( pv )
+			.pipe( importdb.stdin );
 	});
 }
 
