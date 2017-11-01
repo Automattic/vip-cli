@@ -20,7 +20,7 @@
     "node": ">=0.12"
   },
   "scripts": {
-    "preinstall": "./scripts/install-go-search-replace",
+    "preinstall": " mkdir -p build && ./scripts/install-go-search-replace",
     "postinstall": "tabtab install --name vip --auto || echo 'Note: Could not install tab completions, moving on...'",
     "postuninstall": "./scripts/postuninstall",
     "prepublish": "npm run build",
