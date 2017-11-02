@@ -74,19 +74,19 @@ function validateSQLFile( file, callback ) {
 	});
 
 	rl.on( 'line', line => {
-		if ( line.indexOf( 'use' ) === 0 ) {
+		if ( /^use\s/i.test( line ) ) {
 			errors.push( new Error( 'Invalid use statement' ) );
 		}
 
-		if ( line.indexOf( 'CREATE DATABASE' ) === 0 ) {
+		if ( /^CREATE DATABASE/i.test( line ) ) {
 			errors.push( new Error( 'Invalid CREATE DATABASE operation' ) );
 		}
 
-		if ( line.indexOf( 'DROP DATABASE' ) === 0 ) {
+		if ( /^DROP DATABASE/i.test( line ) ) {
 			errors.push( new Error( 'Invalid DROP DATABASE operation' ) );
 		}
 
-		if ( line.indexOf( 'ALTER USER' ) === 0 || line.indexOf( 'SET PASSWORD' ) === 0 ) {
+		if ( /^ALTER USER/i.test( line ) || /^SET PASSWORD/i.test( line ) ) {
 			errors.push( new Error( 'Invalid user update' ) );
 		}
 	});
