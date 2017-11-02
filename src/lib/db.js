@@ -65,16 +65,9 @@ function getConnection( site, opts, callback ) {
 		});
 }
 
-export function importDB( site, file, opts, callback ) {
-
-	// Default opts
-	opts = Object.assign({
-		throttle: 1, // 1 MB
-		replace: {},
-	}, opts );
-
+function sanitizeSQLFile() {
 	const { Transform } = require( 'stream' );
-	const validator = new Transform({
+	return new Transform({
 		transform( chunk, encoding, callback ) {
 			if ( this._last === undefined ) {
 				this._last = '';
@@ -129,6 +122,16 @@ export function importDB( site, file, opts, callback ) {
 			callback();
 		},
 	});
+}
+
+export function importDB( site, file, opts, callback ) {
+
+	// Default opts
+	opts = Object.assign({
+		throttle: 1, // 1 MB
+		replace: {},
+	}, opts );
+
 
 	getConnection( site, ( err, args ) => {
 		if ( err ) {
@@ -144,6 +147,7 @@ export function importDB( site, file, opts, callback ) {
 			process.stderr.write( info );
 		});
 
+		var sanitize = sanitizeSQLFile();
 		var throttle = new Throttle( 1024 * 1024 * opts.throttle );
 		var stream = fs.createReadStream( file );
 		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
@@ -166,13 +170,13 @@ export function importDB( site, file, opts, callback ) {
 			stream = replace.stdout;
 		}
 
-		validator.on( 'error', err => {
+		sanitize.on( 'error', err => {
 			console.error( '\n' + err.toString() );
 			process.exit( 1 );
 		});
 
 		stream
-			.pipe( validator )
+			.pipe( sanitize )
 			.pipe( throttle )
 			.pipe( pv )
 			.pipe( importdb.stdin );
