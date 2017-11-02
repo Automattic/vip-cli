@@ -5,6 +5,7 @@ const vip = require( 'vip' );
 const url = require( 'url' );
 const path = require( 'path' );
 const log = require( 'single-line-log' ).stderr;
+const colors = require( 'colors/safe' );
 
 var s_token_iv = 'XWRCbboGgpK1Q23c';
 var s_token_ky = 'w3C1LwkexA8exKsjuYxRBCHOhqMZ5Wiy4mYPT4UxiJOvKNF7hSLwwt7dqpYyj3cA';
@@ -111,6 +112,15 @@ export function findSite( domain, cb ) {
 		});
 }
 
+export function colorizedEnvironment( env ) {
+	switch( env ) {
+	case 'production':
+		return colors.red.bold( env.toUpperCase() );
+	default:
+		return colors.blue( env );
+	}
+}
+
 export function findAndConfirmSite( site, action, info, cb ) {
 	if ( 'function' === typeof( info ) ) {
 		cb = info;
@@ -129,7 +139,7 @@ export function findAndConfirmSite( site, action, info, cb ) {
 		let notice = [
 			action,
 			`-- Site: ${ s.domain_name } (#${ s.client_site_id })`,
-			'-- Environment: ' + s.environment_name,
+			'-- Environment: ' + colorizedEnvironment( s.environment_name ),
 		];
 
 		displayNotice( notice.concat( info ) );
