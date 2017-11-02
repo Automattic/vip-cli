@@ -3,6 +3,7 @@ const spawn = require( 'child_process' ).spawn;
 const PV = require( 'node-pv' );
 const Throttle = require( 'throttle' );
 const path = require( 'path' );
+const readline = require(  'readline' );
 
 // zlib
 const zlib = require( 'zlib' );
@@ -65,6 +66,36 @@ function getConnection( site, opts, callback ) {
 		});
 }
 
+function validateSQLFile( file, callback ) {
+	let errors = [];
+
+	const rl = readline.createInterface({
+		input: fs.createReadStream( file ),
+	});
+
+	rl.on( 'line', line => {
+		if ( line.indexOf( 'use' ) === 0 ) {
+			errors.push( new Error( 'Invalid use statement' ) );
+		}
+
+		if ( line.indexOf( 'CREATE DATABASE' ) === 0 ) {
+			errors.push( new Error( 'Invalid CREATE DATABASE operation' ) );
+		}
+
+		if ( line.indexOf( 'DROP DATABASE' ) === 0 ) {
+			errors.push( new Error( 'Invalid DROP DATABASE operation' ) );
+		}
+
+		if ( line.indexOf( 'ALTER USER' ) === 0 || line.indexOf( 'SET PASSWORD' ) === 0 ) {
+			errors.push( new Error( 'Invalid user update' ) );
+		}
+	});
+
+	rl.on( 'close', () => {
+		callback( errors );
+	});
+}
+
 function sanitizeSQLFile() {
 	const { Transform } = require( 'stream' );
 	return new Transform({
@@ -85,22 +116,6 @@ function sanitizeSQLFile() {
 
 			for ( let i = 0; i < list.length; i++ ) {
 				let line = list[i];
-
-				if ( line.indexOf( 'use' ) === 0 ) {
-					return callback( new Error( 'Invalid use statement' ) );
-				}
-
-				if ( line.indexOf( 'CREATE DATABASE' ) === 0 ) {
-					return callback( new Error( 'Invalid CREATE DATABASE operation' ) );
-				}
-
-				if ( line.indexOf( 'DROP DATABASE' ) === 0 ) {
-					return callback( new Error( 'Invalid DROP DATABASE operation' ) );
-				}
-
-				if ( line.indexOf( 'ALTER USER' ) === 0 || line.indexOf( 'SET PASSWORD' ) === 0 ) {
-					return callback( new Error( 'Invalid user update' ) );
-				}
 
 				// Ensure all tables use InnoDB
 				if ( line.indexOf( 'ENGINE=MyISAM' ) > -1 ) {
@@ -133,53 +148,63 @@ export function importDB( site, file, opts, callback ) {
 	}, opts );
 
 
-	getConnection( site, ( err, args ) => {
-		if ( err ) {
-			return callback( err );
+	validateSQLFile( file, err => {
+		if ( err && err.length ) {
+			err.forEach( err => {
+				console.error( 'Validation Error:', err.message );
+			});
+
+			return;
 		}
 
-		var stats = fs.lstatSync( file );
-		var pv = new PV({
-			size: stats.size,
+		getConnection( site, ( err, args ) => {
+			if ( err ) {
+				return callback( err );
+			}
+
+			var stats = fs.lstatSync( file );
+			var pv = new PV({
+				size: stats.size,
+			});
+
+			pv.on( 'info', info => {
+				process.stderr.write( info );
+			});
+
+			var sanitize = sanitizeSQLFile();
+			var throttle = new Throttle( 1024 * 1024 * opts.throttle );
+			var stream = fs.createReadStream( file );
+			var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
+
+			// Handle compressed mysqldumps
+			switch( path.extname( file ) ) {
+			case '.gz':
+				stream = stream.pipe( gunzip );
+				break;
+
+			case '.zip':
+				stream = stream.pipe( unzip );
+				break;
+			}
+
+			for ( let from in opts.replace ) {
+				let to = opts.replace[ from ];
+				let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
+				stream.pipe( replace.stdin );
+				stream = replace.stdout;
+			}
+
+			sanitize.on( 'error', err => {
+				console.error( '\n' + err.toString() );
+				process.exit( 1 );
+			});
+
+			stream
+				.pipe( sanitize )
+				.pipe( throttle )
+				.pipe( pv )
+				.pipe( importdb.stdin );
 		});
-
-		pv.on( 'info', info => {
-			process.stderr.write( info );
-		});
-
-		var sanitize = sanitizeSQLFile();
-		var throttle = new Throttle( 1024 * 1024 * opts.throttle );
-		var stream = fs.createReadStream( file );
-		var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
-
-		// Handle compressed mysqldumps
-		switch( path.extname( file ) ) {
-		case '.gz':
-			stream = stream.pipe( gunzip );
-			break;
-
-		case '.zip':
-			stream = stream.pipe( unzip );
-			break;
-		}
-
-		for ( let from in opts.replace ) {
-			let to = opts.replace[ from ];
-			let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
-			stream.pipe( replace.stdin );
-			stream = replace.stdout;
-		}
-
-		sanitize.on( 'error', err => {
-			console.error( '\n' + err.toString() );
-			process.exit( 1 );
-		});
-
-		stream
-			.pipe( sanitize )
-			.pipe( throttle )
-			.pipe( pv )
-			.pipe( importdb.stdin );
 	});
 }
 
