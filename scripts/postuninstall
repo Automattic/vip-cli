@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-echo 'Removing tab-completion...'
-tabtab uninstall --name vip --auto || echo "-- Failed to remove tab-completion :("
-
 read -p "Do you want to delete the VIP CLI configuration? [n] " delete
 if [[ ! $delete =~ ^[Yy]([Ee][Ss])?$ ]]; then
 	rm -r ~/.vip-cli
