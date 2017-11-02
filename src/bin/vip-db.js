@@ -44,7 +44,7 @@ program
 			utils.displayNotice( [
 				'Connecting to database:',
 				`-- Site: ${ s.domain_name } (#${ s.client_site_id })`,
-				'-- Environment: ' + s.environment_name,
+				'-- Environment: ' + utils.colorizedEnvironment( s.environment_name ),
 			] );
 
 			promptly.confirm( ays, ( err, t ) => {
