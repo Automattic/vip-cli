@@ -95,40 +95,36 @@ program
 							Promise.all( upgrading )
 							.then( sites => {
 								var table = new Table({
-									head: [ 'Site', 'Container ID', 'Container Type', 'Container Status', 'Software Stack' ],
+									head: [ 'Site', 'Pending', 'Upgrading', 'Running' ],
 									style: {
 										head: ['blue'],
 									},
 								});
 
 								sites.forEach( site => {
-									site.forEach( container => {
-										let colorizedState = container.state;
+									let pending = site.filter( container => container.software_stack_id !== defaultStack && container.state === 'running' ).length;
+									let upgrading = site.filter( container => container.state === 'upgrading' ).length;
+									let running = site.filter( container => container.software_stack_id === defaultStack && container.state === 'running' ).length;
 
-										switch ( colorizedState ) {
-										case 'running':
-											if ( container.software_stack_id === defaultStack ) {
-												colorizedState = colors['green']( colorizedState );
-											} else {
-												colorizedState = colors['yellow']( colorizedState );
-											}
-											break;
-										case 'upgrading':
-											colorizedState = colors['blue']( colorizedState );
-											break;
-										case 'stopped':
-										case 'uninitialized':
-											colorizedState = colors['red']( colorizedState );
-										}
+									let colorizedSite;
 
-										table.push( [
-											container.domain_name,
-											container.container_id,
-											container.container_type_id,
-											colorizedState,
-											container.software_stack_name,
-										] );
-									});
+									if ( running === site.length ) {
+										// Upgrade is done
+										colorizedSite = colors[ 'green' ]( site[0].domain_name );
+									} else if ( pending === site.length ) {
+										// Upgrade has not started
+										colorizedSite = colors[ 'yellow' ]( site[0].domain_name );
+									} else {
+										// Upgrade is running
+										colorizedSite = colors[ 'white' ]( site[0].domain_name );
+									}
+
+									table.push( [
+										colorizedSite,
+										pending,
+										upgrading,
+										running,
+									] );
 								});
 
 								let done = sites.every( site => {
