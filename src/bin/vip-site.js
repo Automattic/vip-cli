@@ -89,13 +89,13 @@ program
 						var updatingInterval = setInterval( () => {
 							let upgrading = sites.map( site => {
 								return siteUtils.getContainers( site )
-								.then( containers => containers.filter( container => container.container_type_id === 1 ) );
+								.then( containers => containers.filter( container => container.container_type_id === 1 || container.container_type_id === 14 ) );
 							});
 
 							Promise.all( upgrading )
 							.then( sites => {
 								var table = new Table({
-									head: [ 'Site', 'Container ID', 'Container Status', 'Software Stack' ],
+									head: [ 'Site', 'Container ID', 'Container Type', 'Container Status', 'Software Stack' ],
 									style: {
 										head: ['blue'],
 									},
@@ -124,6 +124,7 @@ program
 										table.push( [
 											container.domain_name,
 											container.container_id,
+											container.container_type_id,
 											colorizedState,
 											container.software_stack_name,
 										] );
