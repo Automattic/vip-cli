@@ -132,12 +132,7 @@ export class Importer {
 			return callback();
 		}
 
-		let filepath = path.split( 'uploads/' );
-
-		if ( ! filepath[1] ) {
-			return callback( new Error( 'Invalid upload path' ) );
-		}
-
+		let filepath = path.split( 'uploads' );
 		request
 			.get( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
 			.set({ 'X-Client-Site-ID': this.site.client_site_id })
@@ -156,12 +151,7 @@ export class Importer {
 	}
 
 	upload( path ) {
-		let filepath = path.split( 'uploads/' );
-
-		if ( ! filepath[1] ) {
-			return new Error( 'Invalid upload path' );
-		}
-
+		let filepath = path.split( 'uploads' );
 		return request
 			.put( encodeURI( 'https://' + constants.FILES_SERVICE_ENDPOINT + '/wp-content/uploads' + filepath[1] ) )
 			.set({ 'X-Client-Site-ID': this.site.client_site_id })
