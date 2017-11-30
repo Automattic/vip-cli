@@ -296,9 +296,11 @@ program
 				api
 					.post( '/sites/' + site.client_site_id + '/wp-cli' )
 					.send({
-						command: 'cache',
-						args: [ 'flush' ],
+						command: 'vip',
+						args: [ 'migration', 'cleanup' ],
 						namedvars: {
+							'yes': true,
+							'network': true,
 							'skip-plugins': true,
 							'skip-themes': true,
 						},
