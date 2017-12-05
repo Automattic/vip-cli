@@ -43,19 +43,25 @@ export class Importer {
 			// Check extension
 			let ext = path.extname( file ).substr( 1 );
 			if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
-				return callback( new Error( 'Invalid extension: ' + file ) );
+				let err = new Error( 'Invalid extension: ' + file );
+				console.error( err.toString() );
+				return callback( err );
 			}
 
 			// Check filename
 			if ( ! /^uploads\/[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
-				return callback( new Error( 'Invalid filename:' + file ) );
+				let err = new Error( 'Invalid filename:' + file );
+				console.error( err.toString() );
+				return callback( err );
 			}
 
 			// Check intermediate image
 			let int_re = /-\d+x\d+(\.\w{3,4})$/;
 			if ( ! opts.intermediate && int_re.test( file ) ) {
 				// TODO Check if the original file exists
-				return callback( new Error( 'Skipping intermediate image: ' + file ) );
+				let err = new Error( 'Skipping intermediate image: ' + file );
+				console.error( err.toString() );
+				return callback( err );
 			}
 
 			if ( opts.dryRun ) {
