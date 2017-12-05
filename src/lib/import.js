@@ -47,7 +47,7 @@ export class Importer {
 			}
 
 			// Check filename
-			if ( ! /^[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+			if ( ! /^uploads\/[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
 				return callback( new Error( 'Invalid filename:' + file ) );
 			}
 
