@@ -279,15 +279,6 @@ program
 				return console.error( err );
 			}
 
-			// TODO: Allow replacements to production sites 1/1/2018
-			if ( site.environment_name === 'production' ) {
-				if ( Object.keys( opts.replace ).length ) {
-					console.log( "WARNING: Skipping search replace because this is a production site" );
-				}
-
-				opts.replace = {};
-			}
-
 			db.importDB( site, file, opts, err => {
 				if ( err ) {
 					return console.error( err );
