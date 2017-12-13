@@ -253,7 +253,7 @@ program
 	.alias( 'database' )
 	.alias( 'db' )
 	.description( 'Import SQL to a VIP Go site' )
-	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 1, parseFloat )
+	.option( '-t, --throttle <mb>', 'SQL import transfer limit in MB/s', 5, parseFloat )
 	.option( '-s, --skip-confirm', 'Skip the confirmation step' )
 	.option( '--search-replace <from,to>', 'Search/Replace tuple', searchReplace, {})
 	.action( ( site, file, options ) => {
