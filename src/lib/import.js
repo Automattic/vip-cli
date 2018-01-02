@@ -43,19 +43,25 @@ export class Importer {
 			// Check extension
 			let ext = path.extname( file ).substr( 1 );
 			if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
-				return callback( new Error( 'Invalid extension: ' + file ) );
+				let err = new Error( 'Invalid extension: ' + file );
+				console.log( err.toString() );
+				return callback( err );
 			}
 
 			// Check filename
 			if ( ! /^uploads\/[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
-				return callback( new Error( 'Invalid filename:' + file ) );
+				let err = new Error( 'Invalid filename:' + file );
+				console.log( err.toString() );
+				return callback( err );
 			}
 
 			// Check intermediate image
 			let int_re = /-\d+x\d+(\.\w{3,4})$/;
 			if ( ! opts.intermediate && int_re.test( file ) ) {
 				// TODO Check if the original file exists
-				return callback( new Error( 'Skipping intermediate image: ' + file ) );
+				let err = new Error( 'Skipping intermediate image: ' + file );
+				console.log( err.toString() );
+				return callback( err );
 			}
 
 			if ( opts.dryRun ) {
@@ -72,7 +78,7 @@ export class Importer {
 		}, opts.concurrency );
 
 		this.consumerQ.error = err => {
-			console.error( 'Consumer Error:', err.toString() );
+			console.log( 'Consumer Error:', err.toString() );
 		};
 
 		// Set up the producer queue (populates consumer queue)
@@ -87,7 +93,7 @@ export class Importer {
 		}, 1 );
 
 		this.producerQ.error = err => {
-			console.error( 'Producer Error:', err.toString() );
+			console.log( 'Producer Error:', err.toString() );
 		};
 
 		// Start filling consumer queue when there are less than 25x concurrency number of items
