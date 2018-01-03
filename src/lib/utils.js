@@ -39,7 +39,6 @@ export function setCredentials( credentials, callback ) {
 	credentials.accessToken = credentials.accessToken || '';
 
 	const api = new vip();
-
 	api.auth.apiUserId = credentials.userId;
 	api.auth.token = credentials.accessToken;
 
@@ -52,6 +51,7 @@ export function setCredentials( credentials, callback ) {
 
 			credentials.role = res.body.data[0].api_user_role_id;
 			credentials.caps = res.body.data[0].caps;
+			credentials.updated = Date.now();
 
 			var encoded = this.encrypt( credentials.accessToken, credentials.userId );
 			credentials.accessToken = encoded;
@@ -61,25 +61,37 @@ export function setCredentials( credentials, callback ) {
 }
 
 export function getCredentials( callback ) {
-	config.get( 'login', function( err, r ) {
+	let self = this;
+	config.get( 'login', function( err, credentials ) {
 		if ( err ) {
 			return callback( 'Could not get credentials' );
 		}
 
-		if ( ! r.accessToken ) {
+		if ( ! credentials.accessToken ) {
 			console.error( 'no access token' );
 			return callback( 'Invalid login credentials' );
 		}
 
 		try {
-			var decoded = decrypt( r.accessToken, r.userId );
+			var decoded = decrypt( credentials.accessToken, credentials.userId );
 		} catch ( e ) {
 			config.del( 'login' );
 			return callback( 'Could not decrypt credentials' );
 		}
 
-		r.accessToken = decoded;
-		return callback( null, r );
+		credentials.accessToken = decoded;
+
+		// Update caps hourly
+		if ( ! credentials.updated || Date.now() - credentials.updated > 60 * 60 * 1000 ) {
+			return self.setCredentials({
+				userId: credentials.userId,
+				accessToken: credentials.accessToken,
+			}, function() {
+				callback( null, credentials );
+			});
+		}
+
+		callback( null, credentials );
 	});
 }
 
