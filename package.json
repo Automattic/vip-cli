@@ -14,10 +14,14 @@
     "url": "git+https://github.com/Automattic/vip.git"
   },
   "keywords": [
+    "cli",
     "vip",
-    "cli"
+    "wordpess"
   ],
   "author": "Automattic",
+  "contributors": [
+    "Josh Betz <j@joshbetz.com>"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=7.10"
