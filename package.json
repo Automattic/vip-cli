@@ -14,11 +14,18 @@
     "url": "git+https://github.com/Automattic/vip.git"
   },
   "keywords": [
+    "cli",
     "vip",
-    "cli"
+    "wordpess"
   ],
   "author": "Automattic",
+  "contributors": [
+    "Josh Betz <j@joshbetz.com>"
+  ],
   "license": "MIT",
+  "engines": {
+    "node": ">=7.10"
+  },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
   },
@@ -33,7 +40,10 @@
   },
   "dependencies": {
     "commander": "^2.12.2",
-    "isomorphic-fetch": "^2.2.1"
+    "isomorphic-fetch": "^2.2.1",
+    "jwt-decode": "^2.2.0",
+    "keytar": "^4.1.0",
+    "promptly": "^2.2.0"
   },
   "eslintConfig": {
     "env": {
