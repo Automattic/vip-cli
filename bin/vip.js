@@ -20,11 +20,13 @@ const rootCmd = async function() {
 				await Token.purgeTokens();
 			});
 
+		commander.command( 'site', 'List and interact with VIP Go sites' );
+
 		commander.parse( process.argv );
 
 		// Show help if selected command is invalid
 		const cmds = commander.commands.map( c => c._name );
-		const subCmd = commander.args.length > 0 ? commander.args.pop()._name : process.argv[2];
+		const subCmd = process.argv[2] || '';
 
 		if ( ! process.argv.slice( 2 ).length || 0 > cmds.indexOf( subCmd ) ) {
 			commander.help();
