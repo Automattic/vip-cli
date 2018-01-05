@@ -1,2 +1,2 @@
 # vip
-The VIP Go Javascript libarary & CLI
+The VIP Go Javascript library & CLI
