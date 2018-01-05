@@ -11,13 +11,13 @@ const rootCmd = async function() {
 	commander
 		.version( pkg.version );
 
-	let token = await Token.getToken();
+	let token = await Token.get();
 
 	if ( token && token.valid() ) {
 		commander
 			.command( 'logout' )
 			.action( async () => {
-				await Token.purgeTokens();
+				await Token.purge();
 			});
 
 		commander.command( 'site', 'List and interact with VIP Go sites' );
@@ -53,7 +53,7 @@ const rootCmd = async function() {
 			console.log( 'Invalid token' );
 		}
 
-		Token.setToken( t );
+		Token.set( t );
 	}
 };
 
