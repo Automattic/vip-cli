@@ -33,7 +33,10 @@
   },
   "dependencies": {
     "commander": "^2.12.2",
-    "isomorphic-fetch": "^2.2.1"
+    "isomorphic-fetch": "^2.2.1",
+    "jwt-decode": "^2.2.0",
+    "keytar": "^4.1.0",
+    "promptly": "^2.2.0"
   },
   "eslintConfig": {
     "env": {
