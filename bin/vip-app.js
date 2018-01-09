@@ -12,7 +12,7 @@ commander
 	.action( async options => {
 		const api = await API();
 		let apps = await api
-			.query({ query: '{apps(limit:10,page:1){id,name,environments{id}}}' })
+			.query({ query: '{apps(limit:10,page:1){id,name,repo,environments{id}}}' })
 			.catch( err => {
 				err.forEach( err => {
 					console.log( 'Error:', err.message );
@@ -26,6 +26,24 @@ commander
 			});
 
 			return console.log( format( apps, options.format ) );
+		}
+	});
+
+commander
+	.command( '*' )
+	.option( '--format <format>', 'table, csv, ids, Default: table', 'table' )
+	.action( async ( app, options ) => {
+		const api = await API();
+		let res = await api
+			.query({ query: `{app(id:${app}){id,name,environments{id,name,defaultDomain,branch,datacenter}}}` })
+			.catch( err => {
+				err.forEach( err => {
+					console.log( 'Error:', err.message );
+				});
+			});
+
+		if ( res ) {
+			return console.log( format( res.data.app.environments, options.format ) );
 		}
 	});
 
