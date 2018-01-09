@@ -8,7 +8,7 @@ const format = require( '../lib/cli/format' );
 
 commander
 	.command( 'list' )
-	.option( '--format <format>', 'table, csv, ids, Default: table', 'table' )
+	.option( '--format <format>', 'table, csv, json, Default: table', 'table' )
 	.action( async options => {
 		const api = await API();
 		let apps = await api
@@ -31,7 +31,7 @@ commander
 
 commander
 	.command( '*' )
-	.option( '--format <format>', 'table, csv, ids, Default: table', 'table' )
+	.option( '--format <format>', 'table, csv, json, Default: table', 'table' )
 	.action( async ( app, options ) => {
 		const api = await API();
 		let res = await api
