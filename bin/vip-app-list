@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+
+const args = require( 'args' );
+
+// ours
+const API = require( '../lib/api' );
+const format = require( '../lib/cli/format' );
+
+const options = args
+	.option( 'format', 'table, csv, json. Default: table', 'table' )
+	.parse( process.argv );
+
+const cmd = async function( args, options ) {
+	const api = await API();
+	let apps = await api
+		.query({ query: '{apps(limit:10,page:1){id,name,repo,environments{id}}}' })
+		.catch( err => console.log( err ) );
+
+	if ( apps ) {
+		apps = apps.data.apps.map( app => {
+			app.environments = app.environments.length;
+			return app;
+		});
+
+		return console.log( format( apps, options.format ) );
+	}
+};
+
+cmd( args.sub, options );

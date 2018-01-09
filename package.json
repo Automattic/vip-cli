@@ -4,7 +4,7 @@
   "description": "The VIP Go Javascript library & CLI",
   "main": "index.js",
   "bin": {
-    "vip": "bin/vip.js"
+    "vip": "bin/vip"
   },
   "scripts": {
     "test": "eslint index.js lib bin"
@@ -39,8 +39,8 @@
     "eslint-plugin-wpcalypso": "3.4.0"
   },
   "dependencies": {
+    "args": "^3.0.8",
     "cli-table": "^0.3.1",
-    "commander": "^2.12.2",
     "fetchql": "^2.2.0",
     "isomorphic-fetch": "^2.2.1",
     "json2csv": "^3.11.5",
