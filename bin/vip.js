@@ -20,7 +20,7 @@ const rootCmd = async function() {
 				await Token.purge();
 			});
 
-		commander.command( 'site', 'List and interact with VIP Go sites' );
+		commander.command( 'app', 'List and interact with VIP Go apps' );
 
 		commander.parse( process.argv );
 

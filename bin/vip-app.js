@@ -11,28 +11,21 @@ commander
 	.option( '--format <format>', 'table, csv, ids, Default: table', 'table' )
 	.action( async options => {
 		const api = await API();
-		const sites = await api
-			.query({ query: '{apps{id,name,environments{id,name}}}' })
+		let apps = await api
+			.query({ query: '{apps(limit:10,page:1){id,name,environments{id}}}' })
 			.catch( err => {
 				err.forEach( err => {
 					console.log( 'Error:', err.message );
 				});
 			});
 
-		if ( sites ) {
-			let data = [];
-			sites.data.apps.forEach( site => {
-				site.environments.forEach( env => {
-					data.push({
-						'apps.id': site.id,
-						'apps.name': site.name,
-						'apps.environments.id': env.id,
-						'apps.environments.name': env.name,
-					});
-				});
+		if ( apps ) {
+			apps = apps.data.apps.map( app => {
+				app.environments = app.environments.length;
+				return app;
 			});
 
-			console.log( format( data, options.format ) );
+			return console.log( format( apps, options.format ) );
 		}
 	});
 
