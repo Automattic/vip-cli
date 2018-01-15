@@ -203,7 +203,8 @@ export function importDB( site, file, opts, callback ) {
 				.pipe( sanitize )
 				.pipe( throttle )
 				.pipe( pv )
-				.pipe( importdb.stdin );
+				.pipe( importdb.stdin )
+				.on( 'end', callback );
 		});
 	});
 }
