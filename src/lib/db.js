@@ -204,6 +204,8 @@ export function importDB( site, file, opts, callback ) {
 				.pipe( throttle )
 				.pipe( pv )
 				.pipe( importdb.stdin );
+
+			stream.on( 'end', callback );
 		});
 	});
 }
