@@ -7,7 +7,8 @@
     "vip": "bin/vip"
   },
   "scripts": {
-    "test": "eslint index.js lib bin"
+    "test": "eslint index.js lib bin test && jest",
+	"jest": "jest"
   },
   "repository": {
     "type": "git",
@@ -36,7 +37,8 @@
     "eslint-config-wpcalypso": "0.8.0",
     "eslint-plugin-flowtype": "^2.34.0",
     "eslint-plugin-json": "^1.2.0",
-    "eslint-plugin-wpcalypso": "3.4.0"
+    "eslint-plugin-wpcalypso": "3.4.0",
+    "jest": "^22.1.1"
   },
   "dependencies": {
     "args": "^3.0.8",
