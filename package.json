@@ -4,11 +4,13 @@
   "description": "The VIP Go Javascript library & CLI",
   "main": "index.js",
   "bin": {
-    "vip": "bin/vip"
+    "vip": "bin/vip",
+    "vip-app": "bin/vip-app",
+    "vip-app-list": "bin/vip-app-list"
   },
   "scripts": {
     "test": "eslint index.js lib bin test && jest --coverage",
-	"jest": "jest"
+    "jest": "jest"
   },
   "repository": {
     "type": "git",
