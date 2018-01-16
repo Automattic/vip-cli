@@ -4,9 +4,12 @@ node_js:
     - 'lts/*'
     - '7.10'
 
+os:
+    - osx
+
 cache:
-  directories:
-    - node_modules
+    directories:
+        - node_modules
 
 script:
     - npm test
