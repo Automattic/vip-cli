@@ -7,7 +7,7 @@
     "vip": "bin/vip"
   },
   "scripts": {
-    "test": "eslint index.js lib bin test && jest",
+    "test": "eslint index.js lib bin test && jest --coverage",
 	"jest": "jest"
   },
   "repository": {
