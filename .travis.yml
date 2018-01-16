@@ -12,6 +12,11 @@ os:
 env:
     - CC=clang CXX=clang++ npm_config_clang=1
 
+matrix:
+    fast_finish: true
+    allow_failures:
+        - os: osx
+
 cache:
     directories:
         - node_modules
