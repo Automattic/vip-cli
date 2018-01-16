@@ -13,6 +13,7 @@ const rootCmd = async function() {
 		args
 			.command( 'logout', 'Logout from your current session', () => Token.purge() )
 			.command( 'app', 'List and modify your VIP Go apps' )
+			.command( 'sync', 'Sync production to a development environment' )
 			.parse( process.argv );
 
 		const cmds = args.details.commands.map( cmd => cmd.usage );

@@ -1,0 +1,28 @@
+#!/usr/bin/env node
+
+const args = require( 'args' );
+
+// ours
+const repo = require( '../lib/cli/repo' );
+
+const options = args
+	.option( 'app', 'Specify the app to sync' )
+	.parse( process.argv );
+
+const cmd = async function( args, options ) {
+	let app = options.app;
+
+	if ( ! app ) {
+		const apps = await repo();
+
+		if ( ! apps.apps || apps.apps.length !== 1 ) {
+			return console.log( 'Please specify the app with --app' );
+		}
+
+		app = apps.apps.pop();
+	}
+
+	console.log( app );
+};
+
+cmd( args.sub, options );
