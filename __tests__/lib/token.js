@@ -3,7 +3,7 @@ const Token = require( '../../lib/token' );
 describe( 'token tests', () => {
 	test( 'should correctly validate token', () => {
 		// Expires in 2050
-		const t = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImp0aSI6IjRhM2RmYjE5LTBhMWQtNDE3YS05ODM2LTdjZWIwZTBkM2Q4NSIsImlhdCI6MTUxNjEyMzU1NywiZXhwIjoxNTE2MTI3MTYxfQ.qW1NOl4ww1Rrb8mPMDREdEAEFVr-aqg1Nk4XFqW2YE8';
+		const t = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTYxMzUyNzYsImV4cCI6MjUyNDYwODAwMCwiYXVkIjoiIiwic3ViIjoiIn0.seD8rBKJS0usjYApigqizitlNcmzcrYlGt9DyCm3I4c';
 		const token = new Token( t );
 		expect( token.valid() ).toEqual( true );
 		expect( token.expired() ).toEqual( false );
