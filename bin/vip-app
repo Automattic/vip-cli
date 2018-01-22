@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 
-const args = require( 'args' );
-
 // ours
+const args = require( '../lib/cli/command' );
 const API = require( '../lib/api' );
 const format = require( '../lib/cli/format' );
 
-const options = args
+const options = args( { empty: true, format: true } )
 	.command( 'list', 'List your VIP Go apps' )
-	.option( 'format', 'table, csv, json. Default: table', 'table' )
-	.parse( process.argv );
+	.argv( process.argv );
 
-const cmds = args.details.commands.map( cmd => cmd.usage );
+const cmds = args().details.commands.map( cmd => cmd.usage );
 
-if ( ! args.sub.length ) {
-	args.showHelp();
-} else if ( 0 > cmds.indexOf( args.sub[0] ) ) {
+if ( ! args().sub.length ) {
+	args().showHelp();
+} else if ( 0 > cmds.indexOf( args().sub[0] ) ) {
 	const cmd = async function( args, options ) {
 		const api = await API();
 		let res = await api
@@ -27,5 +25,5 @@ if ( ! args.sub.length ) {
 		}
 	};
 
-	cmd( args.sub, options );
+	cmd( args().sub, options );
 }

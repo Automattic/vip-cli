@@ -1,27 +1,22 @@
 #!/usr/bin/env node
 
-const args = require( 'args' );
 const promptly = require( 'promptly' );
 
 // ours
+const args = require( '../lib/cli/command' );
 const Token = require( '../lib/token' );
 
 const rootCmd = async function() {
 	let token = await Token.get();
 
 	if ( token && token.valid() ) {
-		args
+		args()
 			.command( 'logout', 'Logout from your current session', () => Token.purge() )
 			.command( 'app', 'List and modify your VIP Go apps' )
 			.command( 'sync', 'Sync production to a development environment' )
-			.parse( process.argv );
-
-		const cmds = args.details.commands.map( cmd => cmd.usage );
-		if ( ! args.sub.length || 0 > cmds.indexOf( args.sub[0] ) ) {
-			args.showHelp();
-		}
+			.argv( process.argv );
 	} else {
-		args.parse( process.argv );
+		args( { empty: true } ).argv( process.argv );
 
 		const t = await promptly.password( 'Access Token:' );
 
