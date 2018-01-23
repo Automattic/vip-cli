@@ -10,7 +10,7 @@
     "vip-sync": "src/bin/vip-sync"
   },
   "scripts": {
-    "test": "eslint index.js lib bin test && jest --coverage",
+    "test": "eslint index.js src __test__ && jest --coverage",
     "jest": "jest"
   },
   "repository": {
