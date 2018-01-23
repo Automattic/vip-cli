@@ -36,7 +36,7 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "babel-eslint": "^8.1.2",
-    "eslint": "^4.14.0",
+    "eslint": "^3.3.1",
     "eslint-config-wpcalypso": "0.8.0",
     "eslint-plugin-flowtype": "^2.34.0",
     "eslint-plugin-json": "^1.2.0",
