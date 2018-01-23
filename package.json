@@ -22,7 +22,7 @@
   "scripts": {
     "preinstall": " mkdir -p build && ./scripts/install-go-search-replace",
     "postuninstall": "./scripts/postuninstall",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "build": "babel -q src --out-dir=build",
     "build:watch": "babel src --out-dir=build --watch",
     "test": "eslint src test"
