@@ -11,7 +11,9 @@
   },
   "scripts": {
     "test": "eslint index.js src __test__ && npm run flow && jest --coverage",
-    "prepare": "babel src -d dist",
+    "prepare": "npm run build",
+    "build": "babel src -d dist",
+    "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest"
   },
