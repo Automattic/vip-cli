@@ -41,9 +41,9 @@ const rootCmd = async function() {
 
 		// Exec the command we originally  wanted
 		const spawn = require( 'child_process' ).spawn;
-		const bin = process.argv[1];
+		const bin = process.argv[ 1 ];
 		const argv = process.argv.slice( 2 );
-		spawn( bin, argv, { stdio: 'inherit' });
+		spawn( bin, argv, { stdio: 'inherit' } );
 	}
 };
 

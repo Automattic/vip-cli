@@ -1,4 +1,4 @@
-const api = require( 'lib/api' );
+const api = require( 'dist/lib/api' );
 
 module.exports = {
 	api,

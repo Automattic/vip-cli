@@ -1,4 +1,4 @@
-const Token = require( '../../lib/token' );
+const Token = require( '../../src/lib/token' );
 
 describe( 'token tests', () => {
 	test( 'should correctly validate token', () => {

@@ -4,13 +4,17 @@
   "description": "The VIP Go Javascript library & CLI",
   "main": "index.js",
   "bin": {
-    "vip": "bin/vip",
-    "vip-app": "bin/vip-app",
-    "vip-app-list": "bin/vip-app-list",
-    "vip-sync": "bin/vip-sync"
+    "vip": "dist/bin/vip.js",
+    "vip-app": "dist/bin/vip-app.js",
+    "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-sync": "dist/bin/vip-sync.js"
   },
   "scripts": {
-    "test": "eslint index.js lib bin test && jest --coverage",
+    "test": "eslint index.js src __test__ && npm run flow && jest --coverage",
+    "prepare": "npm run build",
+    "build": "babel src -d dist",
+    "build:watch": "babel src -d dist --watch",
+    "flow": "flow",
     "jest": "jest"
   },
   "repository": {
@@ -35,12 +39,15 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "babel-eslint": "^8.1.2",
-    "eslint": "^4.14.0",
+    "babel-preset-flow": "^6.23.0",
+    "eslint": "^3.3.1",
     "eslint-config-wpcalypso": "0.8.0",
     "eslint-plugin-flowtype": "^2.34.0",
     "eslint-plugin-json": "^1.2.0",
     "eslint-plugin-wpcalypso": "3.4.0",
+    "flow-bin": "^0.63.1",
     "jest": "^22.1.1"
   },
   "dependencies": {
