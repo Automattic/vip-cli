@@ -13,15 +13,19 @@ const cmds = args().details.commands.map( cmd => cmd.usage );
 
 if ( ! args().sub.length ) {
 	args().showHelp();
-} else if ( 0 > cmds.indexOf( args().sub[0] ) ) {
-	const cmd = async function( args, options ) {
+} else if ( 0 > cmds.indexOf( args().sub[ 0 ] ) ) {
+	const cmd = async function( arg, opts ) {
 		const api = await API();
-		let res = await api
-			.query({ query: `{app(id:${args[0]}){id,name,environments{id,name,defaultDomain,branch,datacenter}}}` })
+		const res = await api
+			.query( {
+				query: `{app(id:${ arg[ 0 ] }){
+					id,name,environments{id,name,defaultDomain,branch,datacenter}
+				}}`
+			} )
 			.catch( err => console.log( err ) );
 
 		if ( res ) {
-			return console.log( format( res.data.app.environments, options.format ) );
+			return console.log( format( res.data.app.environments, opts.format ) );
 		}
 	};
 
