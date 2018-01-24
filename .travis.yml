@@ -8,6 +8,11 @@ node_js:
 os:
     - linux
 
+env:
+    matrix:
+        - GNOME_KEYRING=true
+        - GNOME_KEYRING=false
+
 cache:
     directories:
         - node_modules
@@ -22,7 +27,7 @@ addons:
 
 before_script:
     - |
-        if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        if [[ "$TRAVIS_OS_NAME" == "linux" && "$GNOME_KEYRING" == true ]]; then
           dbus-launch /usr/bin/python -c "import gnomekeyring;gnomekeyring.create_sync('login', '');"
           eval $(echo -n "" | /usr/bin/gnome-keyring-daemon --login)
           eval $(/usr/bin/gnome-keyring-daemon --components=secrets --start)
