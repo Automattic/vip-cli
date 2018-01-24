@@ -12,9 +12,13 @@ cache:
     directories:
         - node_modules
 
-before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -yq xvfb gnome-keyring libsecret-1-dev python-gnomekeyring; fi
+addons:
+    apt:
+        packages:
+            - xvfb
+            - gnome-keyring
+            - libsecret-1-dev
+            - python-gnomekeyring
 
 before_script:
     - |
