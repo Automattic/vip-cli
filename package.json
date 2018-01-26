@@ -58,7 +58,8 @@
     "isomorphic-fetch": "^2.2.1",
     "json2csv": "^3.11.5",
     "jwt-decode": "^2.2.0",
-    "keytar": "^4.1.0",
+    "keytar-prebuild": "^4.0.4",
+    "node-localstorage": "^1.3.0",
     "promptly": "^2.2.0"
   },
   "eslintConfig": {
@@ -85,22 +86,20 @@
       "beforeEach": true,
       "afterEach": true,
       "beforeAll": true,
-      "afterAll": true
+      "afterAll": true,
+      "window": true
     },
     "rules": {
       "camelcase": [
         "warn"
       ],
       "no-console": [
-        "warn"
+        "off"
       ],
       "no-unused-vars": [
         "warn"
       ],
       "flowtype/no-types-missing-file-annotation": [
-        0
-      ],
-      "no-process-exit": [
         0
       ]
     }
