@@ -86,7 +86,8 @@
       "beforeEach": true,
       "afterEach": true,
       "beforeAll": true,
-      "afterAll": true
+      "afterAll": true,
+      "window": true
     },
     "rules": {
       "camelcase": [
