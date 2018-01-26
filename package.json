@@ -101,9 +101,6 @@
       ],
       "flowtype/no-types-missing-file-annotation": [
         0
-      ],
-      "no-process-exit": [
-        0
       ]
     }
   }
