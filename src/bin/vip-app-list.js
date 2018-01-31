@@ -5,7 +5,7 @@ const args = require( '../lib/cli/command' );
 const API = require( '../lib/api' );
 const format = require( '../lib/cli/format' );
 
-args( { empty: true, format: true } )
+args( { emptyCommand: true, format: true } )
 	.argv( process.argv, async ( arg, options ) => {
 		const api = await API();
 		let apps = await api
