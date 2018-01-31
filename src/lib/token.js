@@ -1,5 +1,7 @@
-const keytar = require( 'keytar' );
 const jwtDecode = require( 'jwt-decode' );
+
+// ours
+const keychain = require( './keychain' );
 
 // Config
 const SERVICE = 'vip-go-cli';
@@ -27,11 +29,11 @@ class Token {
 module.exports = Token;
 
 module.exports.set = function( token ) {
-	return keytar.setPassword( SERVICE, SERVICE, token );
+	return keychain.setPassword( SERVICE, token );
 };
 
 module.exports.get = async function() {
-	const token = await keytar.getPassword( SERVICE, SERVICE );
+	const token = await keychain.getPassword( SERVICE );
 	try {
 		return new Token( token );
 	} catch ( e ) {
@@ -40,6 +42,5 @@ module.exports.get = async function() {
 };
 
 module.exports.purge = async function() {
-	const credentials = await keytar.findCredentials( SERVICE );
-	credentials.forEach( c => keytar.deletePassword( SERVICE, c.account ) );
+	keychain.deletePassword( SERVICE );
 };

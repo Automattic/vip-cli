@@ -58,7 +58,6 @@
     "isomorphic-fetch": "^2.2.1",
     "json2csv": "^3.11.5",
     "jwt-decode": "^2.2.0",
-    "keytar": "^4.1.0",
     "promptly": "^2.2.0"
   },
   "eslintConfig": {
@@ -85,7 +84,8 @@
       "beforeEach": true,
       "afterEach": true,
       "beforeAll": true,
-      "afterAll": true
+      "afterAll": true,
+      "window": true
     },
     "rules": {
       "camelcase": [
