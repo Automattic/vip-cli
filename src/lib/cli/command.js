@@ -1,6 +1,8 @@
 const args = require( 'args' );
+const colors = require( 'colors' );
 
 // ours
+const API = require( '../api' );
 const repo = require( './repo' );
 const format = require( './format' );
 const prompt = require( './prompt' );
@@ -29,6 +31,8 @@ args.argv = async function( argv, cb ) {
 		return this.showHelp();
 	}
 
+	const api = await API();
+
 	// Set the site in options.app
 	if ( _opts.appContext ) {
 		let app = options.app;
@@ -42,7 +46,35 @@ args.argv = async function( argv, cb ) {
 
 			app = apps.apps.pop();
 		} else {
-			// TODO: Lookup the specified app in the API
+			if ( isNaN( parseInt( app ) ) ) {
+				const res = await api
+					.query( {
+						query: `{apps(name:"${ app }"){
+							id,name,environments{id,name,defaultDomain,branch,datacenter}
+						}}`
+					} )
+					.catch( err => console.log( err[0].stack.body.pipe( process.stdout ) ) );
+
+				if ( ! res ) {
+					return console.log( `App ${ app.blue } does not exist` );
+				}
+
+				app = res.data.apps[ 0 ];
+			} else {
+				const res = await api
+					.query( {
+						query: `{app(id:${ app }){
+							id,name,environments{id,name,defaultDomain,branch,datacenter}
+						}}`
+					} )
+					.catch( err => console.log( err ) );
+
+				if ( ! res || ! res.data || ! res.data.app ) {
+					return console.log( `App ${ app.toString().blue } does not exist` );
+				}
+
+				app = res.data.app;
+			}
 		}
 
 		options.app = app;
@@ -51,7 +83,7 @@ args.argv = async function( argv, cb ) {
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
 		const info = {
-			App: options.app,
+			App: options.app.name,
 			Environment: 'production',
 		};
 		const yes = await prompt.confirm( info, 'Are you sure?' );
