@@ -16,7 +16,7 @@ const rootCmd = async function() {
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
-		args( { emptyCommand: true } ).argv( process.argv );
+		args().argv( process.argv );
 
 		const t = await promptly.password( 'Access Token:' );
 

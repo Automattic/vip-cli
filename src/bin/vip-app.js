@@ -5,7 +5,7 @@ const args = require( '../lib/cli/command' );
 const API = require( '../lib/api' );
 const format = require( '../lib/cli/format' );
 
-const options = args( { emptyCommand: true, format: true } )
+const options = args( { wildcardCommand: true, format: true } )
 	.command( 'list', 'List your VIP Go apps' )
 	.argv( process.argv );
 

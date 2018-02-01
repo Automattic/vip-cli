@@ -9,14 +9,16 @@ let _opts = {};
 args.argv = async function( argv, cb ) {
 	const options = this.parse( argv );
 
-	const cmds = this.details.commands.map( cmd => cmd.usage );
-	if ( ! _opts.emptyCommand && ( ! this.sub.length || 0 > cmds.indexOf( this.sub[ 0 ] ) ) ) {
-		return this.showHelp();
-	}
-
 	// If there's a sub-command, run that instead
 	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
 		return {};
+	}
+
+	const cmds = this.details.commands.map( cmd => cmd.usage );
+	const emptyCommand = this.details.commands.length <= 1;
+	const invalidSub = ! this.sub.length || 0 > cmds.indexOf( this.sub[ 0 ] );
+	if ( ! emptyCommand && ! _opts.wildcardCommand && invalidSub ) {
+		return this.showHelp();
 	}
 
 	// Set the site in options.app
@@ -59,8 +61,8 @@ args.argv = async function( argv, cb ) {
 module.exports = function( opts ) {
 	_opts = Object.assign( {
 		appContext: false,
-		emptyCommand: false,
 		requireConfirm: false,
+		wildcardCommand: false,
 	}, opts );
 
 	const a = args;
