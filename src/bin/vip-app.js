@@ -3,9 +3,8 @@
 // ours
 const args = require( '../lib/cli/command' );
 const API = require( '../lib/api' );
-const format = require( '../lib/cli/format' );
 
-const options = args( { wildcardCommand: true, format: true } )
+args( { wildcardCommand: true, format: true } )
 	.command( 'list', 'List your VIP Go apps' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
@@ -18,6 +17,6 @@ const options = args( { wildcardCommand: true, format: true } )
 			.catch( err => console.log( err ) );
 
 		if ( res ) {
-			return console.log( format( res.data.app.environments, opts.format ) );
+			return res.data.app.environments;
 		}
 	} );

@@ -3,6 +3,7 @@ const promptly = require( 'promptly' );
 
 // ours
 const repo = require( './repo' );
+const format = require( './format' );
 
 let _opts = {};
 
@@ -59,7 +60,11 @@ args.argv = async function( argv, cb ) {
 	}
 
 	if ( cb ) {
-		await cb( this.sub, options );
+		const res = await cb( this.sub, options );
+
+		if ( _opts.format && res ) {
+			return console.log( format( res, options.format ) );
+		}
 	}
 
 	return options;
@@ -68,6 +73,7 @@ args.argv = async function( argv, cb ) {
 module.exports = function( opts ) {
 	_opts = Object.assign( {
 		appContext: false,
+		format: false,
 		requireConfirm: false,
 		wildcardCommand: false,
 	}, opts );
@@ -80,6 +86,10 @@ module.exports = function( opts ) {
 
 	if ( _opts.requireConfirm ) {
 		a.option( 'force', 'Skip confirmation' );
+	}
+
+	if ( _opts.format ) {
+		a.option( 'format', 'Format results' );
 	}
 
 	return a;

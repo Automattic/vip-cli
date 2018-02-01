@@ -2,7 +2,6 @@
 
 // ours
 const args = require( '../lib/cli/command' );
-const repo = require( '../lib/cli/repo' );
 
 args( { appContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {

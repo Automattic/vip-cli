@@ -3,7 +3,6 @@
 // ours
 const args = require( '../lib/cli/command' );
 const API = require( '../lib/api' );
-const format = require( '../lib/cli/format' );
 
 args( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {
@@ -18,6 +17,6 @@ args( { format: true } )
 				return app;
 			} );
 
-			return console.log( format( apps, options.format ) );
+			return apps;
 		}
 	} );
