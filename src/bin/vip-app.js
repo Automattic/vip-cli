@@ -7,14 +7,7 @@ const format = require( '../lib/cli/format' );
 
 const options = args( { wildcardCommand: true, format: true } )
 	.command( 'list', 'List your VIP Go apps' )
-	.argv( process.argv );
-
-const cmds = args().details.commands.map( cmd => cmd.usage );
-
-if ( ! args().sub.length ) {
-	args().showHelp();
-} else if ( 0 > cmds.indexOf( args().sub[ 0 ] ) ) {
-	const cmd = async function( arg, opts ) {
+	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
 		const res = await api
 			.query( {
@@ -27,7 +20,4 @@ if ( ! args().sub.length ) {
 		if ( res ) {
 			return console.log( format( res.data.app.environments, opts.format ) );
 		}
-	};
-
-	cmd( args().sub, options );
-}
+	} );

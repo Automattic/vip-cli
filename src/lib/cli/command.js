@@ -14,10 +14,17 @@ args.argv = async function( argv, cb ) {
 		return {};
 	}
 
-	const cmds = this.details.commands.map( cmd => cmd.usage );
+	// Show help if invalid subcommand
+	const subCommands = this.details.commands.map( cmd => cmd.usage );
 	const emptyCommand = this.details.commands.length <= 1;
-	const invalidSub = ! this.sub.length || 0 > cmds.indexOf( this.sub[ 0 ] );
-	if ( ! emptyCommand && ! _opts.wildcardCommand && invalidSub ) {
+	const emptyArgs = ! this.sub.length;
+	const validSubCommand = 0 > subCommands.indexOf( this.sub[ 0 ] );
+
+	if ( _opts.wildcardCommand && emptyArgs ) {
+		return this.showHelp();
+	}
+
+	if ( ! emptyCommand && ( emptyArgs || ! validSubCommand ) ) {
 		return this.showHelp();
 	}
 
