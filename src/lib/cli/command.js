@@ -1,9 +1,9 @@
 const args = require( 'args' );
-const promptly = require( 'promptly' );
 
 // ours
 const repo = require( './repo' );
 const format = require( './format' );
+const prompt = require( './prompt' );
 
 let _opts = {};
 
@@ -50,10 +50,11 @@ args.argv = async function( argv, cb ) {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		// TODO: Colorize environment
-		console.log( 'App:', options.app );
-
-		const yes = await promptly.confirm( 'Are you sure?' );
+		const info = {
+			App: options.app,
+			Environment: 'production',
+		};
+		const yes = await prompt.confirm( info, 'Are you sure?' );
 		if ( ! yes ) {
 			return;
 		}
