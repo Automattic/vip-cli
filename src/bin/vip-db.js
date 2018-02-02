@@ -95,7 +95,7 @@ program
 				CEILING(SUM(index_length)/POWER(1024,2)) index_mb,
 				CEILING(SUM(data_length+index_length)/POWER(1024,2)) total_mb,
 				@@innodb_buffer_pool_size/POWER(1024,2) mariadb_current_mb,
-				CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2)) suggested_mb 
+				CEILING(CEILING(SUM(data_length+index_length)*${factor}/POWER(1024,2))/128)*128 suggested_mb 
 				FROM information_schema.tables WHERE engine='InnoDB')`;
 
 			db.query( site, query, err => {
