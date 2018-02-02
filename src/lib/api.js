@@ -12,7 +12,7 @@ module.exports = async function API() {
 	const headers = {};
 
 	if ( token ) {
-		token.Authorization = `Bearer ${ token.raw }`;
+		headers.Authorization = `Bearer ${ token.raw }`;
 	}
 
 	return new FetchQL( { url: API_URL, headers: headers } );
