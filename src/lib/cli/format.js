@@ -25,10 +25,10 @@ function ids( data, opts ) {
 		return 'No ID field found';
 	}
 
-	const ids = [];
-	data.forEach( d => ids.push( d.id ) );
+	const id = [];
+	data.forEach( d => id.push( d.id ) );
 
-	return ids.join( ' ' );
+	return id.join( ' ' );
 }
 
 function csv( data, opts ) {

@@ -45,36 +45,34 @@ args.argv = async function( argv, cb ) {
 			}
 
 			app = apps.apps.pop();
-		} else {
-			if ( isNaN( parseInt( app ) ) ) {
-				const res = await api
-					.query( {
-						query: `{apps(name:"${ app }"){
-							id,name,environments{id,name,defaultDomain,branch,datacenter}
-						}}`
-					} )
-					.catch( err => console.log( err[0].stack.body.pipe( process.stdout ) ) );
+		} else if ( isNaN( parseInt( app ) ) ) {
+			const res = await api
+				.query( {
+					query: `{apps(name:"${ app }"){
+						id,name,environments{id,name,defaultDomain,branch,datacenter}
+					}}`
+				} )
+				.catch( err => console.log( err ) );
 
-				if ( ! res ) {
-					return console.log( `App ${ app.blue } does not exist` );
-				}
-
-				app = res.data.apps[ 0 ];
-			} else {
-				const res = await api
-					.query( {
-						query: `{app(id:${ app }){
-							id,name,environments{id,name,defaultDomain,branch,datacenter}
-						}}`
-					} )
-					.catch( err => console.log( err ) );
-
-				if ( ! res || ! res.data || ! res.data.app ) {
-					return console.log( `App ${ app.toString().blue } does not exist` );
-				}
-
-				app = res.data.app;
+			if ( ! res ) {
+				return console.log( `App ${ app.blue } does not exist` );
 			}
+
+			app = res.data.apps[ 0 ];
+		} else {
+			const res = await api
+				.query( {
+					query: `{app(id:${ app }){
+						id,name,environments{id,name,defaultDomain,branch,datacenter}
+					}}`
+				} )
+				.catch( err => console.log( err ) );
+
+			if ( ! res || ! res.data || ! res.data.app ) {
+				return console.log( `App ${ app.toString().blue } does not exist` );
+			}
+
+			app = res.data.app;
 		}
 
 		options.app = app;
