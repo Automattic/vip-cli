@@ -40,7 +40,7 @@ args.argv = async function( argv, cb ) {
 		if ( ! app ) {
 			const apps = await repo();
 
-			if ( ! apps.apps || apps.apps.length !== 1 ) {
+			if ( ! apps || ! apps.apps || apps.apps.length !== 1 ) {
 				return console.log( 'Please specify the app with --app' );
 			}
 
@@ -54,7 +54,7 @@ args.argv = async function( argv, cb ) {
 				} )
 				.catch( err => console.log( err ) );
 
-			if ( ! res ) {
+			if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
 				return console.log( `App ${ app.blue } does not exist` );
 			}
 
