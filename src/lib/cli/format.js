@@ -4,8 +4,12 @@ module.exports = function( data, format, opts ) {
 	}
 
 	switch ( format ) {
+		case 'ids':
+			return ids( data, opts );
+
 		case 'json':
 			return JSON.stringify( data, null, '\t' );
+
 		case 'csv':
 			return csv( data, opts );
 
@@ -14,6 +18,18 @@ module.exports = function( data, format, opts ) {
 			return table( data, opts );
 	}
 };
+
+function ids( data, opts ) {
+	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );
+	if ( 0 > fields.indexOf( 'id' ) ) {
+		return 'No ID field found';
+	}
+
+	const ids = [];
+	data.forEach( d => ids.push( d.id ) );
+
+	return ids.join( ' ' );
+}
 
 function csv( data, opts ) {
 	const json2csv = require( 'json2csv' );
