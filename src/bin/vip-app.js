@@ -25,19 +25,19 @@ args( { requiredArgs: 1, format: true } )
 			}
 
 			return res.data.apps[ 0 ].environments;
-		} else {
-			const res = await api
-				.query( {
-					query: `{app(id:${ app }){
-						id,name,environments{id,name,defaultDomain,branch,datacenter}
-					}}`
-				} )
-				.catch( err => { /* noop */ } );
-
-			if ( ! res || ! res.data || ! res.data.app ) {
-				return console.log( `App ${ app.toString().blue } does not exist` );
-			}
-
-			return res.data.app.environments;
 		}
+
+		const res = await api
+			.query( {
+				query: `{app(id:${ app }){
+					id,name,environments{id,name,defaultDomain,branch,datacenter}
+				}}`
+			} )
+			.catch( err => { /* noop */ } );
+
+		if ( ! res || ! res.data || ! res.data.app ) {
+			return console.log( `App ${ app.toString().blue } does not exist` );
+		}
+
+		return res.data.app.environments;
 	} );
