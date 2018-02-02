@@ -3,7 +3,7 @@ const path = require( 'path' );
 const ini = require( 'ini' );
 
 // ours
-const API = require( '../API' );
+const API = require( '../api' );
 
 module.exports = async function() {
 	const sourceRepo = await getRepoFromGitConfig();
