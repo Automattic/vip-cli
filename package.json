@@ -105,5 +105,8 @@
         0
       ]
     }
+  },
+  "optionalDependencies": {
+    "keytar": "^4.1.0"
   }
 }
