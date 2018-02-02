@@ -4,7 +4,8 @@
 const args = require( '../lib/cli/command' );
 const API = require( '../lib/api' );
 
-args( { wildcardCommand: true, format: true } )
+args( { requiredArgs: 1, format: true } )
+	.example( 'vip app <app>', 'Pass an app name or ID to get details about that app' )
 	.command( 'list', 'List your VIP Go apps' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const app = arg[ 0 ];

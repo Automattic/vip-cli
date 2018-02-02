@@ -23,7 +23,7 @@ args.argv = async function( argv, cb ) {
 	const emptyArgs = ! this.sub.length;
 	const validSubCommand = 0 > subCommands.indexOf( this.sub[ 0 ] );
 
-	if ( _opts.wildcardCommand && emptyArgs ) {
+	if ( _opts.requiredArgs > this.sub.length ) {
 		return this.showHelp();
 	}
 
@@ -106,7 +106,7 @@ module.exports = function( opts ) {
 		appContext: false,
 		format: false,
 		requireConfirm: false,
-		wildcardCommand: false,
+		requiredArgs: 0,
 	}, opts );
 
 	const a = args;
