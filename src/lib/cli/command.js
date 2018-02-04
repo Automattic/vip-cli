@@ -21,13 +21,13 @@ args.argv = async function( argv, cb ) {
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
 	const emptyCommand = this.details.commands.length <= 1;
 	const emptyArgs = ! this.sub.length;
-	const validSubCommand = 0 > subCommands.indexOf( this.sub[ 0 ] );
+	const invalidSubCommand = 0 > subCommands.indexOf( this.sub[ 0 ] );
 
 	if ( _opts.requiredArgs > this.sub.length ) {
 		return this.showHelp();
 	}
 
-	if ( ! emptyCommand && ( emptyArgs || ! validSubCommand ) ) {
+	if ( ! emptyCommand && ( emptyArgs || invalidSubCommand ) ) {
 		return this.showHelp();
 	}
 
