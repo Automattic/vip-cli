@@ -17,17 +17,20 @@ args.argv = async function( argv, cb ) {
 		return {};
 	}
 
-	// Show help if invalid subcommand
-	const subCommands = this.details.commands.map( cmd => cmd.usage );
-	const emptyCommand = this.details.commands.length <= 1;
-	const emptyArgs = ! this.sub.length;
-	const invalidSubCommand = 0 > subCommands.indexOf( this.sub[ 0 ] );
+	// Show help if no args passed
+	if ( this.details.commands.length > 1 && ! this.sub.length ) {
+		return this.showHelp();
+	}
 
+	// Show help if required arg is missing
 	if ( _opts.requiredArgs > this.sub.length ) {
 		return this.showHelp();
 	}
 
-	if ( ! emptyCommand && ( emptyArgs || invalidSubCommand ) ) {
+	// Show help if subcommand is invalid
+	const subCommands = this.details.commands.map( cmd => cmd.usage );
+	if ( this.sub[ _opts.requiredArgs ] &&
+		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
 		return this.showHelp();
 	}
 
