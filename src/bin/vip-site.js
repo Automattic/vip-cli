@@ -95,7 +95,7 @@ program
 							Promise.all( upgrading )
 							.then( sites => {
 								var table = new Table({
-									head: [ 'Site', 'Pending', 'Upgrading', 'Running' ],
+									head: [ 'Site', 'Pending', 'Upgrading', 'Done' ],
 									style: {
 										head: ['blue'],
 									},
