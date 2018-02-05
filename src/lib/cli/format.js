@@ -1,6 +1,8 @@
-module.exports = function( data, format, opts ) {
+// @flow
+
+module.exports = function( data: any, format: string, opts: any ): string {
 	if ( ! data || ! data.length ) {
-		return;
+		return '';
 	}
 
 	switch ( format ) {
@@ -19,7 +21,7 @@ module.exports = function( data, format, opts ) {
 	}
 };
 
-function ids( data, opts ) {
+function ids( data: any, opts: any ): string {
 	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );
 	if ( 0 > fields.indexOf( 'id' ) ) {
 		return 'No ID field found';
@@ -31,14 +33,14 @@ function ids( data, opts ) {
 	return id.join( ' ' );
 }
 
-function csv( data, opts ) {
+function csv( data: any, opts: any ): string {
 	const json2csv = require( 'json2csv' );
 	const fields = Object.keys( data[ 0 ] );
 
 	return json2csv( { data: data, fields: fields } );
 }
 
-function table( data, opts ) {
+function table( data: any, opts: any ): string {
 	const Table = require( 'cli-table' );
 	const fields = Object.keys( data[ 0 ] );
 	const t = new Table( {
