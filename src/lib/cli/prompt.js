@@ -1,15 +1,18 @@
+// @flow
 const promptly = require( 'promptly' );
-const colors = require( 'colors' );
+require( 'colors' );
 
 module.exports = {};
 
-module.exports.confirm = async function( values, message ) {
-	m( values );
+module.exports.confirm = async function( values: any, message: string ): Promise<boolean> {
+	console.log( m( values ) );
 	return promptly.confirm( message );
 };
 
-function m( values ) {
-	console.log( '===================================' );
+function m( values: any ): string {
+	const lines = [];
+
+	lines.push( '===================================' );
 	for ( const k in values ) {
 		let v = values[ k ];
 
@@ -23,7 +26,9 @@ function m( values ) {
 				break;
 		}
 
-		console.log( '+', `${ k }:`, v );
+		lines.push( `+ ${ k }: ${ v }` );
 	}
-	console.log( '===================================' );
+	lines.push( '===================================' );
+
+	return lines.join( '\n' );
 }
