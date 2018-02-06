@@ -104,11 +104,11 @@ program
 								sites.forEach( site => {
 									let pending = site.filter( container => container.software_stack_id !== defaultStack && container.state === 'running' ).length;
 									let upgrading = site.filter( container => container.state === 'upgrading' ).length;
-									let running = site.filter( container => container.software_stack_id === defaultStack && container.state === 'running' ).length;
+									let done = site.filter( container => container.software_stack_id === defaultStack && container.state === 'running' ).length;
 
 									let colorizedSite;
 
-									if ( running === site.length ) {
+									if ( done === site.length ) {
 										// Upgrade is done
 										colorizedSite = colors[ 'green' ]( site[0].domain_name );
 									} else if ( pending === site.length ) {
@@ -123,7 +123,7 @@ program
 										colorizedSite,
 										pending,
 										upgrading,
-										running,
+										done,
 									] );
 								});
 
