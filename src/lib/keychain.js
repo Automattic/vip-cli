@@ -1,5 +1,3 @@
-// @flow
-
 const e = {};
 if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined' ) {
 	// node
