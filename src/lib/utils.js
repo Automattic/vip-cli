@@ -86,8 +86,11 @@ export function getCredentials( callback ) {
 			return self.setCredentials({
 				userId: credentials.userId,
 				accessToken: credentials.accessToken,
-			}, function() {
-				callback( null, credentials );
+			}, ( err, refreshedCredentials ) => {
+				if ( err ) {
+					console.error( 'Failed to refresh auth credentials; please contact the Platform team and tell them about this error: ', err );
+				}
+				callback( err, refreshedCredentials );
 			});
 		}
 
