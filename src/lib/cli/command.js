@@ -9,7 +9,7 @@ const colors = require( 'colors' );
 import type { Tuple } from './prompt';
 
 // ours
-const site = require( '../api/site' );
+const app = require( '../api/app' );
 const repo = require( './repo' );
 const format = require( './format' );
 const prompt = require( './prompt' );
@@ -61,10 +61,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 					name: 'app',
 					message: 'Which site?',
 					pageSize: 10,
-					choices: apps.apps.map( app => {
+					choices: apps.apps.map( cur => {
 						return {
-							name: app.name,
-							value: app
+							name: cur.name,
+							value: cur,
 						};
 					} ),
 				} );
@@ -77,7 +77,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				options.app = a.app;
 			}
 		} else {
-			const a = await site( options.app );
+			const a = await app( options.app );
 
 			if ( ! a || ! a.id ) {
 				console.log( `App ${ colors.blue( options.app ) } does not exist` );
