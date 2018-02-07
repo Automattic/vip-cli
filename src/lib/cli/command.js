@@ -60,7 +60,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				const a = await inquirer.prompt( {
 					type: 'list',
 					name: 'app',
-					message: 'Which site?',
+					message: 'Which app?',
 					pageSize: 10,
 					choices: apps.map( cur => {
 						return {
@@ -82,7 +82,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				const a = await inquirer.prompt( {
 					type: 'list',
 					name: 'app',
-					message: 'Which site?',
+					message: 'Which app?',
 					pageSize: 10,
 					choices: apps.apps.map( cur => {
 						return {
@@ -111,12 +111,55 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 	}
 
+	if ( _opts.envContext && options.app ) {
+		if ( options.env ) {
+			const env = options.app.environments.find( cur => cur.name === options.env );
+
+			if ( ! env ) {
+				console.log( `Environment ${ colors.blue( options.env ) } for app ${ colors.blue( options.app.name ) } does not exist` );
+				return {};
+			}
+
+			options.env = env;
+		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
+			console.log( `Could not find any environments for ${ colors.blue( options.app.name ) }` );
+			return {};
+		} else if ( options.app.environments.length === 1 ) {
+			options.env = options.app.environments.pop();
+		} else if ( options.app.environments.length > 1 ) {
+			const e = await inquirer.prompt( {
+				type: 'list',
+				name: 'env',
+				message: 'Which environment?',
+				pageSize: 10,
+				choices: options.app.environments.map( cur => {
+					return {
+						name: cur.name,
+						value: cur,
+					};
+				} ),
+			} );
+
+			if ( ! e || ! e.env || ! e.env.id ) {
+				console.log( `App ${ colors.blue( e.env.name ) } does not exist` );
+				return {};
+			}
+
+			options.env = e.env;
+		}
+	}
+
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info: Array<Tuple> = [
-			{ key: 'app', value: options.app.name },
-			{ key: 'environment', value: 'production' }
-		];
+		const info: Array<Tuple> = [];
+
+		if ( options.app ) {
+			info.push( { key: 'app', value: options.app.name } );
+		}
+
+		if ( options.env ) {
+			info.push( { key: 'environment', value: options.env.name } );
+		}
 
 		const yes = await prompt.confirm( info, 'Are you sure?' );
 		if ( ! yes ) {
@@ -139,6 +182,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 module.exports = function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
+		envContext: false,
 		format: false,
 		requireConfirm: false,
 		requiredArgs: 0,
@@ -147,7 +191,11 @@ module.exports = function( opts: any ): args {
 	const a = args;
 
 	if ( _opts.appContext || _opts.requireConfirm ) {
-		a.option( 'app', 'Specify the app to sync' );
+		a.option( 'app', 'Specify the app' );
+	}
+
+	if ( _opts.appContext || _opts.requireConfirm ) {
+		a.option( 'env', 'Specify the environment' );
 	}
 
 	if ( _opts.requireConfirm ) {
