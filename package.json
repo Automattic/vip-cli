@@ -96,6 +96,9 @@
       "no-console": [
         0
       ],
+      "max-len": [
+        "warn"
+      ],
       "no-unused-vars": [
         "warn"
       ],
