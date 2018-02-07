@@ -1,6 +1,7 @@
 // @flow
 const args = require( 'args' );
-require( 'colors' );
+const inquirer = require( 'inquirer' );
+const colors = require( 'colors' );
 
 /**
  * internal dependencies
@@ -8,7 +9,7 @@ require( 'colors' );
 import type { Tuple } from './prompt';
 
 // ours
-const API = require( '../api' );
+const site = require( '../api/site' );
 const repo = require( './repo' );
 const format = require( './format' );
 const prompt = require( './prompt' );
@@ -43,54 +44,48 @@ args.argv = async function( argv, cb ): Promise<any> {
 		return {};
 	}
 
-	const api = await API();
-
 	// Set the site in options.app
 	if ( _opts.appContext ) {
-		let app = options.app;
-
-		if ( ! app ) {
+		if ( ! options.app ) {
 			const apps = await repo();
 
-			if ( ! apps || ! apps.apps || apps.apps.length !== 1 ) {
-				console.log( 'Please specify the app with --app' );
+			if ( ! apps || ! apps.apps || ! apps.apps.length ) {
+				// TODO
+				console.log( 'shrug emoji' );
 				return {};
+			} else if ( apps.apps.length === 1 ) {
+				options.app = apps.apps.pop();
+			} else if ( apps.apps.length > 1 ) {
+				const a = await inquirer.prompt( {
+					type: 'list',
+					name: 'app',
+					message: 'Which site?',
+					pageSize: 10,
+					choices: apps.apps.map( app => {
+						return {
+							name: app.name,
+							value: app
+						};
+					} ),
+				} );
+
+				if ( ! a || ! a.app || ! a.app.id ) {
+					console.log( `App ${ colors.blue( a.app.name ) } does not exist` );
+					return {};
+				}
+
+				options.app = a.app;
 			}
-
-			app = apps.apps.pop();
-		} else if ( isNaN( parseInt( app ) ) ) {
-			const res = await api
-				.query( {
-					query: `{apps(name:"${ app }"){
-						id,name,environments{id,name,defaultDomain,branch,datacenter}
-					}}`
-				} )
-				.catch( err => console.log( err ) );
-
-			if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
-				console.log( `App ${ app.blue } does not exist` );
-				return {};
-			}
-
-			app = res.data.apps[ 0 ];
 		} else {
-			const res = await api
-				.query( {
-					query: `{app(id:${ app }){
-						id,name,environments{id,name,defaultDomain,branch,datacenter}
-					}}`
-				} )
-				.catch( err => console.log( err ) );
+			const a = await site( options.app );
 
-			if ( ! res || ! res.data || ! res.data.app ) {
-				console.log( `App ${ app.toString().blue } does not exist` );
+			if ( ! a || ! a.id ) {
+				console.log( `App ${ colors.blue( options.app ) } does not exist` );
 				return {};
 			}
 
-			app = res.data.app;
+			options.app = a;
 		}
-
-		options.app = app;
 	}
 
 	// Prompt for confirmation if necessary
