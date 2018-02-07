@@ -2,6 +2,11 @@
 const args = require( 'args' );
 require( 'colors' );
 
+/**
+ * internal dependencies
+ */
+import type { Tuple } from './prompt';
+
 // ours
 const API = require( '../api' );
 const repo = require( './repo' );
@@ -90,10 +95,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info = {
-			App: options.app.name,
-			Environment: 'production',
-		};
+		const info: Array<Tuple> = [
+			{ key: 'app', value: options.app.name },
+			{ key: 'environment', value: 'production' }
+		];
+
 		const yes = await prompt.confirm( info, 'Are you sure?' );
 		if ( ! yes ) {
 			return {};

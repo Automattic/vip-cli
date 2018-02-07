@@ -1,32 +1,37 @@
 // @flow
 const promptly = require( 'promptly' );
-require( 'colors' );
+const colors = require( 'colors' );
+
+export type Tuple = {
+	key: string,
+	value: string,
+};
 
 module.exports = {};
 
-module.exports.confirm = async function( values: any, message: string ): Promise<boolean> {
+module.exports.confirm = async function( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( m( values ) );
 	return promptly.confirm( message );
 };
 
-function m( values: any ): string {
+function m( values: Array<Tuple> ): string {
 	const lines = [];
 
 	lines.push( '===================================' );
-	for ( const k in values ) {
-		let v = values[ k ];
+	for ( const i of values ) {
+		let v = i.value;
 
-		switch ( k ) {
-			case 'Environment':
+		switch ( i.key.toLowerCase() ) {
+			case 'environment':
 				if ( 'production' === v.toLowerCase() ) {
-					v = v.toUpperCase().red;
+					v = colors.red( v.toUpperCase() );
 				} else {
-					v = v.toLowerCase().blue;
+					v = colors.blue( v.toLowerCase() );
 				}
 				break;
 		}
 
-		lines.push( `+ ${ k }: ${ v }` );
+		lines.push( `+ ${ i.key }: ${ v }` );
 	}
 	lines.push( '===================================' );
 
