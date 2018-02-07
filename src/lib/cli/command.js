@@ -47,12 +47,35 @@ args.argv = async function( argv, cb ): Promise<any> {
 	// Set the site in options.app
 	if ( _opts.appContext ) {
 		if ( ! options.app ) {
-			const apps = await repo();
+			let apps = await repo();
 
 			if ( ! apps || ! apps.apps || ! apps.apps.length ) {
-				// TODO
-				console.log( 'shrug emoji' );
-				return {};
+				apps = await app.apps();
+
+				if ( ! apps ) {
+					console.log( "Couldn't find any apps" );
+					return {};
+				}
+
+				const a = await inquirer.prompt( {
+					type: 'list',
+					name: 'app',
+					message: 'Which site?',
+					pageSize: 10,
+					choices: apps.map( cur => {
+						return {
+							name: cur.name,
+							value: cur,
+						};
+					} ),
+				} );
+
+				if ( ! a || ! a.app || ! a.app.id ) {
+					console.log( `App ${ colors.blue( a.app.name ) } does not exist` );
+					return {};
+				}
+
+				options.app = a.app;
 			} else if ( apps.apps.length === 1 ) {
 				options.app = apps.apps.pop();
 			} else if ( apps.apps.length > 1 ) {
