@@ -1,5 +1,4 @@
-module.exports = {};
-
+const e = {};
 if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined' ) {
 	// node
 
@@ -8,15 +7,15 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 
 		const keytar = require( 'keytar' );
 
-		module.exports.setPassword = function( service, password ) {
+		e.setPassword = async function( service: string, password: string ): Promise<boolean> {
 			return keytar.setPassword( service, service, password );
 		};
 
-		module.exports.getPassword = function( service ) {
+		e.getPassword = async function( service: string ): Promise<string> {
 			return keytar.getPassword( service, service );
 		};
 
-		module.exports.deletePassword = function( service ) {
+		e.deletePassword = async function( service: string ): Promise<boolean> {
 			return keytar.deletePassword( service, service );
 		};
 	} catch ( _ ) {
@@ -47,30 +46,38 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 			throw 'Invalid permissions on access token file: ' + file;
 		}
 
-		module.exports.setPassword = function( service, password ) {
-			return fs.writeFileSync( file, password );
+		e.setPassword = async function( service: string, password: string ): Promise<boolean> {
+			return new Promise( resolve => {
+				fs.writeFile( file, password, err => resolve( ! err ) );
+			} );
 		};
 
-		module.exports.getPassword = function( service ) {
-			return fs.readFileSync( file, 'utf8' );
+		e.getPassword = async function( service: string ): Promise<string> {
+			return new Promise( resolve => {
+				fs.readFile( file, 'utf8', ( err, password ) => resolve( password ) );
+			} );
 		};
 
-		module.exports.deletePassword = function( service ) {
-			return fs.unlinkSync( file );
+		e.deletePassword = async function( service: string ): Promise<boolean> {
+			return new Promise( resolve => {
+				fs.unlink( file, err => resolve( ! err ) );
+			} );
 		};
 	}
 } else {
 	// browser
 
-	module.exports.setPassword = function( service, password ) {
+	e.setPassword = async function( service: string, password: string ): Promise<boolean> {
 		return window.localStorage.setItem( service, password );
 	};
 
-	module.exports.getPassword = function( service ) {
+	e.getPassword = async function( service: string ): Promise<string> {
 		return window.localStorage.getItem( service );
 	};
 
-	module.exports.deletePassword = function( service ) {
+	e.deletePassword = async function( service: string ): Promise<boolean> {
 		return window.localStorage.removeItem( service );
 	};
 }
+
+module.exports = e;

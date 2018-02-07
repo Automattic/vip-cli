@@ -1,5 +1,11 @@
+// @flow
 const args = require( 'args' );
-const colors = require( 'colors' );
+require( 'colors' );
+
+/**
+ * internal dependencies
+ */
+import type { Tuple } from './prompt';
 
 // ours
 const API = require( '../api' );
@@ -9,7 +15,7 @@ const prompt = require( './prompt' );
 
 let _opts = {};
 
-args.argv = async function( argv, cb ) {
+args.argv = async function( argv, cb ): Promise<any> {
 	const options = this.parse( argv );
 
 	// If there's a sub-command, run that instead
@@ -19,19 +25,22 @@ args.argv = async function( argv, cb ) {
 
 	// Show help if no args passed
 	if ( this.details.commands.length > 1 && ! this.sub.length ) {
-		return this.showHelp();
+		this.showHelp();
+		return {};
 	}
 
 	// Show help if required arg is missing
 	if ( _opts.requiredArgs > this.sub.length ) {
-		return this.showHelp();
+		this.showHelp();
+		return {};
 	}
 
 	// Show help if subcommand is invalid
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
 	if ( this.sub[ _opts.requiredArgs ] &&
 		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
-		return this.showHelp();
+		this.showHelp();
+		return {};
 	}
 
 	const api = await API();
@@ -44,7 +53,8 @@ args.argv = async function( argv, cb ) {
 			const apps = await repo();
 
 			if ( ! apps || ! apps.apps || apps.apps.length !== 1 ) {
-				return console.log( 'Please specify the app with --app' );
+				console.log( 'Please specify the app with --app' );
+				return {};
 			}
 
 			app = apps.apps.pop();
@@ -58,7 +68,8 @@ args.argv = async function( argv, cb ) {
 				.catch( err => console.log( err ) );
 
 			if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
-				return console.log( `App ${ app.blue } does not exist` );
+				console.log( `App ${ app.blue } does not exist` );
+				return {};
 			}
 
 			app = res.data.apps[ 0 ];
@@ -72,7 +83,8 @@ args.argv = async function( argv, cb ) {
 				.catch( err => console.log( err ) );
 
 			if ( ! res || ! res.data || ! res.data.app ) {
-				return console.log( `App ${ app.toString().blue } does not exist` );
+				console.log( `App ${ app.toString().blue } does not exist` );
+				return {};
 			}
 
 			app = res.data.app;
@@ -83,13 +95,14 @@ args.argv = async function( argv, cb ) {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info = {
-			App: options.app.name,
-			Environment: 'production',
-		};
+		const info: Array<Tuple> = [
+			{ key: 'app', value: options.app.name },
+			{ key: 'environment', value: 'production' }
+		];
+
 		const yes = await prompt.confirm( info, 'Are you sure?' );
 		if ( ! yes ) {
-			return;
+			return {};
 		}
 	}
 
@@ -97,14 +110,15 @@ args.argv = async function( argv, cb ) {
 		const res = await cb( this.sub, options );
 
 		if ( _opts.format && res ) {
-			return console.log( format( res, options.format ) );
+			console.log( format( res, options.format ) );
+			return {};
 		}
 	}
 
 	return options;
 };
 
-module.exports = function( opts ) {
+module.exports = function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
 		format: false,

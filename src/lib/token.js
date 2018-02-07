@@ -1,3 +1,4 @@
+// @flow
 const jwtDecode = require( 'jwt-decode' );
 
 // ours
@@ -7,7 +8,16 @@ const keychain = require( './keychain' );
 const SERVICE = 'vip-go-cli';
 
 class Token {
-	constructor( token ) {
+	raw: string;
+	id: number;
+	iat: Date;
+	exp: Date;
+
+	constructor( token: string ): void {
+		if ( ! token.length ) {
+			return;
+		}
+
 		const t = jwtDecode( token );
 		this.raw = token;
 		this.id = t.id;
@@ -15,32 +25,28 @@ class Token {
 		this.exp = new Date( t.exp * 1000 );
 	}
 
-	valid() {
+	valid(): boolean {
 		const now = new Date();
 		return now > this.iat && now < this.exp;
 	}
 
-	expired() {
+	expired(): boolean {
 		const now = new Date();
 		return now > this.exp;
+	}
+
+	static async set( token: string ): Promise<boolean> {
+		return keychain.setPassword( SERVICE, token );
+	}
+
+	static async get(): Promise<Token> {
+		const token = await keychain.getPassword( SERVICE );
+		return new Token( token );
+	}
+
+	static async purge(): Promise<boolean> {
+		return keychain.deletePassword( SERVICE );
 	}
 }
 
 module.exports = Token;
-
-module.exports.set = function( token ) {
-	return keychain.setPassword( SERVICE, token );
-};
-
-module.exports.get = async function() {
-	const token = await keychain.getPassword( SERVICE );
-	try {
-		return new Token( token );
-	} catch ( e ) {
-		return null;
-	}
-};
-
-module.exports.purge = async function() {
-	keychain.deletePassword( SERVICE );
-};

@@ -1,3 +1,4 @@
+// @flow
 const fs = require( 'fs' );
 const path = require( 'path' );
 const ini = require( 'ini' );
@@ -5,11 +6,11 @@ const ini = require( 'ini' );
 // ours
 const API = require( '../api' );
 
-module.exports = async function() {
+module.exports = async function(): Promise<any> {
 	const sourceRepo = await getRepoFromGitConfig();
 
-	if ( ! sourceRepo ) {
-		return null;
+	if ( ! sourceRepo.length ) {
+		return {};
 	}
 
 	const api = await API();
@@ -18,17 +19,17 @@ module.exports = async function() {
 		.catch( err => console.log( err ) );
 
 	if ( ! repo || ! repo.data || ! repo.data.repo ) {
-		return null;
+		return {};
 	}
 
 	return repo.data.repo;
 };
 
-async function getRepoFromGitConfig() {
+async function getRepoFromGitConfig(): Promise<string> {
 	const file = await find();
 
-	if ( ! file ) {
-		return null;
+	if ( ! file.length ) {
+		return '';
 	}
 
 	const config = ini.parse( fs.readFileSync( file, 'utf-8' ) );
@@ -41,7 +42,7 @@ async function getRepoFromGitConfig() {
 	return url;
 }
 
-async function find( dir ) {
+async function find( dir ): Promise<string> {
 	dir = dir || process.cwd();
 
 	const test = dir + '/.git/config';
@@ -52,7 +53,7 @@ async function find( dir ) {
 	// Bail if we went all the way and didn't find it
 	const directory = path.parse( dir );
 	if ( directory.dir === directory.root ) {
-		return null;
+		return '';
 	}
 
 	// cd ..
@@ -62,8 +63,8 @@ async function find( dir ) {
 	return find( up.join( path.sep ) );
 }
 
-async function exists( file ) {
+async function exists( file ): Promise<boolean> {
 	return new Promise( resolve => {
-		fs.access( file, err => resolve( ! err ) );
+		fs.access( file, fs.constants.F_OK, err => resolve( ! err ) );
 	} );
 }

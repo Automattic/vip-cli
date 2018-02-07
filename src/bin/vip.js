@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @flow
 
 const promptly = require( 'promptly' );
 

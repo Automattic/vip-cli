@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @flow
 
 // ours
 const args = require( '../lib/cli/command' );
