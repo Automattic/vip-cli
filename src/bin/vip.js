@@ -4,6 +4,7 @@
 const promptly = require( 'promptly' );
 
 // ours
+const _args = require( 'args' );
 const args = require( '../lib/cli/command' );
 const Token = require( '../lib/token' );
 
@@ -17,7 +18,8 @@ const rootCmd = async function() {
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
-		args().argv( process.argv );
+		// Bypass helper function
+		_args.parse( process.argv );
 
 		const t = await promptly.password( 'Access Token:' );
 
