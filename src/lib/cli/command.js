@@ -70,6 +70,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					name: 'app',
 					message: 'Which app?',
 					pageSize: 10,
+					prefix: '',
 					choices: res.data.apps.map( cur => {
 						return {
 							name: cur.name,
@@ -92,6 +93,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					name: 'app',
 					message: 'Which app?',
 					pageSize: 10,
+					prefix: '',
 					choices: apps.apps.map( cur => {
 						return {
 							name: cur.name,
@@ -154,6 +156,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				name: 'env',
 				message: 'Which environment?',
 				pageSize: 10,
+				prefix: '',
 				choices: options.app.environments.map( cur => {
 					return {
 						name: cur.name,

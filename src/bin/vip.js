@@ -25,6 +25,7 @@ const rootCmd = async function() {
 			type: 'password',
 			name: 'token',
 			message: 'Access Token:',
+			prefix: '',
 		} );
 
 		t = t.token;

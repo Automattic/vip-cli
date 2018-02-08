@@ -16,6 +16,7 @@ module.exports.confirm = async function( values: Array<Tuple>, message: string )
 		type: 'confirm',
 		name: 'confirm',
 		message: 'Are you sure?',
+		prefix: '',
 	} );
 
 	return c.confirm;
