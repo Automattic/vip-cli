@@ -6,7 +6,5 @@ const args = require( '../lib/cli/command' );
 
 args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
-		if ( opts.app ) {
-			console.log( opts.app );
-		}
+		console.log( opts.app );
 	} );
