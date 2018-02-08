@@ -1,22 +1,20 @@
-// @flow
-
 const keytar = require( 'keytar' );
 
 /**
  * internal dependencies
  */
-import type { Keychain } from './keychain';
+const Keychain = require( './keychain' );
 
 module.exports = class Secure implements Keychain {
-	getPassword( service: string ): Promise<string> {
+	getPassword( service ) {
 		return keytar.getPassword( service, service );
 	}
 
-	setPassword( service: string, password: string ): Promise<boolean> {
+	setPassword( service, password ) {
 		return keytar.setPassword( service, service, password );
 	}
 
-	deletePassword( service: string ): Promise<boolean> {
+	deletePassword( service ) {
 		return keytar.deletePassword( service, service );
 	}
 };
