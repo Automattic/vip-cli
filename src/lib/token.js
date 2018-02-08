@@ -14,7 +14,7 @@ class Token {
 	exp: Date;
 
 	constructor( token: string ): void {
-		if ( ! token.length ) {
+		if ( ! token || ! token.length ) {
 			return;
 		}
 
