@@ -109,10 +109,19 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			options.app = a;
 		}
+
+		if ( _opts.childEnvContext ) {
+			options.app.environments = options.app.environments.filter( cur => cur.name.toLowerCase() !== 'production' );
+		}
 	}
 
-	if ( _opts.envContext && options.app ) {
+	if ( ( _opts.envContext || _opts.childEnvContext ) && options.app ) {
 		if ( options.env ) {
+			if ( _opts.childEnvContext && options.env.toLowerCase() === 'production' ) {
+				console.log( 'Environment production is not allowed for this command' );
+				return {};
+			}
+
 			const env = options.app.environments.find( cur => cur.name === options.env );
 
 			if ( ! env ) {
@@ -122,7 +131,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			options.env = env;
 		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
-			console.log( `Could not find any environments for ${ colors.blue( options.app.name ) }` );
+			if ( _opts.childEnvContext ) {
+				console.log( `Could not find any child environments for ${ colors.blue( options.app.name ) }` );
+			} else {
+				console.log( `Could not find any environments for ${ colors.blue( options.app.name ) }` );
+			}
+
 			return {};
 		} else if ( options.app.environments.length === 1 ) {
 			options.env = options.app.environments.pop();
@@ -182,6 +196,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 module.exports = function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
+		childEnvContext: false,
 		envContext: false,
 		format: false,
 		requireConfirm: false,
@@ -194,7 +209,7 @@ module.exports = function( opts: any ): args {
 		a.option( 'app', 'Specify the app' );
 	}
 
-	if ( _opts.appContext || _opts.requireConfirm ) {
+	if ( _opts.envContext || _opts.childEnvContext ) {
 		a.option( 'env', 'Specify the environment' );
 	}
 
