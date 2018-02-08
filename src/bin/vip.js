@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // @flow
 
-const promptly = require( 'promptly' );
+const inquirer = require( 'inquirer' );
 
 // ours
 const _args = require( 'args' );
@@ -21,7 +21,13 @@ const rootCmd = async function() {
 		// Bypass helper function
 		_args.parse( process.argv );
 
-		const t = await promptly.password( 'Access Token:' );
+		let t = await inquirer.prompt( {
+			type: 'password',
+			name: 'token',
+			message: 'Access Token:',
+		} );
+
+		t = t.token;
 
 		try {
 			token = new Token( t );

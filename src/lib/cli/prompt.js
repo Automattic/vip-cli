@@ -1,5 +1,5 @@
 // @flow
-const promptly = require( 'promptly' );
+const inquirer = require( 'inquirer' );
 const colors = require( 'colors' );
 
 export type Tuple = {
@@ -11,7 +11,14 @@ module.exports = {};
 
 module.exports.confirm = async function( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( m( values ) );
-	return promptly.confirm( message );
+
+	const c = await inquirer.prompt( {
+		type: 'confirm',
+		name: 'confirm',
+		message: 'Are you sure?',
+	} );
+
+	return c.confirm;
 };
 
 function m( values: Array<Tuple> ): string {
