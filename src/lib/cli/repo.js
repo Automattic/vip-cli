@@ -3,31 +3,7 @@ const fs = require( 'fs' );
 const path = require( 'path' );
 const ini = require( 'ini' );
 
-// ours
-const API = require( '../api' );
-
-module.exports = async function(): Promise<any> {
-	const sourceRepo = await getRepoFromGitConfig();
-
-	if ( ! sourceRepo.length ) {
-		return {};
-	}
-
-	const api = await API();
-	const repo = await api
-		.query( { query: `{repo(name:"${ sourceRepo }"){
-			name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
-		}` } )
-		.catch( err => console.log( err ) );
-
-	if ( ! repo || ! repo.data || ! repo.data.repo ) {
-		return {};
-	}
-
-	return repo.data.repo;
-};
-
-async function getRepoFromGitConfig(): Promise<string> {
+module.exports = async function getRepoFromGitConfig(): Promise<string> {
 	const file = await find();
 
 	if ( ! file.length ) {
@@ -42,7 +18,7 @@ async function getRepoFromGitConfig(): Promise<string> {
 	url = url.replace( 'git@github.com:', '' );
 
 	return url;
-}
+};
 
 async function find( dir ): Promise<string> {
 	dir = dir || process.cwd();

@@ -11,7 +11,7 @@ import type { Tuple } from './prompt';
 // ours
 const API = require( '../api' );
 const app = require( '../api/app' );
-const repo = require( './repo' );
+const Repo = require( './repo' );
 const format = require( './format' );
 const prompt = require( './prompt' );
 
@@ -46,13 +46,22 @@ args.argv = async function( argv, cb ): Promise<any> {
 	}
 
 	// Set the site in options.app
+	let res;
 	if ( _opts.appContext ) {
 		if ( ! options.app ) {
-			const apps = await repo();
+			const repo = await Repo();
+			console.log( repo );
 
-			if ( ! apps || ! apps.apps || ! apps.apps.length ) {
-				const api = await API();
-				const res = await api
+			const api = await API();
+			res = await api
+				.query( { query: `{repo(name:"${ repo }"){
+					name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
+				}` } )
+				.catch( err => console.log( err ) );
+
+			const apps = res.data.repo.apps;
+			if ( ! apps || ! apps || ! apps.length ) {
+				res = await api
 					.query( {
 						query: `{apps{
 							id,name,environments{id,name,defaultDomain,branch,datacenter}
@@ -85,16 +94,16 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 
 				options.app = a.app;
-			} else if ( apps.apps.length === 1 ) {
-				options.app = apps.apps.pop();
-			} else if ( apps.apps.length > 1 ) {
+			} else if ( apps.length === 1 ) {
+				options.app = apps.pop();
+			} else if ( apps.length > 1 ) {
 				const a = await inquirer.prompt( {
 					type: 'list',
 					name: 'app',
 					message: 'Which app?',
 					pageSize: 10,
 					prefix: '',
-					choices: apps.apps.map( cur => {
+					choices: apps.map( cur => {
 						return {
 							name: cur.name,
 							value: cur,
@@ -193,7 +202,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	}
 
 	if ( cb ) {
-		const res = await cb( this.sub, options );
+		res = await cb( this.sub, options );
 
 		if ( _opts.format && res ) {
 			console.log( format( res, options.format ) );
