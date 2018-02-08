@@ -15,7 +15,9 @@ module.exports = async function(): Promise<any> {
 
 	const api = await API();
 	const repo = await api
-		.query( { query: `{repo(name:"${ sourceRepo }"){name,apps{id,name}}}` } )
+		.query( { query: `{repo(name:"${ sourceRepo }"){
+			name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
+		}` } )
 		.catch( err => console.log( err ) );
 
 	if ( ! repo || ! repo.data || ! repo.data.repo ) {
