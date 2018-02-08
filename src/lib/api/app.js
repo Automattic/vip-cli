@@ -34,21 +34,3 @@ module.exports = async function( app: string | number ): Promise<any> {
 
 	return res.data.app;
 };
-
-module.exports.apps = async function(): Promise<any> {
-	const api = await API();
-
-	const res = await api
-		.query( {
-			query: `{apps{
-				id,name,environments{id,name,defaultDomain,branch,datacenter}
-			}}`
-		} )
-		.catch( err => console.log( err ) );
-
-	if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
-		return {};
-	}
-
-	return res.data.apps;
-};

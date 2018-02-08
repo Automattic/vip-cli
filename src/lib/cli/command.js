@@ -9,6 +9,7 @@ const colors = require( 'colors' );
 import type { Tuple } from './prompt';
 
 // ours
+const API = require( '../api' );
 const app = require( '../api/app' );
 const repo = require( './repo' );
 const format = require( './format' );
@@ -47,12 +48,19 @@ args.argv = async function( argv, cb ): Promise<any> {
 	// Set the site in options.app
 	if ( _opts.appContext ) {
 		if ( ! options.app ) {
-			let apps = await repo();
+			const apps = await repo();
 
 			if ( ! apps || ! apps.apps || ! apps.apps.length ) {
-				apps = await app.apps();
+				const api = await API();
+				const res = await api
+					.query( {
+						query: `{apps{
+							id,name,environments{id,name,defaultDomain,branch,datacenter}
+						}}`
+					} )
+					.catch( err => console.log( err ) );
 
-				if ( ! apps ) {
+				if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
 					console.log( "Couldn't find any apps" );
 					return {};
 				}
@@ -62,7 +70,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					name: 'app',
 					message: 'Which app?',
 					pageSize: 10,
-					choices: apps.map( cur => {
+					choices: res.data.apps.map( cur => {
 						return {
 							name: cur.name,
 							value: cur,
