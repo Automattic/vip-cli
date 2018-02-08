@@ -1,23 +1,13 @@
-const e = {};
+// @flow
+
+let e = {};
 if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined' ) {
 	// node
 
 	try {
 		// secure
-
-		const keytar = require( 'keytar' );
-
-		e.setPassword = async function( service: string, password: string ): Promise<boolean> {
-			return keytar.setPassword( service, service, password );
-		};
-
-		e.getPassword = async function( service: string ): Promise<string> {
-			return keytar.getPassword( service, service );
-		};
-
-		e.deletePassword = async function( service: string ): Promise<boolean> {
-			return keytar.deletePassword( service, service );
-		};
+		const Keychain = require( './keychain/secure' );
+		e = new Keychain();
 	} catch ( _ ) {
 		// insecure fallback
 
@@ -46,38 +36,12 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 			throw 'Invalid permissions on access token file: ' + file;
 		}
 
-		e.setPassword = async function( service: string, password: string ): Promise<boolean> {
-			return new Promise( resolve => {
-				fs.writeFile( file, password, err => resolve( ! err ) );
-			} );
-		};
-
-		e.getPassword = async function( service: string ): Promise<string> {
-			return new Promise( resolve => {
-				fs.readFile( file, 'utf8', ( err, password ) => resolve( password ) );
-			} );
-		};
-
-		e.deletePassword = async function( service: string ): Promise<boolean> {
-			return new Promise( resolve => {
-				fs.unlink( file, err => resolve( ! err ) );
-			} );
-		};
+		const Keychain = require( './keychain/insecure' );
+		e = new Keychain( file );
 	}
 } else {
-	// browser
-
-	e.setPassword = async function( service: string, password: string ): Promise<boolean> {
-		return window.localStorage.setItem( service, password );
-	};
-
-	e.getPassword = async function( service: string ): Promise<string> {
-		return window.localStorage.getItem( service );
-	};
-
-	e.deletePassword = async function( service: string ): Promise<boolean> {
-		return window.localStorage.removeItem( service );
-	};
+	const Keychain = require( './keychain/browser' );
+	e = new Keychain();
 }
 
 module.exports = e;
