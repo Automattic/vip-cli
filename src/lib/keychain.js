@@ -14,7 +14,7 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 		const fs = require( 'fs' );
 		const os = require( 'os' );
 
-		// read-only perms
+		// only current user has read-write access
 		const rw = 0o600;
 
 		let stat;
