@@ -28,7 +28,7 @@ args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 
 		setInterval( () => {
 			const marks = {
-				pending: colors.dim( '○' ),
+				pending: '○',
 				running: colors.blue( sprite.next().value ),
 				done: colors.green( '✓' ),
 				error: colors.red( '✕' ),
@@ -40,7 +40,7 @@ args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 				'',
 				`${ marks.done } Prepare environment`,
 				`${ marks.running } Search-replace URLs`,
-				`${ marks.pending } Restore environment`,
+				colors.dim( `${ marks.pending } Restore environment` ),
 				'',
 				'Press ^C to hide progress. Data sync will continue in the background.',
 			];
