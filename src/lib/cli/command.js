@@ -12,7 +12,7 @@ import type { Tuple } from './prompt';
 const API = require( '../api' );
 const app = require( '../api/app' );
 const Repo = require( './repo' );
-const format = require( './format' );
+const { formatData } = require( './format' );
 const prompt = require( './prompt' );
 
 let _opts = {};
@@ -205,7 +205,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		res = await cb( this.sub, options );
 
 		if ( _opts.format && res ) {
-			console.log( format( res, options.format ) );
+			console.log( formatData( res, options.format ) );
 			return {};
 		}
 	}

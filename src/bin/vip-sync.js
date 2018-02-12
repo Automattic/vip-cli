@@ -6,6 +6,7 @@ const log = require( 'single-line-log' ).stdout;
 
 // ours
 const args = require( '../lib/cli/command' );
+const { formatEnvironment } = require( '../lib/cli/format' );
 
 args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
@@ -27,9 +28,9 @@ args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 		};
 
 		console.log();
-		console.log( ` Syncing: ${ colors.blue( opts.app.name ) }` );
-		console.log( `    From: ${ colors.yellow( 'production' ) }` );
-		console.log( `      To: ${ colors.yellow( opts.env.name ) }` );
+		console.log( ` Syncing: ${ colors.yellow( opts.app.name ) }` );
+		console.log( `    From: ${ formatEnvironment( 'production' ) }` );
+		console.log( `      To: ${ formatEnvironment( opts.env.name ) }` );
 		console.log();
 		const progress = setInterval( () => {
 			const marks = {

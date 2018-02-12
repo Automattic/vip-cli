@@ -1,6 +1,8 @@
 // @flow
 const inquirer = require( 'inquirer' );
-const colors = require( 'colors' );
+
+// ours
+const { formatEnvironment } = require( './format' );
 
 export type Tuple = {
 	key: string,
@@ -9,7 +11,7 @@ export type Tuple = {
 
 module.exports = {};
 
-module.exports.confirm = async function( values: Array<Tuple>, message: string ): Promise<boolean> {
+module.exports.confirm = async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( m( values ) );
 
 	const c = await inquirer.prompt( {
@@ -31,11 +33,7 @@ function m( values: Array<Tuple> ): string {
 
 		switch ( i.key.toLowerCase() ) {
 			case 'environment':
-				if ( 'production' === v.toLowerCase() ) {
-					v = colors.red( v.toUpperCase() );
-				} else {
-					v = colors.blue( v.toLowerCase() );
-				}
+				v = formatEnvironment( v );
 				break;
 		}
 
