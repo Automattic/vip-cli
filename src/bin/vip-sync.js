@@ -26,7 +26,12 @@ args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			},
 		};
 
-		setInterval( () => {
+		console.log();
+		console.log( ` Syncing: ${ colors.blue( opts.app.name ) }` );
+		console.log( `    From: ${ colors.yellow( 'production' ) }` );
+		console.log( `      To: ${ colors.yellow( opts.env.name ) }` );
+		console.log();
+		const progress = setInterval( () => {
 			const marks = {
 				pending: '○',
 				running: colors.blue( sprite.next().value ),
@@ -35,15 +40,20 @@ args( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			};
 
 			const out = [
+				` ${ marks.done } Prepare environment`,
+				` ${ marks.running } Search-replace URLs`,
+				colors.dim( ` ${ marks.pending } Restore environment` ),
 				'',
-				`Syncing: ${ colors.blue( opts.app.name ) } (${ colors.yellow( 'production' ) }) to ${ colors.blue( opts.env.defaultDomain ) } (${ colors.yellow( opts.env.name ) })`,
-				'',
-				`${ marks.done } Prepare environment`,
-				`${ marks.running } Search-replace URLs`,
-				colors.dim( `${ marks.pending } Restore environment` ),
-				'',
-				'Press ^C to hide progress. Data sync will continue in the background.',
 			];
+
+			const done = false;
+			if ( done ) {
+				clearInterval( progress );
+
+				out.push( `${ marks.done } Data Sync is finished for https://vip-test.go-vip.co` );
+			} else {
+				out.push( `${ marks.running } Press ^C to hide progress. Data sync will continue in the background.` );
+			}
 
 			log( out.join( '\n' ) );
 		}, 100 );
