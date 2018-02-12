@@ -1,7 +1,7 @@
-const api = require( 'dist/lib/api' );
-const token = require( 'dist/lib/token' );
+const API = require( './dist/lib/api' );
+const Token = require( './dist/lib/token' );
 
 module.exports = {
-	api,
-	token,
+	API,
+	Token,
 };
