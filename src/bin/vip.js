@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 // @flow
 
+const args = require( 'args' );
 const inquirer = require( 'inquirer' );
 
 // ours
-const _args = require( 'args' );
-const args = require( '../lib/cli/command' );
+const command = require( '../lib/cli/command' );
 const Token = require( '../lib/token' );
 
 const rootCmd = async function() {
 	let token = await Token.get();
 
 	if ( token && token.valid() ) {
-		args()
+		command()
 			.command( 'logout', 'Logout from your current session', () => Token.purge() )
 			.command( 'app', 'List and modify your VIP Go apps' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
 		// Bypass helper function
-		_args.parse( process.argv );
+		args.parse( process.argv );
 
 		let t = await inquirer.prompt( {
 			type: 'password',

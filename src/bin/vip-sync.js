@@ -5,10 +5,10 @@ const colors = require( 'colors' );
 const log = require( 'single-line-log' ).stdout;
 
 // ours
-const args = require( '../lib/cli/command' );
+const command = require( '../lib/cli/command' );
 const { formatEnvironment } = require( '../lib/cli/format' );
 
-args( { appContext: true, childEnvContext: true, requireConfirm: true } )
+command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const sprite = {
 			i: 0,
