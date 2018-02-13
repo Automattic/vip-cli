@@ -3,7 +3,9 @@
 type Options = {
 };
 
-module.exports = function( data: Array<any>, format: string, opts: ?Options ): string {
+module.exports = {};
+
+module.exports.formatData = function( data: Array<any>, format: string, opts: ?Options ): string {
 	if ( ! data || ! data.length ) {
 		return '';
 	}
@@ -22,6 +24,16 @@ module.exports = function( data: Array<any>, format: string, opts: ?Options ): s
 		default:
 			return table( data, opts );
 	}
+};
+
+module.exports.formatEnvironment = function( environment: string ): string {
+	const colors = require( 'colors' );
+
+	if ( 'production' === environment.toLowerCase() ) {
+		return colors.red( environment.toUpperCase() );
+	}
+
+	return colors.blue( environment.toLowerCase() );
 };
 
 function ids( data: Array<any>, opts: ?Options ): string {
