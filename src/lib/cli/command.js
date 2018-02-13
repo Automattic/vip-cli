@@ -2,6 +2,7 @@
 const args = require( 'args' );
 const inquirer = require( 'inquirer' );
 const colors = require( 'colors' );
+const gql = require( 'graphql-tag' );
 
 /**
  * internal dependencies
@@ -60,21 +61,30 @@ args.argv = async function( argv, cb ): Promise<any> {
 			console.log( repo );
 
 			const api = await API();
-			res = await api
-				.query( { query: `{repo(name:"${ repo }"){
-					name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
-				}` } )
-				.catch( err => console.log( err ) );
+
+			try {
+				res = await api
+					.query( { query: gql`{repo(name:"${ repo }"){
+						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
+					}` } );
+			} catch ( err ) {
+				console.log( err.toString() );
+				return;
+			}
 
 			const apps = res.data.repo.apps;
 			if ( ! apps || ! apps || ! apps.length ) {
-				res = await api
-					.query( {
-						query: `{apps{
-							id,name,environments{id,name,defaultDomain,branch,datacenter}
-						}}`
-					} )
-					.catch( err => console.log( err ) );
+				try {
+					res = await api
+						.query( {
+							query: gql`{apps{
+								id,name,environments{id,name,defaultDomain,branch,datacenter}
+							}}`
+						} );
+				} catch ( err ) {
+					console.log( err.toString() );
+					return;
+				}
 
 				if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
 					console.log( "Couldn't find any apps" );
@@ -100,9 +110,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 					return {};
 				}
 
-				options.app = a.app;
+				options.app = Object.assign( {}, a.app );
 			} else if ( apps.length === 1 ) {
-				options.app = apps.pop();
+				options.app = Object.assign( {}, apps.pop() );
 			} else if ( apps.length > 1 ) {
 				const a = await inquirer.prompt( {
 					type: 'list',
@@ -123,7 +133,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					return {};
 				}
 
-				options.app = a.app;
+				options.app = Object.assign( {}, a.app );
 			}
 		} else {
 			const a = await app( options.app );
@@ -133,7 +143,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return {};
 			}
 
-			options.app = a;
+			options.app = Object.assign( {}, a );
 		}
 
 		if ( _opts.childEnvContext ) {
@@ -212,6 +222,17 @@ args.argv = async function( argv, cb ): Promise<any> {
 		res = await cb( this.sub, options );
 
 		if ( _opts.format && res ) {
+			res = res.map( row => {
+				const out = Object.assign( {}, row );
+
+				if ( out.__typename ) {
+					// Apollo injects __typename
+					delete out.__typename;
+				}
+
+				return out;
+			} );
+
 			console.log( formatData( res, options.format ) );
 			return {};
 		}
