@@ -1,6 +1,8 @@
 // @flow
 require( 'isomorphic-fetch' );
-const FetchQL = require( 'fetchql' );
+const { ApolloClient } = require( 'apollo-client' );
+const { HttpLink } = require( 'apollo-link-http' );
+const { InMemoryCache } = require( 'apollo-cache-inmemory' );
 
 // ours
 const Token = require( './token' );
@@ -8,7 +10,7 @@ const Token = require( './token' );
 // Config
 const API_URL = process.env.API_URL || 'https://api.go-vip.co/graphql';
 
-module.exports = async function API(): Promise<FetchQL> {
+module.exports = async function API(): Promise<ApolloClient> {
 	const token = await Token.get();
 	const headers = {};
 
@@ -16,5 +18,8 @@ module.exports = async function API(): Promise<FetchQL> {
 		headers.Authorization = `Bearer ${ token.raw }`;
 	}
 
-	return new FetchQL( { url: API_URL, headers: headers } );
+	return new ApolloClient( {
+		link: new HttpLink( { uri: API_URL, headers: headers } ),
+		cache: new InMemoryCache(),
+	} );
 };

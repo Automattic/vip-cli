@@ -1,5 +1,7 @@
 // @flow
+const gql = require( 'graphql-tag' );
 
+// ours
 const API = require( '../api' );
 module.exports = async function( app: string | number ): Promise<any> {
 	const api = await API();
@@ -7,11 +9,11 @@ module.exports = async function( app: string | number ): Promise<any> {
 	if ( isNaN( parseInt( app ) ) ) {
 		const res = await api
 			.query( {
-				query: `{apps(limit:1,name:"${ app }"){
+				// $FlowFixMe
+				query: gql`{apps(limit:1,name:"${ app }"){
 					id,name,environments{id,name,defaultDomain,branch,datacenter}
 				}}`
-			} )
-			.catch( err => console.log( err ) );
+			} );
 
 		if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
 			return {};
@@ -22,11 +24,11 @@ module.exports = async function( app: string | number ): Promise<any> {
 
 	const res = await api
 		.query( {
-			query: `{app(id:${ app }){
+			// $FlowFixMe
+			query: gql`{app(id:${ app }){
 				id,name,environments{id,name,defaultDomain,branch,datacenter}
 			}}`
-		} )
-		.catch( err => console.log( err ) );
+		} );
 
 	if ( ! res || ! res.data || ! res.data.app ) {
 		return {};
