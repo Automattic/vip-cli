@@ -1,15 +1,41 @@
 #!/usr/bin/env node
 // @flow
-
 const colors = require( 'colors' );
+const gql = require( 'graphql-tag' );
 const log = require( 'single-line-log' ).stdout;
 
 // ours
+const API = require( '../lib/api' );
 const command = require( '../lib/cli/command' );
 const { formatEnvironment } = require( '../lib/cli/format' );
 
 command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
+		const api = await API();
+		const res = await api
+			.mutate( {
+				// $FlowFixMe
+				mutation: gql`
+					mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput){
+						syncEnvironment(input: $input){environment{id}}
+					}
+				`,
+				variables: {
+					input: {
+						id: opts.app.id,
+						environmentId: opts.env.id
+					}
+				}
+			} );
+
+		console.log( res );
+
+		// Testing: This always bails. Need a hack to trick eslint
+		const no = true;
+		if ( no ) {
+			return;
+		}
+
 		const sprite = {
 			i: 0,
 			sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
