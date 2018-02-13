@@ -64,6 +64,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			try {
 				res = await api
+					// $FlowFixMe
 					.query( { query: gql`{repo(name:"${ repo }"){
 						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
 					}` } );
@@ -77,6 +78,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				try {
 					res = await api
 						.query( {
+							// $FlowFixMe
 							query: gql`{apps{
 								id,name,environments{id,name,defaultDomain,branch,datacenter}
 							}}`

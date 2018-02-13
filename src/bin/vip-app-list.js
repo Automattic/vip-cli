@@ -13,6 +13,7 @@ command( { format: true } )
 		let apps;
 		try {
 			apps = await api
+				// $FlowFixMe
 				.query( { query: gql`query Apps {apps(limit:10,page:1){id,name,repo,environments{id}}}` } );
 		} catch ( err ) {
 			console.log( err.toString() );

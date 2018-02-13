@@ -9,6 +9,7 @@ module.exports = async function( app: string | number ): Promise<any> {
 	if ( isNaN( parseInt( app ) ) ) {
 		const res = await api
 			.query( {
+				// $FlowFixMe
 				query: gql`{apps(limit:1,name:"${ app }"){
 					id,name,environments{id,name,defaultDomain,branch,datacenter}
 				}}`
@@ -23,6 +24,7 @@ module.exports = async function( app: string | number ): Promise<any> {
 
 	const res = await api
 		.query( {
+			// $FlowFixMe
 			query: gql`{app(id:${ app }){
 				id,name,environments{id,name,defaultDomain,branch,datacenter}
 			}}`
