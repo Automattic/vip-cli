@@ -15,8 +15,15 @@ const Repo = require( './repo' );
 const { formatData } = require( './format' );
 const prompt = require( './prompt' );
 
-let _opts = {};
+function uncaughtError( err ) {
+	console.log();
+	console.log( ' ', colors.red( '✕' ), ' Please contact VIP Support with the following error:' );
+	console.log( ' ', colors.dim( err.stack ) );
+}
+process.on( 'uncaughtException', uncaughtError );
+process.on( 'unhandledRejection', uncaughtError );
 
+let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
 	const options = this.parse( argv );
 
