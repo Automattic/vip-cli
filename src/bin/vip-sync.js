@@ -75,40 +75,49 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					} );
 			}
 
-			let percentage = 0;
-			if ( environment && environment.syncProgress ) {
-				percentage = environment.syncProgress.percentage;
-			}
-
 			const marks = {
 				pending: '○',
 				running: colors.blue( sprite.next().value ),
-				done: colors.green( '✓' ),
-				error: colors.red( '✕' ),
+				success: colors.green( '✓' ),
+				failed: colors.red( '✕' ),
+				unknown: colors.yellow( '✕' ),
 			};
 
-			const out = [
-				` progress: ${ percentage }%`,
-				'',
-				` ${ marks.done } Prepare environment`,
-				` ${ marks.running } Search-replace URLs`,
-				colors.dim( ` ${ marks.pending } Restore environment` ),
-				'',
-			];
+			const out = [];
+			const steps = environment.syncProgress.steps || [];
 
-			let done = false;
-			if ( environment ) {
-				done = environment.syncProgress &&
-					environment.syncProgress.status !== 'running';
-			}
+			steps.forEach( step => {
+				if ( step.status === 'pending' ) {
+					out.push( colors.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
+				} else {
+					out.push( ` ${ marks[ step.status ] } ${ step.name }` );
+				}
+			} );
 
-			if ( done ) {
-				clearInterval( progress );
+			out.push( '' );
 
-				out.push( `${ marks.done } Data Sync is finished for https://vip-test.go-vip.co` );
-				out.push( '' );
-			} else {
-				out.push( `${ marks.running } Press ^C to hide progress. Data sync will continue in the background.` );
+			switch ( environment.syncProgress.status ) {
+				case 'running':
+					out.push( `${ marks.running } Press ^C to hide progress. Data sync will continue in the background.` );
+					break;
+
+				case 'success':
+					out.push( `${ marks.success } Data Sync is finished for https://vip-test.go-vip.co` );
+					out.push( '' );
+					clearInterval( progress );
+					break;
+
+				case 'failed':
+					out.push( `${ marks.failed } Data Sync is finished for https://vip-test.go-vip.co` );
+					out.push( '' );
+					clearInterval( progress );
+					break;
+
+				default:
+					out.push( `${ marks.unknown } Unknown status: Please contact VIP support for more information` );
+					out.push( '' );
+					clearInterval( progress );
+					break;
 			}
 
 			log( out.join( '\n' ) );
