@@ -56,13 +56,17 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
 		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
 
-		let application, environment, i = 0;
+		let environment, i = 0;
 		const progress = setInterval( async () => {
 			if ( i++ % 10 === 0 ) {
 				// Query the API 1/10 of the time (every 1s)
 				// The rest of the iterations are just for moving the spinner
-				application = await app( opts.app.id );
-				environment = application.environments.find( env => env.id === opts.env.id );
+				app( opts.app.id )
+					.then( _app => {
+						environment = _app
+							.environments
+							.find( env => env.id === opts.env.id );
+					} );
 			}
 
 			let percentage = 0;
