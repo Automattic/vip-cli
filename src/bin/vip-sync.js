@@ -56,7 +56,12 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
 		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
 
-		let environment, i = 0;
+		const application = await app( opts.app.id );
+		let environment = application
+			.environments
+			.find( env => env.id === opts.env.id );
+
+		let i = 0;
 		const progress = setInterval( async () => {
 			if ( i++ % 10 === 0 ) {
 				// Query the API 1/10 of the time (every 1s)
@@ -69,10 +74,9 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					} );
 			}
 
-			let percentage = 0, status = '';
+			let percentage = 0;
 			if ( environment && environment.syncProgress ) {
 				percentage = environment.syncProgress.percentage;
-				status = environment.syncProgress.status;
 			}
 
 			const marks = {
@@ -83,7 +87,7 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			};
 
 			const out = [
-				` progress: ${ percentage }% (${ status })`,
+				` progress: ${ percentage }%`,
 				'',
 				` ${ marks.done } Prepare environment`,
 				` ${ marks.running } Search-replace URLs`,
