@@ -69,9 +69,10 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					} );
 			}
 
-			let percentage = 0;
-			if ( environment && environment.syncProgress && environment.syncProgress.percentage ) {
+			let percentage = 0, status = '';
+			if ( environment && environment.syncProgress ) {
 				percentage = environment.syncProgress.percentage;
+				status = environment.syncProgress.status;
 			}
 
 			const marks = {
@@ -82,7 +83,7 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			};
 
 			const out = [
-				` progress: ${ percentage }%`,
+				` progress: ${ percentage }% (${ status })`,
 				'',
 				` ${ marks.done } Prepare environment`,
 				` ${ marks.running } Search-replace URLs`,
@@ -90,11 +91,17 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 				'',
 			];
 
-			const done = false;
+			let done = false;
+			if ( environment ) {
+				done = environment.syncProgress &&
+					environment.syncProgress.status !== 'running';
+			}
+
 			if ( done ) {
 				clearInterval( progress );
 
 				out.push( `${ marks.done } Data Sync is finished for https://vip-test.go-vip.co` );
+				out.push( '' );
 			} else {
 				out.push( `${ marks.running } Press ^C to hide progress. Data sync will continue in the background.` );
 			}
