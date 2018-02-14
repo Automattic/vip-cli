@@ -11,7 +11,7 @@ module.exports = async function( app: string | number ): Promise<any> {
 			.query( {
 				// $FlowFixMe
 				query: gql`{apps(limit:1,name:"${ app }"){
-					id,name,environments{id,name,defaultDomain,branch,datacenter}
+					id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,percentage}}
 				}}`
 			} );
 
@@ -26,7 +26,7 @@ module.exports = async function( app: string | number ): Promise<any> {
 		.query( {
 			// $FlowFixMe
 			query: gql`{app(id:${ app }){
-				id,name,environments{id,name,defaultDomain,branch,datacenter}
+				id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,percentage}}
 			}}`
 		} );
 

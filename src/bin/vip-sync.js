@@ -6,34 +6,32 @@ const log = require( 'single-line-log' ).stdout;
 
 // ours
 const API = require( '../lib/api' );
+const app = require( '../lib/api/app' );
 const command = require( '../lib/cli/command' );
 const { formatEnvironment } = require( '../lib/cli/format' );
 
 command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
-		const res = await api
-			.mutate( {
-				// $FlowFixMe
-				mutation: gql`
-					mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput){
-						syncEnvironment(input: $input){environment{id}}
-					}
-				`,
-				variables: {
-					input: {
-						id: opts.app.id,
-						environmentId: opts.env.id
-					}
-				}
-			} );
 
-		console.log( res );
-
-		// Testing: This always bails. Need a hack to trick eslint
-		const no = true;
-		if ( no ) {
-			return;
+		try {
+			await api
+				.mutate( {
+					// $FlowFixMe
+					mutation: gql`
+						mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput){
+							syncEnvironment(input: $input){environment{id}}
+						}
+					`,
+					variables: {
+						input: {
+							id: opts.app.id,
+							environmentId: opts.env.id
+						}
+					}
+				} );
+		} catch ( e ) {
+			console.log( 'A data sync is already running' );
 		}
 
 		const sprite = {
@@ -54,11 +52,24 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 		};
 
 		console.log();
-		console.log( ` Syncing: ${ colors.yellow( opts.app.name ) }` );
-		console.log( `    From: ${ formatEnvironment( 'production' ) }` );
-		console.log( `      To: ${ formatEnvironment( opts.env.name ) }` );
-		console.log();
-		const progress = setInterval( () => {
+		console.log( `  syncing: ${ colors.yellow( opts.app.name ) }` );
+		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
+		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
+
+		let application, environment, i = 0;
+		const progress = setInterval( async () => {
+			if ( i++ % 10 === 0 ) {
+				// Query the API 1/10 of the time (every 1s)
+				// The rest of the iterations are just for moving the spinner
+				application = await app( opts.app.id );
+				environment = application.environments.find( env => env.id === opts.env.id );
+			}
+
+			let percentage = 0;
+			if ( environment && environment.syncProgress && environment.syncProgress.percentage ) {
+				percentage = environment.syncProgress.percentage;
+			}
+
 			const marks = {
 				pending: '○',
 				running: colors.blue( sprite.next().value ),
@@ -67,6 +78,8 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			};
 
 			const out = [
+				` progress: ${ percentage }%`,
+				'',
 				` ${ marks.done } Prepare environment`,
 				` ${ marks.running } Search-replace URLs`,
 				colors.dim( ` ${ marks.pending } Restore environment` ),

@@ -20,6 +20,7 @@ function uncaughtError( err ) {
 	console.log();
 	console.log( ' ', colors.red( '✕' ), ' Please contact VIP Support with the following error:' );
 	console.log( ' ', colors.dim( err.stack ) );
+	console.log( err );
 }
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
@@ -66,7 +67,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				res = await api
 					// $FlowFixMe
 					.query( { query: gql`{repo(name:"${ repo }"){
-						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter}}}
+						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,percentage}}}}
 					}` } );
 			} catch ( err ) {
 				console.log( err.toString() );
@@ -80,7 +81,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 						.query( {
 							// $FlowFixMe
 							query: gql`{apps{
-								id,name,environments{id,name,defaultDomain,branch,datacenter}
+								id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,percentage}}
 							}}`
 						} );
 				} catch ( err ) {
