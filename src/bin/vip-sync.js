@@ -31,7 +31,8 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					}
 				} );
 		} catch ( e ) {
-			console.log( 'A data sync is already running' );
+			console.log();
+			console.log( colors.yellow( 'Note:' ), 'A data sync is already running' );
 		}
 
 		const sprite = {
