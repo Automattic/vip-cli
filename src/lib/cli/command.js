@@ -67,7 +67,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				res = await api
 					// $FlowFixMe
 					.query( { query: gql`{repo(name:"${ repo }"){
-						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,percentage}}}}
+						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,steps{name,status}}}}
 					}` } );
 			} catch ( err ) {
 				console.log( err.toString() );
@@ -81,7 +81,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 						.query( {
 							// $FlowFixMe
 							query: gql`{apps{
-								id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,percentage}}
+								id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,steps{name,status}}}
 							}}`
 						} );
 				} catch ( err ) {

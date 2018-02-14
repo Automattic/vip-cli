@@ -86,6 +86,8 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			const out = [];
 			const steps = environment.syncProgress.steps || [];
 
+			out.push( '' );
+
 			steps.forEach( step => {
 				if ( step.status === 'pending' ) {
 					out.push( colors.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
@@ -101,20 +103,15 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					out.push( `${ marks.running } Press ^C to hide progress. Data sync will continue in the background.` );
 					break;
 
-				case 'success':
-					out.push( `${ marks.success } Data Sync is finished for https://vip-test.go-vip.co` );
-					out.push( '' );
-					clearInterval( progress );
-					break;
-
 				case 'failed':
 					out.push( `${ marks.failed } Data Sync is finished for https://vip-test.go-vip.co` );
 					out.push( '' );
 					clearInterval( progress );
 					break;
 
+				case 'success':
 				default:
-					out.push( `${ marks.unknown } Unknown status: Please contact VIP support for more information` );
+					out.push( `${ marks.success } Data Sync is finished for https://vip-test.go-vip.co` );
 					out.push( '' );
 					clearInterval( progress );
 					break;
