@@ -3,6 +3,7 @@ const args = require( 'args' );
 const inquirer = require( 'inquirer' );
 const colors = require( 'colors' );
 const gql = require( 'graphql-tag' );
+const updateNotifier = require( 'update-notifier' );
 
 /**
  * internal dependencies
@@ -15,6 +16,7 @@ const app = require( '../api/app' );
 const Repo = require( './repo' );
 const { formatData } = require( './format' );
 const prompt = require( './prompt' );
+const pkg = require( '../../../package.json' );
 
 function uncaughtError( err ) {
 	console.log();
@@ -33,6 +35,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
 		return {};
 	}
+
+	// Check for updates every day
+	updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
 
 	// Show help if no args passed
 	if ( this.details.commands.length > 1 && ! this.sub.length ) {
