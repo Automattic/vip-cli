@@ -2,8 +2,16 @@
 
 The VIP Go Javascript library & CLI 
 
-## Install
+## Getting started
+
+First, you'll need to ask VIP support for access to the dashboard at
+https://ui.go-vip.co.
+
+Then install the command from npm with:
 
 ```
 npm install -g @automattic/vip
 ```
+
+The first time you run `vip`, it will prompt you for an access token. For now,
+you can find your token in localStorage.
