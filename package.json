@@ -29,7 +29,7 @@
   },
   "main": "build/index.js",
   "bin": {
-    "vip": "build/bin/vip.js",
+    "goop": "build/bin/vip.js",
     "go-search-replace": "build/go-search-replace"
   },
   "goSearchReplace": {
