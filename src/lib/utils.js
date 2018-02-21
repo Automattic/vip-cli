@@ -56,12 +56,11 @@ export function setCredentials( credentials, callback ) {
 			var encoded = this.encrypt( credentials.accessToken, credentials.userId );
 			credentials.accessToken = encoded;
 
-			config.set( 'login', credentials, err => callback( err, credentials ) );
+			config.set( 'login', credentials, err => callback( err ) );
 		});
 }
 
 export function getCredentials( callback ) {
-	let self = this;
 	config.get( 'login', function( err, credentials ) {
 		if ( err ) {
 			return callback( 'Could not get credentials' );
@@ -80,21 +79,7 @@ export function getCredentials( callback ) {
 		}
 
 		credentials.accessToken = decoded;
-
-		// Update caps hourly
-		if ( ! credentials.updated || Date.now() - credentials.updated > 60 * 60 * 1000 ) {
-			return self.setCredentials({
-				userId: credentials.userId,
-				accessToken: credentials.accessToken,
-			}, ( err, refreshedCredentials ) => {
-				if ( err ) {
-					console.error( 'Failed to refresh auth credentials; please contact the Platform team and tell them about this error: ', err );
-				}
-				callback( err, refreshedCredentials );
-			});
-		}
-
-		callback( null, credentials );
+		return callback( null, credentials );
 	});
 }
 
