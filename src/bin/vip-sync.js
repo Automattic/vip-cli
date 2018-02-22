@@ -104,14 +104,14 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					break;
 
 				case 'failed':
-					out.push( `${ marks.failed } Data Sync is finished for https://vip-test.go-vip.co` );
+					out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
 					clearInterval( progress );
 					break;
 
 				case 'success':
 				default:
-					out.push( `${ marks.success } Data Sync is finished for https://vip-test.go-vip.co` );
+					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
 					clearInterval( progress );
 					break;
