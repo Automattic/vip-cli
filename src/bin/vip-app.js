@@ -4,8 +4,8 @@
 const colors = require( 'colors' );
 
 // ours
-const command = require( '../lib/cli/command' );
-const app = require( '../lib/api/app' );
+const command = require( 'lib/cli/command' );
+const app = require( 'lib/api/app' );
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip app <app>', 'Pass an app name or ID to get details about that app' )

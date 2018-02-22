@@ -5,8 +5,8 @@ const args = require( 'args' );
 const inquirer = require( 'inquirer' );
 
 // ours
-const command = require( '../lib/cli/command' );
-const Token = require( '../lib/token' );
+const command = require( 'lib/cli/command' );
+const Token = require( 'lib/token' );
 
 const rootCmd = async function() {
 	let token = await Token.get();

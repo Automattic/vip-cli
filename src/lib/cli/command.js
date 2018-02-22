@@ -11,12 +11,12 @@ const updateNotifier = require( 'update-notifier' );
 import type { Tuple } from './prompt';
 
 // ours
-const API = require( '../api' );
-const app = require( '../api/app' );
+const API = require( 'lib/api' );
+const app = require( 'lib/api/app' );
 const Repo = require( './repo' );
 const { formatData } = require( './format' );
 const prompt = require( './prompt' );
-const pkg = require( '../../../package.json' );
+const pkg = require( 'root/package.json' );
 
 function uncaughtError( err ) {
 	console.log();

@@ -3,8 +3,8 @@
 const gql = require( 'graphql-tag' );
 
 // ours
-const command = require( '../lib/cli/command' );
-const API = require( '../lib/api' );
+const command = require( 'lib/cli/command' );
+const API = require( 'lib/api' );
 
 command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {

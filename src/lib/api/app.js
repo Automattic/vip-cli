@@ -2,7 +2,7 @@
 const gql = require( 'graphql-tag' );
 
 // ours
-const API = require( '../api' );
+const API = require( 'lib/api' );
 module.exports = async function( app: string | number ): Promise<any> {
 	const api = await API();
 

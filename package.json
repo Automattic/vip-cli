@@ -41,6 +41,7 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.1.2",
+    "babel-plugin-module-resolver": "^3.1.0",
     "babel-preset-flow": "^6.23.0",
     "eslint": "^3.3.1",
     "eslint-config-wpcalypso": "0.8.0",

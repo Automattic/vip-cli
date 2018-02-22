@@ -5,10 +5,10 @@ const gql = require( 'graphql-tag' );
 const log = require( 'single-line-log' ).stdout;
 
 // ours
-const API = require( '../lib/api' );
-const app = require( '../lib/api/app' );
-const command = require( '../lib/cli/command' );
-const { formatEnvironment } = require( '../lib/cli/format' );
+const API = require( 'lib/api' );
+const app = require( 'lib/api/app' );
+const command = require( 'lib/cli/command' );
+const { formatEnvironment } = require( 'lib/cli/format' );
 
 command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
