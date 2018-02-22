@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import ini from 'ini';
 
-module.exports = async function getRepoFromGitConfig(): Promise<string> {
+export default async function getRepoFromGitConfig(): Promise<string> {
 	const file = await find();
 
 	if ( ! file.length ) {
@@ -22,7 +22,7 @@ module.exports = async function getRepoFromGitConfig(): Promise<string> {
 	url = url.replace( 'git@github.com:', '' );
 
 	return url;
-};
+}
 
 async function find( dir ): Promise<string> {
 	dir = dir || process.cwd();

@@ -1,13 +1,19 @@
 // @flow
 
+/**
+ * Internal dependencies
+ */
+import Secure from './keychain/secure';
+import Insecure from './keychain/insecure';
+import Browser from './keychain/browser';
+
 let e = {};
 if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined' ) {
 	// node
 
 	try {
 		// secure
-		const Keychain = require( './keychain/secure' );
-		e = new Keychain();
+		e = new Secure();
 	} catch ( _ ) {
 		// insecure fallback
 
@@ -36,12 +42,10 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 			throw 'Invalid permissions on access token file: ' + file;
 		}
 
-		const Keychain = require( './keychain/insecure' );
-		e = new Keychain( file );
+		e = new Insecure( file );
 	}
 } else {
-	const Keychain = require( './keychain/browser' );
-	e = new Keychain();
+	e = new Browser();
 }
 
 module.exports = e;

@@ -251,7 +251,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	return options;
 };
 
-module.exports = function( opts: any ): args {
+export default function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
 		childEnvContext: false,
@@ -280,4 +280,4 @@ module.exports = function( opts: any ): args {
 	}
 
 	return a;
-};
+}

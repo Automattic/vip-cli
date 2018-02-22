@@ -16,7 +16,7 @@ import Token from './token';
 // Config
 const API_URL = process.env.API_URL || 'https://api.go-vip.co/graphql';
 
-module.exports = async function API(): Promise<ApolloClient> {
+export default async function API(): Promise<ApolloClient> {
 	const token = await Token.get();
 	const headers = {};
 
@@ -28,4 +28,4 @@ module.exports = async function API(): Promise<ApolloClient> {
 		link: new HttpLink( { uri: API_URL, headers: headers } ),
 		cache: new InMemoryCache(),
 	} );
-};
+}

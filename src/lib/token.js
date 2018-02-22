@@ -13,7 +13,7 @@ import keychain from './keychain';
 // Config
 const SERVICE = 'vip-go-cli';
 
-class Token {
+export default class Token {
 	raw: string;
 	id: number;
 	iat: Date;
@@ -54,5 +54,3 @@ class Token {
 		return keychain.deletePassword( SERVICE );
 	}
 }
-
-module.exports = Token;
