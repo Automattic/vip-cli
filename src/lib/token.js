@@ -1,8 +1,14 @@
 // @flow
-const jwtDecode = require( 'jwt-decode' );
 
-// ours
-const keychain = require( './keychain' );
+/**
+ * External dependencies
+ */
+import jwtDecode from 'jwt-decode';
+
+/**
+ * Internal dependencies
+ */
+import keychain from './keychain';
 
 // Config
 const SERVICE = 'vip-go-cli';

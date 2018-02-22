@@ -1,8 +1,14 @@
 // @flow
-const inquirer = require( 'inquirer' );
 
-// ours
-const { formatEnvironment } = require( './format' );
+/**
+ * External dependencies
+ */
+import inquirer from 'inquirer';
+
+/**
+ * Internal dependencies
+ */
+import { formatEnvironment } from './format';
 
 export type Tuple = {
 	key: string,

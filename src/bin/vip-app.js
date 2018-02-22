@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 // @flow
 
-const colors = require( 'colors' );
+/**
+ * External dependencies
+ */
+import colors from 'colors';
 
-// ours
-const command = require( 'lib/cli/command' );
-const app = require( 'lib/api/app' );
+/**
+ * Internal dependencies
+ */
+import command from 'lib/cli/command';
+import app from 'lib/api/app';
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip app <app>', 'Pass an app name or ID to get details about that app' )

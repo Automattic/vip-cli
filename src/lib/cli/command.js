@@ -1,22 +1,24 @@
 // @flow
-const args = require( 'args' );
-const inquirer = require( 'inquirer' );
-const colors = require( 'colors' );
-const gql = require( 'graphql-tag' );
-const updateNotifier = require( 'update-notifier' );
 
 /**
- * internal dependencies
+ * External dependencies
+ */
+import args from 'args';
+import inquirer from 'inquirer';
+import colors from 'colors';
+import gql from 'graphql-tag';
+import updateNotifier from 'update-notifier';
+
+/**
+ * Internal dependencies
  */
 import type { Tuple } from './prompt';
-
-// ours
-const API = require( 'lib/api' );
-const app = require( 'lib/api/app' );
-const Repo = require( './repo' );
-const { formatData } = require( './format' );
-const prompt = require( './prompt' );
-const pkg = require( 'root/package.json' );
+import API from 'lib/api';
+import app from 'lib/api/app';
+import Repo from './repo';
+import { formatData } from './format';
+import prompt from './prompt';
+import pkg from 'root/package.json';
 
 function uncaughtError( err ) {
 	console.log();

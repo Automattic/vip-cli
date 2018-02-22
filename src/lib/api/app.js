@@ -1,8 +1,15 @@
 // @flow
-const gql = require( 'graphql-tag' );
 
-// ours
-const API = require( 'lib/api' );
+/**
+ * External dependencies
+ */
+import gql from 'graphql-tag';
+
+/**
+ * Internal dependencies
+ */
+import API from 'lib/api';
+
 module.exports = async function( app: string | number ): Promise<any> {
 	const api = await API();
 

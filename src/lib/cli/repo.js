@@ -1,7 +1,11 @@
 // @flow
-const fs = require( 'fs' );
-const path = require( 'path' );
-const ini = require( 'ini' );
+
+/**
+ * External dependencies
+ */
+import fs from 'fs';
+import path from 'path';
+import ini from 'ini';
 
 module.exports = async function getRepoFromGitConfig(): Promise<string> {
 	const file = await find();
