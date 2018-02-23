@@ -1,4 +1,8 @@
-const Token = require( '../../src/lib/token' );
+
+/**
+ * Internal dependencies
+ */
+import Token from 'lib/token';
 
 describe( 'token tests', () => {
 	test( 'should correctly validate token', () => {
