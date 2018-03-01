@@ -1,9 +1,7 @@
-// @flow
 
 /**
  * Internal dependencies
  */
-import Secure from './keychain/secure';
 import Insecure from './keychain/insecure';
 import Browser from './keychain/browser';
 
@@ -13,6 +11,7 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 
 	try {
 		// secure
+		const Secure = require( './keychain/secure' );
 		e = new Secure();
 	} catch ( _ ) {
 		// insecure fallback
