@@ -1,17 +1,21 @@
 // @flow
-const inquirer = require( 'inquirer' );
 
-// ours
-const { formatEnvironment } = require( './format' );
+/**
+ * External dependencies
+ */
+import inquirer from 'inquirer';
+
+/**
+ * Internal dependencies
+ */
+import { formatEnvironment } from './format';
 
 export type Tuple = {
 	key: string,
 	value: string,
 };
 
-module.exports = {};
-
-module.exports.confirm = async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
+export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( m( values ) );
 
 	const c = await inquirer.prompt( {
@@ -22,7 +26,7 @@ module.exports.confirm = async function confirm( values: Array<Tuple>, message: 
 	} );
 
 	return c.confirm;
-};
+}
 
 function m( values: Array<Tuple> ): string {
 	const lines = [];

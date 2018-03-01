@@ -3,9 +3,7 @@
 type Options = {
 };
 
-module.exports = {};
-
-module.exports.formatData = function( data: Array<any>, format: string, opts: ?Options ): string {
+export function formatData( data: Array<any>, format: string, opts: ?Options ): string {
 	if ( ! data || ! data.length ) {
 		return '';
 	}
@@ -24,9 +22,9 @@ module.exports.formatData = function( data: Array<any>, format: string, opts: ?O
 		default:
 			return table( data, opts );
 	}
-};
+}
 
-module.exports.formatEnvironment = function( environment: string ): string {
+export function formatEnvironment( environment: string ): string {
 	const colors = require( 'colors' );
 
 	if ( 'production' === environment.toLowerCase() ) {
@@ -34,7 +32,7 @@ module.exports.formatEnvironment = function( environment: string ): string {
 	}
 
 	return colors.blue( environment.toLowerCase() );
-};
+}
 
 function ids( data: Array<any>, opts: ?Options ): string {
 	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );

@@ -1,22 +1,24 @@
 // @flow
-const args = require( 'args' );
-const inquirer = require( 'inquirer' );
-const colors = require( 'colors' );
-const gql = require( 'graphql-tag' );
-const updateNotifier = require( 'update-notifier' );
 
 /**
- * internal dependencies
+ * External dependencies
+ */
+import args from 'args';
+import inquirer from 'inquirer';
+import colors from 'colors';
+import gql from 'graphql-tag';
+import updateNotifier from 'update-notifier';
+
+/**
+ * Internal dependencies
  */
 import type { Tuple } from './prompt';
-
-// ours
-const API = require( '../api' );
-const app = require( '../api/app' );
-const Repo = require( './repo' );
-const { formatData } = require( './format' );
-const prompt = require( './prompt' );
-const pkg = require( '../../../package.json' );
+import API from 'lib/api';
+import app from 'lib/api/app';
+import Repo from './repo';
+import { formatData } from './format';
+import prompt from './prompt';
+import pkg from 'root/package.json';
 
 function uncaughtError( err ) {
 	console.log();
@@ -249,7 +251,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	return options;
 };
 
-module.exports = function( opts: any ): args {
+export default function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
 		childEnvContext: false,
@@ -278,4 +280,4 @@ module.exports = function( opts: any ): args {
 	}
 
 	return a;
-};
+}

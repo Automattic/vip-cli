@@ -1,13 +1,19 @@
 // @flow
-const jwtDecode = require( 'jwt-decode' );
 
-// ours
-const keychain = require( './keychain' );
+/**
+ * External dependencies
+ */
+import jwtDecode from 'jwt-decode';
+
+/**
+ * Internal dependencies
+ */
+import keychain from './keychain';
 
 // Config
 const SERVICE = 'vip-go-cli';
 
-class Token {
+export default class Token {
 	raw: string;
 	id: number;
 	iat: Date;
@@ -48,5 +54,3 @@ class Token {
 		return keychain.deletePassword( SERVICE );
 	}
 }
-
-module.exports = Token;

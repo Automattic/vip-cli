@@ -1,11 +1,11 @@
 // @flow
 
 /**
- * internal dependencies
+ * Internal dependencies
  */
 import type { Keychain } from './keychain';
 
-module.exports = class Secure implements Keychain {
+export default class Secure implements Keychain {
 	getPassword( service: string ): Promise<string> {
 		return window.localStorage.getItem( service );
 	}
@@ -17,4 +17,4 @@ module.exports = class Secure implements Keychain {
 	deletePassword( service: string ): Promise<boolean> {
 		return window.localStorage.removeItem( service );
 	}
-};
+}

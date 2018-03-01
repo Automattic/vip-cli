@@ -1,13 +1,16 @@
 // @flow
 
-const fs = require( 'fs' );
+/**
+ * External dependencies
+ */
+import fs from 'fs';
 
 /**
- * internal dependencies
+ * Internal dependencies
  */
 import type { Keychain } from './keychain';
 
-module.exports = class Secure implements Keychain {
+export default class Secure implements Keychain {
 	file: string;
 
 	constructor( file: string ) {
@@ -31,4 +34,4 @@ module.exports = class Secure implements Keychain {
 			fs.unlink( this.file, err => resolve( ! err ) );
 		} );
 	}
-};
+}

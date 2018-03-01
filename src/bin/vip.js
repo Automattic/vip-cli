@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 // @flow
 
-const args = require( 'args' );
-const inquirer = require( 'inquirer' );
+/**
+ * External dependencies
+ */
+import args from 'args';
+import inquirer from 'inquirer';
 
-// ours
-const command = require( '../lib/cli/command' );
-const Token = require( '../lib/token' );
+/**
+ * Internal dependencies
+ */
+import command from 'lib/cli/command';
+import Token from 'lib/token';
 
 const rootCmd = async function() {
 	let token = await Token.get();

@@ -1,9 +1,13 @@
 // @flow
-const fs = require( 'fs' );
-const path = require( 'path' );
-const ini = require( 'ini' );
 
-module.exports = async function getRepoFromGitConfig(): Promise<string> {
+/**
+ * External dependencies
+ */
+import fs from 'fs';
+import path from 'path';
+import ini from 'ini';
+
+export default async function getRepoFromGitConfig(): Promise<string> {
 	const file = await find();
 
 	if ( ! file.length ) {
@@ -18,7 +22,7 @@ module.exports = async function getRepoFromGitConfig(): Promise<string> {
 	url = url.replace( 'git@github.com:', '' );
 
 	return url;
-};
+}
 
 async function find( dir ): Promise<string> {
 	dir = dir || process.cwd();

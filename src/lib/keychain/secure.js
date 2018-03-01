@@ -1,11 +1,15 @@
-const keytar = require( 'keytar' );
 
 /**
- * internal dependencies
+ * External dependencies
  */
-const Keychain = require( './keychain' );
+import keytar from 'keytar';
 
-module.exports = class Secure implements Keychain {
+/**
+ * Internal dependencies
+ */
+import Keychain from './keychain';
+
+export default class Secure implements Keychain {
 	getPassword( service ) {
 		return keytar.getPassword( service, service );
 	}
@@ -17,4 +21,4 @@ module.exports = class Secure implements Keychain {
 	deletePassword( service ) {
 		return keytar.deletePassword( service, service );
 	}
-};
+}

@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 // @flow
-const gql = require( 'graphql-tag' );
 
-// ours
-const command = require( '../lib/cli/command' );
-const API = require( '../lib/api' );
+/**
+ * External dependencies
+ */
+import gql from 'graphql-tag';
+
+/**
+ * Internal dependencies
+ */
+import command from 'lib/cli/command';
+import API from 'lib/api';
 
 command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {

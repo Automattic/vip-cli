@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 // @flow
-const colors = require( 'colors' );
-const gql = require( 'graphql-tag' );
-const log = require( 'single-line-log' ).stdout;
 
-// ours
-const API = require( '../lib/api' );
-const app = require( '../lib/api/app' );
-const command = require( '../lib/cli/command' );
-const { formatEnvironment } = require( '../lib/cli/format' );
+/**
+ * External dependencies
+ */
+import colors from 'colors';
+import gql from 'graphql-tag';
+import { stdout } from 'single-line-log';
+
+/**
+ * Internal dependencies
+ */
+import API from 'lib/api';
+import app from 'lib/api/app';
+import command from 'lib/cli/command';
+import { formatEnvironment } from 'lib/cli/format';
 
 command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
@@ -117,6 +123,6 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 					break;
 			}
 
-			log( out.join( '\n' ) );
+			stdout( out.join( '\n' ) );
 		}, 100 );
 	} );
