@@ -145,7 +145,13 @@ args.argv = async function( argv, cb ): Promise<any> {
 				options.app = Object.assign( {}, a.app );
 			}
 		} else {
-			const a = await app( options.app, _opts.appQuery );
+			let a;
+			try {
+				a = await app( options.app, _opts.appQuery );
+			} catch ( e ) {
+				console.log( `App ${ colors.blue( options.app ) } does not exist` );
+				return {};
+			}
 
 			if ( ! a || ! a.id ) {
 				console.log( `App ${ colors.blue( options.app ) } does not exist` );
