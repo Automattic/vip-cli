@@ -16,7 +16,13 @@ import app from 'lib/api/app';
 import command from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
 
-command( { appContext: true, childEnvContext: true, requireConfirm: true } )
+const appQuery = `id,name,environments{
+	id,name,defaultDomain,branch,datacenter,syncProgress{
+		status,steps{name,status}
+	}
+}`;
+
+command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireConfirm: true } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
 
@@ -63,7 +69,7 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
 		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
 
-		const application = await app( opts.app.id );
+		const application = await app( opts.app.id, appQuery );
 		let environment = application
 			.environments
 			.find( env => env.id === opts.env.id );
@@ -73,7 +79,7 @@ command( { appContext: true, childEnvContext: true, requireConfirm: true } )
 			if ( i++ % 10 === 0 ) {
 				// Query the API 1/10 of the time (every 1s)
 				// The rest of the iterations are just for moving the spinner
-				app( opts.app.id )
+				app( opts.app.id, appQuery )
 					.then( _app => {
 						environment = _app
 							.environments

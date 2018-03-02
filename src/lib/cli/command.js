@@ -17,7 +17,7 @@ import API from 'lib/api';
 import app from 'lib/api/app';
 import Repo from './repo';
 import { formatData } from './format';
-import prompt from './prompt';
+import { confirm } from './prompt';
 import pkg from 'root/package.json';
 
 function uncaughtError( err ) {
@@ -66,16 +66,16 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( _opts.appContext ) {
 		if ( ! options.app ) {
 			const repo = await Repo();
-			console.log( repo );
-
 			const api = await API();
 
 			try {
 				res = await api
 					// $FlowFixMe
 					.query( { query: gql`{repo(name:"${ repo }"){
-						name,apps{id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,steps{name,status}}}}
-					}` } );
+						name,apps{
+							${ _opts.appQuery }
+						}
+					}}` } );
 			} catch ( err ) {
 				console.log( err.toString() );
 				return;
@@ -88,7 +88,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 						.query( {
 							// $FlowFixMe
 							query: gql`{apps{
-								id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,steps{name,status}}}
+								${ _opts.appQuery }
 							}}`
 						} );
 				} catch ( err ) {
@@ -146,7 +146,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				options.app = Object.assign( {}, a.app );
 			}
 		} else {
-			const a = await app( options.app );
+			const a = await app( options.app, _opts.appQuery );
 
 			if ( ! a || ! a.id ) {
 				console.log( `App ${ colors.blue( options.app ) } does not exist` );
@@ -222,7 +222,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 			info.push( { key: 'environment', value: options.env.name } );
 		}
 
-		const yes = await prompt.confirm( info, 'Are you sure?' );
+		const yes = await confirm( info, 'Are you sure?' );
 		if ( ! yes ) {
 			return {};
 		}
@@ -254,6 +254,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 export default function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
+		appQuery: 'id,name',
 		childEnvContext: false,
 		envContext: false,
 		format: false,
