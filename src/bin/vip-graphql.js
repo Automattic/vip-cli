@@ -27,5 +27,5 @@ command( { requiredArgs: 1, format: true } )
 			return;
 		}
 
-		return res.data[ keys[ 0 ] ];
+		console.log( res.data[ keys[ 0 ] ] );
 	} );
