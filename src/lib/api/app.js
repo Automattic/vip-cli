@@ -10,15 +10,18 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
-export default async function( app: string | number ): Promise<any> {
-	const api = await API();
+export default async function( app: string | number, fields: ?any ): Promise<any> {
+	if ( ! fields ) {
+		fields = 'id,name';
+	}
 
+	const api = await API();
 	if ( isNaN( parseInt( app ) ) ) {
 		const res = await api
 			.query( {
 				// $FlowFixMe
 				query: gql`{apps(limit:1,name:"${ app }"){
-					id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,steps{name,status}}}
+					${ fields }
 				}}`
 			} );
 
@@ -33,7 +36,7 @@ export default async function( app: string | number ): Promise<any> {
 		.query( {
 			// $FlowFixMe
 			query: gql`{app(id:${ app }){
-				id,name,environments{id,name,defaultDomain,branch,datacenter,syncProgress{status,steps{name,status}}}
+				${ fields }
 			}}`
 		} );
 
