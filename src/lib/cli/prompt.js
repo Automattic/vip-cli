@@ -21,7 +21,7 @@ export async function confirm( values: Array<Tuple>, message: string ): Promise<
 	const c = await inquirer.prompt( {
 		type: 'confirm',
 		name: 'confirm',
-		message: 'Are you sure?',
+		message: message,
 		prefix: '',
 	} );
 

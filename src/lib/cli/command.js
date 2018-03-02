@@ -222,7 +222,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 			info.push( { key: 'environment', value: options.env.name } );
 		}
 
-		const yes = await confirm( info, 'Are you sure?' );
+		let message = 'Are you sure?';
+		if ( 'string' === typeof( _opts.requireConfirm ) ) {
+			message = _opts.requireConfirm;
+		}
+
+		const yes = await confirm( info, message );
 		if ( ! yes ) {
 			return {};
 		}
