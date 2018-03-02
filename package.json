@@ -7,6 +7,7 @@
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-graphql": "dist/bin/vip-graphql.js",
     "vip-sync": "dist/bin/vip-sync.js"
   },
   "scripts": {

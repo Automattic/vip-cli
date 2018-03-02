@@ -20,6 +20,7 @@ const rootCmd = async function() {
 		command()
 			.command( 'logout', 'Logout from your current session', () => Token.purge() )
 			.command( 'app', 'List and modify your VIP Go apps' )
+			.command( 'graphql', 'Run a graphql query' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
