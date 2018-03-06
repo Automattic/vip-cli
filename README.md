@@ -1,6 +1,6 @@
 # VIP CLI
 
-CLI Tools for WordPress.com VIP
+CLI Tools for VIP Go Sandboxes and [the Goop API](https://github.com/Automattic/vip-go-api).
 
 ## Usage
 
