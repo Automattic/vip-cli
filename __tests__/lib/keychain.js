@@ -1,7 +1,6 @@
 /**
  * Internal dependencies
  */
-import Secure from 'lib/keychain/secure';
 import Insecure from 'lib/keychain/insecure';
 import Browser from 'lib/keychain/browser';
 
@@ -9,9 +8,11 @@ import Browser from 'lib/keychain/browser';
 const account = 'vip-cli-test';
 const password = '12345';
 
+let keychain;
+
 describe( 'token tests (secure)', () => {
-	let keychain;
 	try {
+		const Secure = require( 'lib/keychain/secure' );
 		keychain = new Secure();
 	} catch( e ) {
 		test.skip( 'should correctly set token (keytar does not exist)' );
@@ -37,7 +38,7 @@ describe( 'token tests (secure)', () => {
 } );
 
 describe( 'token tests (insecure)', () => {
-	const keychain = new Insecure( 'vip-go-cli-test' );
+	keychain = new Insecure( 'vip-go-cli-test' );
 
 	test( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( _ => {
@@ -61,7 +62,7 @@ describe( 'token tests (browser)', () => {
 	const localStorage = require( 'mock-local-storage' );
 	window.localStorage = global.localStorage;
 
-	const keychain = new Browser();
+	keychain = new Browser();
 
 	test( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( _ => {
