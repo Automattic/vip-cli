@@ -36,6 +36,26 @@ describe( 'token tests (secure)', () => {
 	} );
 } );
 
+describe( 'token tests (insecure)', () => {
+	const keychain = new Insecure( 'vip-go-cli-test' );
+
+	test( 'should correctly set token', () => {
+		return keychain.setPassword( account, password ).then( _ => {
+			const p = keychain.getPassword( account );
+			expect( p ).resolves.toBe( password );
+		} );
+	} );
+
+	test( 'should correctly delete token', () => {
+		return keychain.setPassword( account, password ).then( _ => {
+			return keychain.deletePassword( account ).then( _ => {
+				const p = keychain.getPassword( account );
+				expect( p ).resolves.toBe( null );
+			} );
+		} );
+	} );
+} );
+
 describe( 'token tests (browser)', () => {
 	global.window = {};
 	const localStorage = require( 'mock-local-storage' );
