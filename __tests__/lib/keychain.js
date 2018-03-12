@@ -43,7 +43,7 @@ describe( 'token tests (secure)', () => {
 } );
 
 describe( 'token tests (insecure)', () => {
-	keychain = new Insecure( 'vip-go-cli-test' );
+	keychain = new Insecure( account );
 
 	test( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( _ => {
