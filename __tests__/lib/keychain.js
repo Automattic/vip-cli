@@ -1,4 +1,3 @@
-
 /**
  * Internal dependencies
  */
@@ -11,7 +10,14 @@ const account = 'vip-cli-test';
 const password = '12345';
 
 describe( 'token tests (secure)', () => {
-	const keychain = new Secure();
+	let keychain;
+	try {
+		keychain = new Secure();
+	} catch( e ) {
+		test.skip( 'should correctly set token (keytar does not exist)' );
+		test.skip( 'should correctly delete token (keytar does not exist)' );
+		return;
+	}
 
 	test( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( _ => {
