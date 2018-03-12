@@ -23,6 +23,7 @@ export async function confirm( values: Array<Tuple>, message: string ): Promise<
 		name: 'confirm',
 		message: message,
 		prefix: '',
+		'default': false,
 	} );
 
 	return c.confirm;
