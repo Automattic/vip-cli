@@ -32,6 +32,12 @@ let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
 	const options = this.parse( argv );
 
+	const validationError = validateOpts( options );
+	if ( validationError ) {
+		console.log( validationError.toString() );
+		process.exit( 1 );
+	}
+
 	// If there's a sub-command, run that instead
 	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
 		return {};
@@ -270,6 +276,18 @@ args.argv = async function( argv, cb ): Promise<any> {
 	return options;
 };
 
+function validateOpts( opts: any ): Error {
+	if ( opts.app &&
+		( typeof( opts.app ) !== 'string' || opts.app.length < 1 ) ) {
+		return new Error( 'Invalid `--app`' );
+	}
+
+	if ( opts.env &&
+		( typeof( opts.env ) !== 'string' || opts.env.length < 1 ) ) {
+		return new Error( 'Invalid `--env`' );
+	}
+}
+
 export default function( opts: any ): args {
 	_opts = Object.assign( {
 		appContext: false,
@@ -292,11 +310,11 @@ export default function( opts: any ): args {
 	}
 
 	if ( _opts.requireConfirm ) {
-		a.option( 'force', 'Skip confirmation' );
+		a.option( 'force', 'Skip confirmation', false );
 	}
 
 	if ( _opts.format ) {
-		a.option( 'format', 'Format results' );
+		a.option( 'format', 'Format results', 'table' );
 	}
 
 	return a;
