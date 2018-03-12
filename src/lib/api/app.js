@@ -19,10 +19,15 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 	if ( isNaN( parseInt( app ) ) ) {
 		const res = await api
 			.query( {
-				// $FlowFixMe
-				query: gql`{apps(limit:1,name:"${ app }"){
-					${ fields }
-				}}`
+				// $FlowFixMe: gql template is not supported by flow
+				query: gql`query App( $name: String ) {
+					apps( limit: 1, name: $name ) {
+						${ fields }
+					}
+				}`,
+				variables: {
+					name: app,
+				},
 			} );
 
 		if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
@@ -34,10 +39,15 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 
 	const res = await api
 		.query( {
-			// $FlowFixMe
-			query: gql`{app(id:${ app }){
-				${ fields }
-			}}`
+			// $FlowFixMe: gql template is not supported by flow
+			query: gql`query App( $id: Int ) {
+				app( id: $id ){
+					${ fields }
+				}
+			}`,
+			variables: {
+				id: app,
+			}
 		} );
 
 	if ( ! res || ! res.data || ! res.data.app ) {

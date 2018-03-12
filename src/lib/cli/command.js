@@ -69,12 +69,19 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			try {
 				res = await api
-					// $FlowFixMe
-					.query( { query: gql`{repo(name:"${ repo }"){
-						name,apps{
-							${ _opts.appQuery }
-						}
-					}}` } );
+					.query( {
+						// $FlowFixMe: gql template is not supported by flow
+						query: gql`query Repo( $name: String ) {
+							repo( name: $name ) {
+								name, apps {
+									${ _opts.appQuery }
+								}
+							}
+						}`,
+						variables: {
+							name: repo,
+						},
+					} );
 			} catch ( err ) {
 				console.log( err.toString() );
 				return;
@@ -85,10 +92,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 				try {
 					res = await api
 						.query( {
-							// $FlowFixMe
-							query: gql`{apps{
-								${ _opts.appQuery }
-							}}`
+							// $FlowFixMe: gql template is not supported by flow
+							query: gql`query Apps {
+								apps{
+									${ _opts.appQuery }
+								}
+							}`,
 						} );
 				} catch ( err ) {
 					console.log( err.toString() );

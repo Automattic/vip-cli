@@ -29,10 +29,14 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 		try {
 			await api
 				.mutate( {
-					// $FlowFixMe
+					// $FlowFixMe: gql template is not supported by flow
 					mutation: gql`
 						mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput){
-							syncEnvironment(input: $input){environment{id}}
+							syncEnvironment(input: $input){
+								environment{
+									id
+								}
+							}
 						}
 					`,
 					variables: {
