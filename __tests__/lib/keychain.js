@@ -1,4 +1,9 @@
 /**
+ * External dependencies
+ */
+import { randomBytes } from 'crypto';
+
+/**
  * Internal dependencies
  */
 import Insecure from 'lib/keychain/insecure';
@@ -6,7 +11,7 @@ import Browser from 'lib/keychain/browser';
 
 // TODO: Random bytes
 const account = 'vip-cli-test';
-const password = '12345';
+const password = randomBytes( 256 ).toString();
 
 let keychain;
 
