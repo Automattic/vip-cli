@@ -22,7 +22,11 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 				// $FlowFixMe: gql template is not supported by flow
 				query: gql`query App( $name: String ) {
 					apps( first: 1, name: $name ) {
-						${ fields }
+						total,
+						nextCursor,
+						edges {
+							${ fields }
+						}
 					}
 				}`,
 				variables: {
