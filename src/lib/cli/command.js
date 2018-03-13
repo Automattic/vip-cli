@@ -80,7 +80,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 						query: gql`query Repo( $name: String ) {
 							repo( name: $name ) {
 								name, apps {
-									${ _opts.appQuery }
+									total
+									nextCursor
+									edges {
+										${ _opts.appQuery }
+									}
 								}
 							}
 						}`,
