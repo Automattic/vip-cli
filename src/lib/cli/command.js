@@ -193,7 +193,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		if ( _opts.childEnvContext ) {
-			options.app.environments = options.app.environments.filter( cur => cur.name.toLowerCase() !== 'production' );
+			options.app.environments = options.app.environments.filter( cur => cur.id !== options.app.id );
 		}
 	}
 
