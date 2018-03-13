@@ -30,11 +30,15 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 				},
 			} );
 
-		if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
+		if ( ! res ||
+			! res.data ||
+			! res.data.apps ||
+			! res.data.apps.edges ||
+			! res.data.apps.edges.length ) {
 			return {};
 		}
 
-		return res.data.apps[ 0 ];
+		return res.data.apps.edges[ 0 ];
 	}
 
 	const res = await api

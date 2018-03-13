@@ -93,24 +93,36 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return;
 			}
 
-			const apps = res.data.repo.apps;
+			const apps = res.data.repo.apps.edges;
 			if ( ! apps || ! apps || ! apps.length ) {
 				try {
 					res = await api
 						.query( {
 							// $FlowFixMe: gql template is not supported by flow
-							query: gql`query Apps {
-								apps{
-									${ _opts.appQuery }
+							query: gql`query Apps( $first: Int, $after: String ) {
+								apps( first: $first, after: $after ) {
+									total
+									nextCursor
+									edges {
+										${ _opts.appQuery }
+									}
 								}
 							}`,
+							variables: {
+								first: 10,
+								after: null, // TODO make dynamic?
+							},
 						} );
 				} catch ( err ) {
 					console.log( err.toString() );
 					return;
 				}
 
-				if ( ! res || ! res.data || ! res.data.apps || ! res.data.apps.length ) {
+				if ( ! res ||
+					! res.data ||
+					! res.data.apps ||
+					! res.data.apps.edges ||
+					! res.data.apps.edges.length ) {
 					console.log( "Couldn't find any apps" );
 					return {};
 				}
@@ -121,7 +133,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					message: 'Which app?',
 					pageSize: 10,
 					prefix: '',
-					choices: res.data.apps.map( cur => {
+					choices: res.data.apps.edges.map( cur => {
 						return {
 							name: cur.name,
 							value: cur,

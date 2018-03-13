@@ -16,33 +16,47 @@ command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {
 		const api = await API();
 
-		let apps;
+		let response;
 		try {
-			apps = await api
+			response = await api
 				.query( {
 					// $FlowFixMe: gql template is not supported by flow
-					query: gql`query Apps {
+					query: gql`query Apps( $first: Int, $after: String ) {
 						apps( limit:10, page:1 ) {
-							id,
-							name,
-							repo,
-							environments {
-								id
+							total,
+							nextCursor
+							edges {
+								id,
+								name,
+								repo,
+								environments {
+									id
+								}
 							}
 						}
 					}`,
+					variables: {
+						first: 2,
+						after: null, // TODO make dynamic
+					},
 				} );
 		} catch ( err ) {
 			console.log( err.toString() );
 			return;
 		}
 
-		if ( ! apps || ! apps.data || ! apps.data.apps || ! apps.data.apps.length ) {
+		if ( ! response ||
+			! response.data ||
+			! response.data.apps ||
+			! response.data.apps.edges ||
+			! response.data.apps.edges.length ) {
 			console.log( 'No apps found' );
 			return;
 		}
 
-		return apps.data.apps.map( app => {
+		const apps = response.data.apps.edges;
+
+		return apps.map( app => {
 			const out = Object.assign( {}, app );
 			out.environments = out.environments.length;
 			return out;
