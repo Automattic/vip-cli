@@ -22,7 +22,7 @@ command( { format: true } )
 				.query( {
 					// $FlowFixMe: gql template is not supported by flow
 					query: gql`query Apps( $first: Int, $after: String ) {
-						apps( limit:10, page:1 ) {
+						apps( first: $first, after: $after ) {
 							total,
 							nextCursor
 							edges {
