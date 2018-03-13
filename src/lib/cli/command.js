@@ -293,14 +293,24 @@ args.argv = async function( argv, cb ): Promise<any> {
 };
 
 function validateOpts( opts: any ): Error {
-	if ( opts.app &&
-		( typeof( opts.app ) !== 'string' || opts.app.length < 1 ) ) {
-		return new Error( 'Invalid `--app`' );
+	if ( opts.app ) {
+		if ( typeof( opts.app ) !== 'string' && typeof( opts.app ) !== 'number' ) {
+			return new Error( 'Invalid --app' );
+		}
+
+		if ( opts.app.length < 1 ) {
+			return new Error( 'Invalid --app' );
+		}
 	}
 
-	if ( opts.env &&
-		( typeof( opts.env ) !== 'string' || opts.env.length < 1 ) ) {
-		return new Error( 'Invalid `--env`' );
+	if ( opts.env ) {
+		if ( typeof( opts.env ) !== 'string' && typeof( opts.env ) !== 'number' ) {
+			return new Error( 'Invalid --env' );
+		}
+
+		if ( opts.env.length < 1 ) {
+			return new Error( 'Invalid --env' );
+		}
 	}
 }
 
