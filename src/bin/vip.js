@@ -30,6 +30,17 @@ const rootCmd = async function() {
 		// Bypass helper function
 		args.parse( process.argv );
 
+		const c = await inquirer.prompt( {
+			type: 'confirm',
+			name: 'continue',
+			message: `This will open ${ tokenURL } in your web browser to acquire an access token. Continue?`,
+			prefix: '',
+		} );
+
+		if ( ! c.continue ) {
+			return;
+		}
+
 		opn( tokenURL, { wait: false } );
 
 		let t = await inquirer.prompt( {
