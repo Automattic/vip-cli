@@ -30,6 +30,8 @@
   "main": "build/index.js",
   "bin": {
     "viggo": "build/bin/vip.js",
+    "vipgo": "build/bin/vip.js",
+    "goop": "build/bin/vip.js",
     "go-search-replace": "build/go-search-replace"
   },
   "goSearchReplace": {
