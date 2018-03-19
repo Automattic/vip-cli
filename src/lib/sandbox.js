@@ -152,11 +152,20 @@ function incrementSboxFile( sandbox, cb ) {
 
 function decrementSboxFile( sandbox, cb ) {
 	config.get( 'sandbox', ( err, list ) => {
-		if ( err ) {
+		if ( err && err.code !== 'ENOENT' ) {
 			return cb( err );
 		}
 
-		list[ sandbox.id ]--;
+		if ( ! list ) {
+			list = {};
+		}
+
+		if ( ! list[ sandbox.id ] ) {
+			list[ sandbox.id ] = 0;
+		} else {
+			list[ sandbox.id ]--;
+		}
+
 		config.set( 'sandbox', list, err => {
 			if ( err ) {
 				return cb( err );
@@ -189,8 +198,18 @@ function start( sandbox, site, cb ) {
 
 export function stop( sandbox, cb ) {
 	config.get( 'sandbox', ( err, list ) => {
-		if ( err ) {
+		if ( err && err.code !== 'ENOENT' ) {
 			return cb( err );
+		}
+
+		if ( ! list ) {
+			list = {};
+		}
+
+		if ( ! list[ sandbox.id ] ) {
+			list[ sandbox.id ] = 0;
+		} else {
+			list[ sandbox.id ]--;
 		}
 
 		list[ sandbox.id ] = 0;
