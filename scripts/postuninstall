@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 read -p "Do you want to delete the VIP CLI configuration? [n] " delete
-if [[ ! $delete =~ ^[Yy]([Ee][Ss])?$ ]]; then
+if [[ $delete =~ ^[Yy]([Ee][Ss])?$ ]]; then
 	rm -r ~/.vip-cli
 fi
