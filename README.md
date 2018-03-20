@@ -1,4 +1,4 @@
-# VIPGO CLI
+# VIP (Internal) CLI
 
 Internal CLI Tools for VIP Go Sandboxes and [the Goop API](https://github.com/Automattic/vip-go-api).
 
