@@ -1,13 +1,13 @@
-# VIP CLI
+# VIP (Internal) CLI
 
-CLI Tools for VIP Go Sandboxes and [the Goop API](https://github.com/Automattic/vip-go-api).
+Internal CLI Tools for VIP Go Sandboxes and [the Goop API](https://github.com/Automattic/vip-go-api).
 
 ## Usage
 
 Show available commands:
 
 ```
-vip --help
+vipgo --help
 ```
 
 You can append `--help` to any sub-command to see options and sub-sub-commands.
@@ -16,7 +16,7 @@ You can append `--help` to any sub-command to see options and sub-sub-commands.
 
 ```
 npm install -g wpvip-cli
-vip login
+vipgo login
 ```
 
 ## Development
