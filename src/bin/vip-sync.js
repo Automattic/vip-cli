@@ -94,6 +94,7 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 								}
 							}
 						}`,
+						fetchPolicy: 'network-only',
 						variables: {
 							id: opts.app.id,
 							sync: environment.syncProgress.sync,
