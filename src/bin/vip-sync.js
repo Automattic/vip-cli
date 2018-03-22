@@ -85,10 +85,10 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 				api
 					.query( {
 						// $FlowFixMe: gql template is not supported by flow
-						query: gql`query App( $id: Int ) {
+						query: gql`query App( $id: Int, $sync: Int ) {
 							app( id: $id ){
 								id,name,environments{
-									id,name,defaultDomain,branch,datacenter,syncProgress{
+									id,name,defaultDomain,branch,datacenter,syncProgress( sync: $sync ){
 										status,sync,steps{name,status}
 									}
 								}
