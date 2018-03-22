@@ -44,7 +44,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	}
 
 	// Check for updates every day
-	updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
+	updateNotifier( { pkg, isGlobal: true, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
 
 	// Show help if no args passed
 	if ( this.details.commands.length > 1 && ! this.sub.length ) {
