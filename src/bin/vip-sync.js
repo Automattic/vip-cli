@@ -18,7 +18,7 @@ import { formatEnvironment } from 'lib/cli/format';
 
 const appQuery = `id,name,environments{
 	id,name,defaultDomain,branch,datacenter,syncProgress{
-		status,steps{name,status}
+		status,sync,steps{name,status}
 	}
 }`;
 
@@ -47,7 +47,6 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 					}
 				} );
 		} catch ( e ) {
-			console.log();
 			console.log( colors.yellow( 'Note:' ), 'A data sync is already running' );
 		}
 
@@ -83,7 +82,25 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 			if ( i++ % 10 === 0 ) {
 				// Query the API 1/10 of the time (every 1s)
 				// The rest of the iterations are just for moving the spinner
-				app( opts.app.id, appQuery )
+				api
+					.query( {
+						// $FlowFixMe: gql template is not supported by flow
+						query: gql`query App( $id: Int, $sync: Int ) {
+							app( id: $id ){
+								id,name,environments{
+									id,name,defaultDomain,branch,datacenter,syncProgress( sync: $sync ){
+										status,sync,steps{name,status}
+									}
+								}
+							}
+						}`,
+						fetchPolicy: 'network-only',
+						variables: {
+							id: opts.app.id,
+							sync: environment.syncProgress.sync,
+						}
+					} )
+					.then( res => res.data.app )
 					.then( _app => {
 						environment = _app
 							.environments
