@@ -25,6 +25,7 @@ const appQuery = `id,name,environments{
 command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireConfirm: 'Are you sure you want to sync?' } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
+		let syncing = false;
 
 		try {
 			await api
@@ -47,7 +48,7 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 					}
 				} );
 		} catch ( e ) {
-			console.log( colors.yellow( 'Note:' ), 'A data sync is already running' );
+			syncing = true;
 		}
 
 		const sprite = {
@@ -67,15 +68,24 @@ command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireC
 			},
 		};
 
-		console.log();
-		console.log( `  syncing: ${ colors.yellow( opts.app.name ) }` );
-		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
-		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
-
 		const application = await app( opts.app.id, appQuery );
 		let environment = application
 			.environments
 			.find( env => env.id === opts.env.id );
+
+		if ( syncing ) {
+			if ( environment.syncProgress.status === 'running' ) {
+				console.log( colors.yellow( 'Note:' ), 'A data sync is already running' );
+			} else {
+				console.log( colors.yellow( 'Note:' ), 'Someone recently ran a data sync on this site' );
+				console.log( colors.yellow( 'Note:' ), 'Please wait a few minutes before trying again' );
+			}
+		}
+
+		console.log();
+		console.log( `  syncing: ${ colors.yellow( opts.app.name ) }` );
+		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
+		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
 
 		let i = 0;
 		const progress = setInterval( async () => {
