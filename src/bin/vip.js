@@ -15,7 +15,7 @@ import command from 'lib/cli/command';
 import Token from 'lib/token';
 
 // Config
-const tokenURL = 'https://ui.go-vip.co/';
+const tokenURL = 'https://ui.go-vip.co/me';
 
 const rootCmd = async function() {
 	let token = await Token.get();
