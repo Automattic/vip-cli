@@ -5,6 +5,7 @@
  * External dependencies
  */
 import args from 'args';
+import opn from 'opn';
 import inquirer from 'inquirer';
 
 /**
@@ -12,6 +13,9 @@ import inquirer from 'inquirer';
  */
 import command from 'lib/cli/command';
 import Token from 'lib/token';
+
+// Config
+const tokenURL = 'https://ui.go-vip.co/me';
 
 const rootCmd = async function() {
 	let token = await Token.get();
@@ -25,6 +29,19 @@ const rootCmd = async function() {
 	} else {
 		// Bypass helper function
 		args.parse( process.argv );
+
+		const c = await inquirer.prompt( {
+			type: 'confirm',
+			name: 'continue',
+			message: `This will open ${ tokenURL } in your web browser to acquire an access token. Continue?`,
+			prefix: '',
+		} );
+
+		if ( ! c.continue ) {
+			return;
+		}
+
+		opn( tokenURL, { wait: false } );
 
 		let t = await inquirer.prompt( {
 			type: 'password',
