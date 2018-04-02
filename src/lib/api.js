@@ -1,18 +1,36 @@
 const vip = require( 'vip' );
 const api = new vip();
 
-// Ours
-const utils = require( './utils' );
+const { getEnv } = require( './config' );
+getEnv( 'PROXY', ( err, proxy ) => {
+	if ( err || ! proxy ) {
+		return;
+	}
 
-utils.getCredentials( function( err, credentials ) {
+	api.proxy = proxy;
+});
+
+const { getCredentials } = require( './utils' );
+getCredentials( function( err, credentials ) {
 	if ( err ) {
 		return;
 	}
 
-	api.proxy = process.env.PROXY;
 	api.auth.apiUserId = credentials.userId;
 	api.auth.token = credentials.accessToken;
 	api.caps = credentials.caps;
+
+	getEnv( 'PROXY', ( err, proxy ) => {
+		if ( err ) {
+			return;
+		}
+
+		if ( ! proxy ) {
+			return;
+		}
+
+		api.proxy = proxy;
+	});
 });
 
 export const auth = api.auth;

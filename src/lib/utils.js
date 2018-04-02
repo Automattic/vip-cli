@@ -42,6 +42,15 @@ export function setCredentials( credentials, callback ) {
 	api.auth.apiUserId = credentials.userId;
 	api.auth.token = credentials.accessToken;
 
+	const { getEnv } = require( './config' );
+	getEnv( 'PROXY', ( err, proxy ) => {
+		if ( err || ! proxy ) {
+			return;
+		}
+
+		api.proxy = proxy;
+	});
+
 	api
 		.get( '/api_users/' + api.auth.apiUserId )
 		.end( ( err, res ) => {

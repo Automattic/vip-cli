@@ -2,6 +2,20 @@ const fs = require( 'fs' );
 
 const dir = require( 'os' ).homedir() + '/.vip-cli';
 
+export function getEnv( option, callback ) {
+	if ( process.env[option] ) {
+		return callback( null, process.env[option] );
+	}
+
+	get( 'env', ( err, env ) => {
+		if ( err ) {
+			return callback( err );
+		}
+
+		return callback( null, env[option] );
+	});
+}
+
 export function get( file, callback ) {
 	let data = {};
 
