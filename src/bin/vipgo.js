@@ -47,6 +47,9 @@ utils.getCredentials( ( err, user ) => {
 	program
 		.command( 'api <method> <endpoint>', 'Authenticated API requests' );
 
+	program
+		.command( 'config <option>', 'Set configuration variables' );
+
 	if ( api.currentUserCanRead( 'sites/masterdb' ) ) {
 		program
 			.command( 'db <site>', 'Connect to a given VIP Go database' );
