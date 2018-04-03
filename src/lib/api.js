@@ -39,7 +39,7 @@ function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
 		if ( res.status === 401 ) {
-			return console.error( 'Invalid or expired token. Please login with `vip login`' );
+			return console.error( 'Invalid or expired token. Please login with `vipgo login`' );
 		}
 
 		callback.call( request, err, res );
