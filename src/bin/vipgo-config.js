@@ -5,26 +5,26 @@ const program = require( 'commander' );
 // ours
 const { set } = require( '../lib/config' );
 
+// config
+const options = [ 'PROXY' ];
+
 program
 	.arguments( '<option>' )
-	.action( ( option, options ) => {
+	.action( ( option ) => {
 		if ( option.indexOf( '=' ) < 0 ) {
-			return console.error( 'Invalid option' );
+			return console.error( 'Invalid option argument provided. The argument must be in the format `name=value` (e.g. `PROXY=127.0.0.1:8080`)' );
 		}
 
 		const parts = option.split( '=' );
+		const name = parts[0];
+		const value = parts[1];
 
-		switch( parts[0] ) {
-		case 'PROXY':
-			break;
-
-		default:
+		if ( options.indexOf( name ) < 0 ) {
 			return console.error( 'Invalid option name' );
 		}
 
 		const config = {};
-		config[parts[0]] = parts[1];
-
+		config[name] = value;
 		set( 'env', config, err => {
 			if ( err ) {
 				return console.error( err );
