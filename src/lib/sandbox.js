@@ -39,17 +39,17 @@ export function runOnExistingContainer( site, sandbox, command, opts ) {
 					return console.error( err.response.error );
 				}
 
-				runCommand( sandbox, command, opts );
+				dockerRunCommand( sandbox, command, opts );
 			});
 		case 'running':
-			return runCommand( sandbox, command, opts );
+			return dockerRunCommand( sandbox, command, opts );
 		default:
 			return console.error( 'Cannot start sandbox for requested site' );
 		}
 	});
 }
 
-export function runCommand( sandbox, command, opts ) {
+function dockerRunCommand( sandbox, command, opts ) {
 	opts = Object.assign({
 		'user': 'nobody',
 		'confirm': false,
