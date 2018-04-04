@@ -14,8 +14,12 @@ You can append `--help` to any sub-command to see options and sub-sub-commands.
 
 ## Install
 
+Make sure you have an open connection to the Automattic proxy and are able to
+tunnel local traffic to port 8080.
+
 ```
 npm install -g wpvip-cli
+vipgo config PROXY=socks://127.0.0.1:8080
 vipgo login
 ```
 
