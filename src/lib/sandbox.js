@@ -2,11 +2,16 @@ const spawn = require( 'child_process' ).spawnSync;
 const Table = require( 'cli-table' );
 const colors = require( 'colors/safe' );
 const log = require( 'single-line-log' ).stderr;
+const hostname = require( 'os' ).hostname();
 
 // Ours
 const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
+
+function isSandbox( hostname ) {
+	return /^\w+\.dev\.\w{3}\.vipv2\.net/.test( hostname );
+}
 
 export function getSandboxAndRun( site, command, opts ) {
 	getSandboxForSite( site, ( err, sbox ) =>  {
@@ -31,6 +36,11 @@ export function getSandboxAndRun( site, command, opts ) {
 export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
+	if ( isSandbox( sandbox.host_name ) && hostname !== sandbox.host_name ) {
+		return console.error( 'Cannot run command on dedicated sandbox remotely' );
+	}
+
+	const runCommand = isSandbox( sandbox.host_name ) ? dockerRunCommand : sshRunCommand;
 	maybeStateTransition( site, state => {
 		switch( state ) {
 		case 'stopped':
@@ -49,7 +59,46 @@ export function runOnExistingContainer( site, sandbox, command, opts ) {
 	});
 }
 
-export function runCommand( sandbox, command, opts ) {
+function sshRunCommand( sandbox, command, opts ) {
+	opts = Object.assign({
+		confirm: false,
+	}, opts || {});
+
+	const args = [
+		`vipdev@${ sandbox.host_name }`,
+		'-p', sandbox.ssh_port,
+	];
+
+	if ( ! isSandbox( hostname ) ) {
+		args.push( '-L', `${ sandbox.ssh_port }:localhost:8080` );
+	}
+
+	process.on( 'SIGHUP', () => {
+		decrementSboxFile( sandbox );
+	});
+
+	utils.maybeConfirm( "Are you sure?", opts.confirm, ( err, yes ) => {
+		if ( ! yes ) {
+			return;
+		}
+
+		incrementSboxFile( sandbox, err => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			spawn( 'ssh', args, { stdio: 'inherit' });
+
+			decrementSboxFile( sandbox, err => {
+				if ( err ) {
+					return console.error( err );
+				}
+			});
+		});
+	});
+}
+
+function dockerRunCommand( sandbox, command, opts ) {
 	opts = Object.assign({
 		'user': 'nobody',
 		'confirm': false,
