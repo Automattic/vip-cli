@@ -8,6 +8,10 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
+function isSandbox( hostname ) {
+	return /^\w+\.dev\.\w{3}\.vipv2\.net/.test( hostname );
+}
+
 export function getSandboxAndRun( site, command, opts ) {
 	getSandboxForSite( site, ( err, sbox ) =>  {
 		if ( err ) {
@@ -31,6 +35,12 @@ export function getSandboxAndRun( site, command, opts ) {
 export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
+	const hostname = require( 'os' ).hostname();
+	if ( isSandbox( sandbox.host_name ) && hostname !== sandbox.host_name ) {
+		return console.error( 'Cannot run command on dedicated sandbox remotely' );
+	}
+
+	const runCommand = isSandbox( sandbox.host_name ) ? dockerRunCommand : sshRunCommand;
 	maybeStateTransition( site, state => {
 		switch( state ) {
 		case 'stopped':
@@ -39,14 +49,23 @@ export function runOnExistingContainer( site, sandbox, command, opts ) {
 					return console.error( err.response.error );
 				}
 
-				dockerRunCommand( sandbox, command, opts );
+				runCommand( sandbox, command, opts );
 			});
 		case 'running':
-			return dockerRunCommand( sandbox, command, opts );
+			return runCommand( sandbox, command, opts );
 		default:
 			return console.error( 'Cannot start sandbox for requested site' );
 		}
 	});
+}
+
+function sshRunCommand( sandbox, command, opts ) {
+	opts = Object.assign({
+		confirm: false,
+	}, opts || {});
+
+	console.log( sandbox );
+	console.log( command );
 }
 
 function dockerRunCommand( sandbox, command, opts ) {
