@@ -2,6 +2,7 @@ const spawn = require( 'child_process' ).spawnSync;
 const Table = require( 'cli-table' );
 const colors = require( 'colors/safe' );
 const log = require( 'single-line-log' ).stderr;
+const hostname = require( 'os' ).hostname();
 
 // Ours
 const api = require( './api' );
@@ -35,7 +36,6 @@ export function getSandboxAndRun( site, command, opts ) {
 export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
-	const hostname = require( 'os' ).hostname();
 	if ( isSandbox( sandbox.host_name ) && hostname !== sandbox.host_name ) {
 		return console.error( 'Cannot run command on dedicated sandbox remotely' );
 	}
@@ -70,8 +70,11 @@ function sshRunCommand( sandbox, command, opts ) {
 	const args = [
 		`vipdev@${ sandbox.host_name }`,
 		'-p', sandbox.ssh_port,
-		'-L', `${ sandbox.ssh_port }:localhost:8080`,
 	];
+
+	if ( ! isSandbox( hostname ) ) {
+		args.push( '-L', `${ sandbox.ssh_port }:localhost:8080` );
+	}
 
 	spawn( 'ssh', args, { stdio: 'inherit' });
 }
