@@ -73,7 +73,29 @@ function sshRunCommand( sandbox, command, opts ) {
 		args.push( '-L', `${ sandbox.ssh_port }:localhost:8080` );
 	}
 
-	spawn( 'ssh', args, { stdio: 'inherit' });
+	process.on( 'SIGHUP', () => {
+		decrementSboxFile( sandbox );
+	});
+
+	utils.maybeConfirm( "Are you sure?", opts.confirm, ( err, yes ) => {
+		if ( ! yes ) {
+			return;
+		}
+
+		incrementSboxFile( sandbox, err => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			spawn( 'ssh', args, { stdio: 'inherit' });
+
+			decrementSboxFile( sandbox, err => {
+				if ( err ) {
+					return console.error( err );
+				}
+			});
+		});
+	});
 }
 
 function dockerRunCommand( sandbox, command, opts ) {
