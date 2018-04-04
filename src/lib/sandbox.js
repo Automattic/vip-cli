@@ -64,9 +64,6 @@ function sshRunCommand( sandbox, command, opts ) {
 		confirm: false,
 	}, opts || {});
 
-	// TODO: Don't need to hardcode the port when this is in the API
-	sandbox.ssh_port = 4100;
-
 	const args = [
 		`vipdev@${ sandbox.host_name }`,
 		'-p', sandbox.ssh_port,
