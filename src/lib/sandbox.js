@@ -64,8 +64,16 @@ function sshRunCommand( sandbox, command, opts ) {
 		confirm: false,
 	}, opts || {});
 
-	console.log( sandbox );
-	console.log( command );
+	// TODO: Don't need to hardcode the port when this is in the API
+	sandbox.ssh_port = 4100;
+
+	// TODO: Set proxy command
+	const args = [
+		`vipdev@${ sandbox.host_name }`,
+		'-p', sandbox.ssh_port,
+	];
+
+	spawn( 'ssh', args, { stdio: 'inherit' });
 }
 
 function dockerRunCommand( sandbox, command, opts ) {
