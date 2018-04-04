@@ -67,10 +67,10 @@ function sshRunCommand( sandbox, command, opts ) {
 	// TODO: Don't need to hardcode the port when this is in the API
 	sandbox.ssh_port = 4100;
 
-	// TODO: Set proxy command
 	const args = [
 		`vipdev@${ sandbox.host_name }`,
 		'-p', sandbox.ssh_port,
+		'-L', `${ sandbox.ssh_port }:localhost:8080`,
 	];
 
 	spawn( 'ssh', args, { stdio: 'inherit' });
