@@ -73,6 +73,13 @@ function sshRunCommand( sandbox, command, opts ) {
 		args.push( '-L', `${ sandbox.ssh_port }:localhost:8080` );
 	}
 
+	const notice = [];
+	notice.push( 'Remember to set the host IP in your /etc/hosts file and VIP-GO-SANDBOX-USER-ID header in your browser' );
+	notice.push( `-- Container: ${ sandbox.container_name }` );
+	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
+	notice.push( `-- Host IP: ${ sandbox.host_ip }` );
+	utils.displayNotice( notice );
+
 	process.on( 'SIGHUP', () => {
 		decrementSboxFile( sandbox );
 	});
@@ -113,23 +120,18 @@ function dockerRunCommand( sandbox, command, opts ) {
 
 	const notice = [];
 
-	if ( ! command || command.length < 1 ) {
-		run.push( 'bash' );
-
-		notice.push( 'Logging in to sandbox:' );
-	} else {
+	if ( command && command.length > 0 ) {
 		run = run.concat( command );
 
 		notice.push( 'Running command on container:' );
 		notice.push( `-- Command: ${ command.join( ' ' ) }` );
+	} else {
+		run.push( 'bash' );
 	}
 
-	if ( notice.length > 0 ) {
-		notice.push( `-- Container: ${ sandbox.container_name }` );
-		notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
-
-		utils.displayNotice( notice );
-	}
+	notice.push( `-- Container: ${ sandbox.container_name }` );
+	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
+	utils.displayNotice( notice );
 
 	// TODO: Handle file references as arguments
 	process.on( 'SIGHUP', () => {
