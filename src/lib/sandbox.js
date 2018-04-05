@@ -64,13 +64,15 @@ function sshRunCommand( sandbox, command, opts ) {
 		confirm: false,
 	}, opts || {});
 
-	const args = [
+	const ssh = [
+		'ssh',
 		`vipdev@${ sandbox.host_name }`,
 		'-p', sandbox.ssh_port,
+		'-tt',
 	];
 
 	if ( ! isSandbox( hostname ) ) {
-		args.push( '-L', `${ sandbox.ssh_port }:localhost:8080` );
+		ssh.push( '-o', 'ProxyCommand="nc -X 5 -x 127.0.0.1:8080 %h %p"' );
 	}
 
 	const notice = [];
@@ -94,7 +96,7 @@ function sshRunCommand( sandbox, command, opts ) {
 				return console.error( err );
 			}
 
-			spawn( 'ssh', args, { stdio: 'inherit' });
+			spawn( 'bash', [ '-c', ssh.join( ' ' ) ], { stdio: 'inherit' });
 
 			decrementSboxFile( sandbox, err => {
 				if ( err ) {
