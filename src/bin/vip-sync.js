@@ -22,7 +22,12 @@ const appQuery = `id,name,environments{
 	}
 }`;
 
-command( { appContext: true, appQuery: appQuery, childEnvContext: true, requireConfirm: 'Are you sure you want to sync?' } )
+command( {
+	appContext: true,
+	appQuery: appQuery,
+	childEnvContext: true,
+	requireConfirm: 'Are you sure you want to sync from production?'
+} )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
 		let syncing = false;
