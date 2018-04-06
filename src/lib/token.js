@@ -26,17 +26,42 @@ export default class Token {
 
 		const t = jwtDecode( token );
 		this.raw = token;
-		this.id = t.id;
-		this.iat = new Date( t.iat * 1000 );
-		this.exp = new Date( t.exp * 1000 );
+
+		if ( t.id ) {
+			this.id = t.id;
+		}
+
+		if ( t.iat ) {
+			this.iat = new Date( t.iat * 1000 );
+		}
+
+		if ( t.exp ) {
+			this.exp = new Date( t.exp * 1000 );
+		}
 	}
 
 	valid(): boolean {
+		if ( ! this.id ) {
+			return false;
+		}
+
+		if ( ! this.iat ) {
+			return false;
+		}
+
 		const now = new Date();
+		if ( ! this.exp ) {
+			return now > this.iat;
+		}
+
 		return now > this.iat && now < this.exp;
 	}
 
 	expired(): boolean {
+		if ( ! this.exp ) {
+			return false;
+		}
+
 		const now = new Date();
 		return now > this.exp;
 	}
