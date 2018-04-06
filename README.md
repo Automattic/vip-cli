@@ -11,7 +11,5 @@ Then install the command from npm with:
 
 ```
 npm install -g @automattic/vip
+vip login
 ```
-
-The first time you run `vip`, it will prompt you for an access token. For now,
-you can find your token in localStorage.
