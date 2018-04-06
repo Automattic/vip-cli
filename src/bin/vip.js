@@ -33,7 +33,7 @@ const rootCmd = async function() {
 		const c = await inquirer.prompt( {
 			type: 'confirm',
 			name: 'continue',
-			message: `This will open ${ tokenURL } in your web browser to acquire an access token. Continue?`,
+			message: `This will open ${ tokenURL } in your web browser. Follow the instructions there to acquire an access token. Continue?`,
 			prefix: '',
 		} );
 
