@@ -91,78 +91,97 @@ program
 					.get( '/site_type_allocations/9' )
 					.end( ( err, res ) => {
 						if ( err ) {
-							return console.error( 'Could not retrieve default software stack' );
+							return console.error( 'Could not retrieve default software stack for CLI container' );
 						}
 
-						var defaultStack = res.body.data[0].default_software_stack_id;
+						const containerDefaults = {};
 
-						var updatingInterval = setInterval( () => {
-							let upgrading = sites.map( site => {
-								return siteUtils.getContainers( site )
-								.then( containers => containers.filter( container => container.container_type_id === 1 || container.container_type_id === 14 ) );
-							});
+						const cliAllocations = res.body.data[0];
+						containerDefaults[ 14 ] = {
+							default_software_stack_id: cliAllocations.default_software_stack_id,
+							default_container_image_id: cliAllocations.default_container_image_id,
+						};
 
-							Promise.all( upgrading )
-							.then( sites => {
-								var table = new Table({
-									head: [ 'Site', 'Pending', 'Upgrading', 'Done' ],
-									style: {
-										head: ['blue'],
-									},
+						api.get( '/site_type_allocations/5' ).end( ( err, res ) => {
+							if ( err ) {
+								return console.error( 'Could not retrieve default software stack for CLI container' );
+							}
+
+							const webAllocations = res.body.data[0];
+							containerDefaults[ 1 ] = {
+								default_software_stack_id: webAllocations.default_software_stack_id,
+								default_container_image_id: webAllocations.default_container_image_id,
+							};
+
+							var updatingInterval = setInterval( () => {
+								let upgrading = sites.map( site => {
+									return siteUtils.getContainers( site )
+									.then( containers => containers.filter( container => container.container_type_id === 1 || container.container_type_id === 14 ) );
 								});
 
-								sites.forEach( site => {
-									let pending = site.filter( container => container.software_stack_id !== defaultStack && container.state === 'running' ).length;
-									let upgrading = site.filter( container => container.state === 'upgrading' ).length;
-									let done = site.filter( container => container.software_stack_id === defaultStack && container.state === 'running' ).length;
-
-									let colorizedSite;
-
-									if ( done === site.length ) {
-										// Upgrade is done
-										colorizedSite = colors[ 'green' ]( site[0].domain_name );
-									} else if ( pending === site.length ) {
-										// Upgrade has not started
-										colorizedSite = colors[ 'yellow' ]( site[0].domain_name );
-									} else {
-										// Upgrade is running
-										colorizedSite = colors[ 'white' ]( site[0].domain_name );
-									}
-
-									table.push( [
-										colorizedSite,
-										pending,
-										upgrading,
-										done,
-									] );
-								});
-
-								let done = sites.every( site => {
-									return site.every( container => {
-										if ( container.state === 'stopped' || container.state === 'uninitialized' ) {
-											return true;
-										}
-
-										if ( container.state !== 'running' ) {
-											return false;
-										}
-
-										return container.software_stack_id === defaultStack;
+								Promise.all( upgrading )
+								.then( sites => {
+									var table = new Table({
+										head: [ 'Site', 'Pending', 'Upgrading', 'Done' ],
+										style: {
+											head: ['blue'],
+										},
 									});
-								});
 
-								let output = table.toString();
-								log( output );
+									sites.forEach( site => {
+										let pending = site.filter( container => container.state === 'running' && ( container.software_stack_id !== containerDefaults[ container.container_type_id ].default_software_stack_id || container.container_image_id !== containerDefaults[ container.container_type_id ].default_container_image_id ) ).length;
+										let upgrading = site.filter( container => container.state === 'upgrading' ).length;
+										let done = site.filter( container => container.state === 'running' && container.software_stack_id === containerDefaults[ container.container_type_id ].default_software_stack_id && container.container_image_id === containerDefaults[ container.container_type_id ].default_container_image_id ).length;
 
-								// TODO: Also check DC allocations because we might not be upgrading to the default
-								if ( done ) {
-									clearInterval( updatingInterval );
-									console.log();
-									console.log( 'Update complete' );
-								}
-							})
-							.catch( err => console.error( err.message ) );
-						}, 2000 );
+										let colorizedSite;
+
+										if ( done === site.length ) {
+											// Upgrade is done
+											colorizedSite = colors[ 'green' ]( site[0].domain_name );
+										} else if ( pending === site.length ) {
+											// Upgrade has not started
+											colorizedSite = colors[ 'yellow' ]( site[0].domain_name );
+										} else {
+											// Upgrade is running
+											colorizedSite = colors[ 'white' ]( site[0].domain_name );
+										}
+
+										table.push( [
+											colorizedSite,
+											pending,
+											upgrading,
+											done,
+										] );
+									});
+
+									let done = sites.every( site => {
+										return site.every( container => {
+											if ( container.state === 'stopped' || container.state === 'uninitialized' ) {
+												return true;
+											}
+
+											if ( container.state !== 'running' ) {
+												return false;
+											}
+
+											return container.software_stack_id === containerDefaults[ container.container_type_id ].default_software_stack_id 
+												&& container.container_image_id === containerDefaults[ container.container_type_id ].default_container_image_id;
+										});
+									});
+
+									let output = table.toString();
+									log( output );
+
+									// TODO: Also check DC allocations because we might not be upgrading to the default
+									if ( done ) {
+										clearInterval( updatingInterval );
+										console.log();
+										console.log( 'Update complete' );
+									}
+								})
+								.catch( err => console.error( err.message ) );
+							}, 2000 );
+						});
 					});
 			})
 			.catch( err => console.error( err.message ) );
