@@ -12,7 +12,7 @@ program
 	.arguments( '<option>' )
 	.action( ( option ) => {
 		if ( option.indexOf( '=' ) < 0 ) {
-			return console.error( 'Invalid option argument provided. The argument must be in the format `name=value` (e.g. `PROXY=127.0.0.1:8080`)' );
+			return console.error( 'Error: Invalid option argument provided. The argument must be in the format `name=value` (e.g. `PROXY=127.0.0.1:8080`)' );
 		}
 
 		const parts = option.split( '=' );
@@ -20,15 +20,17 @@ program
 		const value = parts[1];
 
 		if ( options.indexOf( name ) < 0 ) {
-			return console.error( 'Invalid option name' );
+			return console.error( `Error: Invalid option name. Must be one of the following: ( '${ options.join( "', '" ) }' )` );
 		}
 
 		const config = {};
 		config[name] = value;
 		set( 'env', config, err => {
 			if ( err ) {
-				return console.error( err );
+				return console.error( `Error: Failed to save config for '${ name }': ${ err }` );
 			}
+
+			console.log( `Success: saved config for '${ name }'` ); 
 		});
 	});
 
