@@ -409,7 +409,7 @@ export function listSandboxes( opts, cb ) {
 }
 
 export function displaySandboxes( sandboxes, opts ) {
-	var headers = [ 'Site ID', 'Site Name', 'State' ];
+	var headers = [ 'Site ID', 'Site Name', 'State', 'Type', 'Host IP', 'SSH Port' ];
 
 	if ( opts && opts.index ) {
 		headers.unshift( '#' );
@@ -436,7 +436,17 @@ export function displaySandboxes( sandboxes, opts ) {
 				break;
 			}
 
-			var row = [ s.site.client_site_id, s.site.name || s.site.domain_name, c.state ];
+			var row = [
+				s.site.client_site_id,
+				s.site.name || s.site.domain_name,
+				c.state,
+			];
+
+			if ( isSandbox( c.host_name ) ) {
+				row.push( 'Platform', '-', '-' );
+			} else {
+				row.push( 'Container', c.host_ip, c.ssh_port );
+			}
 
 			if ( opts && opts.index ) {
 				row.unshift( i++ );
