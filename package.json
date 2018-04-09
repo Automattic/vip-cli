@@ -50,7 +50,7 @@
     "superagent": "^2.0.0",
     "throttle": "^1.0.3",
     "update-notifier": "^1.0.3",
-    "vip": "automattic/vip-js-sdk",
+    "vip": "automattic/vip-js-sdk#1562706",
     "which": "^1.2.10"
   },
   "devDependencies": {
