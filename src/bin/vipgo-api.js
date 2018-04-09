@@ -16,6 +16,7 @@ function parseData( d ) {
 
 program
 	.command( 'GET <endpoint>' )
+	.alias( 'get' )
 	.description( 'Authenticated GET request' )
 	.action( endpoint => {
 		api
@@ -27,6 +28,7 @@ program
 
 program
 	.command( 'POST <endpoint>' )
+	.alias( 'post' )
 	.description( 'Authenticated POST request' )
 	.option( '-d, --data <data>', 'Add data to the request body', parseData )
 	.action( ( endpoint, options ) => {
@@ -40,6 +42,7 @@ program
 
 program
 	.command( 'PUT <endpoint>' )
+	.alias( 'put' )
 	.description( 'Authenticated PUT request' )
 	.option( '-d, --data <data>', 'Add data to the request body', parseData )
 	.action( ( endpoint, options ) => {
@@ -53,6 +56,7 @@ program
 
 program
 	.command( 'DELETE <endpoint>' )
+	.alias( 'delete' )
 	.description( 'Authenticated DELETE request' )
 	.action( endpoint => {
 		api
