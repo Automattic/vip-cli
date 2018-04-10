@@ -77,6 +77,7 @@ function sshRunCommand( sandbox, command, opts ) {
 
 	const notice = [];
 	notice.push( 'Remember to set the host IP in your /etc/hosts file and VIP-GO-SANDBOX-USER-ID header in your browser' );
+	notice.push( `-- ${ sandbox.host_ip } ${ sandbox.domain_name }` );
 	notice.push( `-- Container: ${ sandbox.container_name }` );
 	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
 	notice.push( `-- Host IP: ${ sandbox.host_ip }` );
