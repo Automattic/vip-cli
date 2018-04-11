@@ -5,7 +5,7 @@ The VIP Go Javascript library & CLI
 ## Getting started
 
 First, you'll need to ask VIP support for access to the dashboard at
-https://ui.go-vip.co.
+https://dashboard.wpvip.co.
 
 Then install the command from npm with:
 
