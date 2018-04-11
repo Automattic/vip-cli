@@ -20,7 +20,7 @@
     "node": ">=0.12"
   },
   "scripts": {
-    "preinstall": " mkdir -p build && ./scripts/install-go-search-replace",
+    "preinstall": " node ./scripts/install-go-search-replace",
     "postuninstall": "./scripts/postuninstall",
     "prepare": "npm run build",
     "build": "babel -q src --out-dir=build",
