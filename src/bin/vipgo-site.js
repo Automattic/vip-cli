@@ -13,19 +13,24 @@ program
 	.command( 'upgrade [<site>]' )
 	.description( 'Update/Rebuild a site\'s web containers based on DC allocation records or default config' )
 	.option( '-c, --client <client_id>', 'Client to target' )
-	.option( '--client_site_type_id <client_site_type_id>', 'Site type to target' )
 	.option( '-l, --launched', 'Target launched sites only?' )
 	.option( '-s, --search <search>', 'Search for sites to upgrade' )
 	.option( '-n, --pagesize <pagesize>', 'Number of sites to update per batch', 5, parseInt )
 	.option( '--page <page>', 'Page number for the batch', 1, parseInt )
 	.option( '-e, --environment <env>', 'Environment to target' )
 	.option( '-w, --wp <version>', 'WordPress version to target' )
+	.option( '--site_type <site_type>', 'Site type to target' )
+	.option( '--container_image <container_image>', 'Container image to target' )
 	.action( ( site, options ) => {
 		// TODO: Optionally pass in a site ID for single site upgrade
 		let query = {};
 
-		if ( options.client_site_type_id ) {
-			query.client_site_type_id = options.client_site_type_id;
+		if ( options.container_image ) {
+			query.container_image_id = options.container_image;
+		}
+
+		if ( options.site_type ) {
+			query.client_site_type_id = options.site_type;
 		}
 
 		if ( options.pagesize ) {
