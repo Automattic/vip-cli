@@ -356,6 +356,7 @@ export function getSandboxesForSite( site, cb ) {
 }
 
 export function waitForRunningSandbox( site, cb ) {
+	let i = 0;
 	var poll = setInterval( () => {
 		getSandboxForSite( site, ( err, sbox ) => {
 			if ( err ) {
@@ -365,6 +366,10 @@ export function waitForRunningSandbox( site, cb ) {
 			}
 
 			if ( ! sbox || sbox.state !== 'running' ) {
+				if ( i++ > 20 ) {
+					clearInterval( poll );
+					return console.log( 'Timeout: Failed to get sandbox' );
+				}
 				return utils.showLoading( 'Waiting for sandbox to start' );
 			}
 
