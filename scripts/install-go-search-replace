@@ -30,6 +30,7 @@ const PLATFORM_MAPPING = {
 	'freebsd': 'freebsd',
 };
 
+// Windows executables compiled by Golang have a `.exe` extension
 let arch = ARCH_MAPPING[process.arch];
 if ( process.platform === 'win32' ) {
 	arch += '.exe';
