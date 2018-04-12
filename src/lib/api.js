@@ -14,7 +14,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import Token from './token';
 
 // Config
-const API_URL = process.env.API_URL || 'https://api.wpvip.co/graphql';
+const API_URL = process.env.API_URL || 'https://api.wpvip.com/graphql';
 
 export default async function API(): Promise<ApolloClient> {
 	const token = await Token.get();

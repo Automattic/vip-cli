@@ -15,7 +15,7 @@ import command from 'lib/cli/command';
 import Token from 'lib/token';
 
 // Config
-const tokenURL = 'https://dashboard.wpvip.co/me/cli/2';
+const tokenURL = 'https://dashboard.wpvip.com/me/cli/2';
 
 const rootCmd = async function() {
 	let token = await Token.get();
