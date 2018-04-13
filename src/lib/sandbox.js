@@ -365,11 +365,17 @@ export function waitForRunningSandbox( site, cb ) {
 				return cb( err );
 			}
 
-			if ( ! sbox || sbox.state !== 'running' ) {
-				if ( i++ > 20 ) {
-					clearInterval( poll );
-					return console.log( 'Timeout: Failed to get sandbox' );
+			if ( i++ > 20 ) {
+				clearInterval( poll );
+
+				if ( sbox && sbox.state !== 'running' ) {
+					return console.error( 'Timeout: the sandbox container is stalled. Please try again or contact the Platform team for help' );
+				} else {
+					return console.error( 'Timeout: failed to get details about the sandbox container. Please try again or contact the Platform team for help' );
 				}
+			}
+
+			if ( ! sbox || sbox.state !== 'running' ) {
 				return utils.showLoading( 'Waiting for sandbox to start' );
 			}
 
