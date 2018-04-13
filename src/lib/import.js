@@ -49,7 +49,7 @@ export class Importer {
 			}
 
 			// Check filename
-			if ( ! /uploads\/[a-zA-Z0-9\/\._-]+$/.test( file ) ) {
+			if ( ! /uploads\/[a-zA-Z0-9@\/\._-]+$/.test( file ) ) {
 				let err = new Error( 'Invalid filename:' + file );
 				console.log( err.toString() );
 				return callback( err );
