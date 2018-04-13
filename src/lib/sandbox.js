@@ -357,12 +357,23 @@ export function getSandboxesForSite( site, cb ) {
 }
 
 export function waitForRunningSandbox( site, cb ) {
+	let i = 0;
 	var poll = setInterval( () => {
 		getSandboxForSite( site, ( err, sbox ) => {
 			if ( err ) {
 				// API error, bail
 				clearInterval( poll );
 				return cb( err );
+			}
+
+			if ( i++ > 20 ) {
+				clearInterval( poll );
+
+				if ( sbox && sbox.state !== 'running' ) {
+					return console.error( 'Timeout: the sandbox container is stalled. Please try again or contact the Platform team for help' );
+				} else {
+					return console.error( 'Timeout: failed to get details about the sandbox container. Please try again or contact the Platform team for help' );
+				}
 			}
 
 			if ( ! sbox || sbox.state !== 'running' ) {
