@@ -52,6 +52,10 @@ export const auth = api.auth;
 function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
+		if ( err && err.code === 'ECONNABORTED' ) {
+			return console.error( colors.red( '✕' ), ' API Timeout: Ensure your PROXY is correctly configured. https://wp.me/PCYsg-fQp#setup' );
+		}
+
 		if ( res.status === 401 ) {
 			return console.error( 'Invalid or expired token. Please login with `vipgo login`' );
 		}
