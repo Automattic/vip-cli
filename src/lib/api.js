@@ -1,5 +1,14 @@
 const vip = require( 'vip' );
 const api = new vip();
+const colors = require( 'colors' );
+
+function uncaughtError( err ) {
+	console.log();
+	console.log( ' ', colors.red( '✕' ), ' Please contact the Platform team with the following error:' );
+	console.log( ' ', colors.dim( err.stack ) );
+}
+process.on( 'uncaughtException', uncaughtError );
+process.on( 'unhandledRejection', uncaughtError );
 
 const { getEnv } = require( './config' );
 getEnv( 'PROXY', ( err, proxy ) => {
