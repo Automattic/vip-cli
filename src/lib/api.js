@@ -1,6 +1,19 @@
 const vip = require( 'vip' );
 const api = new vip();
+const colors = require( 'colors' );
 
+function uncaughtError( err ) {
+	console.log();
+	console.log( ' ', colors.red( '✕' ), ' Unexpected error: Please contact the Platform team with the following error:' );
+	console.log( ' ', colors.dim( err.stack ) );
+}
+process.on( 'uncaughtException', uncaughtError );
+process.on( 'unhandledRejection', uncaughtError );
+
+// Timeout after 2s
+api.API_TIMEOUT = 2000;
+
+// Add environment variables
 const { getEnv } = require( './config' );
 getEnv( 'PROXY', ( err, proxy ) => {
 	if ( err || ! proxy ) {
@@ -10,6 +23,7 @@ getEnv( 'PROXY', ( err, proxy ) => {
 	api.proxy = proxy;
 });
 
+// Inject credentials
 const { getCredentials } = require( './utils' );
 getCredentials( function( err, credentials ) {
 	if ( err ) {
@@ -38,6 +52,10 @@ export const auth = api.auth;
 function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
+		if ( err && err.code === 'ECONNABORTED' ) {
+			return console.error( colors.red( '✕' ), ' API Timeout: Ensure your PROXY is correctly configured. https://wp.me/PCYsg-fQp#setup' );
+		}
+
 		if ( res.status === 401 ) {
 			return console.error( 'Invalid or expired token. Please login with `vipgo login`' );
 		}
