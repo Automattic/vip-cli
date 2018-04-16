@@ -69,6 +69,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 	// Set the site in options.app
 	let res;
 	if ( _opts.appContext ) {
+
+		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
 			const repo = await Repo();
 			const api = await API();
@@ -152,7 +154,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 				options.app = Object.assign( {}, a.app );
 			} else if ( apps.length === 1 ) {
-				options.app = Object.assign( {}, apps.pop() );
+				options.app = Object.assign( {}, apps[ 0 ] );
 			} else if ( apps.length > 1 ) {
 				const a = await inquirer.prompt( {
 					type: 'list',
@@ -221,7 +223,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			return {};
 		} else if ( options.app.environments.length === 1 ) {
-			options.env = options.app.environments.pop();
+			options.env = options.app.environments[ 0 ];
 		} else if ( options.app.environments.length > 1 ) {
 			const e = await inquirer.prompt( {
 				type: 'list',
