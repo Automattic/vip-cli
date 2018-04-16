@@ -160,7 +160,7 @@ program
 
 			sandbox.displaySandboxes( sandboxes );
 
-			utils.maybeConfirm( `Are you sure you want to delete all ${ sandboxes.length } of your sandbox containers? (y/n) y`, true, ( err, yes ) => {
+			utils.maybeConfirm( `Are you sure you want to delete all ${ sandboxes.length } of your sandbox containers?`, true, ( err, yes ) => {
 				if ( ! yes ) {
 					return;
 				}
