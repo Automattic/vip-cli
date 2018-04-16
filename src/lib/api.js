@@ -10,6 +10,10 @@ function uncaughtError( err ) {
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
+// Timeout after 2s
+api.API_TIMEOUT = 2000;
+
+// Add environment variables
 const { getEnv } = require( './config' );
 getEnv( 'PROXY', ( err, proxy ) => {
 	if ( err || ! proxy ) {
@@ -19,6 +23,7 @@ getEnv( 'PROXY', ( err, proxy ) => {
 	api.proxy = proxy;
 });
 
+// Inject credentials
 const { getCredentials } = require( './utils' );
 getCredentials( function( err, credentials ) {
 	if ( err ) {
