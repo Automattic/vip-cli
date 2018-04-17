@@ -33,18 +33,6 @@ getCredentials( function( err, credentials ) {
 	api.auth.apiUserId = credentials.userId;
 	api.auth.token = credentials.accessToken;
 	api.caps = credentials.caps;
-
-	getEnv( 'PROXY', ( err, proxy ) => {
-		if ( err ) {
-			return;
-		}
-
-		if ( ! proxy ) {
-			return;
-		}
-
-		api.proxy = proxy;
-	});
 });
 
 export const auth = api.auth;
