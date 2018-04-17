@@ -69,6 +69,7 @@ function sshRunCommand( sandbox, command, opts ) {
 		`vipdev@${ sandbox.host_name }`,
 		'-p', sandbox.ssh_port,
 		'-tt',
+		'-A', // SSH Agent Forwarding
 	];
 
 	if ( ! isSandbox( hostname ) ) {
