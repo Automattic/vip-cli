@@ -62,7 +62,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
 	if ( this.sub[ _opts.requiredArgs ] &&
 		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
-		this.showHelp();
+		console.error( colors.red( 'Error:' ), `\`${ this.sub.join( ' ' ) }\` is not a valid subcommand. See \`vip help\`` );
 		return {};
 	}
 
