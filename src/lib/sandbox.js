@@ -62,6 +62,7 @@ export function runOnExistingContainer( site, sandbox, command, opts ) {
 function sshRunCommand( sandbox, command, opts ) {
 	opts = Object.assign({
 		confirm: false,
+		agentForward: false,
 	}, opts || {});
 
 	const ssh = [
@@ -69,8 +70,11 @@ function sshRunCommand( sandbox, command, opts ) {
 		`vipdev@${ sandbox.host_name }`,
 		'-p', sandbox.ssh_port,
 		'-tt',
-		'-A', // SSH Agent Forwarding
 	];
+
+	if ( opts.agentForward ) {
+		ssh.push( '-A' );
+	}
 
 	if ( ! isSandbox( hostname ) ) {
 		ssh.push( '-o', 'ProxyCommand="nc -X 5 -x 127.0.0.1:8080 %h %p"' );
