@@ -45,6 +45,7 @@ program
 
 program
 	.command( 'start <site>' )
+	.option( '-A', 'Enables forwarding of the authentication agent connection.  This can also be specified on a per-host basis in a configuration file.' )
 	.description( 'Start a sandbox and switch you to the container namespace' )
 	.action( ( site, options ) => {
 		utils.findSite( site, ( err, site ) => {
@@ -56,7 +57,7 @@ program
 				return console.error( 'Specified site does not exist. Try the ID.' );
 			}
 
-			sandbox.getSandboxAndRun( site, null, { user: 'root' });
+			sandbox.getSandboxAndRun( site, null, { user: 'root', agentForward: options.A });
 		});
 	});
 
