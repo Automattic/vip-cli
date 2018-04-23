@@ -63,6 +63,7 @@ function sshRunCommand( sandbox, command, opts ) {
 	opts = Object.assign({
 		confirm: false,
 		agentForward: false,
+		verbose: false,
 	}, opts || {});
 
 	const ssh = [
@@ -71,6 +72,10 @@ function sshRunCommand( sandbox, command, opts ) {
 		'-p', sandbox.ssh_port,
 		'-tt',
 	];
+
+	if ( opts.verbose ) {
+		ssh.push( '-vvv' );
+	}
 
 	if ( opts.agentForward ) {
 		ssh.push( '-A' );
