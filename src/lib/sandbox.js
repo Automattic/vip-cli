@@ -376,7 +376,8 @@ export function waitForRunningSandbox( site, cb ) {
 				return cb( err );
 			}
 
-			if ( i++ > 20 ) {
+			// timeout after 60 seconds
+			if ( i++ > 60 ) {
 				clearInterval( poll );
 
 				if ( sbox && sbox.state !== 'running' ) {
