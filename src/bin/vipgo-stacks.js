@@ -8,18 +8,8 @@ program
 	.command( 'update' )
 	.description( 'Update software stacks on the current sandbox' )
 	.action( () => {
-		api
-			.get( '/hosts' )
-			.query({
-				search: require( 'os' ).hostname(),
-				host_type_id: 5,
-			})
-			.end( ( err, res ) => {
-				if ( err ) {
-					return console.error( err.response.error );
-				}
-
-				var host_id = res.body.data[0].host_id;
+		// The `software_update` endpoint uses `0` as a way to specify all sandbox hosts.
+		const host_id = 0;
 
 				api
 					.post( '/hosts/' + host_id + '/software_update' )
@@ -46,7 +36,6 @@ program
 								});
 						}, 1000 );
 					});
-			});
 	});
 
 program
