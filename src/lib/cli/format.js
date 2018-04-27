@@ -31,7 +31,7 @@ export function formatEnvironment( environment: string ): string {
 		return chalk.red( environment.toUpperCase() );
 	}
 
-	return chalk.blue( environment.toLowerCase() );
+	return chalk.blueBright( environment.toLowerCase() );
 }
 
 function ids( data: Array<any>, opts: ?Options ): string {
@@ -59,7 +59,7 @@ function table( data: Array<any>, opts: ?Options ): string {
 	const t = new Table( {
 		head: fields,
 		style: {
-			head: [ 'blue' ],
+			head: [ 'blueBright' ],
 		},
 	} );
 

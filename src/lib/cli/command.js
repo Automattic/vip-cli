@@ -148,7 +148,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				} );
 
 				if ( ! a || ! a.app || ! a.app.id ) {
-					console.log( `App ${ chalk.blue( a.app.name ) } does not exist` );
+					console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
 					return {};
 				}
 
@@ -171,7 +171,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				} );
 
 				if ( ! a || ! a.app || ! a.app.id ) {
-					console.log( `App ${ chalk.blue( a.app.name ) } does not exist` );
+					console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
 					return {};
 				}
 
@@ -182,12 +182,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 			try {
 				a = await app( options.app, _opts.appQuery );
 			} catch ( e ) {
-				console.log( `App ${ chalk.blue( options.app ) } does not exist` );
+				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
 				return {};
 			}
 
 			if ( ! a || ! a.id ) {
-				console.log( `App ${ chalk.blue( options.app ) } does not exist` );
+				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
 				return {};
 			}
 
@@ -209,16 +209,16 @@ args.argv = async function( argv, cb ): Promise<any> {
 			const env = options.app.environments.find( cur => cur.name === options.env );
 
 			if ( ! env ) {
-				console.log( `Environment ${ chalk.blue( options.env ) } for app ${ chalk.blue( options.app.name ) } does not exist` );
+				console.log( `Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright( options.app.name ) } does not exist` );
 				return {};
 			}
 
 			options.env = env;
 		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
 			if ( _opts.childEnvContext ) {
-				console.log( `Could not find any child environments for ${ chalk.blue( options.app.name ) }` );
+				console.log( `Could not find any child environments for ${ chalk.blueBright( options.app.name ) }` );
 			} else {
-				console.log( `Could not find any environments for ${ chalk.blue( options.app.name ) }` );
+				console.log( `Could not find any environments for ${ chalk.blueBright( options.app.name ) }` );
 			}
 
 			return {};
@@ -240,7 +240,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} );
 
 			if ( ! e || ! e.env || ! e.env.id ) {
-				console.log( `App ${ chalk.blue( e.env.name ) } does not exist` );
+				console.log( `App ${ chalk.blueBright( e.env.name ) } does not exist` );
 				return {};
 			}
 

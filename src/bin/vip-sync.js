@@ -125,7 +125,7 @@ command( {
 
 			const marks = {
 				pending: '○',
-				running: chalk.blue( sprite.next().value ),
+				running: chalk.blueBright( sprite.next().value ),
 				success: chalk.green( '✓' ),
 				failed: chalk.red( '✕' ),
 				unknown: chalk.yellow( '✕' ),
