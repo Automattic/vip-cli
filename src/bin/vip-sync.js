@@ -4,7 +4,7 @@
 /**
  * External dependencies
  */
-import colors from 'colors';
+import chalk from 'chalk';
 import gql from 'graphql-tag';
 import { stdout } from 'single-line-log';
 
@@ -80,15 +80,15 @@ command( {
 
 		if ( syncing ) {
 			if ( environment.syncProgress.status === 'running' ) {
-				console.log( colors.yellow( 'Note:' ), 'A data sync is already running' );
+				console.log( chalk.yellow( 'Note:' ), 'A data sync is already running' );
 			} else {
-				console.log( colors.yellow( 'Note:' ), 'Someone recently ran a data sync on this site' );
-				console.log( colors.yellow( 'Note:' ), 'Please wait a few minutes before trying again' );
+				console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site' );
+				console.log( chalk.yellow( 'Note:' ), 'Please wait a few minutes before trying again' );
 			}
 		}
 
 		console.log();
-		console.log( `  syncing: ${ colors.yellow( opts.app.name ) }` );
+		console.log( `  syncing: ${ chalk.yellow( opts.app.name ) }` );
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
 		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
 
@@ -125,10 +125,10 @@ command( {
 
 			const marks = {
 				pending: '○',
-				running: colors.blue( sprite.next().value ),
-				success: colors.green( '✓' ),
-				failed: colors.red( '✕' ),
-				unknown: colors.yellow( '✕' ),
+				running: chalk.blue( sprite.next().value ),
+				success: chalk.green( '✓' ),
+				failed: chalk.red( '✕' ),
+				unknown: chalk.yellow( '✕' ),
 			};
 
 			const out = [];
@@ -138,7 +138,7 @@ command( {
 
 			steps.forEach( step => {
 				if ( step.status === 'pending' ) {
-					out.push( colors.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
+					out.push( chalk.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
 				} else {
 					out.push( ` ${ marks[ step.status ] } ${ step.name }` );
 				}

@@ -25,13 +25,13 @@ export function formatData( data: Array<any>, format: string, opts: ?Options ): 
 }
 
 export function formatEnvironment( environment: string ): string {
-	const colors = require( 'colors' );
+	const chalk = require( 'chalk' );
 
 	if ( 'production' === environment.toLowerCase() ) {
-		return colors.red( environment.toUpperCase() );
+		return chalk.red( environment.toUpperCase() );
 	}
 
-	return colors.blue( environment.toLowerCase() );
+	return chalk.blue( environment.toLowerCase() );
 }
 
 function ids( data: Array<any>, opts: ?Options ): string {

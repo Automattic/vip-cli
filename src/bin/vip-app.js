@@ -4,7 +4,7 @@
 /**
  * External dependencies
  */
-import colors from 'colors';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -21,12 +21,12 @@ command( { requiredArgs: 1, format: true } )
 		try {
 			res = await app( arg[ 0 ], 'id,name,environments{id,name,defaultDomain}' );
 		} catch ( e ) {
-			console.log( `App ${ colors.blue( arg[ 0 ] ) } does not exist` );
+			console.log( `App ${ chalk.blue( arg[ 0 ] ) } does not exist` );
 			return;
 		}
 
 		if ( ! res || ! res.environments ) {
-			console.log( `App ${ colors.blue( arg[ 0 ] ) } does not exist` );
+			console.log( `App ${ chalk.blue( arg[ 0 ] ) } does not exist` );
 			return;
 		}
 
