@@ -15,7 +15,8 @@
     "build": "babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
-    "jest": "jest"
+    "jest": "jest",
+    "preinstall": "node ./scripts/check-version.js"
   },
   "repository": {
     "type": "git",
@@ -68,6 +69,7 @@
     "json2csv": "^3.11.5",
     "jwt-decode": "^2.2.0",
     "opn": "^5.2.0",
+    "semver": "^5.5.0",
     "single-line-log": "^1.1.2",
     "update-notifier": "^2.3.0"
   },
