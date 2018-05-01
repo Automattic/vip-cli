@@ -5,7 +5,7 @@
  */
 import args from 'args';
 import inquirer from 'inquirer';
-import colors from 'colors';
+import chalk from 'chalk';
 import gql from 'graphql-tag';
 import updateNotifier from 'update-notifier';
 
@@ -22,8 +22,8 @@ import pkg from 'root/package.json';
 
 function uncaughtError( err ) {
 	console.log();
-	console.log( ' ', colors.red( '✕' ), ' Unexpected error: Please contact VIP Support with the following error:' );
-	console.log( ' ', colors.dim( err.stack ) );
+	console.log( ' ', chalk.red( '✕' ), ' Unexpected error: Please contact VIP Support with the following error:' );
+	console.log( ' ', chalk.dim( err.stack ) );
 }
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
@@ -62,7 +62,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
 	if ( this.sub[ _opts.requiredArgs ] &&
 		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
-		console.error( colors.red( 'Error:' ), `\`${ this.sub.join( ' ' ) }\` is not a valid subcommand. See \`vip help\`` );
+		console.error( chalk.red( 'Error:' ), `\`${ this.sub.join( ' ' ) }\` is not a valid subcommand. See \`vip help\`` );
 		return {};
 	}
 
@@ -147,7 +147,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				} );
 
 				if ( ! a || ! a.app || ! a.app.id ) {
-					console.log( `App ${ colors.blue( a.app.name ) } does not exist` );
+					console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
 					return {};
 				}
 
@@ -170,7 +170,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				} );
 
 				if ( ! a || ! a.app || ! a.app.id ) {
-					console.log( `App ${ colors.blue( a.app.name ) } does not exist` );
+					console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
 					return {};
 				}
 
@@ -181,12 +181,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 			try {
 				a = await app( options.app, _opts.appQuery );
 			} catch ( e ) {
-				console.log( `App ${ colors.blue( options.app ) } does not exist` );
+				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
 				return {};
 			}
 
 			if ( ! a || ! a.id ) {
-				console.log( `App ${ colors.blue( options.app ) } does not exist` );
+				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
 				return {};
 			}
 
@@ -208,16 +208,16 @@ args.argv = async function( argv, cb ): Promise<any> {
 			const env = options.app.environments.find( cur => cur.name === options.env );
 
 			if ( ! env ) {
-				console.log( `Environment ${ colors.blue( options.env ) } for app ${ colors.blue( options.app.name ) } does not exist` );
+				console.log( `Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright( options.app.name ) } does not exist` );
 				return {};
 			}
 
 			options.env = env;
 		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
 			if ( _opts.childEnvContext ) {
-				console.log( `Could not find any child environments for ${ colors.blue( options.app.name ) }` );
+				console.log( `Could not find any child environments for ${ chalk.blueBright( options.app.name ) }` );
 			} else {
-				console.log( `Could not find any environments for ${ colors.blue( options.app.name ) }` );
+				console.log( `Could not find any environments for ${ chalk.blueBright( options.app.name ) }` );
 			}
 
 			return {};
@@ -239,7 +239,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} );
 
 			if ( ! e || ! e.env || ! e.env.id ) {
-				console.log( `App ${ colors.blue( e.env.name ) } does not exist` );
+				console.log( `App ${ chalk.blueBright( e.env.name ) } does not exist` );
 				return {};
 			}
 
