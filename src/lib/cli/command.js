@@ -69,7 +69,6 @@ args.argv = async function( argv, cb ): Promise<any> {
 	// Set the site in options.app
 	let res;
 	if ( _opts.appContext ) {
-
 		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
 			const repo = await Repo();
