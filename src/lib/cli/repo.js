@@ -16,12 +16,29 @@ export default async function getRepoFromGitConfig(): Promise<string> {
 
 	const config = ini.parse( fs.readFileSync( file, 'utf-8' ) );
 
-	let url = config[ 'remote "origin"' ].url;
-	url = url.replace( /.git$/, '' );
-	url = url.replace( 'https://github.com/', '' );
-	url = url.replace( 'git@github.com:', '' );
+	// Find the first 'wpcomvip' remote
+	for ( const key in config ) {
+		if ( 'remote' !== key.substring( 0, 6 ) ) {
+			continue;
+		}
 
-	return url;
+		if ( ! config[ key ].url ) {
+			continue;
+		}
+
+		if ( 0 > config[ key ].url.indexOf( 'wpcomvip/' ) ) {
+			continue;
+		}
+
+		let repo = config[ key ].url;
+		repo = repo.replace( /.git$/, '' );
+		repo = repo.replace( 'https://github.com/', '' );
+		repo = repo.replace( 'git@github.com:', '' );
+
+		return repo;
+	}
+
+	return;
 }
 
 async function find( dir ): Promise<string> {
