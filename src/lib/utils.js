@@ -94,9 +94,10 @@ export function getCredentials( callback ) {
 
 export function findSite( domain, cb ) {
 	var request, api = require( './api' );
-	if ( ! isNaN( parseInt( domain ) ) ) {
+	if ( ! isNaN( domain ) ) {
+		const siteId = parseInt( domain, 10 );
 		request = api
-			.get( '/sites/' + domain );
+			.get( '/sites/' + siteId );
 	} else {
 		var u = url.parse( domain );
 		request = api
