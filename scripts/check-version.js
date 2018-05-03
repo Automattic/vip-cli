@@ -1,9 +1,9 @@
 const semver = require( 'semver' );
-const { engines } = require( '../package.json' );
+const { name, engines } = require( '../package.json' );
 
 const version = engines.node;
 
 if ( ! semver.satisfies( process.version, version ) ) {
-	console.log( `Required node version ${ version } not satisfied with current version ${ process.version }.` );
+	console.log( `The current version of Node (${ process.version }) does not meet the minimum requirements; ${ name } requires Node version ${ version }. Please follow the installation instructions at https://nodejs.org/en/download/ to upgrade before continuing.` );
 	process.exit( 1 );
 }

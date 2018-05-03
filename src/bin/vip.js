@@ -55,17 +55,17 @@ const rootCmd = async function() {
 		try {
 			token = new Token( t );
 		} catch ( e ) {
-			console.log( 'Invalid token: misformed' );
+			console.log( 'The token provided is malformed. Please check the token and try again.' );
 			return;
 		}
 
 		if ( token.expired() ) {
-			console.log( 'Invalid token: expired' );
+			console.log( 'The token provided is expired. Please log in again to refresh the token.' );
 			return;
 		}
 
 		if ( ! token.valid() ) {
-			console.log( 'Invalid token' );
+			console.log( 'The provided token is not valid. Please log in again to refresh the token.' );
 			return;
 		}
 

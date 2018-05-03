@@ -94,7 +94,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 						},
 					} );
 			} catch ( err ) {
-				console.log( err.toString() );
+				console.log( `Failed to get repo (${ _opts.appQuery }) details: ${ err.toString() }` );
 				return;
 			}
 
@@ -119,7 +119,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 							},
 						} );
 				} catch ( err ) {
-					console.log( err.toString() );
+					console.log( `Failed to get app (${ _opts.appQuery }) details: ${ err.toString() }` );
 					return;
 				}
 
