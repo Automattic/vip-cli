@@ -45,6 +45,8 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 		return res.data.apps.edges[ 0 ];
 	}
 
+	app = parseInt( app, 10 );
+
 	const res = await api
 		.query( {
 			// $FlowFixMe: gql template is not supported by flow
