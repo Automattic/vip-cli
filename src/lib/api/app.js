@@ -16,7 +16,7 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 	}
 
 	const api = await API();
-	if ( isNaN( parseInt( app ) ) ) {
+	if ( isNaN( app ) ) {
 		const res = await api
 			.query( {
 				// $FlowFixMe: gql template is not supported by flow
