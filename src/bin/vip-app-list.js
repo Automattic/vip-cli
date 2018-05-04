@@ -41,7 +41,7 @@ command( { format: true } )
 					},
 				} );
 		} catch ( err ) {
-			console.log( err.toString() );
+			console.log( 'Failed to fetch apps: %s', err.toString() );
 			return;
 		}
 
