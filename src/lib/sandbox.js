@@ -91,6 +91,7 @@ function sshRunCommand( sandbox, command, opts ) {
 	notice.push( `-- Container: ${ sandbox.container_name }` );
 	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
 	notice.push( `-- Host IP: ${ sandbox.host_ip }` );
+	notice.push( `-- SFTP: sftp://vipdev@${ sandbox.host_name }:${ sandbox.ssh_port }` );
 	utils.displayNotice( notice );
 
 	process.on( 'SIGHUP', () => {
