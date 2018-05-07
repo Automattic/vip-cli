@@ -10,8 +10,8 @@ function uncaughtError( err ) {
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
-// Timeout after 2s
-api.API_TIMEOUT = 2000;
+// Timeout after 5s
+api.API_TIMEOUT = 5000;
 
 // Add environment variables
 const { getEnv } = require( './config' );
