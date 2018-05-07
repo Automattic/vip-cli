@@ -41,6 +41,7 @@ function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
 		if ( err && err.code === 'ECONNABORTED' ) {
+			console.error( request.method, request.url, request.req.path );
 			return console.error( colors.red( '✕' ), ' API Timeout: Ensure your PROXY is correctly configured. https://wp.me/PCYsg-fQp#setup' );
 		}
 
