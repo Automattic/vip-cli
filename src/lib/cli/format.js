@@ -50,14 +50,14 @@ function csv( data: Array<any>, opts: ?Options ): string {
 	const json2csv = require( 'json2csv' );
 	const fields = Object.keys( data[ 0 ] );
 
-	return json2csv( { data: data, fields: fields } );
+	return json2csv( { data: data, fields: formatFields( fields ) } );
 }
 
 function table( data: Array<any>, opts: ?Options ): string {
 	const Table = require( 'cli-table' );
 	const fields = Object.keys( data[ 0 ] );
 	const t = new Table( {
-		head: fields,
+		head: formatFields( fields ),
 		style: {
 			head: [ 'blueBright' ],
 		},
@@ -70,4 +70,13 @@ function table( data: Array<any>, opts: ?Options ): string {
 	} );
 
 	return t.toString();
+}
+
+function formatFields( fields: Array<string> ) {
+	return fields.map( field => {
+		return field
+			.split( /(?=[A-Z])/ )
+			.join( ' ' )
+			.toLowerCase();
+	} );
 }
