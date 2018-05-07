@@ -19,7 +19,7 @@ command( { requiredArgs: 1, format: true } )
 		let res;
 
 		try {
-			res = await app( arg[ 0 ], 'id,environments{name,datacenter,branch,currentCommit,defaultDomain}' );
+			res = await app( arg[ 0 ], 'id,environments{name,datacenter,repo,branch,currentCommit,defaultDomain}' );
 		} catch ( e ) {
 			console.log( `App ${ chalk.blueBright( arg[ 0 ] ) } does not exist` );
 			return;
