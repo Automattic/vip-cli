@@ -227,6 +227,34 @@ program
 			});
 	});
 
+program
+	.command( 'flush-memcached <site>' )
+	.description( 'Trigger a memcached flush for an unlaunched or non-production site.' )
+	.action( site => {
+		utils.findAndConfirmSite( site, 'Flush memcached containers', ( err, s ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! s ) {
+				return console.error( "Couldn't find site:", site );
+			}
+
+			api.post( `/sites/${ s.client_site_id }/actions/memcached/flush` )
+				.end( ( err, res ) => {
+					if ( err ) {
+						if ( err.status >= 400 && err.status < 500 ) {
+							return console.error( `❌ Error: ${ res.body.message }` );
+						}
+
+						return console.error( `�~] ${ err.response.error }` );
+					}
+
+					console.log( `✅ ${ res.body.data }` );
+				} );
+		} );
+	} );
+
 program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
 	program.help();
