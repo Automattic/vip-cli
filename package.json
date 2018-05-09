@@ -16,7 +16,7 @@
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
-    "preinstall": "node ./scripts/check-version.js"
+    "postinstall": "node ./scripts/check-version.js"
   },
   "repository": {
     "type": "git",
