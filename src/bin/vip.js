@@ -30,10 +30,21 @@ const rootCmd = async function() {
 		// Bypass helper function
 		args.parse( process.argv );
 
+		console.log();
+		console.log( '  Welcome to' );
+		console.log( '   _    __________     ______' );
+		console.log( '  | |  / /  _/ __ \\   / ____/___' );
+		console.log( '  | | / // // /_/ /  / / __/ __ \\' );
+		console.log( '  | |/ // // ____/  / /_/ / /_/ /' );
+		console.log( '  |___/___/_/       \\____/\\____/' );
+		console.log();
+		console.log( `  First you need an access token. We'll open ${ tokenURL } in your web browser. Follow the instructions there to continue.` );
+		console.log();
+
 		const c = await inquirer.prompt( {
 			type: 'confirm',
 			name: 'continue',
-			message: `This will open ${ tokenURL } in your web browser. Follow the instructions there to acquire an access token. Continue?`,
+			message: 'Continue?',
 			prefix: '',
 		} );
 
