@@ -74,32 +74,36 @@ args.argv = async function( argv, cb ): Promise<any> {
 			const repo = await Repo();
 			const api = await API();
 
-			try {
-				res = await api
-					.query( {
-						// $FlowFixMe: gql template is not supported by flow
-						query: gql`query Repo( $name: String ) {
-							repo( name: $name ) {
-								name, apps {
-									total
-									nextCursor
-									edges {
-										${ _opts.appQuery }
+			let apps;
+			if ( repo ) {
+				try {
+					res = await api
+						.query( {
+							// $FlowFixMe: gql template is not supported by flow
+							query: gql`query Repo( $name: String ) {
+								repo( name: $name ) {
+									name, apps {
+										total
+										nextCursor
+										edges {
+											${ _opts.appQuery }
+										}
 									}
 								}
-							}
-						}`,
-						variables: {
-							name: repo,
-						},
-					} );
-			} catch ( err ) {
-				console.log( `Failed to get repo (${ _opts.appQuery }) details: ${ err.toString() }` );
-				return;
+							}`,
+							variables: {
+								name: repo,
+							},
+						} );
+
+					apps = res.data.repo.apps.edges;
+				} catch ( err ) {
+					console.log( `Failed to get repo (${ repo }) details: ${ err.toString() }` );
+					return;
+				}
 			}
 
-			const apps = res.data.repo.apps.edges;
-			if ( ! apps || ! apps || ! apps.length ) {
+			if ( ! apps || ! apps.length ) {
 				try {
 					res = await api
 						.query( {
