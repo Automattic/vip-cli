@@ -40,6 +40,10 @@ export function getSandboxAndRun( site, command, opts ) {
 export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
+	if ( isProxied( hostname ) && ! isSandbox( hostname ) ) {
+		return console.error( 'Cannot sandbox VIP Go sites from WordPress.com sandboxes. https://fieldguide.automattic.com/vip-go/vip-cli/' );
+	}
+
 	if ( isSandbox( sandbox.host_name ) && hostname !== sandbox.host_name ) {
 		return console.error( 'Cannot run command on dedicated sandbox remotely' );
 	}
