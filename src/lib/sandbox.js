@@ -9,6 +9,10 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
+function isProxied( hostname ) {
+	return /dev\.\w{3}\.(?:wordpress.com|vipv2\.net)$/.test( hostname );
+}
+
 function isSandbox( hostname ) {
 	return /^\w+\.dev\.\w{3}\.vipv2\.net/.test( hostname );
 }
@@ -81,7 +85,7 @@ function sshRunCommand( sandbox, command, opts ) {
 		ssh.push( '-A' );
 	}
 
-	if ( ! isSandbox( hostname ) ) {
+	if ( ! isProxied( hostname ) ) {
 		ssh.push( '-o', 'ProxyCommand="nc -X 5 -x 127.0.0.1:8080 %h %p"' );
 	}
 
