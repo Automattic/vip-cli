@@ -10,8 +10,8 @@ function uncaughtError( err ) {
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
-// Timeout after 2s
-api.API_TIMEOUT = 2000;
+// Timeout after 5s
+api.API_TIMEOUT = 5000;
 
 // Add environment variables
 const { getEnv } = require( './config' );
@@ -41,6 +41,7 @@ function handleAuth( request ) {
 	var callback = request.callback;
 	request.callback = function( err, res ) {
 		if ( err && err.code === 'ECONNABORTED' ) {
+			console.error( `${ request.method } ${ request.url }` );
 			return console.error( colors.red( '✕' ), ' API Timeout: Ensure your PROXY is correctly configured. https://wp.me/PCYsg-fQp#setup' );
 		}
 
