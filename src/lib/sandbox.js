@@ -9,11 +9,11 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
-function isProxied( hostname ) {
+function isProxiedHost( hostname ) {
 	return /dev\.\w{3}\.(?:wordpress.com|vipv2\.net)$/.test( hostname );
 }
 
-function isSandbox( hostname ) {
+function isVIPGoPlatformSandboxHost( hostname ) {
 	return /^\w+\.dev\.\w{3}\.vipv2\.net/.test( hostname );
 }
 
@@ -40,15 +40,15 @@ export function getSandboxAndRun( site, command, opts ) {
 export function runOnExistingContainer( site, sandbox, command, opts ) {
 	opts = opts || {};
 
-	if ( isProxied( hostname ) && ! isSandbox( hostname ) ) {
+	if ( isProxiedHost( hostname ) && ! isVIPGoPlatformSandboxHost( hostname ) ) {
 		return console.error( 'Cannot sandbox VIP Go sites from WordPress.com sandboxes. https://fieldguide.automattic.com/vip-go/vip-cli/' );
 	}
 
-	if ( isSandbox( sandbox.host_name ) && hostname !== sandbox.host_name ) {
+	if ( isVIPGoPlatformSandboxHost( sandbox.host_name ) && hostname !== sandbox.host_name ) {
 		return console.error( 'Cannot run command on dedicated sandbox remotely' );
 	}
 
-	const runCommand = isSandbox( sandbox.host_name ) ? dockerRunCommand : sshRunCommand;
+	const runCommand = isVIPGoPlatformSandboxHost( sandbox.host_name ) ? dockerRunCommand : sshRunCommand;
 	maybeStateTransition( site, state => {
 		switch( state ) {
 		case 'stopped':
@@ -89,7 +89,7 @@ function sshRunCommand( sandbox, command, opts ) {
 		ssh.push( '-A' );
 	}
 
-	if ( ! isProxied( hostname ) ) {
+	if ( ! isProxiedHost( hostname ) ) {
 		ssh.push( '-o', 'ProxyCommand="nc -X 5 -x 127.0.0.1:8080 %h %p"' );
 	}
 
@@ -473,7 +473,7 @@ export function displaySandboxes( sandboxes, opts ) {
 				c.state,
 			];
 
-			if ( isSandbox( c.host_name ) ) {
+			if ( isVIPGoPlatformSandboxHost( c.host_name ) ) {
 				row.push( 'Platform', '-', '-' );
 			} else {
 				row.push( 'Container', c.host_ip, c.ssh_port );
