@@ -82,7 +82,14 @@ function sshRunCommand( sandbox, command, opts ) {
 	}
 
 	if ( ! isSandbox( hostname ) ) {
-		ssh.push( '-o', 'ProxyCommand="nc -X 5 -x 127.0.0.1:8080 %h %p"' );
+		// Only using the new ProxyCommand on Windows for now
+		// Will eventually switch everyone over to this
+		// Note: This is win32 even on 64-bit Windows
+		if ( process.platform === 'win32' ) {
+			ssh.push( '-o', 'ProxyCommand="ssh -A -W %h:%p -N proxy.automattic.com"' );
+		} else {
+			ssh.push( '-o', 'ProxyCommand="nc -X 5 -x 127.0.0.1:8080 %h %p"' );
+		}
 	}
 
 	const notice = [];
