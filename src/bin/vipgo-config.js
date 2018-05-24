@@ -3,7 +3,7 @@
 const program = require( 'commander' );
 
 // ours
-const { set } = require( '../lib/config' );
+const { set, get } = require( '../lib/config' );
 
 // config
 const options = [ 'PROXY' ];
@@ -31,6 +31,23 @@ program
 			}
 
 			console.log( `Success: saved config for '${ name }'` ); 
+		});
+	});
+
+program
+	.command( 'show' )
+	.description( 'Show configured options' )
+	.action( ( err ) => {
+		get( 'env', ( err, data ) => {
+			if ( err ) {
+				return console.error( `Error: Failed to parse config: ${ err }` );
+			}
+
+			console.log();
+			for ( const [key, value] of Object.entries( data ) ) {
+				console.log( `${ key }=${ value }` );
+			}
+			console.log();
 		});
 	});
 
