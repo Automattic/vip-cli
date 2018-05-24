@@ -11,31 +11,31 @@ program
 		// The `software_update` endpoint uses `0` as a way to specify all sandbox hosts.
 		const host_id = 0;
 
-				api
-					.post( '/hosts/' + host_id + '/software_update' )
-					.end( ( err, res ) => {
-						if ( err ) {
-							return console.error( err.response.error );
-						}
+		api
+			.post( '/hosts/' + host_id + '/software_update' )
+			.end( ( err, res ) => {
+				if ( err ) {
+					return console.error( err.response.error );
+				}
 
-						var poll = setInterval( () => {
-							api
-								.get( '/hosts/' + host_id + '/actions/' + res.body.result )
-								.end( ( err, res ) => {
-									if ( err ) {
-										clearInterval( poll );
+				var poll = setInterval( () => {
+					api
+						.get( '/hosts/' + host_id + '/actions/' + res.body.result )
+						.end( ( err, res ) => {
+							if ( err ) {
+								clearInterval( poll );
 
-										if ( 404 !== err.status ) {
-											console.error( err.response.error );
-										}
+								if ( 404 !== err.status ) {
+									console.error( err.response.error );
+								}
 
-										return;
-									}
+								return;
+							}
 
-									log( 'Software Stack update: ' + res.body.data[0].status + '\n' );
-								});
-						}, 1000 );
-					});
+							log( 'Software Stack update: ' + res.body.data[0].status + '\n' );
+						});
+				}, 1000 );
+			});
 	});
 
 program
