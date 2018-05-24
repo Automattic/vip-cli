@@ -31,6 +31,7 @@ To start hacking:
 1. cd to the cloned directory `cd vip-cli`
 1. run `npm install` to install dependencies
 1. hack the code
+1. Build: `npm run-script build` is the quickest way to build
 1. test your changes by calling `node build/bin/vip.js`
 
 Note: Your development version will use the same config as the globally installed module and any changes to the config will impact that.
