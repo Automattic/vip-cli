@@ -251,9 +251,9 @@ program
 					}
 
 					console.log( `✅ ${ res.body.data }` );
-				} );
-		} );
-	} );
+				});
+		});
+	});
 
 program.parse( process.argv );
 if ( ! process.argv.slice( 2 ).length ) {
