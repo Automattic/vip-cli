@@ -71,35 +71,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( _opts.appContext ) {
 		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
-			const repo = await Repo();
 			const api = await API();
 
-			try {
-				res = await api
-					.query( {
-						// $FlowFixMe: gql template is not supported by flow
-						query: gql`query Repo( $name: String ) {
-							repo( name: $name ) {
-								name, apps {
-									total
-									nextCursor
-									edges {
-										${ _opts.appQuery }
-									}
-								}
-							}
-						}`,
-						variables: {
-							name: repo,
-						},
-					} );
-			} catch ( err ) {
-				console.log( `Failed to get repo (${ _opts.appQuery }) details: ${ err.toString() }` );
-				return;
-			}
-
-			const apps = res.data.repo.apps.edges;
-			if ( ! apps || ! apps || ! apps.length ) {
 				try {
 					res = await api
 						.query( {
@@ -152,30 +125,6 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 
 				options.app = Object.assign( {}, a.app );
-			} else if ( apps.length === 1 ) {
-				options.app = Object.assign( {}, apps[ 0 ] );
-			} else if ( apps.length > 1 ) {
-				const a = await inquirer.prompt( {
-					type: 'list',
-					name: 'app',
-					message: 'Which app?',
-					pageSize: 10,
-					prefix: '',
-					choices: apps.map( cur => {
-						return {
-							name: cur.name,
-							value: cur,
-						};
-					} ),
-				} );
-
-				if ( ! a || ! a.app || ! a.app.id ) {
-					console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
-					return {};
-				}
-
-				options.app = Object.assign( {}, a.app );
-			}
 		} else {
 			let a;
 			try {
