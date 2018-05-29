@@ -437,6 +437,9 @@ export function listSandboxes( opts, cb ) {
 		}
 
 		const sandboxes = data.data;
+		if ( ! sandboxes.length ) {
+			return console.log( 'No sandboxes found for your account.' );
+		}
 
 		displaySandboxes( sandboxes );
 
