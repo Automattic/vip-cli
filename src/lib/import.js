@@ -40,24 +40,27 @@ export class Importer {
 				console.log( count );
 			}
 
+			const filename = path.basename( file );
+
 			// Check extension
-			let ext = path.extname( file ).substr( 1 );
+			let ext = path.extname( filename ).substr( 1 );
 			if ( ! ext || opts.types.indexOf( ext.toLowerCase() ) < 0 ) {
-				let err = new Error( 'Invalid extension: ' + file );
+				let err = new Error( 'Invalid extension: ' + filename );
 				console.log( err.toString() );
 				return callback( err );
 			}
 
 			// Check filename
-			if ( ! /uploads\/[\p{L}0-9@\/\._-]+$/u.test( file ) ) {
-				let err = new Error( 'Invalid filename:' + file );
+			if ( ! this.validateFileName( filename ) ) {
+				const sanitized = this.sanitizeFileName( filename );
+				const err = new Error( `Invalid filename: ${ filename } -> ${ sanitized }`  );
 				console.log( err.toString() );
 				return callback( err );
 			}
 
 			// Check intermediate image
 			let int_re = /-\d+x\d+(\.\w{3,4})$/;
-			if ( ! opts.intermediate && int_re.test( file ) ) {
+			if ( ! opts.intermediate && int_re.test( filename ) ) {
 				// TODO Check if the original file exists
 				let err = new Error( 'Skipping intermediate image: ' + file );
 				console.log( err.toString() );
@@ -163,6 +166,26 @@ export class Importer {
 			.set({ 'X-Client-Site-ID': this.site.client_site_id })
 			.set({ 'X-Access-Token': this.token })
 			.timeout( 10000 );
+	}
+
+	sanitizeFileName( file ) {
+
+		// Unicode space
+		file = file.replace( '\u00A0', ' ' );
+
+		// Special chars
+		[ '?','[',']','/','\\','=','<','>',':',';',',','\'','\"','&','$','#','*','(',')','|','~','`','!','{','}','%','+' ]
+			.forEach( c => file = file.replace( c, '' ) );
+
+		[ '%20', '+' ].forEach( c => file = file.replace( c, '-' ) );
+		file = file.replace( /\s+/, '-' );
+		file = file.replace( /(?:^[\.-_])|(?:[\.-_]$)/g, '' );
+
+		return file;
+	}
+
+	validateFileName( file ) {
+		return this.sanitizeFileName( file ) === file;
 	}
 }
 
