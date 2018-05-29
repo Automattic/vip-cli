@@ -33,7 +33,7 @@
     "go-search-replace": "build/go-search-replace"
   },
   "goSearchReplace": {
-    "version": "0.0.2"
+    "version": "0.0.5"
   },
   "dependencies": {
     "async": "^1.5.2",
