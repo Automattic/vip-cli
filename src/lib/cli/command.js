@@ -15,7 +15,6 @@ import updateNotifier from 'update-notifier';
 import type { Tuple } from './prompt';
 import API from 'lib/api';
 import app from 'lib/api/app';
-import Repo from './repo';
 import { formatData } from './format';
 import { confirm } from './prompt';
 import pkg from 'root/package.json';
@@ -73,58 +72,58 @@ args.argv = async function( argv, cb ): Promise<any> {
 		if ( ! options.app ) {
 			const api = await API();
 
-				try {
-					res = await api
-						.query( {
-							// $FlowFixMe: gql template is not supported by flow
-							query: gql`query Apps( $first: Int, $after: String ) {
-								apps( first: $first, after: $after ) {
-									total
-									nextCursor
-									edges {
-										${ _opts.appQuery }
-									}
+			try {
+				res = await api
+					.query( {
+						// $FlowFixMe: gql template is not supported by flow
+						query: gql`query Apps( $first: Int, $after: String ) {
+							apps( first: $first, after: $after ) {
+								total
+								nextCursor
+								edges {
+									${ _opts.appQuery }
 								}
-							}`,
-							variables: {
-								first: 100,
-								after: null, // TODO make dynamic?
-							},
-						} );
-				} catch ( err ) {
-					console.log( `Failed to get app (${ _opts.appQuery }) details: ${ err.toString() }` );
-					return;
-				}
+							}
+						}`,
+						variables: {
+							first: 100,
+							after: null, // TODO make dynamic?
+						},
+					} );
+			} catch ( err ) {
+				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ err.toString() }` );
+				return;
+			}
 
-				if ( ! res ||
-					! res.data ||
-					! res.data.apps ||
-					! res.data.apps.edges ||
-					! res.data.apps.edges.length ) {
-					console.log( "Couldn't find any apps" );
-					return {};
-				}
+			if ( ! res ||
+				! res.data ||
+				! res.data.apps ||
+				! res.data.apps.edges ||
+				! res.data.apps.edges.length ) {
+				console.log( "Couldn't find any apps" );
+				return {};
+			}
 
-				const a = await inquirer.prompt( {
-					type: 'list',
-					name: 'app',
-					message: 'Which app?',
-					pageSize: 10,
-					prefix: '',
-					choices: res.data.apps.edges.map( cur => {
-						return {
-							name: cur.name,
-							value: cur,
-						};
-					} ),
-				} );
+			const a = await inquirer.prompt( {
+				type: 'list',
+				name: 'app',
+				message: 'Which app?',
+				pageSize: 10,
+				prefix: '',
+				choices: res.data.apps.edges.map( cur => {
+					return {
+						name: cur.name,
+						value: cur,
+					};
+				} ),
+			} );
 
-				if ( ! a || ! a.app || ! a.app.id ) {
-					console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
-					return {};
-				}
+			if ( ! a || ! a.app || ! a.app.id ) {
+				console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
+				return {};
+			}
 
-				options.app = Object.assign( {}, a.app );
+			options.app = Object.assign( {}, a.app );
 		} else {
 			let a;
 			try {
