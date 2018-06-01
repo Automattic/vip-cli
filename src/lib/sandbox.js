@@ -18,15 +18,30 @@ function isVIPGoPlatformSandboxHost( hostname ) {
 }
 
 export function displaySandboxNotice( sandbox ) {
-	const notice = [];
-	notice.push( 'Note: Remember to set the host IP in your /etc/hosts file and VIP-GO-SANDBOX-USER-ID header in your browser' );
-	notice.push( `-- /etc/hosts: ${ sandbox.host_ip } ${ sandbox.domain_name }` );
-	notice.push( `-- Container: ${ sandbox.container_name }` );
-	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
 	const isLocalSandbox = isVIPGoPlatformSandboxHost( sandbox.host_name );
+	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh'; 
+
+	const notice = [];
+	notice.push( '## Sandbox Info ##' );
+	notice.push( '' );
+	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
+	notice.push( '' );
+
+	notice.push( `-- /etc/hosts: ${ sandbox.host_ip } ${ sandbox.domain_name }` );
+	notice.push( `-- VIP-GO-SANDBOX-USER-ID: ${ api.getUserId() }` );
+	
+	notice.push( '' );
+	notice.push( `-- Connection Method: ${ connectionMethod }` );
+	notice.push( `-- Container: ${ sandbox.container_name }` );
 	if ( ! isLocalSandbox ) {
 		notice.push( `-- SFTP: sftp://vipdev@${ sandbox.host_name }:${ sandbox.ssh_port }` );
 	}
+	notice.push( '' );
+	notice.push( 'Reminder: set the host IP in your /etc/hosts file.' )
+	notice.push( 'Reminder: set the `VIP-GO-SANDBOX-USER-ID` header in your browser using Requestly.' );
+	notice.push( '' );
+	notice.push( 'More details at: https://fieldguide.automattic.com/vip-go/vip-go-sandboxes/' );
+
 	utils.displayNotice( notice );
 }
 
