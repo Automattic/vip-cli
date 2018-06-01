@@ -19,7 +19,7 @@ function isVIPGoPlatformSandboxHost( hostname ) {
 
 export function displaySandboxJSON( sandbox ) {
 	const isLocalSandbox = isVIPGoPlatformSandboxHost( sandbox.host_name );
-	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh'
+	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh';
 
 	const details = {
 		connection_method: connectionMethod,
@@ -57,7 +57,7 @@ export function displaySandboxNotice( sandbox ) {
 		notice.push( `-- SFTP: sftp://vipdev@${ sandbox.host_name }:${ sandbox.ssh_port }` );
 	}
 	notice.push( '' );
-	notice.push( 'Reminder: set the host IP in your /etc/hosts file.' )
+	notice.push( 'Reminder: set the host IP in your /etc/hosts file.' );
 	notice.push( 'Reminder: set the `VIP-GO-SANDBOX-USER-ID` header in your browser using Requestly.' );
 	notice.push( '' );
 	notice.push( 'More details at: https://fieldguide.automattic.com/vip-go/vip-go-sandboxes/' );
