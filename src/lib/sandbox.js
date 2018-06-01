@@ -17,6 +17,26 @@ function isVIPGoPlatformSandboxHost( hostname ) {
 	return /^\w+\.dev\.\w{3}\.vipv2\.net/.test( hostname );
 }
 
+export function displaySandboxJSON( sandbox ) {
+	const isLocalSandbox = isVIPGoPlatformSandboxHost( sandbox.host_name );
+	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh'
+
+	const details = {
+		connection_method: connectionMethod,
+		domain_name: sandbox.domain_name,
+		client_site_id: sandbox.client_site_id,
+		container_name: sandbox.container_name,
+		host_ip: sandbox.host_ip,
+		host_name: sandbox.host_name,
+	};
+
+	if ( ! isLocalSandbox ) {
+		details.ssh_port = sandbox.ssh_port;
+	}
+
+	console.log( JSON.stringify( details ) );
+}
+
 export function displaySandboxNotice( sandbox ) {
 	const isLocalSandbox = isVIPGoPlatformSandboxHost( sandbox.host_name );
 	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh'; 

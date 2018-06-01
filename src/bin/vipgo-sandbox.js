@@ -20,7 +20,8 @@ program
 program
 	.command( 'info <site>' )
 	.description( 'Display connection information and other details about a sandbox container' )
-	.action( ( site ) => {
+	.option( '--json', 'Return the information in JSON format' )
+	.action( ( site, options ) => {
 		utils.findSite( site, ( err, s ) => {
 			if ( err ) {
 				return console.error( err );
@@ -37,6 +38,10 @@ program
 
 				if ( ! sbox ) {
 					return console.error( `There are no active sandbox containers for ${ s.domain_name } (#${ s.client_site_id }).` );
+				}
+
+				if ( options.json ) {
+					return sandbox.displaySandboxJSON( sbox );
 				}
 
 				sandbox.displaySandboxNotice( sbox );
