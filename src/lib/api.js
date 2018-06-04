@@ -69,6 +69,14 @@ export function del( url ) {
 	return api.del( url ).use( handleAuth );
 }
 
+export function getUserId() {
+	if ( api.auth ) {
+		return api.auth.apiUserId;
+	}
+
+	return null;
+}
+
 // caps
 export function currentUserCan( cap, action ) {
 	return api.currentUserCan( cap, action );

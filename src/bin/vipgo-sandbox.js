@@ -18,6 +18,38 @@ program
 	});
 
 program
+	.command( 'info <site>' )
+	.description( 'Display connection information and other details about a sandbox container' )
+	.option( '--json', 'Return the information in JSON format' )
+	.action( ( site, options ) => {
+		utils.findSite( site, ( err, s ) => {
+			if ( err ) {
+				return console.error( err );
+			}
+
+			if ( ! s ) {
+				return console.error( `The requested site '${ site }' could not be found. Check the domain / ID and try again.` );
+			}
+
+			sandbox.getSandboxForSite( s, ( err, sbox ) => {
+				if ( err ) {
+					return console.error( `Failed to get sandbox container for ${ s.domain_name } (#${ s.client_site_id}): ${ err }` );
+				}
+
+				if ( ! sbox ) {
+					return console.error( `There are no active sandbox containers for ${ s.domain_name } (#${ s.client_site_id }).` );
+				}
+
+				if ( options.json ) {
+					return sandbox.displaySandboxJSON( sbox );
+				}
+
+				sandbox.displaySandboxNotice( sbox );
+			});
+		});
+	});
+
+program
 	.command( 'run <site> <command...>' )
 	.description( 'Run a wp-cli command on a sandbox container. Use a double dash (--) before the WP CLI command, example:' + "\n" + '  vip sandbox run exhibit.go-vip.co -- wp user list --field=ID' )
 	.option( '--skip-confirm', 'Run the command without asking for confirmation' )

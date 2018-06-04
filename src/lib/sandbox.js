@@ -17,6 +17,59 @@ function isVIPGoPlatformSandboxHost( hostname ) {
 	return /^\w+\.dev\.\w{3}\.vipv2\.net/.test( hostname );
 }
 
+export function displaySandboxJSON( sandbox ) {
+	const isLocalSandbox = isVIPGoPlatformSandboxHost( sandbox.host_name );
+	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh';
+
+	const details = {
+		connection_method: connectionMethod,
+		domain_name: sandbox.domain_name,
+		client_site_id: sandbox.client_site_id,
+		container_name: sandbox.container_name,
+		host_ip: sandbox.host_ip,
+		host_name: sandbox.host_name,
+	};
+
+	if ( ! isLocalSandbox ) {
+		details.ssh_port = sandbox.ssh_port;
+	}
+
+	console.log( JSON.stringify( details ) );
+}
+
+export function displaySandboxNotice( sandbox ) {
+	const isLocalSandbox = isVIPGoPlatformSandboxHost( sandbox.host_name );
+	const connectionMethod = isLocalSandbox ? 'docker' : 'ssh'; 
+
+	const notice = [];
+	notice.push( '## Sandbox Info ##' );
+	notice.push( '' );
+	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
+
+	
+	notice.push( '' );
+	notice.push( `-- Connection Method: ${ connectionMethod }` );
+	notice.push( `-- Container: ${ sandbox.container_name }` );
+
+	notice.push( '' );
+	notice.push( `-- /etc/hosts: ${ sandbox.host_ip } ${ sandbox.domain_name }` );
+	if ( ! isLocalSandbox ) {
+		notice.push( `-- VIP-GO-SANDBOX-USER-ID: ${ api.getUserId() }` );
+		notice.push( `-- SFTP: sftp://vipdev@${ sandbox.host_name }:${ sandbox.ssh_port }` );
+	}
+
+	notice.push( '' );
+	notice.push( 'Reminder: set the host IP in your /etc/hosts file.' );
+	if ( ! isLocalSandbox ) {
+		notice.push( 'Reminder: set the `VIP-GO-SANDBOX-USER-ID` header in your browser using Requestly.' );
+	}
+
+	notice.push( '' );
+	notice.push( 'More details at: https://fieldguide.automattic.com/vip-go/vip-go-sandboxes/' );
+
+	utils.displayNotice( notice );
+}
+
 export function getSandboxAndRun( site, command, opts ) {
 	getSandboxForSite( site, ( err, sbox ) =>  {
 		if ( err ) {
@@ -100,13 +153,7 @@ function sshRunCommand( sandbox, command, opts ) {
 		}
 	}
 
-	const notice = [];
-	notice.push( 'Note: Remember to set the host IP in your /etc/hosts file and VIP-GO-SANDBOX-USER-ID header in your browser' );
-	notice.push( `-- /etc/hosts: ${ sandbox.host_ip } ${ sandbox.domain_name }` );
-	notice.push( `-- Container: ${ sandbox.container_name }` );
-	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
-	notice.push( `-- SFTP: sftp://vipdev@${ sandbox.host_name }:${ sandbox.ssh_port }` );
-	utils.displayNotice( notice );
+	displaySandboxNotice( sandbox );
 
 	process.on( 'SIGHUP', () => {
 		decrementSboxFile( sandbox );
@@ -157,9 +204,7 @@ function dockerRunCommand( sandbox, command, opts ) {
 		run.push( 'bash' );
 	}
 
-	notice.push( `-- Container: ${ sandbox.container_name }` );
-	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
-	utils.displayNotice( notice );
+	utils.displaySandboxNotice( sandbox );
 
 	// TODO: Handle file references as arguments
 	process.on( 'SIGHUP', () => {
