@@ -169,6 +169,8 @@ export class Importer {
 	}
 
 	sanitizeFileName( file ) {
+		// This logic is based on the WordPress core function `sanitize_file_name()`
+		// https://developer.wordpress.org/reference/functions/sanitize_file_name/
 
 		// Unicode space
 		file = file.replace( '\u00A0', ' ' );
