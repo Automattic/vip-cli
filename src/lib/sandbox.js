@@ -45,20 +45,25 @@ export function displaySandboxNotice( sandbox ) {
 	notice.push( '## Sandbox Info ##' );
 	notice.push( '' );
 	notice.push( `-- Site: ${ sandbox.domain_name } (#${ sandbox.client_site_id })` );
-	notice.push( '' );
 
-	notice.push( `-- /etc/hosts: ${ sandbox.host_ip } ${ sandbox.domain_name }` );
-	notice.push( `-- VIP-GO-SANDBOX-USER-ID: ${ api.getUserId() }` );
 	
 	notice.push( '' );
 	notice.push( `-- Connection Method: ${ connectionMethod }` );
 	notice.push( `-- Container: ${ sandbox.container_name }` );
+
+	notice.push( '' );
+	notice.push( `-- /etc/hosts: ${ sandbox.host_ip } ${ sandbox.domain_name }` );
 	if ( ! isLocalSandbox ) {
+		notice.push( `-- VIP-GO-SANDBOX-USER-ID: ${ api.getUserId() }` );
 		notice.push( `-- SFTP: sftp://vipdev@${ sandbox.host_name }:${ sandbox.ssh_port }` );
 	}
+
 	notice.push( '' );
 	notice.push( 'Reminder: set the host IP in your /etc/hosts file.' );
-	notice.push( 'Reminder: set the `VIP-GO-SANDBOX-USER-ID` header in your browser using Requestly.' );
+	if ( ! isLocalSandbox ) {
+		notice.push( 'Reminder: set the `VIP-GO-SANDBOX-USER-ID` header in your browser using Requestly.' );
+	}
+
 	notice.push( '' );
 	notice.push( 'More details at: https://fieldguide.automattic.com/vip-go/vip-go-sandboxes/' );
 
