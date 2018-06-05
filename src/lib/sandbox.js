@@ -204,7 +204,7 @@ function dockerRunCommand( sandbox, command, opts ) {
 		run.push( 'bash' );
 	}
 
-	utils.displaySandboxNotice( sandbox );
+	displaySandboxNotice( sandbox );
 
 	// TODO: Handle file references as arguments
 	process.on( 'SIGHUP', () => {
