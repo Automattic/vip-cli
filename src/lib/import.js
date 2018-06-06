@@ -181,7 +181,7 @@ export class Importer {
 
 		[ '%20', '+' ].forEach( c => file = file.replace( c, '-' ) );
 		file = file.replace( /\s+/, '-' );
-		file = file.replace( /(?:^[\.-_])|(?:[\.-_]$)/g, '' );
+		file = file.replace( /(?:^[\.\-_])|(?:[\.\-_]$)/g, '' );
 
 		return file;
 	}
