@@ -28,10 +28,7 @@ command( { format: true } )
 							edges {
 								id,
 								name,
-								repo,
-								environments {
-									id
-								}
+								repo
 							}
 						}
 					}`,
@@ -54,11 +51,6 @@ command( { format: true } )
 			return;
 		}
 
-		const apps = response.data.apps.edges;
-
-		return apps.map( app => {
-			const out = Object.assign( {}, app );
-			out.environments = out.environments.length;
-			return out;
-		} );
+		// apps
+		return response.data.apps.edges;
 	} );
