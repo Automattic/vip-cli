@@ -68,7 +68,7 @@ export default class GoogleAnalytics {
 			'User-Agent': this.userAgent,
 		};
 
-		return fetch( this.ENDPOINT, {
+		return fetch( GoogleAnalytics.ENDPOINT, {
 			method,
 			body,
 			headers,

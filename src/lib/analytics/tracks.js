@@ -14,7 +14,7 @@ import querystring from 'querystring';
 
 export default class Tracks {
 	static get ENDPOINT() {
-		return 'https://public-api.wordpress.com/rest/v1.1/tracks/record?http_envelope=1';
+		return 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 	}
 
 	constructor( userId, userType, env ) {
@@ -53,7 +53,7 @@ export default class Tracks {
 			'User-Agent': this.userAgent,
 		};
 
-		return fetch( this.ENDPOINT, {
+		return fetch( Tracks.ENDPOINT, {
 			method,
 			body,
 			headers,
