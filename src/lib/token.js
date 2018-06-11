@@ -4,7 +4,7 @@
  * External dependencies
  */
 import jwtDecode from 'jwt-decode';
-import uuid from 'uuid/v1';
+import uuid from 'uuid/v4';
 
 /**
  * Internal dependencies
