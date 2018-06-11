@@ -4,6 +4,7 @@
  * External dependencies
  */
 import jwtDecode from 'jwt-decode';
+import uuid from 'uuid/v4';
 
 /**
  * Internal dependencies
@@ -64,6 +65,16 @@ export default class Token {
 
 		const now = new Date();
 		return now > this.exp;
+	}
+
+	async uuid(): string {
+		let _uuid = await keychain.getPassword( SERVICE + '-uuid' );
+		if ( ! _uuid ) {
+			_uuid = uuid();
+			await keychain.setPassword( SERVICE + '-uuid', _uuid );
+		}
+
+		return _uuid;
 	}
 
 	static async set( token: string ): Promise<boolean> {
