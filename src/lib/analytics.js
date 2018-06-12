@@ -4,6 +4,7 @@
 import Analytics from './analytics/index';
 import GoogleAnalytics from './analytics/google-analytics';
 import Tracks from './analytics/tracks';
+import config from 'root/config/config.json';
 import env from './env';
 
 let analytics = null;
@@ -13,12 +14,18 @@ export default function getInstance( uuid: string ): Analytics {
 		return analytics;
 	}
 
-	const gaAccountId = 'UA-7131263-5'; // TODO: this is batmoo's test ID
+	const gaAccountId = config.googleAnalyticsId;
+	let googleAnalytics = null;
+	if ( gaAccountId ) {
+		googleAnalytics = new GoogleAnalytics( gaAccountId, uuid, env );
+	}
+
 	const tracksUserType = 'vip';
+	const tracks = new Tracks( uuid, tracksUserType, env );
 
 	analytics = new Analytics( {
-		googleAnalytics: new GoogleAnalytics( gaAccountId, uuid, env ),
-		tracks: new Tracks( uuid, tracksUserType, env ),
+		googleAnalytics,
+		tracks,
 	} );
 
 	return analytics;
