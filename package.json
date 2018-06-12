@@ -11,12 +11,15 @@
   },
   "scripts": {
     "test": "eslint index.js src __test__ && npm run flow && jest --coverage",
-    "prepare": "npm run build",
+    "prepare": "npm run prepareConfig:local && npm run build",
+    "prepublishOnly": "npm run prepareConfig:production",
+    "postinstall": "node ./scripts/check-version.js",
     "build": "babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
-    "postinstall": "node ./scripts/check-version.js"
+    "prepareConfig:local": "node ./scripts/prepare-config.js local",
+    "prepareConfig:publish": "node ./scripts/prepare-config.js publish"
   },
   "repository": {
     "type": "git",
