@@ -29,16 +29,16 @@ export default class Tracks {
 		this.userAgent = env.userAgent;
 	}
 
-	trackEvent( name, details = {} ) {
+	trackEvent( name, eventProps = {} ) {
 		const event = Object.assign( {
 			_en: name,
-		}, details );
+		}, eventProps );
 
 		// For when we want to support batched events
 		const events = [ event ];
 
 		/**
-		 * The API expects an indexed events array with event details.
+		 * The API expects an indexed events array with event data.
 		 *
 		 * `querystring.stringify` does not handle nested arrays and objects very well.
 		 *
