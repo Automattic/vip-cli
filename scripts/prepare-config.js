@@ -2,9 +2,18 @@ const fs = require( 'fs' );
 
 const environment = process.argv[ 2 ] || 'local';
 
-const src = `config/config.${ environment }.json`;
-const dest = 'config/config.json';
+const srcFile = `config/config.${ environment }.json`;
+const destFile = 'config/config.json';
 
-console.log( `Updating config: ${ src } => ${ dest }` );
+// If the file is not there, we shouldn't bother
+const srcExists = fs.existsSync( srcFile );
+if ( ! srcExists ) {
+	console.log( `prepareConfig: source file (${ srcFile }) not found; skipping` );
+	process.exit( 0 );
+}
 
-fs.copyFileSync( src, dest );
+console.log( `prepareConfig: ${ srcFile } => ${ destFile }` );
+
+// Can't use fs.copyFileSync as it's 8.5+
+const srcContents = fs.readFileSync( srcFile );
+fs.writeFileSync( destFile, srcContents );
