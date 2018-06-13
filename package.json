@@ -11,10 +11,10 @@
   },
   "scripts": {
     "test": "eslint index.js src __test__ && npm run flow && jest --coverage",
-    "prepare": "npm run prepareConfig:local && npm run build",
-    "prepublishOnly": "npm run prepareConfig:production",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run prepareConfig:publish",
     "postinstall": "node ./scripts/check-version.js",
-    "build": "babel src -d dist",
+    "build": "npm run prepareConfig:local && babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
