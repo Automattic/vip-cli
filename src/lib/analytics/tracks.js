@@ -17,9 +17,10 @@ export default class Tracks {
 		return 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 	}
 
-	constructor( userId, userType, env ) {
+	constructor( userId, userType, eventPrefix, env ) {
 		this.userId = userId;
 		this.userType = userType;
+		this.eventPrefix = eventPrefix;
 
 		this.baseParams = {
 			'commonProps[_ui]': userId,
@@ -30,6 +31,10 @@ export default class Tracks {
 	}
 
 	trackEvent( name, eventProps = {} ) {
+		if ( ! name.startsWith( this.eventPrefix ) ) {
+			name = this.eventPrefix + name;
+		}
+
 		const event = Object.assign( {
 			_en: name,
 		}, eventProps );

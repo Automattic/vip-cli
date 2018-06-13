@@ -25,7 +25,7 @@ describe( 'lib/analytics/tracks', () => {
 
 	describe( '.send()', () => {
 		it( 'should correctly construct remote request', ( done ) => {
-			const tracksClient = new Tracks( 123, 'vip', {
+			const tracksClient = new Tracks( 123, 'vip', '', {
 				userAgent: 'vip-cli'
 			} );
 
@@ -51,14 +51,14 @@ describe( 'lib/analytics/tracks', () => {
 
 	describe( '.trackEvent()', () => {
 		it( 'should pass event details to request', ( done ) => {
-			const tracksClient = new Tracks( 123, 'vip', {} );
+			const tracksClient = new Tracks( 123, 'vip', 'prefix_', {} );
 
 			const eventName = 'clickButton';
 			const eventDetails = {
 				buttonName: 'deploy',
 			};
 
-			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=clickButton' +
+			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=prefix_clickButton' +
 				'&events%5B0%5D%5BbuttonName%5D=deploy';
 
 			buildNock()
@@ -67,6 +67,22 @@ describe( 'lib/analytics/tracks', () => {
 				} );
 
 			tracksClient.trackEvent( eventName, eventDetails )
+				.then( () => done() );
+		} );
+
+		it( 'should ignore prefix if already set for event name', ( done ) => {
+			const tracksClient = new Tracks( 123, 'vip', 'existingprefix_', {} );
+
+			const eventName = 'existingprefix_clickButton';
+
+			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=existingprefix_clickButton';
+
+			buildNock()
+				.reply( ( uri, requestBody ) => {
+					expect( requestBody ).toContain( expectedBodyMatch );
+				} );
+
+			tracksClient.trackEvent( eventName, {} )
 				.then( () => done() );
 		} );
 	} );
