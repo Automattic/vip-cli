@@ -12,7 +12,7 @@ import path from 'path';
  */
 import type { Keychain } from './keychain';
 
-export default class Secure implements Keychain {
+export default class Insecure implements Keychain {
 	file: string;
 
 	constructor( file: string ) {
