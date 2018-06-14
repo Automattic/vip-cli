@@ -67,7 +67,7 @@ export default class Token {
 		return now > this.exp;
 	}
 
-	async uuid(): string {
+	async uuid(): Promise<string> {
 		let _uuid = await keychain.getPassword( SERVICE + '-uuid' );
 		if ( ! _uuid ) {
 			_uuid = uuid();
