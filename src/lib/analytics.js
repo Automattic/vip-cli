@@ -4,15 +4,15 @@
 import Analytics from './analytics/index';
 import GoogleAnalytics from './analytics/google-analytics';
 import Tracks from './analytics/tracks';
+import Token from 'lib/token';
 import config from 'root/config/config.json';
 import env from './env';
 
 let analytics = null;
 
-export default function getInstance( uuid: string ): Analytics {
-	if ( analytics ) {
-		return analytics;
-	}
+async function init(): Analytics {
+	const token = await Token.get();
+	const uuid = await token.uuid();
 
 	const gaAccountId = config.googleAnalyticsId;
 	let googleAnalytics = null;
@@ -30,4 +30,26 @@ export default function getInstance( uuid: string ): Analytics {
 	} );
 
 	return analytics;
+}
+
+async function getInstance(): Analytics {
+	if ( analytics ) {
+		return analytics;
+	}
+
+	analytics = init();
+
+	return analytics;
+}
+
+export async function trackEvent( ...args ): Promise<Response> {
+	try {
+		getInstance()
+			.trackEvent( ...args );
+	} catch ( e ) {
+		// TODO: add debug
+	}
+
+	// Analytics issues are not critical failures
+	return Promise.resolve();
 }
