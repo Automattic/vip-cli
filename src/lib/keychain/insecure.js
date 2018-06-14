@@ -20,7 +20,7 @@ export default class Insecure implements Keychain {
 		const rw = 0o600;
 
 		let stat;
-		const tmpfile = os.tmpdir() + path.sep + file;
+		const tmpfile = os.homedir() + path.sep + file;
 		try {
 			// Ensure the file exists
 			stat = fs.statSync( tmpfile );
