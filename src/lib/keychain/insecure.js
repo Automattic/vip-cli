@@ -5,6 +5,7 @@
  */
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -19,7 +20,7 @@ export default class Secure implements Keychain {
 		const rw = 0o600;
 
 		let stat;
-		const tmpfile = os.tmpdir() + '/' + file;
+		const tmpfile = os.tmpdir() + path.sep + file;
 		try {
 			// Ensure the file exists
 			stat = fs.statSync( tmpfile );
