@@ -1,6 +1,17 @@
 # Source files
 src
 
+# Tests
+__tests__
+jest.config.js
+jest.setup.js
+.travis.yml
+coverage
+
+# The final `config.json` is generated.
+# We don't need to publish the source files.
+config/config.*.json
+
 # Logs
 logs
 *.log
@@ -12,5 +23,6 @@ node_modules/
 # Optional eslint cache
 .eslintcache
 
-# jest coverage
-coverage
+# Other helper files
+.nvmrc
+.ackrc

@@ -14,9 +14,11 @@ import updateNotifier from 'update-notifier';
  */
 import type { Tuple } from './prompt';
 import API from 'lib/api';
+import Token from 'lib/token';
 import app from 'lib/api/app';
 import { formatData } from './format';
 import { confirm } from './prompt';
+import analytics from 'lib/analytics';
 import pkg from 'root/package.json';
 
 function uncaughtError( err ) {
@@ -27,8 +29,16 @@ function uncaughtError( err ) {
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
+async function initAnalytics() {
+	const token = await Token.get();
+	const uuid = await token.uuid();
+	return analytics( uuid );
+}
+
 let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
+	const tracker = await initAnalytics();
+
 	const options = this.parse( argv );
 
 	const validationError = validateOpts( options );
