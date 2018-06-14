@@ -29,10 +29,10 @@ describe( 'lib/analytics/google-analytics', () => {
 			.post( endpointPath );
 	};
 
-	afterEach( () => nock.cleanAll() );
+	afterEach( nock.cleanAll );
 
 	describe( '.send()', () => {
-		it( 'should correctly construct remote request', ( done ) => {
+		it( 'should correctly construct remote request', () => {
 			const gaClient = new GoogleAnalytics( 'UA-123', 456, env );
 
 			const params = { extra: 'param' };
@@ -55,13 +55,12 @@ describe( 'lib/analytics/google-analytics', () => {
 					expect( requestBody ).toEqual( expectedBody );
 				} );
 
-			gaClient.send( params )
-				.then( () => done() );
+			return gaClient.send( params );
 		} );
 	} );
 
 	describe( '.trackEvent()', () => {
-		it( 'should pass minimum event details to request', ( done ) => {
+		it( 'should pass minimum event details to request', () => {
 			const gaClient = new GoogleAnalytics( 'UA-123', 456, env );
 
 			const eventName = 'clickButton';
@@ -78,11 +77,10 @@ describe( 'lib/analytics/google-analytics', () => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
-			gaClient.trackEvent( eventName, eventDetails )
-				.then( () => done() );
+			return gaClient.trackEvent( eventName, eventDetails );
 		} );
 
-		it( 'should pass all event details to request', ( done ) => {
+		it( 'should pass all event details to request', () => {
 			const gaClient = new GoogleAnalytics( 'UA-123', 456, env );
 
 			const eventName = 'clickButton';
@@ -103,8 +101,7 @@ describe( 'lib/analytics/google-analytics', () => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
-			gaClient.trackEvent( eventName, eventDetails )
-				.then( () => done() );
+			return gaClient.trackEvent( eventName, eventDetails );
 		} );
 	} );
 } );

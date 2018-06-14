@@ -21,10 +21,10 @@ describe( 'lib/analytics/tracks', () => {
 			.post( endpointPath );
 	};
 
-	afterEach( () => nock.cleanAll() );
+	afterEach( nock.cleanAll );
 
 	describe( '.send()', () => {
-		it( 'should correctly construct remote request', ( done ) => {
+		it( 'should correctly construct remote request', () => {
 			const tracksClient = new Tracks( 123, 'vip', '', {
 				userAgent: 'vip-cli'
 			} );
@@ -44,13 +44,12 @@ describe( 'lib/analytics/tracks', () => {
 					expect( requestBody ).toEqual( expectedBody );
 				} );
 
-			tracksClient.send( params )
-				.then( () => done() );
+			return tracksClient.send( params );
 		} );
 	} );
 
 	describe( '.trackEvent()', () => {
-		it( 'should pass event details to request', ( done ) => {
+		it( 'should pass event details to request', () => {
 			const tracksClient = new Tracks( 123, 'vip', 'prefix_', {} );
 
 			const eventName = 'clickButton';
@@ -66,11 +65,10 @@ describe( 'lib/analytics/tracks', () => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
-			tracksClient.trackEvent( eventName, eventDetails )
-				.then( () => done() );
+			return tracksClient.trackEvent( eventName, eventDetails );
 		} );
 
-		it( 'should ignore prefix if already set for event name', ( done ) => {
+		it( 'should ignore prefix if already set for event name', () => {
 			const tracksClient = new Tracks( 123, 'vip', 'existingprefix_', {} );
 
 			const eventName = 'existingprefix_clickButton';
@@ -82,8 +80,7 @@ describe( 'lib/analytics/tracks', () => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
-			tracksClient.trackEvent( eventName, {} )
-				.then( () => done() );
+			return tracksClient.trackEvent( eventName, {} );
 		} );
 	} );
 } );
