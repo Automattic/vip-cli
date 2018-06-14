@@ -20,7 +20,7 @@ export default function getInstance( uuid: string ): Analytics {
 		googleAnalytics = new GoogleAnalytics( gaAccountId, uuid, env );
 	}
 
-	const tracksUserType = 'vip';
+	const tracksUserType = config.tracksUserType;
 	const tracksEventPrefix = config.tracksEventPrefix;
 	const tracks = new Tracks( uuid, tracksUserType, tracksEventPrefix, env );
 

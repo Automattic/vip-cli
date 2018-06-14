@@ -1,4 +1,5 @@
 {
   "googleAnalyticsId": "",
+  "tracksUserType": "vip",
   "tracksEventPrefix": "vip_cli_"
 }
