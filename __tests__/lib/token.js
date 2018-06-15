@@ -33,12 +33,10 @@ describe( 'token tests', () => {
 		expect( token.valid() ).toEqual( false );
 		expect( token.expired() ).toEqual( true );
 	} );
-	test( 'should consistently return uuid', () => {
-		const t = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA';
-		const token = new Token( t );
 
-		token.uuid().then( uuid1 => {
-			token.uuid().then( uuid2 => {
+	test( 'should consistently return uuid', () => {
+		Token.uuid().then( uuid1 => {
+			Token.uuid().then( uuid2 => {
 				expect( uuid1 ).toBe( uuid2 );
 			} );
 		} );

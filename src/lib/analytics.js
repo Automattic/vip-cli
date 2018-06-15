@@ -11,8 +11,7 @@ import env from './env';
 let analytics = null;
 
 async function init(): Analytics {
-	const token = await Token.get();
-	const uuid = await token.uuid();
+	const uuid = await Token.uuid();
 
 	const gaAccountId = config.googleAnalyticsId;
 	let googleAnalytics = null;
