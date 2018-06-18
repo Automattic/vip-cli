@@ -20,7 +20,10 @@ export default class Insecure implements Keychain {
 		const rw = 0o600;
 
 		let stat;
-		const tmpfile = os.homedir() + path.sep + file;
+		const dir = os.homedir() + path.sep + '.vip';
+		this.mkdirp( dir );
+
+		const tmpfile = dir + path.sep + file;
 		try {
 			// Ensure the file exists
 			stat = fs.statSync( tmpfile );
@@ -63,5 +66,16 @@ export default class Insecure implements Keychain {
 		return new Promise( resolve => {
 			fs.unlink( this.file, err => resolve( ! err ) );
 		} );
+	}
+
+	mkdirp( dir ) {
+		const parent = path.dirname( dir );
+
+		try {
+			fs.statSync( dir );
+		} catch ( e ) {
+			this.mkdirp( parent );
+			fs.mkdirSync( dir );
+		}
 	}
 }
