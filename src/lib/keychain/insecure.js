@@ -14,6 +14,7 @@ import type { Keychain } from './keychain';
 
 export default class Insecure implements Keychain {
 	file: string;
+	passwords: Object;
 
 	constructor( file: string ) {
 		// only current user has read-write access
@@ -45,26 +46,38 @@ export default class Insecure implements Keychain {
 	}
 
 	getPassword( service: string ): Promise<string> {
+		if ( this.passwords && this.passwords[ service ] ) {
+			return Promise.resolve( this.passwords[ service ] );
+		}
+
 		return new Promise( resolve => {
-			fs.readFile( this.file, 'utf8', ( err, password ) => {
-				if ( err || ! password ) {
+			fs.readFile( this.file, 'utf8', ( err, passwords ) => {
+				if ( err || ! passwords ) {
 					return resolve( null );
 				}
 
-				return resolve( password );
+				this.passwords = JSON.parse( passwords );
+
+				return resolve( passwords[ service ] );
 			} );
 		} );
 	}
 
 	setPassword( service: string, password: string ): Promise<boolean> {
+		this.passwords[ service ] = password;
+
 		return new Promise( resolve => {
-			fs.writeFile( this.file, password, err => resolve( ! err ) );
+			const json = JSON.stringify( this.passwords );
+			fs.writeFile( this.file, json, err => resolve( ! err ) );
 		} );
 	}
 
 	deletePassword( service: string ): Promise<boolean> {
+		delete this.passwords[ service ];
+
 		return new Promise( resolve => {
-			fs.unlink( this.file, err => resolve( ! err ) );
+			const json = JSON.stringify( this.passwords );
+			fs.writeFile( this.file, json, err => resolve( ! err ) );
 		} );
 	}
 

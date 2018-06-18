@@ -52,6 +52,18 @@ describe( 'token tests (insecure)', () => {
 		} );
 	} );
 
+	test( 'should correctly set multiple tokens', () => {
+		return keychain.setPassword( 'first', 'password1' ).then( _ => {
+			return keychain.setPassword( 'second', 'password2' ).then( _ => {
+				const p = keychain.getPassword( 'first' );
+				expect( p ).resolves.toBe( 'password1' );
+
+				const p2 = keychain.getPassword( 'second' );
+				expect( p2 ).resolves.toBe( 'password2' );
+			} );
+		} );
+	} );
+
 	test( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( _ => {
 			return keychain.deletePassword( account ).then( _ => {
