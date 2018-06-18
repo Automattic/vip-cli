@@ -18,7 +18,15 @@ export default class Insecure implements Keychain {
 
 	constructor( file: string ) {
 		// only current user has read-write access
-		const rw = 0o600;
+		let rw;
+		switch ( process.platform ) {
+			case 'win32':
+				rw = 0o666;
+				break;
+
+			default:
+				rw = 0o600;
+		}
 
 		let stat;
 		const dir = os.homedir() + path.sep + '.vip';
