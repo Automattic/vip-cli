@@ -39,7 +39,7 @@ export default class Insecure implements Keychain {
 
 		// Ensure permissions are what we expect
 		if ( !! ( perms & ~rw ) ) {
-			throw `Invalid permissions (${ perms }, expecting ${ rw }) for keychain file (${ tmpfile })`;
+			throw `Invalid permissions (${ perms.toString( 8 ) }, expecting ${ rw.toString( 8 ) }) for keychain file (${ tmpfile })`;
 		}
 
 		this.file = tmpfile;
