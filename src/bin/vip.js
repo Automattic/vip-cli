@@ -13,6 +13,7 @@ import inquirer from 'inquirer';
  */
 import command from 'lib/cli/command';
 import Token from 'lib/token';
+import { trackEvent } from 'lib/analytics';
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
@@ -22,7 +23,11 @@ const rootCmd = async function() {
 
 	if ( token && token.valid() ) {
 		command()
-			.command( 'logout', 'Logout from your current session', () => Token.purge() )
+			.command( 'logout', 'Logout from your current session', () => {
+				Token.purge();
+
+				await trackEvent( 'logout' );
+			} )
 			.command( 'app', 'List and modify your VIP Go apps' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
@@ -41,6 +46,8 @@ const rootCmd = async function() {
 		console.log( `  First you need an access token. We'll open ${ tokenURL } in your web browser. Follow the instructions there to continue.` );
 		console.log();
 
+		await trackEvent( 'login' );
+
 		const c = await inquirer.prompt( {
 			type: 'confirm',
 			name: 'continue',
@@ -49,10 +56,14 @@ const rootCmd = async function() {
 		} );
 
 		if ( ! c.continue ) {
+			await trackEvent( 'login_browser_open_cancel' );
+
 			return;
 		}
 
 		opn( tokenURL, { wait: false } );
+
+		await trackEvent( 'login_browser_open_success' );
 
 		let t = await inquirer.prompt( {
 			type: 'password',
@@ -67,20 +78,31 @@ const rootCmd = async function() {
 			token = new Token( t );
 		} catch ( e ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
+
+			await trackEvent( 'login_token_submit_error', { error: e.message, } );
+
 			return;
 		}
 
 		if ( token.expired() ) {
 			console.log( 'The token provided is expired. Please log in again to refresh the token.' );
+
+			await trackEvent( 'login_token_submit_error', { error: 'expired', } );
+
 			return;
 		}
 
 		if ( ! token.valid() ) {
 			console.log( 'The provided token is not valid. Please log in again to refresh the token.' );
+
+			await trackEvent( 'login_token_submit_error', { error: 'invalid', } );
+
 			return;
 		}
 
 		Token.set( token.raw );
+
+		await trackEvent( 'login_token_submit_success' );
 
 		// Exec the command we originally  wanted
 		const spawn = require( 'child_process' ).spawn;
