@@ -12,7 +12,7 @@ export default class Analytics {
 		this.tracks = tracks;
 	}
 
-	async trackEvent( name, props ): Promise {
+	async trackEvent( name, props = {} ): Promise {
 		return await Promise.all( [
 			this.googleAnalytics.trackEvent( name, props ),
 			this.tracks.trackEvent( name, props )
