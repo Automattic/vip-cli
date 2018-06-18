@@ -5,6 +5,7 @@
  */
 import 'isomorphic-fetch';
 import querystring from 'querystring';
+const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
 
 /**
  * Internal dependencies
@@ -77,6 +78,8 @@ export default class Tracks implements AnalyticsClient {
 			return reduced;
 		}, {} );
 
+		debug( 'trackEvent()', params );
+
 		return this.send( params );
 	}
 
@@ -89,6 +92,8 @@ export default class Tracks implements AnalyticsClient {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'User-Agent': this.userAgent,
 		};
+
+		debug( 'send()', body );
 
 		return fetch( Tracks.ENDPOINT, {
 			method,

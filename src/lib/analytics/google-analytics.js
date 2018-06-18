@@ -5,6 +5,7 @@
  */
 import 'isomorphic-fetch';
 import querystring from 'querystring';
+const debug = require( 'debug' )( '@automattic/vip:analytics:clients:google' );
 
 /**
  * Internal dependencies
@@ -52,7 +53,11 @@ export default class GoogleAnalytics implements AnalyticsClient {
 	}
 
 	// Name and category are both required; others are optional
-	trackEvent( name: string, { category, label = null, value = null }: {} ): Promise<Response> {
+	trackEvent( name: string, {
+		category = 'CLI',
+		label = null,
+		value = null,
+	}: {} ): Promise<Response> {
 		const params = {
 			t: 'event', // hit type
 			ea: name, // "action"
@@ -67,6 +72,8 @@ export default class GoogleAnalytics implements AnalyticsClient {
 			params.ev = value;
 		}
 
+		debug( 'trackEvent()', params );
+
 		return this.send( params );
 	}
 
@@ -79,6 +86,8 @@ export default class GoogleAnalytics implements AnalyticsClient {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'User-Agent': this.userAgent,
 		};
+
+		debug( 'send()', body );
 
 		return fetch( GoogleAnalytics.ENDPOINT, {
 			method,
