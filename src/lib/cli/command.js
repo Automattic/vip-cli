@@ -36,7 +36,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( validationError ) {
 		const error = validationError.toString();
 
-		trackEvent( 'command_validation_error', { error } );
+		await trackEvent( 'command_validation_error', { error } );
 
 		console.log( error );
 		process.exit( 1 );

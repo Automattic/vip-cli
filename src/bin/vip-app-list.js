@@ -17,7 +17,7 @@ command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {
 		const api = await API();
 
-		trackEvent( 'app_list_command_execute' );
+		await trackEvent( 'app_list_command_execute' );
 
 		let response;
 		try {
@@ -43,7 +43,7 @@ command( { format: true } )
 		} catch ( err ) {
 			const message = err.toString();
 
-			trackEvent( 'app_list_command_fetch_error', {
+			await trackEvent( 'app_list_command_fetch_error', {
 				error: message,
 			} );
 
@@ -58,7 +58,7 @@ command( { format: true } )
 			! response.data.apps.edges.length ) {
 			const message = 'No apps found';
 
-			trackEvent( 'app_list_command_fetch_error', {
+			await trackEvent( 'app_list_command_fetch_error', {
 				error: message,
 			} );
 
@@ -66,7 +66,7 @@ command( { format: true } )
 			return;
 		}
 
-		trackEvent( 'app_list_command_success' );
+		await trackEvent( 'app_list_command_success' );
 
 		return response.data.apps.edges;
 	} );

@@ -32,7 +32,7 @@ command( {
 		const api = await API();
 		let syncing = false;
 
-		trackEvent( 'sync_command_execute' );
+		await trackEvent( 'sync_command_execute' );
 
 		try {
 			await api
@@ -57,8 +57,8 @@ command( {
 		} catch ( e ) {
 			syncing = true;
 
-			trackEvent( 'sync_command_execute_error', {
-				error: e.message,
+			await trackEvent( 'sync_command_execute_error', {
+				error: `Already syncing: ${ e.message }`,
 			} );
 		}
 
@@ -158,7 +158,7 @@ command( {
 					break;
 
 				case 'failed':
-					trackEvent( 'sync_command_error', {
+					await trackEvent( 'sync_command_error', {
 						error: 'API returned `failed` status',
 					} );
 
@@ -169,7 +169,7 @@ command( {
 
 				case 'success':
 				default:
-					trackEvent( 'sync_command_success' );
+					await trackEvent( 'sync_command_success' );
 
 					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );

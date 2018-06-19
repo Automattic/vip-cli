@@ -19,7 +19,7 @@ command( { requiredArgs: 1, format: true } )
 	.example( 'vip app vip-test', 'Get details about the app named vip-test' )
 	.command( 'list', 'List your VIP Go apps' )
 	.argv( process.argv, async ( arg, opts ) => {
-		trackEvent( 'app_command_execute' );
+		await trackEvent( 'app_command_execute' );
 
 		let res;
 		try {
@@ -28,7 +28,7 @@ command( { requiredArgs: 1, format: true } )
 				'id,environments{name,repo,branch,currentCommit,defaultDomain}'
 			);
 		} catch ( e ) {
-			trackEvent( 'app_command_fetch_error', {
+			await trackEvent( 'app_command_fetch_error', {
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
 
@@ -37,7 +37,7 @@ command( { requiredArgs: 1, format: true } )
 		}
 
 		if ( ! res || ! res.environments ) {
-			trackEvent( 'app_command_fetch_error', {
+			await trackEvent( 'app_command_fetch_error', {
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
 
@@ -45,7 +45,7 @@ command( { requiredArgs: 1, format: true } )
 			return;
 		}
 
-		trackEvent( 'app_command_success' );
+		await trackEvent( 'app_command_success' );
 
 		return res.environments;
 	} );
