@@ -297,7 +297,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return out;
 			} );
 
-			await trackEvent( 'command_output_format', {
+			await trackEvent( 'command_output', {
 				format: options.format,
 			} );
 
