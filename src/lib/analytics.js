@@ -49,11 +49,8 @@ async function getInstance(): Analytics {
 export async function trackEvent( ...args ): Promise<Response> {
 	try {
 		const client = await getInstance();
-		await client.trackEvent( ...args );
+		return await client.trackEvent( ...args );
 	} catch ( e ) {
 		debug( 'trackEvent() failed', e );
 	}
-
-	// Analytics issues are not critical failures
-	return Promise.resolve();
 }
