@@ -122,7 +122,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				! res.data.apps ||
 				! res.data.apps.edges ||
 				! res.data.apps.edges.length ) {
-				await trackEvent( 'command_appcontext_list_data_error', {
+				await trackEvent( 'command_appcontext_list_fetch_error', {
 					error: 'No apps found',
 				} );
 
@@ -218,7 +218,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				console.log( `Could not find any environments for ${ chalk.blueBright( options.app.name ) }` );
 			}
 
-			await trackEvent( 'command_childcontext_data_error', {
+			await trackEvent( 'command_childcontext_fetch_error', {
 				error: 'No child environments found',
 			} );
 

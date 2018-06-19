@@ -32,6 +32,8 @@ command( {
 		const api = await API();
 		let syncing = false;
 
+		trackEvent( 'sync_command_execute' );
+
 		try {
 			await api
 				.mutate( {
@@ -54,6 +56,10 @@ command( {
 				} );
 		} catch ( e ) {
 			syncing = true;
+
+			trackEvent( 'sync_command_execute_error', {
+				error: e.message,
+			} );
 		}
 
 		const sprite = {
@@ -152,6 +158,10 @@ command( {
 					break;
 
 				case 'failed':
+					trackEvent( 'sync_command_error', {
+						error: 'API returned `failed` status',
+					} );
+
 					out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
 					clearInterval( progress );
@@ -159,6 +169,8 @@ command( {
 
 				case 'success':
 				default:
+					trackEvent( 'sync_command_success' );
+
 					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
 					clearInterval( progress );
