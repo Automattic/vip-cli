@@ -42,7 +42,10 @@ const rootCmd = async function() {
 		console.log( '  | |/ // // ____/  / /_/ / /_/ /' );
 		console.log( '  |___/___/_/       \\____/\\____/' );
 		console.log();
-		console.log( `  First you need an access token. We'll open ${ tokenURL } in your web browser. Follow the instructions there to continue.` );
+		console.log( '  VIP CLI is your tool for interacting with and managing your VIP Go applications.' );
+		console.log();
+
+		console.log( `  To get started, we need an access token for your VIP account. We'll open ${ tokenURL } in your web browser; follow the instructions there to continue.` );
 		console.log();
 
 		await trackEvent( 'login_command_execute' );
@@ -50,7 +53,7 @@ const rootCmd = async function() {
 		const c = await inquirer.prompt( {
 			type: 'confirm',
 			name: 'continue',
-			message: 'Continue?',
+			message: 'Ready?',
 			prefix: '',
 		} );
 
