@@ -72,6 +72,20 @@ describe( 'token tests (insecure)', () => {
 			} );
 		} );
 	} );
+
+	test( 'should correctly delete a single token', () => {
+		return keychain.setPassword( 'first', 'password1' ).then( _ => {
+			return keychain.setPassword( 'second', 'password2' ).then( _ => {
+				return keychain.deletePassword( 'first' ).then( _ => {
+					const p = keychain.getPassword( 'first' );
+					expect( p ).resolves.toBe( null );
+
+					const p2 = keychain.getPassword( 'second' );
+					expect( p2 ).resolves.toBe( 'password2' );
+				} );
+			} );
+		} );
+	} );
 } );
 
 describe( 'token tests (browser)', () => {
