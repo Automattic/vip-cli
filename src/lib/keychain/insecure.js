@@ -18,15 +18,7 @@ export default class Insecure implements Keychain {
 
 	constructor( file: string ) {
 		// only current user has read-write access
-		let rw;
-		switch ( process.platform ) {
-			case 'win32':
-				rw = 0o666;
-				break;
-
-			default:
-				rw = 0o600;
-		}
+		const rw = fs.constants.S_IRUSR | fs.constants.S_IWUSR;
 
 		let stat;
 		const dir = os.homedir() + path.sep + '.vip';
@@ -42,12 +34,10 @@ export default class Insecure implements Keychain {
 			stat = fs.statSync( tmpfile );
 		}
 
-		// Get file perms (last 3 bits of stat.mode)
-		const perms = stat.mode & 0o777;
-
-		// Ensure permissions are what we expect
-		if ( !! ( perms & ~rw ) ) {
-			throw `Invalid permissions (${ perms.toString( 8 ) }, expecting ${ rw.toString( 8 ) }) for keychain file (${ tmpfile })`;
+		// Check only the current user can access the file
+		// File is not read/write/executable globally or by the group
+		if ( !! ( stat.mode & ( fs.constants.S_IRWXG | fs.constants.S_IRWXO ) ) ) {
+			throw `Invalid permissions (${ stat.mode.toString( 8 ) }, expecting ${ rw.toString( 8 ) }) for keychain file (${ tmpfile })`;
 		}
 
 		this.file = tmpfile;
