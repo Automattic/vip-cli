@@ -1,8 +1,16 @@
+// @flow
+
 /**
  * External dependencies
  */
 import 'isomorphic-fetch';
 import querystring from 'querystring';
+const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
+
+/**
+ * Internal dependencies
+ */
+import type { AnalyticsClient } from './client';
 
 /**
  * Simple class for tracking using Automattic Tracks.
@@ -12,25 +20,31 @@ import querystring from 'querystring';
 
 // TODO: add batch support (can include multiples in `events` array)
 
-export default class Tracks {
+export default class Tracks implements AnalyticsClient {
+	eventPrefix: string;
+	userAgent: string;
+	baseParams: {
+		'commonProps[_ui]': string,
+		'commonProps[_ut]': string,
+	};
+
 	static get ENDPOINT() {
 		return 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 	}
 
-	constructor( userId, userType, eventPrefix, env ) {
-		this.userId = userId;
-		this.userType = userType;
+	constructor( userId: string, userType: string, eventPrefix: string, env: {} ) {
 		this.eventPrefix = eventPrefix;
+
+		this.userAgent = env.userAgent;
 
 		this.baseParams = {
 			'commonProps[_ui]': userId,
 			'commonProps[_ut]': userType,
+			'commonProps[_via_ua]': this.userAgent,
 		};
-
-		this.userAgent = env.userAgent;
 	}
 
-	trackEvent( name, eventProps = {} ) {
+	trackEvent( name: string, eventProps = {} ): Promise<Response> {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
@@ -65,10 +79,12 @@ export default class Tracks {
 			return reduced;
 		}, {} );
 
+		debug( 'trackEvent()', params );
+
 		return this.send( params );
 	}
 
-	send( extraParams ) {
+	send( extraParams: {} ): Promise<Response> {
 		const params = Object.assign( {}, this.baseParams, extraParams );
 
 		const method = 'POST';
@@ -77,6 +93,8 @@ export default class Tracks {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'User-Agent': this.userAgent,
 		};
+
+		debug( 'send()', body );
 
 		return fetch( Tracks.ENDPOINT, {
 			method,

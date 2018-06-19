@@ -1,11 +1,21 @@
-export default class Analytics {
-	constructor( { googleAnalytics, tracks } ) {
-		if ( googleAnalytics ) {
-			this.googleAnalytics = googleAnalytics;
-		}
+/**
+ * Internal dependencies
+ */
+import AnalyticsClientStub from './clients/stub';
 
-		if ( tracks ) {
-			this.tracks = tracks;
-		}
+export default class Analytics {
+	constructor( {
+		googleAnalytics = new AnalyticsClientStub(),
+		tracks = new AnalyticsClientStub()
+	} ) {
+		this.googleAnalytics = googleAnalytics;
+		this.tracks = tracks;
+	}
+
+	async trackEvent( name, props = {} ): Promise {
+		return await Promise.all( [
+			this.googleAnalytics.trackEvent( name, props ),
+			this.tracks.trackEvent( name, props )
+		] );
 	}
 }

@@ -7,22 +7,14 @@ import url from 'url';
 /**
  * Internal dependencies
  */
-import GoogleAnalytics from 'lib/analytics/google-analytics';
+import Tracks from 'lib/analytics/clients/tracks';
 
-describe( 'lib/analytics/google-analytics', () => {
+describe( 'lib/analytics/tracks', () => {
 	const {
 		protocol: endpointProtocol,
 		host: endpointHost,
 		path: endpointPath
-	} = url.parse( GoogleAnalytics.ENDPOINT );
-
-	const env = {
-		app: {
-			name: 'vip',
-			version: '1.0',
-		},
-		userAgent: 'vip-cli'
-	};
+	} = url.parse( Tracks.ENDPOINT );
 
 	const buildNock = () => {
 		return nock( `${ endpointProtocol }//${ endpointHost }` )
@@ -33,17 +25,15 @@ describe( 'lib/analytics/google-analytics', () => {
 
 	describe( '.send()', () => {
 		it( 'should correctly construct remote request', () => {
-			const gaClient = new GoogleAnalytics( 'UA-123', 456, env );
+			const tracksClient = new Tracks( 123, 'vip', '', {
+				userAgent: 'vip-cli'
+			} );
 
 			const params = { extra: 'param' };
 
-			const expectedBody = 'v=1' +
-				'&tid=UA-123' +
-				'&cid=456' +
-				'&aip=1' +
-				'&ds=cli' +
-				'&an=vip' +
-				'&av=1.0' +
+			const expectedBody = 'commonProps%5B_ui%5D=123' +
+				'&commonProps%5B_ut%5D=vip' +
+				'&commonProps%5B_via_ua%5D=vip-cli' +
 				'&extra=param';
 
 			buildNock()
@@ -55,53 +45,43 @@ describe( 'lib/analytics/google-analytics', () => {
 					expect( requestBody ).toEqual( expectedBody );
 				} );
 
-			return gaClient.send( params );
+			return tracksClient.send( params );
 		} );
 	} );
 
 	describe( '.trackEvent()', () => {
-		it( 'should pass minimum event details to request', () => {
-			const gaClient = new GoogleAnalytics( 'UA-123', 456, env );
+		it( 'should pass event details to request', () => {
+			const tracksClient = new Tracks( 123, 'vip', 'prefix_', {} );
 
 			const eventName = 'clickButton';
 			const eventDetails = {
-				category: 'cat',
+				buttonName: 'deploy',
 			};
 
-			const expectedBodyMatch = '&t=event' +
-				'&ea=clickButton' +
-				'&ec=cat';
+			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=prefix_clickButton' +
+				'&events%5B0%5D%5BbuttonName%5D=deploy';
 
 			buildNock()
 				.reply( ( uri, requestBody ) => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
-			return gaClient.trackEvent( eventName, eventDetails );
+			return tracksClient.trackEvent( eventName, eventDetails );
 		} );
 
-		it( 'should pass all event details to request', () => {
-			const gaClient = new GoogleAnalytics( 'UA-123', 456, env );
+		it( 'should ignore prefix if already set for event name', () => {
+			const tracksClient = new Tracks( 123, 'vip', 'existingprefix_', {} );
 
-			const eventName = 'clickButton';
-			const eventDetails = {
-				category: 'cat',
-				label: 'lab',
-				value: 1,
-			};
+			const eventName = 'existingprefix_clickButton';
 
-			const expectedBodyMatch = '&t=event' +
-				'&ea=clickButton' +
-				'&ec=cat' +
-				'&el=lab' +
-				'&ev=1';
+			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=existingprefix_clickButton';
 
 			buildNock()
 				.reply( ( uri, requestBody ) => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
-			return gaClient.trackEvent( eventName, eventDetails );
+			return tracksClient.trackEvent( eventName, {} );
 		} );
 	} );
 } );

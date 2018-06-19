@@ -11,10 +11,13 @@ import gql from 'graphql-tag';
  */
 import command from 'lib/cli/command';
 import API from 'lib/api';
+import { trackEvent } from 'lib/tracker';
 
 command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {
 		const api = await API();
+
+		await trackEvent( 'app_list_command_execute' );
 
 		let response;
 		try {
@@ -38,7 +41,13 @@ command( { format: true } )
 					},
 				} );
 		} catch ( err ) {
-			console.log( 'Failed to fetch apps: %s', err.toString() );
+			const message = err.toString();
+
+			await trackEvent( 'app_list_command_fetch_error', {
+				error: message,
+			} );
+
+			console.log( 'Failed to fetch apps: %s', message );
 			return;
 		}
 
@@ -47,10 +56,17 @@ command( { format: true } )
 			! response.data.apps ||
 			! response.data.apps.edges ||
 			! response.data.apps.edges.length ) {
-			console.log( 'No apps found' );
+			const message = 'No apps found';
+
+			await trackEvent( 'app_list_command_fetch_error', {
+				error: message,
+			} );
+
+			console.log( message );
 			return;
 		}
 
-		// apps
+		await trackEvent( 'app_list_command_success' );
+
 		return response.data.apps.edges;
 	} );

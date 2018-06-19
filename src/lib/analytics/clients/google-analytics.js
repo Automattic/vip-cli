@@ -1,8 +1,16 @@
+// @flow
+
 /**
  * External dependencies
  */
 import 'isomorphic-fetch';
 import querystring from 'querystring';
+const debug = require( 'debug' )( '@automattic/vip:analytics:clients:google' );
+
+/**
+ * Internal dependencies
+ */
+import type { AnalyticsClient } from './client';
 
 /**
  * Simple class for tracking using Google Analytics Measurement Protocol.
@@ -16,12 +24,17 @@ import querystring from 'querystring';
 // TODO: add time tracking (can set `plt: 1012` with value as the time in milliseconds)
 // TODO: add error tracking (can set `exd: ''` [description of error; e.g. DatabaseError] and `exf: 0` [either 0|1 <not fatal|fatal>])
 
-export default class GoogleAnalytics {
+export default class GoogleAnalytics implements AnalyticsClient {
+	accountId: string;
+	userId: string;
+	baseParams: {};
+	userAgent: string;
+
 	static get ENDPOINT() {
 		return 'https://www.google-analytics.com/collect';
 	}
 
-	constructor( accountId, userId, env ) {
+	constructor( accountId: string, userId: string, env: {} ) {
 		this.accountId = accountId;
 		this.userId = userId;
 
@@ -39,26 +52,39 @@ export default class GoogleAnalytics {
 		this.userAgent = env.userAgent;
 	}
 
-	// Name and category are both required; others are optional
-	trackEvent( name, { category, label = null, value = null } ) {
+	// `name` and `category` are both required; others are optional
+	trackEvent( name: string, props: {} ): Promise<Response> {
 		const params = {
 			t: 'event', // hit type
 			ea: name, // "action"
-			ec: category,
+			ec: 'CLI',
 		};
 
-		if ( label ) {
-			params.el = label;
-		}
+		let customPropIndex = 1;
+		Object.entries( props ).forEach( entry => {
+			const [ key, value ] = entry;
 
-		if ( value ) {
-			params.ev = value;
-		}
+			if ( key === 'category' ) {
+				params.ec = value;
+			} else if ( key === 'label' ) {
+				params.el = value;
+			} else if ( key === 'value' ) {
+				params.ev = value;
+			} else if ( key === 'error' ) {
+				params.exd = value;
+			} else {
+				params[ `cd${ customPropIndex }` ] = key;
+				params[ `cm${ customPropIndex }` ] = value;
+				customPropIndex++;
+			}
+		} );
+
+		debug( 'trackEvent()', params );
 
 		return this.send( params );
 	}
 
-	send( extraParams ) {
+	send( extraParams: {} ): Promise<Response> {
 		const params = Object.assign( {}, this.baseParams, extraParams );
 
 		const method = 'POST';
@@ -67,6 +93,8 @@ export default class GoogleAnalytics {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'User-Agent': this.userAgent,
 		};
+
+		debug( 'send()', body );
 
 		return fetch( GoogleAnalytics.ENDPOINT, {
 			method,

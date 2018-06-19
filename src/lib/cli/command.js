@@ -14,12 +14,11 @@ import updateNotifier from 'update-notifier';
  */
 import type { Tuple } from './prompt';
 import API from 'lib/api';
-import Token from 'lib/token';
 import app from 'lib/api/app';
 import { formatData } from './format';
 import { confirm } from './prompt';
-import analytics from 'lib/analytics';
 import pkg from 'root/package.json';
+import { trackEvent } from 'lib/tracker';
 
 function uncaughtError( err ) {
 	console.log();
@@ -29,21 +28,17 @@ function uncaughtError( err ) {
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
-async function initAnalytics() {
-	const token = await Token.get();
-	const uuid = await token.uuid();
-	return analytics( uuid );
-}
-
 let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
-	const tracker = await initAnalytics();
-
 	const options = this.parse( argv );
 
 	const validationError = validateOpts( options );
 	if ( validationError ) {
-		console.log( validationError.toString() );
+		const error = validationError.toString();
+
+		await trackEvent( 'command_validation_error', { error } );
+
+		console.log( error );
 		process.exit( 1 );
 	}
 
@@ -57,12 +52,18 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// Show help if no args passed
 	if ( this.details.commands.length > 1 && ! this.sub.length ) {
+		await trackEvent( 'command_help_view' );
+
 		this.showHelp();
 		return {};
 	}
 
 	// Show help if required arg is missing
 	if ( _opts.requiredArgs > this.sub.length ) {
+		await trackEvent( 'command_validation_error', {
+			error: 'Missing required arg',
+		} );
+
 		this.showHelp();
 		return {};
 	}
@@ -71,7 +72,13 @@ args.argv = async function( argv, cb ): Promise<any> {
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
 	if ( this.sub[ _opts.requiredArgs ] &&
 		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
-		console.error( chalk.red( 'Error:' ), `\`${ this.sub.join( ' ' ) }\` is not a valid subcommand. See \`vip help\`` );
+		const subcommand = this.sub.join( ' ' );
+
+		await trackEvent( 'command_validation_error', {
+			error: `Invalid subcommand: ${ subcommand }`,
+		} );
+
+		console.error( chalk.red( 'Error:' ), `\`${ subcommand }\` is not a valid subcommand. See \`vip help\`` );
 		return {};
 	}
 
@@ -101,7 +108,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 						},
 					} );
 			} catch ( err ) {
-				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ err.toString() }` );
+				const message = err.toString();
+				await trackEvent( 'command_appcontext_list_fetch_error', {
+					error: message,
+				} );
+
+				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 				return;
 			}
 
@@ -110,6 +122,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 				! res.data.apps ||
 				! res.data.apps.edges ||
 				! res.data.apps.edges.length ) {
+				await trackEvent( 'command_appcontext_list_fetch_error', {
+					error: 'No apps found',
+				} );
+
 				console.log( "Couldn't find any apps" );
 				return {};
 			}
@@ -129,9 +145,15 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} );
 
 			if ( ! a || ! a.app || ! a.app.id ) {
+				await trackEvent( 'command_appcontext_list_select_error', {
+					error: 'Invalid app selected',
+				} );
+
 				console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
 				return {};
 			}
+
+			await trackEvent( 'command_appcontext_list_select_success' );
 
 			options.app = Object.assign( {}, a.app );
 		} else {
@@ -139,14 +161,24 @@ args.argv = async function( argv, cb ): Promise<any> {
 			try {
 				a = await app( options.app, _opts.appQuery );
 			} catch ( e ) {
+				await trackEvent( 'command_appcontext_param_error', {
+					error: 'App lookup failed',
+				} );
+
 				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
 				return {};
 			}
 
 			if ( ! a || ! a.id ) {
+				await trackEvent( 'command_appcontext_param_error', {
+					error: 'Invalid app specified',
+				} );
+
 				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
 				return {};
 			}
+
+			await trackEvent( 'command_appcontext_param_select' );
 
 			options.app = Object.assign( {}, a );
 		}
@@ -159,6 +191,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( ( _opts.envContext || _opts.childEnvContext ) && options.app ) {
 		if ( options.env ) {
 			if ( _opts.childEnvContext && options.env.toLowerCase() === 'production' ) {
+				await trackEvent( 'command_childcontext_param_error', {
+					error: 'Cannot use `production`',
+				} );
+
 				console.log( 'Environment production is not allowed for this command' );
 				return {};
 			}
@@ -166,6 +202,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 			const env = options.app.environments.find( cur => cur.name === options.env );
 
 			if ( ! env ) {
+				await trackEvent( 'command_childcontext_param_error', {
+					error: `Invalid child environment (${ options.env }) specified`,
+				} );
+
 				console.log( `Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright( options.app.name ) } does not exist` );
 				return {};
 			}
@@ -177,6 +217,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} else {
 				console.log( `Could not find any environments for ${ chalk.blueBright( options.app.name ) }` );
 			}
+
+			await trackEvent( 'command_childcontext_fetch_error', {
+				error: 'No child environments found',
+			} );
 
 			return {};
 		} else if ( options.app.environments.length === 1 ) {
@@ -197,9 +241,15 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} );
 
 			if ( ! e || ! e.env || ! e.env.id ) {
-				console.log( `App ${ chalk.blueBright( e.env.name ) } does not exist` );
+				await trackEvent( 'command_childcontext_list_select_error', {
+					error: 'Invalid environment selected',
+				} );
+
+				console.log( `Environment ${ chalk.blueBright( e.env.name ) } does not exist` );
 				return {};
 			}
+
+			await trackEvent( 'command_childcontext_list_select_success' );
 
 			options.env = e.env;
 		}
@@ -224,8 +274,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 		const yes = await confirm( info, message );
 		if ( ! yes ) {
+			await trackEvent( 'command_confirm_cancel' );
+
 			return {};
 		}
+
+		await trackEvent( 'command_confirm_success' );
 	}
 
 	if ( cb ) {
@@ -241,6 +295,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 
 				return out;
+			} );
+
+			await trackEvent( 'command_output', {
+				format: options.format,
 			} );
 
 			console.log( formatData( res, options.format ) );
