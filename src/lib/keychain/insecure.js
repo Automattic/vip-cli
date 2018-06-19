@@ -60,7 +60,7 @@ export default class Insecure implements Keychain {
 					return reject( e );
 				}
 
-				return resolve( passwords[ service ] );
+				return resolve( this.passwords[ service ] );
 			} );
 		} );
 	}
