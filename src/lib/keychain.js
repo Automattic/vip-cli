@@ -1,5 +1,10 @@
 
 /**
+ * External dependencies
+ */
+const debug = require( 'debug' )( '@automattic/vip:keychain' );
+
+/**
  * Internal dependencies
  */
 import Insecure from './keychain/insecure';
@@ -10,11 +15,13 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 	// node
 
 	try {
-		// secure
+		// Try using Secure keychain ("keytar") first
 		const Secure = require( './keychain/secure' );
 		e = new Secure();
-	} catch ( _ ) {
-		// insecure fallback
+	} catch ( error ) {
+		debug( 'Cannot use Secure keychain; falling back to Insecure keychain (Details: %o)', error );
+
+		// Fallback to Insecure keychain if we can't 
 		e = new Insecure( 'vip-go-cli' );
 	}
 } else {
