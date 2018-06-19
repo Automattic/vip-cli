@@ -35,12 +35,13 @@ export default class Tracks implements AnalyticsClient {
 	constructor( userId: string, userType: string, eventPrefix: string, env: {} ) {
 		this.eventPrefix = eventPrefix;
 
+		this.userAgent = env.userAgent;
+
 		this.baseParams = {
 			'commonProps[_ui]': userId,
 			'commonProps[_ut]': userType,
+			'commonProps[_via_ua]': this.userAgent,
 		};
-
-		this.userAgent = env.userAgent;
 	}
 
 	trackEvent( name: string, eventProps = {} ): Promise<Response> {

@@ -33,6 +33,7 @@ describe( 'lib/analytics/tracks', () => {
 
 			const expectedBody = 'commonProps%5B_ui%5D=123' +
 				'&commonProps%5B_ut%5D=vip' +
+				'&commonProps%5B_via_ua%5D=vip-cli' +
 				'&extra=param';
 
 			buildNock()
