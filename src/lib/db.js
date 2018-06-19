@@ -187,17 +187,24 @@ export function importDB( site, file, opts, callback ) {
 				break;
 			}
 
-			for ( let from in opts.replace ) {
-				let to = opts.replace[ from ];
-				let replace = spawn( 'go-search-replace', [ from, to ], { stdio: ['pipe', 'pipe', process.stderr] });
-				stream.pipe( replace.stdin );
-				stream = replace.stdout;
-			}
-
 			sanitize.on( 'error', err => {
 				console.error( '\n' + err.toString() );
 				process.exit( 1 );
 			});
+
+			const replacements = [];
+			for ( let from in opts.replace ) {
+				replacements.push( from, opts.replace[ from ] );
+			}
+
+			const replace = spawn( 'go-search-replace', replacements, { stdio: [ 'pipe', 'pipe', process.stderr ] });
+			replace.on( 'error', err => {
+				console.error( '\n' + err.toString() );
+				process.exit( 1 );
+			});
+
+			stream.pipe( replace.stdin );
+			stream = replace.stdout;
 
 			stream
 				.pipe( sanitize )
