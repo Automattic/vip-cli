@@ -18,7 +18,7 @@ import app from 'lib/api/app';
 import { formatData } from './format';
 import { confirm } from './prompt';
 import pkg from 'root/package.json';
-import { trackEvent } from 'lib/analytics';
+import { trackEvent } from 'lib/tracker';
 
 function uncaughtError( err ) {
 	console.log();

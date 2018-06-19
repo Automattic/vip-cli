@@ -13,7 +13,7 @@ import inquirer from 'inquirer';
  */
 import command from 'lib/cli/command';
 import Token from 'lib/token';
-import { trackEvent } from 'lib/analytics';
+import { trackEvent } from 'lib/tracker';
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
