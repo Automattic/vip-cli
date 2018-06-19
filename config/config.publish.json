@@ -1,5 +1,6 @@
 {
   "googleAnalyticsId": "",
-  "tracksUserType": "vip",
+  "tracksUserType": "vip:user_id",
+  "tracksAnonUserType": "anon",
   "tracksEventPrefix": "vip_cli_"
 }
