@@ -23,9 +23,8 @@ const rootCmd = async function() {
 
 	if ( token && token.valid() ) {
 		command()
-			.command( 'logout', 'Logout from your current session', () => {
-				Token.purge();
-
+			.command( 'logout', 'Logout from your current session', async () => {
+				await Token.purge();
 				await trackEvent( 'logout' );
 			} )
 			.command( 'app', 'List and modify your VIP Go apps' )
