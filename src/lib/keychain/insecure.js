@@ -48,13 +48,17 @@ export default class Insecure implements Keychain {
 			return Promise.resolve( this.passwords[ service ] );
 		}
 
-		return new Promise( resolve => {
+		return new Promise( ( resolve, reject ) => {
 			fs.readFile( this.file, 'utf8', ( err, passwords ) => {
 				if ( err || ! passwords ) {
 					return resolve( null );
 				}
 
-				this.passwords = JSON.parse( passwords );
+				try {
+					this.passwords = JSON.parse( passwords );
+				} catch ( e ) {
+					return reject( e );
+				}
 
 				return resolve( passwords[ service ] );
 			} );
@@ -64,8 +68,15 @@ export default class Insecure implements Keychain {
 	setPassword( service: string, password: string ): Promise<boolean> {
 		this.passwords[ service ] = password;
 
-		return new Promise( resolve => {
-			const json = JSON.stringify( this.passwords );
+		return new Promise( ( resolve, reject ) => {
+			let json;
+
+			try {
+				json = JSON.stringify( this.passwords );
+			} catch ( e ) {
+				return reject( e );
+			}
+
 			fs.writeFile( this.file, json, err => resolve( ! err ) );
 		} );
 	}
@@ -73,8 +84,15 @@ export default class Insecure implements Keychain {
 	deletePassword( service: string ): Promise<boolean> {
 		delete this.passwords[ service ];
 
-		return new Promise( resolve => {
-			const json = JSON.stringify( this.passwords );
+		return new Promise( ( resolve, reject ) => {
+			let json;
+
+			try {
+				json = JSON.stringify( this.passwords );
+			} catch ( e ) {
+				return reject( e );
+			}
+
 			fs.writeFile( this.file, json, err => resolve( ! err ) );
 		} );
 	}
