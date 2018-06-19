@@ -21,7 +21,7 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 	} catch ( error ) {
 		debug( 'Cannot use Secure keychain; falling back to Insecure keychain (Details: %o)', error );
 
-		// Fallback to Insecure keychain if we can't 
+		// Fallback to Insecure keychain if we can't
 		e = new Insecure( 'vip-go-cli' );
 	}
 } else {
