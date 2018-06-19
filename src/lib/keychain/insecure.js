@@ -17,6 +17,8 @@ export default class Insecure implements Keychain {
 	passwords: Object;
 
 	constructor( file: string ) {
+		this.passwords = {};
+
 		// only current user has read-write access
 		const rw = fs.constants.S_IRUSR | fs.constants.S_IWUSR;
 
@@ -60,7 +62,7 @@ export default class Insecure implements Keychain {
 					return reject( e );
 				}
 
-				return resolve( passwords[ service ] );
+				return resolve( this.passwords[ service ] );
 			} );
 		} );
 	}
