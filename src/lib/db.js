@@ -171,10 +171,7 @@ export function importDB( site, file, opts, callback ) {
 				process.stderr.write( info );
 			});
 
-			var sanitize = sanitizeSQLFile();
-			var throttle = new Throttle( 1024 * 1024 * opts.throttle );
 			var stream = fs.createReadStream( file );
-			var importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
 
 			// Handle compressed mysqldumps
 			switch( path.extname( file ) ) {
@@ -187,6 +184,7 @@ export function importDB( site, file, opts, callback ) {
 				break;
 			}
 
+			const sanitize = sanitizeSQLFile();
 			sanitize.on( 'error', err => {
 				console.error( '\n' + err.toString() );
 				process.exit( 1 );
@@ -206,6 +204,8 @@ export function importDB( site, file, opts, callback ) {
 			stream.pipe( replace.stdin );
 			stream = replace.stdout;
 
+			const throttle = new Throttle( 1024 * 1024 * opts.throttle );
+			const importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
 			stream
 				.pipe( sanitize )
 				.pipe( throttle )
