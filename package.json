@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "1.0.0-dev-build12",
+  "version": "1.0.0-dev-build13",
   "description": "The VIP Go Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -12,7 +12,7 @@
   "scripts": {
     "test": "eslint index.js src __test__ && npm run flow && jest --coverage",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run prepareConfig:publish",
+    "prepack": "npm run prepareConfig:publish",
     "postinstall": "node ./scripts/check-version.js",
     "build": "npm run prepareConfig:local && babel src -d dist",
     "build:watch": "babel src -d dist --watch",
