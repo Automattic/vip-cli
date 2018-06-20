@@ -15,6 +15,7 @@ import API from 'lib/api';
 import app from 'lib/api/app';
 import command from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
+import { trackEvent } from 'lib/tracker';
 
 const appQuery = `id,name,environments{
 	id,name,defaultDomain,branch,datacenter,syncProgress{
