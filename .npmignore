@@ -6,6 +6,7 @@ __tests__
 jest.config.js
 jest.setup.js
 .travis.yml
+appveyor.yml
 coverage
 
 # The final `config.json` is generated.
