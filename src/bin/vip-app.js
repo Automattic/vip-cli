@@ -47,5 +47,16 @@ command( { requiredArgs: 1, format: true } )
 
 		await trackEvent( 'app_command_success' );
 
-		return res.environments;
+		// Clone the read-only response object so we can modify it
+		const r = Object.assign( {}, res );
+		r.environments = r.environments.map( env => {
+			const e = Object.assign( {}, env );
+
+			// Use the short version of git commit hash
+			e.currentCommit = e.currentCommit.substring( 0, 7 );
+
+			return e;
+		} );
+
+		return r.environments;
 	} );
