@@ -79,7 +79,13 @@ export default class Insecure implements Keychain {
 				return reject( e );
 			}
 
-			fs.writeFile( this.file, json, err => resolve( ! err ) );
+			fs.writeFile( this.file, json, err => {
+				if ( err ) {
+					return reject( err );
+				}
+
+				resolve( true );
+			} );
 		} );
 	}
 
@@ -95,7 +101,13 @@ export default class Insecure implements Keychain {
 				return reject( e );
 			}
 
-			fs.writeFile( this.file, json, err => resolve( ! err ) );
+			fs.writeFile( this.file, json, err => {
+				if ( err ) {
+					return reject( err );
+				}
+
+				resolve( true );
+			} );
 		} );
 	}
 
