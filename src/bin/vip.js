@@ -102,7 +102,15 @@ const rootCmd = async function() {
 			return;
 		}
 
-		Token.set( token.raw );
+		try {
+			Token.set( token.raw );
+		} catch ( e ) {
+			await trackEvent( 'login_command_token_submit_error', {
+				error: e.message,
+			} );
+
+			throw e;
+		}
 
 		await trackEvent( 'login_command_token_submit_success' );
 
