@@ -109,11 +109,11 @@ const rootCmd = async function() {
 		// Exec the command we originally  wanted
 		const argv = process.argv.slice( 2 );
 		if ( argv.length ) {
-			console.log( argv );
 			return args.runCommand( { usage: process.argv.slice( 2 ) } );
 		}
 
-		return args.showHelp();
+		const { spawn } = require( 'child_process' );
+		spawn( process.argv[ 0 ], process.argv.slice( 1 ), { stdio: 'inherit' } );
 	}
 };
 
