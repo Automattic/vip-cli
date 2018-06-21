@@ -1,5 +1,5 @@
 {
-  "googleAnalyticsId": "",
+  "googleAnalyticsId": "UA-114849887-2",
   "tracksUserType": "vip:user_id",
   "tracksAnonUserType": "anon",
   "tracksEventPrefix": "vip_cli_"
