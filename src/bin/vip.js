@@ -107,10 +107,13 @@ const rootCmd = async function() {
 		await trackEvent( 'login_command_token_submit_success' );
 
 		// Exec the command we originally  wanted
-		const spawn = require( 'child_process' ).spawn;
-		const bin = process.argv[ 1 ];
 		const argv = process.argv.slice( 2 );
-		spawn( bin, argv, { stdio: 'inherit' } );
+		if ( argv.length ) {
+			console.log( argv );
+			return args.runCommand( { usage: process.argv.slice( 2 ) } );
+		}
+
+		return args.showHelp();
 	}
 };
 
