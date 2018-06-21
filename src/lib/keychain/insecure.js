@@ -20,7 +20,7 @@ export default class Insecure implements Keychain {
 		this.passwords = {};
 
 		// only current user has read-write access
-		const rw = fs.constants.S_IRUSR | fs.constants.S_IWUSR;
+		const rw = 0o700;
 
 		let stat;
 		const dir = os.homedir() + path.sep + '.vip';
