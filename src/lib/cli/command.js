@@ -50,10 +50,20 @@ args.argv = async function( argv, cb ): Promise<any> {
 	// Check for updates every day
 	updateNotifier( { pkg, isGlobal: true, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
 
-	// Show help if no args passed
 	// `help` and `version` are always defined as subcommands
-	const defaultSubcommandCount = 2;
-	if ( this.details.commands.length > defaultSubcommandCount && ! this.sub.length ) {
+	const customCommands = this.details.commands.filter( c => {
+		switch ( c.usage ) {
+			case 'help':
+			case 'version':
+				return false;
+
+			default:
+				return true;
+		}
+	} );
+
+	// Show help if no args passed
+	if ( !! customCommands.length && ! this.sub.length ) {
 		await trackEvent( 'command_help_view' );
 
 		this.showHelp();
