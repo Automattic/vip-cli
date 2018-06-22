@@ -19,6 +19,7 @@ import { formatData } from './format';
 import { confirm } from './prompt';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
+import pager from 'lib/cli/pager';
 
 function uncaughtError( err ) {
 	console.log();
@@ -295,6 +296,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 	}
 
 	if ( cb ) {
+		const p = pager();
+
 		res = await cb( this.sub, options );
 
 		if ( _opts.format && res ) {
@@ -313,7 +316,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 				format: options.format,
 			} );
 
-			console.log( formatData( res, options.format ) );
+			const formattedOut = formatData( res, options.format );
+			p.write( formattedOut + '\n' );
+			p.end();
 			return {};
 		}
 	}
