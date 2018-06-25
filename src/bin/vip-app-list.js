@@ -36,7 +36,7 @@ command( { format: true } )
 						}
 					}`,
 					variables: {
-						first: 10,
+						first: 100,
 						after: null, // TODO make dynamic
 					},
 				} );
