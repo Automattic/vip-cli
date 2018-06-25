@@ -147,7 +147,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				type: 'list',
 				name: 'app',
 				message: 'Which app?',
-				pageSize: 10,
+				pageSize: 100,
 				prefix: '',
 				choices: res.data.apps.edges.map( cur => {
 					return {
