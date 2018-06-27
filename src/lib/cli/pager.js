@@ -19,7 +19,7 @@ export default function pager() {
 			less = 'less -FRX';
 	}
 
-	const args = ( process.env.PAGER || 'less -FRX' ).split( ' ' );
+	const args = ( process.env.PAGER || less ).split( ' ' );
 	const bin = args.shift();
 
 	proc = spawn( bin, args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
