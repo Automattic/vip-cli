@@ -357,7 +357,7 @@ export function stop( sandbox, cb ) {
 					}
 
 					waitForSandboxStatus( sandbox.client_site_id, STATUS.stopped, ( err, sandbox ) => {
-						cb( null, sandbox );
+						cb( err, sandbox );
 					});
 				});
 		});
