@@ -9,6 +9,13 @@ const api = require( './api' );
 const config = require( './config' );
 const utils = require( './utils' );
 
+// Real constants
+const STATUS = {
+	running: 'running',
+	stopping: 'stopping',
+	stopped: 'stopped',
+};
+
 function isProxiedHost( hostname ) {
 	return /dev\.\w{3}\.(?:wordpress.com|vipv2\.net)$/.test( hostname );
 }
@@ -314,7 +321,7 @@ function start( sandbox, site, cb ) {
 				return cb( err );
 			}
 
-			waitForRunningSandbox( site, ( err, sandbox ) => {
+			waitForSandboxStatus( site, STATUS.running, ( err, sandbox ) => {
 				cb( null, sandbox );
 			});
 		});
@@ -344,7 +351,15 @@ export function stop( sandbox, cb ) {
 
 			api
 				.post( '/sandboxes/' + sandbox.id + '/stop' )
-				.end();
+				.end( ( err, res ) => {
+					if ( err ) {
+						return cb( err );
+					}
+
+					waitForSandboxStatus( sandbox.client_site_id, STATUS.stopped, ( err, sandbox ) => {
+						cb( null, sandbox );
+					});
+				});
 		});
 	});
 }
@@ -381,7 +396,7 @@ export function createSandboxForSite( site, cb ) {
 						return cb( err );
 					}
 
-					waitForRunningSandbox( site, ( err, sandbox ) => {
+					waitForSandboxStatus( site, STATUS.running, ( err, sandbox ) => {
 						cb( err, sandbox );
 					});
 				});
@@ -426,7 +441,10 @@ export function getSandboxesForSite( site, cb ) {
 		});
 }
 
-export function waitForRunningSandbox( site, cb ) {
+export function waitForSandboxStatus( site, expectedStatus, cb ) {
+	
+	if ( ! Object.values( STATUS ).includes( expectedStatus ) ) return console.error( 'Please specify a valid status' );
+
 	let i = 0;
 	var poll = setInterval( () => {
 		getSandboxForSite( site, ( err, sbox ) => {
@@ -440,15 +458,15 @@ export function waitForRunningSandbox( site, cb ) {
 			if ( i++ > 60 ) {
 				clearInterval( poll );
 
-				if ( sbox && sbox.state !== 'running' ) {
+				if ( sbox && sbox.state !== expectedStatus ) {
 					return console.error( 'Timeout: the sandbox container is stalled. Please try again or contact the Platform team for help' );
 				} else {
 					return console.error( 'Timeout: failed to get details about the sandbox container. Please try again or contact the Platform team for help' );
 				}
 			}
 
-			if ( ! sbox || sbox.state !== 'running' ) {
-				return utils.showLoading( 'Waiting for sandbox to start' );
+			if ( ! sbox || sbox.state !== expectedStatus ) {
+				return utils.showLoading( 'Waiting for sandbox to be ' + expectedStatus );
 			}
 
 			clearInterval( poll );
