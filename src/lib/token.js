@@ -21,7 +21,12 @@ export default class Token {
 	exp: Date;
 
 	constructor( token: string ): void {
-		if ( ! token || ! token.length ) {
+		if ( ! token ) {
+			return;
+		}
+
+		token = token.trim();
+		if ( ! token.length ) {
 			return;
 		}
 
