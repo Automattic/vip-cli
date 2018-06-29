@@ -14,7 +14,6 @@ cache:
         - node_modules
 
 script:
-    - git diff --exit-code package-lock.json
     - npm test
 
 after_success:
