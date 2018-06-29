@@ -1,5 +1,6 @@
 # Built files
 dist
+
 # This is generated as part of `npm run prepareConfig`
 config/config.json
 
@@ -9,6 +10,7 @@ logs
 npm-debug.log*
 
 # Dependency directories
+package-lock.json
 node_modules/
 
 # Optional eslint cache
