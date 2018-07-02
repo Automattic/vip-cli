@@ -4,6 +4,7 @@
  * External dependencies
  */
 import { spawn } from 'child_process';
+import { PassThrough } from 'stream';
 
 let proc;
 export default function pager() {
@@ -22,12 +23,20 @@ export default function pager() {
 	const args = ( process.env.PAGER || less ).split( ' ' );
 	const bin = args.shift();
 
+	// passthrough pipe so we can change the output pipe if necessary
+	const pipe = new PassThrough();
 	proc = spawn( bin, args, { stdio: [ 'pipe', process.stdout, process.stderr ] } );
 	proc.on( 'exit', () => {
 		proc.stdin.emit( 'done' );
 	} );
 
-	return proc.stdin;
+	// If we can't spawn less, pipe directly to stdout
+	pipe.pipe( proc.stdin );
+	proc.on( 'error', () => {
+		pipe.pipe( process.stdout );
+	} );
+
+	return pipe;
 }
 
 export function end() {
