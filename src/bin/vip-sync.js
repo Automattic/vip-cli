@@ -56,8 +56,22 @@ command( {
 					}
 				} );
 		} catch ( e ) {
-			syncing = true;
+			if ( e.graphQLErrors ) {
+				let bail = false;
 
+				for ( const err of e.graphQLErrors ) {
+					if ( err.message !== 'Site is already syncing' ) {
+						bail = true;
+						console.log( chalk.red( 'Error:' ), err.message );
+					}
+				}
+
+				if ( bail ) {
+					return;
+				}
+			}
+
+			syncing = true;
 			await trackEvent( 'sync_command_execute_error', {
 				error: `Already syncing: ${ e.message }`,
 			} );
