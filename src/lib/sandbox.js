@@ -443,7 +443,9 @@ export function getSandboxesForSite( site, cb ) {
 
 export function waitForSandboxStatus( site, expectedStatus, cb ) {
 	
-	if ( ! Object.values( STATUS ).includes( expectedStatus ) ) return console.error( 'Please specify a valid status' );
+	if ( ! Object.values( STATUS ).includes( expectedStatus ) ) {
+		return console.error( 'Please specify a valid status' );
+	}
 
 	let i = 0;
 	var poll = setInterval( () => {
