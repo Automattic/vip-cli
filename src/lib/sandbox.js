@@ -166,7 +166,7 @@ function sshRunCommand( sandbox, command, opts ) {
 		decrementSboxFile( sandbox );
 	});
 
-	utils.maybeConfirm( "Are you sure?", opts.confirm, ( err, yes ) => {
+	utils.maybeConfirm( 'Are you sure?', opts.confirm, ( err, yes ) => {
 		if ( ! yes ) {
 			return;
 		}
