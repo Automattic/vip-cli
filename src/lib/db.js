@@ -195,14 +195,16 @@ export function importDB( site, file, opts, callback ) {
 				replacements.push( from, opts.replace[ from ] );
 			}
 
-			const replace = spawn( 'go-search-replace', replacements, { stdio: [ 'pipe', 'pipe', process.stderr ] });
-			replace.on( 'error', err => {
-				console.error( '\n' + err.toString() );
-				process.exit( 1 );
-			});
+			if ( replacements.length > 0 ) {
+				const replace = spawn( 'go-search-replace', replacements, { stdio: [ 'pipe', 'pipe', process.stderr ] });
+				replace.on( 'error', err => {
+					console.error( '\n' + err.toString() );
+					process.exit( 1 );
+				});
 
-			stream.pipe( replace.stdin );
-			stream = replace.stdout;
+				stream.pipe( replace.stdin );
+				stream = replace.stdout;
+			}
 
 			const throttle = new Throttle( 1024 * 1024 * opts.throttle );
 			const importdb = spawn( 'mysql', args, { stdio: [ 'pipe', process.stdout, process.stderr ] });
