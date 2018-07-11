@@ -5,7 +5,9 @@
   "author": "Automattic, Inc.",
   "contributors": [
     "Nick Daugherty <ndaugherty987@gmail.com>",
-    "Josh Betz <j@joshbetz.com>"
+    "Josh Betz <j@joshbetz.com>",
+    "Mohammad Jangda <batmoo@gmail.com",
+    "Gabriel Sambarino <gabriel.sambarino@gmail.com"
   ],
   "keywords": [
     "wordpress",
@@ -17,10 +19,11 @@
   "repository": "git@github.com:Automattic/vip-cli.git",
   "license": "MIT",
   "engines": {
-    "node": ">=0.12"
+    "node": ">=7.0"
   },
   "scripts": {
     "preinstall": " node ./scripts/install-go-search-replace.js",
+    "postinstall": "node ./scripts/check-version.js",
     "postuninstall": "./scripts/postuninstall",
     "prepare": "npm run build",
     "build": "babel -q src --out-dir=build",
