@@ -27,3 +27,4 @@ node_modules/
 # Other helper files
 .nvmrc
 .ackrc
+.publishrc

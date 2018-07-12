@@ -19,7 +19,9 @@
     "flow": "flow",
     "jest": "jest",
     "prepareConfig:local": "node ./scripts/prepare-config.js local",
-    "prepareConfig:publish": "node ./scripts/prepare-config.js publish"
+    "prepareConfig:publish": "node ./scripts/prepare-config.js publish",
+    "publish-please": "publish-please",
+    "prepublishOnly": "publish-please guard"
   },
   "repository": {
     "type": "git",
@@ -56,7 +58,8 @@
     "flow-bin": "~0.63.1",
     "jest": "~22.1.1",
     "mock-local-storage": "~1.0.5",
-    "nock": "~9.3.2"
+    "nock": "~9.3.2",
+    "publish-please": "~3.1.1"
   },
   "dependencies": {
     "apollo-cache-inmemory": "~1.1.7",
