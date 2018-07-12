@@ -296,10 +296,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	}
 
 	if ( cb ) {
-		const p = pager();
-
 		res = await cb( this.sub, options );
-
 		if ( _opts.format && res ) {
 			res = res.map( row => {
 				const out = Object.assign( {}, row );
@@ -317,6 +314,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} );
 
 			const formattedOut = formatData( res, options.format );
+
+			const p = pager();
 			p.write( formattedOut + '\n' );
 			p.end();
 			return {};
