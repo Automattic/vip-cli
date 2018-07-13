@@ -15,3 +15,25 @@ Then, launch the command and follow the prompts:
 ```
 vip
 ```
+
+## Changelog
+
+### 1.1.0
+
+- We now correctly report errors when `vip sync` fails. Previously, this would incorrectly report that a sync was run previously.
+- We fixed permissions issues for some users with `admin` access for repos. They were unable to properly view and access applications.
+- We now display more applications in `vip app list` (up to 100!) and have made it easier to browse through a large list thanks to (`$PAGER`|`less`) support. Previously you would only see the first 10 applications in your account.
+
+https://github.com/Automattic/vip/releases/tag/v1.1.0
+
+### 1.0
+
+The first release!
+
+- `vip app list`: view a list of all your applications.
+- `vip app`: view details about one of your applications.
+- `vip sync`: trigger [a data sync](https://vip.wordpress.com/2018/03/28/data-sync-on-vip-go/) to synchronize data from your production environment to non-production environments.
+
+More details at:
+- https://vip.wordpress.com/2018/06/21/a-command-line-interface-cli-for-your-vip-sites/
+- https://github.com/Automattic/vip/releases/tag/v1.0
