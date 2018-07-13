@@ -24,6 +24,10 @@ New libraries should generally support both CLI and web contexts, though some ca
 
 Note: We use `publish-release` for some pre-publish confidence checks to avoid common mistakes.
 
+### Changelog
+
+For all releases, we should include a changelog in the `README.md` file at the root of this repo. 
+
 ### Major / Minor Versions
 
 1. Set the version: `npm version minor` or `npm version major`
