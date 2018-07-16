@@ -28,7 +28,7 @@ program
 	.option( '--intermediate', 'Upload intermediate images', false )
 	.option( '--skip-check-exists', 'Skip file checking if the file already exists', false )
 	.option( '-p, --parallel <threads>', 'Number of files to process in parallel. Default: 5', 5, parseInt )
-	.option( '--force', 'Allow import to production site' )
+	.option( '--force', 'Allow import to non-production site' )
 	.option( '-t, --types <types>', 'File extensions to import', imports.default_types, list )
 	.option( '--aws-key <key>', 'AWS Key' )
 	.option( '--aws-secret <key>', 'AWS Secret' )
