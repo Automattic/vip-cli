@@ -32,7 +32,7 @@ To start hacking:
 1. Run `npm install` to install dependencies.
 1. Hack the code.
 1. Build your changes using `npm run build`.
-1. Test your changes by calling `node build/bin/vip.js`.
+1. Test your changes by calling `node build/bin/vipgo.js`.
 
 **Note 1:** Your development version will use the same config as the globally installed module and any changes to the config will impact that.
 
