@@ -14,14 +14,6 @@ function parseData( d ) {
 	}
 }
 
-function log( data ) {
-	if ( ! require( 'tty' ).isatty( 1 ) ) {
-		console.log( JSON.stringify( data, null, '\t' ) );
-	} else {
-		console.log( data );
-	}
-}
-
 program
 	.command( 'GET <endpoint>' )
 	.alias( 'get' )
@@ -30,7 +22,7 @@ program
 		api
 			.get( endpoint )
 			.end( ( err, res ) => {
-				log( res.body );
+				console.log( res.body );
 			});
 	});
 
@@ -44,7 +36,7 @@ program
 			.post( endpoint )
 			.send( options.data )
 			.end( ( err, res ) => {
-				log( res.body );
+				console.log( res.body );
 			});
 	});
 
@@ -58,7 +50,7 @@ program
 			.put( endpoint )
 			.send( options.data )
 			.end( ( err, res ) => {
-				log( res.body );
+				console.log( res.body );
 			});
 	});
 
@@ -70,7 +62,7 @@ program
 		api
 			.del( endpoint )
 			.end( ( err, res ) => {
-				log( res.body );
+				console.log( res.body );
 			});
 	});
 
