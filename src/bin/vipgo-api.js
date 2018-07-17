@@ -22,7 +22,7 @@ program
 		api
 			.get( endpoint )
 			.end( ( err, res ) => {
-				console.log( res.body );
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
@@ -36,7 +36,7 @@ program
 			.post( endpoint )
 			.send( options.data )
 			.end( ( err, res ) => {
-				console.log( res.body );
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
@@ -50,7 +50,7 @@ program
 			.put( endpoint )
 			.send( options.data )
 			.end( ( err, res ) => {
-				console.log( res.body );
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
@@ -62,7 +62,7 @@ program
 		api
 			.del( endpoint )
 			.end( ( err, res ) => {
-				console.log( res.body );
+				console.log( JSON.stringify( res.body, null, '\t' ) );
 			});
 	});
 
