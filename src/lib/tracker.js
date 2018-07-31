@@ -7,7 +7,6 @@ const debug = require( 'debug' )( '@automattic/vip:analytics' );
  * Internal dependencies
  */
 import Analytics from './analytics/index';
-import GoogleAnalytics from './analytics/clients/google-analytics';
 import Tracks from './analytics/clients/tracks';
 import Token from 'lib/token';
 import config from 'root/config/config.json';
@@ -19,11 +18,6 @@ async function init(): Analytics {
 	const uuid = await Token.uuid();
 
 	const clients = {};
-
-	const gaAccountId = config.googleAnalyticsId;
-	if ( gaAccountId ) {
-		clients.googleAnalytics = new GoogleAnalytics( gaAccountId, uuid, env );
-	}
 
 	const tracksUserType = config.tracksUserType;
 	const tracksEventPrefix = config.tracksEventPrefix;
