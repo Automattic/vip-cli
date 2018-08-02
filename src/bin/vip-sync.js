@@ -173,22 +173,24 @@ command( {
 					break;
 
 				case 'failed':
+					clearInterval( progress );
+
 					await trackEvent( 'sync_command_error', {
 						error: 'API returned `failed` status',
 					} );
 
 					out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
-					clearInterval( progress );
 					break;
 
 				case 'success':
 				default:
+					clearInterval( progress );
+
 					await trackEvent( 'sync_command_success' );
 
 					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
-					clearInterval( progress );
 					break;
 			}
 
