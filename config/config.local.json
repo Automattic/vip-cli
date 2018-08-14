@@ -1,5 +1,5 @@
 {
   "tracksUserType": "vip:user_id",
   "tracksAnonUserType": "anon",
-  "tracksEventPrefix": "vip_dev_cli_"
+  "tracksEventPrefix": "vip_cli_dev_"
 }
