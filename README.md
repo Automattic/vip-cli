@@ -28,7 +28,7 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 https://github.com/Automattic/vip/releases/tag/v1.1.0
 
-### 1.0
+### 1.0.0
 
 The first release!
 
@@ -38,4 +38,4 @@ The first release!
 
 More details at:
 - https://vip.wordpress.com/2018/06/21/a-command-line-interface-cli-for-your-vip-sites/
-- https://github.com/Automattic/vip/releases/tag/v1.0
+- https://github.com/Automattic/vip/releases/tag/v1.0.0
