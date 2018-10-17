@@ -27,7 +27,7 @@ command( {
 	appContext: true,
 	appQuery: appQuery,
 	childEnvContext: true,
-	requireConfirm: 'Are you sure you want to sync from production?'
+	requireConfirm: 'Are you sure you want to sync from production?',
 } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
@@ -51,9 +51,9 @@ command( {
 					variables: {
 						input: {
 							id: opts.app.id,
-							environmentId: opts.env.id
-						}
-					}
+							environmentId: opts.env.id,
+						},
+					},
 				} );
 		} catch ( e ) {
 			if ( e.graphQLErrors ) {
@@ -134,7 +134,7 @@ command( {
 						variables: {
 							id: opts.app.id,
 							sync: environment.syncProgress.sync,
-						}
+						},
 					} )
 					.then( res => res.data.app )
 					.then( _app => {

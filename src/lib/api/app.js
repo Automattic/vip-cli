@@ -57,7 +57,7 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 			}`,
 			variables: {
 				id: app,
-			}
+			},
 		} );
 
 	if ( ! res || ! res.data || ! res.data.app ) {

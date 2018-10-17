@@ -81,7 +81,7 @@ const rootCmd = async function() {
 		} catch ( e ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
 
-			await trackEvent( 'login_command_token_submit_error', { error: e.message, } );
+			await trackEvent( 'login_command_token_submit_error', { error: e.message } );
 
 			return;
 		}
@@ -89,7 +89,7 @@ const rootCmd = async function() {
 		if ( token.expired() ) {
 			console.log( 'The token provided is expired. Please log in again to refresh the token.' );
 
-			await trackEvent( 'login_command_token_submit_error', { error: 'expired', } );
+			await trackEvent( 'login_command_token_submit_error', { error: 'expired' } );
 
 			return;
 		}
@@ -97,7 +97,7 @@ const rootCmd = async function() {
 		if ( ! token.valid() ) {
 			console.log( 'The provided token is not valid. Please log in again to refresh the token.' );
 
-			await trackEvent( 'login_command_token_submit_error', { error: 'invalid', } );
+			await trackEvent( 'login_command_token_submit_error', { error: 'invalid' } );
 
 			return;
 		}
