@@ -18,7 +18,7 @@
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
-    "lint": "eslint -f json index.js src __test__ | eslines",
+    "lint": "eslint -f json index.js src __tests__ | eslines",
     "prepareConfig:local": "node ./scripts/prepare-config.js local",
     "prepareConfig:publish": "node ./scripts/prepare-config.js publish",
     "publish-please": "publish-please",
