@@ -88,15 +88,6 @@
     "update-notifier": "~2.3.0",
     "uuid": "~3.2.1"
   },
-  "eslintConfig": {
-    "extends": [
-      "wpvip"
-    ],
-    "rules": {
-      "no-console": 0,
-      "no-process-exit": 0
-    }
-  },
   "optionalDependencies": {
     "keytar": "^4.1.0"
   }
