@@ -13,7 +13,7 @@ describe( 'lib/analytics/tracks', () => {
 	const {
 		protocol: endpointProtocol,
 		host: endpointHost,
-		path: endpointPath
+		path: endpointPath,
 	} = url.parse( Tracks.ENDPOINT );
 
 	const buildNock = () => {
@@ -26,7 +26,7 @@ describe( 'lib/analytics/tracks', () => {
 	describe( '.send()', () => {
 		it( 'should correctly construct remote request', () => {
 			const tracksClient = new Tracks( 123, 'vip', '', {
-				userAgent: 'vip-cli'
+				userAgent: 'vip-cli',
 			} );
 
 			const params = { extra: 'param' };

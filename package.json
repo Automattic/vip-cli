@@ -10,7 +10,7 @@
     "vip-sync": "dist/bin/vip-sync.js"
   },
   "scripts": {
-    "test": "eslint index.js src __test__ && npm run flow && jest --coverage",
+    "test": "npm run lint && npm run flow && jest --coverage",
     "prepare": "npm run build",
     "prepack": "npm run prepareConfig:publish",
     "postinstall": "node ./scripts/check-version.js",
@@ -18,6 +18,7 @@
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
+    "lint": "eslint -f json index.js src __tests__ | eslines",
     "prepareConfig:local": "node ./scripts/prepare-config.js local",
     "prepareConfig:publish": "node ./scripts/prepare-config.js publish",
     "publish-please": "publish-please",
@@ -46,15 +47,19 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "babel-cli": "~6.26.0",
-    "babel-eslint": "~8.1.2",
+    "babel-eslint": "^10.0.1",
     "babel-plugin-module-resolver": "~3.1.0",
     "babel-plugin-transform-es2015-modules-commonjs": "~6.26.0",
     "babel-preset-flow": "~6.23.0",
-    "eslint": "~3.3.1",
-    "eslint-config-wpcalypso": "0.8.0",
-    "eslint-plugin-flowtype": "~2.34.0",
-    "eslint-plugin-json": "~1.2.0",
-    "eslint-plugin-wpcalypso": "3.4.0",
+    "eslines": "^1.1.0",
+    "eslint": "^5.3.0",
+    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#84ba8eb",
+    "eslint-plugin-flowtype": "^3.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-json": "^1.2.1",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.11.1",
+    "eslint-plugin-wpcalypso": "^4.0.2",
     "flow-bin": "~0.63.1",
     "jest": "~22.1.1",
     "mock-local-storage": "~1.0.5",
@@ -82,57 +87,6 @@
     "single-line-log": "~1.1.2",
     "update-notifier": "~2.3.0",
     "uuid": "~3.2.1"
-  },
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "es6": true
-    },
-    "extends": [
-      "plugin:flowtype/recommended",
-      "wpcalypso"
-    ],
-    "plugins": [
-      "wpcalypso",
-      "flowtype",
-      "json"
-    ],
-    "parserOptions": {
-      "sourceType": "module"
-    },
-    "globals": {
-      "describe": true,
-      "it": true,
-      "expect": true,
-      "beforeEach": true,
-      "afterEach": true,
-      "beforeAll": true,
-      "afterAll": true,
-      "window": true
-    },
-    "rules": {
-      "camelcase": [
-        "warn"
-      ],
-      "no-console": [
-        0
-      ],
-      "max-len": [
-        "warn"
-      ],
-      "no-unused-vars": [
-        "warn"
-      ],
-      "flowtype/no-types-missing-file-annotation": [
-        0
-      ],
-      "no-undef": [
-        0
-      ],
-      "no-process-exit": [
-        0
-      ]
-    }
   },
   "optionalDependencies": {
     "keytar": "^4.1.0"
