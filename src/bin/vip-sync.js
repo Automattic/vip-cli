@@ -20,7 +20,7 @@ import { trackEvent } from 'lib/tracker';
 const appQuery = `id,name,environments{
 	id,name,defaultDomain,branch,datacenter,syncProgress{
 		status,sync,steps{name,status}
-	}
+	},syncPreview { backup { createdAt }, replacements { from, to } }
 }`;
 
 command( {
