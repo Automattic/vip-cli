@@ -288,7 +288,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		const { backup } = options.env.syncPreview;
 		// remove __typename from replacements.
 		// can not be deleted afterwards if deconstructed
-		const replacements = options.env.syncPreview.replacements.map( ep => {
+		const replacements = options.env.syncPreview.replacements.map( rep => {
 			const { from, to } = rep;
 			return { from, to };
 		} );
