@@ -288,10 +288,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 		const { backup } = options.env.syncPreview;
 		// remove __typename from replacements.
 		// can not be deleted afterwards if deconstructed
-		const replacements = options.env.syncPreview.replacements.map(rep => {
+		const replacements = options.env.syncPreview.replacements.map( ep => {
 			const { from, to } = rep;
 			return { from, to };
-		});
+		} );
 
 		info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
 		info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
