@@ -21,7 +21,7 @@ const env = {
 
 	node: {
 		version: process.version,
-	}
+	},
 };
 
 env.userAgent = `vip-cli/${ pkg.version } (node/${ env.node.version }; ${ env.os.name }/${ env.os.version }; +https://vip.wordpress.com)`;

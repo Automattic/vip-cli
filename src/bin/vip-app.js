@@ -25,7 +25,7 @@ command( { requiredArgs: 1, format: true } )
 		try {
 			res = await app(
 				arg[ 0 ],
-				'id,environments{name,repo,branch,currentCommit,defaultDomain}'
+				'id,environments{name,repo,branch,currentCommit,primaryDomain{name}}'
 			);
 		} catch ( e ) {
 			await trackEvent( 'app_command_fetch_error', {
@@ -49,11 +49,15 @@ command( { requiredArgs: 1, format: true } )
 
 		// Clone the read-only response object so we can modify it
 		const r = Object.assign( {}, res );
+
 		r.environments = r.environments.map( env => {
 			const e = Object.assign( {}, env );
 
 			// Use the short version of git commit hash
 			e.currentCommit = e.currentCommit.substring( 0, 7 );
+
+			// Flatten object
+			e.primaryDomain = e.primaryDomain.name;
 
 			return e;
 		} );
