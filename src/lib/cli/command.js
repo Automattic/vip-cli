@@ -285,6 +285,17 @@ args.argv = async function( argv, cb ): Promise<any> {
 			message = _opts.requireConfirm;
 		}
 
+		const { backup } = options.env.syncPreview;
+		// remove __typename from replacements.
+		// can not be deleted afterwards if deconstructed
+		const replacements = options.env.syncPreview.replacements.map( rep => {
+			const { from, to } = rep;
+			return { from, to };
+		} );
+
+		info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
+		info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+
 		const yes = await confirm( info, message );
 		if ( ! yes ) {
 			await trackEvent( 'command_confirm_cancel' );
