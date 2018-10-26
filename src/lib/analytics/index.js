@@ -8,7 +8,7 @@ const client_info = {
 	node_version: process.version,
 	os: process.platform,
 	cli_version: version,
-}
+};
 
 export default class Analytics {
 	constructor( {
