@@ -7,9 +7,11 @@ import env from '../env';
 const client_info = {
 	'cli_version': env.app.version,
 	'os_name': env.os.name,
-	'os_version': env.os.name,
+	'os_version': env.os.version,
 	'node_version': env.node.version,
 };
+
+console.log( client_info );
 
 export default class Analytics {
 	constructor( {
