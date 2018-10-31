@@ -11,8 +11,6 @@ const client_info = {
 	'node_version': env.node.version,
 };
 
-console.log( client_info );
-
 export default class Analytics {
 	constructor( {
 		tracks = new AnalyticsClientStub(),
