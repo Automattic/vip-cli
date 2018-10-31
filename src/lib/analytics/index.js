@@ -2,12 +2,13 @@
  * Internal dependencies
  */
 import AnalyticsClientStub from './clients/stub';
-import { version } from '../../../package.json';
+import env from '../env';
 
 const client_info = {
-	node_version: process.version,
-	os: process.platform,
-	cli_version: version,
+	'cli_version': env.app.version,
+	'os_name': env.os.name,
+	'os_version': env.os.name,
+	'node_version': env.node.version,
 };
 
 export default class Analytics {
