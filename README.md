@@ -20,6 +20,10 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.1.2
+
+- Bump dependencies, fixing incompatibilities between them
+
 ### 1.1.0
 
 - We now correctly report errors when `vip sync` fails. Previously, this would incorrectly report that a sync was run previously.
