@@ -5,10 +5,10 @@ import AnalyticsClientStub from './clients/stub';
 import env from '../env';
 
 const client_info = {
-	'cli_version': env.app.version,
-	'os_name': env.os.name,
-	'os_version': env.os.version,
-	'node_version': env.node.version,
+	cli_version: env.app.version,
+	os_name: env.os.name,
+	os_version: env.os.version,
+	node_version: env.node.version,
 };
 
 export default class Analytics {
