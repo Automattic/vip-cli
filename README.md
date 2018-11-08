@@ -24,7 +24,7 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 - We now display a preview of the `sync` feature with the backup time and the search/replace taking place in your database.
 - We now display your mapped domain instead of the `vip-go.co` ones in `vip app` and `vip app list`.
-- Bug fixes.
+- We now display a better message when an environment do not have non-production environments.
 
 https://github.com/Automattic/vip/releases/tag/v1.2.0
 
