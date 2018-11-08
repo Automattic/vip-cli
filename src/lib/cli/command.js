@@ -226,7 +226,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 			options.env = env;
 		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
 			if ( _opts.childEnvContext ) {
-				console.log( `Could not find any child environments for ${ chalk.blueBright( options.app.name ) }` );
+				console.log( `Could not find any non-production environments for ${ chalk.blueBright( options.app.name ) }.
+					 To set up a new development environment, please contact VIP Support` );
 			} else {
 				console.log( `Could not find any environments for ${ chalk.blueBright( options.app.name ) }` );
 			}
