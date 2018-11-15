@@ -15,7 +15,3 @@ cache:
 
 script:
     - npm test
-
-after_success:
-    - du -sh dist
-    - du -sh node_modules
