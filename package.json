@@ -7,7 +7,8 @@
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
-    "vip-sync": "dist/bin/vip-sync.js"
+    "vip-sync": "dist/bin/vip-sync.js",
+    "vip-login": "dist/bin/vip-login.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",

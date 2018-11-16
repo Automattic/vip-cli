@@ -28,6 +28,7 @@ const rootCmd = async function() {
 				await trackEvent( 'logout_command_execute' );
 			} )
 			.command( 'app', 'List and modify your VIP Go apps' )
+			.command( 'login', 'Login to the vip cli' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
