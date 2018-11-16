@@ -27,6 +27,9 @@ const rootCmd = async function() {
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
+		// parse arguments in case it's a general subcommand (help, version...)
+		args.parse( process.argv );
+
 		const { spawn } = require('child_process');
 
 		// run login first
