@@ -12,6 +12,9 @@ import inquirer from 'inquirer';
  */
 import command from 'lib/cli/command';
 import Token from 'lib/token';
+import { trackEvent } from 'lib/tracker';
+
+const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
 command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {
