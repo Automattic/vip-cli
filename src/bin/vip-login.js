@@ -22,7 +22,7 @@ command( { format: true } )
 
 		// double check if user is already logged in
 		if ( token && token.valid() ) {
-			return console.log( 'You are already logged in' );
+			return console.log( 'You are already logged in!' );
 		}
 
 		console.log();
@@ -103,6 +103,7 @@ command( { format: true } )
 			throw e;
 		}
 
+		console.log( 'You are now logged in!' );
 		await trackEvent( 'login_command_token_submit_success' );
 
 	} );
