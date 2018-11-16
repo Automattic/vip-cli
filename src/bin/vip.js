@@ -27,17 +27,22 @@ const rootCmd = async function() {
 			.command( 'sync', 'Sync production to a development environment' )
 			.argv( process.argv );
 	} else {
-		// Bypass helper function
-		args.parse( process.argv );
+		const { spawn } = require('child_process');
 
-		// Exec the command we originally  wanted
-		const argv = process.argv.slice( 2 );
-		if ( argv.length ) {
-			return args.runCommand( { usage: process.argv.slice( 2 ) } );
-		}
+		// run login first
+		// can not run the login command here as they are defined only if user is logged in
+		const loginSpawn = spawn( process.argv[ 0 ], [ 'dist/bin/vip-login.js' ], { stdio: 'inherit' } );
 
-		const { spawn } = require( 'child_process' );
-		spawn( process.argv[ 0 ], process.argv.slice( 1 ), { stdio: 'inherit' } );
+		loginSpawn.on( 'exit', async ( code, signal ) => {
+			let token = await Token.get();
+
+			if ( token && token.valid() ) {
+				// user is logged in now, run desired command:
+				return spawn( process.argv[ 0 ], process.argv.slice( 1 ), { stdio: 'inherit' } );
+			}
+
+			return;
+		} );
 	}
 };
 
