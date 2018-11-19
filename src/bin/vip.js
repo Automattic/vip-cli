@@ -52,7 +52,7 @@ const rootCmd = async function() {
 		loginSpawn.on( 'exit', async ( code, signal ) => {
 			let token = await Token.get();
 
-			if ( token && token.valid() ) {
+			if ( token && token.valid() && ! 'login' === currentCommand ) {
 				// user is logged in now, run desired command:
 				return spawn( process.argv[ 0 ], process.argv.slice( 1 ), { stdio: 'inherit' } );
 			}
