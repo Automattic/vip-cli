@@ -11,6 +11,7 @@ import args from 'args';
  */
 import command from 'lib/cli/command';
 import Token from 'lib/token';
+import { trackEvent } from 'lib/tracker';
 
 // Config
 const rootCmd = async function() {
