@@ -13,6 +13,12 @@ import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent } from 'lib/tracker';
 
+// By default, we'll log the user if he's logged out
+// Define commands to ignore from this behavior
+const IGNORE_LOGIN = [
+	'logout',
+];
+
 // Config
 const rootCmd = async function() {
 	let token = await Token.get();
@@ -30,6 +36,12 @@ const rootCmd = async function() {
 	} else {
 		// parse arguments in case it's a general subcommand (help, version...)
 		args.parse( process.argv );
+
+		const currentCommand = process.argv[ 2 ];
+
+		if ( IGNORE_LOGIN.includes( currentCommand ) ) {
+			return;
+		}
 
 		const { spawn } = require('child_process');
 
