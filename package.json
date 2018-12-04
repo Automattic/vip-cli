@@ -59,7 +59,7 @@
     "babel-plugin-module-resolver": "3.1.1",
     "eslines": "1.1.0",
     "eslint": "5.9.0",
-    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#84ba8eb",
+    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#c6a87a6",
     "eslint-plugin-flowtype": "3.2.0",
     "eslint-plugin-import": "2.14.0",
     "eslint-plugin-json": "1.2.1",
