@@ -29,5 +29,4 @@ node_modules/
 .ackrc
 .publishrc
 
-scripts
 .eslintrc.json
