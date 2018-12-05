@@ -26,6 +26,7 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 - We now display your mapped domain instead of the `vip-go.co` ones in `vip app` and `vip app list`.
 - We now display a better message when an environment do not have non-production environments.
 - We fixed a bug where the help menu was not showing until you're logged in
+- We fixed some third party vulnerabilities by updating the used packages
 
 https://github.com/Automattic/vip/releases/tag/v1.2.0
 
