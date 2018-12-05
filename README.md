@@ -20,6 +20,16 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.2.0
+
+- We now display a preview of the `sync` feature with the backup time and the search/replace taking place in your database.
+- We now display your mapped domain instead of the placeholder `go-vip.co` domain in `vip app` and `vip app list`.
+- We now display a better message when an app does not have any non-production environments.
+- We fixed a bug where the help menu was not showing until you're logged in.
+- We updated third party dependencies to newer, more secure versions.
+
+https://github.com/Automattic/vip/releases/tag/v1.2.0
+
 ### 1.1.0
 
 - We now correctly report errors when `vip sync` fails. Previously, this would incorrectly report that a sync was run previously.
