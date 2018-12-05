@@ -20,8 +20,8 @@ describe( 'token tests (secure)', () => {
 		const Secure = require( 'lib/keychain/secure' );
 		keychain = new Secure();
 	} catch ( e ) {
-		test.skip( 'should correctly set token (keytar does not exist)' );
-		test.skip( 'should correctly delete token (keytar does not exist)' );
+		test.skip( 'should correctly set token (keytar does not exist)', () => {} );
+		test.skip( 'should correctly delete token (keytar does not exist)', () => {} );
 		return;
 	}
 
