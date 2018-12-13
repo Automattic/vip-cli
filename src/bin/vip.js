@@ -22,7 +22,9 @@ const rootCmd = async function() {
 	let token = await Token.get();
 
 	const helpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
-	if ( helpCommand || ( token && token.valid() ) ) {
+	const logoutCommand = process.argv.some( arg => arg === 'logout' );
+
+	if ( logoutCommand || helpCommand || ( token && token.valid() ) ) {
 		command()
 			.command( 'logout', 'Logout from your current session', async () => {
 				await Token.purge();
