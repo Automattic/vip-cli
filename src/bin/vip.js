@@ -27,6 +27,7 @@ const rootCmd = async function() {
 			.command( 'logout', 'Logout from your current session', async () => {
 				await Token.purge();
 				await trackEvent( 'logout_command_execute' );
+				console.log( 'You are successfully logged out' );
 			} )
 			.command( 'app', 'List and modify your VIP Go apps' )
 			.command( 'sync', 'Sync production to a development environment' )
