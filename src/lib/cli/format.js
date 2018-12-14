@@ -3,6 +3,11 @@
 type Options = {
 };
 
+export type Tuple = {
+	key: string,
+	value: string,
+};
+
 export function formatData( data: Array<any>, format: string, opts: ?Options ): string {
 	if ( ! data || ! data.length ) {
 		return '';
@@ -17,6 +22,9 @@ export function formatData( data: Array<any>, format: string, opts: ?Options ): 
 
 		case 'csv':
 			return csv( data, opts );
+
+		case 'keyValue':
+			return keyValue( data, opts );
 
 		case 'table':
 		default:
@@ -79,4 +87,24 @@ function formatFields( fields: Array<string> ) {
 			.join( ' ' )
 			.toLowerCase();
 	} );
+}
+
+function keyValue( values: Array<Tuple> ): string {
+	const lines = [];
+
+	lines.push( '===================================' );
+	for ( const i of values ) {
+		let v = i.value;
+
+		switch ( i.key.toLowerCase() ) {
+			case 'environment':
+				v = formatEnvironment( v );
+				break;
+		}
+
+		lines.push( `+ ${ i.key }: ${ v }` );
+	}
+	lines.push( '===================================' );
+
+	return lines.join( '\n' );
 }
