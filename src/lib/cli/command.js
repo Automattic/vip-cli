@@ -22,6 +22,9 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 
 function uncaughtError( err ) {
+	// Error raised when trying to write to an already closed stream
+	if ( err.code === 'EPIPE' ) return;
+
 	console.log();
 	console.log( ' ', chalk.red( '✕' ), ' Unexpected error: Please contact VIP Support with the following error:' );
 	console.log( ' ', chalk.dim( err.stack ) );
