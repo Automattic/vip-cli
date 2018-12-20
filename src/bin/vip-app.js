@@ -53,7 +53,7 @@ command( { requiredArgs: 1, format: true } )
 		const header = [
 			{ key: 'id', value: res.id },
 			{ key: 'name', value: res.name },
-			{ key: 'repo', value: res.repo }
+			{ key: 'repo', value: res.repo },
 		];
 
 		r.environments = r.environments.map( env => {
