@@ -21,8 +21,10 @@ const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 const rootCmd = async function() {
 	let token = await Token.get();
 
-	const helpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
-	if ( helpCommand || ( token && token.valid() ) ) {
+	const isHelpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
+	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
+
+	if ( isLogoutCommand || isHelpCommand || ( token && token.valid() ) ) {
 		command()
 			.command( 'logout', 'Logout from your current session', async () => {
 				await Token.purge();
