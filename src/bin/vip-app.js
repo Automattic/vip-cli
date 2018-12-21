@@ -25,7 +25,7 @@ command( { requiredArgs: 1, format: true } )
 		try {
 			res = await app(
 				arg[ 0 ],
-				'id,environments{name,repo,branch,currentCommit,primaryDomain{name}}'
+				'id,repo,name,environments{name,branch,currentCommit,primaryDomain{name}}'
 			);
 		} catch ( e ) {
 			await trackEvent( 'app_command_fetch_error', {
@@ -50,6 +50,12 @@ command( { requiredArgs: 1, format: true } )
 		// Clone the read-only response object so we can modify it
 		const r = Object.assign( {}, res );
 
+		const header = [
+			{ key: 'id', value: res.id },
+			{ key: 'name', value: res.name },
+			{ key: 'repo', value: res.repo },
+		];
+
 		r.environments = r.environments.map( env => {
 			const e = Object.assign( {}, env );
 
@@ -62,5 +68,5 @@ command( { requiredArgs: 1, format: true } )
 			return e;
 		} );
 
-		return r.environments;
+		return { header, data: r.environments };
 	} );

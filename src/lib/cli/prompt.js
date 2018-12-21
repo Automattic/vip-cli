@@ -8,15 +8,10 @@ import inquirer from 'inquirer';
 /**
  * Internal dependencies
  */
-import { formatEnvironment } from './format';
-
-export type Tuple = {
-	key: string,
-	value: string,
-};
+import { formatEnvironmeznt, keyValue, Tuple } from './format';
 
 export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
-	console.log( m( values ) );
+	console.log( keyValue( values ) );
 
 	const c = await inquirer.prompt( {
 		type: 'confirm',
@@ -27,24 +22,4 @@ export async function confirm( values: Array<Tuple>, message: string ): Promise<
 	} );
 
 	return c.confirm;
-}
-
-function m( values: Array<Tuple> ): string {
-	const lines = [];
-
-	lines.push( '===================================' );
-	for ( const i of values ) {
-		let v = i.value;
-
-		switch ( i.key.toLowerCase() ) {
-			case 'environment':
-				v = formatEnvironment( v );
-				break;
-		}
-
-		lines.push( `+ ${ i.key }: ${ v }` );
-	}
-	lines.push( '===================================' );
-
-	return lines.join( '\n' );
 }
