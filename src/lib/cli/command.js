@@ -306,6 +306,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( cb ) {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
+			if ( res.header ) {
+				console.log( formatData( res.header, 'keyValue' ) );
+				res = res.data;
+			}
+
 			res = res.map( row => {
 				const out = Object.assign( {}, row );
 
