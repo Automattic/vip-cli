@@ -98,103 +98,42 @@ args.argv = async function( argv, cb ): Promise<any> {
 	// Set the site in options.app
 	let res;
 	if ( _opts.appContext ) {
-		// If --app is not set, try to infer the app context
+		// If --app is not set, ask for app
 		if ( ! options.app ) {
-			const api = await API();
-
-			try {
-				res = await api
-					.query( {
-						// $FlowFixMe: gql template is not supported by flow
-						query: gql`query Apps( $first: Int, $after: String ) {
-							apps( first: $first, after: $after ) {
-								total
-								nextCursor
-								edges {
-									${ _opts.appQuery }
-								}
-							}
-						}`,
-						variables: {
-							first: 100,
-							after: null, // TODO make dynamic?
-						},
-					} );
-			} catch ( err ) {
-				const message = err.toString();
-				await trackEvent( 'command_appcontext_list_fetch_error', {
-					error: message,
-				} );
-
-				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
-				return;
-			}
-
-			if ( ! res ||
-				! res.data ||
-				! res.data.apps ||
-				! res.data.apps.edges ||
-				! res.data.apps.edges.length ) {
-				await trackEvent( 'command_appcontext_list_fetch_error', {
-					error: 'No apps found',
-				} );
-
-				console.log( "Couldn't find any apps" );
-				return {};
-			}
-
-			const a = await inquirer.prompt( {
-				type: 'list',
+			const appPrompt = await inquirer.prompt( {
+				type: 'input',
 				name: 'app',
 				message: 'Which app?',
-				pageSize: 100,
-				prefix: '',
-				choices: res.data.apps.edges.map( cur => {
-					return {
-						name: cur.name,
-						value: cur,
-					};
-				} ),
 			} );
 
-			if ( ! a || ! a.app || ! a.app.id ) {
-				await trackEvent( 'command_appcontext_list_select_error', {
-					error: 'Invalid app selected',
-				} );
-
-				console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
-				return {};
-			}
-
-			await trackEvent( 'command_appcontext_list_select_success' );
-
-			options.app = Object.assign( {}, a.app );
-		} else {
-			let a;
-			try {
-				a = await app( options.app, _opts.appQuery );
-			} catch ( e ) {
-				await trackEvent( 'command_appcontext_param_error', {
-					error: 'App lookup failed',
-				} );
-
-				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
-				return {};
-			}
-
-			if ( ! a || ! a.id ) {
-				await trackEvent( 'command_appcontext_param_error', {
-					error: 'Invalid app specified',
-				} );
-
-				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
-				return {};
-			}
-
-			await trackEvent( 'command_appcontext_param_select' );
-
-			options.app = Object.assign( {}, a );
+			options.app = appPrompt.app;
 		}
+
+		let a;
+
+		try {
+			a = await app( options.app, _opts.appQuery );
+		} catch ( e ) {
+			await trackEvent( 'command_appcontext_param_error', {
+				error: 'App lookup failed',
+			} );
+
+			console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
+			return {};
+		}
+
+		if ( ! a || ! a.id ) {
+			await trackEvent( 'command_appcontext_param_error', {
+				error: 'Invalid app specified',
+			} );
+
+			console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
+			return {};
+		}
+
+		await trackEvent( 'command_appcontext_param_select' );
+
+		options.app = Object.assign( {}, a );
 
 		if ( _opts.childEnvContext ) {
 			options.app.environments = options.app.environments.filter( cur => cur.id !== options.app.id );
