@@ -8,7 +8,7 @@ import inquirer from 'inquirer';
 /**
  * Internal dependencies
  */
-import { formatEnvironmeznt, keyValue, Tuple } from './format';
+import { formatEnvironment, keyValue, Tuple } from './format';
 
 export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( keyValue( values ) );
