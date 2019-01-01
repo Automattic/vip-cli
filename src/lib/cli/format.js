@@ -89,7 +89,7 @@ function formatFields( fields: Array<string> ) {
 	} );
 }
 
-function keyValue( values: Array<Tuple> ): string {
+export function keyValue( values: Array<Tuple> ): string {
 	const lines = [];
 
 	lines.push( '===================================' );
