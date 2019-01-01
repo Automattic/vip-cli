@@ -78,6 +78,7 @@
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "^4.0.0",
     "debug": "~4.1.0",
+    "enquirer": "^2.3.0",
     "graphql": "~14.0.2",
     "graphql-tag": "~2.10.0",
     "ini": "~1.3.5",
