@@ -6,7 +6,7 @@
  */
 import args from 'args';
 import opn from 'opn';
-import inquirer from 'inquirer';
+import { prompt } from 'enquirer'
 
 /**
  * Internal dependencies
@@ -54,11 +54,10 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_execute' );
 
-		const c = await inquirer.prompt( {
+		const c = await prompt( {
 			type: 'confirm',
 			name: 'continue',
 			message: 'Ready?',
-			prefix: '',
 		} );
 
 		if ( ! c.continue ) {
@@ -71,11 +70,10 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_browser_opened' );
 
-		let t = await inquirer.prompt( {
+		let t = await prompt( {
 			type: 'password',
 			name: 'token',
 			message: 'Access Token:',
-			prefix: '',
 		} );
 
 		t = t.token;
