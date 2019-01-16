@@ -284,7 +284,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 		const { backup, canSync, errors } = options.env.syncPreview;
 
-		if( ! canSync ) {
+		if ( ! canSync ) {
 			// User can not sync due to some error(s)
 			// Shows the first error in the array
 			console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
