@@ -285,7 +285,15 @@ args.argv = async function( argv, cb ): Promise<any> {
 			message = _opts.requireConfirm;
 		}
 
-		const { backup } = options.env.syncPreview;
+		const { backup, canSync, errors } = options.env.syncPreview;
+
+		if ( ! canSync ) {
+			// User can not sync due to some error(s)
+			// Shows the first error in the array
+			console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
+			return {};
+		}
+
 		// remove __typename from replacements.
 		// can not be deleted afterwards if deconstructed
 		const replacements = options.env.syncPreview.replacements.map( rep => {
@@ -309,6 +317,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 	if ( cb ) {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
+			if ( res.header ) {
+				console.log( formatData( res.header, 'keyValue' ) );
+				res = res.data;
+			}
+
 			res = res.map( row => {
 				const out = Object.assign( {}, row );
 
