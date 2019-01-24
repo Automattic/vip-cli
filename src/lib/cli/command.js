@@ -143,19 +143,18 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return {};
 			}
 
-			const a = await inquirer.prompt( {
-				type: 'list',
+			const appNames = res.data.apps.edges.map( cur => cur.name );
+
+			const a = await prompt( {
+				type: 'autocomplete',
 				name: 'app',
 				message: 'Which app?',
-				pageSize: 100,
-				prefix: '',
-				choices: res.data.apps.edges.map( cur => {
-					return {
-						name: cur.name,
-						value: cur,
-					};
-				} ),
+				limit: 10,
+				choices: appNames,
 			} );
+
+			// Copy all app information
+			a.app = res.data.apps.edges.find( cur => cur.name === a.app );
 
 			if ( ! a || ! a.app || ! a.app.id ) {
 				await trackEvent( 'command_appcontext_list_select_error', {
