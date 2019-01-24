@@ -22,6 +22,11 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 
 function uncaughtError( err ) {
+	// Error raised when trying to write to an already closed stream
+	if ( err.code === 'EPIPE' ) {
+		return;
+	}
+
 	console.log();
 	console.log( ' ', chalk.red( '✕' ), ' Unexpected error: Please contact VIP Support with the following error:' );
 	console.log( ' ', chalk.dim( err.stack ) );
@@ -278,7 +283,15 @@ args.argv = async function( argv, cb ): Promise<any> {
 			message = _opts.requireConfirm;
 		}
 
-		const { backup } = options.env.syncPreview;
+		const { backup, canSync, errors } = options.env.syncPreview;
+
+		if ( ! canSync ) {
+			// User can not sync due to some error(s)
+			// Shows the first error in the array
+			console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
+			return {};
+		}
+
 		// remove __typename from replacements.
 		// can not be deleted afterwards if deconstructed
 		const replacements = options.env.syncPreview.replacements.map( rep => {
