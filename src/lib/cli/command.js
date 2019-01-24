@@ -4,7 +4,7 @@
  * External dependencies
  */
 import args from 'args';
-import inquirer from 'inquirer';
+import { prompt } from 'enquirer';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 import updateNotifier from 'update-notifier';
@@ -148,19 +148,18 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return {};
 			}
 
-			const a = await inquirer.prompt( {
-				type: 'list',
+			const appNames = res.data.apps.edges.map( cur => cur.name );
+
+			const a = await prompt( {
+				type: 'autocomplete',
 				name: 'app',
 				message: 'Which app?',
-				pageSize: 100,
-				prefix: '',
-				choices: res.data.apps.edges.map( cur => {
-					return {
-						name: cur.name,
-						value: cur,
-					};
-				} ),
+				limit: 10,
+				choices: appNames,
 			} );
+
+			// Copy all app information
+			a.app = res.data.apps.edges.find( cur => cur.name === a.app );
 
 			if ( ! a || ! a.app || ! a.app.id ) {
 				await trackEvent( 'command_appcontext_list_select_error', {
@@ -241,19 +240,16 @@ args.argv = async function( argv, cb ): Promise<any> {
 		} else if ( options.app.environments.length === 1 ) {
 			options.env = options.app.environments[ 0 ];
 		} else if ( options.app.environments.length > 1 ) {
-			const e = await inquirer.prompt( {
-				type: 'list',
+			const environmentNames = options.app.environments.map( envObject => envObject.name );
+			const e = await prompt( {
+				type: 'select',
 				name: 'env',
 				message: 'Which environment?',
-				pageSize: 10,
-				prefix: '',
-				choices: options.app.environments.map( cur => {
-					return {
-						name: cur.name,
-						value: cur,
-					};
-				} ),
+				choices: environmentNames,
 			} );
+
+			// Get full environment info after user selection
+			e.env = options.app.environments.find( envObject => envObject.name === e.env );
 
 			if ( ! e || ! e.env || ! e.env.id ) {
 				await trackEvent( 'command_childcontext_list_select_error', {

@@ -3,21 +3,20 @@
 /**
  * External dependencies
  */
-import inquirer from 'inquirer';
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
  */
-import { formatEnvironmeznt, keyValue, Tuple } from './format';
+import { formatEnvironment, keyValue, Tuple } from './format';
 
 export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( keyValue( values ) );
 
-	const c = await inquirer.prompt( {
+	const c = await prompt( {
 		type: 'confirm',
 		name: 'confirm',
 		message: message,
-		prefix: '',
 		default: false,
 	} );
 
