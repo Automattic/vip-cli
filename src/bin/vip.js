@@ -6,7 +6,7 @@
  */
 import args from 'args';
 import opn from 'opn';
-import { prompt } from 'enquirer'
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
