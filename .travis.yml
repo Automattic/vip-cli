@@ -15,4 +15,5 @@ cache:
         - node_modules
 
 script:
+    - npm i --ignore-scripts
     - npm test
