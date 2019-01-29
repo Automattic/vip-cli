@@ -29,4 +29,11 @@ node_modules/
 .ackrc
 .publishrc
 
+# Liniting rules
 .eslintrc.json
+.eslines.json
+
+# Configs
+.flowconfig
+babel.config.js
+renovate.json
