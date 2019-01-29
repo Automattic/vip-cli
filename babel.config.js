@@ -16,5 +16,4 @@ module.exports = {
 			},
 		],
 	],
-	ignore: [ './src/prepare-config.js' ],
 };
