@@ -20,6 +20,19 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.3.0
+
+- We now display information header for every `vip app --app` execution [(#223)](https://github.com/Automattic/vip/pull/223).
+- We fixed the logout bug asking the user to login before being able to logout [(#222)](https://github.com/Automattic/vip/pull/222) and we also display a message when a user logout [(#221)](https://github.com/Automattic/vip/pull/221).
+- We replaced `inquirer` with `enquirer` [(#229)](https://github.com/Automattic/vip/pull/229).
+- We fixed a bug where we didn't check if we can sync to an environment before accessing some information about it [(#230)](https://github.com/Automattic/vip/pull/230).
+- We fixed an `EPIPE` bug when hitting `q` in `app list` command [(#225)](https://github.com/Automattic/vip/pull/225).
+- We updated third party dependencies to newer, more secure versions.
+
+### 1.2.1
+
+- The `1.2.0` version was containing a bug and we published a patch to fix it. Please use this version instead.
+
 ### 1.2.0
 
 - We now display a preview of the `sync` feature with the backup time and the search/replace taking place in your database.
