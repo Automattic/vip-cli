@@ -3,7 +3,7 @@
     "vulnerableDependencies": true,
     "uncommittedChanges": true,
     "untrackedFiles": true,
-    "sensitiveData": false,
+    "sensitiveData": true,
     "branch": "master",
     "gitTag": true
   },
