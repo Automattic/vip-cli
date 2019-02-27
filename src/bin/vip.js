@@ -33,6 +33,7 @@ const rootCmd = async function() {
 			} )
 			.command( 'app', 'List and modify your VIP Go apps' )
 			.command( 'sync', 'Sync production to a development environment' )
+			.command( 'wp', 'Run WP CLI commands against an environment' )
 			.argv( process.argv );
 	} else {
 		// Bypass helper function
