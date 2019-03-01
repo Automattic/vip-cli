@@ -18,13 +18,31 @@ import app from 'lib/api/app';
 import command from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
 import { trackEvent } from 'lib/tracker';
-
-const socket = SocketIO( 'http://localhost:4000/wp-cli' );
+import Token from '../lib/token';
 
 command( {
 	requiredArgs: 2,
 } )
 	.argv( process.argv, async ( arg, opts ) => {
+		const token = await Token.get();
+
+		if ( ! token ) {
+			return console.error( 'Missing token, please log in' );
+		}
+
+		await trackEvent( 'wp_cli_command_execute' );
+
+		const socket = SocketIO( 'http://localhost:4000/wp-cli', {
+			path: '/websockets',
+			transportOptions: {
+				polling: {
+					extraHeaders: {
+						Authorization: `Bearer ${ token.raw }`,
+					},
+				},
+			},
+		} );
+
 		const stdoutStream = IOStream.createStream();
 		const stdinStream = IOStream.createStream();
 
@@ -56,5 +74,13 @@ command( {
 
 		stdoutStream.on( 'end', () => {
 			process.exit();
+		} );
+
+		socket.on( 'unauthorized', err => {
+			console.log( 'There was an error with the authentication:', err.message );
+		} );
+
+		socket.on( 'error', err => { 
+			console.log( err );
 		} );
 	} );
