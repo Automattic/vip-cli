@@ -13,26 +13,68 @@ import IOStream from 'socket.io-stream';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
+import API, { API_HOST } from 'lib/api';
 import app from 'lib/api/app';
 import command from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 
+const appQuery = `id, name, environments {
+	id
+}`;
+
 command( {
 	requiredArgs: 2,
+	appContext: true,
+	envContext: true,
+	appQuery,
 } )
 	.argv( process.argv, async ( arg, opts ) => {
+		const api = await API();
+
 		const token = await Token.get();
 
 		if ( ! token ) {
 			return console.error( 'Missing token, please log in' );
 		}
 
+		const cmd = arg.join( ' ' );
+
+		let result;
+
+		try {
+			result = await api
+				.mutate( {
+					// $FlowFixMe: gql template is not supported by flow
+					mutation: gql`
+						mutation TriggerWPCLICommandMutation($input: AppEnvironmentTriggerWPCLICommandInput ){
+							triggerWPCLICommandOnAppEnvironment( input: $input ) {
+								command {
+									guid
+								}
+							}
+						}
+					`,
+					variables: {
+						input: {
+							id: opts.app.id,
+							environmentId: opts.env.id,
+							command: cmd,
+						},
+					},
+				} );
+		} catch ( e ) {
+			console.log( e );
+
+			return;
+		}
+
+		const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand } } } = result;
+
 		await trackEvent( 'wp_cli_command_execute' );
 
-		const socket = SocketIO( 'http://localhost:4000/wp-cli', {
+		const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 			path: '/websockets',
 			transportOptions: {
 				polling: {
@@ -47,16 +89,11 @@ command( {
 		const stdinStream = IOStream.createStream();
 
 		// TODO handle all arguments
-		// TODO trigger mutation
-		// TODO subscribe to stream
 		// TODO handle disconnect - does IOStream correctly buffer stdin?
 		// TODO stderr - currently server doesn't support it, so errors don't terminate process
 
-		const cmd = arg.join( ' ' );
-
 		const data = {
-			cmd,
-			guid: 'some-generated-guid-from-mutation',
+			guid: cliCommand.guid,
 			columns: process.stdout.columns,
 			rows: process.stdout.rows,
 		};
