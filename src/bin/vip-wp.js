@@ -27,7 +27,7 @@ const appQuery = `id, name, environments {
 command( {
 	requiredArgs: 2,
 	appContext: true,
-	childEnvContext: true,
+	envContext: true,
 	appQuery,
 } )
 	.argv( process.argv, async ( arg, opts ) => {
