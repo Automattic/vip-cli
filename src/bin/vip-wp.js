@@ -24,6 +24,31 @@ const appQuery = `id, name, environments {
 	id
 }`;
 
+const launchCommandOnEnv = async ( appId, envId, command ) => {
+	const api = await API();
+
+	return api
+		.mutate( {
+			// $FlowFixMe: gql template is not supported by flow
+			mutation: gql`
+				mutation TriggerWPCLICommandMutation($input: AppEnvironmentTriggerWPCLICommandInput ){
+					triggerWPCLICommandOnAppEnvironment( input: $input ) {
+						command {
+							guid
+						}
+					}
+				}
+			`,
+			variables: {
+				input: {
+					id: appId,
+					environmentId: envId,
+					command: command,
+				},
+			},
+		} );
+}
+
 command( {
 	wildcardCommand: true,
 	appContext: true,
@@ -31,33 +56,12 @@ command( {
 	appQuery,
 } )
 	.argv( process.argv, async ( arg, opts ) => {
-		const api = await API();
-
 		const cmd = arg.join( ' ' );
 
 		let result;
 
 		try {
-			result = await api
-				.mutate( {
-					// $FlowFixMe: gql template is not supported by flow
-					mutation: gql`
-						mutation TriggerWPCLICommandMutation($input: AppEnvironmentTriggerWPCLICommandInput ){
-							triggerWPCLICommandOnAppEnvironment( input: $input ) {
-								command {
-									guid
-								}
-							}
-						}
-					`,
-					variables: {
-						input: {
-							id: opts.app.id,
-							environmentId: opts.env.id,
-							command: cmd,
-						},
-					},
-				} );
+			result = await launchCommandOnEnv( opts.app.id, opts.env.id, cmd );
 		} catch ( e ) {
 			console.log( e );
 
