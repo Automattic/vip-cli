@@ -88,7 +88,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// Show help if subcommand is invalid
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
-	if ( this.sub[ _opts.requiredArgs ] &&
+	if ( ! _opts.wildcardCommand && this.sub[ _opts.requiredArgs ] &&
 		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
 		const subcommand = this.sub.join( ' ' );
 
@@ -378,6 +378,7 @@ export default function( opts: any ): args {
 		format: false,
 		requireConfirm: false,
 		requiredArgs: 0,
+		wildcardCommand: false,
 	}, opts );
 
 	const a = args;
