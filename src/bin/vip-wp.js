@@ -33,8 +33,6 @@ command( {
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
 
-		const token = await Token.get();
-
 		const cmd = arg.join( ' ' );
 
 		let result;
@@ -70,6 +68,7 @@ command( {
 
 		await trackEvent( 'wp_cli_command_execute' );
 
+		const token = await Token.get();
 		const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 			path: '/websockets',
 			transportOptions: {
