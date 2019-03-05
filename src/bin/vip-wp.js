@@ -117,7 +117,7 @@ command( {
 			console.log( 'There was an error with the authentication:', err.message );
 		} );
 
-		socket.on( 'error', err => { 
+		socket.on( 'error', err => {
 			console.log( err );
 		} );
 	} );
