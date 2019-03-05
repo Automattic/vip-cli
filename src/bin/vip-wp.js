@@ -25,7 +25,7 @@ const appQuery = `id, name, environments {
 }`;
 
 command( {
-	requiredArgs: 2,
+	wildcardCommand: true,
 	appContext: true,
 	envContext: true,
 	appQuery,
