@@ -35,10 +35,6 @@ command( {
 
 		const token = await Token.get();
 
-		if ( ! token ) {
-			return console.error( 'Missing token, please log in' );
-		}
-
 		const cmd = arg.join( ' ' );
 
 		let result;
