@@ -9,6 +9,7 @@ import gql from 'graphql-tag';
 import { stdout } from 'single-line-log';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
+import readline from 'readline';
 
 /**
  * Internal dependencies
@@ -56,12 +57,30 @@ command( {
 	appQuery,
 } )
 	.argv( process.argv, async ( arg, opts ) => {
+		const isShellMode = 'shell' === arg[ 0 ];
 		const cmd = arg.join( ' ' );
 
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, name: envName } = opts.env;
 
 		let result;
+		let rl;
+
+		if ( isShellMode ) {
+			console.log( `Entering WP-CLI shell mode for ${ appName } (${ appId }) and ${ envName } (${ envId }) environment.` );
+
+			rl = readline.createInterface( {
+				input: process.stdin,
+				output: process.stdout,
+				terminal: true,
+				prompt: 'wp> ',
+				historySize: 200
+			} );
+
+			rl.on( 'line', line => {
+				rl.pause();
+			} );
+		}
 
 		try {
 			result = await launchCommandOnEnv( appId, envId, cmd );
@@ -110,6 +129,13 @@ command( {
 
 			process.exit( 1 );
 		} );
+
+		if ( isShellMode ) {
+			// pipe stdin to API
+			process.stdin.pipe( stdinStream );
+			// re-enable the readline environment when we get data back
+			// rl.resume();
+		}
 
 		stdoutStream.on( 'end', () => {
 			process.exit();
