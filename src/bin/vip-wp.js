@@ -58,10 +58,13 @@ command( {
 	.argv( process.argv, async ( arg, opts ) => {
 		const cmd = arg.join( ' ' );
 
+		const { id: appId, name: appName } = opts.app;
+		const { id: envId, name: envName } = opts.env;
+
 		let result;
 
 		try {
-			result = await launchCommandOnEnv( opts.app.id, opts.env.id, cmd );
+			result = await launchCommandOnEnv( appId, envId, cmd );
 		} catch ( e ) {
 			console.log( e );
 
