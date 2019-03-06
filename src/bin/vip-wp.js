@@ -75,7 +75,8 @@ command( {
 				output: process.stdout,
 				terminal: true,
 				prompt: 'wp> ',
-				historySize: 200
+				// TODO make history persistent across sessions for same env
+				historySize: 200,
 			} );
 		}
 
