@@ -15,14 +15,15 @@ import readline from 'readline';
  * Internal dependencies
  */
 import API, { API_HOST } from 'lib/api';
-import app from 'lib/api/app';
-import command from 'lib/cli/command';
+import commandWrapper from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
+import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 
 const appQuery = `id, name, environments {
 	id
+	type
 }`;
 
 const launchCommandOnEnv = async ( appId, envId, command ) => {
@@ -45,13 +46,13 @@ const launchCommandOnEnv = async ( appId, envId, command ) => {
 				input: {
 					id: appId,
 					environmentId: envId,
-					command: command,
+					command,
 				},
 			},
 		} );
-}
+};
 
-command( {
+commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
 	envContext: true,
@@ -62,13 +63,17 @@ command( {
 		const cmd = arg.join( ' ' );
 
 		const { id: appId, name: appName } = opts.app;
-		const { id: envId, name: envName } = opts.env;
+		const { id: envId, type: envName } = opts.env;
 
 		let result;
 		let rl;
 
 		if ( isShellMode ) {
-			console.log( `Entering WP-CLI shell mode for ${ appName } (${ appId }) and ${ envName } (${ envId }) environment.` );
+			console.log( `Entering WP-CLI shell mode for ${ formatEnvironment( envName ) } on ${ appName } (${ appId })` );
+
+			if ( 'production' === envName ) {
+				console.log( `Remember, this is ${ formatEnvironment( envName ) } - please be careful :)` );
+			}
 
 			rl = readline.createInterface( {
 				input: process.stdin,
@@ -78,6 +83,21 @@ command( {
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
+		} else if ( 'production' === envName ) {
+			const yes = await confirm( [
+				{
+					key: 'command',
+					value: `wp ${ cmd }`,
+				},
+			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName } (${ appId })?` );
+
+			if ( ! yes ) {
+				await trackEvent( 'wpcli_confirm_cancel' );
+
+				console.log( 'Command canceled' );
+
+				process.exit( 0 );
+			}
 		}
 
 		try {
