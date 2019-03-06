@@ -62,6 +62,9 @@ commandWrapper( {
 		const isShellMode = 'shell' === arg[ 0 ];
 		const cmd = arg.join( ' ' );
 
+		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
+		const commandForAnalytics = arg.slice( 0, 2 ).join( ' ' );
+
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
@@ -92,7 +95,9 @@ commandWrapper( {
 			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName } (${ appId })?` );
 
 			if ( ! yes ) {
-				await trackEvent( 'wpcli_confirm_cancel' );
+				await trackEvent( 'wpcli_confirm_cancel', {
+					command: commandForAnalytics,
+				} );
 
 				console.log( 'Command canceled' );
 
@@ -110,7 +115,10 @@ commandWrapper( {
 
 		const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
-		await trackEvent( 'wp_cli_command_execute' );
+		await trackEvent( 'wp_cli_command_execute', {
+			command: commandForAnalytics,
+			guid: cliCommand.guid,
+		} );
 
 		const token = await Token.get();
 		const socket = SocketIO( `${ API_HOST }/wp-cli`, {
