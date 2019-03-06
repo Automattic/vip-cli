@@ -34,6 +34,7 @@ const launchCommandOnEnv = async ( appId, envId, command ) => {
 			mutation: gql`
 				mutation TriggerWPCLICommandMutation($input: AppEnvironmentTriggerWPCLICommandInput ){
 					triggerWPCLICommandOnAppEnvironment( input: $input ) {
+						inputToken
 						command {
 							guid
 						}
@@ -86,7 +87,7 @@ command( {
 			return;
 		}
 
-		const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand } } } = result;
+		const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
 		await trackEvent( 'wp_cli_command_execute' );
 
@@ -111,6 +112,7 @@ command( {
 
 		const data = {
 			guid: cliCommand.guid,
+			inputToken,
 			columns: process.stdout.columns,
 			rows: process.stdout.rows,
 		};
