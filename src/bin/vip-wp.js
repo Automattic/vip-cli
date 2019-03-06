@@ -76,10 +76,6 @@ command( {
 				prompt: 'wp> ',
 				historySize: 200
 			} );
-
-			rl.on( 'line', line => {
-				rl.pause();
-			} );
 		}
 
 		try {
@@ -121,6 +117,12 @@ command( {
 
 		IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
 
+		if ( isShellMode ) {
+			rl.on( 'line', line => {
+				stdinStream.write( line + '\n' );
+			} );
+		}
+
 		stdoutStream.pipe( process.stdout );
 
 		stdoutStream.on( 'error', err => {
@@ -129,13 +131,6 @@ command( {
 
 			process.exit( 1 );
 		} );
-
-		if ( isShellMode ) {
-			// pipe stdin to API
-			process.stdin.pipe( stdinStream );
-			// re-enable the readline environment when we get data back
-			// rl.resume();
-		}
 
 		stdoutStream.on( 'end', () => {
 			process.exit();
