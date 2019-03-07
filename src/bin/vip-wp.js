@@ -152,6 +152,16 @@ commandWrapper( {
 			rl.on( 'line', line => {
 				stdinStream.write( line + '\n' );
 			} );
+
+			rl.on( 'SIGINT', () => {
+				rl.question( 'Are you sure you want to exit? ', answer => {
+					if ( answer.match( /^y(es)?$/i ) ) {
+						stdinStream.write( 'exit();\n' );
+					} else {
+						rl.prompt();
+					}
+				} );
+			} );
 		}
 
 		stdoutStream.pipe( process.stdout );
