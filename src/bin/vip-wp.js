@@ -123,7 +123,6 @@ commandWrapper( {
 
 		const token = await Token.get();
 		const socket = SocketIO( `${ API_HOST }/wp-cli`, {
-			path: '/websockets',
 			transportOptions: {
 				polling: {
 					extraHeaders: {
