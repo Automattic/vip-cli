@@ -24,6 +24,7 @@ import Token from '../lib/token';
 const appQuery = `id, name, environments {
 	id
 	type
+	name
 }`;
 
 const launchCommandOnEnv = async ( appId, envId, command ) => {
