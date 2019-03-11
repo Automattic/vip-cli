@@ -67,10 +67,10 @@ In order to do that, please follow this:
 1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
 2. Go to publish-please's config in `.publishrc`
 3. Change the `publishTag` to `next` and `gitTag` to `false` (publish-please will expect the latest commit to have a git tag, but we don't want it in this case)
-4. Commit your changes
+4. Commit your changes to `master`
 5. Run `npm run publish-please`
 
-You can repeat this with every new version until you're happy with your version and ready to a public release.
+You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 
 ### Patching Old Releases
 
