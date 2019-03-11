@@ -58,6 +58,20 @@ Then, let's publish:
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
+### Test Releases
+
+Sometimes, we want to release a version we can test before releasing it to the public. In order to that, we need to release it under a tag other than `latest`, usually `next`. By default, `npm` install from the `latest` tag, so if `@next` isn't specified explicitely in the installation command like `npm install @automattic/vip@next`, a user will not get this version.
+
+In order to do that, please follow this:
+
+1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
+2. Go to publish-please's config in `.publishrc`
+3. Change the `publishTag` to `next` and `gitTag` to `false` (publish-please will expect the latest commit to have a git tag, but we don't want it in this case)
+4. Commit your changes
+5. Run `npm run publish-please`
+
+You can repeat this with every new version until you're happy with your version and ready to a public release.
+
 ### Patching Old Releases
 
 There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `master` branch. 
