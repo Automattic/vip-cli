@@ -13,6 +13,10 @@ import keychain from './keychain';
 
 // Config
 const SERVICE = 'vip-go-cli';
+import {
+	API_HOST,
+	PRODUCTION_API_HOST,
+} from './api';
 
 export default class Token {
 	raw: string;
@@ -93,5 +97,16 @@ export default class Token {
 
 	static async purge(): Promise<boolean> {
 		return keychain.deletePassword( SERVICE );
+
+	static getServiceName( modifier: string = '' ): string {
+		let service = SERVICE;
+
+		if ( PRODUCTION_API_HOST !== API_HOST ) {
+			const sanitized = API_HOST.replace( /[^a-z0-9]/gi, '-' );
+
+			service = `${ SERVICE }:${ sanitized }`;
+		}
+
+		return `${ service }${ modifier }`;
 	}
 }
