@@ -2,7 +2,7 @@
 /**
  * Internal dependencies
  */
-import Token from 'lib/token';
+import Token, { SERVICE } from 'lib/token';
 
 describe( 'token tests', () => {
 	it( 'should correctly validate token', () => {
@@ -56,6 +56,29 @@ describe( 'token tests', () => {
 			Token.uuid().then( uuid2 => {
 				expect( uuid1 ).toBe( uuid2 );
 			} );
+		} );
+	} );
+
+	describe( 'getServiceName()', () => {
+		// TODO how do we test this when it comes from env var, which we've already overridden?
+		it.todo( 'should return default service name for default API_HOST' );
+
+		it( 'should add the API_HOST to the service name if overridden', () => {
+			const name = Token.getServiceName();
+
+			const sanitizedHost = 'http---localhost-4000'; // Sanitized version of process.env.API_HOST
+
+			expect( name ).toBe( `${ SERVICE }:${ sanitizedHost }` );
+		} );
+
+		it( 'should append an optional modifier to the final service name', () => {
+			const modifier = '-foo';
+
+			const name = Token.getServiceName( modifier );
+
+			const sanitizedHost = 'http---localhost-4000'; // Sanitized version of process.env.API_HOST
+
+			expect( name ).toBe( `${ SERVICE }:${ sanitizedHost }${ modifier }` );
 		} );
 	} );
 } );
