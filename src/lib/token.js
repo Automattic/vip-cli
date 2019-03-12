@@ -77,26 +77,35 @@ export default class Token {
 	}
 
 	static async uuid(): string {
-		let _uuid = await keychain.getPassword( SERVICE + '-uuid' );
+		const service = Token.getServiceName( '-uuid' );
+
+		let _uuid = await keychain.getPassword( service );
 		if ( ! _uuid ) {
 			_uuid = uuid();
-			await keychain.setPassword( SERVICE + '-uuid', _uuid );
+			await keychain.setPassword( service, _uuid );
 		}
 
 		return _uuid;
 	}
 
 	static async set( token: string ): Promise<boolean> {
-		return keychain.setPassword( SERVICE, token );
+		const service = Token.getServiceName();
+
+		return keychain.setPassword( service, token );
 	}
 
 	static async get(): Promise<Token> {
-		const token = await keychain.getPassword( SERVICE );
+		const service = Token.getServiceName();
+
+		const token = await keychain.getPassword( service );
 		return new Token( token );
 	}
 
 	static async purge(): Promise<boolean> {
-		return keychain.deletePassword( SERVICE );
+		const service = Token.getServiceName();
+
+		return keychain.deletePassword( service );
+	}
 
 	static getServiceName( modifier: string = '' ): string {
 		let service = SERVICE;
