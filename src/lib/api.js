@@ -34,8 +34,10 @@ export default async function API(): Promise<ApolloClient> {
 		};
 	})
 
+	const httpLink = new HttpLink( { uri: API_URL, headers: headers } );
+
 	return new ApolloClient( {
-		link: new HttpLink( { uri: API_URL, headers: headers } ),
+		link: unauthorizedLink.concat( httpLink ),
 		cache: new InMemoryCache(),
 	} );
 }
