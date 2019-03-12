@@ -11,13 +11,13 @@ import uuid from 'uuid/v4';
  */
 import keychain from './keychain';
 
-// Config
-const SERVICE = 'vip-go-cli';
 import {
 	API_HOST,
 	PRODUCTION_API_HOST,
 } from './api';
 
+// Config
+export const SERVICE = 'vip-go-cli';
 export default class Token {
 	raw: string;
 	id: number;
