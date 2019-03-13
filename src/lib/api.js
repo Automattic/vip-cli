@@ -16,7 +16,8 @@ import chalk from 'chalk';
 import Token from './token';
 
 // Config
-export const API_HOST = process.env.API_HOST || 'https://api.wpvip.com';
+export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
+export const API_HOST = process.env.API_HOST || PRODUCTION_API_HOST;
 export const API_URL = `${ API_HOST }/graphql`;
 
 export default async function API(): Promise<ApolloClient> {
