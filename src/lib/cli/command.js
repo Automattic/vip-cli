@@ -402,7 +402,7 @@ export default function( opts: any ): args {
 	return a;
 }
 
-function getEnvIdentifier( env ) {
+export function getEnvIdentifier( env ) {
 	let identifier = env.type;
 
 	// If the env has a unique name (happens when site has multiple envs of a type), add on name

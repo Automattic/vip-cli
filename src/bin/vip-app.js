@@ -9,7 +9,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
+import command, { getEnvIdentifier } from 'lib/cli/command';
 import app from 'lib/api/app';
 import { trackEvent } from 'lib/tracker';
 
@@ -25,7 +25,7 @@ command( { requiredArgs: 1, format: true } )
 		try {
 			res = await app(
 				arg[ 0 ],
-				'id,repo,name,environments{name,branch,currentCommit,primaryDomain{name}}'
+				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name}}'
 			);
 		} catch ( e ) {
 			await trackEvent( 'app_command_fetch_error', {
@@ -58,6 +58,8 @@ command( { requiredArgs: 1, format: true } )
 
 		r.environments = r.environments.map( env => {
 			const e = Object.assign( {}, env );
+
+			e.name = getEnvIdentifier( env );
 
 			// Use the short version of git commit hash
 			e.currentCommit = e.currentCommit.substring( 0, 7 );
