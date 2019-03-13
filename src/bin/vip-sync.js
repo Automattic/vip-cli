@@ -18,7 +18,7 @@ import { formatEnvironment } from 'lib/cli/format';
 import { trackEvent } from 'lib/tracker';
 
 const appQuery = `id,name,environments{
-	id,type,name,defaultDomain,branch,datacenter,syncProgress{
+	id,appId,type,name,defaultDomain,branch,datacenter,syncProgress{
 		status,sync,steps{name,status}
 	},syncPreview { canSync, errors { message }, backup { createdAt }, replacements { from, to } }
 }`;
