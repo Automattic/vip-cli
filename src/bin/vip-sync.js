@@ -111,7 +111,7 @@ command( {
 		console.log();
 		console.log( `  syncing: ${ chalk.yellow( opts.app.name ) }` );
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
-		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
+		console.log( `       to: ${ formatEnvironment( opts.env.type ) }` );
 
 		let i = 0;
 		const progress = setInterval( async () => {
