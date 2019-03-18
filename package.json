@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "1.4.0-dev2",
+  "version": "1.4.0-dev3",
   "description": "The VIP Go Javascript library & CLI",
   "main": "index.js",
   "bin": {
