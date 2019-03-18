@@ -218,7 +218,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return {};
 			}
 
-			const env = options.app.environments.find( cur => cur.name === options.env );
+			const env = options.app.environments.find( cur => cur.type === options.env );
 
 			if ( ! env ) {
 				await trackEvent( 'command_childcontext_param_error', {
@@ -242,7 +242,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		} else if ( options.app.environments.length === 1 ) {
 			options.env = options.app.environments[ 0 ];
 		} else if ( options.app.environments.length > 1 ) {
-			const environmentNames = options.app.environments.map( envObject => envObject.name );
+			const environmentNames = options.app.environments.map( envObject => getEnvIdentifier( envObject ) );
 			const e = await prompt( {
 				type: 'select',
 				name: 'env',
@@ -251,14 +251,14 @@ args.argv = async function( argv, cb ): Promise<any> {
 			} );
 
 			// Get full environment info after user selection
-			e.env = options.app.environments.find( envObject => envObject.name === e.env );
+			e.env = options.app.environments.find( envObject => getEnvIdentifier( envObject ) === e.env );
 
 			if ( ! e || ! e.env || ! e.env.id ) {
 				await trackEvent( 'command_childcontext_list_select_error', {
 					error: 'Invalid environment selected',
 				} );
 
-				console.log( `Environment ${ chalk.blueBright( e.env.name ) } does not exist` );
+				console.log( `Environment ${ chalk.blueBright( getEnvIdentifier( e.env ) ) } does not exist` );
 				return {};
 			}
 
@@ -277,7 +277,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		if ( options.env ) {
-			info.push( { key: 'environment', value: options.env.name } );
+			info.push( { key: 'environment', value: getEnvIdentifier( options.env.type ) } );
 		}
 
 		let message = 'Are you sure?';
@@ -402,4 +402,16 @@ export default function( opts: any ): args {
 	}
 
 	return a;
+}
+
+export function getEnvIdentifier( env ) {
+	let identifier = env.type;
+
+	// If the env has a unique name (happens when site has multiple envs of a type), add on name
+	// for disambiguation. Only on non-main-env
+	if ( env.name !== env.type && env.name && env.appId !== env.id ) {
+		identifier = `${ identifier }.${ env.name }`;
+	}
+
+	return identifier;
 }

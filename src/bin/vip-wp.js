@@ -23,6 +23,7 @@ import Token from '../lib/token';
 
 const appQuery = `id, name, environments {
 	id
+	appId
 	type
 	name
 }`;
