@@ -117,7 +117,7 @@ commandWrapper( {
 
 		const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
-		await trackEvent( 'wp_cli_command_execute', {
+		await trackEvent( 'wpcli_command_execute', {
 			command: commandForAnalytics,
 			guid: cliCommand.guid,
 		} );

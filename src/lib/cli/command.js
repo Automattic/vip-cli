@@ -107,6 +107,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 		if ( ! options.app ) {
 			const api = await API();
 
+			await trackEvent( 'command_appcontext_list_fetch' );
+
 			try {
 				res = await api
 					.query( {
