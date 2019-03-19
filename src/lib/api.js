@@ -28,9 +28,17 @@ export default async function API(): Promise<ApolloClient> {
 		headers.Authorization = `Bearer ${ token.raw }`;
 	}
 
-	const unauthorizedLink = onError( ( { networkError } ) => {
+	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
 		if ( networkError && networkError.statusCode === 401 ) {
 			console.error( chalk.red( 'Unauthorized:' ), 'You are unauthorized to perform this request, please logout with `vip logout` then try again.' );
+			process.exit();
+		}
+
+		if ( graphQLErrors && graphQLErrors.length ) {
+			graphQLErrors.forEach( error => {
+				console.error( chalk.red( 'Error:' ), error.message );
+			} );
+
 			process.exit();
 		}
 	} );
@@ -38,7 +46,7 @@ export default async function API(): Promise<ApolloClient> {
 	const httpLink = new HttpLink( { uri: API_URL, headers: headers } );
 
 	return new ApolloClient( {
-		link: unauthorizedLink.concat( httpLink ),
+		link: errorLink.concat( httpLink ),
 		cache: new InMemoryCache(),
 	} );
 }
