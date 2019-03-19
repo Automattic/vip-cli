@@ -29,7 +29,7 @@ export default async function API(): Promise<ApolloClient> {
 	}
 
 	const unauthorizedLink = onError( ( { networkError } ) => {
-		if ( networkError.statusCode === 401 ) {
+		if ( networkError && networkError.statusCode === 401 ) {
 			console.error( chalk.red( 'Unauthorized:' ), 'You are unauthorized to perform this request, please logout with `vip logout` then try again.' );
 			process.exit();
 		}
