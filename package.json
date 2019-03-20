@@ -72,8 +72,8 @@
     "publish-please": "5.4.3"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "~1.4.0",
-    "apollo-client": "~2.4.5",
+    "apollo-cache-inmemory": "~1.5.0",
+    "apollo-client": "~2.5.0",
     "apollo-link-error": "^1.1.8",
     "apollo-link-http": "~1.5.5",
     "args": "~5.0.0",
