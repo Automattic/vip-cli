@@ -175,6 +175,7 @@ commandWrapper( {
 				rl.question( 'Are you sure you want to exit? ', answer => {
 					if ( answer.match( /^y(es)?$/i ) ) {
 						commandStreams.stdinStream.write( 'exit();\n' );
+						process.exit();
 					} else {
 						rl.prompt();
 					}
