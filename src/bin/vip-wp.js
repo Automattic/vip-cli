@@ -28,7 +28,7 @@ const appQuery = `id, name, environments {
 	name
 }`;
 
-const launchCommandOnEnv = async ( appId, envId, command ) => {
+const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
 	return api
@@ -147,7 +147,7 @@ commandWrapper( {
 		}
 
 		try {
-			result = await launchCommandOnEnv( appId, envId, cmd );
+			result = await getTokenForCommand( appId, envId, cmd );
 		} catch ( e ) {
 			console.log( e );
 
