@@ -101,6 +101,7 @@ commandWrapper( {
 } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const isShellMode = 'shell' === arg[ 0 ];
+		const isSubShell = 0 === arg.length;
 		const cmd = arg.join( ' ' );
 
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
@@ -111,6 +112,66 @@ commandWrapper( {
 
 		let result;
 		let rl;
+		let subShellRl;
+
+		if ( isSubShell ) {
+			console.log( `Entering WP-CLI subshell mode for ${ formatEnvironment( envName ) } on ${ appName } (${ appId })` );
+
+			subShellRl = readline.createInterface( {
+				input: process.stdin,
+				output: process.stdout,
+				terminal: true,
+				prompt: `${ appName }.${ envName }> `,
+				// TODO make history persistent across sessions for same env
+				historySize: 200,
+			} );
+
+			subShellRl.on( 'line', async line => {
+				console.log( 'received line:', line );
+				subShellRl.pause();
+
+				try {
+					result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
+				} catch ( e ) {
+					console.log( e );
+
+					return;
+				}
+
+				const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
+
+				const commandStreams = await launchCommandAndGetStreams( {
+					guid: cliCommand.guid,
+					inputToken: inputToken,
+				} );
+
+				commandStreams.stdoutStream.pipe( process.stdout );
+
+				commandStreams.stdoutStream.on( 'error', err => {
+					// TODO handle this better
+					console.log( err );
+
+					process.exit( 1 );
+				} );
+
+				commandStreams.stdoutStream.on( 'end', () => {
+					subShellRl.resume();
+				} );
+
+				subShellRl.on( 'SIGINT', () => {
+					subShellRl.question( 'Are you sure you want to exit the subshell mode? ', answer => {
+						if ( answer.match( /^y(es)?$/i ) ) {
+							commandStreams.stdinStream.write( 'exit();\n' );
+							process.exit();
+						} else {
+							subShellRl.prompt();
+						}
+					} );
+				} );
+			} );
+
+			return;
+		}
 
 		if ( isShellMode ) {
 			console.log( `Entering WP-CLI shell mode for ${ formatEnvironment( envName ) } on ${ appName } (${ appId })` );
