@@ -54,6 +54,45 @@ const launchCommandOnEnv = async ( appId, envId, command ) => {
 		} );
 };
 
+const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
+	const token = await Token.get();
+	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
+		transportOptions: {
+			polling: {
+				extraHeaders: {
+					Authorization: `Bearer ${ token.raw }`,
+				},
+			},
+		},
+	} );
+
+	const stdoutStream = IOStream.createStream();
+	const stdinStream = IOStream.createStream();
+
+	// TODO handle all arguments
+	// TODO handle disconnect - does IOStream correctly buffer stdin?
+	// TODO stderr - currently server doesn't support it, so errors don't terminate process
+
+	const data = {
+		guid,
+		inputToken,
+		columns: process.stdout.columns,
+		rows: process.stdout.rows,
+	};
+
+	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
+
+	socket.on( 'unauthorized', err => {
+		console.log( 'There was an error with the authentication:', err.message );
+	} );
+
+	socket.on( 'error', err => {
+		console.log( err );
+	} );
+
+	return { stdinStream, stdoutStream };
+}
+
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
@@ -122,42 +161,20 @@ commandWrapper( {
 			guid: cliCommand.guid,
 		} );
 
-		const token = await Token.get();
-		const socket = SocketIO( `${ API_HOST }/wp-cli`, {
-			transportOptions: {
-				polling: {
-					extraHeaders: {
-						Authorization: `Bearer ${ token.raw }`,
-					},
-				},
-			},
-		} );
-
-		const stdoutStream = IOStream.createStream();
-		const stdinStream = IOStream.createStream();
-
-		// TODO handle all arguments
-		// TODO handle disconnect - does IOStream correctly buffer stdin?
-		// TODO stderr - currently server doesn't support it, so errors don't terminate process
-
-		const data = {
+		const commandStreams = await launchCommandAndGetStreams( {
 			guid: cliCommand.guid,
-			inputToken,
-			columns: process.stdout.columns,
-			rows: process.stdout.rows,
-		};
-
-		IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
+			inputToken: inputToken,
+		} );
 
 		if ( isShellMode ) {
 			rl.on( 'line', line => {
-				stdinStream.write( line + '\n' );
+				commandStreams.stdinStream.write( line + '\n' );
 			} );
 
 			rl.on( 'SIGINT', () => {
 				rl.question( 'Are you sure you want to exit? ', answer => {
 					if ( answer.match( /^y(es)?$/i ) ) {
-						stdinStream.write( 'exit();\n' );
+						commandStreams.stdinStream.write( 'exit();\n' );
 					} else {
 						rl.prompt();
 					}
@@ -165,24 +182,16 @@ commandWrapper( {
 			} );
 		}
 
-		stdoutStream.pipe( process.stdout );
+		commandStreams.stdoutStream.pipe( process.stdout );
 
-		stdoutStream.on( 'error', err => {
+		commandStreams.stdoutStream.on( 'error', err => {
 			// TODO handle this better
 			console.log( err );
 
 			process.exit( 1 );
 		} );
 
-		stdoutStream.on( 'end', () => {
+		commandStreams.stdoutStream.on( 'end', () => {
 			process.exit();
-		} );
-
-		socket.on( 'unauthorized', err => {
-			console.log( 'There was an error with the authentication:', err.message );
-		} );
-
-		socket.on( 'error', err => {
-			console.log( err );
 		} );
 	} );
