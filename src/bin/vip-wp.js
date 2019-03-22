@@ -164,7 +164,9 @@ commandWrapper( {
 				} );
 
 				subShellRl.on( 'SIGINT', () => {
-					commandStreams.stdinStream.write( 'exit();\n' );
+					subShellRl.close();
+
+					process.exit();
 				} );
 			} );
 
