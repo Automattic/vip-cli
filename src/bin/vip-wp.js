@@ -120,11 +120,13 @@ commandWrapper( {
 		if ( isSubShell ) {
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
 
+			const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
+
 			subShellRl = readline.createInterface( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: `${ appName }.${ getEnvIdentifier( opts.env ) }> `,
+				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `,
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
