@@ -121,7 +121,7 @@ commandWrapper( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: `${ appName }.${ getEnvIdentifier( opts.env ) }> `,
+				prompt: `${ appName }.${ getEnvIdentifier( opts.env ) }$ `,
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
