@@ -26,6 +26,9 @@ const appQuery = `id, name, environments {
 	appId
 	type
 	name
+	primaryDomain {
+		name
+	}
 }`;
 
 const getTokenForCommand = async ( appId, envId, command ) => {
@@ -115,7 +118,7 @@ commandWrapper( {
 		let subShellRl;
 
 		if ( isSubShell ) {
-			console.log( `Entering WP-CLI subshell mode for ${ formatEnvironment( envName ) } on ${ appName } (${ appId })` );
+			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
 
 			subShellRl = readline.createInterface( {
 				input: process.stdin,
