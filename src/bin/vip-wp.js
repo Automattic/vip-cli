@@ -161,13 +161,17 @@ commandWrapper( {
 
 				commandStreams.stdoutStream.on( 'end', () => {
 					subShellRl.resume();
-				} );
 
-				subShellRl.on( 'SIGINT', () => {
-					subShellRl.close();
-
-					process.exit();
+					subShellRl.prompt();
 				} );
+			} );
+
+			subShellRl.prompt();
+
+			subShellRl.on( 'SIGINT', () => {
+				subShellRl.close();
+
+				process.exit();
 			} );
 
 			return;
