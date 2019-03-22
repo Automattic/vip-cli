@@ -127,6 +127,14 @@ commandWrapper( {
 			} );
 
 			subShellRl.on( 'line', async line => {
+				const startsWithWp = line.startsWith( 'wp ' );
+				const empty = 0 === line.length;
+
+				if( empty || ! startsWithWp ) {
+					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+					return;
+				}
+
 				subShellRl.pause();
 
 				try {
