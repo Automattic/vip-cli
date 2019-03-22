@@ -156,14 +156,7 @@ commandWrapper( {
 				} );
 
 				subShellRl.on( 'SIGINT', () => {
-					subShellRl.question( 'Are you sure you want to exit the subshell mode? ', answer => {
-						if ( answer.match( /^y(es)?$/i ) ) {
-							commandStreams.stdinStream.write( 'exit();\n' );
-							process.exit();
-						} else {
-							subShellRl.prompt();
-						}
-					} );
+					commandStreams.stdinStream.write( 'exit();\n' );
 				} );
 			} );
 
