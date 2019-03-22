@@ -91,7 +91,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	} );
 
 	return { stdinStream, stdoutStream };
-}
+};
 
 commandWrapper( {
 	wildcardCommand: true,
@@ -130,7 +130,7 @@ commandWrapper( {
 				const startsWithWp = line.startsWith( 'wp ' );
 				const empty = 0 === line.length;
 
-				if( empty || ! startsWithWp ) {
+				if ( empty || ! startsWithWp ) {
 					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 					return;
 				}
