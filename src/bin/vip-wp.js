@@ -127,6 +127,13 @@ commandWrapper( {
 			} );
 
 			subShellRl.on( 'line', async line => {
+				// Check for exit, like SSH (handles both `exit` and `exit;`)
+				if ( line.startsWith( 'exit' ) ) {
+					subShellRl.close();
+
+					process.exit();
+				}
+
 				const startsWithWp = line.startsWith( 'wp ' );
 				const empty = 0 === line.length;
 
