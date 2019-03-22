@@ -127,7 +127,6 @@ commandWrapper( {
 			} );
 
 			subShellRl.on( 'line', async line => {
-				console.log( 'received line:', line );
 				subShellRl.pause();
 
 				try {
