@@ -15,7 +15,7 @@ import readline from 'readline';
  * Internal dependencies
  */
 import API, { API_HOST } from 'lib/api';
-import commandWrapper from 'lib/cli/command';
+import commandWrapper, { getEnvIdentifier } from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
 import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
@@ -121,7 +121,7 @@ commandWrapper( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: `${ appName }.${ envName }> `,
+				prompt: `${ appName }.${ getEnvIdentifier( envName ) }> `,
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
