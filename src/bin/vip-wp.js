@@ -149,8 +149,6 @@ commandWrapper( {
 				commandStreams.stdoutStream.on( 'error', err => {
 					// TODO handle this better
 					console.log( err );
-
-					process.exit( 1 );
 				} );
 
 				commandStreams.stdoutStream.on( 'end', () => {
