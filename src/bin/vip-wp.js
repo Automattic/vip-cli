@@ -141,9 +141,15 @@ commandWrapper( {
 
 				const startsWithWp = line.startsWith( 'wp ' );
 				const empty = 0 === line.length;
+				const isShellCommand = 'wp shell' === line;
 
 				if ( empty || ! startsWithWp ) {
 					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+					return;
+				}
+
+				if ( isShellCommand ) {
+					console.log( chalk.red( 'Error:' ), 'you can not run \'wp shell\' in the subshell mode.' );
 					return;
 				}
 
