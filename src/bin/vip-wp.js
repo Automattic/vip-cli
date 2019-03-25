@@ -141,7 +141,7 @@ commandWrapper( {
 
 				const startsWithWp = line.startsWith( 'wp ' );
 				const empty = 0 === line.length;
-				const isShellCommand = 'wp shell' === line;
+				const isShellCommand = line.startsWith( 'wp shell ' );
 
 				if ( empty || ! startsWithWp ) {
 					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
