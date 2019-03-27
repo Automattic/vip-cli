@@ -89,7 +89,17 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 		console.log( 'There was an error with the authentication:', err.message );
 	} );
 
+	IOStream( socket ).on( 'error', err => {
+		// This returns the error so it can be catched by the socket.on('error')
+		return err;
+	} );
+
 	socket.on( 'error', err => {
+		if ( err = 'Rate limit exceeded' ) {
+			console.log( chalk.red( '\nError:' ), 'you can not run more than two commands in the same time against an environment.' );
+			return;
+		}
+
 		console.log( err );
 	} );
 
