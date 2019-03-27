@@ -95,7 +95,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	} );
 
 	socket.on( 'error', err => {
-		if ( err = 'Rate limit exceeded' ) {
+		if ( err === 'Rate limit exceeded' ) {
 			console.log( chalk.red( '\nError:' ), 'you can not run more than two commands in the same time against an environment.' );
 			return;
 		}
