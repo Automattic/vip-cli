@@ -36,7 +36,15 @@ process.on( 'unhandledRejection', uncaughtError );
 
 let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
-	const options = this.parse( argv );
+	const options = this.parse( argv, { help: false, version: false } );
+
+	if ( options.h || options.help ) {
+		this.showHelp();
+	}
+
+	if ( options.v || options.version ) {
+		this.showVersion();
+	}
 
 	const validationError = validateOpts( options );
 	if ( validationError ) {
