@@ -401,6 +401,10 @@ export default function( opts: any ): args {
 		a.option( 'format', 'Format results', 'table' );
 	}
 
+	// Add help and version to all subcommands
+	a.option( 'help', 'Output the help for the (sub)command', false );
+	a.option( 'version', 'Output the version number', false );
+
 	return a;
 }
 
