@@ -126,7 +126,7 @@ commandWrapper( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `,
+				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$` + ' ', // Must pad with plain string (non-chalk template literal), otherwise cursor doesn't work
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
