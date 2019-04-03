@@ -246,10 +246,6 @@ commandWrapper( {
 		} );
 
 		if ( isShellMode ) {
-			rl.on( 'line', line => {
-				commandStreams.stdinStream.write( line + '\n' );
-			} );
-
 			rl.on( 'SIGINT', () => {
 				rl.question( 'Are you sure you want to exit? ', answer => {
 					if ( answer.match( /^y(es)?$/i ) ) {
@@ -260,9 +256,9 @@ commandWrapper( {
 					}
 				} );
 			} );
-		} else {
-			process.stdin.pipe( commandStreams.stdinStream );
 		}
+
+		process.stdin.pipe( commandStreams.stdinStream );
 
 		commandStreams.stdoutStream.pipe( process.stdout );
 
