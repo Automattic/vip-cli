@@ -96,7 +96,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 
 	socket.on( 'error', err => {
 		if ( err === 'Rate limit exceeded' ) {
-			console.log( chalk.red( '\nError:' ), 'you can not run more than two commands simultaneously in the same environment.' );
+			console.log( chalk.red( '\nError:' ), 'Maximum concurrent running commands have been reached, please allow some to finish before starting another.' );
 			return;
 		}
 
