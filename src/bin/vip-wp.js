@@ -143,7 +143,7 @@ commandWrapper( {
 				const empty = 0 === line.length;
 
 				if ( empty || ! startsWithWp ) {
-					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+					// console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 					return;
 				}
 
@@ -163,6 +163,8 @@ commandWrapper( {
 					guid: cliCommand.guid,
 					inputToken: inputToken,
 				} );
+
+				process.stdin.pipe( commandStreams.stdinStream );
 
 				commandStreams.stdoutStream.pipe( process.stdout );
 
@@ -258,6 +260,8 @@ commandWrapper( {
 					}
 				} );
 			} );
+		} else {
+			process.stdin.pipe( commandStreams.stdinStream );
 		}
 
 		commandStreams.stdoutStream.pipe( process.stdout );
