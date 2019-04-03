@@ -410,8 +410,8 @@ export default function( opts: any ): args {
 	}
 
 	// Add help and version to all subcommands
-	a.option( 'help', 'Output the help for the (sub)command', false );
-	a.option( 'version', 'Output the version number', false );
+	a.option( 'help', 'Output the help for the (sub)command' );
+	a.option( 'version', 'Output the version number' );
 
 	return a;
 }
