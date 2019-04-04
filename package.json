@@ -57,7 +57,7 @@
     "babel-plugin-module-resolver": "3.2.0",
     "core-js": "3.0.0",
     "eslines": "1.1.0",
-    "eslint": "5.15.3",
+    "eslint": "5.16.0",
     "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#84ba8eb",
     "eslint-plugin-flowtype": "3.4.2",
     "eslint-plugin-import": "2.16.0",
