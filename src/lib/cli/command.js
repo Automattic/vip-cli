@@ -36,7 +36,15 @@ process.on( 'unhandledRejection', uncaughtError );
 
 let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
-	const options = this.parse( argv );
+	const options = this.parse( argv, { help: false, version: false } );
+
+	if ( options.h || options.help ) {
+		this.showHelp();
+	}
+
+	if ( options.v || options.version ) {
+		this.showVersion();
+	}
 
 	const validationError = validateOpts( options );
 	if ( validationError ) {
@@ -400,6 +408,10 @@ export default function( opts: any ): args {
 	if ( _opts.format ) {
 		a.option( 'format', 'Format results', 'table' );
 	}
+
+	// Add help and version to all subcommands
+	a.option( 'help', 'Output the help for the (sub)command' );
+	a.option( 'version', 'Output the version number' );
 
 	return a;
 }
