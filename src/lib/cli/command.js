@@ -285,7 +285,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		if ( options.env ) {
-			info.push( { key: 'environment', value: getEnvIdentifier( options.env.type ) } );
+			info.push( { key: 'environment', value: getEnvIdentifier( options.env ) } );
 		}
 
 		let message = 'Are you sure?';
