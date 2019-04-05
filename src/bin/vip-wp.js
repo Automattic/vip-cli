@@ -122,6 +122,8 @@ commandWrapper( {
 
 			const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
+			let commandRunning = false;
+
 			subShellRl = readline.createInterface( {
 				input: process.stdin,
 				output: process.stdout,
@@ -132,6 +134,10 @@ commandWrapper( {
 			} );
 
 			subShellRl.on( 'line', async line => {
+				if ( commandRunning ) {
+					return;
+				}
+
 				// Check for exit, like SSH (handles both `exit` and `exit;`)
 				if ( line.startsWith( 'exit' ) ) {
 					subShellRl.close();
@@ -173,13 +179,18 @@ commandWrapper( {
 				process.stdin.pipe( commandStreams.stdinStream );
 
 				commandStreams.stdoutStream.pipe( process.stdout );
+				commandRunning = true;
 
 				commandStreams.stdoutStream.on( 'error', err => {
+					commandRunning = false;
+
 					// TODO handle this better
 					console.log( err );
 				} );
 
 				commandStreams.stdoutStream.on( 'end', () => {
+					commandRunning = false;
+
 					subShellRl.resume();
 
 					subShellRl.prompt();
