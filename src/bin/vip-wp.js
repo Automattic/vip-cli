@@ -138,6 +138,13 @@ commandWrapper( {
 					return;
 				}
 
+				// Handle plain return / newline
+				if ( ! line ) {
+					subShellRl.prompt();
+
+					return;
+				}
+
 				// Check for exit, like SSH (handles both `exit` and `exit;`)
 				if ( line.startsWith( 'exit' ) ) {
 					subShellRl.close();
