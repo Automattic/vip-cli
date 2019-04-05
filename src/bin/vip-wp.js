@@ -136,7 +136,7 @@ commandWrapper( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `,
+				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$` + ' ', // Must pad with plain string (non-chalk template literal), otherwise cursor doesn't work
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
@@ -151,9 +151,15 @@ commandWrapper( {
 
 				const startsWithWp = line.startsWith( 'wp ' );
 				const empty = 0 === line.length;
+				const isShellCommand = line.startsWith( 'wp shell ' );
 
 				if ( empty || ! startsWithWp ) {
 					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+					return;
+				}
+
+				if ( isShellCommand ) {
+					console.log( chalk.red( 'Error:' ), 'you can not run \'wp shell\' in the subshell mode.' );
 					return;
 				}
 
