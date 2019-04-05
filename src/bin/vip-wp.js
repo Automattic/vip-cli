@@ -157,7 +157,10 @@ commandWrapper( {
 				const isShellCommand = line.startsWith( 'wp shell ' );
 
 				if ( empty || ! startsWithWp ) {
-					// console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+
+					subShellRl.prompt();
+
 					return;
 				}
 
