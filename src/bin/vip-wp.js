@@ -201,6 +201,10 @@ commandWrapper( {
 				commandStreams.stdoutStream.on( 'end', () => {
 					commandRunning = false;
 
+					process.stdin.unpipe( commandStreams.stdinStream );
+
+					commandStreams.stdoutStream.unpipe( process.stdout );
+
 					subShellRl.resume();
 
 					subShellRl.prompt();
