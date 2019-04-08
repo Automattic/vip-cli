@@ -132,6 +132,8 @@ commandWrapper( {
 
 			const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
+			let commandRunning = false;
+
 			subShellRl = readline.createInterface( {
 				input: process.stdin,
 				output: process.stdout,
@@ -142,6 +144,17 @@ commandWrapper( {
 			} );
 
 			subShellRl.on( 'line', async line => {
+				if ( commandRunning ) {
+					return;
+				}
+
+				// Handle plain return / newline
+				if ( ! line ) {
+					subShellRl.prompt();
+
+					return;
+				}
+
 				// Check for exit, like SSH (handles both `exit` and `exit;`)
 				if ( line.startsWith( 'exit' ) ) {
 					subShellRl.close();
@@ -155,6 +168,9 @@ commandWrapper( {
 
 				if ( empty || ! startsWithWp ) {
 					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+
+					subShellRl.prompt();
+
 					return;
 				}
 
@@ -180,14 +196,25 @@ commandWrapper( {
 					inputToken: inputToken,
 				} );
 
+				process.stdin.pipe( commandStreams.stdinStream );
+
 				commandStreams.stdoutStream.pipe( process.stdout );
+				commandRunning = true;
 
 				commandStreams.stdoutStream.on( 'error', err => {
+					commandRunning = false;
+
 					// TODO handle this better
 					console.log( err );
 				} );
 
 				commandStreams.stdoutStream.on( 'end', () => {
+					commandRunning = false;
+
+					process.stdin.unpipe( commandStreams.stdinStream );
+
+					commandStreams.stdoutStream.unpipe( process.stdout );
+
 					subShellRl.resume();
 
 					subShellRl.prompt();
@@ -260,10 +287,6 @@ commandWrapper( {
 		} );
 
 		if ( isShellMode ) {
-			rl.on( 'line', line => {
-				commandStreams.stdinStream.write( line + '\n' );
-			} );
-
 			rl.on( 'SIGINT', () => {
 				rl.question( 'Are you sure you want to exit? ', answer => {
 					if ( answer.match( /^y(es)?$/i ) ) {
@@ -275,6 +298,8 @@ commandWrapper( {
 				} );
 			} );
 		}
+
+		process.stdin.pipe( commandStreams.stdinStream );
 
 		commandStreams.stdoutStream.pipe( process.stdout );
 
