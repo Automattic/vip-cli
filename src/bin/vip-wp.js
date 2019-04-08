@@ -127,6 +127,9 @@ commandWrapper( {
 		let rl;
 		let subShellRl;
 
+		// Reset the cursor (can get messed up with enquirer)
+		process.stdout.write( '\u001b[?25h' );
+
 		if ( isSubShell ) {
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
 
@@ -138,7 +141,7 @@ commandWrapper( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$` + ' ', // Must pad with plain string (non-chalk template literal), otherwise cursor doesn't work
+				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `,
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
