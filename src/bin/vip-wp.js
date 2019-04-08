@@ -31,6 +31,9 @@ const appQuery = `id, name, environments {
 	}
 }`;
 
+const NON_TTY_COLUMNS = 100;
+const NON_TTY_ROWS = 15;
+
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
@@ -79,8 +82,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	const data = {
 		guid,
 		inputToken,
-		columns: process.stdout.columns,
-		rows: process.stdout.rows,
+		columns: process.stdout.columns || NON_TTY_COLUMNS,
+		rows: process.stdout.rows || NON_TTY_ROWS,
 	};
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
@@ -127,21 +130,37 @@ commandWrapper( {
 		let rl;
 		let subShellRl;
 
+		// Reset the cursor (can get messed up with enquirer)
+		process.stdout.write( '\u001b[?25h' );
+
 		if ( isSubShell ) {
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
 
 			const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
+			let commandRunning = false;
+
 			subShellRl = readline.createInterface( {
 				input: process.stdin,
 				output: process.stdout,
 				terminal: true,
-				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$` + ' ', // Must pad with plain string (non-chalk template literal), otherwise cursor doesn't work
+				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `,
 				// TODO make history persistent across sessions for same env
 				historySize: 200,
 			} );
 
 			subShellRl.on( 'line', async line => {
+				if ( commandRunning ) {
+					return;
+				}
+
+				// Handle plain return / newline
+				if ( ! line ) {
+					subShellRl.prompt();
+
+					return;
+				}
+
 				// Check for exit, like SSH (handles both `exit` and `exit;`)
 				if ( line.startsWith( 'exit' ) ) {
 					subShellRl.close();
@@ -155,6 +174,9 @@ commandWrapper( {
 
 				if ( empty || ! startsWithWp ) {
 					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+
+					subShellRl.prompt();
+
 					return;
 				}
 
@@ -180,14 +202,25 @@ commandWrapper( {
 					inputToken: inputToken,
 				} );
 
+				process.stdin.pipe( commandStreams.stdinStream );
+
 				commandStreams.stdoutStream.pipe( process.stdout );
+				commandRunning = true;
 
 				commandStreams.stdoutStream.on( 'error', err => {
+					commandRunning = false;
+
 					// TODO handle this better
 					console.log( err );
 				} );
 
 				commandStreams.stdoutStream.on( 'end', () => {
+					commandRunning = false;
+
+					process.stdin.unpipe( commandStreams.stdinStream );
+
+					commandStreams.stdoutStream.unpipe( process.stdout );
+
 					subShellRl.resume();
 
 					subShellRl.prompt();
@@ -260,10 +293,6 @@ commandWrapper( {
 		} );
 
 		if ( isShellMode ) {
-			rl.on( 'line', line => {
-				commandStreams.stdinStream.write( line + '\n' );
-			} );
-
 			rl.on( 'SIGINT', () => {
 				rl.question( 'Are you sure you want to exit? ', answer => {
 					if ( answer.match( /^y(es)?$/i ) ) {
@@ -275,6 +304,8 @@ commandWrapper( {
 				} );
 			} );
 		}
+
+		process.stdin.pipe( commandStreams.stdinStream );
 
 		commandStreams.stdoutStream.pipe( process.stdout );
 
