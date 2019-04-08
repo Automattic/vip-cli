@@ -31,6 +31,9 @@ const appQuery = `id, name, environments {
 	}
 }`;
 
+const NON_TTY_COLUMNS = 100;
+const NON_TTY_ROWS = 15;
+
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
@@ -79,8 +82,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	const data = {
 		guid,
 		inputToken,
-		columns: process.stdout.columns,
-		rows: process.stdout.rows,
+		columns: process.stdout.columns || NON_TTY_COLUMNS,
+		rows: process.stdout.rows || NON_TTY_ROWS,
 	};
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
