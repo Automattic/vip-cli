@@ -20,6 +20,7 @@ import { confirm } from './prompt';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
+import { parseEnvAliasFromArgv } from './envAlias';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -36,7 +37,9 @@ process.on( 'unhandledRejection', uncaughtError );
 
 let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
-	const options = this.parse( argv, { help: false, version: false } );
+	const parsedAlias = parseEnvAliasFromArgv( argv );
+
+	const options = this.parse( parsedAlias.argv, { help: false, version: false } );
 
 	if ( options.h || options.help ) {
 		this.showHelp();
@@ -44,6 +47,19 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	if ( options.v || options.version ) {
 		this.showVersion();
+	}
+
+	// If we have both an --app/--env and an alias, we need to give a warning
+	if ( parsedAlias.app && ( options.app || options.env ) ) {
+		console.error( chalk`{red Please only use an envirionment alias, or the --app and --env parameters, but not both}` );
+
+		process.exit();
+	}
+
+	// If there is an alias, use it to populate the app/env options
+	if ( parsedAlias.app ) {
+		options.app = parsedAlias.app;
+		options.env = parsedAlias.env; // Can be undefined
 	}
 
 	const validationError = validateOpts( options );
