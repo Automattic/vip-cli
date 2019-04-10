@@ -108,3 +108,17 @@ export function keyValue( values: Array<Tuple> ): string {
 
 	return lines.join( '\n' );
 }
+
+export function requoteArgs( args: Array<string> ): Array<string> {
+	return args.map( arg => {
+		if ( arg.includes( '--' ) && arg.includes( '=' ) && arg.includes( ' ' ) ) {
+			return arg.replace( /^--(.*)=(.*)$/, '--$1="$2"' );
+		}
+
+		if ( arg.includes( ' ' ) ) {
+			return `"${ arg }"`;
+		}
+
+		return arg;
+	} );
+}
