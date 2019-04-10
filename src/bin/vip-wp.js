@@ -115,13 +115,13 @@ commandWrapper( {
 	envContext: true,
 	appQuery,
 } )
-	.argv( process.argv, async ( arg, opts ) => {
-		const isShellMode = 'shell' === arg[ 0 ];
-		const isSubShell = 0 === arg.length;
-		const cmd = arg.join( ' ' );
+	.argv( process.argv, async ( args, opts ) => {
+		const isShellMode = 'shell' === args[ 0 ];
+		const isSubShell = 0 === args.length;
+		const cmd = args.join( ' ' );
 
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
-		const commandForAnalytics = arg.slice( 0, 2 ).join( ' ' );
+		const commandForAnalytics = quotedArgs.slice( 0, 2 ).join( ' ' );
 
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
