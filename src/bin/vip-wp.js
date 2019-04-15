@@ -16,7 +16,7 @@ import readline from 'readline';
  */
 import API, { API_HOST } from 'lib/api';
 import commandWrapper, { getEnvIdentifier } from 'lib/cli/command';
-import { formatEnvironment } from 'lib/cli/format';
+import { formatEnvironment, requoteArgs } from 'lib/cli/format';
 import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
@@ -115,13 +115,17 @@ commandWrapper( {
 	envContext: true,
 	appQuery,
 } )
-	.argv( process.argv, async ( arg, opts ) => {
-		const isShellMode = 'shell' === arg[ 0 ];
-		const isSubShell = 0 === arg.length;
-		const cmd = arg.join( ' ' );
+	.argv( process.argv, async ( args, opts ) => {
+		const isShellMode = 'shell' === args[ 0 ];
+		const isSubShell = 0 === args.length;
+
+		// Have to re-quote anything that needs it before we pass it on
+		const quotedArgs = requoteArgs( args );
+
+		const cmd = quotedArgs.join( ' ' );
 
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
-		const commandForAnalytics = arg.slice( 0, 2 ).join( ' ' );
+		const commandForAnalytics = quotedArgs.slice( 0, 2 ).join( ' ' );
 
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
