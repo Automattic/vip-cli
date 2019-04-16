@@ -29,7 +29,10 @@ exports.parseEnvAlias = function( alias: string ) {
 	return { app, env };
 };
 
-exports.parseEnvAliasFromArgv = function( argv: Array<string> ) {
+exports.parseEnvAliasFromArgv = function( processArgv: Array<string> ) {
+	// Clone to not affect original arvg
+	const argv = ( processArgv.slice( 0 ): Array<string> );
+
 	// If command included a `--` to indicate end of named args, lets only consider aliases
 	// _before_ it, so that it can be passed to other commands directly
 	const dashDashIndex = argv.indexOf( '--' );
