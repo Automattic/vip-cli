@@ -8,9 +8,5 @@ node_js:
 os:
     - windows
 
-cache:
-    directories:
-        - node_modules
-
 script:
     - npm test
