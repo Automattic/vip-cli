@@ -6,13 +6,7 @@ node_js:
     - '10'
 
 os:
-    - linux
-    - osx
     - windows
-
-cache:
-    directories:
-        - node_modules
 
 script:
     - npm test
