@@ -4,7 +4,6 @@ workflows:
   build:
     jobs:
       - node-base
-      - node-6
       - node-8
       - node-10
 
@@ -35,11 +34,6 @@ jobs:
 
       # Lint + Test
       - run: npm run test
-
-  node-6:
-    <<: *build-and-test
-    docker:
-      - image: circleci/node:6
 
   node-8:
     <<: *build-and-test
