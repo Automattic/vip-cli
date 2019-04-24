@@ -48,3 +48,13 @@ export async function trackEvent( ...args ): Promise<Response> {
 		debug( 'trackEvent() failed', e );
 	}
 }
+
+export async function aliasUser( vipUserId ): Promise<Response> {
+	try {
+		if ( vipUserId ) {
+			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
+		}
+	} catch ( e ) {
+		debug( 'aliasUser() failed', e );
+	}
+}

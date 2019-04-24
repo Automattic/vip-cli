@@ -13,7 +13,7 @@ import { prompt } from 'enquirer';
  */
 import command from 'lib/cli/command';
 import Token from 'lib/token';
-import { trackEvent } from 'lib/tracker';
+import { trackEvent, aliasUser } from 'lib/tracker';
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
@@ -114,6 +114,9 @@ const rootCmd = async function() {
 
 			throw e;
 		}
+
+		//de-anonymize user for tracking
+		await aliasUser( token.id );
 
 		await trackEvent( 'login_command_token_submit_success' );
 
