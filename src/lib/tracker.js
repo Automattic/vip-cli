@@ -41,6 +41,7 @@ async function getInstance(): Analytics {
 }
 
 export async function trackEvent( ...args ): Promise<Response> {
+	const id = await Token.uuid();
 	try {
 		const client = await getInstance();
 		return await client.trackEvent( ...args );
@@ -53,6 +54,7 @@ export async function aliasUser( vipUserId ): Promise<Response> {
 	try {
 		if ( vipUserId ) {
 			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
+			Token.setUuid( vipUserId );
 		}
 	} catch ( e ) {
 		debug( 'aliasUser() failed', e );
