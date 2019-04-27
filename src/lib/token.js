@@ -88,6 +88,11 @@ export default class Token {
 		return _uuid;
 	}
 
+	static async setUuid( _uuid: string ) {
+		const service = Token.getServiceName( '-uuid' );
+		await keychain.setPassword( service, _uuid );
+	}
+
 	static async set( token: string ): Promise<boolean> {
 		const service = Token.getServiceName();
 
