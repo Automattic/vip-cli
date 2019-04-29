@@ -4,11 +4,11 @@ Thanks for contributing to the VIP Javascript library. There are some guidelines
 
 ## Coding Standards
 
-TODO
+The VIP-CLI uses [`eslint-config-wpvip`](https://github.com/Automattic/eslint-config-wpvip) for coding standards.
+
+Tests are powered by [Jest](https://jestjs.io).
 
 ## Developing
-
-
 
 ### Adding commands
 
