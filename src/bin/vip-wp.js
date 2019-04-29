@@ -225,7 +225,7 @@ commandWrapper( {
 					process.stdin.unpipe( commandStreams.stdinStream );
 
 					commandStreams.stdoutStream.unpipe( process.stdout );
-					
+
 					// Need a newline - WP CLI doesn't always send one :(
 					// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
 					if ( line.includes( '--format=count' ) || line.includes( '--format=ids' ) ) {
