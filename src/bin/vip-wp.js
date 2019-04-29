@@ -14,7 +14,7 @@ import readline from 'readline';
 /**
  * Internal dependencies
  */
-import API, { API_HOST } from 'lib/api';
+import API, { API_HOST, disableGlobalGraphQLErrorHandling } from 'lib/api';
 import commandWrapper, { getEnvIdentifier } from 'lib/cli/command';
 import { formatEnvironment, requoteArgs } from 'lib/cli/format';
 import { confirm } from 'lib/cli/prompt';
@@ -140,6 +140,9 @@ commandWrapper( {
 		if ( isSubShell ) {
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
 
+			// We'll handle our own errors, thank you
+			disableGlobalGraphQLErrorHandling();
+
 			const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
 			let commandRunning = false;
@@ -194,7 +197,17 @@ commandWrapper( {
 				try {
 					result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
 				} catch ( e ) {
-					console.log( e );
+					// If this was a GraphQL error, print that to the message to the line
+					if ( e.graphQLErrors ) {
+						e.graphQLErrors.forEach( error => {
+							console.log( chalk.red( 'Error:' ), error.message );
+						} );
+					} else {
+						// Else, other type of error, just dump it
+						console.log( e );
+					}
+
+					subShellRl.prompt();
 
 					return;
 				}
