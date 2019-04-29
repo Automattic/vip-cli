@@ -8,9 +8,7 @@ TODO
 
 ## Developing
 
-### `args` package
 
-TODO
 
 ### Adding commands
 
