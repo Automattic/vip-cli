@@ -20,6 +20,12 @@ export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
 export const API_HOST = process.env.API_HOST || PRODUCTION_API_HOST;
 export const API_URL = `${ API_HOST }/graphql`;
 
+let globalGraphQLErrorHandlingEnabled = true;
+
+export function disableGlobalGraphQLErrorHandling() {
+	globalGraphQLErrorHandlingEnabled = false;
+}
+
 export default async function API(): Promise<ApolloClient> {
 	const token = await Token.get();
 	const headers = {};
@@ -34,7 +40,7 @@ export default async function API(): Promise<ApolloClient> {
 			process.exit();
 		}
 
-		if ( graphQLErrors && graphQLErrors.length ) {
+		if ( graphQLErrors && graphQLErrors.length && globalGraphQLErrorHandlingEnabled ) {
 			graphQLErrors.forEach( error => {
 				console.error( chalk.red( 'Error:' ), error.message );
 			} );
