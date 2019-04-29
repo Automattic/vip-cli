@@ -50,7 +50,7 @@ Then, let's publish:
  1. For most regular releases, this will be `npm version minor`. 
 1. Publish the release to npm (`npm run publish-please`)
 1. Push the tag to GitHub (`git push --tags`)
-1. Edit [the release on Github](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
+1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
 1. Bump the version to the next minor: `npm --no-git-tag-version version preminor`
 1. Commit and push (`git add -u` + `git commit` + `git push origin master`).
 
