@@ -47,7 +47,7 @@ Prepare the release by making sure that:
 Then, let's publish:
 
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
- 1. For most regular releases, this will be `npm version minor`.
+1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
 1. Publish the release to npm (`npm run publish-please`)
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
