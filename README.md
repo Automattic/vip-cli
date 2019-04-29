@@ -20,6 +20,16 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.4.1
+
+- No functional changes, 1.4.0 was already taken on NPM :)
+
+### 1.4.0
+
+- Added "environment alias" support (`vip @my-site.env sync`)
+- Added support for WP-CLI commands
+- Misc. dependency updates
+
 ### 1.3.0
 
 - We now display information header for every `vip app --app` execution [(#223)](https://github.com/Automattic/vip/pull/223).
