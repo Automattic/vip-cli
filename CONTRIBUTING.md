@@ -4,13 +4,11 @@ Thanks for contributing to the VIP Javascript library. There are some guidelines
 
 ## Coding Standards
 
-TODO
+The VIP-CLI uses [`eslint-config-wpvip`](https://github.com/Automattic/eslint-config-wpvip) for coding standards.
+
+Tests are powered by [Jest](https://jestjs.io).
 
 ## Developing
-
-### `args` package
-
-TODO
 
 ### Adding commands
 
@@ -43,16 +41,16 @@ Prepare the release by making sure that:
 
 1. All relevant PRs have been merged.
 1. The release has been tested across macOS, Windows, and Linux.
-1. The [changelog](https://github.com/Automattic/vip/blob/master/README.md#changelog) has been updated.
+1. The [changelog](https://github.com/Automattic/vip/blob/master/README.md#changelog) has been updated on `master`.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this, just-in-case).
 
 Then, let's publish:
 
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
- 1. For most regular releases, this will be `npm version minor`. 
-1. Publish the release to npm (`npm run publish-please`)
+1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
-1. Edit [the release on Github](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
+1. Publish the release to npm (`npm run publish-please`)
+1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
 1. Bump the version to the next minor: `npm --no-git-tag-version version preminor`
 1. Commit and push (`git add -u` + `git commit` + `git push origin master`).
 
