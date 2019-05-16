@@ -41,11 +41,11 @@ const rootCmd = async function() {
 
 		console.log();
 		console.log( '  Welcome to' );
-		console.log( '   _    __________     ______' );
-		console.log( '  | |  / /  _/ __ \\   / ____/___' );
-		console.log( '  | | / // // /_/ /  / / __/ __ \\' );
-		console.log( '  | |/ // // ____/  / /_/ / /_/ /' );
-		console.log( '  |___/___/_/       \\____/\\____/' );
+		console.log( '   _    __ ________         ________    ____' );
+		console.log( '  | |  / //  _/ __ \       / ____/ /   /  _/' );
+		console.log( '  | | / / / // /_/ /______/ /   / /    / /  ' );
+		console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
+		console.log( '  |___//___/_/           \____/_____/___/   ' );
 		console.log();
 		console.log( '  VIP CLI is your tool for interacting with and managing your VIP Go applications.' );
 		console.log();
