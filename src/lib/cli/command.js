@@ -120,7 +120,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 			error: `Invalid subcommand: ${ subcommand }`,
 		} );
 
-		console.error( chalk.red( 'Error:' ), `\`${ subcommand }\` is not a valid subcommand. See \`vip help\`` );
+		console.error( chalk.red( 'Error:' ), `\`${ subcommand }\` is not a valid subcommand. See \`vip --help\`` );
 		return {};
 	}
 
