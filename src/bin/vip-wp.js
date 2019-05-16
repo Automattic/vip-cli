@@ -135,10 +135,10 @@ commandWrapper( {
 		let rl;
 		let subShellRl;
 
-		// Reset the cursor (can get messed up with enquirer)
-		process.stdout.write( '\u001b[?25h' );
-
 		if ( isSubShell ) {
+			// Reset the cursor (can get messed up with enquirer)
+			process.stdout.write( '\u001b[?25h' );
+
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
 
 			// We'll handle our own errors, thank you
