@@ -47,7 +47,7 @@ const rootCmd = async function() {
 		console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
 		console.log( '  |___//___/_/           \____/_____/___/   ' );
 		console.log();
-		console.log( '  VIP CLI is your tool for interacting with and managing your VIP Go applications.' );
+		console.log( '  VIP CLI is your tool for interacting with and managing your VIP applications.' );
 		console.log();
 
 		console.log( `  To get started, we need an access token for your VIP account. We'll open ${ tokenURL } in your web browser; follow the instructions there to continue.` );
