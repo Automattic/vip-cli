@@ -334,8 +334,6 @@ commandWrapper( {
 			} );
 		}
 
-		process.stdin.pipe( commandStreams.stdinStream );
-
 		commandStreams.stdoutStream.pipe( process.stdout );
 
 		commandStreams.stdoutStream.on( 'error', err => {
