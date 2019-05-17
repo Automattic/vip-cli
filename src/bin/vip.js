@@ -31,7 +31,7 @@ const rootCmd = async function() {
 				await trackEvent( 'logout_command_execute' );
 				console.log( 'You are successfully logged out.' );
 			} )
-			.command( 'app', 'List and modify your VIP Go apps' )
+			.command( 'app', 'List and modify your VIP applications' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' )
 			.argv( process.argv );

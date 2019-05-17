@@ -1,6 +1,6 @@
 # vip [![Build Status](https://travis-ci.com/Automattic/vip.svg?token=xWx9qCRAJeRdHxEcWW83&branch=master)](https://travis-ci.com/Automattic/vip)
 
-VIP CLI is your tool for interacting with and managing your VIP Go applications.
+VIP CLI is your tool for interacting with and managing your VIP applications.
 
 ## Getting started
 
