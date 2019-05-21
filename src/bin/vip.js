@@ -31,7 +31,7 @@ const rootCmd = async function() {
 				await trackEvent( 'logout_command_execute' );
 				console.log( 'You are successfully logged out.' );
 			} )
-			.command( 'app', 'List and modify your VIP Go apps' )
+			.command( 'app', 'List and modify your VIP applications' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' )
 			.argv( process.argv );
@@ -41,13 +41,13 @@ const rootCmd = async function() {
 
 		console.log();
 		console.log( '  Welcome to' );
-		console.log( '   _    __________     ______' );
-		console.log( '  | |  / /  _/ __ \\   / ____/___' );
-		console.log( '  | | / // // /_/ /  / / __/ __ \\' );
-		console.log( '  | |/ // // ____/  / /_/ / /_/ /' );
-		console.log( '  |___/___/_/       \\____/\\____/' );
+		console.log( '   _    __ ________         ________    ____' );
+		console.log( '  | |  / //  _/ __ \       / ____/ /   /  _/' );
+		console.log( '  | | / / / // /_/ /______/ /   / /    / /  ' );
+		console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
+		console.log( '  |___//___/_/           \____/_____/___/   ' );
 		console.log();
-		console.log( '  VIP CLI is your tool for interacting with and managing your VIP Go applications.' );
+		console.log( '  VIP CLI is your tool for interacting with and managing your VIP applications.' );
 		console.log();
 
 		console.log( `  To get started, we need an access token for your VIP account. We'll open ${ tokenURL } in your web browser; follow the instructions there to continue.` );
