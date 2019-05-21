@@ -116,6 +116,7 @@ commandWrapper( {
 	envContext: true,
 	appQuery,
 } )
+	.option( 'yes', 'Run the command in production without a confirmation prompt' )
 	.argv( process.argv, async ( args, opts ) => {
 		const isShellMode = 'shell' === args[ 0 ];
 		const isSubShell = 0 === args.length;
@@ -283,7 +284,7 @@ commandWrapper( {
 				historySize: 200,
 			} );
 		} else if ( 'production' === envName ) {
-			const yes = await confirm( [
+			const yes = opts.yes || await confirm( [
 				{
 					key: 'command',
 					value: `wp ${ cmd }`,
