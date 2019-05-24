@@ -107,7 +107,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 		console.log( err );
 	} );
 
-	return { stdinStream, stdoutStream, socket };
+	return { stdinStream, stdoutStream };
 };
 
 commandWrapper( {
@@ -229,18 +229,12 @@ commandWrapper( {
 				commandStreams.stdoutStream.on( 'error', err => {
 					commandRunning = false;
 
-					// Tell socket.io to stop trying to connect
-					commandStreams.socket.close();
-
 					// TODO handle this better
 					console.log( err );
 				} );
 
 				commandStreams.stdoutStream.on( 'end', () => {
 					commandRunning = false;
-
-					// Tell socket.io to stop trying to connect
-					commandStreams.socket.close();
 
 					process.stdin.unpipe( commandStreams.stdinStream );
 
