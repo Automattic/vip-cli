@@ -118,12 +118,10 @@ commandWrapper( {
 } )
 	.option( 'yes', 'Run the command in production without a confirmation prompt' )
 	.argv( process.argv, async ( args, opts ) => {
-		const isShellMode = 'shell' === args[ 0 ];
 		const isSubShell = 0 === args.length;
 
 		// Have to re-quote anything that needs it before we pass it on
 		const quotedArgs = requoteArgs( args );
-
 		const cmd = quotedArgs.join( ' ' );
 
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
@@ -132,227 +130,138 @@ commandWrapper( {
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
-		let result;
-		let rl;
-		let subShellRl;
-
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
 			process.stdout.write( '\u001b[?25h' );
-
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
+		}
 
-			// We'll handle our own errors, thank you
-			disableGlobalGraphQLErrorHandling();
+		// We'll handle our own errors, thank you
+		disableGlobalGraphQLErrorHandling();
 
-			const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
+		const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
-			let commandRunning = false;
+		let commandRunning = false;
 
-			subShellRl = readline.createInterface( {
-				input: process.stdin,
-				output: process.stdout,
-				terminal: true,
-				prompt: chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `,
-				// TODO make history persistent across sessions for same env
-				historySize: 200,
-			} );
+		const subShellSettings = {
+			input: process.stdin,
+			output: process.stdout,
+			terminal: true,
+			prompt: '',
+			historySize: 0,
+		};
 
-			subShellRl.on( 'line', async line => {
-				if ( commandRunning ) {
-					return;
-				}
+		if ( isSubShell ) {
+			subShellSettings.prompt = chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `;
+			subShellSettings.historySize = 200;
+		}
 
-				// Handle plain return / newline
-				if ( ! line ) {
-					subShellRl.prompt();
+		const subShellRl = readline.createInterface( subShellSettings );
+		subShellRl.on( 'line', async line => {
+			if ( commandRunning ) {
+				return;
+			}
 
-					return;
-				}
+			// Handle plain return / newline
+			if ( ! line ) {
+				subShellRl.prompt();
+				return;
+			}
 
-				// Check for exit, like SSH (handles both `exit` and `exit;`)
-				if ( line.startsWith( 'exit' ) ) {
-					subShellRl.close();
-
-					process.exit();
-				}
-
-				const startsWithWp = line.startsWith( 'wp ' );
-				const empty = 0 === line.length;
-				const isShellCommand = line.startsWith( 'wp shell ' );
-
-				if ( empty || ! startsWithWp ) {
-					console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
-
-					subShellRl.prompt();
-
-					return;
-				}
-
-				if ( isShellCommand ) {
-					console.log( chalk.red( 'Error:' ), 'you can not run \'wp shell\' in the subshell mode.' );
-					return;
-				}
-
-				subShellRl.pause();
-
-				try {
-					result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
-				} catch ( e ) {
-					// If this was a GraphQL error, print that to the message to the line
-					if ( e.graphQLErrors ) {
-						e.graphQLErrors.forEach( error => {
-							console.log( chalk.red( 'Error:' ), error.message );
-						} );
-					} else {
-						// Else, other type of error, just dump it
-						console.log( e );
-					}
-
-					subShellRl.prompt();
-
-					return;
-				}
-
-				const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
-
-				const commandStreams = await launchCommandAndGetStreams( {
-					guid: cliCommand.guid,
-					inputToken: inputToken,
-				} );
-
-				process.stdin.pipe( commandStreams.stdinStream );
-
-				commandStreams.stdoutStream.pipe( process.stdout );
-				commandRunning = true;
-
-				commandStreams.stdoutStream.on( 'error', err => {
-					commandRunning = false;
-
-					// Tell socket.io to stop trying to connect
-					commandStreams.socket.close();
-
-					// TODO handle this better
-					console.log( err );
-				} );
-
-				commandStreams.stdoutStream.on( 'end', () => {
-					commandRunning = false;
-
-					// Tell socket.io to stop trying to connect
-					commandStreams.socket.close();
-
-					process.stdin.unpipe( commandStreams.stdinStream );
-
-					commandStreams.stdoutStream.unpipe( process.stdout );
-
-					// Need a newline - WP CLI doesn't always send one :(
-					// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
-					if ( line.includes( '--format=count' ) ||
-						line.includes( '--format="count"' ) ||
-						line.includes( '--format=\'count\'' ) ||
-						line.includes( '--format=ids' ) ||
-						line.includes( '--format="ids"' ) ||
-						line.includes( '--format=\'ids\'' ) ) {
-						process.stdout.write( EOL );
-					}
-
-					subShellRl.resume();
-
-					subShellRl.prompt();
-				} );
-			} );
-
-			subShellRl.prompt();
-
-			subShellRl.on( 'SIGINT', () => {
+			// Check for exit, like SSH (handles both `exit` and `exit;`)
+			if ( line.startsWith( 'exit' ) ) {
 				subShellRl.close();
-
 				process.exit();
-			} );
-
-			return;
-		}
-
-		if ( isShellMode ) {
-			console.log( `Entering WP-CLI shell mode for ${ formatEnvironment( envName ) } on ${ appName } (${ appId })` );
-
-			if ( 'production' === envName ) {
-				console.log( `Remember, this is ${ formatEnvironment( envName ) } - please be careful :)` );
 			}
 
-			rl = readline.createInterface( {
-				input: process.stdin,
-				output: process.stdout,
-				terminal: true,
-				prompt: 'wp> ',
-				// TODO make history persistent across sessions for same env
-				historySize: 200,
-			} );
-		} else if ( 'production' === envName ) {
-			const yes = opts.yes || await confirm( [
-				{
-					key: 'command',
-					value: `wp ${ cmd }`,
-				},
-			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName } (${ appId })?` );
+			const startsWithWp = line.startsWith( 'wp ' );
+			const empty = 0 === line.length;
 
-			if ( ! yes ) {
-				await trackEvent( 'wpcli_confirm_cancel', {
-					command: commandForAnalytics,
-				} );
-
-				console.log( 'Command canceled' );
-
-				process.exit( 0 );
+			if ( empty || ! startsWithWp ) {
+				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
+				subShellRl.prompt();
+				return;
 			}
-		}
 
-		try {
-			result = await getTokenForCommand( appId, envId, cmd );
-		} catch ( e ) {
-			console.log( e );
+			subShellRl.pause();
 
-			return;
-		}
+			let result;
+			try {
+				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
+			} catch ( e ) {
+				// If this was a GraphQL error, print that to the message to the line
+				if ( e.graphQLErrors ) {
+					e.graphQLErrors.forEach( error => {
+						console.log( chalk.red( 'Error:' ), error.message );
+					} );
+				} else {
+					// Else, other type of error, just dump it
+					console.log( e );
+				}
 
-		const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
+				subShellRl.prompt();
 
-		await trackEvent( 'wpcli_command_execute', {
-			command: commandForAnalytics,
-			guid: cliCommand.guid,
-		} );
+				return;
+			}
 
-		const commandStreams = await launchCommandAndGetStreams( {
-			guid: cliCommand.guid,
-			inputToken: inputToken,
-		} );
+			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
-		if ( isShellMode ) {
-			rl.on( 'SIGINT', () => {
-				rl.question( 'Are you sure you want to exit? ', answer => {
-					if ( answer.match( /^y(es)?$/i ) ) {
-						commandStreams.stdinStream.write( 'exit();\n' );
-						process.exit();
-					} else {
-						rl.prompt();
-					}
-				} );
+			const commandStreams = await launchCommandAndGetStreams( {
+				guid: cliCommand.guid,
+				inputToken: inputToken,
 			} );
-		}
 
-		process.stdin.pipe( commandStreams.stdinStream );
+			process.stdin.pipe( commandStreams.stdinStream );
+			commandStreams.stdoutStream.pipe( process.stdout );
+			commandRunning = true;
 
-		commandStreams.stdoutStream.pipe( process.stdout );
+			commandStreams.stdoutStream.on( 'error', err => {
+				commandRunning = false;
 
-		commandStreams.stdoutStream.on( 'error', err => {
-			// TODO handle this better
-			console.log( err );
+				// Tell socket.io to stop trying to connect
+				commandStreams.socket.close();
 
-			process.exit( 1 );
+				// TODO handle this better
+				console.log( err );
+			} );
+
+			commandStreams.stdoutStream.on( 'end', () => {
+				commandRunning = false;
+
+				// Tell socket.io to stop trying to connect
+				commandStreams.socket.close();
+				process.stdin.unpipe( commandStreams.stdinStream );
+				commandStreams.stdoutStream.unpipe( process.stdout );
+
+				// Need a newline - WP CLI doesn't always send one :(
+				// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
+				if ( line.includes( '--format=count' ) ||
+					line.includes( '--format="count"' ) ||
+					line.includes( '--format=\'count\'' ) ||
+					line.includes( '--format=ids' ) ||
+					line.includes( '--format="ids"' ) ||
+					line.includes( '--format=\'ids\'' ) ) {
+					process.stdout.write( EOL );
+				}
+
+				if ( ! isSubShell ) {
+					process.exit();
+					return;
+				}
+
+				subShellRl.resume();
+				subShellRl.prompt();
+			} );
 		} );
 
-		commandStreams.stdoutStream.on( 'end', () => {
+		subShellRl.prompt();
+
+		subShellRl.on( 'SIGINT', () => {
+			subShellRl.close();
 			process.exit();
 		} );
+
+		if ( ! isSubShell ) {
+			subShellRl.write( 'wp ' + cmd + '\n' );
+		}
 	} );
