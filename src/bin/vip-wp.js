@@ -245,6 +245,7 @@ commandWrapper( {
 				}
 
 				if ( ! isSubShell ) {
+					subShellRl.close();
 					process.exit();
 					return;
 				}
