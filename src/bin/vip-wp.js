@@ -11,6 +11,7 @@ import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import readline from 'readline';
 import { EOL } from 'os';
+import { Writable } from 'stream';
 
 /**
  * Internal dependencies
@@ -159,9 +160,21 @@ commandWrapper( {
 
 		let commandRunning = false;
 
+		const mutableStdout = new Writable( {
+			write: function( chunk, encoding, callback ) {
+				if ( ! this.muted ) {
+					process.stdout.write( chunk, encoding );
+				}
+
+				callback();
+			},
+		} );
+
+		mutableStdout.muted = false;
+
 		const subShellSettings = {
 			input: process.stdin,
-			output: process.stdout,
+			output: mutableStdout,
 			terminal: true,
 			prompt: '',
 			historySize: 0,
@@ -281,7 +294,9 @@ commandWrapper( {
 		} );
 
 		if ( ! isSubShell ) {
+			mutableStdout.muted = true;
 			subShellRl.write( `wp ${ cmd }\n` );
+			mutableStdout.muted = false;
 			return;
 		}
 
