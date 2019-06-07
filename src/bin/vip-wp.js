@@ -134,6 +134,22 @@ commandWrapper( {
 			// Reset the cursor (can get messed up with enquirer)
 			process.stdout.write( '\u001b[?25h' );
 			console.log( `Welcome to the WP CLI shell for the ${ formatEnvironment( envName ) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!` );
+		} else if ( envName === 'production' ) {
+			const yes = opts.yes || await confirm( [
+				{
+					key: 'command',
+					value: `wp ${ cmd }`,
+				},
+			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName }?` );
+
+			if ( ! yes ) {
+				await trackEvent( 'wpcli_confirm_cancel', {
+					command: commandForAnalytics,
+				} );
+
+				console.log( 'Command cancelled' );
+				process.exit();
+			}
 		}
 
 		// We'll handle our own errors, thank you
