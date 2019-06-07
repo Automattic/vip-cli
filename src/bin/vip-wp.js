@@ -215,8 +215,12 @@ commandWrapper( {
 					console.log( e );
 				}
 
-				subShellRl.prompt();
+				if ( ! isSubShell ) {
+					subShellRl.close();
+					process.exit( 1 );
+				}
 
+				subShellRl.prompt();
 				return;
 			}
 
