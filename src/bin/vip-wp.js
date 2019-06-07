@@ -255,8 +255,6 @@ commandWrapper( {
 			} );
 		} );
 
-		subShellRl.prompt();
-
 		subShellRl.on( 'SIGINT', () => {
 			subShellRl.close();
 			process.exit();
@@ -264,5 +262,7 @@ commandWrapper( {
 
 		if ( ! isSubShell ) {
 			subShellRl.write( 'wp ' + cmd + '\n' );
+		} else {
+			subShellRl.prompt();
 		}
 	} );
