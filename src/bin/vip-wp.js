@@ -259,6 +259,7 @@ commandWrapper( {
 			} );
 
 			commandStreams.stdoutStream.on( 'end', () => {
+				subShellRl.clearLine();
 				commandRunning = false;
 
 				// Tell socket.io to stop trying to connect
