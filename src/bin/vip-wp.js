@@ -277,7 +277,7 @@ commandWrapper( {
 		} );
 
 		if ( ! isSubShell ) {
-			subShellRl.write( 'wp ' + cmd + '\n' );
+			subShellRl.write( `wp ${ cmd }\n` );
 			return;
 		}
 
