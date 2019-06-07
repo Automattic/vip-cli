@@ -262,7 +262,8 @@ commandWrapper( {
 
 		if ( ! isSubShell ) {
 			subShellRl.write( 'wp ' + cmd + '\n' );
-		} else {
-			subShellRl.prompt();
+			return;
 		}
+
+		subShellRl.prompt();
 	} );
