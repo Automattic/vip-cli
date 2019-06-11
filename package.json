@@ -80,7 +80,7 @@
     "chalk": "2.4.1",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "4.0.0",
-    "debug": "4.1.0",
+    "debug": "4.1.1",
     "enquirer": "2.3.0",
     "graphql": "14.1.0",
     "graphql-tag": "2.10.0",
