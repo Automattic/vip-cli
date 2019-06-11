@@ -15,22 +15,25 @@ import API from 'lib/api';
 import app from 'lib/api/app';
 import command from 'lib/cli/command';
 import { formatEnvironment } from 'lib/cli/format';
+import { trackEvent } from 'lib/tracker';
 
 const appQuery = `id,name,environments{
-	id,name,defaultDomain,branch,datacenter,syncProgress{
+	id,appId,type,name,defaultDomain,branch,datacenter,syncProgress{
 		status,sync,steps{name,status}
-	}
+	},syncPreview { canSync, errors { message }, backup { createdAt }, replacements { from, to } }
 }`;
 
 command( {
 	appContext: true,
 	appQuery: appQuery,
 	childEnvContext: true,
-	requireConfirm: 'Are you sure you want to sync from production?'
+	requireConfirm: 'Are you sure you want to sync from production?',
 } )
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = await API();
 		let syncing = false;
+
+		await trackEvent( 'sync_command_execute' );
 
 		try {
 			await api
@@ -48,12 +51,30 @@ command( {
 					variables: {
 						input: {
 							id: opts.app.id,
-							environmentId: opts.env.id
-						}
-					}
+							environmentId: opts.env.id,
+						},
+					},
 				} );
 		} catch ( e ) {
+			if ( e.graphQLErrors ) {
+				let bail = false;
+
+				for ( const err of e.graphQLErrors ) {
+					if ( err.message !== 'Site is already syncing' ) {
+						bail = true;
+						console.log( chalk.red( 'Error:' ), err.message );
+					}
+				}
+
+				if ( bail ) {
+					return;
+				}
+			}
+
 			syncing = true;
+			await trackEvent( 'sync_command_execute_error', {
+				error: `Already syncing: ${ e.message }`,
+			} );
 		}
 
 		const sprite = {
@@ -90,7 +111,7 @@ command( {
 		console.log();
 		console.log( `  syncing: ${ chalk.yellow( opts.app.name ) }` );
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
-		console.log( `       to: ${ formatEnvironment( opts.env.name ) }` );
+		console.log( `       to: ${ formatEnvironment( opts.env.type ) }` );
 
 		let i = 0;
 		const progress = setInterval( async () => {
@@ -113,7 +134,7 @@ command( {
 						variables: {
 							id: opts.app.id,
 							sync: environment.syncProgress.sync,
-						}
+						},
 					} )
 					.then( res => res.data.app )
 					.then( _app => {
@@ -152,16 +173,24 @@ command( {
 					break;
 
 				case 'failed':
+					clearInterval( progress );
+
+					await trackEvent( 'sync_command_error', {
+						error: 'API returned `failed` status',
+					} );
+
 					out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
-					clearInterval( progress );
 					break;
 
 				case 'success':
 				default:
+					clearInterval( progress );
+
+					await trackEvent( 'sync_command_success' );
+
 					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }` );
 					out.push( '' );
-					clearInterval( progress );
 					break;
 			}
 

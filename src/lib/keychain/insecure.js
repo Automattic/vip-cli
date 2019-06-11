@@ -3,64 +3,56 @@
 /**
  * External dependencies
  */
-import fs from 'fs';
-import os from 'os';
+const Configstore = require( 'configstore' );
 
 /**
  * Internal dependencies
  */
 import type { Keychain } from './keychain';
 
-export default class Secure implements Keychain {
+export default class Insecure implements Keychain {
 	file: string;
 
 	constructor( file: string ) {
-		// only current user has read-write access
-		const rw = 0o600;
+		this.file = file;
 
-		let stat;
-		const tmpfile = os.tmpdir() + '/' + file;
-		try {
-			// Ensure the file exists
-			stat = fs.statSync( tmpfile );
-		} catch ( _ ) {
-			const fd = fs.openSync( tmpfile, 'w+', rw );
-			fs.closeSync( fd );
-			stat = fs.statSync( tmpfile );
-		}
-
-		// Get file perms (last 3 bits of stat.mode)
-		const perms = stat.mode & 0o777;
-
-		// Ensure permissions are what we expect
-		if ( !! ( perms & ~rw ) ) {
-			throw 'Invalid permissions on access token file: ' + tmpfile;
-		}
-
-		this.file = tmpfile;
+		this.configstore = new Configstore( this.file );
 	}
 
 	getPassword( service: string ): Promise<string> {
-		return new Promise( resolve => {
-			fs.readFile( this.file, 'utf8', ( err, password ) => {
-				if ( err || ! password ) {
-					return resolve( null );
-				}
+		return new Promise( ( resolve, reject ) => {
+			let password = null;
 
-				return resolve( password );
-			} );
+			try {
+				password = this.configstore.get( service );
+			} catch ( e ) {
+				return reject( e );
+			}
+
+			return resolve( password );
 		} );
 	}
 
 	setPassword( service: string, password: string ): Promise<boolean> {
-		return new Promise( resolve => {
-			fs.writeFile( this.file, password, err => resolve( ! err ) );
+		return new Promise( ( resolve, reject ) => {
+			try {
+				this.configstore.set( service, password );
+			} catch ( e ) {
+				return reject( e );
+			}
+
+			resolve( true );
 		} );
 	}
 
 	deletePassword( service: string ): Promise<boolean> {
-		return new Promise( resolve => {
-			fs.unlink( this.file, err => resolve( ! err ) );
+		return new Promise( ( resolve, reject ) => {
+			try {
+				this.configstore.delete( service );
+			} catch ( e ) {
+				return reject( e );
+			}
+			resolve( true );
 		} );
 	}
 }

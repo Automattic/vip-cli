@@ -3,48 +3,22 @@
 /**
  * External dependencies
  */
-import inquirer from 'inquirer';
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
  */
-import { formatEnvironment } from './format';
-
-export type Tuple = {
-	key: string,
-	value: string,
-};
+import { keyValue, Tuple } from './format';
 
 export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
-	console.log( m( values ) );
+	console.log( keyValue( values ) );
 
-	const c = await inquirer.prompt( {
+	const c = await prompt( {
 		type: 'confirm',
 		name: 'confirm',
 		message: message,
-		prefix: '',
-		'default': false,
+		default: false,
 	} );
 
 	return c.confirm;
-}
-
-function m( values: Array<Tuple> ): string {
-	const lines = [];
-
-	lines.push( '===================================' );
-	for ( const i of values ) {
-		let v = i.value;
-
-		switch ( i.key.toLowerCase() ) {
-			case 'environment':
-				v = formatEnvironment( v );
-				break;
-		}
-
-		lines.push( `+ ${ i.key }: ${ v }` );
-	}
-	lines.push( '===================================' );
-
-	return lines.join( '\n' );
 }

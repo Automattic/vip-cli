@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "wpvip"
+  ],
+  "rules": {
+    "no-console": 0,
+    "no-process-exit": 0
+  },
+  "globals": {
+    "test": true
+  }
+}

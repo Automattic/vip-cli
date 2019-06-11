@@ -1,21 +1,12 @@
 language: node_js
 sudo: required
 node_js:
-    - 'node'
     - 'lts/*'
-    - '7.10'
+    - '8.9.0'
+    - '10'
 
 os:
-    - linux
-    - osx
-
-cache:
-    directories:
-        - node_modules
+    - windows
 
 script:
     - npm test
-
-after_success:
-    - du -sh dist
-    - du -sh node_modules
