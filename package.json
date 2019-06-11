@@ -94,7 +94,7 @@
     "socket.io-client": "2.2.0",
     "socket.io-stream": "0.9.1",
     "update-notifier": "2.5.0",
-    "uuid": "3.3.0"
+    "uuid": "3.3.2"
   },
   "optionalDependencies": {
     "keytar": "4.1.0"
