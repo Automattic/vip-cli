@@ -78,7 +78,7 @@
     "apollo-client": "2.5.0",
     "apollo-link-error": "1.1.8",
     "apollo-link-http": "1.5.5",
-    "args": "5.0.0",
+    "args": "5.0.1",
     "chalk": "2.4.2",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "4.0.0",
