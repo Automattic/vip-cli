@@ -1,2 +1,2 @@
-const { trackEvent } = require( './dist/lib/tracker' );
+const { trackEvent } = require( '../dist/lib/tracker' );
 trackEvent( 'install' );
