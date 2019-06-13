@@ -176,13 +176,23 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			const appNames = res.data.apps.edges.map( cur => cur.name );
 
-			const a = await prompt( {
-				type: 'autocomplete',
-				name: 'app',
-				message: 'Which app?',
-				limit: 10,
-				choices: appNames,
-			} );
+			let a;
+			try {
+				a = await prompt( {
+					type: 'autocomplete',
+					name: 'app',
+					message: 'Which app?',
+					limit: 10,
+					choices: appNames,
+				} );
+			} catch ( err ) {
+				if ( ! err ) {
+					process.exit();
+				}
+
+				console.log( err );
+				process.exit( 1 );
+			}
 
 			// Copy all app information
 			a.app = res.data.apps.edges.find( cur => cur.name === a.app );
@@ -267,12 +277,23 @@ args.argv = async function( argv, cb ): Promise<any> {
 			options.env = options.app.environments[ 0 ];
 		} else if ( options.app.environments.length > 1 ) {
 			const environmentNames = options.app.environments.map( envObject => getEnvIdentifier( envObject ) );
-			const e = await prompt( {
-				type: 'select',
-				name: 'env',
-				message: 'Which environment?',
-				choices: environmentNames,
-			} );
+
+			let e;
+			try {
+				e = await prompt( {
+					type: 'select',
+					name: 'env',
+					message: 'Which environment?',
+					choices: environmentNames,
+				} );
+			} catch ( err ) {
+				if ( ! err ) {
+					process.exit();
+				}
+
+				console.log( err );
+				process.exit( 1 );
+			}
 
 			// Get full environment info after user selection
 			e.env = options.app.environments.find( envObject => getEnvIdentifier( envObject ) === e.env );
