@@ -61,7 +61,7 @@
     "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#738ead1",
     "eslint-plugin-flowtype": "3.10.3",
     "eslint-plugin-import": "2.17.3",
-    "eslint-plugin-jest": "22.7.0",
+    "eslint-plugin-jest": "22.7.1",
     "eslint-plugin-json": "1.4.0",
     "eslint-plugin-jsx-a11y": "6.2.1",
     "eslint-plugin-no-async-foreach": "0.1.1",
