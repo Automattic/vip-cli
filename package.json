@@ -99,6 +99,6 @@
     "uuid": "3.3.2"
   },
   "optionalDependencies": {
-    "keytar": "4.10.0"
+    "keytar": "4.11.0"
   }
 }
