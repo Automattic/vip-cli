@@ -22,6 +22,13 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 
+var Rollbar = require("rollbar");
+var rollbar = new Rollbar( {
+  accessToken: '0d8145a4b91d4e0886bad98781dddb64',
+  captureUncaught: true,
+  captureUnhandledRejections: true
+} );
+
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
 	if ( err.code === 'EPIPE' ) {
