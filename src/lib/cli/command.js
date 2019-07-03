@@ -27,6 +27,9 @@ const rollbar = new Rollbar( {
 	accessToken: '99c8f982d64f47049fde6f6f9d567070',
 	captureUncaught: true,
 	captureUnhandledRejections: true,
+	payload: {
+		platform: 'client'
+	}
 } );
 
 function uncaughtError( err ) {
