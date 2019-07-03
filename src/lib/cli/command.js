@@ -21,6 +21,7 @@ import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
+import env from '../env';
 
 const Rollbar = require( 'rollbar' );
 const rollbar = new Rollbar( {
@@ -28,7 +29,10 @@ const rollbar = new Rollbar( {
 	captureUncaught: true,
 	captureUnhandledRejections: true,
 	payload: {
-		platform: 'client'
+		platform: 'client',
+		cli_version: env.app.version,
+		os_name: env.os.name,
+		node_version: env.node.version,
 	}
 } );
 
