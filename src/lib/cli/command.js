@@ -24,7 +24,7 @@ import { parseEnvAliasFromArgv } from './envAlias';
 
 const Rollbar = require( 'rollbar' );
 const rollbar = new Rollbar( {
-	accessToken: '0d8145a4b91d4e0886bad98781dddb64',
+	accessToken: '99c8f982d64f47049fde6f6f9d567070',
 	captureUncaught: true,
 	captureUnhandledRejections: true,
 } );
