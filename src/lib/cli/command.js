@@ -35,7 +35,7 @@ const rollbar = new Rollbar( {
 		os_name: env.os.name,
 		node_version: env.node.version,
 		environment: config.environment,
-	}
+	},
 } );
 
 function uncaughtError( err ) {
