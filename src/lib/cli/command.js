@@ -22,6 +22,7 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 import env from '../env';
+import config from 'root/config/config.json';
 
 const Rollbar = require( 'rollbar' );
 const rollbar = new Rollbar( {
@@ -33,6 +34,7 @@ const rollbar = new Rollbar( {
 		cli_version: env.app.version,
 		os_name: env.os.name,
 		node_version: env.node.version,
+		environment: config.environment,
 	}
 } );
 
