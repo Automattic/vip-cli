@@ -21,6 +21,22 @@ import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
+import env from '../env';
+import config from 'root/config/config.json';
+
+const Rollbar = require( 'rollbar' );
+const rollbar = new Rollbar( {
+	accessToken: '99c8f982d64f47049fde6f6f9d567070',
+	captureUncaught: true,
+	captureUnhandledRejections: true,
+	payload: {
+		platform: 'client',
+		cli_version: env.app.version,
+		os_name: env.os.name,
+		node_version: env.node.version,
+		environment: config.environment,
+	},
+} );
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream

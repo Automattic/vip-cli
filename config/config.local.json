@@ -1,5 +1,6 @@
 {
   "tracksUserType": "vip:user_id",
   "tracksAnonUserType": "anon",
-  "tracksEventPrefix": "vip_cli_dev_"
+  "tracksEventPrefix": "vip_cli_dev_",
+  "environment": "development"
 }
