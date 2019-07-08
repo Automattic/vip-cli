@@ -299,7 +299,11 @@ commandWrapper( {
 			} );
 		} );
 
-		subShellRl.on( 'SIGINT', () => {
+		subShellRl.on( 'SIGINT', async () => {
+			await trackEvent( 'wpcli_cancel_command', {
+				command: commandForAnalytics,
+			} );
+
 			//write out CTRL-C/SIGINT
 			subShellRl.write( '\x03\n' );
 			shutdownHandler( true );
