@@ -111,6 +111,16 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	return { stdinStream, stdoutStream, socket };
 };
 
+const shutdownHandler = async ( terminateRunningCommand ) => {
+	try {
+		if ( terminateRunningCommand ) {
+			//TODO: call mutation to clean up
+		}
+	} finally {
+		process.exit();
+	}
+};
+
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
@@ -280,7 +290,7 @@ commandWrapper( {
 
 				if ( ! isSubShell ) {
 					subShellRl.close();
-					process.exit();
+					shutdownHandler( false );
 					return;
 				}
 
@@ -290,8 +300,9 @@ commandWrapper( {
 		} );
 
 		subShellRl.on( 'SIGINT', () => {
-			subShellRl.close();
-			process.exit();
+			//write out CTRL-C/SIGINT
+			subShellRl.write( '\x03\n' );
+			shutdownHandler( true );
 		} );
 
 		if ( ! isSubShell ) {
