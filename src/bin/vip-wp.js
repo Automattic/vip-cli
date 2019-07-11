@@ -241,30 +241,30 @@ commandWrapper( {
 
 			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
-			const commandStreams = await launchCommandAndGetStreams( {
+			currentJob = await launchCommandAndGetStreams( {
 				guid: cliCommand.guid,
 				inputToken: inputToken,
 			} );
 
-			process.stdin.pipe( commandStreams.stdinStream );
-			commandStreams.stdoutStream.pipe( process.stdout );
+			process.stdin.pipe( currentJob.stdinStream );
+			currentJob.stdoutStream.pipe( process.stdout );
 			commandRunning = true;
 
-			commandStreams.stdoutStream.on( 'error', err => {
+			currentJob.stdoutStream.on( 'error', err => {
 				commandRunning = false;
 
 				// TODO handle this better
 				console.log( err );
 			} );
 
-			commandStreams.stdoutStream.on( 'end', () => {
+			currentJob.stdoutStream.on( 'end', () => {
 				subShellRl.clearLine();
 				commandRunning = false;
 
 				// Tell socket.io to stop trying to connect
-				commandStreams.socket.close();
-				process.stdin.unpipe( commandStreams.stdinStream );
-				commandStreams.stdoutStream.unpipe( process.stdout );
+				currentJob.socket.close();
+				process.stdin.unpipe( currentJob.stdinStream );
+				currentJob.stdoutStream.unpipe( process.stdout );
 
 				// Need a newline - WP CLI doesn't always send one :(
 				// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
