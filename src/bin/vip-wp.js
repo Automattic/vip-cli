@@ -261,6 +261,26 @@ commandWrapper( {
 				console.log( err );
 			} );
 
+			currentJob.socket.on( 'reconnect', async () => {
+				console.log( 'reconnected' );
+
+				// Close old streams
+				process.stdin.unpipe( currentJob.stdinStream );
+				currentJob.stdoutStream.unpipe( process.stdout );
+
+				currentJob = await launchCommandAndGetStreams( {
+					guid: cliCommand.guid,
+					inputToken: inputToken,
+				} );
+
+				// Rebind new streams
+				process.stdin.pipe( currentJob.stdinStream );
+				currentJob.stdoutStream.pipe( process.stdout );
+
+				// Resume readline interface
+				subShellRl.resume();
+			} );
+
 			currentJob.stdoutStream.on( 'end', () => {
 				subShellRl.clearLine();
 				commandRunning = false;
