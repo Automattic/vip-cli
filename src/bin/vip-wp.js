@@ -36,6 +36,8 @@ const appQuery = `id, name, environments {
 const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
 
+let currentJob = null;
+
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
