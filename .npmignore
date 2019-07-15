@@ -37,3 +37,4 @@ node_modules/
 .flowconfig
 babel.config.js
 renovate.json
+.github
