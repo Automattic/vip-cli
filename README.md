@@ -20,6 +20,13 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.5.0
+
+- Added `--yes` flag for WP-CLI commands to skip confirmation on production environments.
+- We fixed the character limit errors raised when running long WP-CLI commands.
+- We've added Rollbar to allow us to monitor and address errors
+- We updated third party dependencies to newer, more secure versions.
+
 ### 1.4.1
 
 - No functional changes, 1.4.0 was already taken on NPM :)
