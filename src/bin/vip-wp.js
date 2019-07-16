@@ -62,6 +62,29 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 		} );
 };
 
+const cancelCommand = async ( guid ) => {
+	const api = await API();
+	console.log( 'firing cancel' );
+	return api
+		.mutate( {
+			// $FlowFixMe: gql template is not supported by flow
+			mutation: gql`
+				mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
+					cancelWPCLICommand( input: $input ) {
+						command {
+							id
+						}
+					}
+				}
+			`,
+			variables: {
+				input: {
+					guid: guid,
+				},
+			},
+		} );
+};
+
 const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	const token = await Token.get();
 	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
@@ -111,10 +134,22 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	return { stdinStream, stdoutStream, socket };
 };
 
-const shutdownHandler = async ( terminateRunningCommand ) => {
+const shutdownHandler = async ( terminateRunningCommand, guid ) => {
 	try {
 		if ( terminateRunningCommand ) {
-			//TODO: call mutation to clean up
+			try {
+				await cancelCommand( guid );
+			} catch ( e ) {
+				// If this was a GraphQL error, print that to the message to the line
+				if ( e.graphQLErrors ) {
+					e.graphQLErrors.forEach( error => {
+						console.log( chalk.red( 'Error:' ), error.message );
+					} );
+				} else {
+					// Else, other type of error, just dump it
+					console.log( e );
+				}
+			}
 		}
 	} finally {
 		process.exit();
@@ -140,6 +175,8 @@ commandWrapper( {
 
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
+
+		let cmdGuid;
 
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
@@ -254,6 +291,8 @@ commandWrapper( {
 				inputToken: inputToken,
 			} );
 
+			cmdGuid = cliCommand.guid;
+
 			process.stdin.pipe( commandStreams.stdinStream );
 			commandStreams.stdoutStream.pipe( process.stdout );
 			commandRunning = true;
@@ -306,7 +345,8 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			subShellRl.write( '\x03\n' );
-			shutdownHandler( true );
+			console.log( 'Command cancelled by user' );
+			shutdownHandler( true, cmdGuid ); // no need to await, fire and forget
 		} );
 
 		if ( ! isSubShell ) {
