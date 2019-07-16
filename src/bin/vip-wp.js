@@ -38,14 +38,14 @@ const NON_TTY_ROWS = 15;
 
 let currentJob = null;
 
-const pipeStreamsToProcess = ( { stdin, stdout } ) => {
+const pipeStreamsToProcess = ( { stdin, stdout: outStream } ) => {
 	process.stdin.pipe( stdin );
-	stdout.pipe( process.stdout );
+	outStream.pipe( process.stdout );
 };
 
-const unpipeStreamsFromProcess = ( { stdin, stdout } ) => {
+const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 	process.stdin.unpipe( stdin );
-	stdout.unpipe( process.stdout );
+	outStream.unpipe( process.stdout );
 };
 
 const getTokenForCommand = async ( appId, envId, command ) => {
