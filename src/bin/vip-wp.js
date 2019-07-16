@@ -260,8 +260,8 @@ commandWrapper( {
 				inputToken: inputToken,
 			} );
 
-			process.stdin.pipe( currentJob.stdinStream );
-			currentJob.stdoutStream.pipe( process.stdout );
+			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
 			commandRunning = true;
 
 			currentJob.stdoutStream.on( 'error', err => {
@@ -275,8 +275,7 @@ commandWrapper( {
 				console.log( 'reconnected' );
 
 				// Close old streams
-				process.stdin.unpipe( currentJob.stdinStream );
-				currentJob.stdoutStream.unpipe( process.stdout );
+				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 				currentJob = await launchCommandAndGetStreams( {
 					guid: cliCommand.guid,
@@ -284,8 +283,7 @@ commandWrapper( {
 				} );
 
 				// Rebind new streams
-				process.stdin.pipe( currentJob.stdinStream );
-				currentJob.stdoutStream.pipe( process.stdout );
+				pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 				// Resume readline interface
 				subShellRl.resume();
@@ -297,8 +295,7 @@ commandWrapper( {
 
 				// Tell socket.io to stop trying to connect
 				currentJob.socket.close();
-				process.stdin.unpipe( currentJob.stdinStream );
-				currentJob.stdoutStream.unpipe( process.stdout );
+				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 				// Need a newline - WP CLI doesn't always send one :(
 				// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
