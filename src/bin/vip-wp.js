@@ -41,12 +41,12 @@ let currentJob = null;
 const pipeStreamsToProcess = ( { stdin, stdout } ) => {
 	process.stdin.pipe( stdin );
 	stdout.pipe( process.stdout );
-}
+};
 
 const unpipeStreamsFromProcess = ( { stdin, stdout } ) => {
 	process.stdin.unpipe( stdin );
 	stdout.unpipe( process.stdout );
-}
+};
 
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
