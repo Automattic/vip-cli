@@ -281,6 +281,7 @@ commandWrapper( {
 				currentJob = await launchCommandAndGetStreams( {
 					guid: cliCommand.guid,
 					inputToken: inputToken,
+					offset: currentOffset,
 				} );
 
 				// Rebind new streams
