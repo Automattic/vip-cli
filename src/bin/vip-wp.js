@@ -103,6 +103,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 		inputToken,
 		columns: process.stdout.columns || NON_TTY_COLUMNS,
 		rows: process.stdout.rows || NON_TTY_ROWS,
+		offset,
 	};
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
