@@ -64,7 +64,6 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 
 const cancelCommand = async ( guid ) => {
 	const api = await API();
-	console.log( 'firing cancel' );
 	return api
 		.mutate( {
 			// $FlowFixMe: gql template is not supported by flow
