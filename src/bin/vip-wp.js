@@ -75,7 +75,7 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 		} );
 };
 
-const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
+const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) => {
 	const token = await Token.get();
 	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 		transportOptions: {
