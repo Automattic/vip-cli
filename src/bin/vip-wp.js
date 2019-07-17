@@ -37,6 +37,7 @@ const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
 
 let currentJob = null;
+let currentOffset = 0;
 
 const pipeStreamsToProcess = ( { stdin, stdout: outStream } ) => {
 	process.stdin.pipe( stdin );
