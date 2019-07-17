@@ -90,6 +90,10 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();
 
+	stdoutStream.on( 'data', data => {
+		currentOffset = data.length + currentOffset;
+	} );
+
 	// TODO handle all arguments
 	// TODO handle disconnect - does IOStream correctly buffer stdin?
 	// TODO stderr - currently server doesn't support it, so errors don't terminate process
