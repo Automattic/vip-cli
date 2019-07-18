@@ -35,6 +35,7 @@ const appQuery = `id, name, environments {
 
 const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
+const cancelCommandChar = '\x03';
 
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
@@ -135,7 +136,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 
 const shutdownHandler = async ( terminateRunningCommand, guid ) => {
 	try {
-		if ( terminateRunningCommand ) {
+		if ( terminateRunningCommand && guid ) {
 			try {
 				await cancelCommand( guid );
 			} catch ( e ) {
@@ -251,8 +252,9 @@ commandWrapper( {
 
 			const startsWithWp = line.startsWith( 'wp ' );
 			const empty = 0 === line.length;
+			const userCmdCancelled = line === cancelCommandChar;
 
-			if ( empty || ! startsWithWp ) {
+			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
 				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 				subShellRl.prompt();
 				return;
@@ -337,15 +339,17 @@ commandWrapper( {
 			} );
 		} );
 
-		subShellRl.on( 'SIGINT', async () => {
-			await trackEvent( 'wpcli_cancel_command', {
+		subShellRl.on( 'SIGINT', () => {
+			// Handler here can't be async so all methods need to fire and forget
+
+			//write out CTRL-C/SIGINT
+			process.stdin.write( cancelCommandChar );
+			trackEvent( 'wpcli_cancel_command', {
 				command: commandForAnalytics,
 			} );
 
-			//write out CTRL-C/SIGINT
-			subShellRl.write( '\x03\n' );
 			console.log( 'Command cancelled by user' );
-			shutdownHandler( true, cmdGuid ); // no need to await, fire and forget
+			shutdownHandler( true, cmdGuid );
 		} );
 
 		if ( ! isSubShell ) {
