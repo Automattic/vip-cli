@@ -190,7 +190,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					process.exit();
 				}
 
-				if ( ! err.message ){
+				if ( ! err.message ) {
 					console.log( err );
 				} else {
 					console.log( chalk.red( 'Error:' ), err.message );
@@ -296,7 +296,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					process.exit();
 				}
 
-				if ( ! err.message ){
+				if ( ! err.message ) {
 					console.log( err );
 				} else {
 					console.log( chalk.red( 'Error:' ), err.message );
