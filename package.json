@@ -14,7 +14,7 @@
     "test": "npm run lint && npm run flow && jest --coverage",
     "prepare": "npm run build",
     "prepack": "npm run prepareConfig:publish",
-    "postinstall": "node ./helpers/check-version.js",
+    "postinstall": "npm run build && node ./helpers/check-version.js && node ./helpers/postinstall.js",
     "build": "npm run prepareConfig:local && babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
