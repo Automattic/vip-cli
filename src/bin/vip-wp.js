@@ -134,9 +134,9 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	return { stdinStream, stdoutStream, socket };
 };
 
-const shutdownHandler = async ( terminateRunningCommand, guid ) => {
+const shutdownHandler = async ( guid ) => {
 	try {
-		if ( terminateRunningCommand && guid ) {
+		if ( guid ) {
 			try {
 				await cancelCommand( guid );
 			} catch ( e ) {
@@ -330,7 +330,7 @@ commandWrapper( {
 
 				if ( ! isSubShell ) {
 					subShellRl.close();
-					shutdownHandler( false );
+					process.exit();
 					return;
 				}
 
@@ -349,7 +349,7 @@ commandWrapper( {
 			} );
 
 			console.log( 'Command cancelled by user' );
-			shutdownHandler( true, cmdGuid );
+			shutdownHandler( cmdGuid );
 		} );
 
 		if ( ! isSubShell ) {
