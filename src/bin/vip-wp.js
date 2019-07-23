@@ -10,7 +10,6 @@ import { stdout } from 'single-line-log';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import readline from 'readline';
-import { EOL } from 'os';
 import { Writable } from 'stream';
 
 /**
@@ -266,17 +265,6 @@ commandWrapper( {
 				commandStreams.socket.close();
 				process.stdin.unpipe( commandStreams.stdinStream );
 				commandStreams.stdoutStream.unpipe( process.stdout );
-
-				// Need a newline - WP CLI doesn't always send one :(
-				// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
-				if ( line.includes( '--format=count' ) ||
-					line.includes( '--format="count"' ) ||
-					line.includes( '--format=\'count\'' ) ||
-					line.includes( '--format=ids' ) ||
-					line.includes( '--format="ids"' ) ||
-					line.includes( '--format=\'ids\'' ) ) {
-					process.stdout.write( EOL );
-				}
 
 				if ( ! isSubShell ) {
 					subShellRl.close();
