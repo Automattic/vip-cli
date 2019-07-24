@@ -74,31 +74,31 @@
   },
   "dependencies": {
     "apollo-cache-inmemory": "1.6.2",
-    "apollo-client": "2.6.2",
-    "apollo-link-error": "1.1.10",
-    "apollo-link-http": "1.5.14",
+    "apollo-client": "2.6.3",
+    "apollo-link-error": "1.1.11",
+    "apollo-link-http": "1.5.15",
     "args": "5.0.1",
     "chalk": "2.4.2",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.0",
     "debug": "4.1.1",
-    "enquirer": "2.3.0",
-    "graphql": "14.3.1",
+    "enquirer": "2.3.1",
+    "graphql": "14.4.2",
     "graphql-tag": "2.10.1",
     "ini": "1.3.5",
     "isomorphic-fetch": "2.2.1",
     "json2csv": "3.11.5",
     "jwt-decode": "2.2.0",
     "opn": "5.5.0",
-    "rollbar": "2.7.1",
-    "semver": "6.1.2",
+    "rollbar": "2.8.1",
+    "semver": "6.3.0",
     "single-line-log": "1.1.2",
     "socket.io-client": "2.2.0",
     "socket.io-stream": "0.9.1",
-    "update-notifier": "3.0.0",
+    "update-notifier": "3.0.1",
     "uuid": "3.3.2"
   },
   "optionalDependencies": {
-    "keytar": "4.11.0"
+    "keytar": "4.12.0"
   }
 }
