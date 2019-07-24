@@ -137,7 +137,7 @@ const shutdownHandler = async ( guid ) => {
 	try {
 		if ( guid ) {
 			try {
-				await cancelCommand( guid );
+				const val = await cancelCommand( guid );
 			} catch ( e ) {
 				// If this was a GraphQL error, print that to the message to the line
 				if ( e.graphQLErrors ) {
@@ -205,6 +205,8 @@ commandWrapper( {
 		const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
 		let commandRunning = false;
+
+		let countSIGINT = 0;
 
 		const mutableStdout = new Writable( {
 			write: function( chunk, encoding, callback ) {
@@ -318,7 +320,10 @@ commandWrapper( {
 
 				if ( ! isSubShell ) {
 					subShellRl.close();
-					process.exit();
+					// if this is SIGINT scenario, don't kill the process here, let the shutdown handler do that after cleanup
+					if ( countSIGINT === 0 ) {
+						process.exit();
+					}
 					return;
 				}
 
@@ -327,9 +332,13 @@ commandWrapper( {
 			} );
 		} );
 
-		subShellRl.on( 'SIGINT', () => {
+		subShellRl.on( 'SIGINT', async () => {
+			//if we have a 2nd SIGINT, exit immediately
+			if ( countSIGINT >= 1 ) {
+				process.exit();
+			}
+			countSIGINT += 1;
 			// Handler here can't be async so all methods need to fire and forget
-
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
 			trackEvent( 'wpcli_cancel_command', {
@@ -337,7 +346,7 @@ commandWrapper( {
 			} );
 
 			console.log( 'Command cancelled by user' );
-			shutdownHandler( cmdGuid );
+			await shutdownHandler( cmdGuid );
 		} );
 
 		if ( ! isSubShell ) {
