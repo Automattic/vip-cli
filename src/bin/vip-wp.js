@@ -133,28 +133,6 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	return { stdinStream, stdoutStream, socket };
 };
 
-const shutdownHandler = async ( guid ) => {
-	try {
-		if ( guid ) {
-			try {
-				const val = await cancelCommand( guid );
-			} catch ( e ) {
-				// If this was a GraphQL error, print that to the message to the line
-				if ( e.graphQLErrors ) {
-					e.graphQLErrors.forEach( error => {
-						console.log( chalk.red( 'Error:' ), error.message );
-					} );
-				} else {
-					// Else, other type of error, just dump it
-					console.log( e );
-				}
-			}
-		}
-	} finally {
-		process.exit();
-	}
-};
-
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
@@ -320,10 +298,7 @@ commandWrapper( {
 
 				if ( ! isSubShell ) {
 					subShellRl.close();
-					// if this is SIGINT scenario, don't kill the process here, let the shutdown handler do that after cleanup
-					if ( countSIGINT === 0 ) {
-						process.exit();
-					}
+					process.exit();
 					return;
 				}
 
@@ -338,15 +313,13 @@ commandWrapper( {
 				process.exit();
 			}
 			countSIGINT += 1;
-			// Handler here can't be async so all methods need to fire and forget
+
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
 			trackEvent( 'wpcli_cancel_command', {
 				command: commandForAnalytics,
 			} );
-
 			console.log( 'Command cancelled by user' );
-			await shutdownHandler( cmdGuid );
 		} );
 
 		if ( ! isSubShell ) {
