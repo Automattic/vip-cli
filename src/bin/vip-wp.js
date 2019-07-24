@@ -34,6 +34,7 @@ const appQuery = `id, name, environments {
 
 const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
+const cancelCommandChar = '\x03';
 
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
@@ -56,6 +57,28 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 					id: appId,
 					environmentId: envId,
 					command,
+				},
+			},
+		} );
+};
+
+const cancelCommand = async ( guid ) => {
+	const api = await API();
+	return api
+		.mutate( {
+			// $FlowFixMe: gql template is not supported by flow
+			mutation: gql`
+				mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
+					cancelWPCLICommand( input: $input ) {
+						command {
+							id
+						}
+					}
+				}
+			`,
+			variables: {
+				input: {
+					guid: guid,
 				},
 			},
 		} );
@@ -110,6 +133,28 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	return { stdinStream, stdoutStream, socket };
 };
 
+const shutdownHandler = async ( guid ) => {
+	try {
+		if ( guid ) {
+			try {
+				await cancelCommand( guid );
+			} catch ( e ) {
+				// If this was a GraphQL error, print that to the message to the line
+				if ( e.graphQLErrors ) {
+					e.graphQLErrors.forEach( error => {
+						console.log( chalk.red( 'Error:' ), error.message );
+					} );
+				} else {
+					// Else, other type of error, just dump it
+					console.log( e );
+				}
+			}
+		}
+	} finally {
+		process.exit();
+	}
+};
+
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
@@ -129,6 +174,8 @@ commandWrapper( {
 
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
+
+		let cmdGuid;
 
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
@@ -204,8 +251,9 @@ commandWrapper( {
 
 			const startsWithWp = line.startsWith( 'wp ' );
 			const empty = 0 === line.length;
+			const userCmdCancelled = line === cancelCommandChar;
 
-			if ( empty || ! startsWithWp ) {
+			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
 				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 				subShellRl.prompt();
 				return;
@@ -243,6 +291,8 @@ commandWrapper( {
 				inputToken: inputToken,
 			} );
 
+			cmdGuid = cliCommand.guid;
+
 			process.stdin.pipe( commandStreams.stdinStream );
 			commandStreams.stdoutStream.pipe( process.stdout );
 			commandRunning = true;
@@ -278,8 +328,16 @@ commandWrapper( {
 		} );
 
 		subShellRl.on( 'SIGINT', () => {
-			subShellRl.close();
-			process.exit();
+			// Handler here can't be async so all methods need to fire and forget
+
+			//write out CTRL-C/SIGINT
+			process.stdin.write( cancelCommandChar );
+			trackEvent( 'wpcli_cancel_command', {
+				command: commandForAnalytics,
+			} );
+
+			console.log( 'Command cancelled by user' );
+			shutdownHandler( cmdGuid );
 		} );
 
 		if ( ! isSubShell ) {
