@@ -22,6 +22,12 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ### 1.5.0
 
+- We added ability to cancel running commands.
+- We fixed an issue with trailing characters such as line breaks affecting use of command output by scripts.
+- Various dependancy updates.
+
+### 1.5.0
+
 - Added `--yes` flag for WP-CLI commands to skip confirmation on production environments.
 - We fixed the character limit errors raised when running long WP-CLI commands.
 - We've added Rollbar to allow us to monitor and address errors
