@@ -20,7 +20,7 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
-### 1.5.0
+### 1.6.0
 
 - We added ability to cancel running commands.
 - We fixed an issue with trailing characters such as line breaks affecting use of command output by scripts.
