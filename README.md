@@ -20,6 +20,9 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.6.2
+- Corrected some install issues with the 1.6.0/1.6.1 releases. 
+
 ### 1.6.0
 
 - We added ability to cancel running commands.
