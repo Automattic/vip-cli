@@ -20,6 +20,15 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.6.2
+- Corrected some install issues with the 1.6.0/1.6.1 releases. 
+
+### 1.6.0
+
+- We added ability to cancel running commands.
+- We fixed an issue with trailing characters such as line breaks affecting use of command output by scripts.
+- Various dependancy updates.
+
 ### 1.5.0
 
 - Added `--yes` flag for WP-CLI commands to skip confirmation on production environments.

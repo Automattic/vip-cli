@@ -10,7 +10,6 @@ import { stdout } from 'single-line-log';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import readline from 'readline';
-import { EOL } from 'os';
 import { Writable } from 'stream';
 
 /**
@@ -35,6 +34,7 @@ const appQuery = `id, name, environments {
 
 const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
+const cancelCommandChar = '\x03';
 
 let currentJob = null;
 
@@ -69,6 +69,28 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 					id: appId,
 					environmentId: envId,
 					command,
+				},
+			},
+		} );
+};
+
+const cancelCommand = async ( guid ) => {
+	const api = await API();
+	return api
+		.mutate( {
+			// $FlowFixMe: gql template is not supported by flow
+			mutation: gql`
+				mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
+					cancelWPCLICommand( input: $input ) {
+						command {
+							id
+						}
+					}
+				}
+			`,
+			variables: {
+				input: {
+					guid: guid,
 				},
 			},
 		} );
@@ -147,6 +169,8 @@ commandWrapper( {
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
+		let cmdGuid;
+
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
 			process.stdout.write( '\u001b[?25h' );
@@ -175,6 +199,8 @@ commandWrapper( {
 		const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
 		let commandRunning = false;
+
+		let countSIGINT = 0;
 
 		const mutableStdout = new Writable( {
 			write: function( chunk, encoding, callback ) {
@@ -221,8 +247,9 @@ commandWrapper( {
 
 			const startsWithWp = line.startsWith( 'wp ' );
 			const empty = 0 === line.length;
+			const userCmdCancelled = line === cancelCommandChar;
 
-			if ( empty || ! startsWithWp ) {
+			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
 				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 				subShellRl.prompt();
 				return;
@@ -261,6 +288,8 @@ commandWrapper( {
 			} );
 
 			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+      
+			cmdGuid = cliCommand.guid;
 
 			commandRunning = true;
 
@@ -297,17 +326,6 @@ commandWrapper( {
 				currentJob.socket.close();
 				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
-				// Need a newline - WP CLI doesn't always send one :(
-				// https://github.com/wp-cli/wp-cli/blob/779bdd16025cb718260b35fd2b69ae47ca80cb91/php/WP_CLI/Formatter.php#L129-L141
-				if ( line.includes( '--format=count' ) ||
-					line.includes( '--format="count"' ) ||
-					line.includes( '--format=\'count\'' ) ||
-					line.includes( '--format=ids' ) ||
-					line.includes( '--format="ids"' ) ||
-					line.includes( '--format=\'ids\'' ) ) {
-					process.stdout.write( EOL );
-				}
-
 				if ( ! isSubShell ) {
 					subShellRl.close();
 					process.exit();
@@ -319,9 +337,19 @@ commandWrapper( {
 			} );
 		} );
 
-		subShellRl.on( 'SIGINT', () => {
-			subShellRl.close();
-			process.exit();
+		subShellRl.on( 'SIGINT', async () => {
+			//if we have a 2nd SIGINT, exit immediately
+			if ( countSIGINT >= 1 ) {
+				process.exit();
+			}
+			countSIGINT += 1;
+
+			//write out CTRL-C/SIGINT
+			process.stdin.write( cancelCommandChar );
+			trackEvent( 'wpcli_cancel_command', {
+				command: commandForAnalytics,
+			} );
+			console.log( 'Command cancelled by user' );
 		} );
 
 		if ( ! isSubShell ) {
