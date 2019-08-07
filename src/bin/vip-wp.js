@@ -360,6 +360,7 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
+			currentJob.stdoutStream.end();
 			trackEvent( 'wpcli_cancel_command', {
 				command: commandForAnalytics,
 			} );
