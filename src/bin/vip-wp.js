@@ -36,6 +36,19 @@ const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
 const cancelCommandChar = '\x03';
 
+let currentJob = null;
+let currentOffset = 0;
+
+const pipeStreamsToProcess = ( { stdin, stdout: outStream } ) => {
+	process.stdin.pipe( stdin );
+	outStream.pipe( process.stdout );
+};
+
+const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
+	process.stdin.unpipe( stdin );
+	outStream.unpipe( process.stdout );
+};
+
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
@@ -84,7 +97,7 @@ const cancelCommand = async ( guid ) => {
 		} );
 };
 
-const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
+const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) => {
 	const token = await Token.get();
 	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 		transportOptions: {
@@ -99,6 +112,10 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();
 
+	stdoutStream.on( 'data', data => {
+		currentOffset = data.length + currentOffset;
+	} );
+
 	// TODO handle all arguments
 	// TODO handle disconnect - does IOStream correctly buffer stdin?
 	// TODO stderr - currently server doesn't support it, so errors don't terminate process
@@ -108,12 +125,17 @@ const launchCommandAndGetStreams = async ( { guid, inputToken } ) => {
 		inputToken,
 		columns: process.stdout.columns || NON_TTY_COLUMNS,
 		rows: process.stdout.rows || NON_TTY_ROWS,
+		offset,
 	};
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
 
 	socket.on( 'unauthorized', err => {
 		console.log( 'There was an error with the authentication:', err.message );
+	} );
+
+	socket.on( 'reconnect_attempt', err => {
+		console.error( 'There was an error connecting to the server. Retrying...' );
 	} );
 
 	IOStream( socket ).on( 'error', err => {
@@ -266,35 +288,51 @@ commandWrapper( {
 
 			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
-			const commandStreams = await launchCommandAndGetStreams( {
+			currentJob = await launchCommandAndGetStreams( {
 				guid: cliCommand.guid,
 				inputToken: inputToken,
 			} );
 
 			cmdGuid = cliCommand.guid;
 
-			process.stdin.pipe( commandStreams.stdinStream );
-			commandStreams.stdoutStream.pipe( process.stdout );
+			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
 			commandRunning = true;
 
-			commandStreams.stdoutStream.on( 'error', err => {
+			currentJob.stdoutStream.on( 'error', err => {
 				commandRunning = false;
-
-				// Tell socket.io to stop trying to connect
-				commandStreams.socket.close();
 
 				// TODO handle this better
 				console.log( err );
 			} );
 
-			commandStreams.stdoutStream.on( 'end', () => {
+			currentJob.socket.on( 'reconnect', async () => {
+				// Close old streams
+				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+				currentJob = await launchCommandAndGetStreams( {
+					guid: cliCommand.guid,
+					inputToken: inputToken,
+					offset: currentOffset,
+				} );
+
+				// Rebind new streams
+				pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+				// Resume readline interface
+				subShellRl.resume();
+			} );
+
+			currentJob.stdoutStream.on( 'end', () => {
 				subShellRl.clearLine();
 				commandRunning = false;
 
 				// Tell socket.io to stop trying to connect
-				commandStreams.socket.close();
-				process.stdin.unpipe( commandStreams.stdinStream );
-				commandStreams.stdoutStream.unpipe( process.stdout );
+				currentJob.socket.close();
+				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+				// Reset offset
+				currentOffset = 0;
 
 				if ( ! isSubShell ) {
 					subShellRl.close();
