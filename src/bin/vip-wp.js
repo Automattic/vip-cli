@@ -307,8 +307,6 @@ commandWrapper( {
 			} );
 
 			currentJob.socket.on( 'reconnect', async () => {
-				console.log( 'reconnected' );
-
 				// Close old streams
 				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
