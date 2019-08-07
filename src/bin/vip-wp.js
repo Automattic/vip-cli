@@ -134,8 +134,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 		console.log( 'There was an error with the authentication:', err.message );
 	} );
 
-	socket.on( 'disconnect', err => {
-		console.log( 'lost connection' );
+	socket.on( 'reconnect_attempt', err => {
+		console.error( 'There was an error connecting to the server. Retrying...' );
 	} );
 
 	IOStream( socket ).on( 'error', err => {
