@@ -49,6 +49,36 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 	outStream.unpipe( process.stdout );
 };
 
+const bindStreamEvents = ( { subShellRl, commandRunning, isSubShell, stdoutStream } ) => {
+	stdoutStream.on( 'error', err => {
+		commandRunning = false;
+
+		// TODO handle this better
+		console.log( err );
+	} );
+
+	stdoutStream.on( 'end', () => {
+		subShellRl.clearLine();
+		commandRunning = false;
+
+		// Tell socket.io to stop trying to connect
+		currentJob.socket.close();
+		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+		// Reset offset
+		currentOffset = 0;
+
+		if ( ! isSubShell ) {
+			subShellRl.close();
+			process.exit();
+			return;
+		}
+
+		subShellRl.resume();
+		subShellRl.prompt();
+	} );
+};
+
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
@@ -299,12 +329,7 @@ commandWrapper( {
 
 			commandRunning = true;
 
-			currentJob.stdoutStream.on( 'error', err => {
-				commandRunning = false;
-
-				// TODO handle this better
-				console.log( err );
-			} );
+			bindStreamEvents( { subShellRl, commandRunning, isSubShell, stdoutStream: currentJob.stdoutStream } );
 
 			currentJob.socket.on( 'reconnect', async () => {
 				// Close old streams
@@ -319,29 +344,10 @@ commandWrapper( {
 				// Rebind new streams
 				pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
+				bindStreamEvents( { subShellRl, commandRunning, isSubShell, stdoutStream: currentJob.stdoutStream } );
+
 				// Resume readline interface
 				subShellRl.resume();
-			} );
-
-			currentJob.stdoutStream.on( 'end', () => {
-				subShellRl.clearLine();
-				commandRunning = false;
-
-				// Tell socket.io to stop trying to connect
-				currentJob.socket.close();
-				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-				// Reset offset
-				currentOffset = 0;
-
-				if ( ! isSubShell ) {
-					subShellRl.close();
-					process.exit();
-					return;
-				}
-
-				subShellRl.resume();
-				subShellRl.prompt();
 			} );
 		} );
 
