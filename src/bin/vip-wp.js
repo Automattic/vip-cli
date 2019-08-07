@@ -175,6 +175,13 @@ commandWrapper( {
 		const { id: appId, name: appName } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
+		const commonTrackingParams = {
+			command: commandForAnalytics,
+			app_id: appId,
+			env_id: envId,
+			method: isSubShell ? 'subshell' : 'normal',
+		};
+
 		let cmdGuid;
 
 		if ( isSubShell ) {
@@ -190,9 +197,7 @@ commandWrapper( {
 			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName }?` );
 
 			if ( ! yes ) {
-				trackEvent( 'wpcli_confirm_cancel', {
-					command: commandForAnalytics,
-				} );
+				trackEvent( 'wpcli_confirm_cancel', commonTrackingParams );
 
 				console.log( 'Command cancelled' );
 				process.exit();
@@ -310,6 +315,8 @@ commandWrapper( {
 				// Close old streams
 				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
+				trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
+
 				currentJob = await launchCommandAndGetStreams( {
 					guid: cliCommand.guid,
 					inputToken: inputToken,
@@ -326,6 +333,8 @@ commandWrapper( {
 			currentJob.stdoutStream.on( 'end', () => {
 				subShellRl.clearLine();
 				commandRunning = false;
+
+				trackEvent( 'wpcli_command_end', commonTrackingParams );
 
 				// Tell socket.io to stop trying to connect
 				currentJob.socket.close();
@@ -354,9 +363,7 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
-			trackEvent( 'wpcli_cancel_command', {
-				command: commandForAnalytics,
-			} );
+			trackEvent( 'wpcli_cancel_command', commonTrackingParams );
 			console.log( 'Command cancelled by user' );
 		} );
 
