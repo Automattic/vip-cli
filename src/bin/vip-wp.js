@@ -190,7 +190,7 @@ commandWrapper( {
 			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName }?` );
 
 			if ( ! yes ) {
-				await trackEvent( 'wpcli_confirm_cancel', {
+				trackEvent( 'wpcli_confirm_cancel', {
 					command: commandForAnalytics,
 				} );
 
