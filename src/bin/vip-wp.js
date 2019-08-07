@@ -54,7 +54,7 @@ const bindStreamEvents = ( { subShellRl, commandRunning, isSubShell, stdoutStrea
 		commandRunning = false;
 
 		// TODO handle this better
-		console.log( err );
+		console.log( 'Error: ' + err.message );
 	} );
 
 	stdoutStream.on( 'end', () => {
@@ -162,10 +162,6 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 	socket.on( 'unauthorized', err => {
 		console.log( 'There was an error with the authentication:', err.message );
-	} );
-
-	socket.on( 'reconnect_attempt', err => {
-		console.error( 'There was an error connecting to the server. Retrying...' );
 	} );
 
 	IOStream( socket ).on( 'error', err => {
@@ -348,6 +344,18 @@ commandWrapper( {
 
 				// Resume readline interface
 				subShellRl.resume();
+			} );
+
+			currentJob.socket.on( 'reconnect_attempt', err => {
+				// create a new input stream so that we can still catch things like SIGINT while reconnectin
+				if ( currentJob.stdinStream ) {
+					process.stdin.unpipe( currentJob.stdinStream );
+				}
+				process.stdin.pipe( IOStream.createStream() );
+				currentJob.stdoutStream = IOStream.createStream();
+				bindStreamEvents( { subShellRl, commandRunning, isSubShell, stdoutStream: currentJob.stdoutStream } );
+
+				console.error( 'There was an error connecting to the server. Retrying...' );
 			} );
 		} );
 
