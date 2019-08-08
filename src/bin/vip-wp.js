@@ -22,7 +22,12 @@ import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 
-const appQuery = `id, name, environments {
+const appQuery = `id, name,
+	organization {
+		id
+		name
+	}
+	environments {
 	id
 	appId
 	type
@@ -172,13 +177,14 @@ commandWrapper( {
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
 		const commandForAnalytics = quotedArgs.slice( 0, 2 ).join( ' ' );
 
-		const { id: appId, name: appName } = opts.app;
+		const { id: appId, name: appName, organization: { id: orgId } } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
 		const commonTrackingParams = {
 			command: commandForAnalytics,
 			app_id: appId,
 			env_id: envId,
+			org_id: orgId,
 			method: isSubShell ? 'subshell' : 'normal',
 		};
 
