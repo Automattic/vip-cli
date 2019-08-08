@@ -22,7 +22,12 @@ import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 
-const appQuery = `id, name, environments {
+const appQuery = `id, name,
+	organization {
+		id
+		name
+	}
+	environments {
 	id
 	appId
 	type
@@ -172,8 +177,16 @@ commandWrapper( {
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
 		const commandForAnalytics = quotedArgs.slice( 0, 2 ).join( ' ' );
 
-		const { id: appId, name: appName } = opts.app;
+		const { id: appId, name: appName, organization: { id: orgId } } = opts.app;
 		const { id: envId, type: envName } = opts.env;
+
+		const commonTrackingParams = {
+			command: commandForAnalytics,
+			app_id: appId,
+			env_id: envId,
+			org_id: orgId,
+			method: isSubShell ? 'subshell' : 'normal',
+		};
 
 		let cmdGuid;
 
@@ -190,9 +203,7 @@ commandWrapper( {
 			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName }?` );
 
 			if ( ! yes ) {
-				await trackEvent( 'wpcli_confirm_cancel', {
-					command: commandForAnalytics,
-				} );
+				trackEvent( 'wpcli_confirm_cancel', commonTrackingParams );
 
 				console.log( 'Command cancelled' );
 				process.exit();
@@ -310,6 +321,8 @@ commandWrapper( {
 				// Close old streams
 				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
+				trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
+
 				currentJob = await launchCommandAndGetStreams( {
 					guid: cliCommand.guid,
 					inputToken: inputToken,
@@ -326,6 +339,8 @@ commandWrapper( {
 			currentJob.stdoutStream.on( 'end', () => {
 				subShellRl.clearLine();
 				commandRunning = false;
+
+				trackEvent( 'wpcli_command_end', commonTrackingParams );
 
 				// Tell socket.io to stop trying to connect
 				currentJob.socket.close();
@@ -354,9 +369,7 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
-			trackEvent( 'wpcli_cancel_command', {
-				command: commandForAnalytics,
-			} );
+			trackEvent( 'wpcli_cancel_command', commonTrackingParams );
 			console.log( 'Command cancelled by user' );
 		} );
 
