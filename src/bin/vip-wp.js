@@ -338,11 +338,11 @@ commandWrapper( {
 				subShellRl.resume();
 			} );
 
-			currentJob.stdoutStream.on( 'end', () => {
+			currentJob.stdoutStream.on( 'end', async () => {
 				subShellRl.clearLine();
 				commandRunning = false;
 
-				trackEvent( 'wpcli_command_end', commonTrackingParams );
+				await trackEvent( 'wpcli_command_end', commonTrackingParams );
 
 				// Tell socket.io to stop trying to connect
 				currentJob.socket.close();
@@ -371,7 +371,7 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
-			trackEvent( 'wpcli_cancel_command', commonTrackingParams );
+			await trackEvent( 'wpcli_cancel_command', commonTrackingParams );
 			console.log( 'Command cancelled by user' );
 		} );
 
