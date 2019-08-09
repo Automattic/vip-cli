@@ -54,6 +54,38 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 	outStream.unpipe( process.stdout );
 };
 
+const bindStreamEvents = ( { subShellRl, commandRunning, commonTrackingParams, isSubShell, stdoutStream } ) => {
+	stdoutStream.on( 'error', err => {
+		commandRunning = false;
+
+		// TODO handle this better
+		console.log( 'Error: ' + err.message );
+	} );
+
+	stdoutStream.on( 'end', () => {
+		subShellRl.clearLine();
+		commandRunning = false;
+
+		trackEvent( 'wpcli_command_end', commonTrackingParams );
+
+		// Tell socket.io to stop trying to connect
+		currentJob.socket.close();
+		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+		// Reset offset
+		currentOffset = 0;
+
+		if ( ! isSubShell ) {
+			subShellRl.close();
+			process.exit();
+			return;
+		}
+
+		subShellRl.resume();
+		subShellRl.prompt();
+	} );
+};
+
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = await API();
 
@@ -137,10 +169,6 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 	socket.on( 'unauthorized', err => {
 		console.log( 'There was an error with the authentication:', err.message );
-	} );
-
-	socket.on( 'reconnect_attempt', err => {
-		console.error( 'There was an error connecting to the server. Retrying...' );
 	} );
 
 	IOStream( socket ).on( 'error', err => {
@@ -310,12 +338,7 @@ commandWrapper( {
 
 			commandRunning = true;
 
-			currentJob.stdoutStream.on( 'error', err => {
-				commandRunning = false;
-
-				// TODO handle this better
-				console.log( err );
-			} );
+			bindStreamEvents( { subShellRl, commandRunning, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
 
 			currentJob.socket.on( 'reconnect', async () => {
 				// Close old streams
@@ -332,31 +355,22 @@ commandWrapper( {
 				// Rebind new streams
 				pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
+				bindStreamEvents( { subShellRl, commandRunning, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
+
 				// Resume readline interface
 				subShellRl.resume();
 			} );
 
-			currentJob.stdoutStream.on( 'end', () => {
-				subShellRl.clearLine();
-				commandRunning = false;
-
-				trackEvent( 'wpcli_command_end', commonTrackingParams );
-
-				// Tell socket.io to stop trying to connect
-				currentJob.socket.close();
-				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-				// Reset offset
-				currentOffset = 0;
-
-				if ( ! isSubShell ) {
-					subShellRl.close();
-					process.exit();
-					return;
+			currentJob.socket.on( 'reconnect_attempt', err => {
+				// create a new input stream so that we can still catch things like SIGINT while reconnectin
+				if ( currentJob.stdinStream ) {
+					process.stdin.unpipe( currentJob.stdinStream );
 				}
+				process.stdin.pipe( IOStream.createStream() );
+				currentJob.stdoutStream = IOStream.createStream();
+				bindStreamEvents( { subShellRl, commandRunning, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
 
-				subShellRl.resume();
-				subShellRl.prompt();
+				console.error( 'There was an error connecting to the server. Retrying...' );
 			} );
 		} );
 
@@ -369,6 +383,10 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
+			currentJob.stdoutStream.end();
+			trackEvent( 'wpcli_cancel_command', {
+				command: commandForAnalytics,
+			} );
 			trackEvent( 'wpcli_cancel_command', commonTrackingParams );
 			console.log( 'Command cancelled by user' );
 		} );
