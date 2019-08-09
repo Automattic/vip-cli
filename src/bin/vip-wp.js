@@ -188,6 +188,8 @@ commandWrapper( {
 			method: isSubShell ? 'subshell' : 'normal',
 		};
 
+		trackEvent( 'wpcli_command_execute', commonTrackingParams );
+
 		let cmdGuid;
 
 		if ( isSubShell ) {
