@@ -62,11 +62,11 @@ const bindStreamEvents = ( { subShellRl, commandRunning, commonTrackingParams, i
 		console.log( 'Error: ' + err.message );
 	} );
 
-	stdoutStream.on( 'end', () => {
+	stdoutStream.on( 'end', async () => {
 		subShellRl.clearLine();
 		commandRunning = false;
 
-		trackEvent( 'wpcli_command_end', commonTrackingParams );
+		await trackEvent( 'wpcli_command_end', commonTrackingParams );
 
 		// Tell socket.io to stop trying to connect
 		currentJob.socket.close();
@@ -215,6 +215,8 @@ commandWrapper( {
 			org_id: orgId,
 			method: isSubShell ? 'subshell' : 'normal',
 		};
+
+		trackEvent( 'wpcli_command_execute', commonTrackingParams );
 
 		let cmdGuid;
 
@@ -384,10 +386,9 @@ commandWrapper( {
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
 			currentJob.stdoutStream.end();
-			trackEvent( 'wpcli_cancel_command', {
-				command: commandForAnalytics,
-			} );
-			trackEvent( 'wpcli_cancel_command', commonTrackingParams );
+
+			await trackEvent( 'wpcli_cancel_command', commonTrackingParams );
+
 			console.log( 'Command cancelled by user' );
 		} );
 
