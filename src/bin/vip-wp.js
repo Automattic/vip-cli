@@ -388,7 +388,7 @@ commandWrapper( {
 			currentJob.stdoutStream.end();
 
 			await trackEvent( 'wpcli_cancel_command', commonTrackingParams );
-      
+
 			console.log( 'Command cancelled by user' );
 		} );
 
