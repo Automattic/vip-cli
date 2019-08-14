@@ -24,9 +24,9 @@ export default async function(): Promise<any> {
 			}`,
 		} );
 
-	if ( ! res || ! res.data ) {
+	if ( ! res || ! res.data || ! res.data.me ) {
 		return {};
 	}
 
-	return res.data;
+	return res.data.me;
 }
