@@ -23,7 +23,7 @@ export default class Analytics {
 		const user = await currentUser();
 
 		return await Promise.all( [
-			this.tracks.trackEvent( name, Object.assign( { is_vip: user.me && user.me.isVIP }, client_info, props ) ),
+			this.tracks.trackEvent( name, Object.assign( { is_vip: user.isVIP }, client_info, props ) ),
 		] );
 	}
 }
