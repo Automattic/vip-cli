@@ -62,11 +62,11 @@ const bindStreamEvents = ( { subShellRl, commandRunning, commonTrackingParams, i
 		console.log( 'Error: ' + err.message );
 	} );
 
-	stdoutStream.on( 'end', () => {
+	stdoutStream.on( 'end', async () => {
 		subShellRl.clearLine();
 		commandRunning = false;
 
-		trackEvent( 'wpcli_command_end', commonTrackingParams );
+		await trackEvent( 'wpcli_command_end', commonTrackingParams );
 
 		// Tell socket.io to stop trying to connect
 		currentJob.socket.close();
