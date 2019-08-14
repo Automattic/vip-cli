@@ -340,9 +340,7 @@ commandWrapper( {
 
 			commandRunning = true;
 
-			
-      
-      ( { subShellRl, commandRunning, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
+			bindStreamEvents( { subShellRl, commandRunning, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
 
 			currentJob.socket.on( 'reconnect', async () => {
 				// Close old streams
