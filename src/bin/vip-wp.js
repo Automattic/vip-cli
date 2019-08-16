@@ -213,7 +213,7 @@ commandWrapper( {
 			app_id: appId,
 			env_id: envId,
 			org_id: orgId,
-			method: isSubShell ? 'subshell' : 'normal',
+			method: isSubShell ? 'subshell' : 'shell',
 		};
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams );
