@@ -263,7 +263,7 @@ commandWrapper( {
 
 			subShellRl.pause();
 
-			if ( line.includes( '' ) ) {
+			if ( line.includes( '\'' ) ) {
 				line = line.replace( /'/g, '"' );
 			}
 
