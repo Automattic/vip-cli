@@ -167,7 +167,6 @@ commandWrapper( {
 
 		// Have to re-quote anything that needs it before we pass it on
 		const quotedArgs = requoteArgs( args );
-		console.log( '****QUOTED ARGS', quotedArgs );
 		const cmd = quotedArgs.join( ' ' );
 
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
@@ -237,8 +236,6 @@ commandWrapper( {
 		const subShellRl = readline.createInterface( subShellSettings );
 		subShellRl.on( 'line', async line => {
 			console.log( '***LINE', line );
-			// console.log( '***ARGS', args );
-			// console.log( '***CMD', cmd );
 			if ( commandRunning ) {
 				return;
 			}
