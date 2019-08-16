@@ -263,6 +263,10 @@ commandWrapper( {
 
 			subShellRl.pause();
 
+			if ( line.includes( '' ) ) {
+				line = line.replace( /'/g, '"' );
+			}
+
 			let result;
 			try {
 				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
