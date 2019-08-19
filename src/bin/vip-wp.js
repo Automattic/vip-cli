@@ -50,6 +50,7 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 };
 
 const getTokenForCommand = async ( appId, envId, command ) => {
+	console.log('*****PASSED COMMAND- without wp- string format', command);
 	const api = await API();
 
 	return api
@@ -163,10 +164,12 @@ commandWrapper( {
 } )
 	.option( 'yes', 'Run the command in production without a confirmation prompt' )
 	.argv( process.argv, async ( args, opts ) => {
+		console.log( '***PROCESS.ARGV', process.argv );
 		const isSubShell = 0 === args.length;
 
 		// Have to re-quote anything that needs it before we pass it on
 		const quotedArgs = requoteArgs( args );
+		console.log( '****QUOTED ARGS', quotedArgs );
 		const cmd = quotedArgs.join( ' ' );
 
 		// Store only the first 2 parts of command to avoid recording secrets. Can be tweaked
@@ -235,7 +238,7 @@ commandWrapper( {
 
 		const subShellRl = readline.createInterface( subShellSettings );
 		subShellRl.on( 'line', async line => {
-			console.log( '***LINE', line );
+			console.log( '***LINE- command that is passed- string format', line );
 			if ( commandRunning ) {
 				return;
 			}
@@ -265,11 +268,9 @@ commandWrapper( {
 			subShellRl.pause();
 
 			// Requote single quoted arguments for the subshell
-			const regex = /\s'/g || /'$/g;
+			const regex = /'|'$/g;
 
 			if ( line.includes( ' \'' ) ) {
-				// Ignore intentional single quotes (e.g.- apostrophes)
-				const array = line.split( ' \'' );
 				line = line.replace( regex, '"' );
 			}
 
