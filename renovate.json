@@ -1,8 +1,18 @@
 {
-  "extends": [
-    "config:base",
-    ":automergeLinters",
-    "schedule:weekly",
-    "group:allNonMajor"
-  ]
+	"extends": [
+		"config:base",
+		":automergeLinters",
+		"schedule:weekly",
+		"group:allNonMajor"
+	],
+	"packageRules": [
+	  {
+		  "groupName": "eslint packages",
+		  "packagePatterns": ["^eslint"]
+	  },
+	  {
+		  "groupName": "devDependencies",
+		  "depTypeList": ["devDependencies"]
+	  }
+	]
 }
