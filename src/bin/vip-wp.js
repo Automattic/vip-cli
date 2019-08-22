@@ -21,6 +21,7 @@ import { formatEnvironment, requoteArgs } from 'lib/cli/format';
 import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
+import { rollbar } from 'lib/rollbar';
 
 const appQuery = `id, name,
 	organization {
@@ -173,6 +174,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 	IOStream( socket ).on( 'error', err => {
 		// This returns the error so it can be catched by the socket.on('error')
+		rollbar.log( err );
 		return err;
 	} );
 
@@ -182,6 +184,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 			return;
 		}
 
+		rollbar.log( err );
 		console.log( err );
 	} );
 
@@ -315,6 +318,7 @@ commandWrapper( {
 					} );
 				} else {
 					// Else, other type of error, just dump it
+					rollbar.log( e );
 					console.log( e );
 				}
 

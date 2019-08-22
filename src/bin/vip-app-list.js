@@ -12,6 +12,7 @@ import gql from 'graphql-tag';
 import command from 'lib/cli/command';
 import API from 'lib/api';
 import { trackEvent } from 'lib/tracker';
+import { rollbar } from 'lib/rollbar';
 
 command( { format: true } )
 	.argv( process.argv, async ( arg, options ) => {
@@ -47,6 +48,7 @@ command( { format: true } )
 				error: message,
 			} );
 
+			rollbar.log( err );
 			console.log( 'Failed to fetch apps: %s', message );
 			return;
 		}
