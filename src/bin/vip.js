@@ -85,7 +85,7 @@ const rootCmd = async function() {
 		} catch ( e ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
 
-			rollbar.log( e );
+			rollbar.error( e );
 			await trackEvent( 'login_command_token_submit_error', { error: e.message } );
 
 			return;
@@ -114,7 +114,7 @@ const rootCmd = async function() {
 				error: e.message,
 			} );
 
-			rollbar.log( e );
+			rollbar.error( e );
 			throw e;
 		}
 

@@ -174,7 +174,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 	IOStream( socket ).on( 'error', err => {
 		// This returns the error so it can be catched by the socket.on('error')
-		rollbar.log( err );
+		rollbar.error( err );
 		return err;
 	} );
 
@@ -184,7 +184,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 			return;
 		}
 
-		rollbar.log( err );
+		rollbar.error( err );
 		console.log( err );
 	} );
 
@@ -318,7 +318,7 @@ commandWrapper( {
 					} );
 				} else {
 					// Else, other type of error, just dump it
-					rollbar.log( e );
+					rollbar.error( e );
 					console.log( e );
 				}
 

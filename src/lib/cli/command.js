@@ -158,7 +158,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: message,
 				} );
 
-				rollbar.log( err );
+				rollbar.error( err );
 				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 				return;
 			}
@@ -198,7 +198,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 
-				rollbar.log( err );
+				rollbar.error( err );
 				process.exit( 1 );
 			}
 
@@ -305,7 +305,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 
-				rollbar.log( err );
+				rollbar.error( err );
 				process.exit( 1 );
 			}
 

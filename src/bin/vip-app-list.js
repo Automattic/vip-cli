@@ -48,7 +48,7 @@ command( { format: true } )
 				error: message,
 			} );
 
-			rollbar.log( err );
+			rollbar.error( err );
 			console.log( 'Failed to fetch apps: %s', message );
 			return;
 		}
