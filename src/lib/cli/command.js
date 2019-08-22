@@ -21,22 +21,7 @@ import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
-import env from '../env';
-import config from 'root/config/config.json';
-
-const Rollbar = require( 'rollbar' );
-const rollbar = new Rollbar( {
-	accessToken: '99c8f982d64f47049fde6f6f9d567070',
-	captureUncaught: true,
-	captureUnhandledRejections: true,
-	payload: {
-		platform: 'client',
-		cli_version: env.app.version,
-		os_name: env.os.name,
-		node_version: env.node.version,
-		environment: config.environment,
-	},
-} );
+import { rollbar } from '../rollbar';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -173,6 +158,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: message,
 				} );
 
+				rollbar.error( err );
 				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 				return;
 			}
@@ -212,6 +198,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 
+				rollbar.error( err );
 				process.exit( 1 );
 			}
 
@@ -318,6 +305,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 
+				rollbar.error( err );
 				process.exit( 1 );
 			}
 

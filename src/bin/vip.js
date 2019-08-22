@@ -14,6 +14,7 @@ import { prompt } from 'enquirer';
 import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
+import { rollbar } from 'lib/rollbar';
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
@@ -84,6 +85,7 @@ const rootCmd = async function() {
 		} catch ( e ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
 
+			rollbar.error( e );
 			await trackEvent( 'login_command_token_submit_error', { error: e.message } );
 
 			return;
@@ -112,6 +114,7 @@ const rootCmd = async function() {
 				error: e.message,
 			} );
 
+			rollbar.error( e );
 			throw e;
 		}
 
