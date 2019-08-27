@@ -333,6 +333,10 @@ commandWrapper( {
 
 			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
+			if ( line.includes( "'" ) ) {
+				rollbar.info( 'WP-CLI Command containing single quotes', { custom: { code: 'wp-cli-single-quotes', commandGuid: cliCommand.guid } } );
+			}
+
 			currentJob = await launchCommandAndGetStreams( {
 				guid: cliCommand.guid,
 				inputToken: inputToken,
