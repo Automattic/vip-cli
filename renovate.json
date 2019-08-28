@@ -4,6 +4,9 @@
 		":automergeLinters",
 		"schedule:weekly"
 	],
+	"reviewers": [
+		"team:Automattic/vip-platform-devex"
+	],
 	"packageRules": [
 	  {
 		  "depTypeList": ["devDependencies"],
