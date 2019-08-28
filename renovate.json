@@ -2,17 +2,23 @@
 	"extends": [
 		"config:base",
 		":automergeLinters",
-		"schedule:weekly",
-		"group:allNonMajor"
+		"schedule:weekly"
 	],
 	"packageRules": [
 	  {
-		  "groupName": "eslint packages",
-		  "packagePatterns": ["^eslint"]
+		  "depTypeList": ["devDependencies"],
+		  "minor": {
+        		"groupName": "all non-major devDependencies",
+        		"groupSlug": "all-minor-patch-devDependencies"
+		  }
 	  },
 	  {
-		  "groupName": "devDependencies",
-		  "depTypeList": ["devDependencies"]
+		  "packagePatterns": ["eslint"],
+		  "depTypeList": ["devDependencies"],
+		  "minor": {
+        		"groupName": "all non-major eslint",
+        		"groupSlug": "all-minor-patch-eslint"
+		  }
 	  }
 	]
 }
