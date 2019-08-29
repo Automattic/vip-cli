@@ -391,11 +391,19 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
-			currentJob.stdoutStream.end();
+
+			if ( currentJob && currentJob.stdoutStream ) {
+				currentJob.stdoutStream.end();
+			}
 
 			await trackEvent( 'wpcli_cancel_command', commonTrackingParams );
 
 			console.log( 'Command cancelled by user' );
+
+			//if no command running (.e.g. interactive shell, exit only after doing cleanup)
+			if ( commandRunning === false ) {
+				process.exit();
+			}
 		} );
 
 		if ( ! isSubShell ) {
