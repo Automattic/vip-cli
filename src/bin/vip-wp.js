@@ -44,6 +44,7 @@ const cancelCommandChar = '\x03';
 
 let currentJob = null;
 let currentOffset = 0;
+let commandRunning = false;
 
 const pipeStreamsToProcess = ( { stdin, stdout: outStream } ) => {
 	process.stdin.pipe( stdin );
@@ -55,7 +56,7 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 	outStream.unpipe( process.stdout );
 };
 
-const bindStreamEvents = ( { subShellRl, commandRunning, commonTrackingParams, isSubShell, stdoutStream } ) => {
+const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdoutStream } ) => {
 	stdoutStream.on( 'error', err => {
 		commandRunning = false;
 
@@ -81,7 +82,6 @@ const bindStreamEvents = ( { subShellRl, commandRunning, commonTrackingParams, i
 			process.exit();
 			return;
 		}
-
 		subShellRl.resume();
 		subShellRl.prompt();
 	} );
@@ -248,8 +248,6 @@ commandWrapper( {
 
 		const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
-		let commandRunning = false;
-
 		let countSIGINT = 0;
 
 		const mutableStdout = new Writable( {
@@ -348,7 +346,7 @@ commandWrapper( {
 
 			commandRunning = true;
 
-			bindStreamEvents( { subShellRl, commandRunning, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
+			bindStreamEvents( { subShellRl, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
 
 			currentJob.socket.on( 'reconnect', async () => {
 				// Close old streams
@@ -365,7 +363,7 @@ commandWrapper( {
 				// Rebind new streams
 				pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
-				bindStreamEvents( { subShellRl, commandRunning, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
+				bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
 
 				// Resume readline interface
 				subShellRl.resume();
@@ -378,7 +376,7 @@ commandWrapper( {
 				}
 				process.stdin.pipe( IOStream.createStream() );
 				currentJob.stdoutStream = IOStream.createStream();
-				bindStreamEvents( { subShellRl, commandRunning, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
+				bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
 
 				console.error( 'There was an error connecting to the server. Retrying...' );
 			} );
@@ -393,11 +391,19 @@ commandWrapper( {
 
 			//write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
-			currentJob.stdoutStream.end();
+
+			if ( currentJob && currentJob.stdoutStream ) {
+				currentJob.stdoutStream.end();
+			}
 
 			await trackEvent( 'wpcli_cancel_command', commonTrackingParams );
 
 			console.log( 'Command cancelled by user' );
+
+			//if no command running (.e.g. interactive shell, exit only after doing cleanup)
+			if ( commandRunning === false ) {
+				process.exit();
+			}
 		} );
 
 		if ( ! isSubShell ) {
