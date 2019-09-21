@@ -175,7 +175,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 	socket.on( 'cancel', message => {
 		console.log( `Cancel received from server: ${ message }` );
 		socket.close();
-		process.exit();
+		process.exit( 1 );
 	} );
 
 	IOStream( socket ).on( 'error', err => {
