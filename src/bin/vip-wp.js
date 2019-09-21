@@ -172,6 +172,12 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 		console.log( 'There was an error with the authentication:', err.message );
 	} );
 
+	socket.on( 'cancel', message => {
+		console.log( `Cancel received from server: ${ message }` );
+		socket.close();
+		process.exit( 1 );
+	} );
+
 	IOStream( socket ).on( 'error', err => {
 		// This returns the error so it can be catched by the socket.on('error')
 		rollbar.error( err );
