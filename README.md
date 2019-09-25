@@ -20,6 +20,14 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 
 ## Changelog
 
+### 1.8.0
+- Fixes around cancelling commands via Ctrl-C
+- Gracefully handle remote command cancellation
+- Enhance Rollbar logging for additional use cases 
+
+### 1.7.0
+- Resume long-running WP-CLI commands in case of network interruptions
+
 ### 1.6.2
 - Corrected some install issues with the 1.6.0/1.6.1 releases. 
 
