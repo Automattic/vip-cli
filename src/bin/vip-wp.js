@@ -65,7 +65,6 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 	} );
 
 	stdoutStream.on( 'end', async () => {
-		subShellRl.clearLine();
 		commandRunning = false;
 
 		await trackEvent( 'wpcli_command_end', commonTrackingParams );
@@ -271,7 +270,6 @@ commandWrapper( {
 		const subShellSettings = {
 			input: process.stdin,
 			output: mutableStdout,
-			terminal: true,
 			prompt: '',
 			historySize: 0,
 		};
