@@ -271,6 +271,7 @@ commandWrapper( {
 			input: process.stdin,
 			output: mutableStdout,
 			prompt: '',
+			terminal: true,
 			historySize: 0,
 		};
 
@@ -384,6 +385,16 @@ commandWrapper( {
 
 				console.error( 'There was an error connecting to the server. Retrying...' );
 			} );
+		} );
+
+		// Fix to re-add the \n character that readline strips when terminal == true
+		process.stdin.on( 'data', data => {
+			//only run this in interactive mode for prompts from WP commands
+			if ( isSubShell && commandRunning && 0 === Buffer.compare( data, Buffer.from( '\r' ) ) ) {
+				if ( currentJob && currentJob.stdinStream ) {
+					currentJob.stdinStream.write( '\n' );
+				}
+			}
 		} );
 
 		subShellRl.on( 'SIGINT', async () => {
