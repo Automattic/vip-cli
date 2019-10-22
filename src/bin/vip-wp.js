@@ -388,6 +388,16 @@ commandWrapper( {
 			} );
 		} );
 
+		// Fix to re-add the \n character that readline strips when terminal == true
+		process.stdin.on( 'data', data => {
+			//only run this in interactive mode for prompts from WP commands
+			if ( commandRunning && 0 === Buffer.compare( data, Buffer.from( '\r' ) ) ) {
+				if ( currentJob && currentJob.stdinStream ) {
+					currentJob.stdinStream.write( '\n' );
+				}
+			}
+		} );
+
 		subShellRl.on( 'SIGINT', async () => {
 			//if we have a 2nd SIGINT, exit immediately
 			if ( countSIGINT >= 1 ) {
