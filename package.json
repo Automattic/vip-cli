@@ -78,7 +78,7 @@
     "apollo-link-error": "1.1.12",
     "apollo-link-http": "1.5.16",
     "args": "5.0.1",
-    "chalk": "2.4.2",
+    "chalk": "3.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.0",
     "debug": "4.1.1",
