@@ -44,7 +44,7 @@ export async function trackEvent( ...args ): Promise<Response> {
 	const id = await Token.uuid();
 	try {
 		const client = await getInstance();
-		return await client.trackEvent( ...args );
+		return client.trackEvent( ...args );
 	} catch ( e ) {
 		debug( 'trackEvent() failed', e );
 	}
