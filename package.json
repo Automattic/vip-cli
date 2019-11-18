@@ -90,7 +90,7 @@
     "json2csv": "3.11.5",
     "jwt-decode": "2.2.0",
     "opn": "5.5.0",
-    "rollbar": "2.14.3",
+    "rollbar": "2.14.4",
     "semver": "6.3.0",
     "single-line-log": "1.1.2",
     "socket.io-client": "2.3.0",
