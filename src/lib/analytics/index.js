@@ -19,7 +19,7 @@ export default class Analytics {
 	}
 
 	async trackEvent( name, props = {} ): Promise {
-		return await Promise.all( [
+		return Promise.all( [
 			this.tracks.trackEvent( name, Object.assign( {}, client_info, props ) ),
 		] );
 	}
