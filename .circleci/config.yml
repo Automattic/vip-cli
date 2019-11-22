@@ -3,16 +3,56 @@ version: 2.1
 workflows:
   build:
     jobs:
+      - lint
+      - flow
       - test:
           version: 8-stretch
+          requires:
+            - lint
+            - flow
       - test:
           version: 10-stretch
+          requires:
+            - lint
+            - flow
       - test:
           version: lts-stretch
+          requires:
+            - lint
+            - flow
       - test:
           version: current-stretch
+          requires:
+            - lint
+            - flow
 
 jobs:
+  lint:
+    docker:
+      - image: circleci/node:current-stretch
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: npm ci
+      - run:
+          name: Run lint
+          command: npm run lint
+          
+  flow:
+    docker:
+      - image: circleci/node:current-stretch
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: npm ci
+      - run:
+          name: Run flow
+          command: npm run flow
+
   test:
     parameters:
       version:
@@ -26,4 +66,4 @@ jobs:
     steps:
       - checkout
       - run: npm ci
-      - run: npm run test
+      - run: npm run jest
