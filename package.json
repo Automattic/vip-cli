@@ -59,7 +59,7 @@
     "eslines": "1.1.0",
     "eslint": "5.16.0",
     "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#9387e48",
-    "eslint-plugin-flowtype": "4.4.1",
+    "eslint-plugin-flowtype": "4.5.2",
     "eslint-plugin-import": "2.18.2",
     "eslint-plugin-jest": "23.0.4",
     "eslint-plugin-json": "2.0.1",
