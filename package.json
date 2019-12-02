@@ -55,7 +55,7 @@
     "babel-eslint": "10.0.3",
     "babel-jest": "24.9.0",
     "babel-plugin-module-resolver": "3.2.0",
-    "core-js": "3.4.2",
+    "core-js": "3.4.5",
     "eslines": "1.1.0",
     "eslint": "5.16.0",
     "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#9387e48",
