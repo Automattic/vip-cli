@@ -58,7 +58,7 @@
     "core-js": "3.4.5",
     "eslines": "1.1.0",
     "eslint": "5.16.0",
-    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#9387e48",
+    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#00fb352",
     "eslint-plugin-flowtype": "4.5.2",
     "eslint-plugin-import": "2.18.2",
     "eslint-plugin-jest": "23.1.1",
