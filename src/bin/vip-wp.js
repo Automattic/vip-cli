@@ -135,7 +135,7 @@ const cancelCommand = async ( guid ) => {
 		} );
 };
 
-const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) => {
+const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0, commandAction } ) => {
 	const token = await Token.get();
 	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 		transportOptions: {
@@ -164,6 +164,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 		columns: process.stdout.columns || NON_TTY_COLUMNS,
 		rows: process.stdout.rows || NON_TTY_ROWS,
 		offset,
+		commandAction,
 	};
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
@@ -204,8 +205,10 @@ commandWrapper( {
 	appQuery,
 } )
 	.option( 'yes', 'Run the command in production without a confirmation prompt' )
+	.option( 'log', 'Get the command from a completed log' )
+	.option( 'token', 'Input token for command' )
 	.argv( process.argv, async ( args, opts ) => {
-		const isSubShell = 0 === args.length;
+		const isSubShell = 0 === args.length && ! opts.log;
 
 		// Have to re-quote anything that needs it before we pass it on
 		const quotedArgs = requoteArgs( args );
@@ -217,6 +220,8 @@ commandWrapper( {
 		const { id: appId, name: appName, organization: { id: orgId } } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
+		let commandAction = null;
+
 		const commonTrackingParams = {
 			command: commandForAnalytics,
 			app_id: appId,
@@ -226,8 +231,6 @@ commandWrapper( {
 		};
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams );
-
-		let cmdGuid;
 
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
@@ -303,7 +306,7 @@ commandWrapper( {
 			const empty = 0 === line.length;
 			const userCmdCancelled = line === cancelCommandChar;
 
-			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
+			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled && ! opts.log ) {
 				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 				subShellRl.prompt();
 				return;
@@ -311,31 +314,41 @@ commandWrapper( {
 
 			subShellRl.pause();
 
-			let result;
-			try {
-				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
-			} catch ( e ) {
-				// If this was a GraphQL error, print that to the message to the line
-				if ( e.graphQLErrors ) {
-					e.graphQLErrors.forEach( error => {
-						console.log( chalk.red( 'Error:' ), error.message );
-					} );
-				} else {
-					// Else, other type of error, just dump it
-					rollbar.error( e );
-					console.log( e );
+			let cliCommand, inputToken;
+			if ( ! opts.log ) {
+				let result;
+				try {
+					result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
+				} catch ( e ) {
+					// If this was a GraphQL error, print that to the message to the line
+					if ( e.graphQLErrors ) {
+						e.graphQLErrors.forEach( error => {
+							console.log( chalk.red( 'Error:' ), error.message );
+						} );
+					} else {
+						// Else, other type of error, just dump it
+						rollbar.error( e );
+						console.log( e );
+					}
+
+					if ( ! isSubShell ) {
+						subShellRl.close();
+						process.exit( 1 );
+					}
+
+					subShellRl.prompt();
+					return;
 				}
 
-				if ( ! isSubShell ) {
-					subShellRl.close();
-					process.exit( 1 );
-				}
-
-				subShellRl.prompt();
-				return;
+				// const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
+				cliCommand = result.data.triggerWPCLICommandOnAppEnvironment.command;
+				inputToken = result.data.triggerWPCLICommandOnAppEnvironment.inputToken;
+			} else {
+				commandAction = 'logs';
+				cliCommand = {
+					guid: opts.log,
+				};
 			}
-
-			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
 			if ( line.includes( "'" ) ) {
 				rollbar.info( 'WP-CLI Command containing single quotes', { custom: { code: 'wp-cli-single-quotes', commandGuid: cliCommand.guid } } );
@@ -344,9 +357,8 @@ commandWrapper( {
 			currentJob = await launchCommandAndGetStreams( {
 				guid: cliCommand.guid,
 				inputToken: inputToken,
+				commandAction,
 			} );
-
-			cmdGuid = cliCommand.guid;
 
 			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
