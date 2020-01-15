@@ -113,6 +113,59 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 		} );
 };
 
+export const COMMANDS_QUERY = gql`
+	query App( $id: Int, $status: String, $first: Int  ) {
+		app( id: $id ) {
+			environments {
+				id
+				name
+				commands( status: $status, first: $first ) {
+					total
+					nextCursor
+					nodes {
+						id
+						guid
+						command
+						startedAt
+						endedAt
+						status
+						user {
+							id
+							githubUsername
+							displayName
+							isVIP
+						}
+					}
+				}
+			}
+		}
+	}
+`;
+
+const getEnvCompletedCommands = async ( appId ) => {
+	const api = await API();
+	let res;
+	try {
+		res = await api
+			.query( {
+				// $FlowFixMe: gql template is not supported by flow
+				query: COMMANDS_QUERY,
+				variables: {
+					id: appId,
+					status: 'complete',
+					first: 5,
+				},
+			} );
+	} catch ( err ) {
+		const message = err.toString();
+
+		rollbar.error( err );
+		console.log( `Failed to get commands for (${ appId }) details: ${ message }` );
+		return;
+	}
+	return res;
+};
+
 const cancelCommand = async ( guid ) => {
 	const api = await API();
 	return api
@@ -229,6 +282,15 @@ commandWrapper( {
 			org_id: orgId,
 			method: isSubShell ? 'subshell' : 'shell',
 		};
+
+		if ( opts.log && opts.log === true ) { //if no guid specified, provide list of commands
+			const res = await getEnvCompletedCommands( appId );
+			const env = res.data.app.environments.find( e => e.id = envId );
+			const commands = env.commands.nodes;
+			commands.forEach( c => {
+				console.log( new Date( c.startedAt ), c.command, c.guid );
+			} );
+		}
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams );
 
