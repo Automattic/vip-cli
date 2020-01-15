@@ -170,6 +170,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 	socket.on( 'unauthorized', err => {
 		console.log( 'There was an error with the authentication:', err.message );
+		socket.close();
+		process.exit( 1 );
 	} );
 
 	socket.on( 'cancel', message => {
@@ -192,6 +194,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 		rollbar.error( err );
 		console.log( err );
+
+		process.exit( 1 );
 	} );
 
 	return { stdinStream, stdoutStream, socket };
