@@ -290,6 +290,7 @@ commandWrapper( {
 			commands.forEach( c => {
 				console.log( new Date( c.startedAt ), c.command, c.guid );
 			} );
+			process.exit();
 		}
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams );
