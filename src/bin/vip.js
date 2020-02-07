@@ -126,7 +126,11 @@ const rootCmd = async function() {
 		// Exec the command we originally  wanted
 		const argv = process.argv.slice( 2 );
 		if ( argv.length ) {
-			return args.runCommand( { usage: process.argv.slice( 2 ) } );
+			if ( ! args.isDefined( argv, 'commands' ) ) {
+				return args.showHelp();
+			}
+
+			return args.runCommand( { usage: argv } );
 		}
 
 		const { spawn } = require( 'child_process' );
