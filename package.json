@@ -67,7 +67,7 @@
     "eslint-plugin-no-async-foreach": "0.1.1",
     "eslint-plugin-react": "7.18.3",
     "eslint-plugin-wpcalypso": "4.1.0",
-    "flow-bin": "0.117.0",
+    "flow-bin": "0.118.0",
     "jest": "25.1.0",
     "nock": "10.0.6",
     "publish-please": "5.5.1"
