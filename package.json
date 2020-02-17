@@ -95,7 +95,7 @@
     "single-line-log": "1.1.2",
     "socket.io-client": "2.3.0",
     "socket.io-stream": "0.9.1",
-    "update-notifier": "4.0.0",
+    "update-notifier": "4.1.0",
     "uuid": "3.4.0"
   },
   "optionalDependencies": {
