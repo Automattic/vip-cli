@@ -69,7 +69,7 @@
     "eslint-plugin-wpcalypso": "4.1.0",
     "flow-bin": "0.118.0",
     "jest": "25.1.0",
-    "nock": "10.0.6",
+    "nock": "12.0.0",
     "publish-please": "5.5.1"
   },
   "dependencies": {
