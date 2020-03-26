@@ -44,7 +44,7 @@ export default class Tracks implements AnalyticsClient {
 		};
 	}
 
-	trackEvent( name: string, eventProps = {} ): Promise<Response> {
+	trackEvent( name: string, eventProps = {} ): Promise<any> {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
@@ -84,7 +84,7 @@ export default class Tracks implements AnalyticsClient {
 		return this.send( params );
 	}
 
-	send( extraParams: {} ): Promise<Response> {
+	send( extraParams: {} ): Promise<any> {
 		if ( process.env.DO_NOT_TRACK ) {
 			debug( 'send() => skipping per DO_NOT_TRACK variable' );
 
