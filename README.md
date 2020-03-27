@@ -18,6 +18,10 @@ vip
 
 If you need more information, check out our [VIP CLI documentation](https://vip.wordpress.com/documentation/vip-go/vip-cli/).
 
+## Analytics
+
+By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
+
 ## Changelog
 
 ### 1.8.0
