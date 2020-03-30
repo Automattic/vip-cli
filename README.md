@@ -24,6 +24,12 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 1.9.0
+- Added support for [opting out of usage tracking](https://github.com/Automattic/vip/tree/0f3aff15c934c35cc22ba59a94311231fb9a229e#analytics) via `DO_NOT_TRACK` environment variable
+- Fix interactive commands not working correctly #478
+- Show usage information when an unsupported command is entered #527
+- Dependency & dev dependency upgrades
+
 ### 1.8.0
 - Fixes around cancelling commands via Ctrl-C
 - Gracefully handle remote command cancellation
