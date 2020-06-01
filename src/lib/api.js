@@ -9,6 +9,8 @@ import { HttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { onError } from 'apollo-link-error';
 import chalk from 'chalk';
+import ProxyAgent from 'socks-proxy-agent';
+
 
 /**
  * Internal dependencies
@@ -50,6 +52,10 @@ export default async function API(): Promise<ApolloClient> {
 	} );
 
 	const httpLink = new HttpLink( { uri: API_URL, headers: headers } );
+
+	// const httpLink = new HttpLink( { uri: API_URL, headers: headers, fetchOptions: {
+	// 	agent: process.env.hasOwnProperty( 'VIP_PROXY' ) ? ProxyAgent( process.env.VIP_PROXY ) : null,
+	// } } );
 
 	return new ApolloClient( {
 		link: errorLink.concat( httpLink ),
