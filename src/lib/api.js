@@ -11,7 +11,6 @@ import { onError } from 'apollo-link-error';
 import chalk from 'chalk';
 import ProxyAgent from 'socks-proxy-agent';
 
-
 /**
  * Internal dependencies
  */
