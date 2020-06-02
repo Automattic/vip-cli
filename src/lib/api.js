@@ -51,7 +51,7 @@ export default async function API(): Promise<ApolloClient> {
 	} );
 
 	const httpLink = new HttpLink( { uri: API_URL, headers: headers, fetchOptions: {
-		agent: process.env.hasOwnProperty( 'VIP_PROXY' ) ? ProxyAgent( process.env.VIP_PROXY ) : null,
+		agent: process.env.hasOwnProperty( 'VIP_PROXY' ) ? new ProxyAgent( process.env.VIP_PROXY ) : null,
 	} } );
 
 	return new ApolloClient( {
