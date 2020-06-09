@@ -27,12 +27,12 @@ command( {
 			console: false,
 		} );
 
-		let dropTableCount = 0;
+		let createTableCount = 0;
 		let siteUrlMatches = [];
 
 		readInterface.on( 'line', function( line ) {
 			if ( line.match( 'CREATE TABLE (`)?([a-z0-9_]*)\\1\\s' ) ) {
-				dropTableCount += 1;
+				createTableCount += 1;
 			}
 
 			const homeMatch = line.match( '\'(siteurl|home)\',\\s?\'(.*?)\'' );
@@ -42,7 +42,7 @@ command( {
 		} );
 
 		readInterface.on( 'close', function() {
-			console.log( `CREATE Table Count: ${ dropTableCount }` );
+			console.log( `CREATE Table Count: ${ createTableCount }` );
 			console.log( 'siteurl|home matches: ', siteUrlMatches );
 		} );
 	} );
