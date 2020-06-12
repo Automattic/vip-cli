@@ -24,6 +24,9 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 1.10.0
+- Added support for specifying a SOCKS proxy through the environment variable VIP_PROXY
+
 ### 1.9.0
 - Added support for [opting out of usage tracking](https://github.com/Automattic/vip/tree/e54d9ee0ce2dd4725ca8718b3aba06db24306ad7#analytics) via `DO_NOT_TRACK` environment variable #547
 - Fix interactive commands not working correctly #478
