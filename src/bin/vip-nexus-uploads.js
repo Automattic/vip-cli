@@ -19,6 +19,17 @@ import { API_HOST } from 'lib/api';
 
 const SOCKETIO_NAMESPACE = '/nexus-uploads';
 
+/**
+ * The MAX_UPLOAD_CHUNK_SIZE is provided to the `highWaterMark` on the file read stream
+ * to "tweak" the chunk size for runtime and recoverability efficiency.
+ *
+ * In local testing, I'm seeing ~ 40% quicker uploads with 512 KiB
+ * (...vs the 64 that was the default) & diminishing returns past that.
+ *
+ * Real-world network conditions will greatly differ, so we should revisit this constant.
+ */
+const MAX_UPLOAD_CHUNK_SIZE = 512 * 1024; // 512 KiB
+
 // TODO: Move to a util
 const getSocket = async ( namespace = '/' ) => {
 	const token = await Token.get();
@@ -85,19 +96,13 @@ const getFileMeta = fileName => new Promise( async ( resolve, reject ) => {
 	}
 
 	const chunkMeta = [];
-	let countedSizeInBytes = 0;
 	let offset = 0;
 	let fileMetaReadStream;
 
 	const wholeFileHasher = createHash( 'sha256' );
 
 	try {
-		/**
-		 * If we want to tweak the chunk size, we do something like this:
-		 * `fs.createReadStream( fileName, { highWaterMark: chunkSizeInBytes } );`
-		 * I'm seeing a default of 64 KiB on my machine which seems reasonable.
-		 */
-		fileMetaReadStream = fs.createReadStream( fileName );
+		fileMetaReadStream = fs.createReadStream( fileName, { highWaterMark: MAX_UPLOAD_CHUNK_SIZE } );
 	} catch ( e ) {
 		return reject( e );
 	}
@@ -112,19 +117,19 @@ const getFileMeta = fileName => new Promise( async ( resolve, reject ) => {
 			chunkHash: createHash( 'sha256' ).update( chunk ).digest( 'hex' ),
 			index: chunkIndex,
 			length: chunkLength,
-			offset,
+			start: offset,
+			end: offset + chunkLength - 1,
 		} );
 
 		offset += chunk.length;
-		countedSizeInBytes += chunk.length;
 	} );
 
 	fileMetaReadStream.on( 'end', () => {
-		if ( countedSizeInBytes !== sizeInBytes ) {
+		if ( offset !== sizeInBytes ) {
 			return reject( 'Calculated size does not match stat size' );
 		}
 
-		if ( countedSizeInBytes === 0 ) {
+		if ( offset === 0 ) {
 			return reject( 'Failed to read any bytes' );
 		}
 
@@ -148,9 +153,10 @@ commandWrapper( {
 			process.exit( 1 );
 		}
 
-		// TODO: separate subcommand to "ping" the service: socket.emit( 'hai2u' ); (see Parker)
+		// TODO: a separate "Hello World" subcommand to emit a "ping" (ctrl + f for 'hai2u' in the Parker socketHandler)
 
 		try {
+			// Read through the input file one time to identify checksum chunks (for easier retry)
 			const { baseName, sizeInBytes, chunkMeta, hash } = await getFileMeta( fileName );
 			const numChunks = chunkMeta.length;
 			console.log( { sizeInBytes, numChunks, hash } );
@@ -159,12 +165,54 @@ commandWrapper( {
 			addListeners( socket );
 
 			// TODO Track completion of pieces
+			const chunkUploaders = chunkMeta.map( chunkInfo => () => new Promise( ( resolve, reject ) => {
+				const { end, start } = chunkInfo;
 
-			chunkMeta.forEach( chunkInfo => {
-				const start = chunkInfo.offset;
-				const end = start + chunkInfo.length;
-				const chunkStream = fs.createReadStream( fileName, { start, end } ).pipe( IOStream.createStream() );
-				IOStream( socket ).emit( 'sendFileChunk', chunkStream, { baseName, hash, numChunks, sizeInBytes, chunkInfo } );
+				try {
+					// TODO combine into a single pipeline with the hashers
+					const chunkStream = fs.createReadStream( fileName, { start, end } ).pipe( IOStream.createStream() );
+					IOStream( socket ).emit(
+						'sendFileChunk',
+						chunkStream,
+						{ baseName, hash, numChunks, sizeInBytes, chunkInfo },
+						resolve
+					);
+				} catch ( e ) {
+					return reject( e );
+				}
+			} ) );
+
+			console.log( `Uploading ${ sizeInBytes } bytes in ${ numChunks } chunks.` );
+
+			for ( let i = 0; i < numChunks; i++ ) {
+				try {
+					// Upload the chunk
+					await chunkUploaders[ i ]();
+
+					// Show some progress
+					const count = i + 1;
+					const percent = Math.floor( 100 * count / numChunks );
+					process.stdout.clearLine();
+					process.stdout.cursorTo( 0 );
+					process.stdout.write( `${ percent }% -- ${ count } of ${ numChunks } chunks` );
+				} catch ( chunkUploadError ) {
+					// TODO: exponential backoff & retry...throwing for now
+					console.error( `Unable to upload chunk ${ i }` );
+					throw chunkUploadError;
+				}
+			}
+
+			console.log( '\nDone uploading. Sending checksum to the server to verify' );
+
+			// TODO: obviously, baseName isn't enough...some compound key + uuid, maybe?
+			socket.emit( 'verifyFile', { baseName }, serverCalculatedHash => {
+				console.log( 'got verifyFile ack', { serverCalculatedHash } );
+				if ( serverCalculatedHash !== hash ) {
+					console.error( 'Server-calculated checksum does not match' );
+					process.exit( 1 );
+				}
+				console.log( 'File was successfully uploaded and verified' );
+				process.exit();
 			} );
 		} catch ( e ) {
 			console.error( e );
