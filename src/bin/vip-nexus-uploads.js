@@ -157,10 +157,10 @@ commandWrapper( {
 
 		try {
 			// Read through the input file one time to identify checksum chunks (for easier retry)
-			const { baseName, sizeInBytes, chunkMeta, hash } = await getFileMeta( fileName );
+			const { baseName, sizeInBytes, chunkMeta, hash: clientCalculatedHash } = await getFileMeta( fileName );
 
 			const numChunks = chunkMeta.length;
-			console.log( { sizeInBytes, numChunks, hash } );
+			console.log( { sizeInBytes, numChunks, clientCalculatedHash } );
 
 			const socket = await getSocket( SOCKETIO_NAMESPACE );
 			addListeners( socket );
@@ -168,7 +168,7 @@ commandWrapper( {
 			// Tell the server to prepare for the upload and retrieve session data
 			try {
 				await new Promise( ( resolve, reject ) => {
-					socket.emit( 'prepareSendFile', { baseName, sizeInBytes, hash }, response => {
+					socket.emit( 'prepareSendFile', { baseName, sizeInBytes, clientCalculatedHash }, response => {
 						if ( response ) {
 							return reject( response );
 						}
@@ -192,7 +192,7 @@ commandWrapper( {
 					IOStream( socket ).emit(
 						'sendFileChunk',
 						chunkStream,
-						{ baseName, hash, numChunks, sizeInBytes, chunkInfo },
+						{ baseName, chunkInfo },
 						( { error, message } ) => {
 							if ( error ) {
 								return reject( error );
@@ -228,9 +228,12 @@ commandWrapper( {
 			console.log( '\nDone uploading. Sending checksum to the server to verify' );
 
 			// TODO: obviously, baseName isn't enough...some compound key + uuid, maybe?
-			socket.emit( 'verifyFile', { baseName }, serverCalculatedHash => {
-				console.log( 'got verifyFile ack', { serverCalculatedHash } );
-				if ( serverCalculatedHash !== hash ) {
+			socket.emit( 'verifyFile', { baseName, sizeInBytes }, ( { error, hash: serverCalculatedHash } ) => {
+				if ( error ) {
+					console.error( error );
+					process.exit( 1 );
+				}
+				if ( serverCalculatedHash !== clientCalculatedHash ) {
 					console.error( 'Server-calculated checksum does not match' );
 					process.exit( 1 );
 				}
