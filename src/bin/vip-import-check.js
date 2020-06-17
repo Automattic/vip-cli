@@ -13,8 +13,9 @@ const fs = require( 'fs' );
 import command from 'lib/cli/command';
 
 command( {
-	requiredArgs: 1, format: true,
+	requiredArgs: 1,
 } )
+	.example( 'vip import check <file>', 'Run the import checks against file' )
 	.argv( process.argv, async ( arg, opts ) => {
 		if ( ! arg && ! arg[ 0 ] ) {
 			console.error( 'You must pass in a filename' );

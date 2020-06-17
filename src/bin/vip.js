@@ -33,6 +33,7 @@ const rootCmd = async function() {
 				console.log( 'You are successfully logged out.' );
 			} )
 			.command( 'app', 'List and modify your VIP applications' )
+			.command( 'import check <file>', 'Check the validity of a DB import file' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' )
 			.argv( process.argv );
