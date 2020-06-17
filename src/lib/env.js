@@ -24,6 +24,6 @@ const env = {
 	},
 };
 
-env.userAgent = `vip-cli/${ pkg.version } (node/${ env.node.version }; ${ env.os.name }/${ env.os.version }; +https://vip.wordpress.com)`;
+env.userAgent = `vip-cli/${ pkg.version } (node/${ env.node.version }; ${ env.os.name }/${ env.os.version }; +https://wpvip.com)`;
 
 export default env;
