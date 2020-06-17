@@ -26,7 +26,7 @@ const SOCKETIO_NAMESPACE = '/nexus-uploads';
  * In local testing, I'm seeing ~ 40% quicker uploads with 512 KiB
  * (...vs the 64 that was the default) & diminishing returns past that.
  *
- * Real-world network conditions will greatly differ, so we should revisit this constant.
+ * Real-world network conditions will probably greatly differ, so we should revisit this constant.
  */
 const MAX_UPLOAD_CHUNK_SIZE = 512 * 1024; // 512 KiB
 
@@ -158,24 +158,47 @@ commandWrapper( {
 		try {
 			// Read through the input file one time to identify checksum chunks (for easier retry)
 			const { baseName, sizeInBytes, chunkMeta, hash } = await getFileMeta( fileName );
+
 			const numChunks = chunkMeta.length;
 			console.log( { sizeInBytes, numChunks, hash } );
 
 			const socket = await getSocket( SOCKETIO_NAMESPACE );
 			addListeners( socket );
 
-			// TODO Track completion of pieces
+			// Tell the server to prepare for the upload and retrieve session data
+			try {
+				await new Promise( ( resolve, reject ) => {
+					socket.emit( 'prepareSendFile', { baseName, sizeInBytes, hash }, response => {
+						if ( response ) {
+							return reject( response );
+						}
+						resolve();
+					} );
+				} );
+			} catch ( prepareSendFileError ) {
+				console.error( { prepareSendFileError } );
+				process.exit( 1 );
+			}
+			console.log( 'Server is ready to receive the file' );
+
 			const chunkUploaders = chunkMeta.map( chunkInfo => () => new Promise( ( resolve, reject ) => {
 				const { end, start } = chunkInfo;
 
 				try {
 					// TODO combine into a single pipeline with the hashers
-					const chunkStream = fs.createReadStream( fileName, { start, end } ).pipe( IOStream.createStream() );
+					const chunkStream = fs.createReadStream( fileName, { start, end } ).pipe( IOStream.createStream( {
+						highWaterMark: MAX_UPLOAD_CHUNK_SIZE,
+					} ) );
 					IOStream( socket ).emit(
 						'sendFileChunk',
 						chunkStream,
 						{ baseName, hash, numChunks, sizeInBytes, chunkInfo },
-						resolve
+						( { error, message } ) => {
+							if ( error ) {
+								return reject( error );
+							}
+							resolve( message );
+						}
 					);
 				} catch ( e ) {
 					return reject( e );
