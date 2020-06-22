@@ -1,7 +1,11 @@
-/** External dependencies **/
+/**
+ * External dependencies
+ */
 import ProxyAgent from 'socks-proxy-agent';
 
-/** Internal dependencies **/
+/**
+ * Internal dependencies
+ */
 
 export default function createSocksProxyAgent() {
 	if ( ! process.env.hasOwnProperty( 'VIP_PROXY' ) ) {
