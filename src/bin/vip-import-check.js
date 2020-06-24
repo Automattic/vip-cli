@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // @flow
 
+import { prompt } from 'enquirer';
+
 /**
  * External dependencies
  */
@@ -34,12 +36,12 @@ command( {
 
 		let siteUrlMatches = [];
 		const checks = {
-			useDB: { type: 'error', instances: [], message: 'Invalid USE statement' },
-			createDB: { type: 'error', instances: [], message: 'Invalid CREATE DATABASE statement' },
-			dropDB: { type: 'error', instances: [], message: 'Invalid DROP  DATABASE statement' },
-			alterUser: { type: 'error', instances: [], message: 'Invalid ALTER USER statement' },
-			dropTable: { type: 'required', instances: [], message: 'DROP TABLE' },
-			createTable: { type: 'required', instances: [], message: 'CREATE TABLE' },
+			useDB: { type: 'error', instances: [], message: 'USE statement', excerpt: '\'USE\' statement should not be present (case-insensitive, at beginning of line)', recommendation: 'Remove these lines' },
+			createDB: { type: 'error', instances: [], message: 'CREATE DATABASE statement', excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)', recommendation: 'Remove these lines' },
+			dropDB: { type: 'error', instances: [], message: 'DROP DATABASE statement', excerpt: '\'DROP DATABASE\' should not be present (case-insensitive)', recommendation: 'Remove these lines' },
+			alterUser: { type: 'error', instances: [], message: 'ALTER USER statement', excerpt: '\'ALTER USER\' should not be present (case-insensitive)', recommendation: 'Remove these lines' },
+			dropTable: { type: 'required', instances: [], message: 'DROP TABLE', excerpt: '\'DROP TABLE IF EXISTS\' should be present (case-insensitive)', recommendation: 'Check import settings to include DROP TABLE statements' },
+			createTable: { type: 'required', instances: [], message: 'CREATE TABLE', excerpt: '\'CREATE TABLE\' should be present (case-insensitive)', recommendation: 'Check import settings to include CREATE TABLE statements' },
 		};
 		let lineNum = 1;
 
@@ -80,14 +82,19 @@ command( {
 			lineNum += 1;
 		} );
 
-		readInterface.on( 'close', function() {
+		readInterface.on( 'close', async function() {
 			log( `Finished processing ${ lineNum } lines.` );
+			console.log( '\n' );
 			Object.keys( checks ).forEach( key => {
 				const err = checks[ key ];
+				console.log( '🔍', err.excerpt );
 				if ( err.type === 'error' ) {
 					if ( err.instances.length > 0 ) {
 						problemsFound += 1;
 						console.error( chalk.red( 'Error:' ), `${ err.message } on line(s) ${ err.instances.join( ',' ) }.` );
+						console.error( chalk.yellow( 'Recommendation:' ), `${ err.recommendation }` );
+					} else {
+						console.log( `✅ ${ err.message } was found ${ err.instances.length } times.` );
 					}
 				} else if ( err.type === 'required' ) {
 					if ( err.instances.length > 0 ) {
@@ -96,9 +103,12 @@ command( {
 							checkTables( err.instances );
 						}
 					} else {
+						problemsFound += 1;
 						console.error( chalk.red( 'Error:' ), `${ err.message } was not found.` );
+						console.error( chalk.yellow( 'Recommendation:' ), `${ err.recommendation }` );
 					}
 				}
+				console.log( '' );
 			} );
 			if ( siteUrlMatches.length > 0 ) {
 				console.log( '' );
@@ -107,27 +117,38 @@ command( {
 					console.log( item );
 				} );
 			}
+
+			if ( problemsFound >= 0 ) {
+				const c = await prompt( {
+					type: 'confirm',
+					name: 'continue',
+					message: 'Do you want to auto-fix the above issues? (saves to a new file)',
+				} );
+				if ( c ) {
+					console.log( 'Written to', arg [ 0 ] );
+				}
+			}
 		} );
 	} );
 
 function checkTables( tables ) {
 	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
 	tables.forEach( tableName => {
-		if ( tableName.match( /^wp_/ ) ) {
+		if ( tableName.match( /^wp_(\d+_)/ ) ) {
+			wpMultisiteTables.push( tableName );
+		} else if ( tableName.match( /^wp_/ ) ) {
 			wpTables.push( tableName );
 		} else if ( ! tableName.match( /^wp_/ ) ) {
 			notWPTables.push( tableName );
-		} else if ( tableName.match( /^wp_(\d+_)/ ) ) {
-			wpMultisiteTables.push( tableName );
 		}
 	} );
 	if ( wpTables.length > 0 ) {
-		console.log( `✅ wp_ prefix tables ${ wpTables.length } ` );
+		console.log( `✅ wp_ prefix tables found: ${ wpTables.length } ` );
 	}
 	if ( notWPTables.length > 0 ) {
-		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix ${ notWPTables.join( ',' ) } ` );
+		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
 	}
 	if ( wpMultisiteTables.length > 0 ) {
-		console.log( `✅ wp_n_ prefix tables ${ wpTables.length } ` );
+		console.log( `✅ wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
 	}
 }
