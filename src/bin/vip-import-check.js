@@ -10,6 +10,7 @@ const readline = require( 'readline' );
 const fs = require( 'fs' );
 import chalk from 'chalk';
 const log = require( 'single-line-log' ).stdout;
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -34,50 +35,109 @@ command( {
 			console: false,
 		} );
 
-		let siteUrlMatches = [];
 		const checks = {
-			useDB: { type: 'error', instances: [], message: 'USE statement', excerpt: '\'USE\' statement should not be present (case-insensitive, at beginning of line)', recommendation: 'Remove these lines' },
-			createDB: { type: 'error', instances: [], message: 'CREATE DATABASE statement', excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)', recommendation: 'Remove these lines' },
-			dropDB: { type: 'error', instances: [], message: 'DROP DATABASE statement', excerpt: '\'DROP DATABASE\' should not be present (case-insensitive)', recommendation: 'Remove these lines' },
-			alterUser: { type: 'error', instances: [], message: 'ALTER USER statement', excerpt: '\'ALTER USER\' should not be present (case-insensitive)', recommendation: 'Remove these lines' },
-			dropTable: { type: 'required', instances: [], message: 'DROP TABLE', excerpt: '\'DROP TABLE IF EXISTS\' should be present (case-insensitive)', recommendation: 'Check import settings to include DROP TABLE statements' },
-			createTable: { type: 'required', instances: [], message: 'CREATE TABLE', excerpt: '\'CREATE TABLE\' should be present (case-insensitive)', recommendation: 'Check import settings to include CREATE TABLE statements' },
+			useDB: {
+				type: 'error',
+				matcher: /^use\s/i,
+				instances: [],
+				message: 'USE statement',
+				excerpt: '\'USE\' statement should not be present (case-insensitive, at beginning of line)',
+				recommendation: 'Remove these lines',
+			},
+			createDB: {
+				type: 'error',
+				matcher: /^CREATE DATABASE/i,
+				instances: [],
+				message: 'CREATE DATABASE statement',
+				excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
+				recommendation: 'Remove these lines',
+			},
+			dropDB: {
+				type: 'error',
+				matcher: /^DROP DATABASE/i,
+				instances: [],
+				message: 'DROP DATABASE statement',
+				excerpt: '\'DROP DATABASE\' should not be present (case-insensitive)',
+				recommendation: 'Remove these lines',
+			},
+			alterUser: {
+				type: 'error',
+				matcher: /^(ALTER USER|SET PASSWORD)/i,
+				instances: [],
+				message: 'ALTER USER statement',
+				excerpt: '\'ALTER USER\' should not be present (case-insensitive)',
+				recommendation: 'Remove these lines',
+			},
+			dropTable: {
+				type: 'required',
+				matcher: /^DROP TABLE IF EXISTS (`)?([a-z0-9_]*)/i,
+				instances: [],
+				message: 'DROP TABLE',
+				excerpt: '\'DROP TABLE IF EXISTS\' should be present (case-insensitive)',
+				recommendation: 'Check import settings to include DROP TABLE statements',
+			},
+			createTable: {
+				type: 'required',
+				matcher: /^CREATE TABLE (`)?([a-z0-9_]*)/i,
+				instances: [],
+				message: 'CREATE TABLE',
+				excerpt: '\'CREATE TABLE\' should be present (case-insensitive)',
+				recommendation: 'Check import settings to include CREATE TABLE statements',
+			},
+			siteHomeUrl: {
+				type: 'info',
+				matcher: '\'(siteurl|home)\',\\s?\'(.*?)\'',
+				instances: [],
+				message: 'Siteurl/home matches',
+				excerpt: 'Siteurl/home options',
+				recommendation: '',
+			},
 		};
 		let lineNum = 1;
+		let results = null;
 
 		readInterface.on( 'line', function( line ) {
 			if ( lineNum % 1000 === 0 ) {
 				log( `Reading line ${ lineNum } ` );
 			}
-			if ( /^use\s/i.test( line ) ) {
+			results = line.match( checks.useDB.matcher );
+			if ( results ) {
 				checks.useDB.instances.push( lineNum );
 			}
 
-			if ( /^CREATE DATABASE/i.test( line ) ) {
+			results = line.match( checks.createDB.matcher );
+			if ( results ) {
 				checks.createDB.instances.push( lineNum );
 			}
 
-			if ( /^DROP DATABASE/i.test( line ) ) {
+			results = line.match( checks.dropDB.matcher );
+			if ( results ) {
 				checks.dropDB.instances.push( lineNum );
 			}
 
-			if ( /^ALTER USER/i.test( line ) || /^SET PASSWORD/i.test( line ) ) {
+			results = line.match( checks.alterUser.matcher );
+			if ( results ) {
 				checks.alterUser.instances.push( lineNum );
 			}
 
-			if ( /^DROP TABLE IF EXISTS (`)?([a-z0-9_]*)/i.test( line ) ) {
-				const tableName = line.match( /^DROP TABLE IF EXISTS (`)?([a-z0-9_]*)/i );
+			results = line.match( checks.dropTable.matcher );
+			if ( results ) {
+				const tableName = line.match( checks.dropTable.matcher );
 				checks.dropTable.instances.push( tableName [ 2 ] );
 			}
 
-			if ( /^CREATE TABLE (`)?([a-z0-9_]*)/i.test( line ) ) {
-				const tableName = line.match( /^CREATE TABLE (`)?([a-z0-9_]*)/i )[ 2 ];
-				checks.createTable.instances.push( tableName );
+			results = line.match( checks.createTable.matcher );
+			if ( results ) {
+				checks.createTable.instances.push( results [ 2 ] );
 			}
 
-			const homeMatch = line.match( '\'(siteurl|home)\',\\s?\'(.*?)\'' );
-			if ( homeMatch ) {
-				siteUrlMatches = siteUrlMatches.concat( homeMatch[ 0 ] );
+			results = line.match( checks.createTable.matcher );
+			if ( results ) {
+				checks.createTable.instances.push( results [ 2 ] );
+			}
+			results = line.match( checks.siteHomeUrl.matcher );
+			if ( results ) {
+				checks.siteHomeUrl.instances.push( results[ 0 ] );
 			}
 			lineNum += 1;
 		} );
@@ -86,37 +146,34 @@ command( {
 			log( `Finished processing ${ lineNum } lines.` );
 			console.log( '\n' );
 			Object.keys( checks ).forEach( key => {
-				const err = checks[ key ];
-				console.log( '🔍', err.excerpt );
-				if ( err.type === 'error' ) {
-					if ( err.instances.length > 0 ) {
+				const check = checks[ key ];
+				console.log( '🔍', check.excerpt );
+				if ( check.type === 'error' ) {
+					if ( check.instances.length > 0 ) {
 						problemsFound += 1;
-						console.error( chalk.red( 'Error:' ), `${ err.message } on line(s) ${ err.instances.join( ',' ) }.` );
-						console.error( chalk.yellow( 'Recommendation:' ), `${ err.recommendation }` );
+						console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.instances.join( ',' ) }.` );
+						console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 					} else {
-						console.log( `✅ ${ err.message } was found ${ err.instances.length } times.` );
+						console.log( `✅ ${ check.message } was found ${ check.instances.length } times.` );
 					}
-				} else if ( err.type === 'required' ) {
-					if ( err.instances.length > 0 ) {
-						console.log( `✅ ${ err.message } was found ${ err.instances.length } times.` );
+				} else if ( check.type === 'required' ) {
+					if ( check.instances.length > 0 ) {
+						console.log( `✅ ${ check.message } was found ${ check.instances.length } times.` );
 						if ( key === 'createTable' ) {
-							checkTables( err.instances );
+							checkTables( check.instances );
 						}
 					} else {
 						problemsFound += 1;
-						console.error( chalk.red( 'Error:' ), `${ err.message } was not found.` );
-						console.error( chalk.yellow( 'Recommendation:' ), `${ err.recommendation }` );
+						console.error( chalk.red( 'Error:' ), `${ check.message } was not found.` );
+						console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 					}
+				} else if ( check.type === 'info' ) {
+					check.instances.forEach( item => {
+						console.log( item );
+					} );
 				}
 				console.log( '' );
 			} );
-			if ( siteUrlMatches.length > 0 ) {
-				console.log( '' );
-				console.log( chalk.blue( 'Siteurl/home matches' ) );
-				siteUrlMatches.forEach( item => {
-					console.log( item );
-				} );
-			}
 
 			if ( problemsFound >= 0 ) {
 				const c = await prompt( {
@@ -143,12 +200,12 @@ function checkTables( tables ) {
 		}
 	} );
 	if ( wpTables.length > 0 ) {
-		console.log( `✅ wp_ prefix tables found: ${ wpTables.length } ` );
+		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
 	}
 	if ( notWPTables.length > 0 ) {
 		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
 	}
 	if ( wpMultisiteTables.length > 0 ) {
-		console.log( `✅ wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
+		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
 	}
 }
