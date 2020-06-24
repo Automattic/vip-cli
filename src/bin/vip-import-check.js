@@ -97,7 +97,7 @@ command( {
 		let results = null;
 
 		readInterface.on( 'line', function( line ) {
-			if ( lineNum % 1000 === 0 ) {
+			if ( lineNum % 500 === 0 ) {
 				log( `Reading line ${ lineNum } ` );
 			}
 			results = line.match( checks.useDB.matcher );
@@ -176,14 +176,7 @@ command( {
 			} );
 
 			if ( problemsFound >= 0 ) {
-				const c = await prompt( {
-					type: 'confirm',
-					name: 'continue',
-					message: 'Do you want to auto-fix the above issues? (saves to a new file)',
-				} );
-				if ( c ) {
-					console.log( 'Written to', arg [ 0 ] );
-				}
+				console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
 			}
 		} );
 	} );
