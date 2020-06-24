@@ -7,6 +7,7 @@
 const readline = require( 'readline' );
 const fs = require( 'fs' );
 import chalk from 'chalk';
+const log = require( 'single-line-log' ).stdout;
 
 /**
  * Internal dependencies
@@ -43,6 +44,9 @@ command( {
 		let lineNum = 1;
 
 		readInterface.on( 'line', function( line ) {
+			if ( lineNum % 1000 === 0 ) {
+				log( `Reading line ${ lineNum } ` );
+			}
 			if ( /^use\s/i.test( line ) ) {
 				checks.useDB.instances.push( lineNum );
 			}
@@ -77,6 +81,7 @@ command( {
 		} );
 
 		readInterface.on( 'close', function() {
+			log( `Finished processing ${ lineNum } lines.` );
 			Object.keys( checks ).forEach( key => {
 				const err = checks[ key ];
 				if ( err.type === 'error' ) {
