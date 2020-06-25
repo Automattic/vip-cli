@@ -31,7 +31,7 @@ const requiredCheckFormatter = ( check, type ) => {
 	if ( check.results.length > 0 ) {
 		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
 		if ( type === 'createTable' ) {
-			checkTables( check.results );
+			checkTablePrefixes( check.results );
 		}
 	} else {
 		problemsFound += 1;
@@ -112,6 +112,28 @@ const checks = {
 	},
 };
 
+function checkTablePrefixes( tables ) {
+	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
+	tables.forEach( tableName => {
+		if ( tableName.match( /^wp_(\d+_)/ ) ) {
+			wpMultisiteTables.push( tableName );
+		} else if ( tableName.match( /^wp_/ ) ) {
+			wpTables.push( tableName );
+		} else if ( ! tableName.match( /^wp_/ ) ) {
+			notWPTables.push( tableName );
+		}
+	} );
+	if ( wpTables.length > 0 ) {
+		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
+	}
+	if ( notWPTables.length > 0 ) {
+		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
+	}
+	if ( wpMultisiteTables.length > 0 ) {
+		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
+	}
+}
+
 command( {
 	requiredArgs: 1,
 } )
@@ -156,24 +178,3 @@ command( {
 		} );
 	} );
 
-function checkTables( tables ) {
-	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
-	tables.forEach( tableName => {
-		if ( tableName.match( /^wp_(\d+_)/ ) ) {
-			wpMultisiteTables.push( tableName );
-		} else if ( tableName.match( /^wp_/ ) ) {
-			wpTables.push( tableName );
-		} else if ( ! tableName.match( /^wp_/ ) ) {
-			notWPTables.push( tableName );
-		}
-	} );
-	if ( wpTables.length > 0 ) {
-		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
-	}
-	if ( notWPTables.length > 0 ) {
-		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
-	}
-	if ( wpMultisiteTables.length > 0 ) {
-		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
-	}
-}
