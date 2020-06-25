@@ -39,7 +39,8 @@ command( {
 			useDB: {
 				type: 'error',
 				matcher: /^use\s/i,
-				instances: [],
+				matchHandler: ( lineNum ) => lineNum,
+				results: [],
 				message: 'USE statement',
 				excerpt: '\'USE\' statement should not be present (case-insensitive, at beginning of line)',
 				recommendation: 'Remove these lines',
@@ -47,7 +48,8 @@ command( {
 			createDB: {
 				type: 'error',
 				matcher: /^CREATE DATABASE/i,
-				instances: [],
+				matchHandler: ( lineNum ) => lineNum,
+				results: [],
 				message: 'CREATE DATABASE statement',
 				excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
 				recommendation: 'Remove these lines',
@@ -55,7 +57,8 @@ command( {
 			dropDB: {
 				type: 'error',
 				matcher: /^DROP DATABASE/i,
-				instances: [],
+				matchHandler: ( lineNum ) => lineNum,
+				results: [],
 				message: 'DROP DATABASE statement',
 				excerpt: '\'DROP DATABASE\' should not be present (case-insensitive)',
 				recommendation: 'Remove these lines',
@@ -63,23 +66,26 @@ command( {
 			alterUser: {
 				type: 'error',
 				matcher: /^(ALTER USER|SET PASSWORD)/i,
-				instances: [],
+				matchHandler: ( lineNum ) => lineNum,
+				results: [],
 				message: 'ALTER USER statement',
 				excerpt: '\'ALTER USER\' should not be present (case-insensitive)',
 				recommendation: 'Remove these lines',
 			},
 			dropTable: {
 				type: 'required',
-				matcher: /^DROP TABLE IF EXISTS (`)?([a-z0-9_]*)/i,
-				instances: [],
+				matcher: /^DROP TABLE IF EXISTS `?([a-z0-9_]*)/i,
+				matchHandler: ( lineNum, results ) => results [ 1 ],
+				results: [],
 				message: 'DROP TABLE',
 				excerpt: '\'DROP TABLE IF EXISTS\' should be present (case-insensitive)',
 				recommendation: 'Check import settings to include DROP TABLE statements',
 			},
 			createTable: {
 				type: 'required',
-				matcher: /^CREATE TABLE (`)?([a-z0-9_]*)/i,
-				instances: [],
+				matcher: /^CREATE TABLE `?([a-z0-9_]*)/i,
+				matchHandler: ( lineNum, results ) => results [ 1 ],
+				results: [],
 				message: 'CREATE TABLE',
 				excerpt: '\'CREATE TABLE\' should be present (case-insensitive)',
 				recommendation: 'Check import settings to include CREATE TABLE statements',
@@ -87,80 +93,47 @@ command( {
 			siteHomeUrl: {
 				type: 'info',
 				matcher: '\'(siteurl|home)\',\\s?\'(.*?)\'',
-				instances: [],
+				matchHandler: ( lineNum, results ) => results [ 0 ],
+				results: [],
 				message: 'Siteurl/home matches',
 				excerpt: 'Siteurl/home options',
 				recommendation: '',
 			},
 		};
 		let lineNum = 1;
-		let results = null;
 
 		readInterface.on( 'line', function( line ) {
 			if ( lineNum % 500 === 0 ) {
 				log( `Reading line ${ lineNum } ` );
 			}
-			results = line.match( checks.useDB.matcher );
-			if ( results ) {
-				checks.useDB.instances.push( lineNum );
-			}
 
-			results = line.match( checks.createDB.matcher );
-			if ( results ) {
-				checks.createDB.instances.push( lineNum );
-			}
-
-			results = line.match( checks.dropDB.matcher );
-			if ( results ) {
-				checks.dropDB.instances.push( lineNum );
-			}
-
-			results = line.match( checks.alterUser.matcher );
-			if ( results ) {
-				checks.alterUser.instances.push( lineNum );
-			}
-
-			results = line.match( checks.dropTable.matcher );
-			if ( results ) {
-				const tableName = line.match( checks.dropTable.matcher );
-				checks.dropTable.instances.push( tableName [ 2 ] );
-			}
-
-			results = line.match( checks.createTable.matcher );
-			if ( results ) {
-				checks.createTable.instances.push( results [ 2 ] );
-			}
-
-			results = line.match( checks.createTable.matcher );
-			if ( results ) {
-				checks.createTable.instances.push( results [ 2 ] );
-			}
-			results = line.match( checks.siteHomeUrl.matcher );
-			if ( results ) {
-				checks.siteHomeUrl.instances.push( results[ 0 ] );
-			}
+			Object.values( checks ).forEach( check => {
+				const results = line.match( check.matcher );
+				if ( results ) {
+					check.results.push( check.matchHandler( lineNum, results ) );
+				}
+			} );
 			lineNum += 1;
 		} );
 
 		readInterface.on( 'close', async function() {
 			log( `Finished processing ${ lineNum } lines.` );
 			console.log( '\n' );
-			Object.keys( checks ).forEach( key => {
-				const check = checks[ key ];
+			for ( const [ key, check ] of Object.entries( checks ) ) {
 				console.log( '🔍', check.excerpt );
 				if ( check.type === 'error' ) {
-					if ( check.instances.length > 0 ) {
+					if ( check.results.length > 0 ) {
 						problemsFound += 1;
-						console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.instances.join( ',' ) }.` );
+						console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ',' ) }.` );
 						console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 					} else {
-						console.log( `✅ ${ check.message } was found ${ check.instances.length } times.` );
+						console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
 					}
 				} else if ( check.type === 'required' ) {
-					if ( check.instances.length > 0 ) {
-						console.log( `✅ ${ check.message } was found ${ check.instances.length } times.` );
+					if ( check.results.length > 0 ) {
+						console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
 						if ( key === 'createTable' ) {
-							checkTables( check.instances );
+							checkTables( check.results );
 						}
 					} else {
 						problemsFound += 1;
@@ -168,12 +141,12 @@ command( {
 						console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 					}
 				} else if ( check.type === 'info' ) {
-					check.instances.forEach( item => {
+					check.results.forEach( item => {
 						console.log( item );
 					} );
 				}
 				console.log( '' );
-			} );
+			}
 
 			if ( problemsFound >= 0 ) {
 				console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
