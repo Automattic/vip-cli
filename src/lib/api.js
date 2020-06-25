@@ -9,11 +9,13 @@ import { HttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { onError } from 'apollo-link-error';
 import chalk from 'chalk';
+import ProxyAgent from 'socks-proxy-agent';
 
 /**
  * Internal dependencies
  */
 import Token from './token';
+import env from './env';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
@@ -28,7 +30,9 @@ export function disableGlobalGraphQLErrorHandling() {
 
 export default async function API(): Promise<ApolloClient> {
 	const token = await Token.get();
-	const headers = {};
+	const headers = {
+		'User-Agent': env.userAgent,
+	};
 
 	if ( token ) {
 		headers.Authorization = `Bearer ${ token.raw }`;
@@ -49,7 +53,9 @@ export default async function API(): Promise<ApolloClient> {
 		}
 	} );
 
-	const httpLink = new HttpLink( { uri: API_URL, headers: headers } );
+	const httpLink = new HttpLink( { uri: API_URL, headers, fetchOptions: {
+		agent: process.env.hasOwnProperty( 'VIP_PROXY' ) ? new ProxyAgent( process.env.VIP_PROXY ) : null,
+	} } );
 
 	return new ApolloClient( {
 		link: errorLink.concat( httpLink ),
