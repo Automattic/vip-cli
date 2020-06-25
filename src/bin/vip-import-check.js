@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 // @flow
 
-import { prompt } from 'enquirer';
-
 /**
  * External dependencies
  */
@@ -10,7 +8,6 @@ const readline = require( 'readline' );
 const fs = require( 'fs' );
 import chalk from 'chalk';
 const log = require( 'single-line-log' ).stdout;
-import path from 'path';
 
 /**
  * Internal dependencies
@@ -20,7 +17,7 @@ import command from 'lib/cli/command';
 let problemsFound = 0;
 let lineNum = 1;
 
-const errorHandler = ( check ) => {
+const errorCheckFormatter = ( check ) => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
 		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ',' ) }.` );
@@ -30,7 +27,7 @@ const errorHandler = ( check ) => {
 	}
 };
 
-const requiredHandler = ( check, type ) => {
+const requiredCheckFormatter = ( check, type ) => {
 	if ( check.results.length > 0 ) {
 		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
 		if ( type === 'createTable' ) {
@@ -43,7 +40,7 @@ const requiredHandler = ( check, type ) => {
 	}
 };
 
-const infoHandler = ( check ) => {
+const infoCheckFormatter = ( check ) => {
 	check.results.forEach( item => {
 		console.log( item );
 	} );
@@ -53,7 +50,7 @@ const checks = {
 	useDB: {
 		matcher: /^use\s/i,
 		matchHandler: ( lineNumber ) => lineNumber,
-		outputHandler: errorHandler,
+		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'USE statement',
 		excerpt: '\'USE\' statement should not be present (case-insensitive, at beginning of line)',
@@ -62,7 +59,7 @@ const checks = {
 	createDB: {
 		matcher: /^CREATE DATABASE/i,
 		matchHandler: ( lineNumber ) => lineNumber,
-		outputHandler: errorHandler,
+		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'CREATE DATABASE statement',
 		excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
@@ -71,7 +68,7 @@ const checks = {
 	dropDB: {
 		matcher: /^DROP DATABASE/i,
 		matchHandler: ( lineNumber ) => lineNumber,
-		outputHandler: errorHandler,
+		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'DROP DATABASE statement',
 		excerpt: '\'DROP DATABASE\' should not be present (case-insensitive)',
@@ -80,7 +77,7 @@ const checks = {
 	alterUser: {
 		matcher: /^(ALTER USER|SET PASSWORD)/i,
 		matchHandler: ( lineNumber ) => lineNumber,
-		outputHandler: errorHandler,
+		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'ALTER USER statement',
 		excerpt: '\'ALTER USER\' should not be present (case-insensitive)',
@@ -89,7 +86,7 @@ const checks = {
 	dropTable: {
 		matcher: /^DROP TABLE IF EXISTS `?([a-z0-9_]*)/i,
 		matchHandler: ( lineNumber, results ) => results [ 1 ],
-		outputHandler: requiredHandler,
+		outputFormatter: requiredCheckFormatter,
 		results: [],
 		message: 'DROP TABLE',
 		excerpt: '\'DROP TABLE IF EXISTS\' should be present (case-insensitive)',
@@ -98,7 +95,7 @@ const checks = {
 	createTable: {
 		matcher: /^CREATE TABLE `?([a-z0-9_]*)/i,
 		matchHandler: ( lineNumber, results ) => results [ 1 ],
-		outputHandler: requiredHandler,
+		outputFormatter: requiredCheckFormatter,
 		results: [],
 		message: 'CREATE TABLE',
 		excerpt: '\'CREATE TABLE\' should be present (case-insensitive)',
@@ -107,7 +104,7 @@ const checks = {
 	siteHomeUrl: {
 		matcher: '\'(siteurl|home)\',\\s?\'(.*?)\'',
 		matchHandler: ( lineNumber, results ) => results [ 0 ],
-		outputHandler: infoHandler,
+		outputFormatter: infoCheckFormatter,
 		results: [],
 		message: 'Siteurl/home matches',
 		excerpt: 'Siteurl/home options',
@@ -149,7 +146,7 @@ command( {
 			log( `Finished processing ${ lineNum } lines.` );
 			console.log( '\n' );
 			for ( const [ type, check ] of Object.entries( checks ) ) {
-				check.outputHandler( check, type );
+				check.outputFormatter( check, type );
 				console.log( '' );
 			}
 
