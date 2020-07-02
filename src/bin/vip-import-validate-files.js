@@ -26,8 +26,19 @@ command( { requiredArgs: 1, format: true } )
 		// Extract the path of the file
 		const path = file.path;
 
-		// Media files must be part of an uploads directory
+		// Ensure media files are stored in an `uploads` directory
 		if ( path.search( 'uploads' ) === -1 ) {
-			return console.error( 'Media files must be in an `uploads` directory' );
+			console.error( 'Media files must be in an `uploads` directory' );
 		}
+
+		// Folder structure validation
+		fs.readdir( fileString, ( error, files ) => {
+			if ( error ) {
+				console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ fileString }: ${ error.message }` );
+			}
+
+			if ( ! files.length ) {
+				console.error(chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
+			}
+		} )
 	} );
