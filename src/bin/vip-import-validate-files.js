@@ -28,7 +28,9 @@ command( { requiredArgs: 1, format: true } )
 
 		// Ensure media files are stored in an `uploads` directory
 		if ( path.search( 'uploads' ) === -1 ) {
-			console.error( 'Media files must be in an `uploads` directory' );
+			console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
+			console.log();
+			console.log( recommendedFileStructure );
 		}
 
 		// Folder structure validation
