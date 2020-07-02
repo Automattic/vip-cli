@@ -53,8 +53,19 @@ command( { requiredArgs: 1, format: true } )
 				console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ fileString }: ${ error.message }` );
 			}
 
-			if ( ! files.length ) {
+			if ( ! files.length || files.length <= 0 ) {
 				console.error(chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
+			}
+
+			const regex = /\b\d{4}\b/g;
+			const yearFolder = files.filter( folder => regex.test( folder ) );
+		
+			if ( files && yearFolder && yearFolder.length === 1 ) {
+				console.log('✅ File structure: Year directory exists (format: YYYY)');
+			} else {
+				console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads/YYYY` directory' );
+				console.log();
+				recommendedFileStructure();
 			}
 		} )
 	} );
