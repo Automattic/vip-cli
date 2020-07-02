@@ -43,6 +43,8 @@ command( { requiredArgs: 1, format: true } )
 			console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
 			console.log();
 			recommendedFileStructure();
+		} else {
+			console.log( '✅ File structure: Uploads directory exists' );
 		}
 
 		// Folder structure validation
