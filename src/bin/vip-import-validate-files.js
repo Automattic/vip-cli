@@ -14,6 +14,71 @@ import fs from 'fs';
  */
 import command from 'lib/cli/command';
 
+// Accepted media file extensions
+const acceptedExtensions = [
+	'jpg','jpeg','jpe',
+	'gif',
+	'png',
+	'bmp',
+	'tiff','tif',
+	'ico',
+	'asf',
+	'asx',
+	'wmv','wmx','wm',
+	'avi',
+	'divx',
+	'mov',
+	'qt',
+	'mpeg','mpg','mpe','mp4','m4v',
+	'ogv',
+	'webm',
+	'mkv',
+	'3gp','3gpp','3g2','3gp2',
+	'txt',
+	'asc',
+	'c','cc','h',
+	'srt',
+	'csv','tsv',
+	'ics',
+	'rtx',
+	'css',
+	'vtt',
+	'dfxp',
+	'mp3',
+	'm4a','m4b',
+	'ra',
+	'ram',
+	'wav',
+	'ogg',
+	'oga',
+	'mid','midi',
+	'wma',
+	'wax',
+	'mka',
+	'rtf',
+	'js',
+	'pdf',
+	'class',
+	'psd',
+	'xcf',
+	'doc',
+	'pot',
+	'pps',
+	'ppt',
+	'wri',
+	'xla','xls','xlt','xlw',
+	'mdb','mpp',
+	'docx','docm','dotx','dotm',
+	'xlsx','xlsm','xlsb','xltx','xltm','xlam',
+	'pptx','pptm','ppsx','ppsm','potx','potm','ppam',
+	'sldx','sldm',
+	'onetoc','onetoc2','onetmp','onepkg','oxps',
+	'xps',
+	'odt','odp','ods','odg','odc','odb','odf',
+	'wp','wpd',
+	'key','numbers','pages',
+];
+
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate files <file>', 'Validate your media files' )
 	.argv( process.argv, async ( file, options ) => {
@@ -68,4 +133,11 @@ command( { requiredArgs: 1, format: true } )
 				recommendedFileStructure();
 			}
 		} )
+
+		const recommendAcceptableFileTypes = () => {
+			console.log(
+				'Accepted file types: \n\n' +
+				chalk.magenta( `${ acceptedExtensions }` )
+			);
+		};
 	} );
