@@ -140,4 +140,13 @@ command( { requiredArgs: 1, format: true } )
 				chalk.magenta( `${ acceptedExtensions }` )
 			);
 		};
+		
+		// Media files extension validation
+		const extension = path.extname( fileString ).substr( 1 );
+
+		if ( ! extension ) {
+			console.error( chalk.red( '✕' ), `Error: Invalid file type for file: ${ fileString }` );
+			console.log();
+			recommendAcceptableFileTypes();
+		}
 	} );
