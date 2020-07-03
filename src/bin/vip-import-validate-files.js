@@ -81,15 +81,15 @@ const acceptedExtensions = [
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate files <file>', 'Validate your media files' )
-	.argv( process.argv, async ( file, options ) => {
+	.argv( process.argv, async ( arg, options ) => {
 		// File comes in as an array as part of the args- turn it into a string
-		const fileString = file.join();
+		const folder = arg.join();
 
 		// Then parse the file to its URL parts
-		file = url.parse( fileString );
+		arg = url.parse( folder );
 		
 		// Extract the path of the file
-		const path = file.path;
+		const filePath = arg.path;
 
 		const recommendedFileStructure = () => {
 			console.log(
@@ -104,7 +104,7 @@ command( { requiredArgs: 1, format: true } )
 		};
 
 		// Ensure media files are stored in an `uploads` directory
-		if ( path.search( 'uploads' ) === -1 ) {
+		if ( folder.search( 'uploads' ) === -1 ) {
 			console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
 			console.log();
 			recommendedFileStructure();
@@ -113,9 +113,9 @@ command( { requiredArgs: 1, format: true } )
 		}
 
 		// Folder structure validation
-		fs.readdir( fileString, ( error, files ) => {
+		fs.readdir( folder, ( error, files ) => {
 			if ( error ) {
-				console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ fileString }: ${ error.message }` );
+				console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ folder }: ${ error.message }` );
 			}
 
 			if ( ! files.length || files.length <= 0 ) {
@@ -142,10 +142,10 @@ command( { requiredArgs: 1, format: true } )
 		};
 		
 		// Media files extension validation
-		const extension = path.extname( fileString ).substr( 1 );
+		const extension = path.extname( folder ).substr( 1 );
 
 		if ( ! extension ) {
-			console.error( chalk.red( '✕' ), `Error: Invalid file type for file: ${ fileString }` );
+			console.error( chalk.red( '✕' ), `Error: Invalid file type for file: ${ folder }` );
 			console.log();
 			recommendAcceptableFileTypes();
 		}
