@@ -132,21 +132,33 @@ command( { requiredArgs: 1, format: true } )
 				console.log();
 				recommendedFileStructure();
 			}
+
+			/* Media file extension validation */
+			// Map through each file to isolate the extension name
+			files.map( file => {
+				const extension = path.extname( file ); // Extract the extension of the file
+				const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g - .jpg -> jpg)
+				const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
+
+				// Check for any invalid file extensions
+				// Returns true if ext is invalid; false if valid
+				const invalidExtensions = acceptedExtensions.indexOf( extLowerCase) < 0;
+				
+				// Recommend accepted file types
+				const recommendAcceptableFileTypes = () => {
+					console.log(
+						'Accepted file types: \n\n' +
+						chalk.magenta( `${ acceptedExtensions }` )
+					);
+				};
+
+				// If a file has no extension, or has an invalid extension,
+				// log an error and recommend alternative extension types
+				if ( ! extension ||  invalidExtensions ) {
+					console.error( chalk.red( '✕' ), `Error: Invalid file type for file: ${ file }` );
+					console.log();
+					recommendAcceptableFileTypes();
+				}
+			} )
 		} )
-
-		const recommendAcceptableFileTypes = () => {
-			console.log(
-				'Accepted file types: \n\n' +
-				chalk.magenta( `${ acceptedExtensions }` )
-			);
-		};
-		
-		// Media files extension validation
-		const extension = path.extname( folder ).substr( 1 );
-
-		if ( ! extension ) {
-			console.error( chalk.red( '✕' ), `Error: Invalid file type for file: ${ folder }` );
-			console.log();
-			recommendAcceptableFileTypes();
-		}
 	} );
