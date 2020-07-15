@@ -187,6 +187,26 @@ command( { requiredArgs: 1, format: true } )
 					
 					return checkFile;
 				}
+
+				// Accepted file name characters
+				const recommendAcceptableFileNames = () => {
+					const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
+					const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~'
+
+					console.log(
+						'The following characters are allowed in file names: \n\n' +
+						chalk.cyan( `${ acceptedCharacters }` ) + '\n\n' +
+						'The following characters are prohibited in file names: \n\n' +
+						chalk.cyan( `${ prohibitedCharacters }` )
+					);
+					console.log();
+				};
+
+				if ( sanitizeFileName( file ) === false ) {
+					console.log(chalk.red( '✕' ), `Error: Invalid filename: ${ file }` );
+					console.log();
+					recommendAcceptableFileNames()
+				}
 			} )
 		} )
 	} );
