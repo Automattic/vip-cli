@@ -8,11 +8,15 @@ import url from 'url';
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs';
+import { promisify } from 'util';
 
 /**
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+
+// Promisify to use async/await
+const readDir = promisify( fs.readdir );
 
 // Accepted media file extensions
 const acceptedExtensions = [
@@ -102,6 +106,35 @@ command( { requiredArgs: 1, format: true } )
 				' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
 			);
 		};
+
+		/* Find nested directories using recursion to validate the folder structure
+		*/
+		const findNestedDirectories = async directory => {
+			let dir, nestedDir;
+
+			try {		
+				// Read what's inside the current directory		
+				dir = await readDir( directory );
+
+				nestedDir = dir[ 0 ]
+
+				// Once we hit individual media files, stop
+                const regexExtension = /\.\w{3,4}$/;
+				const mediaFiles = regexExtension.test( nestedDir );
+
+				if ( dir !== undefined && mediaFiles ) {
+					return directory;
+				}
+			} catch ( error ) {
+				console.error( chalk.red( '✕' ), ` Error: Unable to read directory: ${ directory }. Reason: ${ error.message }` );
+			}
+
+			// Update the path with the current directory + nested directory
+			const updatedPath = directory + '/' + nestedDir
+
+			// Use recursion to map out the file structure
+			return await findNestedDirectories( updatedPath );
+		}
 
 		// Ensure media files are stored in an `uploads` directory
 		if ( folder.search( 'uploads' ) === -1 ) {
