@@ -159,6 +159,34 @@ command( { requiredArgs: 1, format: true } )
 					console.log();
 					recommendAcceptableFileTypes();
 				}
+
+				/* Character validation
+				* This logic is based on the WordPress core function `sanitize_file_name()`
+				* https://developer.wordpress.org/reference/functions/sanitize_file_name/
+				*/
+				const sanitizeFileName = file => {
+					let sanitizedFile;
+
+					// Prohibited characters:
+					// Encoded spaces (%20), no-break spaces - keeps words together (\u00A0), and plus signs
+					const regexSpaces = /\u00A0|(%20)|\+/g;
+					sanitizedFile = file.replace( regexSpaces, ' ' )
+			
+					// Prohibited characters:
+					// Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
+					const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
+					sanitizedFile= file.replace( regexSpecialChars, '' );
+			
+					// No dashes, underscores, or periods allowed as the first
+					// or last letter of the file (including the extension)
+					const regexFirstAndLast = /(?:^[\.\-_])|(?:[\.\-_]$)/g;
+					sanitizedFile = file.replace( regexFirstAndLast, '' );
+
+					// // Check if the file name has been sanitized
+					const checkFile = sanitizedFile === file;
+					
+					return checkFile;
+				}
 			} )
 		} )
 	} );
