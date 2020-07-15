@@ -133,6 +133,10 @@ command( { requiredArgs: 1, format: true } )
 				recommendedFileStructure();
 			}
 
+			// Collect files that have invalid file types (extensions) or filenames
+			const errorFileTypes = [];
+			const errorFileNames = [];
+
 			/* Media file extension validation */
 			// Map through each file to isolate the extension name
 			files.map( file => {
@@ -143,21 +147,10 @@ command( { requiredArgs: 1, format: true } )
 				// Check for any invalid file extensions
 				// Returns true if ext is invalid; false if valid
 				const invalidExtensions = acceptedExtensions.indexOf( extLowerCase) < 0;
-				
-				// Recommend accepted file types
-				const recommendAcceptableFileTypes = () => {
-					console.log(
-						'Accepted file types: \n\n' +
-						chalk.magenta( `${ acceptedExtensions }` )
-					);
-				};
 
-				// If a file has no extension, or has an invalid extension,
-				// log an error and recommend alternative extension types
-				if ( ! extension ||  invalidExtensions ) {
-					console.error( chalk.red( '✕' ), `Error: Invalid file type for file: ${ file }` );
-					console.log();
-					recommendAcceptableFileTypes();
+				// Collect files that have no extension, or has an invalid extension to log errors later
+				if ( ! extension || invalidExtensions ) {
+					errorFileTypes.push( file );
 				}
 
 				/* Character validation
@@ -188,25 +181,62 @@ command( { requiredArgs: 1, format: true } )
 					return checkFile;
 				}
 
-				// Accepted file name characters
-				const recommendAcceptableFileNames = () => {
-					const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
-					const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~'
-
-					console.log(
-						'The following characters are allowed in file names: \n\n' +
-						chalk.cyan( `${ acceptedCharacters }` ) + '\n\n' +
-						'The following characters are prohibited in file names: \n\n' +
-						chalk.cyan( `${ prohibitedCharacters }` )
-					);
-					console.log();
-				};
-
-				if ( sanitizeFileName( file ) === false ) {
-					console.log(chalk.red( '✕' ), `Error: Invalid filename: ${ file }` );
-					console.log();
-					recommendAcceptableFileNames()
+				// Collect files that have invalid file names to log errors later
+				if ( ! sanitizeFileName( file ) ) {
+					errorFileNames.push( file );
 				}
-			} )
+			} );
+
+			// Recommend accepted file types
+			const recommendAcceptableFileTypes = () => {
+				console.log(
+					'Accepted file types: \n\n' +
+					chalk.magenta( `${ acceptedExtensions }` )
+				);	
+			};
+
+			// Accepted file name characters
+			const recommendAcceptableFileNames = () => {
+				const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
+				const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~'
+
+				console.log(
+					'The following characters are allowed in file names:\n' +
+					chalk.green( `${ acceptedCharacters }` ) + '\n\n' +
+					'The following characters are prohibited in file names:\n' +
+					chalk.red( `${ prohibitedCharacters }` )
+				);
+			};
+
+			// Log errors for files with invalid file extensions and recommend accepted file types
+			const logErrorsForInvalidFileTypes = ( files ) => {
+				files.map( file => {
+					console.error( chalk.red( '✕' ), `File extensions: Invalid file type for file: ${ file }` );
+				});
+
+				console.log();
+				recommendAcceptableFileTypes();
+				console.log();
+			};
+
+			// Log errors for files with invalid filenames and show a list of accepted/prohibited chars
+			const logErrorsForInvalidFilenames = ( files ) => {
+				files.map( file => {
+					console.log(chalk.red( '✕' ), `Character validation: Invalid filename for file: ${ file }` );
+				});
+
+				console.log();
+				recommendAcceptableFileNames();
+				console.log();
+			}
+
+			if ( errorFileTypes.length > 0) {
+				logErrorsForInvalidFileTypes( errorFileTypes );
+			}
+
+			if( errorFileNames.length > 0 ) {
+				logErrorsForInvalidFilenames( errorFileNames );
+			}
+
 		} )
 	} );
