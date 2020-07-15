@@ -112,14 +112,14 @@ command( { requiredArgs: 1, format: true } )
 		const findNestedDirectories = async directory => {
 			let dir, nestedDir;
 
-			try {		
-				// Read what's inside the current directory		
+			try {
+				// Read what's inside the current directory
 				dir = await readDir( directory );
 
-				nestedDir = dir[ 0 ]
+				nestedDir = dir[ 0 ];
 
 				// Once we hit individual media files, stop
-                const regexExtension = /\.\w{3,4}$/;
+				const regexExtension = /\.\w{3,4}$/;
 				const mediaFiles = regexExtension.test( nestedDir );
 
 				if ( dir !== undefined && mediaFiles ) {
@@ -130,11 +130,11 @@ command( { requiredArgs: 1, format: true } )
 			}
 
 			// Update the path with the current directory + nested directory
-			const updatedPath = directory + '/' + nestedDir
+			const updatedPath = directory + '/' + nestedDir;
 
 			// Use recursion to map out the file structure
-			return await findNestedDirectories( updatedPath );
-		}
+			return findNestedDirectories( updatedPath );
+		};
 
 		// Ensure media files are stored in an `uploads` directory
 		if ( folder.search( 'uploads' ) === -1 ) {
