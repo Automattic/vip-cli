@@ -89,6 +89,26 @@ command( { requiredArgs: 1, format: true } )
 				if ( ! sanitizeFileName( file ) ) {
 					errorFileNames.push( file );
 				}
+
+				/**
+				 * Intermediate image validation
+				 * 
+				 * Detect any intermediate images.
+				 * 
+				 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
+				 * You can resize an image directly on VIP so intermediate images are not necessary.
+				 */
+				const original = doesImageHaveExistingSource( file, folder );
+
+				if ( original ) {
+					console.log(
+						chalk.red( '✕' ),
+						`Intermediate images: Duplicate files found for: ${ file }\n` +
+						'Original file: ' + chalk.blue( `${ original }\n` ) +
+						'Intermediate images: ' + chalk.cyan( `${ file }` )
+					);
+					console.log();
+				}
 			} );
 
 			if ( errorFileTypes.length > 0 ) {
