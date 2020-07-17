@@ -17,6 +17,7 @@ import {
 	acceptedExtensions,
 	findNestedDirectories,
 	sanitizeFileName,
+	doesImageHaveExistingSource,
 	recommendedFileStructure,
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames 

@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import path from 'path';
 import { promisify } from 'util';
 
 // Promisify to use async/await
@@ -141,6 +142,47 @@ export const recommendedFileStructure = () => {
         ' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
     );
 };
+
+/**
+ * Intermediate images
+ * 
+ * Identify intermediate images via regex. Should catch:
+ * 
+ * panda4000x6000.jpg (sizing w/ no space/dash/underscore)
+ * panda-4000x6000.jpg (dash)
+ * panda_4000x6000.jpg (underscore)
+ * panda test 4000x6000.jpg (spaces)
+ * panda_test-4000x6000@2x.jpg (retina display)
+ */
+const identifyIntermediateImage = filename => {
+    const regex = /(-|_)?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
+    // console.log('**regex test***', regex.test(filename));
+    return filename.match( regex );
+}
+
+// Check if an intermediate image has an existing original (source) image
+export const doesImageHaveExistingSource = ( file, folder ) => {
+    const filename = path.basename( file );
+
+    // Intermediate image regex check
+    const intermediateImage = identifyIntermediateImage( filename );
+
+    if ( intermediateImage !== null ) {
+        const imageSizing = intermediateImage[ 0 ]; // First capture group of the regex validation
+        const extension = path.extname( filename ).substr( 1 ); // Extension of the path (e.g.- `.jpg`)
+
+        // If an image is an intermediate image, strip away the image sizing
+        // e.g.- `panda4000x6000.png` -> `panda.png`
+        const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
+        const originalImage = path.join( folder, baseFileName );
+
+        // Check if an image with the same path + name already exists (check if an original image exists)
+        if ( fs.existsSync( originalImage ) ) {
+            return originalImage;
+        }
+    }
+    return false;
+}
 
 /** Recommendations
  * 
