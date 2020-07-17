@@ -1,3 +1,8 @@
+// @flow
+
+/**
+ * External dependencies
+ */
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
@@ -72,142 +77,147 @@ export const acceptedExtensions = [
 ];
 
 /** Folder structure validation
- * 
+ *
  * Find nested directories using recursion to validate the folder structure
+ * @param directory The root directory
  */
 export const findNestedDirectories = async directory => {
-    let dir, nestedDir;
+	let dir, nestedDir;
 
-    try {
-        // Read what's inside the current directory
-        dir = await readDir( directory );
+	try {
+		// Read what's inside the current directory
+		dir = await readDir( directory );
+		nestedDir = dir[ 0 ];
 
-        nestedDir = dir[ 0 ];
+		// Once we hit individual media files, stop
+		const regexExtension = /\.\w{3,4}$/;
+		const mediaFiles = regexExtension.test( nestedDir );
 
-        // Once we hit individual media files, stop
-        const regexExtension = /\.\w{3,4}$/;
-        const mediaFiles = regexExtension.test( nestedDir );
+		if ( dir !== undefined && mediaFiles ) {
+			return directory;
+		}
+	} catch ( error ) {
+		console.error( chalk.red( '✕' ), ` Error: Unable to read directory: ${ directory }. Reason: ${ error.message }` );
+	}
 
-        if ( dir !== undefined && mediaFiles ) {
-            return directory;
-        }
-    } catch ( error ) {
-        console.error( chalk.red( '✕' ), ` Error: Unable to read directory: ${ directory }. Reason: ${ error.message }` );
-    }
+	// Update the path with the current directory + nested directory
+	const updatedPath = directory + '/' + nestedDir;
 
-    // Update the path with the current directory + nested directory
-    const updatedPath = directory + '/' + nestedDir;
-
-    // Use recursion to map out the file structure
-    return findNestedDirectories( updatedPath );
+	// Use recursion to map out the file structure
+	return findNestedDirectories( updatedPath );
 };
 
 /** Character validation
- * 
+ *
  * This logic is based on the WordPress core function `sanitize_file_name()`
  * https://developer.wordpress.org/reference/functions/sanitize_file_name/
+ *
+ * @param filename string - The current file being validated
+ * @param returns Boolean - Checks if the filename has been sanitized
  */
 export const sanitizeFileName = filename => {
-    let sanitizedFile;
+	let sanitizedFile;
 
-    // Prohibited characters:
-    // Encoded spaces (%20), no-break spaces - keeps words together (\u00A0), and plus signs
-    const regexSpaces = /\u00A0|(%20)|\+/g;
-    sanitizedFile = filename.replace( regexSpaces, ' ' );
+	// Prohibited characters:
+	// Encoded spaces (%20), no-break spaces - keeps words together (\u00A0), and plus signs
+	const regexSpaces = /\u00A0|(%20)|\+/g;
+	sanitizedFile = filename.replace( regexSpaces, ' ' );
 
-    // Prohibited characters:
-    // Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
-    const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
-    sanitizedFile = filename.replace( regexSpecialChars, '' );
+	// Prohibited characters:
+	// Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
+	const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
+	sanitizedFile = filename.replace( regexSpecialChars, '' );
 
-    // No dashes, underscores, or periods allowed as the first
-    // or last letter of the file (including the extension)
-    const regexFirstAndLast = /(?:^[\.\-_])|(?:[\.\-_]$)/g;
-    sanitizedFile = filename.replace( regexFirstAndLast, '' );
+	// No dashes, underscores, or periods allowed as the first
+	// or last letter of the file (including the extension)
+	const regexFirstAndLast = /(?:^[\.\-_])|(?:[\.\-_]$)/g;
+	sanitizedFile = filename.replace( regexFirstAndLast, '' );
 
-    // // Check if the file name has been sanitized
-    const checkFile = sanitizedFile === filename;
+	// Check if the filename has been sanitized
+	const checkFile = sanitizedFile === filename;
 
-    return checkFile;
+	return checkFile;
 };
 
 export const recommendedFileStructure = () => {
-    console.log(
-        'Please follow this structure for your media files: \n\n' +
-        chalk.underline( 'Single sites:' ) +
-        chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
-        ' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
-        chalk.underline( 'Multisites:' ) +
-        chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
-        ' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
-    );
+	console.log(
+		'Please follow this structure for your media files: \n\n' +
+		chalk.underline( 'Single sites:' ) +
+		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
+		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
+		chalk.underline( 'Multisites:' ) +
+		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
+		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
+	);
 };
 
 /**
  * Intermediate images
- * 
+ *
  * Identify intermediate images via regex. Should catch:
- * 
- * panda4000x6000.jpg (sizing w/ no space/dash/underscore)
+ *
+ * panda4000x6000.jpg (sizing)
  * panda-4000x6000.jpg (dash)
  * panda_4000x6000.jpg (underscore)
- * panda test 4000x6000.jpg (spaces)
+ * panda 4000x6000.jpg (space)
  * panda_test-4000x6000@2x.jpg (retina display)
+ *
+ * @param filename The current file being validated
+ * @param returns Array
  */
 const identifyIntermediateImage = filename => {
-    const regex = /(-|_)?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
-    // console.log('**regex test***', regex.test(filename));
-    return filename.match( regex );
-}
+	const regex = /(-|_)?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
+	return filename.match( regex );
+};
 
 // Check if an intermediate image has an existing original (source) image
 export const doesImageHaveExistingSource = ( file, folder ) => {
-    const filename = path.basename( file );
+	const filename = path.basename( file );
 
-    // Intermediate image regex check
-    const intermediateImage = identifyIntermediateImage( filename );
+	// Intermediate image regex check
+	const intermediateImage = identifyIntermediateImage( filename );
 
-    if ( intermediateImage !== null ) {
-        const imageSizing = intermediateImage[ 0 ]; // First capture group of the regex validation
-        const extension = path.extname( filename ).substr( 1 ); // Extension of the path (e.g.- `.jpg`)
+	if ( null !== intermediateImage ) {
+		const imageSizing = intermediateImage[ 0 ]; // First capture group of the regex validation
+		const extension = path.extname( filename ).substr( 1 ); // Extension of the path (e.g.- `.jpg`)
 
-        // If an image is an intermediate image, strip away the image sizing
-        // e.g.- `panda4000x6000.png` -> `panda.png`
-        const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
-        const originalImage = path.join( folder, baseFileName );
+		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
+		// e.g.- `panda4000x6000.png` -> `panda.png`
+		const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
+		const originalImage = path.join( folder, baseFileName );
 
-        // Check if an image with the same path + name already exists (check if an original image exists)
-        if ( fs.existsSync( originalImage ) ) {
-            return originalImage;
-        }
-    }
-    return false;
-}
+		// Check if an image with the same path + name (the original) already exists
+		if ( fs.existsSync( originalImage ) ) {
+			return originalImage;
+		}
+		return false;
+	}
+};
 
 /** Recommendations
- * 
+ *
  * Recommend alternatives to invalid folders or files
  */
 
 // Recommend accepted file types
 const recommendAcceptableFileTypes = () => {
-    console.log(
-        'Accepted file types: \n\n' +
-        chalk.magenta( `${ acceptedExtensions }` )
-    );
+	console.log(
+		'Accepted file types: \n\n' +
+		chalk.magenta( `${ acceptedExtensions }` )
+	);
 };
 
 // Accepted file name characters
 const recommendAcceptableFileNames = () => {
-    const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
-    const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
+	const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
+	const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
 
-    console.log(
-        'The following characters are allowed in file names:\n' +
-        chalk.green( `${ acceptedCharacters }` ) + '\n\n' +
-        'The following characters are prohibited in file names:\n' +
-        chalk.red( `${ prohibitedCharacters }` )
-    );
+	console.log(
+		'The following characters are allowed in file names:\n' +
+		chalk.green( `${ acceptedCharacters }` ) + '\n\n' +
+		'The following characters are prohibited in file names:\n' +
+		chalk.red( `${ prohibitedCharacters }` )
+	);
 };
 
 /**
@@ -218,22 +228,22 @@ const recommendAcceptableFileNames = () => {
 
 // Log errors for files with invalid file extensions and recommend accepted file types
 export const logErrorsForInvalidFileTypes = invalidFiles => {
-    invalidFiles.map( file => {
-        console.error( chalk.red( '✕' ), `File extensions: Invalid file type for file: ${ file }` );
-    } );
+	invalidFiles.map( file => {
+		console.error( chalk.red( '✕' ), `File extensions: Invalid file type for file: ${ file }` );
+	} );
 
-    console.log();
-    recommendAcceptableFileTypes();
-    console.log();
+	console.log();
+	recommendAcceptableFileTypes();
+	console.log();
 };
 
 // Log errors for files with invalid filenames and show a list of accepted/prohibited chars
 export const logErrorsForInvalidFilenames = invalidFiles => {
-    invalidFiles.map( file => {
-        console.log( chalk.red( '✕' ), `Character validation: Invalid filename for file: ${ file }` );
-    } );
+	invalidFiles.map( file => {
+		console.log( chalk.red( '✕' ), `Character validation: Invalid filename for file: ${ file }` );
+	} );
 
-    console.log();
-    recommendAcceptableFileNames();
-    console.log();
+	console.log();
+	recommendAcceptableFileNames();
+	console.log();
 };
