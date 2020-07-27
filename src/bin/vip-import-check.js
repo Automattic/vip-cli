@@ -4,10 +4,10 @@
 /**
  * External dependencies
  */
-const readline = require( 'readline' );
-const fs = require( 'fs' );
+import readline from 'readline';
+import fs from 'fs';
 import chalk from 'chalk';
-const log = require( 'single-line-log' ).stdout;
+import { stdout as log } from 'single-line-log';
 
 /**
  * Internal dependencies
@@ -177,4 +177,3 @@ command( {
 			}
 		} );
 	} );
-
