@@ -17,7 +17,7 @@ import command from 'lib/cli/command';
 let problemsFound = 0;
 let lineNum = 1;
 
-const errorCheckFormatter = ( check ) => {
+const errorCheckFormatter = check => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
 		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ',' ) }.` );
@@ -40,7 +40,7 @@ const requiredCheckFormatter = ( check, type ) => {
 	}
 };
 
-const infoCheckFormatter = ( check ) => {
+const infoCheckFormatter = check => {
 	check.results.forEach( item => {
 		console.log( item );
 	} );
@@ -49,7 +49,7 @@ const infoCheckFormatter = ( check ) => {
 const checks = {
 	useDB: {
 		matcher: /^use\s/i,
-		matchHandler: ( lineNumber ) => lineNumber,
+		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'USE statement',
@@ -58,7 +58,7 @@ const checks = {
 	},
 	createDB: {
 		matcher: /^CREATE DATABASE/i,
-		matchHandler: ( lineNumber ) => lineNumber,
+		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'CREATE DATABASE statement',
@@ -67,7 +67,7 @@ const checks = {
 	},
 	dropDB: {
 		matcher: /^DROP DATABASE/i,
-		matchHandler: ( lineNumber ) => lineNumber,
+		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'DROP DATABASE statement',
@@ -76,7 +76,7 @@ const checks = {
 	},
 	alterUser: {
 		matcher: /^(ALTER USER|SET PASSWORD)/i,
-		matchHandler: ( lineNumber ) => lineNumber,
+		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'ALTER USER statement',
@@ -127,6 +127,7 @@ function checkTablePrefixes( tables ) {
 		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
 	}
 	if ( notWPTables.length > 0 ) {
+		problemsFound += 1;
 		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
 	}
 	if ( wpMultisiteTables.length > 0 ) {
@@ -139,7 +140,7 @@ command( {
 } )
 	.command( 'sql', 'Validate a DB Import (SQL) file' )
 	.example( 'vip import validate sql <file>', 'Run the import validation against file' )
-	.argv( process.argv, async ( arg, opts ) => {
+	.argv( process.argv, async arg => {
 		if ( ! arg && ! arg[ 0 ] ) {
 			console.error( 'You must pass in a filename' );
 			process.exit( 1 );
@@ -173,8 +174,11 @@ command( {
 				console.log( '' );
 			}
 
-			if ( problemsFound >= 0 ) {
+			if ( problemsFound > 0 ) {
 				console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
+			} else {
+				console.log( '✅ Your database export looks good.  You can now submit for import, see here for more details: ' +
+				'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
 			}
 		} );
 	} );
