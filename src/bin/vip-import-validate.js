@@ -137,7 +137,8 @@ function checkTablePrefixes( tables ) {
 command( {
 	requiredArgs: 1,
 } )
-	.example( 'vip import check <file>', 'Run the import checks against file' )
+	.command( 'sql', 'Validate a DB Import (SQL) file' )
+	.example( 'vip import validate sql <file>', 'Run the import validation against file' )
 	.argv( process.argv, async ( arg, opts ) => {
 		if ( ! arg && ! arg[ 0 ] ) {
 			console.error( 'You must pass in a filename' );

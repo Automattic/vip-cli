@@ -7,7 +7,7 @@
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
-    "vip-import-checker": "dist/bin/vip-app-check.js",
+    "vip-import-validate": "dist/bin/vip-import-validate.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
