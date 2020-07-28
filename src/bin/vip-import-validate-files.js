@@ -8,6 +8,7 @@ import url from 'url';
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs';
+import { promisify } from 'util';
 
 /**
  * Internal dependencies
@@ -22,6 +23,9 @@ import {
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
 } from '../lib/vip-import-validate-files';
+
+// Promisify to use async/await
+const stat = promisify( fs.stat );
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate files <file>', 'Validate your media files' )
@@ -44,9 +48,10 @@ command( { requiredArgs: 1, format: true } )
 		 */
 		const nestedDirectories = await findNestedDirectories( folder );
 
-		const directories = nestedDirectories.split( '/' );
-
-		folderStructureValidation( directories );
+		if ( nestedDirectories ) {
+			const directories = nestedDirectories.split( '/' );
+			folderStructureValidation( directories );
+		}
 
 		/**
 		 * Individual file validations
@@ -75,7 +80,11 @@ command( { requiredArgs: 1, format: true } )
 			const errorFileNames = [];
 
 			// Map through each file to isolate the extension name
-			files.map( file => {
+			files.map( async file => {
+				// Check if file is a directory
+				const stats = await stat( folder + '/' + file );
+				const isFolder = stats.isDirectory();
+
 				const extension = path.extname( file ); // Extract the extension of the file
 				const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g - .jpg -> jpg)
 				const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
@@ -83,9 +92,10 @@ command( { requiredArgs: 1, format: true } )
 				// Check for any invalid file extensions
 				// Returns true if ext is invalid; false if valid
 				const invalidExtensions = acceptedExtensions.indexOf( extLowerCase ) < 0;
-
-				// Collect files that have no extension, or has an invalid extension for error logging
-				if ( ! extension || invalidExtensions ) {
+				
+				// Collect files that have no extension, have invalid extensions,
+				// or are directories for error logging
+				if ( ! extension || invalidExtensions || isFolder ) {
 					errorFileTypes.push( file );
 				}
 
