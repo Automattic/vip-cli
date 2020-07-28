@@ -39,19 +39,6 @@ command( { requiredArgs: 1, format: true } )
 		const filePath = arg.path; // Extract the path of the file
 
 		/**
-		 * Uploads directory validation
-		 * 
-		 * Ensure media files are stored in an `uploads` directory
-		 */
-		if ( filePath.search( 'uploads' ) === -1 ) {
-			console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
-			console.log();
-			recommendedFileStructure();
-		} else {
-			console.log( '✅ File structure: Uploads directory exists' );
-		}
-
-		/**
 		 * Folder structure validation
 		 * 
 		 * Find any nested directories to see if they follow the recommended structure
@@ -75,21 +62,6 @@ command( { requiredArgs: 1, format: true } )
 
 			if ( ! files || ! files.length || files.length <= 0 ) {
 				console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
-			}
-
-			const regex = /\b\d{4}\b/g; // Identify four digits
-
-			// Check for a year folder
-			const yearFolder = files.filter( directory => 
-				regex.test( directory )
-			);
-
-			if ( files && yearFolder && yearFolder.length === 1 ) {
-				console.log( '✅ File structure: Year directory exists (format: YYYY)' );
-			} else {
-				console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads/YYYY` directory' );
-				console.log();
-				recommendedFileStructure();
 			}
 
 			/**
