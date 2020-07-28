@@ -26,17 +26,23 @@ import {
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate files <file>', 'Validate your media files' )
 	.argv( process.argv, async ( arg, options ) => {
-		// File comes in as an array as part of the args- turn it into a string
-		const folder = arg.join();
+		/**
+		 * File manipulation
+		 * 
+		 * Manipulating the file path/name to extract the folder name
+		 */
+		const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
 
-		// Then parse the file to its URL parts
-		arg = url.parse( folder );
+		arg = url.parse( folder ); // Then parse the file to its URL parts
 
-		// Extract the path of the file
-		const filePath = arg.path;
+		const filePath = arg.path; // Extract the path of the file
 
-		// Ensure media files are stored in an `uploads` directory
-		if ( folder.search( 'uploads' ) === -1 ) {
+		/**
+		 * Uploads directory validation
+		 * 
+		 * Ensure media files are stored in an `uploads` directory
+		 */
+		if ( filePath.search( 'uploads' ) === -1 ) {
 			console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
 			console.log();
 			recommendedFileStructure();
@@ -44,18 +50,27 @@ command( { requiredArgs: 1, format: true } )
 			console.log( '✅ File structure: Uploads directory exists' );
 		}
 
-		// Folder structure validation
+		/**
+		 * Individual file validation
+		 * 
+		 * Various validations on the first layer of the nested folder or on individual files,
+		 * depending on the folder structure
+		 */
 		fs.readdir( folder, ( error, files ) => {
 			if ( error ) {
 				console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ folder }: ${ error.message }` );
 			}
 
-			if ( ! files.length || files.length <= 0 ) {
+			if ( ! files || ! files.length || files.length <= 0 ) {
 				console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
 			}
 
-			const regex = /\b\d{4}\b/g;
-			const yearFolder = files.filter( directory => regex.test( directory ) );
+			const regex = /\b\d{4}\b/g; // Identify four digits
+
+			// Check for a year folder
+			const yearFolder = files.filter( directory => 
+				regex.test( directory )
+			);
 
 			if ( files && yearFolder && yearFolder.length === 1 ) {
 				console.log( '✅ File structure: Year directory exists (format: YYYY)' );
@@ -65,11 +80,16 @@ command( { requiredArgs: 1, format: true } )
 				recommendedFileStructure();
 			}
 
-			// Collect files that have invalid file types (extensions) or filenames
+			/**
+			 * Media file extension validation
+			 * 
+			 * Ensure that prohibited media file types are not used
+			 */
+
+			// Collect files that have invalid file types (extensions) or filenames for error logging
 			const errorFileTypes = [];
 			const errorFileNames = [];
 
-			/* Media file extension validation */
 			// Map through each file to isolate the extension name
 			files.map( file => {
 				const extension = path.extname( file ); // Extract the extension of the file
@@ -80,12 +100,12 @@ command( { requiredArgs: 1, format: true } )
 				// Returns true if ext is invalid; false if valid
 				const invalidExtensions = acceptedExtensions.indexOf( extLowerCase ) < 0;
 
-				// Collect files that have no extension, or has an invalid extension to log errors later
+				// Collect files that have no extension, or has an invalid extension for error logging
 				if ( ! extension || invalidExtensions ) {
 					errorFileTypes.push( file );
 				}
 
-				// Collect files that have invalid file names to log errors later
+				// Collect files that have invalid file names for error logging
 				if ( ! sanitizeFileName( file ) ) {
 					errorFileNames.push( file );
 				}
@@ -111,6 +131,9 @@ command( { requiredArgs: 1, format: true } )
 				}
 			} );
 
+			/**
+			 * Error logging
+			 */
 			if ( errorFileTypes.length > 0 ) {
 				logErrorsForInvalidFileTypes( errorFileTypes );
 			}

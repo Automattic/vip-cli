@@ -78,7 +78,9 @@ export const acceptedExtensions = [
 
 /** Folder structure validation
  *
- * Find nested directories using recursion to validate the folder structure
+ * Use recursion to identify the nested tree structure of the folders to
+ * check if it follows the WordPress recommended year/month folder structure for media files
+ * 
  * @param directory The root directory
  */
 export const findNestedDirectories = async directory => {
