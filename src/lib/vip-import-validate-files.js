@@ -141,18 +141,6 @@ export const sanitizeFileName = filename => {
 	return checkFile;
 };
 
-export const recommendedFileStructure = () => {
-	console.log(
-		'Please follow this structure for your media files: \n\n' +
-		chalk.underline( 'Single sites:' ) +
-		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
-		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
-		chalk.underline( 'Multisites:' ) +
-		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
-		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
-	);
-};
-
 /**
  * Intermediate images
  *
@@ -200,6 +188,19 @@ export const doesImageHaveExistingSource = ( file, folder ) => {
  *
  * Recommend alternatives to invalid folders or files
  */
+
+// Recommend the WordPress year/month file structure for media files
+export const recommendedFileStructure = () => {
+	console.log(
+		'Please follow this structure for your media files: \n\n' +
+		chalk.underline( 'Single sites:' ) +
+		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
+		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
+		chalk.underline( 'Multisites:' ) +
+		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
+		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
+	);
+};
 
 // Recommend accepted file types
 const recommendAcceptableFileTypes = () => {
