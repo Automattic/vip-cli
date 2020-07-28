@@ -145,7 +145,7 @@ export const findNestedDirectories = async directory => {
 	const updatedPath = directory + '/' + nestedDir;
 
 	// Use recursion to map out the file structure
-	return await findNestedDirectories( updatedPath );
+	return findNestedDirectories( updatedPath );
 };
 
 /**

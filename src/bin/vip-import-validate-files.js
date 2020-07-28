@@ -95,7 +95,7 @@ command( { requiredArgs: 1, format: true } )
 			// Check for any invalid file extensions
 			// Returns true if ext is invalid; false if valid
 			const invalidExtensions = acceptedExtensions.indexOf( extLowerCase ) < 0;
-			
+
 			// Collect files that have no extension, have invalid extensions,
 			// or are directories for error logging
 			if ( ! extension || invalidExtensions || isFolder ) {
