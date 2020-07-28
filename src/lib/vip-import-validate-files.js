@@ -76,6 +76,45 @@ export const acceptedExtensions = [
 	'key', 'numbers', 'pages',
 ];
 
+/** Recommendations
+ *
+ * Recommend alternatives to invalid folders or files
+ */
+
+// Recommend the WordPress year/month file structure for media files
+const recommendedFileStructure = () => {
+	console.log(
+		'Please follow this structure for your media files: \n\n' +
+		chalk.underline( 'Single sites:' ) +
+		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
+		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
+		chalk.underline( 'Multisites:' ) +
+		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
+		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
+	);
+};
+
+// Recommend accepted file types
+const recommendAcceptableFileTypes = () => {
+	console.log(
+		'Accepted file types: \n\n' +
+		chalk.magenta( `${ acceptedExtensions }` )
+	);
+};
+
+// Accepted file name characters
+const recommendAcceptableFileNames = () => {
+	const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
+	const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
+
+	console.log(
+		'The following characters are allowed in file names:\n' +
+		chalk.green( `${ acceptedCharacters }` ) + '\n\n' +
+		'The following characters are prohibited in file names:\n' +
+		chalk.red( `${ prohibitedCharacters }` )
+	);
+};
+
 /** Nested Directory Search
  *
  * Use recursion to identify the nested tree structure of the folders
@@ -240,45 +279,6 @@ export const doesImageHaveExistingSource = ( file, folder ) => {
 		}
 		return false;
 	}
-};
-
-/** Recommendations
- *
- * Recommend alternatives to invalid folders or files
- */
-
-// Recommend the WordPress year/month file structure for media files
-export const recommendedFileStructure = () => {
-	console.log(
-		'Please follow this structure for your media files: \n\n' +
-		chalk.underline( 'Single sites:' ) +
-		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
-		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
-		chalk.underline( 'Multisites:' ) +
-		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
-		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
-	);
-};
-
-// Recommend accepted file types
-const recommendAcceptableFileTypes = () => {
-	console.log(
-		'Accepted file types: \n\n' +
-		chalk.magenta( `${ acceptedExtensions }` )
-	);
-};
-
-// Accepted file name characters
-const recommendAcceptableFileNames = () => {
-	const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
-	const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
-
-	console.log(
-		'The following characters are allowed in file names:\n' +
-		chalk.green( `${ acceptedCharacters }` ) + '\n\n' +
-		'The following characters are prohibited in file names:\n' +
-		chalk.red( `${ prohibitedCharacters }` )
-	);
 };
 
 /**
