@@ -109,6 +109,59 @@ export const findNestedDirectories = async directory => {
 	return await findNestedDirectories( updatedPath );
 };
 
+/**
+ * Folder structure validation
+ * 
+ * - Uploads directory validation
+ * - Year & month directory validation
+ * 
+ * Check if the folder structure follows the WordPress recommended `uploads/year/month`
+ * folder path structure for media files
+ */
+export const folderStructureValidation = directory => {
+	const errors = 0;
+
+	directory.map( ( fileName, i ) => {
+		switch( i ) {
+			// Check for an `uploads` folder
+			case 0:
+				if( fileName !== 'uploads' ) {
+					console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
+					console.log();
+					errors++;
+				} else {
+					console.log( '✅ File structure: Uploads directory exists' );
+				}
+				break;
+			// Check for a year folder
+			case 1:
+				const regex = /\b\d{4}\b/g; // Identify four digits
+				if( ! regex.test( fileName ) ) {
+					console.log( chalk.yellow( '✕' ), 'Recommended: WordPress media files are usually stored in an `uploads/YYYY` directory' );
+					console.log();
+					errors++;
+				} else {
+					console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+				}
+				break;
+			// Check for a month folder
+			case 2:
+				const regexMonth = /\b\d{2}\b/g; // Identify two digits
+				if( ! regexMonth.test( fileName ) ) {
+					console.log( chalk.yellow( '✕' ), 'Recommended: WordPress media files are usually stored in an `uploads/YYYY/MM` directory' );
+					console.log();
+					errors++;
+				} else {
+					console.log( '✅ File structure: Month directory exists (format: MM)' );
+				}
+				break;
+		}
+	});
+
+	if ( errors ) recommendedFileStructure();
+	return;
+}
+
 /** Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`

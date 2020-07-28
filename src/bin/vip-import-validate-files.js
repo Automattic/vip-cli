@@ -16,6 +16,7 @@ import command from 'lib/cli/command';
 import { 
 	acceptedExtensions,
 	findNestedDirectories,
+	folderStructureValidation,
 	sanitizeFileName,
 	doesImageHaveExistingSource,
 	recommendedFileStructure,
@@ -49,6 +50,17 @@ command( { requiredArgs: 1, format: true } )
 		} else {
 			console.log( '✅ File structure: Uploads directory exists' );
 		}
+
+		/**
+		 * Folder structure validation
+		 * 
+		 * Find any nested directories to see if they follow the recommended structure
+		 */
+		const nestedDirectories = await findNestedDirectories( folder );
+
+		const directories = nestedDirectories.split('/');
+
+		folderStructureValidation( directories );
 
 		/**
 		 * Individual file validation
