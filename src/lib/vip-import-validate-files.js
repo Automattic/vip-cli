@@ -84,7 +84,7 @@ export const acceptedExtensions = [
 // Recommend the WordPress year/month file structure for media files
 const recommendedFileStructure = () => {
 	console.log(
-		'Please follow this structure for your media files: \n\n' +
+		'Recommended structure for your media files: \n\n' +
 		chalk.underline( 'Single sites:' ) +
 		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
 		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
@@ -172,28 +172,33 @@ export const folderStructureValidation = directory => {
 					errors++;
 				} else {
 					console.log( '✅ File structure: Uploads directory exists' );
+					console.log();
 				}
 				break;
 			// Check for a year folder
 			case 1:
-				const regex = /\b\d{4}\b/g; // Identify four digits
-				if ( ! regex.test( fileName ) ) {
-					console.log( chalk.yellow( '✕' ), 'Recommended: WordPress media files are usually stored in an `uploads/YYYY` directory' );
+				const regexYear = /\b\d{4}\b/g; // Identify four digits
+
+				if ( ! regexYear.test( fileName ) ) {
+					console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY` directories' );
 					console.log();
 					errors++;
 				} else {
 					console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+					console.log();
 				}
 				break;
 			// Check for a month folder
 			case 2:
 				const regexMonth = /\b\d{2}\b/g; // Identify two digits
+
 				if ( ! regexMonth.test( fileName ) ) {
-					console.log( chalk.yellow( '✕' ), 'Recommended: WordPress media files are usually stored in an `uploads/YYYY/MM` directory' );
+					console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY/MM` directories' );
 					console.log();
 					errors++;
 				} else {
 					console.log( '✅ File structure: Month directory exists (format: MM)' );
+					console.log();
 				}
 				break;
 		}
