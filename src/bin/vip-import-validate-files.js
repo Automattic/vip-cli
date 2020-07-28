@@ -13,15 +13,14 @@ import fs from 'fs';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { 
+import {
 	acceptedExtensions,
 	findNestedDirectories,
 	folderStructureValidation,
 	sanitizeFileName,
 	doesImageHaveExistingSource,
-	recommendedFileStructure,
 	logErrorsForInvalidFileTypes,
-	logErrorsForInvalidFilenames 
+	logErrorsForInvalidFilenames,
 } from '../lib/vip-import-validate-files';
 
 command( { requiredArgs: 1, format: true } )
@@ -29,31 +28,32 @@ command( { requiredArgs: 1, format: true } )
 	.argv( process.argv, async ( arg, options ) => {
 		/**
 		 * File manipulation
-		 * 
+		 *
 		 * Manipulating the file path/name to extract the folder name
 		 */
 		const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
-
 		arg = url.parse( folder ); // Then parse the file to its URL parts
-
 		const filePath = arg.path; // Extract the path of the file
 
 		/**
 		 * Folder structure validation
-		 * 
+		 *
 		 * Find any nested directories to see if they follow the recommended structure
+		 *
+		 * Recommended structure: `uploads/year/month`
 		 */
 		const nestedDirectories = await findNestedDirectories( folder );
 
-		const directories = nestedDirectories.split('/');
+		const directories = nestedDirectories.split( '/' );
 
 		folderStructureValidation( directories );
 
 		/**
-		 * Individual file validation
-		 * 
-		 * Various validations on the first layer of the nested folder or on individual files,
-		 * depending on the folder structure
+		 * Individual file validations
+		 *
+		 * - Media file extension/type validation
+		 * - Filename validation
+		 * - Intermediate image validation
 		 */
 		fs.readdir( folder, ( error, files ) => {
 			if ( error ) {
@@ -66,7 +66,7 @@ command( { requiredArgs: 1, format: true } )
 
 			/**
 			 * Media file extension validation
-			 * 
+			 *
 			 * Ensure that prohibited media file types are not used
 			 */
 
@@ -89,6 +89,12 @@ command( { requiredArgs: 1, format: true } )
 					errorFileTypes.push( file );
 				}
 
+				/**
+				 * Filename validation
+				 *
+				 * Ensure that filenames don't contain prohibited characters
+				 */
+
 				// Collect files that have invalid file names for error logging
 				if ( ! sanitizeFileName( file ) ) {
 					errorFileNames.push( file );
@@ -96,9 +102,9 @@ command( { requiredArgs: 1, format: true } )
 
 				/**
 				 * Intermediate image validation
-				 * 
+				 *
 				 * Detect any intermediate images.
-				 * 
+				 *
 				 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
 				 * You can resize an image directly on VIP so intermediate images are not necessary.
 				 */
