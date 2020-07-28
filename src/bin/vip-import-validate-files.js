@@ -26,6 +26,7 @@ import {
 
 // Promisify to use async/await
 const stat = promisify( fs.stat );
+const readDir = promisify( fs.readdir );
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate files <file>', 'Validate your media files' )
@@ -60,86 +61,87 @@ command( { requiredArgs: 1, format: true } )
 		 * - Filename validation
 		 * - Intermediate image validation
 		 */
-		fs.readdir( folder, ( error, files ) => {
-			if ( error ) {
-				console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ folder }: ${ error.message }` );
-			}
+		let files;
+
+		try {
+			files = await readDir( nestedDirectories );
 
 			if ( ! files || ! files.length || files.length <= 0 ) {
 				console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
 			}
+		} catch ( error ) {
+			console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ folder }: ${ error.message }` );
+		}
+		/**
+		 * Media file extension validation
+		 *
+		 * Ensure that prohibited media file types are not used
+		 */
 
-			/**
-			 * Media file extension validation
-			 *
-			 * Ensure that prohibited media file types are not used
-			 */
+		// Collect files that have invalid file types (extensions) or filenames for error logging
+		const errorFileTypes = [];
+		const errorFileNames = [];
 
-			// Collect files that have invalid file types (extensions) or filenames for error logging
-			const errorFileTypes = [];
-			const errorFileNames = [];
+		// Map through each file to isolate the extension name
+		files.map( async file => {
+			// Check if file is a directory
+			const stats = await stat( nestedDirectories + '/' + file );
+			const isFolder = stats.isDirectory();
 
-			// Map through each file to isolate the extension name
-			files.map( async file => {
-				// Check if file is a directory
-				const stats = await stat( folder + '/' + file );
-				const isFolder = stats.isDirectory();
+			const extension = path.extname( file ); // Extract the extension of the file
+			const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g - .jpg -> jpg)
+			const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
 
-				const extension = path.extname( file ); // Extract the extension of the file
-				const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g - .jpg -> jpg)
-				const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
-
-				// Check for any invalid file extensions
-				// Returns true if ext is invalid; false if valid
-				const invalidExtensions = acceptedExtensions.indexOf( extLowerCase ) < 0;
-				
-				// Collect files that have no extension, have invalid extensions,
-				// or are directories for error logging
-				if ( ! extension || invalidExtensions || isFolder ) {
-					errorFileTypes.push( file );
-				}
-
-				/**
-				 * Filename validation
-				 *
-				 * Ensure that filenames don't contain prohibited characters
-				 */
-
-				// Collect files that have invalid file names for error logging
-				if ( ! sanitizeFileName( file ) ) {
-					errorFileNames.push( file );
-				}
-
-				/**
-				 * Intermediate image validation
-				 *
-				 * Detect any intermediate images.
-				 *
-				 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
-				 * You can resize an image directly on VIP so intermediate images are not necessary.
-				 */
-				const original = doesImageHaveExistingSource( file, folder );
-
-				if ( original ) {
-					console.log(
-						chalk.red( '✕' ),
-						`Intermediate images: Duplicate files found for: ${ file }\n` +
-						'Original file: ' + chalk.blue( `${ original }\n` ) +
-						'Intermediate images: ' + chalk.cyan( `${ file }` )
-					);
-					console.log();
-				}
-			} );
-
-			/**
-			 * Error logging
-			 */
-			if ( errorFileTypes.length > 0 ) {
-				logErrorsForInvalidFileTypes( errorFileTypes );
+			// Check for any invalid file extensions
+			// Returns true if ext is invalid; false if valid
+			const invalidExtensions = acceptedExtensions.indexOf( extLowerCase ) < 0;
+			
+			// Collect files that have no extension, have invalid extensions,
+			// or are directories for error logging
+			if ( ! extension || invalidExtensions || isFolder ) {
+				errorFileTypes.push( file );
 			}
 
-			if ( errorFileNames.length > 0 ) {
-				logErrorsForInvalidFilenames( errorFileNames );
+			/**
+			 * Filename validation
+			 *
+			 * Ensure that filenames don't contain prohibited characters
+			 */
+
+			// Collect files that have invalid file names for error logging
+			if ( ! sanitizeFileName( file ) ) {
+				errorFileNames.push( file );
+			}
+
+			/**
+			 * Intermediate image validation
+			 *
+			 * Detect any intermediate images.
+			 *
+			 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
+			 * You can resize an image directly on VIP so intermediate images are not necessary.
+			 */
+			const original = doesImageHaveExistingSource( file, nestedDirectories );
+
+			if ( original ) {
+				console.log(
+					chalk.red( '✕' ),
+					`Intermediate images: Duplicate files found for: ${ file }\n` +
+					'Original file: ' + chalk.blue( `${ original }\n` ) +
+					'Intermediate images: ' + chalk.cyan( `${ file }` )
+				);
+				console.log();
 			}
 		} );
+
+		/**
+		 * Error logging
+		 */
+		if ( errorFileTypes.length > 0 ) {
+			logErrorsForInvalidFileTypes( errorFileTypes );
+		}
+
+		if ( errorFileNames.length > 0 ) {
+			logErrorsForInvalidFilenames( errorFileNames );
+		}
 	} );
