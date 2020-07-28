@@ -76,10 +76,9 @@ export const acceptedExtensions = [
 	'key', 'numbers', 'pages',
 ];
 
-/** Folder structure validation
+/** Nested Directory Search
  *
- * Use recursion to identify the nested tree structure of the folders to
- * check if it follows the WordPress recommended year/month folder structure for media files
+ * Use recursion to identify the nested tree structure of the folders
  * 
  * @param directory The root directory
  */
@@ -99,14 +98,15 @@ export const findNestedDirectories = async directory => {
 			return directory;
 		}
 	} catch ( error ) {
-		console.error( chalk.red( '✕' ), ` Error: Unable to read directory: ${ directory }. Reason: ${ error.message }` );
+		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ error.message }` );
+		return;
 	}
 
 	// Update the path with the current directory + nested directory
 	const updatedPath = directory + '/' + nestedDir;
 
 	// Use recursion to map out the file structure
-	return findNestedDirectories( updatedPath );
+	return await findNestedDirectories( updatedPath );
 };
 
 /** Character validation
