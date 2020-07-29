@@ -7,6 +7,7 @@
  */
 import {
 	folderStructureValidation,
+	isFileSanitized,
 } from 'lib/vip-import-validate-files';
 
  describe( 'lib/vip-import-validate-files', () => {
@@ -30,4 +31,13 @@ import {
 							expect( console.log ).toHaveBeenCalled();
 			} );
 		} )
+		describe( 'isFileSanitized()', () => {
+			it ( 'should correctly check to see if a file is sanitized', async () => {
+				const image = 'not-allowed-filename++.jpg';
+
+				const isSanitized = isFileSanitized( image );
+
+				expect( isSanitized ).toBe( true );
+			} );
+		} );
  } );
