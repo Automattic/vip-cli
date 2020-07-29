@@ -50,8 +50,7 @@ command( { requiredArgs: 1, format: true } )
 		const nestedDirectories = await findNestedDirectories( folder );
 
 		if ( nestedDirectories ) {
-			const directories = nestedDirectories.split( '/' );
-			folderStructureValidation( directories );
+			folderStructureValidation( nestedDirectories );
 		}
 
 		/**

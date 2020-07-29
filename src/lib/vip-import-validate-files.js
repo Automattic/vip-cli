@@ -157,52 +157,81 @@ export const findNestedDirectories = async directory => {
  * Check if the folder structure follows the WordPress recommended `uploads/year/month`
  * folder path structure for media files
  *
- * @param {Array} directory Individual directory within the given file
+ * @param {string} folderStructure Path of the entire folder structure
  */
-export const folderStructureValidation = directory => {
+export const folderStructureValidation = folderStructure => {
 	let errors = 0;
+	let yearIndex, monthIndex;
 
-	directory.map( ( fileName, i ) => {
-		switch ( i ) {
-			// Check for an `uploads` folder
-			case 0:
-				if ( fileName !== 'uploads' ) {
-					console.error( chalk.red( '✕' ), 'Error: Media files must be in an `uploads` directory' );
-					console.log();
-					errors++;
-				} else {
-					console.log( '✅ File structure: Uploads directory exists' );
-					console.log();
-				}
-				break;
-			// Check for a year folder
-			case 1:
-				const regexYear = /\b\d{4}\b/g; // Identify four digits
+	// Turn the path into an array to determine index position
+	const directories = folderStructure.split( '/' );
 
-				if ( ! regexYear.test( fileName ) ) {
-					console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY` directories' );
-					console.log();
-					errors++;
-				} else {
-					console.log( '✅ File structure: Year directory exists (format: YYYY)' );
-					console.log();
-				}
-				break;
-			// Check for a month folder
-			case 2:
-				const regexMonth = /\b\d{2}\b/g; // Identify two digits
+	/**
+	 * Upload folder validation
+	 *
+	 * Find if an `uploads` folder exists and return its index position
+	 */
+	const uploadsIndex = directories.indexOf( 'uploads' );
 
-				if ( ! regexMonth.test( fileName ) ) {
-					console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY/MM` directories' );
-					console.log();
-					errors++;
-				} else {
-					console.log( '✅ File structure: Month directory exists (format: MM)' );
-					console.log();
-				}
-				break;
-		}
-	} );
+	/**
+	 * Year folder validation
+	 *
+	 * Find if a year folder exists via a four digit regex matching pattern,
+	 * then obtain that value
+	 */
+	const regexYear = /\b\d{4}\b/g;
+	const year = regexYear.exec( folderStructure ); // Returns an array with the regex-matching value
+
+	if ( year ) {
+		yearIndex = directories.indexOf( year[ 0 ] );
+	}
+
+	/**
+	 * Month folder validation
+	 *
+	 * Find if a month folder exists via a two digit regex matching pattern,
+	 * then obtain that value
+	 */
+	const regexMonth = /\b\d{2}\b/g;
+	const month = regexMonth.exec( folderStructure ); // Returns an array with the regex-matching value
+
+	if ( month ) {
+		monthIndex = directories.indexOf( month[ 0 ] );
+	}
+
+	/**
+	 * Logging
+	 */
+
+	// Uploads folder
+	if ( uploadsIndex === 0 ) {
+		console.log( '✅ File structure: Uploads directory exists' );
+		console.log();
+	} else {
+		console.error( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an `uploads` directory' );
+		console.log();
+		errors++;
+	}
+
+	// Year folder
+	if ( yearIndex && yearIndex === 1 ) {
+		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+		console.log();
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY` directories' );
+		console.log();
+		errors++;
+	}
+
+	// Month folder
+	if ( monthIndex && monthIndex === 2 ) {
+		console.log( '✅ File structure: Month directory exists (format: MM)' );
+		console.log();
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY/MM` directories' );
+		console.log();
+		errors++;
+	}
 
 	if ( errors ) {
 		recommendedFileStructure();
