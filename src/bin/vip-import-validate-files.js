@@ -18,7 +18,7 @@ import {
 	acceptedExtensions,
 	findNestedDirectories,
 	folderStructureValidation,
-	sanitizeFileName,
+	isFileSanitized,
 	doesImageHaveExistingSource,
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
@@ -108,7 +108,7 @@ command( { requiredArgs: 1, format: true } )
 			 */
 
 			// Collect files that have invalid file names for error logging
-			if ( ! sanitizeFileName( file ) ) {
+			if ( isFileSanitized( file ) ) {
 				errorFileNames.push( file );
 			}
 

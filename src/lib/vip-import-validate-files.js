@@ -248,26 +248,26 @@ export const folderStructureValidation = folderStructure => {
  * @param {string} filename - The current file being validated
  * @returns {Boolean} - Checks if the filename has been sanitized
  */
-export const sanitizeFileName = filename => {
-	let sanitizedFile;
+export const isFileSanitized = filename => {
+	let sanitizedFile = filename;
 
 	// Prohibited characters:
 	// Encoded spaces (%20), no-break spaces - keeps words together (\u00A0), and plus signs
 	const regexSpaces = /\u00A0|(%20)|\+/g;
-	sanitizedFile = filename.replace( regexSpaces, ' ' );
+	sanitizedFile = sanitizedFile.replace( regexSpaces, ' ' );
 
 	// Prohibited characters:
 	// Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
 	const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
-	sanitizedFile = filename.replace( regexSpecialChars, '' );
+	sanitizedFile = sanitizedFile.replace( regexSpecialChars, '' );
 
 	// No dashes, underscores, or periods allowed as the first
 	// or last letter of the file (including the extension)
 	const regexFirstAndLast = /(?:^[\.\-_])|(?:[\.\-_]$)/g;
-	sanitizedFile = filename.replace( regexFirstAndLast, '' );
+	sanitizedFile = sanitizedFile.replace( regexFirstAndLast, '' );
 
 	// Check if the filename has been sanitized
-	const checkFile = sanitizedFile === filename;
+	const checkFile = sanitizedFile !== filename;
 
 	return checkFile;
 };
