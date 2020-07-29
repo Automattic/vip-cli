@@ -208,7 +208,7 @@ export const folderStructureValidation = folderStructure => {
 		console.log( '✅ File structure: Uploads directory exists' );
 		console.log();
 	} else {
-		console.error( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an `uploads` directory' );
+		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an `uploads` directory' );
 		console.log();
 		errors++;
 	}
