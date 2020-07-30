@@ -177,7 +177,7 @@ command( {
 			if ( problemsFound > 0 ) {
 				console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
 			} else {
-				console.log( '✅ Your database export looks good.  You can now submit for import, see here for more details: ' +
+				console.log( '✅ Your database file looks good.  You can now submit for import, see here for more details: ' +
 				'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
 			}
 		} );
