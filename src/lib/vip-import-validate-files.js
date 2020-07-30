@@ -84,7 +84,7 @@ export const acceptedExtensions = [
 // Recommend the WordPress year/month file structure for media files
 const recommendedFileStructure = () => {
 	console.log(
-		'Recommended structure for your media files: \n\n' +
+		chalk.underline( 'We recommend the WordPress default folder structure for your media files: \n\n' ) +
 		chalk.underline( 'Single sites:' ) +
 		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
 		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
@@ -92,6 +92,7 @@ const recommendedFileStructure = () => {
 		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
 		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
 	);
+	console.log( '-------------------------------------------------------' );
 };
 
 // Recommend accepted file types
@@ -100,6 +101,8 @@ const recommendAcceptableFileTypes = () => {
 		'Accepted file types: \n\n' +
 		chalk.magenta( `${ acceptedExtensions }` )
 	);
+	console.log();
+
 };
 
 // Accepted file name characters
@@ -113,6 +116,7 @@ const recommendAcceptableFileNames = () => {
 		'The following characters are prohibited in file names:\n' +
 		chalk.red( `${ prohibitedCharacters }` )
 	);
+	console.log();
 };
 
 /** Nested Directory Search
@@ -205,11 +209,12 @@ export const folderStructureValidation = folderStructure => {
 
 	// Uploads folder
 	if ( uploadsIndex === 0 ) {
+		console.log();
 		console.log( '✅ File structure: Uploads directory exists' );
 		console.log();
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an `uploads` directory' );
 		console.log();
+		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
 		errors++;
 	}
 
@@ -218,8 +223,7 @@ export const folderStructureValidation = folderStructure => {
 		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
 		console.log();
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY` directories' );
-		console.log();
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
 		errors++;
 	}
 
@@ -227,8 +231,9 @@ export const folderStructureValidation = folderStructure => {
 	if ( monthIndex && monthIndex === 2 ) {
 		console.log( '✅ File structure: Month directory exists (format: MM)' );
 		console.log();
+		console.log( '-------------------------------------------------------' );
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into `uploads/YYYY/MM` directories' );
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
 		console.log();
 		errors++;
 	}
@@ -329,6 +334,7 @@ export const logErrorsForInvalidFileTypes = invalidFiles => {
 
 	console.log();
 	recommendAcceptableFileTypes();
+	console.log( '-------------------------------------------------------' );
 	console.log();
 };
 
@@ -340,5 +346,6 @@ export const logErrorsForInvalidFilenames = invalidFiles => {
 
 	console.log();
 	recommendAcceptableFileNames();
+	console.log( '-------------------------------------------------------' );
 	console.log();
 };

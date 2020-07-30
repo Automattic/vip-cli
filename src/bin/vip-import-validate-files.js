@@ -123,15 +123,17 @@ command( { requiredArgs: 1, format: true } )
 			const original = doesImageHaveExistingSource( file, nestedDirectories );
 
 			if ( original ) {
+				console.log();
 				console.log(
 					chalk.red( '✕' ),
 					`Intermediate images: Duplicate files found for: ${ file }\n` +
 					'Original file: ' + chalk.blue( `${ original }\n` ) +
-					'Intermediate images: ' + chalk.cyan( `${ file }` )
+					'Intermediate images: ' + chalk.cyan( `${ file }\n` ),
 				);
-				console.log();
 			}
 		}
+		console.log( '-------------------------------------------------------' );
+		console.log();
 
 		/**
 		 * Error logging
