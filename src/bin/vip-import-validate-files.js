@@ -81,8 +81,8 @@ command( { requiredArgs: 1, format: true } )
 		const errorFileTypes = [];
 		const errorFileNames = [];
 
-		// Map through each file to isolate the extension name
-		files.map( async file => {
+		// Iterate through each file to isolate the extension name
+		for ( const file of files ) {
 			// Check if file is a directory
 			const stats = await stat( nestedDirectories + '/' + file );
 			const isFolder = stats.isDirectory();
@@ -131,7 +131,7 @@ command( { requiredArgs: 1, format: true } )
 				);
 				console.log();
 			}
-		} );
+		}
 
 		/**
 		 * Error logging
