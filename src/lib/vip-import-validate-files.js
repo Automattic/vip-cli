@@ -102,7 +102,6 @@ const recommendAcceptableFileTypes = () => {
 		chalk.magenta( `${ acceptedExtensions }` )
 	);
 	console.log();
-
 };
 
 // Accepted file name characters
