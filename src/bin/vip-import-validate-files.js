@@ -20,6 +20,7 @@ import {
 	folderStructureValidation,
 	isFileSanitized,
 	doesImageHaveExistingSource,
+	logErrorsForIntermediateImages,
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
 } from '../lib/vip-import-validate-files';

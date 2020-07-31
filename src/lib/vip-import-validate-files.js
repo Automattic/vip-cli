@@ -348,3 +348,16 @@ export const logErrorsForInvalidFilenames = invalidFiles => {
 	console.log( '-------------------------------------------------------' );
 	console.log();
 };
+
+// Log errors for intermediate image file duplicates
+export const logErrorsForIntermediateImages = obj => {
+	for ( const original in obj ) {
+		console.log();
+		console.log(
+			chalk.red( '✕' ),
+			`Intermediate images: Duplicate files found:\n` +
+			'Original file: ' + chalk.blue( `${ original }\n` ) +
+			'Intermediate images: ' + chalk.cyan( `${ obj[ original ] }\n` ),
+		);
+	}
+}
