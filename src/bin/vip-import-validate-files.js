@@ -80,6 +80,7 @@ command( { requiredArgs: 1, format: true } )
 		// Collect files that have invalid file types (extensions) or filenames for error logging
 		const errorFileTypes = [];
 		const errorFileNames = [];
+		const intImagesObject = {};
 
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
@@ -122,14 +123,14 @@ command( { requiredArgs: 1, format: true } )
 			 */
 			const original = doesImageHaveExistingSource( file, nestedDirectories );
 
+			// If an image is an intermediate image, populate key/value pairs of the original image and intermediate image(s)
 			if ( original ) {
-				console.log();
-				console.log(
-					chalk.red( '✕' ),
-					`Intermediate images: Duplicate files found for: ${ file }\n` +
-					'Original file: ' + chalk.blue( `${ original }\n` ) +
-					'Intermediate images: ' + chalk.cyan( `${ file }\n` ),
-				);
+				if ( intImagesObject[ original ] ) {
+					// Key: original image, value: intermediate image(s)
+					intImagesObject[ original ] = intImagesObject[ original ] + ', ' + file;
+				} else {
+					intImagesObject[ original ] = file;
+				};
 			}
 		}
 		console.log( '-------------------------------------------------------' );
@@ -145,4 +146,8 @@ command( { requiredArgs: 1, format: true } )
 		if ( errorFileNames.length > 0 ) {
 			logErrorsForInvalidFilenames( errorFileNames );
 		}
+
+		if ( Object.keys( intImagesObject ).length > 0 ) {
+			logErrorsForIntermediateImages( intImagesObject );
+		};
 	} );
