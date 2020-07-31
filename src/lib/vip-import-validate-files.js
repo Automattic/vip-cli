@@ -92,7 +92,8 @@ const recommendedFileStructure = () => {
 		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
 		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
 	);
-	console.log( '-------------------------------------------------------' );
+	console.log( '------------------------------------------------------------' );
+	console.log();
 };
 
 // Recommend accepted file types
@@ -230,7 +231,6 @@ export const folderStructureValidation = folderStructure => {
 	if ( monthIndex && monthIndex === 2 ) {
 		console.log( '✅ File structure: Month directory exists (format: MM)' );
 		console.log();
-		console.log( '-------------------------------------------------------' );
 	} else {
 		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
 		console.log();
@@ -327,37 +327,40 @@ export const doesImageHaveExistingSource = ( file, folder ) => {
 
 // Log errors for files with invalid file extensions and recommend accepted file types
 export const logErrorsForInvalidFileTypes = invalidFiles => {
+	console.log( '------------------------------------------------------------' );
+	console.log();
+
 	invalidFiles.map( file => {
-		console.error( chalk.red( '✕' ), `File extensions: Invalid file type for file: ${ file }` );
+		console.error( chalk.red( '✕' ), 'File extensions: Invalid file type for file: ', chalk.cyan( `${ file }` ) );
 	} );
 
 	console.log();
 	recommendAcceptableFileTypes();
-	console.log( '-------------------------------------------------------' );
+	console.log( '------------------------------------------------------------' );
 	console.log();
 };
 
 // Log errors for files with invalid filenames and show a list of accepted/prohibited chars
 export const logErrorsForInvalidFilenames = invalidFiles => {
 	invalidFiles.map( file => {
-		console.log( chalk.red( '✕' ), `Character validation: Invalid filename for file: ${ file }` );
+		console.error( chalk.red( '✕' ), 'Character validation: Invalid filename for file: ', chalk.cyan( `${ file }` ) );
 	} );
 
 	console.log();
 	recommendAcceptableFileNames();
-	console.log( '-------------------------------------------------------' );
+	console.log( '------------------------------------------------------------' );
 	console.log();
 };
 
 // Log errors for intermediate image file duplicates
 export const logErrorsForIntermediateImages = obj => {
 	for ( const original in obj ) {
-		console.log();
-		console.log(
+		console.error(
 			chalk.red( '✕' ),
-			`Intermediate images: Duplicate files found:\n` +
+			'Intermediate images: Duplicate files found:\n' +
 			'Original file: ' + chalk.blue( `${ original }\n` ) +
 			'Intermediate images: ' + chalk.cyan( `${ obj[ original ] }\n` ),
 		);
 	}
+	console.log( '------------------------------------------------------------' );
 }

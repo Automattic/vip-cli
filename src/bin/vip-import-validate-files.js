@@ -44,11 +44,11 @@ command( { requiredArgs: 1, format: true } )
 		/**
 		 * Folder structure validation
 		 *
-		 * Find any nested directories to see if they follow the recommended structure
+		 * Find nested directories to see if media files follow the WordPress recommended folder structure
 		 *
-		 * Recommended structure: `uploads/year/month`
+		 * Recommended structure: `uploads/year/month` (Single sites)
 		 */
-		const nestedDirectories = await findNestedDirectories( folder );
+		const nestedDirectories = await findNestedDirectories( filePath );
 
 		if ( nestedDirectories ) {
 			folderStructureValidation( nestedDirectories );
@@ -70,15 +70,16 @@ command( { requiredArgs: 1, format: true } )
 				console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
 			}
 		} catch ( error ) {
-			console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ folder }: ${ error.message }` );
+			console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ filePath }: ${ error.message }` );
 		}
+
 		/**
 		 * Media file extension validation
 		 *
 		 * Ensure that prohibited media file types are not used
 		 */
 
-		// Collect files that have invalid file types (extensions) or filenames for error logging
+		// Collect invalid files for error logging
 		const errorFileTypes = [];
 		const errorFileNames = [];
 		const intImagesObject = {};
@@ -90,7 +91,7 @@ command( { requiredArgs: 1, format: true } )
 			const isFolder = stats.isDirectory();
 
 			const extension = path.extname( file ); // Extract the extension of the file
-			const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g - .jpg -> jpg)
+			const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g- .jpg -> jpg)
 			const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
 
 			// Check for any invalid file extensions
@@ -131,11 +132,9 @@ command( { requiredArgs: 1, format: true } )
 					intImagesObject[ original ] = intImagesObject[ original ] + ', ' + file;
 				} else {
 					intImagesObject[ original ] = file;
-				};
+				}
 			}
 		}
-		console.log( '-------------------------------------------------------' );
-		console.log();
 
 		/**
 		 * Error logging
@@ -150,5 +149,5 @@ command( { requiredArgs: 1, format: true } )
 
 		if ( Object.keys( intImagesObject ).length > 0 ) {
 			logErrorsForIntermediateImages( intImagesObject );
-		};
+		}
 	} );
