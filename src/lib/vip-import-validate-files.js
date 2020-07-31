@@ -363,4 +363,4 @@ export const logErrorsForIntermediateImages = obj => {
 		);
 	}
 	console.log( '------------------------------------------------------------' );
-}
+};
