@@ -1,9 +1,12 @@
-// @flow
+/**
+ * @flow
+ * @format
+ */
 
 /**
  * External dependencies
  */
-require( 'isomorphic-fetch' );
+import fetch from 'isomorphic-fetch';
 import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -31,16 +34,16 @@ export function disableGlobalGraphQLErrorHandling() {
 export default async function API(): Promise<ApolloClient> {
 	const token = await Token.get();
 	const headers = {
+		Authorization: token ? `Bearer ${ token.raw }` : null,
 		'User-Agent': env.userAgent,
 	};
 
-	if ( token ) {
-		headers.Authorization = `Bearer ${ token.raw }`;
-	}
-
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
 		if ( networkError && networkError.statusCode === 401 ) {
-			console.error( chalk.red( 'Unauthorized:' ), 'You are unauthorized to perform this request, please logout with `vip logout` then try again.' );
+			console.error(
+				chalk.red( 'Unauthorized:' ),
+				'You are unauthorized to perform this request, please logout with `vip logout` then try again.'
+			);
 			process.exit();
 		}
 
@@ -53,12 +56,45 @@ export default async function API(): Promise<ApolloClient> {
 		}
 	} );
 
-	const httpLink = new HttpLink( { uri: API_URL, headers, fetchOptions: {
-		agent: createSocksProxyAgent(),
-	} } );
+	const proxyAgent = createSocksProxyAgent();
 
-	return new ApolloClient( {
+	const httpLink = new HttpLink( {
+		uri: API_URL,
+		headers,
+		fetchOptions: {
+			agent: proxyAgent,
+		},
+	} );
+
+	const apiClient = new ApolloClient( {
 		link: errorLink.concat( httpLink ),
 		cache: new InMemoryCache(),
 	} );
+
+	/**
+	 * Call the Public API with an arbitrary path (e.g. to connect to REST endpoints).
+	 * This will include the token in an Authorization header so requests are "logged-in."
+	 * @param {string} path API path to pass to `fetch` -- will be prefixed by the API_HOST
+	 * @param {object} options options to pass to `fetch`
+	 * @returns {Promise} Return value of the `fetch` call
+	 */
+	apiClient.apiFetch = ( path: string, options = {} ): Promise<any> =>
+		fetch( `${ API_HOST }${ path }`, {
+			...options,
+			...{
+				agent: proxyAgent,
+				headers: {
+					...headers,
+					...{
+						'Content-Type': 'application/json',
+					},
+					...options.headers,
+				},
+			},
+			...{
+				body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
+			},
+		} );
+
+	return apiClient;
 }
