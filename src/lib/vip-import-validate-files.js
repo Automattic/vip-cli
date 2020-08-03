@@ -76,7 +76,8 @@ export const acceptedExtensions = [
 	'key', 'numbers', 'pages',
 ];
 
-/** Recommendations
+/** 
+	* Recommendations
  *
  * Recommend alternatives to invalid folders or files
  */
@@ -119,7 +120,8 @@ const recommendAcceptableFileNames = () => {
 	console.log();
 };
 
-/** Nested Directory Search
+/** 
+	* Nested Directory Search
  *
  * Use recursion to identify the nested tree structure of the folders
  *
@@ -244,7 +246,8 @@ export const folderStructureValidation = folderStructure => {
 	return;
 };
 
-/** Character validation
+/** 
+	* Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`
  * https://developer.wordpress.org/reference/functions/sanitize_file_name/
