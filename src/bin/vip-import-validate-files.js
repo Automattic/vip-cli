@@ -129,7 +129,7 @@ command( { requiredArgs: 1, format: true } )
 			if ( original ) {
 				if ( intImagesObject[ original ] ) {
 					// Key: original image, value: intermediate image(s)
-					intImagesObject[ original ] = intImagesObject[ original ] + ', ' + file;
+					intImagesObject[ original ] = `${ intImagesObject[ original ] }, ${ file }`;
 				} else {
 					intImagesObject[ original ] = file;
 				}

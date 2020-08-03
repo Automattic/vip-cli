@@ -146,7 +146,7 @@ export const findNestedDirectories = async directory => {
 	}
 
 	// Update the path with the current directory + nested directory
-	const updatedPath = directory + '/' + nestedDir;
+	const updatedPath = `${ directory }/${ nestedDir }`;
 
 	// Use recursion to map out the file structure
 	return findNestedDirectories( updatedPath );
