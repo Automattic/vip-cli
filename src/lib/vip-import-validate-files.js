@@ -153,6 +153,9 @@ export const findNestedDirectories = async directory => {
 		// Read what's inside the current directory
 		dir = await readDir( directory );
 
+		// Filter out hidden files such as .DS_Store
+		dir = dir.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
+
 		const firstNestedFolder = dir[ 0 ] // The first nested folder of the given directory
 		nestedDir = firstNestedFolder;
 
