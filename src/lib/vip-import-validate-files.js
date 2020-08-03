@@ -76,7 +76,7 @@ export const acceptedExtensions = [
 	'key', 'numbers', 'pages',
 ];
 
-/** 
+/**
 	* Character validation global variables
  *
  * Accepted and prohibited characters for filenames
@@ -88,14 +88,14 @@ const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicat
 
 // Prohibited characters in filenames
 const prohibitedCharacters = [
-	'+', '&', '#', '%', '=', '\'', '\"', '\\', '<', '>', ":", ";", ',', '/', '?', "$", '*', '|', '`', '!', '{', '}'
+	'+', '&', '#', '%', '=', '\'', '\"', '\\', '<', '>', ':', ';', ',', '/', '?', '$', '*', '|', '`', '!', '{', '}',
 ];
 const prohibitedCharactersSet = new Set( prohibitedCharacters );
 
 // Regex for prohibited characters
-	const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
+const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
 
-/** 
+/**
 	* Recommendations
  *
  * Recommend alternatives to invalid folders or files
@@ -139,7 +139,7 @@ const recommendAcceptableFileNames = () => {
 	);
 };
 
-/** 
+/**
 	* Nested Directory Search
  *
  * Use recursion to identify the nested tree structure of the folders
@@ -156,7 +156,7 @@ export const findNestedDirectories = async directory => {
 		// Filter out hidden files such as .DS_Store
 		dir = dir.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
 
-		const firstNestedFolder = dir[ 0 ] // The first nested folder of the given directory
+		const firstNestedFolder = dir[ 0 ]; // The first nested folder of the given directory
 		nestedDir = firstNestedFolder;
 
 		// Once we hit individual media files, stop
@@ -270,7 +270,7 @@ export const folderStructureValidation = folderStructure => {
 	return;
 };
 
-/** 
+/**
 	* Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`
