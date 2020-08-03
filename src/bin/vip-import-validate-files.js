@@ -95,12 +95,12 @@ command( { requiredArgs: 1, format: true } )
 			const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
 
 			// Check for any invalid file extensions
-			// Returns true if ext is invalid; false if valid
-			const invalidExtensions = acceptedExtensions.indexOf( extLowerCase ) < 0;
+			// Returns true if ext is valid; false if invalid
+			const validExtensions = acceptedExtensions.includes( extLowerCase );
 
 			// Collect files that have no extension, have invalid extensions,
 			// or are directories for error logging
-			if ( ! extension || invalidExtensions || isFolder ) {
+			if ( ! extension || ! validExtensions || isFolder ) {
 				errorFileTypes.push( file );
 			}
 
