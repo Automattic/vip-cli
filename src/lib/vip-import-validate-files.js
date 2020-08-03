@@ -77,6 +77,25 @@ export const acceptedExtensions = [
 ];
 
 /** 
+	* Character validation global variables
+ *
+ * Accepted and prohibited characters for filenames
+ */
+
+// Accepted characters in filenames
+const acceptedCharacters = [ 'Non-English characters', 'spaces', '(', ')', '[', ']', '~' ];
+const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
+
+// Prohibited characters in filenames
+const prohibitedCharacters = [
+	'+', '&', '#', '%', '=', '\'', '\"', '\\', '<', '>', ":", ";", ',', '/', '?', "$", '*', '|', '`', '!', '{', '}'
+];
+const prohibitedCharactersSet = new Set( prohibitedCharacters );
+
+// Regex for prohibited characters
+	const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
+
+/** 
 	* Recommendations
  *
  * Recommend alternatives to invalid folders or files
@@ -108,14 +127,15 @@ const recommendAcceptableFileTypes = () => {
 
 // Accepted file name characters
 const recommendAcceptableFileNames = () => {
-	const prohibitedCharacters = '+ & # % = \' \" \ < > : ; , / ? $ * | ` ! { }';
-	const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
+	// const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
+	const allowedCharacters = [ ...acceptedCharactersSet ].join( ' ' );
+	const notAllowedCharacters = [ ...prohibitedCharactersSet ].join( ' ' );
 
 	console.log(
 		'The following characters are allowed in file names:\n' +
-		chalk.green( `${ acceptedCharacters }\n\n` ) +
+		chalk.green( `${ allowedCharacters }\n\n` ) +
 		'The following characters are prohibited in file names:\n' +
-		chalk.red( `${ prohibitedCharacters }\n` )
+		chalk.red( `${ notAllowedCharacters }\n` )
 	);
 };
 
@@ -264,7 +284,6 @@ export const isFileSanitized = filename => {
 
 	// Prohibited characters:
 	// Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
-	const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
 	sanitizedFile = sanitizedFile.replace( regexSpecialChars, '' );
 
 	// No dashes, underscores, or periods allowed as the first
