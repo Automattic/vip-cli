@@ -87,11 +87,11 @@ const recommendedFileStructure = () => {
 	console.log(
 		chalk.underline( 'We recommend the WordPress default folder structure for your media files: \n\n' ) +
 		chalk.underline( 'Single sites:' ) +
-		chalk.yellow( ' `uploads/year/month/image.png` \n' ) +
-		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png` \n' ) +
+		chalk.yellow( '`uploads/year/month/image.png`\n' ) +
+		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png`\n' ) +
 		chalk.underline( 'Multisites:' ) +
-		chalk.cyan( ' `uploads/sites/siteID/year/month/image.png` \n' ) +
-		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png` \n' )
+		chalk.cyan( '`uploads/sites/siteID/year/month/image.png`\n' ) +
+		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png`\n' )
 	);
 	console.log( '------------------------------------------------------------' );
 	console.log();
@@ -113,11 +113,10 @@ const recommendAcceptableFileNames = () => {
 
 	console.log(
 		'The following characters are allowed in file names:\n' +
-		chalk.green( `${ acceptedCharacters }` ) + '\n\n' +
+		chalk.green( `${ acceptedCharacters }\n\n` ) +
 		'The following characters are prohibited in file names:\n' +
-		chalk.red( `${ prohibitedCharacters }` )
+		chalk.red( `${ prohibitedCharacters }\n` )
 	);
-	console.log();
 };
 
 /** 
