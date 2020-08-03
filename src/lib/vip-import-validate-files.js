@@ -152,7 +152,9 @@ export const findNestedDirectories = async directory => {
 	try {
 		// Read what's inside the current directory
 		dir = await readDir( directory );
-		nestedDir = dir[ 0 ];
+
+		const firstNestedFolder = dir[ 0 ] // The first nested folder of the given directory
+		nestedDir = firstNestedFolder;
 
 		// Once we hit individual media files, stop
 		const regexExtension = /\.\w{3,4}$/;
