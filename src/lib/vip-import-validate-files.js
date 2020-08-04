@@ -142,7 +142,13 @@ const recommendAcceptableFileNames = () => {
 /**
 	* Nested Directory Search
  *
- * Use recursion to identify the nested tree structure of the folders
+ * Use recursion to identify the nested tree structure of the given media file
+	* 
+	* Example media file:
+	*  - Given directory: uploads
+	*   - Nested directories: 2020, 2019, 2018, 2017
+	*    - Nested directories: 01, 02, 03, 04, 05, 06
+	*     - Individual files: image.jpg, image2.jpg, etc. 
  *
  * @param {string} directory Root directory, or the given (current) directory
  */
@@ -158,8 +164,8 @@ export const findNestedDirectories = directory => {
 		// Filter out hidden files such as .DS_Store
 		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
 
-		// For each directory
 		nestedDirectories.forEach( dir => {
+			// Concatenate the file path of the parent directory with the nested directory
 			const filePath = path.join( directory, dir );
 			const statSync = fs.stat( filePath ); // Get stats on the file/folder
 
