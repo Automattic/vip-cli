@@ -285,7 +285,9 @@ export const folderStructureValidation = folderStructure => {
  * @param {string} filename - The current file being validated
  * @returns {Boolean} - Checks if the filename has been sanitized
  */
-export const isFileSanitized = filename => {
+export const isFileSanitized = file => {
+	const filename = path.basename( file );
+	
 	let sanitizedFile = filename;
 
 	// Prohibited characters:
