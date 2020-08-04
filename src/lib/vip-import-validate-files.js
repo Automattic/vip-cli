@@ -330,7 +330,7 @@ const identifyIntermediateImage = filename => {
 };
 
 // Check if an intermediate image has an existing original (source) image
-export const doesImageHaveExistingSource = ( file, folder ) => {
+export const doesImageHaveExistingSource = file => {
 	const filename = path.basename( file );
 
 	// Intermediate image regex check
@@ -343,7 +343,13 @@ export const doesImageHaveExistingSource = ( file, folder ) => {
 		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
 		// e.g.- `panda4000x6000.png` -> `panda.png`
 		const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
-		const originalImage = path.join( folder, baseFileName );
+		
+		const splitFolder = file.split('/');
+
+		// Remove the last element (intermediate image filename) and replace it with the original image filename
+		splitFolder.splice( splitFolder.length -1, 1, baseFileName );
+
+		const originalImage = splitFolder.join( '/' );
 
 		// Check if an image with the same path + name (the original) already exists
 		if ( fs.existsSync( originalImage ) ) {
