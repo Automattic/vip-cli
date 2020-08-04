@@ -144,38 +144,38 @@ const recommendAcceptableFileNames = () => {
  *
  * Use recursion to identify the nested tree structure of the folders
  *
- * @param {string} directory Root directory, or the current directory
+ * @param {string} directory Root directory, or the given (current) directory
  */
-export const findNestedDirectories = async directory => {
-	let dir, nestedDir;
+let individualFiles = [];
+
+export const findNestedDirectories = directory => {
+	let nestedDirectories;
 
 	try {
-		// Read what's inside the current directory
-		dir = await readDir( directory );
+		// Read nested directories within the given directory
+		nestedDirectories = fs.readdir( directory );
 
 		// Filter out hidden files such as .DS_Store
-		dir = dir.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
+		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
 
-		const firstNestedFolder = dir[ 0 ]; // The first nested folder of the given directory
-		nestedDir = firstNestedFolder;
+		// For each directory
+		nestedDirectories.forEach( dir => {
+			const filePath = path.join( directory, dir );
+			const statSync = fs.stat( filePath ); // Get stats on the file/folder
 
-		// Once we hit individual media files, stop
-		const regexExtension = /\.\w{3,4}$/;
-		const mediaFiles = regexExtension.test( nestedDir );
-
-		if ( dir !== undefined && mediaFiles ) {
-			return directory;
-		}
+			// Keep looking for nested directories until we hit individual files
+			if ( statSync.isDirectory() ) {
+				return findNestedDirectories( filePath );
+			} else {
+				// Once we hit media files, push them to an array to do invidual file validations later on
+				return individualFiles.push( filePath ); 
+			}
+		} );
 	} catch ( error ) {
 		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ error.message }` );
 		return;
 	}
-
-	// Update the path with the current directory + nested directory
-	const updatedPath = `${ directory }/${ nestedDir }`;
-
-	// Use recursion to map out the file structure
-	return findNestedDirectories( updatedPath );
+	return individualFiles;
 };
 
 /**
