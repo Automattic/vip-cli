@@ -26,6 +26,7 @@ import {
 } from '../lib/vip-import-validate-files';
 
 // Promisify to use async/await
+const syncStat = promisify( fs.statSync );
 const stat = promisify( fs.stat );
 const readDir = promisify( fs.readdir );
 
@@ -49,10 +50,10 @@ command( { requiredArgs: 1, format: true } )
 		 *
 		 * Recommended structure: `uploads/year/month` (Single sites)
 		 */
-		const nestedDirectories = await findNestedDirectories( filePath );
+		const nestedDirectories = findNestedDirectories( filePath );
 
 		if ( nestedDirectories ) {
-			folderStructureValidation( nestedDirectories );
+			nestedDirectories.forEach( dir => folderStructureValidation( dir ));
 		}
 
 		/**
@@ -62,16 +63,10 @@ command( { requiredArgs: 1, format: true } )
 		 * - Filename validation
 		 * - Intermediate image validation
 		 */
-		let files;
+		let files = nestedDirectories;
 
-		try {
-			files = await readDir( nestedDirectories );
-
-			if ( ! files || ! files.length || files.length <= 0 ) {
-				console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
-			}
-		} catch ( error ) {
-			console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ filePath }: ${ error.message }` );
+		if ( ! files || ! files.length || files.length <= 0 ) {
+			console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
 		}
 
 		/**
