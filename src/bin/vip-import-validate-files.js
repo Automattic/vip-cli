@@ -63,7 +63,7 @@ command( { requiredArgs: 1, format: true } )
 		 * - Filename validation
 		 * - Intermediate image validation
 		 */
-		let files = nestedDirectories;
+		let { files, structureObj } = nestedDirectories;
 
 		if ( ! files || ! files.length || files.length <= 0 ) {
 			console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
@@ -119,7 +119,7 @@ command( { requiredArgs: 1, format: true } )
 			 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
 			 * You can resize an image directly on VIP so intermediate images are not necessary.
 			 */
-			const original = doesImageHaveExistingSource( file, nestedDirectories );
+			const original = doesImageHaveExistingSource( file );
 
 			// If an image is an intermediate image, populate key/value pairs of the original image and intermediate image(s)
 			if ( original ) {

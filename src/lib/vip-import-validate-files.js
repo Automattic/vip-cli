@@ -153,6 +153,7 @@ const recommendAcceptableFileNames = () => {
  * @param {string} directory Root directory, or the given (current) directory
  */
 let files = [];
+let folderStructureObj = {};
 
 export const findNestedDirectories = directory => {
 	let nestedDirectories;
@@ -173,7 +174,10 @@ export const findNestedDirectories = directory => {
 			if ( statSync.isDirectory() ) {
 				return findNestedDirectories( filePath );
 			} else {
-				// Once we hit media files, push them to an array to do individual file validations later on
+				// Once we hit media files, add the path of all existing folders
+				// as object keys to validate folder structure later on
+				folderStructureObj[ directory ] = true;
+				// Also, push individual files to an array to do individual file validations later on
 				return files.push( filePath ); 
 			}
 		} );
