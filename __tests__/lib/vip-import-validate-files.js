@@ -13,20 +13,28 @@ import {
 describe( 'lib/vip-import-validate-files', () => {
 	describe( 'folderStructureValidation', () => {
 		it( 'should correctly validate a recommended folder structure', async () => {
-			const path = 'uploads/2020/06';
+			const folderStructureObj = {
+				'uploads/2020/06': true,
+				'uploads/2019/01': true,
+				'uploads/2018/03': true
+			}
 
+			// Mock console.log()
 			console.log = jest.fn();
 
-			const folderStructure = folderStructureValidation( path );
+			// Call function
+			folderStructureValidation( Object.keys( folderStructureObj ) );
 
-			expect( console.log ).toHaveBeenCalledWith( '✅ File structure: Uploads directory exists' );
+			expect( console.log ).toHaveBeenCalled();
+			expect( console.log.mock.calls[ 0 ][ 0 ] ).toEqual( expect.stringContaining( 'Folder:' ) );
+			expect( console.log.mock.calls[ 0 ][ 1 ] ).toEqual( expect.stringContaining( 'uploads/2020/06' ) );
 		} );
 		it( 'should log recommendations for a non-recommended folder structure', async () => {
 			const path = 'folder/structure/not-recommended';
 
 			console.log = jest.fn();
 
-			const folderStructure = folderStructureValidation( path );
+			folderStructureValidation( path );
 
 			expect( console.log ).toHaveBeenCalled();
 		} );
