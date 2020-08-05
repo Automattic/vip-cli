@@ -51,9 +51,9 @@ command( { requiredArgs: 1, format: true } )
 		 * Recommended structure: `uploads/year/month` (Single sites)
 		 */
 		const nestedFiles = findNestedDirectories( filePath );
-		
-		let { files, folderStructureObj } = nestedFiles; // Destructure
-		
+
+		const { files, folderStructureObj } = nestedFiles; // Destructure
+
 		// Check if there are any nested directories within the given folder
 		const nestedDirectories = Object.keys( folderStructureObj );
 

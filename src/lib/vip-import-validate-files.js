@@ -143,17 +143,17 @@ const recommendAcceptableFileNames = () => {
 	* Nested Directory Search
  *
  * Use recursion to identify the nested tree structure of the given media file
-	* 
+	*
 	* Example media file:
 	*  - Given directory: uploads
 	*   - Nested directories: 2020, 2019, 2018, 2017
 	*    - Nested directories: 01, 02, 03, 04, 05, 06
-	*     - Individual files: image.jpg, image2.jpg, etc. 
+	*     - Individual files: image.jpg, image2.jpg, etc.
  *
  * @param {string} directory Root directory, or the given (current) directory
  */
-let files = [];
-let folderStructureObj = {};
+const files = [];
+const folderStructureObj = {};
 
 export const findNestedDirectories = directory => {
 	let nestedDirectories;
@@ -172,14 +172,14 @@ export const findNestedDirectories = directory => {
 
 			// Keep looking for nested directories until we hit individual files
 			if ( statSync.isDirectory() ) {
-				return findNestedDirectories( filePath );
+				findNestedDirectories( filePath );
 			} else {
 				// Once we hit media files, add the path of all existing folders
 				// as object keys to validate folder structure later on
 				folderStructureObj[ directory ] = true;
 
 				// Also, push individual files to an array to do individual file validations later on
-				return files.push( filePath ); 
+				return files.push( filePath );
 			}
 		} );
 	} catch ( error ) {
@@ -205,7 +205,7 @@ export const folderStructureValidation = folderStructureKeys => {
 	let errors = 0;
 
 	// Loop through each key (path) to validate the folder structure format
-	for( const folderPath of folderStructureKeys) {
+	for ( const folderPath of folderStructureKeys ) {
 		let yearIndex, monthIndex;
 
 		console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
@@ -277,7 +277,7 @@ export const folderStructureValidation = folderStructureKeys => {
 			console.log();
 			errors++;
 		}
- }
+	}
 
 	if ( errors ) {
 		recommendedFileStructure();
@@ -297,7 +297,7 @@ export const folderStructureValidation = folderStructureKeys => {
  */
 export const isFileSanitized = file => {
 	const filename = path.basename( file );
-	
+
 	let sanitizedFile = filename;
 
 	// Prohibited characters:
@@ -353,11 +353,11 @@ export const doesImageHaveExistingSource = file => {
 		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
 		// e.g.- `panda4000x6000.png` -> `panda.png`
 		const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
-		
-		const splitFolder = file.split('/');
+
+		const splitFolder = file.split( '/' );
 
 		// Remove the last element (intermediate image filename) and replace it with the original image filename
-		splitFolder.splice( splitFolder.length -1, 1, baseFileName );
+		splitFolder.splice( splitFolder.length - 1, 1, baseFileName );
 
 		const originalImage = splitFolder.join( '/' );
 
