@@ -46,14 +46,19 @@ command( { requiredArgs: 1, format: true } )
 		/**
 		 * Folder structure validation
 		 *
-		 * Find nested directories to see if media files follow the WordPress recommended folder structure
+		 * Find nested directories and files to see if media files follow the WordPress recommended folder structure
 		 *
 		 * Recommended structure: `uploads/year/month` (Single sites)
 		 */
-		const nestedDirectories = findNestedDirectories( filePath );
+		const nestedFiles = findNestedDirectories( filePath );
+		
+		let { files, folderStructureObj } = nestedFiles; // Destructure
+		
+		// Check if there are any nested directories within the given folder
+		const nestedDirectories = Object.keys( folderStructureObj );
 
-		if ( nestedDirectories ) {
-			nestedDirectories.forEach( dir => folderStructureValidation( dir ));
+		if ( nestedDirectories && nestedDirectories.length > 0 ) {
+			folderStructureValidation( nestedDirectories );
 		}
 
 		/**
@@ -63,8 +68,6 @@ command( { requiredArgs: 1, format: true } )
 		 * - Filename validation
 		 * - Intermediate image validation
 		 */
-		let { files, structureObj } = nestedDirectories;
-
 		if ( ! files || ! files.length || files.length <= 0 ) {
 			console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
 		}
