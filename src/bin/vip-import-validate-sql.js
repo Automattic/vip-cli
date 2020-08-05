@@ -138,7 +138,6 @@ function checkTablePrefixes( tables ) {
 command( {
 	requiredArgs: 1,
 } )
-	.command( 'sql', 'Validate a DB Import (SQL) file' )
 	.example( 'vip import validate sql <file>', 'Run the import validation against file' )
 	.argv( process.argv, async arg => {
 		if ( ! arg && ! arg[ 0 ] ) {

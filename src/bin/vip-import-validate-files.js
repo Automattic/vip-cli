@@ -30,7 +30,6 @@ const stat = promisify( fs.stat );
 const readDir = promisify( fs.readdir );
 
 command( { requiredArgs: 1, format: true } )
-	.command( 'files', 'Validate a media file/folder' )
 	.example( 'vip import validate files <file>', 'Run the import validation against the file' )
 	.argv( process.argv, async ( arg, options ) => {
 		/**
