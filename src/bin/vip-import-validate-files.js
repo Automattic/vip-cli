@@ -83,7 +83,7 @@ command( { requiredArgs: 1, format: true } )
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
 			// Check if file is a directory
-			const stats = await stat( nestedDirectories + '/' + file );
+			const stats = await stat( file );
 			const isFolder = stats.isDirectory();
 
 			const extension = path.extname( file ); // Extract the extension of the file

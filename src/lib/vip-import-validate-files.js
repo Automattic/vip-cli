@@ -177,6 +177,7 @@ export const findNestedDirectories = directory => {
 				// Once we hit media files, add the path of all existing folders
 				// as object keys to validate folder structure later on
 				folderStructureObj[ directory ] = true;
+
 				// Also, push individual files to an array to do individual file validations later on
 				return files.push( filePath ); 
 			}
@@ -186,7 +187,7 @@ export const findNestedDirectories = directory => {
 		return;
 	}
 
-	return files;
+	return { files, folderStructureObj };
 };
 
 /**
