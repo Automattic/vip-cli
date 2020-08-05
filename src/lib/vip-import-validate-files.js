@@ -159,7 +159,7 @@ export const findNestedDirectories = directory => {
 
 	try {
 		// Read nested directories within the given directory
-		nestedDirectories = fs.readdir( directory );
+		nestedDirectories = fs.readdirSync( directory );
 
 		// Filter out hidden files such as .DS_Store
 		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
@@ -167,7 +167,7 @@ export const findNestedDirectories = directory => {
 		nestedDirectories.forEach( dir => {
 			// Concatenate the file path of the parent directory with the nested directory
 			const filePath = path.join( directory, dir );
-			const statSync = fs.stat( filePath ); // Get stats on the file/folder
+			const statSync = fs.statSync( filePath ); // Get stats on the file/folder
 
 			// Keep looking for nested directories until we hit individual files
 			if ( statSync.isDirectory() ) {
