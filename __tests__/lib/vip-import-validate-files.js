@@ -16,8 +16,8 @@ describe( 'lib/vip-import-validate-files', () => {
 			const folderStructureObj = {
 				'uploads/2020/06': true,
 				'uploads/2019/01': true,
-				'uploads/2018/03': true
-			}
+				'uploads/2018/03': true,
+			};
 
 			// Mock console.log()
 			console.log = jest.fn();
