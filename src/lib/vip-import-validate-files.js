@@ -208,6 +208,8 @@ export const folderStructureValidation = folderStructureKeys => {
 	for( const folderPath of folderStructureKeys) {
 		let yearIndex, monthIndex;
 
+		console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
+
 		// Turn the path into an array to determine index position
 		const directories = folderPath.split( '/' );
 
@@ -252,7 +254,6 @@ export const folderStructureValidation = folderStructureKeys => {
 		if ( uploadsIndex === 0 ) {
 			console.log();
 			console.log( '✅ File structure: Uploads directory exists' );
-			console.log();
 		} else {
 			console.log();
 			console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
@@ -262,7 +263,6 @@ export const folderStructureValidation = folderStructureKeys => {
 		// Year folder
 		if ( yearIndex && yearIndex === 1 ) {
 			console.log( '✅ File structure: Year directory exists (format: YYYY)' );
-			console.log();
 		} else {
 			console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
 			errors++;
@@ -377,9 +377,6 @@ export const doesImageHaveExistingSource = file => {
 
 // Log errors for files with invalid file extensions and recommend accepted file types
 export const logErrorsForInvalidFileTypes = invalidFiles => {
-	console.log( '------------------------------------------------------------' );
-	console.log();
-
 	invalidFiles.map( file => {
 		console.error( chalk.red( '✕' ), 'File extensions: Invalid file type for file: ', chalk.cyan( `${ file }` ) );
 	} );
