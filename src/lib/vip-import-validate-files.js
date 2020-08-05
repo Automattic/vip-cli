@@ -152,7 +152,7 @@ const recommendAcceptableFileNames = () => {
  *
  * @param {string} directory Root directory, or the given (current) directory
  */
-let individualFiles = [];
+let files = [];
 
 export const findNestedDirectories = directory => {
 	let nestedDirectories;
@@ -173,15 +173,16 @@ export const findNestedDirectories = directory => {
 			if ( statSync.isDirectory() ) {
 				return findNestedDirectories( filePath );
 			} else {
-				// Once we hit media files, push them to an array to do invidual file validations later on
-				return individualFiles.push( filePath ); 
+				// Once we hit media files, push them to an array to do individual file validations later on
+				return files.push( filePath ); 
 			}
 		} );
 	} catch ( error ) {
 		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ error.message }` );
 		return;
 	}
-	return individualFiles;
+
+	return files;
 };
 
 /**
