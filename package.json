@@ -1,12 +1,15 @@
 {
   "name": "@automattic/vip",
-  "version": "1.10.0",
+  "version": "1.11.1-dev",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-import": "dist/bin/vip-import.js",
+    "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
+    "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
