@@ -43,6 +43,8 @@ command( { requiredArgs: 1, format: true } )
 		arg = url.parse( folder ); // Then parse the file to its URL parts
 		const filePath = arg.path; // Extract the path of the file
 
+		let folderValidation;
+
 		/**
 		 * Folder structure validation
 		 *
@@ -58,7 +60,7 @@ command( { requiredArgs: 1, format: true } )
 		const nestedDirectories = Object.keys( folderStructureObj );
 
 		if ( nestedDirectories && nestedDirectories.length > 0 ) {
-			folderStructureValidation( nestedDirectories );
+			folderValidation = folderStructureValidation( nestedDirectories );
 		}
 
 		/**
@@ -81,7 +83,9 @@ command( { requiredArgs: 1, format: true } )
 		// Collect invalid files for error logging
 		const errorFileTypes = [];
 		const errorFileNames = [];
-		const intImagesObject = {};
+		const intermediateImages = {
+			"tally": 0
+		};
 
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
@@ -124,13 +128,16 @@ command( { requiredArgs: 1, format: true } )
 			 */
 			const original = doesImageHaveExistingSource( file );
 
-			// If an image is an intermediate image, populate key/value pairs of the original image and intermediate image(s)
+			// If an image is an intermediate image, increment the total number and
+			// populate key/value pairs of the original image and intermediate image(s)
 			if ( original ) {
-				if ( intImagesObject[ original ] ) {
+				intermediateImages.tally++;
+
+				if ( intermediateImages[ original ] ) {
 					// Key: original image, value: intermediate image(s)
-					intImagesObject[ original ] = `${ intImagesObject[ original ] }, ${ file }`;
+					intermediateImages[ original ] = `${ intermediateImages[ original ] }, ${ file }`;
 				} else {
-					intImagesObject[ original ] = file;
+					intermediateImages[ original ] = file;
 				}
 			}
 		}
@@ -146,7 +153,7 @@ command( { requiredArgs: 1, format: true } )
 			logErrorsForInvalidFilenames( errorFileNames );
 		}
 
-		if ( Object.keys( intImagesObject ).length > 0 ) {
-			logErrorsForIntermediateImages( intImagesObject );
+		if ( Object.keys( intermediateImages ).length > 0 ) {
+			logErrorsForIntermediateImages( intermediateImages );
 		}
 	} );

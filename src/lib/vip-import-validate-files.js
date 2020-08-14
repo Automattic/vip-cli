@@ -202,11 +202,13 @@ export const findNestedDirectories = directory => {
  * @param {Array} folderStructureKeys Path of the entire folder structure
  */
 export const folderStructureValidation = folderStructureKeys => {
-	let errors = 0;
+	// Collect all the folder paths that have errors
+	let allErrors = [];
 
 	// Loop through each key (path) to validate the folder structure format
 	for ( const folderPath of folderStructureKeys ) {
 		let yearIndex, monthIndex;
+		let error = 0; // Tally individual folder errors
 
 		console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
 
@@ -257,7 +259,7 @@ export const folderStructureValidation = folderStructureKeys => {
 		} else {
 			console.log();
 			console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
-			errors++;
+			error++;
 		}
 
 		// Year folder
@@ -265,7 +267,7 @@ export const folderStructureValidation = folderStructureKeys => {
 			console.log( '✅ File structure: Year directory exists (format: YYYY)' );
 		} else {
 			console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
-			errors++;
+			error++;
 		}
 
 		// Month folder
@@ -275,15 +277,20 @@ export const folderStructureValidation = folderStructureKeys => {
 		} else {
 			console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
 			console.log();
-			errors++;
+			error++;
+		}
+
+		// Push individual folder errors to the collective array of errors
+		if ( error > 0 ) {
+			allErrors.push( folderPath );
 		}
 	}
 
-	if ( errors ) {
+	if ( allErrors.length > 0 ) {
 		recommendedFileStructure();
 	}
 
-	return;
+	return allErrors;
 };
 
 /**
