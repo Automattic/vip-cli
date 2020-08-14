@@ -85,7 +85,7 @@ command( { requiredArgs: 1, format: true } )
 		const errorFileTypes = [];
 		const errorFileNames = [];
 		const intermediateImages = {
-			"tally": 0
+			tally: 0,
 		};
 
 		// Iterate through each file to isolate the extension name
