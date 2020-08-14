@@ -418,3 +418,31 @@ export const logErrorsForIntermediateImages = obj => {
 	}
 	console.log( '------------------------------------------------------------' );
 };
+
+export const summaryLogs = ( folderErrorsLength, intImagesErrorsLength, fileTypeErrorsLength, filenameErrorsLength, totalFiles, totalFolders ) => {
+ if ( folderErrorsLength > 0 ) {
+  folderErrorsLength = chalk.bgYellow( ' RECOMMENDED ') + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total`;
+ } else {
+  folderErrorsLength = chalk.bgGreen( '    PASS     ') + chalk.bold.green( ` ${ totalFolders } folders, ` ) + `${ totalFolders } folders total`;
+ }
+ 
+ if( intImagesErrorsLength > 0 ) {
+  intImagesErrorsLength = chalk.white.bgRed( '   ERROR     ') + chalk.red( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total`;
+ } else {
+  intImagesErrorsLength = chalk.white.bgGreen( '    PASS     ') + chalk.green( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total`;
+ }
+
+ if( fileTypeErrorsLength > 0 ) {
+  fileTypeErrorsLength = chalk.white.bgRed( '   ERROR     ') + chalk.red( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total`;
+ } else {
+  fileTypeErrorsLength = chalk.white.bgGreen( '    PASS     ') + chalk.green( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total`;
+ }
+
+ if ( filenameErrorsLength ) {
+  filenameErrorsLength = chalk.white.bgRed( '   ERROR     ') + chalk.red( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total`;
+ } else {
+  filenameErrorsLength = chalk.bgGreen( '    PASS     ') + chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total`;
+ }
+
+ console.log(`\n${ folderErrorsLength }\n${ intImagesErrorsLength }\n${ fileTypeErrorsLength }\n${ filenameErrorsLength }\n`);
+}

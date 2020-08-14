@@ -23,6 +23,7 @@ import {
 	logErrorsForIntermediateImages,
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
+	summaryLogs,
 } from '../lib/vip-import-validate-files';
 
 // Promisify to use async/await
@@ -156,4 +157,7 @@ command( { requiredArgs: 1, format: true } )
 		if ( Object.keys( intermediateImages ).length > 0 ) {
 			logErrorsForIntermediateImages( intermediateImages );
 		}
+
+		// Log a summary of all errors
+		summaryLogs( folderValidation.length, intermediateImages.tally, errorFileTypes.length, errorFileNames.length, files.length, nestedDirectories.length );
 	} );
