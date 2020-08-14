@@ -22,6 +22,7 @@ import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 import { rollbar } from 'lib/rollbar';
+import createSocksProxyAgent from 'lib/http/socks-proxy-agent';
 
 const appQuery = `id, name,
 	organization {
@@ -145,6 +146,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 				},
 			},
 		},
+		agent: createSocksProxyAgent(),
 	} );
 
 	const stdoutStream = IOStream.createStream();
