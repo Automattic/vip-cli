@@ -24,6 +24,9 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 1.11.0
+- Added `vip import validate sql` and `vip import validate files` commands to run static validation checks for SQL and media files for imports
+
 ### 1.10.0
 - Added support for specifying a SOCKS proxy through the environment variable VIP_PROXY
 
