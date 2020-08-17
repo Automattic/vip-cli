@@ -425,7 +425,7 @@ export const summaryLogs = ( {
 	fileTypeErrorsLength,
 	filenameErrorsLength,
 	totalFiles,
-	totalFolders
+	totalFolders,
 } ) => {
 	if ( folderErrorsLength > 0 ) {
 		folderErrorsLength = chalk.bgYellow( ' RECOMMENDED ' ) + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total`;

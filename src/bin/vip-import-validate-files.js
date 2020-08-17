@@ -164,6 +164,6 @@ command( { requiredArgs: 1, format: true } )
 			fileTypeErrorsLength: errorFileTypes.length,
 			filenameErrorsLength: errorFileNames.length,
 			totalFiles: files.length,
-			totalFolders: nestedDirectories.length
+			totalFolders: nestedDirectories.length,
 		} );
 	} );
