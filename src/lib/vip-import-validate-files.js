@@ -419,7 +419,14 @@ export const logErrorsForIntermediateImages = obj => {
 	console.log( '------------------------------------------------------------' );
 };
 
-export const summaryLogs = ( folderErrorsLength, intImagesErrorsLength, fileTypeErrorsLength, filenameErrorsLength, totalFiles, totalFolders ) => {
+export const summaryLogs = ( {
+	folderErrorsLength,
+	intImagesErrorsLength,
+	fileTypeErrorsLength,
+	filenameErrorsLength,
+	totalFiles,
+	totalFolders
+} ) => {
 	if ( folderErrorsLength > 0 ) {
 		folderErrorsLength = chalk.bgYellow( ' RECOMMENDED ' ) + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total`;
 	} else {

@@ -158,5 +158,12 @@ command( { requiredArgs: 1, format: true } )
 		}
 
 		// Log a summary of all errors
-		summaryLogs( folderValidation.length, intermediateImages.tally, errorFileTypes.length, errorFileNames.length, files.length, nestedDirectories.length );
+		summaryLogs( {
+			folderErrorsLength: folderValidation.length,
+			intImagesErrorsLength: intermediateImages.tally,
+			fileTypeErrorsLength: errorFileTypes.length,
+			filenameErrorsLength: errorFileNames.length,
+			totalFiles: files.length,
+			totalFolders: nestedDirectories.length
+		} );
 	} );
