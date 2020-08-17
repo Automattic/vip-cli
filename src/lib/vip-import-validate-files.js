@@ -142,40 +142,52 @@ const recommendAcceptableFileNames = () => {
 /**
 	* Nested Directory Search
  *
- * Use recursion to identify the nested tree structure of the folders
+ * Use recursion to identify the nested tree structure of the given media file
+	*
+	* Example media file:
+	*  - Given directory: uploads
+	*   - Nested directories: 2020, 2019, 2018, 2017
+	*    - Nested directories: 01, 02, 03, 04, 05, 06
+	*     - Individual files: image.jpg, image2.jpg, etc.
  *
- * @param {string} directory Root directory, or the current directory
+ * @param {string} directory Root directory, or the given (current) directory
  */
-export const findNestedDirectories = async directory => {
-	let dir, nestedDir;
+const files = [];
+const folderStructureObj = {};
+
+export const findNestedDirectories = directory => {
+	let nestedDirectories;
 
 	try {
-		// Read what's inside the current directory
-		dir = await readDir( directory );
+		// Read nested directories within the given directory
+		nestedDirectories = fs.readdirSync( directory );
 
 		// Filter out hidden files such as .DS_Store
-		dir = dir.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
+		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
 
-		const firstNestedFolder = dir[ 0 ]; // The first nested folder of the given directory
-		nestedDir = firstNestedFolder;
+		nestedDirectories.forEach( dir => {
+			// Concatenate the file path of the parent directory with the nested directory
+			const filePath = path.join( directory, dir );
+			const statSync = fs.statSync( filePath ); // Get stats on the file/folder
 
-		// Once we hit individual media files, stop
-		const regexExtension = /\.\w{3,4}$/;
-		const mediaFiles = regexExtension.test( nestedDir );
+			// Keep looking for nested directories until we hit individual files
+			if ( statSync.isDirectory() ) {
+				findNestedDirectories( filePath );
+			} else {
+				// Once we hit media files, add the path of all existing folders
+				// as object keys to validate folder structure later on
+				folderStructureObj[ directory ] = true;
 
-		if ( dir !== undefined && mediaFiles ) {
-			return directory;
-		}
+				// Also, push individual files to an array to do individual file validations later on
+				return files.push( filePath );
+			}
+		} );
 	} catch ( error ) {
 		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ error.message }` );
 		return;
 	}
 
-	// Update the path with the current directory + nested directory
-	const updatedPath = `${ directory }/${ nestedDir }`;
-
-	// Use recursion to map out the file structure
-	return findNestedDirectories( updatedPath );
+	return { files, folderStructureObj };
 };
 
 /**
@@ -187,87 +199,98 @@ export const findNestedDirectories = async directory => {
  * Check if the folder structure follows the WordPress recommended `uploads/year/month`
  * folder path structure for media files
  *
- * @param {string} folderStructure Path of the entire folder structure
+ * @param {Array} folderStructureKeys Path of the entire folder structure
  */
-export const folderStructureValidation = folderStructure => {
-	let errors = 0;
-	let yearIndex, monthIndex;
+export const folderStructureValidation = folderStructureKeys => {
+	// Collect all the folder paths that have errors
+	const allErrors = [];
 
-	// Turn the path into an array to determine index position
-	const directories = folderStructure.split( '/' );
+	// Loop through each key (path) to validate the folder structure format
+	for ( const folderPath of folderStructureKeys ) {
+		let yearIndex, monthIndex;
+		let error = 0; // Tally individual folder errors
 
-	/**
-	 * Upload folder validation
-	 *
-	 * Find if an `uploads` folder exists and return its index position
-	 */
-	const uploadsIndex = directories.indexOf( 'uploads' );
+		console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
 
-	/**
-	 * Year folder validation
-	 *
-	 * Find if a year folder exists via a four digit regex matching pattern,
-	 * then obtain that value
-	 */
-	const regexYear = /\b\d{4}\b/g;
-	const year = regexYear.exec( folderStructure ); // Returns an array with the regex-matching value
+		// Turn the path into an array to determine index position
+		const directories = folderPath.split( '/' );
 
-	if ( year ) {
-		yearIndex = directories.indexOf( year[ 0 ] );
+		/**
+			* Upload folder validation
+			*
+			* Find if an `uploads` folder exists and return its index position
+			*/
+		const uploadsIndex = directories.indexOf( 'uploads' );
+
+		/**
+			* Year folder validation
+			*
+			* Find if a year folder exists via a four digit regex matching pattern,
+			* then obtain that value
+			*/
+		const regexYear = /\b\d{4}\b/g;
+		const year = regexYear.exec( folderPath ); // Returns an array with the regex-matching value
+
+		if ( year ) {
+			yearIndex = directories.indexOf( year[ 0 ] );
+		}
+
+		/**
+			* Month folder validation
+			*
+			* Find if a month folder exists via a two digit regex matching pattern,
+			* then obtain that value
+			*/
+		const regexMonth = /\b\d{2}\b/g;
+		const month = regexMonth.exec( folderPath ); // Returns an array with the regex-matching value
+
+		if ( month ) {
+			monthIndex = directories.indexOf( month[ 0 ] );
+		}
+
+		/**
+			* Logging
+			*/
+
+		// Uploads folder
+		if ( uploadsIndex === 0 ) {
+			console.log();
+			console.log( '✅ File structure: Uploads directory exists' );
+		} else {
+			console.log();
+			console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+			error++;
+		}
+
+		// Year folder
+		if ( yearIndex && yearIndex === 1 ) {
+			console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+		} else {
+			console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
+			error++;
+		}
+
+		// Month folder
+		if ( monthIndex && monthIndex === 2 ) {
+			console.log( '✅ File structure: Month directory exists (format: MM)' );
+			console.log();
+		} else {
+			console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
+			console.log();
+			error++;
+		}
+
+		// Push individual folder errors to the collective array of errors
+		if ( error > 0 ) {
+			allErrors.push( folderPath );
+		}
 	}
 
-	/**
-	 * Month folder validation
-	 *
-	 * Find if a month folder exists via a two digit regex matching pattern,
-	 * then obtain that value
-	 */
-	const regexMonth = /\b\d{2}\b/g;
-	const month = regexMonth.exec( folderStructure ); // Returns an array with the regex-matching value
-
-	if ( month ) {
-		monthIndex = directories.indexOf( month[ 0 ] );
-	}
-
-	/**
-	 * Logging
-	 */
-
-	// Uploads folder
-	if ( uploadsIndex === 0 ) {
-		console.log();
-		console.log( '✅ File structure: Uploads directory exists' );
-		console.log();
-	} else {
-		console.log();
-		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
-		errors++;
-	}
-
-	// Year folder
-	if ( yearIndex && yearIndex === 1 ) {
-		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
-		console.log();
-	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
-		errors++;
-	}
-
-	// Month folder
-	if ( monthIndex && monthIndex === 2 ) {
-		console.log( '✅ File structure: Month directory exists (format: MM)' );
-		console.log();
-	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
-		console.log();
-		errors++;
-	}
-
-	if ( errors ) {
+	if ( allErrors.length > 0 ) {
 		recommendedFileStructure();
 	}
 
-	return;
+	return allErrors;
 };
 
 /**
@@ -279,7 +302,9 @@ export const folderStructureValidation = folderStructure => {
  * @param {string} filename - The current file being validated
  * @returns {Boolean} - Checks if the filename has been sanitized
  */
-export const isFileSanitized = filename => {
+export const isFileSanitized = file => {
+	const filename = path.basename( file );
+
 	let sanitizedFile = filename;
 
 	// Prohibited characters:
@@ -322,7 +347,7 @@ const identifyIntermediateImage = filename => {
 };
 
 // Check if an intermediate image has an existing original (source) image
-export const doesImageHaveExistingSource = ( file, folder ) => {
+export const doesImageHaveExistingSource = file => {
 	const filename = path.basename( file );
 
 	// Intermediate image regex check
@@ -335,7 +360,13 @@ export const doesImageHaveExistingSource = ( file, folder ) => {
 		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
 		// e.g.- `panda4000x6000.png` -> `panda.png`
 		const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
-		const originalImage = path.join( folder, baseFileName );
+
+		const splitFolder = file.split( '/' );
+
+		// Remove the last element (intermediate image filename) and replace it with the original image filename
+		splitFolder.splice( splitFolder.length - 1, 1, baseFileName );
+
+		const originalImage = splitFolder.join( '/' );
 
 		// Check if an image with the same path + name (the original) already exists
 		if ( fs.existsSync( originalImage ) ) {
@@ -353,9 +384,6 @@ export const doesImageHaveExistingSource = ( file, folder ) => {
 
 // Log errors for files with invalid file extensions and recommend accepted file types
 export const logErrorsForInvalidFileTypes = invalidFiles => {
-	console.log( '------------------------------------------------------------' );
-	console.log();
-
 	invalidFiles.map( file => {
 		console.error( chalk.red( '✕' ), 'File extensions: Invalid file type for file: ', chalk.cyan( `${ file }` ) );
 	} );
@@ -389,4 +417,39 @@ export const logErrorsForIntermediateImages = obj => {
 		);
 	}
 	console.log( '------------------------------------------------------------' );
+};
+
+export const summaryLogs = ( {
+	folderErrorsLength,
+	intImagesErrorsLength,
+	fileTypeErrorsLength,
+	filenameErrorsLength,
+	totalFiles,
+	totalFolders,
+} ) => {
+	if ( folderErrorsLength > 0 ) {
+		folderErrorsLength = chalk.bgYellow( ' RECOMMENDED ' ) + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total`;
+	} else {
+		folderErrorsLength = chalk.bgGreen( '    PASS     ' ) + chalk.bold.green( ` ${ totalFolders } folders, ` ) + `${ totalFolders } folders total`;
+	}
+
+	if ( intImagesErrorsLength > 0 ) {
+		intImagesErrorsLength = chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total`;
+	} else {
+		intImagesErrorsLength = chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total`;
+	}
+
+	if ( fileTypeErrorsLength > 0 ) {
+		fileTypeErrorsLength = chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total`;
+	} else {
+		fileTypeErrorsLength = chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total`;
+	}
+
+	if ( filenameErrorsLength ) {
+		filenameErrorsLength = chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total`;
+	} else {
+		filenameErrorsLength = chalk.bgGreen( '    PASS     ' ) + chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total`;
+	}
+
+	console.log( `\n${ folderErrorsLength }\n${ intImagesErrorsLength }\n${ fileTypeErrorsLength }\n${ filenameErrorsLength }\n` );
 };

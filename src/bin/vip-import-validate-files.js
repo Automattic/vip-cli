@@ -23,9 +23,11 @@ import {
 	logErrorsForIntermediateImages,
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
+	summaryLogs,
 } from '../lib/vip-import-validate-files';
 
 // Promisify to use async/await
+const syncStat = promisify( fs.statSync );
 const stat = promisify( fs.stat );
 const readDir = promisify( fs.readdir );
 
@@ -41,17 +43,24 @@ command( { requiredArgs: 1, format: true } )
 		arg = url.parse( folder ); // Then parse the file to its URL parts
 		const filePath = arg.path; // Extract the path of the file
 
+		let folderValidation;
+
 		/**
 		 * Folder structure validation
 		 *
-		 * Find nested directories to see if media files follow the WordPress recommended folder structure
+		 * Find nested directories and files to see if media files follow the WordPress recommended folder structure
 		 *
 		 * Recommended structure: `uploads/year/month` (Single sites)
 		 */
-		const nestedDirectories = await findNestedDirectories( filePath );
+		const nestedFiles = findNestedDirectories( filePath );
 
-		if ( nestedDirectories ) {
-			folderStructureValidation( nestedDirectories );
+		const { files, folderStructureObj } = nestedFiles; // Destructure
+
+		// Check if there are any nested directories within the given folder
+		const nestedDirectories = Object.keys( folderStructureObj );
+
+		if ( nestedDirectories && nestedDirectories.length > 0 ) {
+			folderValidation = folderStructureValidation( nestedDirectories );
 		}
 
 		/**
@@ -61,16 +70,8 @@ command( { requiredArgs: 1, format: true } )
 		 * - Filename validation
 		 * - Intermediate image validation
 		 */
-		let files;
-
-		try {
-			files = await readDir( nestedDirectories );
-
-			if ( ! files || ! files.length || files.length <= 0 ) {
-				console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
-			}
-		} catch ( error ) {
-			console.error( chalk.red( '✕ Error:' ), `Unable to read directory ${ filePath }: ${ error.message }` );
+		if ( ! files || ! files.length || files.length <= 0 ) {
+			console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
 		}
 
 		/**
@@ -82,12 +83,14 @@ command( { requiredArgs: 1, format: true } )
 		// Collect invalid files for error logging
 		const errorFileTypes = [];
 		const errorFileNames = [];
-		const intImagesObject = {};
+		const intermediateImages = {
+			tally: 0,
+		};
 
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
 			// Check if file is a directory
-			const stats = await stat( nestedDirectories + '/' + file );
+			const stats = await stat( file );
 			const isFolder = stats.isDirectory();
 
 			const extension = path.extname( file ); // Extract the extension of the file
@@ -123,15 +126,18 @@ command( { requiredArgs: 1, format: true } )
 			 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
 			 * You can resize an image directly on VIP so intermediate images are not necessary.
 			 */
-			const original = doesImageHaveExistingSource( file, nestedDirectories );
+			const original = doesImageHaveExistingSource( file );
 
-			// If an image is an intermediate image, populate key/value pairs of the original image and intermediate image(s)
+			// If an image is an intermediate image, increment the total number and
+			// populate key/value pairs of the original image and intermediate image(s)
 			if ( original ) {
-				if ( intImagesObject[ original ] ) {
+				intermediateImages.tally++;
+
+				if ( intermediateImages[ original ] ) {
 					// Key: original image, value: intermediate image(s)
-					intImagesObject[ original ] = `${ intImagesObject[ original ] }, ${ file }`;
+					intermediateImages[ original ] = `${ intermediateImages[ original ] }, ${ file }`;
 				} else {
-					intImagesObject[ original ] = file;
+					intermediateImages[ original ] = file;
 				}
 			}
 		}
@@ -147,7 +153,17 @@ command( { requiredArgs: 1, format: true } )
 			logErrorsForInvalidFilenames( errorFileNames );
 		}
 
-		if ( Object.keys( intImagesObject ).length > 0 ) {
-			logErrorsForIntermediateImages( intImagesObject );
+		if ( Object.keys( intermediateImages ).length > 0 ) {
+			logErrorsForIntermediateImages( intermediateImages );
 		}
+
+		// Log a summary of all errors
+		summaryLogs( {
+			folderErrorsLength: folderValidation.length,
+			intImagesErrorsLength: intermediateImages.tally,
+			fileTypeErrorsLength: errorFileTypes.length,
+			filenameErrorsLength: errorFileNames.length,
+			totalFiles: files.length,
+			totalFolders: nestedDirectories.length,
+		} );
 	} );
