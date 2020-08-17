@@ -24,6 +24,9 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 1.11.2
+- Added support for multiple nested folders for the media file validation command
+
 ### 1.11.1
 - Added fix to process the import validation subcommands
 
