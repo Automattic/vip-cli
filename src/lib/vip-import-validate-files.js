@@ -198,7 +198,7 @@ export const findNestedDirectories = directory => {
  *	@param {string} folderPath Path of the entire folder structure
 	* @param {Boolean} sites Check if site is a multisite or single site
  */
-const getIndexPositionofFolders = ( folderPath, sites ) => {
+const getIndexPositionOfFolders = ( folderPath, sites ) => {
 	let sitesIndex, siteIDIndex, yearIndex, monthIndex;
 	let pathMutate = folderPath; // Mutate `path` for multisites
 
@@ -300,7 +300,7 @@ const singleSiteValidation = folderPath => {
 		uploadsIndex,
 		yearIndex,
 		monthIndex,
-	} = getIndexPositionofFolders( folderPath );
+	} = getIndexPositionOfFolders( folderPath );
 
 	/**
 		* Logging
@@ -367,7 +367,7 @@ const multiSiteValidation = folderPath => {
 		siteIDIndex,
 		yearIndex,
 		monthIndex,
-	} = getIndexPositionofFolders( folderPath, true );
+	} = getIndexPositionOfFolders( folderPath, true );
 
 	/**
 		* Logging
