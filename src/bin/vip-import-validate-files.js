@@ -81,11 +81,11 @@ command( { requiredArgs: 1, format: true } )
 		 */
 
 		// Collect invalid files for error logging
+		let intermediateImagesTotal = 0;
+
 		const errorFileTypes = [];
 		const errorFileNames = [];
-		const intermediateImages = {
-			tally: 0,
-		};
+		const intermediateImages = {};
 
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
@@ -131,7 +131,7 @@ command( { requiredArgs: 1, format: true } )
 			// If an image is an intermediate image, increment the total number and
 			// populate key/value pairs of the original image and intermediate image(s)
 			if ( original ) {
-				intermediateImages.tally++;
+				intermediateImagesTotal++;
 
 				if ( intermediateImages[ original ] ) {
 					// Key: original image, value: intermediate image(s)
@@ -160,7 +160,7 @@ command( { requiredArgs: 1, format: true } )
 		// Log a summary of all errors
 		summaryLogs( {
 			folderErrorsLength: folderValidation.length,
-			intImagesErrorsLength: intermediateImages.tally,
+			intImagesErrorsLength: intermediateImagesTotal,
 			fileTypeErrorsLength: errorFileTypes.length,
 			filenameErrorsLength: errorFileNames.length,
 			totalFiles: files.length,
