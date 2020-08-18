@@ -240,7 +240,7 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
 		* then obtain that value
 		*/
 	const regexYear = /\b\d{4}\b/g;
-	const year = regexYear.exec( path ); // Returns an array with the regex-matching value
+	const year = regexYear.exec( pathMutate ); // Returns an array with the regex-matching value
 
 	if ( year ) {
 		yearIndex = directories.indexOf( year[ 0 ] );
@@ -253,7 +253,7 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
 		* then obtain that value
 		*/
 	const regexMonth = /\b\d{2}\b/g;
-	const month = regexMonth.exec( path ); // Returns an array with the regex-matching value
+	const month = regexMonth.exec( pathMutate ); // Returns an array with the regex-matching value
 
 if ( month ) {
 	monthIndex = directories.indexOf( month[ 0 ] );
