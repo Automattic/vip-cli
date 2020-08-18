@@ -200,10 +200,10 @@ export const findNestedDirectories = directory => {
  */
 const getIndexPositionofFolders = ( folderPath, sites ) => {
 	let sitesIndex, siteIDIndex, yearIndex, monthIndex;
-	let path = folderPath; // Mutate `path` for multisites
+	let pathMutate = folderPath; // Mutate `path` for multisites
 
 	// Turn the path into an array to determine index position
-	const directories = path.split( '/' );
+	const directories = pathMutate.split( '/' );
 
 	/**
 		* Upload folder
@@ -211,7 +211,7 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
 		* Find if an `uploads` folder exists and return its index position
 		*/
 	const uploadsIndex = directories.indexOf( 'uploads' );
-	
+
 	/**
 		* Multisite folder
 		*
@@ -222,61 +222,61 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
 		sitesIndex = directories.indexOf( 'sites' );
 
 		const regexSiteID = /\/sites\/(\d+)/g;
-		const siteID = regexSiteID.exec( path ); // Returns an array with the regex-matching value
-	
+		const siteID = regexSiteID.exec( pathMutate ); // Returns an array with the regex-matching value
+
 		if ( siteID ) {
-			siteIDIndex = directories.indexOf( siteID[ 1 ] )
+			siteIDIndex = directories.indexOf( siteID[ 1 ] );
 		}
 
-		// Remove the multisite-specific path to avoid confusing a 2 digit site ID with the month 
+		// Remove the multisite-specific path to avoid confusing a 2 digit site ID with the month
 		// e.g.- `uploads/sites/11/2020/06` -> `uploads/2020/06`
-		path = path.replace( siteID[ 0 ], '' );
+		pathMutate = pathMutate.replace( siteID[ 0 ], '' );
 	}
 
-		/**
+	/**
 		* Year folder
 		*
 		* Find if a year folder exists via a four digit regex matching pattern,
 		* then obtain that value
 		*/
-		const regexYear = /\b\d{4}\b/g;
-		const year = regexYear.exec( path ); // Returns an array with the regex-matching value
-	
-		if ( year ) {
-			yearIndex = directories.indexOf( year[ 0 ] );
-		}
-	
-		/**
-			* Month folder
-			*
-			* Find if a month folder exists via a two digit regex matching pattern,
-			* then obtain that value
-			*/
-		const regexMonth = /\b\d{2}\b/g;
-		const month = regexMonth.exec( path ); // Returns an array with the regex-matching value
-	
-		if ( month ) {
-			monthIndex = directories.indexOf( month[ 0 ] );
-		}
+	const regexYear = /\b\d{4}\b/g;
+	const year = regexYear.exec( path ); // Returns an array with the regex-matching value
 
-		// Multisite
-		if ( sites ) {
-			return {
-				uploadsIndex,
-				sitesIndex,
-				siteIDIndex,
-				yearIndex,
-				monthIndex,
-			};
-		} else {
-			// Single site
-			return {
-				uploadsIndex,
-				yearIndex,
-				monthIndex,
-			}
-		}
+	if ( year ) {
+		yearIndex = directories.indexOf( year[ 0 ] );
+	}
+
+	/**
+		* Month folder
+		*
+		* Find if a month folder exists via a two digit regex matching pattern,
+		* then obtain that value
+		*/
+	const regexMonth = /\b\d{2}\b/g;
+	const month = regexMonth.exec( path ); // Returns an array with the regex-matching value
+
+if ( month ) {
+	monthIndex = directories.indexOf( month[ 0 ] );
 }
+
+	// Multisite
+	if ( sites ) {
+		return {
+			uploadsIndex,
+			sitesIndex,
+			siteIDIndex,
+			yearIndex,
+			monthIndex,
+		};
+	} else {
+		// Single site
+		return {
+			uploadsIndex,
+			yearIndex,
+			monthIndex,
+		};
+	}
+};
 
 /**
  * Single site folder structure validation
@@ -288,62 +288,63 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
  * - Single sites: `uploads/year/month`
  *
  * @param {string} folderPath Path of the entire folder structure
+	* @returns {string|null} Returns null if the folder structure is good; else, returns the folder path
  */
 const singleSiteValidation = folderPath => {
- let errors = 0; // Tally individual folder errors
+	let errors = 0; // Tally individual folder errors
 
- console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
+	console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
 
- // Use destructuring to retrieve the index position of each folder
- const {
-  uploadsIndex,
-  yearIndex,
-  monthIndex,
- } = getIndexPositionofFolders( folderPath );
+	// Use destructuring to retrieve the index position of each folder
+	const {
+		uploadsIndex,
+		yearIndex,
+		monthIndex,
+	} = getIndexPositionofFolders( folderPath );
 
- /**
-  * Logging
-  */
+	/**
+		* Logging
+		*/
 
- // Uploads folder
- if ( uploadsIndex === 0 ) {
-  console.log();
-  console.log( '✅ File structure: Uploads directory exists' );
- } else {
-  console.log();
-  console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
-  errors++;
- }
-
- // Year folder
- if ( yearIndex && yearIndex === 1 ) {
-  console.log( '✅ File structure: Year directory exists (format: YYYY)' );
- } else {
-  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
-  errors++;
- }
-
- // Month folder
- if ( monthIndex && monthIndex === 2 ) {
-  console.log( '✅ File structure: Month directory exists (format: MM)' );
-  console.log();
- } else {
-  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
-  console.log();
-  errors++;
- }
-
- // Push individual folder errors to the collective array of errors
- if ( errors > 0 ) {
-  return folderPath;
+	// Uploads folder
+	if ( uploadsIndex === 0 ) {
+		console.log();
+		console.log( '✅ File structure: Uploads directory exists' );
+	} else {
+		console.log();
+		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+		errors++;
 	}
 
- return null;
-}
+	// Year folder
+	if ( yearIndex && yearIndex === 1 ) {
+		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
+		errors++;
+	}
+
+	// Month folder
+	if ( monthIndex && monthIndex === 2 ) {
+		console.log( '✅ File structure: Month directory exists (format: MM)' );
+		console.log();
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
+		console.log();
+		errors++;
+	}
+
+	// Push individual folder errors to the collective array of errors
+	if ( errors > 0 ) {
+		return folderPath;
+	}
+
+	return null;
+};
 
 /**
  * Multisite folder structure validation
- * 
+ *
  * - Uploads directory validation
  * - Sites & site ID directory validation
  * - Year & month directory validation
@@ -352,76 +353,78 @@ const singleSiteValidation = folderPath => {
  * - Multisites: `uploads/sites/siteID/year/month`
  *
  * @param {string} folderPath Path of the entire folder structure
+	* @returns {string|null} Returns null if the folder structure is good; else, returns the folder path
  */
 const multiSiteValidation = folderPath => {
- let errors = 0; // Tally individual folder errors
+	let errors = 0; // Tally individual folder errors
 
- console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
+	console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
 
- // Use destructuring to retrieve the index position of each folder
- const {
-  uploadsIndex,
-  sitesIndex,
-  siteIDIndex,
-  yearIndex,
-  monthIndex,
- } = getIndexPositionofFolders( folderPath, true );
+	// Use destructuring to retrieve the index position of each folder
+	const {
+		uploadsIndex,
+		sitesIndex,
+		siteIDIndex,
+		yearIndex,
+		monthIndex,
+	} = getIndexPositionofFolders( folderPath, true );
 
- /**
-  * Logging
-  */
+	/**
+		* Logging
+		*/
 
- // Uploads folder
- if ( uploadsIndex === 0 ) {
-  console.log();
-  console.log( '✅ File structure: Uploads directory exists' );
- } else {
-  console.log();
-  console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
-  errors++;
- }
+	// Uploads folder
+	if ( uploadsIndex === 0 ) {
+		console.log();
+		console.log( '✅ File structure: Uploads directory exists' );
+	} else {
+		console.log();
+		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+		errors++;
+	}
 
- // Sites folder
- if ( sitesIndex === 1 ) {
-  console.log( '✅ File structure: Sites directory exists' );
- } else {
-  console.log();
-  console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`sites`' ), 'directory' );
-  errors++;
- }
+	// Sites folder
+	if ( sitesIndex === 1 ) {
+		console.log( '✅ File structure: Sites directory exists' );
+	} else {
+		console.log();
+		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`sites`' ), 'directory' );
+		errors++;
+	}
 
- // Site ID folder
- if( siteIDIndex && siteIDIndex === 2) {
-  console.log( '✅ File structure: Site ID directory exists' );
- } else {
-  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>`' ), 'directories' );
-  errors++;
- }
+	// Site ID folder
+	if ( siteIDIndex && siteIDIndex === 2 ) {
+		console.log( '✅ File structure: Site ID directory exists' );
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>`' ), 'directories' );
+		errors++;
+	}
 
- // Year folder
- if ( yearIndex && yearIndex === 3 ) {
-  console.log( '✅ File structure: Year directory exists (format: YYYY)' );
- } else {
-  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY`' ), 'directories' );
-  errors++;
- }
+	// Year folder
+	if ( yearIndex && yearIndex === 3 ) {
+		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY`' ), 'directories' );
+		errors++;
+	}
 
- // Month folder
- if ( monthIndex && monthIndex === 4 ) {
-  console.log( '✅ File structure: Month directory exists (format: MM)' );
-  console.log();
- } else {
-  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY/MM`' ), 'directories' );
-  console.log();
-  errors++;
- }
+	// Month folder
+	if ( monthIndex && monthIndex === 4 ) {
+		console.log( '✅ File structure: Month directory exists (format: MM)' );
+		console.log();
+	} else {
+		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY/MM`' ), 'directories' );
+		console.log();
+		errors++;
+	}
 
- // Push individual folder errors to the collective array of errors
- if ( errors > 0 ) {
-  return folderPath;
- }
- return null;
-}
+	// Push individual folder errors to the collective array of errors
+	if ( errors > 0 ) {
+		return folderPath;
+	}
+
+	return null;
+};
 
 /**
  * Folder structure validation
@@ -429,34 +432,35 @@ const multiSiteValidation = folderPath => {
  * Validate folder structures and identify folders that don't follow the recommended structure
  *
  * @param {Array} folderStructureKeys Array of paths for each folder
+	* @return {Array} All the erroneous folder paths in an array
  */
 export const folderStructureValidation = folderStructureKeys => {
- // Collect all the folder paths that aren't in the recommended structure
- const allErrors = [];
+	// Collect all the folder paths that aren't in the recommended structure
+	const allErrors = [];
 
- // Loop through each path to validate the folder structure format
- for ( const folderPath of folderStructureKeys ) {
-  let badFolders;
+	// Loop through each path to validate the folder structure format
+	for ( const folderPath of folderStructureKeys ) {
+		let badFolders;
 
-  // Check for multisite folder structure
-  if ( folderPath.search( 'sites' ) !== -1 ) {
-   // Returns null if the folder path is good, otherwise it returns the folder path itself
-   badFolders = multiSiteValidation( folderPath );
-  } else {
-   // Returns null if the folder path is good, otherwise it returns the folder path itself
-   badFolders = singleSiteValidation( folderPath );
-  }
-  
-  if ( badFolders ) {
-   allErrors.push( badFolders );
-  }
- };
+		// Check for multisite folder structure
+		if ( folderPath.search( 'sites' ) !== -1 ) {
+			// Returns null if the folder path is good, otherwise it returns the folder path itself
+			badFolders = multiSiteValidation( folderPath );
+		} else {
+			// Returns null if the folder path is good, otherwise it returns the folder path itself
+			badFolders = singleSiteValidation( folderPath );
+		}
 
-  if( allErrors.length > 0 )  {
-   recommendedFileStructure();
-  }
+		if ( badFolders ) {
+			allErrors.push( badFolders );
+		}
+	}
 
-  return allErrors;
+	if ( allErrors.length > 0 ) {
+		recommendedFileStructure();
+	}
+	
+	return allErrors;
 };
 
 /**
