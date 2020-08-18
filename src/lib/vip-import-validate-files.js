@@ -255,9 +255,9 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
 	const regexMonth = /\b\d{2}\b/g;
 	const month = regexMonth.exec( pathMutate ); // Returns an array with the regex-matching value
 
-if ( month ) {
-	monthIndex = directories.indexOf( month[ 0 ] );
-}
+	if ( month ) {
+		monthIndex = directories.indexOf( month[ 0 ] );
+	}
 
 	// Multisite
 	if ( sites ) {
@@ -268,14 +268,14 @@ if ( month ) {
 			yearIndex,
 			monthIndex,
 		};
-	} else {
-		// Single site
-		return {
-			uploadsIndex,
-			yearIndex,
-			monthIndex,
-		};
 	}
+
+	// Single site
+	return {
+		uploadsIndex,
+		yearIndex,
+		monthIndex,
+	};
 };
 
 /**
@@ -459,7 +459,7 @@ export const folderStructureValidation = folderStructureKeys => {
 	if ( allErrors.length > 0 ) {
 		recommendedFileStructure();
 	}
-	
+
 	return allErrors;
 };
 
