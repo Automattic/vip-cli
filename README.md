@@ -24,6 +24,10 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 1.11.3
+- Added support for multisite media folder validation
+- Fixed a minor media file validation bug
+
 ### 1.11.2
 - Added support for multiple nested folders for the media file validation command
 
