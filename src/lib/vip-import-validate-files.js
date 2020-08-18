@@ -342,6 +342,88 @@ const singleSiteValidation = folderPath => {
 }
 
 /**
+ * Multisite folder structure validation
+ * 
+ * - Uploads directory validation
+ * - Sites & site ID directory validation
+ * - Year & month directory validation
+ *
+ * Check if the folder structure follows the WordPress recommended folder structure for media files:
+ * - Multisites: `uploads/sites/siteID/year/month`
+ *
+ * @param {string} folderPath Path of the entire folder structure
+ */
+const multiSiteValidation = folderPath => {
+ let errors = 0; // Tally individual folder errors
+
+ console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
+
+ // Use destructuring to retrieve the index position of each folder
+ const {
+  uploadsIndex,
+  sitesIndex,
+  siteIDIndex,
+  yearIndex,
+  monthIndex,
+ } = getIndexPositionofFolders( folderPath, true );
+
+ /**
+  * Logging
+  */
+
+ // Uploads folder
+ if ( uploadsIndex === 0 ) {
+  console.log();
+  console.log( '✅ File structure: Uploads directory exists' );
+ } else {
+  console.log();
+  console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+  errors++;
+ }
+
+ // Sites folder
+ if ( sitesIndex === 1 ) {
+  console.log( '✅ File structure: Sites directory exists' );
+ } else {
+  console.log();
+  console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`sites`' ), 'directory' );
+  errors++;
+ }
+
+ // Site ID folder
+ if( siteIDIndex && siteIDIndex === 2) {
+  console.log( '✅ File structure: Site ID directory exists' );
+ } else {
+  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>`' ), 'directories' );
+  errors++;
+ }
+
+ // Year folder
+ if ( yearIndex && yearIndex === 3 ) {
+  console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+ } else {
+  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY`' ), 'directories' );
+  errors++;
+ }
+
+ // Month folder
+ if ( monthIndex && monthIndex === 4 ) {
+  console.log( '✅ File structure: Month directory exists (format: MM)' );
+  console.log();
+ } else {
+  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY/MM`' ), 'directories' );
+  console.log();
+  errors++;
+ }
+
+ // Push individual folder errors to the collective array of errors
+ if ( errors > 0 ) {
+  return folderPath;
+ }
+ return null;
+}
+
+/**
 	* Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`
