@@ -279,6 +279,69 @@ const getIndexPositionofFolders = ( folderPath, sites ) => {
 }
 
 /**
+ * Single site folder structure validation
+ *
+ * - Uploads directory validation
+ * - Year & month directory validation
+ *
+ * Check if the folder structure follows the WordPress recommended folder structure for media files:
+ * - Single sites: `uploads/year/month`
+ *
+ * @param {string} folderPath Path of the entire folder structure
+ */
+const singleSiteValidation = folderPath => {
+ let errors = 0; // Tally individual folder errors
+
+ console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
+
+ // Use destructuring to retrieve the index position of each folder
+ const {
+  uploadsIndex,
+  yearIndex,
+  monthIndex,
+ } = getIndexPositionofFolders( folderPath );
+
+ /**
+  * Logging
+  */
+
+ // Uploads folder
+ if ( uploadsIndex === 0 ) {
+  console.log();
+  console.log( '✅ File structure: Uploads directory exists' );
+ } else {
+  console.log();
+  console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+  errors++;
+ }
+
+ // Year folder
+ if ( yearIndex && yearIndex === 1 ) {
+  console.log( '✅ File structure: Year directory exists (format: YYYY)' );
+ } else {
+  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
+  errors++;
+ }
+
+ // Month folder
+ if ( monthIndex && monthIndex === 2 ) {
+  console.log( '✅ File structure: Month directory exists (format: MM)' );
+  console.log();
+ } else {
+  console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
+  console.log();
+  errors++;
+ }
+
+ // Push individual folder errors to the collective array of errors
+ if ( errors > 0 ) {
+  return folderPath;
+	}
+
+ return null;
+}
+
+/**
 	* Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`
