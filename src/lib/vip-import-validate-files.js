@@ -424,6 +424,42 @@ const multiSiteValidation = folderPath => {
 }
 
 /**
+ * Folder structure validation
+ *
+ * Validate folder structures and identify folders that don't follow the recommended structure
+ *
+ * @param {Array} folderStructureKeys Array of paths for each folder
+ */
+export const folderStructureValidation = folderStructureKeys => {
+ // Collect all the folder paths that aren't in the recommended structure
+ const allErrors = [];
+
+ // Loop through each path to validate the folder structure format
+ for ( const folderPath of folderStructureKeys ) {
+  let badFolders;
+
+  // Check for multisite folder structure
+  if ( folderPath.search( 'sites' ) !== -1 ) {
+   // Returns null if the folder path is good, otherwise it returns the folder path itself
+   badFolders = multiSiteValidation( folderPath );
+  } else {
+   // Returns null if the folder path is good, otherwise it returns the folder path itself
+   badFolders = singleSiteValidation( folderPath );
+  }
+  
+  if ( badFolders ) {
+   allErrors.push( badFolders );
+  }
+ };
+
+  if( allErrors.length > 0 )  {
+   recommendedFileStructure();
+  }
+
+  return allErrors;
+};
+
+/**
 	* Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`
