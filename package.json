@@ -51,8 +51,9 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "@babel/cli": "7.8.4",
-    "@babel/core": "7.9.0",
+    "@babel/core": "^7.11.1",
     "@babel/plugin-transform-modules-commonjs": "7.9.0",
+    "@babel/preset-env": "^7.11.0",
     "@babel/preset-flow": "7.9.0",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "10.1.0",
