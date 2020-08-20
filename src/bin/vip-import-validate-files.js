@@ -159,22 +159,17 @@ command( { requiredArgs: 1, format: true } )
 			logErrorsForIntermediateImages( intermediateImages );
 		}
 
-		// Log a summary of all errors
-		summaryLogs( {
+		const allErrors = {
 			folderErrorsLength: folderValidation.length,
 			intImagesErrorsLength: intermediateImagesTotal,
 			fileTypeErrorsLength: errorFileTypes.length,
 			filenameErrorsLength: errorFileNames.length,
 			totalFiles: files.length,
 			totalFolders: nestedDirectories.length,
-		} );
+		};
 
-		await trackEvent( 'import_validate_files_command_success', {
-			folderErrorsLength: folderValidation.length,
-			intImagesErrorsLength: intermediateImagesTotal,
-			fileTypeErrorsLength: errorFileTypes.length,
-			filenameErrorsLength: errorFileNames.length,
-			totalFiles: files.length,
-			totalFolders: nestedDirectories.length,
-		} );
+		// Log a summary of all errors
+		summaryLogs( allErrors );
+
+		await trackEvent( 'import_validate_files_command_success', allErrors );
 	} );
