@@ -175,9 +175,13 @@ command( {
 			for ( const [ type, check ] of Object.entries( checks ) ) {
 				check.outputFormatter( check, type );
 				console.log( '' );
-				errorSummary[ type ] = check.results.length;
+
+				// Change `type` to snake_case for Tracks events
+				const typeToSnakeCase = type.replace( /([A-Z])/, '_$1' ).toLowerCase();
+
+				errorSummary[ typeToSnakeCase ] = check.results.length;
 			}
-			errorSummary.problemsFound = problemsFound;
+			errorSummary.problems_found = problemsFound;
 
 			if ( problemsFound > 0 ) {
 				console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
