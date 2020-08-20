@@ -13,6 +13,7 @@ import { stdout as log } from 'single-line-log';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+import { trackEvent } from 'lib/tracker';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -145,6 +146,8 @@ command( {
 			process.exit( 1 );
 		}
 
+		await trackEvent( 'import_validate_sql_command_execute' );
+
 		const readInterface = readline.createInterface( {
 			input: fs.createReadStream( arg[ 0 ] ),
 			output: null,
@@ -168,10 +171,13 @@ command( {
 		readInterface.on( 'close', async function() {
 			log( `Finished processing ${ lineNum } lines.` );
 			console.log( '\n' );
+			const errorSummary = {};
 			for ( const [ type, check ] of Object.entries( checks ) ) {
 				check.outputFormatter( check, type );
 				console.log( '' );
+				errorSummary[ type ] = check.results.length;
 			}
+			errorSummary.problemsFound = problemsFound;
 
 			if ( problemsFound > 0 ) {
 				console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
@@ -179,5 +185,7 @@ command( {
 				console.log( '✅ Your database file looks good.  You can now submit for import, see here for more details: ' +
 				'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
 			}
+
+			await trackEvent( 'import_validate_sql_command_success', errorSummary );
 		} );
 	} );
