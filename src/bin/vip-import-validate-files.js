@@ -182,4 +182,3 @@ command( { requiredArgs: 1, format: true } )
 
 		await trackEvent( 'import_validate_files_command_success', allErrors );
 	} );
-	
