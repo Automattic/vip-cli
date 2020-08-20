@@ -159,17 +159,26 @@ command( { requiredArgs: 1, format: true } )
 			logErrorsForIntermediateImages( intermediateImages );
 		}
 
-		const allErrors = {
+		// Log a summary of all errors
+		summaryLogs( {
 			folderErrorsLength: folderValidation.length,
 			intImagesErrorsLength: intermediateImagesTotal,
 			fileTypeErrorsLength: errorFileTypes.length,
 			filenameErrorsLength: errorFileNames.length,
 			totalFiles: files.length,
 			totalFolders: nestedDirectories.length,
-		};
+		} );
 
-		// Log a summary of all errors
-		summaryLogs( allErrors );
+		// Tracks events to track activity
+		// Props (object keys) need to be in Snake case vs. camelCase
+		const allErrors = {
+			folder_errors_length: folderValidation.length,
+			int_images_errors_length: intermediateImagesTotal,
+			file_type_errors_length: errorFileTypes.length,
+			filename_errors_length: errorFileNames.length,
+			total_files: files.length,
+			total_folders: nestedDirectories.length,
+		};
 
 		await trackEvent( 'import_validate_files_command_success', allErrors );
 	} );
