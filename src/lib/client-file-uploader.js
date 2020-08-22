@@ -27,6 +27,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'ListParts'
 		| 'ListMultipartUploads'
 		| 'UploadPart';
+	etagResults?: Array<Object>;
 	organizationId?: number;
 	appId?: number;
 	basename: string;
@@ -39,13 +40,14 @@ export async function getSignedUploadRequestData( {
 	appId,
 	basename,
 	action,
+	etagResults,
 	uploadId = undefined,
 	partNumber = undefined,
 }: GetSignedUploadRequestDataArgs ): Promise<Object> {
 	const { apiFetch } = await API();
 	const response = await apiFetch( '/upload/signed-url', {
 		method: 'POST',
-		body: { action, appId, basename, organizationId, partNumber, uploadId },
+		body: { action, appId, basename, etagResults, organizationId, partNumber, uploadId },
 	} );
 
 	if ( response.status !== 200 ) {
@@ -183,16 +185,16 @@ export async function uploadPart( { basename, fileName, part, uploadId }: Upload
 
 		console.log( `Uploading Part #${ s3PartNumber }` );
 
-		const fetchResult = await fetch( partUploadRequestData.url, fetchOptions );
-		if ( fetchResult.status === 200 ) {
-			const responseHeaders = fetchResult.headers.raw();
+		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
+		if ( fetchResponse.status === 200 ) {
+			const responseHeaders = fetchResponse.headers.raw();
 			console.log( { responseHeaders } );
 			const [ etag ] = responseHeaders.etag;
 			return JSON.parse( etag );
 		}
 
-		const response = await fetchResult.text();
-		console.log( [ partUploadRequestData.url, fetchOptions, response ] );
+		const result = await fetchResponse.text();
+		console.log( [ partUploadRequestData.url, fetchOptions, result ] );
 
 		// TODO is any hardening needed here?
 		const parser = new XmlParser( {
@@ -200,7 +202,7 @@ export async function uploadPart( { basename, fileName, part, uploadId }: Upload
 			ignoreAttrs: true,
 		} );
 
-		const parsed = await parser.parseStringPromise( response );
+		const parsed = await parser.parseStringPromise( result );
 
 		if ( parsed.Error ) {
 			const { Code, Message } = parsed.Error;
@@ -211,13 +213,51 @@ export async function uploadPart( { basename, fileName, part, uploadId }: Upload
 	};
 
 	return {
-		index,
-		etag: await doUpload(),
-		s3PartNumber,
+		ETag: await doUpload(),
+		PartNumber: s3PartNumber,
 	};
 }
 
-export function completeMultipartUpload( { uploadId, parts } ) {
-	// TODO
-	// Action: CompleteMultipartUpload
+export type CompleteMultipartUploadArgs = {
+	basename: string,
+	uploadId: string,
+	etagResults: Array<any>,
+};
+
+export async function completeMultipartUpload( {
+	basename,
+	uploadId,
+	etagResults,
+}: CompleteMultipartUploadArgs ) {
+	const completeMultipartUploadRequestData = await getSignedUploadRequestData( {
+		action: 'CompleteMultipartUpload',
+		basename,
+		uploadId,
+		etagResults,
+	} );
+
+	const completeMultipartUploadResponse = await fetch(
+		completeMultipartUploadRequestData.url,
+		completeMultipartUploadRequestData.options
+	);
+
+	if ( completeMultipartUploadResponse.status !== 200 ) {
+		throw await completeMultipartUploadResponse.text();
+	}
+
+	const result = await completeMultipartUploadResponse.text();
+
+	const parser = new XmlParser( {
+		explicitArray: false,
+		ignoreAttrs: true,
+	} );
+
+	const parsed = await parser.parseStringPromise( result );
+
+	if ( parsed.Error ) {
+		const { Code, Message } = parsed.Error;
+		throw `Unable to complete the upload. Error: ${ JSON.stringify( { Code, Message } ) }`;
+	}
+
+	return parsed;
 }

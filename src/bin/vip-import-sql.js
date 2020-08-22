@@ -17,7 +17,7 @@ import { Parser as XmlParser } from 'xml2js';
  */
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
-import { getFileMeta, getSignedUploadRequestData, hashParts, getPartBoundaries, uploadParts } from 'lib/client-file-uploader';
+import { completeMultipartUpload, getFileMeta, getSignedUploadRequestData, hashParts, getPartBoundaries, uploadParts } from 'lib/client-file-uploader';
 
 const appQuery = 'id, name, organization { id, name },environments{ id, appId, type, name, primaryDomain { name } }';
 
@@ -101,13 +101,23 @@ command( {
 
 		const parts = getPartBoundaries( fileMeta.size );
 		const partsWithHash = await hashParts( fileName, parts );
-		const uploadResults = await uploadParts( {
+		const etagResults = await uploadParts( {
 			basename,
 			fileName,
 			parts: partsWithHash,
 			uploadId,
 		} );
-		console.log( { uploadResults } );
+		console.log( { etagResults } );
+
+		console.log( 'Completing the upload...' );
+		const completeResults = await completeMultipartUpload( {
+			basename,
+			uploadId,
+			etagResults: [
+				etagResults[ 0 ], // Only one ETag object is required, don't waste bandwidth pushing them all
+			],
+		} );
+		console.log( { completeResults } );
 	} catch ( e ) {
 		err( e );
 	}
