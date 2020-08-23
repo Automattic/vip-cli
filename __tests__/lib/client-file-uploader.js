@@ -3,6 +3,9 @@
  */
 
 /**
+ * External dependencies
+ */
+/**
  * Internal dependencies
  */
 import { getFileMeta, getPartBoundaries, hashParts } from 'lib/client-file-uploader';
@@ -13,7 +16,7 @@ describe( 'client-file-uploader', () => {
 			const fileName = '__fixtures__/client-file-uploader/emptyfile.txt';
 			expect.assertions( 1 );
 			await expect( getFileMeta( fileName ) ).rejects.toEqual(
-				"File '__fixtures__/client-file-uploader/emptyfile.txt' is empty"
+				"File '__fixtures__/client-file-uploader/emptyfile.txt' is empty."
 			);
 		} );
 

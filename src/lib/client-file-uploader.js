@@ -64,18 +64,42 @@ export type FileMeta = {
 	size: number,
 };
 
+export async function checkFileAccess( fileName: string ): Promise<void> {
+	// Node 8 doesn't have fs.promises, so fall back to this
+	return new Promise( ( resolve, reject ) => {
+		fs.access( fileName, fs.R_OK, err => {
+			if ( err ) {
+				reject( err );
+			}
+			resolve();
+		} );
+	} );
+}
+
+export async function getFileSize( fileName: string ): Promise<number> {
+	// Node 8 doesn't have fs.promises, so fall back to this
+	return new Promise( ( resolve, reject ) => {
+		fs.stat( fileName, ( err, stats ) => {
+			if ( err ) {
+				reject( err );
+			}
+			resolve( stats.size );
+		} );
+	} );
+}
+
 export function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
 		try {
-			await fs.promises.access( fileName, fs.R_OK );
+			await checkFileAccess( fileName );
 		} catch ( e ) {
-			return reject( `File '${ fileName }' does not exist or is not readable` );
+			return reject( `File '${ fileName }' does not exist or is not readable.` );
 		}
 
-		const { size } = await fs.promises.stat( fileName );
+		const size = await getFileSize( fileName );
 
 		if ( ! size ) {
-			return reject( `File '${ fileName }' is empty` );
+			return reject( `File '${ fileName }' is empty.` );
 		}
 
 		try {
