@@ -19,7 +19,16 @@ import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { completeMultipartUpload, getFileMeta, getSignedUploadRequestData, hashParts, getPartBoundaries, uploadParts } from 'lib/client-file-uploader';
 
-const appQuery = 'id, name, organization { id, name },environments{ id, appId, type, name, primaryDomain { name } }';
+/**
+ * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
+ * - Include `hasImporterS3Credentials` & error out if false (this needs to be implemented)
+ */
+const appQuery = `
+	id,
+	name,
+	organization { id, name },
+	environments{ id, appId, type, name, primaryDomain { name } }
+`;
 
 const err = message => {
 	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
