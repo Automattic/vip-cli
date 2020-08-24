@@ -10,22 +10,28 @@ import fs from 'fs';
 import path from 'path';
 import fetch from 'isomorphic-fetch';
 import { createHash } from 'crypto';
+import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
+import { stdout as singleLogLine } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
 
-// Files smaller than UPLOAD_PART_SIZE will use PutObject vs Multipart Uploads
-const UPLOAD_PART_SIZE = 5242880; // 5 Megabytes in Bytes (5 * 1024 * 1024)
+const KILOBYTE_IN_BYTES = 1024;
+const MEGABYTE_IN_BYTES = KILOBYTE_IN_BYTES * 1024;
+
+// Files smaller than MULTIPART_THRESHOLD will use `PutObject` vs Multipart Uploads
+export const MULTIPART_THRESHOLD = 32 * MEGABYTE_IN_BYTES;
+const UPLOAD_PART_SIZE = 5 * MEGABYTE_IN_BYTES;
 
 export interface GetSignedUploadRequestDataArgs {
 	action: | 'AbortMultipartUpload'
 		| 'CreateMultipartUpload'
 		| 'CompleteMultipartUpload'
 		| 'ListParts'
-		| 'ListMultipartUploads'
+		| 'PutObject'
 		| 'UploadPart';
 	etagResults?: Array<Object>;
 	organizationId?: number;
@@ -33,6 +39,156 @@ export interface GetSignedUploadRequestDataArgs {
 	basename: string;
 	partNumber?: number;
 	uploadId?: string;
+}
+
+export type UploadArguments = {
+	app: Object,
+	basename: string,
+	fileMeta: Object,
+	fileName: string,
+	organization: Object,
+};
+
+// TODO improve naming a bit to include "presigned"
+export async function uploadFile( {
+	app,
+	basename,
+	fileMeta,
+	fileName,
+	organization,
+}: UploadArguments ) {
+	return fileMeta.size < MULTIPART_THRESHOLD
+		? uploadUsingPutObject( { app, basename, fileMeta, fileName, organization } )
+		: uploadUsingMultipart( { app, basename, fileMeta, fileName, organization } );
+}
+
+export async function uploadUsingPutObject( {
+	app,
+	basename,
+	fileMeta,
+	fileName,
+	organization,
+}: UploadArguments ) {
+	console.log( 'Uploading to S3 using the `PutObject` command.' );
+
+	const presignedRequest = await getSignedUploadRequestData( {
+		organizationId: organization.id,
+		appId: app.id,
+		basename,
+		action: 'PutObject',
+	} );
+
+	const fetchOptions = presignedRequest.options;
+	fetchOptions.headers = {
+		...fetchOptions.headers,
+		'Content-Length': `${ fileMeta.size }`, // This has to be a string
+	};
+
+	let readBytes = 0;
+	const progressPassThrough = new PassThrough();
+	progressPassThrough.on( 'data', data => {
+		readBytes += data.length;
+		singleLogLine( `${ Math.floor( ( 100 * readBytes ) / fileMeta.size ) }%...` );
+	} );
+	progressPassThrough.on( 'end', () => console.log( '\n' ) );
+
+	const readStream = fs.createReadStream( fileName ).pipe( progressPassThrough );
+
+	const response = await fetch( presignedRequest.url, {
+		...fetchOptions,
+		body: readStream,
+	} );
+
+	if ( response.status === 200 ) {
+		return 'ok';
+	}
+
+	const result = await response.text();
+
+	// TODO is any additional hardening needed here?
+	const parser = new XmlParser( {
+		explicitArray: false,
+		ignoreAttrs: true,
+	} );
+
+	let parsedResponse;
+	try {
+		parsedResponse = await parser.parseStringPromise( result );
+	} catch ( e ) {
+		throw `Invalid response from cloud service. ${ e }`;
+	}
+
+	const { Code, Message } = parsedResponse.Error || {};
+	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
+}
+
+export async function uploadUsingMultipart( {
+	app,
+	basename,
+	fileMeta,
+	fileName,
+	organization,
+}: UploadArguments ) {
+	console.log( 'Uploading to S3 using the Multipart API.' );
+
+	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
+		organizationId: organization.id,
+		appId: app.id,
+		basename,
+		action: 'CreateMultipartUpload',
+	} );
+
+	const multipartUploadResponse = await fetch(
+		presignedCreateMultipartUpload.url,
+		presignedCreateMultipartUpload.options
+	);
+	const multipartUploadResult = await multipartUploadResponse.text();
+
+	console.log( { multipartUploadResult } );
+
+	// TODO is any hardening needed here?
+	const parser = new XmlParser( {
+		explicitArray: false,
+		ignoreAttrs: true,
+	} );
+
+	const parsedResponse = await parser.parseStringPromise( multipartUploadResult );
+
+	if ( parsedResponse.Error ) {
+		const { Code, Message } = parsedResponse.Error;
+		throw `Unable to create cloud storage object. Error: ${ JSON.stringify( { Code, Message } ) }`;
+	}
+
+	if (
+		! parsedResponse &&
+		parsedResponse.InitiateMultipartUploadResult &&
+		parsedResponse.InitiateMultipartUploadResult.UploadId
+	) {
+		throw `Unable to get Upload ID from cloud storage. Error: ${ multipartUploadResult }`;
+	}
+
+	const uploadId = parsedResponse.InitiateMultipartUploadResult.UploadId;
+
+	console.log( { uploadId } );
+
+	const parts = getPartBoundaries( fileMeta.size );
+	const partsWithHash = await hashParts( fileName, parts );
+	const etagResults = await uploadParts( {
+		basename,
+		fileName,
+		parts: partsWithHash,
+		uploadId,
+	} );
+	console.log( { etagResults } );
+
+	console.log( 'Completing the upload...' );
+	return completeMultipartUpload( {
+		basename,
+		uploadId,
+		etagResults: [
+			etagResults[ 0 ], // Only one ETag object is required, don't waste bandwidth pushing them all
+		],
+	} );
 }
 
 export async function getSignedUploadRequestData( {
@@ -201,8 +357,12 @@ export async function uploadPart( { basename, fileName, part, uploadId }: Upload
 		fetchOptions.headers = {
 			...fetchOptions.headers,
 			'Content-Length': `${ size }`, // This has to be a string
-			// 'Content-MD5': Buffer.from( md5 ).toString( 'base64' ), // This has to be base64 encoded
-			//	'Content-Type': 'applicaton/octet-stream',
+			/**
+			 * TODO? 'Content-MD5': Buffer.from( ... ).toString( 'base64' ),
+			 * Content-MD5 has to be base64 encoded.
+			 * It's the hash of the entire request object & has to be included in the signature,
+			 *   ...so it may not be feasible to include with presigned requests.
+			 */
 		};
 
 		fetchOptions.body = fs.createReadStream( fileName, { start, end } );

@@ -9,15 +9,13 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import fetch from 'isomorphic-fetch';
-import { Parser as XmlParser } from 'xml2js';
 
 /**
  * Internal dependencies
  */
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
-import { completeMultipartUpload, getFileMeta, getSignedUploadRequestData, hashParts, getPartBoundaries, uploadParts } from 'lib/client-file-uploader';
+import { getFileMeta, uploadFile } from 'lib/client-file-uploader';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -70,63 +68,10 @@ command( {
 		const { basename } = fileMeta;
 
 		console.log( `File "${ basename }" is ~ ${ Math.floor( sizeInMB ) } MB.` );
-		// TODO don't do multipart for files less than 5 MB
 
-		const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
-			organizationId: organization.id,
-			appId: app.id,
-			basename,
-			action: 'CreateMultipartUpload',
-		} );
+		const results = await uploadFile( { app, basename, fileMeta, fileName, organization } );
 
-		console.log( { url: presignedCreateMultipartUpload.url, method: presignedCreateMultipartUpload.options.method, headers: presignedCreateMultipartUpload.options.headers } );
-
-		// TODO move this to the lib
-		const multipartUploadResponse = await fetch( presignedCreateMultipartUpload.url, presignedCreateMultipartUpload.options );
-		const multipartUploadResult = await multipartUploadResponse.text();
-
-		console.log( { multipartUploadResult } );
-
-		// TODO is any hardening needed here?
-		const parser = new XmlParser( {
-			explicitArray: false,
-			ignoreAttrs: true,
-		} );
-
-		const parsedResponse = await parser.parseStringPromise( multipartUploadResult );
-
-		if ( parsedResponse.Error ) {
-			const { Code, Message } = parsedResponse.Error;
-			throw `Unable to create cloud storage object. Error: ${ JSON.stringify( { Code, Message } ) }`;
-		}
-
-		if ( ! parsedResponse && parsedResponse.InitiateMultipartUploadResult && parsedResponse.InitiateMultipartUploadResult.UploadId ) {
-			throw `Unable to get Upload ID from cloud storage. Error: ${ multipartUploadResult }`;
-		}
-
-		const uploadId = parsedResponse.InitiateMultipartUploadResult.UploadId;
-
-		console.log( { uploadId } );
-
-		const parts = getPartBoundaries( fileMeta.size );
-		const partsWithHash = await hashParts( fileName, parts );
-		const etagResults = await uploadParts( {
-			basename,
-			fileName,
-			parts: partsWithHash,
-			uploadId,
-		} );
-		console.log( { etagResults } );
-
-		console.log( 'Completing the upload...' );
-		const completeResults = await completeMultipartUpload( {
-			basename,
-			uploadId,
-			etagResults: [
-				etagResults[ 0 ], // Only one ETag object is required, don't waste bandwidth pushing them all
-			],
-		} );
-		console.log( { completeResults } );
+		console.log( { results } );
 	} catch ( e ) {
 		err( e );
 	}
