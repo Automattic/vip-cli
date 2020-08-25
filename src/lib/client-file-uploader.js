@@ -326,17 +326,61 @@ type UploadPartsArgs = {
 };
 
 export async function uploadParts( { basename, fileName, uploadId, parts }: UploadPartsArgs ) {
+	const partProgress = [];
+
+	let printProgressTimeout;
+	const printProgress = ( end = false ) => {
+		clearTimeout( printProgressTimeout );
+		const printer = () =>
+			singleLogLine(
+				partProgress
+					.map( ( percentage, index ) => `Part # ${ index }: ${ percentage }%` )
+					.join( '\n' )
+			);
+		if ( end ) {
+			printer();
+			console.log( '\n' );
+			return;
+		}
+		setTimeout( printer, 500 );
+	};
+
 	// TODO limit concurrency
-	return Promise.all( parts.map( part => uploadPart( { basename, fileName, uploadId, part } ) ) );
+	const allDone = await Promise.all(
+		parts.map( part => {
+			const { index, size } = part;
+			const progressPassThrough = new PassThrough();
+
+			let bytesRead = 0;
+			progressPassThrough.on( 'data', data => {
+				bytesRead += data.length;
+				partProgress[ index ] = Math.floor( ( 100 * bytesRead ) / size );
+				printProgress();
+			} );
+
+			return uploadPart( { basename, fileName, part, progressPassThrough, uploadId } );
+		} )
+	);
+
+	printProgress( true );
+
+	return allDone;
 }
 
 export type UploadPartArgs = {
 	basename: string,
 	fileName: string,
 	part: Object,
+	progressPassThrough: PassThrough,
 	uploadId: string,
 };
-export async function uploadPart( { basename, fileName, part, uploadId }: UploadPartArgs ) {
+export async function uploadPart( {
+	basename,
+	fileName,
+	part,
+	progressPassThrough,
+	uploadId,
+}: UploadPartArgs ) {
 	console.log( { part } );
 	const { end, index, size, start } = part;
 	const s3PartNumber = index + 1; // S3 multipart is indexed from 1
@@ -365,9 +409,7 @@ export async function uploadPart( { basename, fileName, part, uploadId }: Upload
 			 */
 		};
 
-		fetchOptions.body = fs.createReadStream( fileName, { start, end } );
-
-		console.log( `Uploading Part #${ s3PartNumber }` );
+		fetchOptions.body = fs.createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
 
 		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
