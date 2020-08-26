@@ -26,10 +26,10 @@ const MEGABYTE_IN_BYTES = KILOBYTE_IN_BYTES * 1024;
 export const MULTIPART_THRESHOLD = 32 * MEGABYTE_IN_BYTES;
 
 // This is how big each part of a Multipart Upload is (except the last / remainder)
-const UPLOAD_PART_SIZE = 5 * MEGABYTE_IN_BYTES;
+const UPLOAD_PART_SIZE = 16 * MEGABYTE_IN_BYTES;
 
 // How many parts will upload at the same time
-const MAX_CONCURRENT_PART_UPLOADS = 4;
+const MAX_CONCURRENT_PART_UPLOADS = 5;
 
 export interface GetSignedUploadRequestDataArgs {
 	action: | 'AbortMultipartUpload'
@@ -355,7 +355,7 @@ export async function uploadParts( {
 					clearInterval( canDoInterval );
 					resolve();
 				}
-			}, 500 );
+			}, 300 );
 		} );
 
 	const printProgress = () =>

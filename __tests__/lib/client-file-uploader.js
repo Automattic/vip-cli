@@ -27,7 +27,7 @@ describe( 'client-file-uploader', () => {
 				basename: 'db-dump-ipsum-67mb.sql',
 				fileName,
 				md5: '6a051288a7848e3fb3571af220fc455a',
-				size: 67921765,
+				fileSize: 67921765,
 			} );
 		} );
 
@@ -38,7 +38,7 @@ describe( 'client-file-uploader', () => {
 				basename: 'numerical-test-file-5.24mb.txt',
 				fileName,
 				md5: '6f18fdff4f9f9926989e0816741aa2ba',
-				size: 5242890,
+				fileSize: 5242890,
 			} );
 		} );
 	} );
@@ -47,56 +47,48 @@ describe( 'client-file-uploader', () => {
 		it( 'should handle a small file size', () => {
 			const boundaries = getPartBoundaries( 100 );
 			expect( boundaries ).toHaveLength( 1 );
-			expect( boundaries[ 0 ] ).toMatchObject( { end: 99, index: 0, size: 100, start: 0 } );
+			expect( boundaries[ 0 ] ).toMatchObject( { end: 99, index: 0, partSize: 100, start: 0 } );
 		} );
 
-		it( 'should handle a 5mb file size', () => {
-			const boundaries = getPartBoundaries( 5242880 );
+		it( 'should handle a 16mb file size', () => {
+			const boundaries = getPartBoundaries( 16777216 );
 			expect( boundaries ).toHaveLength( 1 );
 			expect( boundaries[ 0 ] ).toMatchObject( {
-				end: 5242879,
+				end: 16777215,
 				index: 0,
-				size: 5242880,
+				partSize: 16777216,
 				start: 0,
 			} );
 		} );
 
-		it( 'should handle a 5+mb file size', () => {
-			const boundaries = getPartBoundaries( 5242881 );
+		it( 'should handle a 16+mb file size', () => {
+			const boundaries = getPartBoundaries( 16777217 );
 			expect( boundaries ).toHaveLength( 2 );
 			expect( boundaries[ 0 ] ).toMatchObject( {
-				end: 5242879,
+				end: 16777215,
 				index: 0,
-				size: 5242880,
+				partSize: 16777216,
 				start: 0,
 			} );
 			expect( boundaries[ 1 ] ).toMatchObject( {
-				end: 5242880,
+				end: 16777216,
 				index: 1,
-				size: 1,
-				start: 5242880,
+				partSize: 1,
+				start: 16777216,
 			} );
 		} );
 
 		it( 'should handle a 67mb sql file', async () => {
 			const fileName = '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql';
 			const fileMeta = await getFileMeta( fileName );
-			const parts = getPartBoundaries( fileMeta.size );
+			const parts = getPartBoundaries( fileMeta.fileSize );
 
 			expect( parts ).toEqual( [
-				{ end: 5242879, index: 0, size: 5242880, start: 0 },
-				{ end: 10485759, index: 1, size: 5242880, start: 5242880 },
-				{ end: 15728639, index: 2, size: 5242880, start: 10485760 },
-				{ end: 20971519, index: 3, size: 5242880, start: 15728640 },
-				{ end: 26214399, index: 4, size: 5242880, start: 20971520 },
-				{ end: 31457279, index: 5, size: 5242880, start: 26214400 },
-				{ end: 36700159, index: 6, size: 5242880, start: 31457280 },
-				{ end: 41943039, index: 7, size: 5242880, start: 36700160 },
-				{ end: 47185919, index: 8, size: 5242880, start: 41943040 },
-				{ end: 52428799, index: 9, size: 5242880, start: 47185920 },
-				{ end: 57671679, index: 10, size: 5242880, start: 52428800 },
-				{ end: 62914559, index: 11, size: 5242880, start: 57671680 },
-				{ end: 67921764, index: 12, size: 5007205, start: 62914560 },
+				{ end: 16777215, index: 0, partSize: 16777216, start: 0 },
+				{ end: 33554431, index: 1, partSize: 16777216, start: 16777216 },
+				{ end: 50331647, index: 2, partSize: 16777216, start: 33554432 },
+				{ end: 67108863, index: 3, partSize: 16777216, start: 50331648 },
+				{ end: 67921764, index: 4, partSize: 812901, start: 67108864 },
 			] );
 		} );
 	} );
@@ -107,34 +99,57 @@ describe( 'client-file-uploader', () => {
 			const expectedHash = '856fefcdf9b935c7bd952847a529e509';
 			const fileMeta = await getFileMeta( fileName );
 			expect( fileMeta.md5 ).toBe( expectedHash );
-			const parts = getPartBoundaries( fileMeta.size );
+			const parts = getPartBoundaries( fileMeta.fileSize );
 			const partsWithHash = await hashParts( fileName, parts );
 
 			expect( partsWithHash ).toHaveLength( 1 );
 			expect( partsWithHash[ 0 ].md5 ).toBe( expectedHash );
 		} );
 
-		it( 'should annotate 5+mb text file parts with hashes', async () => {
-			const fileName = '__fixtures__/client-file-uploader/numerical-test-file-5.24mb.txt';
-			const fileMeta = await getFileMeta( fileName );
-			const parts = getPartBoundaries( fileMeta.size );
-			const partsWithHash = await hashParts( fileName, parts );
-
-			expect( partsWithHash ).toHaveLength( 2 );
-			expect( partsWithHash[ 0 ].md5 ).toBe( '9ac7a28ed2a4ce9a37b8727bc41d95f9' );
-			expect( partsWithHash[ 1 ].md5 ).toBe( 'e0ec043b3f9e198ec09041687e4d4e8d' );
-		} );
-
 		it( 'should annotate 67mb sql parts with hashes', async () => {
 			const fileName = '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql';
 			const fileMeta = await getFileMeta( fileName );
-			const parts = getPartBoundaries( fileMeta.size );
+			const parts = getPartBoundaries( fileMeta.fileSize );
 			const partsWithHash = await hashParts( fileName, parts );
 
-			expect( partsWithHash ).toHaveLength( 13 );
-			expect( partsWithHash[ 0 ].md5 ).toBe( 'a857c5cc4608c776808507cec97d2235' );
-			expect( partsWithHash[ 1 ].md5 ).toBe( '8df26e5554d6d7c5326a26cfbad85f53' );
-			expect( partsWithHash[ 12 ].md5 ).toBe( '15705b12d592056edb6dac23ceee16b9' );
+			expect( partsWithHash ).toHaveLength( 5 );
+			expect( partsWithHash ).toEqual( [
+				{
+					end: 16777215,
+					index: 0,
+					md5: '8c651c16ecc227926b9d2f394f023f33',
+					partSize: 16777216,
+					start: 0,
+				},
+				{
+					end: 33554431,
+					index: 1,
+					md5: '7323e6dea6713dc4adfd919dfa412d6c',
+					partSize: 16777216,
+					start: 16777216,
+				},
+				{
+					end: 50331647,
+					index: 2,
+					md5: 'b1c81ac598904a6fda06e378671f405f',
+					partSize: 16777216,
+					start: 33554432,
+				},
+				{
+					end: 67108863,
+					index: 3,
+					md5: 'c113e49be83d2897be7c178bf5e1fce4',
+					partSize: 16777216,
+					start: 50331648,
+				},
+				{
+					end: 67921764,
+					index: 4,
+					md5: '84923a91c5aab4e2434c617644b6627f',
+					partSize: 812901,
+					start: 67108864,
+				},
+			] );
 		} );
 	} );
 } );
