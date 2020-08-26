@@ -28,6 +28,9 @@ export const MULTIPART_THRESHOLD = 32 * MEGABYTE_IN_BYTES;
 // This is how big each part of a Multipart Upload is (except the last / remainder)
 const UPLOAD_PART_SIZE = 5 * MEGABYTE_IN_BYTES;
 
+// How many parts will upload at the same time
+const MAX_CONCURRENT_PART_UPLOADS = 4;
+
 export interface GetSignedUploadRequestDataArgs {
 	action: | 'AbortMultipartUpload'
 		| 'CreateMultipartUpload'
@@ -340,18 +343,30 @@ export async function uploadParts( {
 	uploadId,
 	parts,
 }: UploadPartsArgs ) {
+	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
-	const partProgress = [];
+	const partPercentages = new Array( parts.length ).fill( 0 );
+
+	const readyForPartUpload = () =>
+		new Promise( resolve => {
+			const canDoInterval = setInterval( () => {
+				if ( uploadsInProgress < MAX_CONCURRENT_PART_UPLOADS ) {
+					uploadsInProgress++;
+					clearInterval( canDoInterval );
+					resolve();
+				}
+			}, 500 );
+		} );
 
 	const printProgress = () =>
 		singleLogLine(
-			partProgress
-				.map(
-					( partPercentage, index ) =>
-						`Part # ${ index }: ${ partPercentage }% of ${ (
-							parts[ index ].partSize / MEGABYTE_IN_BYTES
-						).toFixed( 2 ) }MB`
-				)
+			partPercentages
+				.map( ( partPercentage, index ) => {
+					const { partSize } = parts[ index ];
+					return `Part # ${ index }: ${ partPercentage }% of ${ (
+						partSize / MEGABYTE_IN_BYTES
+					).toFixed( 2 ) }MB`;
+				} )
 				.join( '\n' ) +
 				`\n\nOverall Progress: ${ Math.floor( ( 100 * totalBytesRead ) / fileSize ) }% of ${ (
 					fileSize / MEGABYTE_IN_BYTES
@@ -359,26 +374,36 @@ export async function uploadParts( {
 		);
 	const printProgressInterval = setInterval( printProgress, 500 );
 
-	// TODO limit concurrency
 	const allDone = await Promise.all(
-		parts.map( part => {
+		parts.map( async part => {
 			const { index, partSize } = part;
 			const progressPassThrough = new PassThrough();
 
 			let partBytesRead = 0;
 			progressPassThrough.on( 'data', data => {
-				partBytesRead += data.length;
 				totalBytesRead += data.length;
-				partProgress[ index ] = Math.floor( ( 100 * partBytesRead ) / partSize );
+				partBytesRead += data.length;
+				partPercentages[ index ] = Math.floor( ( 100 * partBytesRead ) / partSize );
 			} );
 
-			return uploadPart( { basename, fileName, part, progressPassThrough, uploadId } );
+			await readyForPartUpload();
+
+			const uploadResult = await uploadPart( {
+				basename,
+				fileName,
+				part,
+				progressPassThrough,
+				uploadId,
+			} );
+
+			uploadsInProgress--;
+
+			return uploadResult;
 		} )
 	);
 
-	printProgress();
-
 	clearInterval( printProgressInterval );
+	printProgress();
 
 	return allDone;
 }
