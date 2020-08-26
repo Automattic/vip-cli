@@ -199,12 +199,20 @@ export async function uploadUsingMultipart( {
 	} );
 	console.log( { etagResults } );
 
+	/**
+	 * Processing of a Complete Multipart Upload request could take several minutes to complete.
+	 * After Amazon S3 begins processing the request, it sends an HTTP response header that specifies a 200 OK response.
+	 * While processing is in progress, Amazon S3 periodically sends white space characters to keep the connection from timing out.
+	 * Because a request could fail after the initial 200 OK response has been sent, it is important that you check the
+	 * response body to determine whether the request succeeded.
+	 * Note that if CompleteMultipartUpload fails, applications should be prepared to retry the failed requests.
+	 *
+	 * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
+	 */
 	return completeMultipartUpload( {
 		basename,
 		uploadId,
-		etagResults: [
-			etagResults[ 0 ], // Only one ETag object is required, don't waste bandwidth pushing them all
-		],
+		etagResults,
 	} );
 }
 
