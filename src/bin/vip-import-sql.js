@@ -60,17 +60,7 @@ command( {
 	const [ fileName ] = arg;
 
 	try {
-		const fileMeta = await getFileMeta( fileName );
-
-		const sizeInMB = fileMeta.size / 1000000;
-
-		// TODO Validate basename
-		const { basename } = fileMeta;
-
-		console.log( `File "${ basename }" is ~ ${ Math.floor( sizeInMB ) } MB.` );
-
-		const results = await uploadFile( { app, basename, fileMeta, fileName, organization } );
-
+		const results = await uploadFile( { app, fileName, organization } );
 		console.log( { results } );
 	} catch ( e ) {
 		err( e );

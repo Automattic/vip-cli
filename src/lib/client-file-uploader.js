@@ -24,6 +24,8 @@ const MEGABYTE_IN_BYTES = KILOBYTE_IN_BYTES * 1024;
 
 // Files smaller than MULTIPART_THRESHOLD will use `PutObject` vs Multipart Uploads
 export const MULTIPART_THRESHOLD = 32 * MEGABYTE_IN_BYTES;
+
+// This is how big each part of a Multipart Upload is (except the last / remainder)
 const UPLOAD_PART_SIZE = 5 * MEGABYTE_IN_BYTES;
 
 export interface GetSignedUploadRequestDataArgs {
@@ -43,32 +45,48 @@ export interface GetSignedUploadRequestDataArgs {
 
 export type UploadArguments = {
 	app: Object,
-	basename: string,
-	fileMeta: Object,
 	fileName: string,
 	organization: Object,
 };
 
 // TODO improve naming a bit to include "presigned"
-export async function uploadFile( {
-	app,
-	basename,
-	fileMeta,
-	fileName,
-	organization,
-}: UploadArguments ) {
-	return fileMeta.size < MULTIPART_THRESHOLD
+export async function uploadFile( { app, fileName, organization }: UploadArguments ) {
+	const fileMeta = await getFileMeta( fileName );
+	const { basename, fileSize } = fileMeta;
+	// TODO Validate File basename
+	// TODO Validate Mime Type
+
+	const sizeInMB = fileSize / 1000000;
+
+	console.log( `File "${ basename }" is ~ ${ Math.floor( sizeInMB ) } MB.` );
+
+	return fileSize < MULTIPART_THRESHOLD
 		? uploadUsingPutObject( { app, basename, fileMeta, fileName, organization } )
 		: uploadUsingMultipart( { app, basename, fileMeta, fileName, organization } );
 }
 
+export type FileMeta = {
+	basename: string,
+	md5: string,
+	fileName: string,
+	fileSize: number,
+};
+
+export type UploadUsingArguments = {
+	app: Object,
+	basename: string,
+	fileMeta: FileMeta,
+	fileName: string,
+	organization: Object,
+};
+
 export async function uploadUsingPutObject( {
 	app,
 	basename,
-	fileMeta,
+	fileMeta: { fileSize },
 	fileName,
 	organization,
-}: UploadArguments ) {
+}: UploadUsingArguments ) {
 	console.log( 'Uploading to S3 using the `PutObject` command.' );
 
 	const presignedRequest = await getSignedUploadRequestData( {
@@ -81,14 +99,14 @@ export async function uploadUsingPutObject( {
 	const fetchOptions = presignedRequest.options;
 	fetchOptions.headers = {
 		...fetchOptions.headers,
-		'Content-Length': `${ fileMeta.size }`, // This has to be a string
+		'Content-Length': `${ fileSize }`, // This has to be a string
 	};
 
 	let readBytes = 0;
 	const progressPassThrough = new PassThrough();
 	progressPassThrough.on( 'data', data => {
 		readBytes += data.length;
-		singleLogLine( `${ Math.floor( ( 100 * readBytes ) / fileMeta.size ) }%...` );
+		singleLogLine( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
 	} );
 	progressPassThrough.on( 'end', () => console.log( '\n' ) );
 
@@ -128,7 +146,7 @@ export async function uploadUsingMultipart( {
 	fileMeta,
 	fileName,
 	organization,
-}: UploadArguments ) {
+}: UploadUsingArguments ) {
 	console.log( 'Uploading to S3 using the Multipart API.' );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
@@ -143,8 +161,6 @@ export async function uploadUsingMultipart( {
 		presignedCreateMultipartUpload.options
 	);
 	const multipartUploadResult = await multipartUploadResponse.text();
-
-	console.log( { multipartUploadResult } );
 
 	// TODO is any hardening needed here?
 	const parser = new XmlParser( {
@@ -171,17 +187,17 @@ export async function uploadUsingMultipart( {
 
 	console.log( { uploadId } );
 
-	const parts = getPartBoundaries( fileMeta.size );
+	const parts = getPartBoundaries( fileMeta.fileSize );
 	const partsWithHash = await hashParts( fileName, parts );
 	const etagResults = await uploadParts( {
 		basename,
+		fileMeta,
 		fileName,
 		parts: partsWithHash,
 		uploadId,
 	} );
 	console.log( { etagResults } );
 
-	console.log( 'Completing the upload...' );
 	return completeMultipartUpload( {
 		basename,
 		uploadId,
@@ -212,13 +228,6 @@ export async function getSignedUploadRequestData( {
 
 	return response.json();
 }
-
-export type FileMeta = {
-	basename: string,
-	md5: string,
-	fileName: string,
-	size: number,
-};
 
 export async function checkFileAccess( fileName: string ): Promise<void> {
 	// Node 8 doesn't have fs.promises, so fall back to this
@@ -252,9 +261,9 @@ export function getFileMeta( fileName: string ): Promise<FileMeta> {
 			return reject( `File '${ fileName }' does not exist or is not readable.` );
 		}
 
-		const size = await getFileSize( fileName );
+		const fileSize = await getFileSize( fileName );
 
-		if ( ! size ) {
+		if ( ! fileSize ) {
 			return reject( `File '${ fileName }' is empty.` );
 		}
 
@@ -265,7 +274,7 @@ export function getFileMeta( fileName: string ): Promise<FileMeta> {
 					resolve( {
 						basename: path.posix.basename( fileName ),
 						fileName,
-						size,
+						fileSize,
 						md5: this.read(),
 					} );
 				} );
@@ -278,7 +287,7 @@ export function getFileMeta( fileName: string ): Promise<FileMeta> {
 export type PartBoundaries = {
 	end: number,
 	index: number,
-	size: number,
+	partSize: number,
 	start: number,
 };
 export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
@@ -292,8 +301,8 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 		const start = index * UPLOAD_PART_SIZE;
 		const remaining = fileSize - start;
 		const end = ( remaining > UPLOAD_PART_SIZE ? start + UPLOAD_PART_SIZE : start + remaining ) - 1;
-		const size = end + 1 - start;
-		return { end, index, size, start };
+		const partSize = end + 1 - start;
+		return { end, index, partSize, start };
 	} );
 }
 
@@ -320,49 +329,56 @@ export async function hashParts( fileName: string, parts: Array<PartBoundaries> 
 
 type UploadPartsArgs = {
 	basename: string,
-	fileName: string,
+	fileMeta: FileMeta,
 	uploadId: string,
 	parts: Array<any>,
 };
 
-export async function uploadParts( { basename, fileName, uploadId, parts }: UploadPartsArgs ) {
+export async function uploadParts( {
+	basename,
+	fileMeta: { fileName, fileSize },
+	uploadId,
+	parts,
+}: UploadPartsArgs ) {
+	let totalBytesRead = 0;
 	const partProgress = [];
 
-	let printProgressTimeout;
-	const printProgress = ( end = false ) => {
-		clearTimeout( printProgressTimeout );
-		const printer = () =>
-			singleLogLine(
-				partProgress
-					.map( ( percentage, index ) => `Part # ${ index }: ${ percentage }%` )
-					.join( '\n' )
-			);
-		if ( end ) {
-			printer();
-			console.log( '\n' );
-			return;
-		}
-		setTimeout( printer, 500 );
-	};
+	const printProgress = () =>
+		singleLogLine(
+			partProgress
+				.map(
+					( partPercentage, index ) =>
+						`Part # ${ index }: ${ partPercentage }% of ${ (
+							parts[ index ].partSize / MEGABYTE_IN_BYTES
+						).toFixed( 2 ) }MB`
+				)
+				.join( '\n' ) +
+				`\n\nOverall Progress: ${ Math.floor( ( 100 * totalBytesRead ) / fileSize ) }% of ${ (
+					fileSize / MEGABYTE_IN_BYTES
+				).toFixed( 2 ) }MB`
+		);
+	const printProgressInterval = setInterval( printProgress, 500 );
 
 	// TODO limit concurrency
 	const allDone = await Promise.all(
 		parts.map( part => {
-			const { index, size } = part;
+			const { index, partSize } = part;
 			const progressPassThrough = new PassThrough();
 
-			let bytesRead = 0;
+			let partBytesRead = 0;
 			progressPassThrough.on( 'data', data => {
-				bytesRead += data.length;
-				partProgress[ index ] = Math.floor( ( 100 * bytesRead ) / size );
-				printProgress();
+				partBytesRead += data.length;
+				totalBytesRead += data.length;
+				partProgress[ index ] = Math.floor( ( 100 * partBytesRead ) / partSize );
 			} );
 
 			return uploadPart( { basename, fileName, part, progressPassThrough, uploadId } );
 		} )
 	);
 
-	printProgress( true );
+	printProgress();
+
+	clearInterval( printProgressInterval );
 
 	return allDone;
 }
@@ -381,8 +397,7 @@ export async function uploadPart( {
 	progressPassThrough,
 	uploadId,
 }: UploadPartArgs ) {
-	console.log( { part } );
-	const { end, index, size, start } = part;
+	const { end, index, partSize, start } = part;
 	const s3PartNumber = index + 1; // S3 multipart is indexed from 1
 
 	// TODO: handle failures / retries, etc.
@@ -400,7 +415,7 @@ export async function uploadPart( {
 		const fetchOptions = partUploadRequestData.options;
 		fetchOptions.headers = {
 			...fetchOptions.headers,
-			'Content-Length': `${ size }`, // This has to be a string
+			'Content-Length': `${ partSize }`, // This has to be a string
 			/**
 			 * TODO? 'Content-MD5': Buffer.from( ... ).toString( 'base64' ),
 			 * Content-MD5 has to be base64 encoded.
@@ -414,13 +429,11 @@ export async function uploadPart( {
 		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
 			const responseHeaders = fetchResponse.headers.raw();
-			console.log( { responseHeaders } );
 			const [ etag ] = responseHeaders.etag;
 			return JSON.parse( etag );
 		}
 
 		const result = await fetchResponse.text();
-		console.log( [ partUploadRequestData.url, fetchOptions, result ] );
 
 		// TODO is any hardening needed here?
 		const parser = new XmlParser( {
