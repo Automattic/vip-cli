@@ -6,7 +6,7 @@ import dbFileImport from 'lib/site-import/db-file-import';
 
 describe( 'site import tests', () => {
 	describe( 'siteImport', () => {
-		it( 'should should have an object called dbSiteImport', () => {
+		it( 'should have an object called dbSiteImport', () => {
 			expect( typeof siteImport.dbFileImport ).toEqual( 'object' );
 		} );
 	} );
