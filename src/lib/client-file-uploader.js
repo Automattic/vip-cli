@@ -18,15 +18,13 @@ import { stdout as singleLogLine } from 'single-line-log';
  * Internal dependencies
  */
 import API from 'lib/api';
-
-const KILOBYTE_IN_BYTES = 1024;
-const MEGABYTE_IN_BYTES = KILOBYTE_IN_BYTES * 1024;
+import { MB_IN_BYTES } from 'lib/constants/file-size';
 
 // Files smaller than MULTIPART_THRESHOLD will use `PutObject` vs Multipart Uploads
-export const MULTIPART_THRESHOLD = 32 * MEGABYTE_IN_BYTES;
+export const MULTIPART_THRESHOLD = 32 * MB_IN_BYTES;
 
 // This is how big each part of a Multipart Upload is (except the last / remainder)
-const UPLOAD_PART_SIZE = 16 * MEGABYTE_IN_BYTES;
+const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 
 // How many parts will upload at the same time
 const MAX_CONCURRENT_PART_UPLOADS = 5;
@@ -363,13 +361,13 @@ export async function uploadParts( {
 			partPercentages
 				.map( ( partPercentage, index ) => {
 					const { partSize } = parts[ index ];
-					return `Part # ${ index }: ${ partPercentage }% of ${ (
-						partSize / MEGABYTE_IN_BYTES
-					).toFixed( 2 ) }MB`;
+					return `Part # ${ index }: ${ partPercentage }% of ${ ( partSize / MB_IN_BYTES ).toFixed(
+						2
+					) }MB`;
 				} )
 				.join( '\n' ) +
 				`\n\nOverall Progress: ${ Math.floor( ( 100 * totalBytesRead ) / fileSize ) }% of ${ (
-					fileSize / MEGABYTE_IN_BYTES
+					fileSize / MB_IN_BYTES
 				).toFixed( 2 ) }MB`
 		);
 	const printProgressInterval = setInterval( printProgress, 500 );
