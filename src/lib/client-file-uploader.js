@@ -8,11 +8,11 @@
  */
 import fs from 'fs';
 import os from 'os';
-import path, { sep as pathSeparator } from 'path';
+import path from 'path';
 import fetch from 'isomorphic-fetch';
 import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
-import { PassThrough } from 'stream';
+import { PassThrough, ReadStream } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import { stdout as singleLogLine } from 'single-line-log';
 
@@ -31,6 +31,15 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 // How many parts will upload at the same time
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
+export type FileMeta = {
+	basename: string,
+	md5?: string,
+	fileContent?: string | Buffer | ReadStream,
+	fileName: string,
+	fileSize: number,
+	isCompressed: boolean,
+};
+
 export interface GetSignedUploadRequestDataArgs {
 	action: | 'AbortMultipartUpload'
 		| 'CreateMultipartUpload'
@@ -48,7 +57,7 @@ export interface GetSignedUploadRequestDataArgs {
 
 export const getWorkingTempDir = async () =>
 	new Promise( ( resolve, reject ) => {
-		fs.mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ), 'utf8', ( err, dir ) => {
+		fs.mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ), ( err, dir ) => {
 			if ( err ) {
 				return reject( err );
 			}
@@ -65,7 +74,7 @@ export type UploadArguments = {
 export const getFileMD5Hash = async ( fileName: string ) =>
 	new Promise( resolve =>
 		fs
-			.createReadStream( fileName, { encoding: 'hex', highWaterMark: UPLOAD_PART_SIZE } )
+			.createReadStream( fileName, { highWaterMark: UPLOAD_PART_SIZE } )
 			.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
 			.on( 'finish', function() {
 				resolve( this.read() );
@@ -80,6 +89,37 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.pipe( fs.createWriteStream( compressedFileName ) )
 			.on( 'finish', resolve )
 	);
+
+export async function getFileMeta( fileName: string ) {
+	return new Promise( async ( resolve, reject ) => {
+		try {
+			await checkFileAccess( fileName );
+		} catch ( e ) {
+			return reject( `File '${ fileName }' does not exist or is not readable.` );
+		}
+
+		const fileSize = await getFileSize( fileName );
+
+		if ( ! fileSize ) {
+			return reject( `File '${ fileName }' is empty.` );
+		}
+
+		const basename = path.posix.basename( fileName );
+		// TODO Validate File basename...  encodeURIComponent, maybe...?
+
+		const mimeType = await detectCompressedMimeType( fileName );
+		// TODO Only allow a subset of Mime Types...?
+
+		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
+
+		resolve( {
+			basename,
+			fileName,
+			fileSize,
+			isCompressed,
+		} );
+	} );
+}
 
 // TODO improve naming a bit to include "presigned"
 export async function uploadFile( { app, fileName, organization }: UploadArguments ) {
@@ -96,12 +136,14 @@ export async function uploadFile( { app, fileName, organization }: UploadArgumen
 		`File "${ fileMeta.basename }" is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB.`
 	);
 
+	// TODO Compression will probably fail over a certain file size... break into pieces...?
+
 	if ( ! fileMeta.isCompressed ) {
 		// Compress to the temp dir & annotate `fileMeta`
 		const uncompressedFileName = fileMeta.fileName;
 		const uncompressedFileSize = fileMeta.fileSize;
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
-		fileMeta.fileName = `${ tmpDir }${ pathSeparator }${ fileMeta.basename }`;
+		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
 		console.log( `Compressing to ${ fileMeta.fileName } prior to transfer.` );
 
@@ -121,10 +163,32 @@ export async function uploadFile( { app, fileName, organization }: UploadArgumen
 
 	try {
 		fileMeta.md5 = await getFileMD5Hash( fileMeta.fileName );
-		console.log( `Calculated file md5 hash: ${ fileMeta.md5 }` );
+		console.log( `Calculated file md5 checksum: ${ fileMeta.md5 }` );
 	} catch ( e ) {
 		throw `Unable to calculate file checksum: ${ e }`;
 	}
+
+	const md5ObjectName = `${ fileMeta.basename }.md5`;
+	const md5ObjectBody = `${ fileMeta.md5 }  ${ fileMeta.basename }`;
+
+	try {
+		console.log( 'Uploading file checksum' );
+		await uploadUsingPutObject( {
+			app,
+			fileMeta: {
+				basename: md5ObjectName,
+				fileContent: md5ObjectBody,
+				fileName: '',
+				fileSize: md5ObjectBody.length,
+				isCompressed: false,
+			},
+			organization,
+		} );
+	} catch ( e ) {
+		throw `Unable to upload file checksum: ${ e }`;
+	}
+
+	console.log( 'Checksum uploaded.' );
 
 	// TODO write md5 to temp dir & upload that as well
 
@@ -134,14 +198,6 @@ export async function uploadFile( { app, fileName, organization }: UploadArgumen
 		: uploadUsingMultipart( { app, fileMeta, organization } );
 }
 
-export type FileMeta = {
-	basename: string,
-	md5?: string,
-	fileName: string,
-	fileSize: number,
-	isCompressed: boolean,
-};
-
 export type UploadUsingArguments = {
 	app: Object,
 	fileMeta: FileMeta,
@@ -150,7 +206,7 @@ export type UploadUsingArguments = {
 
 export async function uploadUsingPutObject( {
 	app,
-	fileMeta: { basename, fileName, fileSize },
+	fileMeta: { basename, fileContent, fileName, fileSize },
 	organization,
 }: UploadUsingArguments ) {
 	console.log( 'Uploading to S3 using the `PutObject` command.' );
@@ -176,11 +232,9 @@ export async function uploadUsingPutObject( {
 	} );
 	progressPassThrough.on( 'end', () => console.log( '\n' ) );
 
-	const readStream = fs.createReadStream( fileName ).pipe( progressPassThrough );
-
 	const response = await fetch( presignedRequest.url, {
 		...fetchOptions,
-		body: readStream,
+		body: fileContent ? fileContent : fs.createReadStream( fileName ).pipe( progressPassThrough ),
 	} );
 
 	if ( response.status === 200 ) {
@@ -346,37 +400,6 @@ export async function detectCompressedMimeType( fileName: string ): Promise<stri
 				}
 				resolve();
 			} );
-	} );
-}
-
-export function getFileMeta( fileName: string ): Promise<FileMeta> {
-	return new Promise( async ( resolve, reject ) => {
-		try {
-			await checkFileAccess( fileName );
-		} catch ( e ) {
-			return reject( `File '${ fileName }' does not exist or is not readable.` );
-		}
-
-		const fileSize = await getFileSize( fileName );
-
-		if ( ! fileSize ) {
-			return reject( `File '${ fileName }' is empty.` );
-		}
-
-		const basename = path.posix.basename( fileName );
-		// TODO Validate File basename...  encodeURIComponent, maybe...?
-
-		const mimeType = await detectCompressedMimeType( fileName );
-		// TODO Only allow a subset of Mime Types...?
-
-		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
-
-		resolve( {
-			basename,
-			fileName,
-			fileSize,
-			isCompressed,
-		} );
 	} );
 }
 
