@@ -7,8 +7,10 @@
  * External dependencies
  */
 import fs from 'fs';
-import path from 'path';
+import os from 'os';
+import path, { sep as pathSeparator } from 'path';
 import fetch from 'isomorphic-fetch';
+import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
@@ -44,48 +46,111 @@ export interface GetSignedUploadRequestDataArgs {
 	uploadId?: string;
 }
 
+export const getWorkingTempDir = async () =>
+	new Promise( ( resolve, reject ) => {
+		fs.mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ), 'utf8', ( err, dir ) => {
+			if ( err ) {
+				return reject( err );
+			}
+			resolve( dir );
+		} );
+	} );
+
 export type UploadArguments = {
 	app: Object,
 	fileName: string,
 	organization: Object,
 };
 
+export const getFileMD5Hash = async ( fileName: string ) =>
+	new Promise( resolve =>
+		fs
+			.createReadStream( fileName, { encoding: 'hex', highWaterMark: UPLOAD_PART_SIZE } )
+			.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
+			.on( 'finish', function() {
+				resolve( this.read() );
+			} )
+	);
+
+export const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) =>
+	new Promise( resolve =>
+		fs
+			.createReadStream( uncompressedFileName )
+			.pipe( createGzip() )
+			.pipe( fs.createWriteStream( compressedFileName ) )
+			.on( 'finish', resolve )
+	);
+
 // TODO improve naming a bit to include "presigned"
 export async function uploadFile( { app, fileName, organization }: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
-	const { basename, fileSize } = fileMeta;
-	// TODO Validate File basename
-	// TODO Validate Mime Type
 
-	const sizeInMB = fileSize / 1000000;
+	let tmpDir;
+	try {
+		tmpDir = await getWorkingTempDir();
+	} catch ( e ) {
+		throw `Unable to create temporary working directory: ${ e }`;
+	}
 
-	console.log( `File "${ basename }" is ~ ${ Math.floor( sizeInMB ) } MB.` );
+	console.log(
+		`File "${ fileMeta.basename }" is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB.`
+	);
 
-	return fileSize < MULTIPART_THRESHOLD
-		? uploadUsingPutObject( { app, basename, fileMeta, fileName, organization } )
-		: uploadUsingMultipart( { app, basename, fileMeta, fileName, organization } );
+	if ( ! fileMeta.isCompressed ) {
+		// Compress to the temp dir & annotate `fileMeta`
+		const uncompressedFileName = fileMeta.fileName;
+		const uncompressedFileSize = fileMeta.fileSize;
+		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
+		fileMeta.fileName = `${ tmpDir }${ pathSeparator }${ fileMeta.basename }`;
+
+		console.log( `Compressing to ${ fileMeta.fileName } prior to transfer.` );
+
+		await gzipFile( uncompressedFileName, fileMeta.fileName );
+		fileMeta.isCompressed = true;
+		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
+
+		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB.` );
+
+		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
+		console.log(
+			`Compression resulted in a ${ ( fewerBytes / MB_IN_BYTES ).toFixed( 2 ) }MB (${ Math.floor(
+				( 100 * fewerBytes ) / uncompressedFileSize
+			) }%) smaller file`
+		);
+	}
+
+	try {
+		fileMeta.md5 = await getFileMD5Hash( fileMeta.fileName );
+		console.log( `Calculated file md5 hash: ${ fileMeta.md5 }` );
+	} catch ( e ) {
+		throw `Unable to calculate file checksum: ${ e }`;
+	}
+
+	// TODO write md5 to temp dir & upload that as well
+
+	// TODO try and merge the two `uploadUsing` functions
+	return fileMeta.fileSize < MULTIPART_THRESHOLD
+		? uploadUsingPutObject( { app, fileMeta, organization } )
+		: uploadUsingMultipart( { app, fileMeta, organization } );
 }
 
 export type FileMeta = {
 	basename: string,
-	md5: string,
+	md5?: string,
 	fileName: string,
 	fileSize: number,
+	isCompressed: boolean,
 };
 
 export type UploadUsingArguments = {
 	app: Object,
-	basename: string,
 	fileMeta: FileMeta,
-	fileName: string,
 	organization: Object,
 };
 
 export async function uploadUsingPutObject( {
 	app,
-	basename,
-	fileMeta: { fileSize },
-	fileName,
+	fileMeta: { basename, fileName, fileSize },
 	organization,
 }: UploadUsingArguments ) {
 	console.log( 'Uploading to S3 using the `PutObject` command.' );
@@ -143,11 +208,11 @@ export async function uploadUsingPutObject( {
 
 export async function uploadUsingMultipart( {
 	app,
-	basename,
 	fileMeta,
-	fileName,
 	organization,
 }: UploadUsingArguments ) {
+	const { basename, fileName } = fileMeta;
+
 	console.log( 'Uploading to S3 using the Multipart API.' );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
@@ -191,9 +256,7 @@ export async function uploadUsingMultipart( {
 	const parts = getPartBoundaries( fileMeta.fileSize );
 	const partsWithHash = await hashParts( fileName, parts );
 	const etagResults = await uploadParts( {
-		basename,
 		fileMeta,
-		fileName,
 		parts: partsWithHash,
 		uploadId,
 	} );
@@ -262,6 +325,30 @@ export async function getFileSize( fileName: string ): Promise<number> {
 	} );
 }
 
+export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {
+	const ZIP_MAGIC_NUMBER = '504b0304';
+	const GZ_MAGIC_NUMBER = '1f8b';
+
+	let fileHeader = '';
+
+	return new Promise( resolve => {
+		fs.createReadStream( fileName, { start: 0, end: 8, encoding: 'hex' } )
+			.on( 'data', data => {
+				fileHeader += data;
+			} )
+			.on( 'end', () => {
+				console.log( { fileHeader } );
+				if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
+					return resolve( 'application/zip' );
+				}
+				if ( GZ_MAGIC_NUMBER === fileHeader.slice( 0, GZ_MAGIC_NUMBER.length ) ) {
+					return resolve( 'application/gzip' );
+				}
+				resolve();
+			} );
+	} );
+}
+
 export function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
 		try {
@@ -276,20 +363,20 @@ export function getFileMeta( fileName: string ): Promise<FileMeta> {
 			return reject( `File '${ fileName }' is empty.` );
 		}
 
-		try {
-			fs.createReadStream( fileName, { highWaterMark: UPLOAD_PART_SIZE } )
-				.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
-				.on( 'finish', function() {
-					resolve( {
-						basename: path.posix.basename( fileName ),
-						fileName,
-						fileSize,
-						md5: this.read(),
-					} );
-				} );
-		} catch ( e ) {
-			return reject( e );
-		}
+		const basename = path.posix.basename( fileName );
+		// TODO Validate File basename...  encodeURIComponent, maybe...?
+
+		const mimeType = await detectCompressedMimeType( fileName );
+		// TODO Only allow a subset of Mime Types...?
+
+		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
+
+		resolve( {
+			basename,
+			fileName,
+			fileSize,
+			isCompressed,
+		} );
 	} );
 }
 
@@ -315,6 +402,7 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 	} );
 }
 
+// TODO: Pull this out...try to use the Content-MD5 header instead
 export async function hashParts( fileName: string, parts: Array<PartBoundaries> ) {
 	return Promise.all(
 		parts.map(
@@ -337,18 +425,12 @@ export async function hashParts( fileName: string, parts: Array<PartBoundaries> 
 }
 
 type UploadPartsArgs = {
-	basename: string,
 	fileMeta: FileMeta,
 	uploadId: string,
 	parts: Array<any>,
 };
 
-export async function uploadParts( {
-	basename,
-	fileMeta: { fileName, fileSize },
-	uploadId,
-	parts,
-}: UploadPartsArgs ) {
+export async function uploadParts( { fileMeta, uploadId, parts }: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
 	const partPercentages = new Array( parts.length ).fill( 0 );
@@ -374,9 +456,9 @@ export async function uploadParts( {
 					) }MB`;
 				} )
 				.join( '\n' ) +
-				`\n\nOverall Progress: ${ Math.floor( ( 100 * totalBytesRead ) / fileSize ) }% of ${ (
-					fileSize / MB_IN_BYTES
-				).toFixed( 2 ) }MB`
+				`\n\nOverall Progress: ${ Math.floor(
+					( 100 * totalBytesRead ) / fileMeta.fileSize
+				) }% of ${ ( fileMeta.fileSize / MB_IN_BYTES ).toFixed( 2 ) }MB`
 		);
 	const printProgressInterval = setInterval( printProgress, 500 );
 
@@ -395,8 +477,7 @@ export async function uploadParts( {
 			await readyForPartUpload();
 
 			const uploadResult = await uploadPart( {
-				basename,
-				fileName,
+				fileMeta,
 				part,
 				progressPassThrough,
 				uploadId,
@@ -415,15 +496,13 @@ export async function uploadParts( {
 }
 
 export type UploadPartArgs = {
-	basename: string,
-	fileName: string,
+	fileMeta: FileMeta,
 	part: Object,
 	progressPassThrough: PassThrough,
 	uploadId: string,
 };
 export async function uploadPart( {
-	basename,
-	fileName,
+	fileMeta: { basename, fileName },
 	part,
 	progressPassThrough,
 	uploadId,
