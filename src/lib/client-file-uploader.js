@@ -209,7 +209,7 @@ export async function uploadUsingPutObject( {
 	fileMeta: { basename, fileContent, fileName, fileSize },
 	organization,
 }: UploadUsingArguments ) {
-	console.log( 'Uploading to S3 using the `PutObject` command.' );
+	console.log( `Uploading ${ basename } to S3 using the \`PutObject\` command.` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
 		organizationId: organization.id,
