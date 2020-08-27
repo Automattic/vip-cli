@@ -6,13 +6,13 @@
 /**
  * External dependencies
  */
-import fs from 'fs';
+import fs, { ReadStream } from 'fs';
 import os from 'os';
 import path from 'path';
 import fetch from 'isomorphic-fetch';
 import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
-import { PassThrough, ReadStream } from 'stream';
+import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import { stdout as singleLogLine } from 'single-line-log';
 
@@ -21,6 +21,9 @@ import { stdout as singleLogLine } from 'single-line-log';
  */
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
+
+// Files smaller than COMPRESS_THRESHOLD will not be compressed before upload
+export const COMPRESS_THRESHOLD = 16 * MB_IN_BYTES;
 
 // Files smaller than MULTIPART_THRESHOLD will use `PutObject` vs Multipart Uploads
 export const MULTIPART_THRESHOLD = 32 * MB_IN_BYTES;
@@ -137,8 +140,9 @@ export async function uploadFile( { app, fileName, organization }: UploadArgumen
 	);
 
 	// TODO Compression will probably fail over a certain file size... break into pieces...?
+	// TODO if needed add a flag to bypass auto-compression
 
-	if ( ! fileMeta.isCompressed ) {
+	if ( ! fileMeta.isCompressed && fileMeta.fileSize >= COMPRESS_THRESHOLD ) {
 		// Compress to the temp dir & annotate `fileMeta`
 		const uncompressedFileName = fileMeta.fileName;
 		const uncompressedFileSize = fileMeta.fileSize;
@@ -391,7 +395,6 @@ export async function detectCompressedMimeType( fileName: string ): Promise<stri
 				fileHeader += data;
 			} )
 			.on( 'end', () => {
-				console.log( { fileHeader } );
 				if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
 					return resolve( 'application/zip' );
 				}
@@ -423,28 +426,6 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 		const partSize = end + 1 - start;
 		return { end, index, partSize, start };
 	} );
-}
-
-// TODO: Pull this out...try to use the Content-MD5 header instead
-export async function hashParts( fileName: string, parts: Array<PartBoundaries> ) {
-	return Promise.all(
-		parts.map(
-			part =>
-				new Promise( resolve => {
-					const { start, end } = part;
-					const hasher = createHash( 'md5' ).setEncoding( 'hex' );
-					fs.createReadStream( fileName, { start, end } )
-						.pipe( hasher )
-						.on( 'finish', () => {
-							hasher.end();
-							return resolve( {
-								...part,
-								md5: hasher.read(),
-							} );
-						} );
-				} )
-		)
-	);
 }
 
 type UploadPartsArgs = {
