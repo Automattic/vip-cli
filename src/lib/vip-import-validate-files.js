@@ -83,7 +83,7 @@ export const acceptedExtensions = [
  */
 
 // Accepted characters in filenames
-const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '+', '&', '#', '%', '=', '’', "\'", "×", "@", "`", '?', '*', '!', '\"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
+const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', '\'', '×', '@', '`', '?', '*', '!', '\"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
 const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
 
 // Prohibited characters in filenames
