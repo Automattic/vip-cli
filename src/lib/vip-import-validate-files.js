@@ -83,13 +83,11 @@ export const acceptedExtensions = [
  */
 
 // Accepted characters in filenames
-const acceptedCharacters = [ 'Non-English characters', 'spaces', '(', ')', '[', ']', '~' ];
+const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', '\'', '×', '@', '`', '?', '*', '!', '\"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
 const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
 
 // Prohibited characters in filenames
-const prohibitedCharacters = [
-	'+', '&', '#', '%', '=', '\'', '\"', '\\', '<', '>', ':', ';', ',', '/', '?', '$', '*', '|', '`', '!', '{', '}',
-];
+const prohibitedCharacters = [ '+', '%20' ];
 const prohibitedCharactersSet = new Set( prohibitedCharacters );
 
 // Regex for prohibited characters
@@ -133,9 +131,9 @@ const recommendAcceptableFileNames = () => {
 
 	console.log(
 		'The following characters are allowed in file names:\n' +
-		chalk.green( `${ allowedCharacters }\n\n` ) +
+		chalk.green( `All special characters, including: ${ allowedCharacters }\n\n` ) +
 		'The following characters are prohibited in file names:\n' +
-		chalk.red( `${ notAllowedCharacters }\n` )
+		chalk.red( `Encoded or alternate whitespace, such as ${ notAllowedCharacters }, are converted to proper spaces\n` )
 	);
 };
 
@@ -477,19 +475,10 @@ export const isFileSanitized = file => {
 
 	let sanitizedFile = filename;
 
-	// Prohibited characters:
+	// Convert encoded or alternate whitespace into a proper space
 	// Encoded spaces (%20), no-break spaces - keeps words together (\u00A0), and plus signs
 	const regexSpaces = /\u00A0|(%20)|\+/g;
 	sanitizedFile = sanitizedFile.replace( regexSpaces, ' ' );
-
-	// Prohibited characters:
-	// Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
-	sanitizedFile = sanitizedFile.replace( regexSpecialChars, '' );
-
-	// No dashes, underscores, or periods allowed as the first
-	// or last letter of the file (including the extension)
-	const regexFirstAndLast = /(?:^[\.\-_])|(?:[\.\-_]$)/g;
-	sanitizedFile = sanitizedFile.replace( regexFirstAndLast, '' );
 
 	// Check if the filename has been sanitized
 	const checkFile = sanitizedFile !== filename;
