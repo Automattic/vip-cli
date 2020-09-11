@@ -16,6 +16,7 @@ import chalk from 'chalk';
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { getFileMeta, uploadFile } from 'lib/client-file-uploader';
+import { validate } from 'lib/validations/sql';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -41,6 +42,7 @@ command( {
 	const { app } = opts;
 	const { environments, organization } = app;
 	const primaryDomainName = environments[ 0 ].primaryDomain.name;
+	const [ fileName ] = arg;
 
 	console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
@@ -52,12 +54,12 @@ command( {
 		err( 'The type of application you specified does not currently support SQL imports.' );
 	}
 
+	await validate( fileName );
+
 	console.log( 'You are about to import a SQL file to site:' );
 	console.log( `ID: ${ app.id }` );
 	console.log( `Name: ${ app.name }` );
 	console.log( `Primary Domain Name: ${ primaryDomainName }` );
-
-	const [ fileName ] = arg;
 
 	try {
 		const results = await uploadFile( { app, fileName, organization } );
