@@ -15,7 +15,7 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
-import { getFileMeta, uploadFile } from 'lib/client-file-uploader';
+import { uploadFile } from 'lib/client-file-uploader';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)

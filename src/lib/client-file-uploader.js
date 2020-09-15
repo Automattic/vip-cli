@@ -51,7 +51,6 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'PutObject'
 		| 'UploadPart';
 	etagResults?: Array<Object>;
-	organizationId?: number;
 	appId?: number;
 	basename: string;
 	partNumber?: number;
@@ -71,7 +70,6 @@ export const getWorkingTempDir = async () =>
 export type UploadArguments = {
 	app: Object,
 	fileName: string,
-	organization: Object,
 };
 
 export const getFileMD5Hash = async ( fileName: string ) =>
@@ -125,7 +123,7 @@ export async function getFileMeta( fileName: string ) {
 }
 
 // TODO improve naming a bit to include "presigned"
-export async function uploadFile( { app, fileName, organization }: UploadArguments ) {
+export async function uploadFile( { app, fileName }: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
@@ -186,7 +184,6 @@ export async function uploadFile( { app, fileName, organization }: UploadArgumen
 				fileSize: md5ObjectBody.length,
 				isCompressed: false,
 			},
-			organization,
 		} );
 	} catch ( e ) {
 		throw `Unable to upload file checksum: ${ e }`;
@@ -194,29 +191,26 @@ export async function uploadFile( { app, fileName, organization }: UploadArgumen
 
 	console.log( 'Checksum uploaded.' );
 
-	// TODO write md5 to temp dir & upload that as well
+	// TODO -- send md5 hash along with the host action payload instead of uploading separately
 
 	// TODO try and merge the two `uploadUsing` functions
 	return fileMeta.fileSize < MULTIPART_THRESHOLD
-		? uploadUsingPutObject( { app, fileMeta, organization } )
-		: uploadUsingMultipart( { app, fileMeta, organization } );
+		? uploadUsingPutObject( { app, fileMeta } )
+		: uploadUsingMultipart( { app, fileMeta } );
 }
 
 export type UploadUsingArguments = {
 	app: Object,
 	fileMeta: FileMeta,
-	organization: Object,
 };
 
 export async function uploadUsingPutObject( {
 	app,
 	fileMeta: { basename, fileContent, fileName, fileSize },
-	organization,
 }: UploadUsingArguments ) {
 	console.log( `Uploading ${ basename } to S3 using the \`PutObject\` command.` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
-		organizationId: organization.id,
 		appId: app.id,
 		basename,
 		action: 'PutObject',
@@ -264,17 +258,12 @@ export async function uploadUsingPutObject( {
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
 
-export async function uploadUsingMultipart( {
-	app,
-	fileMeta,
-	organization,
-}: UploadUsingArguments ) {
-	const { basename, fileName } = fileMeta;
+export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArguments ) {
+	const { basename } = fileMeta;
 
 	console.log( 'Uploading to S3 using the Multipart API.' );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
-		organizationId: organization.id,
 		appId: app.id,
 		basename,
 		action: 'CreateMultipartUpload',
@@ -312,10 +301,9 @@ export async function uploadUsingMultipart( {
 	console.log( { uploadId } );
 
 	const parts = getPartBoundaries( fileMeta.fileSize );
-	const partsWithHash = await hashParts( fileName, parts );
 	const etagResults = await uploadParts( {
 		fileMeta,
-		parts: partsWithHash,
+		parts,
 		uploadId,
 	} );
 	console.log( { etagResults } );
@@ -338,7 +326,6 @@ export async function uploadUsingMultipart( {
 }
 
 export async function getSignedUploadRequestData( {
-	organizationId,
 	appId,
 	basename,
 	action,
@@ -349,7 +336,7 @@ export async function getSignedUploadRequestData( {
 	const { apiFetch } = await API();
 	const response = await apiFetch( '/upload/signed-url', {
 		method: 'POST',
-		body: { action, appId, basename, etagResults, organizationId, partNumber, uploadId },
+		body: { action, appId, basename, etagResults, partNumber, uploadId },
 	} );
 
 	if ( response.status !== 200 ) {
@@ -519,9 +506,6 @@ export async function uploadPart( {
 		// Get the signed request data from Parker
 		const partUploadRequestData = await getSignedUploadRequestData( {
 			action: 'UploadPart',
-			// TODO use org & app IDs to derive bucket information
-			// TODO: organizationId: organization.id,
-			// TODO: appId: app.id,
 			basename,
 			partNumber: s3PartNumber,
 			uploadId,
