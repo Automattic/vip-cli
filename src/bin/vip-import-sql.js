@@ -90,5 +90,10 @@ command( {
 				},
 			} );
 	} catch ( error ) {
+		if ( error.graphQLErrors ) {
+			error.graphQLErrors.map( ( { message } ) => {
+				console.log( chalk.red( 'Error:' ), message );
+			} )
+		}
 	}
 } );
