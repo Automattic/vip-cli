@@ -67,4 +67,28 @@ command( {
 	} catch ( e ) {
 		err( e );
 	}
+
+	// Start the import by calling the GraphQL mutation on Parker
+	try {
+		const result = await api
+			.mutate( {
+				// $FlowFixMe: gql template is not supported by flow
+				mutation: gql`
+					mutation StartImportMutation($input: AppEnvironmentImportInput){
+						startImport(input: $input){
+							environment{
+								id
+							}
+						}
+					}
+				`,
+				variables: {
+					input: {
+						id: opts.app.id,
+						environmentId: opts.env.id,
+					},
+				},
+			} );
+	} catch ( error ) {
+	}
 } );
