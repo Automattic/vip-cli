@@ -89,6 +89,11 @@ command( {
 					},
 				},
 			} );
+		
+		// If our mutation succeeds, log that the import is starting
+		if ( result && result.success === true ) {
+			console.log( 'Starting import...');
+		}
 	} catch ( error ) {
 		if ( error.graphQLErrors ) {
 			error.graphQLErrors.map( ( { message } ) => {
