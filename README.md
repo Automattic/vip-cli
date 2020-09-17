@@ -24,6 +24,9 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 1.12.1
+- Updated list of accepted special characters for media files for imports
+
 ### 1.12.0
 - Added multisite support for media files validation
 - Added Tracks for SQL and media file validation events
