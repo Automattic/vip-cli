@@ -9,6 +9,7 @@
  * External dependencies
  */
 import chalk from 'chalk';
+import gql from 'graphql-tag';
 
 /**
  * Internal dependencies
@@ -17,6 +18,7 @@ import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadFile } from 'lib/client-file-uploader';
 import { validate } from 'lib/validations/sql';
+import API from 'lib/api';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -64,9 +66,44 @@ command( {
 	console.log( `Name: ${ app.name }` );
 	console.log( `Primary Domain Name: ${ primaryDomainName }` );
 
+	const api = await API();
+
 	try {
-		const results = await uploadFile( { app, fileName, organization } );
-		console.log( { results } );
+		const { fileMeta: { basename, md5 }, result } = await uploadFile( { app, fileName, organization } );
+
+		console.log( { basename, md5, result } );
+
+		try {
+			await api
+				.mutate( {
+					mutation: gql`
+						mutation StartImport($input: AppEnvironmentImportInput){
+							startImport(input: $input) {
+								app {
+								  id
+								  name
+								}
+								message
+								success
+							  }
+						}
+					`,
+					variables: {
+						input: {
+							id: app.id,
+							environmentId: env.id,
+							basename: basename,
+							md5: md5,
+						},
+					},
+				} );
+		} catch ( gqlErr ) {
+			// TODO: Log gqlErr.graphQLErrors
+			err( `StartImport call failed: ${ gqlErr }` );
+		}
+
+		console.log( 'Your site is being prepared for the import.' );
+		console.log( '🚧 🚧 🚧 Your database file is importing! 🚧 🚧 🚧\nFeel free to exit this tool if you\'d like. Your import will continue in the background.' );
 	} catch ( e ) {
 		err( e );
 	}

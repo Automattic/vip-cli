@@ -174,9 +174,10 @@ export async function uploadFile( { app, fileName }: UploadArguments ) {
 			? await uploadUsingPutObject( { app, fileMeta } )
 			: await uploadUsingMultipart( { app, fileMeta } );
 
-	console.log( { result } );
-
-	return result;
+	return {
+		fileMeta,
+		result,
+	};
 }
 
 export type UploadUsingArguments = {
