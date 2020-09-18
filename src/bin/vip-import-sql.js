@@ -38,10 +38,13 @@ command( {
 	appContext: true,
 	appQuery,
 	requiredArgs: 1, // TODO print proper usage example
+	childEnvContext: true,
+	// TODO: `requireConfirm=` with something like, 'Are you sure you want to replace your database with the contents of the provided file?',
+	// Looks like requireConfirm does not work here... ("Cannot destructure property `backup` of 'undefined' or 'null'")
 } ).argv( process.argv, async ( arg, opts ) => {
-	const { app } = opts;
-	const { environments, organization } = app;
-	const primaryDomainName = environments[ 0 ].primaryDomain.name;
+	const { app, env } = opts;
+	const { organization } = app;
+	const primaryDomainName = env.primaryDomain.name;
 	const [ fileName ] = arg;
 
 	console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
