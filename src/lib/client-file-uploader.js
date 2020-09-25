@@ -127,8 +127,7 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	} );
 }
 
-// TODO improve naming a bit to include "presigned"
-export async function uploadFile( { app, fileName }: UploadArguments ) {
+export async function uploadImportSqlFileToS3( { app, fileName }: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
@@ -168,7 +167,6 @@ export async function uploadFile( { app, fileName }: UploadArguments ) {
 		);
 	}
 
-	// TODO try and merge the two `uploadUsing` functions
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
 			? await uploadUsingPutObject( { app, fileMeta } )
@@ -290,16 +288,6 @@ export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArgume
 	} );
 	console.log( { etagResults } );
 
-	/**
-	 * Processing of a Complete Multipart Upload request could take several minutes to complete.
-	 * After Amazon S3 begins processing the request, it sends an HTTP response header that specifies a 200 OK response.
-	 * While processing is in progress, Amazon S3 periodically sends white space characters to keep the connection from timing out.
-	 * Because a request could fail after the initial 200 OK response has been sent, it is important that you check the
-	 * response body to determine whether the request succeeded.
-	 * Note that if CompleteMultipartUpload fails, applications should be prepared to retry the failed requests.
-	 *
-	 * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
-	 */
 	return completeMultipartUpload( {
 		app,
 		basename,
@@ -317,13 +305,13 @@ export async function getSignedUploadRequestData( {
 	partNumber = undefined,
 }: GetSignedUploadRequestDataArgs ): Promise<Object> {
 	const { apiFetch } = await API();
-	const response = await apiFetch( '/upload/signed-url', {
+	const response = await apiFetch( '/upload/site-import-presigned-url', {
 		method: 'POST',
 		body: { action, appId, basename, etagResults, partNumber, uploadId },
 	} );
 
 	if ( response.status !== 200 ) {
-		throw await response.text();
+		throw ( await response.text() ) || response.statusText;
 	}
 
 	return response.json();
@@ -573,6 +561,16 @@ export async function completeMultipartUpload( {
 		throw await completeMultipartUploadResponse.text();
 	}
 
+	/**
+	 * Processing of a Complete Multipart Upload request could take several minutes to complete.
+	 * After Amazon S3 begins processing the request, it sends an HTTP response header that specifies a 200 OK response.
+	 * While processing is in progress, Amazon S3 periodically sends white space characters to keep the connection from timing out.
+	 * Because a request could fail after the initial 200 OK response has been sent, it is important that you check the
+	 * response body to determine whether the request succeeded.
+	 * Note that if CompleteMultipartUpload fails, applications should be prepared to retry the failed requests.
+	 *
+	 * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
+	 */
 	const result = await completeMultipartUploadResponse.text();
 
 	const parser = new XmlParser( {

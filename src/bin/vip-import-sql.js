@@ -16,7 +16,7 @@ import gql from 'graphql-tag';
  */
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
-import { uploadFile } from 'lib/client-file-uploader';
+import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { validate } from 'lib/validations/sql';
 import API from 'lib/api';
 
@@ -69,7 +69,7 @@ command( {
 	const api = await API();
 
 	try {
-		const { fileMeta: { basename, md5 }, result } = await uploadFile( { app, fileName, organization } );
+		const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, fileName } );
 
 		console.log( { basename, md5, result } );
 
