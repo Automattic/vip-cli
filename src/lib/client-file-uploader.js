@@ -52,6 +52,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'UploadPart';
 	etagResults?: Array<Object>;
 	appId: number;
+	envId: number;
 	basename: string;
 	partNumber?: number;
 	uploadId?: string;
@@ -69,6 +70,7 @@ export const getWorkingTempDir = async () =>
 
 export type UploadArguments = {
 	app: Object,
+	env: Object,
 	fileName: string,
 };
 
@@ -127,7 +129,7 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	} );
 }
 
-export async function uploadImportSqlFileToS3( { app, fileName }: UploadArguments ) {
+export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
@@ -169,8 +171,8 @@ export async function uploadImportSqlFileToS3( { app, fileName }: UploadArgument
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
-			? await uploadUsingPutObject( { app, fileMeta } )
-			: await uploadUsingMultipart( { app, fileMeta } );
+			? await uploadUsingPutObject( { app, env, fileMeta } )
+			: await uploadUsingMultipart( { app, env, fileMeta } );
 
 	return {
 		fileMeta,
@@ -180,17 +182,20 @@ export async function uploadImportSqlFileToS3( { app, fileName }: UploadArgument
 
 export type UploadUsingArguments = {
 	app: Object,
+	env: Object,
 	fileMeta: FileMeta,
 };
 
 export async function uploadUsingPutObject( {
 	app,
+	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
 }: UploadUsingArguments ) {
 	console.log( `Uploading ${ basename } to S3 using the \`PutObject\` command.` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
 		appId: app.id,
+		envId: env.id,
 		basename,
 		action: 'PutObject',
 	} );
@@ -237,13 +242,14 @@ export async function uploadUsingPutObject( {
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
 
-export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArguments ) {
+export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingArguments ) {
 	const { basename } = fileMeta;
 
 	console.log( 'Uploading to S3 using the Multipart API.' );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
 		appId: app.id,
+		envId: env.id,
 		basename,
 		action: 'CreateMultipartUpload',
 	} );
@@ -282,6 +288,7 @@ export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArgume
 	const parts = getPartBoundaries( fileMeta.fileSize );
 	const etagResults = await uploadParts( {
 		app,
+		env,
 		fileMeta,
 		parts,
 		uploadId,
@@ -290,6 +297,7 @@ export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArgume
 
 	return completeMultipartUpload( {
 		app,
+		env,
 		basename,
 		uploadId,
 		etagResults,
@@ -297,9 +305,10 @@ export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArgume
 }
 
 export async function getSignedUploadRequestData( {
+	action,
 	appId,
 	basename,
-	action,
+	envId,
 	etagResults,
 	uploadId = undefined,
 	partNumber = undefined,
@@ -307,7 +316,7 @@ export async function getSignedUploadRequestData( {
 	const { apiFetch } = await API();
 	const response = await apiFetch( '/upload/site-import-presigned-url', {
 		method: 'POST',
-		body: { action, appId, basename, etagResults, partNumber, uploadId },
+		body: { action, appId, basename, envId, etagResults, partNumber, uploadId },
 	} );
 
 	if ( response.status !== 200 ) {
@@ -388,12 +397,13 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 
 type UploadPartsArgs = {
 	app: Object,
+	env: Object,
 	fileMeta: FileMeta,
 	uploadId: string,
 	parts: Array<any>,
 };
 
-export async function uploadParts( { app, fileMeta, uploadId, parts }: UploadPartsArgs ) {
+export async function uploadParts( { app, env, fileMeta, uploadId, parts }: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
 	const partPercentages = new Array( parts.length ).fill( 0 );
@@ -441,6 +451,7 @@ export async function uploadParts( { app, fileMeta, uploadId, parts }: UploadPar
 
 			const uploadResult = await uploadPart( {
 				app,
+				env,
 				fileMeta,
 				part,
 				progressPassThrough,
@@ -461,6 +472,7 @@ export async function uploadParts( { app, fileMeta, uploadId, parts }: UploadPar
 
 export type UploadPartArgs = {
 	app: Object,
+	env: Object,
 	fileMeta: FileMeta,
 	part: Object,
 	progressPassThrough: PassThrough,
@@ -468,6 +480,7 @@ export type UploadPartArgs = {
 };
 export async function uploadPart( {
 	app,
+	env,
 	fileMeta: { basename, fileName },
 	part,
 	progressPassThrough,
@@ -482,6 +495,7 @@ export async function uploadPart( {
 		const partUploadRequestData = await getSignedUploadRequestData( {
 			action: 'UploadPart',
 			appId: app.id,
+			envId: env.id,
 			basename,
 			partNumber: s3PartNumber,
 			uploadId,
@@ -533,6 +547,7 @@ export async function uploadPart( {
 
 export type CompleteMultipartUploadArgs = {
 	app: Object,
+	env: Object,
 	basename: string,
 	uploadId: string,
 	etagResults: Array<any>,
@@ -540,6 +555,7 @@ export type CompleteMultipartUploadArgs = {
 
 export async function completeMultipartUpload( {
 	app,
+	env,
 	basename,
 	uploadId,
 	etagResults,
@@ -547,6 +563,7 @@ export async function completeMultipartUpload( {
 	const completeMultipartUploadRequestData = await getSignedUploadRequestData( {
 		action: 'CompleteMultipartUpload',
 		appId: app.id,
+		envId: env.id,
 		basename,
 		uploadId,
 		etagResults,
