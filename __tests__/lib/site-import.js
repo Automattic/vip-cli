@@ -1,20 +1,21 @@
 /**
  * Internal dependencies
  */
-import siteImport from 'lib/site-import';
-import dbFileImport from 'lib/site-import/db-file-import';
+import { isSupportedApp } from 'lib/site-import/db-file-import';
 
 describe( 'site import tests', () => {
-	describe( 'siteImport', () => {
-		it( 'should have an object called dbSiteImport', () => {
-			expect( typeof siteImport.dbFileImport ).toEqual( 'object' );
-		} );
-	} );
-	describe( 'dbFileImport', () => {
-		describe( 'importFile', () => {
-			it( 'should exist', () => {
-				const { importFile } = dbFileImport;
-				expect( typeof importFile ).toEqual( 'function' );
+	describe( 'db-file-import', () => {
+		describe( 'isSupportedApp', () => {
+			it( 'should return true for type: WordPress', () => {
+				expect( isSupportedApp( { type: 'WordPress' } ) ).toEqual( true );
+			} );
+
+			it( 'should return false for type: node', () => {
+				expect( isSupportedApp( { type: 'node' } ) ).toEqual( false );
+			} );
+
+			it( 'should return false for no type', () => {
+				expect( isSupportedApp( {} ) ).toEqual( false );
 			} );
 		} );
 	} );

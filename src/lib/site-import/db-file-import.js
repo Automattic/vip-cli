@@ -7,20 +7,21 @@
  * External dependencies
  */
 
-export async function importFile() {}
+export interface AppForImport {
+	id: Number;
+	name: string;
+	type: string;
+	organization: Object;
+	environments: Array<any>;
+	type: string;
+}
 
-export function currentUserCanImportForApp( app: any ): boolean {
+export function currentUserCanImportForApp( app: AppForImport ): boolean {
 	// TODO: implement
 	return !! app;
 }
 
-export function isSupportedApp( app: any ): boolean {
-	// TODO: implement
-	return !! app;
-}
+export const SUPPORTED_DB_FILE_IMPORT_SITE_TYPES = [ 'WordPress' ];
 
-export default {
-	currentUserCanImportForApp,
-	importFile,
-	isSupportedApp,
-};
+export const isSupportedApp = ( { type }: AppForImport ) =>
+	SUPPORTED_DB_FILE_IMPORT_SITE_TYPES.includes( type );
