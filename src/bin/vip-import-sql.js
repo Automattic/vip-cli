@@ -62,6 +62,10 @@ command( {
 
 	await validate( fileName );
 
+	/**
+	 * TODO: We should check for various site locks (including importing) prior to the upload.
+	 */
+
 	console.log( 'You are about to import a SQL file to site:' );
 
 	console.log( formatData( [
