@@ -42,7 +42,7 @@ command( {
 	appContext: true,
 	appQuery,
 	requiredArgs: 1, // TODO print proper usage example
-	childEnvContext: true,
+	envContext: true,
 	// TODO: `requireConfirm=` with something like, 'Are you sure you want to replace your database with the contents of the provided file?',
 	// Looks like requireConfirm does not work here... ("Cannot destructure property `backup` of 'undefined' or 'null'")
 } ).argv( process.argv, async ( arg, opts ) => {
