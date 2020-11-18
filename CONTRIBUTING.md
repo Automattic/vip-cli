@@ -17,11 +17,11 @@ To test against a local instance of Parker, you can use the `API_HOST` env var. 
 Examples:
 
 ```
-VIP_PROXY="" VIP_PROXY=localhost:4000 node ./dist/bin/vip
+VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip
 
-VIP_PROXY="" VIP_PROXY=localhost:4000 node ./dist/bin/vip app
+VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip app
 
-VIP_PROXY="" VIP_PROXY=localhost:4000 node ./dist/bin/vip -- wp option get home
+VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip -- wp option get home
 ```
 
 ### Adding commands
