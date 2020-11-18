@@ -10,6 +10,20 @@ Tests are powered by [Jest](https://jestjs.io).
 
 ## Developing
 
+### Local Dev
+
+To test against a local instance of Parker, you can use the `API_HOST` env var. You'll also want to nullify the `VIP_PROXY` env var as well.
+
+Examples:
+
+```
+VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip
+
+VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip app
+
+VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip -- wp option get home
+```
+
 ### Adding commands
 
 * New command names should use the singular case (e.g. site vs sites)
