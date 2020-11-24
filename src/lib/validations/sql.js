@@ -87,6 +87,15 @@ const checks: Checks = {
 		excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
 		recommendation: 'Remove these lines',
 	},
+	createTrigger: {
+		matcher: /^CREATE TRIGGER/i,
+		matchHandler: lineNumber => lineNumber,
+		outputFormatter: errorCheckFormatter,
+		results: [],
+		message: 'CREATE TRIGGER statement',
+		excerpt: '\'CREATE TRIGGER\' statement should not be present (case-insensitive)',
+		recommendation: 'Remove these lines',
+	},
 	dropDB: {
 		matcher: /^DROP DATABASE/i,
 		matchHandler: lineNumber => lineNumber,
