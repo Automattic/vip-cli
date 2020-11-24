@@ -61,6 +61,7 @@ export type CheckType = {
 export type Checks = {
     useDB: CheckType,
 	createDB: CheckType,
+	createTrigger: CheckType,
 	dropDB: CheckType,
 	alterUser: CheckType,
 	dropTable: CheckType,
