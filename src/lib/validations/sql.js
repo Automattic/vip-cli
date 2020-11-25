@@ -61,7 +61,7 @@ export type CheckType = {
 export type Checks = {
     useDB: CheckType,
 	createDB: CheckType,
-	createTrigger: CheckType,
+	trigger: CheckType,
 	dropDB: CheckType,
 	alterUser: CheckType,
 	dropTable: CheckType,
@@ -88,7 +88,7 @@ const checks: Checks = {
 		excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
 		recommendation: 'Remove these lines',
 	},
-	createTrigger: {
+	trigger: {
 		matcher: /TRIGGER/,
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
