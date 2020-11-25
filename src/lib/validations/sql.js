@@ -93,8 +93,8 @@ const checks: Checks = {
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
-		message: 'CREATE TRIGGER statement',
-		excerpt: '\'CREATE TRIGGER\' statement should not be present (case-insensitive)',
+		message: 'TRIGGER statement',
+		excerpt: '\'TRIGGER\' statement should not be present (case-sensitive)',
 		recommendation: 'Remove these lines',
 	},
 	dropDB: {
