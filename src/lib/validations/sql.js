@@ -22,7 +22,7 @@ let lineNum = 1;
 const errorCheckFormatter = check => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ',' ) }.` );
+		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
 		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 	} else {
 		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
