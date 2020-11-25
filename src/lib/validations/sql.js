@@ -89,8 +89,7 @@ const checks: Checks = {
 		recommendation: 'Remove these lines',
 	},
 	createTrigger: {
-		// Match `CREATE (DEFINER=`root`@`host`) TRIGGER`
-		matcher: /^CREATE (DEFINER=`?(\w*)(`@`)?(\w*%?)?`?)?(| )TRIGGER/i,
+		matcher: /TRIGGER/,
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
