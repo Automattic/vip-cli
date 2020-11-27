@@ -22,7 +22,7 @@ let lineNum = 1;
 const errorCheckFormatter = check => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ',' ) }.` );
+		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
 		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 	} else {
 		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
@@ -61,6 +61,7 @@ export type CheckType = {
 export type Checks = {
     useDB: CheckType,
 	createDB: CheckType,
+	trigger: CheckType,
 	dropDB: CheckType,
 	alterUser: CheckType,
 	dropTable: CheckType,
@@ -85,6 +86,15 @@ const checks: Checks = {
 		results: [],
 		message: 'CREATE DATABASE statement',
 		excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
+		recommendation: 'Remove these lines',
+	},
+	trigger: {
+		matcher: /TRIGGER/,
+		matchHandler: lineNumber => lineNumber,
+		outputFormatter: errorCheckFormatter,
+		results: [],
+		message: 'TRIGGER statement',
+		excerpt: '\'TRIGGER\' statement should not be present (case-sensitive)',
 		recommendation: 'Remove these lines',
 	},
 	dropDB: {
