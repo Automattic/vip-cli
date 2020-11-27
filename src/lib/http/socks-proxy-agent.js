@@ -8,7 +8,7 @@ import ProxyAgent from 'socks-proxy-agent';
  */
 
 export default function createSocksProxyAgent() {
-	if ( ! process.env.hasOwnProperty( 'VIP_PROXY' ) ) {
+	if ( ! process.env.VIP_PROXY ) {
 		return null;
 	}
 
