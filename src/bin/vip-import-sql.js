@@ -10,6 +10,7 @@
  */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -19,6 +20,7 @@ import { currentUserCanImportForApp, isSupportedApp, isImportingBlockedBySync } 
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { formatData } from '../lib/cli/format';
 import { validate } from 'lib/validations/sql';
+import { searchAndReplace } from 'lib/search-and-replace'
 import API from 'lib/api';
 
 /**
@@ -38,6 +40,8 @@ const err = message => {
 	process.exit( 1 );
 };
 
+const debug = debugLib( 'vip:vip-import-sql' );
+
 command( {
 	appContext: true,
 	appQuery,
@@ -50,6 +54,9 @@ command( {
 	const primaryDomainName = env.primaryDomain.name;
 	const [ fileName ] = arg;
 
+	debug( 'Options: ', opts );
+	debug( 'Args: ', arg );
+
 	console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
 	if ( ! currentUserCanImportForApp( app ) ) {
@@ -60,6 +67,7 @@ command( {
 		err( 'The type of application you specified does not currently support SQL imports.' );
 	}
 
+	await searchAndReplace( fileName );
 	await validate( fileName );
 
 	/**

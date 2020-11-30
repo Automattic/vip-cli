@@ -340,7 +340,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		let message = 'Are you sure?';
-		if ( 'string' === typeof( _opts.requireConfirm ) ) {
+		if ( 'string' === typeof ( _opts.requireConfirm ) ) {
 			message = _opts.requireConfirm;
 		}
 
