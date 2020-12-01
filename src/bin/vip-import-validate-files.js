@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // @flow
 
+/* eslint-disable camelcase */
+
 /**
  * External dependencies
  */
@@ -28,13 +30,11 @@ import {
 import { trackEvent } from 'lib/tracker';
 
 // Promisify to use async/await
-const syncStat = promisify( fs.statSync );
 const stat = promisify( fs.stat );
-const readDir = promisify( fs.readdir );
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate files <file>', 'Run the import validation against the file' )
-	.argv( process.argv, async ( arg, options ) => {
+	.argv( process.argv, async arg => {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation

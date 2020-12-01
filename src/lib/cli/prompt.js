@@ -1,5 +1,7 @@
 // @flow
 
+/* eslint-disable no-duplicate-imports */
+
 /**
  * External dependencies
  */
@@ -8,7 +10,8 @@ import { prompt } from 'enquirer';
 /**
  * Internal dependencies
  */
-import { keyValue, Tuple } from './format';
+import { keyValue } from './format';
+import type { Tuple } from './format';
 
 export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( keyValue( values ) );

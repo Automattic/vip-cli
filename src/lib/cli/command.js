@@ -1,5 +1,7 @@
 // @flow
 
+/* eslint-disable no-duplicate-imports */
+
 /**
  * External dependencies
  */
@@ -340,7 +342,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		let message = 'Are you sure?';
-		if ( 'string' === typeof( _opts.requireConfirm ) ) {
+		if ( 'string' === typeof ( _opts.requireConfirm ) ) {
 			message = _opts.requireConfirm;
 		}
 
@@ -410,7 +412,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 function validateOpts( opts: any ): Error {
 	if ( opts.app ) {
-		if ( typeof( opts.app ) !== 'string' && typeof( opts.app ) !== 'number' ) {
+		if ( typeof ( opts.app ) !== 'string' && typeof ( opts.app ) !== 'number' ) {
 			return new Error( 'Invalid --app' );
 		}
 
@@ -420,7 +422,7 @@ function validateOpts( opts: any ): Error {
 	}
 
 	if ( opts.env ) {
-		if ( typeof( opts.env ) !== 'string' && typeof( opts.env ) !== 'number' ) {
+		if ( typeof ( opts.env ) !== 'string' && typeof ( opts.env ) !== 'number' ) {
 			return new Error( 'Invalid --env' );
 		}
 

@@ -206,6 +206,7 @@ export const validate = async ( filename: string, isImport: boolean = true ) => 
 
 			errorSummary[ typeToSnakeCase ] = check.results.length;
 		}
+		// eslint-disable-next-line
 		errorSummary.problems_found = problemsFound;
 
 		if ( problemsFound > 0 ) {

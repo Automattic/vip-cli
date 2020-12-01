@@ -102,6 +102,7 @@ export default class Tracks implements AnalyticsClient {
 
 		debug( 'send()', body );
 
+		// eslint-disable-next-line
 		return fetch( Tracks.ENDPOINT, {
 			method,
 			body,
