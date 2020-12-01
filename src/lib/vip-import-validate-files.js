@@ -79,7 +79,7 @@ export const acceptedExtensions = [
  */
 
 // Accepted characters in filenames
-// eslint-disable-next-line
+// eslint-disable-next-line max-len
 const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', '\'', '×', '@', '`', '?', '*', '!', '\"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
 const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
 

@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 // @flow
 
-/* eslint-disable camelcase */
-
 /**
  * External dependencies
  */
@@ -171,6 +169,7 @@ command( { requiredArgs: 1, format: true } )
 
 		// Tracks events to track activity
 		// Props (object keys) need to be in Snake case vs. camelCase
+		/* eslint-disable camelcase */
 		const allErrors = {
 			folder_errors_length: folderValidation.length,
 			int_images_errors_length: intermediateImagesTotal,
@@ -179,6 +178,7 @@ command( { requiredArgs: 1, format: true } )
 			total_files: files.length,
 			total_folders: nestedDirectories.length,
 		};
+		/* eslint-enable camelcase */
 
 		await trackEvent( 'import_validate_files_command_success', allErrors );
 	} );

@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 // @flow
 
-/* eslint-disable camelcase */
-
 /**
  * External dependencies
  */
@@ -198,6 +196,7 @@ commandWrapper( {
 		const { id: appId, name: appName, organization: { id: orgId } } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
+		/* eslint-disable camelcase */
 		const commonTrackingParams = {
 			command: commandForAnalytics,
 			app_id: appId,
@@ -205,6 +204,7 @@ commandWrapper( {
 			org_id: orgId,
 			method: isSubShell ? 'subshell' : 'shell',
 		};
+		/* eslint-enable camelcase */
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams );
 
