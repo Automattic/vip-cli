@@ -1,7 +1,5 @@
 // @flow
 
-/* eslint-disable no-duplicate-imports */
-
 /**
  * External dependencies
  */
@@ -14,11 +12,13 @@ import updateNotifier from 'update-notifier';
 /**
  * Internal dependencies
  */
+/* eslint-disable no-duplicate-imports */
 import type { Tuple } from './prompt';
+import { confirm } from './prompt';
+/* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
 import app from 'lib/api/app';
 import { formatData } from './format';
-import { confirm } from './prompt';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
