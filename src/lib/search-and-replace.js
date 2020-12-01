@@ -61,7 +61,7 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String>, 
 		.pipe( writeStream )
 		.on( 'finish', function() { // Finished
 			if ( ! isImport ) {
-				console.log( 'Search and Replace Complete!' );
+				console.log( chalk.green( 'Search and Replace Complete!' ) );
 			}
 		} );
 };
