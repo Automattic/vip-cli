@@ -20,7 +20,6 @@ command( {
 	.example( 'vip search replace <file> --pair=<from,to>', 'Replace instances of <from> with <to> in the provided <file>' )
 	.option( 'pair', 'Specify the <from> and <to> pairs to be replaced' )
 	.argv( process.argv, async ( arg, opt ) => {
-
 		const pairs = opt.pair;
 		debug( 'Args: ', arg, 'Pairs: ', pairs );
 
