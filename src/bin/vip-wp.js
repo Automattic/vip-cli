@@ -113,6 +113,29 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 		} );
 };
 
+// eslint-disable-next-line no-unused-vars
+const cancelCommand = async guid => {
+	const api = await API();
+	return api
+		.mutate( {
+		// $FlowFixMe: gql template is not supported by flow
+			mutation: gql`	
+			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){	
+				cancelWPCLICommand( input: $input ) {	
+					command {	
+						id	
+					}	
+				}	
+			}	
+		`,
+			variables: {
+				input: {
+					guid: guid,
+				},
+			},
+		} );
+};
+
 const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) => {
 	const token = await Token.get();
 	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
