@@ -77,7 +77,7 @@
     "publish-please": "5.5.1"
   },
   "dependencies": {
-    "@automattic/vip-search-replace": "^1.0.3",
+    "@automattic/vip-search-replace": "^1.0.5",
     "apollo-cache-inmemory": "1.6.5",
     "apollo-client": "2.6.8",
     "apollo-link-error": "1.1.12",
