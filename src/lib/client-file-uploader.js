@@ -36,7 +36,7 @@ const MAX_CONCURRENT_PART_UPLOADS = 5;
 
 export type FileMeta = {
 	basename: string,
-	md5?: string,
+	md5: string,
 	fileContent?: string | Buffer | ReadStream,
 	fileName: string,
 	fileSize: number,
@@ -51,7 +51,8 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'PutObject'
 		| 'UploadPart';
 	etagResults?: Array<Object>;
-	appId?: number;
+	appId: number;
+	envId: number;
 	basename: string;
 	partNumber?: number;
 	uploadId?: string;
@@ -69,13 +70,14 @@ export const getWorkingTempDir = async () =>
 
 export type UploadArguments = {
 	app: Object,
+	env: Object,
 	fileName: string,
 };
 
 export const getFileMD5Hash = async ( fileName: string ) =>
 	new Promise( resolve =>
 		fs
-			.createReadStream( fileName, { highWaterMark: UPLOAD_PART_SIZE } )
+			.createReadStream( fileName )
 			.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
 			.on( 'finish', function() {
 				resolve( this.read() );
@@ -91,7 +93,7 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.on( 'finish', resolve )
 	);
 
-export async function getFileMeta( fileName: string ) {
+export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
 		try {
 			await checkFileAccess( fileName );
@@ -113,17 +115,21 @@ export async function getFileMeta( fileName: string ) {
 
 		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
+		console.log( 'Calculating file md5 checksum...' );
+		const md5 = await getFileMD5Hash( fileName );
+		console.log( `Calculated file md5 checksum: ${ md5 }` );
+
 		resolve( {
 			basename,
 			fileName,
 			fileSize,
 			isCompressed,
+			md5,
 		} );
 	} );
 }
 
-// TODO improve naming a bit to include "presigned"
-export async function uploadFile( { app, fileName }: UploadArguments ) {
+export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
@@ -163,55 +169,33 @@ export async function uploadFile( { app, fileName }: UploadArguments ) {
 		);
 	}
 
-	try {
-		fileMeta.md5 = await getFileMD5Hash( fileMeta.fileName );
-		console.log( `Calculated file md5 checksum: ${ fileMeta.md5 }` );
-	} catch ( e ) {
-		throw `Unable to calculate file checksum: ${ e }`;
-	}
+	const result =
+		fileMeta.fileSize < MULTIPART_THRESHOLD
+			? await uploadUsingPutObject( { app, env, fileMeta } )
+			: await uploadUsingMultipart( { app, env, fileMeta } );
 
-	const md5ObjectName = `${ fileMeta.basename }.md5`;
-	const md5ObjectBody = `${ fileMeta.md5 }  ${ fileMeta.basename }`;
-
-	try {
-		console.log( 'Uploading file checksum' );
-		await uploadUsingPutObject( {
-			app,
-			fileMeta: {
-				basename: md5ObjectName,
-				fileContent: md5ObjectBody,
-				fileName: '',
-				fileSize: md5ObjectBody.length,
-				isCompressed: false,
-			},
-		} );
-	} catch ( e ) {
-		throw `Unable to upload file checksum: ${ e }`;
-	}
-
-	console.log( 'Checksum uploaded.' );
-
-	// TODO -- send md5 hash along with the host action payload instead of uploading separately
-
-	// TODO try and merge the two `uploadUsing` functions
-	return fileMeta.fileSize < MULTIPART_THRESHOLD
-		? uploadUsingPutObject( { app, fileMeta } )
-		: uploadUsingMultipart( { app, fileMeta } );
+	return {
+		fileMeta,
+		result,
+	};
 }
 
 export type UploadUsingArguments = {
 	app: Object,
+	env: Object,
 	fileMeta: FileMeta,
 };
 
 export async function uploadUsingPutObject( {
 	app,
+	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
 }: UploadUsingArguments ) {
 	console.log( `Uploading ${ basename } to S3 using the \`PutObject\` command.` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
 		appId: app.id,
+		envId: env.id,
 		basename,
 		action: 'PutObject',
 	} );
@@ -258,13 +242,14 @@ export async function uploadUsingPutObject( {
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
 
-export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArguments ) {
+export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingArguments ) {
 	const { basename } = fileMeta;
 
 	console.log( 'Uploading to S3 using the Multipart API.' );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
 		appId: app.id,
+		envId: env.id,
 		basename,
 		action: 'CreateMultipartUpload',
 	} );
@@ -302,23 +287,17 @@ export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArgume
 
 	const parts = getPartBoundaries( fileMeta.fileSize );
 	const etagResults = await uploadParts( {
+		app,
+		env,
 		fileMeta,
 		parts,
 		uploadId,
 	} );
 	console.log( { etagResults } );
 
-	/**
-	 * Processing of a Complete Multipart Upload request could take several minutes to complete.
-	 * After Amazon S3 begins processing the request, it sends an HTTP response header that specifies a 200 OK response.
-	 * While processing is in progress, Amazon S3 periodically sends white space characters to keep the connection from timing out.
-	 * Because a request could fail after the initial 200 OK response has been sent, it is important that you check the
-	 * response body to determine whether the request succeeded.
-	 * Note that if CompleteMultipartUpload fails, applications should be prepared to retry the failed requests.
-	 *
-	 * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
-	 */
 	return completeMultipartUpload( {
+		app,
+		env,
 		basename,
 		uploadId,
 		etagResults,
@@ -326,21 +305,22 @@ export async function uploadUsingMultipart( { app, fileMeta }: UploadUsingArgume
 }
 
 export async function getSignedUploadRequestData( {
+	action,
 	appId,
 	basename,
-	action,
+	envId,
 	etagResults,
 	uploadId = undefined,
 	partNumber = undefined,
 }: GetSignedUploadRequestDataArgs ): Promise<Object> {
 	const { apiFetch } = await API();
-	const response = await apiFetch( '/upload/signed-url', {
+	const response = await apiFetch( '/upload/site-import-presigned-url', {
 		method: 'POST',
-		body: { action, appId, basename, etagResults, partNumber, uploadId },
+		body: { action, appId, basename, envId, etagResults, partNumber, uploadId },
 	} );
 
 	if ( response.status !== 200 ) {
-		throw await response.text();
+		throw ( await response.text() ) || response.statusText;
 	}
 
 	return response.json();
@@ -416,12 +396,14 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 }
 
 type UploadPartsArgs = {
+	app: Object,
+	env: Object,
 	fileMeta: FileMeta,
 	uploadId: string,
 	parts: Array<any>,
 };
 
-export async function uploadParts( { fileMeta, uploadId, parts }: UploadPartsArgs ) {
+export async function uploadParts( { app, env, fileMeta, uploadId, parts }: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
 	const partPercentages = new Array( parts.length ).fill( 0 );
@@ -468,6 +450,8 @@ export async function uploadParts( { fileMeta, uploadId, parts }: UploadPartsArg
 			await readyForPartUpload();
 
 			const uploadResult = await uploadPart( {
+				app,
+				env,
 				fileMeta,
 				part,
 				progressPassThrough,
@@ -487,12 +471,16 @@ export async function uploadParts( { fileMeta, uploadId, parts }: UploadPartsArg
 }
 
 export type UploadPartArgs = {
+	app: Object,
+	env: Object,
 	fileMeta: FileMeta,
 	part: Object,
 	progressPassThrough: PassThrough,
 	uploadId: string,
 };
 export async function uploadPart( {
+	app,
+	env,
 	fileMeta: { basename, fileName },
 	part,
 	progressPassThrough,
@@ -506,6 +494,8 @@ export async function uploadPart( {
 		// Get the signed request data from Parker
 		const partUploadRequestData = await getSignedUploadRequestData( {
 			action: 'UploadPart',
+			appId: app.id,
+			envId: env.id,
 			basename,
 			partNumber: s3PartNumber,
 			uploadId,
@@ -556,18 +546,24 @@ export async function uploadPart( {
 }
 
 export type CompleteMultipartUploadArgs = {
+	app: Object,
+	env: Object,
 	basename: string,
 	uploadId: string,
 	etagResults: Array<any>,
 };
 
 export async function completeMultipartUpload( {
+	app,
+	env,
 	basename,
 	uploadId,
 	etagResults,
 }: CompleteMultipartUploadArgs ) {
 	const completeMultipartUploadRequestData = await getSignedUploadRequestData( {
 		action: 'CompleteMultipartUpload',
+		appId: app.id,
+		envId: env.id,
 		basename,
 		uploadId,
 		etagResults,
@@ -582,6 +578,16 @@ export async function completeMultipartUpload( {
 		throw await completeMultipartUploadResponse.text();
 	}
 
+	/**
+	 * Processing of a Complete Multipart Upload request could take several minutes to complete.
+	 * After Amazon S3 begins processing the request, it sends an HTTP response header that specifies a 200 OK response.
+	 * While processing is in progress, Amazon S3 periodically sends white space characters to keep the connection from timing out.
+	 * Because a request could fail after the initial 200 OK response has been sent, it is important that you check the
+	 * response body to determine whether the request succeeded.
+	 * Note that if CompleteMultipartUpload fails, applications should be prepared to retry the failed requests.
+	 *
+	 * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
+	 */
 	const result = await completeMultipartUploadResponse.text();
 
 	const parser = new XmlParser( {
