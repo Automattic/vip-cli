@@ -12,11 +12,13 @@ import updateNotifier from 'update-notifier';
 /**
  * Internal dependencies
  */
+/* eslint-disable no-duplicate-imports */
 import type { Tuple } from './prompt';
+import { confirm } from './prompt';
+/* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
 import app from 'lib/api/app';
 import { formatData } from './format';
-import { confirm } from './prompt';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
@@ -410,7 +412,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 function validateOpts( opts: any ): Error {
 	if ( opts.app ) {
-		if ( typeof( opts.app ) !== 'string' && typeof( opts.app ) !== 'number' ) {
+		if ( typeof ( opts.app ) !== 'string' && typeof ( opts.app ) !== 'number' ) {
 			return new Error( 'Invalid --app' );
 		}
 
@@ -420,7 +422,7 @@ function validateOpts( opts: any ): Error {
 	}
 
 	if ( opts.env ) {
-		if ( typeof( opts.env ) !== 'string' && typeof( opts.env ) !== 'number' ) {
+		if ( typeof ( opts.env ) !== 'string' && typeof ( opts.env ) !== 'number' ) {
 			return new Error( 'Invalid --env' );
 		}
 
