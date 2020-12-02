@@ -18,7 +18,7 @@ command( { requiredArgs: 1, format: true } )
 	.example( 'vip app 123', 'Get details about the app with ID 123' )
 	.example( 'vip app vip-test', 'Get details about the app named vip-test' )
 	.command( 'list', 'List your VIP applications' )
-	.argv( process.argv, async ( arg, opts ) => {
+	.argv( process.argv, async arg => {
 		await trackEvent( 'app_command_execute' );
 
 		let res;

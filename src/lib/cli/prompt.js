@@ -8,7 +8,10 @@ import { prompt } from 'enquirer';
 /**
  * Internal dependencies
  */
-import { keyValue, Tuple } from './format';
+/* eslint-disable no-duplicate-imports */
+import { keyValue } from './format';
+import type { Tuple } from './format';
+/* eslint-enable no-duplicate-imports */
 
 export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
 	console.log( keyValue( values ) );

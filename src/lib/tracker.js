@@ -41,7 +41,7 @@ async function getInstance(): Analytics {
 }
 
 export async function trackEvent( ...args ): Promise<Response> {
-	const id = await Token.uuid();
+	await Token.uuid();
 	try {
 		const client = await getInstance();
 		return client.trackEvent( ...args );

@@ -6,7 +6,6 @@
  */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
-import { stdout } from 'single-line-log';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import readline from 'readline';
@@ -114,20 +113,21 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 		} );
 };
 
-const cancelCommand = async ( guid ) => {
+// eslint-disable-next-line no-unused-vars
+const cancelCommand = async guid => {
 	const api = await API();
 	return api
 		.mutate( {
-			// $FlowFixMe: gql template is not supported by flow
-			mutation: gql`
-				mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
-					cancelWPCLICommand( input: $input ) {
-						command {
-							id
-						}
-					}
-				}
-			`,
+		// $FlowFixMe: gql template is not supported by flow
+			mutation: gql`	
+			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){	
+				cancelWPCLICommand( input: $input ) {	
+					command {	
+						id	
+					}	
+				}	
+			}	
+		`,
 			variables: {
 				input: {
 					guid: guid,
@@ -219,6 +219,7 @@ commandWrapper( {
 		const { id: appId, name: appName, organization: { id: orgId } } = opts.app;
 		const { id: envId, type: envName } = opts.env;
 
+		/* eslint-disable camelcase */
 		const commonTrackingParams = {
 			command: commandForAnalytics,
 			app_id: appId,
@@ -226,10 +227,9 @@ commandWrapper( {
 			org_id: orgId,
 			method: isSubShell ? 'subshell' : 'shell',
 		};
+		/* eslint-enable camelcase */
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams );
-
-		let cmdGuid;
 
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
@@ -348,8 +348,6 @@ commandWrapper( {
 				inputToken: inputToken,
 			} );
 
-			cmdGuid = cliCommand.guid;
-
 			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 			commandRunning = true;
@@ -377,7 +375,7 @@ commandWrapper( {
 				subShellRl.resume();
 			} );
 
-			currentJob.socket.on( 'reconnect_attempt', err => {
+			currentJob.socket.on( 'reconnect_attempt', () => {
 				// create a new input stream so that we can still catch things like SIGINT while reconnectin
 				if ( currentJob.stdinStream ) {
 					process.stdin.unpipe( currentJob.stdinStream );

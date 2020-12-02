@@ -15,7 +15,7 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { currentUserCanImportForApp, isSupportedApp, isImportingBlockedBySync } from 'lib/site-import/db-file-import';
+import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { formatData } from '../lib/cli/format';
 import { validate } from 'lib/validations/sql';
