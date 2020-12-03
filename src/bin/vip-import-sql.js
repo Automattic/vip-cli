@@ -99,8 +99,13 @@ command( {
 			err( `StartImport call failed: ${ gqlErr }` );
 		}
 
-		console.log( 'Your site is being prepared for the import.' );
-		console.log( '🚧 🚧 🚧 Your database file is importing! 🚧 🚧 🚧\nFeel free to exit this tool if you\'d like. Your import will continue in the background.' );
+		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
+
+		console.log(
+			`VIP Testers: Thank you for testing!
+			We are currently working on adding support for showing the import status here.
+			For now, you can monitor the \`import_progress\` site meta.`
+		);
 	} catch ( e ) {
 		err( e );
 	}
