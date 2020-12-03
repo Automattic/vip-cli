@@ -167,14 +167,16 @@ function checkTablePrefixes( tables ) {
 	}
 }
 
-const openFile = ( filename, flags = 'r', mode = 666 ) => new Promise( ( resolve, reject ) => {
-	fs.open( filename, flags, mode, ( err, fd ) => {
-		if ( err ) {
-			return reject( err );
-		}
-		resolve( fd );
+function openFile( filename, flags = 'r', mode = 666 ) {
+	return new Promise( ( resolve, reject ) => {
+		fs.open( filename, flags, mode, ( err, fd ) => {
+			if ( err ) {
+				return reject( err );
+			}
+			resolve( fd );
+		} );
 	} );
-} );
+}
 
 export const validate = async ( filename: string, isImport: boolean = true ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
