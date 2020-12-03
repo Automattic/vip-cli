@@ -17,6 +17,7 @@ import gql from 'graphql-tag';
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { trackEvent } from 'lib/tracker';
 import { validate } from 'lib/validations/sql';
 import API from 'lib/api';
 
@@ -47,6 +48,11 @@ command( {
 	const { app, env } = opts;
 	const [ fileName ] = arg;
 
+	const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
+		trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
+
+	await trackEventWithEnv( 'import_sql_command_execute' );
+
 	console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
 	if ( ! currentUserCanImportForApp( app ) ) {
@@ -54,6 +60,7 @@ command( {
 	}
 
 	if ( ! isSupportedApp( app ) ) {
+		await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
 		err( 'The type of application you specified does not currently support SQL imports.' );
 	}
 
@@ -95,9 +102,11 @@ command( {
 					},
 				} );
 		} catch ( gqlErr ) {
-			// TODO: Log gqlErr.graphQLErrors
+			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'StartImport-failed', gqlErr } );
 			err( `StartImport call failed: ${ gqlErr }` );
 		}
+
+		await trackEventWithEnv( 'import_sql_command_queued' );
 
 		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 
