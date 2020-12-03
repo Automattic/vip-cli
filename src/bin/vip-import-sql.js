@@ -17,7 +17,6 @@ import gql from 'graphql-tag';
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
-import { formatData } from '../lib/cli/format';
 import { validate } from 'lib/validations/sql';
 import API from 'lib/api';
 
@@ -43,11 +42,9 @@ command( {
 	appQuery,
 	requiredArgs: 1, // TODO print proper usage example
 	envContext: true,
-	// TODO: `requireConfirm=` with something like, 'Are you sure you want to replace your database with the contents of the provided file?',
-	// Looks like requireConfirm does not work here... ("Cannot destructure property `backup` of 'undefined' or 'null'")
+	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } ).argv( process.argv, async ( arg, opts ) => {
 	const { app, env } = opts;
-	const primaryDomainName = env.primaryDomain.name;
 	const [ fileName ] = arg;
 
 	console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
@@ -65,16 +62,6 @@ command( {
 	/**
 	 * TODO: We should check for various site locks (including importing) prior to the upload.
 	 */
-
-	console.log( 'You are about to import a SQL file to site:' );
-
-	console.log( formatData( [
-		{ key: 'appId', value: app.id },
-		{ key: 'appName', value: app.name },
-		{ key: 'environment ID', value: env.id },
-		{ key: 'environment', value: env.type },
-		{ key: 'Primary Domain Name', value: primaryDomainName },
-	], 'keyValue' ) );
 
 	const api = await API();
 
