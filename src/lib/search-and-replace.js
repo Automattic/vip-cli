@@ -56,7 +56,7 @@ export type searchReplaceOptions = {
 	inPlace: boolean,
 };
 
-export const searchAndReplace = async ( filename: string, pairs: Array<String>, { isImport = true, inPlace = false }: searchReplaceOptions ): Promise<string> => {
+export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions ): Promise<string> => {
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
 		console.log( chalk.blueBright( 'No search and replace parameters provided.' ) );
