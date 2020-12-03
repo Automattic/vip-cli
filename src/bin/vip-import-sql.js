@@ -51,6 +51,7 @@ command( {
 	// Looks like requireConfirm does not work here... ("Cannot destructure property `backup` of 'undefined' or 'null'")
 } )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
+	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
 		const primaryDomainName = env.primaryDomain.name;
@@ -69,12 +70,12 @@ command( {
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
-		await searchAndReplace( fileName, searchReplace );
-		await validate( fileName );
+		const inputFile = await searchAndReplace( fileName, searchReplace, { isImport: true, inPlace: opts.inPlace } );
+		await validate( inputFile );
 
 		/**
-	 * TODO: We should check for various site locks (including importing) prior to the upload.
-	 */
+		 * TODO: We should check for various site locks (including importing) prior to the upload.
+		 */
 
 		console.log( 'You are about to import a SQL file to site:' );
 
@@ -89,7 +90,7 @@ command( {
 		const api = await API();
 
 		try {
-			const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, env, fileName } );
+			const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, env, inputFile } );
 
 			console.log( { basename, md5, result } );
 
