@@ -7,6 +7,7 @@ import args from 'args';
 import { prompt } from 'enquirer';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
+import path from 'path';
 import updateNotifier from 'update-notifier';
 
 /**
@@ -346,24 +347,36 @@ args.argv = async function( argv, cb ): Promise<any> {
 			message = _opts.requireConfirm;
 		}
 
-		const { backup, canSync, errors } = options.env.syncPreview;
+		switch ( _opts.module ) {
+			case 'import-sql':
+				if ( options.env && options.env.primaryDomain ) {
+					const primaryDomainName = options.env.primaryDomain.name;
+					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
+				}
+				this.sub && info.push( { key: 'SQL File', value: this.sub } );
+				break;
+			case 'sync':
+				const { backup, canSync, errors } = options.env.syncPreview;
 
-		if ( ! canSync ) {
-			// User can not sync due to some error(s)
-			// Shows the first error in the array
-			console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
-			return {};
+				if ( ! canSync ) {
+					// User can not sync due to some error(s)
+					// Shows the first error in the array
+					console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
+					return {};
+				}
+
+				// remove __typename from replacements.
+				// can not be deleted afterwards if deconstructed
+				const replacements = options.env.syncPreview.replacements.map( rep => {
+					const { from, to } = rep;
+					return { from, to };
+				} );
+
+				info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
+				info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+				break;
+			default:
 		}
-
-		// remove __typename from replacements.
-		// can not be deleted afterwards if deconstructed
-		const replacements = options.env.syncPreview.replacements.map( rep => {
-			const { from, to } = rep;
-			return { from, to };
-		} );
-
-		info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
-		info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
 
 		const yes = await confirm( info, message );
 		if ( ! yes ) {
