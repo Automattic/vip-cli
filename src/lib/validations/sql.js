@@ -167,7 +167,7 @@ function checkTablePrefixes( tables ) {
 	}
 }
 
-export const validate = async ( filename: string, isImport: boolean = true ) => {
+export const validate = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
 
 	const readInterface = readline.createInterface( {
