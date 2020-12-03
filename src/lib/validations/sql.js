@@ -184,7 +184,7 @@ export const validate = async ( filename: string, isImport: boolean = true ) => 
 	try {
 		fd = await openFile( filename );
 	} catch ( e ) {
-		console.log( chalk.red( 'Error: The file at the provided path is either missing or not readable.' ) );
+		console.log( chalk.red( 'Error: ' ) + 'The file at the provided path is either missing or not readable.' );
 		console.log( 'Please check the input and try again.' );
 		process.exit( 1 );
 	}
