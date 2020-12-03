@@ -167,11 +167,30 @@ function checkTablePrefixes( tables ) {
 	}
 }
 
+const openFile = ( filename, flags = 'r', mode = 666 ) => new Promise( ( resolve, reject ) => {
+	fs.open( filename, flags, mode, ( err, fd ) => {
+		if ( err ) {
+			return reject( err );
+		}
+		resolve( fd );
+	} );
+} );
+
 export const validate = async ( filename: string, isImport: boolean = true ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
 
+	let fd;
+
+	try {
+		fd = await openFile( filename );
+	} catch ( e ) {
+		console.log( chalk.red( 'Error: The file at the provided path is either missing or not readable.' ) );
+		console.log( 'Please check the input and try again.' );
+		process.exit( 1 );
+	}
+
 	const readInterface = readline.createInterface( {
-		input: fs.createReadStream( filename ),
+		input: fs.createReadStream( '', { fd } ),
 		output: null,
 		console: false,
 	} );
