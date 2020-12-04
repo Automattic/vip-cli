@@ -11,7 +11,6 @@ import os from 'os';
 import path from 'path';
 import util from 'util';
 import chalk from 'chalk';
-import { stdout as log } from 'single-line-log';
 import debugLib from 'debug';
 import suffix from 'suffix';
 import { replace } from '@automattic/vip-search-replace';
@@ -57,6 +56,8 @@ export type searchReplaceOptions = {
 };
 
 export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions ): Promise<string> => {
+	await trackEvent( 'search_and_replace', { isImport, inPlace } );
+
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
 		console.log( chalk.blueBright( 'No search and replace parameters provided.' ) );
@@ -91,7 +92,7 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 				console.log( chalk.green( 'Search and Replace Complete!' ) );
 				resolve( outputFile );
 			} )
-			.on( 'error', err => {
+			.on( 'error', () => {
 				console.log( chalk.red( 'Oh no! We could not write to the output file.' ) );
 				reject();
 			} );

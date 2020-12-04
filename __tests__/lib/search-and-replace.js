@@ -9,12 +9,13 @@ import suffix from 'suffix';
  * Internal dependencies
  */
 import { searchAndReplace } from 'lib/search-and-replace';
-import { hasUncaughtExceptionCaptureCallback } from 'process';
+import { trackEvent } from 'lib/tracker';
 
 global.console = { log: jest.fn(), error: jest.fn() };
 
 // Mock console.log()
 jest.spyOn( global.console, 'log' );
+jest.spyOn( trackEvent );
 let testFilePath, outputFilePath;
 
 describe( 'lib/search-and-replace', () => {
@@ -23,9 +24,9 @@ describe( 'lib/search-and-replace', () => {
 		outputFilePath = suffix( testFilePath, '.out' );
 	} );
 	afterEach( () => {
-		if ( fs.existsSync( outputFilePath ) ) {
-			fs.unlinkSync( outputFilePath );
-		}
+		// if ( fs.existsSync( outputFilePath ) ) {
+		// 	fs.unlinkSync( outputFilePath );
+		// }
 	} );
 	it( 'returns the input file path if no pairs are provided by an array', async () => {
 		const result = await searchAndReplace( testFilePath, [], { isImport: false, inPlace: false } );
@@ -44,6 +45,7 @@ describe( 'lib/search-and-replace', () => {
 	} );
 	it( 'will accept and use an array of replacement pairs (when multiple replacement provided)', async () => {
 		const result = await searchAndReplace( testFilePath, [ 'ohai,ohHey', 'purty,pretty' ], { isImport: false, inPlace: false } );
+		expect( result ).toBe( outputFilePath );
 		const fileContents = fs.readFileSync( outputFilePath, { encoding: 'utf-8' } );
 		expect( fileContents ).toContain( 'ohHey' );
 		expect( fileContents ).toContain( 'pretty' );

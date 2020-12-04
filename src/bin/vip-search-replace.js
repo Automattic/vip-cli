@@ -21,6 +21,7 @@ command( {
 	.option( 'pair', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg, opt ) => {
+		// TODO: tracks event for usage of this command stand alone
 		const { pair, inPlace } = opt;
 
 		debug( 'Args: ', arg, 'Pair: ', pair );
