@@ -110,12 +110,6 @@ command( {
 		await trackEventWithEnv( 'import_sql_command_queued' );
 
 		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
-
-		console.log(
-			`VIP Testers: Thank you for testing!
-			We are currently working on adding support for showing the import status here.
-			For now, you can monitor the \`import_progress\` site meta.`
-		);
 	} catch ( e ) {
 		err( e );
 	}
