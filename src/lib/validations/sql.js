@@ -167,11 +167,32 @@ function checkTablePrefixes( tables ) {
 	}
 }
 
-export const validate = async ( filename: string, isImport: boolean = true ) => {
+function openFile( filename, flags = 'r', mode = 666 ) {
+	return new Promise( ( resolve, reject ) => {
+		fs.open( filename, flags, mode, ( err, fd ) => {
+			if ( err ) {
+				return reject( err );
+			}
+			resolve( fd );
+		} );
+	} );
+}
+
+export const validate = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
 
+	let fd;
+
+	try {
+		fd = await openFile( filename );
+	} catch ( e ) {
+		console.log( chalk.red( 'Error: ' ) + 'The file at the provided path is either missing or not readable.' );
+		console.log( 'Please check the input and try again.' );
+		process.exit( 1 );
+	}
+
 	const readInterface = readline.createInterface( {
-		input: fs.createReadStream( filename ),
+		input: fs.createReadStream( '', { fd } ),
 		output: null,
 		console: false,
 	} );
@@ -211,15 +232,20 @@ export const validate = async ( filename: string, isImport: boolean = true ) => 
 
 		if ( problemsFound > 0 ) {
 			console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
-			if ( isImport ) {
-				// If we're running this as part of an import command, bail out here
-				process.exit( 1 );
-			}
-		} else {
-			console.log( '✅ Your database file looks good.  You can now submit for import, see here for more details: ' +
-            'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
+			await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
+			process.exit( 1 );
 		}
 
-		await trackEvent( 'import_validate_sql_command_success', { isImport, errorSummary } );
+		console.log( '✅ Your database file looks good.' );
+
+		await trackEvent( 'import_validate_sql_command_success', { isImport } );
+
+		if ( isImport ) {
+			console.log( '\n🎉 Continuing to the import process.' );
+			return;
+		}
+
+		console.log( '\n🎉 You can now submit for import, see here for more details: ' +
+			'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
 	} );
 };

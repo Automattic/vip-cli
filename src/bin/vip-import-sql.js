@@ -16,8 +16,9 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
+import { isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { trackEvent } from 'lib/tracker';
 import { formatData } from '../lib/cli/format';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
@@ -47,37 +48,36 @@ command( {
 	appQuery,
 	requiredArgs: 1, // TODO print proper usage example
 	envContext: true,
-	// TODO: `requireConfirm=` with something like, 'Are you sure you want to replace your database with the contents of the provided file?',
-	// Looks like requireConfirm does not work here... ("Cannot destructure property `backup` of 'undefined' or 'null'")
-} )
-	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
+	module: 'import-sql',
+	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
+} ).option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
 		const primaryDomainName = env.primaryDomain.name;
 		const [ fileName ] = arg;
 
-		debug( 'Options: ', opts );
-		debug( 'Args: ', arg );
+		const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
+			trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
+
+		await trackEventWithEnv( 'import_sql_command_execute' );
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
-		if ( ! currentUserCanImportForApp( app ) ) {
-			err( 'The currently authenticated account does not have permission to perform a SQL import.' );
-		}
+		debug( 'Options: ', opts );
+		debug( 'Args: ', arg );
 
 		if ( ! isSupportedApp( app ) ) {
+			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
 		const inputFile = await searchAndReplace( fileName, searchReplace, { isImport: true, inPlace: opts.inPlace } );
-		await validate( inputFile );
+		await validate( inputFile, true );
 
-		/**
-		 * TODO: We should check for various site locks (including importing) prior to the upload.
-		 */
-
-		console.log( 'You are about to import a SQL file to site:' );
+		if ( ! isSupportedApp( app ) ) {
+			err( 'The type of application you specified does not currently support SQL imports.' );
+		}
 
 		console.log( formatData( [
 			{ key: 'appId', value: app.id },
@@ -90,7 +90,7 @@ command( {
 		const api = await API();
 
 		try {
-			const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, env, inputFile } );
+			const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, env, fileName: inputFile } );
 
 			console.log( { basename, md5, result } );
 
@@ -98,17 +98,17 @@ command( {
 				await api
 					.mutate( {
 						mutation: gql`
-						mutation StartImport($input: AppEnvironmentImportInput){
-							startImport(input: $input) {
-								app {
-								  id
-								  name
-								}
-								message
-								success
-							  }
-						}
-					`,
+					mutation StartImport($input: AppEnvironmentImportInput){
+						startImport(input: $input) {
+							app {
+								id
+								name
+							}
+							message
+							success
+							}
+					}
+				`,
 						variables: {
 							input: {
 								id: app.id,
@@ -117,14 +117,16 @@ command( {
 								md5: md5,
 							},
 						},
+
 					} );
 			} catch ( gqlErr ) {
-			// TODO: Log gqlErr.graphQLErrors
+				await trackEventWithEnv( 'import_sql_command_error', { errorType: 'StartImport-failed', gqlErr } );
 				err( `StartImport call failed: ${ gqlErr }` );
 			}
 
-			console.log( 'Your site is being prepared for the import.' );
-			console.log( '🚧 🚧 🚧 Your database file is importing! 🚧 🚧 🚧\nFeel free to exit this tool if you\'d like. Your import will continue in the background.' );
+			await trackEventWithEnv( 'import_sql_command_queued' );
+
+			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
 			err( e );
 		}
