@@ -65,7 +65,7 @@ command( {
 		err( 'The type of application you specified does not currently support SQL imports.' );
 	}
 
-	await validate( fileName );
+	await validate( fileName, true );
 
 	/**
 	 * TODO: We should check for various site locks (including importing) prior to the upload.
