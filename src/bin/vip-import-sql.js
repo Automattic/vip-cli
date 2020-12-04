@@ -109,8 +109,7 @@ command( {
 
 		await trackEventWithEnv( 'import_sql_command_queued' );
 
-		console.log( 'Your site is being prepared for the import.' );
-		console.log( '🚧 🚧 🚧 Your database file is importing! 🚧 🚧 🚧\nFeel free to exit this tool if you\'d like. Your import will continue in the background.' );
+		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 	} catch ( e ) {
 		err( e );
 	}
