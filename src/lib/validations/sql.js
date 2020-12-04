@@ -178,7 +178,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 	} );
 }
 
-export const validate = async ( filename: string, isImport: boolean = true ) => {
+export const validate = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
 
 	let fd;
@@ -232,15 +232,20 @@ export const validate = async ( filename: string, isImport: boolean = true ) => 
 
 		if ( problemsFound > 0 ) {
 			console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
-			if ( isImport ) {
-				// If we're running this as part of an import command, bail out here
-				process.exit( 1 );
-			}
-		} else {
-			console.log( '✅ Your database file looks good.  You can now submit for import, see here for more details: ' +
-            'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
+			await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
+			process.exit( 1 );
 		}
 
-		await trackEvent( 'import_validate_sql_command_success', { isImport, errorSummary } );
+		console.log( '✅ Your database file looks good.' );
+
+		await trackEvent( 'import_validate_sql_command_success', { isImport } );
+
+		if ( isImport ) {
+			console.log( '\n🎉 Continuing to the import process.' );
+			return;
+		}
+
+		console.log( '\n🎉 You can now submit for import, see here for more details: ' +
+			'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
 	} );
 };

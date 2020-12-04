@@ -22,6 +22,5 @@ command( {
 			process.exit( 1 );
 		}
 
-		const isImport = false;
-		validate( filename, isImport );
+		validate( filename );
 	} );
