@@ -18,6 +18,7 @@ jest.mock( 'node-fetch' );
 jest.spyOn( global.console, 'log' );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 let testFilePath, outputFilePath;
+const binary = process.env.CI === 'true' ? process.cwd() + '/node_modules/@automattic/vip-search-replace/bin/go-search-replace-test' : null;
 
 describe( 'lib/search-and-replace', () => {
 	beforeEach( () => {
@@ -30,22 +31,22 @@ describe( 'lib/search-and-replace', () => {
 		}
 	} );
 	it( 'returns the input file path if no pairs are provided by an array', async () => {
-		const result = await searchAndReplace( testFilePath, [], { isImport: false, inPlace: false } );
+		const result = await searchAndReplace( testFilePath, [], { isImport: false, inPlace: false }, binary );
 		expect( result ).toBe( testFilePath );
 	} );
 	it( 'returns the input file path if no pairs are provided by a string', async () => {
-		const result = await searchAndReplace( testFilePath, '', { isImport: false, inPlace: false } );
+		const result = await searchAndReplace( testFilePath, '', { isImport: false, inPlace: false }, binary );
 		expect( result ).toBe( testFilePath );
 	} );
 	it( 'will accept and use a string of replacement pairs (when one replacement provided)', async () => {
-		const result = await searchAndReplace( testFilePath, 'ohai,ohHey', { isImport: false, inPlace: false } );
+		const result = await searchAndReplace( testFilePath, 'ohai,ohHey', { isImport: false, inPlace: false }, binary );
 		expect( result ).toBe( outputFilePath );
 		const fileContents = fs.readFileSync( outputFilePath, { encoding: 'utf-8' } );
 		expect( fileContents ).toContain( 'ohHey' );
 		expect( fileContents ).not.toContain( 'ohai' );
 	} );
 	it( 'will accept and use an array of replacement pairs (when multiple replacement provided)', async () => {
-		const result = await searchAndReplace( testFilePath, [ 'ohai,ohHey', 'purty,pretty' ], { isImport: false, inPlace: false } );
+		const result = await searchAndReplace( testFilePath, [ 'ohai,ohHey', 'purty,pretty' ], { isImport: false, inPlace: false }, binary );
 		expect( result ).toBe( outputFilePath );
 		const fileContents = fs.readFileSync( outputFilePath, { encoding: 'utf-8' } );
 		expect( fileContents ).toContain( 'ohHey' );

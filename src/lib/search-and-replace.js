@@ -56,7 +56,7 @@ export type searchReplaceOptions = {
 	inPlace: boolean,
 };
 
-export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions ): Promise<string> => {
+export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions, binary: string | null = null ): Promise<string> => {
 	await trackEvent( 'vip_cli_searchreplace_started', { isImport, inPlace } );
 
 	const startTime = process.hrtime();
@@ -88,7 +88,7 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 	const readStream = fs.createReadStream( inputFile, { encoding: 'utf8' } );
 	const writeStream = fs.createWriteStream( outputFile, { encoding: 'utf8' } );
 
-	const replacedStream = await replace( readStream, replacements );
+	const replacedStream = await replace( readStream, replacements, binary );
 	const result = await new Promise( ( resolve, reject ) => {
 		replacedStream
 			.pipe( writeStream )
