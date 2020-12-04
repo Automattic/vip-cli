@@ -4,18 +4,19 @@
 import fs from 'fs';
 import path from 'path';
 import suffix from 'suffix';
+import fetch, { Response } from 'node-fetch';
 
 /**
  * Internal dependencies
  */
 import { searchAndReplace } from 'lib/search-and-replace';
-import { trackEvent } from 'lib/tracker';
 
 global.console = { log: jest.fn(), error: jest.fn() };
+jest.mock( 'node-fetch' );
 
 // Mock console.log()
 jest.spyOn( global.console, 'log' );
-jest.spyOn( trackEvent );
+fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 let testFilePath, outputFilePath;
 
 describe( 'lib/search-and-replace', () => {
@@ -24,9 +25,9 @@ describe( 'lib/search-and-replace', () => {
 		outputFilePath = suffix( testFilePath, '.out' );
 	} );
 	afterEach( () => {
-		// if ( fs.existsSync( outputFilePath ) ) {
-		// 	fs.unlinkSync( outputFilePath );
-		// }
+		if ( fs.existsSync( outputFilePath ) ) {
+			fs.unlinkSync( outputFilePath );
+		}
 	} );
 	it( 'returns the input file path if no pairs are provided by an array', async () => {
 		const result = await searchAndReplace( testFilePath, [], { isImport: false, inPlace: false } );
