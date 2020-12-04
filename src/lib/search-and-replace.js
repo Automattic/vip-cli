@@ -20,6 +20,7 @@ import { replace } from '@automattic/vip-search-replace';
  */
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
+import { getFileSize } from 'lib/client-file-uploader';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
@@ -56,7 +57,10 @@ export type searchReplaceOptions = {
 };
 
 export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions ): Promise<string> => {
-	await trackEvent( 'search_and_replace', { isImport, inPlace } );
+	await trackEvent( 'vip_cli_searchreplace_started', { isImport, inPlace } );
+
+	const startTime = process.hrtime();
+	const fileSize = getFileSize( filename );
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
@@ -97,6 +101,11 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 				reject();
 			} );
 	} );
+
+	const endTime = process.hrtime( startTime );
+	const end = endTime[ 1 ] / 1000000; // time in ms
+
+	await trackEvent( 'vip_cli_searchreplace_completed', { timeToRun: end, fileSize } );
 
 	return result;
 };
