@@ -97,7 +97,7 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 				resolve( outputFile );
 			} )
 			.on( 'error', () => {
-				console.log( chalk.red( 'Oh no! We could not write to the output file.' ) );
+				console.log( chalk.red( 'Oh no! We couldn\'t write to the output file.  Please check your available disk space and file/folder permissions.' ) );
 				reject();
 			} );
 	} );

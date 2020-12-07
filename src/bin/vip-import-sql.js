@@ -16,7 +16,7 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { isSupportedApp } from 'lib/site-import/db-file-import';
+import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEvent } from 'lib/tracker';
 import { formatData } from '../lib/cli/format';
@@ -54,7 +54,6 @@ command( {
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
-		const primaryDomainName = env.primaryDomain.name;
 		const [ fileName ] = arg;
 
 		const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
@@ -67,6 +66,10 @@ command( {
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
 
+		if ( ! currentUserCanImportForApp( app ) ) {
+			err( 'The currently authenticated account does not have permission to perform a SQL import.' );
+		}
+
 		if ( ! isSupportedApp( app ) ) {
 			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
 			err( 'The type of application you specified does not currently support SQL imports.' );
@@ -74,18 +77,6 @@ command( {
 
 		const inputFile = await searchAndReplace( fileName, searchReplace, { isImport: true, inPlace: opts.inPlace } );
 		await validate( inputFile, true );
-
-		if ( ! isSupportedApp( app ) ) {
-			err( 'The type of application you specified does not currently support SQL imports.' );
-		}
-
-		console.log( formatData( [
-			{ key: 'appId', value: app.id },
-			{ key: 'appName', value: app.name },
-			{ key: 'environment ID', value: env.id },
-			{ key: 'environment', value: env.type },
-			{ key: 'Primary Domain Name', value: primaryDomainName },
-		], 'keyValue' ) );
 
 		const api = await API();
 
