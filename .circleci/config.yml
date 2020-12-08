@@ -7,21 +7,25 @@ workflows:
       - flow
       - test:
           version: 8-stretch
+          name: 8-stretch
           requires:
             - lint
             - flow
       - test:
           version: 10-stretch
+          name: 10-stretch
           requires:
             - lint
             - flow
       - test:
           version: lts-stretch
+          name: lts-stretch
           requires:
             - lint
             - flow
       - test:
           version: current-stretch
+          name: current-stretch
           requires:
             - lint
             - flow
