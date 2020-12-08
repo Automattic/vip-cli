@@ -212,40 +212,41 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		lineNum += 1;
 	} );
 
-	readInterface.on( 'close', async () => {
-		log( `Finished processing ${ lineNum } lines.` );
-		console.log( '\n' );
-		const errorSummary = {};
-		const checkEntires: any = Object.entries( checks );
-		for ( const entry of checkEntires ) {
-			const [ type, check ]: [string, CheckType] = entry;
-			check.outputFormatter( check, type );
-			console.log( '' );
+	// Block until the processing completes
+	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 
-			// Change `type` to snake_case for Tracks events
-			const typeToSnakeCase = type.replace( /([A-Z])/, '_$1' ).toLowerCase();
+	log( `Finished processing ${ lineNum } lines.` );
+	console.log( '\n' );
+	const errorSummary = {};
+	const checkEntires: any = Object.entries( checks );
+	for ( const entry of checkEntires ) {
+		const [ type, check ]: [string, CheckType] = entry;
+		check.outputFormatter( check, type );
+		console.log( '' );
 
-			errorSummary[ typeToSnakeCase ] = check.results.length;
-		}
-		// eslint-disable-next-line camelcase
-		errorSummary.problems_found = problemsFound;
+		// Change `type` to snake_case for Tracks events
+		const typeToSnakeCase = type.replace( /([A-Z])/, '_$1' ).toLowerCase();
 
-		if ( problemsFound > 0 ) {
-			console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
-			await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
-			process.exit( 1 );
-		}
+		errorSummary[ typeToSnakeCase ] = check.results.length;
+	}
+	// eslint-disable-next-line camelcase
+	errorSummary.problems_found = problemsFound;
 
-		console.log( '✅ Your database file looks good.' );
+	if ( problemsFound > 0 ) {
+		console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
+		await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
+		process.exit( 1 );
+	}
 
-		await trackEvent( 'import_validate_sql_command_success', { isImport } );
+	console.log( '✅ Your database file looks good.' );
 
-		if ( isImport ) {
-			console.log( '\n🎉 Continuing to the import process.' );
-			return;
-		}
+	await trackEvent( 'import_validate_sql_command_success', { isImport } );
 
-		console.log( '\n🎉 You can now submit for import, see here for more details: ' +
-			'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
-	} );
+	if ( isImport ) {
+		console.log( '\n🎉 Continuing to the import process.' );
+		return;
+	}
+
+	console.log( '\n🎉 You can now submit for import, see here for more details: ' +
+		'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
 };
