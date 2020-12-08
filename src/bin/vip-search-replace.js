@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// @flow
+
+/**
+ * @flow
+ * @fomat
+ */
 
 /**
  * External dependencies

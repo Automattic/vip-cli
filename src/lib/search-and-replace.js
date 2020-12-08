@@ -31,9 +31,12 @@ const flatten = arr => {
 };
 
 const inPlaceReplacement = async filename => {
-	await confirm( [], 'Are you sure you want to run search and replace on your input file? This operation is not reversible.' );
+	await confirm(
+		[],
+		'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
+	);
 
-	const tmpFilePath = path.join( os.tmpdir(), ( +new Date ).toString( 36 ) );
+	const tmpFilePath = path.join( os.tmpdir(), ( +new Date() ).toString( 36 ) );
 
 	const copyFile = util.promisify( fs.copyFile );
 	await copyFile( filename, tmpFilePath );
@@ -56,7 +59,12 @@ export type searchReplaceOptions = {
 	inPlace: boolean,
 };
 
-export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions, binary: string | null = null ): Promise<string> => {
+export const searchAndReplace = async (
+	filename: string,
+	pairs: Array<String> | String,
+	{ isImport = true, inPlace = false }: searchReplaceOptions,
+	binary: string | null = null
+): Promise<string> => {
 	await trackEvent( 'vip_cli_searchreplace_started', { isImport, inPlace } );
 
 	const startTime = process.hrtime();
@@ -74,13 +82,14 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 	}
 
 	// determine all the replacements required
-	const replacementsArr = pairs
-		.map( str => str.split( ',' ) );
+	const replacementsArr = pairs.map( str => str.split( ',' ) );
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
 	// Get a path for a tmp copy of the input file
-	const { inputFile, outputFile } = inPlace ? await inPlaceReplacement( filename ) : outputFileReplacement( filename );
+	const { inputFile, outputFile } = inPlace
+		? await inPlaceReplacement( filename )
+		: outputFileReplacement( filename );
 
 	console.log( chalk.blueBright( 'Input File Path: ' ), inputFile );
 	console.log( chalk.blueBright( 'Output File Path: ' ), outputFile );
@@ -97,7 +106,11 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 				resolve( outputFile );
 			} )
 			.on( 'error', () => {
-				console.log( chalk.red( 'Oh no! We couldn\'t write to the output file.  Please check your available disk space and file/folder permissions.' ) );
+				console.log(
+					chalk.red(
+						"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
+					)
+				);
 				reject();
 			} );
 	} );
