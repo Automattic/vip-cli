@@ -19,7 +19,6 @@ import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEvent } from 'lib/tracker';
-import { formatData } from '../lib/cli/format';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
@@ -50,7 +49,8 @@ command( {
 	envContext: true,
 	module: 'import-sql',
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
-} ).option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
+} )
+	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
@@ -67,7 +67,9 @@ command( {
 		debug( 'Args: ', arg );
 
 		if ( ! currentUserCanImportForApp( app ) ) {
-			err( 'The currently authenticated account does not have permission to perform a SQL import.' );
+			err(
+				'The currently authenticated account does not have permission to perform a SQL import.'
+			);
 		}
 
 		if ( ! isSupportedApp( app ) ) {
@@ -75,43 +77,50 @@ command( {
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
-		const inputFile = await searchAndReplace( fileName, searchReplace, { isImport: true, inPlace: opts.inPlace } );
+		const inputFile = await searchAndReplace( fileName, searchReplace, {
+			isImport: true,
+			inPlace: opts.inPlace,
+		} );
 		await validate( inputFile, true );
 
 		const api = await API();
 
 		try {
-			const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, env, fileName: inputFile } );
+			const {
+				fileMeta: { basename, md5 },
+				result,
+			} = await uploadImportSqlFileToS3( { app, env, fileName: inputFile } );
 
 			console.log( { basename, md5, result } );
 
 			try {
-				await api
-					.mutate( {
-						mutation: gql`
-					mutation StartImport($input: AppEnvironmentImportInput){
-						startImport(input: $input) {
-							app {
-								id
-								name
+				await api.mutate( {
+					mutation: gql`
+						mutation StartImport($input: AppEnvironmentImportInput) {
+							startImport(input: $input) {
+								app {
+									id
+									name
+								}
+								message
+								success
 							}
-							message
-							success
-							}
-					}
-				`,
-						variables: {
-							input: {
-								id: app.id,
-								environmentId: env.id,
-								basename: basename,
-								md5: md5,
-							},
+						}
+					`,
+					variables: {
+						input: {
+							id: app.id,
+							environmentId: env.id,
+							basename: basename,
+							md5: md5,
 						},
-
-					} );
+					},
+				} );
 			} catch ( gqlErr ) {
-				await trackEventWithEnv( 'import_sql_command_error', { errorType: 'StartImport-failed', gqlErr } );
+				await trackEventWithEnv( 'import_sql_command_error', {
+					errorType: 'StartImport-failed',
+					gqlErr,
+				} );
 				err( `StartImport call failed: ${ gqlErr }` );
 			}
 
