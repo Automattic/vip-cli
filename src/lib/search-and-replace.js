@@ -28,11 +28,18 @@ const flatten = arr => {
 	}, [] );
 };
 
-export type getReadAndWriteStreamsOptions = {
+export type GetReadAndWriteStreamsOptions = {
 	filename: string,
 	inPlace: boolean,
 	output: string | Buffer | stream$Writable,
 	tmpDir: string,
+};
+
+export type GetReadAndWriteStreamsOutput = {
+	outputFileName: string | null,
+	readStream: stream$Readable | Buffer,
+	usingStdOut: boolean,
+	writeStream: stream$Writable | Buffer,
 };
 
 export function getReadAndWriteStreams( {
@@ -40,7 +47,11 @@ export function getReadAndWriteStreams( {
 	inPlace,
 	output,
 	tmpDir,
-}: getReadAndWriteStreamsOptions ) {
+}: GetReadAndWriteStreamsOptions ): GetReadAndWriteStreamsOutput {
+	let writeStream;
+	let usingStdOut = false;
+	let outputFileName = null;
+
 	if ( inPlace ) {
 		const midputFileName = path.join( tmpDir, path.basename( filename ) );
 		fs.copyFileSync( filename, midputFileName );
@@ -48,51 +59,65 @@ export function getReadAndWriteStreams( {
 		debug( `Copied input file to ${ midputFileName }` );
 		debug( `Set output to the original file path ${ filename }` );
 		return {
+			outputFileName,
 			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
+			usingStdOut,
 			writeStream: fs.createWriteStream( filename, { encoding: 'utf8' } ),
 		};
 	}
 
 	debug( `Reading input from file: ${ filename }` );
 
-	let writeStream;
-
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
-			debug( `Outputting to file: ${ output }` );
+			outputFileName = output;
+			debug( `Outputting to file: ${ outputFileName }` );
 			break;
 		case 'object':
 			writeStream = output;
-			debug( 'Outputting to the provided output stream' );
+			if ( writeStream === process.stdout ) {
+				usingStdOut = true;
+				debug( 'Outputting to the standard output stream' );
+			} else {
+				debug( 'Outputting to the provided output stream' );
+			}
 			break;
 		default:
 			const tmpOutFile = path.join( tmpDir, path.basename( filename ) );
 			writeStream = fs.createWriteStream( tmpOutFile, {
 				encoding: 'utf8',
 			} );
-			debug( `Outputting to file: ${ tmpOutFile }` );
+			outputFileName = tmpOutFile;
+			debug( `Outputting to file: ${ outputFileName }` );
 			break;
 	}
 
 	return {
+		outputFileName,
 		readStream: fs.createReadStream( filename, { encoding: 'utf8' } ),
+		usingStdOut,
 		writeStream,
 	};
 }
 
-export type searchReplaceOptions = {
+export type SearchReplaceOptions = {
 	isImport: boolean,
 	inPlace: boolean,
 	output: string | Buffer | stream$Writable,
 };
 
+export type SearchReplaceOutput = {
+	usingStdOut?: boolean,
+	outputFileName?: string | null,
+};
+
 export const searchAndReplace = async (
 	filename: string,
 	pairs: Array<String> | String,
-	{ isImport = true, inPlace = false, output = process.stdout }: searchReplaceOptions,
+	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
-): Promise<string> => {
+): Promise<SearchReplaceOutput> => {
 	await trackEvent( 'vip_cli_searchreplace_started', { isImport, inPlace } );
 
 	const startTime = process.hrtime();
@@ -100,8 +125,7 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		console.error( chalk.blueBright( 'No search and replace parameters provided.' ) );
-		return filename;
+		throw new Error( 'No search and replace parameters provided.' );
 	}
 
 	// If only one pair is provided, ensure we have an array
@@ -124,7 +148,7 @@ export const searchAndReplace = async (
 	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
 	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
 
-	const { readStream, writeStream } = getReadAndWriteStreams( {
+	const { usingStdOut, outputFileName, readStream, writeStream } = getReadAndWriteStreams( {
 		filename,
 		inPlace,
 		output,
@@ -136,8 +160,10 @@ export const searchAndReplace = async (
 		replacedStream
 			.pipe( writeStream )
 			.on( 'finish', () => {
-				console.log( chalk.green( 'Search and Replace Complete!' ) );
-				resolve( output );
+				if ( ! usingStdOut ) {
+					console.log( chalk.green( 'Search and Replace Complete!' ) );
+				}
+				resolve( { usingStdOut, outputFileName } );
 			} )
 			.on( 'error', () => {
 				console.log(
