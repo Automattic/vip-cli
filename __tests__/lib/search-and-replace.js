@@ -1,9 +1,12 @@
 /**
+ * @format
+ */
+
+/**
  * External dependencies
  */
 import fs from 'fs';
 import path from 'path';
-import suffix from 'suffix';
 import fetch, { Response } from 'node-fetch';
 
 /**
@@ -12,46 +15,68 @@ import fetch, { Response } from 'node-fetch';
 import { searchAndReplace } from 'lib/search-and-replace';
 
 global.console = { log: jest.fn(), error: jest.fn() };
+
+const fixtureDir = path.resolve( __dirname, '..', '..', '__fixtures__' );
+const testFilePath = path.resolve( fixtureDir, 'client-file-uploader', 'tinyfile.txt' );
+
 jest.mock( 'node-fetch' );
+fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
+
+const binary = path.resolve(
+	fixtureDir,
+	'search-replace-binaries',
+	`go-search-replace-test-${ process.platform }-${ process.arch }`
+);
 
 // Mock console.log()
 jest.spyOn( global.console, 'log' );
-fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
-let testFilePath, outputFilePath;
-const binary = process.env.CI === 'true' ? process.cwd() + '/node_modules/@automattic/vip-search-replace/bin/go-search-replace-test' : null;
 
 describe( 'lib/search-and-replace', () => {
-	beforeEach( () => {
-		testFilePath = path.join( process.cwd(), '__fixtures__', 'client-file-uploader', 'tinyfile.txt' );
-		outputFilePath = suffix( testFilePath, '.out' );
+	it( 'should throw for empty pair array', async () => {
+		const promise = searchAndReplace( testFilePath, [], {}, binary );
+		await expect( promise ).rejects.toEqual(
+			new Error( 'No search and replace parameters provided.' )
+		);
 	} );
-	afterEach( () => {
-		if ( fs.existsSync( outputFilePath ) ) {
-			fs.unlinkSync( outputFilePath );
-		}
-	} );
-	it( 'returns the input file path if no pairs are provided by an array', async () => {
-		const result = await searchAndReplace( testFilePath, [], { isImport: false, inPlace: false }, binary );
-		expect( result ).toBe( testFilePath );
-	} );
-	it( 'returns the input file path if no pairs are provided by a string', async () => {
-		const result = await searchAndReplace( testFilePath, '', { isImport: false, inPlace: false }, binary );
-		expect( result ).toBe( testFilePath );
+	it( 'should throw for empty pair string', async () => {
+		const promise = searchAndReplace( testFilePath, '', {}, binary );
+		await expect( promise ).rejects.toEqual(
+			new Error( 'No search and replace parameters provided.' )
+		);
 	} );
 	it( 'will accept and use a string of replacement pairs (when one replacement provided)', async () => {
-		const result = await searchAndReplace( testFilePath, 'ohai,ohHey', { isImport: false, inPlace: false }, binary );
-		expect( result ).toBe( outputFilePath );
-		const fileContents = fs.readFileSync( outputFilePath, { encoding: 'utf-8' } );
+		const { usingStdOut, outputFileName } = await searchAndReplace(
+			testFilePath,
+			'ohai,ohHey',
+			{ output: true },
+			binary
+		);
+
+		expect( usingStdOut ).toBe( false );
+		expect( outputFileName ).not.toBe( testFilePath );
+
+		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
 		expect( fileContents ).toContain( 'ohHey' );
 		expect( fileContents ).not.toContain( 'ohai' );
+		fs.unlinkSync( outputFileName );
 	} );
+
 	it( 'will accept and use an array of replacement pairs (when multiple replacement provided)', async () => {
-		const result = await searchAndReplace( testFilePath, [ 'ohai,ohHey', 'purty,pretty' ], { isImport: false, inPlace: false }, binary );
-		expect( result ).toBe( outputFilePath );
-		const fileContents = fs.readFileSync( outputFilePath, { encoding: 'utf-8' } );
+		const { usingStdOut, outputFileName } = await searchAndReplace(
+			testFilePath,
+			[ 'ohai,ohHey', 'purty,pretty' ],
+			{ output: true },
+			binary
+		);
+
+		expect( usingStdOut ).toBe( false );
+		expect( outputFileName ).not.toBe( testFilePath );
+
+		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
 		expect( fileContents ).toContain( 'ohHey' );
-		expect( fileContents ).toContain( 'pretty' );
 		expect( fileContents ).not.toContain( 'ohai' );
+		expect( fileContents ).toContain( 'pretty' );
 		expect( fileContents ).not.toContain( 'purty' );
+		fs.unlinkSync( outputFileName );
 	} );
 } );
