@@ -57,7 +57,7 @@ export type searchReplaceOptions = {
 };
 
 export const searchAndReplace = async ( filename: string, pairs: Array<String> | String, { isImport = true, inPlace = false }: searchReplaceOptions, binary: string | null = null ): Promise<string> => {
-	await trackEvent( 'vip_cli_searchreplace_started', { isImport, inPlace } );
+	await trackEvent( 'searchreplace_started', { isImport, inPlace } );
 
 	const startTime = process.hrtime();
 	const fileSize = getFileSize( filename );
@@ -105,7 +105,7 @@ export const searchAndReplace = async ( filename: string, pairs: Array<String> |
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	await trackEvent( 'vip_cli_searchreplace_completed', { timeToRun: end, fileSize } );
+	await trackEvent( 'searchreplace_completed', { timeToRun: end, fileSize } );
 
 	return result;
 };
