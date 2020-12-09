@@ -16,8 +16,7 @@ import { searchAndReplace } from 'lib/search-and-replace';
 
 global.console = { log: jest.fn(), error: jest.fn() };
 
-const baseDir = path.resolve( __dirname, '..', '..' );
-const fixtureDir = path.resolve( baseDir, '__fixtures__' );
+const fixtureDir = path.resolve( __dirname, '..', '..', '__fixtures__' );
 const testFilePath = path.resolve( fixtureDir, 'client-file-uploader', 'tinyfile.txt' );
 
 jest.mock( 'node-fetch' );

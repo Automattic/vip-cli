@@ -32,7 +32,6 @@ export type GetReadAndWriteStreamsOptions = {
 	filename: string,
 	inPlace: boolean,
 	output: string | Buffer | stream$Writable,
-	tmpDir: string,
 };
 
 export type GetReadAndWriteStreamsOutput = {
@@ -42,18 +41,23 @@ export type GetReadAndWriteStreamsOutput = {
 	writeStream: stream$Writable | Buffer,
 };
 
+function makeTempDir() {
+	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
+	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
+	return tmpDir;
+}
+
 export function getReadAndWriteStreams( {
 	filename,
 	inPlace,
 	output,
-	tmpDir,
 }: GetReadAndWriteStreamsOptions ): GetReadAndWriteStreamsOutput {
 	let writeStream;
 	let usingStdOut = false;
 	let outputFileName = null;
 
 	if ( inPlace ) {
-		const midputFileName = path.join( tmpDir, path.basename( filename ) );
+		const midputFileName = path.join( makeTempDir(), path.basename( filename ) );
 		fs.copyFileSync( filename, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
@@ -84,7 +88,7 @@ export function getReadAndWriteStreams( {
 			}
 			break;
 		default:
-			const tmpOutFile = path.join( tmpDir, path.basename( filename ) );
+			const tmpOutFile = path.join( makeTempDir(), path.basename( filename ) );
 			writeStream = fs.createWriteStream( tmpOutFile, {
 				encoding: 'utf8',
 			} );
@@ -145,14 +149,10 @@ export const searchAndReplace = async (
 		);
 	}
 
-	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
-	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
-
 	const { usingStdOut, outputFileName, readStream, writeStream } = getReadAndWriteStreams( {
 		filename,
 		inPlace,
 		output,
-		tmpDir,
 	} );
 
 	const replacedStream = await replace( readStream, replacements, binary );
