@@ -9,10 +9,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import util from 'util';
 import chalk from 'chalk';
 import debugLib from 'debug';
-import suffix from 'suffix';
 import { replace } from '@automattic/vip-search-replace';
 
 /**
@@ -30,39 +28,69 @@ const flatten = arr => {
 	}, [] );
 };
 
-const inPlaceReplacement = async filename => {
-	await confirm(
-		[],
-		'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
-	);
-
-	const tmpFilePath = path.join( os.tmpdir(), ( +new Date() ).toString( 36 ) );
-
-	const copyFile = util.promisify( fs.copyFile );
-	await copyFile( filename, tmpFilePath );
-
-	return {
-		inputFile: tmpFilePath,
-		outputFile: filename,
-	};
+export type getReadAndWriteStreamsOptions = {
+	filename: string,
+	inPlace: boolean,
+	output: string | Buffer | stream$Writable,
+	tmpDir: string,
 };
 
-const outputFileReplacement = filename => {
+export function getReadAndWriteStreams( {
+	filename,
+	inPlace,
+	output,
+	tmpDir,
+}: getReadAndWriteStreamsOptions ) {
+	if ( inPlace ) {
+		const midputFileName = path.join( tmpDir, path.basename( filename ) );
+		fs.copyFileSync( filename, midputFileName );
+
+		debug( `Copied input file to ${ midputFileName }` );
+		debug( `Set output to the original file path ${ filename }` );
+		return {
+			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
+			writeStream: fs.createWriteStream( filename, { encoding: 'utf8' } ),
+		};
+	}
+
+	debug( `Reading input from file: ${ filename }` );
+
+	let writeStream;
+
+	switch ( typeof output ) {
+		case 'string':
+			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
+			debug( `Outputting to file: ${ output }` );
+			break;
+		case 'object':
+			writeStream = output;
+			debug( 'Outputting to the provided output stream' );
+			break;
+		default:
+			const tmpOutFile = path.join( tmpDir, path.basename( filename ) );
+			writeStream = fs.createWriteStream( tmpOutFile, {
+				encoding: 'utf8',
+			} );
+			debug( `Outputting to file: ${ tmpOutFile }` );
+			break;
+	}
+
 	return {
-		inputFile: filename,
-		outputFile: suffix( filename, '.out' ),
+		readStream: fs.createReadStream( filename, { encoding: 'utf8' } ),
+		writeStream,
 	};
-};
+}
 
 export type searchReplaceOptions = {
 	isImport: boolean,
 	inPlace: boolean,
+	output: string | Buffer | stream$Writable,
 };
 
 export const searchAndReplace = async (
 	filename: string,
 	pairs: Array<String> | String,
-	{ isImport = true, inPlace = false }: searchReplaceOptions,
+	{ isImport = true, inPlace = false, output = process.stdout }: searchReplaceOptions,
 	binary: string | null = null
 ): Promise<string> => {
 	await trackEvent( 'vip_cli_searchreplace_started', { isImport, inPlace } );
@@ -72,7 +100,7 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		console.log( chalk.blueBright( 'No search and replace parameters provided.' ) );
+		console.error( chalk.blueBright( 'No search and replace parameters provided.' ) );
 		return filename;
 	}
 
@@ -86,16 +114,22 @@ export const searchAndReplace = async (
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
-	// Get a path for a tmp copy of the input file
-	const { inputFile, outputFile } = inPlace
-		? await inPlaceReplacement( filename )
-		: outputFileReplacement( filename );
+	if ( inPlace ) {
+		await confirm(
+			[],
+			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
+		);
+	}
 
-	console.log( chalk.blueBright( 'Input File Path: ' ), inputFile );
-	console.log( chalk.blueBright( 'Output File Path: ' ), outputFile );
+	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
+	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
 
-	const readStream = fs.createReadStream( inputFile, { encoding: 'utf8' } );
-	const writeStream = fs.createWriteStream( outputFile, { encoding: 'utf8' } );
+	const { readStream, writeStream } = getReadAndWriteStreams( {
+		filename,
+		inPlace,
+		output,
+		tmpDir,
+	} );
 
 	const replacedStream = await replace( readStream, replacements, binary );
 	const result = await new Promise( ( resolve, reject ) => {
@@ -103,7 +137,7 @@ export const searchAndReplace = async (
 			.pipe( writeStream )
 			.on( 'finish', () => {
 				console.log( chalk.green( 'Search and Replace Complete!' ) );
-				resolve( outputFile );
+				resolve( output );
 			} )
 			.on( 'error', () => {
 				console.log(

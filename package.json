@@ -101,7 +101,6 @@
     "socket.io-client": "2.3.0",
     "socket.io-stream": "0.9.1",
     "socks-proxy-agent": "^5.0.0",
-    "suffix": "^1.0.0",
     "update-notifier": "4.1.0",
     "uuid": "3.4.0",
     "xml2js": "^0.4.23"
