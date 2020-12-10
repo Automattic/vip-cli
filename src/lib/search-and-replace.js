@@ -29,7 +29,7 @@ const flatten = arr => {
 };
 
 export type GetReadAndWriteStreamsOptions = {
-	filename: string,
+	fileName: string,
 	inPlace: boolean,
 	output: boolean | string | Buffer | stream$Writable,
 };
@@ -48,7 +48,7 @@ function makeTempDir() {
 }
 
 export function getReadAndWriteStreams( {
-	filename,
+	fileName,
 	inPlace,
 	output,
 }: GetReadAndWriteStreamsOptions ): GetReadAndWriteStreamsOutput {
@@ -57,20 +57,20 @@ export function getReadAndWriteStreams( {
 	let outputFileName;
 
 	if ( inPlace ) {
-		const midputFileName = path.join( makeTempDir(), path.basename( filename ) );
-		fs.copyFileSync( filename, midputFileName );
+		const midputFileName = path.join( makeTempDir(), path.basename( fileName ) );
+		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
-		debug( `Set output to the original file path ${ filename }` );
+		debug( `Set output to the original file path ${ fileName }` );
 		return {
 			outputFileName,
 			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
 			usingStdOut,
-			writeStream: fs.createWriteStream( filename, { encoding: 'utf8' } ),
+			writeStream: fs.createWriteStream( fileName, { encoding: 'utf8' } ),
 		};
 	}
 
-	debug( `Reading input from file: ${ filename }` );
+	debug( `Reading input from file: ${ fileName }` );
 
 	switch ( typeof output ) {
 		case 'string':
@@ -88,7 +88,7 @@ export function getReadAndWriteStreams( {
 			}
 			break;
 		default:
-			const tmpOutFile = path.join( makeTempDir(), path.basename( filename ) );
+			const tmpOutFile = path.join( makeTempDir(), path.basename( fileName ) );
 			writeStream = fs.createWriteStream( tmpOutFile, {
 				encoding: 'utf8',
 			} );
@@ -99,7 +99,7 @@ export function getReadAndWriteStreams( {
 
 	return {
 		outputFileName,
-		readStream: fs.createReadStream( filename, { encoding: 'utf8' } ),
+		readStream: fs.createReadStream( fileName, { encoding: 'utf8' } ),
 		usingStdOut,
 		writeStream,
 	};
@@ -118,7 +118,7 @@ export type SearchReplaceOutput = {
 };
 
 export const searchAndReplace = async (
-	filename: string,
+	fileName: string,
 	pairs: Array<String> | String,
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
@@ -126,7 +126,7 @@ export const searchAndReplace = async (
 	await trackEvent( 'searchreplace_started', { isImport, inPlace } );
 
 	const startTime = process.hrtime();
-	const fileSize = getFileSize( filename );
+	const fileSize = getFileSize( fileName );
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
@@ -150,8 +150,8 @@ export const searchAndReplace = async (
 		);
 	}
 
-	const { outputFileName, readStream, usingStdOut, writeStream } = getReadAndWriteStreams( {
-		filename,
+	const { usingStdOut, outputFileName, readStream, writeStream } = getReadAndWriteStreams( {
+		fileName,
 		inPlace,
 		output,
 	} );
@@ -165,7 +165,7 @@ export const searchAndReplace = async (
 					console.log( chalk.green( 'Search and Replace Complete!' ) );
 				}
 				resolve( {
-					inputFileName: filename,
+					inputFileName: fileName,
 					outputFileName,
 					usingStdOut,
 				} );
