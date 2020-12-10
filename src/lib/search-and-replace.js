@@ -31,11 +31,11 @@ const flatten = arr => {
 export type GetReadAndWriteStreamsOptions = {
 	fileName: string,
 	inPlace: boolean,
-	output: string | Buffer | stream$Writable,
+	output: boolean | string | Buffer | stream$Writable,
 };
 
 export type GetReadAndWriteStreamsOutput = {
-	outputFileName: string | null,
+	outputFileName?: string,
 	readStream: stream$Readable | Buffer,
 	usingStdOut: boolean,
 	writeStream: stream$Writable | Buffer,
@@ -54,7 +54,7 @@ export function getReadAndWriteStreams( {
 }: GetReadAndWriteStreamsOptions ): GetReadAndWriteStreamsOutput {
 	let writeStream;
 	let usingStdOut = false;
-	let outputFileName = null;
+	let outputFileName;
 
 	if ( inPlace ) {
 		const midputFileName = path.join( makeTempDir(), path.basename( fileName ) );
@@ -108,12 +108,13 @@ export function getReadAndWriteStreams( {
 export type SearchReplaceOptions = {
 	isImport: boolean,
 	inPlace: boolean,
-	output: string | Buffer | stream$Writable,
+	output: boolean | string | Buffer | stream$Writable,
 };
 
 export type SearchReplaceOutput = {
-	usingStdOut?: boolean,
-	outputFileName?: string | null,
+	inputFileName: string,
+	outputFileName?: string,
+	usingStdOut: boolean,
 };
 
 export const searchAndReplace = async (
@@ -163,7 +164,11 @@ export const searchAndReplace = async (
 				if ( ! usingStdOut ) {
 					console.log( chalk.green( 'Search and Replace Complete!' ) );
 				}
-				resolve( { usingStdOut, outputFileName } );
+				resolve( {
+					inputFileName: fileName,
+					outputFileName,
+					usingStdOut,
+				} );
 			} )
 			.on( 'error', () => {
 				console.log(

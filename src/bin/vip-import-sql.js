@@ -77,11 +77,19 @@ command( {
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
-		const inputFile = await searchAndReplace( fileName, searchReplace, {
-			isImport: true,
-			inPlace: opts.inPlace,
-		} );
-		await validate( inputFile, true );
+		let fileNameToUpload = fileName;
+
+		if ( searchReplace && searchReplace.length ) {
+			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
+				isImport: true,
+				inPlace: opts.inPlace,
+				output: true,
+			} );
+
+			fileNameToUpload = outputFileName;
+		}
+
+		await validate( fileNameToUpload, true );
 
 		const api = await API();
 
@@ -89,7 +97,7 @@ command( {
 			const {
 				fileMeta: { basename, md5 },
 				result,
-			} = await uploadImportSqlFileToS3( { app, env, fileName: inputFile } );
+			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
 
 			console.log( { basename, md5, result } );
 
