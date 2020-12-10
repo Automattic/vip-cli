@@ -10,6 +10,7 @@
     "vip-import": "dist/bin/vip-import.js",
     "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
+    "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
@@ -76,6 +77,7 @@
     "publish-please": "5.5.1"
   },
   "dependencies": {
+    "@automattic/vip-search-replace": "^1.0.5",
     "apollo-cache-inmemory": "1.6.5",
     "apollo-client": "2.6.8",
     "apollo-link-error": "1.1.12",

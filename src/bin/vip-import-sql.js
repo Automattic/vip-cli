@@ -10,6 +10,7 @@
  */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -19,6 +20,7 @@ import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-f
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEvent } from 'lib/tracker';
 import { validate } from 'lib/validations/sql';
+import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 
 /**
@@ -38,6 +40,8 @@ const err = message => {
 	process.exit( 1 );
 };
 
+const debug = debugLib( 'vip:vip-import-sql' );
+
 command( {
 	appContext: true,
 	appQuery,
@@ -45,52 +49,70 @@ command( {
 	envContext: true,
 	module: 'import-sql',
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
-} ).argv( process.argv, async ( arg, opts ) => {
-	const { app, env } = opts;
-	const [ fileName ] = arg;
+} )
+	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
+	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
+	.argv( process.argv, async ( arg, opts ) => {
+		const { app, env, searchReplace } = opts;
+		const [ fileName ] = arg;
 
-	const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
-		trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
+		const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
+			trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
 
-	await trackEventWithEnv( 'import_sql_command_execute' );
+		await trackEventWithEnv( 'import_sql_command_execute' );
 
-	console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
+		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
-	if ( ! currentUserCanImportForApp( app ) ) {
-		err( 'The currently authenticated account does not have permission to perform a SQL import.' );
-	}
+		debug( 'Options: ', opts );
+		debug( 'Args: ', arg );
 
-	if ( ! isSupportedApp( app ) ) {
-		await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
-		err( 'The type of application you specified does not currently support SQL imports.' );
-	}
+		if ( ! currentUserCanImportForApp( app ) ) {
+			err(
+				'The currently authenticated account does not have permission to perform a SQL import.'
+			);
+		}
 
-	await validate( fileName, true );
+		if ( ! isSupportedApp( app ) ) {
+			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+			err( 'The type of application you specified does not currently support SQL imports.' );
+		}
 
-	/**
-	 * TODO: We should check for various site locks (including importing) prior to the upload.
-	 */
+		let fileNameToUpload = fileName;
 
-	const api = await API();
+		if ( searchReplace && searchReplace.length ) {
+			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
+				isImport: true,
+				inPlace: opts.inPlace,
+				output: true,
+			} );
 
-	try {
-		const { fileMeta: { basename, md5 }, result } = await uploadImportSqlFileToS3( { app, env, fileName } );
+			fileNameToUpload = outputFileName;
+		}
 
-		console.log( { basename, md5, result } );
+		await validate( fileNameToUpload, true );
+
+		const api = await API();
 
 		try {
-			await api
-				.mutate( {
+			const {
+				fileMeta: { basename, md5 },
+				result,
+			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
+
+			console.log( { basename, md5, result } );
+
+			try {
+				await api.mutate( {
 					mutation: gql`
-						mutation StartImport($input: AppEnvironmentImportInput){
+						mutation StartImport($input: AppEnvironmentImportInput) {
 							startImport(input: $input) {
 								app {
-								  id
-								  name
+									id
+									name
 								}
 								message
 								success
-							  }
+							}
 						}
 					`,
 					variables: {
@@ -102,15 +124,18 @@ command( {
 						},
 					},
 				} );
-		} catch ( gqlErr ) {
-			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'StartImport-failed', gqlErr } );
-			err( `StartImport call failed: ${ gqlErr }` );
+			} catch ( gqlErr ) {
+				await trackEventWithEnv( 'import_sql_command_error', {
+					errorType: 'StartImport-failed',
+					gqlErr,
+				} );
+				err( `StartImport call failed: ${ gqlErr }` );
+			}
+
+			await trackEventWithEnv( 'import_sql_command_queued' );
+
+			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
+		} catch ( e ) {
+			err( e );
 		}
-
-		await trackEventWithEnv( 'import_sql_command_queued' );
-
-		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
-	} catch ( e ) {
-		err( e );
-	}
-} );
+	} );
