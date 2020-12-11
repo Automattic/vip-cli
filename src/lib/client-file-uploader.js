@@ -9,7 +9,7 @@
 import fs, { ReadStream } from 'fs';
 import os from 'os';
 import path from 'path';
-import fetch from 'isomorphic-fetch';
+import fetch from 'node-fetch';
 import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
