@@ -6,7 +6,7 @@
 /**
  * External dependencies
  */
-import fetch from 'isomorphic-fetch';
+import fetch from 'node-fetch';
 import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -61,6 +61,7 @@ export default async function API(): Promise<ApolloClient> {
 	const httpLink = new HttpLink( {
 		uri: API_URL,
 		headers,
+		fetch,
 		fetchOptions: {
 			agent: proxyAgent,
 		},
