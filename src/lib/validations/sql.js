@@ -48,6 +48,29 @@ const infoCheckFormatter = check => {
 	} );
 };
 
+function checkTablePrefixes( tables ) {
+	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
+	tables.forEach( tableName => {
+		if ( tableName.match( /^wp_(\d+_)/ ) ) {
+			wpMultisiteTables.push( tableName );
+		} else if ( tableName.match( /^wp_/ ) ) {
+			wpTables.push( tableName );
+		} else if ( ! tableName.match( /^wp_/ ) ) {
+			notWPTables.push( tableName );
+		}
+	} );
+	if ( wpTables.length > 0 ) {
+		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
+	}
+	if ( notWPTables.length > 0 ) {
+		problemsFound += 1;
+		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
+	}
+	if ( wpMultisiteTables.length > 0 ) {
+		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
+	}
+}
+
 export type CheckType = {
     excerpt: string,
     matchHandler: Function,
@@ -142,30 +165,16 @@ const checks: Checks = {
 		excerpt: 'Siteurl/home options',
 		recommendation: '',
 	},
+	engineInnoDB: {
+		matcher: /ENGINE=(?!(InnoDB))/i,
+		matchHandler: lineNumber => lineNumber,
+		outputFormatter: errorCheckFormatter,
+		results: [],
+		message: 'ENGINE != InnoDB',
+		excerpt: '\'ENGINE=InnoDB\' should be present (case-insensitive) for all tables',
+		recommendation: 'Ensure your application works with InnoDB and update your SQL dump to include only \'ENGINE=InnoDB\' engine definitions in \'CREATE TABLE\' statements',
+	},
 };
-
-function checkTablePrefixes( tables ) {
-	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
-	tables.forEach( tableName => {
-		if ( tableName.match( /^wp_(\d+_)/ ) ) {
-			wpMultisiteTables.push( tableName );
-		} else if ( tableName.match( /^wp_/ ) ) {
-			wpTables.push( tableName );
-		} else if ( ! tableName.match( /^wp_/ ) ) {
-			notWPTables.push( tableName );
-		}
-	} );
-	if ( wpTables.length > 0 ) {
-		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
-	}
-	if ( notWPTables.length > 0 ) {
-		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
-	}
-	if ( wpMultisiteTables.length > 0 ) {
-		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
-	}
-}
 
 function openFile( filename, flags = 'r', mode = 666 ) {
 	return new Promise( ( resolve, reject ) => {
