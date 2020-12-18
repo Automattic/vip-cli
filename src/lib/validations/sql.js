@@ -228,8 +228,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	console.log( '\n' );
 	const errorSummary = {};
 	const checkEntires: any = Object.entries( checks );
-	for ( const entry of checkEntires ) {
-		const [ type, check ]: [string, CheckType] = entry;
+	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
 		check.outputFormatter( check, type );
 		console.log( '' );
 
@@ -244,12 +243,14 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	if ( problemsFound > 0 ) {
 		console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
 		await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
-		process.exit( 1 );
+		return process.exit( 1 );
 	}
 
 	console.log( '✅ Your database file looks good.' );
 
 	await trackEvent( 'import_validate_sql_command_success', { isImport } );
+
+	readInterface.close();
 
 	if ( isImport ) {
 		console.log( '\n🎉 Continuing to the import process.' );
