@@ -7,7 +7,6 @@ import args from 'args';
 import { prompt } from 'enquirer';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
-import path from 'path';
 import updateNotifier from 'update-notifier';
 
 /**

@@ -3,7 +3,7 @@
 /**
  * External dependencies
  */
-import 'isomorphic-fetch';
+import fetch from 'node-fetch';
 import querystring from 'querystring';
 const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
 
