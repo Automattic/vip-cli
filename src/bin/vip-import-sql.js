@@ -149,7 +149,7 @@ command( {
 			const {
 				fileMeta: { basename, md5 },
 				result,
-			} = await uploadImportSqlFileToS3( { app, env, fileName } );
+			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
 			startImportVariables.input = {
 				id: app.id,
 				environmentId: env.id,
