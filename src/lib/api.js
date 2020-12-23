@@ -7,10 +7,8 @@
  * External dependencies
  */
 import fetch from 'node-fetch';
-import { ApolloClient } from 'apollo-client';
-import { HttpLink } from 'apollo-link-http';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { onError } from 'apollo-link-error';
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
+import { onError } from '@apollo/client/link/error';
 import chalk from 'chalk';
 
 /**
