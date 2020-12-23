@@ -38,6 +38,7 @@ const appQuery = `
 		type
 		name
 		importStatus {
+			dbOperationInProgress
 			progress {
 				started_at
 				steps { name, started_at, finished_at, result, output }
@@ -62,29 +63,6 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
-const IMPORT_PROGRESS_QUERY = gql`
-	query App($id: Int) {
-		app(id: $id) {
-			environments {
-				id
-				importStatus {
-					progress {
-						started_at
-						steps {
-							name
-							started_at
-							finished_at
-							result
-							output
-						}
-						finished_at
-					}
-				}
-			}
-		}
-	}
-`;
-
 const err = message => {
 	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
 	process.exit( 1 );
@@ -95,24 +73,19 @@ const debug = debugLib( 'vip:vip-import-sql' );
 command( {
 	appContext: true,
 	appQuery,
-	requiredArgs: 1, // TODO print proper usage example
 	envContext: true,
+	requiredArgs: 1,
 	module: 'import-sql',
-	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace } = opts;
-		const {
-			importStatus: { progress: importProgressAtLaunch },
-		} = env;
 		const [ fileName ] = arg;
+		const { app, env, searchReplace } = opts;
+		const { importStatus } = env;
 
 		const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
 			trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
-
-		await trackEventWithEnv( 'import_sql_command_execute' );
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
@@ -125,8 +98,14 @@ command( {
 			);
 		}
 
-		const previousStartedAt = importProgressAtLaunch.started_at || 0;
-		const previousFinishedAt = importProgressAtLaunch.finished_at || 0;
+		const previousStartedAt = importStatus.progress.started_at || 0;
+		const previousFinishedAt = importStatus.progress.finished_at || 0;
+
+		console.log( {
+			importProgressAtLaunch: importStatus.progress,
+			previousStartedAt,
+			previousFinishedAt,
+		} );
 
 		if ( previousStartedAt && ! previousFinishedAt ) {
 			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'existing-import' } );
@@ -197,37 +176,5 @@ command( {
 
 		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 
-		const doneImporting = new Promise( resolve => {
-			const queryInterval = setInterval( async () => {
-				const {
-					data: {
-						app: { environments },
-					},
-				} = await api.query( {
-					query: IMPORT_PROGRESS_QUERY,
-					variables: { id: app.id },
-					fetchPolicy: 'network-only',
-				} );
-				const {
-					importStatus: { progress },
-				} = environments.find( e => e.id === env.id );
-
-				// TODO UX
-				if ( ! ( progress && progress.started_at > previousFinishedAt ) ) {
-					console.log( 'waiting for import to start' );
-					return;
-				}
-
-				console.log( { progress } );
-
-				if ( progress.finished_at > previousFinishedAt ) {
-					clearInterval( queryInterval );
-					resolve();
-				}
-			}, 5000 );
-		} );
-
-		await doneImporting;
-
-		console.log( 'Finished importing the SQL file. Reconfiguring and reloading...' );
+		// TODO call the vip-import-sql-check-status command from here
 	} );
