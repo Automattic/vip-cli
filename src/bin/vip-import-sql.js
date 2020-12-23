@@ -17,13 +17,19 @@ import debugLib from 'debug';
  */
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
+import { importSqlCheckStatus } from 'lib/site-import/status';
 import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
-import { trackEvent } from 'lib/tracker';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 
+const err = async message => {
+	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
+	process.exit( 1 );
+};
+
 /**
+ * TODO:
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
  * - Include `hasImporterS3Credentials` & error out if false (this needs to be implemented)
  */
@@ -63,11 +69,6 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
-const err = message => {
-	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
-	process.exit( 1 );
-};
-
 const debug = debugLib( 'vip:vip-import-sql' );
 
 command( {
@@ -76,16 +77,14 @@ command( {
 	envContext: true,
 	requiredArgs: 1,
 	module: 'import-sql',
+	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
-	.argv( process.argv, async ( arg: string[], opts ) => {
+	.argv( process.argv, async ( arg: string[], opts, { trackEventWithContext } ) => {
 		const [ fileName ] = arg;
 		const { app, env, searchReplace } = opts;
 		const { importStatus } = env;
-
-		const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
-			trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
@@ -98,6 +97,11 @@ command( {
 			);
 		}
 
+		if ( ! isSupportedApp( app ) ) {
+			await trackEventWithContext( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+			err( 'The type of application you specified does not currently support SQL imports.' );
+		}
+
 		const previousStartedAt = importStatus.progress.started_at || 0;
 		const previousFinishedAt = importStatus.progress.finished_at || 0;
 
@@ -108,16 +112,9 @@ command( {
 		} );
 
 		if ( previousStartedAt && ! previousFinishedAt ) {
-			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'existing-import' } );
+			await trackEventWithContext( 'import_sql_command_error', { errorType: 'existing-import' } );
 			// TODO link to status page when one exists
 			err( 'There is already an ongoing import for this site.' );
-		}
-
-		console.log( { importProgressAtLaunch } );
-
-		if ( ! isSupportedApp( app ) ) {
-			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
-			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
 		let fileNameToUpload = fileName;
@@ -165,16 +162,16 @@ command( {
 		try {
 			await api.mutate( { mutation: START_IMPORT_MUTATION, variables: startImportVariables } );
 		} catch ( gqlErr ) {
-			await trackEventWithEnv( 'import_sql_command_error', {
+			await trackEventWithContext( 'import_sql_command_error', {
 				errorType: 'StartImport-failed',
 				gqlErr,
 			} );
 			err( `StartImport call failed: ${ gqlErr }` );
 		}
 
-		await trackEventWithEnv( 'import_sql_command_queued' );
+		await trackEventWithContext( 'import_sql_command_queued' );
 
 		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 
-		// TODO call the vip-import-sql-check-status command from here
+		await importSqlCheckStatus( { app, env, poll: true } );
 	} );
