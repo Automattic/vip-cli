@@ -77,11 +77,8 @@
     "publish-please": "5.5.1"
   },
   "dependencies": {
+    "@apollo/client": "^3.3.6",
     "@automattic/vip-search-replace": "^1.0.5",
-    "apollo-cache-inmemory": "1.6.5",
-    "apollo-client": "2.6.8",
-    "apollo-link-error": "1.1.12",
-    "apollo-link-http": "1.5.16",
     "args": "5.0.1",
     "chalk": "3.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
