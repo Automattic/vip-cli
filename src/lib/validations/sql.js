@@ -258,5 +258,5 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	}
 
 	console.log( '\n🎉 You can now submit for import, see here for more details: ' +
-		'https://wpvip.com/documentation/vip-go/migrating-and-importing-content/#submitting-the-database' );
+		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
 };
