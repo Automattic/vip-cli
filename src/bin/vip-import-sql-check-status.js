@@ -61,5 +61,9 @@ command( {
 		}
 
 		await trackEventWithContext( 'import_sql_check_status_command_execute' );
-		await importSqlCheckStatus( { app, env, poll } );
+
+		// If `poll` is truthy, check for an import that completes after "now"
+		const afterTime = poll ? Math.floor( Date.now() / 1000 ) : null;
+
+		await importSqlCheckStatus( { afterTime, app, env } );
 	} );

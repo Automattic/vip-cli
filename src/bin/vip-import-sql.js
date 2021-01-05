@@ -160,7 +160,16 @@ command( {
 		}
 
 		try {
-			await api.mutate( { mutation: START_IMPORT_MUTATION, variables: startImportVariables } );
+			const { serverTime } = await api.mutate( {
+				mutation: START_IMPORT_MUTATION,
+				variables: startImportVariables,
+			} );
+
+			await trackEventWithContext( 'import_sql_command_queued' );
+
+			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
+
+			await importSqlCheckStatus( { afterTime: serverTime, app, env } );
 		} catch ( gqlErr ) {
 			await trackEventWithContext( 'import_sql_command_error', {
 				errorType: 'StartImport-failed',
@@ -168,10 +177,4 @@ command( {
 			} );
 			err( `StartImport call failed: ${ gqlErr }` );
 		}
-
-		await trackEventWithContext( 'import_sql_command_queued' );
-
-		console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
-
-		await importSqlCheckStatus( { app, env, poll: true } );
 	} );

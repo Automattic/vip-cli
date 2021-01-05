@@ -15,6 +15,8 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
+const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
+
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
 		app(id: $id) {
@@ -40,12 +42,12 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 `;
 
 export type ImportSqlCheckStatusInput = {
+	afterTime: Number | null,
 	app: Object,
 	env: Object,
-	poll: boolean,
 };
 
-export async function importSqlCheckStatus( { app, env, poll }: ImportSqlCheckStatusInput ) {
+export async function importSqlCheckStatus( { afterTime, app, env }: ImportSqlCheckStatusInput ) {
 	const api = await API();
 
 	const getImportStatus = async () => {
@@ -63,31 +65,54 @@ export async function importSqlCheckStatus( { app, env, poll }: ImportSqlCheckSt
 		return importStatus;
 	};
 
-	const importStatus = await new Promise( resolve => {
+	const importStatus = await new Promise( ( resolve, reject ) => {
 		const checkStatus = async () => {
 			const status = await getImportStatus();
+
+			if ( ! afterTime ) {
+				// No polling. This is a single shot check. Just return the status.
+				return resolve( status );
+			}
+
 			const { dbOperationInProgress, progress } = status;
 
-			if ( progress && progress.finished_at ) {
+			if ( ! progress || progress.started_at < afterTime ) {
+				// The job that initiates the import has not been picked up yet
+				console.log( 'Waiting for import to start...' );
+				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+				return;
+			}
+
+			if ( ! dbOperationInProgress && progress.finished_at ) {
+				// All done, let's see if it succeeded
+
+				const failed = progress.steps.filter( step => step.result !== 'success' );
+				if ( failed.length ) {
+					// Some step failed.
+					return reject( failed );
+				}
+
+				// 🎉🥳🎊
 				return resolve( status );
 			}
 
-			if ( poll ) {
-				// TODO add copy on how to exit polling & what to expect, etc.
-				// TODO format this better, obviously :)
-				const output = `
-Polling for Import Status:
-Last updated: ${ new Date().toString() }
-${ JSON.stringify( { dbOperationInProgress, progress } ) }
-`;
-				//singleLogLine( output );
-				console.log( output );
-			} else {
-				return resolve( status );
-			}
+			// The import is still in progress, report the status
 
-			setTimeout( checkStatus, 5000 );
+			// TODO add copy on how to exit polling & what to expect, etc.
+			// TODO format this better, obviously :)
+			const output = `
+            Polling for Import Status:
+            Last updated: ${ new Date().toString() }
+            ${ JSON.stringify( { dbOperationInProgress, progress } ) }
+            `;
+			//singleLogLine( output );
+			console.log( output );
+
+			// Run this check again after a timeout
+			setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 		};
+
+		// Kick off the check
 		checkStatus();
 	} );
 
