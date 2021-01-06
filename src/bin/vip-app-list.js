@@ -15,7 +15,7 @@ import { trackEvent } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
 
 command( { format: true } )
-	.argv( process.argv, async ( arg, options ) => {
+	.argv( process.argv, async () => {
 		const api = await API();
 
 		await trackEvent( 'app_list_command_execute' );

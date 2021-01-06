@@ -3,7 +3,7 @@
 /**
  * External dependencies
  */
-import 'isomorphic-fetch';
+import fetch from 'node-fetch';
 import querystring from 'querystring';
 const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
 
@@ -102,6 +102,7 @@ export default class Tracks implements AnalyticsClient {
 
 		debug( 'send()', body );
 
+		// eslint-disable-next-line no-undef
 		return fetch( Tracks.ENDPOINT, {
 			method,
 			body,

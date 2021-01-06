@@ -10,6 +10,8 @@ import {
 	isFileSanitized,
 } from 'lib/vip-import-validate-files';
 
+global.console = { log: jest.fn() };
+
 describe( 'lib/vip-import-validate-files', () => {
 	describe( 'folderStructureValidation', () => {
 		it( 'should correctly validate a recommended folder structure', async () => {
@@ -20,7 +22,7 @@ describe( 'lib/vip-import-validate-files', () => {
 			};
 
 			// Mock console.log()
-			console.log = jest.fn();
+			jest.spyOn( global.console, 'log' );
 
 			// Call function
 			folderStructureValidation( Object.keys( folderStructureObj ) );
@@ -32,7 +34,7 @@ describe( 'lib/vip-import-validate-files', () => {
 		it( 'should log recommendations for a non-recommended folder structure', async () => {
 			const path = 'folder/structure/not-recommended';
 
-			console.log = jest.fn();
+			jest.spyOn( global.console, 'log' );
 
 			folderStructureValidation( path );
 

@@ -26,15 +26,15 @@ describe( 'token tests (secure)', () => {
 	}
 
 	test( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( _ => {
+		return keychain.setPassword( account, password ).then( () => {
 			const p = keychain.getPassword( account );
 			expect( p ).resolves.toBe( password );
 		} );
 	} );
 
 	test( 'should correctly delete token', () => {
-		return keychain.setPassword( account, password ).then( _ => {
-			return keychain.deletePassword( account ).then( _ => {
+		return keychain.setPassword( account, password ).then( () => {
+			return keychain.deletePassword( account ).then( () => {
 				const p = keychain.getPassword( account );
 				expect( p ).resolves.toBe( null );
 			} );
@@ -46,15 +46,15 @@ describe( 'token tests (insecure)', () => {
 	keychain = new Insecure( account );
 
 	test( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( _ => {
+		return keychain.setPassword( account, password ).then( () => {
 			const p = keychain.getPassword( account );
 			expect( p ).resolves.toBe( password );
 		} );
 	} );
 
 	test( 'should correctly set multiple tokens', () => {
-		return keychain.setPassword( 'first', 'password1' ).then( _ => {
-			return keychain.setPassword( 'second', 'password2' ).then( _ => {
+		return keychain.setPassword( 'first', 'password1' ).then( () => {
+			return keychain.setPassword( 'second', 'password2' ).then( () => {
 				const p = keychain.getPassword( 'first' );
 				expect( p ).resolves.toBe( 'password1' );
 
@@ -65,8 +65,8 @@ describe( 'token tests (insecure)', () => {
 	} );
 
 	test( 'should correctly delete token', () => {
-		return keychain.setPassword( account, password ).then( _ => {
-			return keychain.deletePassword( account ).then( _ => {
+		return keychain.setPassword( account, password ).then( () => {
+			return keychain.deletePassword( account ).then( () => {
 				const p = keychain.getPassword( account );
 				expect( p ).resolves.toBe( null );
 			} );
@@ -74,9 +74,9 @@ describe( 'token tests (insecure)', () => {
 	} );
 
 	test( 'should correctly delete a single token', () => {
-		return keychain.setPassword( 'first', 'password1' ).then( _ => {
-			return keychain.setPassword( 'second', 'password2' ).then( _ => {
-				return keychain.deletePassword( 'first' ).then( _ => {
+		return keychain.setPassword( 'first', 'password1' ).then( () => {
+			return keychain.setPassword( 'second', 'password2' ).then( () => {
+				return keychain.deletePassword( 'first' ).then( () => {
 					const p = keychain.getPassword( 'first' );
 					expect( p ).resolves.toBe( null );
 
@@ -106,15 +106,15 @@ describe( 'token tests (browser)', () => {
 	keychain = new Browser();
 
 	test( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( _ => {
+		return keychain.setPassword( account, password ).then( () => {
 			const p = keychain.getPassword( account );
 			expect( p ).resolves.toBe( password );
 		} );
 	} );
 
 	test( 'should correctly delete token', () => {
-		return keychain.setPassword( account, password ).then( _ => {
-			return keychain.deletePassword( account ).then( _ => {
+		return keychain.setPassword( account, password ).then( () => {
+			return keychain.deletePassword( account ).then( () => {
 				const p = keychain.getPassword( account );
 				expect( p ).resolves.toBe( null );
 			} );

@@ -6,10 +6,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { promisify } from 'util';
-
-// Promisify to use async/await
-const readDir = promisify( fs.readdir );
 
 // Accepted media file extensions
 export const acceptedExtensions = [
@@ -83,17 +79,13 @@ export const acceptedExtensions = [
  */
 
 // Accepted characters in filenames
-const acceptedCharacters = [ 'Non-English characters', 'spaces', '(', ')', '[', ']', '~' ];
+// eslint-disable-next-line max-len
+const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', '\'', '×', '@', '`', '?', '*', '!', '\"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
 const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
 
 // Prohibited characters in filenames
-const prohibitedCharacters = [
-	'+', '&', '#', '%', '=', '\'', '\"', '\\', '<', '>', ':', ';', ',', '/', '?', '$', '*', '|', '`', '!', '{', '}',
-];
+const prohibitedCharacters = [ '+', '%20' ];
 const prohibitedCharactersSet = new Set( prohibitedCharacters );
-
-// Regex for prohibited characters
-const regexSpecialChars = /[\/\'\"\\=<>:;,&?$#*|`!+{}%]/g;
 
 /**
 	* Recommendations
@@ -133,9 +125,9 @@ const recommendAcceptableFileNames = () => {
 
 	console.log(
 		'The following characters are allowed in file names:\n' +
-		chalk.green( `${ allowedCharacters }\n\n` ) +
+		chalk.green( `All special characters, including: ${ allowedCharacters }\n\n` ) +
 		'The following characters are prohibited in file names:\n' +
-		chalk.red( `${ notAllowedCharacters }\n` )
+		chalk.red( `Encoded or alternate whitespace, such as ${ notAllowedCharacters }, are converted to proper spaces\n` )
 	);
 };
 
@@ -196,7 +188,8 @@ export const findNestedDirectories = directory => {
  * Identify the index position of each directory to validate the folder structure
  *
  *	@param {string} folderPath Path of the entire folder structure
-	* @param {Boolean} sites Check if site is a multisite or single site
+ *  @param {Boolean} sites Check if site is a multisite or single site
+ *  @return {Object} indexes
  */
 const getIndexPositionOfFolders = ( folderPath, sites ) => {
 	let sitesIndex, siteIDIndex, yearIndex, monthIndex;
@@ -469,7 +462,7 @@ export const folderStructureValidation = folderStructureKeys => {
  * This logic is based on the WordPress core function `sanitize_file_name()`
  * https://developer.wordpress.org/reference/functions/sanitize_file_name/
  *
- * @param {string} filename - The current file being validated
+ * @param {string} file - The current file being validated
  * @returns {Boolean} - Checks if the filename has been sanitized
  */
 export const isFileSanitized = file => {
@@ -477,19 +470,10 @@ export const isFileSanitized = file => {
 
 	let sanitizedFile = filename;
 
-	// Prohibited characters:
+	// Convert encoded or alternate whitespace into a proper space
 	// Encoded spaces (%20), no-break spaces - keeps words together (\u00A0), and plus signs
 	const regexSpaces = /\u00A0|(%20)|\+/g;
 	sanitizedFile = sanitizedFile.replace( regexSpaces, ' ' );
-
-	// Prohibited characters:
-	// Special characters: + & # % = ' " \ < > : ; , / ? $ * | ` ! { }
-	sanitizedFile = sanitizedFile.replace( regexSpecialChars, '' );
-
-	// No dashes, underscores, or periods allowed as the first
-	// or last letter of the file (including the extension)
-	const regexFirstAndLast = /(?:^[\.\-_])|(?:[\.\-_]$)/g;
-	sanitizedFile = sanitizedFile.replace( regexFirstAndLast, '' );
 
 	// Check if the filename has been sanitized
 	const checkFile = sanitizedFile !== filename;
