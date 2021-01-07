@@ -45,11 +45,12 @@ const debug = debugLib( 'vip:vip-import-sql' );
 command( {
 	appContext: true,
 	appQuery,
-	requiredArgs: 1, // TODO print proper usage example
 	envContext: true,
 	module: 'import-sql',
+	requiredArgs: 1,
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
+	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg, opts ) => {
