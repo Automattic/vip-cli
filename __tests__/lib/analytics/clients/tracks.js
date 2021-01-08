@@ -24,6 +24,22 @@ describe( 'lib/analytics/tracks', () => {
 	afterEach( nock.cleanAll );
 
 	describe( '.send()', () => {
+		/**
+		 * Allow overriding of process variables per test
+		 * Adapted from https://stackoverflow.com/a/48042799
+		 */
+		const OLD_ENV = process.env;
+
+		beforeEach( () => {
+			jest.resetModules();
+			process.env = { ...OLD_ENV };
+			delete process.env.DO_NOT_TRACK;
+		} );
+
+		afterEach( () => {
+			process.env = OLD_ENV;
+		} );
+
 		it( 'should correctly construct remote request', () => {
 			const tracksClient = new Tracks( 123, 'vip', '', {
 				userAgent: 'vip-cli',
@@ -46,6 +62,20 @@ describe( 'lib/analytics/tracks', () => {
 				} );
 
 			return tracksClient.send( params );
+		} );
+
+		it( 'should not send request when DO_NOT_TRACK is truthy', async () => {
+			process.env.DO_NOT_TRACK = 1;
+
+			const tracksClient = new Tracks( 123, 'vip', '', {
+				userAgent: 'vip-cli',
+			} );
+
+			let fetchCalled = false;
+			buildNock().reply( () => fetchCalled = true );
+			const result = await tracksClient.send( { extra: 'param' } );
+			expect( fetchCalled ).toEqual( false );
+			expect( result ).toEqual( 'tracks disabled per DO_NOT_TRACK variable' );
 		} );
 	} );
 

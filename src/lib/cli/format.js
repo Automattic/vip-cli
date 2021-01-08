@@ -42,7 +42,7 @@ export function formatEnvironment( environment: string ): string {
 	return chalk.blueBright( environment.toLowerCase() );
 }
 
-function ids( data: Array<any>, opts: ?Options ): string {
+function ids( data: Array<any> ): string {
 	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );
 	if ( 0 > fields.indexOf( 'id' ) ) {
 		return 'No ID field found';
@@ -54,14 +54,14 @@ function ids( data: Array<any>, opts: ?Options ): string {
 	return id.join( ' ' );
 }
 
-function csv( data: Array<any>, opts: ?Options ): string {
+function csv( data: Array<any> ): string {
 	const json2csv = require( 'json2csv' );
 	const fields = Object.keys( data[ 0 ] );
 
 	return json2csv( { data: data, fields: formatFields( fields ) } );
 }
 
-function table( data: Array<any>, opts: ?Options ): string {
+function table( data: Array<any> ): string {
 	const Table = require( 'cli-table' );
 	const fields = Object.keys( data[ 0 ] );
 	const t = new Table( {

@@ -7,14 +7,24 @@
 import args from 'args';
 import opn from 'opn';
 import { prompt } from 'enquirer';
+import chalk from 'chalk';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
+import config from 'root/config/config.json';
 import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
+
+if ( config && config.environment !== 'production' ) {
+	console.log( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
+	console.log( 'You should `npm link` your locally checked out copy of this repo as part of your development setup.' );
+}
+
+const debug = debugLib( '@automattic/vip:bin:vip' );
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
@@ -25,6 +35,8 @@ const rootCmd = async function() {
 	const isHelpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
 	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
 
+	debug( 'Argv:', process.argv );
+
 	if ( isLogoutCommand || isHelpCommand || ( token && token.valid() ) ) {
 		command()
 			.command( 'logout', 'Logout from your current session', async () => {
@@ -33,6 +45,8 @@ const rootCmd = async function() {
 				console.log( 'You are successfully logged out.' );
 			} )
 			.command( 'app', 'List and modify your VIP applications' )
+			.command( 'import', 'Check the validity of an import source' )
+			.command( 'search', 'Perform Search and Replace tasks on files' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' )
 			.argv( process.argv );
@@ -118,15 +132,20 @@ const rootCmd = async function() {
 			throw e;
 		}
 
-		//de-anonymize user for tracking
+		// De-anonymize user for tracking
 		await aliasUser( token.id );
 
 		await trackEvent( 'login_command_token_submit_success' );
 
 		// Exec the command we originally  wanted
 		const argv = process.argv.slice( 2 );
+		debug( 'Argv', argv );
 		if ( argv.length ) {
-			return args.runCommand( { usage: process.argv.slice( 2 ) } );
+			if ( ! args.isDefined( argv, 'commands' ) ) {
+				return args.showHelp();
+			}
+
+			return args.runCommand( { usage: argv } );
 		}
 
 		const { spawn } = require( 'child_process' );

@@ -12,11 +12,13 @@ import updateNotifier from 'update-notifier';
 /**
  * Internal dependencies
  */
+/* eslint-disable no-duplicate-imports */
 import type { Tuple } from './prompt';
+import { confirm } from './prompt';
+/* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
 import app from 'lib/api/app';
 import { formatData } from './format';
-import { confirm } from './prompt';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
@@ -340,28 +342,40 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		let message = 'Are you sure?';
-		if ( 'string' === typeof( _opts.requireConfirm ) ) {
+		if ( 'string' === typeof ( _opts.requireConfirm ) ) {
 			message = _opts.requireConfirm;
 		}
 
-		const { backup, canSync, errors } = options.env.syncPreview;
+		switch ( _opts.module ) {
+			case 'import-sql':
+				if ( options.env && options.env.primaryDomain ) {
+					const primaryDomainName = options.env.primaryDomain.name;
+					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
+				}
+				this.sub && info.push( { key: 'SQL File', value: this.sub } );
+				break;
+			case 'sync':
+				const { backup, canSync, errors } = options.env.syncPreview;
 
-		if ( ! canSync ) {
-			// User can not sync due to some error(s)
-			// Shows the first error in the array
-			console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
-			return {};
+				if ( ! canSync ) {
+					// User can not sync due to some error(s)
+					// Shows the first error in the array
+					console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
+					return {};
+				}
+
+				// remove __typename from replacements.
+				// can not be deleted afterwards if deconstructed
+				const replacements = options.env.syncPreview.replacements.map( rep => {
+					const { from, to } = rep;
+					return { from, to };
+				} );
+
+				info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
+				info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+				break;
+			default:
 		}
-
-		// remove __typename from replacements.
-		// can not be deleted afterwards if deconstructed
-		const replacements = options.env.syncPreview.replacements.map( rep => {
-			const { from, to } = rep;
-			return { from, to };
-		} );
-
-		info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
-		info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
 
 		const yes = await confirm( info, message );
 		if ( ! yes ) {
@@ -410,7 +424,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 function validateOpts( opts: any ): Error {
 	if ( opts.app ) {
-		if ( typeof( opts.app ) !== 'string' && typeof( opts.app ) !== 'number' ) {
+		if ( typeof ( opts.app ) !== 'string' && typeof ( opts.app ) !== 'number' ) {
 			return new Error( 'Invalid --app' );
 		}
 
@@ -420,7 +434,7 @@ function validateOpts( opts: any ): Error {
 	}
 
 	if ( opts.env ) {
-		if ( typeof( opts.env ) !== 'string' && typeof( opts.env ) !== 'number' ) {
+		if ( typeof ( opts.env ) !== 'string' && typeof ( opts.env ) !== 'number' ) {
 			return new Error( 'Invalid --env' );
 		}
 

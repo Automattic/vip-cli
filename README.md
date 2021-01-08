@@ -18,7 +18,36 @@ vip
 
 If you need more information, check out our [VIP CLI documentation](https://vip.wordpress.com/documentation/vip-go/vip-cli/).
 
+## Analytics
+
+By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
+
 ## Changelog
+
+### 1.12.1
+- Updated list of accepted special characters for media files for imports
+
+### 1.12.0
+- Added multisite support for media files validation
+- Added Tracks for SQL and media file validation events
+
+### 1.11.2
+- Added support for multiple nested folders for the media file validation command
+
+### 1.11.1
+- Added fix to process the import validation subcommands
+
+### 1.11.0
+- Added `vip import validate sql` and `vip import validate files` commands to run static validation checks for SQL and media files for imports
+
+### 1.10.0
+- Added support for specifying a SOCKS proxy through the environment variable VIP_PROXY
+
+### 1.9.0
+- Added support for [opting out of usage tracking](https://github.com/Automattic/vip/tree/e54d9ee0ce2dd4725ca8718b3aba06db24306ad7#analytics) via `DO_NOT_TRACK` environment variable #547
+- Fix interactive commands not working correctly #478
+- Show usage information when an unsupported command is entered #527
+- Dependency & dev dependency upgrades
 
 ### 1.8.0
 - Fixes around cancelling commands via Ctrl-C

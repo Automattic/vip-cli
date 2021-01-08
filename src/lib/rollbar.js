@@ -9,6 +9,7 @@ export const rollbar = new Rollbar( {
 	accessToken: '99c8f982d64f47049fde6f6f9d567070',
 	captureUncaught: true,
 	captureUnhandledRejections: true,
+	/* eslint-disable camelcase */
 	payload: {
 		platform: 'client',
 		cli_version: env.app.version,
@@ -16,5 +17,6 @@ export const rollbar = new Rollbar( {
 		node_version: env.node.version,
 		environment: config.environment,
 	},
+	/* eslint-enable camelcase */
 } );
 
