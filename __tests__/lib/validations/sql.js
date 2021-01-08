@@ -43,27 +43,21 @@ describe( 'lib/validations/sql', () => {
 			debug( 'output', output );
 		} );
 		it( 'an error, and exits with code 1', () => {
-			debug( 'b1' );
 			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
 		} );
 		it( 'USE statements', () => {
-			debug( 'b2' );
 			expect( output ).toContain( 'USE statement on line(s) 3' );
 		} );
 		it( 'CREATE DATABASE statements', () => {
-			debug( 'b3' );
 			expect( output ).toContain( 'CREATE DATABASE statement on line(s) 1' );
 		} );
 		it( 'TRIGGER statements', () => {
-			debug( 'b4' );
 			expect( output ).toContain( 'TRIGGER statement on line(s) 16' );
 		} );
 		it( 'DROP DATABASE statements', () => {
-			debug( 'b5' );
 			expect( output ).toContain( 'DROP DATABASE statement on line(s) 27' );
 		} );
 		it( 'ALTER USER statements', () => {
-			debug( 'b6' );
 			expect( output ).toContain( 'ALTER USER statement on line(s) 25' );
 		} );
 		it( 'no DROP TABLE IF EXISTS statements', () => {
