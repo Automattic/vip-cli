@@ -31,7 +31,7 @@ import { trackEvent } from 'lib/tracker';
 const stat = promisify( fs.stat );
 
 command( { requiredArgs: 1, format: true } )
-	.example( 'vip import validate files <file>', 'Run the import validation against the file' )
+	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
 	.argv( process.argv, async arg => {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
