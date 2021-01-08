@@ -14,7 +14,7 @@ import { validate } from 'lib/validations/sql';
 command( {
 	requiredArgs: 1,
 } )
-	.example( 'vip import validate sql <file>', 'Run the import validation against file' )
+	.example( 'vip import validate-sql <file>', 'Run the import validation against file' )
 	.argv( process.argv, async arg => {
 		const filename = arg[ 0 ];
 		if ( ! arg && ! filename ) {
