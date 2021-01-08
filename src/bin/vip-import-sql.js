@@ -77,8 +77,10 @@ command( {
 	envContext: true,
 	requiredArgs: 1,
 	module: 'import-sql',
+	requiredArgs: 1,
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
+	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.argv( process.argv, async ( arg: string[], opts, { trackEventWithContext } ) => {
