@@ -44,7 +44,6 @@ export type GetReadAndWriteStreamsOutput = {
 function makeTempDir() {
 	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
 	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
-	console.log( chalk.green( `Created a directory to hold temporary files: ${ tmpDir }` ) );
 	return tmpDir;
 }
 
@@ -75,14 +74,14 @@ export function getReadAndWriteStreams( {
 	}
 
 	debug( `Reading input from file: ${ fileName }` );
-	console.log( chalk.green( `Reading input from file: ${ fileName }` ) );
+	console.log( `Reading file ${ chalk.magentaBright ( fileName ) }` );
 
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
-			console.log( chalk.green( `Outputting to file: ${ outputFileName }` ) );
+			console.log( `Replacing to ${ chalk.magenta ( outputFileName ) }` );
 			break;
 		case 'object':
 			writeStream = output;
@@ -91,7 +90,6 @@ export function getReadAndWriteStreams( {
 				debug( 'Outputting to the standard output stream' );
 			} else {
 				debug( 'Outputting to the provided output stream' );
-				console.log( chalk.green( `Outputting to file: ${ outputFileName }` ) );
 			}
 			break;
 		default:
@@ -102,7 +100,7 @@ export function getReadAndWriteStreams( {
 			outputFileName = tmpOutFile;
 
 			debug( `Outputting to file: ${ outputFileName }` );
-			console.log( chalk.green( `Outputting to file: ${ outputFileName }` ) );
+			console.log( `Replacing to ${ chalk.magenta( outputFileName ) }` );
 
 			break;
 	}
@@ -133,9 +131,7 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	if ( ! usingStdOut ) {
-		console.log( chalk.green( 'Starting Search and Replace...' ) );
-	}
+	console.log( `${ chalk.cyan( 'Starting Search and Replace...' ) }` );
 
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
@@ -157,10 +153,6 @@ export const searchAndReplace = async (
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
-	if ( ! usingStdOut ) {
-		console.log( chalk.green( `Replacing ${ replacements[ 0 ] } -> ${ replacements[ 1 ] }` ) );
-	}
-
 	if ( inPlace ) {
 		await confirm(
 			[],
@@ -180,7 +172,7 @@ export const searchAndReplace = async (
 			.pipe( writeStream )
 			.on( 'finish', () => {
 				if ( ! usingStdOut ) {
-					console.log( chalk.green( 'Search and Replace Complete!' ) );
+					console.log( `${ chalk.cyan ( 'Search and Replace Complete!' ) }` );
 				}
 				resolve( {
 					inputFileName: fileName,
