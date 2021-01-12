@@ -168,6 +168,9 @@ export const searchAndReplace = async (
 	// Bail if user does not wish to proceed
 	if ( ! yes ) {
 		console.log( `${ chalk.red( 'Cancelling' ) }` );
+
+		await trackEvent( 'search_replace_cancelled', { is_import: isImport, in_place: inPlace } );
+	
 		process.exit();
 	}
 
