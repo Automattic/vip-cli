@@ -188,7 +188,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 }
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
-	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
+	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	let fd;
 
@@ -242,13 +242,13 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 
 	if ( problemsFound > 0 ) {
 		console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
-		await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
+		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
 
 	console.log( '✅ Your database file looks good.' );
 
-	await trackEvent( 'import_validate_sql_command_success', { isImport } );
+	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
 	readInterface.close();
 
