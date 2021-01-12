@@ -12,6 +12,8 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
  */
 import type { AnalyticsClient } from './client';
 
+const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
+
 /**
  * Simple class for tracking using Automattic Tracks.
  *
@@ -48,6 +50,16 @@ export default class Tracks implements AnalyticsClient {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
+
+		if ( ! validEventOrPropNamePattern.test( name ) ) {
+			debug( `Error: Invalid event name detected: ${ name } -- this event will be rejected during ETL` );
+		}
+
+		Object.keys( eventProps ).forEach( propName => {
+			if ( ! validEventOrPropNamePattern.test( propName ) ) {
+				debug( `Error: Invalid prop name detected: ${ propName } -- this event will be rejected during ETL` );
+			}
+		} );
 
 		const event = Object.assign( {
 			_en: name,
