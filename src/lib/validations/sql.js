@@ -232,10 +232,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		check.outputFormatter( check, type );
 		console.log( '' );
 
-		// Change `type` to snake_case for Tracks events
-		const typeToSnakeCase = type.replace( /([A-Z])/, '_$1' ).toLowerCase();
-
-		errorSummary[ typeToSnakeCase ] = check.results.length;
+		errorSummary[ type ] = check.results.length;
 	}
 	// eslint-disable-next-line camelcase
 	errorSummary.problems_found = problemsFound;
