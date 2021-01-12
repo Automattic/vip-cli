@@ -69,7 +69,7 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
-const debug = debugLib( 'vip:vip-import-sql' );
+const debug = debugLib( '@automattic/vip:vip-import-sql' );
 
 command( {
 	appContext: true,

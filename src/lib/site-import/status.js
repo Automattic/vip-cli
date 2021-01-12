@@ -7,13 +7,15 @@
  * External dependencies
  */
 import gql from 'graphql-tag';
-//import debugLib from 'debug';
+import debugLib from 'debug';
 //import { stdout as singleLogLine } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
+
+const debug = debugLib( '@automattic/vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
 
@@ -74,7 +76,21 @@ export async function importSqlCheckStatus( { afterTime, app, env }: ImportSqlCh
 				return resolve( status );
 			}
 
+			debug( { status } );
+
 			const { dbOperationInProgress, progress } = status;
+
+			if ( progress?.started_at && ! progress.finished_at ) {
+				const { steps = [] } = progress;
+				const failedStep = steps.findIndex( ( { result } ) => result === 'failed' );
+				if ( failedStep !== -1 ) {
+					return reject( `Failed at step # ${ failedStep }: (${ steps[ failedStep ]?.name })` );
+				}
+
+				console.log( 'Running...' );
+				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+				return;
+			}
 
 			if ( ! progress || progress.started_at < afterTime ) {
 				// The job that initiates the import has not been picked up yet
@@ -83,13 +99,20 @@ export async function importSqlCheckStatus( { afterTime, app, env }: ImportSqlCh
 				return;
 			}
 
-			if ( ! dbOperationInProgress && progress.finished_at ) {
+			if ( progress.finished_at ) {
 				// All done, let's see if it succeeded
 
-				const failed = progress.steps.filter( step => step.result !== 'success' );
-				if ( failed.length ) {
-					// Some step failed.
-					return reject( failed );
+				const { steps = [] } = progress;
+				const failedStep = steps.findIndex( ( { result } ) => result === 'failed' );
+				if ( failedStep !== -1 ) {
+					return reject( `Failed at step # ${ failedStep }: (${ steps[ failedStep ]?.name })` );
+				}
+
+				if ( dbOperationInProgress ) {
+					// TODO -- check maint mode, etc. here as well
+					console.log( 'SQL file imported. Site is "reloading."' );
+					setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+					return;
 				}
 
 				// 🎉🥳🎊

@@ -9,7 +9,7 @@
  * External dependencies
  */
 import chalk from 'chalk';
-//import debugLib from 'debug';
+// import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -62,8 +62,17 @@ command( {
 
 		await trackEventWithContext( 'import_sql_check_status_command_execute' );
 
+		console.log( `Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }` );
+
 		// If `poll` is truthy, check for an import that completes after "now"
-		const afterTime = poll ? Math.floor( Date.now() / 1000 ) : null;
+		const now = new Date();
+
+		// The server uses UNIX timestamps (second precision vs. ms)
+		const afterTime = poll ? Math.floor( now.getTime() / 1000 ) : null;
+
+		if ( poll ) {
+			console.log( `Polling until an import is started after: ${ afterTime } ( ${ now } )` );
+		}
 
 		await importSqlCheckStatus( { afterTime, app, env } );
 	} );
