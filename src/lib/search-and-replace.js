@@ -44,6 +44,7 @@ export type GetReadAndWriteStreamsOutput = {
 function makeTempDir() {
 	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
 	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
+	console.log( chalk.green( `Created a directory to hold temporary files: ${ tmpDir }` ) );
 	return tmpDir;
 }
 
@@ -61,7 +62,10 @@ export function getReadAndWriteStreams( {
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
+		console.log( chalk.green( `Copied input file to ${ midputFileName }` ) );
+
 		debug( `Set output to the original file path ${ fileName }` );
+		console.log( chalk.green( `Set output to the original file path ${ fileName }` ) );
 		return {
 			outputFileName,
 			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
@@ -71,12 +75,14 @@ export function getReadAndWriteStreams( {
 	}
 
 	debug( `Reading input from file: ${ fileName }` );
+	console.log( chalk.green( `Reading input from file: ${ fileName }` ) );
 
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( chalk.green( `Outputting to file: ${ outputFileName }` ) );
 			break;
 		case 'object':
 			writeStream = output;
@@ -85,6 +91,7 @@ export function getReadAndWriteStreams( {
 				debug( 'Outputting to the standard output stream' );
 			} else {
 				debug( 'Outputting to the provided output stream' );
+				console.log( chalk.green( `Outputting to file: ${ outputFileName }` ) );
 			}
 			break;
 		default:
@@ -93,7 +100,10 @@ export function getReadAndWriteStreams( {
 				encoding: 'utf8',
 			} );
 			outputFileName = tmpOutFile;
+
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( chalk.green( `Outputting to file: ${ outputFileName }` ) );
+
 			break;
 	}
 
@@ -123,6 +133,10 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
+	if ( ! usingStdOut ) {
+		console.log( chalk.green( 'Starting Search and Replace...' ) );
+	}
+
 	await trackEvent( 'searchreplace_started', { isImport, inPlace } );
 
 	const startTime = process.hrtime();
@@ -142,6 +156,10 @@ export const searchAndReplace = async (
 	const replacementsArr = pairs.map( str => str.split( ',' ) );
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
+
+	if ( ! usingStdOut ) {
+		console.log( chalk.green( `Replacing ${ replacements[ 0 ] } -> ${ replacements[ 1 ] }` ) );
+	}
 
 	if ( inPlace ) {
 		await confirm(
