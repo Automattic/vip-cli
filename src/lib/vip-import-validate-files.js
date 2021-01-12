@@ -13,6 +13,7 @@ export const acceptedExtensions = [
 	'gif',
 	'png',
 	'bmp',
+	'svg',
 	'tiff', 'tif',
 	'ico',
 	'asf',

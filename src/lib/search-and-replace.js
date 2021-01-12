@@ -137,7 +137,7 @@ export const searchAndReplace = async (
 		console.log( chalk.green( 'Starting Search and Replace...' ) );
 	}
 
-	await trackEvent( 'searchreplace_started', { isImport, inPlace } );
+	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
 	const fileSize = getFileSize( fileName );
@@ -201,7 +201,7 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	await trackEvent( 'searchreplace_completed', { timeToRun: end, fileSize } );
+	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
 	return result;
 };

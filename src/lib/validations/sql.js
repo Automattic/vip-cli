@@ -188,7 +188,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 }
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
-	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
+	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	let fd;
 
@@ -232,23 +232,20 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		check.outputFormatter( check, type );
 		console.log( '' );
 
-		// Change `type` to snake_case for Tracks events
-		const typeToSnakeCase = type.replace( /([A-Z])/, '_$1' ).toLowerCase();
-
-		errorSummary[ typeToSnakeCase ] = check.results.length;
+		errorSummary[ type ] = check.results.length;
 	}
 	// eslint-disable-next-line camelcase
 	errorSummary.problems_found = problemsFound;
 
 	if ( problemsFound > 0 ) {
 		console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
-		await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
+		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
 
 	console.log( '✅ Your database file looks good.' );
 
-	await trackEvent( 'import_validate_sql_command_success', { isImport } );
+	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
 	readInterface.close();
 
