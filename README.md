@@ -24,6 +24,12 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.0
+- Drops support for Node 8
+- Added Security Policy
+- Added SQL file import feature for new sites
+- Added SQL search and replace feature
+
 ### 1.12.1
 - Updated list of accepted special characters for media files for imports
 

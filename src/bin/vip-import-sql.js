@@ -58,7 +58,7 @@ command( {
 		const [ fileName ] = arg;
 
 		const trackEventWithEnv = async ( eventName, eventProps = {} ) =>
-			trackEvent( eventName, { ...eventProps, appId: env.appId, envId: env.id } );
+			trackEvent( eventName, { ...eventProps, app_id: env.appId, env_id: env.id } );
 
 		await trackEventWithEnv( 'import_sql_command_execute' );
 
@@ -74,7 +74,7 @@ command( {
 		}
 
 		if ( ! isSupportedApp( app ) ) {
-			await trackEventWithEnv( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+			await trackEventWithEnv( 'import_sql_command_error', { error_type: 'unsupported-app' } );
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
@@ -127,8 +127,8 @@ command( {
 				} );
 			} catch ( gqlErr ) {
 				await trackEventWithEnv( 'import_sql_command_error', {
-					errorType: 'StartImport-failed',
-					gqlErr,
+					error_type: 'StartImport-failed',
+					gql_err: gqlErr,
 				} );
 				err( `StartImport call failed: ${ gqlErr }` );
 			}
