@@ -189,8 +189,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
-	console.log( `${ 'Starting SQL Validation...' }` );
-	console.log();
+	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
 
 	let fd;
 
@@ -240,7 +239,14 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	errorSummary.problems_found = problemsFound;
 
 	if ( problemsFound > 0 ) {
-		console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
+		console.error( `** Total of ${ chalk.red( problemsFound ) } errors found ** ` );
+
+		if ( isImport ) {
+			//console.log();
+			console.log( `${ chalk.red( 'Please adjust these error(s) before continuing on with the import.' ) }` );
+			console.log();
+		}
+	
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
