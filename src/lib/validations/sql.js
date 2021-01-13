@@ -15,6 +15,7 @@ import { stdout as log } from 'single-line-log';
  * Internal dependencies
  */
 import { trackEvent } from 'lib/tracker';
+import { confirm } from 'lib/cli/prompt';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -250,14 +251,28 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		return process.exit( 1 );
 	}
 
-	console.log( '✅ Your database file looks good.' );
+	console.log( '** Your database file looks good 🎉 **\n' );
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
 	readInterface.close();
 
 	if ( isImport ) {
-		console.log( '\n🎉 Continuing to the import process.' );
+		// Add a confirmation step before running the import
+		const yes = await confirm(
+			[], 'Are you sure you want to continue with the import?'
+		);
+
+		// Bail if user does not wish to proceed
+		if ( ! yes ) {
+			console.log( `${ chalk.red( 'Exiting' ) }` );
+
+			await trackEvent( 'import_continue_cancelled', { is_import: isImport, import_file: filename } );
+
+			process.exit();
+		}
+
+		console.log( '\nContinuing to the import process.' );
 		return;
 	}
 
