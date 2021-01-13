@@ -175,10 +175,18 @@ export const searchAndReplace = async (
 	}
 
 	if ( inPlace ) {
-		await confirm(
+		const approved = await confirm(
 			[],
 			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
 		);
+		
+		if ( ! approved ) {
+			console.log( `${ chalk.red( 'Cancelling' ) }` );
+			
+			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
+			
+			process.exit();
+		}
 	}
 
 	const { usingStdOut, outputFileName, readStream, writeStream } = getReadAndWriteStreams( {
