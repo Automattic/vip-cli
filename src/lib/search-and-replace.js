@@ -74,14 +74,14 @@ export function getReadAndWriteStreams( {
 	}
 
 	debug( `Reading input from file: ${ fileName }` );
-	console.log( `Reading file ${ chalk.magentaBright ( fileName ) }` );
+	console.log( `Searching file ${ chalk.cyan( fileName ) }` );
 
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
-			console.log( `Replacing to ${ chalk.magenta ( outputFileName ) }` );
+			console.log( 'Replacing...' );
 			break;
 		case 'object':
 			writeStream = output;
@@ -100,7 +100,7 @@ export function getReadAndWriteStreams( {
 			outputFileName = tmpOutFile;
 
 			debug( `Outputting to file: ${ outputFileName }` );
-			console.log( `Replacing to ${ chalk.magenta( outputFileName ) }` );
+			console.log( 'Replacing...' );
 
 			break;
 	}
@@ -131,7 +131,7 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	console.log( `${ chalk.cyan( 'Starting Search and Replace...' ) }` );
+	console.log( `${ 'Starting Search and Replace...' }` );
 
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
@@ -193,7 +193,9 @@ export const searchAndReplace = async (
 			.pipe( writeStream )
 			.on( 'finish', () => {
 				if ( ! usingStdOut ) {
-					console.log( `${ chalk.cyan ( 'Search and Replace Complete!' ) }` );
+					console.log();
+					console.log( `${ 'Search and Replace Complete!' }` );
+					console.log();
 				}
 				resolve( {
 					inputFileName: fileName,
