@@ -134,7 +134,7 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	console.log( `${ 'Starting Search and Replace...' }` );
+	console.log( 'Starting Search and Replace...' );
 
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
