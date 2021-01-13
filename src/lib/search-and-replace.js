@@ -195,6 +195,7 @@ export const searchAndReplace = async (
 				if ( ! usingStdOut ) {
 					console.log();
 					console.log( `${ 'Search and Replace Complete!' }` );
+					console.log(`Your new SQL file has been saved to ${ chalk.cyan( outputFileName ) }` );
 					console.log();
 				}
 				resolve( {
