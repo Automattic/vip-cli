@@ -156,11 +156,11 @@ export const searchAndReplace = async (
 	// Add a confirmation step for search-replace
 	const yes = await confirm( [
 		{
-			key: 'from',
+			key: 'From',
 			value: `${ chalk.cyan( replacements[ 0 ] ) }`,
 		},
 		{
-			key: 'to',
+			key: 'To',
 			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
 		},
 	], 'Proceed with the following Search and Replace values?' );
