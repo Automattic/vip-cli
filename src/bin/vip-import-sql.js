@@ -139,6 +139,7 @@ command( {
 			await trackEventWithEnv( 'import_sql_command_queued' );
 
 			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
+			console.log( `You can check the status of your import via the \`import_progress\` site meta in the VIP Go Admin Console!` );
 		} catch ( e ) {
 			err( e );
 		}
