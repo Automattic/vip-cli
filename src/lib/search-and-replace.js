@@ -162,7 +162,7 @@ export const searchAndReplace = async (
 		{
 			key: 'to',
 			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
-		}
+		},
 	], 'Proceed with the following Search and Replace values?' );
 
 	// Bail if user does not wish to proceed
@@ -170,7 +170,7 @@ export const searchAndReplace = async (
 		console.log( `${ chalk.red( 'Cancelling' ) }` );
 
 		await trackEvent( 'search_replace_cancelled', { is_import: isImport, in_place: inPlace } );
-	
+
 		process.exit();
 	}
 

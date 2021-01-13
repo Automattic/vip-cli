@@ -80,6 +80,7 @@ command( {
 
 		let fileNameToUpload = fileName;
 
+		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
@@ -90,8 +91,10 @@ command( {
 			fileNameToUpload = outputFileName;
 		}
 
+		// Run SQL validation
 		await validate( fileNameToUpload, true );
 
+		// Call the Public API
 		const api = await API();
 
 		try {
