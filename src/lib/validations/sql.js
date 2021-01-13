@@ -242,8 +242,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		console.error( `** Total of ${ chalk.red( problemsFound ) } errors found ** ` );
 
 		if ( isImport ) {
-			//console.log();
-			console.log( `${ chalk.red( 'Please adjust these error(s) before continuing on with the import.' ) }` );
+			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
 		}
 	
