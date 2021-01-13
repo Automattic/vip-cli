@@ -272,7 +272,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 			process.exit();
 		}
 
-		console.log( '\nContinuing to the import process.' );
+		console.log( `\n${ chalk.underline( 'Starting the import process...' ) }` );
 		return;
 	}
 
