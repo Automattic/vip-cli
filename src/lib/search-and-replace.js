@@ -65,6 +65,9 @@ export function getReadAndWriteStreams( {
 
 		debug( `Set output to the original file path ${ fileName }` );
 		console.log( 'Replacing...' );
+
+		outputFileName = fileName;
+		
 		return {
 			outputFileName,
 			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
