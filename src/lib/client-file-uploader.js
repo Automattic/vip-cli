@@ -160,7 +160,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
-		console.log( `Compressed file ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
+		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
 

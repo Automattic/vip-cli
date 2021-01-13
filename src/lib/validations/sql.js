@@ -246,7 +246,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
 		}
-	
+
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}

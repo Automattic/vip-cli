@@ -61,10 +61,10 @@ export function getReadAndWriteStreams( {
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
-		console.log( chalk.green( `Copied input file to ${ midputFileName }` ) );
+		console.log( `Searching ${ chalk.cyan( fileName ) }` );
 
 		debug( `Set output to the original file path ${ fileName }` );
-		console.log( chalk.green( `Set output to the original file path ${ fileName }` ) );
+		console.log( 'Replacing...' );
 		return {
 			outputFileName,
 			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
