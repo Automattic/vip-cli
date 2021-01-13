@@ -67,7 +67,7 @@ export function getReadAndWriteStreams( {
 		console.log( 'Replacing...' );
 
 		outputFileName = fileName;
-		
+
 		return {
 			outputFileName,
 			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
@@ -182,12 +182,13 @@ export const searchAndReplace = async (
 			[],
 			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
 		);
-		
+
+		// Bail if user does not wish to proceed
 		if ( ! approved ) {
 			console.log( `${ chalk.red( 'Cancelling' ) }` );
-			
+
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
-			
+
 			process.exit();
 		}
 	}
