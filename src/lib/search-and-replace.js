@@ -166,7 +166,7 @@ export const searchAndReplace = async (
 			key: 'To',
 			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
 		},
-	], 'Proceed with the following Search and Replace values?' );
+	], 'Proceed with the following values?' );
 
 	// Bail if user does not wish to proceed
 	if ( ! yes ) {
