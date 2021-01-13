@@ -102,8 +102,7 @@
     "socks-proxy-agent": "^5.0.0",
     "update-notifier": "4.1.0",
     "uuid": "3.4.0",
-    "xml2js": "^0.4.23",
-    "keytar": "5.4.0"
+    "xml2js": "^0.4.23"
   },
   "optionalDependencies": {
     "keytar": "5.4.0"
