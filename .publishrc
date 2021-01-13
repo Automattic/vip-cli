@@ -5,11 +5,11 @@
     "untrackedFiles": true,
     "sensitiveData": true,
     "branch": "master",
-    "gitTag": true
+    "gitTag": false
   },
   "confirm": true,
   "publishCommand": "npm publish",
-  "publishTag": "beta",
+  "publishTag": "next",
   "prePublishScript": "npm test",
   "postPublishScript": false
 }
