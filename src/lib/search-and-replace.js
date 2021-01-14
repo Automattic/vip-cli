@@ -61,7 +61,13 @@ export function getReadAndWriteStreams( {
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
+		console.log( `Searching ${ chalk.cyan( fileName ) }` );
+
 		debug( `Set output to the original file path ${ fileName }` );
+		console.log( 'Replacing...' );
+
+		outputFileName = fileName;
+
 		return {
 			outputFileName,
 			readStream: fs.createReadStream( midputFileName ),
@@ -71,12 +77,14 @@ export function getReadAndWriteStreams( {
 	}
 
 	debug( `Reading input from file: ${ fileName }` );
+	console.log( `Searching file ${ chalk.cyan( fileName ) }` );
 
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( 'Replacing...' );
 			break;
 		case 'object':
 			writeStream = output;
@@ -91,7 +99,10 @@ export function getReadAndWriteStreams( {
 			const tmpOutFile = path.join( makeTempDir(), path.basename( fileName ) );
 			writeStream = fs.createWriteStream( tmpOutFile );
 			outputFileName = tmpOutFile;
+
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( 'Replacing...' );
+
 			break;
 	}
 
@@ -121,6 +132,8 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
+	console.log( 'Starting Search and Replace...' );
+
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -141,11 +154,41 @@ export const searchAndReplace = async (
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
+	// Add a confirmation step for search-replace
+	const yes = await confirm( [
+		{
+			key: 'From',
+			value: `${ chalk.cyan( replacements[ 0 ] ) }`,
+		},
+		{
+			key: 'To',
+			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
+		},
+	], 'Proceed with the following values?' );
+
+	// Bail if user does not wish to proceed
+	if ( ! yes ) {
+		console.log( `${ chalk.red( 'Cancelling' ) }` );
+
+		await trackEvent( 'search_replace_cancelled', { is_import: isImport, in_place: inPlace } );
+
+		process.exit();
+	}
+
 	if ( inPlace ) {
-		await confirm(
+		const approved = await confirm(
 			[],
 			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
 		);
+
+		// Bail if user does not wish to proceed
+		if ( ! approved ) {
+			console.log( `${ chalk.red( 'Cancelling' ) }` );
+
+			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
+
+			process.exit();
+		}
 	}
 
 	const { usingStdOut, outputFileName, readStream, writeStream } = getReadAndWriteStreams( {
@@ -160,7 +203,15 @@ export const searchAndReplace = async (
 			.pipe( writeStream )
 			.on( 'finish', () => {
 				if ( ! usingStdOut ) {
-					console.log( chalk.green( 'Search and Replace Complete!' ) );
+					console.log();
+					console.log( `${ 'Search and Replace Complete!' }` );
+
+					// Only log this message if the output SQL file isn't the original input file
+					const message = `Your new SQL file has been saved to ${ chalk.cyan( outputFileName ) }`;
+
+					inPlace ? '' : console.log( message );
+
+					console.log();
 				}
 				resolve( {
 					inputFileName: fileName,

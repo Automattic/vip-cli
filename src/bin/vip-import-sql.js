@@ -80,6 +80,7 @@ command( {
 
 		let fileNameToUpload = fileName;
 
+		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
@@ -90,8 +91,10 @@ command( {
 			fileNameToUpload = outputFileName;
 		}
 
+		// Run SQL validation
 		await validate( fileNameToUpload, true );
 
+		// Call the Public API
 		const api = await API();
 
 		try {
@@ -135,7 +138,10 @@ command( {
 
 			await trackEventWithEnv( 'import_sql_command_queued' );
 
-			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
+			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
+			// TOD0: Remove the log below before the PUBLIC release
+			console.log( '--> Check the status of your import via the \`import_progress\` site meta in the VIP internal console!\n' );
+			console.log( '===================================' );
 		} catch ( e ) {
 			err( e );
 		}

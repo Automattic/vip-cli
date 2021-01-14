@@ -91,8 +91,10 @@ function formatFields( fields: Array<string> ) {
 
 export function keyValue( values: Array<Tuple> ): string {
 	const lines = [];
+	const pairs = values.length > 0;
 
-	lines.push( '===================================' );
+	pairs ? lines.push( '===================================' ) : '';
+
 	for ( const i of values ) {
 		let v = i.value;
 
@@ -104,6 +106,7 @@ export function keyValue( values: Array<Tuple> ): string {
 
 		lines.push( `+ ${ i.key }: ${ v }` );
 	}
+
 	lines.push( '===================================' );
 
 	return lines.join( '\n' );
