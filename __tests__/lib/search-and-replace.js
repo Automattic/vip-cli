@@ -49,7 +49,7 @@ describe( 'lib/search-and-replace', () => {
 	} );
 	it( 'will accept and use a string of replacement pairs (when one replacement provided)', async () => {
 		// Mock the confirmation prompt so it doesn't actually prompt, and manipulate the resolved value
-		await jest.spyOn( prompt, 'confirm' ).mockResolvedValue( true );
+		const promptMock = await jest.spyOn( prompt, 'confirm' ).mockResolvedValue( true );
 
 		const { usingStdOut, outputFileName } = await searchAndReplace(
 			testFilePath,
@@ -62,9 +62,13 @@ describe( 'lib/search-and-replace', () => {
 		expect( outputFileName ).not.toBe( testFilePath );
 
 		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
+
 		expect( fileContents ).toContain( 'ohHey' );
 		expect( fileContents ).not.toContain( 'ohai' );
+
+		// Clean up
 		fs.unlinkSync( outputFileName );
+		promptMock.mockClear(); // Clear the mock
 	} );
 
 	it( 'will accept and use an array of replacement pairs (when multiple replacement provided)', async () => {
