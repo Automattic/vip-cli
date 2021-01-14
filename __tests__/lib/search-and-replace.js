@@ -13,6 +13,9 @@ import fetch, { Response } from 'node-fetch';
  * Internal dependencies
  */
 import { searchAndReplace } from 'lib/search-and-replace';
+// Import prompt as a module since that's how we implement it in lib/search-and-replace.js,
+// as opposed to importing prompt.confirm on its own
+import * as prompt from 'lib/cli/prompt';
 
 global.console = { log: jest.fn(), error: jest.fn() };
 
@@ -45,6 +48,9 @@ describe( 'lib/search-and-replace', () => {
 		);
 	} );
 	it( 'will accept and use a string of replacement pairs (when one replacement provided)', async () => {
+		// Mock the confirmation prompt so it doesn't actually prompt, and manipulate the resolved value
+		await jest.spyOn( prompt, 'confirm' ).mockResolvedValue( true );
+
 		const { usingStdOut, outputFileName } = await searchAndReplace(
 			testFilePath,
 			'ohai,ohHey',
