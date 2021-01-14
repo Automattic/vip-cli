@@ -70,9 +70,9 @@ export function getReadAndWriteStreams( {
 
 		return {
 			outputFileName,
-			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
+			readStream: fs.createReadStream( midputFileName ),
 			usingStdOut,
-			writeStream: fs.createWriteStream( fileName, { encoding: 'utf8' } ),
+			writeStream: fs.createWriteStream( fileName ),
 		};
 	}
 
@@ -81,7 +81,7 @@ export function getReadAndWriteStreams( {
 
 	switch ( typeof output ) {
 		case 'string':
-			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
+			writeStream = fs.createWriteStream( output );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
 			console.log( 'Replacing...' );
@@ -97,9 +97,7 @@ export function getReadAndWriteStreams( {
 			break;
 		default:
 			const tmpOutFile = path.join( makeTempDir(), path.basename( fileName ) );
-			writeStream = fs.createWriteStream( tmpOutFile, {
-				encoding: 'utf8',
-			} );
+			writeStream = fs.createWriteStream( tmpOutFile );
 			outputFileName = tmpOutFile;
 
 			debug( `Outputting to file: ${ outputFileName }` );
@@ -110,7 +108,7 @@ export function getReadAndWriteStreams( {
 
 	return {
 		outputFileName,
-		readStream: fs.createReadStream( fileName, { encoding: 'utf8' } ),
+		readStream: fs.createReadStream( fileName ),
 		usingStdOut,
 		writeStream,
 	};
