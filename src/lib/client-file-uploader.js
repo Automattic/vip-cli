@@ -104,10 +104,6 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 
 		const fileSize = await getFileSize( fileName );
 
-		if ( ! fileSize ) {
-			return reject( `File '${ fileName }' is empty.` );
-		}
-
 		const basename = path.posix.basename( fileName );
 		// TODO Validate File basename...  encodeURIComponent, maybe...?
 

@@ -12,14 +12,6 @@ import { getFileMD5Hash, getFileMeta, getPartBoundaries } from 'lib/client-file-
 
 describe( 'client-file-uploader', () => {
 	describe( 'getFileMeta()', () => {
-		it( 'should fail on empty file', async () => {
-			const fileName = '__fixtures__/client-file-uploader/emptyfile.txt';
-			expect.assertions( 1 );
-			await expect( getFileMeta( fileName ) ).rejects.toEqual(
-				"File '__fixtures__/client-file-uploader/emptyfile.txt' is empty."
-			);
-		} );
-
 		it( 'should get meta from a 67mb sql file', async () => {
 			const fileName = '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql';
 			const meta = await getFileMeta( fileName );

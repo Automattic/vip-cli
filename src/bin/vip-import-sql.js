@@ -16,8 +16,8 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
-import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { currentUserCanImportForApp, isSupportedApp, SQL_IMPORT_FILE_SIZE_LIMIT } from 'lib/site-import/db-file-import';
+import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEvent } from 'lib/tracker';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
@@ -76,6 +76,18 @@ command( {
 		if ( ! isSupportedApp( app ) ) {
 			await trackEventWithEnv( 'import_sql_command_error', { error_type: 'unsupported-app' } );
 			err( 'The type of application you specified does not currently support SQL imports.' );
+		}
+
+		const fileSize = await getFileSize( fileName );
+
+		if ( ! fileSize ) {
+			err( `File '${ fileName }' is empty.` );
+		}
+
+		if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
+			err(
+				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
+				'Please split it into multiple files or contact support for assistance.' );
 		}
 
 		let fileNameToUpload = fileName;
