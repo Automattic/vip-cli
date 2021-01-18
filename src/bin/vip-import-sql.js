@@ -115,7 +115,8 @@ command( {
 				result,
 			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
 
-			console.log( { basename, md5, result } );
+			debug( { basename, md5, result } );
+			console.log( 'Upload complete. Initiating the import.' );
 
 			try {
 				await api.mutate( {
