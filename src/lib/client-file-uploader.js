@@ -24,6 +24,8 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
 
+const debug = debugLib( 'vip:lib/client-file-uploader' );
+
 // Files smaller than COMPRESS_THRESHOLD will not be compressed before upload
 export const COMPRESS_THRESHOLD = 16 * MB_IN_BYTES;
 
@@ -190,7 +192,7 @@ export async function uploadUsingPutObject( {
 	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
 }: UploadUsingArguments ) {
-	console.log( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
+	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
 		appId: app.id,
@@ -244,7 +246,7 @@ export async function uploadUsingPutObject( {
 export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingArguments ) {
 	const { basename } = fileMeta;
 
-	console.log( 'Uploading to S3 using the Multipart API.' );
+	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the Multipart API.` );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
 		appId: app.id,
@@ -282,7 +284,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 
 	const uploadId = parsedResponse.InitiateMultipartUploadResult.UploadId;
 
-	console.log( { uploadId } );
+	debug( { uploadId } );
 
 	const parts = getPartBoundaries( fileMeta.fileSize );
 	const etagResults = await uploadParts( {
