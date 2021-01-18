@@ -16,6 +16,7 @@ import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import { stdout as singleLogLine } from 'single-line-log';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -112,9 +113,9 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 
 		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
-		console.log( 'Calculating file md5 checksum...' );
+		debug( 'Calculating file md5 checksum...' );
 		const md5 = await getFileMD5Hash( fileName );
-		console.log( `Calculated file md5 checksum: ${ md5 }\n` );
+		debug( `Calculated file md5 checksum: ${ md5 }\n` );
 
 		resolve( {
 			basename,
@@ -291,7 +292,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		parts,
 		uploadId,
 	} );
-	console.log( { etagResults } );
+	debug( { etagResults } );
 
 	return completeMultipartUpload( {
 		app,
