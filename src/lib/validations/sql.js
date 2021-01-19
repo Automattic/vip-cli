@@ -218,7 +218,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 
 	readInterface.on( 'line', function( line ) {
 		if ( lineNum % 500 === 0 ) {
-			log( `Reading line ${ lineNum } ` );
+			isImport ? '' : log( `Reading line ${ lineNum } ` );
 		}
 
 		const checkValues: any = Object.values( checks );
@@ -234,8 +234,8 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	// Block until the processing completes
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 
-	log( `Finished processing ${ lineNum } lines.` );
-	console.log( '\n' );
+	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
+	isImport ? '' : console.log( '\n' );
 	const errorSummary = {};
 	const checkEntires: any = Object.entries( checks );
 	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
