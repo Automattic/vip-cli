@@ -24,6 +24,7 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
+import { searchAndReplace } from '../search-and-replace';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -352,7 +353,23 @@ args.argv = async function( argv, cb ): Promise<any> {
 					const primaryDomainName = options.env.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
+
 				this.sub && info.push( { key: 'SQL File', value: this.sub } );
+
+				// Show S-R params if the `search-replace` flag is set
+				if ( options.searchReplace ) {
+					const params = options.searchReplace.split( ',' );
+
+					const replacements = [
+						{
+							'From': `${ params[ 0 ] }`,
+							'To': `${ params[ 1 ] }`,
+						},
+					];
+
+					// Format data into a user-friendly table
+					info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+				}
 				break;
 			case 'sync':
 				const { backup, canSync, errors } = options.env.syncPreview;
