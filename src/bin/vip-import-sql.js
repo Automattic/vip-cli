@@ -52,18 +52,18 @@ const examples = [
 	// `search-replace` flag
 	{
 		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="<from,to>"',
-		description: 'Perform a Search and Replace, then import the replaced file to my site.\n' +
+		description: 'Perform a Search and Replace, then import the replaced file to your site.\n' +
 		'       * Ensure there are no spaces between your search-replace parameters',
 	},
 	// `in-place` flag
 	{
 		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="<from,to>" --in-place',
-		description: 'Search and Replace on the input <file.sql>, then import the replaced file to my site',
+		description: 'Search and Replace on the input <file.sql>, then import the replaced file to your site',
 	},
 	// `output` flag
 	{
 		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="<from,to>" --output="<output.sql>"',
-		description: 'Output the performed Search and Replace to the specified output file, then import the replaced file to my site\n' +
+		description: 'Output the performed Search and Replace to the specified output file, then import the replaced file to your site\n' +
 		'       * Has no effect when the `in-place` flag is used',
 	},
 ];
