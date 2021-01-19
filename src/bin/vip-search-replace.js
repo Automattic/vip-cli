@@ -22,18 +22,18 @@ const debug = debugLib( '@automattic/vip:bin:vip-search-replace' );
 const examples = [
 	// `search-replace` flag
 	{
-		usage: 'vip search replace <file.sql> --search-replace="<from,to>"',
+		usage: 'vip search-replace <file.sql> --search-replace="<from,to>"',
 		description: 'Replace instances of <from> with <to> in the provided <file.sql>\n' +
 		'       * Ensure there are no spaces between your search-replace parameters',
 	},
 	// `in-place` flag
 	{
-		usage: 'vip search replace <file.sql> --search-replace="<from,to>" --in-place',
+		usage: 'vip search-replace <file.sql> --search-replace="<from,to>" --in-place',
 		description: 'Perform Search and Replace explicitly on the provided input <file.sql> file',
 	},
 	// `output` flag
 	{
-		usage: 'vip search replace <file.sql> --search-replace="<from,to>" --output="<output.sql>"',
+		usage: 'vip search-replace <file.sql> --search-replace="<from,to>" --output="<output.sql>"',
 		description: 'Search and Replace to the specified output <output.sql> file\n' +
 		'       * Has no effect when the `in-place` flag is used',
 	},
