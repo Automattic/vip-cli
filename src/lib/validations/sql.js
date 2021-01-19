@@ -20,21 +20,27 @@ import { confirm } from 'lib/cli/prompt';
 let problemsFound = 0;
 let lineNum = 1;
 
-const errorCheckFormatter = check => {
+const errorCheckFormatter = ( isImport, check ) => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
 		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
 		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 	} else {
-		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		if ( ! isImport ) {
+			console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		}
 	}
 };
 
-const requiredCheckFormatter = ( check, type ) => {
+const requiredCheckFormatter = ( isImport, check, type ) => {
 	if ( check.results.length > 0 ) {
-		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		if ( ! isImport ) {
+			console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		}
 		if ( type === 'createTable' ) {
-			checkTablePrefixes( check.results );
+			if ( ! isImport ) {
+				checkTablePrefixes( check.results );
+			}
 		}
 	} else {
 		problemsFound += 1;
@@ -43,9 +49,11 @@ const requiredCheckFormatter = ( check, type ) => {
 	}
 };
 
-const infoCheckFormatter = check => {
+const infoCheckFormatter = ( isImport, check ) => {
 	check.results.forEach( item => {
-		console.log( item );
+		if ( ! isImport ) {
+			console.log( item );
+		}
 	} );
 };
 
@@ -231,8 +239,8 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	const errorSummary = {};
 	const checkEntires: any = Object.entries( checks );
 	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
-		check.outputFormatter( check, type );
-		console.log( '' );
+		check.outputFormatter( isImport, check, type );
+		isImport ? '' : console.log( '' );
 
 		errorSummary[ type ] = check.results.length;
 	}
