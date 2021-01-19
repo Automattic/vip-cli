@@ -198,7 +198,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
-	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
+	console.log( 'Validating SQL file' );
 
 	let fd;
 
@@ -258,8 +258,6 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
-
-	console.log( '** Your database file looks good 🎉 **\n' );
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
