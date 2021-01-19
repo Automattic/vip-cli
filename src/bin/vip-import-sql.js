@@ -51,9 +51,9 @@ command( {
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
-	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
-	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
-	.option( 'output', 'Where should the replacement file be written? Has no effect when in-place is true', 'process.stdout' )
+	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
+	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
+	.option( 'output', 'Specify the replacement output file for Search and Replace', 'process.stdout' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
 		const [ fileName ] = arg;
