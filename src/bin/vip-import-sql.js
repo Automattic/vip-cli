@@ -51,6 +51,9 @@ command( {
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
+	.example( 'vip import sql @mysite.develop <file.sql> --search-replace="<from,to>"', 'Perform a Search and Replace, then import the replaced file to my site.\n       * Ensure there are no spaces between your search-replace parameters' )
+	.example( 'vip import sql @mysite.develop <file.sql> --search-replace="<from,to>" --in-place', 'Search and Replace on the input <file.sql>, then import the replaced file to my site' )
+	.example( 'vip import sql @mysite.develop <file.sql> --search-replace="<from,to>" --output="<output.sql>"', 'Output the performed Search and Replace to the specified output file, then import the replaced file to my site\n      * Has no effect when the `in-place` flag is used' )
 	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'output', 'Specify the replacement output file for Search and Replace', 'process.stdout' )
