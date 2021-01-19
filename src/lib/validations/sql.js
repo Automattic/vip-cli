@@ -188,12 +188,8 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 	} );
 }
 
-export const validate = async ( filename: string, isImport: boolean = false ) => {
-	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
-	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
-
+export const getReadInterface = async ( filename: string ) => {
 	let fd;
-
 	try {
 		fd = await openFile( filename );
 	} catch ( e ) {
@@ -202,11 +198,18 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 		process.exit( 1 );
 	}
 
-	const readInterface = readline.createInterface( {
+	return readline.createInterface( {
 		input: fs.createReadStream( '', { fd } ),
 		output: null,
 		console: false,
 	} );
+};
+
+export const validate = async ( filename: string, isImport: boolean = false ) => {
+	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
+	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
+
+	const readInterface = await getReadInterface(filename);
 
 	readInterface.on( 'line', function( line ) {
 		if ( lineNum % 500 === 0 ) {
