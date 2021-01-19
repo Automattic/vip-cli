@@ -53,7 +53,7 @@ command( {
 	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
-	.option( 'output', 'Where should the replacement file be written? Has no effect when `in-place` is true. Default: process.stdout' )
+	.option( 'output', 'Where should the replacement file be written? Has no effect when in-place is true', 'process.stdout' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
 		const [ fileName ] = arg;
