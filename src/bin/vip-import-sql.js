@@ -19,6 +19,7 @@ import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp, SQL_IMPORT_FILE_SIZE_LIMIT } from 'lib/site-import/db-file-import';
 import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEvent } from 'lib/tracker';
+import { formatEnvironment } from 'lib/cli/format';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
@@ -115,6 +116,18 @@ command( {
 			err(
 				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
 				'Please split it into multiple files or contact support for assistance.' );
+		}
+
+		// Log summary of import details to user
+		const t = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+		const tt = searchReplace.split( ',' );
+
+		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
+		console.log( `         to: ${ chalk.cyan( t ) }` );
+		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
+
+		if ( searchReplace && searchReplace.length ) {
+			console.log( `        s-r: ${ chalk.blue( tt[ 0 ] ) } -> ${ chalk.blue( tt [ 1 ] ) }` );
 		}
 
 		let fileNameToUpload = fileName;
