@@ -264,6 +264,6 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 
 	readInterface.close();
 
-	console.log( '\n🎉 You can now submit for import, see here for more details: ' +
+	isImport ? '' : console.log( '\n🎉 You can now submit for import, see here for more details: ' +
 		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
 };
