@@ -16,8 +16,8 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
-import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { currentUserCanImportForApp, isSupportedApp, SQL_IMPORT_FILE_SIZE_LIMIT } from 'lib/site-import/db-file-import';
+import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEvent } from 'lib/tracker';
 import { validate, getReadInterface } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
@@ -144,6 +144,31 @@ const gates = async ( app, env, fileName, api ) => {
 		err( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
 	}
 };
+// Command examples
+const examples = [
+	// `sql` subcommand
+	{
+		usage: 'vip import sql @mysite.develop <file.sql>',
+		description: 'Import the given SQL file to your site',
+	},
+	// `search-replace` flag
+	{
+		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to"',
+		description: 'Perform a Search and Replace, then import the replaced file to your site.\n' +
+		'       * Ensure there are no spaces between your search-replace parameters',
+	},
+	// `in-place` flag
+	{
+		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to" --in-place',
+		description: 'Search and Replace on the input <file.sql>, then import the replaced file to your site',
+	},
+	// `output` flag
+	{
+		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to" --output="<output.sql>"',
+		description: 'Output the performed Search and Replace to the specified output file, then import the replaced file to your site\n' +
+		'       * Has no effect when the `in-place` flag is used',
+	},
+];
 
 command( {
 	appContext: true,
@@ -153,9 +178,10 @@ command( {
 	requiredArgs: 1,
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
-	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
-	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
-	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
+	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
+	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
+	.option( 'output', 'Specify the replacement output file for Search and Replace', 'process.stdout' )
+	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
 		const [ fileName ] = arg;
@@ -170,6 +196,18 @@ command( {
 
 		// halt operation of the import based on some rules
 		await gates( app, env, fileName, api );
+
+		const fileSize = await getFileSize( fileName );
+
+		if ( ! fileSize ) {
+			err( `File '${ fileName }' is empty.` );
+		}
+
+		if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
+			err(
+				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
+				'Please split it into multiple files or contact support for assistance.' );
+		}
 
 		let fileNameToUpload = fileName;
 
@@ -194,7 +232,8 @@ command( {
 				result,
 			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
 
-			console.log( { basename, md5, result } );
+			debug( { basename, md5, result } );
+			console.log( 'Upload complete. Initiating the import.' );
 
 			try {
 				await api.mutate( {
