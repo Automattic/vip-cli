@@ -228,7 +228,8 @@ const progress = status => {
 
 	let actionProgress = ` ${ marks[ status ] } ${ action }`;
 
-	stdout( `${ actionProgress }` );
+	// Write to the same line for progress updates
+	log( `${ actionProgress }` );
 	console.log();
 };
 

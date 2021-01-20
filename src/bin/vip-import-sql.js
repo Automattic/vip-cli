@@ -11,7 +11,6 @@
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
-import { stdout } from 'single-line-log';
 
 /**
  * Internal dependencies
