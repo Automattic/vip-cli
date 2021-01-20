@@ -241,10 +241,12 @@ export async function uploadUsingPutObject( {
 	try {
 		parsedResponse = await parser.parseStringPromise( result );
 	} catch ( e ) {
+		progress( 'failed', 'upload' );
 		throw `Invalid response from cloud service. ${ e }`;
 	}
 
 	const { Code, Message } = parsedResponse.Error || {};
+	progress( 'failed', 'upload' );
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
 
@@ -276,6 +278,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 
 	if ( parsedResponse.Error ) {
 		const { Code, Message } = parsedResponse.Error;
+		progress( 'failed', 'upload' );
 		throw `Unable to create cloud storage object. Error: ${ JSON.stringify( { Code, Message } ) }`;
 	}
 
@@ -284,6 +287,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		parsedResponse.InitiateMultipartUploadResult &&
 		parsedResponse.InitiateMultipartUploadResult.UploadId
 	) {
+		progress( 'failed', 'upload' );
 		throw `Unable to get Upload ID from cloud storage. Error: ${ multipartUploadResult }`;
 	}
 
