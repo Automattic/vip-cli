@@ -193,6 +193,7 @@ command( {
 				err( `StartImport call failed: ${ gqlErr }` );
 			}
 
+			progress( 'running', 'import' );
 			await trackEventWithEnv( 'import_sql_command_queued' );
 
 			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );

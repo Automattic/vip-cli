@@ -38,7 +38,9 @@ const steps = {
  replace: 'Performing Search and Replace',
  validate: 'Validating SQL',
  upload: 'Uploading file to S3',
- startImport: 'Starting import...',
+	startImport: 'Starting import',
+	import: 'Importing...'
+	// Add more as neededs
 };
 
 // Progress update logs
