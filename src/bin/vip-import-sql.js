@@ -91,7 +91,7 @@ command( {
 
 		await trackEventWithEnv( 'import_sql_command_execute' );
 
-		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
+		console.log( `\n${ chalk.underline( '** Welcome to the WPVIP Site SQL Importer! **' ) }\n` );
 
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
