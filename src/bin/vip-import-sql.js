@@ -121,13 +121,14 @@ command( {
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
-		const params = searchReplace.split( ',' );
 
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
 
 		if ( searchReplace && searchReplace.length ) {
+			const params = searchReplace.split( ',' );
+
 			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }` );
 		}
 
