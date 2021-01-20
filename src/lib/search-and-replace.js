@@ -197,7 +197,7 @@ export const searchAndReplace = async (
 
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
-	
+
 	progress( 'success', 'replace' );
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 

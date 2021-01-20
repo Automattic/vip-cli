@@ -26,9 +26,7 @@ const errorCheckFormatter = ( isImport, check ) => {
 		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
 		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 	} else {
-		if ( ! isImport ) {
-			console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
-		}
+		isImport ? '' : console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
 	}
 };
 

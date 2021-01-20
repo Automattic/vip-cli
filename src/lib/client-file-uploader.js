@@ -179,7 +179,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 			: await uploadUsingMultipart( { app, env, fileMeta } );
 
 	progress( 'success', 'upload' );
-	
+
 	return {
 		fileMeta,
 		result,

@@ -362,8 +362,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 					const replacements = [
 						{
-							'From': `${ params[ 0 ] }`,
-							'To': `${ params[ 1 ] }`,
+							From: `${ params[ 0 ] }`,
+							To: `${ params[ 1 ] }`,
 						},
 					];
 

@@ -119,16 +119,16 @@ command( {
 				'Please split it into multiple files or contact support for assistance.' );
 		}
 
-		// Log summary of import details to user
-		const t = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
-		const tt = searchReplace.split( ',' );
+		// Log summary of import details
+		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+		const params = searchReplace.split( ',' );
 
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
-		console.log( `         to: ${ chalk.cyan( t ) }` );
+		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
 
 		if ( searchReplace && searchReplace.length ) {
-			console.log( `        s-r: ${ chalk.blue( tt[ 0 ] ) } -> ${ chalk.blue( tt [ 1 ] ) }` );
+			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }` );
 		}
 
 		let fileNameToUpload = fileName;
