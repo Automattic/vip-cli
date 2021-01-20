@@ -12,6 +12,7 @@ import path from 'path';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { replace } from '@automattic/vip-search-replace';
+import { stdout } from 'single-line-log';
 
 /**
  * Internal dependencies
@@ -121,12 +122,49 @@ export type SearchReplaceOutput = {
 	usingStdOut: boolean,
 };
 
+// Progress spinner
+const sprite = {
+ i: 0,
+ sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
+ next() {
+  this.i++;
+
+  if ( this.i >= this.sprite.length ) {
+   this.i = 0;
+  }
+
+  return {
+   value: this.sprite[ this.i ],
+   done: false,
+  };
+ },
+};
+
+// Status signs for progress updates
+const marks = {
+ pending: '○',
+ running: chalk.blueBright( sprite.next().value ),
+ success: chalk.green( '✓' ),
+ failed: chalk.red( '✕' ),
+ unknown: chalk.yellow( '✕' ),
+};
+
+// Progress update logs
+const progress = status => {
+	const action = 'Performing Search and Replace';
+
+	let actionProgress = ` ${ marks[ status ] } ${ action }`;
+
+	return stdout( `${ actionProgress }` );
+};
+
 export const searchAndReplace = async (
 	fileName: string,
 	pairs: Array<String> | String,
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
+	progress( 'running' );
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -134,6 +172,7 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
+		progress( 'failed' );
 		throw new Error( 'No search and replace parameters provided.' );
 	}
 
@@ -155,6 +194,7 @@ export const searchAndReplace = async (
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
+			progress( 'unknown' );
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
 
 			process.exit();
@@ -184,13 +224,17 @@ export const searchAndReplace = async (
 						"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
 					)
 				);
+
+				progress( 'failed' );
+
 				reject();
 			} );
 	} );
 
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
-
+	
+	progress( 'success' );
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
 	return result;
