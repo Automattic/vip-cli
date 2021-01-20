@@ -142,7 +142,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		throw `Unable to create temporary working directory: ${ e }`;
 	}
 
-	console.log(
+	debug(
 		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n`
 	);
 
@@ -156,13 +156,13 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
 		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
-		console.log( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
+		debug( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
 
 		await gzipFile( uncompressedFileName, fileMeta.fileName );
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
-		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
+		debug( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
 
@@ -170,7 +170,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 			( 100 * fewerBytes ) / uncompressedFileSize
 		) }%)`;
 
-		console.log( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
+		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
 	const result =
