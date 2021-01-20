@@ -24,7 +24,6 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
-import { searchAndReplace } from '../search-and-replace';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
