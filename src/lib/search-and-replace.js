@@ -122,43 +122,6 @@ export type SearchReplaceOutput = {
 	usingStdOut: boolean,
 };
 
-// Progress spinner
-const sprite = {
- i: 0,
- sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
- next() {
-  this.i++;
-
-  if ( this.i >= this.sprite.length ) {
-   this.i = 0;
-  }
-
-  return {
-   value: this.sprite[ this.i ],
-   done: false,
-  };
- },
-};
-
-// Status signs for progress updates
-const marks = {
- pending: '○',
- running: chalk.blueBright( sprite.next().value ),
- success: chalk.green( '✓' ),
- failed: chalk.red( '✕' ),
- unknown: chalk.yellow( '✕' ),
-};
-
-// Progress update logs
-const progress = status => {
-	const action = 'Performing Search and Replace';
-
-	let actionProgress = ` ${ marks[ status ] } ${ action }`;
-
-	stdout( `${ actionProgress }` );
-	console.log();
-};
-
 export const searchAndReplace = async (
 	fileName: string,
 	pairs: Array<String> | String,

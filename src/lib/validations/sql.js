@@ -195,44 +195,6 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 	} );
 }
 
-// Progress spinner
-const sprite = {
- i: 0,
- sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
- next() {
-  this.i++;
-
-  if ( this.i >= this.sprite.length ) {
-   this.i = 0;
-  }
-
-  return {
-   value: this.sprite[ this.i ],
-   done: false,
-  };
- },
-};
-
-// Status signs for progress updates
-const marks = {
- pending: '○',
- running: chalk.blueBright( sprite.next().value ),
- success: chalk.green( '✓' ),
- failed: chalk.red( '✕' ),
- unknown: chalk.yellow( '✕' ),
-};
-
-// Progress update logs
-const progress = status => {
-	const action = 'Validating SQL';
-
-	let actionProgress = ` ${ marks[ status ] } ${ action }`;
-
-	// Write to the same line for progress updates
-	log( `${ actionProgress }` );
-	console.log();
-};
-
 export const validate = async ( filename: string, isImport: boolean = false ) => {
 	progress( 'running' );
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
