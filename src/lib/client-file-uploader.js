@@ -23,6 +23,7 @@ import debugLib from 'debug';
  */
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
+import { progress } from 'lib/cli/progress';
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -130,12 +131,14 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 }
 
 export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArguments ) {
+	progress( 'running', 'upload' );
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
 	} catch ( e ) {
+		progress( 'failed', 'upload' );
 		throw `Unable to create temporary working directory: ${ e }`;
 	}
 
@@ -175,6 +178,8 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 			? await uploadUsingPutObject( { app, env, fileMeta } )
 			: await uploadUsingMultipart( { app, env, fileMeta } );
 
+	progress( 'success', 'upload' );
+	
 	return {
 		fileMeta,
 		result,
