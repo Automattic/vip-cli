@@ -12,13 +12,13 @@ import path from 'path';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { replace } from '@automattic/vip-search-replace';
-import { stdout } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
+import { progress } from 'lib/cli/progress';
 import { getFileSize } from 'lib/client-file-uploader';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
@@ -128,7 +128,7 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	progress( 'running' );
+	progress( 'running', 'replace' );
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -136,7 +136,7 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		progress( 'failed' );
+		progress( 'failed', 'replace' );
 		throw new Error( 'No search and replace parameters provided.' );
 	}
 
@@ -158,7 +158,7 @@ export const searchAndReplace = async (
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
-			progress( 'unknown' );
+			progress( 'unknown', 'replace' );
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
 
 			process.exit();
@@ -189,7 +189,7 @@ export const searchAndReplace = async (
 					)
 				);
 
-				progress( 'failed' );
+				progress( 'failed', 'replace' );
 
 				reject();
 			} );
@@ -198,7 +198,7 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 	
-	progress( 'success' );
+	progress( 'success', 'replace' );
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
 	return result;
