@@ -8,7 +8,6 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
 
@@ -18,10 +17,13 @@ import debugLib from 'debug';
 import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp, SQL_IMPORT_FILE_SIZE_LIMIT } from 'lib/site-import/db-file-import';
 import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
-import { trackEvent } from 'lib/tracker';
-import { validate, getReadInterface } from 'lib/validations/sql';
+import { trackEventWithEnv } from 'lib/tracker';
+import { validate } from 'lib/validations/sql';
+import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
+import { isMultiSiteDumpFile } from 'lib/validations/is-multi-site-sql-dump'
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
+import * as exit from 'lib/cli/exit';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -35,97 +37,21 @@ const appQuery = `
 	environments{ id, appId, type, name, syncProgress { status }, primaryDomain { name } }
 `;
 
-const err = message => {
-	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
-	process.exit( 1 );
-};
-
 const debug = debugLib( 'vip:vip-import-sql' );
-
-const trackEventWithEnv = async ( appId, envId, eventName, eventProps = {} ) => {
-	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
-};
-
-const isMultiSiteDumpFile = fileName => {
-	return new Promise( async resolve => {
-		const readInterface = await getReadInterface( fileName );
-		readInterface.on( 'line', line => {
-			const multiSiteTableNameRegex = /^CREATE TABLE `?(wp_\d_[a-z0-9_]*)/i;
-			// determine if we're on a CREATE TABLE statement line what has eg. wp_\d_options
-			if ( multiSiteTableNameRegex.test( line ) ) {
-				resolve( true );
-			}
-		} );
-
-		readInterface.on( 'error', () => {
-			err( 'An error was encountered while reading your SQL dump file.  Please verify the file contents.' );
-		} );
-		// Block until the processing completes
-		await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
-		resolve( false );
-	} );
-};
-
-const isMultiSiteInSiteMeta = async ( appId: number, envId: number, api: Object ): Promise<boolean> => {
-	let res;
-	try {
-		res = await api.query( {
-			query: gql`query AppMultiSiteCheck( $appId: Int, $envId: Int) {
-				app(id: $appId) {
-					id
-					name
-					repo
-					environments(id: $envId) {
-						id
-						appId
-						name
-						type
-						isMultisite
-						isSubdirectoryMultisite
-					}
-				}
-			}`,
-			variables: {
-				appId,
-				envId,
-			},
-		} );
-	} catch ( GraphQlError ) {
-		await trackEventWithEnv( 'import_sql_command_error', {
-			error_type: 'GraphQL-MultiSite-Check-failed',
-			gql_err: GraphQlError,
-		} );
-		err( `StartImport call failed: ${ GraphQlError }` );
-	}
-
-	if ( Array.isArray( res?.data?.app?.environments ) ) {
-		const environments = res.data.app.environments;
-		if ( ! environments.length ) {
-			return false;
-		}
-		// we asked for one result with one appId and one envId, so...
-		const thisEnv = environments[ 0 ];
-		if ( thisEnv.isMultiSite || thisEnv.isSubdirectoryMultisite ) {
-			return true;
-		}
-	}
-
-	return false;
-};
 
 const gates = async ( app, env, fileName, api ) => {
 	const { id: envId, appId } = env;
 	trackEventWithEnv.bind( null, appId, envId );
 
 	if ( ! currentUserCanImportForApp( app ) ) {
-		err(
+		exit.withError(
 			'The currently authenticated account does not have permission to perform a SQL import.'
 		);
 	}
 
 	if ( ! isSupportedApp( app ) ) {
 		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'unsupported-app' } );
-		err( 'The type of application you specified does not currently support SQL imports.' );
+		exit.withError( 'The type of application you specified does not currently support SQL imports.' );
 	}
 
 	// is the import for a multisite?
@@ -135,13 +61,13 @@ const gates = async ( app, env, fileName, api ) => {
 	// if site is a multisite but import sql is not
 	if ( isMultiSite && ! isMultiSiteSqlDump ) {
 		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'multisite-but-not-multisite-sql-dump' } );
-		err( 'You have provided a non-multisite SQL dump file for import into a multisite.' );
+		exit.withError( 'You have provided a non-multisite SQL dump file for import into a multisite.' );
 	}
 
 	// if site is a single site but import sql is for a multi site
 	if ( ! isMultiSite && isMultiSiteSqlDump ) {
 		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'not-multisite-with-multisite-sql-dump' } );
-		err( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
+		exit.withError( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
 	}
 };
 // Command examples
@@ -200,11 +126,11 @@ command( {
 		const fileSize = await getFileSize( fileName );
 
 		if ( ! fileSize ) {
-			err( `File '${ fileName }' is empty.` );
+			exit.withError( `File '${ fileName }' is empty.` );
 		}
 
 		if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
-			err(
+			exit.withError(
 				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
 				'Please split it into multiple files or contact support for assistance.' );
 		}
@@ -263,7 +189,7 @@ command( {
 					error_type: 'StartImport-failed',
 					gql_err: gqlErr,
 				} );
-				err( `StartImport call failed: ${ gqlErr }` );
+				exit.withError( `StartImport call failed: ${ gqlErr }` );
 			}
 
 			await trackEventWithEnv( 'import_sql_command_queued' );
@@ -273,6 +199,6 @@ command( {
 			console.log( '--> Check the status of your import via the \`import_progress\` site meta in the VIP internal console!\n' );
 			console.log( '===================================' );
 		} catch ( e ) {
-			err( e );
+			exit.withError( e );
 		}
 	} );
