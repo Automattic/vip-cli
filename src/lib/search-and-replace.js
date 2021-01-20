@@ -155,7 +155,8 @@ const progress = status => {
 
 	let actionProgress = ` ${ marks[ status ] } ${ action }`;
 
-	return stdout( `${ actionProgress }` );
+	stdout( `${ actionProgress }` );
+	console.log();
 };
 
 export const searchAndReplace = async (
