@@ -209,7 +209,7 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
 
-	const readInterface = await getReadInterface(filename);
+	const readInterface = await getReadInterface( filename );
 
 	readInterface.on( 'line', function( line ) {
 		if ( lineNum % 500 === 0 ) {
