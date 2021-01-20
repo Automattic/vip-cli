@@ -154,27 +154,6 @@ export const searchAndReplace = async (
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
-	// Add a confirmation step for search-replace
-	const yes = await confirm( [
-		{
-			key: 'From',
-			value: `${ chalk.cyan( replacements[ 0 ] ) }`,
-		},
-		{
-			key: 'To',
-			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
-		},
-	], 'Proceed with the following values?' );
-
-	// Bail if user does not wish to proceed
-	if ( ! yes ) {
-		console.log( `${ chalk.red( 'Cancelling' ) }` );
-
-		await trackEvent( 'search_replace_cancelled', { is_import: isImport, in_place: inPlace } );
-
-		process.exit();
-	}
-
 	if ( inPlace ) {
 		const approved = await confirm(
 			[],
