@@ -125,11 +125,12 @@ command( {
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
+		searchReplace ? '' : console.log();
 
 		if ( searchReplace && searchReplace.length ) {
 			const params = searchReplace.split( ',' );
 
-			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }` );
+			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
 		}
 
 		let fileNameToUpload = fileName;
