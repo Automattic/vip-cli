@@ -23,6 +23,7 @@ import { formatEnvironment } from 'lib/cli/format';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
+import { progress } from 'lib/cli/progress';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -156,7 +157,8 @@ command( {
 			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
 
 			debug( { basename, md5, result } );
-			console.log( 'Upload complete. Initiating the import.' );
+			debug( 'Upload complete. Initiating the import.' );
+			progress( 'running', 'startImport' );
 
 			try {
 				await api.mutate( {
@@ -181,7 +183,9 @@ command( {
 						},
 					},
 				} );
+				progress( 'success', 'startImport' );
 			} catch ( gqlErr ) {
+				progress( 'failed', 'startImport' );
 				await trackEventWithEnv( 'import_sql_command_error', {
 					error_type: 'StartImport-failed',
 					gql_err: gqlErr,
