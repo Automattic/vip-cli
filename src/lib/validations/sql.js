@@ -8,6 +8,7 @@
  */
 import chalk from 'chalk';
 import { stdout as log } from 'single-line-log';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -16,6 +17,7 @@ import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
 import { getReadInterface } from 'lib/validations/line-by-line';
 
+const debug = debugLib( 'vip:vip-import-sql' );
 let problemsFound = 0;
 let lineNum = 1;
 
@@ -200,7 +202,6 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
 		}
-
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}

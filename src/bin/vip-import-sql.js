@@ -43,7 +43,7 @@ const debug = debugLib( 'vip:vip-import-sql' );
 
 const gates = async ( app, env, fileName, api ) => {
 	const { id: envId, appId } = env;
-	trackEventWithEnv.bind( null, appId, envId );
+	const track = trackEventWithEnv.bind( null, appId, envId );
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		exit.withError(
@@ -52,7 +52,7 @@ const gates = async ( app, env, fileName, api ) => {
 	}
 
 	if ( ! isSupportedApp( app ) ) {
-		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'unsupported-app' } );
+		await track( 'import_sql_command_error', { error_type: 'unsupported-app' } );
 		exit.withError( 'The type of application you specified does not currently support SQL imports.' );
 	}
 
@@ -74,13 +74,13 @@ const gates = async ( app, env, fileName, api ) => {
 
 	// if site is a multisite but import sql is not
 	if ( isMultiSite && ! isMultiSiteSqlDump ) {
-		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'multisite-but-not-multisite-sql-dump' } );
+		await track( 'import_sql_command_error', { error_type: 'multisite-but-not-multisite-sql-dump' } );
 		exit.withError( 'You have provided a non-multisite SQL dump file for import into a multisite.' );
 	}
 
 	// if site is a single site but import sql is for a multi site
 	if ( ! isMultiSite && isMultiSiteSqlDump ) {
-		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'not-multisite-with-multisite-sql-dump' } );
+		await track( 'import_sql_command_error', { error_type: 'not-multisite-with-multisite-sql-dump' } );
 		exit.withError( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
 	}
 };
@@ -114,10 +114,16 @@ const fileLineValidations = async ( fileName: string, validations: Array<Object>
 	const isImport = true;
 	const readInterface = await getReadInterface( fileName );
 
+	debug( 'Validations: ', validations );
+
 	readInterface.on( 'line', line => {
 		validations.map( validation => {
-			validation.execute( fileName, isImport, line );
+			validation.execute( line );
 		} );
+	} );
+
+	readInterface.on( 'error', err => {
+		throw new Error( ` Error validating input file: ${ err.toString() }` );
 	} );
 
 	// Block until the processing completes
@@ -125,7 +131,7 @@ const fileLineValidations = async ( fileName: string, validations: Array<Object>
 	readInterface.close();
 
 	validations.map( async validation => {
-		if ( validations.postExecutionOutput ) {
+		if ( validation.hasOwnProperty( 'postExecutionOutput' )  && typeof validation.postExecutionOutput === 'function' ) {
 			await validation.postExecutionOutput( fileName, isImport );
 		}
 	} );
@@ -152,8 +158,8 @@ command( {
 		debug( 'Args: ', arg );
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
-		trackEventWithEnv.bind( null, env.appId, env.id );
-		await trackEventWithEnv( 'import_sql_command_execute' );
+		const track = trackEventWithEnv.bind( null, env.appId, env.id );
+		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
 		await gates( app, env, fileName, api );
@@ -172,10 +178,7 @@ command( {
 		const validations = [];
 		validations.push( staticSqlValidations );
 		// validations.push( environmentValidations );
-		fileLineValidations( fileNameToUpload, validations );
-
-		// // Run SQL validation
-		// await validate( fileNameToUpload, true );
+		await fileLineValidations( fileNameToUpload, validations );
 
 		// Call the Public API
 		try {
@@ -211,14 +214,14 @@ command( {
 					},
 				} );
 			} catch ( gqlErr ) {
-				await trackEventWithEnv( 'import_sql_command_error', {
+				await track( 'import_sql_command_error', {
 					error_type: 'StartImport-failed',
 					gql_err: gqlErr,
 				} );
 				exit.withError( `StartImport call failed: ${ gqlErr }` );
 			}
 
-			await trackEventWithEnv( 'import_sql_command_queued' );
+			await track( 'import_sql_command_queued' );
 
 			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 			// TOD0: Remove the log below before the PUBLIC release

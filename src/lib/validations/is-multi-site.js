@@ -16,6 +16,7 @@ import { trackEventWithEnv } from 'lib/tracker';
 import * as exit from 'lib/cli/exit';
 
 export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Promise<boolean> {
+	const track = trackEventWithEnv.bind( null, appId, envId );
 	const api = await API();
 	let res;
 	try {
@@ -41,7 +42,7 @@ export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Pro
 			},
 		} );
 	} catch ( GraphQlError ) {
-		await trackEventWithEnv( 'import_sql_command_error', {
+		await track( 'import_sql_command_error', {
 			error_type: 'GraphQL-MultiSite-Check-failed',
 			gql_err: GraphQlError,
 		} );

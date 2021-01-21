@@ -10,7 +10,7 @@
 /**
  * Internal dependencies
  */
-import { getReadInterface } from 'lib/validations/sql';
+import { getReadInterface } from 'lib/validations/line-by-line';
 import * as exit from 'lib/cli/exit';
 
 const SQL_DUMP_CREATE_TABLE_IS_MULTISITE_REGEX = /^CREATE TABLE `?(wp_\d_[a-z0-9_]*)/i
