@@ -44,7 +44,7 @@ command( {
 } )
 	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
-	.option( 'output', 'Specify the replacement output file for Search and Replace', 'process.stdout' )
+	.option( 'output', 'Specify the replacement output file for Search and Replace' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		// TODO: tracks event for usage of this command stand alone
