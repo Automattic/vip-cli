@@ -13,13 +13,22 @@
 import { getReadInterface } from 'lib/validations/sql';
 import * as exit from 'lib/cli/exit';
 
+const SQL_DUMP_CREATE_TABLE_IS_MULTISITE_REGEX = /^CREATE TABLE `?(wp_\d_[a-z0-9_]*)/i
+
+export function sqlDumpLineIsMultiSite( line: string ): boolean {
+	// determine if we're on a CREATE TABLE statement line what has eg. wp_\d_options
+	if ( SQL_DUMP_CREATE_TABLE_IS_MULTISITE_REGEX.test( line ) ) {
+		return true;
+	}
+	return false;
+}
+
 export function isMultiSiteDumpFile( fileName: string ): Promise<boolean> {
 	return new Promise( async resolve => {
 		const readInterface = await getReadInterface( fileName );
 		readInterface.on( 'line', line => {
-			const multiSiteTableNameRegex = /^CREATE TABLE `?(wp_\d_[a-z0-9_]*)/i;
-			// determine if we're on a CREATE TABLE statement line what has eg. wp_\d_options
-			if ( multiSiteTableNameRegex.test( line ) ) {
+			const result = sqlDumpLineIsMultiSite( line );
+			if ( true === result ) {
 				resolve( true );
 			}
 		} );

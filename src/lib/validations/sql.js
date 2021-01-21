@@ -6,8 +6,6 @@
 /**
  * External dependencies
  */
-import readline from 'readline';
-import fs from 'fs';
 import chalk from 'chalk';
 import { stdout as log } from 'single-line-log';
 
@@ -177,33 +175,20 @@ const checks: Checks = {
 	},
 };
 
-function openFile( filename, flags = 'r', mode = 666 ) {
-	return new Promise( ( resolve, reject ) => {
-		fs.open( filename, flags, mode, ( err, fd ) => {
-			if ( err ) {
-				return reject( err );
-			}
-			resolve( fd );
-		} );
-	} );
-}
-
-export const getReadInterface = async ( filename: string ) => {
-	let fd;
-	try {
-		fd = await openFile( filename );
-	} catch ( e ) {
-		console.log( chalk.red( 'Error: ' ) + 'The file at the provided path is either missing or not readable.' );
-		console.log( 'Please check the input and try again.' );
-		process.exit( 1 );
+function perLineValidations( line ) {
+	if ( lineNum % 500 === 0 ) {
+		log( `Reading line ${ lineNum } ` );
 	}
 
-	return readline.createInterface( {
-		input: fs.createReadStream( '', { fd } ),
-		output: null,
-		console: false,
+	const checkValues: any = Object.values( checks );
+	checkValues.forEach( ( check: CheckType ) => {
+		const results = line.match( check.matcher );
+		if ( results ) {
+			check.results.push( check.matchHandler( lineNum, results ) );
+		}
 	} );
-};
+	lineNum += 1;
+}
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
@@ -212,22 +197,12 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	const readInterface = await getReadInterface( filename );
 
 	readInterface.on( 'line', function( line ) {
-		if ( lineNum % 500 === 0 ) {
-			log( `Reading line ${ lineNum } ` );
-		}
-
-		const checkValues: any = Object.values( checks );
-		checkValues.forEach( ( check: CheckType ) => {
-			const results = line.match( check.matcher );
-			if ( results ) {
-				check.results.push( check.matchHandler( lineNum, results ) );
-			}
-		} );
-		lineNum += 1;
+		perLineValidations( line );
 	} );
 
 	// Block until the processing completes
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
+	readInterface.close();
 
 	log( `Finished processing ${ lineNum } lines.` );
 	console.log( '\n' );
@@ -257,8 +232,6 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	console.log( '** Your database file looks good 🎉 **\n' );
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
-
-	readInterface.close();
 
 	if ( isImport ) {
 		// Add a confirmation step before running the import
