@@ -41,25 +41,3 @@ export async function getReadInterface( filename: string ) {
 		console: false,
 	} );
 }
-
-export function validateLineByLine( readInterface, functions: array ) {
-	readInterface.on( 'line', function( line ) {
-		if ( lineNum % 500 === 0 ) {
-			log( `Reading line ${ lineNum } ` );
-		}
-
-		functions.map( validationObject => {
-
-		} );
-
-		const checkValues: any = Object.values( checks );
-		checkValues.forEach( ( check: CheckType ) => {
-			const results = line.match( check.matcher );
-			if ( results ) {
-				check.results.push( check.matchHandler( lineNum, results ) );
-			}
-		} );
-
-		lineNum += 1;
-	} );
-}

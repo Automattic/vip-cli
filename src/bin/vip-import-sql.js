@@ -18,12 +18,14 @@ import command from 'lib/cli/command';
 import { currentUserCanImportForApp, isSupportedApp, SQL_IMPORT_FILE_SIZE_LIMIT } from 'lib/site-import/db-file-import';
 import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
-import { validate } from 'lib/validations/sql';
+// import { validate } from 'lib/validations/sql';
+import { staticSqlValidations } from 'lib/validations/sql';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import { isMultiSiteDumpFile } from 'lib/validations/is-multi-site-sql-dump'
+import { isMultiSiteDumpFile } from 'lib/validations/is-multi-site-sql-dump';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
+import { getReadInterface } from 'lib/validations/line-by-line';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -52,6 +54,18 @@ const gates = async ( app, env, fileName, api ) => {
 	if ( ! isSupportedApp( app ) ) {
 		await trackEventWithEnv( 'import_sql_command_error', { error_type: 'unsupported-app' } );
 		exit.withError( 'The type of application you specified does not currently support SQL imports.' );
+	}
+
+	const fileSize = await getFileSize( fileName );
+
+	if ( ! fileSize ) {
+		exit.withError( `File '${ fileName }' is empty.` );
+	}
+
+	if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
+		exit.withError(
+			`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
+				'Please split it into multiple files or contact support for assistance.' );
 	}
 
 	// is the import for a multisite?
@@ -96,6 +110,27 @@ const examples = [
 	},
 ];
 
+const fileLineValidations = async ( fileName: string, validations: Array<Object> ) => {
+	const isImport = true;
+	const readInterface = await getReadInterface( fileName );
+
+	readInterface.on( 'line', line => {
+		validations.map( validation => {
+			validation.execute( fileName, isImport, line );
+		} );
+	} );
+
+	// Block until the processing completes
+	await new Promise( resolve => readInterface.on( 'close', resolve ) );
+	readInterface.close();
+
+	validations.map( async validation => {
+		if ( validations.postExecutionOutput ) {
+			await validation.postExecutionOutput( fileName, isImport );
+		}
+	} );
+};
+
 command( {
 	appContext: true,
 	appQuery,
@@ -120,23 +155,10 @@ command( {
 		trackEventWithEnv.bind( null, env.appId, env.id );
 		await trackEventWithEnv( 'import_sql_command_execute' );
 
-		// halt operation of the import based on some rules
+		// // halt operation of the import based on some rules
 		await gates( app, env, fileName, api );
 
-		const fileSize = await getFileSize( fileName );
-
-		if ( ! fileSize ) {
-			exit.withError( `File '${ fileName }' is empty.` );
-		}
-
-		if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
-			exit.withError(
-				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
-				'Please split it into multiple files or contact support for assistance.' );
-		}
-
 		let fileNameToUpload = fileName;
-
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
@@ -144,12 +166,16 @@ command( {
 				inPlace: opts.inPlace,
 				output: true,
 			} );
-
 			fileNameToUpload = outputFileName;
 		}
 
-		// Run SQL validation
-		await validate( fileNameToUpload, true );
+		const validations = [];
+		validations.push( staticSqlValidations );
+		// validations.push( environmentValidations );
+		fileLineValidations( fileNameToUpload, validations );
+
+		// // Run SQL validation
+		// await validate( fileNameToUpload, true );
 
 		// Call the Public API
 		try {

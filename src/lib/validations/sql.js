@@ -14,6 +14,7 @@ import { stdout as log } from 'single-line-log';
  */
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
+import { getReadInterface } from 'lib/validations/line-by-line';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -175,34 +176,9 @@ const checks: Checks = {
 	},
 };
 
-function perLineValidations( line ) {
-	if ( lineNum % 500 === 0 ) {
-		log( `Reading line ${ lineNum } ` );
-	}
-
-	const checkValues: any = Object.values( checks );
-	checkValues.forEach( ( check: CheckType ) => {
-		const results = line.match( check.matcher );
-		if ( results ) {
-			check.results.push( check.matchHandler( lineNum, results ) );
-		}
-	} );
-	lineNum += 1;
-}
-
-export const validate = async ( filename: string, isImport: boolean = false ) => {
+export const postValidation = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
-
-	const readInterface = await getReadInterface( filename );
-
-	readInterface.on( 'line', function( line ) {
-		perLineValidations( line );
-	} );
-
-	// Block until the processing completes
-	await new Promise( resolve => readInterface.on( 'close', resolve ) );
-	readInterface.close();
 
 	log( `Finished processing ${ lineNum } lines.` );
 	console.log( '\n' );
@@ -254,4 +230,41 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 
 	console.log( '\n🎉 You can now submit for import, see here for more details: ' +
 		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
+};
+
+const perLineValidations = ( line: string ) => {
+	if ( lineNum % 500 === 0 ) {
+		log( `Reading line ${ lineNum } ` );
+	}
+
+	const checkValues: any = Object.values( checks );
+	checkValues.forEach( ( check: CheckType ) => {
+		const results = line.match( check.matcher );
+		if ( results ) {
+			check.results.push( check.matchHandler( lineNum, results ) );
+		}
+	} );
+	lineNum += 1;
+};
+
+export const staticSqlValidations = {
+	execute: line => {
+		perLineValidations( line );
+	},
+	postExecutionOutput: async ( filename, isImport ) => {
+		await postValidation( filename, isImport );
+	},
+};
+
+export const validate = async ( filename: string, isImport: boolean = false ) => {
+	const readInterface = await getReadInterface( filename );
+	readInterface.on( 'line', line => {
+		staticSqlValidations.execute( line );
+	} );
+
+	// Block until the processing completes
+	await new Promise( resolve => readInterface.on( 'close', resolve ) );
+	readInterface.close();
+
+	await staticSqlValidations.postExecutionOutput( filename, isImport );
 };
