@@ -17,6 +17,9 @@ import { stdout as log } from 'single-line-log';
 import { trackEvent } from 'lib/tracker';
 import { progress } from 'lib/cli/progress';
 
+// For progress logs
+const step = 'validate';
+
 let problemsFound = 0;
 let lineNum = 1;
 
@@ -195,7 +198,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 }
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
-	progress( 'running', 'validate' );
+	progress( step ,'running' );
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	let fd;
@@ -205,7 +208,9 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	} catch ( e ) {
 		console.log( chalk.red( 'Error: ' ) + 'The file at the provided path is either missing or not readable.' );
 		console.log( 'Please check the input and try again.' );
-		progress( 'failed', 'validate' );
+
+		progress( step, 'failed' );
+
 		process.exit( 1 );
 	}
 
@@ -254,12 +259,14 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 			console.log();
 		}
 
-		progress( 'failed', 'validate' );
+		progress( step, 'failed' );
+
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
 
-	progress( 'success', 'validate' );
+	progress( step, 'success' );
+
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
 	readInterface.close();

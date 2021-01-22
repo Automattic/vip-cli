@@ -23,6 +23,9 @@ import { getFileSize } from 'lib/client-file-uploader';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
+// For progress logs
+const step = 'replace';
+
 const flatten = arr => {
 	return arr.reduce( function( flat, toFlatten ) {
 		return flat.concat( Array.isArray( toFlatten ) ? flatten( toFlatten ) : toFlatten );
@@ -128,7 +131,8 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	progress( 'running', 'replace' );
+	// Track progress
+	progress( step, 'running' );
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -136,7 +140,7 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		progress( 'failed', 'replace' );
+		progress( step, 'failed' );
 		throw new Error( 'No search and replace parameters provided.' );
 	}
 
@@ -158,7 +162,7 @@ export const searchAndReplace = async (
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
-			progress( 'unknown', 'replace' );
+			progress( step, 'unknown' );
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
 
 			process.exit();
@@ -189,7 +193,7 @@ export const searchAndReplace = async (
 					)
 				);
 
-				progress( 'failed', 'replace' );
+				progress( step, 'failed' );
 
 				reject();
 			} );
@@ -198,7 +202,7 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	progress( 'success', 'replace' );
+	progress( step, 'success' );
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
 	return result;

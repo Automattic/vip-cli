@@ -29,6 +29,11 @@ import { progress } from 'lib/cli/progress';
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
  * - Include `hasImporterS3Credentials` & error out if false (this needs to be implemented)
  */
+
+	// For progress logs
+const step = 'startImport';
+const nextStep = 'import';
+
 const appQuery = `
 	id,
 	name,
@@ -159,8 +164,9 @@ command( {
 			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
 
 			debug( { basename, md5, result } );
+
 			debug( 'Upload complete. Initiating the import.' );
-			progress( 'running', 'startImport' );
+			progress( step, 'running' );
 
 			try {
 				await api.mutate( {
@@ -185,9 +191,11 @@ command( {
 						},
 					},
 				} );
-				progress( 'success', 'startImport' );
+
+				progress( step, 'success' );
 			} catch ( gqlErr ) {
-				progress( 'failed', 'startImport' );
+				progress( step, 'failed' );
+
 				await trackEventWithEnv( 'import_sql_command_error', {
 					error_type: 'StartImport-failed',
 					gql_err: gqlErr,
@@ -195,7 +203,7 @@ command( {
 				err( `StartImport call failed: ${ gqlErr }` );
 			}
 
-			progress( 'running', 'import' );
+			progress( nextStep, 'running' );
 			await trackEventWithEnv( 'import_sql_command_queued' );
 
 			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
