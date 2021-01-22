@@ -8,7 +8,6 @@
  */
 import chalk from 'chalk';
 import { stdout as log } from 'single-line-log';
-import debugLib from 'debug';
 
 /**
  * Internal dependencies
