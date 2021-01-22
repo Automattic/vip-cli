@@ -21,17 +21,10 @@ import { trackEventWithEnv } from 'lib/tracker';
 // import { validate } from 'lib/validations/sql';
 import { staticSqlValidations } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
-import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import { isMultiSiteDumpFile } from 'lib/validations/is-multi-site-sql-dump';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
-import { getReadInterface } from 'lib/validations/line-by-line';
-
-export type PerLineValidationObject = {
-	execute: Function,
-	postLineExecutionProcessing?: Function,
-};
+import { fileLineValidations } from 'lib/validations/line-by-line';
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -47,7 +40,7 @@ const appQuery = `
 
 const debug = debugLib( 'vip:vip-import-sql' );
 
-const gates = async ( app, env, fileName, api ) => {
+const gates = async ( app, env, fileName ) => {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -100,33 +93,6 @@ const examples = [
 	},
 ];
 
-const fileLineValidations = async ( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject> ) => {
-	const isImport = true;
-	const readInterface = await getReadInterface( fileName );
-
-	debug( 'Validations: ', validations );
-
-	readInterface.on( 'line', line => {
-		validations.map( validation => {
-			validation.execute( line );
-		} );
-	} );
-
-	readInterface.on( 'error', err => {
-		throw new Error( ` Error validating input file: ${ err.toString() }` );
-	} );
-
-	// Block until the processing completes
-	await new Promise( resolve => readInterface.on( 'close', resolve ) );
-	readInterface.close();
-
-	validations.map( async validation => {
-		if ( validation.hasOwnProperty( 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
-			await validation.postLineExecutionProcessing( { fileName, isImport, appId, envId } );
-		}
-	} );
-};
-
 command( {
 	appContext: true,
 	appQuery,
@@ -153,7 +119,7 @@ command( {
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
-		await gates( app, env, fileName, api );
+		await gates( app, env, fileName );
 
 		let fileNameToUpload = fileName;
 		// Run Search and Replace if the --search-replace flag was provided

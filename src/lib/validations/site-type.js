@@ -14,6 +14,7 @@ import { trackEventWithEnv } from 'lib/tracker';
 import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import * as exit from 'lib/cli/exit';
+import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
 let isMultiSiteSqlDump = false;
 
@@ -24,7 +25,7 @@ export const siteTypeValidations = {
 			isMultiSiteSqlDump = true;
 		}
 	},
-	postLineExecutionProcessing: async ( { appId, envId } ) => {
+	postLineExecutionProcessing: async ( { appId, envId }: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const track = trackEventWithEnv.bind( null, appId, envId );
 

@@ -16,8 +16,8 @@ import debugLib from 'debug';
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
 import { getReadInterface } from 'lib/validations/line-by-line';
+import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
-const debug = debugLib( 'vip:vip-import-sql' );
 let problemsFound = 0;
 let lineNum = 1;
 
@@ -249,11 +249,11 @@ const perLineValidations = ( line: string ) => {
 };
 
 export const staticSqlValidations = {
-	execute: line => {
+	execute: ( line: string ) => {
 		perLineValidations( line );
 	},
-	postLineExecutionProcessing: async ( { filename, isImport } ) => {
-		await postValidation( filename, isImport );
+	postLineExecutionProcessing: async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
+		await postValidation( fileName, isImport );
 	},
 };
 
@@ -267,5 +267,5 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await staticSqlValidations.postExecutionOutput( filename, isImport );
+	await staticSqlValidations.postLineExecutionProcessing( { filename, isImport } );
 };
