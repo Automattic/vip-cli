@@ -40,7 +40,7 @@ const steps = {
 	upload: 'Uploading file to S3',
 	startImport: 'Starting import',
 	import: 'Importing...',
-	// Add more as neededs
+	// Add more as needed
 };
 
 // Progress Logs
@@ -49,36 +49,35 @@ let messages = [];
 const completedSteps = [];
 
 export const progress = ( currentStep, status ) => {
-		for ( const key of Object.keys( steps ) ) {
+	for ( const key of Object.keys( steps ) ) {
+		// Status of the current step in progress
+		if ( key === currentStep ) {
+			message = ` ${ marks[ status ] } ${ steps[ currentStep ] }`;
+			messages.push( message );
 
-			// Status of the current step in progress
-			if ( key === currentStep ) {
-				message = ` ${ marks[ status ] } ${ steps[ currentStep ] }`;
-				messages.push( message );
-
-				// Keep track of completed steps
-				if ( status === 'success' ) {
-					completedSteps.push( currentStep );
-				}
-			}
-
-			// Status of all the other steps
-			if ( key !== currentStep ) {
-				const stepCompleted = completedSteps.includes( key );
-
-				if ( stepCompleted ) {
-					message = ` ${ marks[ 'success' ] } ${ steps[ key ] }`;
-					messages.push( message );
-				} else {
-					message = chalk.dim( ` ${ marks[ 'pending' ] } ${ steps[ key ] }` );
-					messages.push( message );
-				}
+			// Keep track of completed steps
+			if ( status === 'success' ) {
+				completedSteps.push( currentStep );
 			}
 		}
 
-		// Finally, print the progress logs
-		progressLog( messages.join( '\n' ) );
+		// Status of all the other steps
+		if ( key !== currentStep ) {
+			const stepCompleted = completedSteps.includes( key );
 
-		// Reset the messages array for each iteration
-		messages = [];
+			if ( stepCompleted ) {
+				message = ` ${ marks.success } ${ steps[ key ] }`;
+				messages.push( message );
+			} else {
+				message = chalk.dim( ` ${ marks.pending } ${ steps[ key ] }` );
+				messages.push( message );
+			}
+		}
+	}
+
+	// Finally, print the progress logs
+	progressLog( messages.join( '\n' ) );
+
+	// Reset the messages array for each iteration
+	messages = [];
 };

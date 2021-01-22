@@ -198,7 +198,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 }
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
-	progress( step ,'running' );
+	progress( step, 'running' );
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	let fd;

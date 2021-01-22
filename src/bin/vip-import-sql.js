@@ -30,7 +30,7 @@ import { progress } from 'lib/cli/progress';
  * - Include `hasImporterS3Credentials` & error out if false (this needs to be implemented)
  */
 
-	// For progress logs
+// For progress logs
 const step = 'startImport';
 const nextStep = 'import';
 
