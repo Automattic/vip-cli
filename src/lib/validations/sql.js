@@ -252,7 +252,7 @@ export const staticSqlValidations = {
 	execute: line => {
 		perLineValidations( line );
 	},
-	postExecutionOutput: async ( filename, isImport ) => {
+	postLineExecutionProcessing: async ( { filename, isImport } ) => {
 		await postValidation( filename, isImport );
 	},
 };

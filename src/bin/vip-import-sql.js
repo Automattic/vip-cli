@@ -20,12 +20,18 @@ import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
 // import { validate } from 'lib/validations/sql';
 import { staticSqlValidations } from 'lib/validations/sql';
+import { siteTypeValidations } from 'lib/validations/site-type';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import { isMultiSiteDumpFile } from 'lib/validations/is-multi-site-sql-dump';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { getReadInterface } from 'lib/validations/line-by-line';
+
+export type PerLineValidationObject = {
+	execute: Function,
+	postLineExecutionProcessing?: Function,
+};
 
 /**
  * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
@@ -67,22 +73,6 @@ const gates = async ( app, env, fileName, api ) => {
 			`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
 				'Please split it into multiple files or contact support for assistance.' );
 	}
-
-	// is the import for a multisite?
-	const isMultiSiteSqlDump = await isMultiSiteDumpFile( fileName );
-	const isMultiSite = await isMultiSiteInSiteMeta( appId, envId, api );
-
-	// if site is a multisite but import sql is not
-	if ( isMultiSite && ! isMultiSiteSqlDump ) {
-		await track( 'import_sql_command_error', { error_type: 'multisite-but-not-multisite-sql-dump' } );
-		exit.withError( 'You have provided a non-multisite SQL dump file for import into a multisite.' );
-	}
-
-	// if site is a single site but import sql is for a multi site
-	if ( ! isMultiSite && isMultiSiteSqlDump ) {
-		await track( 'import_sql_command_error', { error_type: 'not-multisite-with-multisite-sql-dump' } );
-		exit.withError( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
-	}
 };
 // Command examples
 const examples = [
@@ -110,7 +100,7 @@ const examples = [
 	},
 ];
 
-const fileLineValidations = async ( fileName: string, validations: Array<Object> ) => {
+const fileLineValidations = async ( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject> ) => {
 	const isImport = true;
 	const readInterface = await getReadInterface( fileName );
 
@@ -131,8 +121,8 @@ const fileLineValidations = async ( fileName: string, validations: Array<Object>
 	readInterface.close();
 
 	validations.map( async validation => {
-		if ( validation.hasOwnProperty( 'postExecutionOutput' )  && typeof validation.postExecutionOutput === 'function' ) {
-			await validation.postExecutionOutput( fileName, isImport );
+		if ( validation.hasOwnProperty( 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
+			await validation.postLineExecutionProcessing( { fileName, isImport, appId, envId } );
 		}
 	} );
 };
@@ -151,6 +141,7 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env, searchReplace } = opts;
+		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 		const api = await API();
 
@@ -158,7 +149,7 @@ command( {
 		debug( 'Args: ', arg );
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
-		const track = trackEventWithEnv.bind( null, env.appId, env.id );
+		const track = trackEventWithEnv.bind( null, appId, envId );
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
@@ -175,10 +166,11 @@ command( {
 			fileNameToUpload = outputFileName;
 		}
 
+		// VALIDATIONS
 		const validations = [];
 		validations.push( staticSqlValidations );
-		// validations.push( environmentValidations );
-		await fileLineValidations( fileNameToUpload, validations );
+		validations.push( siteTypeValidations );
+		await fileLineValidations( appId, envId, fileNameToUpload, validations );
 
 		// Call the Public API
 		try {
