@@ -15,7 +15,6 @@ import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
-import { stdout as singleLogLine } from 'single-line-log';
 import debugLib from 'debug';
 
 /**
@@ -219,9 +218,8 @@ export async function uploadUsingPutObject( {
 	const progressPassThrough = new PassThrough();
 	progressPassThrough.on( 'data', data => {
 		readBytes += data.length;
-		singleLogLine( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
+		debug( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
 	} );
-	progressPassThrough.on( 'end', () => console.log( '\n' ) );
 
 	const response = await fetch( presignedRequest.url, {
 		...fetchOptions,
@@ -440,7 +438,7 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 		} );
 
 	const printProgress = () =>
-		singleLogLine(
+		debug(
 			partPercentages
 				.map( ( partPercentage, index ) => {
 					const { partSize } = parts[ index ];
