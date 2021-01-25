@@ -21,6 +21,7 @@ describe( 'utils/cli/envAlias', () => {
 			'@app.env.instance-01',
 			'@1',
 			'@1.env',
+			'@2.MixedCaseEnv',
 		] )( 'should identify valid aliases - %p', alias => {
 			expect( envAlias.isAlias( alias ) ).toBe( true );
 		} );
@@ -88,6 +89,12 @@ describe( 'utils/cli/envAlias', () => {
 				app: '1',
 				env: 'env.instance',
 			},
+			{
+				alias: '@2.Env.instance',
+				app: '2',
+				env: 'env.instance',
+			},
+
 		] )( 'should parse out the app and env from an alias', input => {
 			const parsed = envAlias.parseEnvAlias( input.alias );
 

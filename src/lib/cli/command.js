@@ -54,7 +54,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// If we have both an --app/--env and an alias, we need to give a warning
 	if ( parsedAlias.app && ( options.app || options.env ) ) {
-		console.error( chalk`{red Please only use an envirionment alias, or the --app and --env parameters, but not both}` );
+		console.error( chalk`{red Please only use an environment alias, or the --app and --env parameters, but not both}` );
 
 		process.exit();
 	}
@@ -346,11 +346,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 		const info: Array<Tuple> = [];
 
 		if ( options.app ) {
-			info.push( { key: 'app', value: options.app.name } );
+			info.push( { key: 'App', value: options.app.name } );
 		}
 
 		if ( options.env ) {
-			info.push( { key: 'environment', value: getEnvIdentifier( options.env ) } );
+			info.push( { key: 'Environment', value: getEnvIdentifier( options.env ) } );
 		}
 
 		let message = 'Are you sure?';

@@ -5,7 +5,7 @@
  */
 
 exports.isAlias = function( alias: string ): boolean {
-	return /^@[a-z0-9\.\-]+$/.test( alias );
+	return /^@[A-Za-z0-9\.\-]+$/.test( alias );
 };
 
 exports.parseEnvAlias = function( alias: string ) {
@@ -14,9 +14,10 @@ exports.parseEnvAlias = function( alias: string ) {
 	}
 
 	// Remove the '@'
-	const stripped = alias.substr( 1 );
+	const stripped = alias.substr( 1 ).toLowerCase();
 
 	// in JS, .split() with a limit discards the extra ones, so can't use it
+	// Also convert to lowercase because mixed case environment names would cause problems
 	const [ app, ...rest ] = stripped.split( '.' );
 
 	let env = undefined;

@@ -10,17 +10,21 @@ import fs, { ReadStream } from 'fs';
 import os from 'os';
 import path from 'path';
 import fetch from 'node-fetch';
+import chalk from 'chalk';
 import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import { stdout as singleLogLine } from 'single-line-log';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
+
+const debug = debugLib( 'vip:lib/client-file-uploader' );
 
 // Files smaller than COMPRESS_THRESHOLD will not be compressed before upload
 export const COMPRESS_THRESHOLD = 16 * MB_IN_BYTES;
@@ -103,10 +107,6 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 
 		const fileSize = await getFileSize( fileName );
 
-		if ( ! fileSize ) {
-			return reject( `File '${ fileName }' is empty.` );
-		}
-
 		const basename = path.posix.basename( fileName );
 		// TODO Validate File basename...  encodeURIComponent, maybe...?
 
@@ -115,9 +115,9 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 
 		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
-		console.log( 'Calculating file md5 checksum...' );
+		debug( 'Calculating file md5 checksum...' );
 		const md5 = await getFileMD5Hash( fileName );
-		console.log( `Calculated file md5 checksum: ${ md5 }` );
+		debug( `Calculated file md5 checksum: ${ md5 }\n` );
 
 		resolve( {
 			basename,
@@ -140,7 +140,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 	}
 
 	console.log(
-		`File "${ fileMeta.basename }" is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB.`
+		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n`
 	);
 
 	// TODO Compression will probably fail over a certain file size... break into pieces...?
@@ -153,20 +153,21 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
 		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
-		console.log( `Compressing to ${ fileMeta.fileName } prior to transfer.` );
+		console.log( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
 
 		await gzipFile( uncompressedFileName, fileMeta.fileName );
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
-		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB.` );
+		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
-		console.log(
-			`Compression resulted in a ${ ( fewerBytes / MB_IN_BYTES ).toFixed( 2 ) }MB (${ Math.floor(
-				( 100 * fewerBytes ) / uncompressedFileSize
-			) }%) smaller file`
-		);
+
+		const calculation = `${ ( fewerBytes / MB_IN_BYTES ).toFixed( 2 ) }MB (${ Math.floor(
+			( 100 * fewerBytes ) / uncompressedFileSize
+		) }%)`;
+
+		console.log( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
 	const result =
@@ -191,7 +192,7 @@ export async function uploadUsingPutObject( {
 	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
 }: UploadUsingArguments ) {
-	console.log( `Uploading ${ basename } to S3 using the \`PutObject\` command.` );
+	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
 		appId: app.id,
@@ -245,7 +246,7 @@ export async function uploadUsingPutObject( {
 export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingArguments ) {
 	const { basename } = fileMeta;
 
-	console.log( 'Uploading to S3 using the Multipart API.' );
+	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the Multipart API.` );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
 		appId: app.id,
@@ -283,7 +284,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 
 	const uploadId = parsedResponse.InitiateMultipartUploadResult.UploadId;
 
-	console.log( { uploadId } );
+	debug( { uploadId } );
 
 	const parts = getPartBoundaries( fileMeta.fileSize );
 	const etagResults = await uploadParts( {
@@ -293,7 +294,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		parts,
 		uploadId,
 	} );
-	console.log( { etagResults } );
+	debug( { etagResults } );
 
 	return completeMultipartUpload( {
 		app,

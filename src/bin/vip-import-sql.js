@@ -16,9 +16,13 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
+import {
+	currentUserCanImportForApp,
+	isSupportedApp,
+	SQL_IMPORT_FILE_SIZE_LIMIT,
+} from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
-import { uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { validate } from 'lib/validations/sql';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
@@ -69,6 +73,36 @@ const START_IMPORT_MUTATION = gql`
 
 const debug = debugLib( '@automattic/vip:vip-import-sql' );
 
+// Command examples
+const examples = [
+	// `sql` subcommand
+	{
+		usage: 'vip import sql @mysite.develop <file.sql>',
+		description: 'Import the given SQL file to your site',
+	},
+	// `search-replace` flag
+	{
+		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to"',
+		description:
+			'Perform a Search and Replace, then import the replaced file to your site.\n' +
+			'       * Ensure there are no spaces between your search-replace parameters',
+	},
+	// `in-place` flag
+	{
+		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to" --in-place',
+		description:
+			'Search and Replace on the input <file.sql>, then import the replaced file to your site',
+	},
+	// `output` flag
+	{
+		usage:
+			'vip import sql @mysite.develop <file.sql> --search-replace="from,to" --output="<output.sql>"',
+		description:
+			'Output the performed Search and Replace to the specified output file, then import the replaced file to your site\n' +
+			'       * Has no effect when the `in-place` flag is used',
+	},
+];
+
 command( {
 	appContext: true,
 	appQuery,
@@ -77,13 +111,19 @@ command( {
 	module: 'import-sql',
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
-	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
-	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
-	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
+	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
+	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
+	.option(
+		'output',
+		'Specify the replacement output file for Search and Replace',
+		'process.stdout'
+	)
+	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts, { trackEventWithContext } ) => {
-		const [ fileName ] = arg;
 		const { app, env, searchReplace } = opts;
-		// const { importStatus } = env;
+		const [ fileName ] = arg;
+
+		await trackEventWithContext( 'import_sql_command_execute' );
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
@@ -118,8 +158,22 @@ command( {
 		}
 		*/
 
+		const fileSize = await getFileSize( fileName );
+
+		if ( ! fileSize ) {
+			err( `File '${ fileName }' is empty.` );
+		}
+
+		if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
+			err(
+				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
+					'Please split it into multiple files or contact support for assistance.'
+			);
+		}
+
 		let fileNameToUpload = fileName;
 
+		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
@@ -137,8 +191,10 @@ command( {
 			fileNameToUpload = outputFileName;
 		}
 
+		// Run SQL validation
 		await validate( fileNameToUpload, true );
 
+		// Call the Public API
 		const api = await API();
 
 		const startImportVariables = {};
@@ -154,8 +210,7 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
-
-			console.log( { basename, md5, result } );
+			debug( { basename, md5, result } );
 		} catch ( e ) {
 			err( e );
 		}
@@ -167,12 +222,6 @@ command( {
 			} );
 
 			debug( { startImportResults } );
-
-			await trackEventWithContext( 'import_sql_command_queued' );
-
-			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
-
-			await importSqlCheckStatus( { app, env } );
 		} catch ( gqlErr ) {
 			await trackEventWithContext( 'import_sql_command_error', {
 				errorType: 'StartImport-failed',
@@ -180,4 +229,8 @@ command( {
 			} );
 			err( `StartImport call failed: ${ gqlErr }` );
 		}
+
+		console.log( 'Upload complete. Initiating the import.' );
+
+		await importSqlCheckStatus( { app, env } );
 	} );

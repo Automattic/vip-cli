@@ -15,6 +15,7 @@ import { stdout as log } from 'single-line-log';
  * Internal dependencies
  */
 import { trackEvent } from 'lib/tracker';
+import { confirm } from 'lib/cli/prompt';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -47,6 +48,29 @@ const infoCheckFormatter = check => {
 		console.log( item );
 	} );
 };
+
+function checkTablePrefixes( tables ) {
+	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
+	tables.forEach( tableName => {
+		if ( tableName.match( /^wp_(\d+_)/ ) ) {
+			wpMultisiteTables.push( tableName );
+		} else if ( tableName.match( /^wp_/ ) ) {
+			wpTables.push( tableName );
+		} else if ( ! tableName.match( /^wp_/ ) ) {
+			notWPTables.push( tableName );
+		}
+	} );
+	if ( wpTables.length > 0 ) {
+		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
+	}
+	if ( notWPTables.length > 0 ) {
+		problemsFound += 1;
+		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
+	}
+	if ( wpMultisiteTables.length > 0 ) {
+		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
+	}
+}
 
 export type CheckType = {
     excerpt: string,
@@ -142,30 +166,16 @@ const checks: Checks = {
 		excerpt: 'Siteurl/home options',
 		recommendation: '',
 	},
+	engineInnoDB: {
+		matcher: /ENGINE=(?!(InnoDB))/i,
+		matchHandler: lineNumber => lineNumber,
+		outputFormatter: errorCheckFormatter,
+		results: [],
+		message: 'ENGINE != InnoDB',
+		excerpt: '\'ENGINE=InnoDB\' should be present (case-insensitive) for all tables',
+		recommendation: 'Ensure your application works with InnoDB and update your SQL dump to include only \'ENGINE=InnoDB\' engine definitions in \'CREATE TABLE\' statements',
+	},
 };
-
-function checkTablePrefixes( tables ) {
-	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
-	tables.forEach( tableName => {
-		if ( tableName.match( /^wp_(\d+_)/ ) ) {
-			wpMultisiteTables.push( tableName );
-		} else if ( tableName.match( /^wp_/ ) ) {
-			wpTables.push( tableName );
-		} else if ( ! tableName.match( /^wp_/ ) ) {
-			notWPTables.push( tableName );
-		}
-	} );
-	if ( wpTables.length > 0 ) {
-		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
-	}
-	if ( notWPTables.length > 0 ) {
-		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
-	}
-	if ( wpMultisiteTables.length > 0 ) {
-		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
-	}
-}
 
 function openFile( filename, flags = 'r', mode = 666 ) {
 	return new Promise( ( resolve, reject ) => {
@@ -179,7 +189,8 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 }
 
 export const validate = async ( filename: string, isImport: boolean = false ) => {
-	await trackEvent( 'import_validate_sql_command_execute', { isImport } );
+	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
+	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
 
 	let fd;
 
@@ -219,31 +230,49 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	console.log( '\n' );
 	const errorSummary = {};
 	const checkEntires: any = Object.entries( checks );
-	for ( const entry of checkEntires ) {
-		const [ type, check ]: [string, CheckType] = entry;
+	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
 		check.outputFormatter( check, type );
 		console.log( '' );
 
-		// Change `type` to snake_case for Tracks events
-		const typeToSnakeCase = type.replace( /([A-Z])/, '_$1' ).toLowerCase();
-
-		errorSummary[ typeToSnakeCase ] = check.results.length;
+		errorSummary[ type ] = check.results.length;
 	}
 	// eslint-disable-next-line camelcase
 	errorSummary.problems_found = problemsFound;
 
 	if ( problemsFound > 0 ) {
-		console.error( `Total of ${ chalk.red( problemsFound ) } errors found` );
-		await trackEvent( 'import_validate_sql_command_failure', { isImport, errorSummary } );
-		process.exit( 1 );
+		console.error( `** Total of ${ chalk.red( problemsFound ) } errors found ** ` );
+
+		if ( isImport ) {
+			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
+			console.log();
+		}
+
+		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
+		return process.exit( 1 );
 	}
 
-	console.log( '✅ Your database file looks good.' );
+	console.log( '** Your database file looks good 🎉 **\n' );
 
-	await trackEvent( 'import_validate_sql_command_success', { isImport } );
+	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
+
+	readInterface.close();
 
 	if ( isImport ) {
-		console.log( '\n🎉 Continuing to the import process.' );
+		// Add a confirmation step before running the import
+		const yes = await confirm(
+			[], 'Are you sure you want to continue with the import?'
+		);
+
+		// Bail if user does not wish to proceed
+		if ( ! yes ) {
+			console.log( `${ chalk.red( 'Exiting' ) }` );
+
+			await trackEvent( 'import_continue_cancelled', { is_import: isImport, import_file: filename } );
+
+			process.exit();
+		}
+
+		console.log( `\n${ chalk.underline( 'Starting the import process...' ) }` );
 		return;
 	}
 
