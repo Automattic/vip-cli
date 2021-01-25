@@ -20,11 +20,7 @@ const debug = debugLib( '@automattic/vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
 
-const IMPORT_SQL_PROGRESS_QUERY = gql`
-	query App($id: Int) {
-		app(id: $id) {
-			environments {
-				id
+/*
 				importStatus {
 					dbOperationInProgress
 					importInProgress
@@ -41,16 +37,23 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 						finished_at
 					}
 				}
+*/
+
+const IMPORT_SQL_PROGRESS_QUERY = gql`
+	query App($id: Int) {
+		app(id: $id) {
+			environments {
+				id
 				jobs {
 					id
 					type
 					createdAt
 					progress {
-					  status
-					  steps {
-						name
 						status
-					  }
+						steps {
+							name
+							status
+						}
 					}
 				}
 			}
@@ -74,7 +77,11 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 			variables: { id: app.id },
 			fetchPolicy: 'network-only',
 		} );
-		const { data: { app: { environments } } } = response;
+		const {
+			data: {
+				app: { environments },
+			},
+		} = response;
 		const { importStatus, jobs } = environments.find( e => e.id === env.id );
 		const importJob = jobs.find( ( { type } ) => type === 'sql_import' );
 		return { importStatus, importJob };
@@ -90,7 +97,10 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 				return reject( { error: 'No import job found' } );
 			}
 
-			const { createdAt, progress: { status, steps } } = importJob;
+			const {
+				createdAt,
+				progress: { status, steps },
+			} = importJob;
 
 			if ( status === 'error' ) {
 				return reject( { error: 'Import job failed', steps } );
@@ -104,10 +114,7 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 				return resolve( importJob );
 			}
 
-			const _steps = [ ...steps ];
-			_steps.push( { name: 'fake', status: 'running' } );
-
-			singleLogLine( '\n\nSQL Import Job Status:\n\n' + formatJobSteps( _steps, runningSprite ) );
+			singleLogLine( '\n\nSQL Import Job Status:\n' + formatJobSteps( steps, runningSprite ) );
 			setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 		};
 
@@ -115,7 +122,26 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 		checkStatus();
 	} );
 
-	console.log( '\n', { results } );
+	// break out of the singleLogLine
+	console.log( '\n' );
+
+	const {
+		id: importId,
+		createdAt,
+		progress: { status },
+	} = results;
+	if ( ! importId ) {
+		console.log( 'No import job found' );
+	}
+
+	console.log(
+		`Results
+===============================================================
+Import started at ${ createdAt } (${ new Date( createdAt ) })
+Result: ${ status }
+===============================================================
+`
+	);
 }
 
 export default {

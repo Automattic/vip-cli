@@ -1,12 +1,11 @@
+/** @format */
 // @flow
 /**
  * External dependencies
  */
 import chalk from 'chalk';
-//import { stdout } from 'single-line-log';
 
-type Options = {
-};
+type Options = {};
 
 export type Tuple = {
 	key: string,
@@ -162,8 +161,9 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 }
 
 export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) {
-	return steps.reduce( ( carry, step ) => {
-		carry += `${ step.name }: ${ getGlyphForStatus( step.status, runningSprite ) }\n`;
-		return carry;
-	}, '' );
+	return steps.reduce(
+		( carry, step ) =>
+			carry + `- ${ step.name }: ${ getGlyphForStatus( step.status, runningSprite ) }\n`,
+		''
+	);
 }
