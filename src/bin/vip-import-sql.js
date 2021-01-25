@@ -62,7 +62,7 @@ const gates = async ( app, env, fileName ) => {
 
 	if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
 		exit.withError(
-			`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
+			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
 				'Please split it into multiple files or contact support for assistance.' );
 	}
 };
