@@ -8,12 +8,13 @@
  */
 import gql from 'graphql-tag';
 import debugLib from 'debug';
-//import { stdout as singleLogLine } from 'single-line-log';
+import { stdout as singleLogLine } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
+import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 
 const debug = debugLib( '@automattic/vip:lib/site-import/status' );
 
@@ -26,6 +27,8 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 				id
 				importStatus {
 					dbOperationInProgress
+					importInProgress
+					inMaintenanceMode
 					progress {
 						started_at
 						steps {
@@ -38,100 +41,73 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 						finished_at
 					}
 				}
+				jobs {
+					id
+					type
+					createdAt
+					progress {
+					  status
+					  steps {
+						name
+						status
+					  }
+					}
+				}
 			}
 		}
 	}
 `;
 
 export type ImportSqlCheckStatusInput = {
-	afterTime: Number | null,
 	app: Object,
 	env: Object,
 };
 
-export async function importSqlCheckStatus( { afterTime, app, env }: ImportSqlCheckStatusInput ) {
+export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusInput ) {
 	const api = await API();
 
-	const getImportStatus = async () => {
+	const runningSprite = new RunningSprite();
+
+	const getStatus = async () => {
 		const response = await api.query( {
 			query: IMPORT_SQL_PROGRESS_QUERY,
 			variables: { id: app.id },
 			fetchPolicy: 'network-only',
 		} );
-		const {
-			data: {
-				app: { environments },
-			},
-		} = response;
-		const { importStatus } = environments.find( e => e.id === env.id );
-		return importStatus;
+		const { data: { app: { environments } } } = response;
+		const { importStatus, jobs } = environments.find( e => e.id === env.id );
+		const importJob = jobs.find( ( { type } ) => type === 'sql_import' );
+		return { importStatus, importJob };
 	};
 
-	const importStatus = await new Promise( ( resolve, reject ) => {
+	const results = await new Promise( ( resolve, reject ) => {
 		const checkStatus = async () => {
-			const status = await getImportStatus();
+			const { importStatus, importJob } = await getStatus();
 
-			if ( ! afterTime ) {
-				// No polling. This is a single shot check. Just return the status.
-				return resolve( status );
+			debug( { importStatus, importJob } );
+
+			if ( ! importJob ) {
+				return reject( { error: 'No import job found' } );
 			}
 
-			debug( { status } );
+			const { createdAt, progress: { status, steps } } = importJob;
 
-			const { dbOperationInProgress, progress } = status;
-
-			if ( progress?.started_at && ! progress.finished_at ) {
-				const { steps = [] } = progress;
-				const failedStep = steps.findIndex( ( { result } ) => result === 'failed' );
-				if ( failedStep !== -1 ) {
-					return reject( `Failed at step # ${ failedStep }: (${ steps[ failedStep ]?.name })` );
-				}
-
-				console.log( 'Running...' );
-				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
-				return;
+			if ( status === 'error' ) {
+				return reject( { error: 'Import job failed', steps } );
 			}
 
-			if ( ! progress || progress.started_at < afterTime ) {
-				// The job that initiates the import has not been picked up yet
-				console.log( 'Waiting for import to start...' );
-				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
-				return;
+			if ( ! steps.length ) {
+				return reject( { error: 'Could not enumerate the import job steps' } );
 			}
 
-			if ( progress.finished_at ) {
-				// All done, let's see if it succeeded
-
-				const { steps = [] } = progress;
-				const failedStep = steps.findIndex( ( { result } ) => result === 'failed' );
-				if ( failedStep !== -1 ) {
-					return reject( `Failed at step # ${ failedStep }: (${ steps[ failedStep ]?.name })` );
-				}
-
-				if ( dbOperationInProgress ) {
-					// TODO -- check maint mode, etc. here as well
-					console.log( 'SQL file imported. Site is "reloading."' );
-					setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
-					return;
-				}
-
-				// 🎉🥳🎊
-				return resolve( status );
+			if ( status !== 'running' ) {
+				return resolve( importJob );
 			}
 
-			// The import is still in progress, report the status
+			const _steps = [ ...steps ];
+			_steps.push( { name: 'fake', status: 'running' } );
 
-			// TODO add copy on how to exit polling & what to expect, etc.
-			// TODO format this better, obviously :)
-			const output = `
-            Polling for Import Status:
-            Last updated: ${ new Date().toString() }
-            ${ JSON.stringify( { dbOperationInProgress, progress } ) }
-            `;
-			//singleLogLine( output );
-			console.log( output );
-
-			// Run this check again after a timeout
+			singleLogLine( '\n\nSQL Import Job Status:\n\n' + formatJobSteps( _steps, runningSprite ) );
 			setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 		};
 
@@ -139,7 +115,7 @@ export async function importSqlCheckStatus( { afterTime, app, env }: ImportSqlCh
 		checkStatus();
 	} );
 
-	console.log( '\n', { importStatus } );
+	console.log( '\n', { results } );
 }
 
 export default {
