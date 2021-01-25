@@ -18,18 +18,8 @@ import { isSupportedApp } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import command from 'lib/cli/command';
 
-// TODO: Share this with the import-sql command...?
-const appQuery = `
-id,
-name,
-type,
-organization { id, name },
-environments{
-	id
-	appId
-	type
-	name
-	importStatus {
+/*
+importStatus {
 		dbOperationInProgress
 		importInProgress
 		inMaintenanceMode
@@ -45,6 +35,19 @@ environments{
 		  finished_at
 		}
 	  }
+*/
+
+// TODO: Share this with the import-sql command...?
+const appQuery = `
+id,
+name,
+type,
+organization { id, name },
+environments{
+	id
+	appId
+	type
+	name
 	jobs {
 		id
 		type
@@ -71,16 +74,15 @@ command( {
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
-} )
-	.argv( process.argv, async ( arg: string[], { app, env }, { trackEventWithContext } ) => {
-		if ( ! isSupportedApp( app ) ) {
-			await trackEventWithContext( 'import_sql_command_error', { errorType: 'unsupported-app' } );
-			err( 'The type of application you specified does not currently support SQL imports.' );
-		}
+} ).argv( process.argv, async ( arg: string[], { app, env }, { trackEventWithContext } ) => {
+	if ( ! isSupportedApp( app ) ) {
+		await trackEventWithContext( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+		err( 'The type of application you specified does not currently support SQL imports.' );
+	}
 
-		await trackEventWithContext( 'import_sql_check_status_command_execute' );
+	await trackEventWithContext( 'import_sql_check_status_command_execute' );
 
-		console.log( `Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }` );
+	console.log( `Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }` );
 
-		await importSqlCheckStatus( { app, env } );
-	} );
+	await importSqlCheckStatus( { app, env } );
+} );

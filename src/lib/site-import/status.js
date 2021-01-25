@@ -110,11 +110,12 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 				return reject( { error: 'Could not enumerate the import job steps' } );
 			}
 
+			singleLogLine( '\n\nSQL Import Job Status:\n' + formatJobSteps( steps, runningSprite ) );
+
 			if ( status !== 'running' ) {
 				return resolve( importJob );
 			}
 
-			singleLogLine( '\n\nSQL Import Job Status:\n' + formatJobSteps( steps, runningSprite ) );
 			setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 		};
 

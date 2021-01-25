@@ -28,11 +28,17 @@ const err = async message => {
 	process.exit( 1 );
 };
 
-/**
- * TODO:
- * - Include `import_in_progress` state & error out if appropriate (this likely needs to be exposed in the data graph)
- * - Include `hasImporterS3Credentials` & error out if false (this needs to be implemented)
- */
+/*
+		importStatus {
+			dbOperationInProgress
+			progress {
+				started_at
+				steps { name, started_at, finished_at, result, output }
+				finished_at
+			}
+		}
+*/
+
 const appQuery = `
 	id,
 	name,
@@ -43,14 +49,6 @@ const appQuery = `
 		appId
 		type
 		name
-		importStatus {
-			dbOperationInProgress
-			progress {
-				started_at
-				steps { name, started_at, finished_at, result, output }
-				finished_at
-			}
-		}
 		syncProgress { status }
 		primaryDomain { name }
 	}
@@ -77,7 +75,6 @@ command( {
 	envContext: true,
 	requiredArgs: 1,
 	module: 'import-sql',
-	requiredArgs: 1,
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.example( 'vip import sql <file>', 'Import SQL provided in <file> to your site' )
@@ -86,7 +83,7 @@ command( {
 	.argv( process.argv, async ( arg: string[], opts, { trackEventWithContext } ) => {
 		const [ fileName ] = arg;
 		const { app, env, searchReplace } = opts;
-		const { importStatus } = env;
+		// const { importStatus } = env;
 
 		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
@@ -104,6 +101,7 @@ command( {
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
+		/*
 		const previousStartedAt = importStatus.progress.started_at || 0;
 		const previousFinishedAt = importStatus.progress.finished_at || 0;
 
@@ -118,6 +116,7 @@ command( {
 			// TODO link to status page when one exists
 			err( 'There is already an ongoing import for this site.' );
 		}
+		*/
 
 		let fileNameToUpload = fileName;
 
@@ -162,16 +161,18 @@ command( {
 		}
 
 		try {
-			const { serverTime } = await api.mutate( {
+			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
 				variables: startImportVariables,
 			} );
+
+			debug( { startImportResults } );
 
 			await trackEventWithContext( 'import_sql_command_queued' );
 
 			console.log( '🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 
-			await importSqlCheckStatus( { afterTime: serverTime, app, env } );
+			await importSqlCheckStatus( { app, env } );
 		} catch ( gqlErr ) {
 			await trackEventWithContext( 'import_sql_command_error', {
 				errorType: 'StartImport-failed',
