@@ -14,6 +14,7 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
+import * as exit from 'lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
 export type PerLineValidationObject = {
@@ -44,9 +45,7 @@ export async function getReadInterface( filename: string ) {
 	try {
 		fd = await openFile( filename );
 	} catch ( e ) {
-		console.log( chalk.red( 'Error: ' ) + 'The file at the provided path is either missing or not readable.' );
-		console.log( 'Please check the input and try again.' );
-		process.exit( 1 );
+		exit.withError( 'The file at the provided path is either missing or not readable. Please check the input and try again.' );
 	}
 
 	return readline.createInterface( {
