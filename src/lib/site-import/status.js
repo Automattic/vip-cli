@@ -15,6 +15,7 @@ import { stdout as singleLogLine } from 'single-line-log';
  */
 import API from 'lib/api';
 import { formatJobSteps, RunningSprite } from 'lib/cli/format';
+import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 
 const debug = debugLib( '@automattic/vip:lib/site-import/status' );
 
@@ -68,6 +69,12 @@ export type ImportSqlCheckStatusInput = {
 
 export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusInput ) {
 	const api = await API();
+
+	if ( ! currentUserCanImportForApp( app ) ) {
+		throw new Error(
+			'The currently authenticated account does not have permission to view SQL import status.'
+		);
+	}
 
 	const runningSprite = new RunningSprite();
 
