@@ -91,7 +91,7 @@ describe( 'utils/cli/envAlias', () => {
 			},
 			{
 				alias: '@2.Env.instance',
-				app: '1',
+				app: '2',
 				env: 'env.instance',
 			},
 
