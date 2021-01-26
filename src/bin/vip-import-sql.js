@@ -146,7 +146,7 @@ command( {
 				output: true,
 			} );
 
-			fileNameToUpload = outputFileName
+			fileNameToUpload = outputFileName;
 		} else {
 			progress( 'replace', 'skipped' );
 		}

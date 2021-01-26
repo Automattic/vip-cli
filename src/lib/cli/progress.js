@@ -68,14 +68,14 @@ export const progress = ( currentStep, status ) => {
 		// Status of all the other steps
 		if ( key !== currentStep ) {
 			const stepCompleted = completedSteps.includes( key );
-			
+
 			const skipped = `${ key }-skipped`;
 
 			const stepSkipped = completedSteps.find( step =>
 				step === skipped
 			);
 
-			if ( stepSkipped ===  skipped ) {
+			if ( stepSkipped === skipped ) {
 				message = ` ${ marks.skipped } ${ steps[ key ] }`;
 				messages.push( message );
 			} else if ( stepCompleted ) {
