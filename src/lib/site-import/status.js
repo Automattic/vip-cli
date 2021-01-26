@@ -161,19 +161,32 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 
 				debug( { createdAt, dbOperationInProgress, importInProgress, importStepProgress } );
 
-				const failedImportStep = importStepProgress.steps.find( step => {
-					step.result === 'failed' && console.log( { failedStep: step } );
-					return step.result === 'failed';
-				} );
-
-				if ( failedImportStep ) {
-					return reject( {
-						inImportProgress: true,
-						commandOutput: failedImportStep.output,
-						error: 'Import step failed',
-						stepName: failedImportStep.name,
-						errorText: failedImportStep.error,
+				if (
+					importStepProgress.started_at &&
+					importStepProgress.started_at * 1000 > new Date( createdAt ).getTime()
+				) {
+					// The contents of the `import_progress` meta are pertinent to the most recent import job
+					const failedImportStep = importStepProgress.steps.find( step => {
+						step.result === 'failed' &&
+							console.log( {
+								failedStep: step,
+								sa: 1000 * step.started_at,
+								ca: new Date( createdAt ).getTime(),
+							} );
+						return (
+							step.result === 'failed' && 1000 * step.started_at > new Date( createdAt ).getTime()
+						);
 					} );
+
+					if ( failedImportStep ) {
+						return reject( {
+							inImportProgress: true,
+							commandOutput: failedImportStep.output,
+							error: 'Import step failed',
+							stepName: failedImportStep.name,
+							errorText: failedImportStep.error,
+						} );
+					}
 				}
 
 				if ( jobStatus === 'error' ) {
