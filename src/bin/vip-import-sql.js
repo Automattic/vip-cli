@@ -149,6 +149,8 @@ command( {
 			} );
 
 			fileNameToUpload = outputFileName;
+		} else {
+			progress( 'replace', 'skipped' );
 		}
 
 		// Run SQL validation
