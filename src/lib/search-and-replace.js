@@ -150,10 +150,7 @@ export const searchAndReplace = async (
 	}
 
 	// determine all the replacements required
-	const replacementsArr = pairs.map( str => {
-		const filtered = str.replace( /[\s\x00-\x1F\x7F]/g, '' ); //whitespace & char codes 0-32, 127.
-		return filtered.split( ',' );
-	}	);
+	const replacementsArr = pairs.map( str => str.split( ',' ).map( s => s.trim() ) );
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
