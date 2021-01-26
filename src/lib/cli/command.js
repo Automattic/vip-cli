@@ -54,7 +54,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// If we have both an --app/--env and an alias, we need to give a warning
 	if ( parsedAlias.app && ( options.app || options.env ) ) {
-		console.error( chalk`{red Please only use an envirionment alias, or the --app and --env parameters, but not both}` );
+		console.error( chalk`{red Please only use an environment alias, or the --app and --env parameters, but not both}` );
 
 		process.exit();
 	}
