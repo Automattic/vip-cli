@@ -94,6 +94,12 @@ const examples = [
 			'Output the performed Search and Replace to the specified output file, then import the replaced file to your site\n' +
 			'       * Has no effect when the `in-place` flag is used',
 	},
+	// `sql status` subcommand
+	{
+		usage: 'vip import sql status @mysite.develop',
+		description:
+			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
+	},
 ];
 
 command( {
