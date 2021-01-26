@@ -18,26 +18,6 @@ import { isSupportedApp } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import command from 'lib/cli/command';
 
-/*
-importStatus {
-		dbOperationInProgress
-		importInProgress
-		inMaintenanceMode
-		progress {
-		  started_at
-		  steps {
-			name
-			started_at
-			finished_at
-			result
-			output
-		  }
-		  finished_at
-		}
-	  }
-*/
-
-// TODO: Share this with the import-sql command...?
 const appQuery = `
 id,
 name,
@@ -71,7 +51,7 @@ const err = async message => {
 
 command( {
 	appContext: true,
-	appQuery,
+	appQuery, // try taking this out...
 	envContext: true,
 	requiredArgs: 0,
 } ).argv( process.argv, async ( arg: string[], { app, env }, { trackEventWithContext } ) => {

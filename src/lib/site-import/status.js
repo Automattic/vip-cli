@@ -6,6 +6,7 @@
 /**
  * External dependencies
  */
+import chalk from 'chalk';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
 import { stdout as singleLogLine } from 'single-line-log';
@@ -20,25 +21,6 @@ import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 const debug = debugLib( '@automattic/vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
-
-/*
-				importStatus {
-					dbOperationInProgress
-					importInProgress
-					inMaintenanceMode
-					progress {
-						started_at
-						steps {
-							name
-							started_at
-							finished_at
-							result
-							output
-						}
-						finished_at
-					}
-				}
-*/
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
@@ -57,6 +39,21 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 						}
 					}
 				}
+				importStatus {
+					dbOperationInProgress
+					importInProgress
+					progress {
+						started_at
+						steps {
+							name
+							started_at
+							finished_at
+							result
+							output
+						}
+						finished_at
+					}
+				}
 			}
 		}
 	}
@@ -66,6 +63,67 @@ export type ImportSqlCheckStatusInput = {
 	app: Object,
 	env: Object,
 };
+
+async function getStatus( api, appId, envId ) {
+	const response = await api.query( {
+		query: IMPORT_SQL_PROGRESS_QUERY,
+		variables: { id: appId },
+		fetchPolicy: 'network-only',
+	} );
+	const {
+		data: {
+			app: { environments },
+		},
+	} = response;
+	const { importStatus, jobs } = environments.find( e => e.id === envId );
+	const importJob = jobs.find( ( { type } ) => type === 'sql_import' );
+	return {
+		importStatus,
+		importJob,
+	};
+}
+
+function getErrorMessage( importFailed ) {
+	debug( { importFailed } );
+
+	let message = chalk.red( `Error: ${ importFailed.error }` );
+
+	if ( importFailed.inImportProgress ) {
+		switch ( importFailed.stepName ) {
+			case 'import_preflights':
+			case 'validating_sql':
+				message += `
+This error occurred prior to the mysql batch script processing of your SQL file.
+
+Your site content was not altered.
+
+Please inspect your input file and make the appropriate corrections before trying again.
+`;
+				break;
+			case 'importing_db':
+				message += `
+This error occurred during the mysql batch script processing of your SQL file.
+
+Your site is ${ chalk.blue(
+		'automatically being rolled back'
+	) } to the last backup prior to your import job.
+`;
+				if ( importFailed.commandOutput ) {
+					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
+					message += `
+Please inspect your input file and make the appropriate corrections before trying again.
+The database server said:
+> ${ chalk.red( commandOutput ) }
+`;
+				} else {
+					message += 'Please contact support and include this message along with your sql file.';
+				}
+				break;
+			default:
+		}
+	}
+	return message;
+}
 
 export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusInput ) {
 	const api = await API();
@@ -78,78 +136,97 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 
 	const runningSprite = new RunningSprite();
 
-	const getStatus = async () => {
-		const response = await api.query( {
-			query: IMPORT_SQL_PROGRESS_QUERY,
-			variables: { id: app.id },
-			fetchPolicy: 'network-only',
+	const getResults = () =>
+		new Promise( ( resolve, reject ) => {
+			const checkStatus = async () => {
+				const { importStatus, importJob } = await getStatus( api, app.id, env.id );
+
+				debug( { importJob } );
+
+				if ( ! importJob ) {
+					return resolve( 'No import job found' );
+				}
+
+				const {
+					// completedAt, TODO when Parker support is present
+					createdAt,
+					progress: { status: jobStatus, steps },
+				} = importJob;
+
+				const {
+					dbOperationInProgress,
+					importInProgress,
+					progress: importStepProgress,
+				} = importStatus;
+
+				debug( { createdAt, dbOperationInProgress, importInProgress, importStepProgress } );
+
+				const failedImportStep = importStepProgress.steps.find( step => {
+					step.result === 'failed' && console.log( { failedStep: step } );
+					return step.result === 'failed';
+				} );
+
+				if ( failedImportStep ) {
+					return reject( {
+						inImportProgress: true,
+						commandOutput: failedImportStep.output,
+						error: 'Import step failed',
+						stepName: failedImportStep.name,
+						errorText: failedImportStep.error,
+					} );
+				}
+
+				if ( jobStatus === 'error' ) {
+					return reject( { error: 'Import job failed', steps } );
+				}
+
+				if ( ! steps.length ) {
+					return reject( { error: 'Could not enumerate the import job steps' } );
+				}
+
+				singleLogLine( `
+SQL Import Job Started at ${ createdAt } (${ new Date( createdAt ) })
+
+Status:
+${ formatJobSteps( steps, runningSprite ) }` );
+
+				if ( jobStatus !== 'running' ) {
+					return resolve( importJob );
+				}
+
+				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+			};
+
+			// Kick off the check
+			checkStatus();
 		} );
+
+	try {
+		const results = await getResults();
+
+		// break out of the singleLogLine
+		console.log( '\n' );
+
+		if ( typeof results === 'string' ) {
+			// This type of result is not an importing error. e.g. no import job was found
+			console.log( results );
+			process.exit( 0 );
+		}
+
 		const {
-			data: {
-				app: { environments },
-			},
-		} = response;
-		const { importStatus, jobs } = environments.find( e => e.id === env.id );
-		const importJob = jobs.find( ( { type } ) => type === 'sql_import' );
-		return { importStatus, importJob };
-	};
+			progress: { status },
+		} = results;
 
-	const results = await new Promise( ( resolve, reject ) => {
-		const checkStatus = async () => {
-			const { importStatus, importJob } = await getStatus();
-
-			debug( { importStatus, importJob } );
-
-			if ( ! importJob ) {
-				return reject( { error: 'No import job found' } );
-			}
-
-			const {
-				createdAt,
-				progress: { status, steps },
-			} = importJob;
-
-			if ( status === 'error' ) {
-				return reject( { error: 'Import job failed', steps } );
-			}
-
-			if ( ! steps.length ) {
-				return reject( { error: 'Could not enumerate the import job steps' } );
-			}
-
-			singleLogLine( '\n\nSQL Import Job Status:\n' + formatJobSteps( steps, runningSprite ) );
-
-			if ( status !== 'running' ) {
-				return resolve( importJob );
-			}
-
-			setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
-		};
-
-		// Kick off the check
-		checkStatus();
-	} );
-
-	// break out of the singleLogLine
-	console.log( '\n' );
-
-	const {
-		id: importId,
-		createdAt,
-		progress: { status },
-	} = results;
-	if ( ! importId ) {
-		console.log( 'No import job found' );
-	}
-
-	console.log(
-		`Results
-===============================================================
-Import started at ${ createdAt } (${ new Date( createdAt ) })
+		console.log( `=============================================================
 Result: ${ status }
-===============================================================
-`
-	);
+` );
+	} catch ( importFailed ) {
+		console.log( `
+Result: ${ chalk.red( 'Failed' ) }
+${ getErrorMessage( importFailed ) }
+` );
+		process.exit( 1 );
+	}
 }
 
 export default {

@@ -32,17 +32,6 @@ const err = async message => {
 	process.exit( 1 );
 };
 
-/*
-		importStatus {
-			dbOperationInProgress
-			progress {
-				started_at
-				steps { name, started_at, finished_at, result, output }
-				finished_at
-			}
-		}
-*/
-
 const appQuery = `
 	id,
 	name,
@@ -55,6 +44,10 @@ const appQuery = `
 		name
 		syncProgress { status }
 		primaryDomain { name }
+		importStatus {
+			dbOperationInProgress
+			importInProgress
+		}
 	}
 `;
 
@@ -141,22 +134,21 @@ command( {
 			err( 'The type of application you specified does not currently support SQL imports.' );
 		}
 
-		/*
-		const previousStartedAt = importStatus.progress.started_at || 0;
-		const previousFinishedAt = importStatus.progress.finished_at || 0;
+		const {
+			importStatus: { dbOperationInProgress, importInProgress },
+		} = env;
 
-		console.log( {
-			importProgressAtLaunch: importStatus.progress,
-			previousStartedAt,
-			previousFinishedAt,
-		} );
-
-		if ( previousStartedAt && ! previousFinishedAt ) {
-			await trackEventWithContext( 'import_sql_command_error', { errorType: 'existing-import' } );
-			// TODO link to status page when one exists
-			err( 'There is already an ongoing import for this site.' );
+		if ( dbOperationInProgress ) {
+			await trackEventWithContext( 'import_sql_command_error', { errorType: 'existing-dbop' } );
+			err( 'There is already a database operation in progress. Please try again later.' );
 		}
-		*/
+
+		if ( importInProgress ) {
+			await trackEventWithContext( 'import_sql_command_error', { errorType: 'existing-import' } );
+			err(
+				'There is already an import in progress. You can view the status with the `vip import sql status` command.'
+			);
+		}
 
 		const fileSize = await getFileSize( fileName );
 
