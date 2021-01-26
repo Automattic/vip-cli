@@ -132,23 +132,21 @@ command( {
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
 		searchReplace ? '' : console.log();
 
-		if ( searchReplace && searchReplace.length ) {
-			const params = searchReplace.split( ',' );
-
-			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
-		}
-
 		let fileNameToUpload = fileName;
 
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
+			const params = searchReplace.split( ',' );
+
+			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
+
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
 				output: true,
 			} );
 
-			fileNameToUpload = outputFileName;
+			fileNameToUpload = outputFileName
 		} else {
 			progress( 'replace', 'skipped' );
 		}
