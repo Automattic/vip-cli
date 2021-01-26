@@ -22,25 +22,10 @@ const appQuery = `
 id,
 name,
 type,
-organization { id, name },
 environments{
 	id
 	appId
 	type
-	name
-	jobs {
-		id
-		type
-		createdAt
-		progress {
-		  status
-		  steps {
-			name
-			status
-		  }
-		}
-	}
-	primaryDomain { name }
 }
 `;
 
@@ -51,7 +36,7 @@ const err = async message => {
 
 command( {
 	appContext: true,
-	appQuery, // try taking this out...
+	appQuery,
 	envContext: true,
 	requiredArgs: 0,
 } ).argv( process.argv, async ( arg: string[], { app, env }, { trackEventWithContext } ) => {
