@@ -30,7 +30,7 @@ const marks = {
 	running: chalk.blueBright( sprite.next().value ),
 	success: chalk.green( '✓' ),
 	failed: chalk.red( '✕' ),
-	unknown: chalk.yellow( '✕' ),
+	skipped: chalk.green( '✕' ),
 };
 
 // Various action steps for SQL imports
@@ -55,17 +55,30 @@ export const progress = ( currentStep, status ) => {
 			message = ` ${ marks[ status ] } ${ steps[ currentStep ] }`;
 			messages.push( message );
 
-			// Keep track of completed steps
+			// Keep track of completed and skipped steps
 			if ( status === 'success' ) {
 				completedSteps.push( currentStep );
+			}
+
+			if ( status === 'skipped' ) {
+				completedSteps.push( `${ currentStep }-skipped` );
 			}
 		}
 
 		// Status of all the other steps
 		if ( key !== currentStep ) {
 			const stepCompleted = completedSteps.includes( key );
+			
+			const skipped = `${ key }-skipped`;
 
-			if ( stepCompleted ) {
+			const stepSkipped = completedSteps.find( step =>
+				step === skipped
+			);
+
+			if ( stepSkipped ===  skipped ) {
+				message = ` ${ marks.skipped } ${ steps[ key ] }`;
+				messages.push( message );
+			} else if ( stepCompleted ) {
 				message = ` ${ marks.success } ${ steps[ key ] }`;
 				messages.push( message );
 			} else {
