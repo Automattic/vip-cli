@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import fetch, { Response } from 'node-fetch';
+import searchReplaceLib from '@automattic/vip-search-replace';
 
 /**
  * Internal dependencies
@@ -91,6 +92,9 @@ describe( 'lib/search-and-replace', () => {
 	} );
 
 	it( 'will remove whitespace from the beginning and end of pairs', async () => {
+		jest.spyOn( searchReplaceLib, 'replace' );
+		const replaceSpy = searchReplaceLib.replace;
+
 		const { usingStdOut, outputFileName } = await searchAndReplace(
 			testFilePath,
 			[ ' ohai		,\t\n\tohHey\t\n\r', '	  purty		, \t\n\rpretty\t\n ' ], // tabs spaces, LFs
@@ -98,17 +102,13 @@ describe( 'lib/search-and-replace', () => {
 			binary
 		);
 
-		expect( usingStdOut ).toBe( false );
-		expect( outputFileName ).not.toBe( testFilePath );
+		expect( replaceSpy ).toHaveBeenCalledWith( expect.any( Object ), [
+			'ohai',
+			'ohHey',
+			'purty',
+			'pretty',
+		], expect.anything() );
 
-		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
-		expect( fileContents ).toContain( 'ohHey' );
-		expect( fileContents ).not.toContain( 't\n\tohHey\t\n\r' );
-		expect( fileContents ).not.toContain( 'ohai' );
-		expect( fileContents ).toContain( 'pretty' );
-		expect( fileContents ).not.toContain( '\t\n\rpretty\t\n' );
-		expect( fileContents ).not.toContain( 'purty' );
-
-		fs.unlinkSync( outputFileName );
+		replaceSpy.mockClear();
 	} );
 } );
