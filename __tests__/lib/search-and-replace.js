@@ -89,4 +89,26 @@ describe( 'lib/search-and-replace', () => {
 		expect( fileContents ).not.toContain( 'purty' );
 		fs.unlinkSync( outputFileName );
 	} );
+
+	it( 'will remove whitespace from the beginning and end of pairs', async () => {
+		const { usingStdOut, outputFileName } = await searchAndReplace(
+			testFilePath,
+			[ ' ohai		,\t\n\tohHey\t\n\r', '	  purty		, \t\n\rpretty\t\n ' ], // tabs spaces, LFs
+			{ output: true },
+			binary
+		);
+
+		expect( usingStdOut ).toBe( false );
+		expect( outputFileName ).not.toBe( testFilePath );
+
+		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
+		expect( fileContents ).toContain( 'ohHey' );
+		expect( fileContents ).not.toContain( 't\n\tohHey\t\n\r' );
+		expect( fileContents ).not.toContain( 'ohai' );
+		expect( fileContents ).toContain( 'pretty' );
+		expect( fileContents ).not.toContain( '\t\n\rpretty\t\n' );
+		expect( fileContents ).not.toContain( 'purty' );
+
+		fs.unlinkSync( outputFileName );
+	} );
 } );
