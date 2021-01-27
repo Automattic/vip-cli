@@ -135,6 +135,27 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 	}
 
 	const runningSprite = new RunningSprite();
+	const status = {
+		createdAt: '',
+		steps: [],
+	};
+
+	const updateStatus = ( { createdAt, steps } ) => {
+		status.createdAt = createdAt;
+		status.steps = steps;
+	};
+
+	const printStatus = () =>
+		singleLogLine( `
+SQL Import Job Started at ${ status.createdAt } (${ new Date( status.createdAt ).toString() })
+
+Status:
+${ formatJobSteps( status.steps, runningSprite ) }` );
+
+	const printStatusInterval = setInterval( () => {
+		runningSprite.next();
+		printStatus();
+	}, 1000 );
 
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
@@ -194,11 +215,7 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 					return reject( { error: 'Could not enumerate the import job steps' } );
 				}
 
-				singleLogLine( `
-SQL Import Job Started at ${ createdAt } (${ new Date( createdAt ) })
-
-Status:
-${ formatJobSteps( steps, runningSprite ) }` );
+				updateStatus( { createdAt, steps } );
 
 				if ( jobStatus !== 'running' ) {
 					return resolve( importJob );
@@ -213,6 +230,8 @@ ${ formatJobSteps( steps, runningSprite ) }` );
 
 	try {
 		const results = await getResults();
+		clearInterval( printStatusInterval );
+		printStatus();
 
 		// break out of the singleLogLine
 		console.log( '\n' );
@@ -231,6 +250,7 @@ ${ formatJobSteps( steps, runningSprite ) }` );
 Result: ${ status }
 ` );
 	} catch ( importFailed ) {
+		clearInterval( printStatusInterval );
 		console.log( `
 Result: ${ chalk.red( 'Failed' ) }
 ${ getErrorMessage( importFailed ) }

@@ -131,6 +131,8 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
+	i: number;
+
 	constructor() {
 		this.i = 0;
 	}
@@ -143,7 +145,6 @@ export class RunningSprite {
 
 	toString() {
 		const glyph = RUNNING_SPRITE_GLYPHS[ this.i ];
-		this.next(); // TODO: throttle
 		return glyph;
 	}
 }
