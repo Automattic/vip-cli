@@ -243,8 +243,8 @@ command( {
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
 			await track( 'import_sql_command_error', {
-				errorType: 'StartImport-failed',
-				gqlErr,
+				error_type: 'StartImport-failed',
+				gql_err: gqlErr,
 			} );
 			exit.withError( `StartImport call failed: ${ gqlErr }` );
 		}
