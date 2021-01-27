@@ -157,6 +157,7 @@ command( {
 	module: 'import-sql',
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
+	.command( 'status', 'Check the status of the current running import' )
 	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option(
