@@ -248,18 +248,19 @@ const perLineValidations = ( line: string, runAsImport: boolean ) => {
 };
 
 const execute = ( line: string, isImport: boolean = true ) => {
- perLineValidations( line, isImport );
+	perLineValidations( line, isImport );
 };
 
 const postLineExecutionProcessing = async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
- await postValidation( fileName, isImport );
+	await postValidation( fileName, isImport );
 };
 
 export const staticSqlValidations = {
- execute,
- postLineExecutionProcessing,
+	execute,
+	postLineExecutionProcessing,
 };
 
+// For standalone SQL validations
 export const validate = async ( filename: string, isImport: boolean = false ) => {
 	const readInterface = await getReadInterface( filename );
 	readInterface.on( 'line', line => {
