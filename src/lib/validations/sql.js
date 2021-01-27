@@ -249,15 +249,10 @@ const perLineValidations = ( line: string, runAsImport: boolean ) => {
 
 const execute = ( line: string, isImport: boolean = true ) => {
 	perLineValidations( line, isImport );
-};
-
-const postLineExecutionProcessing = async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
-	await postValidation( fileName, isImport );
-};
 
 export const staticSqlValidations = {
 	execute,
-	postLineExecutionProcessing,
+	postLineExecutionProcessing: postValidation,
 };
 
 // For standalone SQL validations
