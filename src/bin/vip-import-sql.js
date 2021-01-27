@@ -10,6 +10,7 @@
  */
 import gql from 'graphql-tag';
 import debugLib from 'debug';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
