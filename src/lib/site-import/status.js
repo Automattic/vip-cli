@@ -21,6 +21,7 @@ import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 const debug = debugLib( 'vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
+const PRINT_STATUS_INTERVAL = 500;
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
@@ -155,7 +156,7 @@ ${ formatJobSteps( status.steps, runningSprite ) }` );
 	const printStatusInterval = setInterval( () => {
 		runningSprite.next();
 		printStatus();
-	}, 1000 );
+	}, PRINT_STATUS_INTERVAL );
 
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
