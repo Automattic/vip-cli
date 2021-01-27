@@ -162,6 +162,7 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 				debug( { createdAt, dbOperationInProgress, importInProgress, importStepProgress } );
 
 				if (
+					importStepProgress &&
 					importStepProgress.started_at &&
 					importStepProgress.started_at * 1000 > new Date( createdAt ).getTime()
 				) {
