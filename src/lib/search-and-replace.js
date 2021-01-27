@@ -150,7 +150,7 @@ export const searchAndReplace = async (
 	}
 
 	// determine all the replacements required
-	const replacementsArr = pairs.map( str => str.split( ',' ) );
+	const replacementsArr = pairs.map( str => str.split( ',' ).map( s => s.trim() ) );
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
