@@ -187,7 +187,7 @@ const checks: Checks = {
 	},
 };
 
-export const postValidation = async ( filename: string, isImport: boolean = false ) => {
+export const postValidation = async ( filename: string, isImport: boolean ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
