@@ -161,7 +161,14 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 
 				debug( { createdAt, dbOperationInProgress, importInProgress, importStepProgress } );
 
-				if ( importStepProgress?.started_at * 1000 > new Date( createdAt ).getTime() ) {
+				let jobCreationTime;
+				try {
+					jobCreationTime = new Date( createdAt ).getTime();
+				} catch ( e ) {
+					debug( 'Unable to parse createdAt to a Date' );
+				}
+
+				if ( jobCreationTime && importStepProgress?.started_at * 1000 > jobCreationTime ) {
 					// The contents of the `import_progress` meta are pertinent to the most recent import job
 					const failedImportStep = importStepProgress.steps.find(
 						step =>
