@@ -171,10 +171,9 @@ export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) 
 	);
 	return steps.reduce( ( carry, step, index ) => {
 		const stepShowsRunning = currentStepIndex !== -1 && currentStepIndex === index;
-		carry += `- ${ step.name }: ${ getGlyphForStatus(
-			stepShowsRunning ? 'running' : step.status,
-			runningSprite
-		) }`;
+		carry += `${ getGlyphForStatus( stepShowsRunning ? 'running' : step.status, runningSprite ) } ${
+			step.name
+		}`;
 		if ( stepShowsRunning ) {
 			carry += ' (Press ^C to hide progress. The import will continue in the background.)';
 		}
