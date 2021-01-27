@@ -18,13 +18,9 @@ import { replace } from '@automattic/vip-search-replace';
  */
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
-import { progress } from 'lib/cli/progress';
 import { getFileSize } from 'lib/client-file-uploader';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
-
-// For progress logs
-const step = 'replace';
 
 const flatten = arr => {
 	return arr.reduce( function( flat, toFlatten ) {
@@ -65,8 +61,10 @@ export function getReadAndWriteStreams( {
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
+		console.log( `Searching ${ chalk.cyan( fileName ) }` );
 
 		debug( `Set output to the original file path ${ fileName }` );
+		console.log( 'Replacing...' );
 
 		outputFileName = fileName;
 
@@ -79,12 +77,14 @@ export function getReadAndWriteStreams( {
 	}
 
 	debug( `Reading input from file: ${ fileName }` );
+	console.log( `Searching file ${ chalk.cyan( fileName ) }` );
 
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( 'Replacing...' );
 			break;
 		case 'object':
 			writeStream = output;
@@ -101,6 +101,7 @@ export function getReadAndWriteStreams( {
 			outputFileName = tmpOutFile;
 
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( 'Replacing...' );
 
 			break;
 	}
@@ -131,8 +132,8 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	// Track progress
-	progress( step, 'running' );
+	console.log( 'Starting Search and Replace...' );
+
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -140,7 +141,6 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		progress( step, 'failed' );
 		throw new Error( 'No search and replace parameters provided.' );
 	}
 
@@ -154,6 +154,27 @@ export const searchAndReplace = async (
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
+	// Add a confirmation step for search-replace
+	const yes = await confirm( [
+		{
+			key: 'From',
+			value: `${ chalk.cyan( replacements[ 0 ] ) }`,
+		},
+		{
+			key: 'To',
+			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
+		},
+	], 'Proceed with the following values?' );
+
+	// Bail if user does not wish to proceed
+	if ( ! yes ) {
+		console.log( `${ chalk.red( 'Cancelling' ) }` );
+
+		await trackEvent( 'search_replace_cancelled', { is_import: isImport, in_place: inPlace } );
+
+		process.exit();
+	}
+
 	if ( inPlace ) {
 		const approved = await confirm(
 			[],
@@ -162,7 +183,8 @@ export const searchAndReplace = async (
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
-			progress( step, 'failed' );
+			console.log( `${ chalk.red( 'Cancelling' ) }` );
+
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
 
 			process.exit();
@@ -180,6 +202,17 @@ export const searchAndReplace = async (
 		replacedStream
 			.pipe( writeStream )
 			.on( 'finish', () => {
+				if ( ! usingStdOut ) {
+					console.log();
+					console.log( `${ 'Search and Replace Complete!' }` );
+
+					// Only log this message if the output SQL file isn't the original input file
+					const message = `Your new SQL file has been saved to ${ chalk.cyan( outputFileName ) }`;
+
+					inPlace ? '' : console.log( message );
+
+					console.log();
+				}
 				resolve( {
 					inputFileName: fileName,
 					outputFileName,
@@ -192,9 +225,6 @@ export const searchAndReplace = async (
 						"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
 					)
 				);
-
-				progress( step, 'failed' );
-
 				reject();
 			} );
 	} );
@@ -202,7 +232,6 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	progress( step, 'success' );
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
 	return result;
