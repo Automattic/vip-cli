@@ -18,7 +18,7 @@ import API from 'lib/api';
 import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 
-const debug = debugLib( '@automattic/vip:lib/site-import/status' );
+const debug = debugLib( 'vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
 
