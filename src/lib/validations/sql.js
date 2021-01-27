@@ -227,9 +227,9 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
 };
 
-const perLineValidations = ( line: string ) => {
+const perLineValidations = ( line: string, runAsImport: boolean ) => {
 	if ( lineNum % 500 === 0 ) {
-		log( `Reading line ${ lineNum } ` );
+		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
 
 	const checkValues: any = Object.values( checks );
@@ -242,19 +242,20 @@ const perLineValidations = ( line: string ) => {
 	lineNum += 1;
 };
 
-export const staticSqlValidations = {
-	execute: ( line: string ) => {
-		perLineValidations( line );
-	},
-	postLineExecutionProcessing: async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
-		await postValidation( fileName, isImport );
-	},
+const execute = ( line: string, isImport: boolean = true ) => {
+	perLineValidations( line, isImport );
 };
 
+export const staticSqlValidations = {
+	execute,
+	postLineExecutionProcessing: postValidation,
+};
+
+// For standalone SQL validations
 export const validate = async ( filename: string, isImport: boolean = false ) => {
 	const readInterface = await getReadInterface( filename );
 	readInterface.on( 'line', line => {
-		staticSqlValidations.execute( line );
+		execute( line, isImport );
 	} );
 
 	// Block until the processing completes
