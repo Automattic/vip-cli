@@ -25,7 +25,7 @@ command( { requiredArgs: 1, format: true } )
 		try {
 			res = await app(
 				arg[ 0 ],
-				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name}}'
+				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name},launched}'
 			);
 		} catch ( e ) {
 			await trackEvent( 'app_command_fetch_error', {
