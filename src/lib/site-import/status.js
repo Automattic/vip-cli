@@ -168,7 +168,7 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 					// The contents of the `import_progress` meta are pertinent to the most recent import job
 					const failedImportStep = importStepProgress.steps.find( step => {
 						step.result === 'failed' &&
-							console.log( {
+							debug( {
 								failedStep: step,
 								sa: 1000 * step.started_at,
 								ca: new Date( createdAt ).getTime(),
