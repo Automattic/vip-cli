@@ -188,6 +188,7 @@ const checks: Checks = {
 };
 
 export const postValidation = async ( filename: string, isImport: boolean ) => {
+	progress( step, 'running' );
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
@@ -228,6 +229,7 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 };
 
 const perLineValidations = ( line: string, runAsImport: boolean ) => {
+	progress( step, 'running' );
 	if ( lineNum % 500 === 0 ) {
 		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
