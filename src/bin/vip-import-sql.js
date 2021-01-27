@@ -237,7 +237,7 @@ command( {
 		console.log( 'Uploading…' );
 
 		try {
-      progress( step, 'running' );
+			progress( step, 'running' );
 			const {
 				fileMeta: { basename, md5 },
 				result,
@@ -248,7 +248,7 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
-      progress( step, 'success' );
+			progress( step, 'success' );
 			debug( { basename, md5, result } );
 
 			debug( 'Upload complete. Initiating the import.' );
@@ -257,24 +257,24 @@ command( {
 
 			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
-      progress( step, 'failed' );
+			progress( step, 'failed' );
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
 			exit.withError( e );
 		}
 
 		try {
-      progress( nextStep, 'running' );
- 
+			progress( nextStep, 'running' );
+
 			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
 				variables: startImportVariables,
 			} );
-      
-      progress( nextStep, 'success' );
+
+			progress( nextStep, 'success' );
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
-      progress( nextStep, 'failed' );
+			progress( nextStep, 'failed' );
 
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',
