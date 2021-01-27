@@ -8,7 +8,6 @@
  */
 import readline from 'readline';
 import fs from 'fs';
-import chalk from 'chalk';
 import debugLib from 'debug';
 
 /**

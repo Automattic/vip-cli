@@ -10,6 +10,7 @@
  */
 import gql from 'graphql-tag';
 import debugLib from 'debug';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -29,6 +30,12 @@ import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
+import { formatEnvironment } from 'lib/cli/format';
+import { progress } from 'lib/cli/progress';
+
+// For progress logs
+const step = 'startImport';
+const nextStep = 'import';
 
 const appQuery = `
 	id,
@@ -174,7 +181,7 @@ command( {
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
 
-		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
+		console.log( `\n${ chalk.underline( '** Welcome to the WPVIP Site SQL Importer! **' ) }\n` );
 
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -183,9 +190,21 @@ command( {
 		// // halt operation of the import based on some rules
 		await gates( app, env, fileName );
 
+		// Log summary of import details
+		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+
+		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
+		console.log( `         to: ${ chalk.cyan( domain ) }` );
+		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
+		searchReplace ? '' : console.log();
+
 		let fileNameToUpload = fileName;
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
+			const params = searchReplace.split( ',' );
+
+			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
+
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
@@ -200,6 +219,8 @@ command( {
 			}
 
 			fileNameToUpload = outputFileName;
+		} else {
+			progress( 'replace', 'skipped' );
 		}
 
 		// VALIDATIONS
@@ -216,6 +237,7 @@ command( {
 		console.log( 'Uploading…' );
 
 		try {
+			progress( step, 'running' );
 			const {
 				fileMeta: { basename, md5 },
 				result,
@@ -226,25 +248,34 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
+			progress( step, 'success' );
 			debug( { basename, md5, result } );
-			console.log( 'Upload complete. Initiating the import.' );
+
+			debug( 'Upload complete. Initiating the import.' );
 
 			await track( 'import_sql_upload_complete' );
 
 			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
+			progress( step, 'failed' );
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
 			exit.withError( e );
 		}
 
 		try {
+			progress( nextStep, 'running' );
+
 			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
 				variables: startImportVariables,
 			} );
 
+			progress( nextStep, 'success' );
+
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
+			progress( nextStep, 'failed' );
+
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',
 				gql_err: gqlErr,
