@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+/**
+ * @flow
+ * @format
+ */
+
+/**
+ * External dependencies
+ */
+import { trackEventWithEnv } from 'lib/tracker';
+import * as exit from 'lib/cli/exit';
+
+/**
+ * Internal dependencies
+ */
+import { isSupportedApp } from 'lib/site-import/db-file-import';
+import { importSqlCheckStatus } from 'lib/site-import/status';
+import command from 'lib/cli/command';
+
+const appQuery = `
+id,
+name,
+type,
+environments{
+	id
+	appId
+	type
+}
+`;
+
+command( {
+	appContext: true,
+	appQuery,
+	envContext: true,
+	requiredArgs: 0,
+} ).argv( process.argv, async ( arg: string[], { app, env } ) => {
+	const { id: envId, appId } = env;
+	const track = trackEventWithEnv.bind( null, appId, envId );
+
+	if ( ! isSupportedApp( app ) ) {
+		await track( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+		exit.withError(
+			'The type of application you specified does not currently support SQL imports.'
+		);
+	}
+
+	await track( 'import_sql_check_status_command_execute' );
+
+	console.log( `Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }` );
+
+	await importSqlCheckStatus( { app, env } );
+} );
