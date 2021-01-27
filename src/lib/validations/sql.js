@@ -232,9 +232,9 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
 };
 
-const perLineValidations = ( line: string ) => {
+const perLineValidations = ( line: string, runAsImport: boolean ) => {
 	if ( lineNum % 500 === 0 ) {
-		log( `Reading line ${ lineNum } ` );
+		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
 
 	const checkValues: any = Object.values( checks );
