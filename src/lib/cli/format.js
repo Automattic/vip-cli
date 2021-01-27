@@ -170,13 +170,15 @@ export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) 
 		[ 'running', 'pending' ].includes( status )
 	);
 	return steps.reduce( ( carry, step, index ) => {
-		const fakeRunningStatus = currentStepIndex !== -1 && currentStepIndex === index;
-		return (
-			carry +
-			`- ${ step.name }: ${ getGlyphForStatus(
-				fakeRunningStatus ? 'running' : step.status,
-				runningSprite
-			) }\n`
-		);
+		const stepShowsRunning = currentStepIndex !== -1 && currentStepIndex === index;
+		carry += `- ${ step.name }: ${ getGlyphForStatus(
+			stepShowsRunning ? 'running' : step.status,
+			runningSprite
+		) }`;
+		if ( stepShowsRunning ) {
+			carry += ' (Press ^C to hide progress. The import will continue in the background.)';
+		}
+		carry += '\n';
+		return carry;
 	}, '' );
 }
