@@ -146,12 +146,20 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 		status.steps = steps;
 	};
 
-	const printStatus = () =>
+	let firstStatusPrint = true;
+
+	const printStatus = () => {
+		if ( firstStatusPrint ) {
+			firstStatusPrint = false;
+			// Make sure singleLogLine gets a clean line
+			console.log( '\n' );
+		}
 		singleLogLine( `
 SQL Import Job Started at ${ status.createdAt } (${ new Date( status.createdAt ).toString() })
 
 Status:
 ${ formatJobSteps( status.steps, runningSprite ) }` );
+	};
 
 	const printStatusInterval = setInterval( () => {
 		runningSprite.next();
