@@ -213,6 +213,8 @@ command( {
 
 		const startImportVariables = {};
 
+		console.log( 'Uploading…' );
+
 		try {
 			const {
 				fileMeta: { basename, md5 },
