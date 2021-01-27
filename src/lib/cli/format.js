@@ -159,15 +159,24 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 			return chalk.green( '✓' );
 		case 'failed':
 			return chalk.red( '✕' );
+		default:
 		case 'unknown':
 			return chalk.yellow( '✕' );
 	}
 }
 
 export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) {
-	return steps.reduce(
-		( carry, step ) =>
-			carry + `- ${ step.name }: ${ getGlyphForStatus( step.status, runningSprite ) }\n`,
-		''
+	const currentStepIndex = steps.findIndex( ( { status } ) =>
+		[ 'running', 'pending' ].includes( status )
 	);
+	return steps.reduce( ( carry, step, index ) => {
+		const fakeRunningStatus = currentStepIndex !== -1 && currentStepIndex === index;
+		return (
+			carry +
+			`- ${ step.name }: ${ getGlyphForStatus(
+				fakeRunningStatus ? 'running' : step.status,
+				runningSprite
+			) }\n`
+		);
+	}, '' );
 }
