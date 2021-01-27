@@ -267,5 +267,5 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await postLineExecutionProcessing( { filename, isImport } );
+	await staticSqlValidations.postLineExecutionProcessing( { filename, isImport } );
 };
