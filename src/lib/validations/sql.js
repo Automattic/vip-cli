@@ -6,8 +6,6 @@
 /**
  * External dependencies
  */
-import readline from 'readline';
-import fs from 'fs';
 import chalk from 'chalk';
 import { stdout as log } from 'single-line-log';
 
@@ -16,6 +14,8 @@ import { stdout as log } from 'single-line-log';
  */
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
+import { getReadInterface } from 'lib/validations/line-by-line';
+import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -177,54 +177,9 @@ const checks: Checks = {
 	},
 };
 
-function openFile( filename, flags = 'r', mode = 666 ) {
-	return new Promise( ( resolve, reject ) => {
-		fs.open( filename, flags, mode, ( err, fd ) => {
-			if ( err ) {
-				return reject( err );
-			}
-			resolve( fd );
-		} );
-	} );
-}
-
-export const validate = async ( filename: string, isImport: boolean = false ) => {
+export const postValidation = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
-
-	let fd;
-
-	try {
-		fd = await openFile( filename );
-	} catch ( e ) {
-		console.log( chalk.red( 'Error: ' ) + 'The file at the provided path is either missing or not readable.' );
-		console.log( 'Please check the input and try again.' );
-		process.exit( 1 );
-	}
-
-	const readInterface = readline.createInterface( {
-		input: fs.createReadStream( '', { fd } ),
-		output: null,
-		console: false,
-	} );
-
-	readInterface.on( 'line', function( line ) {
-		if ( lineNum % 500 === 0 ) {
-			log( `Reading line ${ lineNum } ` );
-		}
-
-		const checkValues: any = Object.values( checks );
-		checkValues.forEach( ( check: CheckType ) => {
-			const results = line.match( check.matcher );
-			if ( results ) {
-				check.results.push( check.matchHandler( lineNum, results ) );
-			}
-		} );
-		lineNum += 1;
-	} );
-
-	// Block until the processing completes
-	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 
 	log( `Finished processing ${ lineNum } lines.` );
 	console.log( '\n' );
@@ -246,7 +201,6 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
 		}
-
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
@@ -254,8 +208,6 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	console.log( '** Your database file looks good 🎉 **\n' );
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
-
-	readInterface.close();
 
 	if ( isImport ) {
 		// Add a confirmation step before running the import
@@ -278,4 +230,41 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 
 	console.log( '\n🎉 You can now submit for import, see here for more details: ' +
 		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
+};
+
+const perLineValidations = ( line: string ) => {
+	if ( lineNum % 500 === 0 ) {
+		log( `Reading line ${ lineNum } ` );
+	}
+
+	const checkValues: any = Object.values( checks );
+	checkValues.forEach( ( check: CheckType ) => {
+		const results = line.match( check.matcher );
+		if ( results ) {
+			check.results.push( check.matchHandler( lineNum, results ) );
+		}
+	} );
+	lineNum += 1;
+};
+
+export const staticSqlValidations = {
+	execute: ( line: string ) => {
+		perLineValidations( line );
+	},
+	postLineExecutionProcessing: async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
+		await postValidation( fileName, isImport );
+	},
+};
+
+export const validate = async ( filename: string, isImport: boolean = false ) => {
+	const readInterface = await getReadInterface( filename );
+	readInterface.on( 'line', line => {
+		staticSqlValidations.execute( line );
+	} );
+
+	// Block until the processing completes
+	await new Promise( resolve => readInterface.on( 'close', resolve ) );
+	readInterface.close();
+
+	await staticSqlValidations.postLineExecutionProcessing( { filename, isImport } );
 };

@@ -8,8 +8,8 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
-// import debugLib from 'debug';
+import { trackEventWithEnv } from 'lib/tracker';
+import * as exit from 'lib/cli/exit';
 
 /**
  * Internal dependencies
@@ -29,23 +29,23 @@ environments{
 }
 `;
 
-const err = async message => {
-	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
-	process.exit( 1 );
-};
-
 command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
-} ).argv( process.argv, async ( arg: string[], { app, env }, { trackEventWithContext } ) => {
+} ).argv( process.argv, async ( arg: string[], { app, env } ) => {
+	const { id: envId, appId } = env;
+	const track = trackEventWithEnv.bind( null, appId, envId );
+
 	if ( ! isSupportedApp( app ) ) {
-		await trackEventWithContext( 'import_sql_command_error', { errorType: 'unsupported-app' } );
-		err( 'The type of application you specified does not currently support SQL imports.' );
+		await track( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+		exit.withError(
+			'The type of application you specified does not currently support SQL imports.'
+		);
 	}
 
-	await trackEventWithContext( 'import_sql_check_status_command_execute' );
+	await track( 'import_sql_check_status_command_execute' );
 
 	console.log( `Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }` );
 

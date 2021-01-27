@@ -329,18 +329,6 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 	}
 
-	/*
-	 * All execution context has been calculated at this point
-	 * Use trackEventWithContext in place of trackEvent from here on out so it's included in event props
-	 */
-	const trackEventWithContext = async ( eventName, eventProps = {} ) => {
-		const context = {
-			appId: options.app ? options.app.id : undefined,
-			envId: options.env ? options.env.id : undefined,
-		};
-		return trackEvent( eventName, { ...eventProps, ...context } );
-	};
-
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
 		const info: Array<Tuple> = [];
@@ -391,19 +379,16 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 		const yes = await confirm( info, message );
 		if ( ! yes ) {
-			await trackEventWithContext( 'command_confirm_cancel' );
+			await trackEvent( 'command_confirm_cancel' );
 
 			return {};
 		}
 
-		await trackEventWithContext( 'command_confirm_success' );
+		await trackEvent( 'command_confirm_success' );
 	}
 
 	if ( cb ) {
-		res = await cb( this.sub, options, {
-			// Use trackEventWithContext instead of trackEvent in command callbacks so their event props get context too
-			trackEventWithContext,
-		} );
+		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
 			if ( res.header ) {
 				console.log( formatData( res.header, 'keyValue' ) );
@@ -421,7 +406,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return out;
 			} );
 
-			await trackEventWithContext( 'command_output', {
+			await trackEvent( 'command_output', {
 				format: options.format,
 			} );
 

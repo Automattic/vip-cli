@@ -8,7 +8,6 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
 
@@ -23,14 +22,13 @@ import {
 } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
-import { validate } from 'lib/validations/sql';
+import { trackEventWithEnv } from 'lib/tracker';
+import { staticSqlValidations } from 'lib/validations/sql';
+import { siteTypeValidations } from 'lib/validations/site-type';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
-
-const err = async message => {
-	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
-	process.exit( 1 );
-};
+import * as exit from 'lib/cli/exit';
+import { fileLineValidations } from 'lib/validations/line-by-line';
 
 const appQuery = `
 	id,
@@ -64,8 +62,57 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
-const debug = debugLib( '@automattic/vip:vip-import-sql' );
+const debug = debugLib( 'vip:vip-import-sql' );
 
+const gates = async ( app, env, fileName ) => {
+	const { id: envId, appId } = env;
+	const track = trackEventWithEnv.bind( null, appId, envId );
+
+	if ( ! currentUserCanImportForApp( app ) ) {
+		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
+		exit.withError(
+			'The currently authenticated account does not have permission to perform a SQL import.'
+		);
+	}
+
+	if ( ! isSupportedApp( app ) ) {
+		await track( 'import_sql_command_error', { error_type: 'unsupported-app' } );
+		exit.withError(
+			'The type of application you specified does not currently support SQL imports.'
+		);
+	}
+
+	const fileSize = await getFileSize( fileName );
+
+	if ( ! fileSize ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-empty' } );
+		exit.withError( `File '${ fileName }' is empty.` );
+	}
+
+	if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-toobig' } );
+		exit.withError(
+			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
+				'Please split it into multiple files or contact support for assistance.'
+		);
+	}
+
+	const {
+		importStatus: { dbOperationInProgress, importInProgress },
+	} = env;
+
+	if ( dbOperationInProgress ) {
+		await track( 'import_sql_command_error', { errorType: 'existing-dbop' } );
+		exit.withError( 'There is already a database operation in progress. Please try again later.' );
+	}
+
+	if ( importInProgress ) {
+		await track( 'import_sql_command_error', { errorType: 'existing-import' } );
+		exit.withError(
+			'There is already an import in progress. You can view the status with the `vip import sql status` command.'
+		);
+	}
+};
 // Command examples
 const examples = [
 	// `sql` subcommand
@@ -118,59 +165,24 @@ command( {
 		'process.stdout'
 	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opts, { trackEventWithContext } ) => {
+	.argv( process.argv, async ( arg: string[], opts ) => {
 		const { app, env, searchReplace } = opts;
+		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
-
-		await trackEventWithContext( 'import_sql_command_execute' );
-
-		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
 
-		if ( ! currentUserCanImportForApp( app ) ) {
-			err(
-				'The currently authenticated account does not have permission to perform a SQL import.'
-			);
-		}
+		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
 
-		if ( ! isSupportedApp( app ) ) {
-			await trackEventWithContext( 'import_sql_command_error', { errorType: 'unsupported-app' } );
-			err( 'The type of application you specified does not currently support SQL imports.' );
-		}
+		const track = trackEventWithEnv.bind( null, appId, envId );
 
-		const {
-			importStatus: { dbOperationInProgress, importInProgress },
-		} = env;
+		await track( 'import_sql_command_execute' );
 
-		if ( dbOperationInProgress ) {
-			await trackEventWithContext( 'import_sql_command_error', { errorType: 'existing-dbop' } );
-			err( 'There is already a database operation in progress. Please try again later.' );
-		}
-
-		if ( importInProgress ) {
-			await trackEventWithContext( 'import_sql_command_error', { errorType: 'existing-import' } );
-			err(
-				'There is already an import in progress. You can view the status with the `vip import sql status` command.'
-			);
-		}
-
-		const fileSize = await getFileSize( fileName );
-
-		if ( ! fileSize ) {
-			err( `File '${ fileName }' is empty.` );
-		}
-
-		if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
-			err(
-				`The sql import file size (${ fileSize } bytes) exceeds the limit the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
-					'Please split it into multiple files or contact support for assistance.'
-			);
-		}
+		// // halt operation of the import based on some rules
+		await gates( app, env, fileName );
 
 		let fileNameToUpload = fileName;
-
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
@@ -189,8 +201,11 @@ command( {
 			fileNameToUpload = outputFileName;
 		}
 
-		// Run SQL validation
-		await validate( fileNameToUpload, true );
+		// VALIDATIONS
+		const validations = [];
+		validations.push( staticSqlValidations );
+		validations.push( siteTypeValidations );
+		await fileLineValidations( appId, envId, fileNameToUpload, validations );
 
 		// Call the Public API
 		const api = await API();
@@ -209,8 +224,14 @@ command( {
 				md5: md5,
 			};
 			debug( { basename, md5, result } );
+			console.log( 'Upload complete. Initiating the import.' );
+
+			await track( 'import_sql_upload_complete' );
+
+			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
-			err( e );
+			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
+			exit.withError( e );
 		}
 
 		try {
@@ -221,14 +242,12 @@ command( {
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
-			await trackEventWithContext( 'import_sql_command_error', {
+			await track( 'import_sql_command_error', {
 				errorType: 'StartImport-failed',
 				gqlErr,
 			} );
-			err( `StartImport call failed: ${ gqlErr }` );
+			exit.withError( `StartImport call failed: ${ gqlErr }` );
 		}
-
-		console.log( 'Upload complete. Initiating the import.' );
 
 		await importSqlCheckStatus( { app, env } );
 	} );
