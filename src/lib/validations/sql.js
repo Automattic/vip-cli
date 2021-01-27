@@ -249,6 +249,7 @@ const perLineValidations = ( line: string, runAsImport: boolean ) => {
 
 const execute = ( line: string, isImport: boolean = true ) => {
 	perLineValidations( line, isImport );
+};
 
 export const staticSqlValidations = {
 	execute,
