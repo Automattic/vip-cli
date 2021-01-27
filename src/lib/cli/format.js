@@ -1,7 +1,11 @@
+/** @format */
 // @flow
+/**
+ * External dependencies
+ */
+import chalk from 'chalk';
 
-type Options = {
-};
+type Options = {};
 
 export type Tuple = {
 	key: string,
@@ -33,8 +37,6 @@ export function formatData( data: Array<any>, format: string, opts: ?Options ): 
 }
 
 export function formatEnvironment( environment: string ): string {
-	const chalk = require( 'chalk' );
-
 	if ( 'production' === environment.toLowerCase() ) {
 		return chalk.red( environment.toUpperCase() );
 	}
@@ -124,4 +126,47 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 
 		return arg;
 	} );
+}
+
+export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
+
+export class RunningSprite {
+	constructor() {
+		this.i = 0;
+	}
+
+	next() {
+		if ( ++this.i >= RUNNING_SPRITE_GLYPHS.length ) {
+			this.i = 0;
+		}
+	}
+
+	toString() {
+		const glyph = RUNNING_SPRITE_GLYPHS[ this.i ];
+		this.next(); // TODO: throttle
+		return glyph;
+	}
+}
+
+export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
+	switch ( status ) {
+		case 'pending':
+			return '○';
+		case 'running':
+			return chalk.blueBright( runningSprite );
+		case 'success':
+			return chalk.green( '✓' );
+		case 'failed':
+			return chalk.red( '✕' );
+		case 'unknown':
+			return chalk.yellow( '✕' );
+	}
+}
+
+export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) {
+	return steps.reduce(
+		( carry, step ) =>
+			carry + `- ${ step.name }: ${ getGlyphForStatus( step.status, runningSprite ) }\n`,
+		''
+	);
 }
