@@ -162,6 +162,8 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 		default:
 		case 'unknown':
 			return chalk.yellow( '✕' );
+		case 'skipped':
+			return chalk.green( '✕' );
 	}
 }
 
