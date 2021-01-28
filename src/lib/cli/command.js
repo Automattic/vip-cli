@@ -355,43 +355,43 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 				this.sub && info.push( { key: 'SQL File', value: this.sub } );
 
-				 // Show S-R params if the `search-replace` flag is set
-					const searchReplace = options.searchReplace;
+				// Show S-R params if the `search-replace` flag is set
+				const searchReplace = options.searchReplace;
 
-					let replacementPairs;
-					let multiplePairs = [];
-	
-					const assignSRValues = params =>{
-						const pairs = {
-							From: `${ params[ 0 ] }`,
-							To: `${ params[ 1 ] }`,
-						}
-	
-						return pairs;
+				let replacementPairs;
+				const multiplePairs = [];
+
+				const assignSRValues = params =>{
+					const pairs = {
+						From: `${ params[ 0 ] }`,
+						To: `${ params[ 1 ] }`,
+					};
+
+					return pairs;
+				};
+
+				if ( searchReplace ) {
+					// Only one pair of S-R values specified
+					if ( typeof searchReplace === 'string' ) {
+						const params = searchReplace.split( ',' );
+
+						replacementPairs = [ assignSRValues( params ) ];
+					} else {
+						// Multiple pairs of S-R values specified
+						searchReplace.map( pair => {
+							const urls = pair.split( ',' );
+
+							const format = assignSRValues( urls );
+
+							multiplePairs.push( format );
+						} );
+						replacementPairs = multiplePairs;
 					}
-	
-					if ( searchReplace ) {
-						// Only one pair of S-R values specified
-						if ( typeof searchReplace === 'string' ) {
-							const params = searchReplace.split( ',' );
-							
-							replacementPairs = [ assignSRValues( params ) ];
-						} else {
-							// Multiple pairs of S-R values specified
-							searchReplace.map( pair => {
-								const urls = pair.split( ',' );
-	
-								const format = assignSRValues( urls );
-	
-								multiplePairs.push( format );
-							} )
-							replacementPairs = obj;
-						}
-	
-						// Format data into a user-friendly table
-						info.push( { key: 'Replacements', value: '\n' + formatData( replacementPairs, 'table' ) } );
-					}
-	
+
+					// Format data into a user-friendly table
+					info.push( { key: 'Replacements', value: '\n' + formatData( replacementPairs, 'table' ) } );
+				}
+
 				break;
 			case 'sync':
 				const { backup, canSync, errors } = options.env.syncPreview;
