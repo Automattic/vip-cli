@@ -32,9 +32,9 @@ export const setStatusForCurrentAction = ( status, action ) => {
 const completedSteps = [];
 
 export function progress( steps: Object[], runningSprite: RunningSprite ) {
-	const logs = steps.reduce(
-		( carry, step ) => {
-			let statusOfAction;
+	// Iterate over each step and collect the logs to output
+ const reducer = ( accumulator, step ) => {
+		let statusOfAction;
 		statusOfAction = step.status;
 
 		const skipped = `${ step.id }-skipped`;
@@ -63,12 +63,13 @@ export function progress( steps: Object[], runningSprite: RunningSprite ) {
 			statusOfAction = 'pending';
 		}
 
-		const outputStep = carry + `${ getGlyphForStatus( statusOfAction, runningSprite ) } ${ step.name }\n`;
+		const outputStep = accumulator + `${ statusIcon } ${ step.name }\n`;
 
   return outputStep;
-	},
-		''
-	);
- 
+	}
+	
+	const logs = steps.reduce( reducer, '' );
+
+	// Output the logs
  return progressLog( logs );
 }
