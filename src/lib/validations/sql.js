@@ -188,7 +188,7 @@ const checks: Checks = {
 	},
 };
 
-export const postValidation = async ( filename: string, isImport: boolean ) => {
+export const postValidation = async ( filename: string, isImport: boolean = false ) => {
 	if ( isImport ) {
 		currentStatus = setStatusForCurrentAction( 'running', currentAction );
 		progress( currentStatus );
