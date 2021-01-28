@@ -24,7 +24,7 @@ const currentAction = 'validate';
 let problemsFound = 0;
 let lineNum = 1;
 
-const errorCheckFormatter = ( isImport, check ) => {
+const errorCheckFormatter = ( check, isImport ) => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
 		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
@@ -34,7 +34,7 @@ const errorCheckFormatter = ( isImport, check ) => {
 	}
 };
 
-const requiredCheckFormatter = ( isImport, check, type ) => {
+const requiredCheckFormatter = ( check, type, isImport ) => {
 	if ( check.results.length > 0 ) {
 		if ( ! isImport ) {
 			console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
@@ -52,7 +52,7 @@ const requiredCheckFormatter = ( isImport, check, type ) => {
 	}
 };
 
-const infoCheckFormatter = ( isImport, check ) => {
+const infoCheckFormatter = ( check, isImport ) => {
 	check.results.forEach( item => {
 		if ( ! isImport ) {
 			console.log( item );
@@ -201,7 +201,7 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 	const checkEntires: any = Object.entries( checks );
 
 	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
-		check.outputFormatter( isImport, check, type );
+		check.outputFormatter( check, type, isImport );
 		isImport ? '' : console.log( '' );
 
 		errorSummary[ type ] = check.results.length;
