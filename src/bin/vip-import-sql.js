@@ -10,7 +10,6 @@
  */
 import gql from 'graphql-tag';
 import debugLib from 'debug';
-import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -22,7 +21,7 @@ import {
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
-import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
 import { staticSqlValidations } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
@@ -30,12 +29,15 @@ import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
+<<<<<<< HEAD
 import { formatEnvironment } from 'lib/cli/format';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
 
 // For progress logs
 let currentStatus;
 const currentAction = 'import';
+=======
+>>>>>>> c113e672f70108133e7d6270d85e49202827e10b
 
 const appQuery = `
 	id,
@@ -87,6 +89,13 @@ const gates = async ( app, env, fileName ) => {
 		exit.withError(
 			'The type of application you specified does not currently support SQL imports.'
 		);
+	}
+
+	try {
+		await checkFileAccess( fileName );
+	} catch ( e ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-missing' } );
+		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 	}
 
 	const fileSize = await getFileSize( fileName );
@@ -202,10 +211,6 @@ command( {
 
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
-			const params = searchReplace.split( ',' );
-
-			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
-
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
@@ -252,10 +257,8 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
-
 			debug( { basename, md5, result } );
-
-			debug( 'Upload complete. Initiating the import.' );
+			console.log( 'Upload complete. Initiating the import.' );
 
 			await track( 'import_sql_upload_complete' );
 		} catch ( e ) {

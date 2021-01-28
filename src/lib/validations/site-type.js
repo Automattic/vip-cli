@@ -15,9 +15,6 @@ import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import * as exit from 'lib/cli/exit';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
-import debugLib from 'debug';
-
-const debug = debugLib( 'vip:vip-import-sql' );
 
 let isMultiSiteSqlDump = false;
 
@@ -32,8 +29,8 @@ export const siteTypeValidations = {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
-		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
-		debug( `The SQL dump provided is ${ isMultiSiteSqlDump ? 'from a multisite.' : 'not from a multisite' }\n` );
+		console.log( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
+		console.log( `The SQL dump provided is ${ isMultiSiteSqlDump ? 'from a multisite.' : 'not from a multisite' }\n` );
 
 		// if site is a multisite but import sql is not
 		if ( isMultiSite && ! isMultiSiteSqlDump ) {

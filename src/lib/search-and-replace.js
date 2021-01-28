@@ -66,8 +66,10 @@ export function getReadAndWriteStreams( {
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
+		console.log( `Searching ${ chalk.cyan( fileName ) }` );
 
 		debug( `Set output to the original file path ${ fileName }` );
+		console.log( 'Replacing...' );
 
 		outputFileName = fileName;
 
@@ -80,12 +82,14 @@ export function getReadAndWriteStreams( {
 	}
 
 	debug( `Reading input from file: ${ fileName }` );
+	console.log( `Searching file ${ chalk.cyan( fileName ) }` );
 
 	switch ( typeof output ) {
 		case 'string':
 			writeStream = fs.createWriteStream( output );
 			outputFileName = output;
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( 'Replacing...' );
 			break;
 		case 'object':
 			writeStream = output;
@@ -102,6 +106,7 @@ export function getReadAndWriteStreams( {
 			outputFileName = tmpOutFile;
 
 			debug( `Outputting to file: ${ outputFileName }` );
+			console.log( 'Replacing...' );
 
 			break;
 	}
@@ -159,6 +164,27 @@ export const searchAndReplace = async (
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
+	// Add a confirmation step for search-replace
+	const yes = await confirm( [
+		{
+			key: 'From',
+			value: `${ chalk.cyan( replacements[ 0 ] ) }`,
+		},
+		{
+			key: 'To',
+			value: `${ chalk.cyan( replacements[ 1 ] ) }`,
+		},
+	], 'Proceed with the following values?' );
+
+	// Bail if user does not wish to proceed
+	if ( ! yes ) {
+		console.log( `${ chalk.red( 'Cancelling' ) }` );
+
+		await trackEvent( 'search_replace_cancelled', { is_import: isImport, in_place: inPlace } );
+
+		process.exit();
+	}
+
 	if ( inPlace ) {
 		const approved = await confirm(
 			[],
@@ -187,6 +213,17 @@ export const searchAndReplace = async (
 		replacedStream
 			.pipe( writeStream )
 			.on( 'finish', () => {
+				if ( ! usingStdOut ) {
+					console.log();
+					console.log( `${ 'Search and Replace Complete!' }` );
+
+					// Only log this message if the output SQL file isn't the original input file
+					const message = `Your new SQL file has been saved to ${ chalk.cyan( outputFileName ) }`;
+
+					inPlace ? '' : console.log( message );
+
+					console.log();
+				}
 				resolve( {
 					inputFileName: fileName,
 					outputFileName,
