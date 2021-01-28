@@ -21,7 +21,7 @@ import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 const debug = debugLib( 'vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
-const PRINT_STATUS_INTERVAL = 500;
+const PRINT_STATUS_INTERVAL = 100;
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
