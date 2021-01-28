@@ -359,13 +359,33 @@ args.argv = async function( argv, cb ): Promise<any> {
 					const searchReplace = options.searchReplace;
 
 					let replacementPairs;
-
+					let multiplePairs = [];
+	
+					const assignSRValues = params =>{
+						const pairs = {
+							From: `${ params[ 0 ] }`,
+							To: `${ params[ 1 ] }`,
+						}
+	
+						return pairs;
+					}
+	
 					if ( searchReplace ) {
 						// Only one pair of S-R values specified
 						if ( typeof searchReplace === 'string' ) {
 							const params = searchReplace.split( ',' );
 							
 							replacementPairs = [ assignSRValues( params ) ];
+						} else {
+							// Multiple pairs of S-R values specified
+							searchReplace.map( pair => {
+								const urls = pair.split( ',' );
+	
+								const format = assignSRValues( urls );
+	
+								multiplePairs.push( format );
+							} )
+							replacementPairs = obj;
 						}
 	
 						// Format data into a user-friendly table
