@@ -149,7 +149,7 @@ const checks: Checks = {
 		recommendation: 'Check import settings to include DROP TABLE statements',
 	},
 	createTable: {
-		matcher: /^CREATE TABLE `?([a-z0-9_]*)/i,
+		matcher: /^CREATE TABLE (?:IF NOT EXISTS )?`?([a-z0-9_]*)/i,
 		matchHandler: ( lineNumber, results ) => results [ 1 ],
 		outputFormatter: requiredCheckFormatter,
 		results: [],
