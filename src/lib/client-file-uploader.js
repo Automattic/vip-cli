@@ -99,12 +99,6 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
-		try {
-			await checkFileAccess( fileName );
-		} catch ( e ) {
-			return reject( `File '${ fileName }' does not exist or is not readable.` );
-		}
-
 		const fileSize = await getFileSize( fileName );
 
 		const basename = path.posix.basename( fileName );
@@ -140,7 +134,9 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 	}
 
 	console.log(
-		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n`
+		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor(
+			fileMeta.fileSize / MB_IN_BYTES
+		) } MB\n`
 	);
 
 	// TODO Compression will probably fail over a certain file size... break into pieces...?
@@ -153,7 +149,9 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
 		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
-		console.log( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
+		console.log(
+			`Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...`
+		);
 
 		await gzipFile( uncompressedFileName, fileMeta.fileName );
 		fileMeta.isCompressed = true;
@@ -328,27 +326,12 @@ export async function getSignedUploadRequestData( {
 }
 
 export async function checkFileAccess( fileName: string ): Promise<void> {
-	// Node 8 doesn't have fs.promises, so fall back to this
-	return new Promise( ( resolve, reject ) => {
-		fs.access( fileName, fs.R_OK, err => {
-			if ( err ) {
-				reject( err );
-			}
-			resolve();
-		} );
-	} );
+	return fs.promises.access( fileName, fs.R_OK );
 }
 
 export async function getFileSize( fileName: string ): Promise<number> {
-	// Node 8 doesn't have fs.promises, so fall back to this
-	return new Promise( ( resolve, reject ) => {
-		fs.stat( fileName, ( err, stats ) => {
-			if ( err ) {
-				reject( err );
-			}
-			resolve( stats.size );
-		} );
-	} );
+	const { size } = await fs.promises.stat( fileName );
+	return size;
 }
 
 export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {

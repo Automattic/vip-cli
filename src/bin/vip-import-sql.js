@@ -21,7 +21,7 @@ import {
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
-import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
 import { staticSqlValidations } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
@@ -80,6 +80,13 @@ const gates = async ( app, env, fileName ) => {
 		exit.withError(
 			'The type of application you specified does not currently support SQL imports.'
 		);
+	}
+
+	try {
+		await checkFileAccess( fileName );
+	} catch ( e ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-missing' } );
+		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 	}
 
 	const fileSize = await getFileSize( fileName );
