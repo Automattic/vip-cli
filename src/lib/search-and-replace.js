@@ -19,7 +19,6 @@ import { replace } from '@automattic/vip-search-replace';
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
-import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 import { getFileSize } from 'lib/client-file-uploader';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
@@ -27,8 +26,6 @@ const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 // For progress logs
 let currentStatus;
 const currentAction = 'replace';
-
-const runningSprite = new RunningSprite();
 
 const flatten = arr => {
 	return arr.reduce( function( flat, toFlatten ) {
@@ -137,7 +134,7 @@ export const searchAndReplace = async (
 ): Promise<SearchReplaceOutput> => {
 	// Track progress
 	currentStatus = setStatusForCurrentAction( 'running', currentAction );
-	progress( currentStatus, runningSprite );
+	progress( currentStatus );
 
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
@@ -147,7 +144,7 @@ export const searchAndReplace = async (
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
 		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus, runningSprite );
+		progress( currentStatus );
 
 		throw new Error( 'No search and replace parameters provided.' );
 	}
@@ -171,7 +168,7 @@ export const searchAndReplace = async (
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
 			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
 
@@ -204,7 +201,7 @@ export const searchAndReplace = async (
 				);
 
 				currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-				progress( currentStatus, runningSprite );
+				progress( currentStatus );
 
 				reject();
 			} );
@@ -214,7 +211,7 @@ export const searchAndReplace = async (
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
 	currentStatus = setStatusForCurrentAction( 'success', currentAction );
-	progress( currentStatus, runningSprite );
+	progress( currentStatus );
 
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 

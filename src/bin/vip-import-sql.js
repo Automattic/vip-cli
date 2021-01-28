@@ -32,13 +32,10 @@ import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment } from 'lib/cli/format';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
-import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 
 // For progress logs
 let currentStatus;
 let currentAction;
-
-const runningSprite = new RunningSprite();
 
 const appQuery = `
 	id,
@@ -223,8 +220,9 @@ command( {
 
 			fileNameToUpload = outputFileName;
 		} else {
-			currentStatus = setStatusForCurrentAction( 'skipped', currentAction );
-			progress( currentStatus, runningSprite );
+			// Indicate that S-R was skipped in the progress logs
+			currentStatus = setStatusForCurrentAction( 'skipped', 'replace' );
+			progress( currentStatus );
 		}
 
 		// VALIDATIONS
@@ -242,7 +240,7 @@ command( {
 
 		try {
 			currentStatus = setStatusForCurrentAction( 'running', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			const {
 				fileMeta: { basename, md5 },
@@ -255,7 +253,7 @@ command( {
 				md5: md5,
 			};
 			currentStatus = setStatusForCurrentAction( 'success', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			debug( { basename, md5, result } );
 
@@ -264,7 +262,7 @@ command( {
 			await track( 'import_sql_upload_complete' );
 		} catch ( e ) {
 			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
 			exit.withError( e );
@@ -276,7 +274,7 @@ command( {
 
 		try {
 			currentStatus = setStatusForCurrentAction( 'running', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
@@ -284,12 +282,12 @@ command( {
 			} );
 
 			currentStatus = setStatusForCurrentAction( 'success', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
 			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus, runningSprite );
+			progress( currentStatus );
 
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',

@@ -5,7 +5,7 @@
  */
 import chalk from 'chalk';
 import { stdout as progressLog } from 'single-line-log';
-import { getGlyphForStatus } from 'lib/cli/format';
+import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
 // Various action steps for SQL imports
 export const progressSteps = [
@@ -30,8 +30,9 @@ export const setStatusForCurrentAction = ( status, action ) => {
 }
 
 const completedSteps = [];
+const runningSprite = new RunningSprite();
 
-export function progress( steps: Object[], runningSprite: RunningSprite ) {
+export function progress( steps: Object[] ) {
 	// Iterate over each step and collect the logs to output
  const reducer = ( accumulator, step ) => {
 		let statusOfAction;
