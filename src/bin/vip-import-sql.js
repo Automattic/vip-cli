@@ -240,7 +240,7 @@ command( {
 
 		const startImportVariables = {};
 
-		console.log( 'Uploading…' );
+		debug( 'Uploading…' );
 
 		try {
 			currentStatus = setStatusForCurrentAction( 'running', currentAction );
