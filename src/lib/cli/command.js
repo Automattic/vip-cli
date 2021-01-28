@@ -355,9 +355,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 
 				// Site launched details
-				const launchedQuery = site.hasOwnProperty( 'launched' );
+				const haveLaunchedField = site.hasOwnProperty( 'launched' );
 
-				if ( launchedQuery ) {
+				if ( haveLaunchedField ) {
 					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
 
 					info.push( { key: 'Launched?', value: `${ chalk.cyan( launched ) }` } );
