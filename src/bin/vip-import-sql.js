@@ -184,8 +184,6 @@ command( {
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
 
-		console.log( `\n${ chalk.underline( '** Welcome to the WPVIP Site SQL Importer! **' ) }\n` );
-
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
 		await track( 'import_sql_command_execute' );
@@ -264,8 +262,6 @@ command( {
 			debug( 'Upload complete. Initiating the import.' );
 
 			await track( 'import_sql_upload_complete' );
-
-			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
 			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
 			progress( currentStatus, runningSprite );
