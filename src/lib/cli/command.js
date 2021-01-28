@@ -348,9 +348,19 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 		switch ( _opts.module ) {
 			case 'import-sql':
-				if ( options.env && options.env.primaryDomain ) {
-					const primaryDomainName = options.env.primaryDomain.name;
+				const site = options.env;
+				if ( site && site.primaryDomain ) {
+					const primaryDomainName = site.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
+				}
+
+				// Site launched details
+				const haveLaunchedField = site.hasOwnProperty( 'launched' );
+
+				if ( haveLaunchedField ) {
+					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
+
+					info.push( { key: 'Launched?', value: `${ chalk.cyan( launched ) }` } );
 				}
 
 				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
