@@ -7,7 +7,7 @@ import { stdout as progressLog } from 'single-line-log';
 import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
 // Various action steps for SQL imports
-export const progressSteps = [
+export const SQL_IMPORT_PROGRESS_STEPS = [
 	{ id: 'replace', name: 'Performing Search and Replace', status: 'pending' },
 	{ id: 'validate', name: 'Validating SQL', status: 'pending' },
 	{ id: 'upload', name: 'Uploading file to S3', status: 'pending' },
@@ -16,7 +16,7 @@ export const progressSteps = [
 
 // Need to format the response to return an array
 export const setStatusForCurrentAction = ( status, action ) => {
-	const currentProgressSteps = progressSteps.map( step => {
+	const currentProgressSteps = SQL_IMPORT_PROGRESS_STEPS.map( step => {
 		if ( step.id === action ) {
 			step.status = status;
 		}
