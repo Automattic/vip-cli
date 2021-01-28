@@ -352,7 +352,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					const primaryDomainName = options.env.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
-				
+
 				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
 
 				// Show S-R params if the `search-replace` flag is set
