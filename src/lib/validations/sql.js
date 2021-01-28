@@ -16,10 +16,14 @@ import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
 import { getReadInterface } from 'lib/validations/line-by-line';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
-import { progress } from 'lib/cli/progress';
+import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
+import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 
 // For progress logs
-const step = 'validate';
+let currentStatus;
+const currentAction = 'validate';
+
+const runningSprite = new RunningSprite();
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -188,7 +192,9 @@ const checks: Checks = {
 };
 
 export const postValidation = async ( filename: string, isImport: boolean ) => {
-	progress( step, 'running' );
+	currentStatus = setStatusForCurrentAction( 'running', currentAction );
+	progress( currentStatus, runningSprite );
+
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
@@ -213,14 +219,14 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
 		}
-
-		progress( step, 'failed' );
+		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+		progress( currentStatus, runningSprite );
 
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
-
-	progress( step, 'success' );
+	currentStatus = setStatusForCurrentAction( 'success', currentAction );
+	progress( currentStatus, runningSprite );
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
@@ -229,7 +235,9 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 };
 
 const perLineValidations = ( line: string, runAsImport: boolean ) => {
-	progress( step, 'running' );
+	currentStatus = setStatusForCurrentAction( 'running', currentAction );
+	progress( currentStatus, runningSprite );
+
 	if ( lineNum % 500 === 0 ) {
 		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}

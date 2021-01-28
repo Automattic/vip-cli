@@ -5,92 +5,70 @@
  */
 import chalk from 'chalk';
 import { stdout as progressLog } from 'single-line-log';
-
-// Progress spinner
-const sprite = {
-	i: 0,
-	sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
-	next() {
-		this.i++;
-
-		if ( this.i >= this.sprite.length ) {
-			this.i = 0;
-		}
-
-		return {
-			value: this.sprite[ this.i ],
-			done: false,
-		};
-	},
-};
-
-// Icons for different action states/status
-const marks = {
-	pending: '○',
-	running: chalk.blueBright( sprite.next().value ),
-	success: chalk.green( '✓' ),
-	failed: chalk.red( '✕' ),
-	skipped: chalk.green( '✕' ),
-};
+import { getGlyphForStatus } from 'lib/cli/format';
 
 // Various action steps for SQL imports
-const steps = {
-	replace: 'Performing Search and Replace',
-	validate: 'Validating SQL',
-	upload: 'Uploading file to S3',
-	startImport: 'Starting import',
-	import: 'Importing...',
-	// Add more as needed
-};
+export const progressSteps = [
+	{ id: 'replace', name: 'Performing Search and Replace', status: 'pending' },
+	{ id: 'validate', name: 'Validating SQL', status: 'pending' },
+	{ id: 'upload', name: 'Uploading file to S3', status: 'pending' },
+	{ id: 'startImport', name: 'Starting import', status: 'pending' },
+	{ id: 'import', name: 'Importing...', status: 'pending' },
+];
 
-// Progress Logs
-let message;
-let messages = [];
+// Need to format the response to return an array
+export const setStatusForCurrentAction = ( status, action ) => {
+	const currentProgressSteps = progressSteps.map( step => {
+		if ( step.id === action ) {
+			step.status = status;
+		}
+
+		return step;
+	} );
+	
+	return currentProgressSteps;
+}
+
 const completedSteps = [];
 
-export const progress = ( currentStep, status ) => {
-	for ( const key of Object.keys( steps ) ) {
-		// Status of the current step in progress
-		if ( key === currentStep ) {
-			message = ` ${ marks[ status ] } ${ steps[ currentStep ] }`;
-			messages.push( message );
+export function progress( steps: Object[], runningSprite: RunningSprite ) {
+	const logs = steps.reduce(
+		( carry, step ) => {
+			let statusOfAction;
+		statusOfAction = step.status;
 
-			// Keep track of completed and skipped steps
-			if ( status === 'success' ) {
-				completedSteps.push( currentStep );
-			}
+		const skipped = `${ step.id }-skipped`;
+		const statusIcon = getGlyphForStatus( statusOfAction, runningSprite );
 
-			if ( status === 'skipped' ) {
-				completedSteps.push( `${ currentStep }-skipped` );
-			}
+		 // Keep track of completed and skipped steps
+		if ( step.status === 'success' ) {
+			completedSteps.push( step.id );
 		}
 
-		// Status of all the other steps
-		if ( key !== currentStep ) {
-			const stepCompleted = completedSteps.includes( key );
-
-			const skipped = `${ key }-skipped`;
-
-			const stepSkipped = completedSteps.find( step =>
-				step === skipped
-			);
-
-			if ( stepSkipped === skipped ) {
-				message = ` ${ marks.skipped } ${ steps[ key ] }`;
-				messages.push( message );
-			} else if ( stepCompleted ) {
-				message = ` ${ marks.success } ${ steps[ key ] }`;
-				messages.push( message );
-			} else {
-				message = chalk.dim( ` ${ marks.pending } ${ steps[ key ] }` );
-				messages.push( message );
-			}
+		if ( step.status === 'skipped' ) {
+			completedSteps.push( skipped );
 		}
-	}
 
-	// Finally, print the progress logs
-	progressLog( messages.join( '\n' ) );
+		const stepCompleted = completedSteps.includes( step.id );
+		const stepSkipped = completedSteps.find( alreadyDone =>
+			alreadyDone === skipped
+		);
 
-	// Reset the messages array for each iteration
-	messages = [];
-};
+		// Specify status of completed or pending actions to avoid double logging
+		if ( stepSkipped === skipped ) {
+			statusOfAction = 'skipped';
+		} else if ( stepCompleted ) {
+			statusOfAction = 'success'
+		} else {
+			statusOfAction = 'pending';
+		}
+
+		const outputStep = carry + `${ getGlyphForStatus( statusOfAction, runningSprite ) } ${ step.name }\n`;
+
+  return outputStep;
+	},
+		''
+	);
+ 
+ return progressLog( logs );
+}

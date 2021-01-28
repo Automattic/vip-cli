@@ -31,11 +31,14 @@ import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment } from 'lib/cli/format';
-import { progress } from 'lib/cli/progress';
+import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
+import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 
 // For progress logs
-const step = 'startImport';
-const nextStep = 'import';
+let currentStatus;
+let currentAction;
+
+const runningSprite = new RunningSprite();
 
 const appQuery = `
 	id,
@@ -198,6 +201,8 @@ command( {
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
 		searchReplace ? '' : console.log();
 
+		currentAction = 'startImport'
+
 		let fileNameToUpload = fileName;
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
@@ -220,7 +225,8 @@ command( {
 
 			fileNameToUpload = outputFileName;
 		} else {
-			progress( 'replace', 'skipped' );
+			currentStatus = setStatusForCurrentAction( 'skipped', currentAction );
+			progress( currentStatus, runningSprite );
 		}
 
 		// VALIDATIONS
@@ -237,7 +243,9 @@ command( {
 		console.log( 'Uploading…' );
 
 		try {
-			progress( step, 'running' );
+			currentStatus = setStatusForCurrentAction( 'running', currentAction );
+			progress( currentStatus, runningSprite );
+
 			const {
 				fileMeta: { basename, md5 },
 				result,
@@ -248,7 +256,9 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
-			progress( step, 'success' );
+			currentStatus = setStatusForCurrentAction( 'success', currentAction );
+			progress( currentStatus, runningSprite );
+
 			debug( { basename, md5, result } );
 
 			debug( 'Upload complete. Initiating the import.' );
@@ -257,24 +267,33 @@ command( {
 
 			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
-			progress( step, 'failed' );
+			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+			progress( currentStatus, runningSprite );
+
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
 			exit.withError( e );
 		}
 
+		// Which step of the import we're in
+		// `startImport` -> `import`
+		currentAction = 'import';
+
 		try {
-			progress( nextStep, 'running' );
+			currentStatus = setStatusForCurrentAction( 'running', currentAction );
+			progress( currentStatus, runningSprite );
 
 			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
 				variables: startImportVariables,
 			} );
 
-			progress( nextStep, 'success' );
+			currentStatus = setStatusForCurrentAction( 'success', currentAction );
+			progress( currentStatus, runningSprite );
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
-			progress( nextStep, 'failed' );
+			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+			progress( currentStatus, runningSprite );
 
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',
