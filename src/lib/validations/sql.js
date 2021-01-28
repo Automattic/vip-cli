@@ -189,8 +189,10 @@ const checks: Checks = {
 };
 
 export const postValidation = async ( filename: string, isImport: boolean ) => {
-	currentStatus = setStatusForCurrentAction( 'running', currentAction );
-	progress( currentStatus );
+	if ( isImport ) {
+		currentStatus = setStatusForCurrentAction( 'running', currentAction );
+		progress( currentStatus );
+	}
 
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
@@ -215,24 +217,28 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 		if ( isImport ) {
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
-		}
 
-		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus );
+			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+			progress( currentStatus );
+		}
 
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
 
-	currentStatus = setStatusForCurrentAction( 'success', currentAction );
-	progress( currentStatus );
+	if ( isImport ) {
+		currentStatus = setStatusForCurrentAction( 'success', currentAction );
+		progress( currentStatus );
+	}
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 };
 
 const perLineValidations = ( line: string, runAsImport: boolean ) => {
-	currentStatus = setStatusForCurrentAction( 'running', currentAction );
-	progress( currentStatus );
+	if ( runAsImport ) {
+		currentStatus = setStatusForCurrentAction( 'running', currentAction );
+		progress( currentStatus );
+	}
 
 	if ( lineNum % 500 === 0 ) {
 		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
