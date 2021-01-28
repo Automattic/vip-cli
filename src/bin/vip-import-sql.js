@@ -120,7 +120,8 @@ const gates = async ( app, env, fileName ) => {
 		);
 	}
 };
-// Command examples
+
+// Command examples for the `vip import sql` help prompt
 const examples = [
 	// `sql` subcommand
 	{
@@ -191,12 +192,14 @@ command( {
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 
+		console.log();
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
-		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
+		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
 		searchReplace ? '' : console.log();
 
 		let fileNameToUpload = fileName;
+
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			const params = searchReplace.split( ',' );
@@ -223,7 +226,7 @@ command( {
 			progress( currentStatus );
 		}
 
-		// VALIDATIONS
+		// SQL file validations
 		const validations = [];
 		validations.push( staticSqlValidations );
 		validations.push( siteTypeValidations );
@@ -236,11 +239,13 @@ command( {
 
 		debug( 'Uploading…' );
 
+		// Uploading the SQL file to AWS S3
 		try {
 			const {
 				fileMeta: { basename, md5 },
 				result,
 			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
+
 			startImportVariables.input = {
 				id: app.id,
 				environmentId: env.id,
@@ -258,6 +263,7 @@ command( {
 			exit.withError( e );
 		}
 
+		// Start the import
 		try {
 			currentStatus = setStatusForCurrentAction( 'running', currentAction );
 			progress( currentStatus );

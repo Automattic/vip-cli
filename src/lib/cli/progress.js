@@ -27,9 +27,13 @@ export const setStatusForCurrentAction = ( status, action ) => {
 	return currentProgressSteps;
 };
 
-const completedSteps = [];
+// Instantiate a new instance of the RunningSprite class
 const runningSprite = new RunningSprite();
 
+// Keep track of completed and skipped steps
+const completedSteps = [];
+
+// Progress output logs
 export function progress( steps: Object[] ) {
 	// Iterate over each step and collect the logs to output
 	const reducer = ( accumulator, step ) => {
@@ -64,7 +68,7 @@ export function progress( steps: Object[] ) {
 
 		const outputStep = accumulator + `${ statusIcon } ${ step.name }\n`;
 
-  return outputStep;
+		return outputStep;
 	};
 
 	const logs = steps.reduce( reducer, '' );

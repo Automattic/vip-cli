@@ -13,7 +13,6 @@ import { stdout as log } from 'single-line-log';
  * Internal dependencies
  */
 import { trackEvent } from 'lib/tracker';
-import { confirm } from 'lib/cli/prompt';
 import { getReadInterface } from 'lib/validations/line-by-line';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
@@ -216,12 +215,14 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
 		}
+
 		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
 		progress( currentStatus );
 
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
+
 	currentStatus = setStatusForCurrentAction( 'success', currentAction );
 	progress( currentStatus );
 
