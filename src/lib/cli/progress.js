@@ -43,7 +43,7 @@ export function progress( steps: Object[] ) {
 		const skipped = `${ step.id }-skipped`;
 		const statusIcon = getGlyphForStatus( statusOfAction, runningSprite );
 
-		 // Keep track of completed and skipped steps
+		// Keep track of completed and skipped steps
 		if ( step.status === 'success' ) {
 			completedSteps.push( step.id );
 		}
