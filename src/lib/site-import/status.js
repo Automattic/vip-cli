@@ -9,14 +9,14 @@
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
-import { stdout as singleLogLine } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
-import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
+import { ProgressTracker } from 'lib/cli/progress';
+import { getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -62,6 +62,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 export type ImportSqlCheckStatusInput = {
 	app: Object,
 	env: Object,
+	progressTracker: ProgressTracker,
 };
 
 async function getStatus( api, appId, envId ) {
@@ -125,7 +126,12 @@ The database server said:
 	return message;
 }
 
-export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusInput ) {
+export async function importSqlCheckStatus( {
+	app,
+	env,
+	progressTracker,
+}: ImportSqlCheckStatusInput ) {
+	// NO `console.log` in this function (until results are final)! It will break the progress printing.
 	const api = await API();
 
 	if ( ! currentUserCanImportForApp( app ) ) {
@@ -133,8 +139,6 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 			'The currently authenticated account does not have permission to view SQL import status.'
 		);
 	}
-
-	const runningSprite = new RunningSprite();
 
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
@@ -194,11 +198,18 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 					return reject( { error: 'Could not enumerate the import job steps' } );
 				}
 
-				singleLogLine( `
-SQL Import Job Started at ${ createdAt } (${ new Date( createdAt ) })
+				const {
+					progress: { status },
+				} = importJob;
 
-Status:
-${ formatJobSteps( steps, runningSprite ) }` );
+				progressTracker.suffix = `\n\nSQL Import Job Started at ${ createdAt } (${ new Date(
+					createdAt
+				) }\n=============================================================\nStatus: ${ status } ${ getGlyphForStatus(
+					status,
+					progressTracker.runningSprite
+				) }\n`;
+
+				progressTracker.setStepsFromServer( steps );
 
 				if ( jobStatus !== 'running' ) {
 					return resolve( importJob );
@@ -214,22 +225,14 @@ ${ formatJobSteps( steps, runningSprite ) }` );
 	try {
 		const results = await getResults();
 
-		// break out of the singleLogLine
-		console.log( '\n' );
+		// Print one final time
+		progressTracker.print( { clearAfter: true } );
 
 		if ( typeof results === 'string' ) {
 			// This type of result is not an importing error. e.g. no import job was found
 			console.log( results );
 			process.exit( 0 );
 		}
-
-		const {
-			progress: { status },
-		} = results;
-
-		console.log( `=============================================================
-Result: ${ status }
-` );
 	} catch ( importFailed ) {
 		console.log( `
 Result: ${ chalk.red( 'Failed' ) }

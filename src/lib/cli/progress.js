@@ -1,78 +1,144 @@
 // @flow
+/** @format */
 
 /**
  * External dependencies
  */
-import { stdout as progressLog } from 'single-line-log';
+import { stdout as singleLogLine } from 'single-line-log';
+
+/**
+ * Internal dependencies
+ */
 import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
-// Various action steps for SQL imports
-export const SQL_IMPORT_PROGRESS_STEPS = [
-	{ id: 'replace', name: 'Performing Search and Replace', status: 'pending' },
-	{ id: 'validate', name: 'Validating SQL', status: 'pending' },
-	{ id: 'upload', name: 'Uploading file to S3', status: 'pending' },
-	{ id: 'import', name: 'Importing...', status: 'pending' },
-];
+const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
-// Need to format the response to return an array
-export const setStatusForCurrentAction = ( status, action ) => {
-	const currentProgressSteps = SQL_IMPORT_PROGRESS_STEPS.map( step => {
-		if ( step.id === action ) {
-			step.status = status;
+export class ProgressTracker {
+	allStepsSucceeded: boolean
+	hasFailure: boolean
+	hasPrinted: boolean
+	initialized: boolean
+	settingStepsFromServer: boolean
+
+	// What kind of progress this instance is tracking
+	type: string
+
+	// Track the state of each step
+	steps: Map<string, Object>
+
+	// Spinnerz go brrrr
+	runningSprite: RunningSprite
+
+	prefix: string
+	suffix: string
+
+	constructor( steps: Object[] ) {
+		this.runningSprite = new RunningSprite();
+		this.hasFailure = false;
+		this._setSteps( steps );
+		this.prefix = '';
+		this.suffix = '';
+	}
+
+	_setSteps( steps: Object[] ) {
+		this.steps = steps.reduce( ( map, { id, name, status } ) => {
+			map.set( id, { id, name, status: status || 'pending' } );
+			return map;
+		}, this.steps || new Map() );
+	}
+
+	setStepsFromServer( stepsFromServer: Object[] ) {
+		this.settingStepsFromServer = true;
+		this._setSteps( stepsFromServer.map( ( { name, status }, index ) => ( {
+			id: `${ index }-${ name }`,
+			name,
+			status,
+		} ) ) );
+		this.settingStepsFromServer = false;
+		this.print();
+	}
+
+	getNextStep() {
+		if ( this.allStepsSucceeded ) {
+			return undefined;
+		}
+		const steps = [ ...this.steps.values() ];
+		return steps.find( ( { status } ) => status === 'pending' );
+	}
+
+	stepRunning( stepId: string ) {
+		this.setStatusForStepId( stepId, 'running' );
+		this.print();
+	}
+
+	stepFailed( stepId: string ) {
+		this.setStatusForStepId( stepId, 'failed' );
+		this.print( { clearAfter: true } );
+	}
+
+	stepSkipped( stepId: string ) {
+		this.setStatusForStepId( stepId, 'skipped' );
+		this.print();
+	}
+
+	stepSuccess( stepId: string ) {
+		this.setStatusForStepId( stepId, 'success' );
+		// The stepSuccess helper automatically sets the next step to "running"
+		const nextStep = this.getNextStep();
+		if ( nextStep ) {
+			this.stepRunning( nextStep.id );
+			return;
+		}
+		this.allStepsSucceeded = true;
+		this.print( { clearAfter: true } );
+	}
+
+	setStatusForStepId( stepId: string, status: string, fromServer: boolean = false ) {
+		const step = this.steps.get( stepId ) || {};
+		const currentStatus = step?.status;
+		if ( ! fromServer && ! currentStatus ) {
+			// If we're not setting steps from the server, only the initial steps are allowed
+			throw new Error( `Step name ${ stepId } is not valid for type ${ this.type }` );
 		}
 
-		return step;
-	} );
-
-	return currentProgressSteps;
-};
-
-// Instantiate a new instance of the RunningSprite class
-const runningSprite = new RunningSprite();
-
-// Keep track of completed and skipped steps
-const completedSteps = [];
-
-// Progress output logs
-export function progress( steps: Object[] ) {
-	// Iterate over each step and collect the logs to output
-	const reducer = ( accumulator, step ) => {
-		let statusOfAction;
-		statusOfAction = step.status;
-
-		const skipped = `${ step.id }-skipped`;
-		const statusIcon = getGlyphForStatus( statusOfAction, runningSprite );
-
-		// Keep track of completed and skipped steps
-		if ( step.status === 'success' ) {
-			completedSteps.push( step.id );
+		if ( ! fromServer && COMPLETED_STEP_SLUGS.includes( step.status ) ) {
+			throw new Error( `Step name ${ stepId } is already completed for type ${ this.type }` );
 		}
 
-		if ( step.status === 'skipped' ) {
-			completedSteps.push( skipped );
+		if ( status === 'failed' ) {
+			this.hasFailure = true;
 		}
 
-		const stepCompleted = completedSteps.includes( step.id );
-		const stepSkipped = completedSteps.find( alreadyDone =>
-			alreadyDone === skipped
-		);
+		this.steps.set( stepId, {
+			...step,
+			status,
+		} );
 
-		// Specify status of completed or pending actions to avoid double logging
-		if ( stepSkipped === skipped ) {
-			statusOfAction = 'skipped';
-		} else if ( stepCompleted ) {
-			statusOfAction = 'success';
-		} else {
-			statusOfAction = 'pending';
+		if ( ! fromServer ) {
+			this.print();
 		}
+	}
 
-		const outputStep = accumulator + `${ statusIcon } ${ step.name }\n`;
+	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
+		if ( this.settingStepsFromServer ) {
+			return;
+		}
+		if ( ! this.hasPrinted ) {
+			this.hasPrinted = true;
+			singleLogLine.clear();
+		}
+		const stepValues = [ ...this.steps.values() ];
+		const logs = stepValues.reduce( ( accumulator, { name, status } ) => {
+			const statusIcon = getGlyphForStatus( status, this.runningSprite );
+			return `${ accumulator }${ statusIcon } ${ name }\n`;
+		}, '' );
 
-		return outputStep;
-	};
+		// Output the logs
+		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix || '' }` );
 
-	const logs = steps.reduce( reducer, '' );
-
-	// Output the logs
-	return progressLog( logs );
+		if ( clearAfter ) {
+			// Break out of the "Single log line" buffer
+			singleLogLine.clear();
+		}
+	}
 }
