@@ -228,9 +228,6 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 	progress( currentStatus );
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
-
-	isImport ? '' : console.log( '\n🎉 You can now submit for import, see here for more details: ' +
-		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
 };
 
 const perLineValidations = ( line: string, runAsImport: boolean ) => {
