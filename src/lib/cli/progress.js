@@ -11,7 +11,6 @@ export const progressSteps = [
 	{ id: 'replace', name: 'Performing Search and Replace', status: 'pending' },
 	{ id: 'validate', name: 'Validating SQL', status: 'pending' },
 	{ id: 'upload', name: 'Uploading file to S3', status: 'pending' },
-	{ id: 'startImport', name: 'Starting import', status: 'pending' },
 	{ id: 'import', name: 'Importing...', status: 'pending' },
 ];
 
@@ -67,7 +66,7 @@ export function progress( steps: Object[] ) {
 
   return outputStep;
 	};
-	
+
 	const logs = steps.reduce( reducer, '' );
 
 	// Output the logs

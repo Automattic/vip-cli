@@ -35,7 +35,7 @@ import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
 
 // For progress logs
 let currentStatus;
-let currentAction;
+const currentAction = 'import';
 
 const appQuery = `
 	id,
@@ -196,8 +196,6 @@ command( {
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
 		searchReplace ? '' : console.log();
 
-		currentAction = 'startImport';
-
 		let fileNameToUpload = fileName;
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
@@ -249,8 +247,6 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
-			currentStatus = setStatusForCurrentAction( 'success', currentAction );
-			progress( currentStatus );
 
 			debug( { basename, md5, result } );
 
@@ -258,16 +254,9 @@ command( {
 
 			await track( 'import_sql_upload_complete' );
 		} catch ( e ) {
-			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus );
-
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
 			exit.withError( e );
 		}
-
-		// Which step of the import we're in
-		// `startImport` -> `import`
-		currentAction = 'import';
 
 		try {
 			currentStatus = setStatusForCurrentAction( 'running', currentAction );
