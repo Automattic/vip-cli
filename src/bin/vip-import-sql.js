@@ -85,7 +85,7 @@ const gates = async ( app, env, fileName ) => {
 	try {
 		await checkFileAccess( fileName );
 	} catch ( e ) {
-		await track( 'import_sql_command_error', { error_type: 'missing-file' } );
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-missing' } );
 		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 	}
 
