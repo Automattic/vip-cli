@@ -47,6 +47,7 @@ const appQuery = `
 		appId
 		type
 		name
+		launched
 		syncProgress { status }
 		primaryDomain { name }
 		importStatus {
