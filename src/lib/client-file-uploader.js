@@ -79,29 +79,31 @@ export type UploadArguments = {
 };
 
 export const getFileMD5Hash = async ( fileName: string ) =>
-	new Promise( resolve =>
+	new Promise( ( resolve, reject ) =>
 		fs
 			.createReadStream( fileName )
 			.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
 			.on( 'finish', function() {
 				resolve( this.read() );
 			} )
+			.on( 'error', ( error ) => reject( `could not generate file hash: ${ error }` ) )
 	);
 
 export const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) =>
-	new Promise( resolve =>
+	new Promise( ( resolve, reject ) =>
 		fs
 			.createReadStream( uncompressedFileName )
 			.pipe( createGzip() )
 			.pipe( fs.createWriteStream( compressedFileName ) )
 			.on( 'finish', resolve )
+			.on( 'error', ( error ) => reject( `could not compress file: ${ error }` ) )
 	);
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
 		const fileSize = await getFileSize( fileName );
 
-		const basename = path.posix.basename( fileName );
+		const basename = path.basename( fileName );
 		// TODO Validate File basename...  encodeURIComponent, maybe...?
 
 		const mimeType = await detectCompressedMimeType( fileName );
