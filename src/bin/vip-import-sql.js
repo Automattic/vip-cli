@@ -239,9 +239,6 @@ command( {
 		debug( 'Uploading…' );
 
 		try {
-			currentStatus = setStatusForCurrentAction( 'running', currentAction );
-			progress( currentStatus );
-
 			const {
 				fileMeta: { basename, md5 },
 				result,
@@ -280,9 +277,6 @@ command( {
 				mutation: START_IMPORT_MUTATION,
 				variables: startImportVariables,
 			} );
-
-			currentStatus = setStatusForCurrentAction( 'success', currentAction );
-			progress( currentStatus );
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
