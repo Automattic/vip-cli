@@ -47,7 +47,7 @@ command( {
 
 	await track( 'import_sql_check_status_command_execute' );
 
-	console.log( `Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }` );
+	console.log( 'Checking the sql import status for your environment...' );
 
 	await importSqlCheckStatus( { app, env } );
 } );
