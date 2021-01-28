@@ -228,7 +228,7 @@ ${ formatJobSteps( steps, runningSprite ) }` );
 		} = results;
 
 		console.log( `=============================================================
-Result: ${ status }
+Result: ${ status }. The imported data should be visible on your site ${ env.primaryDomain.name }.
 ` );
 	} catch ( importFailed ) {
 		console.log( `

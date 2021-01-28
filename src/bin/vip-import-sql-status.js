@@ -26,6 +26,10 @@ environments{
 	id
 	appId
 	type
+	primaryDomain {
+		id
+		name
+	}
 }
 `;
 
