@@ -101,7 +101,7 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
 		const fileSize = await getFileSize( fileName );
 
-		const basename = path.posix.basename( fileName );
+		const basename = path.basename( fileName );
 		// TODO Validate File basename...  encodeURIComponent, maybe...?
 
 		const mimeType = await detectCompressedMimeType( fileName );
