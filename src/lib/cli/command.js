@@ -352,7 +352,26 @@ args.argv = async function( argv, cb ): Promise<any> {
 					const primaryDomainName = options.env.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
+
 				this.sub && info.push( { key: 'SQL File', value: this.sub } );
+
+				 // Show S-R params if the `search-replace` flag is set
+					const searchReplace = options.searchReplace;
+
+					let replacementPairs;
+
+					if ( searchReplace ) {
+						// Only one pair of S-R values specified
+						if ( typeof searchReplace === 'string' ) {
+							const params = searchReplace.split( ',' );
+							
+							replacementPairs = [ assignSRValues( params ) ];
+						}
+	
+						// Format data into a user-friendly table
+						info.push( { key: 'Replacements', value: '\n' + formatData( replacementPairs, 'table' ) } );
+					}
+	
 				break;
 			case 'sync':
 				const { backup, canSync, errors } = options.env.syncPreview;
