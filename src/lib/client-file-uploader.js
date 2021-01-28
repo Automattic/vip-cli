@@ -184,9 +184,9 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.fileSize < MULTIPART_THRESHOLD
 			? await uploadUsingPutObject( { app, env, fileMeta } )
 			: await uploadUsingMultipart( { app, env, fileMeta } );
-
-			currentStatus = setStatusForCurrentAction( 'success', currentAction );
-			progress( currentStatus );
+			
+	currentStatus = setStatusForCurrentAction( 'success', currentAction );
+	progress( currentStatus );
 
 	return {
 		fileMeta,

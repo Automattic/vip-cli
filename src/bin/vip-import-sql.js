@@ -196,7 +196,7 @@ command( {
 		console.log( `       site: ${ app.name }(${ formatEnvironment( opts.env.type ) })` );
 		searchReplace ? '' : console.log();
 
-		currentAction = 'startImport'
+		currentAction = 'startImport';
 
 		let fileNameToUpload = fileName;
 		// Run Search and Replace if the --search-replace flag was provided

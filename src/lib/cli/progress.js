@@ -3,7 +3,6 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
 import { stdout as progressLog } from 'single-line-log';
 import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
@@ -25,16 +24,16 @@ export const setStatusForCurrentAction = ( status, action ) => {
 
 		return step;
 	} );
-	
+
 	return currentProgressSteps;
-}
+};
 
 const completedSteps = [];
 const runningSprite = new RunningSprite();
 
 export function progress( steps: Object[] ) {
 	// Iterate over each step and collect the logs to output
- const reducer = ( accumulator, step ) => {
+	const reducer = ( accumulator, step ) => {
 		let statusOfAction;
 		statusOfAction = step.status;
 
@@ -59,7 +58,7 @@ export function progress( steps: Object[] ) {
 		if ( stepSkipped === skipped ) {
 			statusOfAction = 'skipped';
 		} else if ( stepCompleted ) {
-			statusOfAction = 'success'
+			statusOfAction = 'success';
 		} else {
 			statusOfAction = 'pending';
 		}
@@ -67,10 +66,10 @@ export function progress( steps: Object[] ) {
 		const outputStep = accumulator + `${ statusIcon } ${ step.name }\n`;
 
   return outputStep;
-	}
+	};
 	
 	const logs = steps.reduce( reducer, '' );
 
 	// Output the logs
- return progressLog( logs );
+	return progressLog( logs );
 }
