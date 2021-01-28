@@ -133,9 +133,11 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	// Track progress
-	currentStatus = setStatusForCurrentAction( 'running', currentAction );
-	progress( currentStatus );
+	// Track progress for imports
+	if ( isImport ) {
+		currentStatus = setStatusForCurrentAction( 'running', currentAction );
+		progress( currentStatus );
+	}
 
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
@@ -144,8 +146,10 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus );
+		if ( isImport ) {
+			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+			progress( currentStatus );
+		}
 
 		throw new Error( 'No search and replace parameters provided.' );
 	}
@@ -168,8 +172,10 @@ export const searchAndReplace = async (
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
-			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus );
+			if ( isImport ) {
+				currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+				progress( currentStatus );
+			}
 
 			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
 
@@ -201,8 +207,10 @@ export const searchAndReplace = async (
 					)
 				);
 
-				currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-				progress( currentStatus );
+				if ( isImport ) {
+					currentStatus = setStatusForCurrentAction( 'failed', currentAction );
+					progress( currentStatus );
+				}
 
 				reject();
 			} );
@@ -211,8 +219,10 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	currentStatus = setStatusForCurrentAction( 'success', currentAction );
-	progress( currentStatus );
+	if ( isImport ) {
+		currentStatus = setStatusForCurrentAction( 'success', currentAction );
+		progress( currentStatus );
+	}
 
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
