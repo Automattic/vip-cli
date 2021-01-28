@@ -24,21 +24,26 @@ const currentAction = 'validate';
 let problemsFound = 0;
 let lineNum = 1;
 
-const errorCheckFormatter = check => {
+const errorCheckFormatter = ( isImport, check ) => {
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
 		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
 		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
 	} else {
-		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		isImport ? '' : console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
 	}
 };
 
-const requiredCheckFormatter = ( check, type ) => {
+const requiredCheckFormatter = ( isImport, check, type ) => {
 	if ( check.results.length > 0 ) {
-		console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		if ( ! isImport ) {
+			console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		}
+
 		if ( type === 'createTable' ) {
-			checkTablePrefixes( check.results );
+			if ( ! isImport ) {
+				checkTablePrefixes( check.results );
+			}
 		}
 	} else {
 		problemsFound += 1;
@@ -47,9 +52,11 @@ const requiredCheckFormatter = ( check, type ) => {
 	}
 };
 
-const infoCheckFormatter = check => {
+const infoCheckFormatter = ( isImport, check ) => {
 	check.results.forEach( item => {
-		console.log( item );
+		if ( ! isImport ) {
+			console.log( item );
+		}
 	} );
 };
 
@@ -186,15 +193,16 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 	progress( currentStatus );
 
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
-	console.log( `${ chalk.underline( 'Starting SQL Validation...' ) }` );
 
-	log( `Finished processing ${ lineNum } lines.` );
-	console.log( '\n' );
+	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
+	isImport ? '' : console.log( '\n' );
+
 	const errorSummary = {};
 	const checkEntires: any = Object.entries( checks );
+
 	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
-		check.outputFormatter( check, type );
-		console.log( '' );
+		check.outputFormatter( isImport, check, type );
+		isImport ? '' : console.log( '' );
 
 		errorSummary[ type ] = check.results.length;
 	}
@@ -221,26 +229,7 @@ export const postValidation = async ( filename: string, isImport: boolean ) => {
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 
-	if ( isImport ) {
-		// Add a confirmation step before running the import
-		const yes = await confirm(
-			[], 'Are you sure you want to continue with the import?'
-		);
-
-		// Bail if user does not wish to proceed
-		if ( ! yes ) {
-			console.log( `${ chalk.red( 'Exiting' ) }` );
-
-			await trackEvent( 'import_continue_cancelled', { is_import: isImport, import_file: filename } );
-
-			process.exit();
-		}
-
-		console.log( `\n${ chalk.underline( 'Starting the import process...' ) }` );
-		return;
-	}
-
-	console.log( '\n🎉 You can now submit for import, see here for more details: ' +
+	isImport ? '' : console.log( '\n🎉 You can now submit for import, see here for more details: ' +
 		'https://docs.wpvip.com/how-tos/prepare-for-site-launch/migrate-content-databases/' );
 };
 
@@ -266,9 +255,13 @@ const execute = ( line: string, isImport: boolean = true ) => {
 	perLineValidations( line, isImport );
 };
 
+const postLineExecutionProcessing = async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
+	await postValidation( fileName, isImport );
+};
+
 export const staticSqlValidations = {
 	execute,
-	postLineExecutionProcessing: postValidation,
+	postLineExecutionProcessing,
 };
 
 // For standalone SQL validations
@@ -282,5 +275,5 @@ export const validate = async ( filename: string, isImport: boolean = false ) =>
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await staticSqlValidations.postLineExecutionProcessing( { filename, isImport } );
+	await postLineExecutionProcessing( { filename, isImport } );
 };

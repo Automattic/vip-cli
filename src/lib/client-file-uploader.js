@@ -15,7 +15,6 @@ import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
-import { stdout as singleLogLine } from 'single-line-log';
 import debugLib from 'debug';
 
 /**
@@ -144,7 +143,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		throw `Unable to create temporary working directory: ${ e }`;
 	}
 
-	console.log(
+	debug(
 		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor(
 			fileMeta.fileSize / MB_IN_BYTES
 		) } MB\n`
@@ -160,7 +159,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
 		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
-		console.log(
+		debug(
 			`Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...`
 		);
 
@@ -168,7 +167,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
-		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
+		debug( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
 
@@ -176,7 +175,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 			( 100 * fewerBytes ) / uncompressedFileSize
 		) }%)`;
 
-		console.log( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
+		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
 	const result =
@@ -223,9 +222,8 @@ export async function uploadUsingPutObject( {
 	const progressPassThrough = new PassThrough();
 	progressPassThrough.on( 'data', data => {
 		readBytes += data.length;
-		singleLogLine( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
+		debug( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
 	} );
-	progressPassThrough.on( 'end', () => console.log( '\n' ) );
 
 	const response = await fetch( presignedRequest.url, {
 		...fetchOptions,
@@ -433,7 +431,7 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 		} );
 
 	const printProgress = () =>
-		singleLogLine(
+		debug(
 			partPercentages
 				.map( ( partPercentage, index ) => {
 					const { partSize } = parts[ index ];

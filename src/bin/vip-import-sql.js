@@ -9,6 +9,7 @@
  * External dependencies
  */
 import gql from 'graphql-tag';
+import chalk from 'chalk';
 import debugLib from 'debug';
 
 /**
@@ -29,15 +30,12 @@ import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
-<<<<<<< HEAD
 import { formatEnvironment } from 'lib/cli/format';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
 
 // For progress logs
 let currentStatus;
 const currentAction = 'import';
-=======
->>>>>>> c113e672f70108133e7d6270d85e49202827e10b
 
 const appQuery = `
 	id,
@@ -211,6 +209,10 @@ command( {
 
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
+			const params = searchReplace.split( ',' );
+
+			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
+
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
@@ -257,11 +259,15 @@ command( {
 				basename: basename,
 				md5: md5,
 			};
+
 			debug( { basename, md5, result } );
-			console.log( 'Upload complete. Initiating the import.' );
+			debug( 'Upload complete. Initiating the import.' );
 
 			await track( 'import_sql_upload_complete' );
 		} catch ( e ) {
+			currentStatus = setStatusForCurrentAction( 'failed', 'upload' );
+			progress( currentStatus );
+
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
 			exit.withError( e );
 		}
