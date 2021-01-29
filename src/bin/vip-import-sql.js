@@ -222,12 +222,15 @@ command( {
 		let fileNameToUpload = fileName;
 
 		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
-		progressTracker.prefix = `=============================================================
+		const setProgressTrackerPrefixAndSuffix = () => {
+			progressTracker.prefix = `=============================================================
 Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
-		progressTracker.suffix = `\n${ getGlyphForStatus(
-			'running',
-			progressTracker.runningSprite
-		) } Loading remaining steps`;
+			progressTracker.suffix = `\n${ getGlyphForStatus(
+				'running',
+				progressTracker.runningSprite
+			) } Loading remaining steps`;
+		};
+		progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
 
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
@@ -241,6 +244,7 @@ Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
 
 			if ( typeof outputFileName !== 'string' ) {
 				// This should not really happen if `searchAndReplace` is functioning properly
+				progressTracker.stopPrinting();
 				throw new Error(
 					'Unable to determine location of the intermediate search & replace file.'
 				);
@@ -285,8 +289,9 @@ Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
 		} catch ( e ) {
-			progressTracker.stepFailed( 'upload' );
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
+			progressTracker.stepFailed( 'upload' );
+			progressTracker.stopPrinting();
 			exit.withError( e );
 		}
 
@@ -306,11 +311,11 @@ Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
 				gql_err: gqlErr,
 			} );
 			progressTracker.stepFailed( 'queue_import' );
+			progressTracker.stopPrinting();
 			exit.withError( `StartImport call failed: ${ gqlErr }` );
 		}
 
 		progressTracker.stepSuccess( 'queue_import' );
-		progressTracker.print();
 
 		await importSqlCheckStatus( { app, env, progressTracker } );
 	} );

@@ -21,6 +21,7 @@ import { getGlyphForStatus } from 'lib/cli/format';
 const debug = debugLib( 'vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
+const PRINT_STATUS_INTERVAL = 100;
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
@@ -131,6 +132,9 @@ export async function importSqlCheckStatus( {
 	env,
 	progressTracker,
 }: ImportSqlCheckStatusInput ) {
+	// Stop printing so we can pass our callback
+	progressTracker.stopPrinting();
+
 	// NO `console.log` in this function (until results are final)! It will break the progress printing.
 	const api = await API();
 
@@ -139,6 +143,30 @@ export async function importSqlCheckStatus( {
 			'The currently authenticated account does not have permission to view SQL import status.'
 		);
 	}
+	let createdAt;
+	let overallStatus = 'running';
+
+	const setProgressTrackerSuffix = () => {
+		progressTracker.suffix = '\n\n';
+		if ( createdAt ) {
+			progressTracker.suffix += `SQL Import Job Started at ${ createdAt } / ${ new Date(
+				createdAt
+			) }`;
+		}
+		progressTracker.suffix += `
+=============================================================
+Status: ${ overallStatus } ${ getGlyphForStatus(
+	overallStatus,
+	progressTracker.runningSprite
+) }\n`;
+	};
+
+	const setSuffixAndPrint = () => {
+		setProgressTrackerSuffix();
+		progressTracker.print();
+	};
+
+	progressTracker.startPrinting( setSuffixAndPrint );
 
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
@@ -152,10 +180,11 @@ export async function importSqlCheckStatus( {
 				}
 
 				const {
-					// completedAt, TODO when Parker support is present
-					createdAt,
 					progress: { status: jobStatus, steps },
 				} = importJob;
+
+				createdAt = importJob.createdAt;
+				// completedAt, TODO when Parker support is present
 
 				const {
 					dbOperationInProgress,
@@ -198,17 +227,6 @@ export async function importSqlCheckStatus( {
 					return reject( { error: 'Could not enumerate the import job steps' } );
 				}
 
-				const {
-					progress: { status },
-				} = importJob;
-
-				progressTracker.suffix = `\n\nSQL Import Job Started at ${ createdAt } (${ new Date(
-					createdAt
-				) }\n=============================================================\nStatus: ${ status } ${ getGlyphForStatus(
-					status,
-					progressTracker.runningSprite
-				) }\n`;
-
 				progressTracker.setStepsFromServer( steps );
 
 				if ( jobStatus !== 'running' ) {
@@ -225,19 +243,26 @@ export async function importSqlCheckStatus( {
 	try {
 		const results = await getResults();
 
+		if ( typeof results === 'string' ) {
+			overallStatus = results;
+		} else {
+			overallStatus = results?.progress?.status || 'unknown';
+			// This shouldn't be 'unknown'...what should we do here?
+		}
+
+		progressTracker.stopPrinting();
+
+		setProgressTrackerSuffix();
+
 		// Print one final time
 		progressTracker.print( { clearAfter: true } );
 
-		if ( typeof results === 'string' ) {
-			// This type of result is not an importing error. e.g. no import job was found
-			console.log( results );
-			process.exit( 0 );
-		}
+		// This type of result is not an importing error. e.g. no import job was found
+		process.exit( 0 );
 	} catch ( importFailed ) {
-		console.log( `
-Result: ${ chalk.red( 'Failed' ) }
-${ getErrorMessage( importFailed ) }
-` );
+		progressTracker.stopPrinting();
+		progressTracker.suffix += `\nERROR: ${ chalk.red( getErrorMessage( importFailed ) ) }\n`;
+		progressTracker.print( { clearAfter: true } );
 		process.exit( 1 );
 	}
 }

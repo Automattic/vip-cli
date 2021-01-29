@@ -11,6 +11,7 @@ import { stdout as singleLogLine } from 'single-line-log';
  */
 import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
+const PRINT_INTERVAL = 100; // 🐇💨
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
 export class ProgressTracker {
@@ -18,7 +19,7 @@ export class ProgressTracker {
 	hasFailure: boolean
 	hasPrinted: boolean
 	initialized: boolean
-	settingStepsFromServer: boolean
+	printInterval: IntervalID
 
 	// Track the state of each step
 	stepsFromCaller: Map<string, Object>
@@ -51,14 +52,11 @@ export class ProgressTracker {
 	}
 
 	setStepsFromServer( steps: Object[] ) {
-		this.settingStepsFromServer = true;
 		this.stepsFromServer = this.mapSteps( steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
 			name,
 			status,
 		} ) ) );
-		this.settingStepsFromServer = false;
-		this.print();
 	}
 
 	getNextStep() {
@@ -71,17 +69,14 @@ export class ProgressTracker {
 
 	stepRunning( stepId: string ) {
 		this.setStatusForStepId( stepId, 'running' );
-		this.print();
 	}
 
 	stepFailed( stepId: string ) {
 		this.setStatusForStepId( stepId, 'failed' );
-		this.print( { clearAfter: true } );
 	}
 
 	stepSkipped( stepId: string ) {
 		this.setStatusForStepId( stepId, 'skipped' );
-		this.print();
 	}
 
 	stepSuccess( stepId: string ) {
@@ -93,7 +88,6 @@ export class ProgressTracker {
 			return;
 		}
 		this.allStepsSucceeded = true;
-		this.print( { clearAfter: true } );
 	}
 
 	setStatusForStepId( stepId: string, status: string ) {
@@ -115,14 +109,22 @@ export class ProgressTracker {
 			...step,
 			status,
 		} );
+	}
 
-		this.print();
+	startPrinting( prePrintCallback: Function = () => {} ) {
+		this.printInterval = setInterval( () => {
+			prePrintCallback();
+			this.print();
+		}, PRINT_INTERVAL );
+	}
+
+	stopPrinting() {
+		if ( this.printInterval ) {
+			clearInterval( this.printInterval );
+		}
 	}
 
 	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
-		if ( this.settingStepsFromServer ) {
-			return;
-		}
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();
