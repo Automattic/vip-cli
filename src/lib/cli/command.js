@@ -348,11 +348,38 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 		switch ( _opts.module ) {
 			case 'import-sql':
-				if ( options.env && options.env.primaryDomain ) {
-					const primaryDomainName = options.env.primaryDomain.name;
+				const site = options.env;
+				if ( site && site.primaryDomain ) {
+					const primaryDomainName = site.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
-				this.sub && info.push( { key: 'SQL File', value: this.sub } );
+
+				// Site launched details
+				const haveLaunchedField = site.hasOwnProperty( 'launched' );
+
+				if ( haveLaunchedField ) {
+					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
+
+					info.push( { key: 'Launched?', value: `${ chalk.cyan( launched ) }` } );
+				}
+
+				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
+
+				// Show S-R params if the `search-replace` flag is set
+				if ( options.searchReplace ) {
+					const params = options.searchReplace.split( ',' );
+
+					const replacements = [
+						{
+							From: `${ params[ 0 ] }`,
+							To: `${ params[ 1 ] }`,
+						},
+					];
+
+					// Format data into a user-friendly table
+					info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+				}
+
 				break;
 			case 'sync':
 				const { backup, canSync, errors } = options.env.syncPreview;
