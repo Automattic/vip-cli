@@ -358,9 +358,23 @@ export async function checkFileAccess( fileName: string ): Promise<void> {
 	return fs.promises.access( fileName, fs.R_OK );
 }
 
+export async function getFileStats( fileName: string ): Promise<fs.Stats> {
+	return fs.promises.stat( fileName );
+}
+
+export async function isFile( fileName: string ): Promise<boolean> {
+	try {
+		const stats = await getFileStats( fileName );
+		return stats.isFile();
+	} catch ( e ) {
+		debug( `isFile error: ${ e }` );
+		return false;
+	}
+}
+
 export async function getFileSize( fileName: string ): Promise<number> {
-	const { size } = await fs.promises.stat( fileName );
-	return size;
+	const stats = await getFileStats( fileName );
+	return stats.size;
 }
 
 export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {

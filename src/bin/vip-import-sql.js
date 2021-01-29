@@ -32,6 +32,7 @@ import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment } from 'lib/cli/format';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
+import { isFile } from '../lib/client-file-uploader';
 
 // For progress logs
 let currentStatus;
@@ -93,8 +94,13 @@ const gates = async ( app, env, fileName ) => {
 	try {
 		await checkFileAccess( fileName );
 	} catch ( e ) {
-		await track( 'import_sql_command_error', { error_type: 'sqlfile-missing' } );
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
 		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
+	}
+
+	if ( ! ( await isFile( fileName ) ) ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-notfile' } );
+		exit.withError( `Path '${ fileName }' is not a file.` );
 	}
 
 	const fileSize = await getFileSize( fileName );
