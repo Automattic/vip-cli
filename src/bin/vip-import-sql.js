@@ -210,9 +210,25 @@ command( {
 
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
-			const params = searchReplace.split( ',' );
+			const message = param => {
+				console.log( `        s-r: ${ chalk.blue( param[ 0 ] ) } -> ${ chalk.blue( param[ 1 ] ) }` );
+			}
 
-			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
+			// Only one pair of S-R values specified
+			if ( typeof searchReplace === 'string' ) {
+				const urlPair = searchReplace.split( ',' );
+
+				message( urlPair );
+				console.log();
+			} else {
+				// Multiple pairs of S-R values specified
+				searchReplace.forEach( pair => {
+					const urls = pair.split( ',' )
+
+					message( urls );
+				} )
+				console.log();
+			}
 
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
