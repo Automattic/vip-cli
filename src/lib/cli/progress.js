@@ -1,78 +1,160 @@
 // @flow
+/** @format */
 
 /**
  * External dependencies
  */
-import { stdout as progressLog } from 'single-line-log';
+import { stdout as singleLogLine } from 'single-line-log';
+
+/**
+ * Internal dependencies
+ */
 import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
-// Various action steps for SQL imports
-export const SQL_IMPORT_PROGRESS_STEPS = [
-	{ id: 'replace', name: 'Performing Search and Replace', status: 'pending' },
-	{ id: 'validate', name: 'Validating SQL', status: 'pending' },
-	{ id: 'upload', name: 'Uploading file to S3', status: 'pending' },
-	{ id: 'import', name: 'Importing...', status: 'pending' },
-];
+const PRINT_INTERVAL = 200; // How often the report is printed. Mainly affects the "spinner" animation.
+const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
-// Need to format the response to return an array
-export const setStatusForCurrentAction = ( status, action ) => {
-	const currentProgressSteps = SQL_IMPORT_PROGRESS_STEPS.map( step => {
-		if ( step.id === action ) {
-			step.status = status;
+export class ProgressTracker {
+	allStepsSucceeded: boolean;
+	hasFailure: boolean;
+	hasPrinted: boolean;
+	initialized: boolean;
+	printInterval: IntervalID;
+
+	// Track the state of each step
+	stepsFromCaller: Map<string, Object>;
+	stepsFromServer: Map<string, Object>;
+
+	// Spinnerz go brrrr
+	runningSprite: RunningSprite;
+
+	// This gets printed before the step status
+	prefix: string;
+
+	// This gets printed after the step status
+	suffix: string;
+
+	constructor( steps: Object[] ) {
+		this.runningSprite = new RunningSprite();
+		this.hasFailure = false;
+		this.stepsFromCaller = this.mapSteps( steps );
+		this.stepsFromServer = new Map();
+		this.prefix = '';
+		this.suffix = '';
+	}
+
+	getSteps(): Map<string, Object> {
+		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
+	}
+
+	mapSteps( steps: Object[] ): Map<string, Object> {
+		return steps.reduce( ( map, { id, name, status } ) => {
+			map.set( id, { id, name, status: status || 'pending' } );
+			return map;
+		}, new Map() );
+	}
+
+	setStepsFromServer( steps: Object[] ) {
+		const formattedSteps = steps.map( ( { name, status }, index ) => ( {
+			id: `server-${ index }-${ name }`,
+			name,
+			status,
+		} ) );
+
+		if ( ! steps.some( ( { status } ) => status === 'running' ) ) {
+			const firstPendingStepIndex = steps.findIndex( ( { status } ) => status === 'pending' );
+
+			if ( firstPendingStepIndex !== -1 ) {
+				// "Promote" the first "pending" to "running"
+				formattedSteps[ firstPendingStepIndex ].status = 'running';
+			}
 		}
 
-		return step;
-	} );
+		this.stepsFromServer = this.mapSteps( formattedSteps );
+	}
 
-	return currentProgressSteps;
-};
+	getNextStep() {
+		if ( this.allStepsSucceeded ) {
+			return undefined;
+		}
+		const steps = [ ...this.getSteps().values() ];
+		return steps.find( ( { status } ) => status === 'pending' );
+	}
 
-// Instantiate a new instance of the RunningSprite class
-const runningSprite = new RunningSprite();
+	stepRunning( stepId: string ) {
+		this.setStatusForStepId( stepId, 'running' );
+	}
 
-// Keep track of completed and skipped steps
-const completedSteps = [];
+	stepFailed( stepId: string ) {
+		this.setStatusForStepId( stepId, 'failed' );
+	}
 
-// Progress output logs
-export function progress( steps: Object[] ) {
-	// Iterate over each step and collect the logs to output
-	const reducer = ( accumulator, step ) => {
-		let statusOfAction;
-		statusOfAction = step.status;
+	stepSkipped( stepId: string ) {
+		this.setStatusForStepId( stepId, 'skipped' );
+	}
 
-		const skipped = `${ step.id }-skipped`;
-		const statusIcon = getGlyphForStatus( statusOfAction, runningSprite );
+	stepSuccess( stepId: string ) {
+		this.setStatusForStepId( stepId, 'success' );
+		// The stepSuccess helper automatically sets the next step to "running"
+		const nextStep = this.getNextStep();
+		if ( nextStep ) {
+			this.stepRunning( nextStep.id );
+			return;
+		}
+		this.allStepsSucceeded = true;
+	}
 
-		// Keep track of completed and skipped steps
-		if ( step.status === 'success' ) {
-			completedSteps.push( step.id );
+	setStatusForStepId( stepId: string, status: string ) {
+		const step = this.stepsFromCaller.get( stepId );
+		if ( ! step ) {
+			// Only allowed to update existing steps with this method
+			throw new Error( `Step name ${ stepId } is not valid.` );
 		}
 
-		if ( step.status === 'skipped' ) {
-			completedSteps.push( skipped );
+		if ( COMPLETED_STEP_SLUGS.includes( step.status ) ) {
+			throw new Error( `Step name ${ stepId } is already completed.` );
 		}
 
-		const stepCompleted = completedSteps.includes( step.id );
-		const stepSkipped = completedSteps.find( alreadyDone =>
-			alreadyDone === skipped
-		);
-
-		// Specify status of completed or pending actions to avoid double logging
-		if ( stepSkipped === skipped ) {
-			statusOfAction = 'skipped';
-		} else if ( stepCompleted ) {
-			statusOfAction = 'success';
-		} else {
-			statusOfAction = 'pending';
+		if ( status === 'failed' ) {
+			this.hasFailure = true;
 		}
 
-		const outputStep = accumulator + `${ statusIcon } ${ step.name }\n`;
+		this.stepsFromCaller.set( stepId, {
+			...step,
+			status,
+		} );
+	}
 
-		return outputStep;
-	};
+	startPrinting( prePrintCallback: Function = () => {} ) {
+		this.printInterval = setInterval( () => {
+			prePrintCallback();
+			this.print();
+		}, PRINT_INTERVAL );
+	}
 
-	const logs = steps.reduce( reducer, '' );
+	stopPrinting() {
+		if ( this.printInterval ) {
+			clearInterval( this.printInterval );
+		}
+	}
 
-	// Output the logs
-	return progressLog( logs );
+	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
+		if ( ! this.hasPrinted ) {
+			this.hasPrinted = true;
+			singleLogLine.clear();
+		}
+		const stepValues = [ ...this.getSteps().values() ];
+		const logs = stepValues.reduce( ( accumulator, { name, status } ) => {
+			const statusIcon = getGlyphForStatus( status, this.runningSprite );
+			return `${ accumulator }${ statusIcon } ${ name }\n`;
+		}, '' );
+
+		// Output the logs
+		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix || '' }` );
+
+		if ( clearAfter ) {
+			// Break out of the "Single log line" buffer
+			singleLogLine.clear();
+		}
+	}
 }
