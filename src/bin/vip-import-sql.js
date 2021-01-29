@@ -30,13 +30,9 @@ import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
-import { formatEnvironment } from 'lib/cli/format';
-import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
+import { formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
+import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
-
-// For progress logs
-let currentStatus;
-const currentAction = 'import';
 
 const appQuery = `
 	id,
@@ -72,6 +68,13 @@ const START_IMPORT_MUTATION = gql`
 `;
 
 const debug = debugLib( 'vip:vip-import-sql' );
+
+const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
+	{ id: 'replace', name: 'Performing Search and Replace' },
+	{ id: 'validate', name: 'Validating SQL' },
+	{ id: 'upload', name: 'Uploading file to S3' },
+	{ id: 'queue_import', name: 'Queueing Import' },
+];
 
 const gates = async ( app, env, fileName ) => {
 	const { id: envId, appId } = env;
@@ -210,18 +213,34 @@ command( {
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
-		searchReplace ? '' : console.log();
+		if ( searchReplace && searchReplace.length ) {
+			const searchAndReplaceParams = searchReplace.split( ',' );
+			console.log(
+				`        s-r: ${ chalk.blue( searchAndReplaceParams[ 0 ] ) } -> ${ chalk.blue(
+					searchAndReplaceParams[ 1 ]
+				) }`
+			);
+		}
+		console.log();
+
+		// NO `console.log` after this point! It will break the progress printing.
 
 		let fileNameToUpload = fileName;
 
+		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
+		const setProgressTrackerPrefixAndSuffix = () => {
+			progressTracker.prefix = `=============================================================
+Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
+			progressTracker.suffix = `\n${ getGlyphForStatus(
+				'running',
+				progressTracker.runningSprite
+			) } Loading remaining steps`;
+		};
+		progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
+
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
-			const params = searchReplace.split( ',' );
-
-			console.log(
-				`        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params[ 1 ] ) }\n`
-			);
-
+			progressTracker.stepRunning( 'replace' );
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
@@ -230,30 +249,31 @@ command( {
 
 			if ( typeof outputFileName !== 'string' ) {
 				// This should not really happen if `searchAndReplace` is functioning properly
+				progressTracker.stopPrinting();
 				throw new Error(
 					'Unable to determine location of the intermediate search & replace file.'
 				);
 			}
 
 			fileNameToUpload = outputFileName;
+			progressTracker.stepSuccess( 'replace' );
 		} else {
-			// Indicate that S-R was skipped in the progress logs
-			currentStatus = setStatusForCurrentAction( 'skipped', 'replace' );
-			progress( currentStatus );
+			progressTracker.stepSkipped( 'replace' );
 		}
 
 		// SQL file validations
 		const validations = [];
 		validations.push( staticSqlValidations );
 		validations.push( siteTypeValidations );
+
 		await fileLineValidations( appId, envId, fileNameToUpload, validations );
+
+		progressTracker.stepSuccess( 'validate' );
 
 		// Call the Public API
 		const api = await API();
 
 		const startImportVariables = {};
-
-		debug( 'Uploading…' );
 
 		// Uploading the SQL file to AWS S3
 		try {
@@ -271,21 +291,17 @@ command( {
 
 			debug( { basename, md5, result } );
 			debug( 'Upload complete. Initiating the import.' );
-
+			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
 		} catch ( e ) {
-			currentStatus = setStatusForCurrentAction( 'failed', 'upload' );
-			progress( currentStatus );
-
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
+			progressTracker.stepFailed( 'upload' );
+			progressTracker.stopPrinting();
 			exit.withError( e );
 		}
 
 		// Start the import
 		try {
-			currentStatus = setStatusForCurrentAction( 'running', currentAction );
-			progress( currentStatus );
-
 			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
 				variables: startImportVariables,
@@ -293,15 +309,18 @@ command( {
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
-			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus );
+			progressTracker.stepFailed( 'queue_import' );
 
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',
 				gql_err: gqlErr,
 			} );
+			progressTracker.stepFailed( 'queue_import' );
+			progressTracker.stopPrinting();
 			exit.withError( `StartImport call failed: ${ gqlErr }` );
 		}
 
-		await importSqlCheckStatus( { app, env } );
+		progressTracker.stepSuccess( 'queue_import' );
+
+		await importSqlCheckStatus( { app, env, progressTracker } );
 	} );

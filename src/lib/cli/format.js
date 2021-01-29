@@ -131,6 +131,8 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
+	i: number;
+
 	constructor() {
 		this.i = 0;
 	}
@@ -150,6 +152,7 @@ export class RunningSprite {
 
 export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
 	switch ( status ) {
+		default:
 		case 'pending':
 			return '○';
 		case 'running':
@@ -163,12 +166,4 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 		case 'skipped':
 			return chalk.green( '✕' );
 	}
-}
-
-export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) {
-	return steps.reduce(
-		( carry, step ) =>
-			carry + `- ${ step.name }: ${ getGlyphForStatus( step.status, runningSprite ) }\n`,
-		''
-	);
 }

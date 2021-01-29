@@ -15,11 +15,6 @@ import { stdout as log } from 'single-line-log';
 import { trackEvent } from 'lib/tracker';
 import { getReadInterface } from 'lib/validations/line-by-line';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
-import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
-
-// For progress logs
-let currentStatus;
-const currentAction = 'validate';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -189,11 +184,6 @@ const checks: Checks = {
 };
 
 export const postValidation = async ( filename: string, isImport: boolean = false ) => {
-	if ( isImport ) {
-		currentStatus = setStatusForCurrentAction( 'running', currentAction );
-		progress( currentStatus );
-	}
-
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
 	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
@@ -217,29 +207,16 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 		if ( isImport ) {
 			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
 			console.log();
-
-			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus );
 		}
 
 		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
 		return process.exit( 1 );
 	}
 
-	if ( isImport ) {
-		currentStatus = setStatusForCurrentAction( 'success', currentAction );
-		progress( currentStatus );
-	}
-
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 };
 
 const perLineValidations = ( line: string, runAsImport: boolean ) => {
-	if ( runAsImport ) {
-		currentStatus = setStatusForCurrentAction( 'running', currentAction );
-		progress( currentStatus );
-	}
-
 	if ( lineNum % 500 === 0 ) {
 		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}

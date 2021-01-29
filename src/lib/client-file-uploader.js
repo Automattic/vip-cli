@@ -22,13 +22,8 @@ import debugLib from 'debug';
  */
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
-import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
-
-// For progress logs
-let currentStatus;
-const currentAction = 'upload';
 
 // Files smaller than COMPRESS_THRESHOLD will not be compressed before upload
 export const COMPRESS_THRESHOLD = 16 * MB_IN_BYTES;
@@ -130,18 +125,12 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 }
 
 export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArguments ) {
-	currentStatus = setStatusForCurrentAction( 'running', currentAction );
-	progress( currentStatus );
-
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
 	} catch ( e ) {
-		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus );
-
 		throw `Unable to create temporary working directory: ${ e }`;
 	}
 
@@ -182,9 +171,6 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.fileSize < MULTIPART_THRESHOLD
 			? await uploadUsingPutObject( { app, env, fileMeta } )
 			: await uploadUsingMultipart( { app, env, fileMeta } );
-
-	currentStatus = setStatusForCurrentAction( 'success', currentAction );
-	progress( currentStatus );
 
 	return {
 		fileMeta,
@@ -246,16 +232,10 @@ export async function uploadUsingPutObject( {
 	try {
 		parsedResponse = await parser.parseStringPromise( result );
 	} catch ( e ) {
-		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus );
-
 		throw `Invalid response from cloud service. ${ e }`;
 	}
 
 	const { Code, Message } = parsedResponse.Error || {};
-
-	currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-	progress( currentStatus );
 
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
@@ -288,10 +268,6 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 
 	if ( parsedResponse.Error ) {
 		const { Code, Message } = parsedResponse.Error;
-
-		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus );
-
 		throw `Unable to create cloud storage object. Error: ${ JSON.stringify( { Code, Message } ) }`;
 	}
 
@@ -300,9 +276,6 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		parsedResponse.InitiateMultipartUploadResult &&
 		parsedResponse.InitiateMultipartUploadResult.UploadId
 	) {
-		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-		progress( currentStatus );
-
 		throw `Unable to get Upload ID from cloud storage. Error: ${ multipartUploadResult }`;
 	}
 

@@ -9,18 +9,19 @@
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
-import { stdout as singleLogLine } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
-import { formatJobSteps, RunningSprite } from 'lib/cli/format';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
+import { ProgressTracker } from 'lib/cli/progress';
+import { getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
+const PRINT_STATUS_INTERVAL = 100;
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
@@ -62,6 +63,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 export type ImportSqlCheckStatusInput = {
 	app: Object,
 	env: Object,
+	progressTracker: ProgressTracker,
 };
 
 async function getStatus( api, appId, envId ) {
@@ -125,7 +127,15 @@ The database server said:
 	return message;
 }
 
-export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusInput ) {
+export async function importSqlCheckStatus( {
+	app,
+	env,
+	progressTracker,
+}: ImportSqlCheckStatusInput ) {
+	// Stop printing so we can pass our callback
+	progressTracker.stopPrinting();
+
+	// NO `console.log` in this function (until results are final)! It will break the progress printing.
 	const api = await API();
 
 	if ( ! currentUserCanImportForApp( app ) ) {
@@ -133,8 +143,34 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 			'The currently authenticated account does not have permission to view SQL import status.'
 		);
 	}
+	let createdAt;
+	let overallStatus = 'running';
 
-	const runningSprite = new RunningSprite();
+	const setProgressTrackerSuffix = () => {
+		progressTracker.suffix = '\n\n';
+		if ( createdAt ) {
+			progressTracker.suffix += `SQL Import Job Started at ${ createdAt } / ${ new Date(
+				createdAt
+			) }`;
+		}
+		progressTracker.suffix += `
+=============================================================
+Status: ${ overallStatus } ${ getGlyphForStatus(
+	overallStatus,
+	progressTracker.runningSprite
+) }\n`;
+		if ( overallStatus === 'running' ) {
+			progressTracker.suffix +=
+				'\n(Press ^C to hide progress. The import will continue in the background.)\n';
+		}
+	};
+
+	const setSuffixAndPrint = () => {
+		setProgressTrackerSuffix();
+		progressTracker.print();
+	};
+
+	progressTracker.startPrinting( setSuffixAndPrint );
 
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
@@ -148,10 +184,11 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 				}
 
 				const {
-					// completedAt, TODO when Parker support is present
-					createdAt,
 					progress: { status: jobStatus, steps },
 				} = importJob;
+
+				createdAt = importJob.createdAt;
+				// completedAt, TODO when Parker support is present
 
 				const {
 					dbOperationInProgress,
@@ -194,11 +231,7 @@ export async function importSqlCheckStatus( { app, env }: ImportSqlCheckStatusIn
 					return reject( { error: 'Could not enumerate the import job steps' } );
 				}
 
-				singleLogLine( `
-SQL Import Job Started at ${ createdAt } (${ new Date( createdAt ) })
-
-Status:
-${ formatJobSteps( steps, runningSprite ) }` );
+				progressTracker.setStepsFromServer( steps );
 
 				if ( jobStatus !== 'running' ) {
 					return resolve( importJob );
@@ -214,27 +247,26 @@ ${ formatJobSteps( steps, runningSprite ) }` );
 	try {
 		const results = await getResults();
 
-		// break out of the singleLogLine
-		console.log( '\n' );
-
 		if ( typeof results === 'string' ) {
-			// This type of result is not an importing error. e.g. no import job was found
-			console.log( results );
-			process.exit( 0 );
+			overallStatus = results;
+		} else {
+			overallStatus = results?.progress?.status || 'unknown';
+			// This shouldn't be 'unknown'...what should we do here?
 		}
 
-		const {
-			progress: { status },
-		} = results;
+		progressTracker.stopPrinting();
 
-		console.log( `=============================================================
-Result: ${ status }
-` );
+		setProgressTrackerSuffix();
+
+		// Print one final time
+		progressTracker.print( { clearAfter: true } );
+
+		// This type of result is not an importing error. e.g. no import job was found
+		process.exit( 0 );
 	} catch ( importFailed ) {
-		console.log( `
-Result: ${ chalk.red( 'Failed' ) }
-${ getErrorMessage( importFailed ) }
-` );
+		progressTracker.stopPrinting();
+		progressTracker.suffix += `\nERROR: ${ chalk.red( getErrorMessage( importFailed ) ) }\n`;
+		progressTracker.print( { clearAfter: true } );
 		process.exit( 1 );
 	}
 }
