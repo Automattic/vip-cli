@@ -90,7 +90,7 @@ export const getFileMD5Hash = async ( fileName: string ) =>
 			.on( 'finish', function() {
 				resolve( this.read() );
 			} )
-			.on( 'error', ( error ) => reject( `could not generate file hash: ${ error }` ) )
+			.on( 'error', error => reject( `could not generate file hash: ${ error }` ) )
 	);
 
 export const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) =>
@@ -100,7 +100,7 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.pipe( createGzip() )
 			.pipe( fs.createWriteStream( compressedFileName ) )
 			.on( 'finish', resolve )
-			.on( 'error', ( error ) => reject( `could not compress file: ${ error }` ) )
+			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
@@ -161,9 +161,7 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
 		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
-		debug(
-			`Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...`
-		);
+		debug( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
 
 		await gzipFile( uncompressedFileName, fileMeta.fileName );
 		fileMeta.isCompressed = true;
@@ -302,7 +300,6 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		parsedResponse.InitiateMultipartUploadResult &&
 		parsedResponse.InitiateMultipartUploadResult.UploadId
 	) {
-
 		currentStatus = setStatusForCurrentAction( 'failed', currentAction );
 		progress( currentStatus );
 
@@ -358,9 +355,23 @@ export async function checkFileAccess( fileName: string ): Promise<void> {
 	return fs.promises.access( fileName, fs.R_OK );
 }
 
+export async function getFileStats( fileName: string ): Promise<fs.Stats> {
+	return fs.promises.stat( fileName );
+}
+
+export async function isFile( fileName: string ): Promise<boolean> {
+	try {
+		const stats = await getFileStats( fileName );
+		return stats.isFile();
+	} catch ( e ) {
+		debug( `isFile error: ${ e }` );
+		return false;
+	}
+}
+
 export async function getFileSize( fileName: string ): Promise<number> {
-	const { size } = await fs.promises.stat( fileName );
-	return size;
+	const stats = await getFileStats( fileName );
+	return stats.size;
 }
 
 export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {
