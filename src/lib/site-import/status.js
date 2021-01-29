@@ -159,6 +159,10 @@ Status: ${ overallStatus } ${ getGlyphForStatus(
 	overallStatus,
 	progressTracker.runningSprite
 ) }\n`;
+		if ( overallStatus === 'running' ) {
+			progressTracker.suffix +=
+				'\n(Press ^C to hide progress. The import will continue in the background.)\n';
+		}
 	};
 
 	const setSuffixAndPrint = () => {
