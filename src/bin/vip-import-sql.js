@@ -218,7 +218,9 @@ command( {
 		if ( searchReplace && searchReplace.length ) {
 			const params = searchReplace.split( ',' );
 
-			console.log( `        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params [ 1 ] ) }\n` );
+			console.log(
+				`        s-r: ${ chalk.blue( params[ 0 ] ) } -> ${ chalk.blue( params[ 1 ] ) }\n`
+			);
 
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
