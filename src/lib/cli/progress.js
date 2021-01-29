@@ -15,21 +15,24 @@ const PRINT_INTERVAL = 100; // 🐇💨
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
 export class ProgressTracker {
-	allStepsSucceeded: boolean
-	hasFailure: boolean
-	hasPrinted: boolean
-	initialized: boolean
-	printInterval: IntervalID
+	allStepsSucceeded: boolean;
+	hasFailure: boolean;
+	hasPrinted: boolean;
+	initialized: boolean;
+	printInterval: IntervalID;
 
 	// Track the state of each step
-	stepsFromCaller: Map<string, Object>
-	stepsFromServer: Map<string, Object>
+	stepsFromCaller: Map<string, Object>;
+	stepsFromServer: Map<string, Object>;
 
 	// Spinnerz go brrrr
-	runningSprite: RunningSprite
+	runningSprite: RunningSprite;
 
-	prefix: string
-	suffix: string
+	// This gets printed before the step status
+	prefix: string;
+
+	// This gets printed after the step status
+	suffix: string;
 
 	constructor( steps: Object[] ) {
 		this.runningSprite = new RunningSprite();
