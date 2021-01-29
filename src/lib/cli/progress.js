@@ -11,7 +11,7 @@ import { stdout as singleLogLine } from 'single-line-log';
  */
 import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
 
-const PRINT_INTERVAL = 100; // 🐇💨
+const PRINT_INTERVAL = 200; // How often the report is printed. Mainly affects the "spinner" animation.
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
 export class ProgressTracker {
