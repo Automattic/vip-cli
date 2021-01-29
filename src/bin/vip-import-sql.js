@@ -32,6 +32,7 @@ import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
+import { isFile } from '../lib/client-file-uploader';
 
 const appQuery = `
 	id,
@@ -96,8 +97,13 @@ const gates = async ( app, env, fileName ) => {
 	try {
 		await checkFileAccess( fileName );
 	} catch ( e ) {
-		await track( 'import_sql_command_error', { error_type: 'sqlfile-missing' } );
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
 		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
+	}
+
+	if ( ! ( await isFile( fileName ) ) ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-notfile' } );
+		exit.withError( `Path '${ fileName }' is not a file.` );
 	}
 
 	const fileSize = await getFileSize( fileName );
@@ -235,7 +241,6 @@ Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
 			progressTracker.stepRunning( 'replace' );
-
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
