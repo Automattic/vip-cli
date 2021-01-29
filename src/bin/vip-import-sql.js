@@ -212,7 +212,7 @@ command( {
 		if ( searchReplace && searchReplace.length ) {
 			const message = param => {
 				console.log( `        s-r: ${ chalk.blue( param[ 0 ] ) } -> ${ chalk.blue( param[ 1 ] ) }` );
-			}
+			};
 
 			// Only one pair of S-R values specified
 			if ( typeof searchReplace === 'string' ) {
@@ -223,10 +223,10 @@ command( {
 			} else {
 				// Multiple pairs of S-R values specified
 				searchReplace.forEach( pair => {
-					const urls = pair.split( ',' )
+					const urls = pair.split( ',' );
 
 					message( urls );
-				} )
+				} );
 				console.log();
 			}
 
