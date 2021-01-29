@@ -20,11 +20,9 @@ export class ProgressTracker {
 	initialized: boolean
 	settingStepsFromServer: boolean
 
-	// What kind of progress this instance is tracking
-	type: string
-
 	// Track the state of each step
-	steps: Map<string, Object>
+	stepsFromCaller: Map<string, Object>
+	stepsFromServer: Map<string, Object>
 
 	// Spinnerz go brrrr
 	runningSprite: RunningSprite
@@ -35,22 +33,27 @@ export class ProgressTracker {
 	constructor( steps: Object[] ) {
 		this.runningSprite = new RunningSprite();
 		this.hasFailure = false;
-		this._setSteps( steps );
+		this.stepsFromCaller = this.mapSteps( steps );
+		this.stepsFromServer = new Map();
 		this.prefix = '';
 		this.suffix = '';
 	}
 
-	_setSteps( steps: Object[] ) {
-		this.steps = steps.reduce( ( map, { id, name, status } ) => {
-			map.set( id, { id, name, status: status || 'pending' } );
-			return map;
-		}, this.steps || new Map() );
+	getSteps(): Map<string, Object> {
+		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
 	}
 
-	setStepsFromServer( stepsFromServer: Object[] ) {
+	mapSteps( steps: Object[] ): Map<string, Object> {
+		return steps.reduce( ( map, { id, name, status } ) => {
+			map.set( id, { id, name, status: status || 'pending' } );
+			return map;
+		}, new Map() );
+	}
+
+	setStepsFromServer( steps: Object[] ) {
 		this.settingStepsFromServer = true;
-		this._setSteps( stepsFromServer.map( ( { name, status }, index ) => ( {
-			id: `${ index }-${ name }`,
+		this.stepsFromServer = this.mapSteps( steps.map( ( { name, status }, index ) => ( {
+			id: `server-${ index }-${ name }`,
 			name,
 			status,
 		} ) ) );
@@ -62,7 +65,7 @@ export class ProgressTracker {
 		if ( this.allStepsSucceeded ) {
 			return undefined;
 		}
-		const steps = [ ...this.steps.values() ];
+		const steps = [ ...this.getSteps().values() ];
 		return steps.find( ( { status } ) => status === 'pending' );
 	}
 
@@ -93,30 +96,27 @@ export class ProgressTracker {
 		this.print( { clearAfter: true } );
 	}
 
-	setStatusForStepId( stepId: string, status: string, fromServer: boolean = false ) {
-		const step = this.steps.get( stepId ) || {};
-		const currentStatus = step?.status;
-		if ( ! fromServer && ! currentStatus ) {
-			// If we're not setting steps from the server, only the initial steps are allowed
-			throw new Error( `Step name ${ stepId } is not valid for type ${ this.type }` );
+	setStatusForStepId( stepId: string, status: string ) {
+		const step = this.stepsFromCaller.get( stepId );
+		if ( ! step ) {
+			// Only allowed to update existing steps with this method
+			throw new Error( `Step name ${ stepId } is not valid.` );
 		}
 
-		if ( ! fromServer && COMPLETED_STEP_SLUGS.includes( step.status ) ) {
-			throw new Error( `Step name ${ stepId } is already completed for type ${ this.type }` );
+		if ( COMPLETED_STEP_SLUGS.includes( step.status ) ) {
+			throw new Error( `Step name ${ stepId } is already completed.` );
 		}
 
 		if ( status === 'failed' ) {
 			this.hasFailure = true;
 		}
 
-		this.steps.set( stepId, {
+		this.stepsFromCaller.set( stepId, {
 			...step,
 			status,
 		} );
 
-		if ( ! fromServer ) {
-			this.print();
-		}
+		this.print();
 	}
 
 	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
@@ -127,7 +127,7 @@ export class ProgressTracker {
 			this.hasPrinted = true;
 			singleLogLine.clear();
 		}
-		const stepValues = [ ...this.steps.values() ];
+		const stepValues = [ ...this.getSteps().values() ];
 		const logs = stepValues.reduce( ( accumulator, { name, status } ) => {
 			const statusIcon = getGlyphForStatus( status, this.runningSprite );
 			return `${ accumulator }${ statusIcon } ${ name }\n`;
