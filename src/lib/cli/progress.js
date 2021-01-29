@@ -52,11 +52,22 @@ export class ProgressTracker {
 	}
 
 	setStepsFromServer( steps: Object[] ) {
-		this.stepsFromServer = this.mapSteps( steps.map( ( { name, status }, index ) => ( {
+		const formattedSteps = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
 			name,
 			status,
-		} ) ) );
+		} ) );
+
+		if ( ! steps.some( ( { status } ) => status === 'running' ) ) {
+			const firstPendingStepIndex = steps.findIndex( ( { status } ) => status === 'pending' );
+
+			if ( firstPendingStepIndex !== -1 ) {
+				// "Promote" the first "pending" to "running"
+				formattedSteps[ firstPendingStepIndex ].status = 'running';
+			}
+		}
+
+		this.stepsFromServer = this.mapSteps( formattedSteps );
 	}
 
 	getNextStep() {
