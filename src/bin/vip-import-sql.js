@@ -231,7 +231,7 @@ command( {
 		const setProgressTrackerPrefixAndSuffix = () => {
 			progressTracker.prefix = `
 =============================================================
-Processing the sql import for your environment...
+Processing the SQL import for your environment...
 `;
 			progressTracker.suffix = `\n${ getGlyphForStatus(
 				'running',
