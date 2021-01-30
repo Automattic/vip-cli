@@ -229,8 +229,10 @@ command( {
 
 		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 		const setProgressTrackerPrefixAndSuffix = () => {
-			progressTracker.prefix = `=============================================================
-Processing your sql import for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
+			progressTracker.prefix = `
+=============================================================
+Processing the SQL import for your environment...
+`;
 			progressTracker.suffix = `\n${ getGlyphForStatus(
 				'running',
 				progressTracker.runningSprite

@@ -27,6 +27,10 @@ environments{
 	id
 	appId
 	type
+	primaryDomain {
+		id
+		name
+	}
 }
 `;
 
@@ -49,8 +53,10 @@ command( {
 	await track( 'import_sql_check_status_command_execute' );
 
 	const progressTracker = new ProgressTracker( [] );
-	progressTracker.prefix = `=============================================================
-Checking the sql import status for env ID: ${ env.id }, app ID: ${ env.appId }:\n`;
+	progressTracker.prefix = `
+=============================================================
+Checking the SQL import status for your environment...
+`;
 
 	await importSqlCheckStatus( { app, env, progressTracker } );
 } );
