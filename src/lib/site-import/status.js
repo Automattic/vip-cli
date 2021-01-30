@@ -149,19 +149,28 @@ export async function importSqlCheckStatus( {
 	let overallStatus = 'checking...';
 
 	const setProgressTrackerSuffix = () => {
-		const formattedCreatedAt = createdAt ? `${ createdAt } / ${ new Date( createdAt ) }` : 'TBD';
+		const formattedCreatedAt = createdAt
+			? `${ new Date( createdAt ).toLocaleString() } (${ createdAt })`
+			: 'TBD';
 		const formattedCompletedAt =
-			createdAt && completedAt ? `${ completedAt } / ${ new Date( completedAt ) }` : 'TBD';
+			createdAt && completedAt
+				? `${ new Date( completedAt ).toLocaleString() } (${ completedAt })`
+				: 'TBD';
 		const exitPrompt = '(Press ^C to hide progress. The import will continue in the background.)';
-
+		const successMessage = `imported data should be visible on your site ${ env.primaryDomain.name }.`;
+		const statusMessage = overallStatus === 'success' ? successMessage : '';
+		const maybeExitPrompt = `${ overallStatus === 'running' ? exitPrompt : '' }`;
 		const suffix = `
 =============================================================
-Status: ${ overallStatus } ${ getGlyphForStatus( overallStatus, progressTracker.runningSprite ) }
-site: ${ app.name } (${ formatEnvironment( env.type ) })
-SQL Import Job Started: ${ formattedCreatedAt }
-SQL Import Job Completed: ${ formattedCompletedAt }
+Status: ${ overallStatus } ${ getGlyphForStatus(
+	overallStatus,
+	progressTracker.runningSprite
+) } ${ statusMessage }
+Site: ${ app.name } (${ formatEnvironment( env.type ) })
+SQL Import Started: ${ formattedCreatedAt }
+SQL Import Completed: ${ formattedCompletedAt }
 =============================================================
-${ overallStatus === 'running' ? exitPrompt : '' }
+${ maybeExitPrompt }
 `;
 		progressTracker.suffix = suffix;
 	};
