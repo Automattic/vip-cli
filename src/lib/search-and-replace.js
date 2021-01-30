@@ -20,6 +20,7 @@ import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
 import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
 import { getFileSize } from 'lib/client-file-uploader';
+import * as exit from 'lib/cli/exit';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
@@ -133,12 +134,6 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	// Track progress for imports
-	if ( isImport ) {
-		currentStatus = setStatusForCurrentAction( 'running', currentAction );
-		progress( currentStatus );
-	}
-
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -146,11 +141,6 @@ export const searchAndReplace = async (
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs || ! pairs.length ) {
-		if ( isImport ) {
-			currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-			progress( currentStatus );
-		}
-
 		throw new Error( 'No search and replace parameters provided.' );
 	}
 
@@ -172,13 +162,10 @@ export const searchAndReplace = async (
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
-			if ( isImport ) {
-				currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-				progress( currentStatus );
-			}
-
-			await trackEvent( 'search_replace_in_place_cancelled', { is_import: isImport, in_place: inPlace } );
-
+			await trackEvent( 'search_replace_in_place_cancelled', {
+				is_import: isImport,
+				in_place: inPlace,
+			} );
 			process.exit();
 		}
 	}
@@ -189,7 +176,13 @@ export const searchAndReplace = async (
 		output,
 	} );
 
-	const replacedStream = await replace( readStream, replacements, binary );
+	let replacedStream;
+	try {
+		replacedStream = await replace( readStream, replacements, binary );
+	} catch ( replaceError ) {
+		exit.withError( replaceError );
+	}
+
 	const result = await new Promise( ( resolve, reject ) => {
 		replacedStream
 			.pipe( writeStream )
@@ -207,22 +200,12 @@ export const searchAndReplace = async (
 					)
 				);
 
-				if ( isImport ) {
-					currentStatus = setStatusForCurrentAction( 'failed', currentAction );
-					progress( currentStatus );
-				}
-
 				reject();
 			} );
 	} );
 
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
-
-	if ( isImport ) {
-		currentStatus = setStatusForCurrentAction( 'success', currentAction );
-		progress( currentStatus );
-	}
 
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 

@@ -17,6 +17,7 @@ import * as exit from 'lib/cli/exit';
 import { isSupportedApp } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import command from 'lib/cli/command';
+import { ProgressTracker } from 'lib/cli/progress';
 
 const appQuery = `
 id,
@@ -51,7 +52,11 @@ command( {
 
 	await track( 'import_sql_check_status_command_execute' );
 
-	console.log( 'Checking the sql import status for your environment...' );
+	const progressTracker = new ProgressTracker( [] );
+	progressTracker.prefix = `
+=============================================================
+Checking the SQL import status for your environment...
+`;
 
-	await importSqlCheckStatus( { app, env } );
+	await importSqlCheckStatus( { app, env, progressTracker } );
 } );
