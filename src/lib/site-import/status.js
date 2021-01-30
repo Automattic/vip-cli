@@ -149,9 +149,13 @@ export async function importSqlCheckStatus( {
 	let overallStatus = 'checking...';
 
 	const setProgressTrackerSuffix = () => {
-		const formattedCreatedAt = createdAt ? `${ createdAt } / ${ new Date( createdAt ) }` : 'TBD';
+		const formattedCreatedAt = createdAt
+			? `${ new Date( createdAt ).toLocaleString() } (${ createdAt })`
+			: 'TBD';
 		const formattedCompletedAt =
-			createdAt && completedAt ? `${ completedAt } / ${ new Date( completedAt ) }` : 'TBD';
+			createdAt && completedAt
+				? `${ new Date( completedAt ).toLocaleString() } (${ completedAt })`
+				: 'TBD';
 		const exitPrompt = '(Press ^C to hide progress. The import will continue in the background.)';
 		const successMessage = `imported data should be visible on your site ${ env.primaryDomain.name }.`;
 		const statusMessage = overallStatus === 'success' ? successMessage : '';
