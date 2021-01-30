@@ -16,12 +16,11 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 import { ProgressTracker } from 'lib/cli/progress';
-import { getGlyphForStatus } from 'lib/cli/format';
+import { formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
-const PRINT_STATUS_INTERVAL = 100;
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
 	query App($id: Int) {
@@ -31,10 +30,12 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 				jobs {
 					id
 					type
+					completedAt
 					createdAt
 					progress {
 						status
 						steps {
+							id
 							name
 							status
 						}
@@ -144,25 +145,25 @@ export async function importSqlCheckStatus( {
 		);
 	}
 	let createdAt;
-	let overallStatus = 'running';
+	let completedAt;
+	let overallStatus = 'checking...';
 
 	const setProgressTrackerSuffix = () => {
-		progressTracker.suffix = '\n\n';
-		if ( createdAt ) {
-			progressTracker.suffix += `SQL Import Job Started at ${ createdAt } / ${ new Date(
-				createdAt
-			) }`;
-		}
-		progressTracker.suffix += `
+		const formattedCreatedAt = createdAt ? `${ createdAt } / ${ new Date( createdAt ) }` : 'TBD';
+		const formattedCompletedAt =
+			createdAt && completedAt ? `${ completedAt } / ${ new Date( completedAt ) }` : 'TBD';
+		const exitPrompt = '(Press ^C to hide progress. The import will continue in the background.)';
+
+		const suffix = `
 =============================================================
-Status: ${ overallStatus } ${ getGlyphForStatus(
-	overallStatus,
-	progressTracker.runningSprite
-) }\n`;
-		if ( overallStatus === 'running' ) {
-			progressTracker.suffix +=
-				'\n(Press ^C to hide progress. The import will continue in the background.)\n';
-		}
+Status: ${ overallStatus } ${ getGlyphForStatus( overallStatus, progressTracker.runningSprite ) }
+site: ${ app.name } (${ formatEnvironment( env.type ) })
+SQL Import Job Started: ${ formattedCreatedAt }
+SQL Import Job Completed: ${ formattedCompletedAt }
+=============================================================
+${ overallStatus === 'running' ? exitPrompt : '' }
+`;
+		progressTracker.suffix = suffix;
 	};
 
 	const setSuffixAndPrint = () => {
@@ -184,11 +185,11 @@ Status: ${ overallStatus } ${ getGlyphForStatus(
 				}
 
 				const {
-					progress: { status: jobStatus, steps },
+					progress: { status: jobStatus, steps: jobSteps },
 				} = importJob;
 
 				createdAt = importJob.createdAt;
-				// completedAt, TODO when Parker support is present
+				completedAt = importJob.completedAt;
 
 				const {
 					dbOperationInProgress,
@@ -196,7 +197,13 @@ Status: ${ overallStatus } ${ getGlyphForStatus(
 					progress: importStepProgress,
 				} = importStatus;
 
-				debug( { createdAt, dbOperationInProgress, importInProgress, importStepProgress } );
+				debug( {
+					completedAt,
+					createdAt,
+					dbOperationInProgress,
+					importInProgress,
+					importStepProgress,
+				} );
 
 				let jobCreationTime;
 				try {
@@ -205,37 +212,54 @@ Status: ${ overallStatus } ${ getGlyphForStatus(
 					debug( 'Unable to parse createdAt to a Date' );
 				}
 
+				let failedImportStep;
+
 				if ( jobCreationTime && importStepProgress?.started_at * 1000 > jobCreationTime ) {
 					// The contents of the `import_progress` meta are pertinent to the most recent import job
-					const failedImportStep = importStepProgress.steps.find(
+					failedImportStep = importStepProgress.steps.find(
 						step =>
 							step?.result === 'failed' && 1000 * step?.started_at > new Date( createdAt ).getTime()
 					);
-
-					if ( failedImportStep ) {
-						return reject( {
-							inImportProgress: true,
-							commandOutput: failedImportStep.output,
-							error: 'Import step failed',
-							stepName: failedImportStep.name,
-							errorText: failedImportStep.error,
-						} );
-					}
 				}
 
-				if ( jobStatus === 'error' ) {
-					return reject( { error: 'Import job failed', steps } );
-				}
-
-				if ( ! steps.length ) {
+				if ( ! jobSteps.length ) {
 					return reject( { error: 'Could not enumerate the import job steps' } );
 				}
 
-				progressTracker.setStepsFromServer( steps );
+				if ( failedImportStep ) {
+					// The server marks the step as a success as per the host action, demote it to 'failed'
+					const _jobSteps = [ ...jobSteps ];
+					const failedJobStepIndex = _jobSteps.findIndex( ( { id } ) => id === 'import' );
+					_jobSteps[ failedJobStepIndex ] = {
+						..._jobSteps[ failedJobStepIndex ],
+						status: 'failed',
+					};
+					progressTracker.setStepsFromServer( _jobSteps );
+					overallStatus = 'failed';
+					setSuffixAndPrint();
 
-				if ( jobStatus !== 'running' ) {
+					return reject( {
+						inImportProgress: true,
+						commandOutput: failedImportStep.output,
+						error: 'Import step failed',
+						stepName: failedImportStep.name,
+						errorText: failedImportStep.error,
+					} );
+				}
+
+				progressTracker.setStepsFromServer( jobSteps );
+
+				setSuffixAndPrint();
+
+				if ( jobStatus === 'error' ) {
+					return reject( { error: 'Import job failed', steps: jobSteps } );
+				}
+
+				if ( jobStatus !== 'running' && completedAt ) {
 					return resolve( importJob );
 				}
+
+				overallStatus = 'running';
 
 				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 			};
@@ -265,7 +289,8 @@ Status: ${ overallStatus } ${ getGlyphForStatus(
 		process.exit( 0 );
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
-		progressTracker.suffix += `\nERROR: ${ chalk.red( getErrorMessage( importFailed ) ) }\n`;
+		progressTracker.print();
+		progressTracker.suffix += `\n${ getErrorMessage( importFailed ) }\n`;
 		progressTracker.print( { clearAfter: true } );
 		process.exit( 1 );
 	}
