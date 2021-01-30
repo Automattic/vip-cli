@@ -214,12 +214,13 @@ command( {
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
 		if ( searchReplace && searchReplace.length ) {
-			const searchAndReplaceParams = searchReplace.split( ',' );
-			console.log(
-				`        s-r: ${ chalk.blue( searchAndReplaceParams[ 0 ] ) } -> ${ chalk.blue(
-					searchAndReplaceParams[ 1 ]
-				) }`
-			);
+			const searchReplaceList =
+				typeof searchReplace === 'string' ? [ searchReplace ] : searchReplace;
+			const searchAndReplaceMessages = searchReplaceList.map( entry => {
+				const [ from = '', to = '' ] = entry.split( ',' );
+				return `        s-r: ${ chalk.blue( from.trim() ) } -> ${ chalk.blue( to.trim() ) }`;
+			} );
+			console.log( searchAndReplaceMessages.join( '\n' ) );
 		}
 		console.log();
 
@@ -242,24 +243,6 @@ Processing the SQL import for your environment...
 
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
-			const message = param => {
-				console.log( `        s-r: ${ chalk.blue( param[ 0 ] ) } -> ${ chalk.blue( param[ 1 ] ) }` );
-			};
-
-			// Only one pair of S-R values specified
-			if ( typeof searchReplace === 'string' ) {
-				const urlPair = searchReplace.split( ',' );
-
-				message( urlPair );
-			} else {
-				// Multiple pairs of S-R values specified
-				searchReplace.forEach( pair => {
-					const urls = pair.split( ',' );
-
-					message( urls );
-				} );
-			}
-
 			progressTracker.stepRunning( 'replace' );
 
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
