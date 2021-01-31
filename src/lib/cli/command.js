@@ -334,7 +334,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		const info: Array<Tuple> = [];
 
 		if ( options.app ) {
-			info.push( { key: 'App', value: options.app.name } );
+			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
 		}
 
 		if ( options.env ) {
