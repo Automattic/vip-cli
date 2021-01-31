@@ -174,7 +174,9 @@ export const formatSearchReplaceValues = ( values, message ) => {
 	const searchReplaceValues = typeof values === 'string' ? [ values ] : values;
 
 	const formattedOutput = searchReplaceValues.map( pairs => {
-		const [ from, to ] = pairs.split( ',' );
+		// Turn each S-R pair into its own array, then trim away whitespace
+		const [ from, to ] = pairs.split( ',' )
+			.map( pair => pair.trim() );
 
 		const output = message( from, to );
 
