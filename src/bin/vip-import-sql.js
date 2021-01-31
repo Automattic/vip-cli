@@ -30,7 +30,7 @@ import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
-import { formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
+import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
 
@@ -213,16 +213,15 @@ command( {
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
-		if ( searchReplace && searchReplace.length ) {
-			const searchReplaceList =
-				typeof searchReplace === 'string' ? [ searchReplace ] : searchReplace;
-			const searchAndReplaceMessages = searchReplaceList.map( entry => {
-				const [ from = '', to = '' ] = entry.split( ',' );
-				return `        s-r: ${ chalk.blue( from.trim() ) } -> ${ chalk.blue( to.trim() ) }`;
-			} );
-			console.log( searchAndReplaceMessages.join( '\n' ) );
+
+		if ( searchReplace?.length ) {
+			const output = ( from, to ) => {
+				const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
+				console.log( message );
+			}
+			
+			formatSearchReplaceValues( searchReplace, output );
 		}
-		console.log();
 
 		// NO `console.log` after this point! It will break the progress printing.
 

@@ -18,7 +18,7 @@ import { confirm } from './prompt';
 /* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
 import app from 'lib/api/app';
-import { formatData } from './format';
+import { formatData, formatSearchReplaceValues } from './format';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
@@ -368,38 +368,20 @@ args.argv = async function( argv, cb ): Promise<any> {
 				// Show S-R params if the `search-replace` flag is set
 				const searchReplace = options.searchReplace;
 
-				let replacementPairs;
-				const multiplePairs = [];
-
-				const assignSRValues = params =>{
+				const assignSRValues = ( from, to ) =>{
 					const pairs = {
-						From: `${ params[ 0 ] }`,
-						To: `${ params[ 1 ] }`,
+						From: `${ from }`,
+						To: `${ to }`,
 					};
 
 					return pairs;
 				};
 
 				if ( searchReplace ) {
-					// Only one pair of S-R values specified
-					if ( typeof searchReplace === 'string' ) {
-						const params = searchReplace.split( ',' );
-
-						replacementPairs = [ assignSRValues( params ) ];
-					} else {
-						// Multiple pairs of S-R values specified
-						searchReplace.map( pair => {
-							const urls = pair.split( ',' );
-
-							const format = assignSRValues( urls );
-
-							multiplePairs.push( format );
-						} );
-						replacementPairs = multiplePairs;
-					}
+					const searchReplaceValues = formatSearchReplaceValues( searchReplace, assignSRValues );
 
 					// Format data into a user-friendly table
-					info.push( { key: 'Replacements', value: '\n' + formatData( replacementPairs, 'table' ) } );
+					info.push( { key: 'Replacements', value: '\n' + formatData( searchReplaceValues, 'table' ) } );
 				}
 
 				break;
