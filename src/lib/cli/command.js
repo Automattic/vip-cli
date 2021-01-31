@@ -334,11 +334,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 		const info: Array<Tuple> = [];
 
 		if ( options.app ) {
-			info.push( { key: 'App', value: options.app.name } );
+			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
 		}
 
 		if ( options.env ) {
-			info.push( { key: 'Environment', value: getEnvIdentifier( options.env ) } );
+			const envName = getEnvIdentifier( options.env );
+			info.push( { key: 'Environment', value: `${ envName } (id: ${ options.env.id })` } );
 		}
 
 		let message = 'Are you sure?';
