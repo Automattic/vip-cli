@@ -72,7 +72,7 @@ const debug = debugLib( 'vip:vip-import-sql' );
 const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'replace', name: 'Performing Search and Replace' },
 	{ id: 'validate', name: 'Validating SQL' },
-	{ id: 'upload', name: 'Uploading file to S3' },
+	{ id: 'upload', name: 'Uploading' },
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
