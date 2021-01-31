@@ -167,3 +167,18 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 			return chalk.green( '✕' );
 	}
 }
+
+// Format Search and Replace values to output
+export const formatSearchReplaceValues = ( values, message ) => {
+	// Convert single pair S-R values to arrays
+	const searchReplaceValues = typeof values === 'string' ? [ values ] : values;
+
+	const formattedOutput = searchReplaceValues.map( pairs => {
+		const [ from, to ] = pairs.split( ',' );
+
+		const output = message( from, to );
+
+		return output;
+	} )
+	return formattedOutput;
+}
