@@ -277,12 +277,20 @@ Processing the SQL import for your environment...
 
 		const startImportVariables = {};
 
-		// Uploading the SQL file to AWS S3
+		const progressCallback = percentage => {
+			progressTracker.setUploadPercentage( percentage );
+		};
+
 		try {
 			const {
 				fileMeta: { basename, md5 },
 				result,
-			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
+			} = await uploadImportSqlFileToS3( {
+				app,
+				env,
+				fileName: fileNameToUpload,
+				progressCallback,
+			} );
 
 			startImportVariables.input = {
 				id: app.id,

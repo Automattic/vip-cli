@@ -75,6 +75,7 @@ export type UploadArguments = {
 	app: Object,
 	env: Object,
 	fileName: string,
+	progressCallback?: Function,
 };
 
 export const getFileMD5Hash = async ( fileName: string ) =>
@@ -124,7 +125,12 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	} );
 }
 
-export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArguments ) {
+export async function uploadImportSqlFileToS3( {
+	app,
+	env,
+	fileName,
+	progressCallback,
+}: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
@@ -169,8 +175,8 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
-			? await uploadUsingPutObject( { app, env, fileMeta } )
-			: await uploadUsingMultipart( { app, env, fileMeta } );
+			? await uploadUsingPutObject( { app, env, fileMeta, progressCallback } )
+			: await uploadUsingMultipart( { app, env, fileMeta, progressCallback } );
 
 	return {
 		fileMeta,
@@ -182,12 +188,14 @@ export type UploadUsingArguments = {
 	app: Object,
 	env: Object,
 	fileMeta: FileMeta,
+	progressCallback?: Function,
 };
 
 export async function uploadUsingPutObject( {
 	app,
 	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
+	progressCallback,
 }: UploadUsingArguments ) {
 	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
 
@@ -208,7 +216,11 @@ export async function uploadUsingPutObject( {
 	const progressPassThrough = new PassThrough();
 	progressPassThrough.on( 'data', data => {
 		readBytes += data.length;
-		debug( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
+		const percentage = Math.floor( ( 100 * readBytes ) / fileSize ) + '%';
+		debug( percentage );
+		if ( typeof progressCallback === 'function' ) {
+			progressCallback( percentage );
+		}
 	} );
 
 	const response = await fetch( presignedRequest.url, {
@@ -240,7 +252,12 @@ export async function uploadUsingPutObject( {
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
 
-export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingArguments ) {
+export async function uploadUsingMultipart( {
+	app,
+	env,
+	fileMeta,
+	progressCallback,
+}: UploadUsingArguments ) {
 	const { basename } = fileMeta;
 
 	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the Multipart API.` );
@@ -290,6 +307,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		fileMeta,
 		parts,
 		uploadId,
+		progressCallback,
 	} );
 	debug( { etagResults } );
 
@@ -398,9 +416,17 @@ type UploadPartsArgs = {
 	fileMeta: FileMeta,
 	uploadId: string,
 	parts: Array<any>,
+	progressCallback?: Function,
 };
 
-export async function uploadParts( { app, env, fileMeta, uploadId, parts }: UploadPartsArgs ) {
+export async function uploadParts( {
+	app,
+	env,
+	fileMeta,
+	uploadId,
+	parts,
+	progressCallback,
+}: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
 	const partPercentages = new Array( parts.length ).fill( 0 );
@@ -416,7 +442,13 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 			}, 300 );
 		} );
 
-	const printProgress = () =>
+	const updateProgress = () => {
+		const percentage = Math.floor( ( 100 * totalBytesRead ) / fileMeta.fileSize ) + '%';
+
+		if ( typeof progressCallback === 'function' ) {
+			progressCallback( percentage );
+		}
+
 		debug(
 			partPercentages
 				.map( ( partPercentage, index ) => {
@@ -426,11 +458,12 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 					) }MB`;
 				} )
 				.join( '\n' ) +
-				`\n\nOverall Progress: ${ Math.floor(
-					( 100 * totalBytesRead ) / fileMeta.fileSize
-				) }% of ${ ( fileMeta.fileSize / MB_IN_BYTES ).toFixed( 2 ) }MB`
+				`\n\nOverall Progress: ${ percentage }% of ${ ( fileMeta.fileSize / MB_IN_BYTES ).toFixed(
+					2
+				) }MB`
 		);
-	const printProgressInterval = setInterval( printProgress, 500 );
+	};
+	const updateProgressInterval = setInterval( updateProgress, 500 );
 
 	const allDone = await Promise.all(
 		parts.map( async part => {
@@ -461,8 +494,8 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 		} )
 	);
 
-	clearInterval( printProgressInterval );
-	printProgress();
+	clearInterval( updateProgressInterval );
+	updateProgress();
 
 	return allDone;
 }
