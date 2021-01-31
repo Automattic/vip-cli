@@ -338,7 +338,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		if ( options.env ) {
-			info.push( { key: 'Environment', value: getEnvIdentifier( options.env ) } );
+			const envName = getEnvIdentifier( options.env )
+			info.push( { key: 'Environment', value: `${ envName } (id: ${ options.env.id })` } );
 		}
 
 		let message = 'Are you sure?';
