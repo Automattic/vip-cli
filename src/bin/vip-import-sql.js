@@ -218,8 +218,8 @@ command( {
 			const output = ( from, to ) => {
 				const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
 				console.log( message );
-			}
-			
+			};
+
 			formatSearchReplaceValues( searchReplace, output );
 		}
 

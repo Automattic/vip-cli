@@ -179,6 +179,6 @@ export const formatSearchReplaceValues = ( values, message ) => {
 		const output = message( from, to );
 
 		return output;
-	} )
+	} );
 	return formattedOutput;
-}
+};
