@@ -18,7 +18,7 @@ import { confirm } from './prompt';
 /* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
 import app from 'lib/api/app';
-import { formatData } from './format';
+import { formatData, formatSearchReplaceValues } from './format';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
@@ -367,18 +367,22 @@ args.argv = async function( argv, cb ): Promise<any> {
 				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
 
 				// Show S-R params if the `search-replace` flag is set
-				if ( options.searchReplace ) {
-					const params = options.searchReplace.split( ',' );
+				const searchReplace = options.searchReplace;
 
-					const replacements = [
-						{
-							From: `${ params[ 0 ] }`,
-							To: `${ params[ 1 ] }`,
-						},
-					];
+				const assignSRValues = ( from, to ) =>{
+					const pairs = {
+						From: `${ from }`,
+						To: `${ to }`,
+					};
+
+					return pairs;
+				};
+
+				if ( searchReplace ) {
+					const searchReplaceValues = formatSearchReplaceValues( searchReplace, assignSRValues );
 
 					// Format data into a user-friendly table
-					info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+					info.push( { key: 'Replacements', value: '\n' + formatData( searchReplaceValues, 'table' ) } );
 				}
 
 				break;
