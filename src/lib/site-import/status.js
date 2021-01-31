@@ -23,11 +23,11 @@ const debug = debugLib( 'vip:lib/site-import/status' );
 const IMPORT_SQL_PROGRESS_POLL_INTERVAL = 5000;
 
 const IMPORT_SQL_PROGRESS_QUERY = gql`
-	query App($id: Int) {
-		app(id: $id) {
-			environments {
+	query App($appId: Int, $envId: Int) {
+		app(id: $appId) {
+			environments(id: $envId) {
 				id
-				jobs {
+				jobs(types: "sql_import") {
 					id
 					type
 					completedAt
@@ -70,7 +70,7 @@ export type ImportSqlCheckStatusInput = {
 async function getStatus( api, appId, envId ) {
 	const response = await api.query( {
 		query: IMPORT_SQL_PROGRESS_QUERY,
-		variables: { id: appId },
+		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
 	const {
@@ -78,8 +78,17 @@ async function getStatus( api, appId, envId ) {
 			app: { environments },
 		},
 	} = response;
-	const { importStatus, jobs } = environments.find( e => e.id === envId );
-	const importJob = jobs.find( ( { type } ) => type === 'sql_import' );
+	if ( ! environments?.length ) {
+		throw new Error( 'Unable to determine import status from environment' );
+	}
+	const [ environment ] = environments;
+	const { importStatus, jobs } = environment;
+	if ( ! jobs?.length ) {
+		return {};
+	}
+
+	const [ importJob ] = jobs;
+
 	return {
 		importStatus,
 		importJob,
@@ -160,15 +169,19 @@ export async function importSqlCheckStatus( {
 		const successMessage = `imported data should be visible on your site ${ env.primaryDomain.name }.`;
 		const statusMessage = overallStatus === 'success' ? successMessage : '';
 		const maybeExitPrompt = `${ overallStatus === 'running' ? exitPrompt : '' }`;
+		const jobCreateCompleteTimestamps = `
+SQL Import Started: ${ formattedCreatedAt }
+SQL Import Completed: ${ formattedCompletedAt }`;
+		const maybeTimestamps = [ 'running', 'success', 'failed' ].includes( overallStatus )
+			? jobCreateCompleteTimestamps
+			: '';
 		const suffix = `
 =============================================================
 Status: ${ overallStatus } ${ getGlyphForStatus(
 	overallStatus,
 	progressTracker.runningSprite
 ) } ${ statusMessage }
-Site: ${ app.name } (${ formatEnvironment( env.type ) })
-SQL Import Started: ${ formattedCreatedAt }
-SQL Import Completed: ${ formattedCompletedAt }
+Site: ${ app.name } (${ formatEnvironment( env.type ) })${ maybeTimestamps }
 =============================================================
 ${ maybeExitPrompt }
 `;
@@ -185,7 +198,13 @@ ${ maybeExitPrompt }
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
 			const checkStatus = async () => {
-				const { importStatus, importJob } = await getStatus( api, app.id, env.id );
+				let status;
+				try {
+					status = await getStatus( api, app.id, env.id );
+				} catch ( error ) {
+					return reject( { error } );
+				}
+				const { importStatus, importJob } = status;
 
 				debug( { importJob } );
 
