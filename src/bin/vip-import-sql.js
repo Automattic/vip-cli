@@ -72,7 +72,7 @@ const debug = debugLib( 'vip:vip-import-sql' );
 const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'replace', name: 'Performing Search and Replace' },
 	{ id: 'validate', name: 'Validating SQL' },
-	{ id: 'upload', name: 'Uploading file to S3' },
+	{ id: 'upload', name: 'Uploading file' },
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
@@ -125,16 +125,16 @@ const gates = async ( app, env, fileName ) => {
 		importStatus: { dbOperationInProgress, importInProgress },
 	} = env;
 
-	if ( dbOperationInProgress ) {
-		await track( 'import_sql_command_error', { errorType: 'existing-dbop' } );
-		exit.withError( 'There is already a database operation in progress. Please try again later.' );
-	}
-
 	if ( importInProgress ) {
 		await track( 'import_sql_command_error', { errorType: 'existing-import' } );
 		exit.withError(
-			'There is already an import in progress. You can view the status with the `vip import sql status` command.'
+			'There is already an import in progress.\n\nYou can view the status with command:\n    vip import sql status'
 		);
+	}
+
+	if ( dbOperationInProgress ) {
+		await track( 'import_sql_command_error', { errorType: 'existing-dbop' } );
+		exit.withError( 'There is already a database operation in progress. Please try again later.' );
 	}
 };
 
@@ -278,12 +278,20 @@ Processing the SQL import for your environment...
 
 		const startImportVariables = {};
 
-		// Uploading the SQL file to AWS S3
+		const progressCallback = percentage => {
+			progressTracker.setUploadPercentage( percentage );
+		};
+
 		try {
 			const {
 				fileMeta: { basename, md5 },
 				result,
-			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
+			} = await uploadImportSqlFileToS3( {
+				app,
+				env,
+				fileName: fileNameToUpload,
+				progressCallback,
+			} );
 
 			startImportVariables.input = {
 				id: app.id,

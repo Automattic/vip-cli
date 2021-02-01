@@ -54,6 +54,14 @@ export class ProgressTracker {
 		}, new Map() );
 	}
 
+	setUploadPercentage( percentage: string ) {
+		const uploadStep = this.stepsFromCaller.get( 'upload' );
+		if ( ! uploadStep ) {
+			return;
+		}
+		this.stepsFromCaller.set( 'upload', { ...uploadStep, percentage } );
+	}
+
 	setStepsFromServer( steps: Object[] ) {
 		const formattedSteps = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
@@ -144,9 +152,15 @@ export class ProgressTracker {
 			singleLogLine.clear();
 		}
 		const stepValues = [ ...this.getSteps().values() ];
-		const logs = stepValues.reduce( ( accumulator, { name, status } ) => {
+		const logs = stepValues.reduce( ( accumulator, { name, id, percentage, status } ) => {
 			const statusIcon = getGlyphForStatus( status, this.runningSprite );
-			return `${ accumulator }${ statusIcon } ${ name }\n`;
+			let suffix = '';
+			if ( id === 'upload' ) {
+				if ( status === 'running' && percentage ) {
+					suffix = percentage;
+				}
+			}
+			return `${ accumulator }${ statusIcon } ${ name } ${ suffix }\n`;
 		}, '' );
 
 		// Output the logs

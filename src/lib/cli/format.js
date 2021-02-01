@@ -153,6 +153,7 @@ export class RunningSprite {
 export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
 	switch ( status ) {
 		default:
+			return '';
 		case 'pending':
 			return '○';
 		case 'running':
@@ -175,8 +176,7 @@ export const formatSearchReplaceValues = ( values, message ) => {
 
 	const formattedOutput = searchReplaceValues.map( pairs => {
 		// Turn each S-R pair into its own array, then trim away whitespace
-		const [ from, to ] = pairs.split( ',' )
-			.map( pair => pair.trim() );
+		const [ from, to ] = pairs.split( ',' ).map( pair => pair.trim() );
 
 		const output = message( from, to );
 
