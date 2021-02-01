@@ -2,6 +2,7 @@
 src
 
 # Tests
+__fixtures__
 __tests__
 jest.config.js
 jest.setup.js
