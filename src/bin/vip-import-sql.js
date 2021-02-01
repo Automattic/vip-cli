@@ -223,16 +223,9 @@ command( {
 			formatSearchReplaceValues( searchReplace, output );
 		}
 
-		let fileNameToUpload = fileName;
-
-		// SQL file validations
-		const validations = [];
-		validations.push( staticSqlValidations );
-		validations.push( siteTypeValidations );
-
-		await fileLineValidations( appId, envId, fileNameToUpload, validations );
-
 		// NO `console.log` after this point! It will break the progress printing.
+
+		let fileNameToUpload = fileName;
 
 		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 		const setProgressTrackerPrefixAndSuffix = () => {
@@ -270,6 +263,13 @@ Processing the SQL import for your environment...
 		} else {
 			progressTracker.stepSkipped( 'replace' );
 		}
+
+		// SQL file validations
+		const validations = [];
+		validations.push( staticSqlValidations );
+		validations.push( siteTypeValidations );
+
+		await fileLineValidations( appId, envId, fileNameToUpload, validations );
 
 		progressTracker.stepSuccess( 'validate' );
 
