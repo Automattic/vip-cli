@@ -121,6 +121,12 @@ const gates = async ( app, env, fileName ) => {
 		);
 	}
 
+	if ( ! env?.importStatus ) {
+		await track( 'import_sql_command_error', { errorType: 'empty-import-status' } );
+		exit.withError(
+			'Unable to check for existing import or database operations on the site.'
+		);
+	}
 	const {
 		importStatus: { dbOperationInProgress, importInProgress },
 	} = env;
