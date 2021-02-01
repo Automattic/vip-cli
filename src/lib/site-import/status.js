@@ -16,7 +16,7 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 import { ProgressTracker } from 'lib/cli/progress';
-import { formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
+import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -155,9 +155,10 @@ export async function importSqlCheckStatus( {
 	}
 	let createdAt;
 	let completedAt;
-	let overallStatus = 'checking...';
+	let overallStatus = 'Checking...';
 
 	const setProgressTrackerSuffix = () => {
+		const sprite = getGlyphForStatus( overallStatus, progressTracker.runningSprite );
 		const formattedCreatedAt = createdAt
 			? `${ new Date( createdAt ).toLocaleString() } (${ createdAt })`
 			: 'TBD';
@@ -166,8 +167,22 @@ export async function importSqlCheckStatus( {
 				? `${ new Date( completedAt ).toLocaleString() } (${ completedAt })`
 				: 'TBD';
 		const exitPrompt = '(Press ^C to hide progress. The import will continue in the background.)';
-		const successMessage = `imported data should be visible on your site ${ env.primaryDomain.name }.`;
-		const statusMessage = overallStatus === 'success' ? successMessage : '';
+
+		let statusMessage;
+		switch ( overallStatus ) {
+			case 'success':
+				statusMessage = `Success ${ sprite } imported data should be visible on your site ${ env.primaryDomain.name }.`;
+				break;
+			case 'running':
+				if ( progressTracker.allStepsSucceeded() ) {
+					statusMessage = `Finishing up... ${ sprite } `;
+					break;
+				}
+			// Intentionally no break to get default case:
+			default:
+				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
+		}
+
 		const maybeExitPrompt = `${ overallStatus === 'running' ? exitPrompt : '' }`;
 		const jobCreateCompleteTimestamps = `
 SQL Import Started: ${ formattedCreatedAt }
@@ -177,10 +192,7 @@ SQL Import Completed: ${ formattedCompletedAt }`;
 			: '';
 		const suffix = `
 =============================================================
-Status: ${ overallStatus } ${ getGlyphForStatus(
-	overallStatus,
-	progressTracker.runningSprite
-) } ${ statusMessage }
+Status: ${ statusMessage }
 Site: ${ app.name } (${ formatEnvironment( env.type ) })${ maybeTimestamps }
 =============================================================
 ${ maybeExitPrompt }
