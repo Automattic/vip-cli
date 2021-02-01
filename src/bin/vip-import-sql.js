@@ -269,9 +269,16 @@ Processing the SQL import for your environment...
 		validations.push( staticSqlValidations );
 		validations.push( siteTypeValidations );
 
-		await fileLineValidations( appId, envId, fileNameToUpload, validations );
-
 		progressTracker.stepSuccess( 'validate' );
+
+		try {
+			await fileLineValidations( appId, envId, fileNameToUpload, validations );
+		} catch ( validateErr ) {
+			progressTracker.stepFailed( 'validate' );
+			progressTracker.stopPrinting();
+
+			exit.withError( `File validation failed: ${ validateErr }` );
+		}
 
 		// Call the Public API
 		const api = await API();
