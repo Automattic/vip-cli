@@ -131,6 +131,8 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
+	i: number;
+
 	constructor() {
 		this.i = 0;
 	}
@@ -150,6 +152,8 @@ export class RunningSprite {
 
 export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
 	switch ( status ) {
+		default:
+			return '';
 		case 'pending':
 			return '○';
 		case 'running':
@@ -160,13 +164,23 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 			return chalk.red( '✕' );
 		case 'unknown':
 			return chalk.yellow( '✕' );
+		case 'skipped':
+			return chalk.green( '✕' );
 	}
 }
 
-export function formatJobSteps( steps: Object[], runningSprite: RunningSprite ) {
-	return steps.reduce(
-		( carry, step ) =>
-			carry + `- ${ step.name }: ${ getGlyphForStatus( step.status, runningSprite ) }\n`,
-		''
-	);
-}
+// Format Search and Replace values to output
+export const formatSearchReplaceValues = ( values, message ) => {
+	// Convert single pair S-R values to arrays
+	const searchReplaceValues = typeof values === 'string' ? [ values ] : values;
+
+	const formattedOutput = searchReplaceValues.map( pairs => {
+		// Turn each S-R pair into its own array, then trim away whitespace
+		const [ from, to ] = pairs.split( ',' ).map( pair => pair.trim() );
+
+		const output = message( from, to );
+
+		return output;
+	} );
+	return formattedOutput;
+};

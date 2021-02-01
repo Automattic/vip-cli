@@ -9,6 +9,7 @@
  * External dependencies
  */
 import gql from 'graphql-tag';
+import chalk from 'chalk';
 import debugLib from 'debug';
 
 /**
@@ -21,7 +22,7 @@ import {
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
-import { getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
 import { staticSqlValidations } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
@@ -29,6 +30,9 @@ import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
+import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
+import { ProgressTracker } from 'lib/cli/progress';
+import { isFile } from '../lib/client-file-uploader';
 
 const appQuery = `
 	id,
@@ -40,6 +44,7 @@ const appQuery = `
 		appId
 		type
 		name
+		launched
 		syncProgress { status }
 		primaryDomain { name }
 		importStatus {
@@ -64,6 +69,13 @@ const START_IMPORT_MUTATION = gql`
 
 const debug = debugLib( 'vip:vip-import-sql' );
 
+const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
+	{ id: 'replace', name: 'Performing Search and Replace' },
+	{ id: 'validate', name: 'Validating SQL' },
+	{ id: 'upload', name: 'Uploading file' },
+	{ id: 'queue_import', name: 'Queueing Import' },
+];
+
 const gates = async ( app, env, fileName ) => {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
@@ -80,6 +92,18 @@ const gates = async ( app, env, fileName ) => {
 		exit.withError(
 			'The type of application you specified does not currently support SQL imports.'
 		);
+	}
+
+	try {
+		await checkFileAccess( fileName );
+	} catch ( e ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
+		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
+	}
+
+	if ( ! ( await isFile( fileName ) ) ) {
+		await track( 'import_sql_command_error', { error_type: 'sqlfile-notfile' } );
+		exit.withError( `Path '${ fileName }' is not a file.` );
 	}
 
 	const fileSize = await getFileSize( fileName );
@@ -101,19 +125,20 @@ const gates = async ( app, env, fileName ) => {
 		importStatus: { dbOperationInProgress, importInProgress },
 	} = env;
 
+	if ( importInProgress ) {
+		await track( 'import_sql_command_error', { errorType: 'existing-import' } );
+		exit.withError(
+			'There is already an import in progress.\n\nYou can view the status with command:\n    vip import sql status'
+		);
+	}
+
 	if ( dbOperationInProgress ) {
 		await track( 'import_sql_command_error', { errorType: 'existing-dbop' } );
 		exit.withError( 'There is already a database operation in progress. Please try again later.' );
 	}
-
-	if ( importInProgress ) {
-		await track( 'import_sql_command_error', { errorType: 'existing-import' } );
-		exit.withError(
-			'There is already an import in progress. You can view the status with the `vip import sql status` command.'
-		);
-	}
 };
-// Command examples
+
+// Command examples for the `vip import sql` help prompt
 const examples = [
 	// `sql` subcommand
 	{
@@ -174,8 +199,6 @@ command( {
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
 
-		console.log( '** Welcome to the WPVIP Site SQL Importer! **\n' );
-
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
 		await track( 'import_sql_command_execute' );
@@ -183,9 +206,44 @@ command( {
 		// // halt operation of the import based on some rules
 		await gates( app, env, fileName );
 
+		// Log summary of import details
+		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+
+		console.log();
+		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
+		console.log( `         to: ${ chalk.cyan( domain ) }` );
+		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
+
+		if ( searchReplace?.length ) {
+			const output = ( from, to ) => {
+				const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
+				console.log( message );
+			};
+
+			formatSearchReplaceValues( searchReplace, output );
+		}
+
+		// NO `console.log` after this point! It will break the progress printing.
+
 		let fileNameToUpload = fileName;
+
+		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
+		const setProgressTrackerPrefixAndSuffix = () => {
+			progressTracker.prefix = `
+=============================================================
+Processing the SQL import for your environment...
+`;
+			progressTracker.suffix = `\n${ getGlyphForStatus(
+				'running',
+				progressTracker.runningSprite
+			) } Loading remaining steps`;
+		};
+		progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
+
 		// Run Search and Replace if the --search-replace flag was provided
 		if ( searchReplace && searchReplace.length ) {
+			progressTracker.stepRunning( 'replace' );
+
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
@@ -194,49 +252,66 @@ command( {
 
 			if ( typeof outputFileName !== 'string' ) {
 				// This should not really happen if `searchAndReplace` is functioning properly
+				progressTracker.stopPrinting();
 				throw new Error(
 					'Unable to determine location of the intermediate search & replace file.'
 				);
 			}
 
 			fileNameToUpload = outputFileName;
+			progressTracker.stepSuccess( 'replace' );
+		} else {
+			progressTracker.stepSkipped( 'replace' );
 		}
 
-		// VALIDATIONS
+		// SQL file validations
 		const validations = [];
 		validations.push( staticSqlValidations );
 		validations.push( siteTypeValidations );
+
 		await fileLineValidations( appId, envId, fileNameToUpload, validations );
+
+		progressTracker.stepSuccess( 'validate' );
 
 		// Call the Public API
 		const api = await API();
 
 		const startImportVariables = {};
 
-		console.log( 'Uploading…' );
+		const progressCallback = percentage => {
+			progressTracker.setUploadPercentage( percentage );
+		};
 
 		try {
 			const {
 				fileMeta: { basename, md5 },
 				result,
-			} = await uploadImportSqlFileToS3( { app, env, fileName: fileNameToUpload } );
+			} = await uploadImportSqlFileToS3( {
+				app,
+				env,
+				fileName: fileNameToUpload,
+				progressCallback,
+			} );
+
 			startImportVariables.input = {
 				id: app.id,
 				environmentId: env.id,
 				basename: basename,
 				md5: md5,
 			};
+
 			debug( { basename, md5, result } );
-			console.log( 'Upload complete. Initiating the import.' );
-
+			debug( 'Upload complete. Initiating the import.' );
+			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
-
-			console.log( '\n🚧 🚧 🚧 Your sql file import is queued 🚧 🚧 🚧' );
 		} catch ( e ) {
 			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
+			progressTracker.stepFailed( 'upload' );
+			progressTracker.stopPrinting();
 			exit.withError( e );
 		}
 
+		// Start the import
 		try {
 			const startImportResults = await api.mutate( {
 				mutation: START_IMPORT_MUTATION,
@@ -245,12 +320,18 @@ command( {
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
+			progressTracker.stepFailed( 'queue_import' );
+
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',
 				gql_err: gqlErr,
 			} );
+			progressTracker.stepFailed( 'queue_import' );
+			progressTracker.stopPrinting();
 			exit.withError( `StartImport call failed: ${ gqlErr }` );
 		}
 
-		await importSqlCheckStatus( { app, env } );
+		progressTracker.stepSuccess( 'queue_import' );
+
+		await importSqlCheckStatus( { app, env, progressTracker } );
 	} );
