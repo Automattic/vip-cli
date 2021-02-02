@@ -285,6 +285,7 @@ Processing the SQL import for your environment...
 		];
 
 		try {
+			progressTracker.stepRunning( 'validate' );
 			await fileLineValidations( appId, envId, fileNameToUpload, validations );
 		} catch ( validateErr ) {
 			progressTracker.stepFailed( 'validate' );
