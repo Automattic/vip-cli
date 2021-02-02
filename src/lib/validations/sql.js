@@ -19,17 +19,6 @@ import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-
 let problemsFound = 0;
 let lineNum = 1;
 
-class SqlValidationError extends Error {
-  constructor( message, validationErrors ) {
-    super( message );
-
-    this.name = this.constructor.name;
-		this.validationErrors = validationErrors;
-
-    Error.captureStackTrace( this, this.constructor );
-  }
-}
-
 function formatError( message ) {
 	return `${ chalk.red( 'SQL Error:' )} ${ message }`;
 }
