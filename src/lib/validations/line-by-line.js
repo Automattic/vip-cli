@@ -74,9 +74,9 @@ export async function fileLineValidations( appId: number, envId: number, fileNam
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await Promise.all( validations.map( async validation => {
+	return await Promise.all( validations.map( async validation => {
 		if ( validation.hasOwnProperty( 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
-			await validation.postLineExecutionProcessing( { fileName, isImport, appId, envId } );
+			return await validation.postLineExecutionProcessing( { fileName, isImport, appId, envId } );
 		}
 	} ) );
 }
