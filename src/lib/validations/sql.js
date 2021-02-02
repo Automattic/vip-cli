@@ -20,11 +20,11 @@ let problemsFound = 0;
 let lineNum = 1;
 
 function formatError( message ) {
-	return `${ chalk.red( 'SQL Error:' )} ${ message }`;
+	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
 }
 
 function formatRecommendation( message ) {
-	return `${ chalk.yellow( 'Recommendation:' )} ${ message }`;
+	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
 
 const errorCheckFormatter = ( check, isImport ) => {
