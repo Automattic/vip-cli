@@ -124,7 +124,7 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'SET @@SESSION.sql_log_bin statement',
-		excerpt: '\'SET @@SESSION.sql_log_bin=0\' statement should not be present (case-insensitive)',
+		excerpt: '\'SET @@SESSION.sql_log_bin\' statement should not be present (case-insensitive)',
 		recommendation: 'Remove these lines',
 	},
 	trigger: {
