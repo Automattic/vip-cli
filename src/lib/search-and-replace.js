@@ -18,15 +18,10 @@ import { replace } from '@automattic/vip-search-replace';
  */
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
-import { progress, setStatusForCurrentAction } from 'lib/cli/progress';
 import { getFileSize } from 'lib/client-file-uploader';
 import * as exit from 'lib/cli/exit';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
-
-// For progress logs
-let currentStatus;
-const currentAction = 'replace';
 
 const flatten = arr => {
 	return arr.reduce( function( flat, toFlatten ) {

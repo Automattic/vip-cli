@@ -9,7 +9,7 @@
   },
   "confirm": true,
   "publishCommand": "npm publish",
-  "publishTag": "next",
+  "publishTag": "latest",
   "prePublishScript": "npm test",
   "postPublishScript": false
 }
