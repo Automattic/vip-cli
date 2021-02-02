@@ -13,6 +13,8 @@ import chalk from 'chalk';
  */
 
 export function withError( message: string ) {
-	console.log( chalk.red( message.toString().replace( /^(Error: )*/, 'Error: ' ) ) );
+	let updatedMessage = message;
+
+	console.log( message.toString().replace( /^(Error: )*/, chalk.red( 'Error: ' ) ) );
 	process.exit( 1 );
 }
