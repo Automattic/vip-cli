@@ -276,7 +276,6 @@ Processing the SQL import for your environment...
 			progressTracker.stopPrinting();
 
 			console.log( '' );
-			console.log( '' );
 
 			exit.withError( validateErr.message );
 		}
