@@ -132,14 +132,14 @@ const gates = async ( app, env, fileName ) => {
 	} = env;
 
 	if ( importInProgress ) {
-		await track( 'import_sql_command_error', { errorType: 'existing-import' } );
+		await track( 'import_sql_command_error', { error_type: 'existing-import' } );
 		exit.withError(
 			'There is already an import in progress.\n\nYou can view the status with command:\n    vip import sql status'
 		);
 	}
 
 	if ( dbOperationInProgress ) {
-		await track( 'import_sql_command_error', { errorType: 'existing-dbop' } );
+		await track( 'import_sql_command_error', { error_type: 'existing-dbop' } );
 		exit.withError( 'There is already a database operation in progress. Please try again later.' );
 	}
 };
