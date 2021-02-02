@@ -252,8 +252,8 @@ Processing the SQL import for your environment...
 			setProgressTrackerPrefixAndSuffix();
 			progressTracker.stopPrinting();
 			progressTracker.print( { clearAfter: true } );
-			exit.withError( failureError);
-		}
+			exit.withError( failureError );
+		};
 
 		progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
 
