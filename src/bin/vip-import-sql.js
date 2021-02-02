@@ -223,21 +223,38 @@ command( {
 			formatSearchReplaceValues( searchReplace, output );
 		}
 
-		// NO `console.log` after this point! It will break the progress printing.
+		/**
+		 * =========== WARNING =============
+		 *
+		 * NO `console.log` after this point!
+		 * Yes, even inside called functions.
+		 * It will break the progress printing.
+		 *
+		 * =========== WARNING =============
+		 */
+		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 
 		let fileNameToUpload = fileName;
+		let status = 'running';
 
-		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 		const setProgressTrackerPrefixAndSuffix = () => {
 			progressTracker.prefix = `
 =============================================================
 Processing the SQL import for your environment...
 `;
-			progressTracker.suffix = `\n${ getGlyphForStatus(
-				'running',
-				progressTracker.runningSprite
-			) } Loading remaining steps`;
+			progressTracker.suffix = `\n${ getGlyphForStatus( status, progressTracker.runningSprite ) } ${
+				status === 'running' ? 'Loading remaining steps' : ''
+			}`; // TODO: maybe use progress tracker status
 		};
+
+		const failWithError = failureError => {
+			status = 'failed';
+			setProgressTrackerPrefixAndSuffix();
+			progressTracker.stopPrinting();
+			progressTracker.print( { clearAfter: true } );
+			exit.withError( failureError);
+		}
+
 		progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
 
 		// Run Search and Replace if the --search-replace flag was provided
@@ -251,11 +268,8 @@ Processing the SQL import for your environment...
 			} );
 
 			if ( typeof outputFileName !== 'string' ) {
-				// This should not really happen if `searchAndReplace` is functioning properly
-				progressTracker.stopPrinting();
-				throw new Error(
-					'Unable to determine location of the intermediate search & replace file.'
-				);
+				progressTracker.stepFailed( 'replace' );
+				return failWithError( 'Unable to determine location of the intermediate search & replace file.' );
 			}
 
 			fileNameToUpload = outputFileName;
@@ -265,19 +279,19 @@ Processing the SQL import for your environment...
 		}
 
 		// SQL file validations
-		const validations = [];
-		validations.push( staticSqlValidations );
-		validations.push( siteTypeValidations );
+		const validations = [
+			staticSqlValidations,
+			siteTypeValidations,
+		];
 
 		try {
 			await fileLineValidations( appId, envId, fileNameToUpload, validations );
 		} catch ( validateErr ) {
 			progressTracker.stepFailed( 'validate' );
-			progressTracker.stopPrinting();
 
 			console.log( '' );
 
-			exit.withError( validateErr.message );
+			return failWithError( validateErr.message );
 		}
 
 		progressTracker.stepSuccess( 'validate' );
@@ -313,11 +327,11 @@ Processing the SQL import for your environment...
 			debug( 'Upload complete. Initiating the import.' );
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
-		} catch ( e ) {
-			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
+		} catch ( uploadError ) {
+			await track( 'import_sql_command_error', { error_type: 'upload_failed', uploadError } );
+
 			progressTracker.stepFailed( 'upload' );
-			progressTracker.stopPrinting();
-			exit.withError( e );
+			return failWithError( uploadError );
 		}
 
 		// Start the import
@@ -335,9 +349,9 @@ Processing the SQL import for your environment...
 				error_type: 'StartImport-failed',
 				gql_err: gqlErr,
 			} );
+
 			progressTracker.stepFailed( 'queue_import' );
-			progressTracker.stopPrinting();
-			exit.withError( `StartImport call failed: ${ gqlErr }` );
+			return failWithError( `StartImport call failed: ${ gqlErr }` );
 		}
 
 		progressTracker.stepSuccess( 'queue_import' );
