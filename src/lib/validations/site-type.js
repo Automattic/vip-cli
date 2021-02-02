@@ -38,13 +38,15 @@ export const siteTypeValidations = {
 		// if site is a multisite but import sql is not
 		if ( isMultiSite && ! isMultiSiteSqlDump ) {
 			await track( 'import_sql_command_error', { error_type: 'multisite-but-not-multisite-sql-dump' } );
-			exit.withError( 'You have provided a non-multisite SQL dump file for import into a multisite.' );
+
+			throw new Error( 'You have provided a non-multisite SQL dump file for import into a multisite.' );
 		}
 
 		// if site is a single site but import sql is for a multi site
 		if ( ! isMultiSite && isMultiSiteSqlDump ) {
 			await track( 'import_sql_command_error', { error_type: 'not-multisite-with-multisite-sql-dump' } );
-			exit.withError( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
+
+			throw new Error( 'You have provided a multisite SQL dump file for import into a single site (non-multisite).' );
 		}
 	},
 };
