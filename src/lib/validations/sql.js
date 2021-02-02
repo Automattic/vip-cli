@@ -52,9 +52,7 @@ const requiredCheckFormatter = ( check, type, isImport ) => {
 	const infos = [];
 
 	if ( check.results.length > 0 ) {
-		if ( ! isImport ) {
-			infos.push( `✅ ${ check.message } was found ${ check.results.length } times.` );
-		}
+		infos.push( `✅ ${ check.message } was found ${ check.results.length } times.` );
 
 		if ( type === 'createTable' ) {
 			if ( ! isImport ) {
@@ -80,9 +78,7 @@ const infoCheckFormatter = ( check, isImport ) => {
 	const infos = [];
 
 	check.results.forEach( item => {
-		if ( ! isImport ) {
-			infos.push( item );
-		}
+		infos.push( item );
 	} );
 
 	return {
@@ -276,8 +272,10 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 		return process.exit( 1 );
 	}
 
-	console.log( formattedInfos.join( '\n' ) );
-	console.log( '' );
+	if ( ! isImport ) {
+		console.log( formattedInfos.join( '\n' ) );
+		console.log( '' );
+	}
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 };
