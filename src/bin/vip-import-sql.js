@@ -124,7 +124,7 @@ const gates = async ( app, env, fileName ) => {
 	if ( ! env?.importStatus ) {
 		await track( 'import_sql_command_error', { error_type: 'empty-import-status' } );
 		exit.withError(
-			'Could not determine the import status for this environment.'
+			'Could not determine the import status for this environment. Check the app/environment and if the problem persists, contact support for assistance'
 		);
 	}
 	const {
