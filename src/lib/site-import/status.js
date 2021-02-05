@@ -98,38 +98,58 @@ async function getStatus( api, appId, envId ) {
 function getErrorMessage( importFailed ) {
 	debug( { importFailed } );
 
+	const rollbackMessage = `Your site is ${ chalk.blue(
+		'automatically being rolled back'
+	) } to the last backup prior to your import job.
+`;
+
 	let message = chalk.red( `Error: ${ importFailed.error }` );
 
 	if ( importFailed.inImportProgress ) {
 		switch ( importFailed.stepName ) {
 			case 'import_preflights':
-			case 'validating_sql':
 				message += `
 This error occurred prior to the mysql batch script processing of your SQL file.
 
 Your site content was not altered.
 
-Please inspect your input file and make the appropriate corrections before trying again.
+If this error persists, please contact support.
 `;
 				break;
+
 			case 'importing_db':
 				message += `
 This error occurred during the mysql batch script processing of your SQL file.
 
-Your site is ${ chalk.blue(
-		'automatically being rolled back'
-	) } to the last backup prior to your import job.
-`;
+${ rollbackMessage }`;
 				if ( importFailed.commandOutput ) {
 					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
 					message += `
 Please inspect your input file and make the appropriate corrections before trying again.
-The database server said:
+The server said:
 > ${ chalk.red( commandOutput ) }
 `;
 				} else {
 					message += 'Please contact support and include this message along with your sql file.';
 				}
+				break;
+
+			case 'validating_db':
+				message += `\nThis error occurred during the post-import validation of the imported data.
+
+${ rollbackMessage }
+`;
+				if ( importFailed.commandOutput ) {
+					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
+					message += `
+Please inspect your input file and make the appropriate corrections before trying again.
+The server said:
+> ${ chalk.red( commandOutput ) }
+`;
+				} else {
+					message += 'Please contact support and include this message along with your sql file.';
+				}
+
 				break;
 			default:
 		}
