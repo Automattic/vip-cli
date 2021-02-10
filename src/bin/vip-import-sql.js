@@ -189,6 +189,10 @@ command( {
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.command( 'status', 'Check the status of the current running import' )
+	.option(
+		'skip-validate',
+		'Do not perform pre-upload file validation. If unsupported entries are present, the import is likely to fail'
+	)
 	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option(
@@ -198,7 +202,7 @@ command( {
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace } = opts;
+		const { app, env, searchReplace, skipValidate } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 
@@ -290,15 +294,20 @@ Processing the SQL import for your environment...
 			siteTypeValidations,
 		];
 
-		try {
-			progressTracker.stepRunning( 'validate' );
-			await fileLineValidations( appId, envId, fileNameToUpload, validations );
-		} catch ( validateErr ) {
-			progressTracker.stepFailed( 'validate' );
+		if ( skipValidate ) {
+			progressTracker.stepSkipped( 'validate' );
+		} else {
+			try {
+				progressTracker.stepRunning( 'validate' );
+				await fileLineValidations( appId, envId, fileNameToUpload, validations );
+			} catch ( validateErr ) {
+				progressTracker.stepFailed( 'validate' );
+				console.log( '' );
+				return failWithError( `${ validateErr.message }
 
-			console.log( '' );
-
-			return failWithError( validateErr.message );
+If you are confident the file does not contain unsupported statements, you can retry the command with the --skip-validate option.
+` );
+			}
 		}
 
 		progressTracker.stepSuccess( 'validate' );
