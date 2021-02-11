@@ -13,7 +13,7 @@
 import { getReadInterface } from 'lib/validations/line-by-line';
 import * as exit from 'lib/cli/exit';
 
-const SQL_DUMP_CREATE_TABLE_IS_MULTISITE_REGEX = /^CREATE TABLE `?(wp_\d_[a-z0-9_]*)/i;
+const SQL_DUMP_CREATE_TABLE_IS_MULTISITE_REGEX = /^CREATE TABLE `?(wp_\d+_[a-z0-9_]*)/i;
 
 export function sqlDumpLineIsMultiSite( line: string ): boolean {
 	// determine if we're on a CREATE TABLE statement line what has eg. wp_\d_options
