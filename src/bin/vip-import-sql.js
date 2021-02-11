@@ -300,6 +300,7 @@ Processing the SQL import for your environment...
 			try {
 				progressTracker.stepRunning( 'validate' );
 				await fileLineValidations( appId, envId, fileNameToUpload, validations );
+				progressTracker.stepSuccess( 'validate' );
 			} catch ( validateErr ) {
 				progressTracker.stepFailed( 'validate' );
 				console.log( '' );
