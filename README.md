@@ -24,6 +24,11 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.1
+- Fix for multi-site SQL tables validation
+- Bump `@automattic/vip-search-replace` to `v1.0.12`
+- Introduce `--skip-validation` when running an import to skip the validation step
+
 ### 2.0.0
 - Drops support for Node 8
 - Added Security Policy
