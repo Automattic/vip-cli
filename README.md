@@ -1,4 +1,3 @@
-# vip [![Build Status](https://travis-ci.com/Automattic/vip.svg?branch=master)](https://travis-ci.com/Automattic/vip)
 
 VIP-CLI is your tool for interacting with and managing your VIP applications.
 
