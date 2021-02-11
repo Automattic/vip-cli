@@ -366,6 +366,15 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
 
+				options.skipValidate =
+					options.hasOwnProperty( 'skipValidate' ) &&
+					!! options.skipValidate &&
+					! [ 'false', 'no' ].includes( options.skipValidate );
+
+				if ( options.skipValidate ) {
+					info.push( { key: 'Pre-Upload Validations', value: chalk.red( 'SKIPPED!' ) } );
+				}
+
 				// Show S-R params if the `search-replace` flag is set
 				const searchReplace = options.searchReplace;
 
