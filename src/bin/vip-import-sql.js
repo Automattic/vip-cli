@@ -311,7 +311,7 @@ If you are confident the file does not contain unsupported statements, you can r
 			}
 		}
 
-		progressTracker.stepSuccess( 'validate' );
+		progressTracker.stepRunning( 'upload' );
 
 		// Call the Public API
 		const api = await API();
