@@ -306,7 +306,7 @@ Processing the SQL import for your environment...
 				console.log( '' );
 				return failWithError( `${ validateErr.message }
 
-If you are confident the file does not contain unsupported statements, you can retry the command with the --skip-validate option.
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
 ` );
 			}
 		}
