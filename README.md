@@ -24,6 +24,16 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.2
+- Improved handling of debug output during search & replace
+- Updated the vip-search-replace package to ^1.0.13
+
+### 2.0.1
+- SQL Import: Improved reporting of server-side failures
+- SQL Import: Add ability to skip local validation
+- Updated the vip-search-replace package to v1.0.12
+- SQL Import: Fix and test for multi-site tables that have more than one digit
+
 ### 2.0.0
 - Drops support for Node 8
 - Added Security Policy
