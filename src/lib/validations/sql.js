@@ -157,7 +157,7 @@ const checks: Checks = {
 	},
 	trigger: {
 		// Match `CREATE (DEFINER=`root`@`host`) TRIGGER`
-		matcher: /^CREATE (DEFINER=`?(\w*)(`@`)?(\w*\.*%?)*`?)?(| )TRIGGER/,
+		matcher: /^CREATE (DEFINER=`?(\w*)(`@`)?(\w*\.*%?)*`?)?(| )TRIGGER/i,
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
