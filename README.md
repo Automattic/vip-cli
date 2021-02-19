@@ -26,7 +26,6 @@ By default, we record information about the usage of this tool using an in-house
 
 ### 2.0.3
 - Improved SQL import validation around the use of TRIGGER
-- vip-search-replace dependency bump to 1.0.13
 
 ### 2.0.2
 - Improved handling of debug output during search & replace
