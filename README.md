@@ -24,6 +24,9 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.3
+- Improved SQL import validation around the use of TRIGGER
+
 ### 2.0.2
 - Improved handling of debug output during search & replace
 - Updated the vip-search-replace package to ^1.0.13
