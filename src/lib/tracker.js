@@ -60,3 +60,7 @@ export async function aliasUser( vipUserId ): Promise<Response> {
 		debug( 'aliasUser() failed', e );
 	}
 }
+
+export async function trackEventWithEnv( appId, envId, eventName, eventProps = {} ): Promise<Response> {
+	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
+}

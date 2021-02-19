@@ -1,7 +1,11 @@
+/** @format */
 // @flow
+/**
+ * External dependencies
+ */
+import chalk from 'chalk';
 
-type Options = {
-};
+type Options = {};
 
 export type Tuple = {
 	key: string,
@@ -33,8 +37,6 @@ export function formatData( data: Array<any>, format: string, opts: ?Options ): 
 }
 
 export function formatEnvironment( environment: string ): string {
-	const chalk = require( 'chalk' );
-
 	if ( 'production' === environment.toLowerCase() ) {
 		return chalk.red( environment.toUpperCase() );
 	}
@@ -91,8 +93,10 @@ function formatFields( fields: Array<string> ) {
 
 export function keyValue( values: Array<Tuple> ): string {
 	const lines = [];
+	const pairs = values.length > 0;
 
-	lines.push( '===================================' );
+	pairs ? lines.push( '===================================' ) : '';
+
 	for ( const i of values ) {
 		let v = i.value;
 
@@ -104,6 +108,7 @@ export function keyValue( values: Array<Tuple> ): string {
 
 		lines.push( `+ ${ i.key }: ${ v }` );
 	}
+
 	lines.push( '===================================' );
 
 	return lines.join( '\n' );
@@ -122,3 +127,67 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 		return arg;
 	} );
 }
+
+export function capitalize( str: string ): string {
+	if ( typeof str !== 'string' || ! str.length ) {
+		return '';
+	}
+	return str[ 0 ].toUpperCase() + str.slice( 1 );
+}
+
+export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
+
+export class RunningSprite {
+	i: number;
+
+	constructor() {
+		this.i = 0;
+	}
+
+	next() {
+		if ( ++this.i >= RUNNING_SPRITE_GLYPHS.length ) {
+			this.i = 0;
+		}
+	}
+
+	toString() {
+		const glyph = RUNNING_SPRITE_GLYPHS[ this.i ];
+		this.next(); // TODO: throttle
+		return glyph;
+	}
+}
+
+export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
+	switch ( status ) {
+		default:
+			return '';
+		case 'pending':
+			return '○';
+		case 'running':
+			return chalk.blueBright( runningSprite );
+		case 'success':
+			return chalk.green( '✓' );
+		case 'failed':
+			return chalk.red( '✕' );
+		case 'unknown':
+			return chalk.yellow( '✕' );
+		case 'skipped':
+			return chalk.green( '-' );
+	}
+}
+
+// Format Search and Replace values to output
+export const formatSearchReplaceValues = ( values, message ) => {
+	// Convert single pair S-R values to arrays
+	const searchReplaceValues = typeof values === 'string' ? [ values ] : values;
+
+	const formattedOutput = searchReplaceValues.map( pairs => {
+		// Turn each S-R pair into its own array, then trim away whitespace
+		const [ from, to ] = pairs.split( ',' ).map( pair => pair.trim() );
+
+		const output = message( from, to );
+
+		return output;
+	} );
+	return formattedOutput;
+};

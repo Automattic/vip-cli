@@ -4,8 +4,11 @@
  */
 
 /**
- * External dependencies
+ * Internal dependencies
  */
+import { GB_IN_BYTES } from 'lib/constants/file-size';
+
+export const SQL_IMPORT_FILE_SIZE_LIMIT = 10 * GB_IN_BYTES;
 
 export interface AppForImport {
 	id: Number;

@@ -19,12 +19,12 @@ import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
 
-if ( config && config.environment !== 'production' ) {
-	console.log( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
-	console.log( 'You should `npm link` your locally checked out copy of this repo as part of your development setup.' );
-}
-
 const debug = debugLib( '@automattic/vip:bin:vip' );
+
+if ( config && config.environment !== 'production' ) {
+	debug( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
+	debug( 'You should `npm link` your locally checked out copy of this repo as part of your development setup.' );
+}
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
@@ -46,7 +46,7 @@ const rootCmd = async function() {
 			} )
 			.command( 'app', 'List and modify your VIP applications' )
 			.command( 'import', 'Check the validity of an import source' )
-			.command( 'search', 'Perform Search and Replace tasks on files' )
+			.command( 'search-replace', 'Perform Search and Replace tasks on files' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' )
 			.argv( process.argv );

@@ -19,6 +19,7 @@ import { replace } from '@automattic/vip-search-replace';
 import { trackEvent } from 'lib/tracker';
 import { confirm } from 'lib/cli/prompt';
 import { getFileSize } from 'lib/client-file-uploader';
+import * as exit from 'lib/cli/exit';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
@@ -61,12 +62,16 @@ export function getReadAndWriteStreams( {
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
+
 		debug( `Set output to the original file path ${ fileName }` );
+
+		outputFileName = fileName;
+
 		return {
 			outputFileName,
-			readStream: fs.createReadStream( midputFileName, { encoding: 'utf8' } ),
+			readStream: fs.createReadStream( midputFileName ),
 			usingStdOut,
-			writeStream: fs.createWriteStream( fileName, { encoding: 'utf8' } ),
+			writeStream: fs.createWriteStream( fileName ),
 		};
 	}
 
@@ -74,8 +79,9 @@ export function getReadAndWriteStreams( {
 
 	switch ( typeof output ) {
 		case 'string':
-			writeStream = fs.createWriteStream( output, { encoding: 'utf8' } );
+			writeStream = fs.createWriteStream( output );
 			outputFileName = output;
+
 			debug( `Outputting to file: ${ outputFileName }` );
 			break;
 		case 'object':
@@ -89,17 +95,17 @@ export function getReadAndWriteStreams( {
 			break;
 		default:
 			const tmpOutFile = path.join( makeTempDir(), path.basename( fileName ) );
-			writeStream = fs.createWriteStream( tmpOutFile, {
-				encoding: 'utf8',
-			} );
+			writeStream = fs.createWriteStream( tmpOutFile );
 			outputFileName = tmpOutFile;
+
 			debug( `Outputting to file: ${ outputFileName }` );
+
 			break;
 	}
 
 	return {
 		outputFileName,
-		readStream: fs.createReadStream( fileName, { encoding: 'utf8' } ),
+		readStream: fs.createReadStream( fileName ),
 		usingStdOut,
 		writeStream,
 	};
@@ -123,7 +129,7 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
-	await trackEvent( 'searchreplace_started', { isImport, inPlace } );
+	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
 	const fileSize = getFileSize( fileName );
@@ -139,15 +145,24 @@ export const searchAndReplace = async (
 	}
 
 	// determine all the replacements required
-	const replacementsArr = pairs.map( str => str.split( ',' ) );
+	const replacementsArr = pairs.map( str => str.split( ',' ).map( s => s.trim() ) );
 	const replacements = flatten( replacementsArr );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
 	if ( inPlace ) {
-		await confirm(
+		const approved = await confirm(
 			[],
 			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
 		);
+
+		// Bail if user does not wish to proceed
+		if ( ! approved ) {
+			await trackEvent( 'search_replace_in_place_cancelled', {
+				is_import: isImport,
+				in_place: inPlace,
+			} );
+			process.exit();
+		}
 	}
 
 	const { usingStdOut, outputFileName, readStream, writeStream } = getReadAndWriteStreams( {
@@ -156,14 +171,17 @@ export const searchAndReplace = async (
 		output,
 	} );
 
-	const replacedStream = await replace( readStream, replacements, binary );
+	let replacedStream;
+	try {
+		replacedStream = await replace( readStream, replacements, binary );
+	} catch ( replaceError ) {
+		exit.withError( replaceError );
+	}
+
 	const result = await new Promise( ( resolve, reject ) => {
 		replacedStream
 			.pipe( writeStream )
 			.on( 'finish', () => {
-				if ( ! usingStdOut ) {
-					console.log( chalk.green( 'Search and Replace Complete!' ) );
-				}
 				resolve( {
 					inputFileName: fileName,
 					outputFileName,
@@ -176,6 +194,7 @@ export const searchAndReplace = async (
 						"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
 					)
 				);
+
 				reject();
 			} );
 	} );
@@ -183,7 +202,7 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	await trackEvent( 'searchreplace_completed', { timeToRun: end, fileSize } );
+	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
 	return result;
 };
