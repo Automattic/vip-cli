@@ -15,13 +15,15 @@ import { createGzip } from 'zlib';
 import { createHash } from 'crypto';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
-import { stdout as singleLogLine } from 'single-line-log';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
+
+const debug = debugLib( 'vip:lib/client-file-uploader' );
 
 // Files smaller than COMPRESS_THRESHOLD will not be compressed before upload
 export const COMPRESS_THRESHOLD = 16 * MB_IN_BYTES;
@@ -73,38 +75,35 @@ export type UploadArguments = {
 	app: Object,
 	env: Object,
 	fileName: string,
+	progressCallback?: Function,
 };
 
 export const getFileMD5Hash = async ( fileName: string ) =>
-	new Promise( resolve =>
+	new Promise( ( resolve, reject ) =>
 		fs
 			.createReadStream( fileName )
 			.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
 			.on( 'finish', function() {
 				resolve( this.read() );
 			} )
+			.on( 'error', error => reject( `could not generate file hash: ${ error }` ) )
 	);
 
 export const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) =>
-	new Promise( resolve =>
+	new Promise( ( resolve, reject ) =>
 		fs
 			.createReadStream( uncompressedFileName )
 			.pipe( createGzip() )
 			.pipe( fs.createWriteStream( compressedFileName ) )
 			.on( 'finish', resolve )
+			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	return new Promise( async ( resolve, reject ) => {
-		try {
-			await checkFileAccess( fileName );
-		} catch ( e ) {
-			return reject( `File '${ fileName }' does not exist or is not readable.` );
-		}
-
 		const fileSize = await getFileSize( fileName );
 
-		const basename = path.posix.basename( fileName );
+		const basename = path.basename( fileName );
 		// TODO Validate File basename...  encodeURIComponent, maybe...?
 
 		const mimeType = await detectCompressedMimeType( fileName );
@@ -112,9 +111,9 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 
 		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
-		console.log( 'Calculating file md5 checksum...' );
+		debug( 'Calculating file md5 checksum...' );
 		const md5 = await getFileMD5Hash( fileName );
-		console.log( `Calculated file md5 checksum: ${ md5 }\n` );
+		debug( `Calculated file md5 checksum: ${ md5 }\n` );
 
 		resolve( {
 			basename,
@@ -126,7 +125,12 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	} );
 }
 
-export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArguments ) {
+export async function uploadImportSqlFileToS3( {
+	app,
+	env,
+	fileName,
+	progressCallback,
+}: UploadArguments ) {
 	const fileMeta = await getFileMeta( fileName );
 
 	let tmpDir;
@@ -136,8 +140,10 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		throw `Unable to create temporary working directory: ${ e }`;
 	}
 
-	console.log(
-		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n`
+	debug(
+		`File ${ chalk.cyan( fileMeta.basename ) } is ~ ${ Math.floor(
+			fileMeta.fileSize / MB_IN_BYTES
+		) } MB\n`
 	);
 
 	// TODO Compression will probably fail over a certain file size... break into pieces...?
@@ -150,13 +156,13 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 		fileMeta.basename = fileMeta.basename.replace( /(.gz)?$/i, '.gz' );
 		fileMeta.fileName = path.join( tmpDir, fileMeta.basename );
 
-		console.log( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
+		debug( `Compressing the file to ${ chalk.cyan( fileMeta.fileName ) } prior to transfer...` );
 
 		await gzipFile( uncompressedFileName, fileMeta.fileName );
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
-		console.log( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
+		debug( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
 
@@ -164,13 +170,13 @@ export async function uploadImportSqlFileToS3( { app, env, fileName }: UploadArg
 			( 100 * fewerBytes ) / uncompressedFileSize
 		) }%)`;
 
-		console.log( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
+		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
-			? await uploadUsingPutObject( { app, env, fileMeta } )
-			: await uploadUsingMultipart( { app, env, fileMeta } );
+			? await uploadUsingPutObject( { app, env, fileMeta, progressCallback } )
+			: await uploadUsingMultipart( { app, env, fileMeta, progressCallback } );
 
 	return {
 		fileMeta,
@@ -182,14 +188,16 @@ export type UploadUsingArguments = {
 	app: Object,
 	env: Object,
 	fileMeta: FileMeta,
+	progressCallback?: Function,
 };
 
 export async function uploadUsingPutObject( {
 	app,
 	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
+	progressCallback,
 }: UploadUsingArguments ) {
-	console.log( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
+	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
 		appId: app.id,
@@ -208,9 +216,12 @@ export async function uploadUsingPutObject( {
 	const progressPassThrough = new PassThrough();
 	progressPassThrough.on( 'data', data => {
 		readBytes += data.length;
-		singleLogLine( `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%...` );
+		const percentage = Math.floor( ( 100 * readBytes ) / fileSize ) + '%';
+		debug( percentage );
+		if ( typeof progressCallback === 'function' ) {
+			progressCallback( percentage );
+		}
 	} );
-	progressPassThrough.on( 'end', () => console.log( '\n' ) );
 
 	const response = await fetch( presignedRequest.url, {
 		...fetchOptions,
@@ -237,13 +248,19 @@ export async function uploadUsingPutObject( {
 	}
 
 	const { Code, Message } = parsedResponse.Error || {};
+
 	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
 }
 
-export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingArguments ) {
+export async function uploadUsingMultipart( {
+	app,
+	env,
+	fileMeta,
+	progressCallback,
+}: UploadUsingArguments ) {
 	const { basename } = fileMeta;
 
-	console.log( 'Uploading to S3 using the Multipart API.' );
+	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the Multipart API.` );
 
 	const presignedCreateMultipartUpload = await getSignedUploadRequestData( {
 		appId: app.id,
@@ -281,7 +298,7 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 
 	const uploadId = parsedResponse.InitiateMultipartUploadResult.UploadId;
 
-	console.log( { uploadId } );
+	debug( { uploadId } );
 
 	const parts = getPartBoundaries( fileMeta.fileSize );
 	const etagResults = await uploadParts( {
@@ -290,8 +307,9 @@ export async function uploadUsingMultipart( { app, env, fileMeta }: UploadUsingA
 		fileMeta,
 		parts,
 		uploadId,
+		progressCallback,
 	} );
-	console.log( { etagResults } );
+	debug( { etagResults } );
 
 	return completeMultipartUpload( {
 		app,
@@ -325,27 +343,26 @@ export async function getSignedUploadRequestData( {
 }
 
 export async function checkFileAccess( fileName: string ): Promise<void> {
-	// Node 8 doesn't have fs.promises, so fall back to this
-	return new Promise( ( resolve, reject ) => {
-		fs.access( fileName, fs.R_OK, err => {
-			if ( err ) {
-				reject( err );
-			}
-			resolve();
-		} );
-	} );
+	return fs.promises.access( fileName, fs.R_OK );
+}
+
+export async function getFileStats( fileName: string ): Promise<fs.Stats> {
+	return fs.promises.stat( fileName );
+}
+
+export async function isFile( fileName: string ): Promise<boolean> {
+	try {
+		const stats = await getFileStats( fileName );
+		return stats.isFile();
+	} catch ( e ) {
+		debug( `isFile error: ${ e }` );
+		return false;
+	}
 }
 
 export async function getFileSize( fileName: string ): Promise<number> {
-	// Node 8 doesn't have fs.promises, so fall back to this
-	return new Promise( ( resolve, reject ) => {
-		fs.stat( fileName, ( err, stats ) => {
-			if ( err ) {
-				reject( err );
-			}
-			resolve( stats.size );
-		} );
-	} );
+	const stats = await getFileStats( fileName );
+	return stats.size;
 }
 
 export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {
@@ -399,9 +416,17 @@ type UploadPartsArgs = {
 	fileMeta: FileMeta,
 	uploadId: string,
 	parts: Array<any>,
+	progressCallback?: Function,
 };
 
-export async function uploadParts( { app, env, fileMeta, uploadId, parts }: UploadPartsArgs ) {
+export async function uploadParts( {
+	app,
+	env,
+	fileMeta,
+	uploadId,
+	parts,
+	progressCallback,
+}: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
 	const partPercentages = new Array( parts.length ).fill( 0 );
@@ -417,8 +442,14 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 			}, 300 );
 		} );
 
-	const printProgress = () =>
-		singleLogLine(
+	const updateProgress = () => {
+		const percentage = Math.floor( ( 100 * totalBytesRead ) / fileMeta.fileSize ) + '%';
+
+		if ( typeof progressCallback === 'function' ) {
+			progressCallback( percentage );
+		}
+
+		debug(
 			partPercentages
 				.map( ( partPercentage, index ) => {
 					const { partSize } = parts[ index ];
@@ -427,11 +458,12 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 					) }MB`;
 				} )
 				.join( '\n' ) +
-				`\n\nOverall Progress: ${ Math.floor(
-					( 100 * totalBytesRead ) / fileMeta.fileSize
-				) }% of ${ ( fileMeta.fileSize / MB_IN_BYTES ).toFixed( 2 ) }MB`
+				`\n\nOverall Progress: ${ percentage }% of ${ ( fileMeta.fileSize / MB_IN_BYTES ).toFixed(
+					2
+				) }MB`
 		);
-	const printProgressInterval = setInterval( printProgress, 500 );
+	};
+	const updateProgressInterval = setInterval( updateProgress, 500 );
 
 	const allDone = await Promise.all(
 		parts.map( async part => {
@@ -462,8 +494,8 @@ export async function uploadParts( { app, env, fileMeta, uploadId, parts }: Uplo
 		} )
 	);
 
-	clearInterval( printProgressInterval );
-	printProgress();
+	clearInterval( updateProgressInterval );
+	updateProgress();
 
 	return allDone;
 }

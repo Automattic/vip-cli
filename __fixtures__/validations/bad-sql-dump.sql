@@ -30,3 +30,5 @@ INSERT INTO wp_options (option_name, option_value, autoload)
     VALUES 
         ('siteurl', 'https://super-employees-go.vip.net', 'yes'),
         ('home', 'https://super-empoyees.com', 'yes');
+
+SET @@SESSION.SQL_LOG_BIN= 0;

@@ -18,7 +18,7 @@ import { confirm } from './prompt';
 /* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
 import app from 'lib/api/app';
-import { formatData } from './format';
+import { formatData, formatSearchReplaceValues } from './format';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
@@ -54,7 +54,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// If we have both an --app/--env and an alias, we need to give a warning
 	if ( parsedAlias.app && ( options.app || options.env ) ) {
-		console.error( chalk`{red Please only use an envirionment alias, or the --app and --env parameters, but not both}` );
+		console.error( chalk`{red Please only use an environment alias, or the --app and --env parameters, but not both}` );
 
 		process.exit();
 	}
@@ -334,11 +334,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 		const info: Array<Tuple> = [];
 
 		if ( options.app ) {
-			info.push( { key: 'App', value: options.app.name } );
+			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
 		}
 
 		if ( options.env ) {
-			info.push( { key: 'Environment', value: getEnvIdentifier( options.env ) } );
+			const envName = getEnvIdentifier( options.env );
+			info.push( { key: 'Environment', value: `${ envName } (id: ${ options.env.id })` } );
 		}
 
 		let message = 'Are you sure?';
@@ -348,11 +349,51 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 		switch ( _opts.module ) {
 			case 'import-sql':
-				if ( options.env && options.env.primaryDomain ) {
-					const primaryDomainName = options.env.primaryDomain.name;
+				const site = options.env;
+				if ( site && site.primaryDomain ) {
+					const primaryDomainName = site.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
-				this.sub && info.push( { key: 'SQL File', value: this.sub } );
+
+				// Site launched details
+				const haveLaunchedField = site.hasOwnProperty( 'launched' );
+
+				if ( haveLaunchedField ) {
+					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
+
+					info.push( { key: 'Launched?', value: `${ chalk.cyan( launched ) }` } );
+				}
+
+				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
+
+				options.skipValidate =
+					options.hasOwnProperty( 'skipValidate' ) &&
+					!! options.skipValidate &&
+					! [ 'false', 'no' ].includes( options.skipValidate );
+
+				if ( options.skipValidate ) {
+					info.push( { key: 'Pre-Upload Validations', value: chalk.red( 'SKIPPED!' ) } );
+				}
+
+				// Show S-R params if the `search-replace` flag is set
+				const searchReplace = options.searchReplace;
+
+				const assignSRValues = ( from, to ) =>{
+					const pairs = {
+						From: `${ from }`,
+						To: `${ to }`,
+					};
+
+					return pairs;
+				};
+
+				if ( searchReplace ) {
+					const searchReplaceValues = formatSearchReplaceValues( searchReplace, assignSRValues );
+
+					// Format data into a user-friendly table
+					info.push( { key: 'Replacements', value: '\n' + formatData( searchReplaceValues, 'table' ) } );
+				}
+
 				break;
 			case 'sync':
 				const { backup, canSync, errors } = options.env.syncPreview;

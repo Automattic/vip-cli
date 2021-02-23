@@ -60,6 +60,9 @@ describe( 'lib/validations/sql', () => {
 		it( 'instances of ALTER USER statements', () => {
 			expect( output ).toContain( 'ALTER USER statement on line(s) 25' );
 		} );
+		it( 'instances of SET @@SESSION.sql_log_bin statements', () => {
+			expect( output ).toContain( 'SET @@SESSION.sql_log_bin statement on line(s) 34' );
+		} );
 		it( 'no instances of DROP TABLE IF EXISTS statements', () => {
 			expect( output ).toContain( 'DROP TABLE was not found' );
 		} );
