@@ -262,7 +262,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return {};
 			}
 
-			const env = options.app.environments.find( cur => cur.type === options.env );
+			const env = options.app.environments.find( cur => getEnvIdentifier( cur ) === options.env );
 
 			if ( ! env ) {
 				await trackEvent( 'command_childcontext_param_error', {
