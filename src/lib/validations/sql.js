@@ -155,6 +155,15 @@ const checks: Checks = {
 		excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
 		recommendation: 'Remove these lines',
 	},
+	binaryLogging: {
+		matcher: /SET @@SESSION.sql_log_bin/i,
+		matchHandler: lineNumber => lineNumber,
+		outputFormatter: errorCheckFormatter,
+		results: [],
+		message: 'SET @@SESSION.sql_log_bin statement',
+		excerpt: '\'SET @@SESSION.sql_log_bin\' statement should not be present (case-insensitive)',
+		recommendation: 'Remove these lines',
+	},
 	trigger: {
 		// Match `CREATE (DEFINER=`root`@`host`) TRIGGER`
 		matcher: /^CREATE (\(?DEFINER=`?(\w*)(`@`)?(\w*\.*%?)*`?\)?)?(| )TRIGGER/i,
