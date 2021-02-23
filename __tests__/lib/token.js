@@ -53,8 +53,8 @@ describe( 'token tests', () => {
 	} );
 
 	it( 'should consistently return uuid', () => {
-		return Token.uuid().then( uuid1 => {
-			return Token.uuid().then( uuid2 => {
+		Token.uuid().then( uuid1 => {
+			Token.uuid().then( uuid2 => {
 				expect( uuid1 ).toBe( uuid2 );
 			} );
 		} );
