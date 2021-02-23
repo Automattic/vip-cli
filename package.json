@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.0.0-dev4",
+  "version": "2.0.3",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -67,12 +67,12 @@
     "eslint": "5.16.0",
     "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#39d3482",
     "eslint-plugin-flowtype": "4.7.0",
-    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jest": "23.8.2",
-    "eslint-plugin-json": "2.1.1",
-    "eslint-plugin-jsx-a11y": "6.2.3",
+    "eslint-plugin-json": "2.1.2",
+    "eslint-plugin-jsx-a11y": "6.4.1",
     "eslint-plugin-no-async-foreach": "0.1.1",
-    "eslint-plugin-react": "7.19.0",
+    "eslint-plugin-react": "7.22.0",
     "eslint-plugin-wpcalypso": "4.1.0",
     "flow-bin": "0.121.0",
     "jest": "26.6.3",
@@ -81,7 +81,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
-    "@automattic/vip-search-replace": "^1.0.9",
+    "@automattic/vip-search-replace": "^1.0.13",
     "args": "5.0.1",
     "chalk": "3.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",

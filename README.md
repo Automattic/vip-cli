@@ -1,4 +1,3 @@
-# vip [![Build Status](https://travis-ci.com/Automattic/vip.svg?token=xWx9qCRAJeRdHxEcWW83&branch=master)](https://travis-ci.com/Automattic/vip)
 
 VIP-CLI is your tool for interacting with and managing your VIP applications.
 
@@ -23,6 +22,19 @@ If you need more information, check out our [VIP CLI documentation](https://vip.
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
 ## Changelog
+
+### 2.0.3
+- Improved SQL import validation around the use of TRIGGER
+
+### 2.0.2
+- Improved handling of debug output during search & replace
+- Updated the vip-search-replace package to ^1.0.13
+
+### 2.0.1
+- SQL Import: Improved reporting of server-side failures
+- SQL Import: Add ability to skip local validation
+- Updated the vip-search-replace package to v1.0.12
+- SQL Import: Fix and test for multi-site tables that have more than one digit
 
 ### 2.0.0
 - Drops support for Node 8

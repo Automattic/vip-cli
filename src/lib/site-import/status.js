@@ -16,7 +16,7 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 import { ProgressTracker } from 'lib/cli/progress';
-import { formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
+import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -98,38 +98,58 @@ async function getStatus( api, appId, envId ) {
 function getErrorMessage( importFailed ) {
 	debug( { importFailed } );
 
+	const rollbackMessage = `Your site is ${ chalk.blue(
+		'automatically being rolled back'
+	) } to the last backup prior to your import job.
+`;
+
 	let message = chalk.red( `Error: ${ importFailed.error }` );
 
 	if ( importFailed.inImportProgress ) {
 		switch ( importFailed.stepName ) {
 			case 'import_preflights':
-			case 'validating_sql':
 				message += `
 This error occurred prior to the mysql batch script processing of your SQL file.
 
 Your site content was not altered.
 
-Please inspect your input file and make the appropriate corrections before trying again.
+If this error persists, please contact support.
 `;
 				break;
+
 			case 'importing_db':
 				message += `
 This error occurred during the mysql batch script processing of your SQL file.
 
-Your site is ${ chalk.blue(
-		'automatically being rolled back'
-	) } to the last backup prior to your import job.
-`;
+${ rollbackMessage }`;
 				if ( importFailed.commandOutput ) {
 					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
 					message += `
 Please inspect your input file and make the appropriate corrections before trying again.
-The database server said:
+The server said:
 > ${ chalk.red( commandOutput ) }
 `;
 				} else {
 					message += 'Please contact support and include this message along with your sql file.';
 				}
+				break;
+
+			case 'validating_db':
+				message += `\nThis error occurred during the post-import validation of the imported data.
+
+${ rollbackMessage }
+`;
+				if ( importFailed.commandOutput ) {
+					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
+					message += `
+Please inspect your input file and make the appropriate corrections before trying again.
+The server said:
+> ${ chalk.red( commandOutput ) }
+`;
+				} else {
+					message += 'Please contact support and include this message along with your sql file.';
+				}
+
 				break;
 			default:
 		}
@@ -155,9 +175,10 @@ export async function importSqlCheckStatus( {
 	}
 	let createdAt;
 	let completedAt;
-	let overallStatus = 'checking...';
+	let overallStatus = 'Checking...';
 
 	const setProgressTrackerSuffix = () => {
+		const sprite = getGlyphForStatus( overallStatus, progressTracker.runningSprite );
 		const formattedCreatedAt = createdAt
 			? `${ new Date( createdAt ).toLocaleString() } (${ createdAt })`
 			: 'TBD';
@@ -166,8 +187,22 @@ export async function importSqlCheckStatus( {
 				? `${ new Date( completedAt ).toLocaleString() } (${ completedAt })`
 				: 'TBD';
 		const exitPrompt = '(Press ^C to hide progress. The import will continue in the background.)';
-		const successMessage = `imported data should be visible on your site ${ env.primaryDomain.name }.`;
-		const statusMessage = overallStatus === 'success' ? successMessage : '';
+
+		let statusMessage;
+		switch ( overallStatus ) {
+			case 'success':
+				statusMessage = `Success ${ sprite } imported data should be visible on your site ${ env.primaryDomain.name }.`;
+				break;
+			case 'running':
+				if ( progressTracker.allStepsSucceeded() ) {
+					statusMessage = `Finishing up... ${ sprite } `;
+					break;
+				}
+			// Intentionally no break to get default case:
+			default:
+				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
+		}
+
 		const maybeExitPrompt = `${ overallStatus === 'running' ? exitPrompt : '' }`;
 		const jobCreateCompleteTimestamps = `
 SQL Import Started: ${ formattedCreatedAt }
@@ -177,10 +212,7 @@ SQL Import Completed: ${ formattedCompletedAt }`;
 			: '';
 		const suffix = `
 =============================================================
-Status: ${ overallStatus } ${ getGlyphForStatus(
-	overallStatus,
-	progressTracker.runningSprite
-) } ${ statusMessage }
+Status: ${ statusMessage }
 Site: ${ app.name } (${ formatEnvironment( env.type ) })${ maybeTimestamps }
 =============================================================
 ${ maybeExitPrompt }

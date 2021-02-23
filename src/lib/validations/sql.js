@@ -19,43 +19,75 @@ import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-
 let problemsFound = 0;
 let lineNum = 1;
 
+function formatError( message ) {
+	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
+}
+
+function formatRecommendation( message ) {
+	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
+}
+
 const errorCheckFormatter = ( check, isImport ) => {
+	const errors = [];
+	const infos = [];
+
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` );
-		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
+		errors.push( {
+			error: formatError( `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` ),
+			recommendation: formatRecommendation( check.recommendation ),
+		} );
 	} else {
-		isImport ? '' : console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		infos.push( `✅ ${ check.message } was found ${ check.results.length } times.` );
 	}
+
+	return {
+		errors,
+		infos,
+	};
 };
 
 const requiredCheckFormatter = ( check, type, isImport ) => {
+	const errors = [];
+	const infos = [];
+
 	if ( check.results.length > 0 ) {
-		if ( ! isImport ) {
-			console.log( `✅ ${ check.message } was found ${ check.results.length } times.` );
-		}
+		infos.push( `✅ ${ check.message } was found ${ check.results.length } times.` );
 
 		if ( type === 'createTable' ) {
 			if ( ! isImport ) {
-				checkTablePrefixes( check.results );
+				checkTablePrefixes( check.results, errors, infos );
 			}
 		}
 	} else {
 		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `${ check.message } was not found.` );
-		console.error( chalk.yellow( 'Recommendation:' ), `${ check.recommendation }` );
+
+		errors.push( {
+			error: formatError( `${ check.message } was not found.` ),
+			recommendation: formatRecommendation( check.recommendation ),
+		} );
 	}
+
+	return {
+		errors,
+		infos,
+	};
 };
 
 const infoCheckFormatter = ( check, isImport ) => {
+	const infos = [];
+
 	check.results.forEach( item => {
-		if ( ! isImport ) {
-			console.log( item );
-		}
+		infos.push( item );
 	} );
+
+	return {
+		errors: [],
+		infos,
+	};
 };
 
-function checkTablePrefixes( tables ) {
+function checkTablePrefixes( tables, errors, infos ) {
 	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
 	tables.forEach( tableName => {
 		if ( tableName.match( /^wp_(\d+_)/ ) ) {
@@ -67,14 +99,19 @@ function checkTablePrefixes( tables ) {
 		}
 	} );
 	if ( wpTables.length > 0 ) {
-		console.log( ` - wp_ prefix tables found: ${ wpTables.length } ` );
+		infos.push( ` - wp_ prefix tables found: ${ wpTables.length } ` );
 	}
 	if ( notWPTables.length > 0 ) {
 		problemsFound += 1;
-		console.error( chalk.red( 'Error:' ), `tables without wp_ prefix found: ${ notWPTables.join( ',' ) } ` );
+
+		errors.push( {
+			error: formatError( `tables without wp_ prefix found: ${ notWPTables.join( ',' ) }` ),
+			recommendation: formatRecommendation( 'Please make sure all table names are prefixed with `wp_`' ),
+		} );
 	}
+
 	if ( wpMultisiteTables.length > 0 ) {
-		console.log( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
+		infos.push( ` - wp_n_ prefix tables found: ${ wpMultisiteTables.length } ` );
 	}
 }
 
@@ -128,7 +165,8 @@ const checks: Checks = {
 		recommendation: 'Remove these lines',
 	},
 	trigger: {
-		matcher: /TRIGGER/,
+		// Match `CREATE (DEFINER=`root`@`host`) TRIGGER`
+		matcher: /^CREATE (\(?DEFINER=`?(\w*)(`@`)?(\w*\.*%?)*`?\)?)?(| )TRIGGER/i,
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
@@ -195,15 +233,22 @@ const checks: Checks = {
 export const postValidation = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
 
-	isImport ? '' : log( `Finished processing ${ lineNum } lines.` );
-	isImport ? '' : console.log( '\n' );
+	if ( ! isImport ) {
+		log( `Finished processing ${ lineNum } lines.` );
+		console.log( '\n' );
+	}
 
 	const errorSummary = {};
-	const checkEntires: any = Object.entries( checks );
+	const checkEntries: any = Object.entries( checks );
 
-	for ( const [ type, check ]: [string, CheckType] of checkEntires ) {
-		check.outputFormatter( check, type, isImport );
-		isImport ? '' : console.log( '' );
+	let formattedErrors = [];
+	let formattedInfos = [];
+
+	for ( const [ type, check ]: [string, CheckType] of checkEntries ) {
+		const formattedOutput = check.outputFormatter( check, type, isImport );
+
+		formattedErrors = formattedErrors.concat( formattedOutput.errors );
+		formattedInfos = formattedInfos.concat( formattedOutput.infos );
 
 		errorSummary[ type ] = check.results.length;
 	}
@@ -211,15 +256,35 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 	errorSummary.problems_found = problemsFound;
 
 	if ( problemsFound > 0 ) {
-		console.error( `** Total of ${ chalk.red( problemsFound ) } errors found ** ` );
+		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
+
+		const errorOutput = [
+			`SQL validation failed due to ${ chalk.red( problemsFound ) } error(s)`,
+			'',
+		];
+
+		formattedErrors.forEach( error => {
+			errorOutput.push( error.error );
+
+			if ( error.recommendation ) {
+				errorOutput.push( error.recommendation );
+			}
+
+			errorOutput.push( '' );
+		} );
 
 		if ( isImport ) {
-			console.log( `${ chalk.red( 'Please adjust these error(s) before proceeding with the import.' ) }` );
-			console.log();
+			throw new Error( errorOutput.join( '\n' ) );
 		}
 
-		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
+		console.error( errorOutput.join( '\n' ) );
+
 		return process.exit( 1 );
+	}
+
+	if ( ! isImport ) {
+		console.log( formattedInfos.join( '\n' ) );
+		console.log( '' );
 	}
 
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );

@@ -121,19 +121,25 @@ const gates = async ( app, env, fileName ) => {
 		);
 	}
 
+	if ( ! env?.importStatus ) {
+		await track( 'import_sql_command_error', { error_type: 'empty-import-status' } );
+		exit.withError(
+			'Could not determine the import status for this environment. Check the app/environment and if the problem persists, contact support for assistance'
+		);
+	}
 	const {
 		importStatus: { dbOperationInProgress, importInProgress },
 	} = env;
 
 	if ( importInProgress ) {
-		await track( 'import_sql_command_error', { errorType: 'existing-import' } );
+		await track( 'import_sql_command_error', { error_type: 'existing-import' } );
 		exit.withError(
 			'There is already an import in progress.\n\nYou can view the status with command:\n    vip import sql status'
 		);
 	}
 
 	if ( dbOperationInProgress ) {
-		await track( 'import_sql_command_error', { errorType: 'existing-dbop' } );
+		await track( 'import_sql_command_error', { error_type: 'existing-dbop' } );
 		exit.withError( 'There is already a database operation in progress. Please try again later.' );
 	}
 };
@@ -183,6 +189,10 @@ command( {
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
 } )
 	.command( 'status', 'Check the status of the current running import' )
+	.option(
+		'skip-validate',
+		'Do not perform pre-upload file validation. If unsupported entries are present, the import is likely to fail'
+	)
 	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option(
@@ -192,7 +202,7 @@ command( {
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace } = opts;
+		const { app, env, searchReplace, skipValidate } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 
@@ -223,21 +233,38 @@ command( {
 			formatSearchReplaceValues( searchReplace, output );
 		}
 
-		// NO `console.log` after this point! It will break the progress printing.
+		/**
+		 * =========== WARNING =============
+		 *
+		 * NO `console.log` after this point!
+		 * Yes, even inside called functions.
+		 * It will break the progress printing.
+		 *
+		 * =========== WARNING =============
+		 */
+		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 
 		let fileNameToUpload = fileName;
+		let status = 'running';
 
-		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 		const setProgressTrackerPrefixAndSuffix = () => {
 			progressTracker.prefix = `
 =============================================================
 Processing the SQL import for your environment...
 `;
-			progressTracker.suffix = `\n${ getGlyphForStatus(
-				'running',
-				progressTracker.runningSprite
-			) } Loading remaining steps`;
+			progressTracker.suffix = `\n${ getGlyphForStatus( status, progressTracker.runningSprite ) } ${
+				status === 'running' ? 'Loading remaining steps' : ''
+			}`; // TODO: maybe use progress tracker status
 		};
+
+		const failWithError = failureError => {
+			status = 'failed';
+			setProgressTrackerPrefixAndSuffix();
+			progressTracker.stopPrinting();
+			progressTracker.print( { clearAfter: true } );
+			exit.withError( failureError );
+		};
+
 		progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
 
 		// Run Search and Replace if the --search-replace flag was provided
@@ -251,11 +278,8 @@ Processing the SQL import for your environment...
 			} );
 
 			if ( typeof outputFileName !== 'string' ) {
-				// This should not really happen if `searchAndReplace` is functioning properly
-				progressTracker.stopPrinting();
-				throw new Error(
-					'Unable to determine location of the intermediate search & replace file.'
-				);
+				progressTracker.stepFailed( 'replace' );
+				return failWithError( 'Unable to determine location of the intermediate search & replace file.' );
 			}
 
 			fileNameToUpload = outputFileName;
@@ -265,13 +289,29 @@ Processing the SQL import for your environment...
 		}
 
 		// SQL file validations
-		const validations = [];
-		validations.push( staticSqlValidations );
-		validations.push( siteTypeValidations );
+		const validations = [
+			staticSqlValidations,
+			siteTypeValidations,
+		];
 
-		await fileLineValidations( appId, envId, fileNameToUpload, validations );
+		if ( skipValidate ) {
+			progressTracker.stepSkipped( 'validate' );
+		} else {
+			try {
+				progressTracker.stepRunning( 'validate' );
+				await fileLineValidations( appId, envId, fileNameToUpload, validations );
+				progressTracker.stepSuccess( 'validate' );
+			} catch ( validateErr ) {
+				progressTracker.stepFailed( 'validate' );
+				console.log( '' );
+				return failWithError( `${ validateErr.message }
 
-		progressTracker.stepSuccess( 'validate' );
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
+` );
+			}
+		}
+
+		progressTracker.stepRunning( 'upload' );
 
 		// Call the Public API
 		const api = await API();
@@ -304,11 +344,11 @@ Processing the SQL import for your environment...
 			debug( 'Upload complete. Initiating the import.' );
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
-		} catch ( e ) {
-			await track( 'import_sql_command_error', { error_type: 'upload_failed', e } );
+		} catch ( uploadError ) {
+			await track( 'import_sql_command_error', { error_type: 'upload_failed', uploadError } );
+
 			progressTracker.stepFailed( 'upload' );
-			progressTracker.stopPrinting();
-			exit.withError( e );
+			return failWithError( uploadError );
 		}
 
 		// Start the import
@@ -326,9 +366,9 @@ Processing the SQL import for your environment...
 				error_type: 'StartImport-failed',
 				gql_err: gqlErr,
 			} );
+
 			progressTracker.stepFailed( 'queue_import' );
-			progressTracker.stopPrinting();
-			exit.withError( `StartImport call failed: ${ gqlErr }` );
+			return failWithError( `StartImport call failed: ${ gqlErr }` );
 		}
 
 		progressTracker.stepSuccess( 'queue_import' );

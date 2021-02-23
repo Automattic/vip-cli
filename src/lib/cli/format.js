@@ -128,6 +128,13 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 	} );
 }
 
+export function capitalize( str: string ): string {
+	if ( typeof str !== 'string' || ! str.length ) {
+		return '';
+	}
+	return str[ 0 ].toUpperCase() + str.slice( 1 );
+}
+
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
@@ -165,7 +172,7 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 		case 'unknown':
 			return chalk.yellow( '✕' );
 		case 'skipped':
-			return chalk.green( '✕' );
+			return chalk.green( '-' );
 	}
 }
 

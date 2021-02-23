@@ -1,11 +1,12 @@
 {
+	"labels": ["[Status] Needs Review"],
 	"extends": [
 		"config:base",
 		":automergeLinters",
 		"schedule:weekly"
 	],
 	"reviewers": [
-		"team:Automattic/vip-platform-devex"
+		"team:Automattic/vip-platform-patisserie"
 	],
 	"packageRules": [
 	  {
@@ -23,5 +24,6 @@
         		"groupSlug": "all-minor-patch-eslint"
 		  }
 	  }
-	]
+	],
+	"dependencyDashboard": true
 }
