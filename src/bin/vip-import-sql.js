@@ -79,11 +79,11 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 
 const gates = async ( app, env, fileName, opts ) => {
 	const { id: envId, appId } = env;
-	const { subsite } = opts;
+	const { blogIds } = opts;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
 	// EXIT unless feature enabled, exit if disabled
-	if ( subsite ) {
+	if ( blogIds ) {
 		// currently checks isVIP, but featureName should match feature in public API
 		exitWhenFeatureDisabled( 'subsite-sql-imports' );
 	}
@@ -208,10 +208,10 @@ command( {
 		'Specify the replacement output file for Search and Replace',
 		'process.stdout'
 	)
-	.option( 'subsite', 'Perform this import into a mulitsite subsite' )
+	.option( 'blog-ids', 'A comma delimited list of blog IDs to perform this import into.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace, skipValidate, subsite } = opts;
+		const { app, env, searchReplace, skipValidate, blogIds } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 
@@ -232,8 +232,8 @@ command( {
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
-		if ( subsite ) {
-			console.log( `    subsite: ${ subsite }` );
+		if ( blogIds ) {
+			console.log( ` blog ID(s): ${ blogIds }` );
 		}
 
 		if ( searchReplace?.length ) {
@@ -351,6 +351,9 @@ If you are confident the file does not contain unsupported statements, you can r
 				environmentId: env.id,
 				basename: basename,
 				md5: md5,
+				options: {
+					blogIds,
+				},
 			};
 
 			debug( { basename, md5, result } );

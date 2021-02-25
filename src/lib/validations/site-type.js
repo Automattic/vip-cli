@@ -35,7 +35,7 @@ export const siteTypeValidations = {
 	}: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const track = trackEventWithEnv.bind( null, appId, envId );
-		const { subsite: subsiteId } = opts;
+		const { blogIds } = opts;
 
 		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
 		debug(
@@ -45,7 +45,7 @@ export const siteTypeValidations = {
 		);
 
 		// if site is a multisite but import sql is not
-		if ( ! subsiteId ) {
+		if ( ! blogIds ) {
 			if ( isMultiSite && ! isMultiSiteSqlDump ) {
 				await track( 'import_sql_command_error', {
 					error_type: 'multisite-but-not-multisite-sql-dump',
