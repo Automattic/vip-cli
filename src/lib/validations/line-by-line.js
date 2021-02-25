@@ -54,7 +54,7 @@ export async function getReadInterface( filename: string ) {
 	} );
 }
 
-export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject> ) {
+export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject>, opts: Object ) {
 	const isImport = true;
 	const readInterface = await getReadInterface( fileName );
 
@@ -76,7 +76,7 @@ export async function fileLineValidations( appId: number, envId: number, fileNam
 
 	return Promise.all( validations.map( async validation => {
 		if ( validation.hasOwnProperty( 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
-			return validation.postLineExecutionProcessing( { fileName, isImport, appId, envId } );
+			return validation.postLineExecutionProcessing( { fileName, isImport, appId, envId, opts } );
 		}
 	} ) );
 }

@@ -33,6 +33,7 @@ import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
+import { checkFeatureEnabled } from '../lib/cli/apiConfig';
 
 const appQuery = `
 	id,
@@ -200,9 +201,10 @@ command( {
 		'Specify the replacement output file for Search and Replace',
 		'process.stdout'
 	)
+	.option( 'subsite', 'Perform this import into a mulitsite subsite' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace, skipValidate } = opts;
+		const { app, env, searchReplace, skipValidate, subsite } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 
@@ -223,6 +225,9 @@ command( {
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
+		if ( subsite ) {
+			console.log( `    subsite: ${ subsite }` );
+		}
 
 		if ( searchReplace?.length ) {
 			const output = ( from, to ) => {
@@ -299,7 +304,7 @@ Processing the SQL import for your environment...
 		} else {
 			try {
 				progressTracker.stepRunning( 'validate' );
-				await fileLineValidations( appId, envId, fileNameToUpload, validations );
+				await fileLineValidations( appId, envId, fileNameToUpload, validations, opts );
 				progressTracker.stepSuccess( 'validate' );
 			} catch ( validateErr ) {
 				progressTracker.stepFailed( 'validate' );
