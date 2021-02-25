@@ -33,7 +33,7 @@ import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
-import { checkFeatureEnabled } from '../lib/cli/apiConfig';
+import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
 
 const appQuery = `
 	id,
@@ -77,9 +77,16 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
-const gates = async ( app, env, fileName ) => {
+const gates = async ( app, env, fileName, opts ) => {
 	const { id: envId, appId } = env;
+	const { subsite } = opts;
 	const track = trackEventWithEnv.bind( null, appId, envId );
+
+	// EXIT unless feature enabled, exit if disabled
+	if ( subsite ) {
+		// currently checks isVIP, but featureName should match feature in public API
+		exitWhenFeatureDisabled( 'subsite-sql-imports' );
+	}
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
@@ -216,7 +223,7 @@ command( {
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
-		await gates( app, env, fileName );
+		await gates( app, env, fileName, opts );
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
@@ -284,7 +291,9 @@ Processing the SQL import for your environment...
 
 			if ( typeof outputFileName !== 'string' ) {
 				progressTracker.stepFailed( 'replace' );
-				return failWithError( 'Unable to determine location of the intermediate search & replace file.' );
+				return failWithError(
+					'Unable to determine location of the intermediate search & replace file.'
+				);
 			}
 
 			fileNameToUpload = outputFileName;
@@ -294,10 +303,7 @@ Processing the SQL import for your environment...
 		}
 
 		// SQL file validations
-		const validations = [
-			staticSqlValidations,
-			siteTypeValidations,
-		];
+		const validations = [ staticSqlValidations, siteTypeValidations ];
 
 		if ( skipValidate ) {
 			progressTracker.stepSkipped( 'validate' );
@@ -311,7 +317,9 @@ Processing the SQL import for your environment...
 				console.log( '' );
 				return failWithError( `${ validateErr.message }
 
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+		'--skip-validate'
+	) } option.
 ` );
 			}
 		}

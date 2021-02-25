@@ -15,10 +15,13 @@ import { trackEvent } from 'lib/tracker';
 import API from 'lib/api';
 import * as exit from './exit';
 
-export async function checkFeatureEnabled( featureName: string, exitOnFalse: boolean = false ): Promise<boolean> {
+export async function checkFeatureEnabled(
+	featureName: string,
+	exitOnFalse: boolean = false
+): Promise<boolean> {
 	// TODO: eventually let's look at more feature flags coming from the public api,
 	// for now, let's see if the user of the CLI is VIP
-	await trackEvent( 'checkFeatureEnabled_start', { featureName } );
+	await trackEvent( 'checkFeatureEnabled_start', { featureName, exitOnFalse } );
 
 	const api = await API();
 	const isVIP = await new Promise( async resolve => {
@@ -26,18 +29,19 @@ export async function checkFeatureEnabled( featureName: string, exitOnFalse: boo
 			const res = await api.query( {
 				// $FlowFixMe: gql template is not supported by flow
 				query: gql`
-                    query isVIP {
-                        me {
-                            isVIP
-                        }
-                    }
-                `,
+					query isVIP {
+						me {
+							isVIP
+						}
+					}
+				`,
 			} );
 			resolve( res.data.me.isVIP );
 		} catch ( err ) {
 			const message = err.toString();
 			await trackEvent( 'checkFeatureEnabled_fetch_error', {
 				featureName,
+				exitOnFalse,
 				error: message,
 			} );
 
@@ -50,4 +54,8 @@ export async function checkFeatureEnabled( featureName: string, exitOnFalse: boo
 	}
 
 	return isVIP === true;
+}
+
+export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {
+	await checkFeatureEnabled( featureName, true );
 }
