@@ -24,7 +24,7 @@ import {
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
-import { staticSqlValidations } from 'lib/validations/sql';
+import { staticSqlValidations, getTableNames } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
@@ -322,6 +322,8 @@ If you are confident the file does not contain unsupported statements, you can r
 	) } option.
 ` );
 			}
+			// this can only be called after static validation of the SQL file
+			const tableNamesInSqlFile = getTableNames();
 		}
 
 		progressTracker.stepRunning( 'upload' );

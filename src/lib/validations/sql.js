@@ -18,6 +18,7 @@ import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-
 
 let problemsFound = 0;
 let lineNum = 1;
+const tableNames = [];
 
 function formatError( message ) {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
@@ -88,7 +89,9 @@ const infoCheckFormatter = ( check, isImport ) => {
 };
 
 function checkTablePrefixes( tables, errors, infos ) {
-	const wpTables = [], notWPTables = [], wpMultisiteTables = [];
+	const wpTables = [],
+		notWPTables = [],
+		wpMultisiteTables = [];
 	tables.forEach( tableName => {
 		if ( tableName.match( /^wp_(\d+_)/ ) ) {
 			wpMultisiteTables.push( tableName );
@@ -106,7 +109,9 @@ function checkTablePrefixes( tables, errors, infos ) {
 
 		errors.push( {
 			error: formatError( `tables without wp_ prefix found: ${ notWPTables.join( ',' ) }` ),
-			recommendation: formatRecommendation( 'Please make sure all table names are prefixed with `wp_`' ),
+			recommendation: formatRecommendation(
+				'Please make sure all table names are prefixed with `wp_`'
+			),
 		} );
 	}
 
@@ -116,17 +121,17 @@ function checkTablePrefixes( tables, errors, infos ) {
 }
 
 export type CheckType = {
-    excerpt: string,
-    matchHandler: Function,
-    matcher: RegExp | string,
-    message: string,
-    outputFormatter: Function,
-    recommendation: string,
-    results: Array<string | empty>,
+	excerpt: string,
+	matchHandler: Function,
+	matcher: RegExp | string,
+	message: string,
+	outputFormatter: Function,
+	recommendation: string,
+	results: Array<string | empty>,
 };
 
 export type Checks = {
-    useDB: CheckType,
+	useDB: CheckType,
 	createDB: CheckType,
 	trigger: CheckType,
 	dropDB: CheckType,
@@ -143,7 +148,7 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'USE statement',
-		excerpt: '\'USE\' statement should not be present (case-insensitive, at beginning of line)',
+		excerpt: "'USE' statement should not be present (case-insensitive, at beginning of line)",
 		recommendation: 'Remove these lines',
 	},
 	createDB: {
@@ -152,7 +157,7 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'CREATE DATABASE statement',
-		excerpt: '\'CREATE DATABASE\' statement should not  be present (case-insensitive)',
+		excerpt: "'CREATE DATABASE' statement should not  be present (case-insensitive)",
 		recommendation: 'Remove these lines',
 	},
 	binaryLogging: {
@@ -161,7 +166,7 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'SET @@SESSION.sql_log_bin statement',
-		excerpt: '\'SET @@SESSION.sql_log_bin\' statement should not be present (case-insensitive)',
+		excerpt: "'SET @@SESSION.sql_log_bin' statement should not be present (case-insensitive)",
 		recommendation: 'Remove these lines',
 	},
 	trigger: {
@@ -171,7 +176,7 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'TRIGGER statement',
-		excerpt: '\'TRIGGER\' statement should not be present (case-sensitive)',
+		excerpt: "'TRIGGER' statement should not be present (case-sensitive)",
 		recommendation: 'Remove these lines',
 	},
 	dropDB: {
@@ -180,7 +185,7 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'DROP DATABASE statement',
-		excerpt: '\'DROP DATABASE\' should not be present (case-insensitive)',
+		excerpt: "'DROP DATABASE' should not be present (case-insensitive)",
 		recommendation: 'Remove these lines',
 	},
 	alterUser: {
@@ -189,30 +194,30 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'ALTER USER statement',
-		excerpt: '\'ALTER USER\' should not be present (case-insensitive)',
+		excerpt: "'ALTER USER' should not be present (case-insensitive)",
 		recommendation: 'Remove these lines',
 	},
 	dropTable: {
 		matcher: /^DROP TABLE IF EXISTS `?([a-z0-9_]*)/i,
-		matchHandler: ( lineNumber, results ) => results [ 1 ],
+		matchHandler: ( lineNumber, results ) => results[ 1 ],
 		outputFormatter: requiredCheckFormatter,
 		results: [],
 		message: 'DROP TABLE',
-		excerpt: '\'DROP TABLE IF EXISTS\' should be present (case-insensitive)',
+		excerpt: "'DROP TABLE IF EXISTS' should be present (case-insensitive)",
 		recommendation: 'Check import settings to include DROP TABLE statements',
 	},
 	createTable: {
 		matcher: /^CREATE TABLE (?:IF NOT EXISTS )?`?([a-z0-9_]*)/i,
-		matchHandler: ( lineNumber, results ) => results [ 1 ],
+		matchHandler: ( lineNumber, results ) => results[ 1 ],
 		outputFormatter: requiredCheckFormatter,
 		results: [],
 		message: 'CREATE TABLE',
-		excerpt: '\'CREATE TABLE\' should be present (case-insensitive)',
+		excerpt: "'CREATE TABLE' should be present (case-insensitive)",
 		recommendation: 'Check import settings to include CREATE TABLE statements',
 	},
 	siteHomeUrl: {
-		matcher: '\'(siteurl|home)\',\\s?\'(.*?)\'',
-		matchHandler: ( lineNumber, results ) => results [ 0 ],
+		matcher: "'(siteurl|home)',\\s?'(.*?)'",
+		matchHandler: ( lineNumber, results ) => results[ 0 ],
 		outputFormatter: infoCheckFormatter,
 		results: [],
 		message: 'Siteurl/home matches',
@@ -225,8 +230,9 @@ const checks: Checks = {
 		outputFormatter: errorCheckFormatter,
 		results: [],
 		message: 'ENGINE != InnoDB',
-		excerpt: '\'ENGINE=InnoDB\' should be present (case-insensitive) for all tables',
-		recommendation: 'Ensure your application works with InnoDB and update your SQL dump to include only \'ENGINE=InnoDB\' engine definitions in \'CREATE TABLE\' statements',
+		excerpt: "'ENGINE=InnoDB' should be present (case-insensitive) for all tables",
+		recommendation:
+			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements",
 	},
 };
 
@@ -244,7 +250,7 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 	let formattedErrors = [];
 	let formattedInfos = [];
 
-	for ( const [ type, check ]: [string, CheckType] of checkEntries ) {
+	for ( const [ type, check ]: [ string, CheckType ] of checkEntries ) {
 		const formattedOutput = check.outputFormatter( check, type, isImport );
 
 		formattedErrors = formattedErrors.concat( formattedOutput.errors );
@@ -256,7 +262,10 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 	errorSummary.problems_found = problemsFound;
 
 	if ( problemsFound > 0 ) {
-		await trackEvent( 'import_validate_sql_command_failure', { is_import: isImport, error: errorSummary } );
+		await trackEvent( 'import_validate_sql_command_failure', {
+			is_import: isImport,
+			error: errorSummary,
+		} );
 
 		const errorOutput = [
 			`SQL validation failed due to ${ chalk.red( problemsFound ) } error(s)`,
@@ -290,10 +299,24 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
 };
 
+export const getTableNames = () => {
+	return tableNames;
+};
+
+const checkForTableName = line => {
+	const matches = line.match( /(?<=^CREATE\sTABLE\s)`?(?:wp_[\d+_]?\w+)`?/ );
+	if ( matches ) {
+		// we should only have one match if we have any since we're looking at the start of the string
+		tableNames.push( matches[ 0 ] );
+	}
+};
+
 const perLineValidations = ( line: string, runAsImport: boolean ) => {
 	if ( lineNum % 500 === 0 ) {
 		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
+
+	checkForTableName( line );
 
 	const checkValues: any = Object.values( checks );
 	checkValues.forEach( ( check: CheckType ) => {
@@ -309,7 +332,10 @@ const execute = ( line: string, isImport: boolean = true ) => {
 	perLineValidations( line, isImport );
 };
 
-const postLineExecutionProcessing = async ( { fileName, isImport }: PostLineExecutionProcessingParams ) => {
+const postLineExecutionProcessing = async ( {
+	fileName,
+	isImport,
+}: PostLineExecutionProcessingParams ) => {
 	await postValidation( fileName, isImport );
 };
 
