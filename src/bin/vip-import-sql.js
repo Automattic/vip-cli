@@ -33,6 +33,7 @@ import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
+import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
 
 const appQuery = `
@@ -77,13 +78,12 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
-const gates = async ( app, env, fileName, opts ) => {
+const gates = async ( app, env, fileName ) => {
 	const { id: envId, appId } = env;
-	const { blogIds } = opts;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
-	// EXIT unless feature enabled, exit if disabled
-	if ( blogIds ) {
+	// Block multiSite imports unless feature is enabled
+	if ( await isMultiSiteInSiteMeta( appId, envId ) ) {
 		// currently checks isVIP, but featureName should match feature in public API
 		exitWhenFeatureDisabled( 'subsite-sql-imports' );
 	}
@@ -208,12 +208,12 @@ command( {
 		'Specify the replacement output file for Search and Replace',
 		'process.stdout'
 	)
-	.option( 'blog-ids', 'A comma delimited list of blog IDs to perform this import into.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace, skipValidate, blogIds } = opts;
+		const { app, env, searchReplace, skipValidate } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
+		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
@@ -232,8 +232,8 @@ command( {
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
-		if ( blogIds ) {
-			console.log( ` blog ID(s): ${ blogIds }` );
+		if ( isMultiSite ) {
+			console.log( `multisite: ${ isMultiSite }` );
 		}
 
 		if ( searchReplace?.length ) {
@@ -310,7 +310,7 @@ Processing the SQL import for your environment...
 		} else {
 			try {
 				progressTracker.stepRunning( 'validate' );
-				await fileLineValidations( appId, envId, fileNameToUpload, validations, opts );
+				await fileLineValidations( appId, envId, fileNameToUpload, validations );
 				progressTracker.stepSuccess( 'validate' );
 			} catch ( validateErr ) {
 				progressTracker.stepFailed( 'validate' );
@@ -352,7 +352,7 @@ If you are confident the file does not contain unsupported statements, you can r
 				basename: basename,
 				md5: md5,
 				options: {
-					blogIds,
+					isMultiSite,
 				},
 			};
 

@@ -6,6 +6,7 @@
 /**
  * External dependencies
  */
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -15,7 +16,6 @@ import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import * as exit from 'lib/cli/exit';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
-import debugLib from 'debug';
 
 const debug = debugLib( 'vip:vip-import-sql' );
 
@@ -31,11 +31,9 @@ export const siteTypeValidations = {
 	postLineExecutionProcessing: async ( {
 		appId,
 		envId,
-		opts,
 	}: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const track = trackEventWithEnv.bind( null, appId, envId );
-		const { blogIds } = opts;
 
 		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
 		debug(
@@ -45,7 +43,7 @@ export const siteTypeValidations = {
 		);
 
 		// if site is a multisite but import sql is not
-		if ( ! blogIds ) {
+		if ( ! isMultiSite ) {
 			if ( isMultiSite && ! isMultiSiteSqlDump ) {
 				await track( 'import_sql_command_error', {
 					error_type: 'multisite-but-not-multisite-sql-dump',
