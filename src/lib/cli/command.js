@@ -414,7 +414,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 			default:
 		}
 
-		const yes = await confirm( info, message );
+		const skipPrompt = _opts.skipConfirmPrompt || false;
+		const yes = await confirm( info, message, skipPrompt );
 		if ( ! yes ) {
 			await trackEvent( 'command_confirm_cancel' );
 

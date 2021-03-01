@@ -12,6 +12,7 @@ import gql from 'graphql-tag';
 import columns from 'cli-columns';
 import chalk from 'chalk';
 import debugLib from 'debug';
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
@@ -197,6 +198,7 @@ command( {
 	requiredArgs: 1,
 	module: 'import-sql',
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
+	skipConfirmPrompt: true,
 } )
 	.command( 'status', 'Check the status of the current running import' )
 	.option(
@@ -229,11 +231,14 @@ command( {
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+		const unFormattedEnvironment = opts.env.type.toLowerCase();
+		const formattedEnvironment = formatEnvironment( opts.env.type );
+		const launched = opts.env.launched;
 
 		console.log();
 		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
-		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
+		console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
 		if ( isMultiSite ) {
 			console.log( `multisite: ${ isMultiSite.toString() }` );
 		}
@@ -274,8 +279,17 @@ If you are confident the file does not contain unsupported statements, you can r
 			console.log( 'Below are a list of Tables that will be imported by this process:' );
 			console.log( columns( tableNamesInSqlFile ) );
 			// tableNamesInSqlFile.map( tableName => console.log( ` - ${ tableName }` ) );
-			const approved = await confirm( [], 'Do you want to confirm and import all these tables?' );
-			if ( ! approved ) {
+			const response = await prompt(
+				{
+					type: 'input',
+					name: 'confirmedEnvironment',
+					message: `You are about to import the above tables into a ${
+						launched ? 'launched' : 'unlaunched'
+					} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
+				}
+			);
+
+			if ( response.confirmedEnvironment !== unFormattedEnvironment ) {
 				await track( 'import_sql_unexpected_tables' );
 				exit.withError( 'Please review the contents of your SQL dump' );
 			}
