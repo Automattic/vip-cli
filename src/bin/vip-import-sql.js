@@ -29,6 +29,7 @@ import { siteTypeValidations } from 'lib/validations/site-type';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
+import { confirm } from 'lib/cli/prompt';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
@@ -223,7 +224,7 @@ command( {
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
-		await gates( app, env, fileName, opts );
+		await gates( app, env, fileName );
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
@@ -233,7 +234,7 @@ command( {
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
 		if ( isMultiSite ) {
-			console.log( `multisite: ${ isMultiSite }` );
+			console.log( `multisite: ${ isMultiSite.toString() }` );
 		}
 
 		if ( searchReplace?.length ) {
@@ -243,6 +244,41 @@ command( {
 			};
 
 			formatSearchReplaceValues( searchReplace, output );
+		}
+
+		let fileNameToUpload = fileName;
+
+		// SQL file validations
+		const validations = [ staticSqlValidations, siteTypeValidations ];
+
+		if ( skipValidate ) {
+			console.log( 'Skipping SQL file validation.' );
+		} else {
+			try {
+				await fileLineValidations( appId, envId, fileNameToUpload, validations );
+			} catch ( validateErr ) {
+				console.log( '' );
+				return exit.withError( `${ validateErr.message }
+
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+		'--skip-validate'
+	) } option.
+` );
+			}
+			// this can only be called after static validation of the SQL file
+			const tableNamesInSqlFile = getTableNames();
+
+			// output the table names
+			console.log( 'Below are a list of Tables that will be imported by this process:' );
+			tableNamesInSqlFile.map( tableName => console.log( ` - ${ tableName }\n` ) );
+			const approved = await confirm(
+				[],
+				'Are the tables displayed complete with what you expect from this import?'
+			);
+			if ( ! approved ) {
+				await track( 'import_sql_unexpected_tables' );
+				exit.withError( 'Please review the contents of your SQL dump' );
+			}
 		}
 
 		/**
@@ -256,7 +292,6 @@ command( {
 		 */
 		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 
-		let fileNameToUpload = fileName;
 		let status = 'running';
 
 		const setProgressTrackerPrefixAndSuffix = () => {
@@ -300,30 +335,6 @@ Processing the SQL import for your environment...
 			progressTracker.stepSuccess( 'replace' );
 		} else {
 			progressTracker.stepSkipped( 'replace' );
-		}
-
-		// SQL file validations
-		const validations = [ staticSqlValidations, siteTypeValidations ];
-
-		if ( skipValidate ) {
-			progressTracker.stepSkipped( 'validate' );
-		} else {
-			try {
-				progressTracker.stepRunning( 'validate' );
-				await fileLineValidations( appId, envId, fileNameToUpload, validations );
-				progressTracker.stepSuccess( 'validate' );
-			} catch ( validateErr ) {
-				progressTracker.stepFailed( 'validate' );
-				console.log( '' );
-				return failWithError( `${ validateErr.message }
-
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
-		'--skip-validate'
-	) } option.
-` );
-			}
-			// this can only be called after static validation of the SQL file
-			const tableNamesInSqlFile = getTableNames();
 		}
 
 		progressTracker.stepRunning( 'upload' );
