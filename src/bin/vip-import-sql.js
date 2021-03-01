@@ -9,6 +9,7 @@
  * External dependencies
  */
 import gql from 'graphql-tag';
+import columns from 'cli-columns';
 import chalk from 'chalk';
 import debugLib from 'debug';
 
@@ -269,12 +270,11 @@ If you are confident the file does not contain unsupported statements, you can r
 			const tableNamesInSqlFile = getTableNames();
 
 			// output the table names
+			console.log();
 			console.log( 'Below are a list of Tables that will be imported by this process:' );
-			tableNamesInSqlFile.map( tableName => console.log( ` - ${ tableName }\n` ) );
-			const approved = await confirm(
-				[],
-				'Are the tables displayed complete with what you expect from this import?'
-			);
+			console.log( columns( tableNamesInSqlFile ) );
+			// tableNamesInSqlFile.map( tableName => console.log( ` - ${ tableName }` ) );
+			const approved = await confirm( [], 'Do you want to confirm and import all these tables?' );
 			if ( ! approved ) {
 				await track( 'import_sql_unexpected_tables' );
 				exit.withError( 'Please review the contents of your SQL dump' );

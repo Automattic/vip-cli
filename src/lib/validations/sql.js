@@ -304,10 +304,40 @@ export const getTableNames = () => {
 };
 
 const checkForTableName = line => {
-	const matches = line.match( /(?<=^CREATE\sTABLE\s)`?(?:wp_[\d+_]?\w+)`?/ );
+	const matches = line.match( /(?<=^CREATE\sTABLE\s)`?(?:(wp_[\d+_]?\w+))`?/ );
+	const chalkColors = [
+		// commenting out common terminal bg colors
+		// commenting out red, yellow, green as they are indicators of failure, warning, success
+		// 'black',
+		// 'red',
+		// 'green',
+		// 'yellow',
+		'blue',
+		'magenta',
+		'cyan',
+		// 'white',
+		// 'blackBright', default color for primary site
+		'redBright',
+		'greenBright',
+		'yellowBright',
+		'blueBright',
+		'magentaBright',
+		'cyanBright',
+		'whiteBright',
+	];
 	if ( matches ) {
+		const tableName = matches[ 1 ];
+		let color;
+		// just get the first digit, so 3 will have the same color as 34
+		const tableIntMatch = tableName.match( /\d/ );
+		if ( ! tableIntMatch || tableName === 'wp_a8c_cron_control_jobs' ) {
+			color = 'blackBright';
+		} else {
+			// minus 1 since subsite indices start at 2
+			color = chalkColors[ tableIntMatch[ 0 ] - 1 ];
+		}
 		// we should only have one match if we have any since we're looking at the start of the string
-		tableNames.push( matches[ 0 ] );
+		tableNames.push( chalk[ color ]( tableName ) );
 	}
 };
 
