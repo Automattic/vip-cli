@@ -31,13 +31,12 @@ import { siteTypeValidations } from 'lib/validations/site-type';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
-import { confirm } from 'lib/cli/prompt';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
+import { exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
 
 const appQuery = `
 	id,
@@ -191,6 +190,69 @@ const examples = [
 	},
 ];
 
+const promptToContinue = async ( {
+	launched,
+	formattedEnvironment,
+	unFormattedEnvironment,
+	track,
+} ): Promise<void> => {
+	console.log();
+	const promptResponse = await prompt( {
+		type: 'input',
+		name: 'confirmedEnvironment',
+		message: `You are about to import the above tables into a ${
+			launched ? 'launched' : 'un-launched'
+		} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
+	} );
+
+	if ( promptResponse.confirmedEnvironment !== unFormattedEnvironment ) {
+		await track( 'import_sql_unexpected_tables' );
+		exit.withError( 'Please review the contents of your SQL dump' );
+	}
+};
+
+const validationsAndGetTableNames = async ( { skipValidate, appId, envId, fileNameToUpload } ): Promise<array> => {
+	const validations = [ staticSqlValidations, siteTypeValidations ];
+	let tableNamesInSqlFile = [];
+	if ( skipValidate ) {
+		console.log( 'Skipping SQL file validation.' );
+	} else {
+		try {
+			await fileLineValidations( appId, envId, fileNameToUpload, validations );
+		} catch ( validateErr ) {
+			console.log( '' );
+			return exit.withError( `${ validateErr.message }
+
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+		'--skip-validate'
+	) } option.
+` );
+		}
+		// this can only be called after static validation of the SQL file
+		tableNamesInSqlFile = getTableNames();
+	}
+	return tableNamesInSqlFile;
+};
+
+const displayPlaybook = async ( { tableNames, fileName, domain, formattedEnvironment, isMultiSite, app } ) => {
+	console.log();
+	console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
+	console.log( `         to: ${ chalk.cyan( domain ) }` );
+	console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
+	if ( isMultiSite ) {
+		// eslint-disable-next-line no-multi-spaces
+		console.log(   `multisite: ${ isMultiSite.toString() }` );
+	}
+	if ( ! tableNames.length ) {
+		console.log( 'Since validation was skipped, no playbook information could be displayed' );
+	} else {
+		// output the table names
+		console.log();
+		console.log( 'Below are a list of Tables that will be imported by this process:' );
+		console.log( columns( tableNames ) );
+	}
+};
+
 command( {
 	appContext: true,
 	appQuery,
@@ -235,15 +297,6 @@ command( {
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
-		console.log();
-		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
-		console.log( `         to: ${ chalk.cyan( domain ) }` );
-		console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
-		if ( isMultiSite ) {
-			// eslint-disable-next-line no-multi-spaces
-			console.log(   `multisite: ${ isMultiSite.toString() }` );
-		}
-
 		if ( searchReplace?.length ) {
 			const output = ( from, to ) => {
 				const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
@@ -256,46 +309,13 @@ command( {
 		let fileNameToUpload = fileName;
 
 		// SQL file validations
-		const validations = [ staticSqlValidations, siteTypeValidations ];
+		const tableNames = await validationsAndGetTableNames( { skipValidate, appId, envId, fileNameToUpload } );
 
-		if ( skipValidate ) {
-			console.log( 'Skipping SQL file validation.' );
-		} else {
-			try {
-				await fileLineValidations( appId, envId, fileNameToUpload, validations );
-			} catch ( validateErr ) {
-				console.log( '' );
-				return exit.withError( `${ validateErr.message }
-
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
-		'--skip-validate'
-	) } option.
-` );
-			}
-			// this can only be called after static validation of the SQL file
-			const tableNamesInSqlFile = getTableNames();
-
-			// output the table names
-			console.log();
-			console.log( 'Below are a list of Tables that will be imported by this process:' );
-			console.log( columns( tableNamesInSqlFile ) );
-		}
+		// display playbook of what will happen during execution
+		await displayPlaybook( { tableNames, fileName, domain, formattedEnvironment, isMultiSite, app } );
 
 		// PROMPT TO PROCEED WITH THE IMPORT
-		const promptResponse = await prompt(
-			{
-				type: 'input',
-				name: 'confirmedEnvironment',
-				message: `You are about to import the above tables into a ${
-					launched ? 'launched' : 'un-launched'
-				} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
-			}
-		);
-
-		if ( promptResponse.confirmedEnvironment !== unFormattedEnvironment ) {
-			await track( 'import_sql_unexpected_tables' );
-			exit.withError( 'Please review the contents of your SQL dump' );
-		}
+		await promptToContinue( { launched, formattedEnvironment, unFormattedEnvironment, track } );
 
 		/**
 		 * =========== WARNING =============
