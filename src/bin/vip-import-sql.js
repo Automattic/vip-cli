@@ -58,6 +58,18 @@ const appQuery = `
 	}
 `;
 
+const EXECUTE_WP_SITE_LIST = gql`
+	mutation TriggerWPCLICommandMutation( $input: AppEnvironmentTriggerWPCLICommandInput ){
+		triggerWPCLICommandOnAppEnvironment(input: $input ) {
+			command {
+				id
+				guid
+				command
+			}
+		}
+	}
+`;
+
 const START_IMPORT_MUTATION = gql`
 	mutation StartImport($input: AppEnvironmentImportInput) {
 		startImport(input: $input) {
@@ -233,23 +245,75 @@ If you are confident the file does not contain unsupported statements, you can r
 	}
 	return tableNamesInSqlFile;
 };
-
-const displayPlaybook = async ( { tableNames, fileName, domain, formattedEnvironment, isMultiSite, app } ) => {
+const displayPlaybook = async ( {
+	tableNames,
+	searchReplace,
+	fileName,
+	domain,
+	formattedEnvironment,
+	isMultiSite,
+	app,
+	env,
+	track,
+} ) => {
 	console.log();
 	console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
 	console.log( `         to: ${ chalk.cyan( domain ) }` );
 	console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
+
+	if ( searchReplace?.length ) {
+		const output = ( from, to ) => {
+			const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
+			console.log( message );
+		};
+
+		formatSearchReplaceValues( searchReplace, output );
+	}
+
 	if ( isMultiSite ) {
 		// eslint-disable-next-line no-multi-spaces
-		console.log(   `multisite: ${ isMultiSite.toString() }` );
+		console.log( `multisite: ${ isMultiSite.toString() }` );
 	}
+
 	if ( ! tableNames.length ) {
+		console.log();
 		console.log( 'Since validation was skipped, no playbook information could be displayed' );
 	} else {
 		// output the table names
 		console.log();
 		console.log( 'Below are a list of Tables that will be imported by this process:' );
 		console.log( columns( tableNames ) );
+	}
+
+	if ( tableNames.length && isMultiSite ) {
+		// console.log();
+		// console.log( 'The following sites will be affected by the import:' );
+		// get blog_ids from wpcli
+		// const api = await API();
+		// try {
+		// 	const inputs = {
+		// 		input: {
+		// 			id: env.appId,
+		// 			environmentId: env.id,
+		// 			command: 'site list',
+		// 		},
+		// 	};
+		// 	debug( inputs );
+		// 	const wpSiteListResults = await api.mutate( {
+		// 		mutation: EXECUTE_WP_SITE_LIST,
+		// 		variables: inputs,
+		// 	} );
+
+		// 	debug( wpSiteListResults );
+		// } catch ( gqlErr ) {
+		// 	await track( 'import_sql_command_error', {
+		// 		error_type: 'SiteListResults-failed',
+		// 		gql_err: gqlErr,
+		// 	} );
+
+		// 	exit.withError( `wp site list call failed: ${ gqlErr }` );
+		// }
+
 	}
 };
 
@@ -297,22 +361,13 @@ command( {
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
-		if ( searchReplace?.length ) {
-			const output = ( from, to ) => {
-				const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
-				console.log( message );
-			};
-
-			formatSearchReplaceValues( searchReplace, output );
-		}
-
 		let fileNameToUpload = fileName;
 
 		// SQL file validations
 		const tableNames = await validationsAndGetTableNames( { skipValidate, appId, envId, fileNameToUpload } );
 
 		// display playbook of what will happen during execution
-		await displayPlaybook( { tableNames, fileName, domain, formattedEnvironment, isMultiSite, app } );
+		await displayPlaybook( { tableNames, searchReplace, fileName, domain, formattedEnvironment, isMultiSite, app, env, track } );
 
 		// PROMPT TO PROCEED WITH THE IMPORT
 		await promptToContinue( { launched, formattedEnvironment, unFormattedEnvironment, track } );
