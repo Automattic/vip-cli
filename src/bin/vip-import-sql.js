@@ -279,21 +279,22 @@ If you are confident the file does not contain unsupported statements, you can r
 			console.log();
 			console.log( 'Below are a list of Tables that will be imported by this process:' );
 			console.log( columns( tableNamesInSqlFile ) );
-			// tableNamesInSqlFile.map( tableName => console.log( ` - ${ tableName }` ) );
-			const promptResponse = await prompt(
-				{
-					type: 'input',
-					name: 'confirmedEnvironment',
-					message: `You are about to import the above tables into a ${
-						launched ? 'launched' : 'un-launched'
-					} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
-				}
-			);
+		}
 
-			if ( promptResponse.confirmedEnvironment !== unFormattedEnvironment ) {
-				await track( 'import_sql_unexpected_tables' );
-				exit.withError( 'Please review the contents of your SQL dump' );
+		// PROMPT TO PROCEED WITH THE IMPORT
+		const promptResponse = await prompt(
+			{
+				type: 'input',
+				name: 'confirmedEnvironment',
+				message: `You are about to import the above tables into a ${
+					launched ? 'launched' : 'un-launched'
+				} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
 			}
+		);
+
+		if ( promptResponse.confirmedEnvironment !== unFormattedEnvironment ) {
+			await track( 'import_sql_unexpected_tables' );
+			exit.withError( 'Please review the contents of your SQL dump' );
 		}
 
 		/**
