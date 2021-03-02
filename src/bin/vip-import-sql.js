@@ -240,7 +240,8 @@ command( {
 		console.log( `         to: ${ chalk.cyan( domain ) }` );
 		console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
 		if ( isMultiSite ) {
-			console.log( `multisite: ${ isMultiSite.toString() }` );
+			// eslint-disable-next-line no-multi-spaces
+			console.log(   `multisite: ${ isMultiSite.toString() }` );
 		}
 
 		if ( searchReplace?.length ) {
@@ -279,17 +280,17 @@ If you are confident the file does not contain unsupported statements, you can r
 			console.log( 'Below are a list of Tables that will be imported by this process:' );
 			console.log( columns( tableNamesInSqlFile ) );
 			// tableNamesInSqlFile.map( tableName => console.log( ` - ${ tableName }` ) );
-			const response = await prompt(
+			const promptResponse = await prompt(
 				{
 					type: 'input',
 					name: 'confirmedEnvironment',
 					message: `You are about to import the above tables into a ${
-						launched ? 'launched' : 'unlaunched'
+						launched ? 'launched' : 'un-launched'
 					} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
 				}
 			);
 
-			if ( response.confirmedEnvironment !== unFormattedEnvironment ) {
+			if ( promptResponse.confirmedEnvironment !== unFormattedEnvironment ) {
 				await track( 'import_sql_unexpected_tables' );
 				exit.withError( 'Please review the contents of your SQL dump' );
 			}
