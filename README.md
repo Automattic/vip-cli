@@ -25,7 +25,7 @@ By default, we record information about the usage of this tool using an in-house
 
 ### 2.0.4
 - Bump socket.io-client from 2.3.0 to 2.4.0 (Fixes WP-CLI in node 15+) #679
-- Additiona SQL import file static validations #669
+- Additional SQL import file static validations #669
 
 ### 2.0.3
 - Improved SQL import validation around the use of TRIGGER
