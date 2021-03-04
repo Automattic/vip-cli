@@ -20,23 +20,23 @@ describe( 'token tests (secure)', () => {
 		const Secure = require( 'lib/keychain/secure' );
 		keychain = new Secure();
 	} catch ( e ) {
-		test.skip( 'should correctly set token (keytar does not exist)', () => {} );
-		test.skip( 'should correctly delete token (keytar does not exist)', () => {} );
+		it.skip( 'should correctly set token (keytar does not exist)', () => {} );
+		it.skip( 'should correctly delete token (keytar does not exist)', () => {} );
 		return;
 	}
 
-	test( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( () => {
+	it( 'should correctly set token', () => {
+		return keychain.setPassword( account, password ).then( async () => {
 			const p = keychain.getPassword( account );
-			expect( p ).resolves.toBe( password );
+			await expect( p ).resolves.toBe( password );
 		} );
 	} );
 
-	test( 'should correctly delete token', () => {
+	it( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( () => {
-			return keychain.deletePassword( account ).then( () => {
+			return keychain.deletePassword( account ).then( async () => {
 				const p = keychain.getPassword( account );
-				expect( p ).resolves.toBe( null );
+				await expect( p ).resolves.toBeNull();
 			} );
 		} );
 	} );
@@ -45,43 +45,43 @@ describe( 'token tests (secure)', () => {
 describe( 'token tests (insecure)', () => {
 	keychain = new Insecure( account );
 
-	test( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( () => {
+	it( 'should correctly set token', () => {
+		return keychain.setPassword( account, password ).then( async () => {
 			const p = keychain.getPassword( account );
-			expect( p ).resolves.toBe( password );
+			await expect( p ).resolves.toBe( password );
 		} );
 	} );
 
-	test( 'should correctly set multiple tokens', () => {
+	it( 'should correctly set multiple tokens', () => {
 		return keychain.setPassword( 'first', 'password1' ).then( () => {
-			return keychain.setPassword( 'second', 'password2' ).then( () => {
+			return keychain.setPassword( 'second', 'password2' ).then( async () => {
 				const p = keychain.getPassword( 'first' );
-				expect( p ).resolves.toBe( 'password1' );
+				await expect( p ).resolves.toBe( 'password1' );
 
 				const p2 = keychain.getPassword( 'second' );
-				expect( p2 ).resolves.toBe( 'password2' );
+				await expect( p2 ).resolves.toBe( 'password2' );
 			} );
 		} );
 	} );
 
-	test( 'should correctly delete token', () => {
+	it( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( () => {
-			return keychain.deletePassword( account ).then( () => {
+			return keychain.deletePassword( account ).then( async () => {
 				const p = keychain.getPassword( account );
-				expect( p ).resolves.toBe( null );
+				await expect( p ).resolves.toBeNull();
 			} );
 		} );
 	} );
 
-	test( 'should correctly delete a single token', () => {
+	it( 'should correctly delete a single token', () => {
 		return keychain.setPassword( 'first', 'password1' ).then( () => {
 			return keychain.setPassword( 'second', 'password2' ).then( () => {
-				return keychain.deletePassword( 'first' ).then( () => {
+				return keychain.deletePassword( 'first' ).then( async () => {
 					const p = keychain.getPassword( 'first' );
-					expect( p ).resolves.toBe( null );
+					await expect( p ).resolves.toBeNull();
 
 					const p2 = keychain.getPassword( 'second' );
-					expect( p2 ).resolves.toBe( 'password2' );
+					await expect( p2 ).resolves.toBe( 'password2' );
 				} );
 			} );
 		} );
@@ -105,18 +105,18 @@ describe( 'token tests (browser)', () => {
 
 	keychain = new Browser();
 
-	test( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( () => {
+	it( 'should correctly set token', () => {
+		return keychain.setPassword( account, password ).then( async () => {
 			const p = keychain.getPassword( account );
-			expect( p ).resolves.toBe( password );
+			await expect( p ).resolves.toBe( password );
 		} );
 	} );
 
-	test( 'should correctly delete token', () => {
+	it( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( () => {
-			return keychain.deletePassword( account ).then( () => {
+			return keychain.deletePassword( account ).then( async () => {
 				const p = keychain.getPassword( account );
-				expect( p ).resolves.toBe( null );
+				await expect( p ).resolves.toBeNull();
 			} );
 		} );
 	} );
