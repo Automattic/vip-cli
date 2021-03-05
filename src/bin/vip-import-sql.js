@@ -38,6 +38,11 @@ import { isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import { exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
 
+export type WPSiteListType = {
+	id: string,
+	homeUrl: string,
+};
+
 const appQuery = `
 	id,
 	name,
@@ -59,7 +64,7 @@ const appQuery = `
 `;
 
 const GET_WP_SITE_LIST = gql`
-	query getWpSites ($appId: Int){
+	query getWpSites($appId: Int) {
 		app(id: $appId) {
 			environments {
 				wpSites {
@@ -226,7 +231,12 @@ const promptToContinue = async ( {
 	}
 };
 
-const validationsAndGetTableNames = async ( { skipValidate, appId, envId, fileNameToUpload } ): Promise<array> => {
+const validationsAndGetTableNames = async ( {
+	skipValidate,
+	appId,
+	envId,
+	fileNameToUpload,
+} ): Promise<Array<string>> => {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	let tableNamesInSqlFile = [];
 	if ( skipValidate ) {
@@ -236,7 +246,7 @@ const validationsAndGetTableNames = async ( { skipValidate, appId, envId, fileNa
 			await fileLineValidations( appId, envId, fileNameToUpload, validations );
 		} catch ( validateErr ) {
 			console.log( '' );
-			return exit.withError( `${ validateErr.message }
+			exit.withError( `${ validateErr.message }
 
 If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
 		'--skip-validate'
@@ -249,7 +259,7 @@ If you are confident the file does not contain unsupported statements, you can r
 	return tableNamesInSqlFile;
 };
 
-const getMultiSiteList = async ( { env, track } ): Promise<array> => {
+const getMultiSiteList = async ( { env, track } ): Promise<Array<WPSiteListType>> => {
 	let wpSiteListResults;
 	// get blog_ids from wpcli
 	const api = await API();
@@ -280,6 +290,7 @@ const getMultiSiteList = async ( { env, track } ): Promise<array> => {
 };
 
 const displayPlaybook = async ( {
+	launched,
 	tableNames,
 	searchReplace,
 	fileName,
@@ -341,10 +352,21 @@ const displayPlaybook = async ( {
 				};
 			} );
 
+			if ( launched ) {
+				console.log(
+					chalk.yellowBright(
+						'You are updating tables in a launched multi site installation. Sites in the same network may have their performance impacted by this operation.'
+					)
+				);
+			}
 			console.log( chalk.yellow( 'The following sites will be affected by the import:' ) );
 			multiSiteBreakdown.map( siteObject => {
 				console.log();
-				console.log( chalk.blueBright( `Blog with ID ${ siteObject.id } and URL ${ siteObject.url } will import the following tables:` ) );
+				console.log(
+					chalk.blueBright(
+						`Blog with ID ${ siteObject.id } and URL ${ siteObject.url } will import the following tables:`
+					)
+				);
 				console.log( columns( siteObject.tables ) );
 			} );
 		}
@@ -398,10 +420,26 @@ command( {
 		let fileNameToUpload = fileName;
 
 		// SQL file validations
-		const tableNames = await validationsAndGetTableNames( { skipValidate, appId, envId, fileNameToUpload } );
+		const tableNames = await validationsAndGetTableNames( {
+			skipValidate,
+			appId,
+			envId,
+			fileNameToUpload,
+		} );
 
 		// display playbook of what will happen during execution
-		await displayPlaybook( { tableNames, searchReplace, fileName, domain, formattedEnvironment, isMultiSite, app, env, track } );
+		await displayPlaybook( {
+			launched,
+			tableNames,
+			searchReplace,
+			fileName,
+			domain,
+			formattedEnvironment,
+			isMultiSite,
+			app,
+			env,
+			track,
+		} );
 
 		// PROMPT TO PROCEED WITH THE IMPORT
 		await promptToContinue( { launched, formattedEnvironment, unFormattedEnvironment, track } );
