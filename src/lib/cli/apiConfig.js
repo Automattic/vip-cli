@@ -57,5 +57,5 @@ export async function checkFeatureEnabled(
 }
 
 export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {
-	await checkFeatureEnabled( featureName, true );
+	return checkFeatureEnabled( featureName, true );
 }

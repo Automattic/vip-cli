@@ -58,13 +58,16 @@ const appQuery = `
 	}
 `;
 
-const EXECUTE_WP_SITE_LIST = gql`
-	mutation TriggerWPCLICommandMutation( $input: AppEnvironmentTriggerWPCLICommandInput ){
-		triggerWPCLICommandOnAppEnvironment(input: $input ) {
-			command {
-				id
-				guid
-				command
+const GET_WP_SITE_LIST = gql`
+	query getWpSites ($appId: Int){
+		app(id: $appId) {
+			environments {
+				wpSites {
+					nodes {
+						homeUrl
+						id
+					}
+				}
 			}
 		}
 	}
@@ -245,6 +248,37 @@ If you are confident the file does not contain unsupported statements, you can r
 	}
 	return tableNamesInSqlFile;
 };
+
+const getMultiSiteList = async ( { env, track } ): Promise<array> => {
+	let wpSiteListResults;
+	// get blog_ids from wpcli
+	const api = await API();
+	try {
+		const inputs = {
+			appId: env.appId,
+		};
+		debug( inputs );
+		wpSiteListResults = await api.query( {
+			query: GET_WP_SITE_LIST,
+			variables: inputs,
+		} );
+	} catch ( gqlErr ) {
+		await track( 'import_sql_command_error', {
+			error_type: 'SiteListResults-failed',
+			gql_err: gqlErr,
+		} );
+
+		exit.withError( `wp site list call failed: ${ gqlErr }` );
+	}
+
+	let siteArray = [];
+	if ( Array.isArray( wpSiteListResults?.data?.app?.environments[ 0 ]?.wpSites?.nodes ) ) {
+		siteArray = wpSiteListResults.data?.app.environments[ 0 ].wpSites.nodes;
+	}
+	debug( 'multiSiteArray', siteArray );
+	return siteArray;
+};
+
 const displayPlaybook = async ( {
 	tableNames,
 	searchReplace,
@@ -270,9 +304,11 @@ const displayPlaybook = async ( {
 		formatSearchReplaceValues( searchReplace, output );
 	}
 
+	let siteArray = [];
 	if ( isMultiSite ) {
 		// eslint-disable-next-line no-multi-spaces
 		console.log( `multisite: ${ isMultiSite.toString() }` );
+		siteArray = await getMultiSiteList( { env, track } );
 	}
 
 	if ( ! tableNames.length ) {
@@ -281,39 +317,37 @@ const displayPlaybook = async ( {
 	} else {
 		// output the table names
 		console.log();
-		console.log( 'Below are a list of Tables that will be imported by this process:' );
-		console.log( columns( tableNames ) );
-	}
+		if ( ! isMultiSite ) {
+			console.log( 'Below are a list of Tables that will be imported by this process:' );
+			console.log( columns( tableNames ) );
+		} else {
+			// we have siteArray from the API, use it and the table names together
+			if ( ! siteArray.length ) {
+				throw new Error( 'There were no sites in your multisite installation' );
+			}
 
-	if ( tableNames.length && isMultiSite ) {
-		// console.log();
-		// console.log( 'The following sites will be affected by the import:' );
-		// get blog_ids from wpcli
-		// const api = await API();
-		// try {
-		// 	const inputs = {
-		// 		input: {
-		// 			id: env.appId,
-		// 			environmentId: env.id,
-		// 			command: 'site list',
-		// 		},
-		// 	};
-		// 	debug( inputs );
-		// 	const wpSiteListResults = await api.mutate( {
-		// 		mutation: EXECUTE_WP_SITE_LIST,
-		// 		variables: inputs,
-		// 	} );
+			const multiSiteBreakdown = siteArray.map( wpSite => {
+				let siteRegex;
+				if ( wpSite.id === 1 ) {
+					siteRegex = /wp_[a-z]+/i;
+				} else {
+					siteRegex = new RegExp( `wp_${ wpSite.id }_[a-z]+`, 'i' );
+				}
+				const tableNamesInGroup = tableNames.filter( name => siteRegex.test( name ) );
+				return {
+					id: wpSite.id,
+					url: wpSite.homeUrl,
+					tables: tableNamesInGroup,
+				};
+			} );
 
-		// 	debug( wpSiteListResults );
-		// } catch ( gqlErr ) {
-		// 	await track( 'import_sql_command_error', {
-		// 		error_type: 'SiteListResults-failed',
-		// 		gql_err: gqlErr,
-		// 	} );
-
-		// 	exit.withError( `wp site list call failed: ${ gqlErr }` );
-		// }
-
+			console.log( chalk.yellow( 'The following sites will be affected by the import:' ) );
+			multiSiteBreakdown.map( siteObject => {
+				console.log();
+				console.log( chalk.blueBright( `Blog with ID ${ siteObject.id } and URL ${ siteObject.url } will import the following tables:` ) );
+				console.log( columns( siteObject.tables ) );
+			} );
+		}
 	}
 };
 
