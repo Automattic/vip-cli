@@ -73,7 +73,5 @@ export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Pro
 		}
 	}
 
-	// we should exit with an error here instead of returning false
-	exit.withError( 'We were unable to determine if your application was a multisite.' );
 	return false;
 }

@@ -489,9 +489,6 @@ Processing the SQL import for your environment...
 				environmentId: env.id,
 				basename: basename,
 				md5: md5,
-				options: {
-					isMultiSite,
-				},
 			};
 
 			debug( { basename, md5, result } );
