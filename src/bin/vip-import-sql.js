@@ -219,17 +219,20 @@ const promptToContinue = async ( {
 	track,
 } ): Promise<void> => {
 	console.log();
+	const promptToMatch = unFormattedEnvironment.toUpperCase();
 	const promptResponse = await prompt( {
 		type: 'input',
 		name: 'confirmedEnvironment',
 		message: `You are about to import the above tables into a ${
 			launched ? 'launched' : 'un-launched'
-		} ${ formattedEnvironment } site. Type '${ formattedEnvironment }' to continue`,
+		} ${ formattedEnvironment } site.\nType '${ chalk.blueBright(
+			promptToMatch
+		) }' (without the quotes) to continue:\n`,
 	} );
 
-	if ( promptResponse.confirmedEnvironment !== unFormattedEnvironment ) {
+	if ( promptResponse.confirmedEnvironment !== promptToMatch ) {
 		await track( 'import_sql_unexpected_tables' );
-		exit.withError( 'Please review the contents of your SQL dump' );
+		exit.withError( 'The input did not match the expected environment label. Import aborted.' );
 	}
 };
 
