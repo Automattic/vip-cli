@@ -215,22 +215,22 @@ const examples = [
 const promptToContinue = async ( {
 	launched,
 	formattedEnvironment,
-	unFormattedEnvironment,
 	track,
+	domain,
 } ): Promise<void> => {
 	console.log();
-	const promptToMatch = unFormattedEnvironment.toUpperCase();
+	const promptToMatch = domain.toUpperCase();
 	const promptResponse = await prompt( {
 		type: 'input',
-		name: 'confirmedEnvironment',
+		name: 'confirmedDomain',
 		message: `You are about to import the above tables into a ${
 			launched ? 'launched' : 'un-launched'
-		} ${ formattedEnvironment } site.\nType '${ chalk.blueBright(
+		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
 			promptToMatch
 		) }' (without the quotes) to continue:\n`,
 	} );
 
-	if ( promptResponse.confirmedEnvironment !== promptToMatch ) {
+	if ( promptResponse.confirmedDomain !== promptToMatch ) {
 		await track( 'import_sql_unexpected_tables' );
 		exit.withError( 'The input did not match the expected environment label. Import aborted.' );
 	}
@@ -454,7 +454,12 @@ command( {
 		} );
 
 		// PROMPT TO PROCEED WITH THE IMPORT
-		await promptToContinue( { launched, formattedEnvironment, unFormattedEnvironment, track } );
+		await promptToContinue( {
+			launched,
+			formattedEnvironment,
+			track,
+			domain,
+		} );
 
 		/**
 		 * =========== WARNING =============
