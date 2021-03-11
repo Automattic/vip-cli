@@ -6,14 +6,14 @@
 /**
  * External dependencies
  */
-import gql from 'graphql-tag';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import { trackEvent } from 'lib/tracker';
-import API from 'lib/api';
 import * as exit from './exit';
+import * as featureFlags from 'lib/api/feature-flags';
 
 export async function checkFeatureEnabled(
 	featureName: string,
@@ -23,20 +23,14 @@ export async function checkFeatureEnabled(
 	// for now, let's see if the user of the CLI is VIP
 	await trackEvent( 'checkFeatureEnabled_start', { featureName, exitOnFalse } );
 
-	const api = await API();
-	const isVIP = await new Promise( async resolve => {
+	const isVIP = await new Promise( async ( resolve, reject ) => {
 		try {
-			const res = await api.query( {
-				// $FlowFixMe: gql template is not supported by flow
-				query: gql`
-					query isVIP {
-						me {
-							isVIP
-						}
-					}
-				`,
-			} );
-			resolve( res.data.me.isVIP );
+			const res = await featureFlags.get();
+			if ( res?.data?.me?.isVIP !== undefined ) {
+				resolve( res.data.me.isVIP );
+			} else {
+				resolve( false );
+			}
 		} catch ( err ) {
 			const message = err.toString();
 			await trackEvent( 'checkFeatureEnabled_fetch_error', {
@@ -45,7 +39,7 @@ export async function checkFeatureEnabled(
 				error: message,
 			} );
 
-			exit.withError( 'Failed to determine if feature is enabled' );
+			exit.withError( 'Failed to determine if feature is enabled' + message );
 		}
 	} );
 

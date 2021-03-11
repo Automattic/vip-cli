@@ -23,6 +23,8 @@ import {
 	isSupportedApp,
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 } from 'lib/site-import/db-file-import';
+// eslint-disable-next-line no-duplicate-imports
+import type { AppForImport, EnvForImport } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
@@ -100,13 +102,13 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
-const gates = async ( app, env, fileName ) => {
+export async function gates( app: AppForImport, env: EnvForImport, fileName: string ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
 	// Block multiSite imports unless feature is enabled
 	if ( await isMultiSiteInSiteMeta( appId, envId ) ) {
-		// currently checks isVIP, but featureName should match feature in public API
+		// currently checks isVIP
 		exitWhenFeatureDisabled( 'subsite-sql-imports' );
 	}
 
@@ -172,7 +174,7 @@ const gates = async ( app, env, fileName ) => {
 		await track( 'import_sql_command_error', { error_type: 'existing-dbop' } );
 		exit.withError( 'There is already a database operation in progress. Please try again later.' );
 	}
-};
+}
 
 // Command examples for the `vip import sql` help prompt
 const examples = [
@@ -231,12 +233,19 @@ const promptToContinue = async ( {
 	}
 };
 
-const validationsAndGetTableNames = async ( {
+export type validationsAndGetTableNamesInputType = {
+	skipValidate: boolean,
+	appId: number,
+	envId: number,
+	fileNameToUpload: string,
+};
+
+export async function validationsAndGetTableNames( {
 	skipValidate,
 	appId,
 	envId,
 	fileNameToUpload,
-} ): Promise<Array<string>> => {
+}: validationsAndGetTableNamesInputType ): Promise<Array<string>> {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	let tableNamesInSqlFile = [];
 	if ( skipValidate ) {
@@ -257,7 +266,7 @@ If you are confident the file does not contain unsupported statements, you can r
 		tableNamesInSqlFile = getTableNames();
 	}
 	return tableNamesInSqlFile;
-};
+}
 
 const getMultiSiteList = async ( { env, track } ): Promise<Array<WPSiteListType>> => {
 	let wpSiteListResults;
