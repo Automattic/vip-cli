@@ -330,7 +330,7 @@ const displayPlaybook = async ( {
 	let siteArray = [];
 	if ( isMultiSite ) {
 		// eslint-disable-next-line no-multi-spaces
-		console.log( `multisite: ${ isMultiSite.toString() }` );
+		console.log( `  multisite: ${ isMultiSite.toString() }` );
 		siteArray = await getMultiSiteList( { env, track } );
 	}
 
