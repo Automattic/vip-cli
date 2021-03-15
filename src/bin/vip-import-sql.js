@@ -334,7 +334,10 @@ If you are confident the file does not contain unsupported statements, you can r
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
 		} catch ( uploadError ) {
-			await track( 'import_sql_command_error', { error_type: 'upload_failed', uploadError } );
+			await track( 'import_sql_command_error', {
+				error_type: 'upload_failed',
+				upload_error: uploadError,
+			} );
 
 			progressTracker.stepFailed( 'upload' );
 			return failWithError( uploadError );
