@@ -38,7 +38,8 @@ const rootCmd = async function() {
 	debug( 'Argv:', process.argv );
 
 	if ( isLogoutCommand || isHelpCommand || ( token && token.valid() ) ) {
-		command()
+		const cmd = command();
+		cmd
 			.command( 'logout', 'Logout from your current session', async () => {
 				await Token.purge();
 				await trackEvent( 'logout_command_execute' );
@@ -48,8 +49,12 @@ const rootCmd = async function() {
 			.command( 'import', 'Check the validity of an import source' )
 			.command( 'search-replace', 'Perform Search and Replace tasks on files' )
 			.command( 'sync', 'Sync production to a development environment' )
-			.command( 'wp', 'Run WP CLI commands against an environment' )
-			.argv( process.argv );
+			.command( 'wp', 'Run WP CLI commands against an environment' );
+
+		// TODO hide behind flag
+		cmd.command( 'dev-environment', 'Use local dev-environment' );
+
+		cmd.argv( process.argv );
 	} else {
 		// Bypass helper function
 		args.parse( process.argv );
