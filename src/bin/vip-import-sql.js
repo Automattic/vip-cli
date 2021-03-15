@@ -16,11 +16,7 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import {
-	currentUserCanImportForApp,
-	isSupportedApp,
-	SQL_IMPORT_FILE_SIZE_LIMIT,
-} from 'lib/site-import/db-file-import';
+import { currentUserCanImportForApp, isSupportedApp } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
@@ -111,14 +107,6 @@ const gates = async ( app, env, fileName ) => {
 	if ( ! fileSize ) {
 		await track( 'import_sql_command_error', { error_type: 'sqlfile-empty' } );
 		exit.withError( `File '${ fileName }' is empty.` );
-	}
-
-	if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
-		await track( 'import_sql_command_error', { error_type: 'sqlfile-toobig' } );
-		exit.withError(
-			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
-				'Please split it into multiple files or contact support for assistance.'
-		);
 	}
 
 	if ( ! env?.importStatus ) {
