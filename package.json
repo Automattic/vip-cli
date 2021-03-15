@@ -14,7 +14,9 @@
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
-    "vip-wp": "dist/bin/vip-wp.js"
+    "vip-wp": "dist/bin/vip-wp.js",
+    "vip-dev-environment": "dist/bin/vip-dev-environment.js",
+    "vip-dev-environment-start": "dist/bin/vip-dev-environment-start.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
