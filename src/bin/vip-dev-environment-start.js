@@ -14,9 +14,9 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+import { defaultEnvironmentSlug, startEnvironment } from 'lib/dev-environment';
 
-
-const debug = debugLib( '@automattic/vip:bin:vip-dev-environment' );
+const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 // Command examples
 const examples = [
@@ -28,10 +28,19 @@ const examples = [
 ];
 
 command()
-	.option( 'name', 'Custom name of the dev environment' )
+	.option( 'slug', `Custom name of the dev environment (default: "${ defaultEnvironmentSlug }")` )
+	.option( 'title', 'Title for the WordPress site (default: "VIP Dev")' )
+	.option( 'multisite', 'Enable multisite install' )
+	.option( 'php', 'Use a specific PHP version' )
+	.option( 'wordpress', 'Use a specific WordPress version or local directory (default: last stable)' )
+	.option( 'mu-plugins', 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )
+	.option( 'jetpack', 'Use a specific Jetpack from a local directory (default: "mu": use the version in mu-plugins)' )
+	.option( 'client-code', 'Use the client code from github or a local directory (default: use the VIP skeleton)' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const { name } = opt;
+		const slug = opt.slug || defaultEnvironmentSlug;
 
 		debug( 'Args: ', arg, 'Options: ', opt );
+
+		await startEnvironment( slug, opt );
 	} );
