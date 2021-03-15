@@ -267,7 +267,9 @@ Processing the SQL import for your environment...
 
 			if ( typeof outputFileName !== 'string' ) {
 				progressTracker.stepFailed( 'replace' );
-				return failWithError( 'Unable to determine location of the intermediate search & replace file.' );
+				return failWithError(
+					'Unable to determine location of the intermediate search & replace file.'
+				);
 			}
 
 			fileNameToUpload = outputFileName;
@@ -277,10 +279,7 @@ Processing the SQL import for your environment...
 		}
 
 		// SQL file validations
-		const validations = [
-			staticSqlValidations,
-			siteTypeValidations,
-		];
+		const validations = [ staticSqlValidations, siteTypeValidations ];
 
 		if ( skipValidate ) {
 			progressTracker.stepSkipped( 'validate' );
@@ -294,7 +293,9 @@ Processing the SQL import for your environment...
 				console.log( '' );
 				return failWithError( `${ validateErr.message }
 
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+		'--skip-validate'
+	) } option.
 ` );
 			}
 		}
