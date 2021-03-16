@@ -125,10 +125,11 @@ const gates = async ( app, env, fileName ) => {
 			launched: !! env?.launched,
 		} );
 		exit.withError(
-			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).\n` +
-				env.launched
-				? 'Note: This limit is lower for launched environments to maintain site stability.\n'
-				: '' + 'Please split it into multiple files or contact support for assistance.'
+			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).` +
+				( env.launched
+					? ' Note: This limit is lower for launched environments to maintain site stability.'
+					: '' ) +
+				'\n\nPlease split it into multiple files or contact support for assistance.'
 		);
 	}
 
