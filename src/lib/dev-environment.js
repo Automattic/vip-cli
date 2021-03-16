@@ -18,7 +18,7 @@ import cp from 'child_process';
  * Internal dependencies
  */
 
-const debug = debugLib('@automattic/vip:bin:dev-environment');
+const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const containerImages = {
 	wordpress: {
@@ -78,7 +78,7 @@ export async function startEnvironment( slug, options ) {
 			throw new Error(
 				`The environment ${ slug } already exists and we can not change its configuration` +
 				` ( configuration parameters - ${ parameters.join( ', ' ) } found ).` +
-				' Destroy the environment first if you would like to recreate it.')
+				' Destroy the environment first if you would like to recreate it.' );
 		}
 	} else {
 		const instanceData = generateInstanceData( slug, options );
