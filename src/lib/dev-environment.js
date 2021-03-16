@@ -10,6 +10,9 @@ import debugLib from 'debug';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import fs from 'fs';
+import ejs from 'ejs';
+import path from 'path';
+import cp from 'child_process';
 
 /**
  * Internal dependencies
@@ -56,55 +59,51 @@ export const defaults = {
 	};
 } );
 
+const landoFileTemplatePath = 'assets/dev-environment.lando.template.yml.ejs';
+const landoFileName = '.lando.yml';
+
 export async function startEnvironment( slug, options ) {
-	debug('Will create environment', slug, 'with options: ', options);
+	debug( 'Will start an environment', slug, 'with options: ', options );
 
 	const instancePath = getEnvironmentPath( slug );
 
 	const alreadyExists = fs.existsSync( instancePath );
-	// if ( fs.existsSync( instancePath ) ) {
-	// 	return console.error( 'Instance ' + name + ' already exists' );
-	// }
-	// fs.mkdirSync( instancePath );
 
 	if ( alreadyExists ) {
 		const parameters = Object
 			.keys( options || {} )
 			.filter( key => key !== 'slug' );
-		if ( parameters ) {
+
+		if ( parameters && parameters.length ) {
 			throw new Error(
-				`The environment ${ slug } already exists and we can not change it's configuration` +
-				`( configuration parameters - ${ parameters.join( ', ' ) } found ).` +
+				`The environment ${ slug } already exists and we can not change its configuration` +
+				` ( configuration parameters - ${ parameters.join( ', ' ) } found ).` +
 				' Destroy the environment first if you would like to recreate it.')
 		}
 	} else {
 		const instanceData = generateInstanceData( slug, options );
+
+		debug( 'Instance data to create a new environment:', instanceData );
+
+		await prepareLandoEnv( instanceData, instancePath );
 	}
 
-	// const instanceData = {
-	// 	siteSlug: slug,
-	// 	wpTitle: options.title || 'VIP Dev',
-	// 	multisite: options.multisite || false,
-	// 	wordpress: {},
-	// 	muPlugins: {},
-	// 	jetpack: {},
-	// 	clientCode: {},
-	// };
+	landoStart( instancePath );
+}
 
-	// updateSiteDataWithOptions( instanceData, options );
+function landoStart( instancePath ) {
+	cp.execSync( 'lando start', { cwd: instancePath, stdio: 'inherit' } );
+}
 
-	// await prepareLandoEnv( instanceData, instancePath );
+async function prepareLandoEnv( instanceData, instancePath ) {
+	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 
-	// console.log( instanceData );
-	// fs.writeFileSync( instancePath + '/instanceData.json', JSON.stringify( instanceData ) );
+	const landoFileTargetPath = path.join( instancePath, landoFileName );
 
-	// if ( options.start ) {
-	// 	landoStart( instancePath );
-	// 	console.log( 'Lando environment created on directory "' + instancePath + '" and started.' );
-	// } else {
-	// 	console.log( 'Lando environment created on directory "' + instancePath + '".' );
-	// 	console.log( 'You can cd into that directory and run "lando start"' );
-	// }
+	fs.mkdirSync( instancePath, { recursive: true } );
+	fs.writeFileSync( landoFileTargetPath, landoFile );
+
+	debug( `Lando file created in ${ landoFileTargetPath }` );
 }
 
 export function generateInstanceData( slug, options ) {
@@ -154,5 +153,5 @@ export function getEnvironmentPath( name ) {
 
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
-	return `${ mainEnvironmentPath }/vip/dev-environment/${ name }`;
+	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
 }

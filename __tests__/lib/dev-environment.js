@@ -37,8 +37,8 @@ describe( 'lib/dev-environment', () => {
 
 			await expect( promise ).rejects.toEqual(
 				new Error(
-					`The environment ${ slug } already exists and we can not change it's configuration` +
-					`( configuration parameters - ${ parameters } found ).` +
+					`The environment ${ slug } already exists and we can not change its configuration` +
+					` ( configuration parameters - ${ parameters } found ).` +
 					' Destroy the environment first if you would like to recreate it.' )
 			);
 		} );

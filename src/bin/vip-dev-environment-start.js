@@ -9,6 +9,7 @@
  * External dependencies
  */
 import debugLib from 'debug';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -42,5 +43,9 @@ command()
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
-		await startEnvironment( slug, opt );
+		try {
+			await startEnvironment( slug, opt );
+		} catch ( e ) {
+			console.log( chalk.red( 'Error:' ), e.message );
+		}
 	} );
