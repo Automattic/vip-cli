@@ -22,10 +22,6 @@ import debugLib from 'debug';
  */
 import API from 'lib/api';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
-import {
-	SQL_IMPORT_FILE_SIZE_LIMIT,
-	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
-} from 'lib/site-import/db-file-import';
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -175,17 +171,6 @@ export async function uploadImportSqlFileToS3( {
 		) }%)`;
 
 		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
-	}
-
-	const maxFileSize = env.launched
-		? SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED
-		: SQL_IMPORT_FILE_SIZE_LIMIT;
-
-	if ( fileMeta.fileSize > maxFileSize ) {
-		throw `The sql import file size (${ fileMeta.fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).\n` +
-			env.launched
-			? 'Note: This limit is lower for launched environments to maintain site stability.\n'
-			: '' + 'Please split it into multiple files or contact support for assistance.';
 	}
 
 	const result =
