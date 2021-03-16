@@ -20,6 +20,7 @@ import {
 	currentUserCanImportForApp,
 	isSupportedApp,
 	SQL_IMPORT_FILE_SIZE_LIMIT,
+	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
 } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
@@ -113,11 +114,22 @@ const gates = async ( app, env, fileName ) => {
 		exit.withError( `File '${ fileName }' is empty.` );
 	}
 
-	if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
-		await track( 'import_sql_command_error', { error_type: 'sqlfile-toobig' } );
+	const maxFileSize = env?.launched
+		? SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED
+		: SQL_IMPORT_FILE_SIZE_LIMIT;
+
+	if ( fileSize > maxFileSize ) {
+		await track( 'import_sql_command_error', {
+			error_type: 'sqlfile-toobig',
+			file_size: fileSize,
+			launched: !! env?.launched,
+		} );
 		exit.withError(
-			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
-				'Please split it into multiple files or contact support for assistance.'
+			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).` +
+				( env.launched
+					? ' Note: This limit is lower for launched environments to maintain site stability.'
+					: '' ) +
+				'\n\nPlease split it into multiple files or contact support for assistance.'
 		);
 	}
 
@@ -279,7 +291,9 @@ Processing the SQL import for your environment...
 
 			if ( typeof outputFileName !== 'string' ) {
 				progressTracker.stepFailed( 'replace' );
-				return failWithError( 'Unable to determine location of the intermediate search & replace file.' );
+				return failWithError(
+					'Unable to determine location of the intermediate search & replace file.'
+				);
 			}
 
 			fileNameToUpload = outputFileName;
@@ -289,10 +303,7 @@ Processing the SQL import for your environment...
 		}
 
 		// SQL file validations
-		const validations = [
-			staticSqlValidations,
-			siteTypeValidations,
-		];
+		const validations = [ staticSqlValidations, siteTypeValidations ];
 
 		if ( skipValidate ) {
 			progressTracker.stepSkipped( 'validate' );
@@ -306,7 +317,9 @@ Processing the SQL import for your environment...
 				console.log( '' );
 				return failWithError( `${ validateErr.message }
 
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+		'--skip-validate'
+	) } option.
 ` );
 			}
 		}
@@ -345,7 +358,10 @@ If you are confident the file does not contain unsupported statements, you can r
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
 		} catch ( uploadError ) {
-			await track( 'import_sql_command_error', { error_type: 'upload_failed', uploadError } );
+			await track( 'import_sql_command_error', {
+				error_type: 'upload_failed',
+				upload_error: uploadError,
+			} );
 
 			progressTracker.stepFailed( 'upload' );
 			return failWithError( uploadError );
