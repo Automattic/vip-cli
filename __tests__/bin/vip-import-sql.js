@@ -1,15 +1,11 @@
 /**
- * @format
- */
-
-/**
  * External dependencies
  */
 
 /**
  * Internal dependencies
  */
-import { validationsAndGetTableNames, gates } from 'bin/vip-import-sql';
+import { validateAndGetTableNames, gates } from 'bin/vip-import-sql';
 import * as isMultiSite from 'lib/validations/is-multi-site';
 import * as featureFlags from 'lib/api/feature-flags';
 import * as exit from 'lib/cli/exit';
@@ -22,7 +18,7 @@ const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 const exitWithErrorSpy = jest.spyOn( exit, 'withError' );
 
 describe( 'vip-import-sql', () => {
-	describe( 'validationsAndGetTableNames', () => {
+	describe( 'validateAndGetTableNames', () => {
 		it( 'returns an empty array when skipValidate is true', async () => {
 			const params = {
 				skipValidate: true,
@@ -30,7 +26,7 @@ describe( 'vip-import-sql', () => {
 				envId: 1,
 				fileNameToUpload: '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql',
 			};
-			const result = await validationsAndGetTableNames( params );
+			const result = await validateAndGetTableNames( params );
 			expect( result ).toEqual( [] );
 		} );
 		it( 'returns an array of table names that are contained within the input file', async () => {
@@ -40,7 +36,7 @@ describe( 'vip-import-sql', () => {
 				envId: 1,
 				fileNameToUpload: '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql',
 			};
-			const result = await validationsAndGetTableNames( params );
+			const result = await validateAndGetTableNames( params );
 			const expected = [
 				'wp_commentmeta',
 				'wp_comments',

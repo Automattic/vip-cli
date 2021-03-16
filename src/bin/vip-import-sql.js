@@ -235,19 +235,19 @@ const promptToContinue = async ( {
 	}
 };
 
-export type validationsAndGetTableNamesInputType = {
+export type validateAndGetTableNamesInputType = {
 	skipValidate: boolean,
 	appId: number,
 	envId: number,
 	fileNameToUpload: string,
 };
 
-export async function validationsAndGetTableNames( {
+export async function validateAndGetTableNames( {
 	skipValidate,
 	appId,
 	envId,
 	fileNameToUpload,
-}: validationsAndGetTableNamesInputType ): Promise<Array<string>> {
+}: validateAndGetTableNamesInputType ): Promise<Array<string>> {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	let tableNamesInSqlFile = [];
 	if ( skipValidate ) {
@@ -334,8 +334,7 @@ const displayPlaybook = async ( {
 	}
 
 	if ( ! tableNames.length ) {
-		console.log();
-		console.log( 'Since validation was skipped, no playbook information could be displayed' );
+		debug( 'Validation was skipped, no playbook information will be displayed' );
 	} else {
 		// output the table names
 		console.log();
@@ -430,7 +429,7 @@ command( {
 		let fileNameToUpload = fileName;
 
 		// SQL file validations
-		const tableNames = await validationsAndGetTableNames( {
+		const tableNames = await validateAndGetTableNames( {
 			skipValidate,
 			appId,
 			envId,
