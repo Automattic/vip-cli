@@ -22,6 +22,7 @@ import {
 	currentUserCanImportForApp,
 	isSupportedApp,
 	SQL_IMPORT_FILE_SIZE_LIMIT,
+	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
 } from 'lib/site-import/db-file-import';
 // eslint-disable-next-line no-duplicate-imports
 import type { AppForImport, EnvForImport } from 'lib/site-import/db-file-import';
@@ -144,11 +145,22 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 		exit.withError( `File '${ fileName }' is empty.` );
 	}
 
-	if ( fileSize > SQL_IMPORT_FILE_SIZE_LIMIT ) {
-		await track( 'import_sql_command_error', { error_type: 'sqlfile-toobig' } );
+	const maxFileSize = env?.launched
+		? SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED
+		: SQL_IMPORT_FILE_SIZE_LIMIT;
+
+	if ( fileSize > maxFileSize ) {
+		await track( 'import_sql_command_error', {
+			error_type: 'sqlfile-toobig',
+			file_size: fileSize,
+			launched: !! env?.launched,
+		} );
 		exit.withError(
-			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ SQL_IMPORT_FILE_SIZE_LIMIT } bytes).` +
-				'Please split it into multiple files or contact support for assistance.'
+			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).` +
+				( env.launched
+					? ' Note: This limit is lower for launched environments to maintain site stability.'
+					: '' ) +
+				'\n\nPlease split it into multiple files or contact support for assistance.'
 		);
 	}
 
@@ -548,7 +560,10 @@ Processing the SQL import for your environment...
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );
 		} catch ( uploadError ) {
-			await track( 'import_sql_command_error', { error_type: 'upload_failed', uploadError } );
+			await track( 'import_sql_command_error', {
+				error_type: 'upload_failed',
+				upload_error: uploadError,
+			} );
 
 			progressTracker.stepFailed( 'upload' );
 			return failWithError( uploadError );
