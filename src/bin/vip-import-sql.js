@@ -63,19 +63,10 @@ const appQuery = `
 			dbOperationInProgress
 			importInProgress
 		}
-	}
-`;
-
-const GET_WP_SITE_LIST = gql`
-	query getWpSites($appId: Int) {
-		app(id: $appId) {
-			environments {
-				wpSites {
-					nodes {
-						homeUrl
-						id
-					}
-				}
+		wpSites {
+			nodes {
+				homeUrl
+				id
 			}
 		}
 	}
@@ -282,37 +273,7 @@ If you are confident the file does not contain unsupported statements, you can r
 	return tableNamesInSqlFile;
 }
 
-const getMultiSiteList = async ( { env, track } ): Promise<Array<WPSiteListType>> => {
-	let wpSiteListResults;
-	// get blog_ids from wpcli
-	const api = await API();
-	try {
-		const inputs = {
-			appId: env.appId,
-		};
-		debug( inputs );
-		wpSiteListResults = await api.query( {
-			query: GET_WP_SITE_LIST,
-			variables: inputs,
-		} );
-	} catch ( gqlErr ) {
-		await track( 'import_sql_command_error', {
-			error_type: 'SiteListResults-failed',
-			gql_err: gqlErr,
-		} );
-
-		exit.withError( `wp site list call failed: ${ gqlErr }` );
-	}
-
-	let siteArray = [];
-	if ( Array.isArray( wpSiteListResults?.data?.app?.environments[ 0 ]?.wpSites?.nodes ) ) {
-		siteArray = wpSiteListResults.data?.app.environments[ 0 ].wpSites.nodes;
-	}
-	debug( 'multiSiteArray', siteArray );
-	return siteArray;
-};
-
-const displayPlaybook = async ( {
+const displayPlaybook = ( {
 	launched,
 	tableNames,
 	searchReplace,
@@ -321,8 +282,6 @@ const displayPlaybook = async ( {
 	formattedEnvironment,
 	isMultiSite,
 	app,
-	env,
-	track,
 } ) => {
 	console.log();
 	console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
@@ -342,7 +301,7 @@ const displayPlaybook = async ( {
 	if ( isMultiSite ) {
 		// eslint-disable-next-line no-multi-spaces
 		console.log( `  multisite: ${ isMultiSite.toString() }` );
-		siteArray = await getMultiSiteList( { env, track } );
+		siteArray = app?.environments[ 0 ]?.wpSites?.nodes;
 	}
 
 	if ( ! tableNames.length ) {
@@ -449,7 +408,7 @@ command( {
 		} );
 
 		// display playbook of what will happen during execution
-		await displayPlaybook( {
+		displayPlaybook( {
 			launched,
 			tableNames,
 			searchReplace,
@@ -458,8 +417,6 @@ command( {
 			formattedEnvironment,
 			isMultiSite,
 			app,
-			env,
-			track,
 		} );
 
 		// PROMPT TO PROCEED WITH THE IMPORT

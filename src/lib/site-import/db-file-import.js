@@ -31,6 +31,7 @@ export interface EnvForImport {
 	primaryDomain: Object;
 	syncProgress: Object;
 	importStatus: ImportStatusType;
+	launched: boolean;
 }
 
 export function currentUserCanImportForApp( app: AppForImport ): boolean {
