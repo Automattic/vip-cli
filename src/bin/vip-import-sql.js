@@ -97,7 +97,6 @@ const debug = debugLib( 'vip:vip-import-sql' );
 
 const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'replace', name: 'Performing Search and Replace' },
-	{ id: 'validate', name: 'Validating SQL' },
 	{ id: 'upload', name: 'Uploading file' },
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
@@ -425,7 +424,6 @@ command( {
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
-		const unFormattedEnvironment = opts.env.type.toLowerCase();
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
