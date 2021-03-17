@@ -254,22 +254,18 @@ export async function validateAndGetTableNames( {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	if ( skipValidate ) {
 		console.log( 'Skipping SQL file validation.' );
-	} else {
-		try {
-			await fileLineValidations( appId, envId, fileNameToUpload, validations );
-		} catch ( validateErr ) {
-			console.log( '' );
-			exit.withError( `${ validateErr.message }
-
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
-		'--skip-validate'
-	) } option.
-` );
-		}
-		// this can only be called after static validation of the SQL file
-		tableNamesInSqlFile = getTableNames();
+		return [];
 	}
-	return tableNamesInSqlFile;
+	try {
+		await fileLineValidations( appId, envId, fileNameToUpload, validations );
+	} catch ( validateErr ) {
+		console.log( '' );
+		exit.withError( `${ validateErr.message }
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
+` );
+	}
+	// this can only be called after static validation of the SQL file
+	return getTableNames();
 }
 
 const displayPlaybook = ( {
