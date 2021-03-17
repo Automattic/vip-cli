@@ -252,7 +252,6 @@ export async function validateAndGetTableNames( {
 	fileNameToUpload,
 }: validateAndGetTableNamesInputType ): Promise<Array<string>> {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
-	let tableNamesInSqlFile = [];
 	if ( skipValidate ) {
 		console.log( 'Skipping SQL file validation.' );
 	} else {
