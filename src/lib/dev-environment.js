@@ -12,7 +12,8 @@ import os from 'os';
 import fs from 'fs';
 import ejs from 'ejs';
 import path from 'path';
-import cp from 'child_process';
+import Lando from 'lando/lib/lando';
+import landoUtils from 'lando/plugins/lando-core/lib/utils';
 
 /**
  * Internal dependencies
@@ -88,11 +89,41 @@ export async function startEnvironment( slug, options ) {
 		await prepareLandoEnv( instanceData, instancePath );
 	}
 
-	landoStart( instancePath );
+	await landoStart( instancePath );
 }
 
-function landoStart( instancePath ) {
-	cp.execSync( 'lando start', { cwd: instancePath, stdio: 'inherit' } );
+function getLandoConfig() {
+	const landoPath = path.join( __dirname, '..', '..', 'node_modules', 'lando' );
+
+	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
+
+	return {
+		logLevelConsole: 'warn',
+		landoFile: '.lando.yml',
+		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
+		postLandoFiles: [ '.lando.local.yml' ],
+		pluginDirs: [
+			landoPath,
+			{
+				path: path.join( landoPath, 'integrations' ),
+				subdir: '.',
+			},
+		],
+	};
+}
+
+async function landoStart( instancePath ) {
+	debug( 'Will start lando app on path:', instancePath );
+
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const app = lando.getApp( instancePath );
+	await app.init();
+
+	await app.start();
+
+	console.log( lando.cli.formatData( landoUtils.startTable( app ), { format: 'table' }, { border: false } ) );
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
