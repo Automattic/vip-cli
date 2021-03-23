@@ -18,6 +18,7 @@ import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
+import { checkIsVIP } from '../lib/cli/apiConfig';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -51,8 +52,10 @@ const rootCmd = async function() {
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' );
 
-		// TODO hide behind flag
-		cmd.command( 'dev-environment', 'Use local dev-environment' );
+		if ( await checkIsVIP() ) {
+			// temporarily hiding for non-vip, to avoid confusion untill we get full featured subcommand
+			cmd.command( 'dev-environment', 'Use local dev-environment' );
+		}
 
 		cmd.argv( process.argv );
 	} else {
