@@ -43,7 +43,7 @@ export const defaults = {
 	environmentSlug: 'vip-local',
 	title: 'VIP Dev',
 	multisite: false,
-	phpVersion: '7.3',
+	phpVersion: '7.4',
 	jetpack: {
 		mode: 'inherit',
 	},
