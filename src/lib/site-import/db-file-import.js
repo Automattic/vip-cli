@@ -6,25 +6,32 @@
 /**
  * Internal dependencies
  */
-import { GB_IN_BYTES } from 'lib/constants/file-size';
+import { GB_IN_BYTES, MB_IN_BYTES } from 'lib/constants/file-size';
 
 export const SQL_IMPORT_FILE_SIZE_LIMIT = 10 * GB_IN_BYTES;
+export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 350 * MB_IN_BYTES;
 
 export interface AppForImport {
-	id: Number;
+	id: number;
 	environments: Array<any>;
 	name: string;
 	organization: Object;
 	type: string;
 }
 
+export type ImportStatusType = {
+	dbOperationInProgress: boolean,
+	importInProgress: boolean,
+};
 export interface EnvForImport {
-	id: Number;
-	appId: Number;
+	id: number;
+	appId: number;
 	name: string;
 	type: string;
 	primaryDomain: Object;
 	syncProgress: Object;
+	importStatus: ImportStatusType;
+	launched: boolean;
 }
 
 export function currentUserCanImportForApp( app: AppForImport ): boolean {
