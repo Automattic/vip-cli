@@ -17,5 +17,6 @@ import command from 'lib/cli/command';
 command( {
 	requiredArgs: 1,
 } )
-	.command( 'start', 'Start the local dev environment' )
+	.command( 'create', 'Create a local dev environment' )
+	.command( 'start', 'Start a local dev environment' )
 	.argv( process.argv );

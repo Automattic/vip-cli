@@ -12,34 +12,33 @@ import fs from 'fs';
 /**
  * Internal dependencies
  */
-import { getEnvironmentPath, startEnvironment, generateInstanceData } from 'lib/dev-environment';
+import { getEnvironmentPath, createEnvironment, startEnvironment, generateInstanceData } from 'lib/dev-environment';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
 
 describe( 'lib/dev-environment', () => {
-	describe( 'startEnvironment', () => {
-		it.each( [
-			{
-				title: 'test-title',
-			},
-			{
-				name: 'test-name',
-				multisite: true,
-			},
-		] )( 'should throw for existing folder and setup arguments', async options => {
+	describe( 'createEnvironment', () => {
+		it( 'should throw for existing folder', async () => {
 			const slug = 'foo';
-			fs.existsSync.mockResolvedValue( true );
+			fs.existsSync.mockReturnValue( true );
 
-			const promise = startEnvironment( slug, options );
-
-			const parameters = Object.keys( options ).join( ', ' );
+			const promise = createEnvironment( slug, {} );
 
 			await expect( promise ).rejects.toEqual(
-				new Error(
-					`The environment ${ slug } already exists and we can not change its configuration` +
-					` ( configuration parameters - ${ parameters } found ).` +
-					' Destroy the environment first if you would like to recreate it.' )
+				new Error( 'Environment already exists.' )
+			);
+		} );
+	} );
+	describe( 'startEnvironment', () => {
+		it( 'should throw for NON existing folder', async () => {
+			const slug = 'foo';
+			fs.existsSync.mockReturnValue( false );
+
+			const promise = startEnvironment( slug );
+
+			await expect( promise ).rejects.toEqual(
+				new Error( 'Environment not found.' )
 			);
 		} );
 	} );
@@ -52,7 +51,7 @@ describe( 'lib/dev-environment', () => {
 				expected: {
 					siteSlug: 'foo',
 					wpTitle: 'VIP Dev',
-					phpVersion: '7.3',
+					phpVersion: '7.4',
 					multisite: false,
 					wordpress: {
 						image: 'wpvipdev/wordpress',
@@ -116,7 +115,7 @@ describe( 'lib/dev-environment', () => {
 				expected: {
 					siteSlug: 'foo',
 					wpTitle: 'VIP Dev',
-					phpVersion: '7.3',
+					phpVersion: '7.4',
 					multisite: false,
 					wordpress: {
 						image: 'wpvipdev/wordpress',
@@ -150,7 +149,7 @@ describe( 'lib/dev-environment', () => {
 				expected: {
 					siteSlug: 'foo',
 					wpTitle: 'VIP Dev',
-					phpVersion: '7.3',
+					phpVersion: '7.4',
 					multisite: false,
 					wordpress: {
 						mode: 'local',
@@ -182,7 +181,7 @@ describe( 'lib/dev-environment', () => {
 				expected: {
 					siteSlug: 'foo',
 					wpTitle: 'VIP Dev',
-					phpVersion: '7.3',
+					phpVersion: '7.4',
 					multisite: false,
 					wordpress: {
 						mode: 'image',

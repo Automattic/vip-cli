@@ -63,33 +63,40 @@ export const defaults = {
 const landoFileTemplatePath = 'assets/dev-environment.lando.template.yml.ejs';
 const landoFileName = '.lando.yml';
 
-export async function startEnvironment( slug, options ) {
+export async function startEnvironment( slug ) {
+	debug( 'Will start an environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	await landoStart( instancePath );
+}
+
+export async function createEnvironment( slug, options ) {
 	debug( 'Will start an environment', slug, 'with options: ', options );
 
 	const instancePath = getEnvironmentPath( slug );
 
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
 	const alreadyExists = fs.existsSync( instancePath );
 
 	if ( alreadyExists ) {
-		const parameters = Object
-			.keys( options || {} )
-			.filter( key => key !== 'slug' );
-
-		if ( parameters && parameters.length ) {
-			throw new Error(
-				`The environment ${ slug } already exists and we can not change its configuration` +
-				` ( configuration parameters - ${ parameters.join( ', ' ) } found ).` +
-				' Destroy the environment first if you would like to recreate it.' );
-		}
-	} else {
-		const instanceData = generateInstanceData( slug, options );
-
-		debug( 'Instance data to create a new environment:', instanceData );
-
-		await prepareLandoEnv( instanceData, instancePath );
+		throw new Error( 'Environment already exists.' );
 	}
 
-	await landoStart( instancePath );
+	const instanceData = generateInstanceData( slug, options );
+
+	debug( 'Instance data to create a new environment:', instanceData );
+
+	await prepareLandoEnv( instanceData, instancePath );
 }
 
 function getLandoConfig() {
