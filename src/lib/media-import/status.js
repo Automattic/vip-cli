@@ -175,22 +175,10 @@ ${ maybeExitPrompt }
 				const failedMediaImport = ( 'FAILED' === status );
 
 				if ( failedMediaImport ) {
-					debug( {
-						inImportProgress: true,
-						error: 'Import failed',
-						filesTotal,
-						filesProcessed,
-					} );
-
 					progressTracker.setStatus( mediaImportStatus );
 					setSuffixAndPrint();
-					return reject( {
-						inImportProgress: true,
-						error: 'Import failed',
-						filesTotal,
-						filesProcessed,
-						/* TODO: Here we will add failure details */
-					} );
+					/* TODO: Here we will add failure details */
+					return reject( mediaImportStatus );
 				}
 
 				progressTracker.setStatus( mediaImportStatus );
@@ -228,6 +216,7 @@ ${ maybeExitPrompt }
 
 		process.exit( 0 );
 	} catch ( importFailed ) {
+		debug( importFailed );
 		progressTracker.stopPrinting();
 		progressTracker.print();
 		progressTracker.suffix += `\n${ buildErrorMessage( importFailed ) }\n`;
