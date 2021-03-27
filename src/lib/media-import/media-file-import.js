@@ -8,10 +8,9 @@
  */
 import { GB_IN_BYTES, MB_IN_BYTES } from 'lib/constants/file-size';
 
-export const SQL_IMPORT_FILE_SIZE_LIMIT = 10 * GB_IN_BYTES;
-export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 350 * MB_IN_BYTES;
+export const MEDIA_IMPORT_FILE_SIZE_LIMIT = 30 * GB_IN_BYTES;
 
-export interface AppForImport {
+export interface AppForMediaImport {
 	id: Number;
 	environments: Array<any>;
 	name: string;
@@ -19,26 +18,12 @@ export interface AppForImport {
 	type: string;
 }
 
-export interface EnvForImport {
-	id: Number;
-	appId: Number;
-	name: string;
-	type: string;
-	primaryDomain: Object;
-	syncProgress: Object;
-}
-
-export function currentUserCanImportForApp( app: AppForImport ): boolean {
+export function currentUserCanImportForApp( app: AppForMediaImport ): boolean {
 	// TODO: implement
 	return !! app;
 }
 
-export const SUPPORTED_DB_FILE_IMPORT_SITE_TYPES = [ 'WordPress' ];
+export const SUPPORTED_MEDIA_FILE_IMPORT_SITE_TYPES = [ 'WordPress' ];
 
-export const isSupportedApp = ( { type }: AppForImport ) =>
-	SUPPORTED_DB_FILE_IMPORT_SITE_TYPES.includes( type );
-
-export const SYNC_STATUS_NOT_SYNCING = 'not_syncing';
-
-export const isImportingBlockedBySync = ( { syncProgress: { status } }: EnvForImport ) =>
-	status !== SYNC_STATUS_NOT_SYNCING;
+export const isSupportedApp = ( { type }: AppForMediaImport ) =>
+	SUPPORTED_MEDIA_FILE_IMPORT_SITE_TYPES.includes( type );
