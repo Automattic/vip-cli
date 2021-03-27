@@ -18,3 +18,12 @@ command( )
 	.argv( process.argv, async () => {
 		await trackEvent( 'vip_import_command_execute' );
 	} );
+
+command( )
+	.command( 'media', 'Import media files to your application from a compressed archive' )
+	.command( 'media-progress', 'Import media files to your application from a compressed archive' )
+	.command( 'validate-files', 'Validate your media file library' )
+	.example( 'vip import media @mysite.develop <file.zip>', 'Import media files contained into the archive to your site' )
+	.argv( process.argv, async () => {
+		await trackEvent( 'vip_media_import_command_execute' );
+	} );
