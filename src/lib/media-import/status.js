@@ -193,8 +193,9 @@ ${ maybeExitPrompt }
 					} );
 				}
 
+				progressTracker.setStatus( mediaImportStatus );
 				setSuffixAndPrint();
-				debug( mediaImportStatus );
+
 				if ( status === 'COMPLETED' ) {
 					return resolve( mediaImportStatus );
 				}
