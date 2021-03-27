@@ -211,12 +211,11 @@ ${ maybeExitPrompt }
 
 	try {
 		const results = await getResults();
-		debug( results );
+
 		if ( typeof results === 'string' ) {
 			overallStatus = results;
 		} else {
 			overallStatus = results?.status || 'unknown';
-			debug( 'here' );
 			// This shouldn't be 'unknown'...what should we do here?
 		}
 
