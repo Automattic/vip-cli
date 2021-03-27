@@ -195,7 +195,7 @@ ${ maybeExitPrompt }
 
 				setSuffixAndPrint();
 				debug( mediaImportStatus );
-				if ( status === 'COMPLETED'  ) {
+				if ( status === 'COMPLETED' ) {
 					return resolve( mediaImportStatus );
 				}
 

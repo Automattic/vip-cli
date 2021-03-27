@@ -68,7 +68,7 @@ Current status: ${ this.status.status }
 Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage } 
 =============================================================`;
 		// Output the logs
-		singleLogLine( `${ this.prefix || '' }${ logs }${  '' }` );
+		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix }` );
 
 		if ( clearAfter ) {
 			// Break out of the "Single log line" buffer
