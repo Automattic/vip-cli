@@ -14,10 +14,10 @@ import * as exit from 'lib/cli/exit';
 /**
  * Internal dependencies
  */
-import { isSupportedApp } from 'lib/site-import/db-file-import';
-import { importSqlCheckStatus } from 'lib/site-import/status';
+import { isSupportedApp } from 'lib/media-import/media-file-import';
 import command from 'lib/cli/command';
-import { ProgressTracker } from 'lib/cli/progress';
+import { MediaImportProgressTracker } from 'lib/media-import/progress';
+import { mediaImportCheckStatus } from '../lib/media-import/status';
 
 const appQuery = `
 id,
@@ -52,11 +52,11 @@ command( {
 
 	await track( 'import_media_check_status_command_execute' );
 
-	const progressTracker = new ProgressTracker( [] );
+	const progressTracker = new MediaImportProgressTracker( [] );
 	progressTracker.prefix = `
 =============================================================
-Checking the SQL import status for your environment...
+Checking the Media import status for your environment...
 `;
 
-	await importSqlCheckStatus( { app, env, progressTracker } );
+	await mediaImportCheckStatus( { app, env, progressTracker } );
 } );
