@@ -65,7 +65,7 @@ export class MediaImportProgressTracker {
 =============================================================
 Site ID: ${ this.status.siteId }
 Current status: ${ this.status.status }
-Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage } 
+Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }%
 =============================================================`;
 		// Output the logs
 		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix }` );
