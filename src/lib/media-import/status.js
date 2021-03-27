@@ -119,12 +119,12 @@ export async function mediaImportCheckStatus( {
 			case 'completed':
 				statusMessage = `Success ${ sprite } imported data should be visible on your site ${ env.primaryDomain.name }.`;
 				break;
-			case 'running':
+			case 'completing':
 				statusMessage = `Finishing up... ${ sprite } `;
 				break;
 			// Intentionally no break to get default case:
 			default:
-				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
+				statusMessage = `${ capitalize( overallStatus ) }`;
 		}
 
 		const maybeExitPrompt = `${ overallStatus === 'COMPLETING' ? exitPrompt : '' }`;
