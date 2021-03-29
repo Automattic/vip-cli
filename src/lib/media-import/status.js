@@ -132,7 +132,7 @@ export async function mediaImportCheckStatus( {
 		const suffix = `
 =============================================================
 Status: ${ statusMessage }
-Site: ${ app.name } (${ formatEnvironment( env.type ) })
+App: ${ app.name } (${ formatEnvironment( env.type ) })
 =============================================================
 ${ maybeExitPrompt }
 `;
