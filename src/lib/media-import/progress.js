@@ -63,7 +63,8 @@ export class MediaImportProgressTracker {
 		const progressPercentage = Math.floor( this.status.filesProcessed / this.status.filesTotal * 100 );
 		const logs = `
 =============================================================
-Site ID: ${ this.status.siteId }
+App ID: 
+Environment ID: ${ this.status.siteId }
 Current status: ${ this.status.status }
 Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }%
 =============================================================`;
