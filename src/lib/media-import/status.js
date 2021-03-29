@@ -43,8 +43,8 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 				importId
 				siteId
 				status
-            	filesTotal
-            	filesProcessed
+				filesTotal
+				filesProcessed
 			}
 		}
 	}
