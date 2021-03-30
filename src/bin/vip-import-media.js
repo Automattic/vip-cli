@@ -52,7 +52,7 @@ const appQuery = `
 
 const debug = debugLib( 'vip:vip-import-media' );
 
-// Command examples for the `vip import sql` help prompt
+// Command examples for the `vip import media` help prompt
 const examples = [
 	// `media status` subcommand
 	{
@@ -73,7 +73,7 @@ command( {
 } )
 	.command( 'status', 'Check the status of the current running import' )
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opts ) => {
+	.argv( process.argv, async ( args: string[], opts ) => {
 		debug( 'Options: ', opts );
 		debug( 'Args:', args );
 	} );
