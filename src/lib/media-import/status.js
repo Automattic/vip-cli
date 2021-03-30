@@ -94,7 +94,7 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 			return chalk.red( '✕' );
 		case 'ABORTED':
 		case 'ABORTING':
-			return chalk.yellow( '✕' );
+			return chalk.yellow( '⚠️' );
 		default:
 			return '';
 	}
