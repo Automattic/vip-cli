@@ -81,8 +81,6 @@ async function getStatus( api, appId, envId ) {
 
 export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
 	switch ( status ) {
-		default:
-			return '';
 		case 'INITIALIZING':
 			return '○';
 		case 'INITIALIZED':
@@ -97,6 +95,8 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 		case 'ABORTED':
 		case 'ABORTING':
 			return chalk.yellow( '✕' );
+		default:
+			return '';
 	}
 }
 
@@ -174,7 +174,6 @@ ${ maybeExitPrompt }
 				try {
 					mediaImportStatus = await getStatus( api, app.id, env.id );
 				} catch ( error ) {
-					debug( error );
 					return reject( { error } );
 				}
 
@@ -238,7 +237,6 @@ ${ maybeExitPrompt }
 
 		process.exit( 0 );
 	} catch ( importFailed ) {
-		debug( importFailed );
 		progressTracker.stopPrinting();
 		progressTracker.print();
 		progressTracker.suffix += `\n${ buildErrorMessage( importFailed ) }\n`;

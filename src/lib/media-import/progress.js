@@ -7,6 +7,12 @@
 import { stdout as singleLogLine } from 'single-line-log';
 import debugLib from 'debug';
 
+/**
+ * Internal dependencies
+ */
+import { getGlyphForStatus } from 'lib/media-import/status';
+import { RunningSprite } from 'lib/cli/format';
+
 const debug = debugLib( 'vip:lib/media-import/progress' );
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
@@ -24,6 +30,9 @@ export class MediaImportProgressTracker {
 		filesProcessed: number,
 	};
 
+	// Spinnerz go brrrr
+	runningSprite: RunningSprite;
+
 	// This gets printed before the step status
 	prefix: string;
 
@@ -31,6 +40,7 @@ export class MediaImportProgressTracker {
 	suffix: string;
 
 	constructor( status: Object[] ) {
+		this.runningSprite = new RunningSprite();
 		this.hasFailure = false;
 		this.status = Object.assign( {}, status );
 		this.prefix = '';
@@ -61,13 +71,8 @@ export class MediaImportProgressTracker {
 		}
 
 		const progressPercentage = Math.floor( this.status.filesProcessed / this.status.filesTotal * 100 );
-		const logs = `
-=============================================================
-App ID: 
-Environment ID: ${ this.status.siteId }
-Current step: ${ this.status.status }
-Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }%
-=============================================================`;
+		const statusIcon = getGlyphForStatus( this.status.status, this.runningSprite );
+		const logs = `Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }% ${ statusIcon }`
 		// Output the logs
 		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix }` );
 
