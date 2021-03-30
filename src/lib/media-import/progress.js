@@ -48,6 +48,9 @@ export class MediaImportProgressTracker {
 	}
 
 	setStatus( status: Object ) {
+		if ( 'FAILED' === status.status ) {
+			this.hasFailure = true;
+		}
 		this.status = Object.assign( {}, status );
 	}
 
