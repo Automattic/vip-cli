@@ -22,7 +22,7 @@ import { RunningSprite } from '../cli/format';
 
 const debug = debugLib( 'vip:lib/media-import/status' );
 
-const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 5000;
+const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
 
 /*
  * TODO: Add support to
@@ -101,7 +101,7 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 }
 
 function buildErrorMessage( importFailed ) {
-	let message = chalk.red( `Error: ${ importFailed.status }` );
+	let message = chalk.red( `Error: ${ importFailed.error }` );
 
 	if ( 'FAILED' === importFailed.status ) {
 		message += `
@@ -160,6 +160,7 @@ ${ maybeExitPrompt }
 `;
 		progressTracker.suffix = suffix;
 	};
+
 	const setSuffixAndPrint = () => {
 		setProgressTrackerSuffix();
 		progressTracker.print();
@@ -200,16 +201,14 @@ ${ maybeExitPrompt }
 					overallStatus = 'FAILED';
 					setSuffixAndPrint();
 					/* TODO: Here we will add failure details */
-					return reject( mediaImportStatus );
+					return reject( { ...mediaImportStatus, error: 'Import failed' } );
 				}
 
 				progressTracker.setStatus( mediaImportStatus );
+
 				setSuffixAndPrint();
 
-				if ( 'ABORTED' === status ) {
-					return resolve( mediaImportStatus );
-				}
-				if ( status === 'COMPLETED' ) {
+				if ( [ 'COMPLETED', 'ABORTED' ] === status ) {
 					return resolve( mediaImportStatus );
 				}
 
