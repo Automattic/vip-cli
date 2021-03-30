@@ -8,7 +8,6 @@
  */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
-import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -19,8 +18,6 @@ import { MediaImportProgressTracker } from 'lib/media-import/progress';
 import { capitalize, formatEnvironment } from 'lib/cli/format';
 
 import { RunningSprite } from '../cli/format';
-
-const debug = debugLib( 'vip:lib/media-import/status' );
 
 const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -179,20 +176,8 @@ ${ maybeExitPrompt }
 				}
 
 				const {
-					importId,
-					siteId,
 					status,
-					filesTotal,
-					filesProcessed,
 				} = mediaImportStatus;
-
-				debug( {
-					importId,
-					siteId,
-					status,
-					filesTotal,
-					filesProcessed,
-				} );
 
 				const failedMediaImport = ( 'FAILED' === status );
 
