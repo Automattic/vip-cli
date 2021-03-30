@@ -65,7 +65,7 @@ export class MediaImportProgressTracker {
 =============================================================
 App ID: 
 Environment ID: ${ this.status.siteId }
-Current status: ${ this.status.status }
+Current step: ${ this.status.status }
 Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }%
 =============================================================`;
 		// Output the logs
