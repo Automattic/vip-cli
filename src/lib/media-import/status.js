@@ -197,6 +197,7 @@ ${ maybeExitPrompt }
 
 				if ( failedMediaImport ) {
 					progressTracker.setStatus( mediaImportStatus );
+					overallStatus = 'FAILED';
 					setSuffixAndPrint();
 					/* TODO: Here we will add failure details */
 					return reject( mediaImportStatus );
@@ -205,6 +206,9 @@ ${ maybeExitPrompt }
 				progressTracker.setStatus( mediaImportStatus );
 				setSuffixAndPrint();
 
+				if ( 'ABORTED' === status ) {
+					return resolve( mediaImportStatus );
+				}
 				if ( status === 'COMPLETED' ) {
 					return resolve( mediaImportStatus );
 				}
