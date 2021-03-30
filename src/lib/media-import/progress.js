@@ -72,7 +72,7 @@ export class MediaImportProgressTracker {
 
 		const progressPercentage = Math.floor( this.status.filesProcessed / this.status.filesTotal * 100 );
 		const statusIcon = getGlyphForStatus( this.status.status, this.runningSprite );
-		const logs = `Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }% ${ statusIcon }`
+		const logs = `Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }% ${ statusIcon }`;
 		// Output the logs
 		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix }` );
 

@@ -55,7 +55,7 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 export type MediaImportCheckStatusInput = {
 	app: Object,
 	env: Object,
-	MediaImportProgressTracker: MediaImportProgressTracker,
+	progressTracker: MediaImportProgressTracker,
 };
 
 async function getStatus( api, appId, envId ) {
