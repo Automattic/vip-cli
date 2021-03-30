@@ -16,8 +16,9 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/media-import/media-file-import';
 import { MediaImportProgressTracker } from 'lib/media-import/progress';
-import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
-import { ProgressTracker } from '../cli/progress';
+import { capitalize, formatEnvironment } from 'lib/cli/format';
+
+import { RunningSprite } from '../cli/format';
 
 const debug = debugLib( 'vip:lib/media-import/status' );
 
@@ -78,6 +79,27 @@ async function getStatus( api, appId, envId ) {
 	return mediaImportStatus;
 }
 
+export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
+	switch ( status ) {
+		default:
+			return '';
+		case 'INITIALIZING':
+			return '○';
+		case 'INITIALIZED':
+		case 'RUNNING':
+		case 'COMPLETING':
+		case 'RAN':
+			return chalk.blueBright( runningSprite );
+		case 'COMPLETED':
+			return chalk.green( '✓' );
+		case 'FAILED':
+			return chalk.red( '✕' );
+		case 'ABORTED':
+		case 'ABORTING':
+			return chalk.yellow( '✕' );
+	}
+}
+
 function buildErrorMessage( importFailed ) {
 	let message = chalk.red( `Error: ${ importFailed.status }` );
 
@@ -116,15 +138,15 @@ export async function mediaImportCheckStatus( {
 
 		let statusMessage;
 		switch ( overallStatus ) {
-			case 'completed':
+			case 'COMPLETED':
 				statusMessage = `Success ${ sprite } imported data should be visible on your site ${ env.primaryDomain.name }.`;
 				break;
-			case 'completing':
+			case 'COMPLETING':
 				statusMessage = `Finishing up... ${ sprite } `;
 				break;
 			// Intentionally no break to get default case:
 			default:
-				statusMessage = `${ capitalize( overallStatus ) }`;
+				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
 		}
 
 		const maybeExitPrompt = `${ overallStatus === 'COMPLETING' ? exitPrompt : '' }`;
@@ -188,7 +210,7 @@ ${ maybeExitPrompt }
 					return resolve( mediaImportStatus );
 				}
 
-				overallStatus = 'running';
+				overallStatus = status;
 
 				setTimeout( checkStatus, IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
 			};
