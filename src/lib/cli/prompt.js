@@ -13,15 +13,18 @@ import { keyValue } from './format';
 import type { Tuple } from './format';
 /* eslint-enable no-duplicate-imports */
 
-export async function confirm( values: Array<Tuple>, message: string ): Promise<boolean> {
+export async function confirm( values: Array<Tuple>, message: string, skipPrompt: boolean = false ): Promise<boolean> {
 	console.log( keyValue( values ) );
 
-	const c = await prompt( {
-		type: 'confirm',
-		name: 'confirm',
-		message: message,
-		default: false,
-	} );
+	if ( ! skipPrompt ) {
+		const c = await prompt( {
+			type: 'confirm',
+			name: 'confirm',
+			message: message,
+			default: false,
+		} );
+		return c.confirm;
+	}
 
-	return c.confirm;
+	return true;
 }

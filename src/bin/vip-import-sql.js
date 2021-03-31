@@ -9,8 +9,10 @@
  * External dependencies
  */
 import gql from 'graphql-tag';
+import columns from 'cli-columns';
 import chalk from 'chalk';
 import debugLib from 'debug';
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
@@ -22,10 +24,12 @@ import {
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
 } from 'lib/site-import/db-file-import';
+// eslint-disable-next-line no-duplicate-imports
+import type { AppForImport, EnvForImport } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
-import { staticSqlValidations } from 'lib/validations/sql';
+import { staticSqlValidations, getTableNames } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
 import { searchAndReplace } from 'lib/search-and-replace';
 import API from 'lib/api';
@@ -34,6 +38,13 @@ import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
+import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
+import { exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
+
+export type WPSiteListType = {
+	id: string,
+	homeUrl: string,
+};
 
 const appQuery = `
 	id,
@@ -51,6 +62,12 @@ const appQuery = `
 		importStatus {
 			dbOperationInProgress
 			importInProgress
+		}
+		wpSites {
+			nodes {
+				homeUrl
+				id
+			}
 		}
 	}
 `;
@@ -72,14 +89,19 @@ const debug = debugLib( 'vip:vip-import-sql' );
 
 const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'replace', name: 'Performing Search and Replace' },
-	{ id: 'validate', name: 'Validating SQL' },
 	{ id: 'upload', name: 'Uploading file' },
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
-const gates = async ( app, env, fileName ) => {
+export async function gates( app: AppForImport, env: EnvForImport, fileName: string ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
+
+	// Block multiSite imports unless feature is enabled
+	if ( await isMultiSiteInSiteMeta( appId, envId ) ) {
+		// currently checks isVIP
+		exitWhenFeatureDisabled( 'subsite-sql-imports' );
+	}
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
@@ -154,7 +176,7 @@ const gates = async ( app, env, fileName ) => {
 		await track( 'import_sql_command_error', { error_type: 'existing-dbop' } );
 		exit.withError( 'There is already a database operation in progress. Please try again later.' );
 	}
-};
+}
 
 // Command examples for the `vip import sql` help prompt
 const examples = [
@@ -192,6 +214,141 @@ const examples = [
 	},
 ];
 
+const promptToContinue = async ( {
+	launched,
+	formattedEnvironment,
+	track,
+	domain,
+} ): Promise<void> => {
+	console.log();
+	const promptToMatch = domain.toUpperCase();
+	const promptResponse = await prompt( {
+		type: 'input',
+		name: 'confirmedDomain',
+		message: `You are about to import the above tables into a ${
+			launched ? 'launched' : 'un-launched'
+		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
+			promptToMatch
+		) }' (without the quotes) to continue:\n`,
+	} );
+
+	if ( promptResponse.confirmedDomain !== promptToMatch ) {
+		await track( 'import_sql_unexpected_tables' );
+		exit.withError( 'The input did not match the expected environment label. Import aborted.' );
+	}
+};
+
+export type validateAndGetTableNamesInputType = {
+	skipValidate: boolean,
+	appId: number,
+	envId: number,
+	fileNameToUpload: string,
+};
+
+export async function validateAndGetTableNames( {
+	skipValidate,
+	appId,
+	envId,
+	fileNameToUpload,
+}: validateAndGetTableNamesInputType ): Promise<Array<string>> {
+	const validations = [ staticSqlValidations, siteTypeValidations ];
+	if ( skipValidate ) {
+		console.log( 'Skipping SQL file validation.' );
+		return [];
+	}
+	try {
+		await fileLineValidations( appId, envId, fileNameToUpload, validations );
+	} catch ( validateErr ) {
+		console.log( '' );
+		exit.withError( `${ validateErr.message }
+If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
+` );
+	}
+	// this can only be called after static validation of the SQL file
+	return getTableNames();
+}
+
+const displayPlaybook = ( {
+	launched,
+	tableNames,
+	searchReplace,
+	fileName,
+	domain,
+	formattedEnvironment,
+	isMultiSite,
+	app,
+} ) => {
+	console.log();
+	console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
+	console.log( `         to: ${ chalk.cyan( domain ) }` );
+	console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
+
+	if ( searchReplace?.length ) {
+		const output = ( from, to ) => {
+			const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
+			console.log( message );
+		};
+
+		formatSearchReplaceValues( searchReplace, output );
+	}
+
+	let siteArray = [];
+	if ( isMultiSite ) {
+		// eslint-disable-next-line no-multi-spaces
+		console.log( `  multisite: ${ isMultiSite.toString() }` );
+		siteArray = app?.environments[ 0 ]?.wpSites?.nodes;
+	}
+
+	if ( ! tableNames.length ) {
+		debug( 'Validation was skipped, no playbook information will be displayed' );
+	} else {
+		// output the table names
+		console.log();
+		if ( ! isMultiSite ) {
+			console.log( 'Below are a list of Tables that will be imported by this process:' );
+			console.log( columns( tableNames ) );
+		} else {
+			// we have siteArray from the API, use it and the table names together
+			if ( ! siteArray.length ) {
+				throw new Error( 'There were no sites in your multisite installation' );
+			}
+
+			const multiSiteBreakdown = siteArray.map( wpSite => {
+				let siteRegex;
+				if ( wpSite.id === 1 ) {
+					siteRegex = /wp_[a-z]+/i;
+				} else {
+					siteRegex = new RegExp( `wp_${ wpSite.id }_[a-z]+`, 'i' );
+				}
+				const tableNamesInGroup = tableNames.filter( name => siteRegex.test( name ) );
+				return {
+					id: wpSite.id,
+					url: wpSite.homeUrl,
+					tables: tableNamesInGroup,
+				};
+			} );
+
+			if ( launched ) {
+				console.log(
+					chalk.yellowBright(
+						'You are updating tables in a launched multi site installation. Sites in the same network may have their performance impacted by this operation.'
+					)
+				);
+			}
+			console.log( chalk.yellow( 'The following sites will be affected by the import:' ) );
+			multiSiteBreakdown.map( siteObject => {
+				console.log();
+				console.log(
+					chalk.blueBright(
+						`Blog with ID ${ siteObject.id } and URL ${ siteObject.url } will import the following tables:`
+					)
+				);
+				console.log( columns( siteObject.tables ) );
+			} );
+		}
+	}
+};
+
 command( {
 	appContext: true,
 	appQuery,
@@ -199,6 +356,7 @@ command( {
 	requiredArgs: 1,
 	module: 'import-sql',
 	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
+	skipConfirmPrompt: true,
 } )
 	.command( 'status', 'Check the status of the current running import' )
 	.option(
@@ -217,6 +375,7 @@ command( {
 		const { app, env, searchReplace, skipValidate } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
+		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
@@ -230,20 +389,38 @@ command( {
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+		const formattedEnvironment = formatEnvironment( opts.env.type );
+		const launched = opts.env.launched;
 
-		console.log();
-		console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
-		console.log( `         to: ${ chalk.cyan( domain ) }` );
-		console.log( `       site: ${ app.name } (${ formatEnvironment( opts.env.type ) })` );
+		let fileNameToUpload = fileName;
 
-		if ( searchReplace?.length ) {
-			const output = ( from, to ) => {
-				const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
-				console.log( message );
-			};
+		// SQL file validations
+		const tableNames = await validateAndGetTableNames( {
+			skipValidate,
+			appId,
+			envId,
+			fileNameToUpload,
+		} );
 
-			formatSearchReplaceValues( searchReplace, output );
-		}
+		// display playbook of what will happen during execution
+		displayPlaybook( {
+			launched,
+			tableNames,
+			searchReplace,
+			fileName,
+			domain,
+			formattedEnvironment,
+			isMultiSite,
+			app,
+		} );
+
+		// PROMPT TO PROCEED WITH THE IMPORT
+		await promptToContinue( {
+			launched,
+			formattedEnvironment,
+			track,
+			domain,
+		} );
 
 		/**
 		 * =========== WARNING =============
@@ -256,7 +433,6 @@ command( {
 		 */
 		const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
 
-		let fileNameToUpload = fileName;
 		let status = 'running';
 
 		const setProgressTrackerPrefixAndSuffix = () => {
@@ -300,28 +476,6 @@ Processing the SQL import for your environment...
 			progressTracker.stepSuccess( 'replace' );
 		} else {
 			progressTracker.stepSkipped( 'replace' );
-		}
-
-		// SQL file validations
-		const validations = [ staticSqlValidations, siteTypeValidations ];
-
-		if ( skipValidate ) {
-			progressTracker.stepSkipped( 'validate' );
-		} else {
-			try {
-				progressTracker.stepRunning( 'validate' );
-				await fileLineValidations( appId, envId, fileNameToUpload, validations );
-				progressTracker.stepSuccess( 'validate' );
-			} catch ( validateErr ) {
-				progressTracker.stepFailed( 'validate' );
-				console.log( '' );
-				return failWithError( `${ validateErr.message }
-
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
-		'--skip-validate'
-	) } option.
-` );
-			}
 		}
 
 		progressTracker.stepRunning( 'upload' );
