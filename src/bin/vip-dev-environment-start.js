@@ -44,7 +44,7 @@ command()
 				const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
 				const createCommand = chalk.bold( DEV_ENVIRONMENT_COMMAND + ' create' + extraCommandParmas );
 
-				messageToShow += `Environemnt doesnt exists\n\n\nTo create new environment run:\n\n${ createCommand }\n`;
+				messageToShow += `Environment doesnt exists\n\n\nTo create new environment run:\n\n${ createCommand }\n`;
 				console.log( messageToShow );
 			} else {
 				console.log( messageToShow, e.message );

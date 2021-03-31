@@ -53,13 +53,13 @@ command()
 		try {
 			await createEnvironment( slug, opt );
 
-			const message = chalk.green( '✓' ) + ` environemnt created.\n\n\nTo start it please run:\n\n${ startCommand }\n`;
+			const message = chalk.green( '✓' ) + ` environment created.\n\n\nTo start it please run:\n\n${ startCommand }\n`;
 			console.log( message );
 		} catch ( e ) {
 			let messageToShow = chalk.red( 'Error:' );
 			if ( 'Environment already exists.' === e.message ) {
-				messageToShow += `Environemnt already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
-				`To create another environemnt use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;
+				messageToShow += `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
+				`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;
 				console.log( messageToShow );
 			} else {
 				console.log( messageToShow, e.message );
