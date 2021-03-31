@@ -136,7 +136,7 @@ export async function mediaImportCheckStatus( {
 		let statusMessage;
 		switch ( overallStatus ) {
 			case 'COMPLETED':
-				statusMessage = `Success ${ sprite } imported data should be visible on your site ${ env.primaryDomain.name }.`;
+				statusMessage = `COMPLETED ${ sprite } : The Imported files should be visible on your site ${ env.primaryDomain.name }`;
 				break;
 			case 'COMPLETING':
 				statusMessage = `Finishing up... ${ sprite } `;
