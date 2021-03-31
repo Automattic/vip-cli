@@ -84,6 +84,8 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 		case 'RUNNING':
 		case 'COMPLETING':
 		case 'RAN':
+		case 'VALIDATING':
+		case 'VALIDATED':
 			return chalk.blueBright( runningSprite );
 		case 'COMPLETED':
 			return chalk.green( '✓' );
@@ -192,11 +194,9 @@ ${ maybeExitPrompt }
 				progressTracker.setStatus( mediaImportStatus );
 
 				setSuffixAndPrint();
-
-				if ( [ 'COMPLETED', 'ABORTED' ] === status ) {
+				if ( [ 'COMPLETED', 'ABORTED' ].includes( status ) ) {
 					return resolve( mediaImportStatus );
 				}
-
 				overallStatus = status;
 
 				setTimeout( checkStatus, IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
@@ -208,13 +208,7 @@ ${ maybeExitPrompt }
 
 	try {
 		const results = await getResults();
-
-		if ( typeof results === 'string' ) {
-			overallStatus = results;
-		} else {
-			overallStatus = results?.status || 'unknown';
-			// This shouldn't be 'unknown'...what should we do here?
-		}
+		overallStatus = results?.status || 'unknown';
 
 		progressTracker.stopPrinting();
 
