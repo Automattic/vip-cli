@@ -146,7 +146,7 @@ export async function mediaImportCheckStatus( {
 				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
 		}
 
-		const maybeExitPrompt = `${ overallStatus === 'COMPLETED' ? exitPrompt : '' }`;
+		const maybeExitPrompt = `${ overallStatus !== 'COMPLETED' ? exitPrompt : '' }`;
 
 		const suffix = `
 =============================================================
