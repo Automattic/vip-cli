@@ -1,1 +1,1 @@
-export const DEV_ENVIRONMENT_COMMAND = 'vip dev-environmnet';
+export const DEV_ENVIRONMENT_COMMAND = 'vip dev-environment';

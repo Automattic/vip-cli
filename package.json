@@ -16,7 +16,8 @@
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js",
     "vip-dev-environment": "dist/bin/vip-dev-environment.js",
-    "vip-dev-environment-start": "dist/bin/vip-dev-environment-start.js"
+    "vip-dev-environment-start": "dist/bin/vip-dev-environment-start.js",
+    "vip-dev-environment-create": "dist/bin/vip-dev-environment-create.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
