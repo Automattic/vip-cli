@@ -139,7 +139,7 @@ export async function mediaImportCheckStatus( {
 				statusMessage = `COMPLETED ${ sprite } : The Imported files should be visible on your site ${ env.primaryDomain.name }`;
 				break;
 			case 'COMPLETING':
-				statusMessage = `Finishing up... ${ sprite } `;
+				statusMessage = `COMPLETING ${ sprite } `;
 				break;
 			// Intentionally no break to get default case:
 			default:
