@@ -104,7 +104,7 @@ function buildErrorMessage( importFailed ) {
 
 	if ( 'FAILED' === importFailed.status ) {
 		message += `
-An error occurred: ${ importFailed.filesProcessed }/${ importFailed.filesTotal } files imported.
+${ importFailed.filesProcessed }/${ importFailed.filesTotal } files imported.
 
 If this error persists, please contact support.
 `;
@@ -173,6 +173,12 @@ ${ maybeExitPrompt }
 				let mediaImportStatus;
 				try {
 					mediaImportStatus = await getStatus( api, app.id, env.id );
+					if ( ! mediaImportStatus ) {
+						return reject(
+							{
+								error: 'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
+							} );
+					}
 				} catch ( error ) {
 					return reject( { error } );
 				}
