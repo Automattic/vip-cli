@@ -75,11 +75,16 @@ const debug = debugLib( 'vip:vip-import-media' );
 
 // Command examples for the `vip import media` help prompt
 const examples = [
-	// `media status` subcommand
 	{
 		usage: 'vip import media @mysite.develop --url https://domain.to/archive.zip',
 		description:
 			'Start a media import with the contents of the archive file in the URL',
+	},
+	// `media status` subcommand
+	{
+		usage: 'vip import media status @mysite.develop',
+		description:
+			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
 	},
 ];
 
@@ -133,7 +138,6 @@ Starting Media Import for your environment...
 						},
 					},
 				} );
-			console.log( response );
 
 			await mediaImportCheckStatus( { app, env, progressTracker } );
 		} catch ( e ) {
