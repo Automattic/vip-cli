@@ -15,7 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { defaults, startEnvironment } from 'lib/dev-environment';
+import { defaults, destroyEnvironment } from 'lib/dev-environment';
 import { DEV_ENVIRONMENT_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -23,8 +23,12 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 // Command examples
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_COMMAND } start`,
-		description: 'Starts a local dev environment',
+		usage: `${ DEV_ENVIRONMENT_COMMAND } destroy`,
+		description: 'Destroys a default local dev environment',
+	},
+	{
+		usage: `${ DEV_ENVIRONMENT_COMMAND } destroy --slug foo`,
+		description: 'Destroys a local dev environment named foo',
 	},
 ];
 
@@ -37,17 +41,11 @@ command()
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		try {
-			await startEnvironment( slug );
-		} catch ( e ) {
-			let messageToShow = chalk.red( 'Error:' );
-			if ( 'Environment not found.' === e.message ) {
-				const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
-				const createCommand = chalk.bold( DEV_ENVIRONMENT_COMMAND + ' create' + extraCommandParmas );
+			await destroyEnvironment( slug );
 
-				messageToShow += `Environment doesnt exists\n\n\nTo create new environment run:\n\n${ createCommand }\n`;
-				console.log( messageToShow );
-			} else {
-				console.log( messageToShow, e.message );
-			}
+			const message = chalk.green( '✓' ) + ' environment destroyed.\n';
+			console.log( message );
+		} catch ( e ) {
+			console.log( chalk.red( 'Error:' ), e.message );
 		}
 	} );

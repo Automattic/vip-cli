@@ -115,6 +115,22 @@ export async function createEnvironment( slug, options ) {
 	await prepareLandoEnv( instanceData, instancePath );
 }
 
+export async function destroyEnvironment( slug ) {
+	debug( 'Will destroy an environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	fs.rmdirSync( instancePath, { recursive: true } );
+}
+
 function getLandoConfig() {
 	const landoPath = path.join( __dirname, '..', '..', 'node_modules', 'lando' );
 
