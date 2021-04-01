@@ -60,7 +60,7 @@ export const defaults = {
 	};
 } );
 
-const landoFileTemplatePath = 'assets/dev-environment.lando.template.yml.ejs';
+const landoFileTemplatePath = path.join( __dirname, '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
 const landoFileName = '.lando.yml';
 
 export async function startEnvironment( slug ) {
