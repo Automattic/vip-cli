@@ -84,6 +84,8 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 		case 'RUNNING':
 		case 'COMPLETING':
 		case 'RAN':
+		case 'VALIDATING':
+		case 'VALIDATED':
 			return chalk.blueBright( runningSprite );
 		case 'COMPLETED':
 			return chalk.green( '✓' );
@@ -102,7 +104,7 @@ function buildErrorMessage( importFailed ) {
 
 	if ( 'FAILED' === importFailed.status ) {
 		message += `
-An error occurred: ${ importFailed.filesProcessed }/${ importFailed.filesTotal } files imported.
+${ importFailed.filesProcessed }/${ importFailed.filesTotal } files imported.
 
 If this error persists, please contact support.
 `;
@@ -138,10 +140,6 @@ export async function mediaImportCheckStatus( {
 			case 'COMPLETED':
 				statusMessage = `COMPLETED ${ sprite } : The Imported files should be visible on your site ${ env.primaryDomain.name }`;
 				break;
-			case 'COMPLETING':
-				statusMessage = `COMPLETING ${ sprite } `;
-				break;
-			// Intentionally no break to get default case:
 			default:
 				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
 		}
@@ -171,6 +169,12 @@ ${ maybeExitPrompt }
 				let mediaImportStatus;
 				try {
 					mediaImportStatus = await getStatus( api, app.id, env.id );
+					if ( ! mediaImportStatus ) {
+						return reject(
+							{
+								error: 'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
+							} );
+					}
 				} catch ( error ) {
 					return reject( { error } );
 				}
@@ -192,11 +196,9 @@ ${ maybeExitPrompt }
 				progressTracker.setStatus( mediaImportStatus );
 
 				setSuffixAndPrint();
-
-				if ( [ 'COMPLETED', 'ABORTED' ] === status ) {
+				if ( [ 'COMPLETED', 'ABORTED' ].includes( status ) ) {
 					return resolve( mediaImportStatus );
 				}
-
 				overallStatus = status;
 
 				setTimeout( checkStatus, IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
@@ -208,13 +210,7 @@ ${ maybeExitPrompt }
 
 	try {
 		const results = await getResults();
-
-		if ( typeof results === 'string' ) {
-			overallStatus = results;
-		} else {
-			overallStatus = results?.status || 'unknown';
-			// This shouldn't be 'unknown'...what should we do here?
-		}
+		overallStatus = results?.status || 'unknown';
 
 		progressTracker.stopPrinting();
 

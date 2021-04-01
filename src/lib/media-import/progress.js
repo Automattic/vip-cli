@@ -73,11 +73,15 @@ export class MediaImportProgressTracker {
 			singleLogLine.clear();
 		}
 
-		const progressPercentage = Math.floor( this.status.filesProcessed / this.status.filesTotal * 100 );
 		const statusIcon = getGlyphForStatus( this.status.status, this.runningSprite );
-		const logs = `Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }% ${ statusIcon }`;
+		let logs;
+		if ( this.status.filesProcessed && this.status.filesTotal ) {
+			const progressPercentage = Math.floor( this.status.filesProcessed / this.status.filesTotal * 100 );
+			logs = `Processed Files: ${ this.status.filesProcessed }/${ this.status.filesTotal } - ${ progressPercentage }% ${ statusIcon }`;
+		}
+
 		// Output the logs
-		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix }` );
+		singleLogLine( `${ this.prefix || '' }${ logs || '' }${ this.suffix || '' }` );
 
 		if ( clearAfter ) {
 			// Break out of the "Single log line" buffer
