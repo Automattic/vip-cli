@@ -117,7 +117,7 @@ command( {
 		const progressTracker = new MediaImportProgressTracker( [] );
 		progressTracker.prefix = `
 =============================================================
-Starting Media Import for your environment...
+Processing the files import for your environment...
 `;
 
 		console.log();
@@ -127,7 +127,7 @@ Starting Media Import for your environment...
 		console.log();
 
 		try {
-			const response = await api
+			await api
 				.mutate( {
 					mutation: START_IMPORT_MUTATION,
 					variables: {
