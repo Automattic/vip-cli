@@ -17,22 +17,11 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import API from 'lib/api';
-import {
-	currentUserCanImportForApp,
-	isSupportedApp,
-	SQL_IMPORT_FILE_SIZE_LIMIT,
-	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
-} from 'lib/site-import/db-file-import';
 // eslint-disable-next-line no-duplicate-imports
 import { trackEventWithEnv } from 'lib/tracker';
-import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
+import { formatEnvironment } from 'lib/cli/format';
 import { MediaImportProgressTracker } from 'lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
-
-export type WPSiteListType = {
-	id: string,
-	homeUrl: string,
-};
 
 const appQuery = `
 	id,
@@ -44,20 +33,13 @@ const appQuery = `
 		appId
 		type
 		name
-		launched
 		primaryDomain { name }
-		wpSites {
-			nodes {
-				homeUrl
-				id
-			}
-		}
 	}
 `;
 
 const START_IMPORT_MUTATION = gql`
-	mutation StartMediaImport($input:AppEnvironmentStartMediaImportInput) {
-		startMediaImport(input: $input) {
+	mutation StartMediaImport( $input: AppEnvironmentStartMediaImportInput ) {
+		startMediaImport( input: $input ) {
 			applicationId
 			environmentId
 			mediaImportStatus {
@@ -102,6 +84,7 @@ Are you sure you want to import the contents of the url?
 `,
 } )
 	.option( 'url', 'Valid URL to download a file archive from', '' )
+	.command( 'status', 'Check the status of the current running import' )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
 		const { app, env, url } = opts;
