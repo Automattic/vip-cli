@@ -93,7 +93,13 @@ command( {
 	appQuery,
 	envContext: true,
 	module: 'import-media',
-	requireConfirm: 'Are you sure you want to import the contents of the url?',
+	requireConfirm: `
+${ chalk.bold( 'NOTE: If the provided archive\'s directory structure begins with `/wp-content/uploads`,' ) }
+${ chalk.bold( 'then we will extract only the files after that path and import it. Otherwise, we will' ) }
+${ chalk.bold( 'import all files and preserve the directory structure as is.' ) }
+
+Are you sure you want to import the contents of the url?
+`,
 } )
 	.option( 'url', 'Valid URL to download a file archive from', '' )
 	.examples( examples )
