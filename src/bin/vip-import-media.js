@@ -121,7 +121,7 @@ Processing the files import for your environment...
 `;
 
 		console.log();
-		console.log( `importing: ${ url }` );
+		console.log( `Importing archive from: ${ url }` );
 		console.log( `to: ${ env.primaryDomain.name }` );
 		console.log( `site: ${ env.name } (${ env.type })` );
 		console.log();
@@ -154,4 +154,3 @@ Processing the files import for your environment...
 			} );
 		}
 	} );
-
