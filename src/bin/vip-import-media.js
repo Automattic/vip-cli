@@ -121,9 +121,7 @@ Processing the files import for your environment...
 
 		console.log();
 		console.log( `Importing archive from: ${ url }` );
-		console.log( `to: ${ env.primaryDomain.name }` );
-		console.log( `site: ${ env.name } (${ env.type })` );
-		console.log();
+		console.log( `to: ${ env.primaryDomain.name } (${ formatEnvironment( env.type ) })` );
 
 		try {
 			await api
