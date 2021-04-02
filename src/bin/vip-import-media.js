@@ -150,7 +150,7 @@ Processing the files import for your environment...
 			}
 
 			await track( 'import_media_start_execute_error', {
-				error: `Error starting: ${ e.message }`,
+				error: `Error: ${ e.message }`,
 			} );
 		}
 	} );
