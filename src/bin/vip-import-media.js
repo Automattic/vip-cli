@@ -95,7 +95,6 @@ command( {
 	module: 'import-media',
 	requireConfirm: 'Are you sure you want to import the contents of the url?',
 } )
-	// .command( 'status', 'Check the status of the current running import' )
 	.option( 'url', 'Valid URL to download a file archive from', '' )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
