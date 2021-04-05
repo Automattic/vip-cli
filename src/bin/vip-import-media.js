@@ -82,9 +82,10 @@ ${ chalk.red.bold( 'import all files and preserve the directory structure as is.
 
 Are you sure you want to import the contents of the url?
 `,
+	skipConfirmPrompt: true,
 } )
-	.option( 'url', 'Valid URL to download a file archive from', '' )
 	.command( 'status', 'Check the status of the current running import' )
+	.option( 'url', 'Valid URL to download a file archive from', '' )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
 		const { app, env, url } = opts;
