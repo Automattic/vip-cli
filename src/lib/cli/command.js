@@ -92,7 +92,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	} );
 
 	// Show help if no args passed
-	if ( !! customCommands.length && ! this.sub.length ) {
+	if ( !! customCommands.length && ! this.sub.length && _opts.module !== 'import-media' ) {
 		await trackEvent( 'command_help_view' );
 
 		this.showHelp();
