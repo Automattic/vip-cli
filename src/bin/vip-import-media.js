@@ -46,8 +46,6 @@ const START_IMPORT_MUTATION = gql`
 				importId
 				siteId
 				status
-				filesTotal
-				filesProcessed
 			}
 		}
 	}
