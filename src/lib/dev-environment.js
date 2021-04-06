@@ -79,6 +79,22 @@ export async function startEnvironment( slug ) {
 	await landoStart( instancePath );
 }
 
+export async function stopEnvironment( slug ) {
+	debug( 'Will stop an environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	await landoStop( instancePath );
+}
+
 export async function createEnvironment( slug, options ) {
 	debug( 'Will start an environment', slug, 'with options: ', options );
 
@@ -131,6 +147,18 @@ async function landoStart( instancePath ) {
 	await app.start();
 
 	console.log( lando.cli.formatData( landoUtils.startTable( app ), { format: 'table' }, { border: false } ) );
+}
+
+async function landoStop( instancePath ) {
+	debug( 'Will stop lando app on path:', instancePath );
+
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const app = lando.getApp( instancePath );
+	await app.init();
+
+	await app.stop();
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
