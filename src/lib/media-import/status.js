@@ -116,7 +116,7 @@ function buildErrorMessage( importFailed ) {
 	}
 
 	message += chalk.red( `Error: ${ importFailed.error }` );
-	message += 'If this error persists, please contact support';
+	message += 'If this error persists and you are not sure on how to fix, please contact support';
 	return message;
 }
 
