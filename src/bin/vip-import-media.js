@@ -56,7 +56,7 @@ const debug = debugLib( 'vip:vip-import-media' );
 // Command examples for the `vip import media` help prompt
 const examples = [
 	{
-		usage: 'vip import media @mysite.develop --url https://domain.to/archive.zip',
+		usage: 'vip import media @mysite.develop https://<path_to_publicly_accessible_archive>',
 		description:
 			'Start a media import with the contents of the archive file in the URL',
 	},
@@ -68,28 +68,33 @@ const examples = [
 	},
 ];
 
+function isSupportedUrl( urlToTest ) {
+	const url = new URL( urlToTest );
+	return url.protocol === 'http:' || url.protocol === 'https:';
+}
+
 command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
 	module: 'import-media',
+	requiredArgs: 1,
 	requireConfirm: `
-${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure begins with `/wp-content/uploads`,' ) }
-${ chalk.red.bold( 'we will extract only the files after that path and import it. Otherwise, we will' ) }
-${ chalk.red.bold( 'import all files and preserve the directory structure as is.' ) }
+${ chalk.yellowBright.bold( 'NOTE: If the provided archive\'s directory structure begins with `/wp-content/uploads`,' ) }
+${ chalk.yellowBright.bold( 'we will extract only the files after that path and import it. Otherwise, we will' ) }
+${ chalk.yellowBright.bold( 'import all files and preserve the directory structure as is.' ) }
 
 Are you sure you want to import the contents of the url?
 `,
-	skipConfirmPrompt: true,
 } )
 	.command( 'status', 'Check the status of the current running import' )
-	.option( 'url', 'Valid URL to download a file archive from', '' )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
-		const { app, env, url } = opts;
+		const { app, env } = opts;
+		const [ url ] = args;
 
-		if ( ! url ) {
-			console.log( chalk.red( 'Error:' ), 'No URL provided' );
+		if ( ! isSupportedUrl( url ) ) {
+			console.log( chalk.red( 'Error:' ), `Invalid URL provided ${ url }\nPlease make sure that it publicly accessible web archive` );
 			return;
 		}
 
