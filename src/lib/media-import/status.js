@@ -21,18 +21,10 @@ import { RunningSprite } from '../cli/format';
 
 const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
 
-/*
- * TODO: Add support to
- *  failureDetails {
- *		previousStatus
- *		globalErrors
- *	}
- * (when Parker is ready)
- */
 const IMPORT_MEDIA_PROGRESS_QUERY = gql`
-	query App($appId: Int = 1, $envId: Int = 1) {
-		app(id: $appId) {
-			environments(id: $envId ) {
+	query App( $appId: Int, $envId: Int ) {
+		app( id: $appId ) {
+			environments( id: $envId ) {
 			id
 			name
 			type
@@ -43,6 +35,14 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 				status
 				filesTotal
 				filesProcessed
+				failureDetails {
+					previousStatus
+					globalErrors
+					fileErrors {
+							fileName
+							errors
+					}
+				}
 			}
 		}
 	}
@@ -100,15 +100,23 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 }
 
 function buildErrorMessage( importFailed ) {
-	let message = chalk.red( `Error: ${ importFailed.error }` );
+	let message = '=============================================================\n';
 
 	if ( 'FAILED' === importFailed.status ) {
-		message += `
-${ importFailed.filesProcessed }/${ importFailed.filesTotal } files imported.
-
-If this error persists, please contact support.
-`;
+		const globalFailureDetails = importFailed.failureDetails;
+		if ( globalFailureDetails ) {
+			message += `${ chalk.yellow( 'Import failed at phase: ' ) }`;
+			message += `${ chalk.yellowBright( globalFailureDetails.previousStatus ) }\n`;
+			message += chalk.yellow( 'Errors:' );
+			globalFailureDetails.globalErrors.forEach( value => {
+				message += `\n\t- ${ chalk.yellowBright( value ) }`;
+			} );
+			return message;
+		}
 	}
+
+	message += chalk.red( `Error: ${ importFailed.error }` );
+	message += 'If this error persists and you are not sure on how to fix, please contact support';
 	return message;
 }
 
@@ -189,8 +197,7 @@ ${ maybeExitPrompt }
 					progressTracker.setStatus( mediaImportStatus );
 					overallStatus = 'FAILED';
 					setSuffixAndPrint();
-					/* TODO: Here we will add failure details */
-					return reject( { ...mediaImportStatus, error: 'Import failed' } );
+					return reject( { ...mediaImportStatus, error: 'Import FAILED' } );
 				}
 
 				progressTracker.setStatus( mediaImportStatus );
