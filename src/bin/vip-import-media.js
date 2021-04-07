@@ -94,7 +94,10 @@ Are you sure you want to import the contents of the url?
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
-			console.log( chalk.red( `Error: Invalid URL provided ${ url }\nPlease make sure that it publicly accessible web archive` ) );
+			console.log( chalk.red( `
+Error: 
+	Invalid URL provided: ${ url }
+	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import` ) );
 			return;
 		}
 
