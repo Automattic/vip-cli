@@ -14,6 +14,7 @@ import ejs from 'ejs';
 import path from 'path';
 import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -117,7 +118,6 @@ export async function createEnvironment( slug, options ) {
 
 export async function destroyEnvironment( slug ) {
 	debug( 'Will destroy an environment', slug );
-
 	const instancePath = getEnvironmentPath( slug );
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
@@ -130,6 +130,25 @@ export async function destroyEnvironment( slug ) {
 
 	await landoDestroy( instancePath );
 	fs.rmdirSync( instancePath, { recursive: true } );
+}
+
+export async function printEnvironmentInfo( slug ) {
+	debug( 'Will get info for an environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	const appInfo = await landoInfo( instancePath );
+
+	const lando = new Lando( getLandoConfig() );
+	console.log( lando.cli.formatData( appInfo, { format: 'table' }, { border: false } ) );
 }
 
 function getLandoConfig() {
@@ -180,7 +199,6 @@ async function landoStop( instancePath ) {
 
 async function landoDestroy( instancePath ) {
 	debug( 'Will destroy lando app on path:', instancePath );
-
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 
@@ -188,6 +206,27 @@ async function landoDestroy( instancePath ) {
 	await app.init();
 
 	await app.destroy();
+}
+
+async function landoInfo( instancePath ) {
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const app = lando.getApp( instancePath );
+	await app.init();
+
+	const appInfo = landoUtils.startTable( app );
+
+	const reachableServices = app.info.filter( service => service.urls.length );
+	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
+	const urls = reachableServices.map( service => service.urls ).flat();
+
+	const scanResult = await app.scanUrls( urls, { max: 1 } );
+	// If all the URLs are reachable than the app is considered 'up'
+	const isUp = scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
+	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
+
+	return appInfo;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
