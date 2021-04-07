@@ -23,11 +23,11 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 // Command examples
 const examples = [
 	{
-		usage: 'vip dev-environment create',
+		usage: `${ DEV_ENVIRONMENT_COMMAND } create`,
 		description: 'Creates a local dev environment',
 	},
 	{
-		usage: 'vip dev-environment create --slug test',
+		usage: `${ DEV_ENVIRONMENT_COMMAND } create --slug test`,
 		description: 'Creates a local dev environment named "test", this enables to create multiple independend environments',
 	},
 ];

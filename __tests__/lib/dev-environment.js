@@ -12,7 +12,7 @@ import fs from 'fs';
 /**
  * Internal dependencies
  */
-import { getEnvironmentPath, createEnvironment, startEnvironment, generateInstanceData } from 'lib/dev-environment';
+import { getEnvironmentPath, createEnvironment, startEnvironment, generateInstanceData, destroyEnvironment } from 'lib/dev-environment';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
@@ -36,6 +36,18 @@ describe( 'lib/dev-environment', () => {
 			fs.existsSync.mockReturnValue( false );
 
 			const promise = startEnvironment( slug );
+
+			await expect( promise ).rejects.toEqual(
+				new Error( 'Environment not found.' )
+			);
+		} );
+	} );
+	describe( 'destroyEnvironment', () => {
+		it( 'should throw for NON existing folder', async () => {
+			const slug = 'foo';
+			fs.existsSync.mockReturnValue( false );
+
+			const promise = destroyEnvironment( slug );
 
 			await expect( promise ).rejects.toEqual(
 				new Error( 'Environment not found.' )

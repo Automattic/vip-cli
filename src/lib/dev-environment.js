@@ -115,6 +115,23 @@ export async function createEnvironment( slug, options ) {
 	await prepareLandoEnv( instanceData, instancePath );
 }
 
+export async function destroyEnvironment( slug ) {
+	debug( 'Will destroy an environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	await landoDestroy( instancePath );
+	fs.rmdirSync( instancePath, { recursive: true } );
+}
+
 function getLandoConfig() {
 	const landoPath = path.join( __dirname, '..', '..', 'node_modules', 'lando' );
 
@@ -159,6 +176,18 @@ async function landoStop( instancePath ) {
 	await app.init();
 
 	await app.stop();
+}
+
+async function landoDestroy( instancePath ) {
+	debug( 'Will destroy lando app on path:', instancePath );
+
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const app = lando.getApp( instancePath );
+	await app.init();
+
+	await app.destroy();
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {

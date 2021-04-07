@@ -20,4 +20,5 @@ command( {
 	.command( 'create', 'Create a local dev environment' )
 	.command( 'start', 'Start a local dev environment' )
 	.command( 'stop', 'Stop a local dev environment' )
+	.command( 'destroy', 'Destroy a local dev environment' )
 	.argv( process.argv );
