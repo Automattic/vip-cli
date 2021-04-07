@@ -19,7 +19,8 @@
     "vip-dev-environment-start": "dist/bin/vip-dev-environment-start.js",
     "vip-dev-environment-stop": "dist/bin/vip-dev-environment-stop.js",
     "vip-dev-environment-create": "dist/bin/vip-dev-environment-create.js",
-    "vip-dev-environment-destroy": "dist/bin/vip-dev-environment-destroy.js"
+    "vip-dev-environment-destroy": "dist/bin/vip-dev-environment-destroy.js",
+    "vip-dev-environment-info": "dist/bin/vip-dev-environment-info.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
