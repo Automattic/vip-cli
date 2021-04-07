@@ -92,7 +92,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	} );
 
 	// Show help if no args passed
-	if ( !! customCommands.length && ! this.sub.length && _opts.module !== 'import-media' ) {
+	if ( !! customCommands.length && ! this.sub.length ) {
 		await trackEvent( 'command_help_view' );
 
 		this.showHelp();
@@ -410,6 +410,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 				info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
 				info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
+				break;
+			case 'import-media':
+				info.push( { key: 'Archive URL', value: this.sub } );
 				break;
 			default:
 		}
