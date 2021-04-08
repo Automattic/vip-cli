@@ -249,9 +249,9 @@ ${ maybeExitPrompt }
 			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ !! exportFileErrorsToJson ? '.json' : '.txt' }`;
 			try {
 				await fs.writeFile( errorsFile, formattedData );
-				progressTracker.suffix += `\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }`;
+				progressTracker.suffix += `\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;
 			} catch ( writeFileErr ) {
-				progressTracker.suffix += `\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }`;
+				progressTracker.suffix += `\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }\n\n`;
 			}
 		}
 
