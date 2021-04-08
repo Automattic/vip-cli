@@ -8,6 +8,8 @@
  */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 /**
  * Internal dependencies
@@ -15,7 +17,7 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/media-import/media-file-import';
 import { MediaImportProgressTracker } from 'lib/media-import/progress';
-import { capitalize, formatEnvironment } from 'lib/cli/format';
+import { capitalize, formatEnvironment, formatData } from 'lib/cli/format';
 
 import { RunningSprite } from '../cli/format';
 
@@ -100,30 +102,45 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 }
 
 function buildErrorMessage( importFailed ) {
-	let message = '=============================================================\n';
+	let message = '';
 
 	if ( 'FAILED' === importFailed.status ) {
 		const globalFailureDetails = importFailed.failureDetails;
 		if ( globalFailureDetails ) {
 			message += `${ chalk.yellow( 'Import failed at phase: ' ) }`;
-			message += `${ chalk.yellowBright( globalFailureDetails.previousStatus ) }\n`;
+			message += `${ chalk.yellowBright.bold( globalFailureDetails.previousStatus ) }\n`;
 			message += chalk.yellow( 'Errors:' );
 			globalFailureDetails.globalErrors.forEach( value => {
-				message += `\n\t- ${ chalk.yellowBright( value ) }`;
+				message += `\n\t- ${ chalk.yellowBright.bold( value ) }`;
 			} );
 			return message;
 		}
 	}
 
-	message += chalk.red( `Error: ${ importFailed.error }` );
-	message += 'If this error persists and you are not sure on how to fix, please contact support';
+	message += chalk.red( `Error: ${ importFailed.error ? importFailed.error : importFailed }` );
+	message += '\n\nIf this error persists and you are not sure on how to fix, please contact support';
 	return message;
+}
+
+function buildFileErrors( fileErrors, exportFileErrorsToJson ) {
+	if ( exportFileErrorsToJson ) {
+		// TODO: Remove the __typename field from every File Error
+		return formatData( fileErrors, 'json' );
+	}
+
+	let errorString = '';
+	for ( const fileError of fileErrors ) {
+		errorString += `File Name: ${ fileError.fileName }`;
+		errorString += `\n\nErrors:\n\t- ${ fileError.errors }\n\n\n\n`;
+	}
+	return errorString;
 }
 
 export async function mediaImportCheckStatus( {
 	app,
 	env,
 	progressTracker,
+	exportFileErrorsToJson,
 }: MediaImportCheckStatusInput ) {
 	// Stop printing so we can pass our callback
 	progressTracker.stopPrinting();
@@ -152,7 +169,7 @@ export async function mediaImportCheckStatus( {
 				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
 		}
 
-		const maybeExitPrompt = `${ overallStatus !== 'COMPLETED' ? exitPrompt : '' }`;
+		const maybeExitPrompt = [ 'COMPLETED', 'ABORTED', 'FAILED' ].includes( overallStatus ) ? '' : exitPrompt;
 
 		const suffix = `
 =============================================================
@@ -203,6 +220,7 @@ ${ maybeExitPrompt }
 				progressTracker.setStatus( mediaImportStatus );
 
 				setSuffixAndPrint();
+
 				if ( [ 'COMPLETED', 'ABORTED' ].includes( status ) ) {
 					return resolve( mediaImportStatus );
 				}
@@ -222,6 +240,20 @@ ${ maybeExitPrompt }
 		progressTracker.stopPrinting();
 
 		setProgressTrackerSuffix();
+		progressTracker.print();
+
+		const fileErrors = results.failureDetails?.fileErrors;
+		if ( !! fileErrors && fileErrors.length > 0 ) {
+			progressTracker.suffix += `${ chalk.yellow( `⚠️ ${ fileErrors.length } file error(s) found` ) }`;
+			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
+			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ !! exportFileErrorsToJson ? '.json' : '.txt' }`;
+			try {
+				await fs.writeFile( errorsFile, formattedData );
+				progressTracker.suffix += `\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;
+			} catch ( writeFileErr ) {
+				progressTracker.suffix += `\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }\n\n`;
+			}
+		}
 
 		// Print one final time
 		progressTracker.print( { clearAfter: true } );
