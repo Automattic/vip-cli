@@ -15,7 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { defaults, printEnvironmentInfo } from 'lib/dev-environment';
+import { defaults, printEnvironmentInfo, printAllEnvironmentsInfo } from 'lib/dev-environment';
 import { DEV_ENVIRONMENT_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -30,6 +30,7 @@ const examples = [
 
 command()
 	.option( 'slug', `Custom name of the dev environment (default: "${ defaults.environmentSlug }")` )
+	.option( 'all', 'Show Info for all local dev environemnts' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = opt.slug || defaults.environmentSlug;
@@ -37,7 +38,11 @@ command()
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		try {
-			await printEnvironmentInfo( slug );
+			if ( opt.all ) {
+				await printAllEnvironmentsInfo();
+			} else {
+				await printEnvironmentInfo( slug );
+			}
 		} catch ( e ) {
 			let messageToShow = chalk.red( 'Error:' );
 			if ( 'Environment not found.' === e.message ) {
