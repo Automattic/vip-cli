@@ -132,6 +132,18 @@ export async function destroyEnvironment( slug ) {
 	fs.rmdirSync( instancePath, { recursive: true } );
 }
 
+export async function printAllEnvironmentsInfo() {
+	const allEnvNames = getAllEnvironmentNames();
+
+	debug( 'Will print info for all environments. Names found: ', allEnvNames );
+
+	console.log( 'Found ' + chalk.bold( allEnvNames.length ) + ' environments' + ( allEnvNames.length ? ':' : '.' ) );
+	for ( const envName of allEnvNames ) {
+		console.log( '\n' );
+		await printEnvironmentInfo( envName );
+	}
+}
+
 export async function printEnvironmentInfo( slug ) {
 	debug( 'Will get info for an environment', slug );
 
@@ -280,7 +292,27 @@ function getParamInstanceData( param, type ) {
 	return defaults[ type ];
 }
 
-export function getEnvironmentPath( name ) {
+function getAllEnvironmentNames() {
+	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+
+	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
+
+	const doWeHaveAnyEnvironment = fs.existsSync( baseDir );
+
+	let envNames = [];
+	if ( doWeHaveAnyEnvironment ) {
+		const files = fs.readdirSync( baseDir );
+
+		envNames = files.filter( file => {
+			const fullPath = path.join( baseDir, file );
+			return fs.lstatSync( fullPath ).isDirectory();
+		} );
+	}
+
+	return envNames;
+}
+
+function getEnvironmentPath( name ) {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
