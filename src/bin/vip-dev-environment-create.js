@@ -30,6 +30,10 @@ const examples = [
 		usage: `${ DEV_ENVIRONMENT_COMMAND } create --slug test`,
 		description: 'Creates a local dev environment named "test", this enables to create multiple independend environments',
 	},
+	{
+		usage: `${ DEV_ENVIRONMENT_COMMAND } create --multisite --wordpress "5.6" --client-code "~/git/my_code"`,
+		description: 'Creates a local dev environment that is multisite and is using WP 5.6 and client code is expected to be in "~/git/my_code"',
+	},
 ];
 
 command()
