@@ -312,7 +312,7 @@ function getAllEnvironmentNames() {
 	return envNames;
 }
 
-function getEnvironmentPath( name ) {
+export function getEnvironmentPath( name ) {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
