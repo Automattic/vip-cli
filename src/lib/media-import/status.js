@@ -8,7 +8,7 @@
  */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
-import * as fs from 'fs/promises';
+import { promises as fsp } from 'fs';
 import * as path from 'path';
 
 /**
@@ -248,7 +248,7 @@ ${ maybeExitPrompt }
 			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
 			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ !! exportFileErrorsToJson ? '.json' : '.txt' }`;
 			try {
-				await fs.writeFile( errorsFile, formattedData );
+				await fsp.writeFile( errorsFile, formattedData );
 				progressTracker.suffix += `\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;
 			} catch ( writeFileErr ) {
 				progressTracker.suffix += `\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }\n\n`;
