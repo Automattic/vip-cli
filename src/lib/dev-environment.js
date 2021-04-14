@@ -267,8 +267,10 @@ export function generateInstanceData( slug, options ) {
 	return instanceData;
 }
 
-function getParamInstanceData( param, type ) {
-	if ( param ) {
+export function getParamInstanceData( passedParam, type ) {
+	if ( passedParam ) {
+		// cast to string
+		const param = passedParam + '';
 		if ( param.includes( '/' ) ) {
 			return {
 				mode: 'local',
