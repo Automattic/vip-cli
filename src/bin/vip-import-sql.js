@@ -57,6 +57,7 @@ const appQuery = `
 		type
 		name
 		launched
+		isK8sResident
 		syncProgress { status }
 		primaryDomain { name }
 		importStatus {
@@ -112,6 +113,13 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 
 	if ( ! isSupportedApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unsupported-app' } );
+		exit.withError(
+			'The type of application you specified does not currently support SQL imports.'
+		);
+	}
+
+	if ( env.isK8sResident ) {
+		await track( 'import_sql_command_error', { error_type: 'unsupported-k8s' } );
 		exit.withError(
 			'The type of application you specified does not currently support SQL imports.'
 		);
