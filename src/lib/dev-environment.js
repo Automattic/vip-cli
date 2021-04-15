@@ -64,7 +64,7 @@ export const defaults = {
 const landoFileTemplatePath = path.join( __dirname, '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
 const landoFileName = '.lando.yml';
 
-export async function startEnvironment( slug ) {
+export async function startEnvironment( slug: string ) {
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -80,7 +80,7 @@ export async function startEnvironment( slug ) {
 	await landoStart( instancePath );
 }
 
-export async function stopEnvironment( slug ) {
+export async function stopEnvironment( slug: string ) {
 	debug( 'Will stop an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -96,7 +96,17 @@ export async function stopEnvironment( slug ) {
 	await landoStop( instancePath );
 }
 
-export async function createEnvironment( slug, options ) {
+type NewInstanceOptions = {
+	title: string,
+	multisite: boolean,
+	phpVersion: string,
+	wordpress: string,
+	muPlugins: string,
+	jetpack: string,
+	clientCode: string
+}
+
+export async function createEnvironment( slug: string, options: NewInstanceOptions ) {
 	debug( 'Will start an environment', slug, 'with options: ', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -116,7 +126,7 @@ export async function createEnvironment( slug, options ) {
 	await prepareLandoEnv( instanceData, instancePath );
 }
 
-export async function destroyEnvironment( slug ) {
+export async function destroyEnvironment( slug: string ) {
 	debug( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
@@ -129,6 +139,8 @@ export async function destroyEnvironment( slug ) {
 	}
 
 	await landoDestroy( instancePath );
+
+	// $FlowFixMe: Seems like a Flow issue, recursive is a valid option and it won't work without it.
 	fs.rmdirSync( instancePath, { recursive: true } );
 }
 
@@ -144,7 +156,7 @@ export async function printAllEnvironmentsInfo() {
 	}
 }
 
-export async function printEnvironmentInfo( slug ) {
+export async function printEnvironmentInfo( slug: string ) {
 	debug( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -252,7 +264,7 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 }
 
-export function generateInstanceData( slug, options ) {
+export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
 	const instanceData = {
 		siteSlug: slug,
 		wpTitle: options.title || defaults.title,
@@ -267,7 +279,7 @@ export function generateInstanceData( slug, options ) {
 	return instanceData;
 }
 
-export function getParamInstanceData( passedParam, type ) {
+export function getParamInstanceData( passedParam: string, type: string ) {
 	if ( passedParam ) {
 		// cast to string
 		const param = passedParam + '';
@@ -314,7 +326,7 @@ function getAllEnvironmentNames() {
 	return envNames;
 }
 
-export function getEnvironmentPath( name ) {
+export function getEnvironmentPath( name: string ) {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
