@@ -12,7 +12,7 @@ import fs from 'fs';
 /**
  * Internal dependencies
  */
-import { getEnvironmentPath, createEnvironment, startEnvironment, generateInstanceData, destroyEnvironment } from 'lib/dev-environment';
+import { getEnvironmentPath, createEnvironment, startEnvironment, generateInstanceData, destroyEnvironment, getParamInstanceData } from 'lib/dev-environment';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
@@ -219,6 +219,23 @@ describe( 'lib/dev-environment', () => {
 			},
 		] )( 'should process options and use defaults', async input => {
 			const result = generateInstanceData( input.slug, input.options );
+
+			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'getParamInstanceData', () => {
+		it.each( [
+			{
+				param: 5.6,
+				option: 'wordpress',
+				expected: {
+					image: 'wpvipdev/wordpress',
+					mode: 'image',
+					tag: '5.6',
+				},
+			},
+		] )( 'should process options and use defaults', async input => {
+			const result = getParamInstanceData( input.param, input.option );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
