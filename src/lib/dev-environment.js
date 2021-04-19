@@ -261,14 +261,20 @@ async function landoInfo( instancePath ) {
 
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
+
+	const isUp = await isEnvUp( app );
+	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
+
+	return appInfo;
+}
+
+async function isEnvUp( app ) {
+	const reachableServices = app.info.filter( service => service.urls.length );
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
 	// If all the URLs are reachable than the app is considered 'up'
-	const isUp = scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
-	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
-
-	return appInfo;
+	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
@@ -288,6 +294,12 @@ async function landoRunWp( instancePath, args ) {
 
 	const app = lando.getApp( instancePath );
 	await app.init();
+
+	const isUp = await isEnvUp(app);
+
+	if ( ! isUp ) {
+		throw new Error( 'environment needs to be started before running wp command' );
+	}
 
 	const wpTooling = app.config.tooling?.wp;
 	if ( ! wpTooling ) {
