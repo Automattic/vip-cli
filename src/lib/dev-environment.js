@@ -295,7 +295,7 @@ async function landoRunWp( instancePath, args ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
-	const isUp = await isEnvUp(app);
+	const isUp = await isEnvUp( app );
 
 	if ( ! isUp ) {
 		throw new Error( 'environment needs to be started before running wp command' );
@@ -398,7 +398,7 @@ export function getEnvironmentPath( name: string ) {
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
 }
 
-export function handleCLIException( exception: Error, slug: string) {
+export function handleCLIException( exception: Error, slug: string ) {
 	let messageToShow = chalk.red( 'Error:' );
 	if ( 'Environment not found.' === exception.message ) {
 		const extraCommandParmas = slug ? ` --slug ${ slug }` : '';
