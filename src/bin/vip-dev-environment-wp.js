@@ -38,7 +38,7 @@ command( { wildcardCommand: true } )
 		const slug = opt.slug || defaults.environmentSlug;
 
 		try {
-		// to avoid confusion let's enforce -- as a spliter for arguments for this command and wp itself
+			// to avoid confusion let's enforce -- as a spliter for arguments for this command and wp itself
 			const argSpliterIx = process.argv.findIndex( argument => '--' === argument );
 			const argSpliterFound = argSpliterIx > -1;
 			if ( unmatchedArgs.length > 0 && ! argSpliterFound ) {
