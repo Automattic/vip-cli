@@ -250,6 +250,9 @@ async function landoInfo( instancePath ) {
 	const isUp = scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
+	// Drop vipdev prefix
+	appInfo.name = appInfo.name.replace( /^vipdev/, '' );
+
 	return appInfo;
 }
 

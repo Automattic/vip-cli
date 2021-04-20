@@ -15,7 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { defaults, createEnvironment } from 'lib/dev-environment';
+import { defaults, createEnvironment, printEnvironmentInfo } from 'lib/dev-environment';
 import { DEV_ENVIRONMENT_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -57,7 +57,9 @@ command()
 		try {
 			await createEnvironment( slug, opt );
 
-			const message = chalk.green( '✓' ) + ` environment created.\n\n\nTo start it please run:\n\n${ startCommand }\n`;
+			await printEnvironmentInfo( slug );
+
+			const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 			console.log( message );
 		} catch ( e ) {
 			let messageToShow = chalk.red( 'Error:' );
