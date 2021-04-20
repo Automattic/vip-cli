@@ -399,14 +399,14 @@ export function getEnvironmentPath( name: string ) {
 }
 
 export function handleCLIException( exception: Error, slug: string ) {
-	let messageToShow = chalk.red( 'Error:' );
+	const errorPrefix = chalk.red( 'Error:' );
 	if ( 'Environment not found.' === exception.message ) {
 		const extraCommandParmas = slug ? ` --slug ${ slug }` : '';
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_COMMAND + ' create' + extraCommandParmas );
 
-		messageToShow += `Environment doesnt exists\n\n\nTo create new environment run:\n\n${ createCommand }\n`;
-		console.log( messageToShow );
+		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
+		console.log( errorPrefix, message );
 	} else {
-		console.log( messageToShow, exception.message );
+		console.log( errorPrefix, exception.message );
 	}
 }

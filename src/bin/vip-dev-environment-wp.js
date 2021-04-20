@@ -34,17 +34,22 @@ const examples = [
 command( { wildcardCommand: true } )
 	.option( 'slug', `Custom name of the dev environment (default: "${ defaults.environmentSlug }")` )
 	.examples( examples )
-	.argv( process.argv, async ( _, opt ) => {
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = opt.slug || defaults.environmentSlug;
 
-		// to avoid confusion let's enforce -- as a spliter for arguments for this command and wp itself
-		let arg = [];
-		const argSpliterIx = process.argv.findIndex( argument => '--' === argument );
-		if ( argSpliterIx && argSpliterIx + 1 < process.argv.length ) {
-			arg = process.argv.slice( argSpliterIx + 1 );
-		}
-
 		try {
+		// to avoid confusion let's enforce -- as a spliter for arguments for this command and wp itself
+			const argSpliterIx = process.argv.findIndex( argument => '--' === argument );
+			const argSpliterFound = argSpliterIx > -1;
+			if ( unmatchedArgs.length > 0 && ! argSpliterFound ) {
+				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and "wp" commands (see "--help" for examples)' );
+			}
+
+			let arg = [];
+			if ( argSpliterFound && argSpliterIx + 1 < process.argv.length ) {
+				arg = process.argv.slice( argSpliterIx + 1 );
+			}
+
 			await runWp( slug, arg );
 		} catch ( e ) {
 			handleCLIException( e, opt.slug );
