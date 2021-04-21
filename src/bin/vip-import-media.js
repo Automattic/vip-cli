@@ -88,9 +88,10 @@ Are you sure you want to import the contents of the url?
 `,
 } )
 	.command( 'status', 'Check the status of the current running import' )
+	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
-		const { app, env } = opts;
+		const { app, env, exportFileErrorsToJson } = opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
@@ -132,7 +133,7 @@ Processing the files import for your environment...
 					},
 				} );
 
-			await mediaImportCheckStatus( { app, env, progressTracker } );
+			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
 		} catch ( e ) {
 			if ( e.graphQLErrors ) {
 				for ( const err of e.graphQLErrors ) {
