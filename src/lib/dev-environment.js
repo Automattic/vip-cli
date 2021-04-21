@@ -265,6 +265,9 @@ async function landoInfo( instancePath ) {
 	const isUp = await isEnvUp( app );
 	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
+	// Drop vipdev prefix
+	appInfo.name = appInfo.name.replace( /^vipdev/, '' );
+
 	return appInfo;
 }
 
