@@ -14,11 +14,13 @@ import ejs from 'ejs';
 import path from 'path';
 import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
+import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 
 /**
  * Internal dependencies
  */
+import { DEV_ENVIRONMENT_COMMAND } from './constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -175,6 +177,22 @@ export async function printEnvironmentInfo( slug: string ) {
 	console.log( lando.cli.formatData( appInfo, { format: 'table' }, { border: false } ) );
 }
 
+export async function runWp( slug: string, args: Array ) {
+	debug( 'Will run a wp command on env', slug, 'with args', args );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	await landoRunWp( instancePath, args );
+}
+
 function getLandoConfig() {
 	const landoPath = path.join( __dirname, '..', '..', 'node_modules', 'lando' );
 
@@ -243,14 +261,20 @@ async function landoInfo( instancePath ) {
 
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
+
+	const isUp = await isEnvUp( app );
+	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
+
+	return appInfo;
+}
+
+async function isEnvUp( app ) {
+	const reachableServices = app.info.filter( service => service.urls.length );
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
 	// If all the URLs are reachable than the app is considered 'up'
-	const isUp = scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
-	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
-
-	return appInfo;
+	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
@@ -262,6 +286,44 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	fs.writeFileSync( landoFileTargetPath, landoFile );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
+}
+
+async function landoRunWp( instancePath, args ) {
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const app = lando.getApp( instancePath );
+	await app.init();
+
+	const isUp = await isEnvUp( app );
+
+	if ( ! isUp ) {
+		throw new Error( 'environment needs to be started before running wp command' );
+	}
+
+	const wpTooling = app.config.tooling?.wp;
+	if ( ! wpTooling ) {
+		throw new Error( 'wp is not a known lando task' );
+	}
+
+	/*
+	 lando is looking in both passed args and process.argv so we need to do a bit of hack to fake process.argv
+	 so that lando doesn't try to interpret args not meant for wp.
+
+	 Lando drops first 3 args (<node> <lando> <command>) from process.argv and process rest, so we will fake 3 args + the real args
+	*/
+	process.argv = [ '0', '1', '3' ].concat( args );
+
+	wpTooling.app = app;
+	wpTooling.name = 'wp';
+
+	const wpTask = landoBuildTask( wpTooling, lando );
+
+	const argv = {
+		_: args,
+	};
+
+	wpTask.run( argv );
 }
 
 export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
@@ -334,4 +396,17 @@ export function getEnvironmentPath( name: string ) {
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
+}
+
+export function handleCLIException( exception: Error, slug: string ) {
+	const errorPrefix = chalk.red( 'Error:' );
+	if ( 'Environment not found.' === exception.message ) {
+		const extraCommandParmas = slug ? ` --slug ${ slug }` : '';
+		const createCommand = chalk.bold( DEV_ENVIRONMENT_COMMAND + ' create' + extraCommandParmas );
+
+		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
+		console.log( errorPrefix, message );
+	} else {
+		console.log( errorPrefix, exception.message );
+	}
 }

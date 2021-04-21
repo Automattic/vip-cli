@@ -22,4 +22,5 @@ command( {
 	.command( 'stop', 'Stop a local dev environment' )
 	.command( 'destroy', 'Destroy a local dev environment' )
 	.command( 'info', 'Provides basic info about a local dev environment' )
+	.command( 'wp', 'Run wp cli command' )
 	.argv( process.argv );
