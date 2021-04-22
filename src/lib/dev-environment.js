@@ -286,7 +286,7 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
 	const configDefaultsTargetPath = path.join( instancePath, 'config' );
-	const configDefaultsFileTargetPath = path.join(configDefaultsTargetPath, 'wp-config-defaults.php');
+	const configDefaultsFileTargetPath = path.join( configDefaultsTargetPath, 'wp-config-defaults.php' );
 
 	fs.mkdirSync( instancePath, { recursive: true } );
 	fs.writeFileSync( landoFileTargetPath, landoFile );
