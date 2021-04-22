@@ -17,4 +17,8 @@ node_modules/
 # jest coverage
 coverage
 
+# Mac
 .DS_Store
+
+# Webstorm
+.idea
