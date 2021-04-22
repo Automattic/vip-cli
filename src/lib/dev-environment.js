@@ -64,7 +64,7 @@ export const defaults = {
 } );
 
 const landoFileTemplatePath = path.join( __dirname, '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
-const configDefaultsFilePath = path.join( __dirname, '..', '..', 'assets', 'config', 'wp-config-defaults.php' );
+const configDefaultsFilePath = path.join( __dirname, '..', '..', 'assets', 'dev-environment.wp-config-defaults.php' );
 const landoFileName = '.lando.yml';
 
 export async function startEnvironment( slug: string ) {
