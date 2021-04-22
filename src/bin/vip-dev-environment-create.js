@@ -15,29 +15,37 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { defaults, createEnvironment, printEnvironmentInfo } from 'lib/dev-environment';
-import { DEV_ENVIRONMENT_COMMAND } from 'lib/constants/dev-environment';
+import { createEnvironment, printEnvironmentInfo, getEnvironmentName } from 'lib/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 // Command examples
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_COMMAND } create`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create`,
 		description: 'Creates a local dev environment',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_COMMAND } create --slug test`,
-		description: 'Creates a local dev environment named "test", this enables to create multiple independend environments',
+		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create`,
+		description: 'Creates a local dev environment for prodaction site for id 123',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_COMMAND } create --multisite --wordpress "5.6" --client-code "~/git/my_code"`,
+		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug 'my_site'`,
+		description: 'Creates a local dev environment for prodaction site for id 123 aliased as "my_site"',
+	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug test`,
+		description: 'Creates a blank local dev environment with custom name "test", this enables to create multiple independend environments',
+	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress "5.6" --client-code "~/git/my_code"`,
 		description: 'Creates a local dev environment that is multisite and is using WP 5.6 and client code is expected to be in "~/git/my_code"',
 	},
 ];
 
 command()
-	.option( 'slug', `Custom name of the dev environment (default: "${ defaults.environmentSlug }")` )
+	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site (default: "VIP Dev")' )
 	.option( 'multisite', 'Enable multisite install' )
 	.option( 'php', 'Use a specific PHP version' )
@@ -47,12 +55,12 @@ command()
 	.option( 'client-code', 'Use the client code from a local directory or VIP skeleton (default: use the VIP skeleton)' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const slug = opt.slug || defaults.environmentSlug;
+		const slug = getEnvironmentName( opt );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
-		const startCommand = chalk.bold( DEV_ENVIRONMENT_COMMAND + ' start' + extraCommandParmas );
+		const startCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' start' + extraCommandParmas );
 
 		try {
 			await createEnvironment( slug, opt );

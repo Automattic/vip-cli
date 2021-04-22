@@ -20,7 +20,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { DEV_ENVIRONMENT_COMMAND } from './constants/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from './constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -406,15 +406,34 @@ export function getEnvironmentPath( name: string ) {
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
 }
 
-export function handleCLIException( exception: Error, slug: string ) {
+export function handleCLIException( exception: Error ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( 'Environment not found.' === exception.message ) {
-		const extraCommandParmas = slug ? ` --slug ${ slug }` : '';
-		const createCommand = chalk.bold( DEV_ENVIRONMENT_COMMAND + ' create' + extraCommandParmas );
+		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
 		console.log( errorPrefix, message );
 	} else {
 		console.log( errorPrefix, exception.message );
 	}
+}
+
+type EnvironmentNameOptions = {
+	slug: string,
+	app: string,
+	env: string,
+}
+
+export function getEnvironmentName( options: EnvironmentNameOptions ) {
+	if ( options.slug ) {
+		return options.slug;
+	}
+
+	if ( options.app ) {
+		const envSuffix = options.env ? `-${ options.env }` : '';
+
+		return options.app + envSuffix;
+	}
+
+	return defaults.environmentSlug;
 }
