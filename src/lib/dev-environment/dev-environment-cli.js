@@ -8,6 +8,7 @@
  */
 import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
+import { prompt, Confirm, Select } from 'enquirer';
 
 /**
  * Internal dependencies
@@ -69,16 +70,16 @@ export function generateInstanceData( slug: string, options: NewInstanceOptions 
 		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
 		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
 		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
-		wordpress: getParamInstanceData( options.wordpress, 'wordpress' ),
-		muPlugins: getParamInstanceData( options.muPlugins, 'muPlugins' ),
-		jetpack: getParamInstanceData( options.jetpack, 'jetpack' ),
-		clientCode: getParamInstanceData( options.clientCode, 'clientCode' ),
+		wordpress: processComponentOptionInput( options.wordpress, 'wordpress' ),
+		muPlugins: processComponentOptionInput( options.muPlugins, 'muPlugins' ),
+		jetpack: processComponentOptionInput( options.jetpack, 'jetpack' ),
+		clientCode: processComponentOptionInput( options.clientCode, 'clientCode' ),
 	};
 
 	return instanceData;
 }
 
-export function getParamInstanceData( passedParam: string, type: string ) {
+export function processComponentOptionInput( passedParam: string, type: string ) {
 	if ( passedParam ) {
 		// cast to string
 		const param = passedParam + '';
@@ -103,4 +104,88 @@ export function getParamInstanceData( passedParam: string, type: string ) {
 	}
 
 	return DEV_ENVIRONMENT_DEFAULTS[ type ];
+}
+
+const promptIntro = 'This is a wizard to help you set up you local dev environment.\n\n' +
+	'Sensible defaualt values were pre-selected for convinience. ' +
+	'You can also choose to create multiple different environments with different settings using the --slug option.\n\n';
+
+export async function promptForArguments( providedOptions: NewInstanceOptions ) {
+	console.log( promptIntro );
+
+	const instanceData = {
+		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', DEV_ENVIRONMENT_DEFAULTS.title ),
+		phpVersion: providedOptions.phpVersion || await promptForText( 'Php version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
+		multisite: providedOptions.multisite || await promptForBoolean( 'Multisite', DEV_ENVIRONMENT_DEFAULTS.multisite ),
+		// wordpress: providedOptions.wordpress ? processComponentOptionInput( providedOptions.wordpress, 'wordpress' ) : await promptForCode( 'wordpress' ),
+		// muPlugins: processComponentOptionInput( options.muPlugins, 'muPlugins' ),
+		// jetpack: processComponentOptionInput( options.jetpack, 'jetpack' ),
+		// clientCode: processComponentOptionInput( options.clientCode, 'clientCode' ),
+		wordpress: {},
+	};
+
+	const components = [ 'wordpress' ];
+	for ( const component of components ) {
+		const option = providedOptions[ component ];
+		instanceData[ component ] = option
+			? processComponentOptionInput( option, component )
+			: await promptForComponent( component );
+	}
+
+	return instanceData;
+}
+
+export async function promptForText( message: string, initial: string ) {
+	const nonEmptyValidator = value => {
+		if ( ( value || '' ).trim() ) {
+			return true;
+		}
+		return 'value needs to be provided';
+	};
+
+	const result = await prompt( {
+		type: 'input',
+		name: 'input',
+		message,
+		initial,
+		validate: nonEmptyValidator,
+	} );
+
+	return result.input.trim();
+}
+
+export async function promptForBoolean( message: string, initial: boolean ) {
+	const confirm = new Confirm( {
+		message,
+		initial,
+	} );
+
+	return confirm.run();
+}
+
+export async function promptForComponent( component: string ) {
+	const choices = [
+		{
+			message: `local folder - where you already have ${ component } code`,
+			value: 'local',
+		},
+		{
+			message: 'image - that gets automatically fetched',
+			value: 'image',
+		},
+	];
+	const initial = 1;
+
+	const select = new Select( {
+		name: 'color',
+		message: `How would you like to source ${ component }`,
+		choices,
+		initial,
+	} );
+
+	const modeResult = await select.run();
+
+	return {
+		mode: modeResult,
+	};
 }

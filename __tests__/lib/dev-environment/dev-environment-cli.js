@@ -5,12 +5,19 @@
 /**
  * External dependencies
  */
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
  */
 
-import { getEnvironmentName, generateInstanceData, getParamInstanceData } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, generateInstanceData, processComponentOptionInput, promptForText } from 'lib/dev-environment/dev-environment-cli';
+
+jest.mock( 'enquirer', () => {
+	return {
+		prompt: jest.fn(),
+	};
+} );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'getEnvironmentName', () => {
@@ -215,7 +222,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			expect( result ).toStrictEqual( input.expected );
 		} );
 	} );
-	describe( 'getParamInstanceData', () => {
+	describe( 'processComponentOptionInput', () => {
 		it.each( [
 			{
 				param: 5.6,
@@ -227,9 +234,20 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = getParamInstanceData( input.param, input.option );
+			const result = processComponentOptionInput( input.param, input.option );
 
 			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'promptForText', () => {
+		it( 'should trim provided value', async () => {
+			const providedValue = '  bar  ';
+
+			prompt.mockResolvedValue( { input: providedValue } );
+
+			const result = await promptForText( 'Give me something', 'foo' );
+
+			expect( result ).toStrictEqual( 'bar' );
 		} );
 	} );
 } );
