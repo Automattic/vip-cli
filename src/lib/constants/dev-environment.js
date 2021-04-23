@@ -4,7 +4,6 @@ export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }
 export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 	wordpress: {
 		image: 'wpvipdev/wordpress',
-		tag: '5.6',
 	},
 	jetpack: {
 		image: 'wpvipdev/jetpack',
@@ -26,12 +25,15 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	jetpack: {
 		mode: 'inherit',
 	},
-	wordpress: {},
+	wordpress: {
+		mode: 'image',
+		image: 'wpvipdev/wordpress',
+	},
 	muPlugins: {},
 	clientCode: {},
 };
 
-[ 'wordpress', 'muPlugins', 'clientCode' ].forEach( type => {
+[ 'muPlugins', 'clientCode' ].forEach( type => {
 	DEV_ENVIRONMENT_DEFAULTS[ type ] = {
 		mode: 'image',
 		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,

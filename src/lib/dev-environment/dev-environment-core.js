@@ -13,6 +13,7 @@ import fs from 'fs';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
+import fetch from 'node-fetch';
 
 /**
  * Internal dependencies
@@ -82,7 +83,7 @@ export async function createEnvironment( slug: string, options: NewInstanceOptio
 		throw new Error( 'Environment already exists.' );
 	}
 
-	const instanceData = generateInstanceData( slug, options );
+	const instanceData = await generateInstanceData( slug, options );
 
 	debug( 'Instance data to create a new environment:', instanceData );
 
@@ -168,22 +169,22 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 }
 
-export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
+export async function generateInstanceData( slug: string, options: NewInstanceOptions ) {
 	const instanceData = {
 		siteSlug: slug,
 		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
 		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
 		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
-		wordpress: getParamInstanceData( options.wordpress, 'wordpress' ),
-		muPlugins: getParamInstanceData( options.muPlugins, 'muPlugins' ),
-		jetpack: getParamInstanceData( options.jetpack, 'jetpack' ),
-		clientCode: getParamInstanceData( options.clientCode, 'clientCode' ),
+		wordpress: await getParamInstanceData( options.wordpress, 'wordpress' ),
+		muPlugins: await getParamInstanceData( options.muPlugins, 'muPlugins' ),
+		jetpack: await getParamInstanceData( options.jetpack, 'jetpack' ),
+		clientCode: await getParamInstanceData( options.clientCode, 'clientCode' ),
 	};
 
 	return instanceData;
 }
 
-export function getParamInstanceData( passedParam: string, type: string ) {
+export async function getParamInstanceData( passedParam: string, type: string ) {
 	if ( passedParam ) {
 		// cast to string
 		const param = passedParam + '';
@@ -204,6 +205,18 @@ export function getParamInstanceData( passedParam: string, type: string ) {
 			mode: 'image',
 			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
 			tag: param,
+		};
+	}
+
+	if ( type === 'wordpress' ) {
+		const request = await fetch( 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10' );
+		const body = await request.json();
+		const versions = body.results.map( x => x.name ).sort();
+		const tag = versions.pop();
+		return {
+			mode: 'image',
+			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
+			tag,
 		};
 	}
 
