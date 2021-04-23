@@ -117,14 +117,13 @@ export async function promptForArguments( providedOptions: NewInstanceOptions ) 
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', DEV_ENVIRONMENT_DEFAULTS.title ),
 		phpVersion: providedOptions.phpVersion || await promptForText( 'Php version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
 		multisite: providedOptions.multisite || await promptForBoolean( 'Multisite', DEV_ENVIRONMENT_DEFAULTS.multisite ),
-		// wordpress: providedOptions.wordpress ? processComponentOptionInput( providedOptions.wordpress, 'wordpress' ) : await promptForCode( 'wordpress' ),
-		// muPlugins: processComponentOptionInput( options.muPlugins, 'muPlugins' ),
-		// jetpack: processComponentOptionInput( options.jetpack, 'jetpack' ),
-		// clientCode: processComponentOptionInput( options.clientCode, 'clientCode' ),
 		wordpress: {},
+		muPlugins: {},
+		jetpack: {},
+		clientCode: {},
 	};
 
-	const components = [ 'wordpress' ];
+	const components = [ 'wordpress', 'muPlugins', 'jetpack', 'clientCode' ];
 	for ( const component of components ) {
 		const option = providedOptions[ component ];
 		instanceData[ component ] = option
@@ -174,18 +173,52 @@ export async function promptForComponent( component: string ) {
 			value: 'image',
 		},
 	];
-	const initial = 1;
+	let initial = 1;
+	if ( 'jetpack' === component ) {
+		initial = 0;
+		choices.unshift( {
+			message: `inherit - use ${ component } included in mu-plugins`,
+			value: 'inherit',
+		} );
+	} else if ( 'clientCode' === component ) {
+		initial = 0;
+	}
 
 	const select = new Select( {
-		name: 'color',
 		message: `How would you like to source ${ component }`,
 		choices,
 		initial,
 	} );
 
 	const modeResult = await select.run();
+	if ( 'local' === modeResult ) {
+		const path = await promptForText( `	What is a path to your local ${ component }`, '' );
+		return {
+			mode: modeResult,
+			dir: path,
+		};
+	}
+	if ( 'inherit' === modeResult ) {
+		return {
+			mode: modeResult,
+		}
+	}
+
+	// image
+	let tag = DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].tag;
+	const componentsWithPredefinedImageTag = [ 'muPlugins', 'clientCode' ];
+
+	if ( ! componentsWithPredefinedImageTag.includes( component ) ) {
+		const selectTag = new Select( {
+			message: '	Which version would you like',
+			choices: DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].allTags,
+		} );
+		tag = await selectTag.run();
+	}
 
 	return {
 		mode: modeResult,
+		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].image,
+		tag,
 	};
 }

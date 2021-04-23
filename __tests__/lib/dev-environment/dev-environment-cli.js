@@ -5,17 +5,23 @@
 /**
  * External dependencies
  */
-import { prompt } from 'enquirer';
+import { prompt, selectRunMock } from 'enquirer';
 
 /**
  * Internal dependencies
  */
 
-import { getEnvironmentName, generateInstanceData, processComponentOptionInput, promptForText } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, generateInstanceData, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'enquirer', () => {
+	const _selectRunMock = jest.fn();
 	return {
 		prompt: jest.fn(),
+		// Select: jest.fn().mockImplementation( () => ( { run: jest.fn() } ) ),
+		Select: class {
+			run = _selectRunMock
+		},
+		selectRunMock: _selectRunMock,
 	};
 } );
 
@@ -248,6 +254,77 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForText( 'Give me something', 'foo' );
 
 			expect( result ).toStrictEqual( 'bar' );
+		} );
+	} );
+	describe( 'promptForComponent', () => {
+		beforeEach( () => {
+			selectRunMock.mockReset();
+		} );
+
+		it.each( [
+			{
+				component: 'wordpress',
+				mode: 'local',
+				path: '/tmp',
+				expected: {
+					mode: 'local',
+					dir: '/tmp',
+				},
+			},
+			{
+				component: 'wordpress',
+				mode: 'image',
+				path: '5.6',
+				expected: {
+					mode: 'image',
+					image: 'wpvipdev/wordpress',
+					tag: '5.6',
+				},
+			},
+			{ // muPlugins hav just one tag - auto
+				component: 'muPlugins',
+				mode: 'image',
+				expected: {
+					mode: 'image',
+					image: 'wpvipdev/mu-plugins',
+					tag: 'auto',
+				},
+			},
+			{ // jetpack inherit
+				component: 'jetpack',
+				mode: 'inherit',
+				expected: {
+					mode: 'inherit',
+				},
+			},
+			{ // jetpack image
+				component: 'jetpack',
+				mode: 'image',
+				path: '1',
+				expected: {
+					mode: 'image',
+					image: 'wpvipdev/jetpack',
+					tag: '1',
+				},
+			},
+			{ // clientCode have just one tag
+				component: 'clientCode',
+				mode: 'image',
+				expected: {
+					mode: 'image',
+					image: 'wpvipdev/skeleton',
+					tag: '181a17d9aedf7da73730d65ccef3d8dbf172a5c5',
+				},
+			},
+		] )( 'should return correct component %p', async input => {
+			prompt.mockResolvedValue( { input: input.path } );
+			selectRunMock
+				.mockResolvedValueOnce( input.mode )
+				.mockResolvedValueOnce( input.path );
+
+			const result = await promptForComponent( input.component );
+
+			expect( result ).toStrictEqual( input.expected );
 		} );
 	} );
 } );

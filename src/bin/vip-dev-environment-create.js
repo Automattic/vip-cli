@@ -60,17 +60,13 @@ command()
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
-		const instanceData2 = await promptForArguments( opt );
-		instanceData2.siteSlug = slug;
-
-		console.log( 'result', instanceData2 );
+		const instanceData = await promptForArguments( opt );
+		instanceData.siteSlug = slug;
 
 		const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
 		const startCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' start' + extraCommandParmas );
 
 		try {
-			const instanceData = generateInstanceData( slug, opt );
-
 			await createEnvironment( instanceData );
 
 			await printEnvironmentInfo( slug );
