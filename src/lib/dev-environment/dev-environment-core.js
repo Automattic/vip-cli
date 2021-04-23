@@ -19,46 +19,9 @@ import chalk from 'chalk';
  */
 import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
+import { DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
-
-const containerImages = {
-	wordpress: {
-		image: 'wpvipdev/wordpress',
-		tag: '5.6',
-	},
-	jetpack: {
-		image: 'wpvipdev/jetpack',
-	},
-	muPlugins: {
-		image: 'wpvipdev/mu-plugins',
-		tag: 'auto',
-	},
-	clientCode: {
-		image: 'wpvipdev/skeleton',
-		tag: '181a17d9aedf7da73730d65ccef3d8dbf172a5c5',
-	},
-};
-
-export const defaults = {
-	title: 'VIP Dev',
-	multisite: false,
-	phpVersion: '7.4',
-	jetpack: {
-		mode: 'inherit',
-	},
-	wordpress: {},
-	muPlugins: {},
-	clientCode: {},
-};
-
-[ 'wordpress', 'muPlugins', 'clientCode' ].forEach( type => {
-	defaults[ type ] = {
-		mode: 'image',
-		image: containerImages[ type ].image,
-		tag: containerImages[ type ].tag,
-	};
-} );
 
 const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
 const configDefaultsFilePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.wp-config-defaults.php' );
@@ -208,9 +171,9 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
 	const instanceData = {
 		siteSlug: slug,
-		wpTitle: options.title || defaults.title,
-		multisite: options.multisite || defaults.multisite,
-		phpVersion: options.phpVersion || defaults.phpVersion,
+		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
+		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
+		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
 		wordpress: getParamInstanceData( options.wordpress, 'wordpress' ),
 		muPlugins: getParamInstanceData( options.muPlugins, 'muPlugins' ),
 		jetpack: getParamInstanceData( options.jetpack, 'jetpack' ),
@@ -239,12 +202,12 @@ export function getParamInstanceData( passedParam: string, type: string ) {
 
 		return {
 			mode: 'image',
-			image: containerImages[ type ].image,
+			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
 			tag: param,
 		};
 	}
 
-	return defaults[ type ];
+	return DEV_ENVIRONMENT_DEFAULTS[ type ];
 }
 
 function getAllEnvironmentNames() {
