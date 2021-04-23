@@ -10,13 +10,14 @@
  */
 import debugLib from 'debug';
 import chalk from 'chalk';
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
  */
 import command from 'lib/cli/command';
 import { createEnvironment, printEnvironmentInfo } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, generateInstanceData } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -45,6 +46,28 @@ const examples = [
 	},
 ];
 
+const intro = 'This is a wizard to help you set up you local dev environment.\n\n' +
+	'Sensible defaualt values were pre-selected for convinience. ' +
+	'You can also choose to create multiple different environments with different settings using the --slug option.\n\n';
+
+const proptForMissingArguments = async providedOptions => {
+	console.log( intro );
+
+	const collected = await prompt({
+		type: 'input',
+  	name: 'username',
+  	message: 'What is your username?',
+	  initial: 'true',
+	});
+
+	const result = {
+		...providedOptions,
+		...collected,
+	};
+
+	return result;
+}
+
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site (default: "VIP Dev")' )
@@ -60,11 +83,15 @@ command()
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
+		await proptForMissingArguments();
+
 		const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
 		const startCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' start' + extraCommandParmas );
 
 		try {
-			await createEnvironment( slug, opt );
+			const instanceData = generateInstanceData( slug, opt );
+
+			await createEnvironment( instanceData );
 
 			await printEnvironmentInfo( slug );
 
