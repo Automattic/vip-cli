@@ -17,8 +17,8 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-env-lando';
-import { printTable } from './dev-env-cli';
+import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
+import { printTable } from './dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

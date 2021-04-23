@@ -9,9 +9,9 @@
 /**
  * Internal dependencies
  */
-import { getEnvironmentName } from 'lib/dev-env/dev-env-cli';
+import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 
-describe( 'lib/dev-env/dev-env-cli', () => {
+describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'getEnvironmentName', () => {
 		it.each( [
 			{ // default value

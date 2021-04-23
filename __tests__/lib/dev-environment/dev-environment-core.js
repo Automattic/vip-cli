@@ -18,12 +18,12 @@ import { getEnvironmentPath,
 	generateInstanceData,
 	destroyEnvironment,
 	getParamInstanceData,
-	getEnvironmentName } from 'lib/dev-env/dev-env-core';
+	getEnvironmentName } from 'lib/dev-environment/dev-environment-core';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
 
-describe( 'lib/dev-env/dev-env-core', () => {
+describe( 'lib/dev-environment/dev-environment-core', () => {
 	describe( 'createEnvironment', () => {
 		it( 'should throw for existing folder', async () => {
 			const slug = 'foo';
