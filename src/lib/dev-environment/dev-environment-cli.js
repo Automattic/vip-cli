@@ -54,6 +54,30 @@ export function printTable( data: Object ) {
 
 	console.log( formattedData );
 }
+
+export function processComponentOptionInput( passedParam: string, type: string ) {
+	// cast to string
+	const param = passedParam + '';
+	if ( param.includes( '/' ) ) {
+		return {
+			mode: 'local',
+			dir: param,
+		};
+	}
+
+	if ( type === 'jetpack' && param === 'mu' ) {
+		return {
+			mode: 'inherit',
+		};
+	}
+
+	return {
+		mode: 'image',
+		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
+		tag: param,
+	};
+}
+
 type NewInstanceOptions = {
 	title: string,
 	multisite: boolean,
@@ -62,48 +86,6 @@ type NewInstanceOptions = {
 	muPlugins: string,
 	jetpack: string,
 	clientCode: string
-}
-
-export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
-	const instanceData = {
-		siteSlug: slug,
-		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
-		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
-		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
-		wordpress: processComponentOptionInput( options.wordpress, 'wordpress' ),
-		muPlugins: processComponentOptionInput( options.muPlugins, 'muPlugins' ),
-		jetpack: processComponentOptionInput( options.jetpack, 'jetpack' ),
-		clientCode: processComponentOptionInput( options.clientCode, 'clientCode' ),
-	};
-
-	return instanceData;
-}
-
-export function processComponentOptionInput( passedParam: string, type: string ) {
-	if ( passedParam ) {
-		// cast to string
-		const param = passedParam + '';
-		if ( param.includes( '/' ) ) {
-			return {
-				mode: 'local',
-				dir: param,
-			};
-		}
-
-		if ( type === 'jetpack' && param === 'mu' ) {
-			return {
-				mode: 'inherit',
-			};
-		}
-
-		return {
-			mode: 'image',
-			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
-			tag: param,
-		};
-	}
-
-	return DEV_ENVIRONMENT_DEFAULTS[ type ];
 }
 
 const promptIntro = 'This is a wizard to help you set up you local dev environment.\n\n' +
