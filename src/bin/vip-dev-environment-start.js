@@ -14,7 +14,8 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { getEnvironmentName, startEnvironment, handleCLIException } from 'lib/dev-environment';
+import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
+import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );

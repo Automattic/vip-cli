@@ -15,7 +15,8 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { createEnvironment, printEnvironmentInfo, getEnvironmentName } from 'lib/dev-environment';
+import { createEnvironment, printEnvironmentInfo } from 'lib/dev-environment/dev-environment-core';
+import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
