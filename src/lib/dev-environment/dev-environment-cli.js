@@ -183,7 +183,7 @@ export async function promptForComponent( component: string ) {
 	if ( 'inherit' === modeResult ) {
 		return {
 			mode: modeResult,
-		}
+		};
 	}
 
 	// image
