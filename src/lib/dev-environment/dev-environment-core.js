@@ -20,7 +20,7 @@ import fetch from 'node-fetch';
  */
 import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
-import { DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS } from '../constants/dev-environment';
+import { DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS, DOCKER_HUB_WP_IMAGES } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -209,7 +209,7 @@ export async function getParamInstanceData( passedParam: string, type: string ) 
 	}
 
 	if ( type === 'wordpress' ) {
-		const request = await fetch( 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10' );
+		const request = await fetch( DOCKER_HUB_WP_IMAGES );
 		const body = await request.json();
 		const versions = body.results.map( x => x.name ).sort();
 		const tag = versions.pop();

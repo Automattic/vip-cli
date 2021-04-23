@@ -1,6 +1,8 @@
 export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-environment';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
+export const DOCKER_HUB_WP_IMAGES = 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10';
+
 export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 	wordpress: {
 		image: 'wpvipdev/wordpress',
