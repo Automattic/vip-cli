@@ -107,17 +107,19 @@ function buildErrorMessage( importFailed ) {
 	if ( 'FAILED' === importFailed.status ) {
 		const globalFailureDetails = importFailed.failureDetails;
 		if ( globalFailureDetails ) {
-			message += `${ chalk.yellow( 'Import failed at phase: ' ) }`;
-			message += `${ chalk.yellowBright.bold( globalFailureDetails.previousStatus ) }\n`;
-			message += chalk.yellow( 'Errors:' );
+			message += `${ chalk.red( 'Import failed at phase: ' ) }`;
+			message += `${ chalk.redBright.bold( globalFailureDetails.previousStatus ) }\n`;
+			message += chalk.red( 'Errors:' );
 			globalFailureDetails.globalErrors.forEach( value => {
-				message += `\n\t- ${ chalk.yellowBright.bold( value ) }`;
+				message += `\n\t- ${ chalk.redBright.bold( value ) }`;
 			} );
 			return message;
 		}
 	}
 
-	message += chalk.red( `Error: ${ importFailed.error ? importFailed.error : importFailed }` );
+	const generalErrorMessage: string = importFailed.error ? importFailed.error : importFailed;
+
+	message += chalk.red( generalErrorMessage.startsWith( 'Err' ) ? generalErrorMessage : `Error: ${ generalErrorMessage }` );
 	message += '\n\nIf this error persists and you are not sure on how to fix, please contact support';
 	return message;
 }
@@ -150,7 +152,7 @@ export async function mediaImportCheckStatus( {
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		throw new Error(
-			'The currently authenticated account does not have permission to view Media import status.'
+			'The currently authenticated account does not have permission to view Media Import status.'
 		);
 	}
 	let overallStatus = 'Checking...';
