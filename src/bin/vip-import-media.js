@@ -69,7 +69,12 @@ const examples = [
 ];
 
 function isSupportedUrl( urlToTest ) {
-	const url = new URL( urlToTest );
+	let url;
+	try {
+		url = new URL( urlToTest );
+	} catch ( err ) {
+		return false;
+	}
 	return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
