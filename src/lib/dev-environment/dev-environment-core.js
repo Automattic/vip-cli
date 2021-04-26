@@ -184,6 +184,17 @@ export async function generateInstanceData( slug: string, options: NewInstanceOp
 	return instanceData;
 }
 
+async function getLatestWordPressImage() {
+	const request = await fetch( DOCKER_HUB_WP_IMAGES );
+	const body = await request.json();
+	const tags = body.results.map( x => x.name ).sort();
+	return {
+		mode: 'image',
+		image: DEV_ENVIRONMENT_CONTAINER_IMAGES.wordpress.image,
+		tag: tags.pop(),
+	};
+}
+
 export async function getParamInstanceData( passedParam: string, type: string ) {
 	if ( passedParam ) {
 		// cast to string
@@ -208,19 +219,7 @@ export async function getParamInstanceData( passedParam: string, type: string ) 
 		};
 	}
 
-	if ( type === 'wordpress' ) {
-		const request = await fetch( DOCKER_HUB_WP_IMAGES );
-		const body = await request.json();
-		const versions = body.results.map( x => x.name ).sort();
-		const tag = versions.pop();
-		return {
-			mode: 'image',
-			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
-			tag,
-		};
-	}
-
-	return DEV_ENVIRONMENT_DEFAULTS[ type ];
+	return type === 'wordpress' ? getLatestWordPressImage() : DEV_ENVIRONMENT_DEFAULTS[ type ];
 }
 
 function getAllEnvironmentNames() {

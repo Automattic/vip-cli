@@ -5,6 +5,7 @@
 /**
  * External dependencies
  */
+import fetch from 'node-fetch';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import fs from 'fs';
@@ -17,11 +18,15 @@ import { getEnvironmentPath,
 	startEnvironment,
 	generateInstanceData,
 	destroyEnvironment,
-	getParamInstanceData,
-	getEnvironmentName } from 'lib/dev-environment/dev-environment-core';
+	getParamInstanceData } from 'lib/dev-environment/dev-environment-core';
+
+import dockerHubResponse from './docker-hub-response.json';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
+jest.mock( 'node-fetch' );
+
+fetch.mockReturnValue( Promise.resolve( { json: () => Promise.resolve( dockerHubResponse ) } ) );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	describe( 'createEnvironment', () => {
@@ -74,7 +79,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					wordpress: {
 						image: 'wpvipdev/wordpress',
 						mode: 'image',
-						tag: '5.6',
+						tag: '5.7.1',
 					},
 					muPlugins: {
 						image: 'wpvipdev/mu-plugins',
@@ -107,7 +112,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					wordpress: {
 						image: 'wpvipdev/wordpress',
 						mode: 'image',
-						tag: '5.6',
+						tag: '5.7.1',
 					},
 					muPlugins: {
 						image: 'wpvipdev/mu-plugins',
@@ -138,7 +143,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					wordpress: {
 						image: 'wpvipdev/wordpress',
 						mode: 'image',
-						tag: '5.6',
+						tag: '5.7.1',
 					},
 					muPlugins: {
 						image: 'wpvipdev/mu-plugins',
@@ -224,7 +229,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = generateInstanceData( input.slug, input.options );
+			const result = await generateInstanceData( input.slug, input.options );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -241,7 +246,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = getParamInstanceData( input.param, input.option );
+			const result = await getParamInstanceData( input.param, input.option );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
