@@ -5,7 +5,6 @@
 /**
  * External dependencies
  */
-import fetch from 'node-fetch';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import fs from 'fs';
@@ -19,13 +18,10 @@ import { getEnvironmentPath,
 	destroyEnvironment,
 } from 'lib/dev-environment/dev-environment-core';
 
-import dockerHubResponse from './docker-hub-response.json';
+import dockerHubResponse from './docker-hub-wp-response.json';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
-jest.mock( 'node-fetch' );
-
-fetch.mockReturnValue( Promise.resolve( { json: () => Promise.resolve( dockerHubResponse ) } ) );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	describe( 'createEnvironment', () => {

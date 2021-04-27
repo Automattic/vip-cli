@@ -6,12 +6,15 @@
  * External dependencies
  */
 import { prompt, selectRunMock } from 'enquirer';
+import fetch from 'node-fetch';
 
 /**
  * Internal dependencies
  */
 
 import { getEnvironmentName, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
+import dockerHubWPResponse from './docker-hub-wp-response.json';
+import dockerHubJetpackResponse from './docker-hub-jetpack-response.json';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -23,6 +26,13 @@ jest.mock( 'enquirer', () => {
 		selectRunMock: _selectRunMock,
 	};
 } );
+
+jest.mock( 'node-fetch' );
+fetch.mockImplementation( url =>
+	Promise.resolve( { json: () => Promise.resolve(
+		url === 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10'
+			? dockerHubWPResponse
+			: dockerHubJetpackResponse ) } ) );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'getEnvironmentName', () => {
