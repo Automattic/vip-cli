@@ -29,10 +29,7 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	jetpack: {
 		mode: 'inherit',
 	},
-	wordpress: {
-		mode: 'image',
-		image: 'wpvipdev/wordpress',
-	},
+	wordpress: {},
 	muPlugins: {},
 	clientCode: {},
 };

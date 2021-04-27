@@ -209,7 +209,7 @@ export async function promptForComponent( component: string ) {
 	};
 }
 
-async function getLatestImageTags( component: string ): string[] {
+async function getLatestImageTags( component: string ): Promise<string[]> {
 	const url = component === 'wordpress' ? DOCKER_HUB_WP_IMAGES : DOCKER_HUB_JETPACK_IMAGES;
 	const request = await fetch( url );
 	const body = await request.json();

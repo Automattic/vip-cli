@@ -13,14 +13,12 @@ import fs from 'fs';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
-import fetch from 'node-fetch';
 
 /**
  * Internal dependencies
  */
 import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
-import { DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS, DOCKER_HUB_WP_IMAGES } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -165,48 +163,6 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	fs.copyFileSync( configDefaultsFilePath, configDefaultsFileTargetPath );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
-}
-
-export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
-	const instanceData = {
-		siteSlug: slug,
-		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
-		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
-		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
-		wordpress: getParamInstanceData( options.wordpress, 'wordpress' ),
-		muPlugins: getParamInstanceData( options.muPlugins, 'muPlugins' ),
-		jetpack: getParamInstanceData( options.jetpack, 'jetpack' ),
-		clientCode: getParamInstanceData( options.clientCode, 'clientCode' ),
-	};
-
-	return instanceData;
-}
-
-export function getParamInstanceData( passedParam: string, type: string ) {
-	if ( passedParam ) {
-		// cast to string
-		const param = passedParam + '';
-		if ( param.includes( '/' ) ) {
-			return {
-				mode: 'local',
-				dir: param,
-			};
-		}
-
-		if ( type === 'jetpack' && param === 'mu' ) {
-			return {
-				mode: 'inherit',
-			};
-		}
-
-		return {
-			mode: 'image',
-			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
-			tag: param,
-		};
-	}
-
-	return DEV_ENVIRONMENT_DEFAULTS[ type ];
 }
 
 function getAllEnvironmentNames() {
