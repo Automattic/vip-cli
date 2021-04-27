@@ -15,10 +15,7 @@ import fs from 'fs';
 import { getEnvironmentPath,
 	createEnvironment,
 	startEnvironment,
-	destroyEnvironment,
-} from 'lib/dev-environment/dev-environment-core';
-
-import dockerHubResponse from './docker-hub-wp-response.json';
+	destroyEnvironment } from 'lib/dev-environment/dev-environment-core';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
