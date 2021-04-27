@@ -88,13 +88,35 @@ type NewInstanceOptions = {
 	clientCode: string
 }
 
-export async function promptForArguments( providedOptions: NewInstanceOptions ) {
+type AppInfo = {
+	id: number,
+	name: string,
+	repository: string,
+	environment: {
+		name: string,
+		type: string,
+		branch: string,
+		isMultisite: boolean,
+	}
+}
+
+export async function promptForArguments( providedOptions: NewInstanceOptions, appInfo: AppInfo ) {
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
+	const name = appInfo?.environment?.name || appInfo?.name;
+	let multisiteText = 'Multisite';
+	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
+
+	if ( appInfo?.environment ) {
+		const isEnvMultisite = !! appInfo?.environment?.isMultisite;
+		multisiteText += ` (${ name } ${ isEnvMultisite ? 'IS' : 'is NOT' } multisite)`;
+		multisiteDefault = isEnvMultisite;
+	}
+
 	const instanceData = {
-		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', DEV_ENVIRONMENT_DEFAULTS.title ),
+		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
 		phpVersion: providedOptions.phpVersion || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
-		multisite: providedOptions.multisite || await promptForBoolean( 'Multisite', DEV_ENVIRONMENT_DEFAULTS.multisite ),
+		multisite: providedOptions.multisite || await promptForBoolean( multisiteText, multisiteDefault ),
 		wordpress: {},
 		muPlugins: {},
 		jetpack: {},

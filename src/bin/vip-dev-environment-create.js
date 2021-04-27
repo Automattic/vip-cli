@@ -15,7 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { createEnvironment, printEnvironmentInfo } from 'lib/dev-environment/dev-environment-core';
+import { createEnvironment, printEnvironmentInfo, getApplicationInformation } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, promptForArguments } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
@@ -60,7 +60,19 @@ command()
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
-		const instanceData = await promptForArguments( opt );
+		let appInfo: any = {};
+		try {
+			if ( opt.app ) {
+				appInfo = await getApplicationInformation( opt.app, opt.env );
+			}
+		} catch ( e ) {
+			const message = `failed to fetch application "${ opt.app }" information`;
+
+			debug( `WARNING: ${ message }`, e.message );
+			console.log( chalk.yellow( 'Warning:' ), message );
+		}
+
+		const instanceData = await promptForArguments( opt, appInfo );
 		const instanceDataWithSlug = {
 			...instanceData,
 			siteSlug: slug,
