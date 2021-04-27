@@ -11,16 +11,15 @@ import { prompt, selectRunMock } from 'enquirer';
  * Internal dependencies
  */
 
-import { getEnvironmentName, generateInstanceData, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
+	const SelectClass = class {};
+	SelectClass.prototype.run = _selectRunMock;
 	return {
 		prompt: jest.fn(),
-		// Select: jest.fn().mockImplementation( () => ( { run: jest.fn() } ) ),
-		Select: class {
-			run = _selectRunMock
-		},
+		Select: SelectClass,
 		selectRunMock: _selectRunMock,
 	};
 } );
