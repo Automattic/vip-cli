@@ -1,8 +1,9 @@
 export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-environment';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
-export const DOCKER_HUB_WP_IMAGES = 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10';
-export const DOCKER_HUB_JETPACK_IMAGES = 'https://hub.docker.com/v2/repositories/wpvipdev/jetpack/tags/?page_size=10';
+export const DOCKER_HUB_PAGE_SIZE = 10;
+export const DOCKER_HUB_WP_IMAGES = `https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=${ DOCKER_HUB_PAGE_SIZE }`;
+export const DOCKER_HUB_JETPACK_IMAGES = `https://hub.docker.com/v2/repositories/wpvipdev/jetpack/tags/?page_size=${ DOCKER_HUB_PAGE_SIZE }`;
 
 export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 	wordpress: {
