@@ -13,7 +13,7 @@ import { prompt, Confirm, Select } from 'enquirer';
 /**
  * Internal dependencies
  */
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS } from '../constants/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS, DEV_ENVIRONMENT_PROMPT_INTRO } from '../constants/dev-environment';
 
 const DEFAULT_SLUG = 'vip-local';
 
@@ -88,12 +88,8 @@ type NewInstanceOptions = {
 	clientCode: string
 }
 
-const promptIntro = 'This is a wizard to help you set up you local dev environment.\n\n' +
-	'Sensible defaualt values were pre-selected for convinience. ' +
-	'You can also choose to create multiple different environments with different settings using the --slug option.\n\n';
-
 export async function promptForArguments( providedOptions: NewInstanceOptions ) {
-	console.log( promptIntro );
+	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', DEV_ENVIRONMENT_DEFAULTS.title ),

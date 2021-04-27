@@ -16,7 +16,7 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import { createEnvironment, printEnvironmentInfo } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, generateInstanceData, promptForArguments } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, promptForArguments } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -61,13 +61,16 @@ command()
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		const instanceData = await promptForArguments( opt );
-		instanceData.siteSlug = slug;
+		const instanceDataWithSlug = {
+			...instanceData,
+			siteSlug: slug,
+		};
 
 		const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
 		const startCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' start' + extraCommandParmas );
 
 		try {
-			await createEnvironment( instanceData );
+			await createEnvironment( instanceDataWithSlug );
 
 			await printEnvironmentInfo( slug );
 

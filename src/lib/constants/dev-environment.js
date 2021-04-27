@@ -55,3 +55,7 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 		tag: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].tag,
 	};
 } );
+
+export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up you local dev environment.\n\n' +
+	'Sensible defaualt values were pre-selected for convinience. ' +
+	'You can also choose to create multiple different environments with different settings using the --slug option.\n\n';
