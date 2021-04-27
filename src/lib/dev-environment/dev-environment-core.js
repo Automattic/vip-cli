@@ -60,18 +60,20 @@ export async function stopEnvironment( slug: string ) {
 	await landoStop( instancePath );
 }
 
-type NewInstanceOptions = {
-	title: string,
+type NewInstanceData = {
+	siteSlug: string,
+	wpTitle: string,
 	multisite: boolean,
 	phpVersion: string,
-	wordpress: string,
-	muPlugins: string,
-	jetpack: string,
-	clientCode: string
+	wordpress: Object,
+	muPlugins: Object,
+	jetpack: Object,
+	clientCode: Object,
 }
 
-export async function createEnvironment( slug: string, options: NewInstanceOptions ) {
-	debug( 'Will start an environment', slug, 'with options: ', options );
+export async function createEnvironment( instanceData: NewInstanceData ) {
+	const slug = instanceData.siteSlug;
+	debug( 'Will start an environment', slug, 'with instanceData: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -82,10 +84,6 @@ export async function createEnvironment( slug: string, options: NewInstanceOptio
 	if ( alreadyExists ) {
 		throw new Error( 'Environment already exists.' );
 	}
-
-	const instanceData = await generateInstanceData( slug, options );
-
-	debug( 'Instance data to create a new environment:', instanceData );
 
 	await prepareLandoEnv( instanceData, instancePath );
 }
@@ -169,33 +167,22 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 }
 
-export async function generateInstanceData( slug: string, options: NewInstanceOptions ) {
+export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
 	const instanceData = {
 		siteSlug: slug,
 		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
 		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
 		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
-		wordpress: await getParamInstanceData( options.wordpress, 'wordpress' ),
-		muPlugins: await getParamInstanceData( options.muPlugins, 'muPlugins' ),
-		jetpack: await getParamInstanceData( options.jetpack, 'jetpack' ),
-		clientCode: await getParamInstanceData( options.clientCode, 'clientCode' ),
+		wordpress: getParamInstanceData( options.wordpress, 'wordpress' ),
+		muPlugins: getParamInstanceData( options.muPlugins, 'muPlugins' ),
+		jetpack: getParamInstanceData( options.jetpack, 'jetpack' ),
+		clientCode: getParamInstanceData( options.clientCode, 'clientCode' ),
 	};
 
 	return instanceData;
 }
 
-async function getLatestWordPressImage() {
-	const request = await fetch( DOCKER_HUB_WP_IMAGES );
-	const body = await request.json();
-	const tags = body.results.map( x => x.name ).sort();
-	return {
-		mode: 'image',
-		image: DEV_ENVIRONMENT_CONTAINER_IMAGES.wordpress.image,
-		tag: tags.pop(),
-	};
-}
-
-export async function getParamInstanceData( passedParam: string, type: string ) {
+export function getParamInstanceData( passedParam: string, type: string ) {
 	if ( passedParam ) {
 		// cast to string
 		const param = passedParam + '';
@@ -219,7 +206,7 @@ export async function getParamInstanceData( passedParam: string, type: string ) 
 		};
 	}
 
-	return type === 'wordpress' ? getLatestWordPressImage() : DEV_ENVIRONMENT_DEFAULTS[ type ];
+	return DEV_ENVIRONMENT_DEFAULTS[ type ];
 }
 
 function getAllEnvironmentNames() {

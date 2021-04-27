@@ -1,7 +1,8 @@
 export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-environment';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
-export const DOCKER_HUB_WP_IMAGES = 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=8';
+export const DOCKER_HUB_WP_IMAGES = 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10';
+export const DOCKER_HUB_JETPACK_IMAGES = 'https://hub.docker.com/v2/repositories/wpvipdev/jetpack/tags/?page_size=10';
 
 export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 	wordpress: {
@@ -42,3 +43,7 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 		tag: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].tag,
 	};
 } );
+
+export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up you local dev environment.\n\n' +
+	'Sensible defaualt values were pre-selected for convinience. ' +
+	'You can also choose to create multiple different environments with different settings using the --slug option.\n\n';
