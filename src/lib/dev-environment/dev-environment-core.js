@@ -19,7 +19,6 @@ import chalk from 'chalk';
  */
 import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
-import { DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -59,18 +58,20 @@ export async function stopEnvironment( slug: string ) {
 	await landoStop( instancePath );
 }
 
-type NewInstanceOptions = {
-	title: string,
+type NewInstanceData = {
+	siteSlug: string,
+	wpTitle: string,
 	multisite: boolean,
 	phpVersion: string,
-	wordpress: string,
-	muPlugins: string,
-	jetpack: string,
-	clientCode: string
+	wordpress: Object,
+	muPlugins: Object,
+	jetpack: Object,
+	clientCode: Object,
 }
 
-export async function createEnvironment( slug: string, options: NewInstanceOptions ) {
-	debug( 'Will start an environment', slug, 'with options: ', options );
+export async function createEnvironment( instanceData: NewInstanceData ) {
+	const slug = instanceData.siteSlug;
+	debug( 'Will start an environment', slug, 'with instanceData: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -81,10 +82,6 @@ export async function createEnvironment( slug: string, options: NewInstanceOptio
 	if ( alreadyExists ) {
 		throw new Error( 'Environment already exists.' );
 	}
-
-	const instanceData = generateInstanceData( slug, options );
-
-	debug( 'Instance data to create a new environment:', instanceData );
 
 	await prepareLandoEnv( instanceData, instancePath );
 }
@@ -166,48 +163,6 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	fs.copyFileSync( configDefaultsFilePath, configDefaultsFileTargetPath );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
-}
-
-export function generateInstanceData( slug: string, options: NewInstanceOptions ) {
-	const instanceData = {
-		siteSlug: slug,
-		wpTitle: options.title || DEV_ENVIRONMENT_DEFAULTS.title,
-		multisite: options.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite,
-		phpVersion: options.phpVersion || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
-		wordpress: getParamInstanceData( options.wordpress, 'wordpress' ),
-		muPlugins: getParamInstanceData( options.muPlugins, 'muPlugins' ),
-		jetpack: getParamInstanceData( options.jetpack, 'jetpack' ),
-		clientCode: getParamInstanceData( options.clientCode, 'clientCode' ),
-	};
-
-	return instanceData;
-}
-
-export function getParamInstanceData( passedParam: string, type: string ) {
-	if ( passedParam ) {
-		// cast to string
-		const param = passedParam + '';
-		if ( param.includes( '/' ) ) {
-			return {
-				mode: 'local',
-				dir: param,
-			};
-		}
-
-		if ( type === 'jetpack' && param === 'mu' ) {
-			return {
-				mode: 'inherit',
-			};
-		}
-
-		return {
-			mode: 'image',
-			image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
-			tag: param,
-		};
-	}
-
-	return DEV_ENVIRONMENT_DEFAULTS[ type ];
 }
 
 function getAllEnvironmentNames() {
