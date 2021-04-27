@@ -93,7 +93,7 @@ export async function promptForArguments( providedOptions: NewInstanceOptions ) 
 
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', DEV_ENVIRONMENT_DEFAULTS.title ),
-		phpVersion: providedOptions.phpVersion || await promptForText( 'Php version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
+		phpVersion: providedOptions.phpVersion || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
 		multisite: providedOptions.multisite || await promptForBoolean( 'Multisite', DEV_ENVIRONMENT_DEFAULTS.multisite ),
 		wordpress: {},
 		muPlugins: {},
