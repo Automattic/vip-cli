@@ -16,7 +16,7 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import { createEnvironment, printEnvironmentInfo } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, promptForArguments } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -66,8 +66,7 @@ command()
 			siteSlug: slug,
 		};
 
-		const extraCommandParmas = opt.slug ? ` --slug ${ opt.slug }` : '';
-		const startCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' start' + extraCommandParmas );
+		const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
 
 		try {
 			await createEnvironment( instanceDataWithSlug );
@@ -77,7 +76,7 @@ command()
 			const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 			console.log( message );
 		} catch ( e ) {
-			let messageToShow = chalk.red( 'Error:' );
+			let messageToShow = chalk.red( 'Error: ' );
 			if ( 'Environment already exists.' === e.message ) {
 				messageToShow += `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
 				`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;

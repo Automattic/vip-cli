@@ -11,7 +11,7 @@ import { prompt, selectRunMock } from 'enquirer';
  * Internal dependencies
  */
 
-import { getEnvironmentName, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -54,6 +54,39 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 		] )( 'should get correct name', async input => {
 			const result = getEnvironmentName( input.options );
+
+			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'getEnvironmentStartCommand', () => {
+		it.each( [
+			{ // default value
+				options: {},
+				expected: 'vip dev-environment start',
+			},
+			{ // use custom name
+				options: {
+					slug: 'foo',
+				},
+				expected: 'vip dev-environment start --slug foo',
+			},
+			{ // construct name from app and env
+				options: {
+					app: '123',
+					env: 'bar.car',
+				},
+				expected: 'vip @123.bar.car dev-environment start',
+			},
+			{ // custom name takes precedence
+				options: {
+					slug: 'foo',
+					app: '123',
+					env: 'bar.car',
+				},
+				expected: 'vip dev-environment start --slug foo',
+			},
+		] )( 'should get correct start command', async input => {
+			const result = getEnvironmentStartCommand( input.options );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );

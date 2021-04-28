@@ -13,7 +13,7 @@ import { prompt, Confirm, Select } from 'enquirer';
 /**
  * Internal dependencies
  */
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS, DEV_ENVIRONMENT_PROMPT_INTRO } from '../constants/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND, DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS, DEV_ENVIRONMENT_PROMPT_INTRO } from '../constants/dev-environment';
 
 const DEFAULT_SLUG = 'vip-local';
 
@@ -47,6 +47,23 @@ export function getEnvironmentName( options: EnvironmentNameOptions ) {
 	}
 
 	return DEFAULT_SLUG;
+}
+
+export function getEnvironmentStartCommand( options: EnvironmentNameOptions ) {
+	if ( options.slug ) {
+		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ options.slug }`;
+	}
+
+	if ( options.app ) {
+		let application = `@${ options.app }`;
+		if ( options.env ) {
+			application += `.${ options.env }`;
+		}
+
+		return `vip ${ application } ${ DEV_ENVIRONMENT_SUBCOMMAND } start`;
+	}
+
+	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 }
 
 export function printTable( data: Object ) {
