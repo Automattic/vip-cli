@@ -1,30 +1,16 @@
 export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-environment';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
+export const DOCKER_HUB_PAGE_SIZE = 10;
+export const DOCKER_HUB_WP_IMAGES = `https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=${ DOCKER_HUB_PAGE_SIZE }`;
+export const DOCKER_HUB_JETPACK_IMAGES = `https://hub.docker.com/v2/repositories/wpvipdev/jetpack/tags/?page_size=${ DOCKER_HUB_PAGE_SIZE }`;
+
 export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 	wordpress: {
 		image: 'wpvipdev/wordpress',
-		tag: '5.6',
-		allTags: [
-			'5.7.1',
-			'5.7',
-			'5.6.3',
-			'5.6',
-			'5.5.1',
-			'5.5.2',
-			'5.5',
-			'5.4.2',
-			'5.3.4',
-		],
 	},
 	jetpack: {
 		image: 'wpvipdev/jetpack',
-		allTags: [
-			'8.9.1',
-			'8.9',
-			'8.8.2',
-			'8.8',
-		],
 	},
 	muPlugins: {
 		image: 'wpvipdev/mu-plugins',
@@ -48,7 +34,7 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	clientCode: {},
 };
 
-[ 'wordpress', 'muPlugins', 'clientCode' ].forEach( type => {
+[ 'muPlugins', 'clientCode' ].forEach( type => {
 	DEV_ENVIRONMENT_DEFAULTS[ type ] = {
 		mode: 'image',
 		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
