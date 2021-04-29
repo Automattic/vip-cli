@@ -124,7 +124,7 @@ function buildErrorMessage( importFailed ) {
 
 function buildFileErrors( fileErrors, exportFileErrorsToJson ) {
 	if ( exportFileErrorsToJson ) {
-		const fileErrorsToExport = fileErrors.map( fileError => { 
+		const fileErrorsToExport = fileErrors.map( fileError => {
 			return {
 				fileName: fileError.fileName,
 				errors: fileError.errors,
