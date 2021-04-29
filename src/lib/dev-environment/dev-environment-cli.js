@@ -57,6 +57,23 @@ export function getEnvironmentName( options: EnvironmentNameOptions ) {
 	return DEFAULT_SLUG;
 }
 
+export function getEnvironmentStartCommand( options: EnvironmentNameOptions ) {
+	if ( options.slug ) {
+		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ options.slug }`;
+	}
+
+	if ( options.app ) {
+		let application = `@${ options.app }`;
+		if ( options.env ) {
+			application += `.${ options.env }`;
+		}
+
+		return `vip ${ application } ${ DEV_ENVIRONMENT_SUBCOMMAND } start`;
+	}
+
+	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
+}
+
 export function printTable( data: Object ) {
 	const formattedData = formatters.formatData( data, { format: 'table' }, { border: false } );
 
