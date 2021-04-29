@@ -108,7 +108,7 @@ function buildErrorMessage( importFailed ) {
 		const globalFailureDetails = importFailed.failureDetails;
 		if ( globalFailureDetails ) {
 			message += `${ chalk.red( 'Import failed at phase: ' ) }`;
-			message += `${ chalk.redBright.bold( globalFailureDetails.previousStatus ) }\n`;
+			message += `${ chalk.redBright.bold( globalFailureDetails.previousStatus ) }\n\n`;
 			message += chalk.red( 'Errors:' );
 			globalFailureDetails.globalErrors.forEach( value => {
 				message += `\n\t- ${ chalk.redBright.bold( value ) }`;
@@ -117,17 +117,20 @@ function buildErrorMessage( importFailed ) {
 		}
 	}
 
-	const generalErrorMessage: string = importFailed.error ? importFailed.error : importFailed;
-
-	message += chalk.red( generalErrorMessage.startsWith( 'Err' ) ? generalErrorMessage : `Error: ${ generalErrorMessage }` );
+	message += chalk.red( importFailed.error ? importFailed.error : importFailed );
 	message += '\n\nIf this error persists and you are not sure on how to fix, please contact support';
 	return message;
 }
 
 function buildFileErrors( fileErrors, exportFileErrorsToJson ) {
 	if ( exportFileErrorsToJson ) {
-		// TODO: Remove the __typename field from every File Error
-		return formatData( fileErrors, 'json' );
+		const fileErrorsToExport = fileErrors.map( fileError => { 
+			return {
+				fileName: fileError.fileName,
+				errors: fileError.errors,
+			};
+		} );
+		return formatData( fileErrorsToExport, 'json' );
 	}
 
 	let errorString = '';
