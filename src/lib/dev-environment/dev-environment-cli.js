@@ -13,7 +13,16 @@ import { prompt, Confirm, Select } from 'enquirer';
 /**
  * Internal dependencies
  */
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_CONTAINER_IMAGES, DEV_ENVIRONMENT_DEFAULTS, DEV_ENVIRONMENT_PROMPT_INTRO } from '../constants/dev-environment';
+import {
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_SUBCOMMAND,
+	DEV_ENVIRONMENT_CONTAINER_IMAGES,
+	DEV_ENVIRONMENT_DEFAULTS,
+	DEV_ENVIRONMENT_PROMPT_INTRO,
+	DOCKER_HUB_WP_IMAGES,
+	DOCKER_HUB_JETPACK_IMAGES,
+} from '../constants/dev-environment';
+import fetch from 'node-fetch';
 
 const DEFAULT_SLUG = 'vip-local';
 
@@ -47,6 +56,23 @@ export function getEnvironmentName( options: EnvironmentNameOptions ) {
 	}
 
 	return DEFAULT_SLUG;
+}
+
+export function getEnvironmentStartCommand( options: EnvironmentNameOptions ) {
+	if ( options.slug ) {
+		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ options.slug }`;
+	}
+
+	if ( options.app ) {
+		let application = `@${ options.app }`;
+		if ( options.env ) {
+			application += `.${ options.env }`;
+		}
+
+		return `vip ${ application } ${ DEV_ENVIRONMENT_SUBCOMMAND } start`;
+	}
+
+	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 }
 
 export function printTable( data: Object ) {
@@ -211,7 +237,7 @@ export async function promptForComponent( component: string ) {
 	if ( ! componentsWithPredefinedImageTag.includes( component ) ) {
 		const selectTag = new Select( {
 			message: '	Which version would you like',
-			choices: DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].allTags,
+			choices: await getLatestImageTags( component ),
 		} );
 		tag = await selectTag.run();
 	}
@@ -221,4 +247,11 @@ export async function promptForComponent( component: string ) {
 		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].image,
 		tag,
 	};
+}
+
+async function getLatestImageTags( component: string ): Promise<string[]> {
+	const url = component === 'wordpress' ? DOCKER_HUB_WP_IMAGES : DOCKER_HUB_JETPACK_IMAGES;
+	const request = await fetch( url );
+	const body = await request.json();
+	return body.results.map( x => x.name ).sort().reverse();
 }
