@@ -94,10 +94,10 @@ Are you sure you want to import the contents of the url?
 } )
 	.command( 'status', 'Check the status of the current running import' )
 	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
-	.option( 'overwriteExisting', 'Overwrite any existing files', false )
+	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
-		const { app, env, exportFileErrorsToJson, overwriteExisting } = opts;
+		const { app, env, exportFileErrorsToJson, overwriteExistingFiles } = opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
@@ -135,7 +135,7 @@ Processing the files import for your environment...
 							applicationId: app.id,
 							environmentId: env.id,
 							archiveUrl: url,
-							overwriteExistingFiles: overwriteExisting,
+							overwriteExistingFiles,
 						},
 					},
 				} );
