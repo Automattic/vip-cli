@@ -56,13 +56,13 @@ const debug = debugLib( 'vip:vip-import-media' );
 // Command examples for the `vip import media` help prompt
 const examples = [
 	{
-		usage: 'vip import media @mysite.develop https://<path_to_publicly_accessible_archive>',
+		usage: 'vip import media @mysite.production https://<path_to_publicly_accessible_archive>',
 		description:
 			'Start a media import with the contents of the archive file in the URL',
 	},
 	// `media status` subcommand
 	{
-		usage: 'vip import media status @mysite.develop',
+		usage: 'vip import media status @mysite.production',
 		description:
 			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
 	},
