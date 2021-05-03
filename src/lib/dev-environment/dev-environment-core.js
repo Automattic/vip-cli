@@ -19,6 +19,7 @@ import chalk from 'chalk';
  */
 import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
+import app from '../api/app';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -195,3 +196,49 @@ export function getEnvironmentPath( name: string ) {
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
 }
 
+export async function getApplicationInformation( appId: number, envType: string | null ) {
+	// $FlowFixMe: gql template is not supported by flow
+	const fieldsQuery = `
+		id,
+		name,
+		repository {
+			htmlUrl,
+			fullName
+		},
+		environments {
+			id,
+			name,
+			type,
+			branch,
+			isMultisite
+		}`;
+
+	const queryResult = await app( appId, fieldsQuery );
+
+	const appData = {};
+
+	if ( queryResult ) {
+		appData.id = queryResult.id;
+		appData.name = queryResult.name;
+		appData.repository = queryResult.repository?.htmlUrl;
+
+		const environments = queryResult.environments || [];
+		let envData;
+		if ( envType ) {
+			envData = environments.find( candidateEnv => candidateEnv.type === envType );
+		} else if ( 1 === environments.length ) {
+			envData = environments[ 0 ];
+		}
+
+		if ( envData ) {
+			appData.environment = {
+				name: envData.name,
+				branch: envData.branch,
+				type: envData.type,
+				isMultisite: envData.isMultisite,
+			};
+		}
+	}
+
+	return appData;
+}
