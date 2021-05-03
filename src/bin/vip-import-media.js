@@ -56,13 +56,13 @@ const debug = debugLib( 'vip:vip-import-media' );
 // Command examples for the `vip import media` help prompt
 const examples = [
 	{
-		usage: 'vip import media @mysite.develop https://<path_to_publicly_accessible_archive>',
+		usage: 'vip import media @mysite.production https://<path_to_publicly_accessible_archive>',
 		description:
 			'Start a media import with the contents of the archive file in the URL',
 	},
 	// `media status` subcommand
 	{
-		usage: 'vip import media status @mysite.develop',
+		usage: 'vip import media status @mysite.production',
 		description:
 			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
 	},
@@ -94,9 +94,10 @@ Are you sure you want to import the contents of the url?
 } )
 	.command( 'status', 'Check the status of the current running import' )
 	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
+	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
-		const { app, env, exportFileErrorsToJson } = opts;
+		const { app, env, exportFileErrorsToJson, overwriteExistingFiles } = opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
@@ -134,6 +135,7 @@ Processing the files import for your environment...
 							applicationId: app.id,
 							environmentId: env.id,
 							archiveUrl: url,
+							overwriteExistingFiles,
 						},
 					},
 				} );
