@@ -92,14 +92,15 @@ export async function landoInfo( instancePath: string ) {
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
+	const isUp = await isEnvUp( app );
+
 	// Enterprise Search
 	const vipSearch = app.info.find( service => service.service === 'vip-search' );
-	if ( vipSearch?.external_connection && Number.isInteger( vipSearch?.external_connection.port ) ) {
+	if ( vipSearch?.external_connection && isUp ) {
 		const { host, port } = vipSearch?.external_connection;
 		appInfo[ 'enterprise search' ] = `http://${ host }:${ port }`;
 	}
 
-	const isUp = await isEnvUp( app );
 	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
 	// Drop vipdev prefix
