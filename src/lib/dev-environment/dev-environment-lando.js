@@ -92,6 +92,13 @@ export async function landoInfo( instancePath: string ) {
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
+	// VIP Search
+	const vipSearch = app.info.find( service => service.service === 'vip-search' );
+	if ( vipSearch?.external_connection ) {
+		const connection = vipSearch?.external_connection;
+		appInfo[ 'vip search' ] = `http://${ connection.host }:${ connection.port }`;
+	}
+
 	const isUp = await isEnvUp( app );
 	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
