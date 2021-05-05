@@ -173,6 +173,7 @@ tooling:
       - mysql -hdatabase -uwordpress -pwordpress wordpress
 
 <% function wpVolumes() { %>
+        - ./config/wp-config-defaults.php:/wp/config/wp-config-defaults.php
         - ./config:/wp/config
         - ./log:/wp/log
 <% if ( wordpress.mode == 'image' ) { %>
