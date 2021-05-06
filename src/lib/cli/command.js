@@ -24,6 +24,7 @@ import { trackEvent } from 'lib/tracker';
 import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
+import * as exit from './exit';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -54,9 +55,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// If we have both an --app/--env and an alias, we need to give a warning
 	if ( parsedAlias.app && ( options.app || options.env ) ) {
-		console.error( chalk`{red Please only use an environment alias, or the --app and --env parameters, but not both}` );
-
-		process.exit();
+		exit.withError( 'Please only use an environment alias, or the --app and --env parameters, but not both' );
 	}
 
 	// If there is an alias, use it to populate the app/env options
@@ -68,11 +67,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 	const validationError = validateOpts( options );
 	if ( validationError ) {
 		const error = validationError.toString();
-
 		await trackEvent( 'command_validation_error', { error } );
-
-		console.log( error );
-		process.exit( 1 );
+		exit.withError( error );
 	}
 
 	// If there's a sub-command, run that instead
@@ -262,7 +258,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				return {};
 			}
 
-			const env = options.app.environments.find( cur => cur.type === options.env );
+			const env = options.app.environments.find( cur => getEnvIdentifier( cur ) === options.env );
 
 			if ( ! env ) {
 				await trackEvent( 'command_childcontext_param_error', {
@@ -418,7 +414,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 			default:
 		}
 
-		const yes = await confirm( info, message );
+		const skipPrompt = _opts.skipConfirmPrompt || false;
+		const yes = await confirm( info, message, skipPrompt );
 		if ( ! yes ) {
 			await trackEvent( 'command_confirm_cancel' );
 
