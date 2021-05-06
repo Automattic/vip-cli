@@ -100,7 +100,7 @@
     "graphql": "15.5.0",
     "graphql-tag": "2.10.3",
     "ini": "1.3.8",
-    "json2csv": "3.11.5",
+    "json2csv": "5.0.6",
     "jwt-decode": "2.2.0",
     "lando": "git+https://github.com/lando/lando.git#v3.0.26",
     "node-fetch": "^2.6.1",
