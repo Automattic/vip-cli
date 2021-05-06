@@ -90,7 +90,7 @@
     "@apollo/client": "^3.3.6",
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.1",
-    "chalk": "3.0.0",
+    "chalk": "4.1.1",
     "cli-columns": "^3.1.2",
     "cli-table": "github:automattic/cli-table#89392b2",
     "configstore": "5.0.1",
