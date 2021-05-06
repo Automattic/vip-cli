@@ -92,7 +92,7 @@
     "args": "5.0.1",
     "chalk": "4.1.1",
     "cli-columns": "^3.1.2",
-    "cli-table": "github:automattic/cli-table#89392b2",
+    "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
     "debug": "4.3.1",
     "ejs": "^3.1.6",
