@@ -14,7 +14,6 @@ import debugLib from 'debug';
 import { trackEventWithEnv } from 'lib/tracker';
 import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import * as exit from 'lib/cli/exit';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
 const debug = debugLib( 'vip:vip-import-sql' );

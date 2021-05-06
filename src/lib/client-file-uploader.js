@@ -100,7 +100,7 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 	);
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
-	return new Promise( async ( resolve, reject ) => {
+	return new Promise( async resolve => {
 		const fileSize = await getFileSize( fileName );
 
 		const basename = path.basename( fileName );
