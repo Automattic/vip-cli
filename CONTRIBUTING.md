@@ -17,11 +17,11 @@ To test against a local instance of Parker, you can use the `API_HOST` env var. 
 Examples:
 
 ```
-VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip
+VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip
 
-VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip app
+VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip app
 
-VIP_PROXY="" API_HOST=localhost:4000 node ./dist/bin/vip -- wp option get home
+VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get home
 ```
 
 ### Adding commands
@@ -86,7 +86,7 @@ You can repeat this with every new version until you're happy with your version 
 
 ### Patching Old Releases
 
-There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `master` branch. 
+There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `master` branch.
 
 For these cases:
 
