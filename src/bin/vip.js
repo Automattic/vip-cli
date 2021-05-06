@@ -52,7 +52,7 @@ const rootCmd = async function() {
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' );
 
-		if ( await checkIsVIP() ) {
+		if ( ! isLogoutCommand && await checkIsVIP() ) {
 			// temporarily hiding for non-vip, to avoid confusion untill we get full featured subcommand
 			cmd.command( 'dev-environment', 'Use local dev-environment' );
 		}
