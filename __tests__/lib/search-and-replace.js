@@ -95,7 +95,7 @@ describe( 'lib/search-and-replace', () => {
 		jest.spyOn( searchReplaceLib, 'replace' );
 		const replaceSpy = searchReplaceLib.replace;
 
-		const { usingStdOut, outputFileName } = await searchAndReplace(
+		await searchAndReplace(
 			testFilePath,
 			[ ' ohai		,\t\n\tohHey\t\n\r', '	  purty		, \t\n\rpretty\t\n ' ], // tabs spaces, LFs
 			{ output: true },
