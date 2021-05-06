@@ -54,7 +54,7 @@ describe( 'lib/analytics/tracks', () => {
 
 			buildNock()
 				// No arrow function because we need `this`
-				.reply( function( uri, requestBody ) {
+				.reply( 200, function( uri, requestBody ) {
 					expect( this.req.headers[ 'user-agent' ] )
 						.toEqual( [ 'vip-cli' ] ); // The header value is returned as an array
 
@@ -72,7 +72,7 @@ describe( 'lib/analytics/tracks', () => {
 			} );
 
 			let fetchCalled = false;
-			buildNock().reply( () => fetchCalled = true );
+			buildNock().reply( 200, () => fetchCalled = true );
 			const result = await tracksClient.send( { extra: 'param' } );
 			expect( fetchCalled ).toEqual( false );
 			expect( result ).toEqual( 'tracks disabled per DO_NOT_TRACK variable' );
@@ -92,7 +92,7 @@ describe( 'lib/analytics/tracks', () => {
 				'&events%5B0%5D%5BbuttonName%5D=deploy';
 
 			buildNock()
-				.reply( ( uri, requestBody ) => {
+				.reply( 200, ( uri, requestBody ) => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
@@ -107,7 +107,7 @@ describe( 'lib/analytics/tracks', () => {
 			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=existingprefix_clickButton';
 
 			buildNock()
-				.reply( ( uri, requestBody ) => {
+				.reply( 200, ( uri, requestBody ) => {
 					expect( requestBody ).toContain( expectedBodyMatch );
 				} );
 
