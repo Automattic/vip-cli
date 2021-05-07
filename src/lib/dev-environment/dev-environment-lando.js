@@ -118,7 +118,7 @@ async function isEnvUp( app ) {
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
-export async function landoRunWp( instancePath: string, args: Array<string> ) {
+export async function landoExec( instancePath: string, toolName: string, args: Array<string> ) {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 
@@ -131,8 +131,8 @@ export async function landoRunWp( instancePath: string, args: Array<string> ) {
 		throw new Error( 'environment needs to be started before running wp command' );
 	}
 
-	const wpTooling = app.config.tooling?.wp;
-	if ( ! wpTooling ) {
+	const tool = app.config.tooling[ toolName ];
+	if ( ! tool ) {
 		throw new Error( 'wp is not a known lando task' );
 	}
 
@@ -144,10 +144,10 @@ export async function landoRunWp( instancePath: string, args: Array<string> ) {
 	*/
 	process.argv = [ '0', '1', '3' ].concat( args );
 
-	wpTooling.app = app;
-	wpTooling.name = 'wp';
+	tool.app = app;
+	tool.name = toolName;
 
-	const wpTask = landoBuildTask( wpTooling, lando );
+	const wpTask = landoBuildTask( tool, lando );
 
 	const argv = {
 		_: args,

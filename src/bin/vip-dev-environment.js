@@ -23,4 +23,5 @@ command( {
 	.command( 'destroy', 'Destroy a local dev environment' )
 	.command( 'info', 'Provides basic info about a local dev environment' )
 	.command( 'wp', 'Run wp cli command' )
+	.command( 'add-site', 'Adds a site to a multisite dev environment' )
 	.argv( process.argv );

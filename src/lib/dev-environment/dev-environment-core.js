@@ -17,7 +17,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoRunWp, landoStart, landoStop } from './dev-environment-lando';
+import { landoDestroy, landoInfo, landoExec, landoStart, landoStop } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
 import app from '../api/app';
 
@@ -148,7 +148,25 @@ export async function runWp( slug: string, args: Array<string> ) {
 		throw new Error( 'Environment not found.' );
 	}
 
-	await landoRunWp( instancePath, args );
+	await landoExec( instancePath, 'wp', args );
+}
+
+export async function runAddSite( slug: string, newSiteSlug: string, newSiteTitle: string ) {
+	debug( 'Will run a wp command on env', slug, 'for', newSiteSlug, ' - ', newSiteTitle );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( 'Environment not found.' );
+	}
+
+	const args = [ '--slug', newSiteSlug, '--title', newSiteTitle ];
+
+	await landoExec( instancePath, 'add-site', args );
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
