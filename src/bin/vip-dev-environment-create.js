@@ -88,7 +88,6 @@ command()
 			siteSlug: slug,
 		};
 
-
 		try {
 			await createEnvironment( instanceDataWithSlug );
 
