@@ -169,6 +169,16 @@ export async function runAddSite( slug: string, newSiteSlug: string, newSiteTitl
 	await landoExec( instancePath, 'add-site', args );
 }
 
+export function doesEnvironmentExist( slug: string ) {
+	debug( 'Will check for environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	return fs.existsSync( instancePath );
+}
+
 async function prepareLandoEnv( instanceData, instancePath ) {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 
