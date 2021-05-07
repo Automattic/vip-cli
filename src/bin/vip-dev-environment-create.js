@@ -15,7 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { createEnvironment, printEnvironmentInfo, getApplicationInformation } from 'lib/dev-environment/dev-environment-core';
+import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 
@@ -57,8 +57,18 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
-
 		debug( 'Args: ', arg, 'Options: ', opt );
+
+		const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
+
+		const environmentAlreadyExists = doesEnvironmentExist( slug );
+		if ( environmentAlreadyExists ) {
+			const messageToShow = `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
+				`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;
+
+			console.log( chalk.red( 'Error:' ), messageToShow );
+			return;
+		}
 
 		let appInfo: any = {};
 		try {
@@ -78,7 +88,6 @@ command()
 			siteSlug: slug,
 		};
 
-		const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
 
 		try {
 			await createEnvironment( instanceDataWithSlug );
@@ -88,13 +97,6 @@ command()
 			const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 			console.log( message );
 		} catch ( e ) {
-			let messageToShow = chalk.red( 'Error: ' );
-			if ( 'Environment already exists.' === e.message ) {
-				messageToShow += `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
-				`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;
-				console.log( messageToShow );
-			} else {
-				console.log( messageToShow, e.message );
-			}
+			console.log( chalk.red( 'Error:' ), e.message );
 		}
 	} );
