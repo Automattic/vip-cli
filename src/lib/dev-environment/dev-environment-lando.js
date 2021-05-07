@@ -147,11 +147,11 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 	tool.app = app;
 	tool.name = toolName;
 
-	const wpTask = landoBuildTask( tool, lando );
+	const task = landoBuildTask( tool, lando );
 
 	const argv = {
 		_: args,
 	};
 
-	await wpTask.run( argv );
+	await task.run( argv );
 }
