@@ -34,7 +34,11 @@ export function handleCLIException( exception: Error ) {
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
 		console.log( errorPrefix, message );
 	} else {
-		console.log( errorPrefix, exception.message );
+		let message = exception.message;
+		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
+		message = message.replace( 'ERROR: ', '' );
+
+		console.log( errorPrefix, message );
 	}
 }
 
