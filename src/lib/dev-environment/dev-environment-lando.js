@@ -153,5 +153,5 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 		_: args,
 	};
 
-	wpTask.run( argv );
+	await wpTask.run( argv );
 }
