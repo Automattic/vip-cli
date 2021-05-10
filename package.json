@@ -81,7 +81,7 @@
     "eslint-plugin-no-async-foreach": "0.1.1",
     "eslint-plugin-react": "7.23.2",
     "eslint-plugin-wpcalypso": "5.0.0",
-    "flow-bin": "0.150.0",
+    "flow-bin": "0.150.1",
     "jest": "26.6.3",
     "nock": "13.0.11",
     "prettier": "npm:wp-prettier@2.0.5",
