@@ -1,0 +1,44 @@
+/**
+ * External dependencies
+ */
+
+/**
+ * Internal dependencies
+ */
+import { withError } from 'lib/cli/exit';
+import env from 'lib/env';
+
+// Mock console.log()
+let output;
+global.console = {
+	log: ( m, d = '' ) => output += m + d + '\n',
+	error: ( m, d = '' ) => output += m + d + '\n',
+};
+jest.spyOn( global.console, 'log' );
+
+const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
+const ERROR_CODE = 1;
+
+describe( 'lib/cli/exit', () => {
+	beforeAll( async () => {
+		output = '';
+		mockExit.mockClear();
+	} );
+
+	it( 'calls process.exit with code 1', () => {
+		withError( 'Unexpected error' );
+		expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
+	} );
+
+	it( 'outputs the passed error message', () => {
+		withError( 'My error message' );
+		expect( output ).toContain( 'My error message' );
+	} );
+
+	it( 'outputs debug information', () => {
+		withError( 'Oh no' );
+		expect( output ).toContain( 'Debug' );
+		expect( output ).toContain( `VIP-CLI v${ env.app.version }` );
+		expect( output ).toContain( `Node ${ env.node.version }` );
+	} );
+} );
