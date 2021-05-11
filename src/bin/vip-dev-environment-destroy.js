@@ -15,6 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+import * as exit from 'lib/cli/exit';
 import { destroyEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
@@ -47,6 +48,6 @@ command()
 			const message = chalk.green( '✓' ) + ' environment destroyed.\n';
 			console.log( message );
 		} catch ( e ) {
-			console.log( chalk.red( 'Error:' ), e.message );
+			exit.withError( e.message );
 		}
 	} );

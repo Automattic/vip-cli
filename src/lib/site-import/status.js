@@ -16,6 +16,7 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 import { ProgressTracker } from 'lib/cli/progress';
+import * as exit from 'lib/cli/exit';
 import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );

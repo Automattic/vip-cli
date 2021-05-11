@@ -32,9 +32,10 @@ function uncaughtError( err ) {
 		return;
 	}
 
-	console.log();
-	console.log( ' ', chalk.red( '✕' ), ' Unexpected error: Please contact VIP Support with the following error:' );
-	console.log( ' ', chalk.dim( err.stack ) );
+	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );
+	console.log( chalk.dim( err.stack ) );
+
+	exit.withError( 'Unexpected error' );
 }
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
@@ -119,8 +120,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 			error: `Invalid subcommand: ${ subcommand }`,
 		} );
 
-		console.error( chalk.red( 'Error:' ), `\`${ subcommand }\` is not a valid subcommand. See \`vip --help\`` );
-		return {};
+		exit.withError( `\`${ subcommand }\` is not a valid subcommand. See \`vip --help\`` );
 	}
 
 	// Set the site in options.app
@@ -157,8 +157,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				} );
 
 				rollbar.error( err );
-				console.log( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
-				return;
+				exit.withError( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 			}
 
 			if ( ! res ||
@@ -170,8 +169,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: 'No apps found',
 				} );
 
-				console.log( "Couldn't find any apps" );
-				return {};
+				exit.withError( "Couldn't find any apps" );
 			}
 
 			const appNames = res.data.apps.edges.map( cur => cur.name );
@@ -190,14 +188,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 					process.exit();
 				}
 
-				if ( ! err.message ) {
-					console.log( err );
-				} else {
-					console.log( chalk.red( 'Error:' ), err.message );
-				}
-
 				rollbar.error( err );
-				process.exit( 1 );
+				exit.withError( err.message || err );
 			}
 
 			// Copy all app information
@@ -208,8 +200,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: 'Invalid app selected',
 				} );
 
-				console.log( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
-				return {};
+				exit.withError( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
 			}
 
 			await trackEvent( 'command_appcontext_list_select_success' );
@@ -224,8 +215,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: 'App lookup failed',
 				} );
 
-				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
-				return {};
+				exit.withError( `App ${ chalk.blueBright( options.app ) } does not exist` );
 			}
 
 			if ( ! a || ! a.id ) {
@@ -233,8 +223,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: 'Invalid app specified',
 				} );
 
-				console.log( `App ${ chalk.blueBright( options.app ) } does not exist` );
-				return {};
+				exit.withError( `App ${ chalk.blueBright( options.app ) } does not exist` );
 			}
 
 			await trackEvent( 'command_appcontext_param_select' );
@@ -254,8 +243,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: 'Cannot use `production`',
 				} );
 
-				console.log( 'Environment production is not allowed for this command' );
-				return {};
+				exit.withError( 'Environment production is not allowed for this command' );
 			}
 
 			const env = options.app.environments.find( cur => getEnvIdentifier( cur ) === options.env );
@@ -265,20 +253,18 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: `Invalid child environment (${ options.env }) specified`,
 				} );
 
-				console.log( `Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright( options.app.name ) } does not exist` );
-				return {};
+				exit.withError( `Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright( options.app.name ) } does not exist` );
 			}
 
 			options.env = env;
 		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
-			console.log( `Could not find any non-production environments for ${ chalk.blueBright( options.app.name ) }.` );
 			console.log( 'To set up a new development environment, please contact VIP Support.' );
 
 			await trackEvent( 'command_childcontext_fetch_error', {
 				error: 'No child environments found',
 			} );
 
-			return {};
+			exit.withError( `Could not find any non-production environments for ${ chalk.blueBright( options.app.name ) }.` );
 		} else if ( options.app.environments.length === 1 ) {
 			options.env = options.app.environments[ 0 ];
 		} else if ( options.app.environments.length > 1 ) {
@@ -297,14 +283,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 					process.exit();
 				}
 
-				if ( ! err.message ) {
-					console.log( err );
-				} else {
-					console.log( chalk.red( 'Error:' ), err.message );
-				}
-
 				rollbar.error( err );
-				process.exit( 1 );
+				exit.withError( err.message || err );
 			}
 
 			// Get full environment info after user selection
@@ -315,8 +295,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: 'Invalid environment selected',
 				} );
 
-				console.log( `Environment ${ chalk.blueBright( getEnvIdentifier( e.env ) ) } does not exist` );
-				return {};
+				exit.withError( `Environment ${ chalk.blueBright( getEnvIdentifier( e.env ) ) } does not exist` );
 			}
 
 			await trackEvent( 'command_childcontext_list_select_success' );
@@ -397,8 +376,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				if ( ! canSync ) {
 					// User can not sync due to some error(s)
 					// Shows the first error in the array
-					console.log( `${ chalk.red( 'Error:' ) } Could not sync to this environment: ${ errors[ 0 ].message }` );
-					return {};
+					exit.withError( `Could not sync to this environment: ${ errors[ 0 ].message }` );
 				}
 
 				// remove __typename from replacements.
