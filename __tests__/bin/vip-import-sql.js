@@ -5,17 +5,12 @@
 /**
  * Internal dependencies
  */
-import { validateAndGetTableNames, gates } from 'bin/vip-import-sql';
-import * as isMultiSite from 'lib/validations/is-multi-site';
-import * as featureFlags from 'lib/api/feature-flags';
-import * as exit from 'lib/cli/exit';
+import { validateAndGetTableNames } from 'bin/vip-import-sql';
 
 jest.mock( 'lib/tracker' );
 jest.mock( 'lib/validations/site-type' );
 jest.mock( 'lib/validations/is-multi-site' );
 jest.mock( 'lib/api/feature-flags' );
-const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
-const exitWithErrorSpy = jest.spyOn( exit, 'withError' );
 
 describe( 'vip-import-sql', () => {
 	describe( 'validateAndGetTableNames', () => {
@@ -52,34 +47,6 @@ describe( 'vip-import-sql', () => {
 				'wp_users',
 			];
 			expect( result ).toEqual( expected );
-		} );
-	} );
-	describe( 'gates', () => {
-		it( 'exits if featureDisabled (not isVIP) and site is multisite', async () => {
-			isMultiSite.isMultiSiteInSiteMeta.mockImplementation( () => true );
-			featureFlags.get.mockImplementation( () => {
-				const res = {
-					data: {
-						me: {
-							isVIP: false,
-						},
-					},
-				};
-				return res;
-			} );
-			const app = {};
-			const env = {
-				importStatus: {
-					dbOperationInProgress: false,
-					importInProgress: false,
-				},
-			};
-			const fileName = '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql';
-			await gates( app, env, fileName );
-			expect( exitWithErrorSpy ).toHaveBeenCalledWith(
-				'The feature you are attempting to use is not currently enabled.'
-			);
-			expect( mockExit ).toHaveBeenCalled();
 		} );
 	} );
 } );
