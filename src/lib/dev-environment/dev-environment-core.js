@@ -148,7 +148,7 @@ export async function exec( slug: string, args: Array<string> ) {
 		throw new Error( 'Environment not found.' );
 	}
 
-	const commad = args.shift();
+	const command = args.shift();
 
 	let commandArgs = [ ...args ];
 	if ( 'add-site' === commad ) {
