@@ -151,11 +151,11 @@ export async function exec( slug: string, args: Array<string> ) {
 	const command = args.shift();
 
 	let commandArgs = [ ...args ];
-	if ( 'add-site' === commad ) {
+	if ( 'add-site' === command ) {
 		commandArgs = [ ...args.map( argument => argument.replace( '--new-site-', '--' ) ) ];
 	}
 
-	await landoExec( instancePath, commad, commandArgs );
+	await landoExec( instancePath, command, commandArgs );
 }
 
 export function doesEnvironmentExist( slug: string ) {
