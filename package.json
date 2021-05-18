@@ -21,8 +21,7 @@
     "vip-dev-environment-create": "dist/bin/vip-dev-environment-create.js",
     "vip-dev-environment-destroy": "dist/bin/vip-dev-environment-destroy.js",
     "vip-dev-environment-info": "dist/bin/vip-dev-environment-info.js",
-    "vip-dev-environment-wp": "dist/bin/vip-dev-environment-wp.js",
-    "vip-dev-environment-add-site": "dist/bin/vip-dev-environment-add-site.js"
+    "vip-dev-environment-exec": "dist/bin/vip-dev-environment-exec.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",

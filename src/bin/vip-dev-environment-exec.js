@@ -14,18 +14,22 @@
  */
 import command from 'lib/cli/command';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
-import { runWp } from 'lib/dev-environment/dev-environment-core';
+import { exec } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } wp -- post list`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- wp post list`,
 		description: 'Use dev-environment to run `wp post list`',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } wp --slug my_site -- shell`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp shell`,
 		description: 'Use dev-environment "my_site" to run interactive wp shell',
+	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- add-site --new-site-slug subsite --new-site-title "New Subsite"`,
+		description: 'Execute script to add a subsite to multisite dev environment',
 	},
 ];
 
@@ -40,7 +44,7 @@ command( { wildcardCommand: true } )
 			const argSpliterIx = process.argv.findIndex( argument => '--' === argument );
 			const argSpliterFound = argSpliterIx > -1;
 			if ( unmatchedArgs.length > 0 && ! argSpliterFound ) {
-				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and "wp" commands (see "--help" for examples)' );
+				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
 			}
 
 			let arg = [];
@@ -48,7 +52,7 @@ command( { wildcardCommand: true } )
 				arg = process.argv.slice( argSpliterIx + 1 );
 			}
 
-			await runWp( slug, arg );
+			await exec( slug, arg );
 		} catch ( e ) {
 			handleCLIException( e );
 		}
