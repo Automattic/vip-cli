@@ -107,8 +107,8 @@ function buildErrorMessage( importFailed ) {
 	if ( 'FAILED' === importFailed.status ) {
 		const globalFailureDetails = importFailed.failureDetails;
 		if ( globalFailureDetails ) {
-			message += `${ chalk.red( 'Import failed at phase: ' ) }`;
-			message += `${ chalk.redBright.bold( globalFailureDetails.previousStatus ) }\n\n`;
+			message += `${ chalk.red( 'Import failed at status: ' ) }`;
+			message += `${ chalk.redBright.bold( globalFailureDetails.previousStatus ) }\n`;
 			message += chalk.red( 'Errors:' );
 			globalFailureDetails.globalErrors.forEach( value => {
 				message += `\n\t- ${ chalk.redBright.bold( value ) }`;
@@ -267,7 +267,7 @@ ${ maybeExitPrompt }
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
 		progressTracker.print();
-		progressTracker.suffix += `\n${ buildErrorMessage( importFailed ) }\n`;
+		progressTracker.suffix += `\n${ buildErrorMessage( importFailed ) }`;
 		progressTracker.print( { clearAfter: true } );
 		process.exit( 1 );
 	}
