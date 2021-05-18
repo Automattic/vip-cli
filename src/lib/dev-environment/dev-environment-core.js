@@ -87,7 +87,7 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 	await prepareLandoEnv( instanceData, instancePath );
 }
 
-export async function destroyEnvironment( slug: string ) {
+export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	debug( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
@@ -101,8 +101,10 @@ export async function destroyEnvironment( slug: string ) {
 
 	await landoDestroy( instancePath );
 
-	// $FlowFixMe: Seems like a Flow issue, recursive is a valid option and it won't work without it.
-	fs.rmdirSync( instancePath, { recursive: true } );
+	if ( removeFiles ) {
+		// $FlowFixMe: Seems like a Flow issue, recursive is a valid option and it won't work without it.
+		fs.rmdirSync( instancePath, { recursive: true } );
+	}
 }
 
 export async function printAllEnvironmentsInfo() {
@@ -135,7 +137,7 @@ export async function printEnvironmentInfo( slug: string ) {
 	printTable( appInfo );
 }
 
-export async function runWp( slug: string, args: Array<string> ) {
+export async function exec( slug: string, args: Array<string> ) {
 	debug( 'Will run a wp command on env', slug, 'with args', args );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -148,25 +150,14 @@ export async function runWp( slug: string, args: Array<string> ) {
 		throw new Error( 'Environment not found.' );
 	}
 
-	await landoExec( instancePath, 'wp', args );
-}
+	const command = args.shift();
 
-export async function runAddSite( slug: string, newSiteSlug: string, newSiteTitle: string ) {
-	debug( 'Will run a wp command on env', slug, 'for', newSiteSlug, ' - ', newSiteTitle );
-
-	const instancePath = getEnvironmentPath( slug );
-
-	debug( 'Instance path for', slug, 'is:', instancePath );
-
-	const environmentExists = fs.existsSync( instancePath );
-
-	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+	let commandArgs = [ ...args ];
+	if ( 'add-site' === command ) {
+		commandArgs = [ ...args.map( argument => argument.replace( '--new-site-', '--' ) ) ];
 	}
 
-	const args = [ '--slug', newSiteSlug, '--title', newSiteTitle ];
-
-	await landoExec( instancePath, 'add-site', args );
+	await landoExec( instancePath, command, commandArgs );
 }
 
 export function doesEnvironmentExist( slug: string ) {
