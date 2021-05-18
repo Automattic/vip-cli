@@ -87,7 +87,7 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 	await prepareLandoEnv( instanceData, instancePath );
 }
 
-export async function destroyEnvironment( slug: string ) {
+export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	debug( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
@@ -101,8 +101,10 @@ export async function destroyEnvironment( slug: string ) {
 
 	await landoDestroy( instancePath );
 
-	// $FlowFixMe: Seems like a Flow issue, recursive is a valid option and it won't work without it.
-	fs.rmdirSync( instancePath, { recursive: true } );
+	if ( removeFiles ) {
+		// $FlowFixMe: Seems like a Flow issue, recursive is a valid option and it won't work without it.
+		fs.rmdirSync( instancePath, { recursive: true } );
+	}
 }
 
 export async function printAllEnvironmentsInfo() {
