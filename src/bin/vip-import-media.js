@@ -92,7 +92,7 @@ ${ chalk.yellowBright.bold( 'import all files and preserve the directory structu
 Are you sure you want to import the contents of the url?
 `,
 } )
-	.command( 'status', 'Check the status of the current running import' )
+	.command( 'status', 'Check the status of the latest Media Import' )
 	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.examples( examples )

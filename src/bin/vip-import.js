@@ -14,7 +14,7 @@ command( )
 	.command( 'sql', 'Import SQL to your database from a file' )
 	.command( 'validate-sql', 'Validate your SQL dump' )
 	.command( 'validate-files', 'Validate your media file library' )
-	.command( 'media', 'Import media files to your application from a compressed web archive' )
+	.command( 'media', 'Import media files to the production environment of your application from a compressed web archive' )
 	.example( 'vip import sql @mysite.develop <file.sql>', 'Import the given SQL file to your site' )
 	.example( 'vip import media @mysite.production https://<path_to_publicly_accessible_archive>', 'Import contents of the given archive file into the media library of your site' )
 	.argv( process.argv, async () => {
