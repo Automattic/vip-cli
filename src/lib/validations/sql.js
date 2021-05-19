@@ -233,7 +233,8 @@ const checks: Checks = {
 		message: 'ENGINE != InnoDB',
 		excerpt: "'ENGINE=InnoDB' should be present (case-insensitive) for all tables",
 		recommendation:
-			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements",
+			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements. " +
+		"We suggest you search for all 'ENGINE=X' entries and replace them with  'ENGINE=InnoDB'!",
 	},
 };
 
