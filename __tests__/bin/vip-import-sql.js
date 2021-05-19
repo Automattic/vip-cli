@@ -6,11 +6,14 @@
  * Internal dependencies
  */
 import { validateAndGetTableNames } from 'bin/vip-import-sql';
+import * as exit from 'lib/cli/exit';
 
 jest.mock( 'lib/tracker' );
 jest.mock( 'lib/validations/site-type' );
 jest.mock( 'lib/validations/is-multi-site' );
 jest.mock( 'lib/api/feature-flags' );
+jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
+jest.spyOn( exit, 'withError' );
 
 describe( 'vip-import-sql', () => {
 	describe( 'validateAndGetTableNames', () => {
