@@ -85,7 +85,7 @@ command( {
 	module: 'import-media',
 	requiredArgs: 1,
 	requireConfirm: `
-${ chalk.yellowBright.bold( 'NOTE: If the provided archive\'s directory structure begins with `/wp-content/uploads`,' ) }
+${ chalk.yellowBright.bold( 'NOTE: If the provided archive\'s directory structure contains an `/uploads` directory,' ) }
 ${ chalk.yellowBright.bold( 'we will extract only the files after that path and import it. Otherwise, we will' ) }
 ${ chalk.yellowBright.bold( 'import all files and preserve the directory structure as is.' ) }
 
