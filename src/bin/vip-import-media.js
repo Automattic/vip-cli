@@ -86,8 +86,7 @@ command( {
 	requiredArgs: 1,
 	requireConfirm: `
 ${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `/uploads` directory,' ) }
-${ chalk.red.bold( 'we will extract only the files after that path and import it. Otherwise, we will' ) }
-${ chalk.red.bold( 'import all files and preserve the directory structure as is.' ) }
+${ chalk.red.bold( 'we will extract only the files after that path and import it.' ) }
 
 Are you sure you want to import the contents of the url?
 `,
