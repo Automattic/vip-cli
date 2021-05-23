@@ -412,7 +412,20 @@ args.argv = async function( argv, cb ): Promise<any> {
 				info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
 				break;
 			case 'import-media':
-				info.push( { key: 'Archive URL', value: this.sub } );
+				info.push( { key: 'Archive URL', value: chalk.blue.underline( this.sub ) } );
+
+				options.overwriteExistingFiles = options.hasOwnProperty( 'overwriteExistingFiles' ) &&
+					!! options.overwriteExistingFiles && ! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
+				info.push( { key: 'Overwrite any existing files', value: options.overwriteExistingFiles ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
+
+				options.importIntermediateImages = options.hasOwnProperty( 'importIntermediateImages' ) &&
+					!! options.importIntermediateImages && ! [ 'false', 'no' ].includes( options.importIntermediateImages );
+				info.push( { key: 'Import intermediate image files', value: options.importIntermediateImages ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
+
+				options.exportFileErrorsToJson = options.hasOwnProperty( 'exportFileErrorsToJson' ) &&
+					!! options.exportFileErrorsToJson && ! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
+				info.push( { key: 'Export any file errors encountered to a JSON file instead of a plain text file',
+					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
 				break;
 			default:
 		}
