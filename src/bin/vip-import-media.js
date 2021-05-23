@@ -85,7 +85,7 @@ command( {
 	module: 'import-media',
 	requiredArgs: 1,
 	requireConfirm: `
-${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure begins with `/wp-content/uploads`,' ) }
+${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `/uploads` directory,' ) }
 ${ chalk.red.bold( 'we will extract only the files after that path and import it. Otherwise, we will' ) }
 ${ chalk.red.bold( 'import all files and preserve the directory structure as is.' ) }
 
@@ -95,9 +95,10 @@ Are you sure you want to import the contents of the url?
 	.command( 'status', 'Check the status of the latest Media Import' )
 	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
+	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
-		const { app, env, exportFileErrorsToJson, overwriteExistingFiles } = opts;
+		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } = opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
@@ -136,6 +137,7 @@ Processing the files import for your environment...
 							environmentId: env.id,
 							archiveUrl: url,
 							overwriteExistingFiles,
+							importIntermediateImages,
 						},
 					},
 				} );
