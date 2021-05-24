@@ -390,7 +390,7 @@ commandWrapper( {
 
 		// Fix to re-add the \n character that readline strips when terminal == true
 		process.stdin.on( 'data', data => {
-			//only run this in interactive mode for prompts from WP commands
+			// only run this in interactive mode for prompts from WP commands
 			if ( commandRunning && 0 === Buffer.compare( data, Buffer.from( '\r' ) ) ) {
 				if ( currentJob && currentJob.stdinStream ) {
 					currentJob.stdinStream.write( '\n' );
@@ -399,13 +399,13 @@ commandWrapper( {
 		} );
 
 		subShellRl.on( 'SIGINT', async () => {
-			//if we have a 2nd SIGINT, exit immediately
+			// if we have a 2nd SIGINT, exit immediately
 			if ( countSIGINT >= 1 ) {
 				process.exit();
 			}
 			countSIGINT += 1;
 
-			//write out CTRL-C/SIGINT
+			// write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
 
 			if ( currentJob && currentJob.stdoutStream ) {
@@ -416,7 +416,7 @@ commandWrapper( {
 
 			console.log( 'Command cancelled by user' );
 
-			//if no command running (.e.g. interactive shell, exit only after doing cleanup)
+			// if no command running (.e.g. interactive shell, exit only after doing cleanup)
 			if ( commandRunning === false ) {
 				process.exit();
 			}

@@ -16,15 +16,6 @@ const password = randomBytes( 256 ).toString();
 let keychain;
 
 describe( 'token tests (secure)', () => {
-	try {
-		const Secure = require( 'lib/keychain/secure' );
-		keychain = new Secure();
-	} catch ( e ) {
-		it.skip( 'should correctly set token (keytar does not exist)', () => {} );
-		it.skip( 'should correctly delete token (keytar does not exist)', () => {} );
-		return;
-	}
-
 	it( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( async () => {
 			const p = keychain.getPassword( account );

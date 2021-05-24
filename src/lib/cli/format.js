@@ -57,10 +57,12 @@ function ids( data: Array<any> ): string {
 }
 
 function csv( data: Array<any> ): string {
-	const json2csv = require( 'json2csv' );
+	const { Parser } = require( 'json2csv' );
 	const fields = Object.keys( data[ 0 ] );
 
-	return json2csv( { data: data, fields: formatFields( fields ) } );
+	const parser = new Parser( { fields: formatFields( fields ) } );
+
+	return parser.parse( data );
 }
 
 function table( data: Array<any> ): string {

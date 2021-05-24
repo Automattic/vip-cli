@@ -69,9 +69,6 @@ describe( 'lib/validations/sql', () => {
 		it( 'no instances of CREATE TABLE statements', () => {
 			expect( output ).toContain( 'CREATE TABLE was not found' );
 		} );
-		it.skip( 'siteurl/home matches', () => {
-			// TODO: the validator should warn when these fields are mismatched
-		} );
 		it( 'instances of ENGINE != InnoDB', () => {
 			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
 		} );

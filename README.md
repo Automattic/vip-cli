@@ -23,6 +23,14 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.7
+- SQL Import: Add additional multisite validations
+- Update socket.io-client to 4.0.1
+- Misc. dependency updates
+
+### 2.0.6
+- SQL Import: Add additional checks for site type
+
 ### 2.0.5
 - Fix a bug when comparing env data to selected environment #697
 

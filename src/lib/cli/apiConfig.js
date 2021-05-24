@@ -6,7 +6,6 @@
 /**
  * External dependencies
  */
-import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -23,7 +22,7 @@ export async function checkFeatureEnabled(
 	// for now, let's see if the user of the CLI is VIP
 	await trackEvent( 'checkFeatureEnabled_start', { featureName, exitOnFalse } );
 
-	const isVIP = await new Promise( async ( resolve, reject ) => {
+	const isVIP = await new Promise( async resolve => {
 		try {
 			const res = await featureFlags.get();
 			if ( res?.data?.me?.isVIP !== undefined ) {

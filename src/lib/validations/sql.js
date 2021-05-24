@@ -14,6 +14,7 @@ import { stdout as log } from 'single-line-log';
  */
 import { trackEvent } from 'lib/tracker';
 import { getReadInterface } from 'lib/validations/line-by-line';
+// eslint-disable-next-line no-duplicate-imports
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
 let problemsFound = 0;
@@ -28,7 +29,7 @@ function formatRecommendation( message ) {
 	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
 
-const errorCheckFormatter = ( check, isImport ) => {
+const errorCheckFormatter = check => {
 	const errors = [];
 	const infos = [];
 
@@ -75,7 +76,7 @@ const requiredCheckFormatter = ( check, type, isImport ) => {
 	};
 };
 
-const infoCheckFormatter = ( check, isImport ) => {
+const infoCheckFormatter = check => {
 	const infos = [];
 
 	check.results.forEach( item => {
@@ -232,7 +233,8 @@ const checks: Checks = {
 		message: 'ENGINE != InnoDB',
 		excerpt: "'ENGINE=InnoDB' should be present (case-insensitive) for all tables",
 		recommendation:
-			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements",
+			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements. " +
+		"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
 
@@ -307,8 +309,6 @@ const checkForTableName = line => {
 	const matches = line.match( /(?<=^CREATE\sTABLE\s)`?(?:(wp_[\d+_]?\w+))`?/ );
 	if ( matches ) {
 		const tableName = matches[ 1 ];
-		// get table index matching for blog_id grouping
-		const tableIntMatch = tableName.match( /\d/ );
 		// we should only have one match if we have any since we're looking at the start of the string
 		tableNames.push( tableName );
 	}
