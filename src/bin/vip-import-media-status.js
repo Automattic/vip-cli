@@ -20,18 +20,18 @@ import { MediaImportProgressTracker } from 'lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 
 const appQuery = `
-id,
-name,
-type,
-environments{
-	id
-	appId
-	type
-	primaryDomain {
+	id,
+	name,
+	type,
+	environments{
 		id
-		name
+		appId
+		type
+		primaryDomain {
+			id
+			name
+		}
 	}
-}
 `;
 
 command( {
