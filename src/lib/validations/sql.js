@@ -16,7 +16,6 @@ import { trackEvent } from 'lib/tracker';
 import { getReadInterface } from 'lib/validations/line-by-line';
 // eslint-disable-next-line no-duplicate-imports
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
-import { check } from 'prettier';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -266,9 +265,6 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 
 	const tableNamesSet = new Set( tableNames );
 	if ( tableNames.length > tableNamesSet.size ) {
-
-		
-
 		// there was a duplciate table
 		problemsFound++;
 		const errorObject = {
