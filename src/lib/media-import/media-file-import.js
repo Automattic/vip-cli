@@ -6,7 +6,7 @@
 /**
  * Internal dependencies
  */
-import { GB_IN_BYTES, MB_IN_BYTES } from 'lib/constants/file-size';
+import { GB_IN_BYTES } from 'lib/constants/file-size';
 
 export const MEDIA_IMPORT_FILE_SIZE_LIMIT = 30 * GB_IN_BYTES;
 
