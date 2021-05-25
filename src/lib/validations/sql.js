@@ -267,8 +267,27 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 	if ( tableNames.length > tableNamesSet.size ) {
 		// there was a duplciate table
 		problemsFound++;
+
+		function findDuplicates( arr ) {
+			const distinct = new Set( arr ); // to improve performance
+			const filtered = arr.filter( item => {
+				// remove the element from the set on very first encounter
+				if ( distinct.has( item ) ) {
+					distinct.delete( item );
+				}
+				// return the element on subsequent encounters
+				else {
+					return item;
+				}
+			} );
+
+			return [ ...new Set( filtered ) ];
+		}
+
+		const duplicates = findDuplicates( tableNames );
+
 		const errorObject = {
-			error: formatError( 'Duplicate table names were found.' ),
+			error: formatError( 'Duplicate table names were found: ' + duplicates.join( ',' ) ),
 			recommendation: formatRecommendation( 'Ensure that there are no duplicate tables in your SQL dump' ),
 		};
 		formattedErrors = formattedErrors.concat( errorObject );

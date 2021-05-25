@@ -86,7 +86,7 @@ describe( 'lib/validations/sql', () => {
 			debug( 'output', output );
 		} );
 		it( 'duplicate tables names found', () => {
-			expect( output ).toContain( 'Duplicate table names were found.' );
+			expect( output ).toContain( 'Duplicate table names were found: wp_users' );
 		} );
 	} );
 } );
