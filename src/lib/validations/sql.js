@@ -269,14 +269,10 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 		problemsFound++;
 
 		function findDuplicates( arr ) {
-			const distinct = new Set( arr ); // to improve performance
 			const filtered = arr.filter( item => {
-				// remove the element from the set on very first encounter
-				if ( distinct.has( item ) ) {
-					distinct.delete( item );
-				}
-				// return the element on subsequent encounters
-				else {
+				if ( tableNamesSet.has( item ) ) {
+					tableNamesSet.delete( item );
+				} else {
 					return item;
 				}
 			} );
