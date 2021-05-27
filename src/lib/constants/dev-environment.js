@@ -1,4 +1,4 @@
-export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-environment';
+export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-env';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
 export const DOCKER_HUB_PAGE_SIZE = 10;

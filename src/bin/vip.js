@@ -54,7 +54,7 @@ const rootCmd = async function() {
 
 		if ( ! isLogoutCommand && await checkIsVIP() ) {
 			// temporarily hiding for non-vip, to avoid confusion untill we get full featured subcommand
-			cmd.command( 'dev-environment', 'Use local dev-environment' );
+			cmd.command( 'dev-env', 'Use local dev-environment' );
 		}
 
 		cmd.argv( process.argv );
