@@ -233,7 +233,8 @@ const checks: Checks = {
 		message: 'ENGINE != InnoDB',
 		excerpt: "'ENGINE=InnoDB' should be present (case-insensitive) for all tables",
 		recommendation:
-			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements",
+			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements. " +
+			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
 
@@ -261,6 +262,32 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 	}
 	// eslint-disable-next-line camelcase
 	errorSummary.problems_found = problemsFound;
+
+	const tableNamesSet = new Set( tableNames );
+	if ( tableNames.length > tableNamesSet.size ) {
+		// there was a duplciate table
+		problemsFound++;
+
+		function findDuplicates( arr ) {
+			const filtered = arr.filter( item => {
+				if ( tableNamesSet.has( item ) ) {
+					tableNamesSet.delete( item );
+				} else {
+					return item;
+				}
+			} );
+
+			return [ ...new Set( filtered ) ];
+		}
+
+		const duplicates = findDuplicates( tableNames );
+
+		const errorObject = {
+			error: formatError( 'Duplicate table names were found: ' + duplicates.join( ',' ) ),
+			recommendation: formatRecommendation( 'Ensure that there are no duplicate tables in your SQL dump' ),
+		};
+		formattedErrors = formattedErrors.concat( errorObject );
+	}
 
 	if ( problemsFound > 0 ) {
 		await trackEvent( 'import_validate_sql_command_failure', {

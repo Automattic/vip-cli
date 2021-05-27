@@ -72,20 +72,20 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		it.each( [
 			{ // default value
 				options: {},
-				expected: 'vip dev-environment start',
+				expected: 'vip dev-env start',
 			},
 			{ // use custom name
 				options: {
 					slug: 'foo',
 				},
-				expected: 'vip dev-environment start --slug foo',
+				expected: 'vip dev-env start --slug foo',
 			},
 			{ // construct name from app and env
 				options: {
 					app: '123',
 					env: 'bar.car',
 				},
-				expected: 'vip @123.bar.car dev-environment start',
+				expected: 'vip @123.bar.car dev-env start',
 			},
 			{ // custom name takes precedence
 				options: {
@@ -93,7 +93,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					app: '123',
 					env: 'bar.car',
 				},
-				expected: 'vip dev-environment start --slug foo',
+				expected: 'vip dev-env start --slug foo',
 			},
 		] )( 'should get correct start command', async input => {
 			const result = getEnvironmentStartCommand( input.options );

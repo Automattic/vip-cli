@@ -23,6 +23,12 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.8
+- [Beta] Media Import: Enable media imports for production WordPress applications
+- SQL Import: Enable SQL Import for launched sites
+- SQL Import: Enable SQL Import for multisite networks
+- SQL Import: Additional input file validation
+
 ### 2.0.7
 - SQL Import: Add additional multisite validations
 - Update socket.io-client to 4.0.1
