@@ -17,13 +17,13 @@
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js",
-    "vip-dev-environment": "dist/bin/vip-dev-environment.js",
-    "vip-dev-environment-start": "dist/bin/vip-dev-environment-start.js",
-    "vip-dev-environment-stop": "dist/bin/vip-dev-environment-stop.js",
-    "vip-dev-environment-create": "dist/bin/vip-dev-environment-create.js",
-    "vip-dev-environment-destroy": "dist/bin/vip-dev-environment-destroy.js",
-    "vip-dev-environment-info": "dist/bin/vip-dev-environment-info.js",
-    "vip-dev-environment-exec": "dist/bin/vip-dev-environment-exec.js"
+    "vip-dev-env": "dist/bin/vip-dev-env.js",
+    "vip-dev-env-start": "dist/bin/vip-dev-env-start.js",
+    "vip-dev-env-stop": "dist/bin/vip-dev-env-stop.js",
+    "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
+    "vip-dev-env-destroy": "dist/bin/vip-dev-env-destroy.js",
+    "vip-dev-env-info": "dist/bin/vip-dev-env-info.js",
+    "vip-dev-env-exec": "dist/bin/vip-dev-env-exec.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
