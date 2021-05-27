@@ -111,13 +111,6 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 		);
 	}
 
-	if ( env.isK8sResident ) {
-		await track( 'import_sql_command_error', { error_type: 'unsupported-k8s' } );
-		exit.withError(
-			'The type of application you specified does not currently support SQL imports.'
-		);
-	}
-
 	try {
 		await checkFileAccess( fileName );
 	} catch ( e ) {
