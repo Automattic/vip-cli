@@ -47,7 +47,7 @@ const rootCmd = async function() {
 				console.log( 'You are successfully logged out.' );
 			} )
 			.command( 'app', 'List and modify your VIP applications' )
-			.command( 'import', 'Check the validity of an import source' )
+			.command( 'import', 'Import Media or SQL files into your VIP applications' )
 			.command( 'search-replace', 'Perform Search and Replace tasks on files' )
 			.command( 'sync', 'Sync production to a development environment' )
 			.command( 'wp', 'Run WP CLI commands against an environment' );

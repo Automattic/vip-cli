@@ -31,11 +31,12 @@ jest.mock( 'node-fetch' );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 
 describe( 'lib/validations/sql', () => {
-	describe( 'it fails when the SQL has', () => {
+	describe( 'it fails when the SQL has (using bad-sql-dump.sql)', () => {
 		beforeAll( async () => {
 			try {
 				output = '';
 				const badSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dump.sql' );
+				// const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
 				await validate( badSqlDumpPath );
 			} catch ( e ) {
 				debug( 'Error:', e.toString() );
@@ -71,6 +72,21 @@ describe( 'lib/validations/sql', () => {
 		} );
 		it( 'instances of ENGINE != InnoDB', () => {
 			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
+		} );
+	} );
+	describe( 'it fails when the SQL has (using bad-sql-duplicate-tables.sql)', () => {
+		beforeAll( async () => {
+			try {
+				output = '';
+				const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
+				await validate( duplicateCreateTableSqlDumpPath );
+			} catch ( e ) {
+				debug( 'Error:', e.toString() );
+			}
+			debug( 'output', output );
+		} );
+		it( 'duplicate tables names found', () => {
+			expect( output ).toContain( 'Duplicate table names were found: wp_users' );
 		} );
 	} );
 } );
