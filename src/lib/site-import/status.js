@@ -27,6 +27,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 		app(id: $appId) {
 			environments(id: $envId) {
 				id
+				isK8sResident
 				jobs(types: "sql_import") {
 					id
 					type
@@ -83,7 +84,7 @@ async function getStatus( api, appId, envId ) {
 	}
 	const [ environment ] = environments;
 	const { importStatus, jobs } = environment;
-	if ( ! jobs?.length ) {
+	if ( ! environment.isK8sResident && ! jobs?.length ) {
 		return {};
 	}
 
@@ -178,6 +179,7 @@ export async function importSqlCheckStatus( {
 	let overallStatus = 'Checking...';
 
 	const setProgressTrackerSuffix = () => {
+		debug( overallStatus );
 		const sprite = getGlyphForStatus( overallStatus, progressTracker.runningSprite );
 		const formattedCreatedAt = createdAt
 			? `${ new Date( createdAt ).toLocaleString() } (${ createdAt })`
@@ -238,18 +240,32 @@ ${ maybeExitPrompt }
 				}
 				const { importStatus, importJob } = status;
 
-				debug( { importJob } );
+				let jobStatus, jobSteps;
+				if ( env.isK8sResident ) {
+					( {
+						progress: { steps: jobSteps },
+					} = importStatus );
 
-				if ( ! importJob ) {
-					return resolve( 'No import job found' );
+					if ( jobSteps.some( ( { result } ) => result === 'failed' ) ) {
+						jobStatus = 'error';
+					}
+
+					if ( jobSteps.every( ( { result } ) => result === 'success' ) ) {
+						jobStatus = 'success';
+						completedAt = Math.max( ...jobSteps.map( ( { finished_at } ) => finished_at ), 0 );
+					}
+				} else {
+					if ( ! importJob ) {
+						return resolve( 'No import job found' );
+					}
+
+					( {
+						progress: { status: jobStatus, steps: jobSteps },
+					} = importJob );
+
+					createdAt = importJob.createdAt;
+					completedAt = importJob.completedAt;
 				}
-
-				const {
-					progress: { status: jobStatus, steps: jobSteps },
-				} = importJob;
-
-				createdAt = importJob.createdAt;
-				completedAt = importJob.completedAt;
 
 				const {
 					dbOperationInProgress,
@@ -258,6 +274,7 @@ ${ maybeExitPrompt }
 				} = importStatus;
 
 				debug( {
+					jobStatus,
 					completedAt,
 					createdAt,
 					dbOperationInProgress,
