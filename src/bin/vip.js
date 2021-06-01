@@ -18,7 +18,6 @@ import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
-import { checkIsVIP } from '../lib/cli/apiConfig';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -50,12 +49,8 @@ const rootCmd = async function() {
 			.command( 'import', 'Import Media or SQL files into your VIP applications' )
 			.command( 'search-replace', 'Perform Search and Replace tasks on files' )
 			.command( 'sync', 'Sync production to a development environment' )
-			.command( 'wp', 'Run WP CLI commands against an environment' );
-
-		if ( ! isLogoutCommand && await checkIsVIP() ) {
-			// temporarily hiding for non-vip, to avoid confusion untill we get full featured subcommand
-			cmd.command( 'dev-env', 'Use local dev-environment' );
-		}
+			.command( 'wp', 'Run WP CLI commands against an environment' )
+			.command( 'dev-env', 'Use local dev-environment' );
 
 		cmd.argv( process.argv );
 	} else {
