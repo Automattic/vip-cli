@@ -179,7 +179,6 @@ export async function importSqlCheckStatus( {
 	let overallStatus = 'Checking...';
 
 	const setProgressTrackerSuffix = () => {
-		debug( overallStatus );
 		const sprite = getGlyphForStatus( overallStatus, progressTracker.runningSprite );
 		const formattedCreatedAt = createdAt
 			? `${ new Date( createdAt ).toLocaleString() } (${ createdAt })`
@@ -238,22 +237,35 @@ ${ maybeExitPrompt }
 				} catch ( error ) {
 					return reject( { error } );
 				}
-				const { importStatus, importJob } = status;
+				const { importStatus } = status;
+				let { importJob } = status;
 
 				let jobStatus, jobSteps;
 				if ( env.isK8sResident ) {
-					( {
-						progress: { steps: jobSteps },
-					} = importStatus );
+					const { progress: { steps: statusSteps } } = importStatus;
 
-					if ( jobSteps.some( ( { result } ) => result === 'failed' ) ) {
+					//we wont have an importJob in this path, so remap the steps from the status
+					jobSteps = statusSteps.map( step => {
+						return {
+							id: step.name,
+							name: capitalize( step.name.replace( /_/g, ' ' ) ),
+							status: step.result,
+						};
+					} );
+
+					if ( statusSteps.some( ( { result } ) => result === 'failed' ) ) {
 						jobStatus = 'error';
+					} else 	if ( statusSteps.every( ( { result } ) => result === 'success' ) ) {
+						jobStatus = 'success';
+						completedAt = new Date( Math.max( ...statusSteps.map( ( { finished_at } ) => finished_at ), 0 ) * 1000 ).toUTCString();
+						createdAt = new Date( importStatus.progress.started_at * 1000 ).toUTCString();
 					}
 
-					if ( jobSteps.every( ( { result } ) => result === 'success' ) ) {
-						jobStatus = 'success';
-						completedAt = Math.max( ...jobSteps.map( ( { finished_at } ) => finished_at ), 0 );
-					}
+					importJob = {
+						progress: { status: jobStatus, steps: jobSteps },
+						createdAt: completedAt,
+						completedAt,
+					};
 				} else {
 					if ( ! importJob ) {
 						return resolve( 'No import job found' );
