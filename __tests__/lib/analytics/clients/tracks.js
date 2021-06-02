@@ -113,5 +113,16 @@ describe( 'lib/analytics/tracks', () => {
 
 			return tracksClient.trackEvent( eventName, {} );
 		} );
+
+		it( 'should not reject promise when tracking fails', async () => {
+			const tracksClient = new Tracks( 123, 'vip', 'existingprefix_', {} );
+
+			const eventName = 'existingprefix_clickButton';
+
+			buildNock().replyWithError( 'Connection reset' );
+
+			// We expect that the promise resolves to false instead of rejecting and throwing errors with async/await
+			await expect( tracksClient.trackEvent( eventName, {} ) ).resolves.toBe( false );
+		} );
 	} );
 } );
