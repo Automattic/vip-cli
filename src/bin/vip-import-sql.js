@@ -39,7 +39,6 @@ import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import { exitWhenFeatureDisabled } from '../lib/cli/apiConfig';
 
 export type WPSiteListType = {
 	id: string,
@@ -86,7 +85,7 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
-const debug = debugLib( 'vip:vip-import-sql' );
+const debug = debugLib( '@automattic/vip:bin:vip-import-sql' );
 
 const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'replace', name: 'Performing Search and Replace' },
@@ -98,12 +97,6 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
-	// Block multiSite imports unless feature is enabled
-	if ( await isMultiSiteInSiteMeta( appId, envId ) ) {
-		// currently checks isVIP
-		exitWhenFeatureDisabled( 'subsite-sql-imports' );
-	}
-
 	if ( ! currentUserCanImportForApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
 		exit.withError(
@@ -113,13 +106,6 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 
 	if ( ! isSupportedApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unsupported-app' } );
-		exit.withError(
-			'The type of application you specified does not currently support SQL imports.'
-		);
-	}
-
-	if ( env.isK8sResident ) {
-		await track( 'import_sql_command_error', { error_type: 'unsupported-k8s' } );
 		exit.withError(
 			'The type of application you specified does not currently support SQL imports.'
 		);
@@ -515,7 +501,24 @@ Processing the SQL import for your environment...
 				md5: md5,
 			};
 
-			debug( { basename, md5, result } );
+			if ( searchReplace ) {
+				let pairs = searchReplace;
+				if ( ! Array.isArray( pairs ) ) {
+					pairs = [ searchReplace ];
+				}
+
+				// determine all the replacements required
+				const replacementsArr = pairs.map( str => str.split( ',' ).map( s => s.trim() ) );
+
+				startImportVariables.input.searchReplace = replacementsArr.map( arr => {
+					return {
+						from: arr[ 0 ],
+						to: arr[ 1 ],
+					};
+				} );
+			}
+
+			debug( { basename, md5, result, startImportVariables } );
 			debug( 'Upload complete. Initiating the import.' );
 			progressTracker.stepSuccess( 'upload' );
 			await track( 'import_sql_upload_complete' );

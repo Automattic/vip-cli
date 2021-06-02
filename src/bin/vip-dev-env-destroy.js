@@ -36,6 +36,7 @@ const examples = [
 
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'soft', 'Keep config files needed to start an environment intact' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
@@ -43,7 +44,8 @@ command()
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		try {
-			await destroyEnvironment( slug );
+			const removeFiles = ! ( opt.soft || false );
+			await destroyEnvironment( slug, removeFiles );
 
 			const message = chalk.green( '✓' ) + ' environment destroyed.\n';
 			console.log( message );
