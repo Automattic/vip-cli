@@ -16,6 +16,7 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 import { ProgressTracker } from 'lib/cli/progress';
+import * as exit from 'lib/cli/exit';
 import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
@@ -104,7 +105,7 @@ function getErrorMessage( importFailed ) {
 	) } to the last backup prior to your import job.
 `;
 
-	let message = chalk.red( `Error: ${ importFailed.error }` );
+	let message = importFailed.error;
 
 	if ( importFailed.inImportProgress ) {
 		switch ( importFailed.stepName ) {
@@ -386,10 +387,8 @@ ${ maybeExitPrompt }
 		process.exit( 0 );
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
-		progressTracker.print();
-		progressTracker.suffix += `\n${ getErrorMessage( importFailed ) }\n`;
 		progressTracker.print( { clearAfter: true } );
-		process.exit( 1 );
+		exit.withError( getErrorMessage( importFailed ) );
 	}
 }
 

@@ -16,6 +16,7 @@ import { Writable } from 'stream';
  */
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from 'lib/api';
 import commandWrapper, { getEnvIdentifier } from 'lib/cli/command';
+import * as exit from 'lib/cli/exit';
 import { formatEnvironment, requoteArgs } from 'lib/cli/format';
 import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
@@ -175,9 +176,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 	} );
 
 	socket.on( 'cancel', message => {
-		console.log( `Cancel received from server: ${ message }` );
 		socket.close();
-		process.exit( 1 );
+		exit.withError( `Cancel received from server: ${ message }` );
 	} );
 
 	IOStream( socket ).on( 'error', err => {
