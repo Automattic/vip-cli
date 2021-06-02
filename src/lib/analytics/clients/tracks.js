@@ -46,7 +46,7 @@ export default class Tracks implements AnalyticsClient {
 		};
 	}
 
-	trackEvent( name: string, eventProps = {} ): Promise<any> {
+	async trackEvent( name: string, eventProps = {} ): Promise<any> {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
@@ -93,7 +93,14 @@ export default class Tracks implements AnalyticsClient {
 
 		debug( 'trackEvent()', params );
 
-		return this.send( params );
+		try {
+			return await this.send( params );
+		} catch ( error ) {
+			debug( error );
+		}
+
+		// Resolve to false instead of rejecting
+		return Promise.resolve( false );
 	}
 
 	send( extraParams: {} ): Promise<any> {
