@@ -23,6 +23,15 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.9 (3 June 2021)
+- Enable SQL import for all site types
+- Bug fix for analytics errors causing some commands to fail
+- Add the full changelog to the readme
+- Improved error output by adding debug info and consistent output/error codes
+- Misc dependency updates
+
+https://github.com/Automattic/vip/releases/tag/v2.0.9
+
 ### 2.0.8 (27 May 2021)
 - [Beta] Media Import: Enable media imports for production WordPress applications
 - SQL Import: Enable SQL Import for launched sites
