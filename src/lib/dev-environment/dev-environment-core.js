@@ -212,7 +212,7 @@ export function getEnvironmentPath( name: string ) {
 
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
-	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
+	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
 
 export async function getApplicationInformation( appId: number, envType: string | null ) {
