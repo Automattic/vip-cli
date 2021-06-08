@@ -238,52 +238,17 @@ ${ maybeExitPrompt }
 				} catch ( error ) {
 					return reject( { error } );
 				}
-				const { importStatus } = status;
-				let { importJob } = status;
+				const { importStatus, importJob } = status;
 
-				let jobStatus, jobSteps = [];
-				if ( env.isK8sResident ) {
-					// in the future the API may provide this in k8s jobs so account for that.
-					// Until then we need to create the importJob from the status object.
-					if ( ! importJob ) {
-						importJob = {};
-						const statusSteps = importStatus?.progress?.steps;
+				debug( { importJob } );
 
-						// if the progress meta isn't filled out yet, wait until it is.
-						if ( ! statusSteps ) {
-							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
-						}
-
-						jobSteps = statusSteps.map( step => {
-							return {
-								id: step.name,
-								name: capitalize( step.name.replace( /_/g, ' ' ) ),
-								status: step.result,
-							};
-						} );
-
-						if ( statusSteps.some( ( { result } ) => result === 'failed' ) ) {
-							jobStatus = 'error';
-						} else 	if ( statusSteps.every( ( { result } ) => result === 'success' ) ) {
-							jobStatus = 'success';
-							importJob.completedAt = new Date( Math.max( ...statusSteps.map( ( { finished_at } ) => finished_at ), 0 ) * 1000 ).toUTCString();
-						}
-
-						if ( importStatus?.progress?.started_at ) {
-							importJob.createdAt = new Date( importStatus.progress.started_at * 1000 ).toUTCString();
-						}
-
-						importJob.progress = { status: jobStatus, steps: jobSteps };
-					}
-				} else {
-					if ( ! importJob ) {
-						return resolve( 'No import job found' );
-					}
-
-					( {
-						progress: { status: jobStatus, steps: jobSteps },
-					} = importJob );
+				if ( ! importJob ) {
+					return resolve( 'No import job found' );
 				}
+
+				const {
+					progress: { status: jobStatus, steps: jobSteps },
+				} = importJob;
 
 				createdAt = importJob.createdAt;
 				completedAt = importJob.completedAt;
@@ -295,7 +260,6 @@ ${ maybeExitPrompt }
 				} = importStatus;
 
 				debug( {
-					jobStatus,
 					completedAt,
 					createdAt,
 					dbOperationInProgress,
