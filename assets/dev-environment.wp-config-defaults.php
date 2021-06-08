@@ -75,8 +75,8 @@ if ( file_exists( ABSPATH . '/wp-content/vip-config/vip-config.php' ) ) {
  */
 /*
 // Uncomment following code in order to enable Enterprise Search
-if ( ! defined( 'USE_VIP_ELASTICSEARCH' ) ) {
-	define( 'USE_VIP_ELASTICSEARCH', true );
+if ( ! defined( 'VIP_ENABLE_VIP_SEARCH' ) ) {
+	define( 'VIP_ENABLE_VIP_SEARCH', true );
 }
 
 if ( ! defined( 'VIP_ENABLE_ELASTICSEARCH_QUERY_INTEGRATION' ) ) {
