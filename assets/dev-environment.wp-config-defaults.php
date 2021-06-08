@@ -71,8 +71,10 @@ if ( file_exists( ABSPATH . '/wp-content/vip-config/vip-config.php' ) ) {
 }
 
 /**
- * VIP Search
+ * Enterprise Search
  */
+/*
+// Uncomment following code in order to enable Enterprise Search
 if ( ! defined( 'USE_VIP_ELASTICSEARCH' ) ) {
 	define( 'USE_VIP_ELASTICSEARCH', true );
 }
@@ -80,6 +82,7 @@ if ( ! defined( 'USE_VIP_ELASTICSEARCH' ) ) {
 if ( ! defined( 'VIP_ENABLE_ELASTICSEARCH_QUERY_INTEGRATION' ) ) {
 	define( 'VIP_ENABLE_ELASTICSEARCH_QUERY_INTEGRATION', true );
 }
+*/
 
 if ( ! defined( 'VIP_ELASTICSEARCH_ENDPOINTS' ) ) {
 	define( 'VIP_ELASTICSEARCH_ENDPOINTS', [
