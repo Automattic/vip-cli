@@ -9,6 +9,7 @@
 import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -23,6 +24,8 @@ import {
 	DOCKER_HUB_JETPACK_IMAGES,
 } from '../constants/dev-environment';
 import fetch from 'node-fetch';
+
+const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
 
@@ -111,7 +114,7 @@ export function processComponentOptionInput( passedParam: string, type: string )
 type NewInstanceOptions = {
 	title: string,
 	multisite: boolean,
-	phpVersion: string,
+	php: string,
 	wordpress: string,
 	muPlugins: string,
 	jetpack: string,
@@ -131,6 +134,8 @@ type AppInfo = {
 }
 
 export async function promptForArguments( providedOptions: NewInstanceOptions, appInfo: AppInfo ) {
+	debug( 'Provided options', providedOptions );
+
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
 	const name = appInfo?.environment?.name || appInfo?.name;
@@ -145,7 +150,7 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
-		phpVersion: providedOptions.phpVersion || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
+		phpVersion: providedOptions.php || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
 		multisite: providedOptions.multisite || await promptForBoolean( multisiteText, multisiteDefault ),
 		wordpress: {},
 		muPlugins: {},
