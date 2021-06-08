@@ -200,7 +200,7 @@ const componentDisplayNames = {
 };
 
 export async function promptForComponent( component: string ) {
-	const componentDisplayName = componentDisplayNames[ component ];
+	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [
 		{
 			message: `local folder - where you already have ${ componentDisplayName } code`,
