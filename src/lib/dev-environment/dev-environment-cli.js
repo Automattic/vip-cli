@@ -197,10 +197,18 @@ export async function promptForBoolean( message: string, initial: boolean ) {
 	return confirm.run();
 }
 
+const componentDisplayNames = {
+	wordpress: 'WordPress',
+	muPlugins: 'vip-go-mu-plugins',
+	jetpack: 'Jetpack',
+	clientCode: 'site-code',
+};
+
 export async function promptForComponent( component: string ) {
+	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [
 		{
-			message: `local folder - where you already have ${ component } code`,
+			message: `local folder - where you already have ${ componentDisplayName } code`,
 			value: 'local',
 		},
 		{
@@ -212,7 +220,7 @@ export async function promptForComponent( component: string ) {
 	if ( 'jetpack' === component ) {
 		initial = 0;
 		choices.unshift( {
-			message: `inherit - use ${ component } included in mu-plugins`,
+			message: `inherit - use ${ componentDisplayName } included in mu-plugins`,
 			value: 'inherit',
 		} );
 	} else if ( 'clientCode' === component ) {
@@ -220,14 +228,14 @@ export async function promptForComponent( component: string ) {
 	}
 
 	const select = new Select( {
-		message: `How would you like to source ${ component }`,
+		message: `How would you like to source ${ componentDisplayName }`,
 		choices,
 		initial,
 	} );
 
 	const modeResult = await select.run();
 	if ( 'local' === modeResult ) {
-		const path = await promptForText( `	What is a path to your local ${ component }`, '' );
+		const path = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
 		return {
 			mode: modeResult,
 			dir: path,
