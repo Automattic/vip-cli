@@ -41,6 +41,8 @@ export async function startEnvironment( slug: string ) {
 	}
 
 	await landoStart( instancePath );
+
+	await printEnvironmentInfo( slug );
 }
 
 export async function stopEnvironment( slug: string ) {
