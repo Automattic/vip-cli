@@ -12,6 +12,7 @@
     "vip-import-sql-status": "dist/bin/vip-import-sql-status.js",
     "vip-import-media": "dist/bin/vip-import-media.js",
     "vip-import-media-status": "dist/bin/vip-import-media-status.js",
+    "vip-import-media-abort": "dist/bin/vip-import-media-abort.js",
     "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",

@@ -93,6 +93,7 @@ Are you sure you want to import the contents of the url?
 `,
 } )
 	.command( 'status', 'Check the status of the latest Media Import' )
+	.command( 'abort', 'Abort the Media Import running for your App' )
 	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
@@ -120,7 +121,7 @@ Error:
 		const progressTracker = new MediaImportProgressTracker( [] );
 		progressTracker.prefix = `
 =============================================================
-Processing the files import for your environment...
+Importing Media into your App...
 `;
 
 		console.log();
