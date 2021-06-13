@@ -57,6 +57,10 @@ command( {
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
+	requireConfirm: `
+${ chalk.red.bold( 'By running this command, the Media Import running on your App will stop and can\'t be resumed.' ) }
+${ chalk.red.bold( 'Are you sure you want to abort this Media Import?' ) }
+`,
 } )
 	.argv( process.argv, async ( arg: string[], { app, env } ) => {
 		const { id: envId, appId } = env;
