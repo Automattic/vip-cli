@@ -16,6 +16,7 @@ import debugLib from 'debug';
 import API from 'lib/api';
 import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
 import { ProgressTracker } from 'lib/cli/progress';
+import * as exit from 'lib/cli/exit';
 import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
@@ -27,6 +28,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 		app(id: $appId) {
 			environments(id: $envId) {
 				id
+				isK8sResident
 				jobs(types: "sql_import") {
 					id
 					type
@@ -83,7 +85,7 @@ async function getStatus( api, appId, envId ) {
 	}
 	const [ environment ] = environments;
 	const { importStatus, jobs } = environment;
-	if ( ! jobs?.length ) {
+	if ( ! environment.isK8sResident && ! jobs?.length ) {
 		return {};
 	}
 
@@ -103,7 +105,7 @@ function getErrorMessage( importFailed ) {
 	) } to the last backup prior to your import job.
 `;
 
-	let message = chalk.red( `Error: ${ importFailed.error }` );
+	let message = importFailed.error;
 
 	if ( importFailed.inImportProgress ) {
 		switch ( importFailed.stepName ) {
@@ -236,17 +238,52 @@ ${ maybeExitPrompt }
 				} catch ( error ) {
 					return reject( { error } );
 				}
-				const { importStatus, importJob } = status;
+				const { importStatus } = status;
+				let { importJob } = status;
 
-				debug( { importJob } );
+				let jobStatus, jobSteps = [];
+				if ( env.isK8sResident ) {
+					// in the future the API may provide this in k8s jobs so account for that.
+					// Until then we need to create the importJob from the status object.
+					if ( ! importJob ) {
+						importJob = {};
+						const statusSteps = importStatus?.progress?.steps;
 
-				if ( ! importJob ) {
-					return resolve( 'No import job found' );
+						// if the progress meta isn't filled out yet, wait until it is.
+						if ( ! statusSteps ) {
+							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+						}
+
+						jobSteps = statusSteps.map( step => {
+							return {
+								id: step.name,
+								name: capitalize( step.name.replace( /_/g, ' ' ) ),
+								status: step.result,
+							};
+						} );
+
+						if ( statusSteps.some( ( { result } ) => result === 'failed' ) ) {
+							jobStatus = 'error';
+						} else 	if ( statusSteps.every( ( { result } ) => result === 'success' ) ) {
+							jobStatus = 'success';
+							importJob.completedAt = new Date( Math.max( ...statusSteps.map( ( { finished_at } ) => finished_at ), 0 ) * 1000 ).toUTCString();
+						}
+
+						if ( importStatus?.progress?.started_at ) {
+							importJob.createdAt = new Date( importStatus.progress.started_at * 1000 ).toUTCString();
+						}
+
+						importJob.progress = { status: jobStatus, steps: jobSteps };
+					}
+				} else {
+					if ( ! importJob ) {
+						return resolve( 'No import job found' );
+					}
+
+					( {
+						progress: { status: jobStatus, steps: jobSteps },
+					} = importJob );
 				}
-
-				const {
-					progress: { status: jobStatus, steps: jobSteps },
-				} = importJob;
 
 				createdAt = importJob.createdAt;
 				completedAt = importJob.completedAt;
@@ -258,6 +295,7 @@ ${ maybeExitPrompt }
 				} = importStatus;
 
 				debug( {
+					jobStatus,
 					completedAt,
 					createdAt,
 					dbOperationInProgress,
@@ -349,10 +387,8 @@ ${ maybeExitPrompt }
 		process.exit( 0 );
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
-		progressTracker.print();
-		progressTracker.suffix += `\n${ getErrorMessage( importFailed ) }\n`;
 		progressTracker.print( { clearAfter: true } );
-		process.exit( 1 );
+		exit.withError( getErrorMessage( importFailed ) );
 	}
 }
 

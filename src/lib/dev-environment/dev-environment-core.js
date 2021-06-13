@@ -41,6 +41,8 @@ export async function startEnvironment( slug: string ) {
 	}
 
 	await landoStart( instancePath );
+
+	await printEnvironmentInfo( slug );
 }
 
 export async function stopEnvironment( slug: string ) {
@@ -212,7 +214,7 @@ export function getEnvironmentPath( name: string ) {
 
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
-	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name );
+	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
 
 export async function getApplicationInformation( appId: number, envType: string | null ) {

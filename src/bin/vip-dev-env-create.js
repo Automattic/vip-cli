@@ -15,6 +15,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+import * as exit from 'lib/cli/exit';
 import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
@@ -66,8 +67,7 @@ command()
 			const messageToShow = `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
 				`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;
 
-			console.log( chalk.red( 'Error:' ), messageToShow );
-			return;
+			exit.withError( messageToShow );
 		}
 
 		let appInfo: any = {};
@@ -96,6 +96,6 @@ command()
 			const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 			console.log( message );
 		} catch ( e ) {
-			console.log( chalk.red( 'Error:' ), e.message );
+			exit.withError( e.message );
 		}
 	} );

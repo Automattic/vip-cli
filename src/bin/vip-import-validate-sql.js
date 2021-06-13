@@ -9,6 +9,7 @@
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+import * as exit from 'lib/cli/exit';
 import { validate } from 'lib/validations/sql';
 
 command( {
@@ -18,8 +19,7 @@ command( {
 	.argv( process.argv, async arg => {
 		const filename = arg[ 0 ];
 		if ( ! arg && ! filename ) {
-			console.error( 'You must pass in a filename' );
-			process.exit( 1 );
+			exit.withError( 'You must pass in a filename' );
 		}
 
 		validate( filename );

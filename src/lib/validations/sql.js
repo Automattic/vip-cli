@@ -12,6 +12,7 @@ import { stdout as log } from 'single-line-log';
 /**
  * Internal dependencies
  */
+import * as exit from 'lib/cli/exit';
 import { trackEvent } from 'lib/tracker';
 import { getReadInterface } from 'lib/validations/line-by-line';
 // eslint-disable-next-line no-duplicate-imports
@@ -314,9 +315,7 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 			throw new Error( errorOutput.join( '\n' ) );
 		}
 
-		console.error( errorOutput.join( '\n' ) );
-
-		return process.exit( 1 );
+		exit.withError( errorOutput.join( '\n' ) );
 	}
 
 	if ( ! isImport ) {

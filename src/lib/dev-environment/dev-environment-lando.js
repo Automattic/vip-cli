@@ -53,8 +53,6 @@ export async function landoStart( instancePath: string ) {
 	await app.init();
 
 	await app.start();
-
-	console.log( lando.cli.formatData( landoUtils.startTable( app ), { format: 'table' }, { border: false } ) );
 }
 
 export async function landoStop( instancePath: string ) {
