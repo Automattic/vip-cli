@@ -66,6 +66,12 @@ const examples = [
 		description:
 			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
 	},
+	// `media abort` subcommand
+	{
+		usage: 'vip import media abort @mysite.production',
+		description:
+			'Abort an ongoing import',
+	},
 ];
 
 function isSupportedUrl( urlToTest ) {
