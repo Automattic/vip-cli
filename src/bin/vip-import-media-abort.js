@@ -39,6 +39,14 @@ const appQuery = `
 const ABORT_IMPORT_MUTATION = gql`
 	mutation AbortMediaImport( $input: AppEnvironmentAbortMediaImportInput ) {
 		abortMediaImport( input: $input ) {
+			applicationId
+			environmentId
+			mediaImportStatusChange {
+				importId
+				siteId
+				statusFrom
+				statusTo
+			}
 		}
 	}
 `;
