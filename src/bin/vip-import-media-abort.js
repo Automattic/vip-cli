@@ -18,7 +18,6 @@ import API from 'lib/api';
 import * as exit from 'lib/cli/exit';
 // eslint-disable-next-line no-duplicate-imports
 import { trackEventWithEnv } from 'lib/tracker';
-import { formatEnvironment } from 'lib/cli/format';
 import { MediaImportProgressTracker } from 'lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 
@@ -40,14 +39,6 @@ const appQuery = `
 const ABORT_IMPORT_MUTATION = gql`
 	mutation AbortMediaImport( $input: AppEnvironmentAbortMediaImportInput ) {
 		abortMediaImport( input: $input ) {
-			applicationId
-			environmentId
-			mediaImportStatusChange {
-				importId
-				siteId
-				statusFrom
-				statusTo
-			}
 		}
 	}
 `;

@@ -40,13 +40,6 @@ const appQuery = `
 const START_IMPORT_MUTATION = gql`
 	mutation StartMediaImport( $input: AppEnvironmentStartMediaImportInput ) {
 		startMediaImport( input: $input ) {
-			applicationId
-			environmentId
-			mediaImportStatus {
-				importId
-				siteId
-				status
-			}
 		}
 	}
 `;
