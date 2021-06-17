@@ -168,8 +168,11 @@ export async function mediaImportCheckStatus( {
 
 		let statusMessage;
 		switch ( overallStatus ) {
+			case 'INITIALIZING':
+				statusMessage = `INITIALIZING ${ sprite } : We're downloading the files to be imported...`;
+				break;
 			case 'COMPLETED':
-				statusMessage = `COMPLETED ${ sprite } : The Imported files should be visible on your site ${ env.primaryDomain.name }`;
+				statusMessage = `COMPLETED ${ sprite } : The imported files should be visible on your App`;
 				break;
 			default:
 				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;

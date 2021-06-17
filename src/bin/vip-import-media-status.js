@@ -48,7 +48,7 @@ command( {
 		if ( ! isSupportedApp( app ) ) {
 			await track( 'import_media_command_error', { errorType: 'unsupported-app' } );
 			exit.withError(
-				'The type of application you specified does not currently support Media imports.'
+				'The type of application you specified does not currently support this feature'
 			);
 		}
 
