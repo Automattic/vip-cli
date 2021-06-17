@@ -54,9 +54,6 @@ const rootCmd = async function() {
 
 		cmd.argv( process.argv );
 	} else {
-		// Bypass helper function
-		args.parse( process.argv );
-
 		console.log();
 		console.log( '  Welcome to' );
 		console.log( '   _    __ ________         ________    ____' );
@@ -139,6 +136,9 @@ const rootCmd = async function() {
 		await aliasUser( token.id );
 
 		await trackEvent( 'login_command_token_submit_success' );
+
+		// Validate args
+		args.parse( process.argv );
 
 		// Exec the command we originally  wanted
 		const argv = process.argv.slice( 2 );
