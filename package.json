@@ -108,7 +108,7 @@
     "lando": "git+https://github.com/lando/lando.git#v3.1.2",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
-    "rollbar": "2.21.1",
+    "rollbar": "2.22.0",
     "semver": "7.3.5",
     "single-line-log": "1.1.2",
     "socket.io-client": "4.0.1",
