@@ -23,6 +23,17 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.10 (21 June 2021)
+- Adds Media Import Abort subcommand
+- Disables enterprise search by default
+- Handles numbered slugs correctly
+- Unifies print table on start command with other commands 
+- Drops the isVip requirement for dev-env
+- Fixes intermittent fatal error caused due to analytics tracking
+- Misc dependency updates
+
+https://github.com/Automattic/vip/releases/tag/v2.0.10
+
 ### 2.0.9 (3 June 2021)
 - Enable SQL import for all site types
 - Bug fix for analytics errors causing some commands to fail
