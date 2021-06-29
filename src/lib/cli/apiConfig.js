@@ -54,14 +54,18 @@ export async function checkIsVIP(): Promise<boolean> {
 
 	let isVip = false;
 	try {
-		const res = await featureFlags.get();
-		isVip = res?.data?.me?.isVIP;
+		isVip = await checkIfUserIsVip();
 	} catch ( err ) {
 		const message = err.toString();
 		await trackEvent( 'checkFeatureEnabled_fetch_error', { error: message } );
 	}
 
 	return !! isVip;
+}
+
+export async function checkIfUserIsVip() {
+	const res = await featureFlags.get();
+	return res?.data?.me?.isVIP;
 }
 
 export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {
