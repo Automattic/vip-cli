@@ -11,6 +11,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
+import { checkIsVIP } from '../lib/cli/apiConfig';
 
 const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
 
@@ -63,6 +64,7 @@ export default class Tracks implements AnalyticsClient {
 
 		const event = Object.assign( {
 			_en: name,
+			is_vip: await checkIsVIP(),	// Add `is_vip` flag to every Tracks event recorded
 		}, eventProps );
 
 		// For when we want to support batched events
