@@ -11,7 +11,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
-import { checkIsVIP } from '../lib/cli/apiConfig';
+import { checkIsVIP } from '../../cli/apiConfig';
 
 const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
 
