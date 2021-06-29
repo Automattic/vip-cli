@@ -62,9 +62,10 @@ export default class Tracks implements AnalyticsClient {
 			}
 		} );
 
+		eventProps.is_vip = await checkIfUserIsVip();	// Add `is_vip` flag to every Tracks event recorded
+
 		const event = Object.assign( {
 			_en: name,
-			is_vip: await checkIfUserIsVip(),	// Add `is_vip` flag to every Tracks event recorded
 		}, eventProps );
 
 		// For when we want to support batched events
