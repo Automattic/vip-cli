@@ -13,6 +13,7 @@ import fetch, { Response } from 'node-fetch';
  * Internal dependencies
  */
 import { validate } from 'lib/validations/sql';
+import * as apiConfig from 'lib/cli/apiConfig';
 
 const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );
 
@@ -29,6 +30,8 @@ const ERROR_CODE = 1;
 
 jest.mock( 'node-fetch' );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
+
+jest.spyOn( apiConfig, 'checkIfUserIsVip' ).mockResolvedValue( true );
 
 describe( 'lib/validations/sql', () => {
 	describe( 'it fails when the SQL has (using bad-sql-dump.sql)', () => {
