@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -235,10 +236,10 @@ export async function promptForComponent( component: string ) {
 
 	const modeResult = await select.run();
 	if ( 'local' === modeResult ) {
-		const path = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
+		const directoryPath = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
 		return {
 			mode: modeResult,
-			dir: path,
+			dir: path.resolve( directoryPath ),
 		};
 	}
 	if ( 'inherit' === modeResult ) {
