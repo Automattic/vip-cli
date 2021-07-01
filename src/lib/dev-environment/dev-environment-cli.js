@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
+import fs from 'fs';
 
 /**
  * Internal dependencies
@@ -161,12 +162,37 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = providedOptions[ component ];
-		instanceData[ component ] = option
-			? processComponentOptionInput( option, component )
-			: await promptForComponent( component );
+
+		instanceData[ component ] = await processComponent( component, option );
 	}
 
 	return instanceData;
+}
+
+async function processComponent( component: string, option: string ) {
+	let result = null;
+
+	if ( option ) {
+		result = processComponentOptionInput( option, component );
+	} else {
+		result = await promptForComponent( component );
+	}
+
+	while ( 'local' === result?.mode ) {
+		const path = result.dir || '';
+		const isDirectory = path && fs.existsSync( path ) && fs.lstatSync( path ).isDirectory();
+		const isEmpty = isDirectory ? fs.readdirSync( path ).length === 0 : true;
+
+		if ( isDirectory && ! isEmpty ) {
+			break;
+		} else {
+			const message = `Provided path "${ path || '' }" does not point to a non-empty directory.`;
+			console.log( chalk.yellow( 'Warning:' ), message );
+			result = await promptForComponent( component );
+		}
+	}
+
+	return result;
 }
 
 export async function promptForText( message: string, initial: string ) {
