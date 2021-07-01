@@ -89,7 +89,7 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 
 	const cleanedInstanceData = cleanInstanceData( instanceData );
 
-	await prepareLandoEnv( instanceData, cleanedInstanceData );
+	await prepareLandoEnv( cleanedInstanceData, instancePath );
 }
 
 export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
