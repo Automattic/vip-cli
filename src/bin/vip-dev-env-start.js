@@ -30,14 +30,18 @@ const examples = [
 
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'skip-rebuild', 'Only start stopped services' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
+		const options = {
+			skipRebuild: !! opt.skipRebuild,
+		};
 		try {
-			await startEnvironment( slug );
+			await startEnvironment( slug, options );
 		} catch ( e ) {
 			handleCLIException( e );
 		}

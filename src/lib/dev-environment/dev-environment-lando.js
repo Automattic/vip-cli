@@ -52,6 +52,18 @@ export async function landoStart( instancePath: string ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
+	await app.start();
+}
+
+export async function landoRebuild( instancePath: string ) {
+	debug( 'Will rebuild lando app on path:', instancePath );
+
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const app = lando.getApp( instancePath );
+	await app.init();
+
 	await app.rebuild();
 }
 
