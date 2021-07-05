@@ -22,6 +22,7 @@ import {
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DOCKER_HUB_WP_IMAGES,
 	DOCKER_HUB_JETPACK_IMAGES,
+	DEV_ENVIRONMENT_COMPONENTS,
 } from '../constants/dev-environment';
 import fetch from 'node-fetch';
 
@@ -158,8 +159,7 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 		clientCode: {},
 	};
 
-	const components = [ 'wordpress', 'muPlugins', 'jetpack', 'clientCode' ];
-	for ( const component of components ) {
+	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = providedOptions[ component ];
 		instanceData[ component ] = option
 			? processComponentOptionInput( option, component )
@@ -235,10 +235,10 @@ export async function promptForComponent( component: string ) {
 
 	const modeResult = await select.run();
 	if ( 'local' === modeResult ) {
-		const path = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
+		const directoryPath = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
 		return {
 			mode: modeResult,
-			dir: path,
+			dir: directoryPath,
 		};
 	}
 	if ( 'inherit' === modeResult ) {
