@@ -17,7 +17,6 @@ import { searchAndReplace } from 'lib/search-and-replace';
 // Import prompt as a module since that's how we implement it in lib/search-and-replace.js,
 // as opposed to importing prompt.confirm on its own
 import * as prompt from 'lib/cli/prompt';
-import * as apiConfig from 'lib/cli/apiConfig';
 
 global.console = { log: jest.fn(), error: jest.fn() };
 
@@ -26,8 +25,6 @@ const testFilePath = path.resolve( fixtureDir, 'client-file-uploader', 'tinyfile
 
 jest.mock( 'node-fetch' );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
-
-jest.spyOn( apiConfig, 'checkIfUserIsVip' ).mockResolvedValue( true );
 
 const binary = path.resolve(
 	fixtureDir,
