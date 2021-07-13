@@ -240,7 +240,7 @@ ${ maybeExitPrompt }
 				overallStatus = status;
 
 				// after two minutes, we'll start decreasing the pollInterval
-				pollIntervalDecreasing = startDate < ( Date.now() - TWO_MINUTES_IN_MILLISECONDS );
+				pollIntervalDecreasing = pollIntervalDecreasing || startDate < ( Date.now() - TWO_MINUTES_IN_MILLISECONDS );
 
 				// decrease poll interval by a second, every minute
 				if ( pollIntervalDecreasing && startDate < ( Date.now() - ONE_MINUTE_IN_MILLISECONDS ) ) {
