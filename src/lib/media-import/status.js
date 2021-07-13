@@ -22,6 +22,8 @@ import { capitalize, formatEnvironment, formatData } from 'lib/cli/format';
 import { RunningSprite } from '../cli/format';
 
 const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
+const ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
+const TWO_MINUTES_IN_MILLISECONDS = 2 * ONE_MINUTE_IN_MILLISECONDS;
 
 const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 	query App( $appId: Int, $envId: Int ) {
@@ -199,7 +201,9 @@ ${ maybeExitPrompt }
 
 	const getResults = () =>
 		new Promise( ( resolve, reject ) => {
-			const checkStatus = async () => {
+			let startDate = Date.now();
+			let pollIntervalDecreasing = false;
+			const checkStatus = async ( pollInterval: number ) => {
 				let mediaImportStatus;
 				try {
 					mediaImportStatus = await getStatus( api, app.id, env.id );
@@ -235,11 +239,22 @@ ${ maybeExitPrompt }
 				}
 				overallStatus = status;
 
-				setTimeout( checkStatus, IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
+				// after two minutes, we'll start decreasing the pollInterval
+				pollIntervalDecreasing = startDate < ( Date.now() - TWO_MINUTES_IN_MILLISECONDS );
+
+				// decrease poll interval by a second, every minute
+				if ( pollIntervalDecreasing && startDate < ( Date.now() - ONE_MINUTE_IN_MILLISECONDS ) ) {
+					pollInterval = pollInterval + IMPORT_MEDIA_PROGRESS_POLL_INTERVAL;
+					startDate = Date.now();
+				}
+
+				setTimeout( () => {
+					checkStatus( pollInterval );
+				}, pollInterval );
 			};
 
 			// Kick off the check
-			checkStatus();
+			checkStatus( IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
 		} );
 
 	try {
