@@ -17,7 +17,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoExec, landoStart, landoStop } from './dev-environment-lando';
+import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
 import app from '../api/app';
 import { DEV_ENVIRONMENT_COMPONENTS } from '../constants/dev-environment';
@@ -28,7 +28,11 @@ const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 
 const configDefaultsFilePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.wp-config-defaults.php' );
 const landoFileName = '.lando.yml';
 
-export async function startEnvironment( slug: string ) {
+type StartEnvironmentOptions = {
+	skipRebuild: boolean
+};
+
+export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -41,7 +45,11 @@ export async function startEnvironment( slug: string ) {
 		throw new Error( 'Environment not found.' );
 	}
 
-	await landoStart( instancePath );
+	if ( options.skipRebuild ) {
+		await landoStart( instancePath );
+	} else {
+		await landoRebuild( instancePath );
+	}
 
 	await printEnvironmentInfo( slug );
 }
