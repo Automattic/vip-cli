@@ -11,6 +11,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
+import { checkIfUserIsVip } from '../../cli/apiConfig';
 
 const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
 
@@ -60,6 +61,8 @@ export default class Tracks implements AnalyticsClient {
 				debug( `Error: Invalid prop name detected: ${ propName } -- this event will be rejected during ETL` );
 			}
 		} );
+
+		eventProps.is_vip = await checkIfUserIsVip();	// Add `is_vip` flag to every Tracks event recorded
 
 		const event = Object.assign( {
 			_en: name,
