@@ -153,7 +153,7 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
 		phpVersion: providedOptions.php || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
-		multisite: providedOptions.multisite || await promptForBoolean( multisiteText, multisiteDefault ),
+		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
 		wordpress: {},
 		muPlugins: {},
 		jetpack: {},
