@@ -386,7 +386,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 					return { from, to };
 				} );
 
-				info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
+				if ( backup ) {
+					info.push( { key: 'From backup', value: new Date( backup.createdAt ).toUTCString() } );
+				}
 				info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
 				break;
 			case 'import-media':
