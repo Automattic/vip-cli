@@ -10,16 +10,24 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
+let api;
+API()
+	.then( client => {
+		api = client;
+	}	);
+
+const isVipQuery = gql`
+	query isVIP {
+		me {
+			isVIP
+		}
+	}
+`;
+
 export async function get() {
-	const api = await API();
 	const res = await api.query( {
-		query: gql`
-			query isVIP {
-				me {
-					isVIP
-				}
-			}
-		`,
+		query: isVipQuery,
+		fetchPolicy: 'cache-first',
 	} );
 	return res;
 }

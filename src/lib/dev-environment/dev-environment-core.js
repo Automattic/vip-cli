@@ -17,9 +17,10 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoExec, landoStart, landoStop } from './dev-environment-lando';
+import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
 import { printTable } from './dev-environment-cli';
 import app from '../api/app';
+import { DEV_ENVIRONMENT_COMPONENTS } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -27,7 +28,11 @@ const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 
 const configDefaultsFilePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.wp-config-defaults.php' );
 const landoFileName = '.lando.yml';
 
-export async function startEnvironment( slug: string ) {
+type StartEnvironmentOptions = {
+	skipRebuild: boolean
+};
+
+export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -40,7 +45,11 @@ export async function startEnvironment( slug: string ) {
 		throw new Error( 'Environment not found.' );
 	}
 
-	await landoStart( instancePath );
+	if ( options.skipRebuild ) {
+		await landoStart( instancePath );
+	} else {
+		await landoRebuild( instancePath );
+	}
 
 	await printEnvironmentInfo( slug );
 }
@@ -86,7 +95,9 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 		throw new Error( 'Environment already exists.' );
 	}
 
-	await prepareLandoEnv( instanceData, instancePath );
+	const cleanedInstanceData = cleanInstanceData( instanceData );
+
+	await prepareLandoEnv( cleanedInstanceData, instancePath );
 }
 
 export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
@@ -170,6 +181,23 @@ export function doesEnvironmentExist( slug: string ) {
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	return fs.existsSync( instancePath );
+}
+
+function cleanInstanceData( instanceData: NewInstanceData ): NewInstanceData {
+	const cleanedData = {
+		...instanceData,
+	};
+
+	// resolve directory path for local mode, so relative paths can work reliably
+	for ( const componentKey of DEV_ENVIRONMENT_COMPONENTS ) {
+		const component = instanceData[ componentKey ];
+		if ( 'local' === component.mode ) {
+			component.dir = path.resolve( component.dir );
+			cleanedData[ componentKey ] = component;
+		}
+	}
+
+	return cleanedData;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {

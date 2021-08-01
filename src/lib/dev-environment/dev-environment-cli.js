@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
+import fs from 'fs';
 
 /**
  * Internal dependencies
@@ -22,6 +23,7 @@ import {
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DOCKER_HUB_WP_IMAGES,
 	DOCKER_HUB_JETPACK_IMAGES,
+	DEV_ENVIRONMENT_COMPONENTS,
 } from '../constants/dev-environment';
 import fetch from 'node-fetch';
 
@@ -151,22 +153,46 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
 		phpVersion: providedOptions.php || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
-		multisite: providedOptions.multisite || await promptForBoolean( multisiteText, multisiteDefault ),
+		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
 		wordpress: {},
 		muPlugins: {},
 		jetpack: {},
 		clientCode: {},
 	};
 
-	const components = [ 'wordpress', 'muPlugins', 'jetpack', 'clientCode' ];
-	for ( const component of components ) {
+	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = providedOptions[ component ];
-		instanceData[ component ] = option
-			? processComponentOptionInput( option, component )
-			: await promptForComponent( component );
+
+		instanceData[ component ] = await processComponent( component, option );
 	}
 
 	return instanceData;
+}
+
+async function processComponent( component: string, option: string ) {
+	let result = null;
+
+	if ( option ) {
+		result = processComponentOptionInput( option, component );
+	} else {
+		result = await promptForComponent( component );
+	}
+
+	while ( 'local' === result?.mode ) {
+		const path = result.dir || '';
+		const isDirectory = path && fs.existsSync( path ) && fs.lstatSync( path ).isDirectory();
+		const isEmpty = isDirectory ? fs.readdirSync( path ).length === 0 : true;
+
+		if ( isDirectory && ! isEmpty ) {
+			break;
+		} else {
+			const message = `Provided path "${ path || '' }" does not point to a non-empty directory.`;
+			console.log( chalk.yellow( 'Warning:' ), message );
+			result = await promptForComponent( component );
+		}
+	}
+
+	return result;
 }
 
 export async function promptForText( message: string, initial: string ) {
@@ -235,10 +261,10 @@ export async function promptForComponent( component: string ) {
 
 	const modeResult = await select.run();
 	if ( 'local' === modeResult ) {
-		const path = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
+		const directoryPath = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
 		return {
 			mode: modeResult,
-			dir: path,
+			dir: directoryPath,
 		};
 	}
 	if ( 'inherit' === modeResult ) {

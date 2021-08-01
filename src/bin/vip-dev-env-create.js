@@ -49,7 +49,7 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site (default: "VIP Dev")' )
-	.option( 'multisite', 'Enable multisite install' )
+	.option( 'multisite', 'Enable multisite install', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.option( 'php', 'Use a specific PHP version' )
 	.option( 'wordpress', 'Use a specific WordPress version or local directory (default: last stable)' )
 	.option( 'mu-plugins', 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )

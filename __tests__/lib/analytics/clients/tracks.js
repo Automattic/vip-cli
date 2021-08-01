@@ -8,6 +8,7 @@ import url from 'url';
  * Internal dependencies
  */
 import Tracks from 'lib/analytics/clients/tracks';
+import * as apiConfig from 'lib/cli/apiConfig';
 
 describe( 'lib/analytics/tracks', () => {
 	const {
@@ -81,6 +82,7 @@ describe( 'lib/analytics/tracks', () => {
 
 	describe( '.trackEvent()', () => {
 		it( 'should pass event details to request', () => {
+			const checkIfUserIsVipSpy = jest.spyOn( apiConfig, 'checkIfUserIsVip' );
 			const tracksClient = new Tracks( 123, 'vip', 'prefix_', {} );
 
 			const eventName = 'clickButton';
@@ -88,8 +90,11 @@ describe( 'lib/analytics/tracks', () => {
 				buttonName: 'deploy',
 			};
 
+			checkIfUserIsVipSpy.mockResolvedValue( true );
+
 			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=prefix_clickButton' +
-				'&events%5B0%5D%5BbuttonName%5D=deploy';
+				'&events%5B0%5D%5BbuttonName%5D=deploy' +
+				'&events%5B0%5D%5Bis_vip%5D=true';
 
 			buildNock()
 				.reply( 200, ( uri, requestBody ) => {
