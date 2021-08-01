@@ -227,7 +227,7 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	engineInnoDB: {
-		matcher: /ENGINE=(?!(InnoDB))/i,
+		matcher: / ENGINE=(?!(InnoDB))/i,
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],
