@@ -279,10 +279,8 @@ ${ maybeExitPrompt }
 					return resolve( 'No import job found' );
 				}
 
-				( {
-					progress: { status: jobStatus, steps: jobSteps },
-				} = importJob );
-
+				jobStatus = importJob.progress.status;
+				jobSteps = importJob.progress.steps;
 				createdAt = importJob.createdAt;
 				completedAt = importJob.completedAt;
 
