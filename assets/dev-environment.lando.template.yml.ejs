@@ -12,7 +12,7 @@ services:
   devtools:
     type: compose
     services:
-      image: wpvipdev/dev-tools:0.4
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.5
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -22,7 +22,7 @@ services:
   nginx:
     type: compose
     services:
-      image: wpvipdev/nginx:1.19.2-2
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.1
       command: nginx -g "daemon off;"
       volumes:
 <% wpVolumes() %>
@@ -30,7 +30,7 @@ services:
   php:
     type: compose
     services:
-      image: wpvipdev/php-fpm:<%= phpVersion %>
+      image: ghcr.io/automattic/vip-container-images/php-fpm:7.4
       command: php-fpm
       working_dir: /wp
       volumes:
@@ -51,11 +51,6 @@ services:
   memcached:
     type: memcached:1.5.12
 
-  #mailhog:
-  #  type: mailhog
-  #  hogfrom:
-  #  - php
-
   phpmyadmin:
     type: phpmyadmin
     hosts:
@@ -70,7 +65,7 @@ services:
   statsd:
     type: compose
     services:
-      image: wpvipdev/statsd:v0.8.6-1
+      image: ghcr.io/automattic/vip-container-images/statsd:v0.8.6
       command: node stats.js /config/statsd-config.js
 
   # Code containers
@@ -97,18 +92,6 @@ services:
         - mu-plugins:/shared
     volumes:
       mu-plugins: {}
-<% } %>
-
-<% if ( jetpack.mode == 'image' ) { %>
-  jetpack:
-    type: compose
-    services:
-      image: <%= jetpack.image %>:<%= jetpack.tag %>
-      command: sh /run.sh
-      volumes:
-        - jetpack:/shared
-    volumes:
-      jetpack: {}
 <% } %>
 
 <% if ( clientCode.mode == 'image' ) { %>
