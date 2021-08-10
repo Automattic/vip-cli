@@ -6,15 +6,12 @@
  * External dependencies
  */
 import { prompt, selectRunMock } from 'enquirer';
-import fetch from 'node-fetch';
 
 /**
  * Internal dependencies
  */
 
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
-import dockerHubWPResponse from './docker-hub-wp-response.json';
-import dockerHubJetpackResponse from './docker-hub-jetpack-response.json';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -26,13 +23,6 @@ jest.mock( 'enquirer', () => {
 		selectRunMock: _selectRunMock,
 	};
 } );
-
-jest.mock( 'node-fetch' );
-fetch.mockImplementation( url =>
-	Promise.resolve( { json: () => Promise.resolve(
-		url === 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10'
-			? dockerHubWPResponse
-			: dockerHubJetpackResponse ) } ) );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'getEnvironmentName', () => {
@@ -107,7 +97,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				param: 5.6,
 				option: 'wordpress',
 				expected: {
-					image: 'wpvipdev/wordpress',
+					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					mode: 'image',
 					tag: '5.6',
 				},
@@ -165,7 +155,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				path: '5.6',
 				expected: {
 					mode: 'image',
-					image: 'wpvipdev/wordpress',
+					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					tag: '5.6',
 				},
 			},
@@ -174,8 +164,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'wpvipdev/mu-plugins',
-					tag: 'auto',
+					image: 'ghcr.io/automattic/vip-container-images/mu-plugins',
+					tag: 'latest',
 				},
 			},
 			{ // jetpack inherit
@@ -185,23 +175,13 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					mode: 'inherit',
 				},
 			},
-			{ // jetpack image
-				component: 'jetpack',
-				mode: 'image',
-				path: '1',
-				expected: {
-					mode: 'image',
-					image: 'wpvipdev/jetpack',
-					tag: '1',
-				},
-			},
 			{ // clientCode have just one tag
 				component: 'clientCode',
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'wpvipdev/skeleton',
-					tag: '181a17d9aedf7da73730d65ccef3d8dbf172a5c5',
+					image: 'ghcr.io/automattic/vip-container-images/skeleton',
+					tag: 'latest',
 				},
 			},
 		] )( 'should return correct component %p', async input => {
