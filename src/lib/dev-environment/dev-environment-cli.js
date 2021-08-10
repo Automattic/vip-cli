@@ -291,9 +291,9 @@ export async function promptForComponent( component: string ) {
 }
 
 async function getLatestImageTags( component: string ): string[] {
-  	if ( component === 'wordpress' ) {
-  	  return ['5.8', '5.7.2'];
+	if ( component === 'wordpress' ) {
+	  return [ '5.8', '5.7.2' ];
 	}
 
-  	return [];
+	return [];
 }
