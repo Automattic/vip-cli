@@ -23,11 +23,26 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.11 (5 August 2021)
+- Handle parameter validation in a consistent way #795
+- Fix error blocking data sync on CLI sites #810
+- Update DB Engine check to reduce false positives #811
+- Retrieve the status and steps regardless of the site type. #812
+- Dev-Env: Handle relative file paths #802
+- Dev-Env: Make dev-env start more resilient #804
+- Dev-Env: Validate Path to a component #803
+- Dev-Env: Handle multisite = false correctly #809
+- Dev-Env: Adds a check for an orphaned proxy container #814
+- FORNO-759: Add logged in user details to all Tracks events #801
+- FORNO-779: Throttle request to Parker when fetching media import status #808
+
+https://github.com/Automattic/vip/releases/tag/2.0.11
+
 ### 2.0.10 (21 June 2021)
 - Adds Media Import Abort subcommand
 - Disables enterprise search by default
 - Handles numbered slugs correctly
-- Unifies print table on start command with other commands 
+- Unifies print table on start command with other commands
 - Drops the isVip requirement for dev-env
 - Fixes intermittent fatal error caused due to analytics tracking
 - Misc dependency updates
@@ -143,7 +158,7 @@ https://github.com/Automattic/vip/releases/tag/v1.9.0
 ### 1.8.0 (25 Sep 2019)
 - Fixes around cancelling commands via Ctrl-C
 - Gracefully handle remote command cancellation
-- Enhance Rollbar logging for additional use cases 
+- Enhance Rollbar logging for additional use cases
 
 https://github.com/Automattic/vip/releases/tag/v1.8.0
 
@@ -153,7 +168,7 @@ https://github.com/Automattic/vip/releases/tag/v1.8.0
 https://github.com/Automattic/vip/releases/tag/v1.7.0
 
 ### 1.6.2 (25 Jul 2019)
-- Corrected some install issues with the 1.6.0/1.6.1 releases. 
+- Corrected some install issues with the 1.6.0/1.6.1 releases.
 
 https://github.com/Automattic/vip/releases/tag/v1.6.2
 

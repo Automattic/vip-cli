@@ -64,6 +64,8 @@ export async function landoRebuild( instancePath: string ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
+	await ensureNoOrphantProxyContainer( lando );
+
 	await app.rebuild();
 }
 
@@ -164,4 +166,34 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 	};
 
 	await task.run( argv );
+}
+
+/**
+ * Sometimes the proxy network seems to disapper leaving only orphant stopped proxy container.
+ * It seems to happen while restarting/powering off computer. This container would then failed
+ * to start due to missing network.
+ *
+ * This function tries to detect such scenario and remove the orphant. So that regular flow
+ * can safelly add a network and a new proxy container.
+ *
+ * @param {object} lando Bootstrapped Lando object
+ */
+async function ensureNoOrphantProxyContainer( lando ) {
+	const proxyContainerName = lando.config.proxyContainer;
+
+	const docker = lando.engine.docker;
+	const containers = await docker.listContainers( { all: true } );
+	const proxyContainerExists = containers.some( container => container.Names.includes( `/${ proxyContainerName }` ) );
+
+	if ( ! proxyContainerExists ) {
+		return;
+	}
+
+	const proxyContainer = await docker.getContainer( proxyContainerName );
+	const status = await proxyContainer.inspect();
+	if ( status?.State?.Running ) {
+		return;
+	}
+
+	await proxyContainer.remove();
 }
