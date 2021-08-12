@@ -102,13 +102,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					tag: '5.6',
 				},
 			},
-			{ // jetpack - mu
-				param: 'mu',
-				option: 'jetpack',
-				expected: {
-					mode: 'inherit',
-				},
-			},
 			{ // muPlugins - path
 				param: '~/path',
 				option: 'muPlugins',
@@ -166,13 +159,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					mode: 'image',
 					image: 'ghcr.io/automattic/vip-container-images/mu-plugins',
 					tag: 'latest',
-				},
-			},
-			{ // jetpack inherit
-				component: 'jetpack',
-				mode: 'inherit',
-				expected: {
-					mode: 'inherit',
 				},
 			},
 			{ // clientCode have just one tag

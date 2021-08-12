@@ -177,15 +177,6 @@ tooling:
 <% } else { %>
         - <%= muPlugins.dir %>:/wp/wp-content/mu-plugins
 <% } %>
-<% if ( jetpack.mode == 'image' ) { %>
-        - type: volume
-          source: jetpack
-          target: /wp/wp-content/mu-plugins/jetpack
-          volume:
-            nocopy: true
-<% } else if ( jetpack.mode == 'local' ) { %>
-        - <%= jetpack.dir %>:/wp/wp-content/mu-plugins/jetpack
-<% } %>
 <% if ( clientCode.mode == 'image' ) { %>
         - type: volume
           source: clientcode_clientmuPlugins

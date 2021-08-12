@@ -97,12 +97,6 @@ export function processComponentOptionInput( passedParam: string, type: string )
 		};
 	}
 
-	if ( type === 'jetpack' && param === 'mu' ) {
-		return {
-			mode: 'inherit',
-		};
-	}
-
 	return {
 		mode: 'image',
 		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
@@ -116,7 +110,6 @@ type NewInstanceOptions = {
 	php: string,
 	wordpress: string,
 	muPlugins: string,
-	jetpack: string,
 	clientCode: string
 }
 
@@ -152,7 +145,6 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
 		wordpress: {},
 		muPlugins: {},
-		jetpack: {},
 		clientCode: {},
 	};
 
@@ -222,7 +214,6 @@ export async function promptForBoolean( message: string, initial: boolean ) {
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
-	jetpack: 'Jetpack',
 	clientCode: 'site-code',
 };
 
@@ -239,15 +230,7 @@ export async function promptForComponent( component: string ) {
 		},
 	];
 	let initial = 1;
-	if ( 'jetpack' === component ) {
-		initial = 0;
-		choices.unshift( {
-			message: `inherit - use ${ componentDisplayName } included in mu-plugins`,
-			value: 'inherit',
-		} );
-		// Removing image option
-		choices.pop();
-	} else if ( 'clientCode' === component ) {
+	if ( 'clientCode' === component ) {
 		initial = 0;
 	}
 

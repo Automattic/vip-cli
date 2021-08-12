@@ -19,9 +19,6 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
 	phpVersion: '7.4',
-	jetpack: {
-		mode: 'inherit',
-	},
 	wordpress: {},
 	muPlugins: {},
 	clientCode: {},
@@ -39,4 +36,4 @@ export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up
 	'Sensible default values were pre-selected for convenience. ' +
 	'You may also choose to create multiple environments with different settings using the --slug option.\n\n';
 
-export const DEV_ENVIRONMENT_COMPONENTS = [ 'wordpress', 'muPlugins', 'jetpack', 'clientCode' ];
+export const DEV_ENVIRONMENT_COMPONENTS = [ 'wordpress', 'muPlugins', 'clientCode' ];
