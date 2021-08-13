@@ -70,7 +70,7 @@ export async function checkIfUserIsVip() {
 	if ( token && token.valid() ) {
 		const res = await featureFlags.get();
 
-		return res?.data?.me?.isVIP;
+		return !! res?.data?.me?.isVIP;
 	}
 
 	return false;
