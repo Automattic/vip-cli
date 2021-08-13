@@ -66,7 +66,7 @@ export default async function API(): Promise<ApolloClient> {
 		operation.setContext( {
 			headers: {
 				Authorization: token ? `Bearer ${ token.raw }` : null,
-			}
+			},
 		} );
 
 		return forward( operation );

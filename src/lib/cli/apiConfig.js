@@ -65,7 +65,7 @@ export async function checkIsVIP(): Promise<boolean> {
 }
 
 export async function checkIfUserIsVip() {
-	let token = await Token.get();
+	const token = await Token.get();
 
 	if ( token && token.valid() ) {
 		const res = await featureFlags.get();
@@ -73,7 +73,7 @@ export async function checkIfUserIsVip() {
 		return res?.data?.me?.isVIP;
 	}
 
-	return false;	
+	return false;
 }
 
 export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {
