@@ -77,7 +77,6 @@ type NewInstanceData = {
 	phpVersion: string,
 	wordpress: Object,
 	muPlugins: Object,
-	jetpack: Object,
 	clientCode: Object,
 }
 

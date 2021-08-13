@@ -21,11 +21,8 @@ import {
 	DEV_ENVIRONMENT_CONTAINER_IMAGES,
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
-	DOCKER_HUB_WP_IMAGES,
-	DOCKER_HUB_JETPACK_IMAGES,
 	DEV_ENVIRONMENT_COMPONENTS,
 } from '../constants/dev-environment';
-import fetch from 'node-fetch';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -100,12 +97,6 @@ export function processComponentOptionInput( passedParam: string, type: string )
 		};
 	}
 
-	if ( type === 'jetpack' && param === 'mu' ) {
-		return {
-			mode: 'inherit',
-		};
-	}
-
 	return {
 		mode: 'image',
 		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
@@ -119,7 +110,6 @@ type NewInstanceOptions = {
 	php: string,
 	wordpress: string,
 	muPlugins: string,
-	jetpack: string,
 	clientCode: string
 }
 
@@ -152,11 +142,9 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
-		phpVersion: providedOptions.php || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
 		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
 		wordpress: {},
 		muPlugins: {},
-		jetpack: {},
 		clientCode: {},
 	};
 
@@ -226,7 +214,6 @@ export async function promptForBoolean( message: string, initial: boolean ) {
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
-	jetpack: 'Jetpack',
 	clientCode: 'site-code',
 };
 
@@ -243,13 +230,7 @@ export async function promptForComponent( component: string ) {
 		},
 	];
 	let initial = 1;
-	if ( 'jetpack' === component ) {
-		initial = 0;
-		choices.unshift( {
-			message: `inherit - use ${ componentDisplayName } included in mu-plugins`,
-			value: 'inherit',
-		} );
-	} else if ( 'clientCode' === component ) {
+	if ( 'clientCode' === component ) {
 		initial = 0;
 	}
 
@@ -280,7 +261,7 @@ export async function promptForComponent( component: string ) {
 	if ( ! componentsWithPredefinedImageTag.includes( component ) ) {
 		const selectTag = new Select( {
 			message: '	Which version would you like',
-			choices: await getLatestImageTags( component ),
+			choices: getLatestImageTags( component ),
 		} );
 		tag = await selectTag.run();
 	}
@@ -292,9 +273,10 @@ export async function promptForComponent( component: string ) {
 	};
 }
 
-async function getLatestImageTags( component: string ): Promise<string[]> {
-	const url = component === 'wordpress' ? DOCKER_HUB_WP_IMAGES : DOCKER_HUB_JETPACK_IMAGES;
-	const request = await fetch( url );
-	const body = await request.json();
-	return body.results.map( x => x.name ).sort().reverse();
+async function getLatestImageTags( component: string ): string[] {
+	if ( component === 'wordpress' ) {
+		return [ '5.8', '5.7.2' ];
+	}
+
+	return [];
 }

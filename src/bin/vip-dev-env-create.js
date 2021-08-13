@@ -53,7 +53,6 @@ command()
 	.option( 'php', 'Use a specific PHP version' )
 	.option( 'wordpress', 'Use a specific WordPress version or local directory (default: last stable)' )
 	.option( 'mu-plugins', 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )
-	.option( 'jetpack', 'Use a specific Jetpack from a local directory (default: "mu": use the version in mu-plugins)' )
 	.option( 'client-code', 'Use the client code from a local directory or VIP skeleton (default: use the VIP skeleton)' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

@@ -8,6 +8,8 @@
  */
 import fetch from 'node-fetch';
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
+import { ApolloLink } from '@apollo/client/link/core';
+import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import chalk from 'chalk';
 
@@ -30,9 +32,7 @@ export function disableGlobalGraphQLErrorHandling() {
 }
 
 export default async function API(): Promise<ApolloClient> {
-	const token = await Token.get();
 	const headers = {
-		Authorization: token ? `Bearer ${ token.raw }` : null,
 		'User-Agent': env.userAgent,
 	};
 
@@ -54,6 +54,24 @@ export default async function API(): Promise<ApolloClient> {
 		}
 	} );
 
+	const withToken = setContext( async () =>{
+		const token = await Token.get();
+
+		return { token };
+	} );
+
+	const authLink = new ApolloLink( ( operation, forward ) => {
+		const { token } = operation.getContext();
+
+		operation.setContext( {
+			headers: {
+				Authorization: token ? `Bearer ${ token.raw }` : null,
+			},
+		} );
+
+		return forward( operation );
+	} );
+
 	const proxyAgent = createSocksProxyAgent();
 
 	const httpLink = new HttpLink( {
@@ -66,7 +84,7 @@ export default async function API(): Promise<ApolloClient> {
 	} );
 
 	const apiClient = new ApolloClient( {
-		link: errorLink.concat( httpLink ),
+		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
 		cache: new InMemoryCache(),
 	} );
 
