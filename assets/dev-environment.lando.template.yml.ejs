@@ -55,6 +55,9 @@ services:
     type: phpmyadmin
     hosts:
       - database
+    overrides:
+      environment:
+        UPLOAD_LIMIT: 128M
 
   vip-search:
     type: elasticsearch:custom
