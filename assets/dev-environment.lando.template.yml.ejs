@@ -162,6 +162,7 @@ tooling:
         - ./config/wp-config-defaults.php:/wp/config/wp-config-defaults.php
         - ./config:/wp/config
         - ./log:/wp/log
+        - ./uploads:/wp/wp-content/uploads
 <% if ( wordpress.mode == 'image' ) { %>
         - type: volume
           source: wordpress
