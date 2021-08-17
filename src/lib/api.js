@@ -32,8 +32,10 @@ export function disableGlobalGraphQLErrorHandling() {
 }
 
 export default async function API(): Promise<ApolloClient> {
+	const authToken = await Token.get();
 	const headers = {
 		'User-Agent': env.userAgent,
+		Authorization: authToken ? `Bearer ${ authToken.raw }` : null,
 	};
 
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
@@ -84,7 +86,7 @@ export default async function API(): Promise<ApolloClient> {
 	} );
 
 	const apiClient = new ApolloClient( {
-		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
+		link: ApolloLink.from( [ errorLink, httpLink ] ),
 		cache: new InMemoryCache(),
 	} );
 
