@@ -303,7 +303,14 @@ const displayPlaybook = ( {
 			console.log( columns( tableNames ) );
 		} else {
 			// we have siteArray from the API, use it and the table names together
-			if ( ! siteArray.length ) {
+			if ( siteArray === 'undefined' || ! siteArray ) {
+				console.log(
+					chalk.yellowBright(
+						'Unable to determine the subsites affected by this import, please proceed only if you are confident on the contents in the import file.'
+					)
+				);
+				return;
+			} else if ( ! siteArray?.length ) {
 				throw new Error( 'There were no sites in your multisite installation' );
 			}
 
