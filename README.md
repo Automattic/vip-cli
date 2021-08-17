@@ -23,6 +23,13 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.12 (13 August 2021)
+
+- Using new VIP Docker images for dev-env #818
+- Bump path-parse from 1.0.6 to 1.0.7 #819
+- Increasing dev-env PMA upload limit to 4G #822
+- PIE-2890 Fixes issue where user is unable to login after logout #823
+
 ### 2.0.11 (5 August 2021)
 - Handle parameter validation in a consistent way #795
 - Fix error blocking data sync on CLI sites #810
