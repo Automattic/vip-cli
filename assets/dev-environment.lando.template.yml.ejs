@@ -68,7 +68,7 @@ services:
   statsd:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/statsd:v0.8.6
+      image: ghcr.io/automattic/vip-container-images/statsd:v0.9.0
       command: node stats.js /config/statsd-config.js
 
 <% if ( wordpress.mode == 'image' ) { %>
