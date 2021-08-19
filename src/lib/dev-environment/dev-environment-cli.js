@@ -11,6 +11,8 @@ import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 /**
  * Internal dependencies
@@ -87,7 +89,14 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-export function processComponentOptionInput( passedParam: string, type: string ) {
+type ComponentConfig = {
+	mode: 'local' | 'image' | 'inherit';
+	dir?: string,
+	image?: string,
+	tag?: string,
+}
+
+export function processComponentOptionInput( passedParam: string, type: string ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
 	if ( param.includes( '/' ) ) {
@@ -167,14 +176,19 @@ async function processComponent( component: string, option: string ) {
 	}
 
 	while ( 'local' === result?.mode ) {
-		const path = result.dir || '';
-		const isDirectory = path && fs.existsSync( path ) && fs.lstatSync( path ).isDirectory();
-		const isEmpty = isDirectory ? fs.readdirSync( path ).length === 0 : true;
+		// Resolve does not do ~ reliably
+		let resolvedPath = ( result.dir || '' ).replace( /^~/, os.homedir() );
+		// And resolve to handle relative paths
+		resolvedPath = path.resolve( resolvedPath );
+		result.dir = resolvedPath;
+
+		const isDirectory = resolvedPath && fs.existsSync( resolvedPath ) && fs.lstatSync( resolvedPath ).isDirectory();
+		const isEmpty = isDirectory ? fs.readdirSync( resolvedPath ).length === 0 : true;
 
 		if ( isDirectory && ! isEmpty ) {
 			break;
 		} else {
-			const message = `Provided path "${ path || '' }" does not point to a non-empty directory.`;
+			const message = `Provided path "${ resolvedPath }" does not point to a non-empty directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component );
 		}
@@ -217,7 +231,7 @@ const componentDisplayNames = {
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string ) {
+export async function promptForComponent( component: string ): Promise<ComponentConfig> {
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [
 		{
@@ -273,7 +287,7 @@ export async function promptForComponent( component: string ) {
 	};
 }
 
-async function getLatestImageTags( component: string ): string[] {
+function getLatestImageTags( component: string ): string[] {
 	if ( component === 'wordpress' ) {
 		return [ '5.8', '5.7.2' ];
 	}
