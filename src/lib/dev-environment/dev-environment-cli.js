@@ -176,10 +176,7 @@ async function processComponent( component: string, option: string ) {
 	}
 
 	while ( 'local' === result?.mode ) {
-		// Resolve does not do ~ reliably
-		let resolvedPath = ( result.dir || '' ).replace( /^~/, os.homedir() );
-		// And resolve to handle relative paths
-		resolvedPath = path.resolve( resolvedPath );
+		const resolvedPath = resolvePath( result.dir || '' );
 		result.dir = resolvedPath;
 
 		const isDirectory = resolvedPath && fs.existsSync( resolvedPath ) && fs.lstatSync( resolvedPath ).isDirectory();
@@ -195,6 +192,13 @@ async function processComponent( component: string, option: string ) {
 	}
 
 	return result;
+}
+
+export function resolvePath( input: string ): string {
+	// Resolve does not do ~ reliably
+	const resolvedPath = input.replace( /^~/, os.homedir() );
+	// And resolve to handle relative paths
+	return path.resolve( resolvedPath );
 }
 
 export async function promptForText( message: string, initial: string ) {
