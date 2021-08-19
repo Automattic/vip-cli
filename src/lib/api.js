@@ -32,8 +32,10 @@ export function disableGlobalGraphQLErrorHandling() {
 }
 
 export default async function API(): Promise<ApolloClient> {
+	const authToken = await Token.get();
 	const headers = {
 		'User-Agent': env.userAgent,
+		Authorization: authToken ? `Bearer ${ authToken.raw }` : null,
 	};
 
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
