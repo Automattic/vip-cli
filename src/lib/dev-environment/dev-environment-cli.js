@@ -119,7 +119,8 @@ type NewInstanceOptions = {
 	php: string,
 	wordpress: string,
 	muPlugins: string,
-	clientCode: string
+	clientCode: string,
+	elasticSearch: string,
 }
 
 type AppInfo = {
@@ -152,6 +153,7 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
+		elasticSearch: providedOptions.elasticSearch || DEV_ENVIRONMENT_DEFAULTS.elasticSearchVersion,
 		wordpress: {},
 		muPlugins: {},
 		clientCode: {},
