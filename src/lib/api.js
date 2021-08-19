@@ -86,7 +86,7 @@ export default async function API(): Promise<ApolloClient> {
 	} );
 
 	const apiClient = new ApolloClient( {
-		link: ApolloLink.from( [ errorLink, httpLink ] ),
+		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
 		cache: new InMemoryCache(),
 	} );
 
