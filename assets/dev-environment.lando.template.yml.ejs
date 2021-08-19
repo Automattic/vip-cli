@@ -65,11 +65,13 @@ services:
     overrides:
       image: bitnami/elasticsearch:7.8.0
 
+<% if ( statsd ) { %>
   statsd:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/statsd:v0.8.6
       command: node stats.js /config/statsd-config.js
+<% } %>
 
   # Code containers
 

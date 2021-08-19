@@ -54,6 +54,7 @@ command()
 	.option( 'wordpress', 'Use a specific WordPress version or local directory (default: last stable)' )
 	.option( 'mu-plugins', 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )
 	.option( 'client-code', 'Use the client code from a local directory or VIP skeleton (default: use the VIP skeleton)' )
+	.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
@@ -85,6 +86,7 @@ command()
 		const instanceDataWithSlug = {
 			...instanceData,
 			siteSlug: slug,
+			statsd: opt.statsd || false,
 		};
 
 		try {
