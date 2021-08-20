@@ -8,6 +8,7 @@
 /**
  * External dependencies
  */
+import chalk from 'chalk';
 import debugLib from 'debug';
 import { exec } from 'child_process';
 
@@ -18,7 +19,6 @@ import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import chalk from 'chalk';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
