@@ -31,8 +31,11 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/php-fpm:7.4
-      command: php-fpm
+      command: run-php-fpm.sh
       working_dir: /wp
+      environment:
+        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+
       volumes:
         - type: volume
           source: devtools
