@@ -55,6 +55,7 @@ command()
 	.option( 'mu-plugins', 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )
 	.option( 'client-code', 'Use the client code from a local directory or VIP skeleton (default: use the VIP skeleton)' )
 	.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
@@ -87,6 +88,7 @@ command()
 			...instanceData,
 			siteSlug: slug,
 			statsd: opt.statsd || false,
+			phpmyadmin: opt.phpmyadmin || false,
 		};
 
 		try {
