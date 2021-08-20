@@ -51,12 +51,12 @@ command()
 
 				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
 					if ( error != null || stderr != null ) {
-					  debug( error );
-					  debug( stderr );
-					  console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
+						debug( error );
+						debug( stderr );
+						console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
 					} else {
-					  debug( stdout );
-					  console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
+						debug( stdout );
+						console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
 					}
 				} );
 			}
