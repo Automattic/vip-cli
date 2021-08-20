@@ -49,6 +49,12 @@ command()
 				console.log( 'Running on Windows. Applying Docker patch...' );
 
 				exec( dockerEsPatchPath, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
+					if ( error != null ) {
+					  console.log( 'There was an error while applying the patch: ' );
+					  console.log( error );
+					  return;
+					}
+
 					console.log( 'Docker patch for Windows applied' );
 				} );
 			}
