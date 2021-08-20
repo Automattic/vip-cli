@@ -9,6 +9,8 @@
  * External dependencies
  */
 import debugLib from 'debug';
+import path from 'path';
+import { exec } from 'child_process';
 
 /**
  * Internal dependencies
@@ -19,6 +21,8 @@ import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+
+const dockerEsPatchPath = path.join( __dirname, '..', '..', '..', 'assets', 'docker-es-patch.ps1' );
 
 // Command examples
 const examples = [
@@ -41,6 +45,14 @@ command()
 			skipRebuild: !! opt.skipRebuild,
 		};
 		try {
+			if ( process.platform === 'win32' ) {
+				console.log( 'Running on Windows. Applying Docker patch...' );
+
+				exec( dockerEsPatchPath, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
+					console.log( 'Docker patch for Windows applied' );
+				} );
+			}
+
 			await startEnvironment( slug, options );
 		} catch ( e ) {
 			handleCLIException( e );
