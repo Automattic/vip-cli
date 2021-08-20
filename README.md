@@ -23,6 +23,17 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.13 (19 August 2021)
+
+- Allow user to run multisite import even if wpSites.nodes doesn't exist. #815
+- Bumping version number to 2.0.12 #827
+- Path resolving fixes #829
+- Send header each time #826
+- Sets up a volume for media files #825
+- Update dependency chalk to v4.1.2 #813
+- Update dependency lando to v3.1.4 #797
+- Upgrading statsd container to 0.9.0 #828
+
 ### 2.0.12 (13 August 2021)
 
 - Using new VIP Docker images for dev-env #818
