@@ -47,16 +47,17 @@ command()
 		};
 		try {
 			if ( process.platform === 'win32' ) {
-				console.log( 'Running on Windows. Applying Docker patch...' );
+				debug( 'Windows platform detected. Applying Docker patch...' );
 
 				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
-					if ( error != null ) {
-					  console.log( 'There was an error while applying the patch: ' );
-					  console.log( error );
-					  return;
+					if ( error != null || stderr != null ) {
+					  debug( error );
+					  debug( stderr );
+					  console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
+					} else {
+					  debug( stdout );
+					  console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
 					}
-
-					console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
 				} );
 			}
 
