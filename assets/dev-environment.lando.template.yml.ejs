@@ -51,6 +51,7 @@ services:
   memcached:
     type: memcached:1.5.12
 
+<% if ( phpmyadmin ) { %>
   phpmyadmin:
     type: phpmyadmin
     hosts:
@@ -58,6 +59,7 @@ services:
     overrides:
       environment:
         UPLOAD_LIMIT: 4G
+<% } %>
 
   vip-search:
     type: elasticsearch:custom

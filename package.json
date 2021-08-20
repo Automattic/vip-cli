@@ -97,7 +97,7 @@
     "cli-columns": "^3.1.2",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
-    "debug": "4.3.1",
+    "debug": "4.3.2",
     "ejs": "^3.1.6",
     "enquirer": "2.3.6",
     "graphql": "15.5.0",
