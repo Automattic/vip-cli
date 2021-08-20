@@ -9,7 +9,6 @@
  * External dependencies
  */
 import debugLib from 'debug';
-import path from 'path';
 import { exec } from 'child_process';
 
 /**
@@ -19,10 +18,12 @@ import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import chalk from 'chalk';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const dockerEsPatchPath = path.join( __dirname, '..', '..', '..', 'assets', 'docker-es-patch.ps1' );
+// PowerShell command for Windows Docker patch
+const dockerWindowsPathCmd = 'wsl -d docker-desktop bash -c "sysctl -w vm.max_map_count=262144"';
 
 // Command examples
 const examples = [
@@ -48,14 +49,14 @@ command()
 			if ( process.platform === 'win32' ) {
 				console.log( 'Running on Windows. Applying Docker patch...' );
 
-				exec( dockerEsPatchPath, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
+				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
 					if ( error != null ) {
 					  console.log( 'There was an error while applying the patch: ' );
 					  console.log( error );
 					  return;
 					}
 
-					console.log( 'Docker patch for Windows applied' );
+					console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
 				} );
 			}
 
