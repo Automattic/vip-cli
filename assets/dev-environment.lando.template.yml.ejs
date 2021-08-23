@@ -133,12 +133,6 @@ tooling:
     cmd:
       - wp
 
-  test:
-    service: php
-    description: "Run all tests: lando test"
-    cmd:
-      - cd /wp/wp-content/mu-plugins && phpunit
-
   add-site:
     service: php
     description: "Add site to a multisite installation"
