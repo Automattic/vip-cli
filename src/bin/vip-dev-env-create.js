@@ -57,6 +57,8 @@ command()
 	.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'elastic-search', 'Explicitly choose ElasticSearch version to use' )
+	.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );

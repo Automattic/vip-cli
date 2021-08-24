@@ -68,7 +68,7 @@ services:
     type: elasticsearch:custom
     portforward: true
     overrides:
-      image: bitnami/elasticsearch:7.8.0
+      image: bitnami/elasticsearch:<%= elasticsearch %>
 
 <% if ( statsd ) { %>
   statsd:
