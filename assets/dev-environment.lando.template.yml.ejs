@@ -65,10 +65,17 @@ services:
 <% } %>
 
   vip-search:
-    type: elasticsearch:custom
+    type: compose
     portforward: true
-    overrides:
-      image: bitnami/elasticsearch:<%= elasticsearch %>
+    services:
+      image: elasticsearch:<%= elasticsearch %>
+      command: /usr/local/bin/docker-entrypoint.sh
+      environment:
+        ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
+        ELASTICSEARCH_CLUSTER_NAME: 'bespin'
+        ELASTICSEARCH_NODE_NAME: 'lando'
+        ELASTICSEARCH_PORT_NUMBER: 9200
+        discovery.type: 'single-node'
 
 <% if ( statsd ) { %>
   statsd:
