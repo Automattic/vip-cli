@@ -19,7 +19,7 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
 	phpVersion: '7.4',
-	elasticsearchVersion: '7.5.1',
+	elasticsearchVersion: '7.10.1',
 	wordpress: {},
 	muPlugins: {},
 	clientCode: {},
