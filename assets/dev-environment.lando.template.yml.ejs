@@ -50,7 +50,7 @@ services:
   database:
     type: compose
     services:
-      image: mariadb:10.3
+      image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
