@@ -24,7 +24,6 @@ import app from '../api/app';
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
-const configDefaultsFilePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.wp-config-defaults.php' );
 const landoFileName = '.lando.yml';
 
 type StartEnvironmentOptions = {
@@ -183,13 +182,9 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
-	const configDefaultsTargetPath = path.join( instancePath, 'config' );
-	const configDefaultsFileTargetPath = path.join( configDefaultsTargetPath, 'wp-config-defaults.php' );
 
 	fs.mkdirSync( instancePath, { recursive: true } );
 	fs.writeFileSync( landoFileTargetPath, landoFile );
-	fs.mkdirSync( configDefaultsTargetPath );
-	fs.copyFileSync( configDefaultsFilePath, configDefaultsFileTargetPath );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 }
