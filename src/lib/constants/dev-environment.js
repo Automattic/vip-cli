@@ -20,6 +20,7 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	multisite: false,
 	phpVersion: '7.4',
 	elasticsearchVersion: '7.10.1',
+	mariadbVersion: '10.3',
 	wordpress: {},
 	muPlugins: {},
 	clientCode: {},

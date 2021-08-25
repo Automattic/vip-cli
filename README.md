@@ -23,6 +23,21 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.0.14 (26 August 2021)
+
+- Update dependency graphql to v15.5.1 #796
+- Update dependency graphql-tag to v2.12.5 #799
+- Update dependency debug to v4.3.2 #806
+- Remove fake data dev-env commands #830
+- Disable statsd by default #831
+- Support ES version option #832
+- Removing mu-plugins test command #835
+- Making PHPMyAdmin optional on dev-env #836
+- Patching Docker for Windows in dev-env #837
+- enable/disable xdebug #838
+
+https://github.com/Automattic/vip/releases/tag/v2.0.14
+
 ### 2.0.13 (19 August 2021)
 
 - Allow user to run multisite import even if wpSites.nodes doesn't exist. #815
@@ -34,12 +49,16 @@ By default, we record information about the usage of this tool using an in-house
 - Update dependency lando to v3.1.4 #797
 - Upgrading statsd container to 0.9.0 #828
 
+https://github.com/Automattic/vip/releases/tag/v2.0.13
+
 ### 2.0.12 (13 August 2021)
 
 - Using new VIP Docker images for dev-env #818
 - Bump path-parse from 1.0.6 to 1.0.7 #819
 - Increasing dev-env PMA upload limit to 4G #822
 - PIE-2890 Fixes issue where user is unable to login after logout #823
+
+https://github.com/Automattic/vip/releases/tag/v2.0.12
 
 ### 2.0.11 (5 August 2021)
 - Handle parameter validation in a consistent way #795
