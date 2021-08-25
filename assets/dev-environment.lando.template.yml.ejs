@@ -48,8 +48,12 @@ services:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
-    type: mariadb
-    #portforward: 13306
+    type: compose
+    services:
+      image: mariadb:<%= mariadb %>
+      command: docker-entrypoint.sh mysqld
+      environment:
+        MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
 
   memcached:
     type: memcached:1.5.12
