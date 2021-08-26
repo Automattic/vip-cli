@@ -99,19 +99,18 @@ export async function landoInfo( instancePath: string ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
-	const appInfo = landoUtils.startTable( app );
+	let appInfo = landoUtils.startTable( app );
 
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
 	const isUp = await isEnvUp( app );
 
-	// Enterprise Search
-	const vipSearch = app.info.find( service => service.service === 'vip-search' );
-	if ( vipSearch?.external_connection && isUp ) {
-		const { host, port } = vipSearch?.external_connection;
-		appInfo[ 'enterprise search' ] = `http://${ host }:${ port }`;
-	}
+	const extraService = await getExtraServicesConnections( lando, app );
+	appInfo = {
+		...appInfo,
+		...extraService,
+	};
 
 	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
@@ -119,6 +118,39 @@ export async function landoInfo( instancePath: string ) {
 	appInfo.name = appInfo.name.replace( /^vipdev/, '' );
 
 	return appInfo;
+}
+
+const extraServicesForTable = [
+	{
+		name: 'vip-search',
+		label: 'enterprise search',
+		protocol: 'http',
+	},
+	{
+		name: 'database',
+		label: 'database',
+	},
+];
+
+async function getExtraServicesConnections( lando, app ) {
+	const extraServices = {};
+	const allServices = await lando.engine.list( { project: app.project } );
+
+	for ( const extraService of extraServicesForTable ) {
+		const serviceInfo = allServices.find( service => service.service === extraService.name );
+		const containerScan = serviceInfo?.id ? await lando.engine.docker.scan( serviceInfo?.id ) : null;
+		if ( containerScan?.NetworkSettings?.Ports ) {
+			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
+				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
+				.filter( externalMapping => externalMapping?.length );
+
+			if ( mappings?.length ) {
+				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
+				extraServices[ extraService.label ] = ( extraService.protocol ? `${ extraService.protocol }://` : '' ) + `${ host }:${ port }`;
+			}
+		}
+	}
+	return extraServices;
 }
 
 async function isEnvUp( app ) {
