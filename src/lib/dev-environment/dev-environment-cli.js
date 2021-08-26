@@ -189,7 +189,7 @@ async function processComponent( component: string, option: string ) {
 		if ( isDirectory && ! isEmpty ) {
 			break;
 		} else {
-			const message = `Provided path "${ resolvedPath }" does not point to a non-empty directory.`;
+			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component );
 		}
