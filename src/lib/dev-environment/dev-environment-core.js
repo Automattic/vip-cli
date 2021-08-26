@@ -72,7 +72,6 @@ type NewInstanceData = {
 	siteSlug: string,
 	wpTitle: string,
 	multisite: boolean,
-	phpVersion: string,
 	wordpress: Object,
 	muPlugins: Object,
 	clientCode: Object,
