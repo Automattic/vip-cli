@@ -74,9 +74,9 @@ services:
 <% } %>
 
   vip-search:
-    type: compose
+    type: elasticsearch:custom
     portforward: true
-    services:
+    overrides:
       image: elasticsearch:<%= elasticsearch %>
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
