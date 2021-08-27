@@ -48,12 +48,17 @@ services:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
-    type: compose
-    services:
+    type: mariadb:custom
+    overrides:
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
+        MARIADB_DATABASE: 'database'
+        MYSQL_DATABASE: 'database'
+        MARIADB_PASSWORD: 'mariadb'
+        MARIADB_USER: 'mariadb'
+        LANDO_NEEDS_EXEC: 'DOEEET'
 
   memcached:
     type: memcached:1.5.12
