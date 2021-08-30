@@ -52,9 +52,6 @@ command( { wildcardCommand: true } )
 				arg = process.argv.slice( argSpliterIx + 1 );
 			}
 
-			console.log( slug );
-			console.log( arg );
-
 			await exec( slug, arg );
 		} catch ( e ) {
 			handleCLIException( e );
