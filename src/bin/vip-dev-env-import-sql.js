@@ -8,6 +8,9 @@
 /**
  * External dependencies
  */
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -33,30 +36,27 @@ const examples = [
 	},
 ];
 
-command( { wildcardCommand: true } )
+command( {
+	requiredArgs: 1,
+} )
 	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'file', 'SQL file to import' )
 	.examples( examples )
-	.argv( process.argv, async ( unmatchedArgs, opt ) => {
+	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	  	const [ fileName ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );
 
 		try {
-			// to avoid confusion let's enforce -- as a spliter for arguments for this command and wp itself
-			const argSpliterIx = process.argv.findIndex( argument => '--' === argument );
-			const argSpliterFound = argSpliterIx > -1;
-			if ( unmatchedArgs.length > 0 && ! argSpliterFound ) {
-				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
-			}
+		  const resolvedPath = path.resolve( fileName );
 
-			let arg = [];
-			if ( argSpliterFound && argSpliterIx + 1 < process.argv.length ) {
-				arg = process.argv.slice( argSpliterIx + 1 );
-			}
+		  if ( ! fs.existsSync( resolvedPath ) ) {
+				throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
+		  }
+		  const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
+		  const arg = [ 'wp', 'db', 'import', dockerPath ];
 
-			console.log( slug );
-			console.log( arg );
-
-			await exec( slug, arg );
+		  await exec( slug, arg );
 		} catch ( e ) {
-			handleCLIException( e );
+		  handleCLIException( e );
 		}
 	} );

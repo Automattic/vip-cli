@@ -23,4 +23,5 @@ command( {
 	.command( 'destroy', 'Destroy a local dev environment' )
 	.command( 'info', 'Provides basic info about a local dev environment' )
 	.command( 'exec', 'Execute operation on dev environment' )
+	.command( 'import', 'Import into a WordPress install' )
 	.argv( process.argv );
