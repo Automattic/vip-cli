@@ -12,7 +12,7 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.5
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.6
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -162,7 +162,6 @@ tooling:
       - mysql -hdatabase -uwordpress -pwordpress wordpress
 
 <% function wpVolumes() { %>
-        - ./config/wp-config-defaults.php:/wp/config/wp-config-defaults.php
         - ./config:/wp/config
         - ./log:/wp/log
         - ./uploads:/wp/wp-content/uploads
