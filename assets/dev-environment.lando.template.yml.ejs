@@ -64,7 +64,7 @@ services:
     type: memcached:custom
     overrides:
       image: memcached:1.6-alpine3.14
-      command: docker-entrypoint.sh
+      command: docker-entrypoint.sh memcached
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:
