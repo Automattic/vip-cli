@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
@@ -40,7 +40,6 @@ command( {
 	requiredArgs: 1,
 } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'file', 'SQL file to import' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 	  	const [ fileName ] = unmatchedArgs;

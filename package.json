@@ -26,7 +26,8 @@
     "vip-dev-env-info": "dist/bin/vip-dev-env-info.js",
     "vip-dev-env-exec": "dist/bin/vip-dev-env-exec.js",
     "vip-dev-env-import": "dist/bin/vip-dev-env-import.js",
-    "vip-dev-env-import-sql": "dist/bin/vip-dev-env-import-sql.js"
+    "vip-dev-env-import-sql": "dist/bin/vip-dev-env-import-sql.js",
+    "vip-dev-env-import-media": "dist/bin/vip-dev-env-import-media.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
