@@ -18,7 +18,7 @@ export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
-	elasticsearchVersion: '7.5.1',
+	elasticsearchVersion: '7.10.1',
 	mariadbVersion: '10.3',
 	wordpress: {},
 	muPlugins: {},
