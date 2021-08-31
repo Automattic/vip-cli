@@ -23,16 +23,12 @@ import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 // Command examples
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- wp post list`,
-		description: 'Use dev-environment to run `wp post list`',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql some-wp-db-file.sql`,
+		description: 'Import the contents of a WordPress database from an SQL file',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp shell`,
-		description: 'Use dev-environment "my_site" to run interactive wp shell',
-	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- add-site --new-site-slug subsite --new-site-title "New Subsite"`,
-		description: 'Execute script to add a subsite to multisite dev environment',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --slug my_site`,
+		description: 'Import the contents of a WordPress database from an SQL file into `my_site`',
 	},
 ];
 
