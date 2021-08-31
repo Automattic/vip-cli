@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
@@ -13,7 +13,6 @@
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 // Command examples
