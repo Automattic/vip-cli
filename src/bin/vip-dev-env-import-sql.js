@@ -42,20 +42,20 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
-	  	const [ fileName ] = unmatchedArgs;
+		const [ fileName ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );
 
 		try {
-		  const resolvedPath = path.resolve( fileName );
+			const resolvedPath = path.resolve( fileName );
 
-		  if ( ! fs.existsSync( resolvedPath ) ) {
+			if ( ! fs.existsSync( resolvedPath ) ) {
 				throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
-		  }
-		  const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
-		  const arg = [ 'wp', 'db', 'import', dockerPath ];
+			}
+			const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
+			const arg = [ 'wp', 'db', 'import', dockerPath ];
 
-		  await exec( slug, arg );
+			await exec( slug, arg );
 		} catch ( e ) {
-		  handleCLIException( e );
+			handleCLIException( e );
 		}
 	} );
