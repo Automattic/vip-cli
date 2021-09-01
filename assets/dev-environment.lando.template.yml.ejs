@@ -1,4 +1,4 @@
-name: vipdev<%= siteSlug %>
+name: <%= siteSlug %>
 env_file:
   - .env
 proxy:
@@ -12,7 +12,7 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.5
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.6
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -35,6 +35,7 @@ services:
       working_dir: /wp
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+        STATSD: <%= statsd ? 'enable' : 'disable' %>
 
       volumes:
         - type: volume
@@ -48,14 +49,19 @@ services:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
-    type: compose
-    services:
+    type: mariadb:custom
+    overrides:
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
       ports:
         - ":3306"
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
+        MARIADB_DATABASE: 'database'
+        MYSQL_DATABASE: 'database'
+        MARIADB_PASSWORD: 'mariadb'
+        MARIADB_USER: 'mariadb'
+        LANDO_NEEDS_EXEC: 'DOEEET'
 
   memcached:
     type: memcached:1.5.12
@@ -74,7 +80,14 @@ services:
     type: elasticsearch:custom
     portforward: true
     overrides:
-      image: bitnami/elasticsearch:<%= elasticsearch %>
+      image: elasticsearch:<%= elasticsearch %>
+      command: /usr/local/bin/docker-entrypoint.sh
+      environment:
+        ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
+        ELASTICSEARCH_CLUSTER_NAME: 'bespin'
+        ELASTICSEARCH_NODE_NAME: 'lando'
+        ELASTICSEARCH_PORT_NUMBER: 9200
+        discovery.type: 'single-node'
 
 <% if ( statsd ) { %>
   statsd:
@@ -152,7 +165,6 @@ tooling:
       - mysql -hdatabase -uwordpress -pwordpress wordpress
 
 <% function wpVolumes() { %>
-        - ./config/wp-config-defaults.php:/wp/config/wp-config-defaults.php
         - ./config:/wp/config
         - ./log:/wp/log
         - ./uploads:/wp/wp-content/uploads
