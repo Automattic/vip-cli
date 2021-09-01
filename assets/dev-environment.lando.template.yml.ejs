@@ -35,6 +35,7 @@ services:
       working_dir: /wp
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+        STATSD: <%= statsd ? 'enable' : 'disable' %>
 
       volumes:
         - type: volume
