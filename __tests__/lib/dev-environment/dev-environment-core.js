@@ -244,8 +244,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			await expect( promise ).resolves.toEqual(
 				{
 					resolvedPath: path.resolve( 'testfile.sql' ),
-				    dockerPath: path.resolve( 'testfile.sql' ).replace( os.homedir(), '/user' ),
-			  	}
+					dockerPath: path.resolve( 'testfile.sql' ).replace( os.homedir(), '/user' ),
+				}
 			);
 		} );
 	} );
