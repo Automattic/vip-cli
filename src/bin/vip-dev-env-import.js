@@ -12,8 +12,8 @@
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 
 // Command examples
 const examples = [

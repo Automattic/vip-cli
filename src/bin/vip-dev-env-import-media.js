@@ -12,7 +12,7 @@
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
+import command from '../lib/cli/command';
 
 command( {
 	requiredArgs: 1,
