@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
