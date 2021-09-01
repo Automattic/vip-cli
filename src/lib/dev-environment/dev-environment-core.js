@@ -31,6 +31,11 @@ type StartEnvironmentOptions = {
 	skipRebuild: boolean
 };
 
+type SQLImportPaths = {
+	resolvedPath: string,
+	dockerPath: string
+}
+
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
 	debug( 'Will start an environment', slug );
 
@@ -266,7 +271,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 	return appData;
 }
 
-export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<string> {
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<SQLImportPaths> {
 	let resolvedPath = path.resolve( fileName );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
@@ -292,5 +297,9 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		fs.renameSync( outputFileName, resolvedPath );
 	}
 
-	return resolvedPath.replace( os.homedir(), '/user' );
+	const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
+	return {
+		resolvedPath,
+		dockerPath,
+	};
 }

@@ -8,6 +8,7 @@
 /**
  * External dependencies
  */
+import fs from 'fs';
 
 /**
  * Internal dependencies
@@ -50,9 +51,13 @@ command( {
 		const slug = getEnvironmentName( opt );
 
 		try {
-			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
-			const arg = [ 'wp', 'db', 'import', resolvedPath ];
+			const { resolvedPath, dockerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
+			const arg = [ 'wp', 'db', 'import', dockerPath ];
 			await exec( slug, arg );
+
+			if ( searchReplace && searchReplace.length && ! inPlace ) {
+				fs.unlinkSync( resolvedPath );
+			}
 		} catch ( e ) {
 			handleCLIException( e );
 		}

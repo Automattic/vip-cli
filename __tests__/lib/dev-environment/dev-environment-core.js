@@ -6,8 +6,9 @@
  * External dependencies
  */
 import xdgBasedir from 'xdg-basedir';
-import os from 'os';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -17,7 +18,9 @@ import { getEnvironmentPath,
 	createEnvironment,
 	startEnvironment,
 	destroyEnvironment,
-	getApplicationInformation } from 'lib/dev-environment/dev-environment-core';
+	getApplicationInformation,
+	resolveImportPath,
+} from '../../../src/lib/dev-environment/dev-environment-core';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
@@ -220,6 +223,30 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const result = await getApplicationInformation( input.appId, input.envType );
 
 			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'resolveImportPath', () => {
+		it( 'should throw if file does not exist', async () => {
+			fs.existsSync.mockReturnValue( false );
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
+
+			await expect( promise ).rejects.toEqual(
+				new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' )
+			);
+		} );
+
+		it( 'should resolve the path and replace it with /user', async () => {
+			fs.existsSync.mockReturnValue( true );
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
+
+			await expect( promise ).resolves.toEqual(
+				{
+					resolvedPath: path.resolve( 'testfile.sql' ),
+				    dockerPath: path.resolve( 'testfile.sql' ).replace( os.homedir(), '/user' ),
+			  	}
+			);
 		} );
 	} );
 } );
