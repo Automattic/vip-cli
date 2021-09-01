@@ -18,6 +18,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
+import { searchAndReplace } from '../search-and-replace';
 import { printTable } from './dev-environment-cli';
 import app from '../api/app';
 
@@ -263,4 +264,33 @@ export async function getApplicationInformation( appId: number, envType: string 
 	}
 
 	return appData;
+}
+
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<string> {
+	let resolvedPath = path.resolve( fileName );
+
+	if ( ! fs.existsSync( resolvedPath ) ) {
+		throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
+	}
+
+	// Run Search and Replace if the --search-replace flag was provided
+	if ( searchReplace && searchReplace.length ) {
+		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
+			isImport: true,
+			output: true,
+			inPlace,
+		} );
+
+		if ( typeof outputFileName !== 'string' ) {
+			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
+		}
+
+		const environmentPath = getEnvironmentPath( slug );
+		const baseName = path.basename( outputFileName );
+
+		resolvedPath = path.join( environmentPath, baseName );
+		fs.renameSync( outputFileName, resolvedPath );
+	}
+
+	return resolvedPath.replace( os.homedir(), '/user' );
 }
