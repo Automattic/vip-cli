@@ -44,7 +44,20 @@ let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	const options = this.parse( parsedAlias.argv, { help: false, version: false } );
+	// A usage option allows us to override the default usage text, which isn't
+	// accurate for subcommands. By default, it will display something like (note
+	// the hyphen):
+	//   Usage: vip command-subcommand [options]
+	//
+	// We can pass "vip command subcommand" to the name param for more accurate
+	// usage text:
+	//   Usage: vip command subcommand [options]
+	//
+	// It also allows us to represent required args in usage text:
+	//   Usage: vip command subcommand <arg1> <arg2> [options]
+	const name = _opts.usage || null;
+
+	const options = this.parse( parsedAlias.argv, { help: false, name, version: false } );
 
 	if ( options.h || options.help ) {
 		this.showHelp();
