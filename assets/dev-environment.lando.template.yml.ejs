@@ -62,7 +62,10 @@ services:
         LANDO_NEEDS_EXEC: 'DOEEET'
 
   memcached:
-    type: memcached:1.5.12
+    type: memcached:custom
+    overrides:
+      image: memcached:1.6-alpine3.14
+      command: docker-entrypoint.sh memcached
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:
