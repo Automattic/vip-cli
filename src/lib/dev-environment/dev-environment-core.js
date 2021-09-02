@@ -303,3 +303,11 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		dockerPath,
 	};
 }
+
+export async function importMediaPath( slug: string, filePath: string ) {
+	const resolvedPath = resolvePath( filePath );
+
+	if ( ! fs.existsSync( resolvedPath ) ) {
+		throw new Error( 'The provided path does not exist or it is not valid (see "--help" for examples)' );
+	}
+}

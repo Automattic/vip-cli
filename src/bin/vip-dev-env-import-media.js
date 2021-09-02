@@ -13,11 +13,20 @@
  * Internal dependencies
  */
 import command from '../lib/cli/command';
+import { getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
+import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 
 command( {
 	requiredArgs: 1,
 } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.argv( process.argv, async () => {
-		console.log( 'Importing media to a dev environment is not available yet.' );
+	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+		const [ filePath ] = unmatchedArgs;
+		const slug = getEnvironmentName( opt );
+
+		try {
+			await importMediaPath( slug, filePath );
+		} catch ( error ) {
+			handleCLIException( error );
+		}
 	} );
