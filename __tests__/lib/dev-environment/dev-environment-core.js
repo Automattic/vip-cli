@@ -21,12 +21,18 @@ import { getEnvironmentPath,
 	getApplicationInformation,
 	resolveImportPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
+import { searchAndReplace } from '../../../src/lib/search-and-replace';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
 jest.mock( '../../../src/lib/api/app' );
+jest.mock( '../../../src/lib/search-and-replace' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
+  	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
 	describe( 'createEnvironment', () => {
 		it( 'should throw for existing folder', async () => {
 			const slug = 'foo';
@@ -231,6 +237,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
+			expect( searchAndReplace ).not.toHaveBeenCalled();
+
 			await expect( promise ).rejects.toEqual(
 				new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' )
 			);
@@ -241,12 +249,53 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
+			expect( searchAndReplace ).not.toHaveBeenCalled();
+
 			await expect( promise ).resolves.toEqual(
 				{
 					resolvedPath: path.resolve( 'testfile.sql' ),
 					dockerPath: path.resolve( 'testfile.sql' ).replace( os.homedir(), '/user' ),
 				}
 			);
+		} );
+
+		it( 'should call search and replace not in place with the proper arguments', async () => {
+			searchAndReplace.mockReturnValue( {
+				outputFileName: 'testfile.sql',
+			} );
+
+			const resolvedPath = path.resolve( 'testfile.sql' );
+			const searchReplace = 'testsite.com,testsite.net';
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', searchReplace, false );
+
+			expect( searchAndReplace ).toHaveBeenCalledTimes( 1 );
+			expect( searchAndReplace ).toHaveBeenLastCalledWith( resolvedPath, searchReplace, {
+				isImport: true,
+				output: true,
+				inPlace: false,
+			} );
+
+			const expectedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
+
+			await expect( promise ).resolves.toEqual( {
+				resolvedPath: expectedPath,
+				dockerPath: expectedPath,
+			} );
+		} );
+
+		it( 'should call search and replace in place with the proper arguments', async () => {
+			const resolvedPath = path.resolve( 'testfile.sql' );
+			const searchReplace = 'testsite.com,testsite.net';
+
+			await resolveImportPath( 'foo', 'testfile.sql', searchReplace, true );
+
+			expect( searchAndReplace ).toHaveBeenCalledTimes( 1 );
+			expect( searchAndReplace ).toHaveBeenLastCalledWith( resolvedPath, searchReplace, {
+				isImport: true,
+				output: true,
+				inPlace: true,
+			} );
 		} );
 	} );
 } );

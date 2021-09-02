@@ -18,7 +18,6 @@ import { getEnvironmentName, handleCLIException } from '../lib/dev-environment/d
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql some-wp-db-file.sql`,
