@@ -25,7 +25,6 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 // PowerShell command for Windows Docker patch
 const dockerWindowsPathCmd = 'wsl -d docker-desktop bash -c "sysctl -w vm.max_map_count=262144"';
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } start`,
@@ -61,7 +60,7 @@ command()
 			}
 
 			await startEnvironment( slug, options );
-		} catch ( e ) {
-			handleCLIException( e );
+		} catch ( error ) {
+			handleCLIException( error );
 		}
 	} );
