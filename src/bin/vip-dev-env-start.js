@@ -48,7 +48,7 @@ command()
 			if ( process.platform === 'win32' ) {
 				debug( 'Windows platform detected. Applying Docker patch...' );
 
-				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
+				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
 					if ( error != null ) {
 						debug( error );
 						console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
