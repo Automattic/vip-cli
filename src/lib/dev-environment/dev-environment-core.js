@@ -19,7 +19,7 @@ import chalk from 'chalk';
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
-import { printTable } from './dev-environment-cli';
+import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -272,7 +272,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 }
 
 export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<SQLImportPaths> {
-	let resolvedPath = path.resolve( fileName );
+	let resolvedPath = resolvePath( fileName );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
 		throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
