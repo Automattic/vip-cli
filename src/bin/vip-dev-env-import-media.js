@@ -18,6 +18,6 @@ command( {
 	requiredArgs: 1,
 } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.argv( process.argv, async () => {
 		console.log( 'Importing media to a dev environment is not available yet.' );
 	} );

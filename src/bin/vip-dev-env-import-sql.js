@@ -57,7 +57,7 @@ command( {
 			if ( searchReplace && searchReplace.length && ! inPlace ) {
 				fs.unlinkSync( resolvedPath );
 			}
-		} catch ( e ) {
-			handleCLIException( e );
+		} catch ( error ) {
+			handleCLIException( error );
 		}
 	} );
