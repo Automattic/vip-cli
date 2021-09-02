@@ -29,7 +29,7 @@ jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
-  	beforeEach( () => {
+	beforeEach( () => {
 		jest.clearAllMocks();
 	} );
 
