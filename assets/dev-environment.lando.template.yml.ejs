@@ -21,6 +21,8 @@ services:
 
   nginx:
     type: compose
+    ssl: true
+    sslExpose: false
     services:
       image: ghcr.io/automattic/vip-container-images/nginx:1.21.1
       command: nginx -g "daemon off;"
