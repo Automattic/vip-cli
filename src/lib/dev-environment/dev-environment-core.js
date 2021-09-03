@@ -13,6 +13,7 @@ import fs from 'fs';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
+import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
 
 /**
@@ -22,7 +23,6 @@ import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild
 import { searchAndReplace } from '../search-and-replace';
 import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
-import { prompt } from 'enquirer';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
