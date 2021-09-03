@@ -44,8 +44,11 @@ command( {
 		debug( `Request: delete environment variable ${ JSON.stringify( name ) } for @${ opt.app.id }.${ opt.env.type }` );
 
 		validateNameOrError( name );
-		await promptForValue( `Type ${ name } to confirm deletion:`, name );
-		await confirmOrCancel( `Are you sure? ${ chalk.bold.red( 'Deletion is permanent' ) } (y/N)` );
+
+		if ( ! opt.skipConfirmation ) {
+			await promptForValue( `Type ${ name } to confirm deletion:`, name );
+			await confirmOrCancel( `Are you sure? ${ chalk.bold.red( 'Deletion is permanent' ) } (y/N)` );
+		}
 
 		await deleteEnvVar( opt.app.id, opt.env.id, name );
 		console.log( chalk.green( `Successfully deleted environment variable ${ JSON.stringify( name ) }` ) );
