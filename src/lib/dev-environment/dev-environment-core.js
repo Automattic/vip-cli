@@ -18,7 +18,8 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
-import { printTable } from './dev-environment-cli';
+import { searchAndReplace } from '../search-and-replace';
+import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -29,6 +30,11 @@ const landoFileName = '.lando.yml';
 type StartEnvironmentOptions = {
 	skipRebuild: boolean
 };
+
+type SQLImportPaths = {
+	resolvedPath: string,
+	dockerPath: string
+}
 
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
 	debug( 'Will start an environment', slug );
@@ -263,4 +269,37 @@ export async function getApplicationInformation( appId: number, envType: string 
 	}
 
 	return appData;
+}
+
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<SQLImportPaths> {
+	let resolvedPath = resolvePath( fileName );
+
+	if ( ! fs.existsSync( resolvedPath ) ) {
+		throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
+	}
+
+	// Run Search and Replace if the --search-replace flag was provided
+	if ( searchReplace && searchReplace.length ) {
+		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
+			isImport: true,
+			output: true,
+			inPlace,
+		} );
+
+		if ( typeof outputFileName !== 'string' ) {
+			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
+		}
+
+		const environmentPath = getEnvironmentPath( slug );
+		const baseName = path.basename( outputFileName );
+
+		resolvedPath = path.join( environmentPath, baseName );
+		fs.renameSync( outputFileName, resolvedPath );
+	}
+
+	const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
+	return {
+		resolvedPath,
+		dockerPath,
+	};
 }
