@@ -333,5 +333,5 @@ export async function importMediaPath( slug: string, filePath: string ) {
 
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
 	copydir.sync( resolvedPath, uploadsPath );
-	console.log( `${ chalk.green( '✓' ) } Files successfuly copied to ${ uploadsPath }.` );
+	console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
 }
