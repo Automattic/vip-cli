@@ -13,6 +13,7 @@ import fs from 'fs';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
+import copydir from 'copy-dir';
 
 /**
  * Internal dependencies
@@ -21,11 +22,14 @@ import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild
 import { searchAndReplace } from '../search-and-replace';
 import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
+import { prompt } from 'enquirer';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
 const landoFileName = '.lando.yml';
+
+const uploadPathString = 'uploads';
 
 type StartEnvironmentOptions = {
 	skipRebuild: boolean
@@ -307,7 +311,27 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 export async function importMediaPath( slug: string, filePath: string ) {
 	const resolvedPath = resolvePath( filePath );
 
-	if ( ! fs.existsSync( resolvedPath ) ) {
+	if ( ! fs.existsSync( resolvedPath ) || ! fs.lstatSync( resolvedPath ).isDirectory() ) {
 		throw new Error( 'The provided path does not exist or it is not valid (see "--help" for examples)' );
 	}
+
+	const files = fs.readdirSync( resolvedPath );
+	if ( files.indexOf( uploadPathString ) > -1 ) {
+		const confirm = await prompt( {
+			type: 'confirm',
+			name: 'continue',
+			message: 'The provided path contains an uploads folder inside. Do you want to continue?',
+		} );
+
+		if ( ! confirm.continue ) {
+			return;
+		}
+	}
+
+	const environmentPath = getEnvironmentPath( slug );
+	const uploadsPath = path.join( environmentPath, uploadPathString );
+
+	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
+	copydir.sync( resolvedPath, uploadsPath );
+	console.log( `${ chalk.green( '✓' ) } Files successfuly copied to ${ uploadsPath }.` );
 }
