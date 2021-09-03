@@ -50,7 +50,6 @@ command( {
 		let value;
 		if ( opt.fromFile ) {
 			value = await readVariableFromFile( opt.fromFile );
-			console.clear();
 		} else {
 			console.log( `For multiline input, use the ${ chalk.bold( '--from-file' ) } option.` );
 			console.log();
