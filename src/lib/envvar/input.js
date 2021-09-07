@@ -28,20 +28,6 @@ export async function confirmOrCancel( message: string ): Promise<void> {
 	}
 }
 
-export function printBox( lines: string[] ): void {
-	const longestLineLength = lines.reduce( ( acc, line ) => line.length > acc ? line.length : acc, 0 );
-
-	const bar = '─'.repeat( longestLineLength + 2 );
-
-	const box = [
-		`┌${ bar }┐`,
-		...lines.map( line => `│ ${ line }${ ' '.repeat( longestLineLength - line.length ) } │` ),
-		`└${ bar }┘`,
-	];
-
-	console.log( chalk.green( box.join( '\n' ) ) );
-}
-
 export async function promptForValue( message: string, mustMatch?: string ) {
 	const response = await prompt( {
 		message,

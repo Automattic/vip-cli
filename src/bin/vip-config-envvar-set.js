@@ -15,7 +15,7 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import { appQuery, setEnvVar, validateNameOrError } from 'lib/envvar/api';
-import { confirmOrCancel, printBox, promptForValue } from 'lib/envvar/input';
+import { confirmOrCancel, promptForValue } from 'lib/envvar/input';
 import { debug } from 'lib/envvar/logging';
 import { readVariableFromFile } from 'lib/envvar/read-file';
 
@@ -59,9 +59,9 @@ command( {
 		if ( ! opt.skipConfirmation ) {
 			// Print input if it was loaded from file.
 			if ( opt.fromFile ) {
-				printBox( [ 'Received value printed below' ] );
+				console.log( '===== Received value printed below =====' );
 				console.log( value );
-				printBox( [ 'Received value printed above' ] );
+				console.log( '===== Received value printed above =====' );
 				console.log();
 			}
 
