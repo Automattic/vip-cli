@@ -42,12 +42,12 @@ export const appQuery = `
 	}
 `;
 
-function validateName( name: string ): boolean {
+export function validateName( name: string ): boolean {
 	const sanitizedName = name.trim().toUpperCase().replace( /[^A-Z0-9_]/g, '' );
 	return name === sanitizedName && /^[A-Z]/.test( sanitizedName );
 }
 
-export function validateNameOrError( name: string ): void {
+export function validateNameWithMessage( name: string ): boolean {
 	debug( `Validating environment variable name ${ JSON.stringify( name ) }` );
 
 	if ( ! validateName( name ) ) {
@@ -57,6 +57,8 @@ export function validateNameOrError( name: string ): void {
 		].join( '\n' );
 
 		console.log( chalk.bold.red( message ) );
-		process.exit();
+		return false;
 	}
+
+	return true;
 }
