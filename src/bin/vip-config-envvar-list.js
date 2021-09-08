@@ -30,6 +30,42 @@ const examples = [
 	},
 ];
 
+export async function listEnvVarsCommand( arg: string[], opt ): void {
+	const trackingParams = {
+		app_id: opt.app.id,
+		command: usage,
+		env_id: opt.env.id,
+		format: opt.format,
+		org_id: opt.app.organization.id,
+	};
+
+	debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
+	await trackEvent( 'envvar_list_command_execute', trackingParams );
+
+	const envvars = await listEnvVars( opt.app.id, opt.env.id, opt.format )
+		.catch( async err => {
+			rollbar.error( err );
+			await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
+
+			throw err;
+		} );
+
+	await trackEvent( 'envvar_list_command_success', trackingParams );
+
+	if ( 0 === envvars.length ) {
+		console.log( chalk.yellow( 'There are no environment variables' ) );
+		process.exit();
+	}
+
+	// Display context for non-machine-readable formats.
+	if ( [ 'keyValue', 'table' ].includes( opt.format ) ) {
+		console.log( 'For security, the values of environment variables cannot be retrieved.' );
+		console.log();
+	}
+
+	console.log( formatData( envvars, opt.format ) );
+}
+
 command( {
 	appContext: true,
 	appQuery,
@@ -38,38 +74,4 @@ command( {
 	usage,
 } )
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opt ) => {
-		const trackingParams = {
-			app_id: opt.app.id,
-			command: usage,
-			env_id: opt.env.id,
-			format: opt.format,
-			org_id: opt.app.organization.id,
-		};
-
-		debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
-		await trackEvent( 'envvars_list_command_execute', trackingParams );
-
-		const envvars = await listEnvVars( opt.app.id, opt.env.id, opt.format )
-			.catch( async err => {
-				rollbar.error( err );
-				await trackEvent( 'envvars_list_query_error', { ...trackingParams, error: err.message } );
-
-				throw err;
-			} );
-
-		await trackEvent( 'envvars_list_command_success', trackingParams );
-
-		if ( 0 === envvars.length ) {
-			console.log( chalk.yellow( 'There are no environment variables' ) );
-			process.exit();
-		}
-
-		// Display context for non-machine-readable formats.
-		if ( [ 'keyValue', 'table' ].includes( opt.format ) ) {
-			console.log( 'For security, the values of environment variables cannot be retrieved.' );
-			console.log();
-		}
-
-		console.log( formatData( envvars, opt.format ) );
-	} );
+	.argv( process.argv, listEnvVarsCommand );
