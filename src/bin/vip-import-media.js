@@ -150,9 +150,9 @@ Importing Media into your App...
 				} );
 
 			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
-		} catch ( e ) {
-			if ( e.graphQLErrors ) {
-				for ( const err of e.graphQLErrors ) {
+		} catch ( error ) {
+			if ( error.graphQLErrors ) {
+				for ( const err of error.graphQLErrors ) {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 
@@ -160,7 +160,7 @@ Importing Media into your App...
 			}
 
 			await track( 'import_media_start_execute_error', {
-				error: `Error: ${ e.message }`,
+				error: `Error: ${ error.message }`,
 			} );
 		}
 	} );

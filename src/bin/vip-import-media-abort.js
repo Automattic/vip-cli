@@ -95,15 +95,15 @@ Aborting the Media Import running on your App
 					},
 				} );
 			await mediaImportCheckStatus( { app, env, progressTracker } );
-		} catch ( e ) {
-			if ( e.graphQLErrors ) {
-				for ( const err of e.graphQLErrors ) {
+		} catch ( error ) {
+			if ( error.graphQLErrors ) {
+				for ( const err of error.graphQLErrors ) {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 				return;
 			}
 			await track( 'import_media_abort_execute_error', {
-				error: `Error: ${ e.message }`,
+				error: `Error: ${ error.message }`,
 			} );
 		}
 	} );

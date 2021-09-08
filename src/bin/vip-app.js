@@ -27,7 +27,7 @@ command( { requiredArgs: 1, format: true } )
 				arg[ 0 ],
 				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name},launched}'
 			);
-		} catch ( e ) {
+		} catch ( err ) {
 			await trackEvent( 'app_command_fetch_error', {
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
@@ -48,7 +48,7 @@ command( { requiredArgs: 1, format: true } )
 		await trackEvent( 'app_command_success' );
 
 		// Clone the read-only response object so we can modify it
-		const r = Object.assign( {}, res );
+		const clonedResponse = Object.assign( {}, res );
 
 		const header = [
 			{ key: 'id', value: res.id },
@@ -56,19 +56,19 @@ command( { requiredArgs: 1, format: true } )
 			{ key: 'repo', value: res.repo },
 		];
 
-		r.environments = r.environments.map( env => {
-			const e = Object.assign( {}, env );
+		clonedResponse.environments = clonedResponse.environments.map( env => {
+			const clonedEnv = Object.assign( {}, env );
 
-			e.name = getEnvIdentifier( env );
+			clonedEnv.name = getEnvIdentifier( env );
 
 			// Use the short version of git commit hash
-			e.currentCommit = e.currentCommit.substring( 0, 7 );
+			clonedEnv.currentCommit = clonedEnv.currentCommit.substring( 0, 7 );
 
 			// Flatten object
-			e.primaryDomain = e.primaryDomain.name;
+			clonedEnv.primaryDomain = clonedEnv.primaryDomain.name;
 
-			return e;
+			return clonedEnv;
 		} );
 
-		return { header, data: r.environments };
+		return { header, data: clonedResponse.environments };
 	} );

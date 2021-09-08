@@ -4,7 +4,6 @@
 /**
  * External dependencies
  */
-import args from 'args';
 import opn from 'opn';
 import { prompt } from 'enquirer';
 import chalk from 'chalk';
@@ -74,13 +73,13 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_execute' );
 
-		const c = await prompt( {
+		const answer = await prompt( {
 			type: 'confirm',
 			name: 'continue',
 			message: 'Ready?',
 		} );
 
-		if ( ! c.continue ) {
+		if ( ! answer.continue ) {
 			await trackEvent( 'login_command_browser_cancelled' );
 
 			return;
@@ -90,21 +89,19 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_browser_opened' );
 
-		let t = await prompt( {
+		const { token: tokenInput } = await prompt( {
 			type: 'password',
 			name: 'token',
 			message: 'Access Token:',
 		} );
 
-		t = t.token;
-
 		try {
-			token = new Token( t );
-		} catch ( e ) {
+			token = new Token( tokenInput );
+		} catch ( err ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
 
-			rollbar.error( e );
-			await trackEvent( 'login_command_token_submit_error', { error: e.message } );
+			rollbar.error( err );
+			await trackEvent( 'login_command_token_submit_error', { error: err.message } );
 
 			return;
 		}
@@ -127,13 +124,13 @@ const rootCmd = async function() {
 
 		try {
 			Token.set( token.raw );
-		} catch ( e ) {
+		} catch ( err ) {
 			await trackEvent( 'login_command_token_submit_error', {
-				error: e.message,
+				error: err.message,
 			} );
 
-			rollbar.error( e );
-			throw e;
+			rollbar.error( err );
+			throw err;
 		}
 
 		// De-anonymize user for tracking

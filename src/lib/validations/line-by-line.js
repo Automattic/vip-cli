@@ -43,7 +43,7 @@ export async function getReadInterface( filename: string ) {
 	let fd;
 	try {
 		fd = await openFile( filename );
-	} catch ( e ) {
+	} catch ( err ) {
 		exit.withError( 'The file at the provided path is either missing or not readable. Please check the input and try again.' );
 	}
 

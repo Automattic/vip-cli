@@ -113,7 +113,7 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 
 	try {
 		await checkFileAccess( fileName );
-	} catch ( e ) {
+	} catch ( err ) {
 		await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
 		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 	}
@@ -515,7 +515,7 @@ Processing the SQL import for your environment...
 				}
 
 				// determine all the replacements required
-				const replacementsArr = pairs.map( str => str.split( ',' ).map( s => s.trim() ) );
+				const replacementsArr = pairs.map( pair => pair.split( ',' ).map( str => str.trim() ) );
 
 				startImportVariables.input.searchReplace = replacementsArr.map( arr => {
 					return {

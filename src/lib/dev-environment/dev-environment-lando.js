@@ -162,7 +162,7 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 	const task = landoBuildTask( tool, lando );
 
 	const argv = {
-		_: args,
+		_: args, // eslint-disable-line
 	};
 
 	await task.run( argv );
