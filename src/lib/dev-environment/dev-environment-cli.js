@@ -11,6 +11,8 @@ import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 /**
  * Internal dependencies
@@ -87,7 +89,14 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-export function processComponentOptionInput( passedParam: string, type: string ) {
+type ComponentConfig = {
+	mode: 'local' | 'image' | 'inherit';
+	dir?: string,
+	image?: string,
+	tag?: string,
+}
+
+export function processComponentOptionInput( passedParam: string, type: string ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
 	if ( param.includes( '/' ) ) {
@@ -110,7 +119,9 @@ type NewInstanceOptions = {
 	php: string,
 	wordpress: string,
 	muPlugins: string,
-	clientCode: string
+	clientCode: string,
+	elasticsearch: string,
+	mariadb: string,
 }
 
 type AppInfo = {
@@ -143,6 +154,8 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
+		elasticsearch: providedOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		mariadb: providedOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		wordpress: {},
 		muPlugins: {},
 		clientCode: {},
@@ -167,20 +180,29 @@ async function processComponent( component: string, option: string ) {
 	}
 
 	while ( 'local' === result?.mode ) {
-		const path = result.dir || '';
-		const isDirectory = path && fs.existsSync( path ) && fs.lstatSync( path ).isDirectory();
-		const isEmpty = isDirectory ? fs.readdirSync( path ).length === 0 : true;
+		const resolvedPath = resolvePath( result.dir || '' );
+		result.dir = resolvedPath;
+
+		const isDirectory = resolvedPath && fs.existsSync( resolvedPath ) && fs.lstatSync( resolvedPath ).isDirectory();
+		const isEmpty = isDirectory ? fs.readdirSync( resolvedPath ).length === 0 : true;
 
 		if ( isDirectory && ! isEmpty ) {
 			break;
 		} else {
-			const message = `Provided path "${ path || '' }" does not point to a non-empty directory.`;
+			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component );
 		}
 	}
 
 	return result;
+}
+
+export function resolvePath( input: string ): string {
+	// Resolve does not do ~ reliably
+	const resolvedPath = input.replace( /^~/, os.homedir() );
+	// And resolve to handle relative paths
+	return path.resolve( resolvedPath );
 }
 
 export async function promptForText( message: string, initial: string ) {
@@ -217,7 +239,7 @@ const componentDisplayNames = {
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string ) {
+export async function promptForComponent( component: string ): Promise<ComponentConfig> {
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [
 		{
@@ -273,7 +295,7 @@ export async function promptForComponent( component: string ) {
 	};
 }
 
-async function getLatestImageTags( component: string ): string[] {
+function getLatestImageTags( component: string ): string[] {
 	if ( component === 'wordpress' ) {
 		return [ '5.8', '5.7.2' ];
 	}

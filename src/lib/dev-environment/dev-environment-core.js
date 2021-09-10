@@ -13,24 +13,32 @@ import fs from 'fs';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
+import { prompt } from 'enquirer';
+import copydir from 'copy-dir';
 
 /**
  * Internal dependencies
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
-import { printTable } from './dev-environment-cli';
+import { searchAndReplace } from '../search-and-replace';
+import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
-import { DEV_ENVIRONMENT_COMPONENTS } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
-const configDefaultsFilePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.wp-config-defaults.php' );
 const landoFileName = '.lando.yml';
+
+const uploadPathString = 'uploads';
 
 type StartEnvironmentOptions = {
 	skipRebuild: boolean
 };
+
+type SQLImportPaths = {
+	resolvedPath: string,
+	dockerPath: string
+}
 
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
 	debug( 'Will start an environment', slug );
@@ -74,7 +82,6 @@ type NewInstanceData = {
 	siteSlug: string,
 	wpTitle: string,
 	multisite: boolean,
-	phpVersion: string,
 	wordpress: Object,
 	muPlugins: Object,
 	clientCode: Object,
@@ -94,9 +101,7 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 		throw new Error( 'Environment already exists.' );
 	}
 
-	const cleanedInstanceData = cleanInstanceData( instanceData );
-
-	await prepareLandoEnv( cleanedInstanceData, instancePath );
+	await prepareLandoEnv( instanceData, instancePath );
 }
 
 export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
@@ -182,34 +187,13 @@ export function doesEnvironmentExist( slug: string ) {
 	return fs.existsSync( instancePath );
 }
 
-function cleanInstanceData( instanceData: NewInstanceData ): NewInstanceData {
-	const cleanedData = {
-		...instanceData,
-	};
-
-	// resolve directory path for local mode, so relative paths can work reliably
-	for ( const componentKey of DEV_ENVIRONMENT_COMPONENTS ) {
-		const component = instanceData[ componentKey ];
-		if ( 'local' === component.mode ) {
-			component.dir = path.resolve( component.dir );
-			cleanedData[ componentKey ] = component;
-		}
-	}
-
-	return cleanedData;
-}
-
 async function prepareLandoEnv( instanceData, instancePath ) {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
-	const configDefaultsTargetPath = path.join( instancePath, 'config' );
-	const configDefaultsFileTargetPath = path.join( configDefaultsTargetPath, 'wp-config-defaults.php' );
 
 	fs.mkdirSync( instancePath, { recursive: true } );
 	fs.writeFileSync( landoFileTargetPath, landoFile );
-	fs.mkdirSync( configDefaultsTargetPath );
-	fs.copyFileSync( configDefaultsFilePath, configDefaultsFileTargetPath );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 }
@@ -289,4 +273,65 @@ export async function getApplicationInformation( appId: number, envType: string 
 	}
 
 	return appData;
+}
+
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<SQLImportPaths> {
+	let resolvedPath = resolvePath( fileName );
+
+	if ( ! fs.existsSync( resolvedPath ) ) {
+		throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
+	}
+
+	// Run Search and Replace if the --search-replace flag was provided
+	if ( searchReplace && searchReplace.length ) {
+		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
+			isImport: true,
+			output: true,
+			inPlace,
+		} );
+
+		if ( typeof outputFileName !== 'string' ) {
+			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
+		}
+
+		const environmentPath = getEnvironmentPath( slug );
+		const baseName = path.basename( outputFileName );
+
+		resolvedPath = path.join( environmentPath, baseName );
+		fs.renameSync( outputFileName, resolvedPath );
+	}
+
+	const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
+	return {
+		resolvedPath,
+		dockerPath,
+	};
+}
+
+export async function importMediaPath( slug: string, filePath: string ) {
+	const resolvedPath = resolvePath( filePath );
+
+	if ( ! fs.existsSync( resolvedPath ) || ! fs.lstatSync( resolvedPath ).isDirectory() ) {
+		throw new Error( 'The provided path does not exist or it is not valid (see "--help" for examples)' );
+	}
+
+	const files = fs.readdirSync( resolvedPath );
+	if ( files.indexOf( uploadPathString ) > -1 ) {
+		const confirm = await prompt( {
+			type: 'confirm',
+			name: 'continue',
+			message: 'The provided path contains an uploads folder inside. Do you want to continue?',
+		} );
+
+		if ( ! confirm.continue ) {
+			return;
+		}
+	}
+
+	const environmentPath = getEnvironmentPath( slug );
+	const uploadsPath = path.join( environmentPath, uploadPathString );
+
+	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
+	copydir.sync( resolvedPath, uploadsPath );
+	console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
 }

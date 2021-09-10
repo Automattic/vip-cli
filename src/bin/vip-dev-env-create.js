@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
@@ -22,7 +22,6 @@ import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/co
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create`,
@@ -38,11 +37,11 @@ const examples = [
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug test`,
-		description: 'Creates a blank local dev environment with custom name "test", this enables to create multiple independend environments',
+		description: 'Creates a blank local dev environment with custom name "test", this enables to create multiple independent environments',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress "5.6" --client-code "~/git/my_code"`,
-		description: 'Creates a local dev environment that is multisite and is using WP 5.6 and client code is expected to be in "~/git/my_code"',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress "5.8" --client-code "~/git/my_code"`,
+		description: 'Creates a local multisite dev environment using WP 5.8 and client code is expected to be in "~/git/my_code"',
 	},
 ];
 
@@ -50,10 +49,14 @@ command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site (default: "VIP Dev")' )
 	.option( 'multisite', 'Enable multisite install', undefined, value => 'false' !== value?.toLowerCase?.() )
-	.option( 'php', 'Use a specific PHP version' )
 	.option( 'wordpress', 'Use a specific WordPress version or local directory (default: last stable)' )
-	.option( 'mu-plugins', 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )
+	.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory (default: "auto": last commit in master)' )
 	.option( 'client-code', 'Use the client code from a local directory or VIP skeleton (default: use the VIP skeleton)' )
+	.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
+	.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
@@ -74,10 +77,10 @@ command()
 			if ( opt.app ) {
 				appInfo = await getApplicationInformation( opt.app, opt.env );
 			}
-		} catch ( e ) {
+		} catch ( error ) {
 			const message = `failed to fetch application "${ opt.app }" information`;
 
-			debug( `WARNING: ${ message }`, e.message );
+			debug( `WARNING: ${ message }`, error.message );
 			console.log( chalk.yellow( 'Warning:' ), message );
 		}
 
@@ -85,6 +88,9 @@ command()
 		const instanceDataWithSlug = {
 			...instanceData,
 			siteSlug: slug,
+			statsd: opt.statsd || false,
+			phpmyadmin: opt.phpmyadmin || false,
+			xdebug: opt.xdebug || false,
 		};
 
 		try {
@@ -94,7 +100,7 @@ command()
 
 			const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 			console.log( message );
-		} catch ( e ) {
-			exit.withError( e.message );
+		} catch ( error ) {
+			exit.withError( error.message );
 		}
 	} );
