@@ -21,8 +21,8 @@ const examples = [
 		description: 'Import the given SQL file to your site',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media https://<path_to_publicly_accessible_archive>`,
-		description: 'Import contents of the given archive file into the media library of your site',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads`,
+		description: 'Import contents of the given WP uploads folder file into the media library of the default dev environment',
 	},
 ];
 
@@ -31,5 +31,6 @@ command( {
 } )
 	.examples( examples )
 	.command( 'sql', 'Import SQL to your dev-env database from a file' )
-	.command( 'media', 'Import media files to the dev environment of your application from a compressed web archive' )
+	.command( 'media', 'Import media files to the dev environment of your application from a compressed web archive. ' +
+		'This command will copy the contents of a folder to the `uploads` folder of the target dev environment.' )
 	.argv( process.argv );

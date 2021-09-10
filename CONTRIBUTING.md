@@ -26,7 +26,9 @@ VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get
 
 ### Adding commands
 
-* New command names should use the singular case (e.g. site vs sites)
+* New command names should use the singular form (e.g. site vs sites).
+* Add new commands to `package.json#bin`.
+* Run `npm link` so that `arg` knows how to spawn the command locally. (Skipping this step will result in `Error: spawn vip-command ENOENT`.)
 
 ### Adding libraries
 
