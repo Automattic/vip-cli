@@ -120,14 +120,14 @@ const cancelCommand = async guid => {
 	return api
 		.mutate( {
 		// $FlowFixMe: gql template is not supported by flow
-			mutation: gql`	
-			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){	
-				cancelWPCLICommand( input: $input ) {	
-					command {	
-						id	
-					}	
-				}	
-			}	
+			mutation: gql`
+			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
+				cancelWPCLICommand( input: $input ) {
+					command {
+						id
+					}
+				}
+			}
 		`,
 			variables: {
 				input: {
