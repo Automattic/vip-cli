@@ -297,7 +297,7 @@ export async function promptForComponent( component: string ): Promise<Component
 
 function getLatestImageTags( component: string ): string[] {
 	if ( component === 'wordpress' ) {
-		return [ '5.8', '5.7.2' ];
+		return [ '5.8.1', '5.8', '5.7.3', '5.7.2', 'master' ];
 	}
 
 	return [];
