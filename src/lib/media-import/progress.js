@@ -5,15 +5,12 @@
  * External dependencies
  */
 import { stdout as singleLogLine } from 'single-line-log';
-import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import { getGlyphForStatus } from 'lib/media-import/status';
 import { RunningSprite } from 'lib/cli/format';
-
-const debug = debugLib( 'vip:lib/media-import/progress' );
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 
