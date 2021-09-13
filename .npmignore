@@ -32,7 +32,6 @@ node_modules/
 
 # Liniting rules
 .eslintrc.json
-.eslines.json
 
 # Configs
 .flowconfig
