@@ -34,19 +34,19 @@ export default class Token {
 			return;
 		}
 
-		const t = jwtDecode( token );
+		const decodedToken = jwtDecode( token );
 		this.raw = token;
 
-		if ( t.id ) {
-			this.id = t.id;
+		if ( decodedToken.id ) {
+			this.id = decodedToken.id;
 		}
 
-		if ( t.iat ) {
-			this.iat = new Date( t.iat * 1000 );
+		if ( decodedToken.iat ) {
+			this.iat = new Date( decodedToken.iat * 1000 );
 		}
 
-		if ( t.exp ) {
-			this.exp = new Date( t.exp * 1000 );
+		if ( decodedToken.exp ) {
+			this.exp = new Date( decodedToken.exp * 1000 );
 		}
 	}
 
