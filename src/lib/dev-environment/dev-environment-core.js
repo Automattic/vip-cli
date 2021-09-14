@@ -27,9 +27,12 @@ import app from '../api/app';
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-env.lando.template.yml.ejs' );
+const nginxFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-env.nginx.template.conf.ejs' );
 const landoFileName = '.lando.yml';
+const nginxFileName = 'extra.conf';
 
 const uploadPathString = 'uploads';
+const nginxPathString = 'nginx';
 
 type StartEnvironmentOptions = {
 	skipRebuild: boolean
@@ -85,6 +88,7 @@ type NewInstanceData = {
 	wordpress: Object,
 	muPlugins: Object,
 	clientCode: Object,
+	mediaRedirect: string,
 }
 
 export async function createEnvironment( instanceData: NewInstanceData ) {
@@ -99,6 +103,11 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 
 	if ( alreadyExists ) {
 		throw new Error( 'Environment already exists.' );
+	}
+
+	if ( instanceData.mediaRedirect && ! instanceData.mediaRedirect.match( /^http/ ) ) {
+		// We need to make sure the redirect is an absolute path
+		instanceData.mediaRedirect = `https://${ instanceData.mediaRedirect }`;
 	}
 
 	await prepareLandoEnv( instanceData, instancePath );
@@ -189,13 +198,20 @@ export function doesEnvironmentExist( slug: string ) {
 
 async function prepareLandoEnv( instanceData, instancePath ) {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
+	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
+	const nginxFolderPath = path.join( instancePath, nginxPathString );
+	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
 
 	fs.mkdirSync( instancePath, { recursive: true } );
+	fs.mkdirSync( nginxFolderPath, { recursive: true } );
+
 	fs.writeFileSync( landoFileTargetPath, landoFile );
+	fs.writeFileSync( nginxFileTargetPath, nginxFile );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
+	debug( `Nginx file created in ${ nginxFileTargetPath }` );
 }
 
 function getAllEnvironmentNames() {
