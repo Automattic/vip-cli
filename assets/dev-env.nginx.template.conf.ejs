@@ -1,4 +1,4 @@
-<% if ( imageRedirectUrl ) { %>
+<% if ( mediaRedirect ) { %>
 
 location ~* \.(png|jpg|jpeg|gif|ico)$ {
     expires max;
@@ -7,7 +7,7 @@ location ~* \.(png|jpg|jpeg|gif|ico)$ {
 }
 
 location @prod_site {
-    rewrite ^/(.*)$ <%= imageRedirectUrl %>/$1 redirect;
+    rewrite ^/(.*)$ <%= mediaRedirect %>/$1 redirect;
 }
 
 <% } %>
