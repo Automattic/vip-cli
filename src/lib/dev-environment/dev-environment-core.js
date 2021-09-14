@@ -26,7 +26,7 @@ import app from '../api/app';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-environment.lando.template.yml.ejs' );
+const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-env.lando.template.yml.ejs' );
 const landoFileName = '.lando.yml';
 
 const uploadPathString = 'uploads';

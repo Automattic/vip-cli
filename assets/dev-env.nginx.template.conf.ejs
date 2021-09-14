@@ -1,0 +1,13 @@
+<% if ( imageRedirectUrl ) { %>
+
+location ~* \.(png|jpg|jpeg|gif|ico)$ {
+    expires max;
+    log_not_found off;
+    try_files $uri @prod_site;
+}
+
+location @prod_site {
+    rewrite ^/(.*)$ <%= imageRedirectUrl %>/$1 redirect;
+}
+
+<% } %>
