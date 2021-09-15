@@ -126,6 +126,11 @@ const extraServiceDisplayConfiguration = [
 		label: 'enterprise search',
 		protocol: 'http',
 	},
+	{
+		name: 'phpmyadmin',
+		// Skipping, as the phpmyadmin was already printed by the regular services
+		skip: true,
+	},
 ];
 
 async function getExtraServicesConnections( lando, app ) {
@@ -136,6 +141,11 @@ async function getExtraServicesConnections( lando, app ) {
 		const displayConfiguration = extraServiceDisplayConfiguration.find(
 			conf => conf.name === service.service
 		) || {};
+
+		if ( displayConfiguration.skip ) {
+			continue;
+		}
+
 		const containerScan = service?.id ? await lando.engine.docker.scan( service?.id ) : null;
 		if ( containerScan?.NetworkSettings?.Ports ) {
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
