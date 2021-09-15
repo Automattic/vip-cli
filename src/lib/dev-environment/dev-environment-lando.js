@@ -120,15 +120,11 @@ export async function landoInfo( instancePath: string ) {
 	return appInfo;
 }
 
-const extraServicesForTable = [
+const extraServiceDisplayConfiguration = [
 	{
 		name: 'vip-search',
 		label: 'enterprise search',
 		protocol: 'http',
-	},
-	{
-		name: 'database',
-		label: 'database',
 	},
 ];
 
@@ -136,9 +132,11 @@ async function getExtraServicesConnections( lando, app ) {
 	const extraServices = {};
 	const allServices = await lando.engine.list( { project: app.project } );
 
-	for ( const extraService of extraServicesForTable ) {
-		const serviceInfo = allServices.find( service => service.service === extraService.name );
-		const containerScan = serviceInfo?.id ? await lando.engine.docker.scan( serviceInfo?.id ) : null;
+	for ( const service of allServices ) {
+		const displayConfiguration = extraServiceDisplayConfiguration.find(
+			conf => conf.name === service.service
+		) || {};
+		const containerScan = service?.id ? await lando.engine.docker.scan( service?.id ) : null;
 		if ( containerScan?.NetworkSettings?.Ports ) {
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
 				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
@@ -146,10 +144,13 @@ async function getExtraServicesConnections( lando, app ) {
 
 			if ( mappings?.length ) {
 				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
-				extraServices[ extraService.label ] = ( extraService.protocol ? `${ extraService.protocol }://` : '' ) + `${ host }:${ port }`;
+				const label = displayConfiguration.label || service.service;
+				const value = ( displayConfiguration.protocol ? `${ displayConfiguration.protocol }://` : '' ) + `${ host }:${ port }`;
+				extraServices[ label ] = value;
 			}
 		}
 	}
+
 	return extraServices;
 }
 
