@@ -88,7 +88,7 @@ type NewInstanceData = {
 	wordpress: Object,
 	muPlugins: Object,
 	clientCode: Object,
-	mediaRedirect: string,
+	mediaRedirectDomain: string,
 }
 
 export async function createEnvironment( instanceData: NewInstanceData ) {
@@ -105,9 +105,9 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 		throw new Error( 'Environment already exists.' );
 	}
 
-	if ( instanceData.mediaRedirect && ! instanceData.mediaRedirect.match( /^http/ ) ) {
+	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
 		// We need to make sure the redirect is an absolute path
-		instanceData.mediaRedirect = `https://${ instanceData.mediaRedirect }`;
+		instanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
 	await prepareLandoEnv( instanceData, instancePath );
