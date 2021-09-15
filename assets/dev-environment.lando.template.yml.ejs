@@ -21,8 +21,10 @@ services:
 
   nginx:
     type: compose
+    ssl: true
+    sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.1
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
 <% wpVolumes() %>
@@ -49,22 +51,24 @@ services:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
-    type: mariadb:custom
-    overrides:
+    type: compose
+    services:
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
       ports:
         - ":3306"
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
-        MARIADB_DATABASE: 'database'
-        MYSQL_DATABASE: 'database'
-        MARIADB_PASSWORD: 'mariadb'
-        MARIADB_USER: 'mariadb'
-        LANDO_NEEDS_EXEC: 'DOEEET'
+      volumes:
+        - database_data:/var/lib/mysql
+    volumes:
+      database_data:
 
   memcached:
-    type: memcached:1.5.12
+    type: memcached:custom
+    overrides:
+      image: memcached:1.6-alpine3.14
+      command: docker-entrypoint.sh memcached
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:

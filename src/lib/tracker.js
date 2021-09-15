@@ -45,8 +45,8 @@ export async function trackEvent( ...args ): Promise<Response> {
 	try {
 		const client = await getInstance();
 		return client.trackEvent( ...args );
-	} catch ( e ) {
-		debug( 'trackEvent() failed', e );
+	} catch ( err ) {
+		debug( 'trackEvent() failed', err );
 	}
 }
 
@@ -56,8 +56,8 @@ export async function aliasUser( vipUserId ): Promise<Response> {
 			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
 			Token.setUuid( vipUserId );
 		}
-	} catch ( e ) {
-		debug( 'aliasUser() failed', e );
+	} catch ( err ) {
+		debug( 'aliasUser() failed', err );
 	}
 }
 

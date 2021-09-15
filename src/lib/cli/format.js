@@ -51,7 +51,7 @@ function ids( data: Array<any> ): string {
 	}
 
 	const id = [];
-	data.forEach( d => id.push( d.id ) );
+	data.forEach( datum => id.push( datum.id ) );
 
 	return id.join( ' ' );
 }
@@ -68,20 +68,20 @@ function csv( data: Array<any> ): string {
 function table( data: Array<any> ): string {
 	const Table = require( 'cli-table' );
 	const fields = Object.keys( data[ 0 ] );
-	const t = new Table( {
+	const dataTable = new Table( {
 		head: formatFields( fields ),
 		style: {
 			head: [ 'blueBright' ],
 		},
 	} );
 
-	data.forEach( d => {
+	data.forEach( datum => {
 		const row = [];
-		fields.forEach( h => row.push( d[ h ] ) );
-		t.push( row );
+		fields.forEach( field => row.push( datum[ field ] ) );
+		dataTable.push( row );
 	} );
 
-	return t.toString();
+	return dataTable.toString();
 }
 
 function formatFields( fields: Array<string> ) {
@@ -99,16 +99,16 @@ export function keyValue( values: Array<Tuple> ): string {
 
 	pairs ? lines.push( '===================================' ) : '';
 
-	for ( const i of values ) {
-		let v = i.value;
+	for ( const { key, value } of values ) {
+		let formattedValue = value;
 
-		switch ( i.key.toLowerCase() ) {
+		switch ( key.toLowerCase() ) {
 			case 'environment':
-				v = formatEnvironment( v );
+				formattedValue = formatEnvironment( value );
 				break;
 		}
 
-		lines.push( `+ ${ i.key }: ${ v }` );
+		lines.push( `+ ${ key }: ${ formattedValue }` );
 	}
 
 	lines.push( '===================================' );
@@ -140,20 +140,20 @@ export function capitalize( str: string ): string {
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
-	i: number;
+	count: number;
 
 	constructor() {
-		this.i = 0;
+		this.count = 0;
 	}
 
 	next() {
-		if ( ++this.i >= RUNNING_SPRITE_GLYPHS.length ) {
-			this.i = 0;
+		if ( ++this.count >= RUNNING_SPRITE_GLYPHS.length ) {
+			this.count = 0;
 		}
 	}
 
 	toString() {
-		const glyph = RUNNING_SPRITE_GLYPHS[ this.i ];
+		const glyph = RUNNING_SPRITE_GLYPHS[ this.count ];
 		this.next(); // TODO: throttle
 		return glyph;
 	}

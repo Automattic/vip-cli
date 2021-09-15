@@ -24,7 +24,10 @@
     "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
     "vip-dev-env-destroy": "dist/bin/vip-dev-env-destroy.js",
     "vip-dev-env-info": "dist/bin/vip-dev-env-info.js",
-    "vip-dev-env-exec": "dist/bin/vip-dev-env-exec.js"
+    "vip-dev-env-exec": "dist/bin/vip-dev-env-exec.js",
+    "vip-dev-env-import": "dist/bin/vip-dev-env-import.js",
+    "vip-dev-env-import-sql": "dist/bin/vip-dev-env-import-sql.js",
+    "vip-dev-env-import-media": "dist/bin/vip-dev-env-import-media.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
@@ -105,7 +108,7 @@
     "ini": "1.3.8",
     "json2csv": "5.0.6",
     "jwt-decode": "2.2.0",
-    "lando": "git+https://github.com/lando/cli.git#v3.3.0",
+    "lando": "git+https://github.com/lando/cli.git#v3.3.2",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "rollbar": "2.22.0",

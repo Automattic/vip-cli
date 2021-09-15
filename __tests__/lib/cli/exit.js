@@ -11,8 +11,8 @@ import env from 'lib/env';
 // Mock console.log()
 let output;
 global.console = {
-	log: ( m, d = '' ) => output += m + d + '\n',
-	error: ( m, d = '' ) => output += m + d + '\n',
+	log: message => output += message + '\n',
+	error: message => output += message + '\n',
 };
 jest.spyOn( global.console, 'log' );
 

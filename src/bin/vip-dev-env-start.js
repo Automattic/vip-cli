@@ -25,7 +25,6 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 // PowerShell command for Windows Docker patch
 const dockerWindowsPathCmd = 'wsl -d docker-desktop bash -c "sysctl -w vm.max_map_count=262144"';
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } start`,
@@ -49,7 +48,7 @@ command()
 			if ( process.platform === 'win32' ) {
 				debug( 'Windows platform detected. Applying Docker patch...' );
 
-				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
+				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
 					if ( error != null ) {
 						debug( error );
 						console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
@@ -61,7 +60,7 @@ command()
 			}
 
 			await startEnvironment( slug, options );
-		} catch ( e ) {
-			handleCLIException( e );
+		} catch ( error ) {
+			handleCLIException( error );
 		}
 	} );

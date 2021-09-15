@@ -120,14 +120,14 @@ const cancelCommand = async guid => {
 	return api
 		.mutate( {
 		// $FlowFixMe: gql template is not supported by flow
-			mutation: gql`	
-			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){	
-				cancelWPCLICommand( input: $input ) {	
-					command {	
-						id	
-					}	
-				}	
-			}	
+			mutation: gql`
+			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
+				cancelWPCLICommand( input: $input ) {
+					command {
+						id
+					}
+				}
+			}
 		`,
 			variables: {
 				input: {
@@ -316,16 +316,16 @@ commandWrapper( {
 			let result;
 			try {
 				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
-			} catch ( e ) {
+			} catch ( error ) {
 				// If this was a GraphQL error, print that to the message to the line
-				if ( e.graphQLErrors ) {
-					e.graphQLErrors.forEach( error => {
-						console.log( chalk.red( 'Error:' ), error.message );
+				if ( error.graphQLErrors ) {
+					error.graphQLErrors.forEach( err => {
+						console.log( chalk.red( 'Error:' ), err.message );
 					} );
 				} else {
 					// Else, other type of error, just dump it
-					rollbar.error( e );
-					console.log( e );
+					rollbar.error( error );
+					console.log( error );
 				}
 
 				if ( ! isSubShell ) {

@@ -21,7 +21,6 @@ import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } stop`,
@@ -42,7 +41,7 @@ command()
 
 			const message = chalk.green( '✓' ) + ' environment stopped.\n';
 			console.log( message );
-		} catch ( e ) {
-			handleCLIException( e );
+		} catch ( error ) {
+			handleCLIException( error );
 		}
 	} );
