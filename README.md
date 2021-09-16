@@ -27,6 +27,33 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.1.0 (16 September 2021)
+
+- #857  Remove select DB checks update/remove-some-db-checks    MERGED
+- #864  Adding WordPress versions to dev-env    add/dev-env-wp-versions MERGED
+- #868  persist database data in between container restarts     update/persist_data     MERGED
+- #862  Fix lint warnings       fix/lint-errors MERGED
+- #867  Update dependency lando to v3.3.2       renovate/lando-3.x      MERGED
+- #863  Add links to CONTRIBUTING and SECURITY  improve/readme-link-to-contributing     MERGED
+- #855  Add some helpful hints for new command scaffolding      improve/cli-scaffold-docs       MERGED
+- #856  Adding media import command on dev environment  add/dev-env-media-import        MERGED
+- #849  Adding SQL import to dev environment    add/dev-env-import      MERGED
+- #854  Updating command descriptions and arguments on dev-env  update/cli-descriptions MERGED
+- #850  Use official memcached image on dev-env add/memcached-image     MERGED
+- #853  Enable ssl forwarding on dev-env        dev_env_enable_ssl      MERGED
+- #851  Conditionally disabling statsd on mu-plugins    fix/statsd-errors       MERGED
+- #852  Fixing Prettier format annotation typo  fix/format-typo MERGED
+- #843  Removing custom wp-config-defaults      delete/custom-wp-config-file    MERGED
+- #848  Not using a prefix to all dev environments      fix/dev-env-name        MERGED
+- #847  Update dependency lando to v3.3.0       renovate/lando-3.x      MERGED
+- #840  Use official Elasticsearch image on dev-env     fix/elasticsearch-arm   MERGED
+- #845  Fix MariaDB healthcheck fix/mariadb-healthcheck MERGED
+- #846  dev-env: Update error message for directory prompt      fix/double_negative     MERGED
+- #842  Removing PHP parameter from dev environment     delete/php-parameter    MERGED
+- #839  Use official MariaDB image and enable version selection on dev-env      fix/mariadb-arm MERGED
+
+https://github.com/Automattic/vip/releases/tag/v2.1.0
+
 ### 2.0.14 (26 August 2021)
 
 - Update dependency graphql to v15.5.1 #796
