@@ -19,8 +19,8 @@ const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );
 // Mock console.log()
 let output;
 global.console = {
-	log: ( m, d = '' ) => output += m + d + '\n',
-	error: ( m, d = '' ) => output += m + d + '\n',
+	log: message => output += message + '\n',
+	error: message => output += message + '\n',
 };
 jest.spyOn( global.console, 'log' );
 
@@ -38,8 +38,8 @@ describe( 'lib/validations/sql', () => {
 				const badSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dump.sql' );
 				// const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
 				await validate( badSqlDumpPath );
-			} catch ( e ) {
-				debug( 'Error:', e.toString() );
+			} catch ( err ) {
+				debug( 'Error:', err.toString() );
 			}
 			debug( 'output', output );
 		} );
@@ -74,8 +74,8 @@ describe( 'lib/validations/sql', () => {
 				output = '';
 				const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
 				await validate( duplicateCreateTableSqlDumpPath );
-			} catch ( e ) {
-				debug( 'Error:', e.toString() );
+			} catch ( err ) {
+				debug( 'Error:', err.toString() );
 			}
 			debug( 'output', output );
 		} );
