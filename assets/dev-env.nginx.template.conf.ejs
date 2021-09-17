@@ -1,6 +1,6 @@
 <% if ( mediaRedirectDomain ) { %>
 
-location ~* \.(png|jpg|jpeg|gif|ico)$ {
+location ~* /wp-content/uploads {
     expires max;
     log_not_found off;
     try_files $uri @prod_site;
