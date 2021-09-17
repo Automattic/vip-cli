@@ -46,12 +46,6 @@ describe( 'lib/validations/sql', () => {
 		it( 'an error, and exits with code 1', () => {
 			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
 		} );
-		it( 'instances of USE statements', () => {
-			expect( output ).toContain( 'USE statement on line(s) 3' );
-		} );
-		it( 'instances of CREATE DATABASE statements', () => {
-			expect( output ).toContain( 'CREATE DATABASE statement on line(s) 1' );
-		} );
 		it( 'instances of TRIGGER statements', () => {
 			expect( output ).toContain( 'TRIGGER statement on line(s) 16' );
 		} );

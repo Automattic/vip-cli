@@ -24,7 +24,7 @@ services:
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.1
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
 <% wpVolumes() %>
@@ -151,8 +151,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
+    user: root
     cmd:
-      - wp
+      - wp --allow-root
 
   add-site:
     service: php
