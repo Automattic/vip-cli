@@ -27,6 +27,33 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.1.0 (16 September 2021)
+
+- #857  Remove select DB checks
+- #864  Adding WordPress versions to dev-env
+- #868  persist database data in between container restarts
+- #862  Fix lint warnings
+- #867  Update dependency lando to v3.3.2
+- #863  Add links to CONTRIBUTING and SECURITY
+- #855  Add some helpful hints for new command scaffolding
+- #856  Adding media import command on dev environment
+- #849  Adding SQL import to dev environment
+- #854  Updating command descriptions and arguments on dev-env
+- #850  Use official memcached image on dev-env
+- #853  Enable ssl forwarding on dev-env
+- #851  Conditionally disabling statsd on mu-plugins
+- #852  Fixing Prettier format annotation typo
+- #843  Removing custom wp-config-defaults
+- #848  Not using a prefix to all dev environments
+- #847  Update dependency lando to v3.3.0
+- #840  Use official Elasticsearch image on dev-env
+- #845  Fix MariaDB healthcheck
+- #846  dev-env: Update error message for directory prompt
+- #842  Removing PHP parameter from dev environment
+- #839  Use official MariaDB image and enable version selection on dev-env
+
+https://github.com/Automattic/vip/releases/tag/v2.1.0
+
 ### 2.0.14 (26 August 2021)
 
 - Update dependency graphql to v15.5.1 #796
