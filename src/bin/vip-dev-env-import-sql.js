@@ -43,7 +43,6 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
-	.option( 'add-vipgo-user', 'Add vipgo:password user to the site to enable easy access' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ fileName ] = unmatchedArgs;
@@ -62,10 +61,8 @@ command( {
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( slug, cacheArg );
 
-			if ( opt.addVipgoUser ) {
-				const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
-				await exec( slug, addUserArg );
-			}
+			const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
+			await exec( slug, addUserArg );
 		} catch ( error ) {
 			handleCLIException( error );
 		}
