@@ -42,13 +42,14 @@ const runCmd = async function() {
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'sync', 'Sync production to a development environment' )
-		.command( 'wp', 'Run WP CLI commands against an environment' )
-		.argv( process.argv );
+		.command( 'wp', 'Run WP CLI commands against an environment' );
 
 	// Gate access to VIP staff.
 	if ( await checkIfUserIsVip() ) {
 		cmd.command( 'config', 'Set configuration for your VIP applications' );
 	}
+
+	cmd.argv( process.argv );
 };
 
 const rootCmd = async function() {
