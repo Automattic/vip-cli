@@ -136,8 +136,8 @@ export async function uploadImportSqlFileToS3( {
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
-	} catch ( e ) {
-		throw `Unable to create temporary working directory: ${ e }`;
+	} catch ( err ) {
+		throw `Unable to create temporary working directory: ${ err }`;
 	}
 
 	debug(
@@ -243,8 +243,8 @@ export async function uploadUsingPutObject( {
 	let parsedResponse;
 	try {
 		parsedResponse = await parser.parseStringPromise( result );
-	} catch ( e ) {
-		throw `Invalid response from cloud service. ${ e }`;
+	} catch ( err ) {
+		throw `Invalid response from cloud service. ${ err }`;
 	}
 
 	const { Code, Message } = parsedResponse.Error || {};
@@ -354,8 +354,8 @@ export async function isFile( fileName: string ): Promise<boolean> {
 	try {
 		const stats = await getFileStats( fileName );
 		return stats.isFile();
-	} catch ( e ) {
-		debug( `isFile error: ${ e }` );
+	} catch ( err ) {
+		debug( `isFile error: ${ err }` );
 		return false;
 	}
 }
@@ -401,7 +401,7 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 
 	const numParts = Math.ceil( fileSize / UPLOAD_PART_SIZE );
 
-	return new Array( numParts ).fill( undefined ).map( ( _, index ) => {
+	return new Array( numParts ).fill( undefined ).map( ( _numPart, index ) => {
 		const start = index * UPLOAD_PART_SIZE;
 		const remaining = fileSize - start;
 		const end = ( remaining > UPLOAD_PART_SIZE ? start + UPLOAD_PART_SIZE : start + remaining ) - 1;

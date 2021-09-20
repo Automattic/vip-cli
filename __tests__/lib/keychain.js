@@ -18,16 +18,16 @@ let keychain;
 describe( 'token tests (secure)', () => {
 	it( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( async () => {
-			const p = keychain.getPassword( account );
-			await expect( p ).resolves.toBe( password );
+			const passwd = keychain.getPassword( account );
+			await expect( passwd ).resolves.toBe( password );
 		} );
 	} );
 
 	it( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( () => {
 			return keychain.deletePassword( account ).then( async () => {
-				const p = keychain.getPassword( account );
-				await expect( p ).resolves.toBeNull();
+				const passwd = keychain.getPassword( account );
+				await expect( passwd ).resolves.toBeNull();
 			} );
 		} );
 	} );
@@ -38,19 +38,19 @@ describe( 'token tests (insecure)', () => {
 
 	it( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( async () => {
-			const p = keychain.getPassword( account );
-			await expect( p ).resolves.toBe( password );
+			const passwd = keychain.getPassword( account );
+			await expect( passwd ).resolves.toBe( password );
 		} );
 	} );
 
 	it( 'should correctly set multiple tokens', () => {
 		return keychain.setPassword( 'first', 'password1' ).then( () => {
 			return keychain.setPassword( 'second', 'password2' ).then( async () => {
-				const p = keychain.getPassword( 'first' );
-				await expect( p ).resolves.toBe( 'password1' );
+				const passwd = keychain.getPassword( 'first' );
+				await expect( passwd ).resolves.toBe( 'password1' );
 
-				const p2 = keychain.getPassword( 'second' );
-				await expect( p2 ).resolves.toBe( 'password2' );
+				const passwd2 = keychain.getPassword( 'second' );
+				await expect( passwd2 ).resolves.toBe( 'password2' );
 			} );
 		} );
 	} );
@@ -58,8 +58,8 @@ describe( 'token tests (insecure)', () => {
 	it( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( () => {
 			return keychain.deletePassword( account ).then( async () => {
-				const p = keychain.getPassword( account );
-				await expect( p ).resolves.toBeNull();
+				const passwd = keychain.getPassword( account );
+				await expect( passwd ).resolves.toBeNull();
 			} );
 		} );
 	} );
@@ -68,11 +68,11 @@ describe( 'token tests (insecure)', () => {
 		return keychain.setPassword( 'first', 'password1' ).then( () => {
 			return keychain.setPassword( 'second', 'password2' ).then( () => {
 				return keychain.deletePassword( 'first' ).then( async () => {
-					const p = keychain.getPassword( 'first' );
-					await expect( p ).resolves.toBeNull();
+					const passwd = keychain.getPassword( 'first' );
+					await expect( passwd ).resolves.toBeNull();
 
-					const p2 = keychain.getPassword( 'second' );
-					await expect( p2 ).resolves.toBe( 'password2' );
+					const passwd2 = keychain.getPassword( 'second' );
+					await expect( passwd2 ).resolves.toBe( 'password2' );
 				} );
 			} );
 		} );
@@ -98,16 +98,16 @@ describe( 'token tests (browser)', () => {
 
 	it( 'should correctly set token', () => {
 		return keychain.setPassword( account, password ).then( async () => {
-			const p = keychain.getPassword( account );
-			await expect( p ).resolves.toBe( password );
+			const passwd = keychain.getPassword( account );
+			await expect( passwd ).resolves.toBe( password );
 		} );
 	} );
 
 	it( 'should correctly delete token', () => {
 		return keychain.setPassword( account, password ).then( () => {
 			return keychain.deletePassword( account ).then( async () => {
-				const p = keychain.getPassword( account );
-				await expect( p ).resolves.toBeNull();
+				const passwd = keychain.getPassword( account );
+				await expect( passwd ).resolves.toBeNull();
 			} );
 		} );
 	} );

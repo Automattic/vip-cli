@@ -56,11 +56,11 @@ command( {
 						},
 					},
 				} );
-		} catch ( e ) {
-			if ( e.graphQLErrors ) {
+		} catch ( error ) {
+			if ( error.graphQLErrors ) {
 				let bail = false;
 
-				for ( const err of e.graphQLErrors ) {
+				for ( const err of error.graphQLErrors ) {
 					if ( err.message !== 'Site is already syncing' ) {
 						bail = true;
 						console.log( chalk.red( 'Error:' ), err.message );
@@ -76,22 +76,22 @@ command( {
 
 			syncing = true;
 			await trackEvent( 'sync_command_execute_error', {
-				error: `Already syncing: ${ e.message }`,
+				error: `Already syncing: ${ error.message }`,
 			} );
 		}
 
 		const sprite = {
-			i: 0,
+			count: 0,
 			sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
 			next() {
-				this.i++;
+				this.count++;
 
-				if ( this.i >= this.sprite.length ) {
-					this.i = 0;
+				if ( this.count >= this.sprite.length ) {
+					this.count = 0;
 				}
 
 				return {
-					value: this.sprite[ this.i ],
+					value: this.sprite[ this.count ],
 					done: false,
 				};
 			},
@@ -116,9 +116,9 @@ command( {
 		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
 		console.log( `       to: ${ formatEnvironment( opts.env.type ) }` );
 
-		let i = 0;
+		let count = 0;
 		const progress = setInterval( async () => {
-			if ( i++ % 10 === 0 ) {
+			if ( count++ % 10 === 0 ) {
 				// Query the API 1/10 of the time (every 1s)
 				// The rest of the iterations are just for moving the spinner
 				api
