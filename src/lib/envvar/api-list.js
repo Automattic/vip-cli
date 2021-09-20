@@ -34,7 +34,8 @@ const query = gql`
 	}
 `;
 
-export default async function listEnvVars( appId: number, envId: number, format: string ) {
+// List the names (but not values) of environment variables.
+export default async function listEnvVars( appId: number, envId: number ) {
 	const api = await API();
 
 	const variables = {
@@ -44,16 +45,5 @@ export default async function listEnvVars( appId: number, envId: number, format:
 
 	const { data } = await api.query( { query, variables } );
 
-	// Environment variable values are never exposed by the public API.
-	const value = '**********';
-
-	// Vary data by expected format.
-	let key: string = 'name';
-	if ( 'keyValue' === format ) {
-		key = 'key';
-	} else if ( 'ids' === format ) {
-		key = 'id';
-	}
-
-	return data.app.environments[ 0 ].environmentVariables.nodes.map( ( { name } ) => ( { [ key ]: name, value } ) );
+	return data.app.environments[ 0 ].environmentVariables.nodes.map( ( { name } ) => name );
 }

@@ -42,7 +42,7 @@ export async function listEnvVarsCommand( arg: string[], opt ): void {
 	debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
 	await trackEvent( 'envvar_list_command_execute', trackingParams );
 
-	const envvars = await listEnvVars( opt.app.id, opt.env.id, opt.format )
+	const envvars = await listEnvVars( opt.app.id, opt.env.id )
 		.catch( async err => {
 			rollbar.error( err );
 			await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
@@ -57,13 +57,18 @@ export async function listEnvVarsCommand( arg: string[], opt ): void {
 		process.exit();
 	}
 
-	// Display context for non-machine-readable formats.
-	if ( [ 'keyValue', 'table' ].includes( opt.format ) ) {
-		console.log( 'For security, the values of environment variables cannot be retrieved.' );
-		console.log();
+	// Vary data by expected format.
+	let key = 'name';
+	if ( 'keyValue' === opt.format ) {
+		key = 'key';
+	} else if ( 'ids' === opt.format ) {
+		key = 'id';
 	}
 
-	console.log( formatData( envvars, opt.format ) );
+	// Format as an object for formatData.
+	const envvarsObject = envvars.map( name => ( { [ key ]: name } ) );
+
+	console.log( formatData( envvarsObject, opt.format ) );
 }
 
 command( {
