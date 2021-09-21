@@ -27,7 +27,7 @@ const query = gql`
 					total
 					nodes {
 						name
-						# value
+						value
 					}
 				}
 			}
