@@ -268,14 +268,17 @@ ${ maybeExitPrompt }
 
 		const fileErrors = results.failureDetails?.fileErrors;
 		if ( !! fileErrors && fileErrors.length > 0 ) {
-			progressTracker.suffix += `${ chalk.yellow( `⚠️ ${ fileErrors.length } file error(s) found` ) }`;
+			progressTracker.suffix += `${ chalk.yellow( `⚠️  ${ fileErrors.length } file error(s) have been extracted` ) }`;
+			if ( results.filesTotal - results.filesProcessed !== fileErrors.length ) {
+				progressTracker.suffix += `. ${ chalk.italic.yellow( 'File-errors report size threshold reached.' ) }`;
+			}
 			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
 			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ !! exportFileErrorsToJson ? '.json' : '.txt' }`;
 			try {
 				await fsp.writeFile( errorsFile, formattedData );
-				progressTracker.suffix += `\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;
+				progressTracker.suffix += `\n\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;
 			} catch ( writeFileErr ) {
-				progressTracker.suffix += `\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }\n\n`;
+				progressTracker.suffix += `\n\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }\n\n`;
 			}
 		}
 
