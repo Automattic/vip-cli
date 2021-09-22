@@ -11,12 +11,15 @@
  */
 import { checkFeatureEnabled, exitWhenFeatureDisabled, checkIsVIP } from 'lib/cli/apiConfig';
 import * as featureFlags from 'lib/api/feature-flags';
+import Token from 'lib/token';
 
 jest.mock( 'lib/tracker' );
 const getFeatureSpy = jest.spyOn( featureFlags, 'get' );
 
 describe( 'apiConfig', () => {
 	beforeEach( () => {
+		Token.set( 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA' );
+
 		getFeatureSpy.mockClear();
 	} );
 
@@ -87,6 +90,13 @@ describe( 'apiConfig', () => {
 			} );
 			const check = await checkIsVIP();
 			expect( getFeatureSpy ).toHaveBeenCalledTimes( 1 );
+			expect( check ).toBe( false );
+		} );
+		it( 'returns false when token is not set', async () => {
+			Token.set( null );
+
+			const check = await checkIsVIP();
+
 			expect( check ).toBe( false );
 		} );
 		it( 'returns false when the public API has no response', async () => {

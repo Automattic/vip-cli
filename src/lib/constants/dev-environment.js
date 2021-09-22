@@ -1,34 +1,25 @@
 export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-env';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
-export const DOCKER_HUB_PAGE_SIZE = 10;
-export const DOCKER_HUB_WP_IMAGES = `https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=${ DOCKER_HUB_PAGE_SIZE }`;
-export const DOCKER_HUB_JETPACK_IMAGES = `https://hub.docker.com/v2/repositories/wpvipdev/jetpack/tags/?page_size=${ DOCKER_HUB_PAGE_SIZE }`;
-
 export const DEV_ENVIRONMENT_CONTAINER_IMAGES = {
 	wordpress: {
-		image: 'wpvipdev/wordpress',
-	},
-	jetpack: {
-		image: 'wpvipdev/jetpack',
+		image: 'ghcr.io/automattic/vip-container-images/wordpress',
 	},
 	muPlugins: {
-		image: 'wpvipdev/mu-plugins',
-		tag: 'auto',
+		image: 'ghcr.io/automattic/vip-container-images/mu-plugins',
+		tag: 'latest',
 	},
 	clientCode: {
-		image: 'wpvipdev/skeleton',
-		tag: '181a17d9aedf7da73730d65ccef3d8dbf172a5c5',
+		image: 'ghcr.io/automattic/vip-container-images/skeleton',
+		tag: 'latest',
 	},
 };
 
 export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
-	phpVersion: '7.4',
-	jetpack: {
-		mode: 'inherit',
-	},
+	elasticsearchVersion: '7.10.1',
+	mariadbVersion: '10.3',
 	wordpress: {},
 	muPlugins: {},
 	clientCode: {},
@@ -45,3 +36,5 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up your local dev environment.\n\n' +
 	'Sensible default values were pre-selected for convenience. ' +
 	'You may also choose to create multiple environments with different settings using the --slug option.\n\n';
+
+export const DEV_ENVIRONMENT_COMPONENTS = [ 'wordpress', 'muPlugins', 'clientCode' ];

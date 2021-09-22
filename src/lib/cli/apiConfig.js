@@ -13,6 +13,7 @@
 import { trackEvent } from 'lib/tracker';
 import * as exit from './exit';
 import * as featureFlags from 'lib/api/feature-flags';
+import Token from 'lib/token';
 
 export async function checkFeatureEnabled(
 	featureName: string,
@@ -54,14 +55,25 @@ export async function checkIsVIP(): Promise<boolean> {
 
 	let isVip = false;
 	try {
-		const res = await featureFlags.get();
-		isVip = res?.data?.me?.isVIP;
+		isVip = await checkIfUserIsVip();
 	} catch ( err ) {
 		const message = err.toString();
 		await trackEvent( 'checkFeatureEnabled_fetch_error', { error: message } );
 	}
 
 	return !! isVip;
+}
+
+export async function checkIfUserIsVip() {
+	const token = await Token.get();
+
+	if ( token && token.valid() ) {
+		const res = await featureFlags.get();
+
+		return !! res?.data?.me?.isVIP;
+	}
+
+	return false;
 }
 
 export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {

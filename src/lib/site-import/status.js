@@ -266,7 +266,7 @@ ${ maybeExitPrompt }
 							jobStatus = 'error';
 						} else 	if ( statusSteps.every( ( { result } ) => result === 'success' ) ) {
 							jobStatus = 'success';
-							importJob.completedAt = new Date( Math.max( ...statusSteps.map( ( { finished_at } ) => finished_at ), 0 ) * 1000 ).toUTCString();
+							importJob.completedAt = new Date( Math.max( ...statusSteps.map( step => step.finished_at ), 0 ) * 1000 ).toUTCString();
 						}
 
 						if ( importStatus?.progress?.started_at ) {
@@ -275,16 +275,12 @@ ${ maybeExitPrompt }
 
 						importJob.progress = { status: jobStatus, steps: jobSteps };
 					}
-				} else {
-					if ( ! importJob ) {
-						return resolve( 'No import job found' );
-					}
-
-					( {
-						progress: { status: jobStatus, steps: jobSteps },
-					} = importJob );
+				} else if ( ! importJob ) {
+					return resolve( 'No import job found' );
 				}
 
+				jobStatus = importJob.progress.status;
+				jobSteps = importJob.progress.steps;
 				createdAt = importJob.createdAt;
 				completedAt = importJob.completedAt;
 
@@ -306,7 +302,7 @@ ${ maybeExitPrompt }
 				let jobCreationTime;
 				try {
 					jobCreationTime = new Date( createdAt ).getTime();
-				} catch ( e ) {
+				} catch ( err ) {
 					debug( 'Unable to parse createdAt to a Date' );
 				}
 

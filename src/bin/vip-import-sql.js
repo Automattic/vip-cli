@@ -113,7 +113,7 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 
 	try {
 		await checkFileAccess( fileName );
-	} catch ( e ) {
+	} catch ( err ) {
 		await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
 		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 	}
@@ -303,7 +303,14 @@ const displayPlaybook = ( {
 			console.log( columns( tableNames ) );
 		} else {
 			// we have siteArray from the API, use it and the table names together
-			if ( ! siteArray.length ) {
+			if ( siteArray === 'undefined' || ! siteArray ) {
+				console.log(
+					chalk.yellowBright(
+						'Unable to determine the subsites affected by this import, please proceed only if you are confident on the contents in the import file.'
+					)
+				);
+				return;
+			} else if ( ! siteArray?.length ) {
 				throw new Error( 'There were no sites in your multisite installation' );
 			}
 
@@ -508,7 +515,7 @@ Processing the SQL import for your environment...
 				}
 
 				// determine all the replacements required
-				const replacementsArr = pairs.map( str => str.split( ',' ).map( s => s.trim() ) );
+				const replacementsArr = pairs.map( pair => pair.split( ',' ).map( str => str.trim() ) );
 
 				startImportVariables.input.searchReplace = replacementsArr.map( arr => {
 					return {

@@ -4,7 +4,6 @@
 /**
  * External dependencies
  */
-import args from 'args';
 import opn from 'opn';
 import { prompt } from 'enquirer';
 import chalk from 'chalk';
@@ -29,6 +28,24 @@ if ( config && config.environment !== 'production' ) {
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
+const runCmd = function() {
+	const cmd = command();
+	cmd
+		.command( 'logout', 'Logout from your current session', async () => {
+			await Token.purge();
+			await trackEvent( 'logout_command_execute' );
+			console.log( 'You are successfully logged out.' );
+		} )
+		.command( 'app', 'List and modify your VIP applications' )
+		.command( 'config', 'Set configuration for your VIP applications' )
+		.command( 'dev-env', 'Use local dev-environment' )
+		.command( 'import', 'Import media or SQL files into your VIP applications' )
+		.command( 'search-replace', 'Perform search and replace tasks on files' )
+		.command( 'sync', 'Sync production to a development environment' )
+		.command( 'wp', 'Run WP CLI commands against an environment' )
+		.argv( process.argv );
+};
+
 const rootCmd = async function() {
 	let token = await Token.get();
 
@@ -38,25 +55,8 @@ const rootCmd = async function() {
 	debug( 'Argv:', process.argv );
 
 	if ( isLogoutCommand || isHelpCommand || ( token && token.valid() ) ) {
-		const cmd = command();
-		cmd
-			.command( 'logout', 'Logout from your current session', async () => {
-				await Token.purge();
-				await trackEvent( 'logout_command_execute' );
-				console.log( 'You are successfully logged out.' );
-			} )
-			.command( 'app', 'List and modify your VIP applications' )
-			.command( 'import', 'Import Media or SQL files into your VIP applications' )
-			.command( 'search-replace', 'Perform Search and Replace tasks on files' )
-			.command( 'sync', 'Sync production to a development environment' )
-			.command( 'wp', 'Run WP CLI commands against an environment' )
-			.command( 'dev-env', 'Use local dev-environment' );
-
-		cmd.argv( process.argv );
+		runCmd();
 	} else {
-		// Bypass helper function
-		args.parse( process.argv );
-
 		console.log();
 		console.log( '  Welcome to' );
 		console.log( '   _    __ ________         ________    ____' );
@@ -73,13 +73,13 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_execute' );
 
-		const c = await prompt( {
+		const answer = await prompt( {
 			type: 'confirm',
 			name: 'continue',
 			message: 'Ready?',
 		} );
 
-		if ( ! c.continue ) {
+		if ( ! answer.continue ) {
 			await trackEvent( 'login_command_browser_cancelled' );
 
 			return;
@@ -89,21 +89,19 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_browser_opened' );
 
-		let t = await prompt( {
+		const { token: tokenInput } = await prompt( {
 			type: 'password',
 			name: 'token',
 			message: 'Access Token:',
 		} );
 
-		t = t.token;
-
 		try {
-			token = new Token( t );
-		} catch ( e ) {
+			token = new Token( tokenInput );
+		} catch ( err ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
 
-			rollbar.error( e );
-			await trackEvent( 'login_command_token_submit_error', { error: e.message } );
+			rollbar.error( err );
+			await trackEvent( 'login_command_token_submit_error', { error: err.message } );
 
 			return;
 		}
@@ -126,13 +124,13 @@ const rootCmd = async function() {
 
 		try {
 			Token.set( token.raw );
-		} catch ( e ) {
+		} catch ( err ) {
 			await trackEvent( 'login_command_token_submit_error', {
-				error: e.message,
+				error: err.message,
 			} );
 
-			rollbar.error( e );
-			throw e;
+			rollbar.error( err );
+			throw err;
 		}
 
 		// De-anonymize user for tracking
@@ -140,19 +138,7 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_token_submit_success' );
 
-		// Exec the command we originally  wanted
-		const argv = process.argv.slice( 2 );
-		debug( 'Argv', argv );
-		if ( argv.length ) {
-			if ( ! args.isDefined( argv, 'commands' ) ) {
-				return args.showHelp();
-			}
-
-			return args.runCommand( { usage: argv } );
-		}
-
-		const { spawn } = require( 'child_process' );
-		spawn( process.argv[ 0 ], process.argv.slice( 1 ), { stdio: 'inherit' } );
+		runCmd();
 	}
 };
 
