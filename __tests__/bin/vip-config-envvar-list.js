@@ -76,12 +76,12 @@ describe( 'listEnvVarsCommand', () => {
 	} );
 
 	it( 'returns env vars from listEnvVars with correct format', async () => {
-		const returnedEnvVars = [ { key: 'hello' } ];
+		const returnedEnvVars = [ 'hello' ];
 		listEnvVars.mockImplementation( () => Promise.resolve( returnedEnvVars ) );
 
 		await listEnvVarsCommand( args, opts );
 
-		expect( formatData ).toHaveBeenCalledWith( returnedEnvVars, 'csv' );
+		expect( formatData ).toHaveBeenCalledWith( [ { name: 'hello' } ], 'csv' );
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
