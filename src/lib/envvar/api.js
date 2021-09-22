@@ -13,12 +13,16 @@ import chalk from 'chalk';
  */
 import { debug } from 'lib/envvar/logging';
 import deleteEnvVar from './api-delete';
+import getEnvVar from './api-get';
+import getEnvVars from './api-get-all';
 import listEnvVars from './api-list';
 import setEnvVar from './api-set';
 
 // Reexport for convenience
 export {
 	deleteEnvVar,
+	getEnvVar,
+	getEnvVars,
 	listEnvVars,
 	setEnvVar,
 };

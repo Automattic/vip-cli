@@ -10,6 +10,8 @@
     "vip-config": "dist/bin/vip-config.js",
     "vip-config-envvar": "dist/bin/vip-config-envvar.js",
     "vip-config-envvar-delete": "dist/bin/vip-config-envvar-delete.js",
+    "vip-config-envvar-get": "dist/bin/vip-config-envvar-get.js",
+    "vip-config-envvar-get-all": "dist/bin/vip-config-envvar-get-all.js",
     "vip-config-envvar-list": "dist/bin/vip-config-envvar-list.js",
     "vip-config-envvar-set": "dist/bin/vip-config-envvar-set.js",
     "vip-dev-env": "dist/bin/vip-dev-env.js",
