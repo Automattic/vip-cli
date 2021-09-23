@@ -15,22 +15,22 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import { formatData } from 'lib/cli/format';
-import { appQuery, listEnvVars } from 'lib/envvar/api';
+import { appQuery, getEnvVars } from 'lib/envvar/api';
 import { debug, getEnvContext } from 'lib/envvar/logging';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
 
-const usage = 'vip config envvar list';
+const usage = 'vip config envvar get-all';
 
 // Command examples
 const examples = [
 	{
 		usage,
-		description: 'Lists all environment variables (names only)',
+		description: 'Get the values of all environment variables',
 	},
 ];
 
-export async function listEnvVarsCommand( arg: string[], opt ): void {
+export async function getAllEnvVarsCommand( arg: string[], opt ): void {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,
@@ -39,18 +39,18 @@ export async function listEnvVarsCommand( arg: string[], opt ): void {
 		org_id: opt.app.organization.id,
 	};
 
-	debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
-	await trackEvent( 'envvar_list_command_execute', trackingParams );
+	debug( `Request: Get all environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
+	await trackEvent( 'envvar_get_all_command_execute', trackingParams );
 
-	const envvars = await listEnvVars( opt.app.id, opt.env.id )
+	const envvars = await getEnvVars( opt.app.id, opt.env.id )
 		.catch( async err => {
 			rollbar.error( err );
-			await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
+			await trackEvent( 'envvar_get_all_query_error', { ...trackingParams, error: err.message } );
 
 			throw err;
 		} );
 
-	await trackEvent( 'envvar_list_command_success', trackingParams );
+	await trackEvent( 'envvar_get_all_command_success', trackingParams );
 
 	if ( 0 === envvars.length ) {
 		console.log( chalk.yellow( 'There are no environment variables' ) );
@@ -65,8 +65,7 @@ export async function listEnvVarsCommand( arg: string[], opt ): void {
 		key = 'id';
 	}
 
-	// Format as an object for formatData.
-	const envvarsObject = envvars.map( name => ( { [ key ]: name } ) );
+	const envvarsObject = envvars.map( ( { name: envvarName, value } ) => ( { [ key ]: envvarName, value } ) );
 
 	console.log( formatData( envvarsObject, opt.format ) );
 }
@@ -79,4 +78,5 @@ command( {
 	usage,
 } )
 	.examples( examples )
-	.argv( process.argv, listEnvVarsCommand );
+	.argv( process.argv, getAllEnvVarsCommand );
+

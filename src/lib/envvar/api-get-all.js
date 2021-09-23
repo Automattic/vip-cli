@@ -11,7 +11,7 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 
 const query = gql`
-	query GetEnvironmentVariables(
+	query GetEnvironmentVariablesWithValues(
 		$appId: Int!
 		$envId: Int!
 	) {
@@ -27,6 +27,7 @@ const query = gql`
 					total
 					nodes {
 						name
+						value
 					}
 				}
 			}
@@ -34,8 +35,7 @@ const query = gql`
 	}
 `;
 
-// List the names (but not values) of environment variables.
-export default async function listEnvVars( appId: number, envId: number ) {
+export default async function getEnvVars( appId: number, envId: number ) {
 	const api = await API();
 
 	const variables = {
@@ -45,5 +45,6 @@ export default async function listEnvVars( appId: number, envId: number ) {
 
 	const { data } = await api.query( { query, variables } );
 
-	return data.app.environments[ 0 ].environmentVariables.nodes.map( ( { name } ) => name );
+	return data.app.environments[ 0 ].environmentVariables.nodes;
 }
+

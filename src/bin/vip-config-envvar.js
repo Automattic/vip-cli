@@ -18,6 +18,8 @@ command( {
 	requiredArgs: 1,
 } )
 	.command( 'delete', 'Permanently delete an environment variable' )
-	.command( 'list', 'List all environment variables' )
+	.command( 'get', 'Get the value of an environment variable' )
+	.command( 'get-all', 'Get the values of all environment variable' )
+	.command( 'list', 'List the names of all environment variables' )
 	.command( 'set', 'Add or update an environment variable' )
 	.argv( process.argv );

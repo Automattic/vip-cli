@@ -14,7 +14,6 @@ command( {
 	requiredArgs: 2,
 } )
 	.command( 'envvar', 'Manage environment variables for an application environment' )
-	.argv( process.argv, async ( arg, opts ) => {
-		console.log( 'hello from here' );
+	.argv( process.argv, async () => {
 		process.exit( 0 );
 	} );
