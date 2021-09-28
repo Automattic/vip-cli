@@ -91,6 +91,10 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+      volumes:
+        - search_data:/usr/share/elasticsearch/data
+    volumes:
+      search_data:
 
 <% if ( statsd ) { %>
   statsd:

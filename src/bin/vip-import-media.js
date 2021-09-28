@@ -91,9 +91,9 @@ command( {
 	module: 'import-media',
 	requiredArgs: 1,
 	requireConfirm: `
-${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `/uploads` directory,' ) }
+${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `uploads/` directory,' ) }
 ${ chalk.red.bold( 'only the files present inside that directory will be imported and the rest will be ignored.' ) }
-${ chalk.red.bold( 'If no `/uploads` directory is found, all files will be imported, as is.' ) }
+${ chalk.red.bold( 'If no `uploads/` directory is found, all files will be imported, as is.' ) }
 
 Are you sure you want to import the contents of the url?
 `,
