@@ -27,6 +27,7 @@ services:
       image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
+        - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
 
   php:
