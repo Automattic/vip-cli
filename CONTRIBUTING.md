@@ -34,6 +34,30 @@ VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get
 
 New libraries should generally support both CLI and web contexts, though some cases that won't make sense (e.g. formatting for CLI output). Ensuring the libraries are useful everywhere will allow us to offer consistent experiences regardless of the interface.
 
+## Release & Deployment Process
+
+Our release flow for VIP CLI follows this pattern:
+
+**_feature branch -> develop branch -> master branch -> NPM release_**
+
+- For feature branches, please follow A8C branch naming conventions (e.g.- `add/data-sync-command`, `fix/subsite-launch-command`, etc.)
+- Include a Changelog for all npm version releases, including any minor or major versions
+- This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
+- Merge changes from your feature branch to the `develop` branch
+- Please do not merge any changes into the `master` branch yet. All features/changes that are not ready to be public should stay in the `develop` branch to avoid conflicts when releasing urgent fixes.
+- Changes from the `develop` branch are merged to `master` and released on NPM following our release schedule
+- Any team member that is part of our NPM organization can release new minor or major versions, but please have a Customer Experience (Pâtisserie) team member look over the changes first.
+
+### Changelogs
+Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the V[VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
+
+### Release Schedule
+We deploy changes from our `develop` branch to the `master` branch on Tuesdays from 4AM to 5PM Pacific Time.
+
+Changes that are not ready to be publicly released should stay in the `develop` branch to avoid conflicts with any urgent fixes we may need to roll out. Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via npm at any time outside of our release schedule.
+
+All other changes should follow the schedule so that we can monitor the newly released changes.
+
 ## Releasing / Publishing
 
 ### Pre-publish Checks
@@ -59,6 +83,13 @@ Prepare the release by making sure that:
 1. The release has been tested across macOS, Windows, and Linux.
 1. The [changelog](https://github.com/Automattic/vip/blob/master/README.md#changelog) has been updated on `master`.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this, just-in-case).
+
+#### Changelog Generator Hint:
+
+```
+export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
+gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s*\S\+\s*\S\+\s*$//' -e 's/^/- #/'
+```
 
 Then, let's publish:
 

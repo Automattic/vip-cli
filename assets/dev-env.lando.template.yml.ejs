@@ -27,6 +27,7 @@ services:
       image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
+        - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
 
   php:
@@ -92,6 +93,10 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+      volumes:
+        - search_data:/usr/share/elasticsearch/data
+    volumes:
+      search_data:
 
 <% if ( statsd ) { %>
   statsd:
@@ -153,8 +158,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
+    user: root
     cmd:
-      - wp
+      - wp --allow-root
 
   add-site:
     service: php

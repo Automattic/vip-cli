@@ -1,0 +1,13 @@
+<% if ( mediaRedirectDomain ) { %>
+
+location ~* /wp-content/uploads {
+    expires max;
+    log_not_found off;
+    try_files $uri @prod_site;
+}
+
+location @prod_site {
+    rewrite ^/(.*)$ <%= mediaRedirectDomain %>/$1 redirect;
+}
+
+<% } %>

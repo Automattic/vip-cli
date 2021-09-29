@@ -65,7 +65,7 @@ function csv( data: Array<any> ): string {
 	return parser.parse( data );
 }
 
-function table( data: Array<any> ): string {
+export function table( data: Array<any> ): string {
 	const Table = require( 'cli-table' );
 	const fields = Object.keys( data[ 0 ] );
 	const dataTable = new Table( {
