@@ -56,6 +56,8 @@ services:
     services:
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
+      ports:
+        - ":3306"
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
       volumes:
