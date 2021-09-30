@@ -51,12 +51,18 @@ command( {
 
 		try {
 			const { resolvedPath, dockerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
-			const arg = [ 'wp', 'db', 'import', dockerPath ];
-			await exec( slug, arg );
+			const importArg = [ 'wp', 'db', 'import', dockerPath ];
+			await exec( slug, importArg );
 
 			if ( searchReplace && searchReplace.length && ! inPlace ) {
 				fs.unlinkSync( resolvedPath );
 			}
+
+			const cacheArg = [ 'wp', 'cache', 'flush' ];
+			await exec( slug, cacheArg );
+
+			const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
+			await exec( slug, addUserArg );
 		} catch ( error ) {
 			handleCLIException( error );
 		}
