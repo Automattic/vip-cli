@@ -178,7 +178,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				.mockResolvedValueOnce( input.mode )
 				.mockResolvedValueOnce( input.path );
 
-			const result = await promptForComponent( input.component );
+			const result = await promptForComponent( input.component, true );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
