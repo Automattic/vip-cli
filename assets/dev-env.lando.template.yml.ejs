@@ -47,9 +47,11 @@ services:
           volume:
             nocopy: true
 <% wpVolumes() %>
-
-    run_as_root:
+    run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
+    run_as_root:
+      - echo "Copying dev-env-plugin.php to mu-plugins"
+      - cp /dev-tools/dev-env-plugin.php /wp/wp-content/mu-plugins/
 
   database:
     type: compose
