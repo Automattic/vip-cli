@@ -255,19 +255,19 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		value: 'image',
 	} );
 
-	let initial = 'image';
+	let initialMode = 'image';
 	if ( 'clientCode' === component ) {
-		initial = 'local';
+		initialMode = 'local';
 	}
 
-	let modeResult = initial;
+	let modeResult = initialMode;
 	const selectMode = choices.length > 1;
 	if ( selectMode ) {
-		const initialIx = choices.findIndex( choice => choice.value === initial );
+		const initialModeIx = choices.findIndex( choice => choice.value === initialMode );
 		const select = new Select( {
 			message: `How would you like to source ${ componentDisplayName }`,
 			choices,
-			initial: initialIx,
+			initial: initialModeIx,
 		} );
 
 		modeResult = await select.run();
