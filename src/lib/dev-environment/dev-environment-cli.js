@@ -263,11 +263,11 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	let modeResult = initialMode;
 	const selectMode = choices.length > 1;
 	if ( selectMode ) {
-		const initialModeIx = choices.findIndex( choice => choice.value === initialMode );
+		const initialModeIndex = choices.findIndex( choice => choice.value === initialMode );
 		const select = new Select( {
 			message: `How would you like to source ${ componentDisplayName }`,
 			choices,
-			initial: initialModeIx,
+			initial: initialModeIndex,
 		} );
 
 		modeResult = await select.run();
