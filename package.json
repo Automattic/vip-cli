@@ -104,7 +104,7 @@
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.1",
     "chalk": "4.1.2",
-    "cli-columns": "^3.1.2",
+    "cli-columns": "^4.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
     "debug": "4.3.2",
