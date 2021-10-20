@@ -41,11 +41,6 @@ function getLandoConfig() {
 			},
 		],
 		proxyName: 'vip-dev-env-proxy',
-		// This is a way to make lando config merging actually not include any of its fallback
-		// Each item in the array will overwrite one fallback port. And there are 4 default fallbacks
-		// for both http an https each.
-		proxyHttpFallbacks: [ '80', '80', '80', '80' ],
-		proxyHttpsFallbacks: [ '443', '443', '443', '443' ],
 	};
 }
 
