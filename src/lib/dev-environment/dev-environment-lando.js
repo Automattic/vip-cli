@@ -40,6 +40,7 @@ function getLandoConfig() {
 				subdir: '.',
 			},
 		],
+		proxyName: 'vip-dev-env-proxy',
 	};
 }
 
