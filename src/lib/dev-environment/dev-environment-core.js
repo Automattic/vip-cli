@@ -329,7 +329,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 	let inContainerPath;
 	if ( path.sep === '\\' ) {
 		// Because the file path generated for windows will have \ instead of / we need to replace that as well so that the path inside the container (unix) still works.
-		inContainerPath = homeDirPathInsideContainers + pathWithoutHome.replace( /\\/g, '/');
+		inContainerPath = homeDirPathInsideContainers + pathWithoutHome.replace( /\\/g, '/' );
 	} else {
 		inContainerPath = homeDirPathInsideContainers + pathWithoutHome;
 	}
