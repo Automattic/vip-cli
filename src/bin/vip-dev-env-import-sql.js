@@ -50,8 +50,9 @@ command( {
 		const slug = getEnvironmentName( opt );
 
 		try {
-			const { resolvedPath, dockerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
-			const importArg = [ 'wp', 'db', 'import', dockerPath ];
+			const { resolvedPath, inContainerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
+
+			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
 			await exec( slug, importArg );
 
 			if ( searchReplace && searchReplace.length && ! inPlace ) {
