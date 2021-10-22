@@ -325,13 +325,10 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 	 * docker container will get the file from within the mapped volume under /user.
 	 */
 
-	const pathWithoutHome = resolvedPath.replace( os.homedir(), '' );
-	let inContainerPath;
+	let inContainerPath = resolvedPath.replace( os.homedir(), homeDirPathInsideContainers );
 	if ( path.sep === '\\' ) {
 		// Because the file path generated for windows will have \ instead of / we need to replace that as well so that the path inside the container (unix) still works.
-		inContainerPath = homeDirPathInsideContainers + pathWithoutHome.replace( /\\/g, '/' );
-	} else {
-		inContainerPath = homeDirPathInsideContainers + pathWithoutHome;
+		inContainerPath = inContainerPath.replace( /\\/g, '/' );
 	}
 
 	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
