@@ -10,6 +10,7 @@ import debugLib from 'debug';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
@@ -128,14 +129,8 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	await landoDestroy( instancePath );
 
 	if ( removeFiles ) {
-		fs.rm( instancePath, { recursive: true }, err => {
-			if ( err ) {
-				console.log( `${ chalk.red( '✕' ) } Could not delete the environment files.` );
-				console.log( err );
-			} else {
-				console.log( `${ chalk.green( '✓' ) } Environment files deleted successfully.` );
-			}
-		} );
+		await fsPromises.rm( instancePath, { recursive: true } );
+		console.log( `${ chalk.green( '✓' ) } Environment files deleted successfully.` );
 	}
 }
 
