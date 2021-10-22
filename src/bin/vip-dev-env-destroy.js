@@ -46,7 +46,7 @@ command()
 			const removeFiles = ! ( opt.soft || false );
 			await destroyEnvironment( slug, removeFiles );
 
-			const message = chalk.green( '✓' ) + ' environment destroyed.\n';
+			const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 			console.log( message );
 		} catch ( error ) {
 			exit.withError( error.message );
