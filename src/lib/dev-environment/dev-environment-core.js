@@ -128,8 +128,14 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	await landoDestroy( instancePath );
 
 	if ( removeFiles ) {
-		// $FlowFixMe: Seems like a Flow issue, recursive is a valid option and it won't work without it.
-		fs.rmdirSync( instancePath, { recursive: true } );
+		fs.rm( instancePath, { recursive: true }, err => {
+			if ( err ) {
+				console.log( `${ chalk.red( '✕' ) } Could not delete the environment files.` );
+				console.log( err );
+			} else {
+				console.log( `${ chalk.green( '✓' ) } Environment files deleted successfully.` );
+			}
+		} );
 	}
 }
 
