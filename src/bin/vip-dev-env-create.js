@@ -84,6 +84,7 @@ command()
 			debug( `WARNING: ${ message }`, error.message );
 			console.log( chalk.yellow( 'Warning:' ), message );
 		}
+		debug( 'App Info', appInfo );
 
 		const instanceData = await promptForArguments( opt, appInfo );
 		const instanceDataWithSlug = {
@@ -92,7 +93,6 @@ command()
 			statsd: opt.statsd || false,
 			phpmyadmin: opt.phpmyadmin || false,
 			xdebug: opt.xdebug || false,
-			mediaRedirectDomain: opt.mediaRedirectDomain || '',
 		};
 
 		try {
