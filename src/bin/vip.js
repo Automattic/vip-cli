@@ -13,7 +13,6 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import config from 'root/config/config.json';
-import { checkIfUserIsVip } from 'lib/cli/apiConfig';
 import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
