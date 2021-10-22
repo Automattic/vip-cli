@@ -38,7 +38,7 @@ const runCmd = async function() {
 			console.log( 'You are successfully logged out.' );
 		} )
 		.command( 'app', 'List and modify your VIP applications' )
-		.command( 'config', 'Set configuration for your VIP applications' );
+		.command( 'config', 'Set configuration for your VIP applications' )
 		.command( 'dev-env', 'Use local dev-environment' )
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
