@@ -31,6 +31,8 @@ const nginxFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 
 const landoFileName = '.lando.yml';
 const nginxFileName = 'extra.conf';
 
+const homeDirPathInsideContainers = '/user';
+
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
@@ -40,7 +42,7 @@ type StartEnvironmentOptions = {
 
 type SQLImportPaths = {
 	resolvedPath: string,
-	dockerPath: string
+	inContainerPath: string
 }
 
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
@@ -317,10 +319,21 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		fs.renameSync( outputFileName, resolvedPath );
 	}
 
-	const dockerPath = resolvedPath.replace( os.homedir(), '/user' );
+	/**
+	 * Docker container does not have acces to the host filesystem.
+	 * However lando maps os.homedir() to /user in the container. So if we replace the path in the same way
+	 * in the Docker container will get the file from within the mapped volume under /user.
+	 */
+	let inContainerPath = resolvedPath.replace( os.homedir(), homeDirPathInsideContainers );
+	if ( path.sep === '\\' ) {
+		// Because the file path generated for windows will have \ instead of / we need to replace that as well so that the path inside the container (unix) still works.
+		inContainerPath = inContainerPath.replace( /\\/g, '/' );
+	}
+
+	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
 	return {
 		resolvedPath,
-		dockerPath,
+		inContainerPath,
 	};
 }
 
