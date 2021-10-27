@@ -49,7 +49,7 @@ Our release flow for VIP CLI follows this pattern:
 - Any team member that is part of our NPM organization can release new minor or major versions, but please have a Customer Experience (Pâtisserie) team member look over the changes first.
 
 ### Changelogs
-Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the V[VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
+Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
 
 ### Release Schedule
 
