@@ -12,7 +12,7 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.6
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.7
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -24,9 +24,10 @@ services:
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.1
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
+        - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
 
   php:
@@ -46,15 +47,21 @@ services:
           volume:
             nocopy: true
 <% wpVolumes() %>
-
-    run_as_root:
+    run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
+    run_as_root:
+      - echo "Copying dev-env-plugin.php to mu-plugins"
+      - cp /dev-tools/dev-env-plugin.php /wp/wp-content/mu-plugins/
 
   database:
     type: compose
     services:
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
+      ports:
+        - ":3306"
+      healthcheck:
+        test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
       volumes:
@@ -79,9 +86,8 @@ services:
 <% } %>
 
   vip-search:
-    type: elasticsearch:custom
-    portforward: true
-    overrides:
+    type: compose
+    services:
       image: elasticsearch:<%= elasticsearch %>
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
@@ -90,6 +96,14 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+      ports:
+        - ":9200"
+      healthcheck:
+        test: "curl --noproxy '*' -XGET localhost:9200"
+      volumes:
+        - search_data:/usr/share/elasticsearch/data
+    volumes:
+      search_data:
 
 <% if ( statsd ) { %>
   statsd:
@@ -99,17 +113,13 @@ services:
       command: node stats.js /config/statsd-config.js
 <% } %>
 
-<% if ( wordpress.mode == 'image' ) { %>
   wordpress:
     type: compose
     services:
       image: <%= wordpress.image %>:<%= wordpress.tag %>
       command: sh -c "rsync -a /wp/ /shared/; sleep infinity"
       volumes:
-        - wordpress:/shared
-    volumes:
-      wordpress: {}
-<% } %>
+        - ./wordpress:/shared
 
 <% if ( muPlugins.mode == 'image' ) { %>
   mu-plugins:
@@ -151,8 +161,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
+    user: root
     cmd:
-      - wp
+      - wp --allow-root
 
   add-site:
     service: php
@@ -170,15 +181,7 @@ tooling:
         - ./config:/wp/config
         - ./log:/wp/log
         - ./uploads:/wp/wp-content/uploads
-<% if ( wordpress.mode == 'image' ) { %>
-        - type: volume
-          source: wordpress
-          target: /wp
-          volume:
-            nocopy: true
-<% } else { %>
-        - <%= wordpress.dir %>:/wp
-<% } %>
+        - ./wordpress:/wp
 <% if ( muPlugins.mode == 'image' ) { %>
         - type: volume
           source: mu-plugins

@@ -96,22 +96,34 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{ // wordpress tag
 				param: 5.6,
 				option: 'wordpress',
+				allowLocal: true,
 				expected: {
 					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					mode: 'image',
 					tag: '5.6',
 				},
 			},
+			{ // wordpress local is not allowed
+				param: '/tmp/wp',
+				option: 'wordpress',
+				allowLocal: false,
+				expected: {
+					image: 'ghcr.io/automattic/vip-container-images/wordpress',
+					mode: 'image',
+					tag: '/tmp/wp',
+				},
+			},
 			{ // muPlugins - path
 				param: '~/path',
 				option: 'muPlugins',
+				allowLocal: true,
 				expected: {
 					mode: 'local',
 					dir: '~/path',
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = processComponentOptionInput( input.param, input.option );
+			const result = processComponentOptionInput( input.param, input.option, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -133,23 +145,13 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		} );
 
 		it.each( [
-			{
-				component: 'wordpress',
+			{ // mu plugins local
+				component: 'muPlugins',
 				mode: 'local',
 				path: '/tmp',
 				expected: {
 					mode: 'local',
 					dir: '/tmp',
-				},
-			},
-			{
-				component: 'wordpress',
-				mode: 'image',
-				path: '5.6',
-				expected: {
-					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/wordpress',
-					tag: '5.6',
 				},
 			},
 			{ // muPlugins hav just one tag - auto
@@ -176,7 +178,25 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				.mockResolvedValueOnce( input.mode )
 				.mockResolvedValueOnce( input.path );
 
-			const result = await promptForComponent( input.component );
+			const result = await promptForComponent( input.component, true );
+
+			expect( result ).toStrictEqual( input.expected );
+		} );
+
+		it.each( [
+			{
+				tag: '5.6',
+				expected: {
+					mode: 'image',
+					image: 'ghcr.io/automattic/vip-container-images/wordpress',
+					tag: '5.6',
+				},
+			},
+		] )( 'should return correct component for wordpress %p', async input => {
+			selectRunMock
+				.mockResolvedValueOnce( input.tag );
+
+			const result = await promptForComponent( 'wordpress', false );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );

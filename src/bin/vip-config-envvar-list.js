@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+
+/**
+ * @flow
+ * @format
+ */
+
+/**
+ * External dependencies
+ */
+import chalk from 'chalk';
+
+/**
+ * Internal dependencies
+ */
+import command from 'lib/cli/command';
+import { formatData } from 'lib/cli/format';
+import { appQuery, listEnvVars } from 'lib/envvar/api';
+import { debug, getEnvContext } from 'lib/envvar/logging';
+import { rollbar } from 'lib/rollbar';
+import { trackEvent } from 'lib/tracker';
+
+const usage = 'vip config envvar list';
+
+// Command examples
+const examples = [
+	{
+		usage,
+		description: 'Lists all environment variables (names only)',
+	},
+];
+
+export async function listEnvVarsCommand( arg: string[], opt ): void {
+	const trackingParams = {
+		app_id: opt.app.id,
+		command: usage,
+		env_id: opt.env.id,
+		format: opt.format,
+		org_id: opt.app.organization.id,
+	};
+
+	debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
+	await trackEvent( 'envvar_list_command_execute', trackingParams );
+
+	const envvars = await listEnvVars( opt.app.id, opt.env.id )
+		.catch( async err => {
+			rollbar.error( err );
+			await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
+
+			throw err;
+		} );
+
+	await trackEvent( 'envvar_list_command_success', trackingParams );
+
+	if ( 0 === envvars.length ) {
+		console.log( chalk.yellow( 'There are no environment variables' ) );
+		process.exit();
+	}
+
+	// Vary data by expected format.
+	let key = 'name';
+	if ( 'keyValue' === opt.format ) {
+		key = 'key';
+	} else if ( 'ids' === opt.format ) {
+		key = 'id';
+	}
+
+	// Format as an object for formatData.
+	const envvarsObject = envvars.map( name => ( { [ key ]: name } ) );
+
+	console.log( formatData( envvarsObject, opt.format ) );
+}
+
+command( {
+	appContext: true,
+	appQuery,
+	envContext: true,
+	format: true,
+	usage,
+} )
+	.examples( examples )
+	.argv( process.argv, listEnvVarsCommand );

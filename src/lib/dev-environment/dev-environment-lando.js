@@ -12,6 +12,7 @@ import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
+import App from 'lando/lib/app';
 
 /**
  * Internal dependencies
@@ -40,6 +41,7 @@ function getLandoConfig() {
 				subdir: '.',
 			},
 		],
+		proxyName: 'vip-dev-env-proxy',
 	};
 }
 
@@ -51,6 +53,8 @@ export async function landoStart( instancePath: string ) {
 
 	const app = lando.getApp( instancePath );
 	await app.init();
+
+	addHooks( app, lando );
 
 	await app.start();
 }
@@ -66,7 +70,35 @@ export async function landoRebuild( instancePath: string ) {
 
 	await ensureNoOrphantProxyContainer( lando );
 
+	addHooks( app, lando );
+
 	await app.rebuild();
+}
+
+function addHooks( app: App, lando: Lando ) {
+	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
+}
+
+async function healthcheckHook( app: App, lando: Lando ) {
+	try {
+		await lando.Promise.retry( async () => {
+			const list = await lando.engine.list( { project: app.project } );
+
+			const containersWithHealthCheck = list.filter( container => container.status.includes( 'health' ) );
+			const notHealthyContainers = containersWithHealthCheck.filter( container => ! container.status.includes( 'healthy' ) );
+
+			if ( notHealthyContainers.length ) {
+				for ( const container of notHealthyContainers ) {
+					console.log( `Waiting for service ${ container.service } ...` );
+				}
+				return Promise.reject( notHealthyContainers );
+			}
+		}, { max: 20, backoff: 1000 } );
+	} catch ( containersWithFailingHealthCheck ) {
+		for ( const container of containersWithFailingHealthCheck ) {
+			console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` );
+		}
+	}
 }
 
 export async function landoStop( instancePath: string ) {
@@ -99,19 +131,18 @@ export async function landoInfo( instancePath: string ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
-	const appInfo = landoUtils.startTable( app );
+	let appInfo = landoUtils.startTable( app );
 
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
 	const isUp = await isEnvUp( app );
 
-	// Enterprise Search
-	const vipSearch = app.info.find( service => service.service === 'vip-search' );
-	if ( vipSearch?.external_connection && isUp ) {
-		const { host, port } = vipSearch?.external_connection;
-		appInfo[ 'enterprise search' ] = `http://${ host }:${ port }`;
-	}
+	const extraService = await getExtraServicesConnections( lando, app );
+	appInfo = {
+		...appInfo,
+		...extraService,
+	};
 
 	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
@@ -119,6 +150,50 @@ export async function landoInfo( instancePath: string ) {
 	appInfo.name = appInfo.name.replace( /^vipdev/, '' );
 
 	return appInfo;
+}
+
+const extraServiceDisplayConfiguration = [
+	{
+		name: 'vip-search',
+		label: 'enterprise search',
+		protocol: 'http',
+	},
+	{
+		name: 'phpmyadmin',
+		// Skipping, as the phpmyadmin was already printed by the regular services
+		skip: true,
+	},
+];
+
+async function getExtraServicesConnections( lando, app ) {
+	const extraServices = {};
+	const allServices = await lando.engine.list( { project: app.project } );
+
+	for ( const service of allServices ) {
+		const displayConfiguration = extraServiceDisplayConfiguration.find(
+			conf => conf.name === service.service
+		) || {};
+
+		if ( displayConfiguration.skip ) {
+			continue;
+		}
+
+		const containerScan = service?.id ? await lando.engine.docker.scan( service?.id ) : null;
+		if ( containerScan?.NetworkSettings?.Ports ) {
+			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
+				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
+				.filter( externalMapping => externalMapping?.length );
+
+			if ( mappings?.length ) {
+				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
+				const label = displayConfiguration.label || service.service;
+				const value = ( displayConfiguration.protocol ? `${ displayConfiguration.protocol }://` : '' ) + `${ host }:${ port }`;
+				extraServices[ label ] = value;
+			}
+		}
+	}
+
+	return extraServices;
 }
 
 async function isEnvUp( app ) {
