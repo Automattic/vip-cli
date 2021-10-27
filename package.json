@@ -114,7 +114,7 @@
     "graphql-tag": "2.12.5",
     "ini": "2.0.0",
     "json2csv": "5.0.6",
-    "jwt-decode": "2.2.0",
+    "jwt-decode": "3.1.2",
     "lando": "git+https://github.com/lando/cli.git#v3.4.3",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
