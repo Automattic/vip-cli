@@ -60,6 +60,8 @@ services:
       command: docker-entrypoint.sh mysqld
       ports:
         - ":3306"
+      healthcheck:
+        test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
       volumes:
@@ -84,9 +86,8 @@ services:
 <% } %>
 
   vip-search:
-    type: elasticsearch:custom
-    portforward: true
-    overrides:
+    type: compose
+    services:
       image: elasticsearch:<%= elasticsearch %>
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
@@ -95,6 +96,10 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+      ports:
+        - ":9200"
+      healthcheck:
+        test: "curl --noproxy '*' -XGET localhost:9200"
       volumes:
         - search_data:/usr/share/elasticsearch/data
     volumes:
