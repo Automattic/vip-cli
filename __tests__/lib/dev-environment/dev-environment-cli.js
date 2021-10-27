@@ -93,29 +93,24 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
-			{ // wordpress tag
+			{ // base tag
 				param: 5.6,
-				option: 'wordpress',
 				allowLocal: true,
 				expected: {
-					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					mode: 'image',
 					tag: '5.6',
 				},
 			},
-			{ // wordpress local is not allowed
+			{ // if local is not allowed
 				param: '/tmp/wp',
-				option: 'wordpress',
 				allowLocal: false,
 				expected: {
-					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					mode: 'image',
 					tag: '/tmp/wp',
 				},
 			},
-			{ // muPlugins - path
+			{ // if local is  allowed
 				param: '~/path',
-				option: 'muPlugins',
 				allowLocal: true,
 				expected: {
 					mode: 'local',
@@ -123,7 +118,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = processComponentOptionInput( input.param, input.option, input.allowLocal );
+			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -159,8 +154,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/mu-plugins',
-					tag: 'latest',
 				},
 			},
 			{ // clientCode have just one tag
@@ -168,8 +161,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/skeleton',
-					tag: 'latest',
 				},
 			},
 		] )( 'should return correct component %p', async input => {
@@ -188,7 +179,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				tag: '5.6',
 				expected: {
 					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					tag: '5.6',
 				},
 			},

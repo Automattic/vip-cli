@@ -107,6 +107,7 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 
 	return {
 		mode: 'image',
+		tag: param,
 	};
 }
 
@@ -172,7 +173,7 @@ async function processComponent( component: string, option: string ) {
 
 	const allowLocal = component !== 'wordpress';
 	if ( option ) {
-		result = processComponentOptionInput( option, component, allowLocal );
+		result = processComponentOptionInput( option, allowLocal );
 	} else {
 		result = await promptForComponent( component, allowLocal );
 	}
