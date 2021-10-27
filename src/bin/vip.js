@@ -13,7 +13,6 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import config from 'root/config/config.json';
-import { checkIfUserIsVip } from 'lib/cli/apiConfig';
 import command from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
@@ -38,16 +37,12 @@ const runCmd = async function() {
 			console.log( 'You are successfully logged out.' );
 		} )
 		.command( 'app', 'List and modify your VIP applications' )
+		.command( 'config', 'Set configuration for your VIP applications' )
 		.command( 'dev-env', 'Use local dev-environment' )
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'wp', 'Run WP CLI commands against an environment' );
-
-	// Gate access to VIP staff.
-	if ( await checkIfUserIsVip() ) {
-		cmd.command( 'config', 'Set configuration for your VIP applications' );
-	}
 
 	cmd.argv( process.argv );
 };
