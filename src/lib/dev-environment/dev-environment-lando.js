@@ -12,6 +12,7 @@ import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
+import App from 'lando/lib/app';
 
 /**
  * Internal dependencies
@@ -53,6 +54,8 @@ export async function landoStart( instancePath: string ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
+	addHooks( app, lando );
+
 	await app.start();
 }
 
@@ -67,7 +70,35 @@ export async function landoRebuild( instancePath: string ) {
 
 	await ensureNoOrphantProxyContainer( lando );
 
+	addHooks( app, lando );
+
 	await app.rebuild();
+}
+
+function addHooks( app: App, lando: Lando ) {
+	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
+}
+
+async function healthcheckHook( app: App, lando: Lando ) {
+	try {
+		await lando.Promise.retry( async () => {
+			const list = await lando.engine.list( { project: app.project } );
+
+			const containersWithHealthCheck = list.filter( container => container.status.includes( 'health' ) );
+			const notHealthyContainers = containersWithHealthCheck.filter( container => ! container.status.includes( 'healthy' ) );
+
+			if ( notHealthyContainers.length ) {
+				for ( const container of notHealthyContainers ) {
+					console.log( `Waiting for service ${ container.service } ...` );
+				}
+				return Promise.reject( notHealthyContainers );
+			}
+		}, { max: 20, backoff: 1000 } );
+	} catch ( containersWithFailingHealthCheck ) {
+		for ( const container of containersWithFailingHealthCheck ) {
+			console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` );
+		}
+	}
 }
 
 export async function landoStop( instancePath: string ) {

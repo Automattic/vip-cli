@@ -97,10 +97,9 @@ Then, let's publish:
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
 1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
-1. Publish the release to npm (`npm run publish-please`)
+1. Make sure you're part of the Automattic organization in npm
+1. Publish the release to npm (`npm run publish-please --access public`)
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
-1. Bump the version to the next minor: `npm --no-git-tag-version version preminor`
-1. Commit and push (`git add -u` + `git commit` + `git push origin master`).
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
