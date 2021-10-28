@@ -12,7 +12,7 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.7
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.8
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -49,9 +49,6 @@ services:
 <% wpVolumes() %>
     run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
-    run_as_root:
-      - echo "Copying dev-env-plugin.php to mu-plugins"
-      - cp /dev-tools/dev-env-plugin.php /wp/wp-content/mu-plugins/
 
   database:
     type: compose
@@ -116,8 +113,8 @@ services:
   wordpress:
     type: compose
     services:
-      image: <%= wordpress.image %>:<%= wordpress.tag %>
-      command: sh -c "rsync -a /wp/ /shared/; sleep infinity"
+      image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
+      command: sh -c "rsync -a /wp/ /shared/; chown www-data -R /shared; sleep infinity"
       volumes:
         - ./wordpress:/shared
 
@@ -125,8 +122,8 @@ services:
   mu-plugins:
     type: compose
     services:
-      image: <%= muPlugins.image %>:<%= muPlugins.tag %>
-      command: sh -c 'rsync -a /mu-plugins/ /shared/; sh /autoupdate.sh /shared'
+      image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
+      command: sh /run.sh
       volumes:
         - mu-plugins:/shared
     volumes:
@@ -137,7 +134,7 @@ services:
   client-code:
     type: compose
     services:
-      image: <%= clientCode.image %>:<%= clientCode.tag %>
+      image: ghcr.io/automattic/vip-container-images/skeleton:latest
       command: sleep infinity
       volumes:
         - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
