@@ -6,15 +6,6 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	multisite: false,
 	elasticsearchVersion: '7.10.1',
 	mariadbVersion: '10.3',
-	wordpress: {
-		mode: 'image',
-	},
-	muPlugins: {
-		mode: 'image',
-	},
-	clientCode: {
-		mode: 'image',
-	},
 };
 
 export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up your local dev environment.\n\n' +
