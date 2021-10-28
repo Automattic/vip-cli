@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for contributing to the VIP Javascript library. There are some guidelines to ensure we have consistency across the CLI and web interfaces.
+Thanks for contributing to the VIP-CLI. There are some guidelines to ensure we have consistency across the CLI and web interfaces.
 
 ## Coding Standards
 
@@ -49,14 +49,15 @@ Our release flow for VIP CLI follows this pattern:
 - Any team member that is part of our NPM organization can release new minor or major versions, but please have a Customer Experience (Pâtisserie) team member look over the changes first.
 
 ### Changelogs
-Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the V[VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
+Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
 
 ### Release Schedule
-We deploy changes from our `develop` branch to the `master` branch on Tuesdays from 4AM to 5PM Pacific Time.
 
-Changes that are not ready to be publicly released should stay in the `develop` branch to avoid conflicts with any urgent fixes we may need to roll out. Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via npm at any time outside of our release schedule.
+The VIP Customer Experience squad conducts releases on Tuesdays from 4AM to 5PM Pacific Time (US). Releases are regular but do not happen every Tuesday. Please coordinate with the VIP Customer Experience squad if you'd like to lead your own release.
 
-All other changes should follow the schedule so that we can monitor the newly released changes.
+As part of the release process, our squad merges changes from the `develop` branch to the `master` branch. Therefore, do not merge changes into `develop` unless it is ready for release (or use a feature flag to disable it).
+
+Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via `npm` at any time outside of our release window. All other changes should participate in our release window.
 
 ## Releasing / Publishing
 
