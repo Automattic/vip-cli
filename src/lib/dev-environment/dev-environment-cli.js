@@ -20,7 +20,6 @@ import os from 'os';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_SUBCOMMAND,
-	DEV_ENVIRONMENT_CONTAINER_IMAGES,
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
@@ -96,7 +95,7 @@ type ComponentConfig = {
 	tag?: string,
 }
 
-export function processComponentOptionInput( passedParam: string, type: string, allowLocal: boolean ): ComponentConfig {
+export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
 	if ( allowLocal && param.includes( '/' ) ) {
@@ -108,7 +107,6 @@ export function processComponentOptionInput( passedParam: string, type: string, 
 
 	return {
 		mode: 'image',
-		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
 		tag: param,
 	};
 }
@@ -175,7 +173,7 @@ async function processComponent( component: string, option: string ) {
 
 	const allowLocal = component !== 'wordpress';
 	if ( option ) {
-		result = processComponentOptionInput( option, component, allowLocal );
+		result = processComponentOptionInput( option, allowLocal );
 	} else {
 		result = await promptForComponent( component, allowLocal );
 	}
@@ -192,7 +190,7 @@ async function processComponent( component: string, option: string ) {
 		} else {
 			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
-			result = await promptForComponent( component );
+			result = await promptForComponent( component, allowLocal );
 		}
 	}
 
@@ -241,6 +239,7 @@ const componentDisplayNames = {
 };
 
 export async function promptForComponent( component: string, allowLocal: boolean ): Promise<ComponentConfig> {
+	debug( `Prompting for ${ component }` );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [];
 
@@ -288,29 +287,24 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	}
 
 	// image
-	let tag = DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].tag;
-	const componentsWithPredefinedImageTag = [ 'muPlugins', 'clientCode' ];
-
-	if ( ! componentsWithPredefinedImageTag.includes( component ) ) {
+	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
 		const selectTag = new Select( {
 			message,
-			choices: getLatestImageTags( component ),
+			choices: getWordpressImageTags(),
 		} );
-		tag = await selectTag.run();
+		const tag = await selectTag.run();
+		return {
+			mode: modeResult,
+			tag,
+		};
 	}
 
 	return {
 		mode: modeResult,
-		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].image,
-		tag,
 	};
 }
 
-function getLatestImageTags( component: string ): string[] {
-	if ( component === 'wordpress' ) {
-		return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
-	}
-
-	return [];
+function getWordpressImageTags(): string[] {
+	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
 }
