@@ -16,8 +16,10 @@ services:
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
+        - scripts:/scripts
     volumes:
       devtools: {}
+      scripts:
 
   nginx:
     type: compose
@@ -46,6 +48,11 @@ services:
           target: /dev-tools
           volume:
             nocopy: true
+        - type: volume
+            source: scripts
+            target: /scripts
+            volume:
+              nocopy: true
 <% wpVolumes() %>
     run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
@@ -120,6 +127,11 @@ services:
       command: sh -c "rsync -a /wp/ /shared/; sleep infinity"
       volumes:
         - ./wordpress:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
 
 <% if ( muPlugins.mode == 'image' ) { %>
   mu-plugins:
@@ -129,6 +141,11 @@ services:
       command: sh -c 'rsync -a /mu-plugins/ /shared/; sh /autoupdate.sh /shared'
       volumes:
         - mu-plugins:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
     volumes:
       mu-plugins: {}
 <% } %>
