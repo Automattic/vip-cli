@@ -49,10 +49,10 @@ services:
           volume:
             nocopy: true
         - type: volume
-            source: scripts
-            target: /scripts
-            volume:
-              nocopy: true
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
 <% wpVolumes() %>
     run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
