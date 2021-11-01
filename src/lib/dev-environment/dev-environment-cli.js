@@ -131,6 +131,7 @@ type AppInfo = {
 		type: string,
 		branch: string,
 		isMultisite: boolean,
+		primaryDomain: string,
 	}
 }
 
@@ -154,10 +155,20 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
 		elasticsearch: providedOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
 		mariadb: providedOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
+		mediaRedirectDomain: '',
 		wordpress: {},
 		muPlugins: {},
 		clientCode: {},
 	};
+
+	const primaryDomain = appInfo?.environment?.primaryDomain;
+	if ( primaryDomain ) {
+		const mediaRedirectPromptText = `Would you like to redirect to ${ primaryDomain } for missing media files?`;
+		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
+		if ( setMediaRedirectDomain ) {
+			instanceData.mediaRedirectDomain = primaryDomain;
+		}
+	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = providedOptions[ component ];

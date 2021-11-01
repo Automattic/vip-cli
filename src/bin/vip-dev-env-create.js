@@ -92,7 +92,6 @@ command()
 			statsd: opt.statsd || false,
 			phpmyadmin: opt.phpmyadmin || false,
 			xdebug: opt.xdebug || false,
-			mediaRedirectDomain: opt.mediaRedirectDomain || '',
 		};
 
 		try {

@@ -266,7 +266,10 @@ export async function getApplicationInformation( appId: number, envType: string 
 			name,
 			type,
 			branch,
-			isMultisite
+			isMultisite,
+			primaryDomain {
+				name
+			}
 		}`;
 
 	const queryResult = await app( appId, fieldsQuery );
@@ -292,6 +295,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 				branch: envData.branch,
 				type: envData.type,
 				isMultisite: envData.isMultisite,
+				primaryDomain: envData.primaryDomain?.name || '',
 			};
 		}
 	}
