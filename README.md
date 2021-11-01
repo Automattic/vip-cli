@@ -27,6 +27,40 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.2.0 (27 October 2021)
+
+New: Environment variables command
+- #896 Open config envvar command for all customers
+- #876 Update envvar list command to only show names
+- #879 Add config envvar get and get-all commands
+- #875 Temporarily gate access to new config command to VIP staff
+- #858 Environment variable CLI commands (list, set, delete)
+
+Fixes:
+- #901 Don't mark import as failed until restore has completed
+- #899 Proxy fix + healthchecks
+- #894 support windows db import
+- #889 Proxy config change
+- #888 mount wordpress code
+- #872 Auto flush cache after import and add vipgo user
+- #869 Media redirect to production site.
+- #885 Make search data persistent between restarts
+- #844 Expose DB and expose extra services in info table
+- #865 spawn WP-CLI as root to allow for FS operations
+- #895 Fix rmdir deprecation warning
+- #870 Add the VIP CLI release process and release schedule
+
+Dependencies updates:
+- #778 Update dependency ini to v2
+- #786 Update dependency keytar to v7
+- #884 Update dependency cli-columns to v4
+- #887 Update dependency lando to v3.4.3
+- #874 Update dependency lando to v3.4.0
+- #750 Bump hosted-git-info from 2.8.8 to 2.8.9
+- #877 Bump tmpl from 1.0.4 to 1.0.5
+
+https://github.com/Automattic/vip/releases/tag/v2.2.0
+
 ### 2.1.0 (16 September 2021)
 
 - #857  Remove select DB checks

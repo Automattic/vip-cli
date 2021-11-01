@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for contributing to the VIP Javascript library. There are some guidelines to ensure we have consistency across the CLI and web interfaces.
+Thanks for contributing to the VIP-CLI. There are some guidelines to ensure we have consistency across the CLI and web interfaces.
 
 ## Coding Standards
 
@@ -49,14 +49,15 @@ Our release flow for VIP CLI follows this pattern:
 - Any team member that is part of our NPM organization can release new minor or major versions, but please have a Customer Experience (Pâtisserie) team member look over the changes first.
 
 ### Changelogs
-Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the V[VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
+Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
 
 ### Release Schedule
-We deploy changes from our `develop` branch to the `master` branch on Tuesdays from 4AM to 5PM Pacific Time.
 
-Changes that are not ready to be publicly released should stay in the `develop` branch to avoid conflicts with any urgent fixes we may need to roll out. Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via npm at any time outside of our release schedule.
+The VIP Customer Experience squad conducts releases on Tuesdays from 4AM to 5PM Pacific Time (US). Releases are regular but do not happen every Tuesday. Please coordinate with the VIP Customer Experience squad if you'd like to lead your own release.
 
-All other changes should follow the schedule so that we can monitor the newly released changes.
+As part of the release process, our squad merges changes from the `develop` branch to the `master` branch. Therefore, do not merge changes into `develop` unless it is ready for release (or use a feature flag to disable it).
+
+Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via `npm` at any time outside of our release window. All other changes should participate in our release window.
 
 ## Releasing / Publishing
 
@@ -96,10 +97,9 @@ Then, let's publish:
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
 1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
-1. Publish the release to npm (`npm run publish-please`)
+1. Make sure you're part of the Automattic organization in npm
+1. Publish the release to npm (`npm run publish-please --access public`)
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
-1. Bump the version to the next minor: `npm --no-git-tag-version version preminor`
-1. Commit and push (`git add -u` + `git commit` + `git push origin master`).
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
