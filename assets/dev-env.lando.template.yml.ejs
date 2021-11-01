@@ -41,7 +41,9 @@ services:
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
-        LANDO_NO_USER_PERMS: "We have our own user mapping script under /scripts"
+
+        LANDO_NO_USER_PERMS: 'enable'
+
 
       volumes:
         - type: volume
