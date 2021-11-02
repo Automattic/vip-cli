@@ -94,9 +94,11 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 Then, let's publish:
 
+1. Make sure master branch is up to date `git pull`
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
 1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
+1. Push the master branch `git push`
 1. Make sure you're part of the Automattic organization in npm
 1. Publish the release to npm (`npm run publish-please --access public`)
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
