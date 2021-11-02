@@ -28,7 +28,7 @@ By default, we record information about the usage of this tool using an in-house
 ## Changelog
 
 ### 2.3.1 (2 November 2021)
-- Fixes issue during 2.3.0 publish process
+- Fixes an issue with the 2.3.0 where the intended changes didn't get published correctly.
 
 ### 2.3.0 (2 November 2021)
 - #908  [dev-env] Custom user permissions setup
