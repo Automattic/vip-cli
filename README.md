@@ -27,6 +27,9 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.3.1 (2 November 2021)
+- Fixes issue during 2.3.0 publish process
+
 ### 2.3.0 (2 November 2021)
 - #908  [dev-env] Custom user permissions setup
 - #897  [dev-env] Primary domain prompt for primary domain redirect
