@@ -27,6 +27,13 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.3.0 (2 November 2021)
+- #908  [dev-env] Custom user permissions setup
+- #897  [dev-env] Primary domain prompt for primary domain redirect
+- #902  [dev-env] Delete file permissions
+- #900  Clarify CONTRIBUTING guidelines
+- #905  Update contribution steps
+
 ### 2.2.0 (27 October 2021)
 
 New: Environment variables command
