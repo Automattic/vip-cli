@@ -93,25 +93,32 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
-			{ // wordpress tag
+			{ // base tag
 				param: 5.6,
-				option: 'wordpress',
+				allowLocal: true,
 				expected: {
-					image: 'ghcr.io/automattic/vip-container-images/wordpress',
 					mode: 'image',
 					tag: '5.6',
 				},
 			},
-			{ // muPlugins - path
+			{ // if local is not allowed
+				param: '/tmp/wp',
+				allowLocal: false,
+				expected: {
+					mode: 'image',
+					tag: '/tmp/wp',
+				},
+			},
+			{ // if local is  allowed
 				param: '~/path',
-				option: 'muPlugins',
+				allowLocal: true,
 				expected: {
 					mode: 'local',
 					dir: '~/path',
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = processComponentOptionInput( input.param, input.option );
+			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -133,8 +140,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		} );
 
 		it.each( [
-			{
-				component: 'wordpress',
+			{ // mu plugins local
+				component: 'muPlugins',
 				mode: 'local',
 				path: '/tmp',
 				expected: {
@@ -142,23 +149,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					dir: '/tmp',
 				},
 			},
-			{
-				component: 'wordpress',
-				mode: 'image',
-				path: '5.6',
-				expected: {
-					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/wordpress',
-					tag: '5.6',
-				},
-			},
 			{ // muPlugins hav just one tag - auto
 				component: 'muPlugins',
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/mu-plugins',
-					tag: 'latest',
 				},
 			},
 			{ // clientCode have just one tag
@@ -166,8 +161,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'ghcr.io/automattic/vip-container-images/skeleton',
-					tag: 'latest',
 				},
 			},
 		] )( 'should return correct component %p', async input => {
@@ -176,7 +169,24 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				.mockResolvedValueOnce( input.mode )
 				.mockResolvedValueOnce( input.path );
 
-			const result = await promptForComponent( input.component );
+			const result = await promptForComponent( input.component, true );
+
+			expect( result ).toStrictEqual( input.expected );
+		} );
+
+		it.each( [
+			{
+				tag: '5.6',
+				expected: {
+					mode: 'image',
+					tag: '5.6',
+				},
+			},
+		] )( 'should return correct component for wordpress %p', async input => {
+			selectRunMock
+				.mockResolvedValueOnce( input.tag );
+
+			const result = await promptForComponent( 'wordpress', false );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );

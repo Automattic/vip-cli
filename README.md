@@ -27,6 +27,77 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.3.1 (2 November 2021)
+- Fixes an issue with the 2.3.0 where the intended changes didn't get published correctly.
+
+### 2.3.0 (2 November 2021)
+- #908  [dev-env] Custom user permissions setup
+- #897  [dev-env] Primary domain prompt for primary domain redirect
+- #902  [dev-env] Delete file permissions
+- #900  Clarify CONTRIBUTING guidelines
+- #905  Update contribution steps
+
+### 2.2.0 (27 October 2021)
+
+New: Environment variables command
+- #896 Open config envvar command for all customers
+- #876 Update envvar list command to only show names
+- #879 Add config envvar get and get-all commands
+- #875 Temporarily gate access to new config command to VIP staff
+- #858 Environment variable CLI commands (list, set, delete)
+
+Fixes:
+- #901 Don't mark import as failed until restore has completed
+- #899 Proxy fix + healthchecks
+- #894 support windows db import
+- #889 Proxy config change
+- #888 mount wordpress code
+- #872 Auto flush cache after import and add vipgo user
+- #869 Media redirect to production site.
+- #885 Make search data persistent between restarts
+- #844 Expose DB and expose extra services in info table
+- #865 spawn WP-CLI as root to allow for FS operations
+- #895 Fix rmdir deprecation warning
+- #870 Add the VIP CLI release process and release schedule
+
+Dependencies updates:
+- #778 Update dependency ini to v2
+- #786 Update dependency keytar to v7
+- #884 Update dependency cli-columns to v4
+- #887 Update dependency lando to v3.4.3
+- #874 Update dependency lando to v3.4.0
+- #750 Bump hosted-git-info from 2.8.8 to 2.8.9
+- #877 Bump tmpl from 1.0.4 to 1.0.5
+
+https://github.com/Automattic/vip/releases/tag/v2.2.0
+
+### 2.1.0 (16 September 2021)
+
+- #857  Remove select DB checks
+- #864  Adding WordPress versions to dev-env
+- #868  persist database data in between container restarts
+- #862  Fix lint warnings
+- #867  Update dependency lando to v3.3.2
+- #863  Add links to CONTRIBUTING and SECURITY
+- #855  Add some helpful hints for new command scaffolding
+- #856  Adding media import command on dev environment
+- #849  Adding SQL import to dev environment
+- #854  Updating command descriptions and arguments on dev-env
+- #850  Use official memcached image on dev-env
+- #853  Enable ssl forwarding on dev-env
+- #851  Conditionally disabling statsd on mu-plugins
+- #852  Fixing Prettier format annotation typo
+- #843  Removing custom wp-config-defaults
+- #848  Not using a prefix to all dev environments
+- #847  Update dependency lando to v3.3.0
+- #840  Use official Elasticsearch image on dev-env
+- #845  Fix MariaDB healthcheck
+- #846  dev-env: Update error message for directory prompt
+- #842  Removing PHP parameter from dev environment
+- #839  Use official MariaDB image and enable version selection on dev-env
+
+https://github.com/Automattic/vip/releases/tag/v2.1.0
+
 ### 2.0.14 (26 August 2021)
 
 - Update dependency graphql to v15.5.1 #796

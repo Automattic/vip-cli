@@ -262,11 +262,11 @@ ${ maybeExitPrompt }
 							};
 						} );
 
-						if ( statusSteps.some( ( { result } ) => result === 'failed' ) ) {
+						if ( statusSteps.some( ( { result } ) => result === 'failed' ) && ! statusSteps.find( ( { name, result } ) => name === 'restore_db' && ! result ) ) {
 							jobStatus = 'error';
 						} else 	if ( statusSteps.every( ( { result } ) => result === 'success' ) ) {
 							jobStatus = 'success';
-							importJob.completedAt = new Date( Math.max( ...statusSteps.map( ( { finished_at } ) => finished_at ), 0 ) * 1000 ).toUTCString();
+							importJob.completedAt = new Date( Math.max( ...statusSteps.map( step => step.finished_at ), 0 ) * 1000 ).toUTCString();
 						}
 
 						if ( importStatus?.progress?.started_at ) {
@@ -302,7 +302,7 @@ ${ maybeExitPrompt }
 				let jobCreationTime;
 				try {
 					jobCreationTime = new Date( createdAt ).getTime();
-				} catch ( e ) {
+				} catch ( err ) {
 					debug( 'Unable to parse createdAt to a Date' );
 				}
 

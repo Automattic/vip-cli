@@ -12,21 +12,24 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.6
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.8
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
+        - scripts:/scripts
     volumes:
       devtools: {}
+      scripts:
 
   nginx:
     type: compose
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.1
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
+        - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
 
   php:
@@ -39,29 +42,39 @@ services:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
 
+        LANDO_NO_USER_PERMS: 'enable'
+
+
       volumes:
         - type: volume
           source: devtools
           target: /dev-tools
           volume:
             nocopy: true
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
 <% wpVolumes() %>
-
-    run_as_root:
+    run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
-    type: mariadb:custom
-    overrides:
+    type: compose
+    services:
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld
+      ports:
+        - ":3306"
+      healthcheck:
+        test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
-        MARIADB_DATABASE: 'database'
-        MYSQL_DATABASE: 'database'
-        MARIADB_PASSWORD: 'mariadb'
-        MARIADB_USER: 'mariadb'
-        LANDO_NEEDS_EXEC: 'DOEEET'
+      volumes:
+        - database_data:/var/lib/mysql
+    volumes:
+      database_data:
 
   memcached:
     type: memcached:custom
@@ -80,9 +93,8 @@ services:
 <% } %>
 
   vip-search:
-    type: elasticsearch:custom
-    portforward: true
-    overrides:
+    type: compose
+    services:
       image: elasticsearch:<%= elasticsearch %>
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
@@ -91,6 +103,14 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+      ports:
+        - ":9200"
+      healthcheck:
+        test: "curl --noproxy '*' -XGET localhost:9200"
+      volumes:
+        - search_data:/usr/share/elasticsearch/data
+    volumes:
+      search_data:
 
 <% if ( statsd ) { %>
   statsd:
@@ -100,26 +120,32 @@ services:
       command: node stats.js /config/statsd-config.js
 <% } %>
 
-<% if ( wordpress.mode == 'image' ) { %>
   wordpress:
     type: compose
     services:
-      image: <%= wordpress.image %>:<%= wordpress.tag %>
-      command: sh -c "rsync -a /wp/ /shared/; sleep infinity"
+      image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
+      command: sh -c "rsync -a /wp/ /shared/; chown www-data -R /shared; sleep infinity"
       volumes:
-        - wordpress:/shared
-    volumes:
-      wordpress: {}
-<% } %>
+        - ./wordpress:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
 
 <% if ( muPlugins.mode == 'image' ) { %>
   mu-plugins:
     type: compose
     services:
-      image: <%= muPlugins.image %>:<%= muPlugins.tag %>
-      command: sh -c 'rsync -a /mu-plugins/ /shared/; sh /autoupdate.sh /shared'
+      image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
+      command: sh /run.sh
       volumes:
         - mu-plugins:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
     volumes:
       mu-plugins: {}
 <% } %>
@@ -128,7 +154,7 @@ services:
   client-code:
     type: compose
     services:
-      image: <%= clientCode.image %>:<%= clientCode.tag %>
+      image: ghcr.io/automattic/vip-container-images/skeleton:latest
       command: sleep infinity
       volumes:
         - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
@@ -152,8 +178,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
+    user: root
     cmd:
-      - wp
+      - wp --allow-root
 
   add-site:
     service: php
@@ -171,15 +198,7 @@ tooling:
         - ./config:/wp/config
         - ./log:/wp/log
         - ./uploads:/wp/wp-content/uploads
-<% if ( wordpress.mode == 'image' ) { %>
-        - type: volume
-          source: wordpress
-          target: /wp
-          volume:
-            nocopy: true
-<% } else { %>
-        - <%= wordpress.dir %>:/wp
-<% } %>
+        - ./wordpress:/wp
 <% if ( muPlugins.mode == 'image' ) { %>
         - type: volume
           source: mu-plugins

@@ -25,8 +25,8 @@ export default class Insecure implements Keychain {
 
 			try {
 				password = this.configstore.get( service );
-			} catch ( e ) {
-				return reject( e );
+			} catch ( err ) {
+				return reject( err );
 			}
 
 			return resolve( password );
@@ -37,8 +37,8 @@ export default class Insecure implements Keychain {
 		return new Promise( ( resolve, reject ) => {
 			try {
 				this.configstore.set( service, password );
-			} catch ( e ) {
-				return reject( e );
+			} catch ( err ) {
+				return reject( err );
 			}
 
 			resolve( true );
@@ -49,8 +49,8 @@ export default class Insecure implements Keychain {
 		return new Promise( ( resolve, reject ) => {
 			try {
 				this.configstore.delete( service );
-			} catch ( e ) {
-				return reject( e );
+			} catch ( err ) {
+				return reject( err );
 			}
 			resolve( true );
 		} );
