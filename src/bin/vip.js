@@ -13,7 +13,7 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import config from 'root/config/config.json';
-import command from 'lib/cli/command';
+import command, { containsAppEnvArgument } from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
@@ -52,10 +52,11 @@ const rootCmd = async function() {
 
 	const isHelpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
 	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
+	const isDevEnvCommandWithoutEnv = process.argv.some( arg => arg === 'dev-env' ) && ! containsAppEnvArgument( process.argv );
 
 	debug( 'Argv:', process.argv );
 
-	if ( isLogoutCommand || isHelpCommand || ( token && token.valid() ) ) {
+	if ( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) ) {
 		runCmd();
 	} else {
 		console.log();
