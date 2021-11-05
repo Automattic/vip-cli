@@ -92,6 +92,7 @@ command()
 			statsd: opt.statsd || false,
 			phpmyadmin: opt.phpmyadmin || false,
 			xdebug: opt.xdebug || false,
+			version: 1.0,
 		};
 
 		try {
