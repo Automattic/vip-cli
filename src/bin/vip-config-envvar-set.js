@@ -91,6 +91,11 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 
 	await trackEvent( 'envvar_set_command_success', trackingParams );
 	console.log( chalk.green( `Successfully set environment variable ${ JSON.stringify( name ) }` ) );
+
+	if ( ! opt.skipConfirmation ) {
+		console.log( chalk.bgYellow( chalk.bold( 'Important:' ) ),
+			'Updates to environment variables will not be available until the application’s next deploy.' );
+	}
 }
 
 command( {
