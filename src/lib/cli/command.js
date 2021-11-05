@@ -537,3 +537,9 @@ export function getEnvIdentifier( env ) {
 
 	return identifier;
 }
+
+export function containsAppEnvArgument( argv ) {
+	const parsedAlias = parseEnvAliasFromArgv( argv );
+
+	return !! ( parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' ) );
+}
