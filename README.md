@@ -27,6 +27,10 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.4.0 (5 November 2021)
+- #913  [dev-env] No login required for dev-env
+- #911  Adds more release instructions
+
 ### 2.3.1 (2 November 2021)
 - Fixes an issue with the 2.3.0 where the intended changes didn't get published correctly.
 
