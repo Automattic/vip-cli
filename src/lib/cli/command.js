@@ -541,15 +541,5 @@ export function getEnvIdentifier( env ) {
 export function containsAppEnvArgument( argv ) {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	const options = args
-		.option( 'app', 'app' )
-		.option( 'env', 'env' )
-		.parse( parsedAlias.argv );
-
-	if ( parsedAlias.app ) {
-		options.app = parsedAlias.app;
-		options.env = parsedAlias.env;
-	}
-
-	return !! ( options.app || options.env );
+	return !! ( parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' ) );
 }
