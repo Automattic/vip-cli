@@ -92,7 +92,6 @@ type NewInstanceData = {
 	muPlugins: Object,
 	clientCode: Object,
 	mediaRedirectDomain: string,
-	version: number,
 }
 
 export async function createEnvironment( instanceData: NewInstanceData ) {
