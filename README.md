@@ -27,6 +27,12 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.5.0 (9 November 2021)
+- #919  [dev-env] Expose lando core logs
+- #916  [dev-env] Save instance data state
+- #914  [dev-env] update help wording for dev env
+- #915  Add warning message when an envvar is set/deleted
+
 ### 2.4.0 (5 November 2021)
 - #913  [dev-env] No login required for dev-env
 - #911  Adds more release instructions
