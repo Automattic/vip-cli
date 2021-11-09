@@ -24,6 +24,7 @@ import { searchAndReplace } from '../search-and-replace';
 import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import type { InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -83,16 +84,6 @@ export async function stopEnvironment( slug: string ) {
 	}
 
 	await landoStop( instancePath );
-}
-
-type InstanceData = {
-	siteSlug: string,
-	wpTitle: string,
-	multisite: boolean,
-	wordpress: Object,
-	muPlugins: Object,
-	clientCode: Object,
-	mediaRedirectDomain: string,
 }
 
 export async function createEnvironment( instanceData: InstanceData ) {

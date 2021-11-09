@@ -320,6 +320,18 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					mediaRedirectDomain: 'b',
 				},
 			},
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+					mediaRedirectDomain: 'b',
+				},
+			},
 		] )( 'should handle media redirect query', async input => {
 			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
 
@@ -335,6 +347,45 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;
 
 			expect( result.mediaRedirectDomain ).toStrictEqual( expectedValue );
+		} );
+
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+					mediaRedirectDomain: 'a',
+					mariadb: 'maria_a',
+					elasticsearch: 'elastic_a',
+				},
+				default: {
+					mediaRedirectDomain: 'b',
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+					mariadb: 'maria_b',
+					elasticsearch: 'elastic_b',
+				},
+			},
+		] )( 'should handle elasticsearch/mariadb', async input => {
+			const result = await promptForArguments( input.preselected, input.default );
+
+			const expectedMaria = input.preselected.mariadb ? input.preselected.mariadb : input.default.mariadb;
+			const expectedElastic = input.preselected.elasticsearch ? input.preselected.elasticsearch : input.default.elasticsearch;
+
+			expect( result.mariadb ).toStrictEqual( expectedMaria );
+			expect( result.elasticsearch ).toStrictEqual( expectedElastic );
 		} );
 	} );
 } );

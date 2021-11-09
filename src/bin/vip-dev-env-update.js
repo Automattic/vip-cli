@@ -18,6 +18,7 @@ import command from 'lib/cli/command';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, handleCLIException, promptForArguments } from '../lib/dev-environment/dev-environment-cli';
+import type { InstanceOptions } from '../lib/dev-environment/dev-environment-cli';
 import { doesEnvironmentExist, readEnvironmentData } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 
@@ -56,7 +57,16 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Combined preselected data are', preselectedOptions );
 
-		const instanceData = await promptForArguments( preselectedOptions, {} );
+		const defaultOptions: InstanceOptions = {
+			clientCode: currentInstanceData.clientCode.dir || currentInstanceData.clientCode.tag,
+			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag,
+			wordpress: currentInstanceData.wordpress.tag,
+			elasticsearch: currentInstanceData.elasticsearch,
+			mariadb: currentInstanceData.mariadb,
+
+		}
+
+		const instanceData = await promptForArguments( preselectedOptions, currentInstanceData );
 		// const instanceDataWithSlug = {
 		// 	...currentInstanceData,
 		// 	siteSlug: slug,

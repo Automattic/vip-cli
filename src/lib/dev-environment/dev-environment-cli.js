@@ -25,6 +25,7 @@ import {
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
+import type { InstanceData, InstanceOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -44,12 +45,6 @@ export function handleCLIException( exception: Error ) {
 
 		console.log( errorPrefix, message );
 	}
-}
-
-type EnvironmentNameOptions = {
-	slug: string,
-	app: string,
-	env: string,
 }
 
 export function getEnvironmentName( options: EnvironmentNameOptions ) {
@@ -89,12 +84,7 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-type ComponentConfig = {
-	mode: 'local' | 'image' | 'inherit';
-	dir?: string,
-	image?: string,
-	tag?: string,
-}
+
 
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
@@ -112,30 +102,6 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 	};
 }
 
-type InstanceOptions = {
-	title?: string,
-	multisite?: boolean,
-	php?: string,
-	wordpress?: string,
-	muPlugins?: string,
-	clientCode?: string,
-	elasticsearch?: string,
-	mariadb?: string,
-	mediaRedirectDomain?: string
-}
-
-type AppInfo = {
-	id?: number,
-	name?: string,
-	repository?: string,
-	environment?: {
-		name: string,
-		type: string,
-		branch: string,
-		isMultisite: boolean,
-		primaryDomain: string,
-	}
-}
 
 export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	if ( ! appInfo ) {
@@ -170,9 +136,9 @@ export async function promptForArguments( preselecteddOptions: InstanceOptions, 
 
 	const instanceData = {
 		wpTitle: preselecteddOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: 'multisite' in preselecteddOptions ? preselecteddOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
-		elasticsearch: preselecteddOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
-		mariadb: preselecteddOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
+		multisite: 'multisite' in preselecteddOptions ? preselecteddOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		elasticsearch: preselecteddOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		mariadb: preselecteddOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		mediaRedirectDomain: preselecteddOptions.mediaRedirectDomain || '',
 		wordpress: {},
 		muPlugins: {},
@@ -189,21 +155,23 @@ export async function promptForArguments( preselecteddOptions: InstanceOptions, 
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = preselecteddOptions[ component ];
+		const defaultValue = defaultOptions[ component ];
 
-		instanceData[ component ] = await processComponent( component, option );
+		instanceData[ component ] = await processComponent( component, option, defaultValue );
 	}
 
 	return instanceData;
 }
 
-async function processComponent( component: string, option: string ) {
+async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
-	if ( option ) {
-		result = processComponentOptionInput( option, allowLocal );
+	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
+	if ( preselectedValue ) {
+		result = processComponentOptionInput( preselectedValue, allowLocal );
 	} else {
-		result = await promptForComponent( component, allowLocal );
+		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
 
 	while ( 'local' === result?.mode ) {
@@ -218,7 +186,7 @@ async function processComponent( component: string, option: string ) {
 		} else {
 			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
-			result = await promptForComponent( component, allowLocal );
+			result = await promptForComponent( component, allowLocal, defaultObject );
 		}
 	}
 
@@ -266,7 +234,7 @@ const componentDisplayNames = {
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string, allowLocal: boolean ): Promise<ComponentConfig> {
+export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig ): Promise<ComponentConfig> {
 	debug( `Prompting for ${ component }` );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [];
@@ -287,6 +255,10 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		initialMode = 'local';
 	}
 
+	if ( defaultObject?.mode ) {
+		initialMode = defaultObject.mode;
+	}
+
 	let modeResult = initialMode;
 	const selectMode = choices.length > 1;
 	if ( selectMode ) {
@@ -301,33 +273,40 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	}
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
+	// path
 	if ( 'local' === modeResult ) {
-		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, '' );
+		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, defaultObject?.dir || '' );
 		return {
 			mode: modeResult,
 			dir: directoryPath,
 		};
 	}
-	if ( 'inherit' === modeResult ) {
-		return {
-			mode: modeResult,
-		};
-	}
 
-	// image
+	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
+		const choices = getWordpressImageTags();
+		let initialTagIndex = 0;
+		if ( defaultObject?.tag ) {
+			const defaultTagIndex = choices.indexOf( choice => choice === defaultObject.tag );
+			if ( defaultTagIndex !== -1 ) {
+				initialTagIndex = defaultTagIndex;
+			}
+		}
 		const selectTag = new Select( {
 			message,
-			choices: getWordpressImageTags(),
+			choices,
+			initial: initialTagIndex,
 		} );
 		const tag = await selectTag.run();
+
 		return {
 			mode: modeResult,
 			tag,
 		};
 	}
 
+	// image
 	return {
 		mode: modeResult,
 	};
