@@ -23,6 +23,7 @@ import {
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
+	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -31,7 +32,7 @@ const DEFAULT_SLUG = 'vip-local';
 
 export function handleCLIException( exception: Error ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( 'Environment not found.' === exception.message ) {
+	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
@@ -111,22 +112,23 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 	};
 }
 
-type NewInstanceOptions = {
-	title: string,
-	multisite: boolean,
-	php: string,
-	wordpress: string,
-	muPlugins: string,
-	clientCode: string,
-	elasticsearch: string,
-	mariadb: string,
+type InstanceOptions = {
+	title?: string,
+	multisite?: boolean,
+	php?: string,
+	wordpress?: string,
+	muPlugins?: string,
+	clientCode?: string,
+	elasticsearch?: string,
+	mariadb?: string,
+	mediaRedirectDomain?: string
 }
 
 type AppInfo = {
-	id: number,
-	name: string,
-	repository: string,
-	environment: {
+	id?: number,
+	name?: string,
+	repository?: string,
+	environment?: {
 		name: string,
 		type: string,
 		branch: string,
@@ -135,43 +137,58 @@ type AppInfo = {
 	}
 }
 
-export async function promptForArguments( providedOptions: NewInstanceOptions, appInfo: AppInfo ) {
-	debug( 'Provided options', providedOptions );
+export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
+	if ( ! appInfo ) {
+		return {};
+	}
+
+	return {
+		title: appInfo.environment?.name || appInfo.name,
+		multisite: !! appInfo?.environment?.isMultisite,
+		mediaRedirectDomain: appInfo.environment?.primaryDomain,
+	};
+}
+
+/**
+ * Prompt for arguments
+ * @param {InstanceOptions} preselecteddOptions - options to be used without prompt
+ * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
+ * @returns {any} instance data
+ */
+export async function promptForArguments( preselecteddOptions: InstanceOptions, defaultOptions: InstanceOptions) {
+	debug( 'Provided options', preselecteddOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
-	const name = appInfo?.environment?.name || appInfo?.name;
 	let multisiteText = 'Multisite';
 	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
 
-	if ( appInfo?.environment ) {
-		const isEnvMultisite = !! appInfo?.environment?.isMultisite;
-		multisiteText += ` (${ name } ${ isEnvMultisite ? 'IS' : 'is NOT' } multisite)`;
-		multisiteDefault = isEnvMultisite;
+	if ( defaultOptions.title ) {
+		multisiteText += ` (${ defaultOptions.title } ${ defaultOptions.multisite ? 'IS' : 'is NOT' } multisite)`;
+		multisiteDefault = defaultOptions.multisite;
 	}
 
 	const instanceData = {
-		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
-		elasticsearch: providedOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
-		mariadb: providedOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
-		mediaRedirectDomain: '',
+		wpTitle: preselecteddOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
+		multisite: 'multisite' in preselecteddOptions ? preselecteddOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
+		elasticsearch: preselecteddOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		mariadb: preselecteddOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
+		mediaRedirectDomain: preselecteddOptions.mediaRedirectDomain || '',
 		wordpress: {},
 		muPlugins: {},
 		clientCode: {},
 	};
 
-	const primaryDomain = appInfo?.environment?.primaryDomain;
-	if ( primaryDomain ) {
-		const mediaRedirectPromptText = `Would you like to redirect to ${ primaryDomain } for missing media files?`;
+	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
+		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
 		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
 		if ( setMediaRedirectDomain ) {
-			instanceData.mediaRedirectDomain = primaryDomain;
+			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain;
 		}
 	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
-		const option = providedOptions[ component ];
+		const option = preselecteddOptions[ component ];
 
 		instanceData[ component ] = await processComponent( component, option );
 	}
@@ -314,6 +331,19 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	return {
 		mode: modeResult,
 	};
+}
+
+export function addDevEnvConfigurationOptions( command ) {
+	return command
+		.option( 'wordpress', 'Use a specific WordPress version' )
+		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
+		.option( 'client-code', 'Use the client code from a local directory or VIP skeleton' )
+		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
+		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
+		.option( 'media-redirect-domain', 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
 function getWordpressImageTags(): string[] {

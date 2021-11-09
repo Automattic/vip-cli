@@ -23,6 +23,7 @@ import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild
 import { searchAndReplace } from '../search-and-replace';
 import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -56,7 +57,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	if ( options.skipRebuild ) {
@@ -78,13 +79,13 @@ export async function stopEnvironment( slug: string ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	await landoStop( instancePath );
 }
 
-type NewInstanceData = {
+type InstanceData = {
 	siteSlug: string,
 	wpTitle: string,
 	multisite: boolean,
@@ -94,7 +95,7 @@ type NewInstanceData = {
 	mediaRedirectDomain: string,
 }
 
-export async function createEnvironment( instanceData: NewInstanceData ) {
+export async function createEnvironment( instanceData: InstanceData ) {
 	const slug = instanceData.siteSlug;
 	debug( 'Will start an environment', slug, 'with instanceData: ', instanceData );
 
@@ -125,7 +126,7 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const landoFilePath = path.join( instancePath, landoFileName );
@@ -164,7 +165,7 @@ export async function printEnvironmentInfo( slug: string ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const appInfo = await landoInfo( instancePath );
@@ -182,7 +183,7 @@ export async function exec( slug: string, args: Array<string> ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const command = args.shift();
@@ -203,6 +204,18 @@ export function doesEnvironmentExist( slug: string ) {
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	return fs.existsSync( instancePath );
+}
+
+export function readEnvironmentData( slug: string ): InstanceData {
+	debug( 'Will try to get instance data for environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+
+	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+
+	return JSON.parse( instanceDataString );
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {

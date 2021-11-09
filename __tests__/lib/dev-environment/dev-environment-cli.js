@@ -5,26 +5,38 @@
 /**
  * External dependencies
  */
-import { prompt, selectRunMock } from 'enquirer';
+import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 
 /**
  * Internal dependencies
  */
 
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
+import { promptForArguments } from '../../../src/lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
 	const SelectClass = class {};
 	SelectClass.prototype.run = _selectRunMock;
+
+	const _confirmRunMock = jest.fn();
+	const ConfirmClass = class {};
+	ConfirmClass.prototype.run = _confirmRunMock;
 	return {
 		prompt: jest.fn(),
 		Select: SelectClass,
 		selectRunMock: _selectRunMock,
+
+		Confirm: ConfirmClass,
+		confirmRunMock: _confirmRunMock,
 	};
 } );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
+	beforeEach( () => {
+		prompt.mockReset();
+		confirmRunMock.mockReset();
+	} );
 	describe( 'getEnvironmentName', () => {
 		it.each( [
 			{ // default value
@@ -189,6 +201,140 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForComponent( 'wordpress', false );
 
 			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'promptForArguments', () => {
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+					title: 'b',
+				},
+			},
+		] )( 'should handle title', async input => {
+			prompt.mockResolvedValue( { input: input.default.title } );
+
+			const result = await promptForArguments( input.preselected, input.default );
+
+			if ( input.preselected.title ) {
+				expect( prompt ).toHaveBeenCalledTimes( 0 );
+			} else {
+				expect( prompt ).toHaveBeenCalledTimes( 1 );
+
+				const calledWith = prompt.mock.calls[ 0 ][ 0 ];
+				expect( prompt ).toHaveBeenCalledWith( {
+					...calledWith,
+					initial: input.default.title,
+				} );
+			}
+
+			const expectedValue = input.preselected.title ? input.preselected.title : input.default.title;
+
+			expect( result.wpTitle ).toStrictEqual( expectedValue );
+		} );
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+					multisite: true,
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+					multisite: false,
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+					multisite: true,
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+					multisite: false,
+				},
+			},
+		] )( 'should handle multisite', async input => {
+			confirmRunMock.mockResolvedValue( input.default.multisite );
+
+			const result = await promptForArguments( input.preselected, input.default );
+
+			if ( 'multisite' in input.preselected ) {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 1 );
+			}
+
+			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
+
+			expect( result.multisite ).toStrictEqual( expectedValue );
+		} );
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+					mediaRedirectDomain: 'a',
+				},
+				default: {
+					mediaRedirectDomain: 'b',
+				},
+			},
+		] )( 'should handle media redirect query', async input => {
+			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
+
+			const result = await promptForArguments( input.preselected, input.default );
+
+
+			if ( input.preselected.mediaRedirectDomain ) {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 1 );
+			}
+
+			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;
+
+			expect( result.mediaRedirectDomain ).toStrictEqual( expectedValue );
 		} );
 	} );
 } );
