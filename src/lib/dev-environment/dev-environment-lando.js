@@ -21,16 +21,18 @@ import App from 'lando/lib/app';
 /**
  * This file will hold all the interactions with lando library
  */
-
-const debug = debugLib( '@automattic/vip:bin:dev-environment-lando' );
+const DEBUG_KEY = '@automattic/vip:bin:dev-environment-lando';
+const debug = debugLib( DEBUG_KEY );
 
 function getLandoConfig() {
 	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
 
 	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
 
+	const logLevelConsole = ( process.env.DEBUG || '' ).includes( DEBUG_KEY ) ? 'debug' : 'warn';
+
 	return {
-		logLevelConsole: 'warn',
+		logLevelConsole,
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
 		postLandoFiles: [ '.lando.local.yml' ],
