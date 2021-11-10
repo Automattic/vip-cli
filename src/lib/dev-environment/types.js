@@ -1,5 +1,5 @@
 
-export type InstanceOptions = {
+export interface InstanceOptions {
 	title?: string,
 	multisite?: boolean,
 	php?: string,
@@ -37,7 +37,7 @@ export type EnvironmentNameOptions = {
 	env: string,
 }
 
-export type InstanceData = {
+export interface InstanceData {
 	siteSlug: string,
 	wpTitle: string,
 	multisite: boolean,

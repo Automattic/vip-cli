@@ -25,7 +25,7 @@ import {
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
-import type { InstanceData, InstanceOptions } from './types';
+import { InstanceOptions, EnvironmentNameOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -122,7 +122,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * @returns {any} instance data
  */
 export async function promptForArguments( preselecteddOptions: InstanceOptions, defaultOptions: InstanceOptions) {
-	debug( 'Provided options', preselecteddOptions );
+	debug( 'Provided preselected', preselecteddOptions, 'and default', defaultOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
@@ -164,6 +164,7 @@ export async function promptForArguments( preselecteddOptions: InstanceOptions, 
 }
 
 async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
+	debug( `processing a component '${ component }', with preselected/deafault - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
@@ -235,17 +236,17 @@ const componentDisplayNames = {
 };
 
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig ): Promise<ComponentConfig> {
-	debug( `Prompting for ${ component }` );
+	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const choices = [];
+	const modChoices = [];
 
 	if ( allowLocal ) {
-		choices.push( {
+		modChoices.push( {
 			message: `local folder - where you already have ${ componentDisplayName } code`,
 			value: 'local',
 		} );
 	}
-	choices.push( {
+	modChoices.push( {
 		message: 'image - that gets automatically fetched',
 		value: 'image',
 	} );
@@ -260,12 +261,12 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	}
 
 	let modeResult = initialMode;
-	const selectMode = choices.length > 1;
+	const selectMode = modChoices.length > 1;
 	if ( selectMode ) {
-		const initialModeIndex = choices.findIndex( choice => choice.value === initialMode );
+		const initialModeIndex = modChoices.findIndex( choice => choice.value === initialMode );
 		const select = new Select( {
 			message: `How would you like to source ${ componentDisplayName }`,
-			choices,
+			choices: modChoices,
 			initial: initialModeIndex,
 		} );
 
@@ -285,17 +286,17 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
-		const choices = getWordpressImageTags();
+		const tagChoices = getWordpressImageTags();
 		let initialTagIndex = 0;
 		if ( defaultObject?.tag ) {
-			const defaultTagIndex = choices.indexOf( choice => choice === defaultObject.tag );
+			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
 			if ( defaultTagIndex !== -1 ) {
 				initialTagIndex = defaultTagIndex;
 			}
 		}
 		const selectTag = new Select( {
 			message,
-			choices,
+			choices: tagChoices,
 			initial: initialTagIndex,
 		} );
 		const tag = await selectTag.run();
