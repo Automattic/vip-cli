@@ -250,9 +250,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 					multisite: true,
 				},
 				default: {
@@ -261,9 +258,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 					multisite: false,
 				},
 				default: {
@@ -272,9 +266,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 				},
 				default: {
 					multisite: true,
@@ -283,9 +274,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 				},
 				default: {
 					multisite: false,
@@ -311,9 +299,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					multisite: true,
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 					mediaRedirectDomain: 'a',
 				},
 				default: {
@@ -324,9 +309,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					multisite: true,
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 				},
 				default: {
 					mediaRedirectDomain: 'b',
@@ -353,25 +335,15 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					multisite: true,
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
-					mediaRedirectDomain: 'a',
 					mariadb: 'maria_a',
 					elasticsearch: 'elastic_a',
 				},
 				default: {
-					mediaRedirectDomain: 'b',
 				},
 			},
 			{
 				preselected: {
 					title: 'a',
-					multisite: true,
-					muPlugins: 'mu',
-					clientCode: 'code',
-					wordpress: 'wp',
 				},
 				default: {
 					mariadb: 'maria_b',
@@ -386,6 +358,51 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 			expect( result.mariadb ).toStrictEqual( expectedMaria );
 			expect( result.elasticsearch ).toStrictEqual( expectedElastic );
+		} );
+		it.each( [
+			{
+				service: 'statsd',
+				preselected: true,
+				expected: true,
+			},
+			{
+				service: 'statsd',
+				expected: false,
+			},
+			{
+				service: 'statsd',
+				default: true,
+				expected: true,
+			},
+			{
+				service: 'statsd',
+				preselected: false,
+				default: true,
+				expected: false,
+			},
+			{
+				service: 'phpmyadmin',
+				preselected: true,
+				default: true,
+				expected: true,
+			},
+			{
+				service: 'xdebug',
+				default: true,
+				expected: true,
+			},
+		] )( 'should handle auxiliary services', async input => {
+			const preselected = {};
+			const defaultOptions = {};
+			if ( 'preselected' in input ) {
+				preselected[ input.service ] = input.preselected;
+			}
+			if ( 'default' in input ) {
+				defaultOptions[ input.service ] = input.default;
+			}
+			const result = await promptForArguments( preselected, defaultOptions );
+
+			expect( result[ input.service ] ).toStrictEqual( input.expected );
 		} );
 	} );
 } );

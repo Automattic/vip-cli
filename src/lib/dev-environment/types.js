@@ -2,13 +2,15 @@
 export interface InstanceOptions {
 	title?: string,
 	multisite?: boolean,
-	php?: string,
 	wordpress?: string,
 	muPlugins?: string,
 	clientCode?: string,
 	elasticsearch?: string,
 	mariadb?: string,
-	mediaRedirectDomain?: string
+	mediaRedirectDomain?: string,
+	statsd?: boolean,
+	phpmyadmin?: boolean,
+	xdebug?: boolean,
 }
 
 export type AppInfo = {
@@ -45,5 +47,8 @@ export interface InstanceData {
 	muPlugins: ComponentConfig,
 	clientCode: ComponentConfig,
 	mediaRedirectDomain: string,
+	statsd: boolean,
+	phpmyadmin: boolean,
+	xdebug: boolean,
 }
 

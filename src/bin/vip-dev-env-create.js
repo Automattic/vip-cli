@@ -82,16 +82,10 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	}
 
 	const instanceData = await promptForArguments( opt, defaultOptions );
-	const instanceDataWithSlug = {
-		...instanceData,
-		siteSlug: slug,
-		statsd: opt.statsd || false,
-		phpmyadmin: opt.phpmyadmin || false,
-		xdebug: opt.xdebug || false,
-	};
+	instanceData.siteSlug = slug;
 
 	try {
-		await createEnvironment( instanceDataWithSlug );
+		await createEnvironment( instanceData );
 
 		await printEnvironmentInfo( slug );
 

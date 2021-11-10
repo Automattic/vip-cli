@@ -88,7 +88,7 @@ export async function stopEnvironment( slug: string ) {
 
 export async function createEnvironment( instanceData: InstanceData ) {
 	const slug = instanceData.siteSlug;
-	debug( 'Will start an environment', slug, 'with instanceData: ', instanceData );
+	debug( 'Will create an environment', slug, 'with instanceData: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -100,12 +100,41 @@ export async function createEnvironment( instanceData: InstanceData ) {
 		throw new Error( 'Environment already exists.' );
 	}
 
-	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
-		// We need to make sure the redirect is an absolute path
-		instanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
+	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+
+	await prepareLandoEnv( preProcessedInstanceData, instancePath );
+}
+
+export async function updateEnvironment( instanceData: InstanceData ) {
+	const slug = instanceData.siteSlug;
+	debug( 'Will update an environment', slug, 'with instanceData: ', instanceData );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const alreadyExists = fs.existsSync( instancePath );
+
+	if ( ! alreadyExists ) {
+		throw new Error( 'Environment doesn\'t exist.' );
 	}
 
-	await prepareLandoEnv( instanceData, instancePath );
+	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+
+	await prepareLandoEnv( preProcessedInstanceData, instancePath );
+}
+
+function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
+	const newInstanceData = {
+		...instanceData,
+	};
+
+	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
+		// We need to make sure the redirect is an absolute path
+		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
+	}
+
+	return newInstanceData;
 }
 
 export async function destroyEnvironment( slug: string, removeFiles: boolean ) {

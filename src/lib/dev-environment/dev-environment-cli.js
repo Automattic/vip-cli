@@ -25,7 +25,7 @@ import {
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
-import { InstanceOptions, EnvironmentNameOptions } from './types';
+import { InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -117,12 +117,12 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 
 /**
  * Prompt for arguments
- * @param {InstanceOptions} preselecteddOptions - options to be used without prompt
+ * @param {InstanceOptions} preselectedOptions - options to be used without prompt
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
  * @returns {any} instance data
  */
-export async function promptForArguments( preselecteddOptions: InstanceOptions, defaultOptions: InstanceOptions) {
-	debug( 'Provided preselected', preselecteddOptions, 'and default', defaultOptions );
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions): InstanceData {
+	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
@@ -134,15 +134,18 @@ export async function promptForArguments( preselecteddOptions: InstanceOptions, 
 		multisiteDefault = defaultOptions.multisite;
 	}
 
-	const instanceData = {
-		wpTitle: preselecteddOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: 'multisite' in preselecteddOptions ? preselecteddOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
-		elasticsearch: preselecteddOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
-		mariadb: preselecteddOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
-		mediaRedirectDomain: preselecteddOptions.mediaRedirectDomain || '',
+	const instanceData: InstanceData = {
+		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
+		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
+		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
 		wordpress: {},
 		muPlugins: {},
 		clientCode: {},
+		statsd: false,
+		phpmyadmin: false,
+		xdebug: false,
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -154,12 +157,21 @@ export async function promptForArguments( preselecteddOptions: InstanceOptions, 
 	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
-		const option = preselecteddOptions[ component ];
+		const option = preselectedOptions[ component ];
 		const defaultValue = defaultOptions[ component ];
 
 		instanceData[ component ] = await processComponent( component, option, defaultValue );
 	}
 
+	for ( const service of [ 'statsd', 'phpmyadmin', 'xdebug' ] ) {
+		if ( service in preselectedOptions ) {
+			instanceData[ service ] = preselectedOptions[ service ];
+		} else if ( service in defaultOptions ) {
+			instanceData[ service ] = defaultOptions[ service ];
+		}
+	}
+
+	debug( 'Instance data after prompts', instanceData );
 	return instanceData;
 }
 
@@ -217,7 +229,7 @@ export async function promptForText( message: string, initial: string ) {
 		validate: nonEmptyValidator,
 	} );
 
-	return result.input.trim();
+	return ( result?.input || '' ).trim();
 }
 
 export async function promptForBoolean( message: string, initial: boolean ) {

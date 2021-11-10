@@ -19,7 +19,7 @@ import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, handleCLIException, promptForArguments } from '../lib/dev-environment/dev-environment-cli';
 import { InstanceOptions } from '../lib/dev-environment/types';
-import { doesEnvironmentExist, readEnvironmentData } from '../lib/dev-environment/dev-environment-core';
+import { doesEnvironmentExist, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -55,22 +55,25 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			...opt,
 		};
 
-		const defaultOptions = {
+		const defaultOptions: InstanceOptions = {
 			clientCode: currentInstanceData.clientCode.dir || currentInstanceData.clientCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag,
 			elasticsearch: currentInstanceData.elasticsearch,
 			mariadb: currentInstanceData.mariadb,
+			statsd: currentInstanceData.statsd,
+			phpmyadmin: currentInstanceData.phpmyadmin,
+			xdebug: currentInstanceData.phpmyadmin,
+			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 		};
 
 		const instanceData = await promptForArguments( preselectedOptions, defaultOptions );
-		// const instanceDataWithSlug = {
-		// 	...currentInstanceData,
-		// 	siteSlug: slug,
-		// 	statsd: opt.statsd || false,
-		// 	phpmyadmin: opt.phpmyadmin || false,
-		// 	xdebug: opt.xdebug || false,
-		// };
+		instanceData.siteSlug = slug;
+
+		await updateEnvironment( instanceData );
+
+		const message = '\n' + chalk.green( '✓' ) + ' environment updated. Restart environment for changes to take an affect.';
+		console.log( message );
 	} catch ( error ) {
 		if ( 'ENOENT' === error.code ) {
 			const message = 'Environment was created before update was supported.\n\nTo update environment please destroy it and create a new one.';
