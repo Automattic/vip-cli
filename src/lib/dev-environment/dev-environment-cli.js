@@ -84,8 +84,6 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-
-
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
@@ -101,7 +99,6 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 		tag: param,
 	};
 }
-
 
 export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	if ( ! appInfo ) {
@@ -121,7 +118,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
  * @returns {any} instance data
  */
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions): InstanceData {
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions ): InstanceData {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );

@@ -319,7 +319,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 			const result = await promptForArguments( input.preselected, input.default );
 
-
 			if ( input.preselected.mediaRedirectDomain ) {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
 			} else {
