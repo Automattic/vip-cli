@@ -27,6 +27,26 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.5.0 (9 November 2021)
+- #919  [dev-env] Expose lando core logs
+- #916  [dev-env] Save instance data state
+- #914  [dev-env] update help wording for dev env
+- #915  Add warning message when an envvar is set/deleted
+
+### 2.4.0 (5 November 2021)
+- #913  [dev-env] No login required for dev-env
+- #911  Adds more release instructions
+
+### 2.3.1 (2 November 2021)
+- Fixes an issue with the 2.3.0 where the intended changes didn't get published correctly.
+
+### 2.3.0 (2 November 2021)
+- #908  [dev-env] Custom user permissions setup
+- #897  [dev-env] Primary domain prompt for primary domain redirect
+- #902  [dev-env] Delete file permissions
+- #900  Clarify CONTRIBUTING guidelines
+- #905  Update contribution steps
+
 ### 2.2.0 (27 October 2021)
 
 New: Environment variables command

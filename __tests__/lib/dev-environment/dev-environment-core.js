@@ -138,6 +138,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						type: 'develop',
 						branch: 'dev',
 						isMultisite: true,
+						primaryDomain: '',
 					},
 				},
 			},
@@ -180,6 +181,9 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 							type: 'develop',
 							branch: 'dev',
 							isMultisite: true,
+							primaryDomain: {
+								name: 'test.develop.com',
+							},
 						},
 						{
 							name: 'prodName',
@@ -198,6 +202,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						type: 'develop',
 						branch: 'dev',
 						isMultisite: true,
+						primaryDomain: 'test.develop.com',
 					},
 				},
 			},

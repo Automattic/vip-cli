@@ -30,6 +30,7 @@ const landoFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 
 const nginxFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 'dev-env.nginx.template.conf.ejs' );
 const landoFileName = '.lando.yml';
 const nginxFileName = 'extra.conf';
+const instanceDataFileName = 'instance_data.json';
 
 const homeDirPathInsideContainers = '/user';
 
@@ -127,7 +128,13 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 		throw new Error( 'Environment not found.' );
 	}
 
-	await landoDestroy( instancePath );
+	const landoFilePath = path.join( instancePath, landoFileName );
+	if ( fs.existsSync( landoFilePath ) ) {
+		debug( 'Lando file exists, will lando destroy.' );
+		await landoDestroy( instancePath );
+	} else {
+		debug( "Lando file doesn't exist, skipping lando destroy." );
+	}
 
 	if ( removeFiles ) {
 		await fs.promises.rm( instancePath, { recursive: true } );
@@ -201,19 +208,23 @@ export function doesEnvironmentExist( slug: string ) {
 async function prepareLandoEnv( instanceData, instancePath ) {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
+	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
 	const nginxFolderPath = path.join( instancePath, nginxPathString );
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
+	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
 	fs.mkdirSync( instancePath, { recursive: true } );
 	fs.mkdirSync( nginxFolderPath, { recursive: true } );
 
 	fs.writeFileSync( landoFileTargetPath, landoFile );
 	fs.writeFileSync( nginxFileTargetPath, nginxFile );
+	fs.writeFileSync( instanceDataTargetPath, instanceDataFile );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 	debug( `Nginx file created in ${ nginxFileTargetPath }` );
+	debug( `Instance data file created in ${ instanceDataTargetPath }` );
 }
 
 function getAllEnvironmentNames() {
@@ -260,7 +271,10 @@ export async function getApplicationInformation( appId: number, envType: string 
 			name,
 			type,
 			branch,
-			isMultisite
+			isMultisite,
+			primaryDomain {
+				name
+			}
 		}`;
 
 	const queryResult = await app( appId, fieldsQuery );
@@ -286,6 +300,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 				branch: envData.branch,
 				type: envData.type,
 				isMultisite: envData.isMultisite,
+				primaryDomain: envData.primaryDomain?.name || '',
 			};
 		}
 	}
