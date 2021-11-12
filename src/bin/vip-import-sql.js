@@ -506,6 +506,7 @@ Processing the SQL import for your environment...
 				environmentId: env.id,
 				basename: basename,
 				md5: md5,
+				searchReplace: [],
 			};
 
 			if ( searchReplace ) {

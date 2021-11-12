@@ -18,7 +18,7 @@ import command from 'lib/cli/command';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, handleCLIException, promptForArguments } from '../lib/dev-environment/dev-environment-cli';
-import { InstanceOptions } from '../lib/dev-environment/types';
+import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 

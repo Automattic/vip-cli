@@ -341,7 +341,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 	return appData;
 }
 
-export async function resolveImportPath( slug: string, fileName: string, searchReplace: String | String[], inPlace: boolean ): Promise<SQLImportPaths> {
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
 	let resolvedPath = resolvePath( fileName );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
