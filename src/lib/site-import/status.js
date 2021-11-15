@@ -270,7 +270,7 @@ ${ maybeExitPrompt }
 				let jobCreationTime;
 				try {
 					jobCreationTime = new Date( createdAt ).getTime();
-				} catch ( e ) {
+				} catch ( err ) {
 					debug( 'Unable to parse createdAt to a Date' );
 				}
 

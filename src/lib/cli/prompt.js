@@ -17,13 +17,13 @@ export async function confirm( values: Array<Tuple>, message: string, skipPrompt
 	console.log( keyValue( values ) );
 
 	if ( ! skipPrompt ) {
-		const c = await prompt( {
+		const answer = await prompt( {
 			type: 'confirm',
 			name: 'confirm',
 			message: message,
 			default: false,
 		} );
-		return c.confirm;
+		return answer.confirm;
 	}
 
 	return true;

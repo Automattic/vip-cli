@@ -133,8 +133,6 @@ export type CheckType = {
 };
 
 export type Checks = {
-	useDB: CheckType,
-	createDB: CheckType,
 	trigger: CheckType,
 	dropDB: CheckType,
 	alterUser: CheckType,
@@ -144,24 +142,6 @@ export type Checks = {
 };
 
 const checks: Checks = {
-	useDB: {
-		matcher: /^use\s/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
-		results: [],
-		message: 'USE statement',
-		excerpt: "'USE' statement should not be present (case-insensitive, at beginning of line)",
-		recommendation: 'Remove these lines',
-	},
-	createDB: {
-		matcher: /^CREATE DATABASE/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
-		results: [],
-		message: 'CREATE DATABASE statement',
-		excerpt: "'CREATE DATABASE' statement should not  be present (case-insensitive)",
-		recommendation: 'Remove these lines',
-	},
 	binaryLogging: {
 		matcher: /SET @@SESSION.sql_log_bin/i,
 		matchHandler: lineNumber => lineNumber,
@@ -227,7 +207,7 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	engineInnoDB: {
-		matcher: /ENGINE=(?!(InnoDB))/i,
+		matcher: / ENGINE=(?!(InnoDB))/i,
 		matchHandler: lineNumber => lineNumber,
 		outputFormatter: errorCheckFormatter,
 		results: [],

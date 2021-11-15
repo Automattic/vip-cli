@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
@@ -22,11 +22,10 @@ import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } destroy`,
-		description: 'Destroys a default local dev environment',
+		description: 'Destroys the default local dev environment',
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } destroy --slug foo`,
@@ -47,9 +46,9 @@ command()
 			const removeFiles = ! ( opt.soft || false );
 			await destroyEnvironment( slug, removeFiles );
 
-			const message = chalk.green( '✓' ) + ' environment destroyed.\n';
+			const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 			console.log( message );
-		} catch ( e ) {
-			exit.withError( e.message );
+		} catch ( error ) {
+			exit.withError( error.message );
 		}
 	} );

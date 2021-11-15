@@ -44,7 +44,20 @@ let _opts = {};
 args.argv = async function( argv, cb ): Promise<any> {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	const options = this.parse( parsedAlias.argv, { help: false, version: false } );
+	// A usage option allows us to override the default usage text, which isn't
+	// accurate for subcommands. By default, it will display something like (note
+	// the hyphen):
+	//   Usage: vip command-subcommand [options]
+	//
+	// We can pass "vip command subcommand" to the name param for more accurate
+	// usage text:
+	//   Usage: vip command subcommand [options]
+	//
+	// It also allows us to represent required args in usage text:
+	//   Usage: vip command subcommand <arg1> <arg2> [options]
+	const name = _opts.usage || null;
+
+	const options = this.parse( parsedAlias.argv, { help: false, name, version: false } );
 
 	if ( options.h || options.help ) {
 		this.showHelp();
@@ -81,8 +94,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 	updateNotifier( { pkg, isGlobal: true, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
 
 	// `help` and `version` are always defined as subcommands
-	const customCommands = this.details.commands.filter( c => {
-		switch ( c.usage ) {
+	const customCommands = this.details.commands.filter( command => {
+		switch ( command.usage ) {
 			case 'help':
 			case 'version':
 				return false;
@@ -174,9 +187,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			const appNames = res.data.apps.edges.map( cur => cur.name );
 
-			let a;
+			let appSelection;
 			try {
-				a = await prompt( {
+				appSelection = await prompt( {
 					type: 'autocomplete',
 					name: 'app',
 					message: 'Which app?',
@@ -193,24 +206,24 @@ args.argv = async function( argv, cb ): Promise<any> {
 			}
 
 			// Copy all app information
-			a.app = res.data.apps.edges.find( cur => cur.name === a.app );
+			appSelection.app = res.data.apps.edges.find( cur => cur.name === appSelection.app );
 
-			if ( ! a || ! a.app || ! a.app.id ) {
+			if ( ! appSelection || ! appSelection.app || ! appSelection.app.id ) {
 				await trackEvent( 'command_appcontext_list_select_error', {
 					error: 'Invalid app selected',
 				} );
 
-				exit.withError( `App ${ chalk.blueBright( a.app.name ) } does not exist` );
+				exit.withError( `App ${ chalk.blueBright( appSelection.app.name ) } does not exist` );
 			}
 
 			await trackEvent( 'command_appcontext_list_select_success' );
 
-			options.app = Object.assign( {}, a.app );
+			options.app = Object.assign( {}, appSelection.app );
 		} else {
-			let a;
+			let appLookup;
 			try {
-				a = await app( options.app, _opts.appQuery );
-			} catch ( e ) {
+				appLookup = await app( options.app, _opts.appQuery );
+			} catch ( err ) {
 				await trackEvent( 'command_appcontext_param_error', {
 					error: 'App lookup failed',
 				} );
@@ -218,7 +231,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				exit.withError( `App ${ chalk.blueBright( options.app ) } does not exist` );
 			}
 
-			if ( ! a || ! a.id ) {
+			if ( ! appLookup || ! appLookup.id ) {
 				await trackEvent( 'command_appcontext_param_error', {
 					error: 'Invalid app specified',
 				} );
@@ -228,7 +241,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			await trackEvent( 'command_appcontext_param_select' );
 
-			options.app = Object.assign( {}, a );
+			options.app = Object.assign( {}, appLookup );
 		}
 
 		if ( _opts.childEnvContext ) {
@@ -270,9 +283,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 		} else if ( options.app.environments.length > 1 ) {
 			const environmentNames = options.app.environments.map( envObject => getEnvIdentifier( envObject ) );
 
-			let e;
+			let envSelection;
 			try {
-				e = await prompt( {
+				envSelection = await prompt( {
 					type: 'select',
 					name: 'env',
 					message: 'Which environment?',
@@ -288,19 +301,19 @@ args.argv = async function( argv, cb ): Promise<any> {
 			}
 
 			// Get full environment info after user selection
-			e.env = options.app.environments.find( envObject => getEnvIdentifier( envObject ) === e.env );
+			envSelection.env = options.app.environments.find( envObject => getEnvIdentifier( envObject ) === envSelection.env );
 
-			if ( ! e || ! e.env || ! e.env.id ) {
+			if ( ! envSelection || ! envSelection.env || ! envSelection.env.id ) {
 				await trackEvent( 'command_childcontext_list_select_error', {
 					error: 'Invalid environment selected',
 				} );
 
-				exit.withError( `Environment ${ chalk.blueBright( getEnvIdentifier( e.env ) ) } does not exist` );
+				exit.withError( `Environment ${ chalk.blueBright( getEnvIdentifier( envSelection.env ) ) } does not exist` );
 			}
 
 			await trackEvent( 'command_childcontext_list_select_success' );
 
-			options.env = e.env;
+			options.env = envSelection.env;
 		}
 	}
 
@@ -446,9 +459,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			const formattedOut = formatData( res, options.format );
 
-			const p = pager();
-			p.write( formattedOut + '\n' );
-			p.end();
+			const page = pager();
+			page.write( formattedOut + '\n' );
+			page.end();
 			return {};
 		}
 	}
@@ -490,29 +503,27 @@ export default function( opts: any ): args {
 		wildcardCommand: false,
 	}, opts );
 
-	const a = args;
-
 	if ( _opts.appContext || _opts.requireConfirm ) {
-		a.option( 'app', 'Specify the app' );
+		args.option( 'app', 'Specify the app' );
 	}
 
 	if ( _opts.envContext || _opts.childEnvContext ) {
-		a.option( 'env', 'Specify the environment' );
+		args.option( 'env', 'Specify the environment' );
 	}
 
 	if ( _opts.requireConfirm ) {
-		a.option( 'force', 'Skip confirmation', false );
+		args.option( 'force', 'Skip confirmation', false );
 	}
 
 	if ( _opts.format ) {
-		a.option( 'format', 'Format results', 'table' );
+		args.option( 'format', 'Format results', 'table' );
 	}
 
 	// Add help and version to all subcommands
-	a.option( 'help', 'Output the help for the (sub)command' );
-	a.option( 'version', 'Output the version number' );
+	args.option( 'help', 'Output the help for the (sub)command' );
+	args.option( 'version', 'Output the version number' );
 
-	return a;
+	return args;
 }
 
 export function getEnvIdentifier( env ) {
@@ -525,4 +536,10 @@ export function getEnvIdentifier( env ) {
 	}
 
 	return identifier;
+}
+
+export function containsAppEnvArgument( argv ) {
+	const parsedAlias = parseEnvAliasFromArgv( argv );
+
+	return !! ( parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' ) );
 }

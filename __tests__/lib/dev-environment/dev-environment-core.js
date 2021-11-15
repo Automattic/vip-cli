@@ -6,8 +6,9 @@
  * External dependencies
  */
 import xdgBasedir from 'xdg-basedir';
-import os from 'os';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -17,13 +18,23 @@ import { getEnvironmentPath,
 	createEnvironment,
 	startEnvironment,
 	destroyEnvironment,
-	getApplicationInformation } from 'lib/dev-environment/dev-environment-core';
+	getApplicationInformation,
+	resolveImportPath,
+} from '../../../src/lib/dev-environment/dev-environment-core';
+import { searchAndReplace } from '../../../src/lib/search-and-replace';
+import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
 jest.mock( '../../../src/lib/api/app' );
+jest.mock( '../../../src/lib/search-and-replace' );
+jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
 	describe( 'createEnvironment', () => {
 		it( 'should throw for existing folder', async () => {
 			const slug = 'foo';
@@ -127,6 +138,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						type: 'develop',
 						branch: 'dev',
 						isMultisite: true,
+						primaryDomain: '',
 					},
 				},
 			},
@@ -169,6 +181,9 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 							type: 'develop',
 							branch: 'dev',
 							isMultisite: true,
+							primaryDomain: {
+								name: 'test.develop.com',
+							},
 						},
 						{
 							name: 'prodName',
@@ -187,6 +202,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						type: 'develop',
 						branch: 'dev',
 						isMultisite: true,
+						primaryDomain: 'test.develop.com',
 					},
 				},
 			},
@@ -220,6 +236,97 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const result = await getApplicationInformation( input.appId, input.envType );
 
 			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'resolveImportPath', () => {
+		afterEach( () => {
+			path.sep = '/';
+		} );
+
+		it( 'should throw if file does not exist', async () => {
+			fs.existsSync.mockReturnValue( false );
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
+
+			expect( searchAndReplace ).not.toHaveBeenCalled();
+
+			await expect( promise ).rejects.toEqual(
+				new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' )
+			);
+		} );
+
+		it( 'should resolve the path and replace it with /user', async () => {
+			fs.existsSync.mockReturnValue( true );
+			const resolvedPath = `${ os.homedir() }/testfile.sql`;
+			resolvePath.mockReturnValue( resolvedPath );
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
+
+			expect( searchAndReplace ).not.toHaveBeenCalled();
+
+			await expect( promise ).resolves.toEqual(
+				{
+					resolvedPath: resolvedPath,
+					inContainerPath: resolvedPath.replace( os.homedir(), '/user' ),
+				}
+			);
+		} );
+
+		it( 'should handle windows path correctly', async () => {
+			path.sep = '\\';
+			fs.existsSync.mockReturnValue( true );
+			const resolvedPath = `${ os.homedir() }\\somewhere\\testfile.sql`;
+			resolvePath.mockReturnValue( resolvedPath );
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
+
+			await expect( promise ).resolves.toEqual(
+				{
+					resolvedPath: resolvedPath,
+					inContainerPath: '/user/somewhere/testfile.sql',
+				}
+			);
+		} );
+
+		it( 'should call search and replace not in place with the proper arguments', async () => {
+			searchAndReplace.mockReturnValue( {
+				outputFileName: 'testfile.sql',
+			} );
+			const resolvedPath = `${ os.homedir() }/testfile.sql`;
+			resolvePath.mockReturnValue( resolvedPath );
+
+			const searchReplace = 'testsite.com,testsite.net';
+
+			const promise = resolveImportPath( 'foo', 'testfile.sql', searchReplace, false );
+
+			expect( searchAndReplace ).toHaveBeenCalledTimes( 1 );
+			expect( searchAndReplace ).toHaveBeenLastCalledWith( resolvedPath, searchReplace, {
+				isImport: true,
+				output: true,
+				inPlace: false,
+			} );
+
+			const expectedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
+
+			await expect( promise ).resolves.toEqual( {
+				resolvedPath: expectedPath,
+				inContainerPath: expectedPath,
+			} );
+		} );
+
+		it( 'should call search and replace in place with the proper arguments', async () => {
+			const resolvedPath = `${ os.homedir() }/testfile.sql`;
+			resolvePath.mockReturnValue( resolvedPath );
+			const searchReplace = 'testsite.com,testsite.net';
+
+			await resolveImportPath( 'foo', 'testfile.sql', searchReplace, true );
+
+			expect( searchAndReplace ).toHaveBeenCalledTimes( 1 );
+			expect( searchAndReplace ).toHaveBeenLastCalledWith( resolvedPath, searchReplace, {
+				isImport: true,
+				output: true,
+				inPlace: true,
+			} );
 		} );
 	} );
 } );

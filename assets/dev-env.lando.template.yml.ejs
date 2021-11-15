@@ -1,4 +1,4 @@
-name: vipdev<%= siteSlug %>
+name: <%= siteSlug %>
 env_file:
   - .env
 proxy:
@@ -12,110 +12,149 @@ services:
   devtools:
     type: compose
     services:
-      image: wpvipdev/dev-tools:0.4
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.8
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
+        - scripts:/scripts
     volumes:
       devtools: {}
+      scripts:
 
   nginx:
     type: compose
+    ssl: true
+    sslExpose: false
     services:
-      image: wpvipdev/nginx:1.19.2-2
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
       command: nginx -g "daemon off;"
       volumes:
+        - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
 
   php:
     type: compose
     services:
-      image: wpvipdev/php-fpm:<%= phpVersion %>
-      command: php-fpm
+      image: ghcr.io/automattic/vip-container-images/php-fpm:7.4
+      command: run.sh
       working_dir: /wp
+      environment:
+        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+        STATSD: <%= statsd ? 'enable' : 'disable' %>
+
+        LANDO_NO_USER_PERMS: 'enable'
+
+
       volumes:
         - type: volume
           source: devtools
           target: /dev-tools
           volume:
             nocopy: true
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
 <% wpVolumes() %>
-
-    run_as_root:
+    run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
-    type: mariadb
-    #portforward: 13306
+    type: compose
+    services:
+      image: mariadb:<%= mariadb %>
+      command: docker-entrypoint.sh mysqld
+      ports:
+        - ":3306"
+      healthcheck:
+        test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
+      environment:
+        MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
+      volumes:
+        - database_data:/var/lib/mysql
+    volumes:
+      database_data:
 
   memcached:
-    type: memcached:1.5.12
+    type: memcached:custom
+    overrides:
+      image: memcached:1.6-alpine3.14
+      command: docker-entrypoint.sh memcached
 
-  #mailhog:
-  #  type: mailhog
-  #  hogfrom:
-  #  - php
-
+<% if ( phpmyadmin ) { %>
   phpmyadmin:
     type: phpmyadmin
     hosts:
       - database
+    overrides:
+      environment:
+        UPLOAD_LIMIT: 4G
+<% } %>
 
   vip-search:
-    type: elasticsearch:custom
-    portforward: true
-    overrides:
-      image: bitnami/elasticsearch:7.8.0
+    type: compose
+    services:
+      image: elasticsearch:<%= elasticsearch %>
+      command: /usr/local/bin/docker-entrypoint.sh
+      environment:
+        ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
+        ELASTICSEARCH_CLUSTER_NAME: 'bespin'
+        ELASTICSEARCH_NODE_NAME: 'lando'
+        ELASTICSEARCH_PORT_NUMBER: 9200
+        discovery.type: 'single-node'
+      ports:
+        - ":9200"
+      healthcheck:
+        test: "curl --noproxy '*' -XGET localhost:9200"
+      volumes:
+        - search_data:/usr/share/elasticsearch/data
+    volumes:
+      search_data:
 
+<% if ( statsd ) { %>
   statsd:
     type: compose
     services:
-      image: wpvipdev/statsd:v0.8.6-1
+      image: ghcr.io/automattic/vip-container-images/statsd:v0.9.0
       command: node stats.js /config/statsd-config.js
+<% } %>
 
-  # Code containers
-
-<% if ( wordpress.mode == 'image' ) { %>
   wordpress:
     type: compose
     services:
-      image: <%= wordpress.image %>:<%= wordpress.tag %>
-      command: sh -c "rsync -a /wp/ /shared/; sleep infinity"
+      image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
+      command: sh -c "rsync -a /wp/ /shared/; chown www-data -R /shared; sleep infinity"
       volumes:
-        - wordpress:/shared
-    volumes:
-      wordpress: {}
-<% } %>
+        - ./wordpress:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
 
 <% if ( muPlugins.mode == 'image' ) { %>
   mu-plugins:
     type: compose
     services:
-      image: <%= muPlugins.image %>:<%= muPlugins.tag %>
-      command: sh -c 'rsync -a /mu-plugins/ /shared/; sh /autoupdate.sh /shared'
-      volumes:
-        - mu-plugins:/shared
-    volumes:
-      mu-plugins: {}
-<% } %>
-
-<% if ( jetpack.mode == 'image' ) { %>
-  jetpack:
-    type: compose
-    services:
-      image: <%= jetpack.image %>:<%= jetpack.tag %>
+      image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
       command: sh /run.sh
       volumes:
-        - jetpack:/shared
+        - mu-plugins:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
     volumes:
-      jetpack: {}
+      mu-plugins: {}
 <% } %>
 
 <% if ( clientCode.mode == 'image' ) { %>
   client-code:
     type: compose
     services:
-      image: <%= clientCode.image %>:<%= clientCode.tag %>
+      image: ghcr.io/automattic/vip-container-images/skeleton:latest
       command: sleep infinity
       volumes:
         - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
@@ -139,26 +178,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
+    user: root
     cmd:
-      - wp
-
-  test:
-    service: php
-    description: "Run all tests: lando test"
-    cmd:
-      - cd /wp/wp-content/mu-plugins && phpunit
-
-  add-fake-data:
-    service: php
-    description: "Add fake data described in '/configs/fixtures/test_fixtures.yml'. You can also use 'wp fixtures' directly to aim it at other files within lando."
-    cmd:
-     - wp fixtures load --file=/app/configs/fixtures/test_fixtures.yml
-
-  delete-fake-data:
-    service: php
-    description: "Delete all fake data generated by 'wp fixtures'"
-    cmd:
-     - wp fixtures delete
+      - wp --allow-root
 
   add-site:
     service: php
@@ -173,18 +195,10 @@ tooling:
       - mysql -hdatabase -uwordpress -pwordpress wordpress
 
 <% function wpVolumes() { %>
-        - ./config/wp-config-defaults.php:/wp/config/wp-config-defaults.php
         - ./config:/wp/config
         - ./log:/wp/log
-<% if ( wordpress.mode == 'image' ) { %>
-        - type: volume
-          source: wordpress
-          target: /wp
-          volume:
-            nocopy: true
-<% } else { %>
-        - <%= wordpress.dir %>:/wp
-<% } %>
+        - ./uploads:/wp/wp-content/uploads
+        - ./wordpress:/wp
 <% if ( muPlugins.mode == 'image' ) { %>
         - type: volume
           source: mu-plugins
@@ -193,15 +207,6 @@ tooling:
             nocopy: true
 <% } else { %>
         - <%= muPlugins.dir %>:/wp/wp-content/mu-plugins
-<% } %>
-<% if ( jetpack.mode == 'image' ) { %>
-        - type: volume
-          source: jetpack
-          target: /wp/wp-content/mu-plugins/jetpack
-          volume:
-            nocopy: true
-<% } else if ( jetpack.mode == 'local' ) { %>
-        - <%= jetpack.dir %>:/wp/wp-content/mu-plugins/jetpack
 <% } %>
 <% if ( clientCode.mode == 'image' ) { %>
         - type: volume

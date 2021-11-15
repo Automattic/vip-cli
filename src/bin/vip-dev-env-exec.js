@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
@@ -17,7 +17,6 @@ import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-
 import { exec } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- wp post list`,
@@ -40,20 +39,20 @@ command( { wildcardCommand: true } )
 		const slug = getEnvironmentName( opt );
 
 		try {
-			// to avoid confusion let's enforce -- as a spliter for arguments for this command and wp itself
-			const argSpliterIx = process.argv.findIndex( argument => '--' === argument );
-			const argSpliterFound = argSpliterIx > -1;
-			if ( unmatchedArgs.length > 0 && ! argSpliterFound ) {
+			// to avoid confusion let's enforce -- as a splitter for arguments for this command and wp itself
+			const argSplitterIx = process.argv.findIndex( argument => '--' === argument );
+			const argSplitterFound = argSplitterIx > -1;
+			if ( unmatchedArgs.length > 0 && ! argSplitterFound ) {
 				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
 			}
 
 			let arg = [];
-			if ( argSpliterFound && argSpliterIx + 1 < process.argv.length ) {
-				arg = process.argv.slice( argSpliterIx + 1 );
+			if ( argSplitterFound && argSplitterIx + 1 < process.argv.length ) {
+				arg = process.argv.slice( argSplitterIx + 1 );
 			}
 
 			await exec( slug, arg );
-		} catch ( e ) {
-			handleCLIException( e );
+		} catch ( error ) {
+			handleCLIException( error );
 		}
 	} );

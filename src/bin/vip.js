@@ -4,7 +4,6 @@
 /**
  * External dependencies
  */
-import args from 'args';
 import opn from 'opn';
 import { prompt } from 'enquirer';
 import chalk from 'chalk';
@@ -14,7 +13,7 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import config from 'root/config/config.json';
-import command from 'lib/cli/command';
+import command, { containsAppEnvArgument } from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
@@ -29,7 +28,7 @@ if ( config && config.environment !== 'production' ) {
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
-const runCmd = function() {
+const runCmd = async function() {
 	const cmd = command();
 	cmd
 		.command( 'logout', 'Logout from your current session', async () => {
@@ -38,11 +37,12 @@ const runCmd = function() {
 			console.log( 'You are successfully logged out.' );
 		} )
 		.command( 'app', 'List and modify your VIP applications' )
-		.command( 'import', 'Import Media or SQL files into your VIP applications' )
-		.command( 'search-replace', 'Perform Search and Replace tasks on files' )
+		.command( 'config', 'Set configuration for your VIP applications' )
+		.command( 'dev-env', 'Use local dev-environment' )
+		.command( 'import', 'Import media or SQL files into your VIP applications' )
+		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'sync', 'Sync production to a development environment' )
-		.command( 'wp', 'Run WP CLI commands against an environment' )
-		.command( 'dev-env', 'Use local dev-environment' );
+		.command( 'wp', 'Run WP CLI commands against an environment' );
 
 	cmd.argv( process.argv );
 };
@@ -52,10 +52,11 @@ const rootCmd = async function() {
 
 	const isHelpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
 	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
+	const isDevEnvCommandWithoutEnv = process.argv.some( arg => arg === 'dev-env' ) && ! containsAppEnvArgument( process.argv );
 
 	debug( 'Argv:', process.argv );
 
-	if ( isLogoutCommand || isHelpCommand || ( token && token.valid() ) ) {
+	if ( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) ) {
 		runCmd();
 	} else {
 		console.log();
@@ -74,13 +75,13 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_execute' );
 
-		const c = await prompt( {
+		const answer = await prompt( {
 			type: 'confirm',
 			name: 'continue',
 			message: 'Ready?',
 		} );
 
-		if ( ! c.continue ) {
+		if ( ! answer.continue ) {
 			await trackEvent( 'login_command_browser_cancelled' );
 
 			return;
@@ -90,21 +91,19 @@ const rootCmd = async function() {
 
 		await trackEvent( 'login_command_browser_opened' );
 
-		let t = await prompt( {
+		const { token: tokenInput } = await prompt( {
 			type: 'password',
 			name: 'token',
 			message: 'Access Token:',
 		} );
 
-		t = t.token;
-
 		try {
-			token = new Token( t );
-		} catch ( e ) {
+			token = new Token( tokenInput );
+		} catch ( err ) {
 			console.log( 'The token provided is malformed. Please check the token and try again.' );
 
-			rollbar.error( e );
-			await trackEvent( 'login_command_token_submit_error', { error: e.message } );
+			rollbar.error( err );
+			await trackEvent( 'login_command_token_submit_error', { error: err.message } );
 
 			return;
 		}
@@ -127,13 +126,13 @@ const rootCmd = async function() {
 
 		try {
 			Token.set( token.raw );
-		} catch ( e ) {
+		} catch ( err ) {
 			await trackEvent( 'login_command_token_submit_error', {
-				error: e.message,
+				error: err.message,
 			} );
 
-			rollbar.error( e );
-			throw e;
+			rollbar.error( err );
+			throw err;
 		}
 
 		// De-anonymize user for tracking

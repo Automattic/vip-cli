@@ -2,7 +2,7 @@
 
 /**
  * @flow
- * @fomat
+ * @format
  */
 
 /**
@@ -20,7 +20,6 @@ import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/co
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-// Command examples
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info -all`,
@@ -38,7 +37,7 @@ const examples = [
 
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'all', 'Show Info for all local dev environemnts' )
+	.option( 'all', 'Show Info for all local dev environments' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
@@ -51,7 +50,7 @@ command()
 			} else {
 				await printEnvironmentInfo( slug );
 			}
-		} catch ( e ) {
-			handleCLIException( e );
+		} catch ( error ) {
+			handleCLIException( error );
 		}
 	} );

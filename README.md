@@ -17,17 +17,154 @@ vip
 
 If you need more information, check out our [VIP CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
 
+## Contributing
+
+For help with contributing to this project, including instructions for local development, please see [CONTRIBUTING](CONTRIBUTING.md) and [SECURITY](SECURITY.md).
+
 ## Analytics
 
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
 ## Changelog
 
+### 2.5.0 (9 November 2021)
+- #919  [dev-env] Expose lando core logs
+- #916  [dev-env] Save instance data state
+- #914  [dev-env] update help wording for dev env
+- #915  Add warning message when an envvar is set/deleted
+
+### 2.4.0 (5 November 2021)
+- #913  [dev-env] No login required for dev-env
+- #911  Adds more release instructions
+
+### 2.3.1 (2 November 2021)
+- Fixes an issue with the 2.3.0 where the intended changes didn't get published correctly.
+
+### 2.3.0 (2 November 2021)
+- #908  [dev-env] Custom user permissions setup
+- #897  [dev-env] Primary domain prompt for primary domain redirect
+- #902  [dev-env] Delete file permissions
+- #900  Clarify CONTRIBUTING guidelines
+- #905  Update contribution steps
+
+### 2.2.0 (27 October 2021)
+
+New: Environment variables command
+- #896 Open config envvar command for all customers
+- #876 Update envvar list command to only show names
+- #879 Add config envvar get and get-all commands
+- #875 Temporarily gate access to new config command to VIP staff
+- #858 Environment variable CLI commands (list, set, delete)
+
+Fixes:
+- #901 Don't mark import as failed until restore has completed
+- #899 Proxy fix + healthchecks
+- #894 support windows db import
+- #889 Proxy config change
+- #888 mount wordpress code
+- #872 Auto flush cache after import and add vipgo user
+- #869 Media redirect to production site.
+- #885 Make search data persistent between restarts
+- #844 Expose DB and expose extra services in info table
+- #865 spawn WP-CLI as root to allow for FS operations
+- #895 Fix rmdir deprecation warning
+- #870 Add the VIP CLI release process and release schedule
+
+Dependencies updates:
+- #778 Update dependency ini to v2
+- #786 Update dependency keytar to v7
+- #884 Update dependency cli-columns to v4
+- #887 Update dependency lando to v3.4.3
+- #874 Update dependency lando to v3.4.0
+- #750 Bump hosted-git-info from 2.8.8 to 2.8.9
+- #877 Bump tmpl from 1.0.4 to 1.0.5
+
+https://github.com/Automattic/vip/releases/tag/v2.2.0
+
+### 2.1.0 (16 September 2021)
+
+- #857  Remove select DB checks
+- #864  Adding WordPress versions to dev-env
+- #868  persist database data in between container restarts
+- #862  Fix lint warnings
+- #867  Update dependency lando to v3.3.2
+- #863  Add links to CONTRIBUTING and SECURITY
+- #855  Add some helpful hints for new command scaffolding
+- #856  Adding media import command on dev environment
+- #849  Adding SQL import to dev environment
+- #854  Updating command descriptions and arguments on dev-env
+- #850  Use official memcached image on dev-env
+- #853  Enable ssl forwarding on dev-env
+- #851  Conditionally disabling statsd on mu-plugins
+- #852  Fixing Prettier format annotation typo
+- #843  Removing custom wp-config-defaults
+- #848  Not using a prefix to all dev environments
+- #847  Update dependency lando to v3.3.0
+- #840  Use official Elasticsearch image on dev-env
+- #845  Fix MariaDB healthcheck
+- #846  dev-env: Update error message for directory prompt
+- #842  Removing PHP parameter from dev environment
+- #839  Use official MariaDB image and enable version selection on dev-env
+
+https://github.com/Automattic/vip/releases/tag/v2.1.0
+
+### 2.0.14 (26 August 2021)
+
+- Update dependency graphql to v15.5.1 #796
+- Update dependency graphql-tag to v2.12.5 #799
+- Update dependency debug to v4.3.2 #806
+- Remove fake data dev-env commands #830
+- Disable statsd by default #831
+- Support ES version option #832
+- Removing mu-plugins test command #835
+- Making PHPMyAdmin optional on dev-env #836
+- Patching Docker for Windows in dev-env #837
+- enable/disable xdebug #838
+
+https://github.com/Automattic/vip/releases/tag/v2.0.14
+
+### 2.0.13 (19 August 2021)
+
+- Allow user to run multisite import even if wpSites.nodes doesn't exist. #815
+- Bumping version number to 2.0.12 #827
+- Path resolving fixes #829
+- Send header each time #826
+- Sets up a volume for media files #825
+- Update dependency chalk to v4.1.2 #813
+- Update dependency lando to v3.1.4 #797
+- Upgrading statsd container to 0.9.0 #828
+
+https://github.com/Automattic/vip/releases/tag/v2.0.13
+
+### 2.0.12 (13 August 2021)
+
+- Using new VIP Docker images for dev-env #818
+- Bump path-parse from 1.0.6 to 1.0.7 #819
+- Increasing dev-env PMA upload limit to 4G #822
+- PIE-2890 Fixes issue where user is unable to login after logout #823
+
+https://github.com/Automattic/vip/releases/tag/v2.0.12
+
+### 2.0.11 (5 August 2021)
+- Handle parameter validation in a consistent way #795
+- Fix error blocking data sync on CLI sites #810
+- Update DB Engine check to reduce false positives #811
+- Retrieve the status and steps regardless of the site type. #812
+- Dev-Env: Handle relative file paths #802
+- Dev-Env: Make dev-env start more resilient #804
+- Dev-Env: Validate Path to a component #803
+- Dev-Env: Handle multisite = false correctly #809
+- Dev-Env: Adds a check for an orphaned proxy container #814
+- FORNO-759: Add logged in user details to all Tracks events #801
+- FORNO-779: Throttle request to Parker when fetching media import status #808
+
+https://github.com/Automattic/vip/releases/tag/2.0.11
+
 ### 2.0.10 (21 June 2021)
 - Adds Media Import Abort subcommand
 - Disables enterprise search by default
 - Handles numbered slugs correctly
-- Unifies print table on start command with other commands 
+- Unifies print table on start command with other commands
 - Drops the isVip requirement for dev-env
 - Fixes intermittent fatal error caused due to analytics tracking
 - Misc dependency updates
@@ -143,7 +280,7 @@ https://github.com/Automattic/vip/releases/tag/v1.9.0
 ### 1.8.0 (25 Sep 2019)
 - Fixes around cancelling commands via Ctrl-C
 - Gracefully handle remote command cancellation
-- Enhance Rollbar logging for additional use cases 
+- Enhance Rollbar logging for additional use cases
 
 https://github.com/Automattic/vip/releases/tag/v1.8.0
 
@@ -153,7 +290,7 @@ https://github.com/Automattic/vip/releases/tag/v1.8.0
 https://github.com/Automattic/vip/releases/tag/v1.7.0
 
 ### 1.6.2 (25 Jul 2019)
-- Corrected some install issues with the 1.6.0/1.6.1 releases. 
+- Corrected some install issues with the 1.6.0/1.6.1 releases.
 
 https://github.com/Automattic/vip/releases/tag/v1.6.2
 

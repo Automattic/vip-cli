@@ -13,6 +13,7 @@
 import { trackEvent } from 'lib/tracker';
 import * as exit from './exit';
 import * as featureFlags from 'lib/api/feature-flags';
+import Token from 'lib/token';
 
 export async function checkFeatureEnabled(
 	featureName: string,
@@ -49,23 +50,19 @@ export async function checkFeatureEnabled(
 	return isVIP === true;
 }
 
-export async function checkIsVIP(): Promise<boolean> {
-	await trackEvent( 'checkIsVIP_start' );
+// Because this function is called by trackEvent:
+// - It cannot directly or indirectly call trackEvent, or it will cause a loop.
+// - It is mocked globally in jest.setupMocks.js.
+export async function checkIfUserIsVip() {
+	const token = await Token.get();
 
-	let isVip = false;
-	try {
-		isVip = await checkIfUserIsVip();
-	} catch ( err ) {
-		const message = err.toString();
-		await trackEvent( 'checkFeatureEnabled_fetch_error', { error: message } );
+	if ( token && token.valid() ) {
+		const res = await featureFlags.get();
+
+		return !! res?.data?.me?.isVIP;
 	}
 
-	return !! isVip;
-}
-
-export async function checkIfUserIsVip() {
-	const res = await featureFlags.get();
-	return res?.data?.me?.isVIP;
+	return false;
 }
 
 export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {

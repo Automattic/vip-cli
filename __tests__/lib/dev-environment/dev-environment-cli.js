@@ -6,15 +6,12 @@
  * External dependencies
  */
 import { prompt, selectRunMock } from 'enquirer';
-import fetch from 'node-fetch';
 
 /**
  * Internal dependencies
  */
 
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
-import dockerHubWPResponse from './docker-hub-wp-response.json';
-import dockerHubJetpackResponse from './docker-hub-jetpack-response.json';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -26,13 +23,6 @@ jest.mock( 'enquirer', () => {
 		selectRunMock: _selectRunMock,
 	};
 } );
-
-jest.mock( 'node-fetch' );
-fetch.mockImplementation( url =>
-	Promise.resolve( { json: () => Promise.resolve(
-		url === 'https://hub.docker.com/v2/repositories/wpvipdev/wordpress/tags/?page_size=10'
-			? dockerHubWPResponse
-			: dockerHubJetpackResponse ) } ) );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'getEnvironmentName', () => {
@@ -103,32 +93,32 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
-			{ // wordpress tag
+			{ // base tag
 				param: 5.6,
-				option: 'wordpress',
+				allowLocal: true,
 				expected: {
-					image: 'wpvipdev/wordpress',
 					mode: 'image',
 					tag: '5.6',
 				},
 			},
-			{ // jetpack - mu
-				param: 'mu',
-				option: 'jetpack',
+			{ // if local is not allowed
+				param: '/tmp/wp',
+				allowLocal: false,
 				expected: {
-					mode: 'inherit',
+					mode: 'image',
+					tag: '/tmp/wp',
 				},
 			},
-			{ // muPlugins - path
+			{ // if local is  allowed
 				param: '~/path',
-				option: 'muPlugins',
+				allowLocal: true,
 				expected: {
 					mode: 'local',
 					dir: '~/path',
 				},
 			},
 		] )( 'should process options and use defaults', async input => {
-			const result = processComponentOptionInput( input.param, input.option );
+			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -150,8 +140,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		} );
 
 		it.each( [
-			{
-				component: 'wordpress',
+			{ // mu plugins local
+				component: 'muPlugins',
 				mode: 'local',
 				path: '/tmp',
 				expected: {
@@ -159,40 +149,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					dir: '/tmp',
 				},
 			},
-			{
-				component: 'wordpress',
-				mode: 'image',
-				path: '5.6',
-				expected: {
-					mode: 'image',
-					image: 'wpvipdev/wordpress',
-					tag: '5.6',
-				},
-			},
 			{ // muPlugins hav just one tag - auto
 				component: 'muPlugins',
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'wpvipdev/mu-plugins',
-					tag: 'auto',
-				},
-			},
-			{ // jetpack inherit
-				component: 'jetpack',
-				mode: 'inherit',
-				expected: {
-					mode: 'inherit',
-				},
-			},
-			{ // jetpack image
-				component: 'jetpack',
-				mode: 'image',
-				path: '1',
-				expected: {
-					mode: 'image',
-					image: 'wpvipdev/jetpack',
-					tag: '1',
 				},
 			},
 			{ // clientCode have just one tag
@@ -200,8 +161,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				mode: 'image',
 				expected: {
 					mode: 'image',
-					image: 'wpvipdev/skeleton',
-					tag: '181a17d9aedf7da73730d65ccef3d8dbf172a5c5',
 				},
 			},
 		] )( 'should return correct component %p', async input => {
@@ -210,7 +169,24 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				.mockResolvedValueOnce( input.mode )
 				.mockResolvedValueOnce( input.path );
 
-			const result = await promptForComponent( input.component );
+			const result = await promptForComponent( input.component, true );
+
+			expect( result ).toStrictEqual( input.expected );
+		} );
+
+		it.each( [
+			{
+				tag: '5.6',
+				expected: {
+					mode: 'image',
+					tag: '5.6',
+				},
+			},
+		] )( 'should return correct component for wordpress %p', async input => {
+			selectRunMock
+				.mockResolvedValueOnce( input.tag );
+
+			const result = await promptForComponent( 'wordpress', false );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );

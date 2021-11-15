@@ -11,6 +11,8 @@ import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 /**
  * Internal dependencies
@@ -18,14 +20,10 @@ import fs from 'fs';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_SUBCOMMAND,
-	DEV_ENVIRONMENT_CONTAINER_IMAGES,
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
-	DOCKER_HUB_WP_IMAGES,
-	DOCKER_HUB_JETPACK_IMAGES,
 	DEV_ENVIRONMENT_COMPONENTS,
 } from '../constants/dev-environment';
-import fetch from 'node-fetch';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -90,25 +88,25 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-export function processComponentOptionInput( passedParam: string, type: string ) {
+type ComponentConfig = {
+	mode: 'local' | 'image' | 'inherit';
+	dir?: string,
+	image?: string,
+	tag?: string,
+}
+
+export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
-	if ( param.includes( '/' ) ) {
+	if ( allowLocal && param.includes( '/' ) ) {
 		return {
 			mode: 'local',
 			dir: param,
 		};
 	}
 
-	if ( type === 'jetpack' && param === 'mu' ) {
-		return {
-			mode: 'inherit',
-		};
-	}
-
 	return {
 		mode: 'image',
-		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ type ].image,
 		tag: param,
 	};
 }
@@ -119,8 +117,9 @@ type NewInstanceOptions = {
 	php: string,
 	wordpress: string,
 	muPlugins: string,
-	jetpack: string,
-	clientCode: string
+	clientCode: string,
+	elasticsearch: string,
+	mariadb: string,
 }
 
 type AppInfo = {
@@ -132,6 +131,7 @@ type AppInfo = {
 		type: string,
 		branch: string,
 		isMultisite: boolean,
+		primaryDomain: string,
 	}
 }
 
@@ -152,13 +152,23 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 
 	const instanceData = {
 		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
-		phpVersion: providedOptions.php || await promptForText( 'PHP version', DEV_ENVIRONMENT_DEFAULTS.phpVersion ),
 		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
+		elasticsearch: providedOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		mariadb: providedOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
+		mediaRedirectDomain: '',
 		wordpress: {},
 		muPlugins: {},
-		jetpack: {},
 		clientCode: {},
 	};
+
+	const primaryDomain = appInfo?.environment?.primaryDomain;
+	if ( primaryDomain ) {
+		const mediaRedirectPromptText = `Would you like to redirect to ${ primaryDomain } for missing media files?`;
+		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
+		if ( setMediaRedirectDomain ) {
+			instanceData.mediaRedirectDomain = primaryDomain;
+		}
+	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = providedOptions[ component ];
@@ -172,27 +182,37 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 async function processComponent( component: string, option: string ) {
 	let result = null;
 
+	const allowLocal = component !== 'wordpress';
 	if ( option ) {
-		result = processComponentOptionInput( option, component );
+		result = processComponentOptionInput( option, allowLocal );
 	} else {
-		result = await promptForComponent( component );
+		result = await promptForComponent( component, allowLocal );
 	}
 
 	while ( 'local' === result?.mode ) {
-		const path = result.dir || '';
-		const isDirectory = path && fs.existsSync( path ) && fs.lstatSync( path ).isDirectory();
-		const isEmpty = isDirectory ? fs.readdirSync( path ).length === 0 : true;
+		const resolvedPath = resolvePath( result.dir || '' );
+		result.dir = resolvedPath;
+
+		const isDirectory = resolvedPath && fs.existsSync( resolvedPath ) && fs.lstatSync( resolvedPath ).isDirectory();
+		const isEmpty = isDirectory ? fs.readdirSync( resolvedPath ).length === 0 : true;
 
 		if ( isDirectory && ! isEmpty ) {
 			break;
 		} else {
-			const message = `Provided path "${ path || '' }" does not point to a non-empty directory.`;
+			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
-			result = await promptForComponent( component );
+			result = await promptForComponent( component, allowLocal );
 		}
 	}
 
 	return result;
+}
+
+export function resolvePath( input: string ): string {
+	// Resolve does not do ~ reliably
+	const resolvedPath = input.replace( /^~/, os.homedir() );
+	// And resolve to handle relative paths
+	return path.resolve( resolvedPath );
 }
 
 export async function promptForText( message: string, initial: string ) {
@@ -226,42 +246,46 @@ export async function promptForBoolean( message: string, initial: boolean ) {
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
-	jetpack: 'Jetpack',
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string ) {
+export async function promptForComponent( component: string, allowLocal: boolean ): Promise<ComponentConfig> {
+	debug( `Prompting for ${ component }` );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const choices = [
-		{
+	const choices = [];
+
+	if ( allowLocal ) {
+		choices.push( {
 			message: `local folder - where you already have ${ componentDisplayName } code`,
 			value: 'local',
-		},
-		{
-			message: 'image - that gets automatically fetched',
-			value: 'image',
-		},
-	];
-	let initial = 1;
-	if ( 'jetpack' === component ) {
-		initial = 0;
-		choices.unshift( {
-			message: `inherit - use ${ componentDisplayName } included in mu-plugins`,
-			value: 'inherit',
 		} );
-	} else if ( 'clientCode' === component ) {
-		initial = 0;
 	}
-
-	const select = new Select( {
-		message: `How would you like to source ${ componentDisplayName }`,
-		choices,
-		initial,
+	choices.push( {
+		message: 'image - that gets automatically fetched',
+		value: 'image',
 	} );
 
-	const modeResult = await select.run();
+	let initialMode = 'image';
+	if ( 'clientCode' === component ) {
+		initialMode = 'local';
+	}
+
+	let modeResult = initialMode;
+	const selectMode = choices.length > 1;
+	if ( selectMode ) {
+		const initialModeIndex = choices.findIndex( choice => choice.value === initialMode );
+		const select = new Select( {
+			message: `How would you like to source ${ componentDisplayName }`,
+			choices,
+			initial: initialModeIndex,
+		} );
+
+		modeResult = await select.run();
+	}
+
+	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
-		const directoryPath = await promptForText( `	What is a path to your local ${ componentDisplayName }`, '' );
+		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, '' );
 		return {
 			mode: modeResult,
 			dir: directoryPath,
@@ -274,27 +298,24 @@ export async function promptForComponent( component: string ) {
 	}
 
 	// image
-	let tag = DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].tag;
-	const componentsWithPredefinedImageTag = [ 'muPlugins', 'clientCode' ];
-
-	if ( ! componentsWithPredefinedImageTag.includes( component ) ) {
+	if ( component === 'wordpress' ) {
+		const message = `${ messagePrefix }Which version would you like`;
 		const selectTag = new Select( {
-			message: '	Which version would you like',
-			choices: await getLatestImageTags( component ),
+			message,
+			choices: getWordpressImageTags(),
 		} );
-		tag = await selectTag.run();
+		const tag = await selectTag.run();
+		return {
+			mode: modeResult,
+			tag,
+		};
 	}
 
 	return {
 		mode: modeResult,
-		image: DEV_ENVIRONMENT_CONTAINER_IMAGES[ component ].image,
-		tag,
 	};
 }
 
-async function getLatestImageTags( component: string ): Promise<string[]> {
-	const url = component === 'wordpress' ? DOCKER_HUB_WP_IMAGES : DOCKER_HUB_JETPACK_IMAGES;
-	const request = await fetch( url );
-	const body = await request.json();
-	return body.results.map( x => x.name ).sort().reverse();
+function getWordpressImageTags(): string[] {
+	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
 }

@@ -10,22 +10,22 @@ const debug = require( 'debug' )( '@automattic/vip:keychain' );
 import Insecure from './keychain/insecure';
 import Browser from './keychain/browser';
 
-let e = {};
+let exportValue = {};
 if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined' ) {
 	// node
 
 	try {
 		// Try using Secure keychain ("keytar") first
 		const Secure = require( './keychain/secure' );
-		e = new Secure();
+		exportValue = new Secure();
 	} catch ( error ) {
 		debug( 'Cannot use Secure keychain; falling back to Insecure keychain (Details: %o)', error );
 
 		// Fallback to Insecure keychain if we can't
-		e = new Insecure( 'vip-go-cli' );
+		exportValue = new Insecure( 'vip-go-cli' );
 	}
 } else {
-	e = new Browser();
+	exportValue = new Browser();
 }
 
-module.exports = e;
+module.exports = exportValue;

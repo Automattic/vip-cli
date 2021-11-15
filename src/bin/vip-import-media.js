@@ -91,9 +91,9 @@ command( {
 	module: 'import-media',
 	requiredArgs: 1,
 	requireConfirm: `
-${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `/uploads` directory,' ) }
+${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `uploads/` directory,' ) }
 ${ chalk.red.bold( 'only the files present inside that directory will be imported and the rest will be ignored.' ) }
-${ chalk.red.bold( 'If no `/uploads` directory is found, all files will be imported, as is.' ) }
+${ chalk.red.bold( 'If no `uploads/` directory is found, all files will be imported, as is.' ) }
 
 Are you sure you want to import the contents of the url?
 `,
@@ -150,9 +150,9 @@ Importing Media into your App...
 				} );
 
 			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
-		} catch ( e ) {
-			if ( e.graphQLErrors ) {
-				for ( const err of e.graphQLErrors ) {
+		} catch ( error ) {
+			if ( error.graphQLErrors ) {
+				for ( const err of error.graphQLErrors ) {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 
@@ -160,7 +160,7 @@ Importing Media into your App...
 			}
 
 			await track( 'import_media_start_execute_error', {
-				error: `Error: ${ e.message }`,
+				error: `Error: ${ error.message }`,
 			} );
 		}
 	} );
