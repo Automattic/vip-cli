@@ -283,7 +283,6 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	}
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
-	// path
 	if ( 'local' === modeResult ) {
 		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, defaultObject?.dir || '' );
 		return {
