@@ -308,7 +308,7 @@ ${ maybeExitPrompt }
 
 				let failedImportStep;
 
-				if ( jobCreationTime && importStepProgress?.started_at * 1000 > jobCreationTime ) {
+				if ( jobCreationTime && importStepProgress?.started_at * 1000 >= jobCreationTime ) {
 					// The contents of the `import_progress` meta are pertinent to the most recent import job
 					failedImportStep = importStepProgress.steps.find(
 						step =>
