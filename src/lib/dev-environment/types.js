@@ -1,7 +1,7 @@
 
 export interface InstanceOptions {
-	title?: string,
-	multisite?: boolean,
+	title: string,
+	multisite: boolean,
 	wordpress?: string,
 	muPlugins?: string,
 	clientCode?: string,

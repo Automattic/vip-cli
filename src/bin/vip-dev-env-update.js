@@ -63,7 +63,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			mariadb: currentInstanceData.mariadb,
 			statsd: currentInstanceData.statsd,
 			phpmyadmin: currentInstanceData.phpmyadmin,
-			xdebug: currentInstanceData.phpmyadmin,
+			xdebug: currentInstanceData.xdebug,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 		};
 
