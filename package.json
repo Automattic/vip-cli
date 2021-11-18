@@ -33,6 +33,7 @@
     "vip-import-sql-status": "dist/bin/vip-import-sql-status.js",
     "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
+    "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js"
