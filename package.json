@@ -16,6 +16,7 @@
     "vip-config-envvar-set": "dist/bin/vip-config-envvar-set.js",
     "vip-dev-env": "dist/bin/vip-dev-env.js",
     "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
+    "vip-dev-env-update": "dist/bin/vip-dev-env-update.js",
     "vip-dev-env-destroy": "dist/bin/vip-dev-env-destroy.js",
     "vip-dev-env-exec": "dist/bin/vip-dev-env-exec.js",
     "vip-dev-env-import": "dist/bin/vip-dev-env-import.js",
