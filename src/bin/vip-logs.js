@@ -14,7 +14,7 @@ const LIMIT_MIN = 1;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
 
 export async function getLogs( arg: string[], opt ): Promise<void> {
-	validateInputs( opt.type, opt.limit );
+	validateInputs( opt.type, opt.limit, opt.env );
 
 	const trackingParams = {
 		command: 'vip logs',
@@ -44,7 +44,11 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 	await trackEvent( 'logs_command_success', trackingParams );
 }
 
-export function validateInputs( type: string, limit: number ): void {
+export function validateInputs( type: string, limit: number, env: Object ): void {
+	if ( ! env.isK8sResident ) {
+		exit.withError( '`vip logs` is not supported for the specified environment.' );
+	}
+
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
 		exit.withError( `Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.` );
 	}
@@ -62,6 +66,7 @@ export const appQuery = `
 		appId
 		name
 		type
+		isK8sResident
 	}
 	organization {
 		id

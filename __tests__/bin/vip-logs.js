@@ -31,20 +31,25 @@ jest.mock( 'lib/logs/logs', () => ( {
 } ) );
 
 describe( 'getLogs', () => {
-	const opts = {
-		app: {
-			id: 1,
-			organization: {
-				id: 2,
+	let opts;
+
+	beforeEach( () => {
+		opts = {
+			app: {
+				id: 1,
+				organization: {
+					id: 2,
+				},
 			},
-		},
-		env: {
-			id: 3,
-			type: 'develop',
-		},
-		type: 'app',
-		limit: 500,
-	};
+			env: {
+				id: 3,
+				type: 'develop',
+				isK8sResident: true,
+			},
+			type: 'app',
+			limit: 500,
+		};
+	} );
 
 	beforeEach( jest.clearAllMocks );
 
@@ -118,7 +123,9 @@ describe( 'getLogs', () => {
 	} );
 
 	it( 'should exit with error if "type" is invalid', async () => {
-		const promise = getLogs( [], { ...opts, type: 'my-type' } );
+		opts.type = 'my-type';
+
+		const promise = getLogs( [], opts );
 
 		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
@@ -141,12 +148,33 @@ describe( 'getLogs', () => {
 		12.4,
 		5001,
 	] )( 'should exit with error if "limit" is invalid (%p)', async limit => {
-		const promise = getLogs( [], { ...opts, limit } );
+		opts.limit = limit;
+
+		const promise = getLogs( [], opts );
 
 		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith( `Invalid limit: ${ limit }. It should be a number between 1 and 5000.` );
+
+		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
+
+		expect( console.log ).not.toHaveBeenCalled();
+
+		expect( tracker.trackEvent ).not.toHaveBeenCalled();
+
+		expect( rollbar.error ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should exit with error if the site is not on k8s', async () => {
+		opts.env.isK8sResident = false;
+
+		const promise = getLogs( [], opts );
+
+		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
+
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( exit.withError ).toHaveBeenCalledWith( '`vip logs` is not supported for the specified environment.' );
 
 		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
 
