@@ -9,6 +9,7 @@
  * External dependencies
  */
 import fs from 'fs';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -17,7 +18,6 @@ import command from '../lib/cli/command';
 import { getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import chalk from 'chalk';
 
 const examples = [
 	{
