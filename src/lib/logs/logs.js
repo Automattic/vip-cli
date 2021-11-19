@@ -14,11 +14,11 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 
 const QUERY_ENVIRONMENT_LOGS = gql`
-	query App( $appId: Int, $envId: Int ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: String, $limit: Int ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
-				logs( type: String, limit: Int ) {
+				logs( type: $type, limit: $limit ) {
 					nodes {
 						timestamp
 						message
