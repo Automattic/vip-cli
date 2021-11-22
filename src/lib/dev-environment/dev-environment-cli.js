@@ -11,18 +11,26 @@ import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
+import git from 'nodegit'
 import path from 'path';
 import os from 'os';
+import xdgBasedir from 'xdg-basedir';
 
 /**
  * Internal dependencies
  */
+import { getRepoPath }  from './dev-environment-core';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_SUBCOMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
+	DEV_ENVIRONMENT_GIT_URL,
+	DEV_ENVIRONMENT_WAIT_MESSAGE,
+	DEV_ENVIRONMENT_MODE_IMAGE,
+	DEV_ENVIRONMENT_MODE_LOCAL,
+	DEV_ENVIRONMENT_MODE_INHERIT,
 } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -89,24 +97,24 @@ export function printTable( data: Object ) {
 }
 
 type ComponentConfig = {
-	mode: 'local' | 'image' | 'inherit';
+	mode: DEV_ENVIRONMENT_MODE_LOCAL | DEV_ENVIRONMENT_MODE_IMAGE | DEV_ENVIRONMENT_MODE_INHERIT;
 	dir?: string,
 	image?: string,
 	tag?: string,
 }
 
-export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
+export function processComponentOptionInput( passedParam: string ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
-	if ( allowLocal && param.includes( '/' ) ) {
+	if ( param.includes( '/' ) ) {
 		return {
-			mode: 'local',
+			mode: DEV_ENVIRONMENT_MODE_LOCAL,
 			dir: param,
 		};
 	}
 
 	return {
-		mode: 'image',
+		mode: DEV_ENVIRONMENT_MODE_IMAGE,
 		tag: param,
 	};
 }
@@ -182,14 +190,13 @@ export async function promptForArguments( providedOptions: NewInstanceOptions, a
 async function processComponent( component: string, option: string ) {
 	let result = null;
 
-	const allowLocal = component !== 'wordpress';
 	if ( option ) {
-		result = processComponentOptionInput( option, allowLocal );
+		result = processComponentOptionInput( option );
 	} else {
-		result = await promptForComponent( component, allowLocal );
+		result = await promptForComponent( component );
 	}
 
-	while ( 'local' === result?.mode ) {
+	while ( DEV_ENVIRONMENT_MODE_LOCAL === result?.mode ) {
 		const resolvedPath = resolvePath( result.dir || '' );
 		result.dir = resolvedPath;
 
@@ -201,7 +208,7 @@ async function processComponent( component: string, option: string ) {
 		} else {
 			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
-			result = await promptForComponent( component, allowLocal );
+			result = await promptForComponent( component );
 		}
 	}
 
@@ -249,25 +256,26 @@ const componentDisplayNames = {
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string, allowLocal: boolean ): Promise<ComponentConfig> {
+export async function promptForComponent( component: string ): Promise<ComponentConfig> {
 	debug( `Prompting for ${ component }` );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const choices = [];
 
-	if ( allowLocal ) {
+	if ( component !== 'wordpress' ) {
 		choices.push( {
 			message: `local folder - where you already have ${ componentDisplayName } code`,
-			value: 'local',
+			value: DEV_ENVIRONMENT_MODE_LOCAL,
 		} );
 	}
+
 	choices.push( {
 		message: 'image - that gets automatically fetched',
-		value: 'image',
+		value: DEV_ENVIRONMENT_MODE_IMAGE,
 	} );
 
-	let initialMode = 'image';
+	let initialMode = DEV_ENVIRONMENT_MODE_IMAGE;
 	if ( 'clientCode' === component ) {
-		initialMode = 'local';
+		initialMode = DEV_ENVIRONMENT_MODE_LOCAL;
 	}
 
 	let modeResult = initialMode;
@@ -284,29 +292,29 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	}
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
-	if ( 'local' === modeResult ) {
+	if ( DEV_ENVIRONMENT_MODE_LOCAL === modeResult ) {
 		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, '' );
 		return {
 			mode: modeResult,
 			dir: directoryPath,
 		};
 	}
-	if ( 'inherit' === modeResult ) {
+	if ( DEV_ENVIRONMENT_MODE_INHERIT === modeResult ) {
 		return {
 			mode: modeResult,
 		};
 	}
 
-	// image
+	// local dist
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
 		const selectTag = new Select( {
 			message,
-			choices: getWordpressImageTags(),
+			choices: await getWordpressTags(),
 		} );
 		const tag = await selectTag.run();
 		return {
-			mode: modeResult,
+			mode: DEV_ENVIRONMENT_MODE_LOCAL,
 			tag,
 		};
 	}
@@ -316,6 +324,108 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	};
 }
 
-function getWordpressImageTags(): string[] {
-	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
+async function cloneWordPressRepo() {
+	await git.Clone.clone( DEV_ENVIRONMENT_GIT_URL, getRepoPath() );
+}
+
+async function getWordPressRepo(): git.Repository {
+	const path = getRepoPath();
+	let updated = false;
+
+	console.log( DEV_ENVIRONMENT_WAIT_MESSAGE );
+
+	if ( ! fs.existsSync( path ) || ! fs.lstatSync( path ).isDirectory() ) {
+		updated = true;
+		await cloneWordPressRepo();
+	}
+
+	const repo = await git.Repository.init( getRepoPath(), 0 );
+
+	if ( ! updated ) {
+		// TODO: stash/reset the working branch in case it's dirty
+
+		await repo.fetchAll();
+	}
+
+	return repo;
+}
+
+async function getWordpressTags(): string[] {
+	const repo = await getWordPressRepo();
+	const tags = await git.Tag.list( repo );
+	return collateTagList( tags );
+}
+
+/**
+ *	Attempts to organize the list of tags in an intelligent way.
+ *	Show all editions of the current major version
+ *	Show only the the most recent point releases of previous major versions
+ *	Limit the list to 20 by default
+ */
+function collateTagList( tags: string[], size: number = 20 ) {
+	const majorVersions = [];
+	const versions = {};
+	const releases = {};
+	const newTagList = [];
+	let majorVersion, version, release;
+	let parts = [];
+	let sizeOffset = 0;
+
+	// sort tags
+	tags = tags.reverse();
+
+	// index tags
+	for ( const tag of tags ) {
+		[ majorVersion, version, release ] = tag.split( '.' );
+
+		// index majorVersion
+		if ( majorVersions.indexOf( majorVersion ) < 0 ) {
+			majorVersions.push( majorVersion );
+		}
+
+		// index version
+		if ( ! versions.hasOwnProperty( majorVersion ) ) {
+			versions[ majorVersion ] = [];
+		}
+
+		if ( versions[ majorVersion ].indexOf( `${ majorVersion }.${ version }` ) < 0 ) {
+			versions[ majorVersion ].push( `${ majorVersion }.${ version }` );
+		}
+
+		// index release
+		if ( ! releases.hasOwnProperty( `${ majorVersion }.${ version }` ) ) {
+			releases[ `${ majorVersion }.${ version }` ] = [];
+		}
+
+		if ( releases[ `${ majorVersion }.${ version }` ].indexOf( tag ) < 0 ) {
+			releases[ `${ majorVersion }.${ version }` ].push( tag );
+		}
+
+		if ( release != undefined ) {
+			if ( releases[ `${ majorVersion }.${ version }` ].indexOf( tag ) < 0 ) {
+				releases[ `${ majorVersion }.${ version }` ].push( tag );
+			}
+		}
+	}
+
+	// build new tag list from indexes
+	newTags:
+	for ( const i in majorVersions ) {
+		for ( const [ j, v ] of versions[ majorVersions[ i ] ].entries() ) {
+			// If it is the most recent version, append all of the releases
+			if ( i == 0 && j == 0 ) {
+				sizeOffset = releases[ v ].length;
+				newTagList.push( ...releases[ v ] )
+			} else {
+				// append only the newest release for previous versions
+				newTagList.push( releases[ v ][ 0 ] );
+			}
+
+			if ( newTagList.length >= ( size - sizeOffset) ) {
+				break newTags;
+			}
+		}
+	}
+
+	return newTagList;
 }

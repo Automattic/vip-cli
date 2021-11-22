@@ -10,6 +10,7 @@ import debugLib from 'debug';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import fs from 'fs';
+import fse from 'fs-extra';
 import ejs from 'ejs';
 import path from 'path';
 import chalk from 'chalk';
@@ -113,6 +114,8 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 		instanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
+	await prepareWordPressCore( instanceData, instancePath );
+
 	await prepareLandoEnv( instanceData, instancePath );
 }
 
@@ -205,6 +208,30 @@ export function doesEnvironmentExist( slug: string ) {
 	return fs.existsSync( instancePath );
 }
 
+function filterWordPressCopy( src, dest ) {
+	const blackList = [
+		'.git',
+		'.gitignore',
+	];
+
+	const parts = src.split( '/' ).reverse();
+
+	if ( blackList.indexOf( parts[ 0 ] ) >= 0 ) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+async function prepareWordPressCore( instanceData, instancePath ) {
+	const srcPath = getRepoPath();
+	const destPath = path.join( getEnvironmentPath( instanceData.siteSlug ), 'wordpress' );
+
+	fse.copy( srcPath, destPath, { overwrite: true, filter: filterWordPressCopy }, err => {
+		if (err) return console.error(err);
+	} );
+}
+
 async function prepareLandoEnv( instanceData, instancePath ) {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
@@ -228,18 +255,16 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 }
 
 function getAllEnvironmentNames() {
-	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	const devEnvPath = path.join( getBasePath(), 'dev-environment' );
 
-	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
-
-	const doWeHaveAnyEnvironment = fs.existsSync( baseDir );
+	const doWeHaveAnyEnvironment = fs.existsSync( devEnvPath );
 
 	let envNames = [];
 	if ( doWeHaveAnyEnvironment ) {
-		const files = fs.readdirSync( baseDir );
+		const files = fs.readdirSync( devEnvPath );
 
 		envNames = files.filter( file => {
-			const fullPath = path.join( baseDir, file );
+			const fullPath = path.join( devEnvPath, file );
 			return fs.lstatSync( fullPath ).isDirectory();
 		} );
 	}
@@ -247,14 +272,21 @@ function getAllEnvironmentNames() {
 	return envNames;
 }
 
+function getBasePath() {
+	const basePath = xdgBasedir.data || os.tmpdir();
+	return path.join( basePath, 'vip' );
+}
+
 export function getEnvironmentPath( name: string ) {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
 
-	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	return path.join( getBasePath(), 'dev-environment', name + '' );
+}
 
-	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
+export function getRepoPath() {
+	return path.join( getBasePath(), 'dist', 'wordpress' );
 }
 
 export async function getApplicationInformation( appId: number, envType: string | null ) {
