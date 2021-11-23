@@ -27,6 +27,16 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.6.0 (23 November 2021)
+- #921  [dev-env] Introuces update to change existing environment
+- #928  [dev-env] Switch lando to use our fork
+- #927  [dev-env] Handles user already exists during sql import
+- #925  [dev-env] Fix the issue with dev-env update
+- #924  FORNO-985 Increase SQL Import limit for unlaunched sites to 100GB
+- #923  FORNO-943 Fixes a bug which prevents displaying SQL Import error messages
+- #922  Update eslint-config-wpvip commit hash to c6605d1
+- #873  Pin dependencies
+
 ### 2.5.0 (9 November 2021)
 - #919  [dev-env] Expose lando core logs
 - #916  [dev-env] Save instance data state

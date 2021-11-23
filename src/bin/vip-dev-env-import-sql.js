@@ -9,6 +9,7 @@
  * External dependencies
  */
 import fs from 'fs';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -62,8 +63,16 @@ command( {
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( slug, cacheArg );
 
-			const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
-			await exec( slug, addUserArg );
+			try {
+				const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
+				await exec( slug, addUserArg );
+			} catch ( exception ) {
+				if ( ( exception.message || '' ).includes( 'is already registered' ) ) {
+					console.log( chalk.bold( chalk.green( 'Success: ' ) ) + 'Skipping user vipgo provisioning' );
+				} else {
+					throw exception;
+				}
+			}
 		} catch ( error ) {
 			handleCLIException( error );
 		}
