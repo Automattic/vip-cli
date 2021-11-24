@@ -24,6 +24,8 @@ import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild
 import { searchAndReplace } from '../search-and-replace';
 import { printTable, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import type { InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -57,7 +59,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	if ( options.skipRebuild ) {
@@ -79,25 +81,15 @@ export async function stopEnvironment( slug: string ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	await landoStop( instancePath );
 }
 
-type NewInstanceData = {
-	siteSlug: string,
-	wpTitle: string,
-	multisite: boolean,
-	wordpress: Object,
-	muPlugins: Object,
-	clientCode: Object,
-	mediaRedirectDomain: string,
-}
-
-export async function createEnvironment( instanceData: NewInstanceData ) {
+export async function createEnvironment( instanceData: InstanceData ) {
 	const slug = instanceData.siteSlug;
-	debug( 'Will start an environment', slug, 'with instanceData: ', instanceData );
+	debug( 'Will create an environment', slug, 'with instanceData: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -109,14 +101,45 @@ export async function createEnvironment( instanceData: NewInstanceData ) {
 		throw new Error( 'Environment already exists.' );
 	}
 
-	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
-		// We need to make sure the redirect is an absolute path
-		instanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
+	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+
+	await prepareWordPressCore( preProcessedInstanceData, instancePath );
+
+	await prepareLandoEnv( preProcessedInstanceData, instancePath );
+}
+
+export async function updateEnvironment( instanceData: InstanceData ) {
+	const slug = instanceData.siteSlug;
+	debug( 'Will update an environment', slug, 'with instanceData: ', instanceData );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const alreadyExists = fs.existsSync( instancePath );
+
+	if ( ! alreadyExists ) {
+		throw new Error( 'Environment doesn\'t exist.' );
 	}
 
-	await prepareWordPressCore( instanceData, instancePath );
+	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 
-	await prepareLandoEnv( instanceData, instancePath );
+	await prepareWordPressCore( preProcessedInstanceData, instancePath );
+
+	await prepareLandoEnv( preProcessedInstanceData, instancePath );
+}
+
+function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
+	const newInstanceData = {
+		...instanceData,
+	};
+
+	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
+		// We need to make sure the redirect is an absolute path
+		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
+	}
+
+	return newInstanceData;
 }
 
 export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
@@ -128,7 +151,7 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const landoFilePath = path.join( instancePath, landoFileName );
@@ -167,7 +190,7 @@ export async function printEnvironmentInfo( slug: string ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const appInfo = await landoInfo( instancePath );
@@ -185,7 +208,7 @@ export async function exec( slug: string, args: Array<string> ) {
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
-		throw new Error( 'Environment not found.' );
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const command = args.shift();
@@ -230,6 +253,18 @@ async function prepareWordPressCore( instanceData, instancePath ) {
 	fse.copy( srcPath, destPath, { overwrite: true, filter: filterWordPressCopy }, err => {
 		if (err) return console.error(err);
 	} );
+}
+
+export function readEnvironmentData( slug: string ): InstanceData {
+	debug( 'Will try to get instance data for environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+
+	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+
+	return JSON.parse( instanceDataString );
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
@@ -340,7 +375,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 	return appData;
 }
 
-export async function resolveImportPath( slug: string, fileName: string, searchReplace: string, inPlace: boolean ): Promise<SQLImportPaths> {
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
 	let resolvedPath = resolvePath( fileName );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
