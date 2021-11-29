@@ -22,6 +22,7 @@ const debug = debugLib( '@automattic/vip:bin:vip' );
 
 if ( config && config.environment !== 'production' ) {
 	debug( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
+
 	debug( 'You should `npm link` your locally checked out copy of this repo as part of your development setup.' );
 }
 
