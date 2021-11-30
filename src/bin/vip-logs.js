@@ -84,15 +84,15 @@ command( {
 	.option( 'limit', 'The maximum number of log lines', 500 )
 	.examples( [
 		{
-			usage: 'vip logs --app 9999 --env develop',
+			usage: 'vip @mysite.production logs',
 			description: 'Get the most recent app logs',
 		},
 		{
-			usage: 'vip logs --app 9999 --env develop --type batch',
+			usage: 'vip @mysite.production logs --type batch',
 			description: 'Get the most recent batch logs',
 		},
 		{
-			usage: 'vip logs --app 9999 --env develop --limit 100',
+			usage: 'vip @mysite.production logs --limit 100',
 			description: 'Get the most recent 100 logs',
 		},
 	] )
