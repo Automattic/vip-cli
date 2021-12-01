@@ -30,6 +30,10 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 	try {
 		const logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit );
 
+		if ( ! logs.length ) {
+			console.error( 'No logs found' );
+		}
+
 		for ( const { timestamp, message } of logs ) {
 			console.log( `${ timestamp } ${ message }` );
 		}

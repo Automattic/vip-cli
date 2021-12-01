@@ -8,6 +8,7 @@ import { rollbar } from 'lib/rollbar';
 import { getLogs } from 'bin/vip-logs';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+jest.spyOn( console, 'error' ).mockImplementation( () => {} );
 jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
@@ -78,6 +79,32 @@ describe( 'getLogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', trackingParams );
+
+		expect( rollbar.error ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should show a message if no logs were found', async () => {
+		logsLib.getRecentLogs.mockImplementation( async () => [] ); // empty logs
+
+		await getLogs( [], opts );
+
+		expect( logsLib.getRecentLogs ).toHaveBeenCalledTimes( 1 );
+		expect( logsLib.getRecentLogs ).toHaveBeenCalledWith( 1, 3, 'app', 500 );
+
+		expect( console.error ).toHaveBeenCalledTimes( 1 );
+		expect( console.error ).toHaveBeenCalledWith( 'No logs found' ); // display error message
+
+		const trackingParams = {
+			command: 'vip logs',
+			org_id: 2,
+			app_id: 1,
+			env_id: 3,
+			type: 'app',
+			limit: 500,
+		};
+
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', trackingParams );
 

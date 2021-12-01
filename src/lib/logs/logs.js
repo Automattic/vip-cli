@@ -48,9 +48,5 @@ export async function getRecentLogs( appId: number, envId: number, type: string,
 		throw new Error( 'Unable to query logs' );
 	}
 
-	if ( ! logs.length ) {
-		throw new Error( 'No logs found' );
-	}
-
 	return logs;
 }
