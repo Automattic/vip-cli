@@ -14,7 +14,7 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 
 const QUERY_ENVIRONMENT_LOGS = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: String, $limit: Int ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
