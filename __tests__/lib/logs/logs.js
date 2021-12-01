@@ -12,7 +12,7 @@ import { getRecentLogs } from 'lib/logs/logs';
 jest.mock( 'lib/api', () => jest.fn() );
 
 const EXPECTED_QUERY = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: String, $limit: Int ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
