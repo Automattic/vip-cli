@@ -55,6 +55,34 @@ describe( 'getRecentLogs()', () => {
 			},
 		} );
 	} );
+
+	it( 'should throw when logs field is not returned', async () => {
+		const queryMock = jest.fn();
+
+		API.mockImplementation( () => ( {
+			query: queryMock,
+		} ) );
+
+		queryMock.mockImplementation( () => {} );
+
+		const result = getRecentLogs( 1, 3, 'batch', 1200 );
+
+		await expect( result ).rejects.toThrow( 'Unable to query logs' );
+	} );
+
+	it( 'should throw when logs array is empty', async () => {
+		const queryMock = jest.fn();
+
+		API.mockImplementation( () => ( {
+			query: queryMock,
+		} ) );
+
+		queryMock.mockImplementation( () => logsResponse( [] ) );
+
+		const result = getRecentLogs( 1, 3, 'batch', 1200 );
+
+		await expect( result ).rejects.toThrow( 'No logs found' );
+	} );
 } );
 
 function logsResponse( logs ) {
