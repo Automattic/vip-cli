@@ -121,15 +121,15 @@ command( {
 		},
 		{
 			usage: 'vip @mysite.production logs --limit 100',
-			description: 'Get the most recent 100 logs',
+			description: 'Get the most recent 100 log entries',
 		},
 		{
 			usage: 'vip @mysite.production logs --limit 100 --format csv',
-			description: 'Get the most recent 100 logs formatted as a CSV',
+			description: 'Get the most recent 100 log entries formatted as comma-separated values (CSV)
 		},
 		{
 			usage: 'vip @mysite.production logs --limit 100 --format json',
-			description: 'Get the most recent 100 logs formatted in JSON',
+			description: 'Get the most recent 100 log entries formatted as JSON',
 		},
 	] )
 	.argv( process.argv, getLogs );
