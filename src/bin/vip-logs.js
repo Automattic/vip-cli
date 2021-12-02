@@ -13,7 +13,7 @@ import { formatData } from 'lib/cli/format';
 const LIMIT_MAX = 5000;
 const LIMIT_MIN = 1;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
-const ALLOWED_FORMATS = [ 'csv', 'json', 'console' ];
+const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
 
 export async function getLogs( arg: string[], opt ): Promise<void> {
 	validateInputs( opt.type, opt.limit, opt.format );
@@ -59,7 +59,7 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 	} );
 
 	let output = '';
-	if ( opt.format && 'console' === opt.format ) {
+	if ( opt.format && 'text' === opt.format ) {
 		const rows = [];
 		for ( const { timestamp, message } of logs ) {
 			rows.push( `${ timestamp } ${ message }` );
@@ -109,7 +109,7 @@ command( {
 } )
 	.option( 'type', 'The type of logs to be returned: "app" or "batch"', 'app' )
 	.option( 'limit', 'The maximum number of log lines', 500 )
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'console' )
+	.option( 'format', 'Output the log lines in CSV or JSON format', 'text' )
 	.examples( [
 		{
 			usage: 'vip @mysite.production logs',
