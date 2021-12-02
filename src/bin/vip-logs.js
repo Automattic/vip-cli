@@ -8,13 +8,15 @@ import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
 import * as logsLib from 'lib/logs/logs';
 import * as exit from 'lib/cli/exit';
+import { formatData } from 'lib/cli/format';
 
 const LIMIT_MAX = 5000;
 const LIMIT_MIN = 1;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
+const ALLOWED_FORMATS = [ 'csv', 'json', 'console' ];
 
 export async function getLogs( arg: string[], opt ): Promise<void> {
-	validateInputs( opt.type, opt.limit, opt.env );
+	validateInputs( opt.type, opt.limit, opt.format );
 
 	const trackingParams = {
 		command: 'vip logs',
@@ -23,20 +25,14 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 		env_id: opt.env.id,
 		type: opt.type,
 		limit: opt.limit,
+		format: opt.format,
 	};
 
 	await trackEvent( 'logs_command_execute', trackingParams );
 
+	let logs = [];
 	try {
-		const logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit );
-
-		if ( ! logs.length ) {
-			console.error( 'No logs found' );
-		}
-
-		for ( const { timestamp, message } of logs ) {
-			console.log( `${ timestamp } ${ message }` );
-		}
+		logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit );
 	} catch ( error ) {
 		rollbar.error( error );
 
@@ -45,16 +41,44 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 		return exit.withError( error.message );
 	}
 
-	await trackEvent( 'logs_command_success', trackingParams );
-}
+	await trackEvent( 'logs_command_success', {
+		...trackingParams,
+		logs_output: logs.length,
+	} );
 
-export function validateInputs( type: string, limit: number, env: Object ): void {
-	if ( ! env.isK8sResident ) {
-		exit.withError( '`vip logs` is not supported for the specified environment.' );
+	if ( ! logs.length ) {
+		console.error( 'No logs found' );
+		return;
 	}
 
+	// Strip out __typename
+	logs = logs.map( log => {
+		const { timestamp, message } = log;
+
+		return { timestamp, message };
+	} );
+
+	let output = '';
+	if ( opt.format && 'console' === opt.format ) {
+		const rows = [];
+		for ( const { timestamp, message } of logs ) {
+			rows.push( `${ timestamp } ${ message }` );
+			output = rows.join( '\n' );
+		}
+	} else {
+		output = formatData( logs, opt.format );
+	}
+
+	console.log( output );
+}
+
+export function validateInputs( type: string, limit: number, format: string ): void {
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
 		exit.withError( `Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.` );
+	}
+
+	if ( ! ALLOWED_FORMATS.includes( format ) ) {
+		exit.withError( `Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.` );
 	}
 
 	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > LIMIT_MAX ) {
@@ -70,7 +94,6 @@ export const appQuery = `
 		appId
 		name
 		type
-		isK8sResident
 	}
 	organization {
 		id
@@ -86,6 +109,7 @@ command( {
 } )
 	.option( 'type', 'The type of logs to be returned: "app" or "batch"', 'app' )
 	.option( 'limit', 'The maximum number of log lines', 500 )
+	.option( 'format', 'Output the log lines in CSV or JSON format', 'console' )
 	.examples( [
 		{
 			usage: 'vip @mysite.production logs',
@@ -98,6 +122,14 @@ command( {
 		{
 			usage: 'vip @mysite.production logs --limit 100',
 			description: 'Get the most recent 100 logs',
+		},
+		{
+			usage: 'vip @mysite.production logs --limit 100 --format csv',
+			description: 'Get the most recent 100 logs formatted as a CSV',
+		},
+		{
+			usage: 'vip @mysite.production logs --limit 100 --format json',
+			description: 'Get the most recent 100 logs formatted in JSON',
 		},
 	] )
 	.argv( process.argv, getLogs );

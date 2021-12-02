@@ -4,11 +4,13 @@
 import * as tracker from 'lib/tracker';
 import * as logsLib from 'lib/logs/logs';
 import * as exit from 'lib/cli/exit';
+import * as format from 'lib/cli/format';
 import { rollbar } from 'lib/rollbar';
 import { getLogs } from 'bin/vip-logs';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
+jest.spyOn( format, 'formatData' ).mockImplementation( () => {} );
 jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
@@ -49,6 +51,7 @@ describe( 'getLogs', () => {
 			},
 			type: 'app',
 			limit: 500,
+			format: 'console',
 		};
 	} );
 
@@ -65,9 +68,10 @@ describe( 'getLogs', () => {
 		expect( logsLib.getRecentLogs ).toHaveBeenCalledTimes( 1 );
 		expect( logsLib.getRecentLogs ).toHaveBeenCalledWith( 1, 3, 'app', 500 );
 
-		expect( console.log ).toHaveBeenCalledTimes( 2 );
-		expect( console.log ).toHaveBeenNthCalledWith( 1, '2021-11-05T20:18:36.234041811Z My container message 1' );
-		expect( console.log ).toHaveBeenNthCalledWith( 2, '2021-11-09T20:47:07.301221112Z My container message 2' );
+		expect( console.log ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).toHaveBeenCalledWith(
+			'2021-11-05T20:18:36.234041811Z My container message 1\n2021-11-09T20:47:07.301221112Z My container message 2'
+		);
 
 		const trackingParams = {
 			command: 'vip logs',
@@ -76,11 +80,87 @@ describe( 'getLogs', () => {
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			format: 'console',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
+			...trackingParams,
+			logs_output: 2,
+		} );
+
+		expect( rollbar.error ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should display the logs in the output with JSON format', async () => {
+		opts.format = 'json';
+
+		logsLib.getRecentLogs.mockImplementation( async () => [
+			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+		] );
+
+		await getLogs( [], opts );
+
+		expect( format.formatData ).toHaveBeenCalledTimes( 1 );
+		expect( format.formatData ).toHaveBeenCalledWith( [
+			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+		], 'json' );
+
+		const trackingParams = {
+			command: 'vip logs',
+			org_id: 2,
+			app_id: 1,
+			env_id: 3,
+			type: 'app',
+			limit: 500,
+			format: 'json',
+		};
+
+		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
+			...trackingParams,
+			logs_output: 2,
+		} );
+
+		expect( rollbar.error ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should display the logs in the output with CSV format', async () => {
+		opts.format = 'csv';
+
+		logsLib.getRecentLogs.mockImplementation( async () => [
+			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+		] );
+
+		await getLogs( [], opts );
+
+		expect( format.formatData ).toHaveBeenCalledTimes( 1 );
+		expect( format.formatData ).toHaveBeenCalledWith( [
+			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+		], 'csv' );
+
+		const trackingParams = {
+			command: 'vip logs',
+			org_id: 2,
+			app_id: 1,
+			env_id: 3,
+			type: 'app',
+			limit: 500,
+			format: 'csv',
+		};
+
+		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
+			...trackingParams,
+			logs_output: 2,
+		} );
 
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
@@ -103,10 +183,14 @@ describe( 'getLogs', () => {
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			format: 'console',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
+			...trackingParams,
+			logs_output: 0,
+		} );
 
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
@@ -136,6 +220,7 @@ describe( 'getLogs', () => {
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			format: 'console',
 		};
 
 		expect( rollbar.error ).toHaveBeenCalledTimes( 1 );
@@ -168,6 +253,25 @@ describe( 'getLogs', () => {
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
+	it( 'should exit with error if "format" is invalid', async () => {
+		opts.format = 'jso';
+
+		const promise = getLogs( [], opts );
+
+		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
+
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( exit.withError ).toHaveBeenCalledWith( 'Invalid format: jso. The supported formats are: csv, json, console.' );
+
+		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
+
+		expect( console.log ).not.toHaveBeenCalled();
+
+		expect( tracker.trackEvent ).not.toHaveBeenCalled();
+
+		expect( rollbar.error ).not.toHaveBeenCalled();
+	} );
+
 	it.each( [
 		'abc',
 		-1,
@@ -183,25 +287,6 @@ describe( 'getLogs', () => {
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith( `Invalid limit: ${ limit }. It should be a number between 1 and 5000.` );
-
-		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
-
-		expect( console.log ).not.toHaveBeenCalled();
-
-		expect( tracker.trackEvent ).not.toHaveBeenCalled();
-
-		expect( rollbar.error ).not.toHaveBeenCalled();
-	} );
-
-	it( 'should exit with error if the site is not on k8s', async () => {
-		opts.env.isK8sResident = false;
-
-		const promise = getLogs( [], opts );
-
-		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
-
-		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( '`vip logs` is not supported for the specified environment.' );
 
 		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
 
