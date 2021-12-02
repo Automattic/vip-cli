@@ -4,13 +4,11 @@
 import * as tracker from 'lib/tracker';
 import * as logsLib from 'lib/logs/logs';
 import * as exit from 'lib/cli/exit';
-import * as format from 'lib/cli/format';
 import { rollbar } from 'lib/rollbar';
 import { getLogs } from 'bin/vip-logs';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
-jest.spyOn( format, 'formatData' ).mockImplementation( () => {} );
 jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
@@ -103,11 +101,21 @@ describe( 'getLogs', () => {
 
 		await getLogs( [], opts );
 
-		expect( format.formatData ).toHaveBeenCalledTimes( 1 );
-		expect( format.formatData ).toHaveBeenCalledWith( [
-			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
-		], 'json' );
+		expect( console.log ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).toHaveBeenCalledWith(
+			/* eslint-disable indent */
+`[
+	{
+		"timestamp": "2021-11-05T20:18:36.234041811Z",
+		"message": "My container message 1"
+	},
+	{
+		"timestamp": "2021-11-09T20:47:07.301221112Z",
+		"message": "My container message 2"
+	}
+]`
+			/* eslint-enable indent */
+		);
 
 		const trackingParams = {
 			command: 'vip logs',
@@ -134,16 +142,21 @@ describe( 'getLogs', () => {
 
 		logsLib.getRecentLogs.mockImplementation( async () => [
 			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2 has "double quotes", \'single quotes\', commas, multiple\nlines\n, and	tabs' },
 		] );
 
 		await getLogs( [], opts );
 
-		expect( format.formatData ).toHaveBeenCalledTimes( 1 );
-		expect( format.formatData ).toHaveBeenCalledWith( [
-			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
-		], 'csv' );
+		expect( console.log ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).toHaveBeenCalledWith(
+			/* eslint-disable indent */
+`"timestamp","message"
+"2021-11-05T20:18:36.234041811Z","My container message 1"
+"2021-11-09T20:47:07.301221112Z","My container message 2 has ""double quotes"", 'single quotes', commas, multiple
+lines
+, and	tabs"`
+			/* eslint-enable indent */
+		);
 
 		const trackingParams = {
 			command: 'vip logs',
