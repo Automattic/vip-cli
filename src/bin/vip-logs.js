@@ -125,7 +125,7 @@ command( {
 		},
 		{
 			usage: 'vip @mysite.production logs --limit 100 --format csv',
-			description: 'Get the most recent 100 log entries formatted as comma-separated values (CSV)
+			description: 'Get the most recent 100 log entries formatted as comma-separated values (CSV)',
 		},
 		{
 			usage: 'vip @mysite.production logs --limit 100 --format json',
