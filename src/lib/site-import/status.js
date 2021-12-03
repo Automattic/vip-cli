@@ -96,7 +96,7 @@ async function getStatus( api, appId, envId ) {
 	return {
 		importStatus,
 		importJob,
-	  	launched,
+		launched,
 	};
 }
 
