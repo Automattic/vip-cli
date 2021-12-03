@@ -169,6 +169,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 		offset,
 	};
 
+	data.metaCommand = 'vip-go-retrieve-remote-logs';
+
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
 
 	socket.on( 'unauthorized', err => {
@@ -206,8 +208,9 @@ commandWrapper( {
 	appQuery,
 } )
 	.option( 'yes', 'Run the command in production without a confirmation prompt' )
+	.option( 'log', 'Return the log from a completed command' )
 	.argv( process.argv, async ( args, opts ) => {
-		const isSubShell = 0 === args.length;
+		const isSubShell = 0 === args.length && 0 === opts.log;
 
 		// Have to re-quote anything that needs it before we pass it on
 		const quotedArgs = requoteArgs( args );
@@ -304,48 +307,57 @@ commandWrapper( {
 			const startsWithWp = line.startsWith( 'wp ' );
 			const empty = 0 === line.length;
 			const userCmdCancelled = line === cancelCommandChar;
+			const isLogCommand = opts.log;
 
-			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
+			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled && ! isLogCommand ) {
 				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 				subShellRl.prompt();
 				return;
 			}
 
+			const guid = '<guid-here>';
+			const token = '<token-here>';
+
 			subShellRl.pause();
+			let cliCommand, inputToken;
+			if ( ! isLogCommand ) {
+				let result;
+				try {
+					result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
+				} catch ( error ) {
+					// If this was a GraphQL error, print that to the message to the line
+					if ( error.graphQLErrors ) {
+						error.graphQLErrors.forEach( err => {
+							console.log( chalk.red( 'Error:' ), err.message );
+						} );
+					} else {
+						// Else, other type of error, just dump it
+						rollbar.error( error );
+						console.log( error );
+					}
+					if ( ! isSubShell ) {
+						subShellRl.close();
+						process.exit( 1 );
+					}
 
-			let result;
-			try {
-				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
-			} catch ( error ) {
-				// If this was a GraphQL error, print that to the message to the line
-				if ( error.graphQLErrors ) {
-					error.graphQLErrors.forEach( err => {
-						console.log( chalk.red( 'Error:' ), err.message );
-					} );
-				} else {
-					// Else, other type of error, just dump it
-					rollbar.error( error );
-					console.log( error );
+					subShellRl.prompt();
+					return;
 				}
 
-				if ( ! isSubShell ) {
-					subShellRl.close();
-					process.exit( 1 );
-				}
-
-				subShellRl.prompt();
-				return;
+				cliCommand = result.data.triggerWPCLICommandOnAppEnvironment.command;
+				inputToken = result.data.triggerWPCLICommandOnAppEnvironment.inputToken;
+			} else {
+				cliCommand = { guid };
+				inputToken = token;
 			}
-
-			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
 
 			if ( line.includes( "'" ) ) {
 				rollbar.info( 'WP-CLI Command containing single quotes', { custom: { code: 'wp-cli-single-quotes', commandGuid: cliCommand.guid } } );
 			}
 
 			currentJob = await launchCommandAndGetStreams( {
-				guid: cliCommand.guid,
-				inputToken: inputToken,
+				guid,
+				inputToken: token,
 			} );
 
 			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
