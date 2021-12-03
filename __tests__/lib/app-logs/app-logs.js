@@ -7,7 +7,7 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from 'lib/api';
-import { getRecentLogs } from 'lib/logs/logs';
+import { getRecentLogs } from 'lib/app-logs/app-logs';
 
 jest.mock( 'lib/api', () => jest.fn() );
 

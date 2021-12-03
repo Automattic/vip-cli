@@ -6,7 +6,7 @@
 import command from 'lib/cli/command';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
-import * as logsLib from 'lib/logs/logs';
+import * as logsLib from 'lib/app-logs/app-logs';
 import * as exit from 'lib/cli/exit';
 import { formatData } from 'lib/cli/format';
 

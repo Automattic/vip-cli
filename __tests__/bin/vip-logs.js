@@ -2,7 +2,7 @@
  * Internal dependencies
  */
 import * as tracker from 'lib/tracker';
-import * as logsLib from 'lib/logs/logs';
+import * as logsLib from 'lib/app-logs/app-logs';
 import * as exit from 'lib/cli/exit';
 import { rollbar } from 'lib/rollbar';
 import { getLogs } from 'bin/vip-logs';
@@ -27,7 +27,7 @@ jest.mock( 'lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-jest.mock( 'lib/logs/logs', () => ( {
+jest.mock( 'lib/app-logs/app-logs', () => ( {
 	getRecentLogs: jest.fn(),
 } ) );
 
