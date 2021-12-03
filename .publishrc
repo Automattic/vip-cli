@@ -4,12 +4,12 @@
     "uncommittedChanges": true,
     "untrackedFiles": true,
     "sensitiveData": true,
-    "branch": "master",
+    "branch": "develop",
     "gitTag": false
   },
   "confirm": true,
   "publishCommand": "npm publish",
-  "publishTag": "latest",
+  "publishTag": "next",
   "prePublishScript": "npm test",
   "postPublishScript": false
 }
