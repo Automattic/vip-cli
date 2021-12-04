@@ -137,7 +137,7 @@ const cancelCommand = async guid => {
 		} );
 };
 
-const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) => {
+const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0, metaCommand = null } ) => {
 	const token = await Token.get();
 	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 		transportOptions: {
@@ -169,7 +169,9 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 		offset,
 	};
 
-	data.metaCommand = 'vip-go-retrieve-remote-logs';
+	if ( metaCommand ) {
+		data.metaCommand = metaCommand;
+	}
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
 
@@ -308,18 +310,21 @@ commandWrapper( {
 			const empty = 0 === line.length;
 			const userCmdCancelled = line === cancelCommandChar;
 			const isLogCommand = opts.log;
-
+			let metaCommand;
+			let cliCommand, inputToken;
 			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled && ! isLogCommand ) {
 				console.log( chalk.red( 'Error:' ), 'invalid command, please pass a valid WP CLI command.' );
 				subShellRl.prompt();
 				return;
 			}
 
-			const guid = '<guid-here>';
-			const token = '<token-here>';
+			if ( opts.log ) {
+				metaCommand = 'vip-go-retrieve-remote-logs';
+				cliCommand = opts.log;
+			}
 
 			subShellRl.pause();
-			let cliCommand, inputToken;
+
 			if ( ! isLogCommand ) {
 				let result;
 				try {
@@ -344,11 +349,8 @@ commandWrapper( {
 					return;
 				}
 
-				cliCommand = result.data.triggerWPCLICommandOnAppEnvironment.command;
+				cliCommand = result.data.triggerWPCLICommandOnAppEnvironment.command.guid;
 				inputToken = result.data.triggerWPCLICommandOnAppEnvironment.inputToken;
-			} else {
-				cliCommand = { guid };
-				inputToken = token;
 			}
 
 			if ( line.includes( "'" ) ) {
@@ -356,8 +358,9 @@ commandWrapper( {
 			}
 
 			currentJob = await launchCommandAndGetStreams( {
-				guid,
-				inputToken: token,
+				guid: cliCommand,
+				inputToken,
+				metaCommand,
 			} );
 
 			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
