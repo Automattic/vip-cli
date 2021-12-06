@@ -29,6 +29,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 			environments(id: $envId) {
 				id
 				isK8sResident
+				launched
 				jobs(types: "sql_import") {
 					id
 					type
@@ -84,7 +85,8 @@ async function getStatus( api, appId, envId ) {
 		throw new Error( 'Unable to determine import status from environment' );
 	}
 	const [ environment ] = environments;
-	const { importStatus, jobs } = environment;
+	const { importStatus, jobs, launched } = environment;
+
 	if ( ! environment.isK8sResident && ! jobs?.length ) {
 		return {};
 	}
@@ -94,13 +96,14 @@ async function getStatus( api, appId, envId ) {
 	return {
 		importStatus,
 		importJob,
+		launched,
 	};
 }
 
-function getErrorMessage( importFailed ) {
+function getErrorMessage( importFailed, launched = false ) {
 	debug( { importFailed } );
 
-	const rollbackMessage = `Your site is ${ chalk.blue(
+	const rollbackMessage = launched ? '' : `Your site is ${ chalk.blue(
 		'automatically being rolled back'
 	) } to the last backup prior to your import job.
 `;
@@ -238,7 +241,7 @@ ${ maybeExitPrompt }
 				} catch ( error ) {
 					return reject( { error } );
 				}
-				const { importStatus } = status;
+				const { importStatus, launched } = status;
 				let { importJob } = status;
 
 				let jobStatus, jobSteps = [];
@@ -317,7 +320,7 @@ ${ maybeExitPrompt }
 				}
 
 				if ( ! jobSteps.length ) {
-					return reject( { error: 'Could not enumerate the import job steps' } );
+					return reject( { error: 'Could not enumerate the import job steps', launched } );
 				}
 
 				if ( failedImportStep ) {
@@ -338,6 +341,7 @@ ${ maybeExitPrompt }
 						error: 'Import step failed',
 						stepName: failedImportStep.name,
 						errorText: failedImportStep.error,
+						launched,
 					} );
 				}
 
@@ -346,7 +350,7 @@ ${ maybeExitPrompt }
 				setSuffixAndPrint();
 
 				if ( jobStatus === 'error' ) {
-					return reject( { error: 'Import job failed', steps: jobSteps } );
+					return reject( { error: 'Import job failed', steps: jobSteps, launched } );
 				}
 
 				if ( jobStatus !== 'running' && completedAt ) {
@@ -364,7 +368,6 @@ ${ maybeExitPrompt }
 
 	try {
 		const results = await getResults();
-
 		if ( typeof results === 'string' ) {
 			overallStatus = results;
 		} else {
@@ -384,7 +387,7 @@ ${ maybeExitPrompt }
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
 		progressTracker.print( { clearAfter: true } );
-		exit.withError( getErrorMessage( importFailed ) );
+		exit.withError( getErrorMessage( importFailed, importFailed.launched ) );
 	}
 }
 
