@@ -27,6 +27,13 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.7.0 (07 December 2021)
+- #941  [dev-env] Bump lando CLI dependency
+- #938  Hide roll back message after SQL Import failure for launched sites
+- #936  Sets jest maxWorkers to 4
+
+https://github.com/Automattic/vip/releases/tag/v2.7.0
+
 ### 2.6.0 (23 November 2021)
 - #921  [dev-env] Introuces update to change existing environment
 - #928  [dev-env] Switch lando to use our fork

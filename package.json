@@ -33,6 +33,7 @@
     "vip-import-sql-status": "dist/bin/vip-import-sql-status.js",
     "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
+    "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-wp": "dist/bin/vip-wp.js"
@@ -116,7 +117,7 @@
     "ini": "2.0.0",
     "json2csv": "5.0.6",
     "jwt-decode": "2.2.0",
-    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_11_22",
+    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "rollbar": "2.22.0",
