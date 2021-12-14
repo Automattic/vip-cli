@@ -36,6 +36,7 @@
     "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
+    "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
