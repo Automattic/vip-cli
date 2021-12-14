@@ -23,6 +23,8 @@ import { trackEvent } from 'lib/tracker';
 
 const baseUsage = 'vip config envvar set';
 
+const NEW_RELIC_ENVVAR_KEY = 'NEW_RELIC_LICENSE_KEY';
+
 // Command examples
 const examples = [
 	{
@@ -50,6 +52,13 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 
 	if ( ! validateNameWithMessage( name ) ) {
 		await trackEvent( 'envvar_set_invalid_name', trackingParams );
+		process.exit( 1 );
+	}
+
+	if ( NEW_RELIC_ENVVAR_KEY === name ) {
+		await trackEvent( 'envvar_set_newrelic_key', trackingParams );
+		console.log( chalk.bold.red( 'Setting the New Relic key is not permitted.' ),
+			'If you want to set your own New Relic key, please contact our support team through the usual channels.' );
 		process.exit( 1 );
 	}
 
