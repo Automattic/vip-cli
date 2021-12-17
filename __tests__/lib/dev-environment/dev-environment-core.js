@@ -175,7 +175,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						branch: 'trunk',
 						isMultisite: true,
 						primaryDomain: '',
-					}
+					},
 				},
 			},
 			{ // picks env with correct type if type provided
