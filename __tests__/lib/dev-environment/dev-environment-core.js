@@ -143,7 +143,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					},
 				},
 			},
-			{ // Does NOT take an env if there is more than one
+			{ // Picks first env if no envType provided
 				appId: 123,
 				envType: null,
 				response: {
@@ -155,6 +155,10 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					environments: [
 						{
 							name: 'envName',
+							type: 'production',
+							branch: 'trunk',
+							isMultisite: true,
+							primaryDomain: '',
 						},
 						{
 							name: 'envName2',
@@ -165,6 +169,13 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					id: 123,
 					name: 'foo',
 					repository: 'www.nice.repo',
+					environment: {
+						name: 'envName',
+						type: 'production',
+						branch: 'trunk',
+						isMultisite: true,
+						primaryDomain: '',
+					}
 				},
 			},
 			{ // picks env with correct type if type provided
