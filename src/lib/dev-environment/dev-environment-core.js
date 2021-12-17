@@ -323,7 +323,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 		let envData;
 		if ( envType ) {
 			envData = environments.find( candidateEnv => candidateEnv.type === envType );
-		} else if ( 1 === environments.length ) {
+		} else if ( 1 === environments.length || ! envType ) {
 			envData = environments[ 0 ];
 		}
 
