@@ -14,11 +14,11 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 
 const QUERY_ENVIRONMENT_LOGS = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $since: String ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
-				logs( type: $type, limit: $limit ) {
+				logs( type: $type, limit: $limit, since: $since ) {
 					nodes {
 						timestamp
 						message
@@ -29,7 +29,7 @@ const QUERY_ENVIRONMENT_LOGS = gql`
 	}
 `;
 
-export async function getRecentLogs( appId: number, envId: number, type: string, limit: number ): Promise<Array<{ timestamp: string, message: string }>> {
+export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, since: string ): Promise<Array<{ timestamp: string, message: string }>> {
 	const api = await API();
 
 	const response = await api.query( {
@@ -39,6 +39,7 @@ export async function getRecentLogs( appId: number, envId: number, type: string,
 			envId,
 			type,
 			limit,
+			since,
 		},
 	} );
 

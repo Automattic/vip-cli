@@ -25,10 +25,15 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 		env_id: opt.env.id,
 		type: opt.type,
 		limit: opt.limit,
+		follow: opt.follow,
 		format: opt.format,
 	};
 
 	await trackEvent( 'logs_command_execute', trackingParams );
+
+	if ( opt.follow ) {
+		return await followLogs( opt );
+	}
 
 	let logs = [];
 	try {
@@ -51,6 +56,33 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 		return;
 	}
 
+	printLogs( logs, opt.format );
+}
+
+export async function followLogs( opt ): Promise<void> {
+	let interval = 30;
+
+	let since;
+
+	while ( true ) {
+		let logs = [];
+		try {
+			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit, since );
+		} catch ( error ) {
+			console.error( 'Failed to fetch logs. Trying again after the polling interval' );
+			rollbar.error( error );
+		}
+
+		if ( logs.length ) {
+			printLogs( logs, opt.format );
+			since = logs[ logs.length-1 ].timestamp;
+		}
+
+		await new Promise( ( resolve ) => { setTimeout( resolve, interval * 1000 ); } );
+	}
+}
+
+function printLogs( logs, format ) {
 	// Strip out __typename
 	logs = logs.map( log => {
 		const { timestamp, message } = log;
@@ -59,18 +91,19 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 	} );
 
 	let output = '';
-	if ( opt.format && 'text' === opt.format ) {
+	if ( format && 'text' === format ) {
 		const rows = [];
 		for ( const { timestamp, message } of logs ) {
 			rows.push( `${ timestamp } ${ message }` );
 			output = rows.join( '\n' );
 		}
 	} else {
-		output = formatData( logs, opt.format );
+		output = formatData( logs, format );
 	}
 
 	console.log( output );
 }
+
 
 export function validateInputs( type: string, limit: number, format: string ): void {
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
@@ -109,6 +142,7 @@ command( {
 } )
 	.option( 'type', 'The type of logs to be returned: "app" or "batch"', 'app' )
 	.option( 'limit', 'The maximum number of log lines', 500 )
+	.option( 'follow', 'Keep fetching new logs as they are generated' )
 	.option( 'format', 'Output the log lines in CSV or JSON format', 'text' )
 	.examples( [
 		{
