@@ -14,22 +14,23 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 
 const QUERY_ENVIRONMENT_LOGS = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $since: String ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $after: String ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
-				logs( type: $type, limit: $limit, since: $since ) {
+				logs( type: $type, limit: $limit, after: $after ) {
 					nodes {
 						timestamp
 						message
 					}
+					nextCursor
 				}
 			}
 		}
 	}
 `;
 
-export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, since: string ): Promise<Array<{ timestamp: string, message: string }>> {
+export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after: string ): Promise<{ nodes: Array<{ timestamp: string, message: string }>, nextCursor: string }> {
 	const api = await API();
 
 	const response = await api.query( {
@@ -39,13 +40,13 @@ export async function getRecentLogs( appId: number, envId: number, type: string,
 			envId,
 			type,
 			limit,
-			since,
+			after,
 		},
 	} );
 
-	const logs = response?.data?.app?.environments[ 0 ]?.logs?.nodes;
+	const logs = response?.data?.app?.environments[ 0 ]?.logs;
 
-	if ( ! logs ) {
+	if ( ! logs?.nodes ) {
 		throw new Error( 'Unable to query logs' );
 	}
 

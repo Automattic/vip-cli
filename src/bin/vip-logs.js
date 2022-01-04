@@ -35,7 +35,7 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 		return await followLogs( opt );
 	}
 
-	let logs = [];
+	let logs;
 	try {
 		logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit );
 	} catch ( error ) {
@@ -48,35 +48,36 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 
 	await trackEvent( 'logs_command_success', {
 		...trackingParams,
-		logs_output: logs.length,
+		total: logs.nodes.length,
 	} );
 
-	if ( ! logs.length ) {
+	if ( ! logs.nodes.length ) {
 		console.error( 'No logs found' );
 		return;
 	}
 
-	printLogs( logs, opt.format );
+	printLogs( logs.nodes, opt.format );
 }
 
 export async function followLogs( opt ): Promise<void> {
 	let interval = 30;
 
-	let since;
+	let after = null;
 
 	while ( true ) {
-		let logs = [];
+		let logs;
 		try {
-			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit, since );
+			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit, after );
 		} catch ( error ) {
 			console.error( 'Failed to fetch logs. Trying again after the polling interval' );
 			rollbar.error( error );
 		}
 
-		if ( logs.length ) {
-			printLogs( logs, opt.format );
-			since = logs[ logs.length-1 ].timestamp;
+		if ( logs.nodes.length ) {
+			printLogs( logs.nodes, opt.format );
 		}
+
+		after = logs.nextCursor;
 
 		await new Promise( ( resolve ) => { setTimeout( resolve, interval * 1000 ); } );
 	}
