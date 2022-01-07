@@ -31,12 +31,12 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 
 	await trackEvent( 'logs_command_execute', trackingParams );
 
-	if ( opt.follow ) {
-		return await followLogs( opt );
-	}
-
 	let logs;
 	try {
+		if ( opt.follow ) {
+			return await followLogs( opt );
+		}
+
 		logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit );
 	} catch ( error ) {
 		rollbar.error( error );
