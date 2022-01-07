@@ -33,7 +33,13 @@ const QUERY_ENVIRONMENT_LOGS = gql`
 	}
 `;
 
-export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after: string ): Promise<{ nodes: Array<{ timestamp: string, message: string }>, nextCursor: string, pollingDelaySeconds: number }> {
+type GetRecentLogsResponse = {
+	nodes: Array<{ timestamp: string, message: string }>,
+	nextCursor: string,
+	pollingDelaySeconds: number,
+};
+
+export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after?: string ): Promise<GetRecentLogsResponse> {
 	const api = await API();
 
 	const response = await api.query( {

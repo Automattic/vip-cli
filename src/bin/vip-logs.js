@@ -74,15 +74,15 @@ export async function followLogs( opt ): Promise<void> {
 			rollbar.error( error );
 		}
 
-		if ( logs.nodes.length ) {
+		if ( logs?.nodes.length ) {
 			printLogs( logs.nodes, opt.format );
 		}
 
-		after = logs.nextCursor;
+		after = logs?.nextCursor;
 		isFirstRequest = false;
 
 		// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
-		const delay = Math.min( ( logs.pollingDelaySeconds || 10 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
+		const delay = Math.min( ( logs?.pollingDelaySeconds || 10 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
 
 		await new Promise( resolve => setTimeout( resolve, delay ) );
 	}
