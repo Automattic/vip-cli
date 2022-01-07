@@ -25,7 +25,7 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 		env_id: opt.env.id,
 		type: opt.type,
 		limit: opt.limit,
-		follow: opt.follow,
+		follow: opt.follow || false,
 		format: opt.format,
 	};
 
