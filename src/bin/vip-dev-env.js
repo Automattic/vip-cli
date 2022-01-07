@@ -23,6 +23,7 @@ command( {
 	.command( 'stop', 'Stop a local dev environment' )
 	.command( 'destroy', 'Remove containers, networks, volumes and configuration files of a local dev environment' )
 	.command( 'info', 'Provides basic info about one or multiple local dev environments' )
+	.command( 'list', 'Provides basic info about all local dev environments' )
 	.command( 'exec', 'Execute an operation on a dev environment' )
 	.command( 'import', 'Import data into a local WordPress environment' )
 	.argv( process.argv );
