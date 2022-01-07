@@ -82,7 +82,7 @@ export async function followLogs( opt ): Promise<void> {
 		isFirstRequest = false;
 
 		// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
-		const delay = Math.min( ( logs?.pollingDelaySeconds || 10 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
+		const delay = Math.max( ( logs?.pollingDelaySeconds || 10 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
 
 		await new Promise( resolve => setTimeout( resolve, delay ) );
 	}
