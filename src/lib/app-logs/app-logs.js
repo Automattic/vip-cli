@@ -13,6 +13,8 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
+export const LIMIT_MAX = 5000;
+
 const QUERY_ENVIRONMENT_LOGS = gql`
 	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $after: String ) {
 		app( id: $appId ) {

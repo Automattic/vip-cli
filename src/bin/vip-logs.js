@@ -10,7 +10,6 @@ import * as logsLib from 'lib/app-logs/app-logs';
 import * as exit from 'lib/cli/exit';
 import { formatData } from 'lib/cli/format';
 
-const LIMIT_MAX = 5000;
 const LIMIT_MIN = 1;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
 const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
@@ -62,11 +61,14 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 
 export async function followLogs( opt ): Promise<void> {
 	let after = null;
+	let isFirstRequest = true;
 
 	while ( true ) {
+		const limit = isFirstRequest ? opt.limit : 5000;
+
 		let logs;
 		try {
-			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit, after );
+			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, limit, after );
 		} catch ( error ) {
 			console.error( 'Failed to fetch logs. Trying again after the polling interval' );
 			rollbar.error( error );
@@ -77,6 +79,7 @@ export async function followLogs( opt ): Promise<void> {
 		}
 
 		after = logs.nextCursor;
+		isFirstRequest = false;
 
 		// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
 		const delay = Math.min( ( logs.pollingDelaySeconds || 10 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
@@ -107,7 +110,6 @@ function printLogs( logs, format ) {
 	console.log( output );
 }
 
-
 export function validateInputs( type: string, limit: number, format: string ): void {
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
 		exit.withError( `Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.` );
@@ -117,8 +119,8 @@ export function validateInputs( type: string, limit: number, format: string ): v
 		exit.withError( `Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.` );
 	}
 
-	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > LIMIT_MAX ) {
-		exit.withError( `Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ LIMIT_MAX }.` );
+	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > logsLib.LIMIT_MAX ) {
+		exit.withError( `Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ logsLib.LIMIT_MAX }.` );
 	}
 }
 
