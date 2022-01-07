@@ -162,6 +162,9 @@ export async function uploadImportSqlFileToS3( {
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
+		// file was compressed, so we need to recalculate md5
+		fileMeta.md5 = await getFileMD5Hash( fileMeta.fileName );
+
 		debug( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
