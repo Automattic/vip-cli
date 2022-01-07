@@ -24,13 +24,14 @@ const QUERY_ENVIRONMENT_LOGS = gql`
 						message
 					}
 					nextCursor
+					pollingDelaySeconds
 				}
 			}
 		}
 	}
 `;
 
-export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after: string ): Promise<{ nodes: Array<{ timestamp: string, message: string }>, nextCursor: string }> {
+export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after: string ): Promise<{ nodes: Array<{ timestamp: string, message: string }>, nextCursor: string, pollingDelaySeconds: number }> {
 	const api = await API();
 
 	const response = await api.query( {

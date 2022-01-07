@@ -14,6 +14,7 @@ const LIMIT_MAX = 5000;
 const LIMIT_MIN = 1;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
 const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
+const MIN_POLLING_DELAY_SECONDS = 5;
 
 export async function getLogs( arg: string[], opt ): Promise<void> {
 	validateInputs( opt.type, opt.limit, opt.format );
@@ -60,8 +61,6 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 }
 
 export async function followLogs( opt ): Promise<void> {
-	let interval = 30;
-
 	let after = null;
 
 	while ( true ) {
@@ -79,7 +78,10 @@ export async function followLogs( opt ): Promise<void> {
 
 		after = logs.nextCursor;
 
-		await new Promise( ( resolve ) => { setTimeout( resolve, interval * 1000 ); } );
+		// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
+		const delay = Math.min( ( logs.pollingDelaySeconds || 10 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
+
+		await new Promise( resolve => setTimeout( resolve, delay ) );
 	}
 }
 
