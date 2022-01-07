@@ -111,16 +111,11 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 
 		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
-		debug( 'Calculating file md5 checksum...' );
-		const md5 = await getFileMD5Hash( fileName );
-		debug( `Calculated file md5 checksum: ${ md5 }\n` );
-
 		resolve( {
 			basename,
 			fileName,
 			fileSize,
 			isCompressed,
-			md5,
 		} );
 	} );
 }
@@ -162,9 +157,6 @@ export async function uploadImportSqlFileToS3( {
 		fileMeta.isCompressed = true;
 		fileMeta.fileSize = await getFileSize( fileMeta.fileName );
 
-		// file was compressed, so we need to recalculate md5
-		fileMeta.md5 = await getFileMD5Hash( fileMeta.fileName );
-
 		debug( `Compressed file is ~ ${ Math.floor( fileMeta.fileSize / MB_IN_BYTES ) } MB\n` );
 
 		const fewerBytes = uncompressedFileSize - fileMeta.fileSize;
@@ -175,6 +167,10 @@ export async function uploadImportSqlFileToS3( {
 
 		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
+
+	debug( 'Calculating file md5 checksum...' );
+	fileMeta.md5 = await getFileMD5Hash( fileMeta.fileName );
+	debug( `Calculated file md5 checksum: ${ fileMeta.md5 }\n` );
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
