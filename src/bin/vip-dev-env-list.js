@@ -19,7 +19,7 @@ import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info list`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } list`,
 		description: 'Return information about all local dev environments',
 	},
 ];
