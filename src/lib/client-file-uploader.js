@@ -98,6 +98,27 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
 
+export async function getFileMeta( fileName: string ): Promise<FileMeta> {
+	return new Promise( async resolve => {
+		const fileSize = await getFileSize( fileName );
+
+		const basename = path.basename( fileName );
+		// TODO Validate File basename...  encodeURIComponent, maybe...?
+
+		const mimeType = await detectCompressedMimeType( fileName );
+		// TODO Only allow a subset of Mime Types...?
+
+		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
+
+		resolve( {
+			basename,
+			fileName,
+			fileSize,
+			isCompressed,
+		} );
+	} );
+}
+
 export async function uploadImportSqlFileToS3( {
 	app,
 	env,
@@ -156,6 +177,7 @@ export async function uploadImportSqlFileToS3( {
 
 	return {
 		fileMeta,
+		md5,
 		result,
 	};
 }
