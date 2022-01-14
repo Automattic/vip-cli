@@ -28,6 +28,7 @@ jest.mock( 'lib/tracker', () => ( {
 } ) );
 
 jest.mock( 'lib/app-logs/app-logs', () => ( {
+	// Only mock what is really needed, otherwise exported constants like LIMIT_MAX would be `undefined` during the tests
 	...jest.requireActual( 'lib/app-logs/app-logs' ),
 	getRecentLogs: jest.fn(),
 } ) );
