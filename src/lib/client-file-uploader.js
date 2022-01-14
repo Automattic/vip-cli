@@ -39,7 +39,6 @@ const MAX_CONCURRENT_PART_UPLOADS = 5;
 
 export type FileMeta = {
 	basename: string,
-	md5: string,
 	fileContent?: string | Buffer | ReadStream,
 	fileName: string,
 	fileSize: number,
@@ -99,40 +98,13 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
 
-export async function getFileMeta( fileName: string ): Promise<FileMeta> {
-	return new Promise( async resolve => {
-		const fileSize = await getFileSize( fileName );
-
-		const basename = path.basename( fileName );
-		// TODO Validate File basename...  encodeURIComponent, maybe...?
-
-		const mimeType = await detectCompressedMimeType( fileName );
-		// TODO Only allow a subset of Mime Types...?
-
-		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
-
-		debug( 'Calculating file md5 checksum...' );
-		const md5 = await getFileMD5Hash( fileName );
-		debug( `Calculated file md5 checksum: ${ md5 }\n` );
-
-		resolve( {
-			basename,
-			fileName,
-			fileSize,
-			isCompressed,
-			md5,
-		} );
-	} );
-}
-
 export async function uploadImportSqlFileToS3( {
 	app,
 	env,
 	fileName,
+	fileMeta,
 	progressCallback,
 }: UploadArguments ) {
-	const fileMeta = await getFileMeta( fileName );
-
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
@@ -172,6 +144,10 @@ export async function uploadImportSqlFileToS3( {
 
 		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
+
+	debug( 'Calculating file md5 checksum...' );
+	const md5 = await getFileMD5Hash( fileName );
+	debug( `Calculated file md5 checksum: ${ md5 }\n` );
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
