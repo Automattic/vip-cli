@@ -75,7 +75,7 @@ export async function followLogs( opt ): Promise<void> {
 		} catch ( error ) {
 			// If the first request fails we don't want to retry (it's probably not recoverable)
 			if ( isFirstRequest ) {
-				console.error( `Error fetching initial logs` );
+				console.error( 'Error fetching initial logs' );
 				break;
 			}
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
