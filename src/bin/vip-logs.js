@@ -63,6 +63,9 @@ export async function followLogs( opt ): Promise<void> {
 	let after = null;
 	let isFirstRequest = true;
 
+	// Set an initial default delay
+	let delay = 30;
+
 	while ( true ) {
 		const limit = isFirstRequest ? opt.limit : 5000;
 
@@ -70,21 +73,26 @@ export async function followLogs( opt ): Promise<void> {
 		try {
 			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, limit, after );
 		} catch ( error ) {
-			console.error( 'Failed to fetch logs. Trying again after the polling interval' );
+			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
+			delay += 30;
+			delay = Math.max( delay, 300 );
+			console.error( `Failed to fetch logs. Trying again in ${ delay } seconds` );
 			rollbar.error( error );
 		}
 
-		if ( logs?.nodes.length ) {
-			printLogs( logs.nodes, opt.format );
+		if ( logs ) {
+			if ( logs?.nodes.length ) {
+				printLogs( logs.nodes, opt.format );
+			}
+
+			after = logs?.nextCursor;
+			isFirstRequest = false;
+
+			// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
+			delay = Math.max( ( logs?.pollingDelaySeconds || 30 ), MIN_POLLING_DELAY_SECONDS );
 		}
 
-		after = logs?.nextCursor;
-		isFirstRequest = false;
-
-		// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
-		const delay = Math.max( ( logs?.pollingDelaySeconds || 30 ), MIN_POLLING_DELAY_SECONDS ) * 1000;
-
-		await new Promise( resolve => setTimeout( resolve, delay ) );
+		await new Promise( resolve => setTimeout( resolve, delay * 1000 ) );
 	}
 }
 
