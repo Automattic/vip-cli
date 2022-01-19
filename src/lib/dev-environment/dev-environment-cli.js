@@ -294,7 +294,8 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
-		const tagChoices = getWordpressImageTags();
+		const tagChoices = []
+		await populateWordPressVersionList(tagChoices);
 		let initialTagIndex = 0;
 		if ( defaultObject?.tag ) {
 			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
@@ -334,6 +335,46 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'media-redirect-domain', 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
-function getWordpressImageTags(): string[] {
-	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
+async function populateWordPressVersionList( versionList ) {
+	return new Promise(( resolve, reject ) =>  {
+		const https = require('https')
+		const req = https.request(getImageApiOptions(), res => {
+			let data = ''
+
+			res.on( 'data', (chunk) => {
+				data += chunk
+			})
+
+			res.on( 'end', () => {
+				let list = JSON.parse(data)
+				list.forEach( item => {
+					if ( item.metadata.container.tags.length > 0 ) {
+						versionList.push(item.metadata.container.tags[0])
+					}
+				})
+				versionList.sort().reverse()
+				resolve()
+			})
+		})
+
+		req.on('error', error => {
+			console.error(error)
+		})
+
+		req.end()
+    });
+}
+
+function getImageApiOptions() {
+	return  {
+		hostname: 'api.github.com',
+		port: 443,
+		path: '/orgs/Automattic/packages/container/vip-container-images%2Fwordpress/versions?per_page=100&repo=vip-container-images&package_type=container',
+		method: 'GET',
+		headers: {
+			'Authorization': 'Bearer ghp_XXXXXXXXXXXXXXXXXXXX',
+			'User-Agent': 'VIP',
+			'Accept': 'application/vnd.github.v3+json',
+		}
+	}
 }
