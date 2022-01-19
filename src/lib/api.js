@@ -31,7 +31,7 @@ export function disableGlobalGraphQLErrorHandling() {
 	globalGraphQLErrorHandlingEnabled = false;
 }
 
-export default async function API(): Promise<ApolloClient> {
+export default async function API( exitOnError = true ): Promise<ApolloClient> {
 	const authToken = await Token.get();
 	const headers = {
 		'User-Agent': env.userAgent,
@@ -52,7 +52,9 @@ export default async function API(): Promise<ApolloClient> {
 				console.error( chalk.red( 'Error:' ), error.message );
 			} );
 
-			process.exit();
+			if ( exitOnError ) {
+				process.exit();
+			}
 		}
 	} );
 

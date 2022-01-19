@@ -73,9 +73,14 @@ export async function followLogs( opt ): Promise<void> {
 		try {
 			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, limit, after );
 		} catch ( error ) {
+			// If the first request fails we don't want to retry (it's probably not recoverable)
+			if ( isFirstRequest ) {
+				console.error( `Error fetching initial logs` );
+				break;
+			}
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
 			delay += 30;
-			delay = Math.max( delay, 300 );
+			delay = Math.min( delay, 300 );
 			console.error( `Failed to fetch logs. Trying again in ${ delay } seconds` );
 			rollbar.error( error );
 		}
