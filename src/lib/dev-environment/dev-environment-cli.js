@@ -335,5 +335,13 @@ export function addDevEnvConfigurationOptions( command ) {
 }
 
 function getWordpressImageTags(): string[] {
-	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
+	return [
+		'5.9',
+		'5.8.3',
+		'5.8.2',
+		'5.8.1',
+		'5.8',
+		'5.7.3',
+		'5.7.2',
+	];
 }
