@@ -21,16 +21,7 @@ const MAX_POLLING_DELAY_IN_SECONDS = 300;
 export async function getLogs( arg: string[], opt ): Promise<void> {
 	validateInputs( opt.type, opt.limit, opt.format );
 
-	const trackingParams = {
-		command: 'vip logs',
-		org_id: opt.app.organization.id,
-		app_id: opt.app.id,
-		env_id: opt.env.id,
-		type: opt.type,
-		limit: opt.limit,
-		follow: opt.follow || false,
-		format: opt.format,
-	};
+	const trackingParams = getBaseTrackingParams( opt );
 
 	await trackEvent( 'logs_command_execute', trackingParams );
 
@@ -65,6 +56,10 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 export async function followLogs( opt ): Promise<void> {
 	let after = null;
 	let isFirstRequest = true;
+	// How many times have we polled?
+	let requestNumber = 0;
+
+	const trackingParams = getBaseTrackingParams( opt );
 
 	// Set an initial default delay
 	let delay = DEFAULT_POLLING_DELAY_IN_SECONDS;
@@ -72,10 +67,22 @@ export async function followLogs( opt ): Promise<void> {
 	while ( true ) {
 		const limit = isFirstRequest ? opt.limit : LIMIT_MAX;
 
+		requestNumber++;
+		trackingParams.request_number = requestNumber;
+		trackingParams.request_delay = delay;
+		trackingParams.limit = limit;
+
 		let logs;
 		try {
 			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, limit, after );
+
+			await trackEvent( 'logs_command_follow_success', {
+				...trackingParams,
+				total: logs?.nodes.length,
+			} );
 		} catch ( error ) {
+			await trackEvent( 'logs_command_follow_error', { ...trackingParams, error: error.message } );
+
 			// If the first request fails we don't want to retry (it's probably not recoverable)
 			if ( isFirstRequest ) {
 				console.error( 'Error fetching initial logs' );
@@ -102,6 +109,19 @@ export async function followLogs( opt ): Promise<void> {
 
 		await new Promise( resolve => setTimeout( resolve, delay * 1000 ) );
 	}
+}
+
+function getBaseTrackingParams( opt ) {
+	return {
+		command: 'vip logs',
+		org_id: opt.app.organization.id,
+		app_id: opt.app.id,
+		env_id: opt.env.id,
+		type: opt.type,
+		limit: opt.limit,
+		follow: opt.follow || false,
+		format: opt.format,
+	};
 }
 
 function printLogs( logs, format ) {
