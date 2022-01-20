@@ -346,21 +346,27 @@ async function populateWordPressVersionList( versionList ) {
 			} );
 
 			res.on( 'end', () => {
-				const list = JSON.parse( data );
-				list.forEach( item => {
-					if ( item.metadata.container.tags.length > 0 ) {
-						item.metadata.container.tags.forEach( tag => {
-							versionList.push( tag );
-						} );
-					}
-				} );
+				try {
+					const list = JSON.parse( data );
+					list.forEach( item => {
+						if ( item.metadata.container.tags.length > 0 ) {
+							item.metadata.container.tags.forEach( tag => {
+								versionList.push( tag );
+							} );
+						}
+					} );
+				} catch {
+					console.log( chalk.yellow( 'Warning:' ), 'Could not load remote list of WordPress images.' );
+					versionList.push( '5.9', '5.8', '5.7', '5.6' );
+				}
+
 				versionList.sort().reverse();
 				resolve();
 			} );
 		} );
 
 		req.on( 'error', error => {
-			console.error( error );
+			console.log( chalk.yellow( 'Warning:' ), error );
 		} );
 
 		req.end();
@@ -374,7 +380,7 @@ function getImageApiOptions() {
 		path: '/orgs/Automattic/packages/container/vip-container-images%2Fwordpress/versions?per_page=100&repo=vip-container-images&package_type=container',
 		method: 'GET',
 		headers: {
-			Authorization: 'Bearer ghp_XXXXXXXXXXXXXXXXXXXX',
+			Authorization: 'Bearer ghp_XXXXXXXXXXXXXXXXXXXXXX',
 			'User-Agent': 'VIP',
 			Accept: 'application/vnd.github.v3+json',
 		},
