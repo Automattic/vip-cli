@@ -40,7 +40,7 @@ type GetRecentLogsResponse = {
 };
 
 export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after?: string ): Promise<GetRecentLogsResponse> {
-	const api = await API( false );
+	const api = await API( { exitOnError: false } );
 
 	const response = await api.query( {
 		query: QUERY_ENVIRONMENT_LOGS,
