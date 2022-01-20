@@ -341,7 +341,7 @@ async function populateWordPressVersionList( versionList ) {
 		const req = https.request(getImageApiOptions(), res => {
 			let data = ''
 
-			res.on( 'data', (chunk) => {
+			res.on( 'data', chunk => {
 				data += chunk
 			})
 
