@@ -12,15 +12,17 @@ import { getRecentLogs } from 'lib/app-logs/app-logs';
 jest.mock( 'lib/api', () => jest.fn() );
 
 const EXPECTED_QUERY = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $after: String ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
-				logs( type: $type, limit: $limit ) {
+				logs( type: $type, limit: $limit, after: $after ) {
 					nodes {
 						timestamp
 						message
 					}
+					nextCursor
+					pollingDelaySeconds
 				}
 			}
 		}
@@ -52,6 +54,7 @@ describe( 'getRecentLogs()', () => {
 				envId: 3,
 				type: 'batch',
 				limit: 1200,
+				after: undefined,
 			},
 		} );
 	} );
@@ -71,13 +74,14 @@ describe( 'getRecentLogs()', () => {
 	} );
 } );
 
-function logsResponse( logs ) {
+function logsResponse( logs, nextCursor = null ) {
 	return {
 		data: {
 			app: {
 				environments: [
 					{
 						logs: {
+							nextCursor,
 							nodes: logs,
 						},
 					},

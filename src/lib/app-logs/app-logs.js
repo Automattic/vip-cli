@@ -13,24 +13,34 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
+export const LIMIT_MAX = 5000;
+
 const QUERY_ENVIRONMENT_LOGS = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int ) {
+	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $after: String ) {
 		app( id: $appId ) {
 			environments( id: $envId ) {
 				id
-				logs( type: $type, limit: $limit ) {
+				logs( type: $type, limit: $limit, after: $after ) {
 					nodes {
 						timestamp
 						message
 					}
+					nextCursor
+					pollingDelaySeconds
 				}
 			}
 		}
 	}
 `;
 
-export async function getRecentLogs( appId: number, envId: number, type: string, limit: number ): Promise<Array<{ timestamp: string, message: string }>> {
-	const api = await API();
+type GetRecentLogsResponse = {
+	nodes: Array<{ timestamp: string, message: string }>,
+	nextCursor: string,
+	pollingDelaySeconds: number,
+};
+
+export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after?: string ): Promise<GetRecentLogsResponse> {
+	const api = await API( { exitOnError: false } );
 
 	const response = await api.query( {
 		query: QUERY_ENVIRONMENT_LOGS,
@@ -39,12 +49,13 @@ export async function getRecentLogs( appId: number, envId: number, type: string,
 			envId,
 			type,
 			limit,
+			after,
 		},
 	} );
 
-	const logs = response?.data?.app?.environments[ 0 ]?.logs?.nodes;
+	const logs = response?.data?.app?.environments[ 0 ]?.logs;
 
-	if ( ! logs ) {
+	if ( ! logs?.nodes ) {
 		throw new Error( 'Unable to query logs' );
 	}
 
