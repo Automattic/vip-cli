@@ -14,8 +14,6 @@ import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
 import { promptForArguments } from '../../../src/lib/dev-environment/dev-environment-cli';
 
-jest.setTimeout( 10000 );
-
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
 	const SelectClass = class {};
