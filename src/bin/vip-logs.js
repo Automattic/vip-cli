@@ -11,9 +11,12 @@ import * as exit from 'lib/cli/exit';
 import { formatData } from 'lib/cli/format';
 
 const LIMIT_MIN = 1;
+const LIMIT_MAX = 5000;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
 const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
-const MIN_POLLING_DELAY_SECONDS = 5;
+const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
+const MIN_POLLING_DELAY_IN_SECONDS = 5;
+const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
 export async function getLogs( arg: string[], opt ): Promise<void> {
 	validateInputs( opt.type, opt.limit, opt.format );
@@ -64,10 +67,10 @@ export async function followLogs( opt ): Promise<void> {
 	let isFirstRequest = true;
 
 	// Set an initial default delay
-	let delay = 30;
+	let delay = DEFAULT_POLLING_DELAY_IN_SECONDS;
 
 	while ( true ) {
-		const limit = isFirstRequest ? opt.limit : 5000;
+		const limit = isFirstRequest ? opt.limit : LIMIT_MAX;
 
 		let logs;
 		try {
@@ -79,8 +82,8 @@ export async function followLogs( opt ): Promise<void> {
 				break;
 			}
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
-			delay += 30;
-			delay = Math.min( delay, 300 );
+			delay += DEFAULT_POLLING_DELAY_IN_SECONDS;
+			delay = Math.min( delay, MAX_POLLING_DELAY_IN_SECONDS );
 			console.error( `Failed to fetch logs. Trying again in ${ delay } seconds` );
 			rollbar.error( error );
 		}
@@ -93,8 +96,8 @@ export async function followLogs( opt ): Promise<void> {
 			after = logs?.nextCursor;
 			isFirstRequest = false;
 
-			// Keep a sane lower limit of MIN_POLLING_DELAY_SECONDS just in case something goes wrong in the server-side
-			delay = Math.max( ( logs?.pollingDelaySeconds || 30 ), MIN_POLLING_DELAY_SECONDS );
+			// Keep a sane lower limit of MIN_POLLING_DELAY_IN_SECONDS just in case something goes wrong in the server-side
+			delay = Math.max( ( logs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS ), MIN_POLLING_DELAY_IN_SECONDS );
 		}
 
 		await new Promise( resolve => setTimeout( resolve, delay * 1000 ) );
