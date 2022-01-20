@@ -337,7 +337,7 @@ export function addDevEnvConfigurationOptions( command ) {
 
 async function populateWordPressVersionList( versionList ) {
 	return new Promise(( resolve, reject ) =>  {
-		const https = require('https')
+		const https = require( 'https' )
 		const req = https.request(getImageApiOptions(), res => {
 			let data = ''
 
@@ -346,11 +346,11 @@ async function populateWordPressVersionList( versionList ) {
 			})
 
 			res.on( 'end', () => {
-				let list = JSON.parse(data)
+				let list = JSON.parse( data )
 				list.forEach( item => {
 					if ( item.metadata.container.tags.length > 0 ) {
 						item.metadata.container.tags.forEach( tag => {
-							versionList.push(tag)
+							versionList.push( tag )
 						})
 					}
 				})
@@ -360,7 +360,7 @@ async function populateWordPressVersionList( versionList ) {
 		})
 
 		req.on('error', error => {
-			console.error(error)
+			console.error( error )
 		})
 
 		req.end()
