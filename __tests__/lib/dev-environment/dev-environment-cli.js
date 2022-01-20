@@ -106,11 +106,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
 			{ // base tag
-				param: 5.6,
+				param: 5.9,
 				allowLocal: true,
 				expected: {
 					mode: 'image',
-					tag: '5.6',
+					tag: '5.9',
 				},
 			},
 			{ // if local is not allowed
