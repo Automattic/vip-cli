@@ -294,8 +294,8 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
-		const tagChoices = []
-		await populateWordPressVersionList(tagChoices);
+		const tagChoices = [];
+		await populateWordPressVersionList( tagChoices );
 		let initialTagIndex = 0;
 		if ( defaultObject?.tag ) {
 			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
@@ -336,47 +336,47 @@ export function addDevEnvConfigurationOptions( command ) {
 }
 
 async function populateWordPressVersionList( versionList ) {
-	return new Promise(( resolve, reject ) =>  {
-		const https = require( 'https' )
-		const req = https.request(getImageApiOptions(), res => {
-			let data = ''
+	return new Promise( resolve => {
+		const https = require( 'https' );
+		const req = https.request( getImageApiOptions(), res => {
+			let data = '';
 
 			res.on( 'data', chunk => {
-				data += chunk
-			})
+				data += chunk;
+			} );
 
 			res.on( 'end', () => {
-				let list = JSON.parse( data )
+				const list = JSON.parse( data );
 				list.forEach( item => {
 					if ( item.metadata.container.tags.length > 0 ) {
 						item.metadata.container.tags.forEach( tag => {
-							versionList.push( tag )
-						})
+							versionList.push( tag );
+						} );
 					}
-				})
-				versionList.sort().reverse()
-				resolve()
-			})
-		})
+				} );
+				versionList.sort().reverse();
+				resolve();
+			} );
+		} );
 
-		req.on('error', error => {
-			console.error( error )
-		})
+		req.on( 'error', error => {
+			console.error( error );
+		} );
 
-		req.end()
-    });
+		req.end();
+	} );
 }
 
 function getImageApiOptions() {
-	return  {
+	return {
 		hostname: 'api.github.com',
 		port: 443,
 		path: '/orgs/Automattic/packages/container/vip-container-images%2Fwordpress/versions?per_page=100&repo=vip-container-images&package_type=container',
 		method: 'GET',
 		headers: {
-			'Authorization': 'Bearer ghp_XXXXXXXXXXXXXXXXXXXX',
+			Authorization: 'Bearer ghp_XXXXXXXXXXXXXXXXXXXX',
 			'User-Agent': 'VIP',
-			'Accept': 'application/vnd.github.v3+json',
-		}
-	}
+			Accept: 'application/vnd.github.v3+json',
+		},
+	};
 }
