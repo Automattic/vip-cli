@@ -349,7 +349,9 @@ async function populateWordPressVersionList( versionList ) {
 				let list = JSON.parse(data)
 				list.forEach( item => {
 					if ( item.metadata.container.tags.length > 0 ) {
-						versionList.push(item.metadata.container.tags[0])
+						item.metadata.container.tags.forEach( tag => {
+							versionList.push(tag)
+						})
 					}
 				})
 				versionList.sort().reverse()
