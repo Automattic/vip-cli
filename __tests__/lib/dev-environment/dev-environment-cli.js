@@ -188,10 +188,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 		it.each( [
 			{
-				tag: '5.6',
+				tag: '5.9',
 				expected: {
 					mode: 'image',
-					tag: '5.6',
+					tag: '5.9',
 				},
 			},
 		] )( 'should return correct component for wordpress %p', async input => {
