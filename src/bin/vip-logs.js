@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 // @flow
+
+/**
+ * External dependencies
+ */
+import chalk from 'chalk';
+
 /**
  * Internal dependencies
  */
@@ -91,7 +97,7 @@ export async function followLogs( opt ): Promise<void> {
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
 			delay += DEFAULT_POLLING_DELAY_IN_SECONDS;
 			delay = Math.min( delay, MAX_POLLING_DELAY_IN_SECONDS );
-			console.error( `Failed to fetch logs. Trying again in ${ delay } seconds` );
+			console.error( `${ chalk.red( 'Error:' ) } Failed to fetch logs. Trying again in ${ delay } seconds` );
 			rollbar.error( error );
 		}
 
