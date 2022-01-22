@@ -120,7 +120,7 @@
     "json2csv": "5.0.6",
     "jwt-decode": "2.2.0",
     "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.0.0",
     "opn": "5.5.0",
     "rollbar": "2.22.0",
     "semver": "7.3.5",
