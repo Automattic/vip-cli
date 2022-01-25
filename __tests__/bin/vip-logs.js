@@ -28,6 +28,8 @@ jest.mock( 'lib/tracker', () => ( {
 } ) );
 
 jest.mock( 'lib/app-logs/app-logs', () => ( {
+	// Only mock what is really needed, otherwise exported constants like LIMIT_MAX would be `undefined` during the tests
+	...jest.requireActual( 'lib/app-logs/app-logs' ),
 	getRecentLogs: jest.fn(),
 } ) );
 
@@ -56,10 +58,13 @@ describe( 'getLogs', () => {
 	beforeEach( jest.clearAllMocks );
 
 	it( 'should display the logs in the output', async () => {
-		logsLib.getRecentLogs.mockImplementation( async () => [
-			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
-		] );
+		logsLib.getRecentLogs.mockImplementation( async () => ( {
+			nextCursor: null,
+			nodes: [
+				{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+				{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+			],
+		} ) );
 
 		await getLogs( [], opts );
 
@@ -78,6 +83,7 @@ describe( 'getLogs', () => {
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			follow: false,
 			format: 'text',
 		};
 
@@ -85,7 +91,7 @@ describe( 'getLogs', () => {
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
-			logs_output: 2,
+			total: 2,
 		} );
 
 		expect( rollbar.error ).not.toHaveBeenCalled();
@@ -94,10 +100,13 @@ describe( 'getLogs', () => {
 	it( 'should display the logs in the output with JSON format', async () => {
 		opts.format = 'json';
 
-		logsLib.getRecentLogs.mockImplementation( async () => [
-			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
-		] );
+		logsLib.getRecentLogs.mockImplementation( async () => ( {
+			nextCursor: null,
+			nodes: [
+				{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+				{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2' },
+			],
+		} ) );
 
 		await getLogs( [], opts );
 
@@ -124,6 +133,7 @@ describe( 'getLogs', () => {
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			follow: false,
 			format: 'json',
 		};
 
@@ -131,7 +141,7 @@ describe( 'getLogs', () => {
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
-			logs_output: 2,
+			total: 2,
 		} );
 
 		expect( rollbar.error ).not.toHaveBeenCalled();
@@ -140,10 +150,13 @@ describe( 'getLogs', () => {
 	it( 'should display the logs in the output with CSV format', async () => {
 		opts.format = 'csv';
 
-		logsLib.getRecentLogs.mockImplementation( async () => [
-			{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-			{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2 has "double quotes", \'single quotes\', commas, multiple\nlines\n, and	tabs' },
-		] );
+		logsLib.getRecentLogs.mockImplementation( async () => ( {
+			nextCursor: null,
+			nodes: [
+				{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
+				{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2 has "double quotes", \'single quotes\', commas, multiple\nlines\n, and	tabs' },
+			],
+		} ) );
 
 		await getLogs( [], opts );
 
@@ -165,6 +178,7 @@ lines
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			follow: false,
 			format: 'csv',
 		};
 
@@ -172,14 +186,14 @@ lines
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
-			logs_output: 2,
+			total: 2,
 		} );
 
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'should show a message if no logs were found', async () => {
-		logsLib.getRecentLogs.mockImplementation( async () => [] ); // empty logs
+		logsLib.getRecentLogs.mockImplementation( async () => ( { nextCursor: null, nodes: [] } ) ); // empty logs
 
 		await getLogs( [], opts );
 
@@ -196,13 +210,14 @@ lines
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			follow: false,
 			format: 'text',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
-			logs_output: 0,
+			total: 0,
 		} );
 
 		expect( rollbar.error ).not.toHaveBeenCalled();
@@ -233,6 +248,7 @@ lines
 			env_id: 3,
 			type: 'app',
 			limit: 500,
+			follow: false,
 			format: 'text',
 		};
 

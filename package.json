@@ -23,6 +23,7 @@
     "vip-dev-env-import-media": "dist/bin/vip-dev-env-import-media.js",
     "vip-dev-env-import-sql": "dist/bin/vip-dev-env-import-sql.js",
     "vip-dev-env-info": "dist/bin/vip-dev-env-info.js",
+    "vip-dev-env-list": "dist/bin/vip-dev-env-list.js",
     "vip-dev-env-start": "dist/bin/vip-dev-env-start.js",
     "vip-dev-env-stop": "dist/bin/vip-dev-env-stop.js",
     "vip-import": "dist/bin/vip-import.js",
@@ -36,6 +37,7 @@
     "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
+    "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
@@ -109,7 +111,7 @@
     "cli-columns": "^4.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
-    "debug": "4.3.2",
+    "debug": "4.3.3",
     "ejs": "^3.1.6",
     "enquirer": "2.3.6",
     "graphql": "15.5.1",
