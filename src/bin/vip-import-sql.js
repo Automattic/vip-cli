@@ -504,6 +504,8 @@ Processing the SQL import for your environment...
 			progressTracker.setUploadPercentage( percentage );
 		};
 
+		fileMeta.fileName = fileNameToUpload;
+
 		try {
 			const {
 				fileMeta: { basename },
@@ -512,7 +514,6 @@ Processing the SQL import for your environment...
 			} = await uploadImportSqlFileToS3( {
 				app,
 				env,
-				fileName: fileNameToUpload,
 				fileMeta,
 				progressCallback,
 			} );
