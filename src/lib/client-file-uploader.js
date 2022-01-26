@@ -167,7 +167,7 @@ export async function uploadImportSqlFileToS3( {
 	}
 
 	debug( 'Calculating file md5 checksum...' );
-	const md5 = await getFileMD5Hash( fileName );
+	const md5 = await getFileMD5Hash( fileMeta.fileName );
 	debug( `Calculated file md5 checksum: ${ md5 }\n` );
 
 	const result =
