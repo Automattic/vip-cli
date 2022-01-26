@@ -122,7 +122,6 @@ export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 export async function uploadImportSqlFileToS3( {
 	app,
 	env,
-	fileName,
 	fileMeta,
 	progressCallback,
 }: UploadArguments ) {
