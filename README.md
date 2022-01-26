@@ -27,6 +27,11 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.8.1 (26 January 2021)
+- #959  Fixes md5 calculation for SQL Imports on VIPd
+
+https://github.com/Automattic/vip/releases/tag/v2.8.1
+
 ### 2.8.0 (25 January 2021)
 - #952  FORNO-1047: Fix SQL Import for compressed files
 - #955  Add Error prefix for "Failed to fetch logs" msg
