@@ -33,7 +33,7 @@ workflows:
 jobs:
   lint:
     docker:
-      - image: cimg/node:current-stretch
+      - image: cimg/node:current
 
     working_directory: ~/repo
 
@@ -46,7 +46,7 @@ jobs:
           
   flow:
     docker:
-      - image: cimg/node:current-stretch
+      - image: cimg/node:current
 
     working_directory: ~/repo
 
@@ -63,7 +63,7 @@ jobs:
         type: string
 
     docker:
-      - image: circleci/node:<< parameters.version >>
+      - image: cimg/node:<< parameters.version >>
 
     working_directory: ~/repo
 
