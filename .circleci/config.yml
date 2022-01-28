@@ -6,26 +6,26 @@ workflows:
       - lint
       - flow
       - test:
-          version: 10-stretch
-          name: 10-stretch
+          version: 12
+          name: node-12
           requires:
             - lint
             - flow
       - test:
-          version: 12-stretch
-          name: 12-stretch
+          version: 14
+          name: node-14
           requires:
             - lint
             - flow
       - test:
-          version: lts-stretch
-          name: lts-stretch
+          version: 16
+          name: node-16
           requires:
             - lint
             - flow
       - test:
-          version: current-stretch
-          name: current-stretch
+          version: 17
+          name: node-17
           requires:
             - lint
             - flow
@@ -33,7 +33,7 @@ workflows:
 jobs:
   lint:
     docker:
-      - image: circleci/node:current-stretch
+      - image: cimg/node:current-stretch
 
     working_directory: ~/repo
 
@@ -46,7 +46,7 @@ jobs:
           
   flow:
     docker:
-      - image: circleci/node:current-stretch
+      - image: cimg/node:current-stretch
 
     working_directory: ~/repo
 
