@@ -6,25 +6,25 @@ workflows:
       - lint
       - flow
       - test:
-          version: 12
+          version: '12'
           name: node-12
           requires:
             - lint
             - flow
       - test:
-          version: 14
+          version: '14'
           name: node-14
           requires:
             - lint
             - flow
       - test:
-          version: 16
+          version: '16'
           name: node-16
           requires:
             - lint
             - flow
       - test:
-          version: 17
+          version: '17'
           name: node-17
           requires:
             - lint
