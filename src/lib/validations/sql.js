@@ -170,6 +170,15 @@ const checks: Checks = {
 		excerpt: "'DROP DATABASE' should not be present (case-insensitive)",
 		recommendation: 'Remove these lines',
 	},
+	useStatement: {
+		matcher: /^USE /i,
+		matchHandler: lineNumber => lineNumber,
+		outputFormatter: errorCheckFormatter,
+		results: [],
+		message: 'USE <DATABASE_NAME> statement',
+		excerpt: "'USE <DATABASE_NAME>' should not be present (case-insensitive)",
+		recommendation: 'Remove these lines',
+	},
 	alterUser: {
 		matcher: /^(ALTER USER|SET PASSWORD)/i,
 		matchHandler: lineNumber => lineNumber,
@@ -319,14 +328,15 @@ const checkForTableName = line => {
 	}
 };
 
-const perLineValidations = ( line: string, runAsImport: boolean ) => {
+const perLineValidations = ( line: string, runAsImport: boolean, skipChecks: string[] ) => {
 	if ( lineNum % 500 === 0 ) {
 		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
 
 	checkForTableName( line );
 
-	const checkValues: any = Object.values( checks );
+	const checkKeys = Object.keys( checks ).filter( checkItem => ! skipChecks.includes( checkItem ) );
+	const checkValues: any = checkKeys.map( checkKey => checks[ checkKey ] );
 	checkValues.forEach( ( check: CheckType ) => {
 		const results = line.match( check.matcher );
 		if ( results ) {
@@ -336,8 +346,8 @@ const perLineValidations = ( line: string, runAsImport: boolean ) => {
 	lineNum += 1;
 };
 
-const execute = ( line: string, isImport: boolean = true ) => {
-	perLineValidations( line, isImport );
+const execute = ( line: string, isImport: boolean = true, skipChecks: string[] = [ 'useStatement' ] ) => {
+	perLineValidations( line, isImport, skipChecks );
 };
 
 const postLineExecutionProcessing = async ( {
@@ -353,15 +363,15 @@ export const staticSqlValidations = {
 };
 
 // For standalone SQL validations
-export const validate = async ( filename: string, isImport: boolean = false ) => {
+export const validate = async ( filename: string, skipChecks: string[] = [ 'useStatement' ] ) => {
 	const readInterface = await getReadInterface( filename );
 	readInterface.on( 'line', line => {
-		execute( line, isImport );
+		execute( line, false, skipChecks );
 	} );
 
 	// Block until the processing completes
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await postLineExecutionProcessing( { filename, isImport } );
+	await postLineExecutionProcessing( { filename, isImport: false } );
 };
