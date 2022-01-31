@@ -358,13 +358,13 @@ async function populateWordPressVersionList( versionList ) {
 					list.forEach( image => {
 						tag = image.tag;
 
-						if ( image.locked === true ) {
+						if ( image.locked ) {
 							tag += ' 🔒';
 						} else {
 							tag += '  ';
 						}
 
-						if ( image.prerelease === true ) {
+						if ( image.prerelease ) {
 							tag += ' (Pre-Release)';
 						}
 
