@@ -336,10 +336,17 @@ export function addDevEnvConfigurationOptions( command ) {
 }
 
 async function populateWordPressVersionList( versionList ) {
+	const apiOptions = {
+		hostname: 'raw.githubusercontent.com',
+		path: '/Automattic/vip-container-images/master/wordpress/versions.json',
+		method: 'GET',
+	}
+
 	return new Promise( resolve => {
 		const https = require( 'https' );
-		const req = https.request( getImageApiOptions(), res => {
+		const req = https.request( apiOptions, res => {
 			let data = '';
+			let tag, locked, prerelease;
 
 			res.on( 'data', chunk => {
 				data += chunk;
@@ -348,12 +355,21 @@ async function populateWordPressVersionList( versionList ) {
 			res.on( 'end', () => {
 				try {
 					const list = JSON.parse( data );
-					list.forEach( item => {
-						if ( item.metadata.container.tags.length > 0 ) {
-							item.metadata.container.tags.forEach( tag => {
-								versionList.push( tag );
-							} );
+					list.forEach( image => {
+						tag = image.tag;
+
+						if ( image.locked == true ) {
+							tag += ' 🔒';
+						} else {
+							tag += '  ';
 						}
+
+						if ( image.prerelease == true ) {
+							tag += ' (Pre-Release)';
+						}
+
+						versionList.push( tag );
+
 					} );
 				} catch {
 					console.log( chalk.yellow( 'Warning:' ), 'Could not load remote list of WordPress images.' );
@@ -371,18 +387,4 @@ async function populateWordPressVersionList( versionList ) {
 
 		req.end();
 	} );
-}
-
-function getImageApiOptions() {
-	return {
-		hostname: 'api.github.com',
-		port: 443,
-		path: '/orgs/Automattic/packages/container/vip-container-images%2Fwordpress/versions?per_page=100&repo=vip-container-images&package_type=container',
-		method: 'GET',
-		headers: {
-			Authorization: 'Bearer ghp_XXXXXXXXXXXXXXXXXXXXXX',
-			'User-Agent': 'VIP',
-			Accept: 'application/vnd.github.v3+json',
-		},
-	};
 }
