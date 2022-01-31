@@ -340,13 +340,13 @@ async function populateWordPressVersionList( versionList ) {
 		hostname: 'raw.githubusercontent.com',
 		path: '/Automattic/vip-container-images/master/wordpress/versions.json',
 		method: 'GET',
-	}
+	};
 
 	return new Promise( resolve => {
 		const https = require( 'https' );
 		const req = https.request( apiOptions, res => {
 			let data = '';
-			let tag, locked, prerelease;
+			let tag;
 
 			res.on( 'data', chunk => {
 				data += chunk;
@@ -358,18 +358,17 @@ async function populateWordPressVersionList( versionList ) {
 					list.forEach( image => {
 						tag = image.tag;
 
-						if ( image.locked == true ) {
+						if ( image.locked === true ) {
 							tag += ' 🔒';
 						} else {
 							tag += '  ';
 						}
 
-						if ( image.prerelease == true ) {
+						if ( image.prerelease === true ) {
 							tag += ' (Pre-Release)';
 						}
 
 						versionList.push( tag );
-
 					} );
 				} catch {
 					console.log( chalk.yellow( 'Warning:' ), 'Could not load remote list of WordPress images.' );
