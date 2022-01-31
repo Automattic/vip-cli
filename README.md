@@ -27,6 +27,29 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.8.2 (27 January 2021)
+- #961  Fixes md5 calculation failing when search-replace is used
+- #959  Fixes md5 calculation for SQL Imports on VIPd
+
+https://github.com/Automattic/vip/releases/tag/v2.8.2
+
+### 2.8.0 (25 January 2021)
+- #952  FORNO-1047: Fix SQL Import for compressed files
+- #955  Add Error prefix for "Failed to fetch logs" msg
+- #946  Add support for the site logs tailing feature
+- #953  [dev-env] Updated list of available wordpress images for dev-env
+- #933  Update dependency debug to v4.3.3
+
+https://github.com/Automattic/vip/releases/tag/v2.8.0
+
+### 2.7.1 (10 January 2021)
+- #950 Switch to npm-shrinkwrap
+- #947  [dev-env] List all dev env alias
+- #944  Add `vip whoami` command
+- #942  Envvar: Show message when there is an attempt to change the New Relic key.
+
+https://github.com/Automattic/vip/releases/tag/v2.7.1
+
 ### 2.7.0 (07 December 2021)
 - #941  [dev-env] Bump lando CLI dependency
 - #938  Hide roll back message after SQL Import failure for launched sites
