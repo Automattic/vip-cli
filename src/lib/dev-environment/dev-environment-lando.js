@@ -7,12 +7,16 @@
  * External dependencies
  */
 import debugLib from 'debug';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
+import { promisify } from 'util';
 import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
+import { _ } from 'core-js';
 
 /**
  * Internal dependencies
@@ -23,8 +27,26 @@ import App from 'lando/lib/app';
  */
 const DEBUG_KEY = '@automattic/vip:bin:dev-environment-lando';
 const debug = debugLib( DEBUG_KEY );
+const mkdtemp = promisify( fs.mkdtemp );
 
-function getLandoConfig() {
+let landoConfRoot;
+
+/**
+ * @returns {Promise<string>} User configuration root directory (aka userConfRoot in Lando)
+ */
+async function getLandoUserConfigurationRoot() {
+	if ( ! landoConfRoot ) {
+		const tmpDir = os.tmpdir();
+		landoConfRoot = await mkdtemp( `${ tmpDir }${ path.sep }lando` );
+	}
+
+	return landoConfRoot;
+}
+
+/**
+ * @returns {Promise<object>} Lando configuration
+ */
+async function getLandoConfig() {
 	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
 
 	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
@@ -44,13 +66,14 @@ function getLandoConfig() {
 			},
 		],
 		proxyName: 'vip-dev-env-proxy',
+		userConfRoot: await getLandoUserConfigurationRoot(),
 	};
 }
 
 export async function landoStart( instancePath: string ) {
 	debug( 'Will start lando app on path:', instancePath );
 
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
@@ -64,7 +87,7 @@ export async function landoStart( instancePath: string ) {
 export async function landoRebuild( instancePath: string ) {
 	debug( 'Will rebuild lando app on path:', instancePath );
 
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
@@ -106,7 +129,7 @@ async function healthcheckHook( app: App, lando: Lando ) {
 export async function landoStop( instancePath: string ) {
 	debug( 'Will stop lando app on path:', instancePath );
 
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
@@ -117,7 +140,7 @@ export async function landoStop( instancePath: string ) {
 
 export async function landoDestroy( instancePath: string ) {
 	debug( 'Will destroy lando app on path:', instancePath );
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
@@ -127,7 +150,7 @@ export async function landoDestroy( instancePath: string ) {
 }
 
 export async function landoInfo( instancePath: string ) {
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
@@ -208,7 +231,7 @@ async function isEnvUp( app ) {
 }
 
 export async function landoExec( instancePath: string, toolName: string, args: Array<string> ) {
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
