@@ -346,7 +346,7 @@ async function populateWordPressVersionList( versionList ) {
 		const https = require( 'https' );
 		const req = https.request( apiOptions, res => {
 			let data = '';
-			let tag;
+			let tag, tagFormatted, locked, prerelease, mapping;
 
 			res.on( 'data', chunk => {
 				data += chunk;
@@ -356,19 +356,17 @@ async function populateWordPressVersionList( versionList ) {
 				try {
 					const list = JSON.parse( data );
 					list.forEach( image => {
-						tag = image.tag;
+						tagFormatted = image.tag.padEnd(8 -  image.tag.length);
+						locked = ( image.locked ) ? '🔒' : ' ';
+						prerelease = ( image.prerelease ) ? '(Pre-Release)' : '             ';
 
-						if ( image.locked ) {
-							tag += ' 🔒';
+						if ( image.tag !== image.ref ) {
+							mapping = `→ ${image.ref}`;
 						} else {
-							tag += '  ';
+							mapping = '';
 						}
 
-						if ( image.prerelease ) {
-							tag += ' (Pre-Release)';
-						}
-
-						versionList.push( tag );
+						versionList.push( `${tagFormatted} ${locked} ${prerelease} ${mapping}` );
 					} );
 				} catch {
 					console.log( chalk.yellow( 'Warning:' ), 'Could not load remote list of WordPress images.' );
