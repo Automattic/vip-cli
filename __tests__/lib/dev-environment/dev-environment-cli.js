@@ -34,7 +34,7 @@ jest.mock( 'enquirer', () => {
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	beforeEach( () => {
-		jest.setTimeout(60000);
+		jest.setTimeout( 60000 );
 		prompt.mockReset();
 		confirmRunMock.mockReset();
 	} );
