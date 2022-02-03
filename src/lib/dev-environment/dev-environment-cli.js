@@ -13,6 +13,7 @@ import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import https from 'https';
 
 /**
  * Internal dependencies
@@ -343,7 +344,6 @@ async function populateWordPressVersionList( versionList ) {
 	};
 
 	return new Promise( resolve => {
-		const https = require( 'https' );
 		const req = https.request( apiOptions, res => {
 			let data = '';
 			let tag, tagFormatted, prerelease, mapping;
