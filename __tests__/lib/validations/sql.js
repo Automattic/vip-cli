@@ -67,6 +67,9 @@ describe( 'lib/validations/sql', () => {
 		it( 'instances of ENGINE != InnoDB', () => {
 			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
 		} );
+		it( 'use statement should be ok', () => {
+			expect( output ).not.toContain( '\'USE <DATABASE_NAME>\' should not be present (case-insensitive)' );
+		} );
 	} );
 	describe( 'it fails when the SQL has (using bad-sql-duplicate-tables.sql)', () => {
 		beforeAll( async () => {
@@ -81,6 +84,21 @@ describe( 'lib/validations/sql', () => {
 		} );
 		it( 'duplicate tables names found', () => {
 			expect( output ).toContain( 'Duplicate table names were found: wp_users' );
+		} );
+	} );
+	describe( 'it fails when the SQL for dev-env has (using bad-sql-dev-env.sql)', () => {
+		beforeAll( async () => {
+			try {
+				output = '';
+				const sqlFileDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dev-env.sql' );
+				await validate( sqlFileDumpPath, [] );
+			} catch ( err ) {
+				debug( 'Error:', err.toString() );
+			}
+			debug( 'output', output );
+		} );
+		it( 'use statement', () => {
+			expect( output ).toContain( 'USE <DATABASE_NAME> statement on line(s)' );
 		} );
 	} );
 } );
