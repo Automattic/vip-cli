@@ -4,7 +4,7 @@ module.exports = {
 			'@babel/preset-env',
 			{
 				targets: {
-					node: '10', // Keep this in sync with package.json engines.node
+					node: '12', // Keep this in sync with package.json engines.node
 				},
 			},
 		],
