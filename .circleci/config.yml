@@ -6,12 +6,6 @@ workflows:
       - lint
       - flow
       - test:
-          version: 10-stretch
-          name: 10-stretch
-          requires:
-            - lint
-            - flow
-      - test:
           version: 12-stretch
           name: 12-stretch
           requires:
