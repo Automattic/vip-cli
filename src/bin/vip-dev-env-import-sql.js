@@ -69,16 +69,8 @@ command( {
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( slug, cacheArg );
 
-			try {
-				const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
-				await exec( slug, addUserArg );
-			} catch ( exception ) {
-				if ( ( exception.message || '' ).includes( 'is already registered' ) ) {
-					console.log( chalk.bold( chalk.green( 'Success: ' ) ) + 'Skipping user vipgo provisioning' );
-				} else {
-					throw exception;
-				}
-			}
+			const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
+			await exec( slug, addUserArg );
 		} catch ( error ) {
 			handleCLIException( error );
 		}
