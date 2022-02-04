@@ -37,7 +37,7 @@ let landoConfRoot;
 async function getLandoUserConfigurationRoot() {
 	if ( ! landoConfRoot ) {
 		const tmpDir = os.tmpdir();
-		landoConfRoot = await mkdtemp( `${ tmpDir }${ path.sep }lando` );
+		landoConfRoot = await mkdtemp( path.join( tmpDir, 'lando' ) );
 	}
 
 	return landoConfRoot;
