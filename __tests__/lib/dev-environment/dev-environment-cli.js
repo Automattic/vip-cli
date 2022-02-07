@@ -33,60 +33,16 @@ jest.mock( 'enquirer', () => {
 	};
 } );
 
-const scope = nock('https://raw.githubusercontent.com')
-  .get('/Automattic/vip-container-images/master/wordpress/versions.json')
-  .reply( 200, [
-		{
-			"ref": "5.8.3",
-			"tag": "5.8",
-			"cacheable": true,
-			"locked": false,
-			"prerelease": false
-		},
-		{
-			"ref": "5.9",
-			"tag": "5.9",
-			"cacheable": true,
-			"locked": false,
-			"prerelease": false
-		},
-		{
-			"ref": "5.5.8",
-			"tag": "5.5",
-			"cacheable": true,
-			"locked": true,
-			"prerelease": false
-		},
-		{
-			"ref": "5.6.7",
-			"tag": "5.6",
-			"cacheable": true,
-			"locked": true,
-			"prerelease": false
-		},
-		{
-			"ref": "5.7.5",
-			"tag": "5.7",
-			"cacheable": true,
-			"locked": true,
-			"prerelease": false
-		},
-		{
-			"ref": "5.8.3",
-			"tag": "5.8.3",
-			"cacheable": true,
-			"locked": true,
-			"prerelease": false
-		},
-		{
-			"ref": "3ae9f9ffe311e546b0fd5f82d456b3539e3b8e74",
-			"tag": "5.9.1",
-			"cacheable": true,
-			"locked": true,
-			"prerelease": true
-		}
-	],
-);
+const scope = nock( 'https://raw.githubusercontent.com' )
+	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
+	.reply( 200, [ {
+		ref: '5.9',
+		tag: '5.9',
+		cacheable: true,
+		locked: false,
+		prerelease: false,
+	} ] );
+scope.persist( true );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	beforeEach( () => {
