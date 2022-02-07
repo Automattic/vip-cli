@@ -46,7 +46,6 @@ scope.persist( true );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	beforeEach( () => {
-		jest.setTimeout( 60000 );
 		prompt.mockReset();
 		confirmRunMock.mockReset();
 	} );
