@@ -297,7 +297,15 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		const message = `${ messagePrefix }Which version would you like`;
 		const tagChoices = [];
 		await populateWordPressVersionList( tagChoices );
-		let initialTagIndex = 0;
+
+		// First tag not: "Pre-Release"
+		const firstNonPreRelease = tagChoices.find( tag => {
+			return ! tag.match( /Pre\-Release/g );
+		} );
+
+		// Set initialTagIndex as the first non Pre-Release
+		let initialTagIndex = tagChoices.indexOf( firstNonPreRelease );
+
 		if ( defaultObject?.tag ) {
 			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
 			if ( defaultTagIndex !== -1 ) {
