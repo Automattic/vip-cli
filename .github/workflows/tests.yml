@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
-          path: vip-go
+          path: vip
 
       - name: Setup Node
         uses: actions/setup-node@v2
@@ -20,15 +20,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: vip-go
-      
-      - name: Build
-        run: npm run build
-        working-directory: vip-go
+        working-directory: vip
 
       - name: Unit Tests
+        working-directory: vip
         run: npm run jest
       
       - name: Test Command line
+        working-directory: vip
         run: |
           node ./dist/bin/vip app
