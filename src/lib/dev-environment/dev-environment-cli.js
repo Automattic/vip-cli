@@ -344,6 +344,9 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'media-redirect-domain', 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
+/**
+ * Makes a web call to raw.githubusercontent.com
+ */
 async function fetchVersionList() {
 	const host = 'raw.githubusercontent.com';
 	const uri = '/Automattic/vip-container-images/master/wordpress/versions.json';
@@ -361,6 +364,7 @@ async function getVersionList() {
 	const cacheKey = 'worpress-versions.json';
 	const cacheFile = path.join( cacheDir, cacheKey );
 
+	// Try to retrieve the file from cache or cache it if invalid
 	try {
 		// If the cache doesn't exist, create it
 		if ( ! fs.existsSync( cacheFile ) ) {
@@ -381,9 +385,8 @@ async function getVersionList() {
 			res = await fetchVersionList();
 			fs.writeFileSync( cacheFile, res );
 		}
-
 	} catch ( err ) {
-		// Use the cache file if it exists
+		// Soft error handling here, since it's still possible to use a previously cached file.
 		console.log( chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' ) );
 		debug( err );
 	}
@@ -398,6 +401,9 @@ async function getVersionList() {
 	}
 }
 
+/**
+ * Provides the list of tag choices for selection
+ */
 async function getTagChoices() {
 	const tagChoices = [];
 	let tagFormatted, prerelease, mapping;
