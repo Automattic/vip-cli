@@ -345,7 +345,7 @@ export function addDevEnvConfigurationOptions( command ) {
 }
 
 async function fetchVersionList() {
-	const host = 'raw.fakegithubusercontent.com';
+	const host = 'raw.githubusercontent.com';
 	const path = '/Automattic/vip-container-images/master/wordpress/versions.json';
 	return fetch( `https://${ host }${ path }`, { method: 'GET' } ).then( res => res.text() );
 }
@@ -373,11 +373,10 @@ async function getVersionList() {
 		debug( `WordPress Version List cache last modified: ${ stats.mtime }` );
 
 		// If the cache is expired, fetch the list again and cache it
-		const ts = Date.now();
-		const lastModified = new Date( stats.mtime );
-		const expire = new Date( ts - cacheTtl );
+		const expire = new Date( stats.mtime );
+		expire.setSeconds( expire.getSeconds() + cacheTtl );
 
-		if ( expire > lastModified ) {
+		if ( +new Date > expire ) {
 			debug( `WordPress Version List cache is expired: ${ expire }` );
 			res = await fetchVersionList();
 			fs.writeFileSync( cacheFile, res );
