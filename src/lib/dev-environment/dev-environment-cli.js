@@ -359,7 +359,7 @@ async function fetchVersionList() {
  * Uses a cache file to keep the version list in tow until it is ultimately outdated
  */
 async function getVersionList() {
-	let res, fetchErr;
+	let res;
 	const local = xdgBasedir.data || os.tmpdir();
 	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
 	console.log( DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
@@ -389,8 +389,7 @@ async function getVersionList() {
 	} catch ( err ) {
 		// Soft error handling here, since it's still possible to use a previously cached file.
 		console.log( chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' ) );
-		fetchErr = err;
-		debug( fetchErr );
+		debug( err );
 	}
 
 	// Try to parse the cached file if it exists
