@@ -26,6 +26,9 @@ import {
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_RAW_GITHUB_HOST,
+	DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI,
+	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
 } from '../constants/dev-environment';
 import { InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
@@ -348,9 +351,8 @@ export function addDevEnvConfigurationOptions( command ) {
  * Makes a web call to raw.githubusercontent.com
  */
 async function fetchVersionList() {
-	const host = 'raw.githubusercontent.com';
-	const uri = '/Automattic/vip-container-images/master/wordpress/versions.json';
-	return fetch( `https://${ host }${ uri }`, { method: 'GET' } ).then( res => res.text() );
+	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
+	return fetch( url ).then( res => res.text() );
 }
 
 /**
@@ -358,11 +360,10 @@ async function fetchVersionList() {
  */
 async function getVersionList() {
 	let res, fetchErr;
-	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
 	const local = xdgBasedir.data || os.tmpdir();
-	const cacheDir = path.join( local, 'vip' );
-	const cacheKey = 'worpress-versions.json';
-	const cacheFile = path.join( cacheDir, cacheKey );
+	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
+	console.log( DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
+	const cacheFile = path.join( local, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 
 	// Try to retrieve the file from cache or cache it if invalid
 	try {
