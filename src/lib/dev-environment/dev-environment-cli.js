@@ -382,12 +382,19 @@ async function getVersionList() {
 			fs.writeFileSync( cacheFile, res );
 		}
 
-		// the result is cached
-		return JSON.parse( fs.readFileSync( cacheFile ) );
 	} catch ( err ) {
 		// Use the cache file if it exists
 		console.log( chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' ) );
 		debug( err );
+	}
+
+	// Try to parse the cached file if it exists
+	// if not, something worse than a failed request happend; bail.
+	try {
+		return JSON.parse( fs.readFileSync( cacheFile ) );
+	} catch ( err ) {
+		console.error( err );
+		process.exit( 1 );
 	}
 }
 
