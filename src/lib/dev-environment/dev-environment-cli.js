@@ -7,13 +7,14 @@
  * External dependencies
  */
 import chalk from 'chalk';
+import fetch from 'node-fetch';
 import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import https from 'https';
+import xdgBasedir from 'xdg-basedir';
 
 /**
  * Internal dependencies
@@ -295,8 +296,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
-		const tagChoices = [];
-		await populateWordPressVersionList( tagChoices );
+		const tagChoices = await getTagChoices();
 
 		// First tag not: "Pre-Release"
 		const firstNonPreRelease = tagChoices.find( tag => {
@@ -344,51 +344,71 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'media-redirect-domain', 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
-async function populateWordPressVersionList( versionList ) {
-	const apiOptions = {
-		hostname: 'raw.githubusercontent.com',
-		path: '/Automattic/vip-container-images/master/wordpress/versions.json',
-		method: 'GET',
-	};
+async function fetchVersionList() {
+	const host = 'raw.fakegithubusercontent.com';
+	const path = '/Automattic/vip-container-images/master/wordpress/versions.json';
+	return fetch( `https://${ host }${ path }`, { method: 'GET' } ).then( res => res.text() );
+}
 
-	return new Promise( resolve => {
-		const req = https.request( apiOptions, res => {
-			let data = '';
-			let tagFormatted, prerelease, mapping;
+/**
+ * Uses a cache file to keep the version list in tow until it is ultimately outdated
+ */
+async function getVersionList() {
+	let res;
+	const cacheTtl = 86400 //number of seconds that the cache can be considered active.
+	const local = xdgBasedir.data || os.tmpdir();
+	const cacheDir = path.join( local, 'vip' );
+	const cacheKey = 'worpress-versions.json';
+	const cacheFile = path.join(cacheDir, cacheKey);
 
-			res.on( 'data', chunk => {
-				data += chunk;
-			} );
+	try {
+		// If the cache doesn't exist, create it
+		if ( ! fs.existsSync( cacheFile ) ) {
+			res = await fetchVersionList();
+			fs.writeFileSync( cacheFile, res );
+		}
 
-			res.on( 'end', () => {
-				try {
-					const list = JSON.parse( data );
-					list.forEach( image => {
-						tagFormatted = image.tag.padEnd( 8 - image.tag.length );
-						prerelease = ( image.prerelease ) ? '(Pre-Release)' : '';
+		// Last modified
+		const stats = fs.statSync( cacheFile );
+		debug( `WordPress Version List cache last modified: ${ stats.mtime }` );
 
-						if ( image.tag !== image.ref ) {
-							mapping = `→ ${ prerelease } ${ image.ref }`;
-						} else {
-							mapping = '';
-						}
+		// If the cache is expired, fetch the list again and cache it
+		const ts = Date.now();
+		const lastModified = new Date( stats.mtime );
+		const expire = new Date( ts - cacheTtl );
 
-						versionList.push( `${ tagFormatted } ${ mapping }` );
-					} );
-				} catch {
-					console.log( chalk.yellow( 'Warning:' ), 'Could not load remote list of WordPress images.' );
-					versionList.push( '5.9', '5.8', '5.7', '5.6' );
-				}
+		if ( expire > lastModified ) {
+			debug( `WordPress Version List cache is expired: ${ expire }` );
+			res = await fetchVersionList();
+			fs.writeFileSync( cacheFile, res );
+		}
+	} catch ( err ) {
+		// Use the cache file if it exists
+		console.log( chalk.yellow( `fetchWordPressVersionList failed to retrieve an updated version list` ) );
+		debug( err );
+	}
 
-				versionList.sort().reverse();
-				resolve();
-			} );
-		} );
+	// the result is cached
+	return JSON.parse( fs.readFileSync( cacheFile ) );
+}
 
-		req.on( 'error', error => {
-			console.log( chalk.yellow( 'Warning:' ), error );
-		} );
+async function getTagChoices() {
+	const tagChoices = [];
+	let tagFormatted, prerelease, mapping;
+	const versions = await getVersionList();
 
-		req.end();
-	} );
+	for ( const version of versions ) {
+		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
+		prerelease = ( version.prerelease ) ? '(Pre-Release)' : '';
+
+		if ( version.tag !== version.ref ) {
+			mapping = `→ ${ prerelease } ${ version.ref }`;
+		} else {
+			mapping = '';
+		}
+
+		tagChoices.push( `${ tagFormatted } ${ mapping }` );
+	}
+
+	return tagChoices.sort().reverse();
 }
