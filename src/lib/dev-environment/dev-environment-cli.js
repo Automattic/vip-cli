@@ -397,7 +397,6 @@ async function getVersionList() {
 	try {
 		return JSON.parse( fs.readFileSync( cacheFile ) );
 	} catch ( err ) {
-		debug( fetchErr );
 		debug( err );
 		return [];
 	}
