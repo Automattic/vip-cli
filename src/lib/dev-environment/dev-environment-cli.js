@@ -399,6 +399,7 @@ async function getVersionList() {
 	} catch ( err ) {
 		debug( fetchErr );
 		debug( err );
+		return [];
 	}
 }
 
