@@ -348,7 +348,7 @@ export function addDevEnvConfigurationOptions( command ) {
  * Makes a web call to raw.githubusercontent.com
  */
 async function fetchVersionList() {
-	const host = 'raw.fakegithubusercontent.com';
+	const host = 'raw.githubusercontent.com';
 	const uri = '/Automattic/vip-container-images/master/wordpress/versions.json';
 	return fetch( `https://${ host }${ uri }`, { method: 'GET' } ).then( res => res.text() );
 }
@@ -358,7 +358,7 @@ async function fetchVersionList() {
  */
 async function getVersionList() {
 	let res, fetchErr;
-	const cacheTtl = 1; // number of seconds that the cache can be considered active.
+	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
 	const local = xdgBasedir.data || os.tmpdir();
 	const cacheDir = path.join( local, 'vip' );
 	const cacheKey = 'worpress-versions.json';
