@@ -409,6 +409,9 @@ async function getTagChoices() {
 	const tagChoices = [];
 	let tagFormatted, prerelease, mapping;
 	const versions = await getVersionList();
+	if ( versions.length < 1 ) {
+		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
+	}
 
 	for ( const version of versions ) {
 		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
