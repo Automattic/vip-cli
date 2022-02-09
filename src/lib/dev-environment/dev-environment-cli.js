@@ -362,7 +362,6 @@ async function getVersionList() {
 	let res;
 	const local = xdgBasedir.data || os.tmpdir();
 	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
-	console.log( DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 	const cacheFile = path.join( local, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 
 	// Try to retrieve the file from cache or cache it if invalid
