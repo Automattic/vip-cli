@@ -381,14 +381,14 @@ async function getVersionList() {
 			res = await fetchVersionList();
 			fs.writeFileSync( cacheFile, res );
 		}
+
+		// the result is cached
+		return JSON.parse( fs.readFileSync( cacheFile ) );
 	} catch ( err ) {
 		// Use the cache file if it exists
 		console.log( chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' ) );
 		debug( err );
 	}
-
-	// the result is cached
-	return JSON.parse( fs.readFileSync( cacheFile ) );
 }
 
 async function getTagChoices() {
