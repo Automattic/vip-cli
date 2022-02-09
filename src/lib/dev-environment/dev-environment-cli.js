@@ -346,8 +346,8 @@ export function addDevEnvConfigurationOptions( command ) {
 
 async function fetchVersionList() {
 	const host = 'raw.githubusercontent.com';
-	const path = '/Automattic/vip-container-images/master/wordpress/versions.json';
-	return fetch( `https://${ host }${ path }`, { method: 'GET' } ).then( res => res.text() );
+	const uri = '/Automattic/vip-container-images/master/wordpress/versions.json';
+	return fetch( `https://${ host }${ uri }`, { method: 'GET' } ).then( res => res.text() );
 }
 
 /**
@@ -355,11 +355,11 @@ async function fetchVersionList() {
  */
 async function getVersionList() {
 	let res;
-	const cacheTtl = 86400 //number of seconds that the cache can be considered active.
+	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
 	const local = xdgBasedir.data || os.tmpdir();
 	const cacheDir = path.join( local, 'vip' );
 	const cacheKey = 'worpress-versions.json';
-	const cacheFile = path.join(cacheDir, cacheKey);
+	const cacheFile = path.join( cacheDir, cacheKey );
 
 	try {
 		// If the cache doesn't exist, create it
@@ -383,7 +383,7 @@ async function getVersionList() {
 		}
 	} catch ( err ) {
 		// Use the cache file if it exists
-		console.log( chalk.yellow( `fetchWordPressVersionList failed to retrieve an updated version list` ) );
+		console.log( chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' ) );
 		debug( err );
 	}
 
