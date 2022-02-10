@@ -29,6 +29,7 @@ import {
 	DEV_ENVIRONMENT_RAW_GITHUB_HOST,
 	DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI,
 	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
+	DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE,
 } from '../constants/dev-environment';
 import type { InstanceData } from './types';
 
@@ -61,11 +62,48 @@ type SQLImportPaths = {
  *     - A Path to using an image that is available
  *   - If there is a new WordPress image available
  *   - If there is a newer version of the WordPress version currently used
+ *
+ * @param  {Object=} instancePath Path to local profile
  */
-async function updateWordPressImage( instancePath, options ) {
-	console.log( `instancePath: ${ instancePath }` );
-	console.log( 'options:' );
-	console.log( options );
+async function updateWordPressImage( instancePath ) {
+	const versions = await getVersionList();
+	const refType = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
+	const wpvAssign = new RegExp( /\$wp_version \= \'(.*)\'\;/ );
+	const landoFile = `${ instancePath }/.lando.yml`;
+	const versionFile = `${ instancePath }/${ DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE }`;
+
+	// filter
+	const filteredVersions = versions.filter( version => {
+		return refType.test( version.ref );
+	} );
+
+	// sort
+	filteredVersions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
+
+	// Newest WordPress Image
+	const newestWordPressImage = filteredVersions[ 0 ];
+	console.log( `The most recent WordPress version available is: ${ newestWordPressImage.tag }` );
+
+	// Currently Used WordPress Version
+	const code = fs.readFileSync( versionFile ).toString();
+	const versionCode = wpvAssign.exec( code );
+	let currentWordPressVersion = null;
+
+	if ( null === versionCode ) {
+		console.log( 'Cannot determine the currently installed WordPress version.' );
+	} else {
+		currentWordPressVersion = versionCode[ 1 ];
+	}
+
+	// Determine if there is an image available for the current WordPress version
+	const version = filteredVersions.find( ( { ref } ) => ref === currentWordPressVersion );
+
+	// If there is no available image for the currently installed version, give user a path to change
+	if ( typeof version === 'undefined' ) {
+		console.log( `Installed WordPress: ${ currentWordPressVersion } has no available container image in repository. ` );
+		console.log( 'Using this environment will not be possible without an edit to the .lando.yml file at: ' );
+		console.log( `    ${ landoFile }` );
+	}
 }
 
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
