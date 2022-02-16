@@ -23,7 +23,7 @@ const examples = [
 		description: 'Import contents of the given WP uploads folder file into the media library of the default dev environment',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads --slug mysite`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads --slug=mysite`,
 		description: 'Import contents of the given WP uploads folder file into the media library of a dev environment named `mysite`',
 	},
 ];

@@ -30,11 +30,11 @@ const examples = [
 	},
 	{
 		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create`,
-		description: 'Creates a local dev environment for prodaction site for id 123',
+		description: 'Creates a local dev environment for production site for id 123',
 	},
 	{
-		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug=my_site`,
-		description: 'Creates a local dev environment for prodaction site for id 123 aliased as "my_site"',
+		usage: `vip ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug=my_site`,
+		description: 'Creates a local dev environment aliased as "my_site"',
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug=test`,
