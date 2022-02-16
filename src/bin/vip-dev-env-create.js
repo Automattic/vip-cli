@@ -38,7 +38,7 @@ const examples = [
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug=test`,
-		description: 'Creates a blank local dev environment with custom name "test", this enables to create multiple independent environments',
+		description: 'Assigning unique slugs to environments allows multiple environments to be created.',
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --client-code="~/git/my_code"`,
