@@ -33,15 +33,15 @@ const examples = [
 		description: 'Creates a local dev environment for prodaction site for id 123',
 	},
 	{
-		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug 'my_site'`,
+		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug=my_site`,
 		description: 'Creates a local dev environment for prodaction site for id 123 aliased as "my_site"',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug test`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug=test`,
 		description: 'Creates a blank local dev environment with custom name "test", this enables to create multiple independent environments',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress "5.8" --client-code "~/git/my_code"`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --client-code="~/git/my_code"`,
 		description: 'Creates a local multisite dev environment using WP 5.8 and client code is expected to be in "~/git/my_code"',
 	},
 ];
