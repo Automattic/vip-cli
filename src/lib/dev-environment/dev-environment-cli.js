@@ -331,7 +331,7 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
-		.option( 'media-redirect-domain', 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
+		.option( [ 'm', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
 function getWordpressImageTags(): string[] {
