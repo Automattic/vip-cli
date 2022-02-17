@@ -22,7 +22,7 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info -all`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info --all`,
 		description: 'Return information about all local dev environments',
 	},
 	{
@@ -30,7 +30,7 @@ const examples = [
 		description: 'Return information about dev environment for site 123',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info -slug my_site`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info --slug=my_site`,
 		description: 'Return information about a local dev environment named "my_site"',
 	},
 ];
