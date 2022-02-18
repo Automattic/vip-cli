@@ -30,6 +30,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI,
 	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE,
+	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 } from '../constants/dev-environment';
 import type { InstanceData } from './types';
 
@@ -492,15 +493,26 @@ export async function fetchVersionList() {
 }
 
 /**
+ * Encapsulates the logic for determining if a file is expired by an arbitrary TTL
+ */
+function isVersionListExpired( cacheFile, ttl ) {
+	const stats = fs.statSync( cacheFile );
+	const expire = new Date( stats.mtime );
+	expire.setSeconds( expire.getSeconds() + ttl );
+	debug( `WordPress Version List cache last modified: ${ stats.mtime }` );
+
+	return ( +new Date > expire );
+}
+
+/**
  * Uses a cache file to keep the version list in tow until it is ultimately outdated
  */
 export async function getVersionList() {
 	let res;
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
-	const cacheTtl = 86400; // number of seconds that the cache can be considered active.
 	const cacheFile = path.join( mainEnvironmentPath, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 
-	// Try to retrieve the file from cache or cache it if invalid
+	// Handle from cache
 	try {
 		// If the cache doesn't exist, create it
 		if ( ! fs.existsSync( cacheFile ) ) {
@@ -508,15 +520,8 @@ export async function getVersionList() {
 			fs.writeFileSync( cacheFile, res );
 		}
 
-		// Last modified
-		const stats = fs.statSync( cacheFile );
-		debug( `WordPress Version List cache last modified: ${ stats.mtime }` );
-
-		// If the cache is expired, fetch the list again and cache it
-		const expire = new Date( stats.mtime );
-		expire.setSeconds( expire.getSeconds() + cacheTtl );
-
-		if ( +new Date > expire ) {
+		// If the cache is expired, refresh it
+		if ( isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
 			debug( `WordPress Version List cache is expired: ${ expire }` );
 			res = await fetchVersionList();
 			fs.writeFileSync( cacheFile, res );
@@ -527,8 +532,7 @@ export async function getVersionList() {
 		debug( err );
 	}
 
-	// Try to parse the cached file if it exists
-	// if not, something worse than a failed request happend; bail.
+	// Try to parse the cached file if it exists.
 	try {
 		return JSON.parse( fs.readFileSync( cacheFile ) );
 	} catch ( err ) {
