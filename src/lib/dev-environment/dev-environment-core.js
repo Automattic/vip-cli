@@ -385,6 +385,16 @@ export async function getApplicationInformation( appId: number, envType: string 
 			envData = environments.find( candidateEnv => candidateEnv.type === envType );
 		} else if ( 1 === environments.length ) {
 			envData = environments[ 0 ];
+		} else {
+			const choices = environments.map( candidateEnv => candidateEnv.type );
+
+			const { env } = await prompt( {
+				type: 'select',
+				name: 'env',
+				message: 'Which environment?',
+				choices,
+			} );
+			envData = environments.find( candidateEnv => candidateEnv.type === env );
 		}
 
 		if ( envData ) {

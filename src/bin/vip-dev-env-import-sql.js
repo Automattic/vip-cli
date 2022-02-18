@@ -26,7 +26,7 @@ const examples = [
 		description: 'Import the contents of a WordPress database from an SQL file',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --slug my_site`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --slug=my_site`,
 		description: 'Import the contents of a WordPress database from an SQL file into `my_site`',
 	},
 	{
