@@ -444,7 +444,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
  * @param  {Object=} options options
  */
 async function updateWordPressImage( instancePath, options ) {
-	let choice, version, tag, res;
+	let choice, version;
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
 	const vsnRgx = new RegExp( /\$wp_version \= \'(.*)\'\;/ );
@@ -452,13 +452,13 @@ async function updateWordPressImage( instancePath, options ) {
 	const versionFile = `${ instancePath }/${ DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE }`;
 
 	// If versionFile doesn't exist it means that the environment has not been initiated.
-	if ( ! fs.existsSync( versionFile ) )  {
+	if ( ! fs.existsSync( versionFile ) ) {
 		return;
 	}
 
 	// filter
-	const filteredVersions = versions.filter( version => {
-		return refRgx.test( version.ref );
+	const filteredVersions = versions.filter( vsn => {
+		return refRgx.test( vsn.ref );
 	} );
 
 	// sort
@@ -515,7 +515,7 @@ async function updateWordPressImage( instancePath, options ) {
 
 		// Change the lando file and rebuild.
 		const data = fs.readFileSync( landoFile, { encoding: 'utf8', flag: 'r' } );
-		const edit = data.replace( /ghcr\.io\/.*wordpress\:.*\d+\.\d+(?:\.\d+)?/g,  selectedImage );
+		const edit = data.replace( /ghcr\.io\/.*wordpress\:.*\d+\.\d+(?:\.\d+)?/g, selectedImage );
 		fs.writeFileSync( landoFile, edit );
 
 		// Stage for rebuild
@@ -535,6 +535,9 @@ export async function fetchVersionList() {
 
 /**
  * Encapsulates the logic for determining if a file is expired by an arbitrary TTL
+ * @param  {string} cacheFile uri of cache file
+ * @param  {number} ttl time to live in seconds
+ * @returns {boolean} version list expired true/false
  */
 function isVersionListExpired( cacheFile, ttl ) {
 	const stats = fs.statSync( cacheFile );
@@ -562,7 +565,6 @@ export async function getVersionList() {
 
 		// If the cache is expired, refresh it
 		if ( isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
-			debug( `WordPress Version List cache is expired: ${ expire }` );
 			res = await fetchVersionList();
 			fs.writeFileSync( cacheFile, res );
 		}
