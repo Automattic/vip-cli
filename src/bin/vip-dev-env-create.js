@@ -20,6 +20,7 @@ import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doe
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, getOptionsFromAppInfo } from '../lib/dev-environment/dev-environment-cli';
+import type { InstanceOptions } from '../lib/dev-environment/types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -68,7 +69,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions = {};
+	let defaultOptions: $Shape<InstanceOptions> = {};
 	try {
 		if ( opt.app ) {
 			const appInfo = await getApplicationInformation( opt.app, opt.env );
