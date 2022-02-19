@@ -491,8 +491,7 @@ async function updateWordPressImage( instancePath, options ) {
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof version === 'undefined' ) {
 		console.log( `Installed WordPress: ${ currentWordPressVersion } has no available container image in repository. ` );
-		console.log( 'Using this environment will not be possible without an edit to the .lando.yml file at: ' );
-		console.log( `    ${ landoFile }` );
+		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( version.ref ) );
 	}
