@@ -444,7 +444,6 @@ export async function importMediaPath( slug: string, filePath: string ) {
  * @param  {Object=} options options
  */
 async function updateWordPressImage( instancePath, options ) {
-	let choice, version;
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
 	const vsnRgx = new RegExp( /\$wp_version \= \'(.*)\'\;/ );
@@ -486,14 +485,14 @@ async function updateWordPressImage( instancePath, options ) {
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	version = filteredVersions.find( ( { ref } ) => ref === currentWordPressVersion );
+	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressVersion );
 
 	// If there is no available image for the currently installed version, give user a path to change
-	if ( typeof version === 'undefined' ) {
+	if ( typeof match === 'undefined' ) {
 		console.log( `Installed WordPress: ${ currentWordPressVersion } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
-		console.log( 'Environment WordPress version is: ' + chalk.yellow( version.ref ) );
+		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
 	}
 
 	// Prompt the user to select a new WordPress Version
@@ -505,11 +504,11 @@ async function updateWordPressImage( instancePath, options ) {
 
 	// If the user takes the new WP version path
 	if ( confirm.upgrade ) {
-		console.log( 'Upgrading from: ' + chalk.yellow( version.ref ) + ' to:' );
+		console.log( 'Upgrading from: ' + chalk.yellow( match.ref ) + ' to:' );
 
 		// Select a new image
-		choice = await promptForComponent( 'wordpress' );
-		version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
+		const choice = await promptForComponent( 'wordpress' );
+		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 		const selectedImage = `ghcr.io/automattic/vip-container-images/wordpress:${ version.tag }`;
 
 		// Change the lando file and rebuild.
