@@ -157,7 +157,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
-		const option = preselectedOptions[ component ].toString();
+		const option = ( preselectedOptions[ component ] ?? '' ).toString();
 		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
 
 		const result = await processComponent( component, option, defaultValue );
