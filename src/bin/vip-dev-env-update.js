@@ -65,6 +65,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
+			multisite: false,
+			title: '',
 		};
 
 		const instanceData = await promptForArguments( preselectedOptions, defaultOptions );
