@@ -32,7 +32,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE,
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 } from '../constants/dev-environment';
-import type { AppInfo, InstanceData } from './types'
+import type { AppInfo, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
