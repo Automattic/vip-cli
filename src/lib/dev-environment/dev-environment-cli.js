@@ -324,7 +324,18 @@ export async function promptForComponent( component: string, allowLocal: boolean
 			choices: tagChoices,
 			initial: initialTagIndex,
 		} );
-		const tag = await selectTag.run();
+		const option = await selectTag.run();
+
+		// Validate the input
+		// Some of the options are like: '5.7   →  5.7.5'
+		// Extract first occurrence of something that looks like a tag
+		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
+		const match = tagRgx.exec( option );
+		if ( match.length < 2 ) {
+			throw new Error( `Invalid WordPress Selection: ${ option }` );
+		}
+
+		const tag = match[ 1 ];
 
 		return {
 			mode: modeResult,
