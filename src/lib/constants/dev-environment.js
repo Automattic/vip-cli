@@ -14,3 +14,11 @@ export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up
 export const DEV_ENVIRONMENT_NOT_FOUND = 'Environment not found.';
 
 export const DEV_ENVIRONMENT_COMPONENTS = [ 'wordpress', 'muPlugins', 'clientCode' ];
+
+export const DEV_ENVIRONMENT_RAW_GITHUB_HOST = 'raw.githubusercontent.com';
+
+export const DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI = '/Automattic/vip-container-images/master/wordpress/versions.json';
+
+export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'worpress-versions.json';
+
+export const DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE = 'wordpress/wp-includes/version.php';

@@ -25,6 +25,7 @@ import {
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
+import { getVersionList } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -302,8 +303,16 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
-		const tagChoices = getWordpressImageTags();
-		let initialTagIndex = 0;
+		const tagChoices = await getTagChoices();
+
+		// First tag not: "Pre-Release"
+		const firstNonPreRelease = tagChoices.find( tag => {
+			return ! tag.match( /Pre\-Release/g );
+		} );
+
+		// Set initialTagIndex as the first non Pre-Release
+		let initialTagIndex = tagChoices.indexOf( firstNonPreRelease );
+
 		if ( defaultObject?.tag ) {
 			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
 			if ( defaultTagIndex !== -1 ) {
@@ -342,14 +351,29 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
-function getWordpressImageTags(): string[] {
-	return [
-		'5.9',
-		'5.8.3',
-		'5.8.2',
-		'5.8.1',
-		'5.8',
-		'5.7.3',
-		'5.7.2',
-	];
+/**
+ * Provides the list of tag choices for selection
+ */
+export async function getTagChoices() {
+	const tagChoices = [];
+	let tagFormatted, prerelease, mapping;
+	const versions = await getVersionList();
+	if ( versions.length < 1 ) {
+		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
+	}
+
+	for ( const version of versions ) {
+		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
+		prerelease = ( version.prerelease ) ? '(Pre-Release)' : '';
+
+		if ( version.tag !== version.ref ) {
+			mapping = `→ ${ prerelease } ${ version.ref }`;
+		} else {
+			mapping = '';
+		}
+
+		tagChoices.push( `${ tagFormatted } ${ mapping }` );
+	}
+
+	return tagChoices.sort().reverse();
 }
