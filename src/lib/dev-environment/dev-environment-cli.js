@@ -331,7 +331,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		// Extract first occurrence of something that looks like a tag
 		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
 		const match = tagRgx.exec( option );
-		if ( match.length < 2 ) {
+		if ( null == match || match.length < 2 ) {
 			throw new Error( `Invalid WordPress Selection: ${ option }` );
 		}
 
