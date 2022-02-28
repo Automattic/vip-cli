@@ -32,7 +32,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE,
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 } from '../constants/dev-environment';
-import type { InstanceData } from './types';
+import type { AppInfo, InstanceData } from './types'
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -136,7 +136,7 @@ export async function updateEnvironment( instanceData: InstanceData ) {
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	const newInstanceData = {
-		...instanceData,
+		...( instanceData: Object ),
 	};
 
 	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
@@ -226,7 +226,7 @@ export async function exec( slug: string, args: Array<string> ) {
 	await landoExec( instancePath, command, commandArgs );
 }
 
-export function doesEnvironmentExist( slug: string ) {
+export function doesEnvironmentExist( slug: string ): boolean {
 	debug( 'Will check for environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -290,7 +290,7 @@ function getAllEnvironmentNames() {
 	return envNames;
 }
 
-export function getEnvironmentPath( name: string ) {
+export function getEnvironmentPath( name: string ): string {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
@@ -300,7 +300,7 @@ export function getEnvironmentPath( name: string ) {
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
 
-export async function getApplicationInformation( appId: number, envType: string | null ) {
+export async function getApplicationInformation( appId: number, envType: string | null ): Promise<AppInfo> {
 	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `
 		id,
