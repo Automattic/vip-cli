@@ -27,6 +27,18 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.9.0 (1 March 2022)
+- #966  [dev-env] Dynamic WordPress Image List
+- #975  [dev-env] prompt On Unselected Env
+- #974  [dev-env] Corrections of text for -h menu in dev-env create
+- #973  [dev-env] update Nginx image
+- #971  [dev-env] Use custom add user command
+- #964  [dev-env] Validate sql on import
+- #970  [dev-env] Do not use /tmp as a userConfRoot
+- #977  Fix flow errors
+- #976  Fix/duplicate shortcut parameter
+- #968  Update minimum Node version
+
 ### 2.8.2 (27 January 2021)
 - #961  Fixes md5 calculation failing when search-replace is used
 - #959  Fixes md5 calculation for SQL Imports on VIPd
