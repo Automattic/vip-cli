@@ -1,6 +1,7 @@
 /**
  * Internal dependencies
  */
+import os from 'os';
 import * as tracker from 'lib/tracker';
 import * as logsLib from 'lib/app-logs/app-logs';
 import * as exit from 'lib/cli/exit';
@@ -154,7 +155,7 @@ describe( 'getLogs', () => {
 			nextCursor: null,
 			nodes: [
 				{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-				{ timestamp: '2021-11-09T20:47:07.301221112Z', message: 'My container message 2 has "double quotes", \'single quotes\', commas, multiple\nlines\n, and	tabs' },
+				{ timestamp: '2021-11-09T20:47:07.301221112Z', message: `My container message 2 has "double quotes", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs` },
 			],
 		} ) );
 
@@ -162,13 +163,9 @@ describe( 'getLogs', () => {
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			/* eslint-disable indent */
-`"timestamp","message"
-"2021-11-05T20:18:36.234041811Z","My container message 1"
-"2021-11-09T20:47:07.301221112Z","My container message 2 has ""double quotes"", 'single quotes', commas, multiple
-lines
-, and	tabs"`
-			/* eslint-enable indent */
+			/* eslint-disable max-len */
+			`"timestamp","message"${ os.EOL }"2021-11-05T20:18:36.234041811Z","My container message 1"${ os.EOL }"2021-11-09T20:47:07.301221112Z","My container message 2 has ""double quotes"", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs"`
+			/* eslint-enable max-len */
 		);
 
 		const trackingParams = {
