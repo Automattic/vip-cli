@@ -8,6 +8,7 @@
  */
 import debugLib from 'debug';
 import xdgBasedir from 'xdg-basedir';
+import fetch from 'node-fetch';
 import os from 'os';
 import fs from 'fs';
 import ejs from 'ejs';
@@ -21,10 +22,17 @@ import copydir from 'copy-dir';
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
-import { printTable, resolvePath } from './dev-environment-cli';
+import { printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
-import type { InstanceData } from './types';
+import {
+	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_RAW_GITHUB_HOST,
+	DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI,
+	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
+	DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE,
+	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
+} from '../constants/dev-environment';
+import type { AppInfo, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -60,6 +68,8 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
+
+	await updateWordPressImage( instancePath, options );
 
 	if ( options.skipRebuild ) {
 		await landoStart( instancePath );
@@ -126,7 +136,7 @@ export async function updateEnvironment( instanceData: InstanceData ) {
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	const newInstanceData = {
-		...instanceData,
+		...( instanceData: Object ),
 	};
 
 	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
@@ -216,7 +226,7 @@ export async function exec( slug: string, args: Array<string> ) {
 	await landoExec( instancePath, command, commandArgs );
 }
 
-export function doesEnvironmentExist( slug: string ) {
+export function doesEnvironmentExist( slug: string ): boolean {
 	debug( 'Will check for environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -280,7 +290,7 @@ function getAllEnvironmentNames() {
 	return envNames;
 }
 
-export function getEnvironmentPath( name: string ) {
+export function getEnvironmentPath( name: string ): string {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
@@ -290,7 +300,7 @@ export function getEnvironmentPath( name: string ) {
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
 
-export async function getApplicationInformation( appId: number, envType: string | null ) {
+export async function getApplicationInformation( appId: number, envType: string | null ): Promise<AppInfo> {
 	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `
 		id,
@@ -325,6 +335,16 @@ export async function getApplicationInformation( appId: number, envType: string 
 			envData = environments.find( candidateEnv => candidateEnv.type === envType );
 		} else if ( 1 === environments.length ) {
 			envData = environments[ 0 ];
+		} else {
+			const choices = environments.map( candidateEnv => candidateEnv.type );
+
+			const { env } = await prompt( {
+				type: 'select',
+				name: 'env',
+				message: 'Which environment?',
+				choices,
+			} );
+			envData = environments.find( candidateEnv => candidateEnv.type === env );
 		}
 
 		if ( envData ) {
@@ -411,4 +431,152 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
 	copydir.sync( resolvedPath, uploadsPath );
 	console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
+}
+
+/**
+ * Uses the WordPress versions manifest on github.com
+ * Informs the user several things:
+ *   - If the WordPress image their env uses is no longer available
+ *   - If there is a newer version of the WordPress version currently used
+ *   - A choice to use a different image
+ *
+ * @param  {Object=} instancePath Path to local profile
+ * @param  {Object=} options options
+ */
+async function updateWordPressImage( instancePath, options ) {
+	const versions = await getVersionList();
+	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
+	const vsnRgx = new RegExp( /\$wp_version \= \'(.*)\'\;/ );
+	const landoFile = `${ instancePath }/.lando.yml`;
+	const versionFile = `${ instancePath }/${ DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE }`;
+
+	// If versionFile doesn't exist it means that the environment has not been initiated.
+	if ( ! fs.existsSync( versionFile ) ) {
+		return;
+	}
+
+	// filter
+	const filteredVersions = versions.filter( vsn => {
+		return refRgx.test( vsn.ref );
+	} );
+
+	// sort
+	filteredVersions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
+
+	// Newest WordPress Image
+	const newestWordPressImage = filteredVersions[ 0 ];
+	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
+
+	// Currently Used WordPress Version
+	const code = fs.readFileSync( versionFile ).toString();
+	const versionCode = vsnRgx.exec( code );
+	let currentWordPressVersion = null;
+
+	if ( null === versionCode ) {
+		console.log( 'Cannot determine the currently installed WordPress version.' );
+	} else {
+		currentWordPressVersion = versionCode[ 1 ];
+	}
+
+	// If the currently used version is the most up to date: exit.
+	if ( currentWordPressVersion === newestWordPressImage.ref ) {
+		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressVersion ) + '  ... 😎 nice! ' );
+		return;
+	}
+
+	// Determine if there is an image available for the current WordPress version
+	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressVersion );
+
+	// If there is no available image for the currently installed version, give user a path to change
+	if ( typeof match === 'undefined' ) {
+		console.log( `Installed WordPress: ${ currentWordPressVersion } has no available container image in repository. ` );
+		console.log( 'You must select a new WordPress image to continue... ' );
+	} else {
+		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
+	}
+
+	// Prompt the user to select a new WordPress Version
+	const confirm = await prompt( {
+		type: 'confirm',
+		name: 'upgrade',
+		message: 'Would You like to change the WordPress version? ',
+	} );
+
+	// If the user takes the new WP version path
+	if ( confirm.upgrade ) {
+		console.log( 'Upgrading from: ' + chalk.yellow( match.ref ) + ' to:' );
+
+		// Select a new image
+		const choice = await promptForComponent( 'wordpress' );
+		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
+		const selectedImage = `ghcr.io/automattic/vip-container-images/wordpress:${ version.tag }`;
+
+		// Change the lando file and rebuild.
+		const data = fs.readFileSync( landoFile, { encoding: 'utf8', flag: 'r' } );
+		const edit = data.replace( /ghcr\.io\/.*wordpress\:.*\d+\.\d+(?:\.\d+)?/g, selectedImage );
+		fs.writeFileSync( landoFile, edit );
+
+		// Stage for rebuild
+		options.skipRebuild = false;
+	}
+
+	return;
+}
+
+/**
+ * Makes a web call to raw.githubusercontent.com
+ */
+export async function fetchVersionList() {
+	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
+	return fetch( url ).then( res => res.text() );
+}
+
+/**
+ * Encapsulates the logic for determining if a file is expired by an arbitrary TTL
+ * @param  {string} cacheFile uri of cache file
+ * @param  {number} ttl time to live in seconds
+ * @returns {boolean} version list expired true/false
+ */
+function isVersionListExpired( cacheFile, ttl ) {
+	const stats = fs.statSync( cacheFile );
+	const expire = new Date( stats.mtime );
+	expire.setSeconds( expire.getSeconds() + ttl );
+
+	return ( +new Date > expire );
+}
+
+/**
+ * Uses a cache file to keep the version list in tow until it is ultimately outdated
+ */
+export async function getVersionList() {
+	let res;
+	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	const cacheFile = path.join( mainEnvironmentPath, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
+
+	// Handle from cache
+	try {
+		// If the cache doesn't exist, create it
+		if ( ! fs.existsSync( cacheFile ) ) {
+			res = await fetchVersionList();
+			fs.writeFileSync( cacheFile, res );
+		}
+
+		// If the cache is expired, refresh it
+		if ( isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
+			res = await fetchVersionList();
+			fs.writeFileSync( cacheFile, res );
+		}
+	} catch ( err ) {
+		// Soft error handling here, since it's still possible to use a previously cached file.
+		console.log( chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' ) );
+		debug( err );
+	}
+
+	// Try to parse the cached file if it exists.
+	try {
+		return JSON.parse( fs.readFileSync( cacheFile ) );
+	} catch ( err ) {
+		debug( err );
+		return [];
+	}
 }

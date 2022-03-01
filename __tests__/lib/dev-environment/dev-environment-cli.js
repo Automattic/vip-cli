@@ -6,6 +6,7 @@
  * External dependencies
  */
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
+import nock from 'nock';
 
 /**
  * Internal dependencies
@@ -31,6 +32,17 @@ jest.mock( 'enquirer', () => {
 		confirmRunMock: _confirmRunMock,
 	};
 } );
+
+const scope = nock( 'https://raw.githubusercontent.com' )
+	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
+	.reply( 200, [ {
+		ref: '5.9',
+		tag: '5.9',
+		cacheable: true,
+		locked: false,
+		prerelease: false,
+	} ] );
+scope.persist( true );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	beforeEach( () => {
@@ -106,11 +118,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
 			{ // base tag
-				param: 5.6,
+				param: 5.9,
 				allowLocal: true,
 				expected: {
 					mode: 'image',
-					tag: '5.6',
+					tag: '5.9',
 				},
 			},
 			{ // if local is not allowed
@@ -188,10 +200,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 		it.each( [
 			{
-				tag: '5.6',
+				tag: '5.9',
 				expected: {
 					mode: 'image',
-					tag: '5.6',
+					tag: '5.9',
 				},
 			},
 		] )( 'should return correct component for wordpress %p', async input => {

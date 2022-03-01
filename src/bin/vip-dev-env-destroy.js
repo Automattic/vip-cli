@@ -28,7 +28,7 @@ const examples = [
 		description: 'Destroys the default local dev environment',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } destroy --slug foo`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } destroy --slug=foo`,
 		description: 'Destroys a local dev environment named foo',
 	},
 ];
