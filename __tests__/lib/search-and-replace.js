@@ -26,10 +26,15 @@ const testFilePath = path.resolve( fixtureDir, 'client-file-uploader', 'tinyfile
 jest.mock( 'node-fetch' );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 
+let searchReplaceBinaryFilename = `go-search-replace-test-${ process.platform }-${ process.arch }`;
+if ( 'win32' === process.platform ) {
+	searchReplaceBinaryFilename += '.exe';
+}
+
 const binary = path.resolve(
 	fixtureDir,
 	'search-replace-binaries',
-	`go-search-replace-test-${ process.platform }-${ process.arch }`
+	searchReplaceBinaryFilename
 );
 
 // Mock console.log()
