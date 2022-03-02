@@ -125,7 +125,7 @@ export type SearchReplaceOutput = {
 
 export const searchAndReplace = async (
 	fileName: string,
-	pairs: Array<String> | String,
+	pairs: Array<string> | string,
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {

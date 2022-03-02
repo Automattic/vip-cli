@@ -15,7 +15,7 @@ coverage
 config/config.*.json
 
 # Logs
-logs
+/logs
 *.log
 npm-debug.log*
 

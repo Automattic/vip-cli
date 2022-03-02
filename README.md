@@ -27,6 +27,66 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.9.1 (2 March 2022)
+- #982  Remove unused dependencies - Fixes Error: Cannot find module 'core-js'
+- #978  [dev-env] Added phpmyadmin proxy value
+
+https://github.com/Automattic/vip/releases/tag/v2.9.1
+
+### 2.9.0 (1 March 2022)
+- #966  [dev-env] Dynamic WordPress Image List
+- #975  [dev-env] prompt On Unselected Env
+- #974  [dev-env] Corrections of text for -h menu in dev-env create
+- #973  [dev-env] update Nginx image
+- #971  [dev-env] Use custom add user command
+- #964  [dev-env] Validate sql on import
+- #970  [dev-env] Do not use /tmp as a userConfRoot
+- #977  Fix flow errors
+- #976  Fix/duplicate shortcut parameter
+- #968  Update minimum Node version
+
+https://github.com/Automattic/vip/releases/tag/v2.9.0
+
+### 2.8.2 (27 January 2021)
+- #961  Fixes md5 calculation failing when search-replace is used
+- #959  Fixes md5 calculation for SQL Imports on VIPd
+
+https://github.com/Automattic/vip/releases/tag/v2.8.2
+
+### 2.8.0 (25 January 2021)
+- #952  FORNO-1047: Fix SQL Import for compressed files
+- #955  Add Error prefix for "Failed to fetch logs" msg
+- #946  Add support for the site logs tailing feature
+- #953  [dev-env] Updated list of available wordpress images for dev-env
+- #933  Update dependency debug to v4.3.3
+
+https://github.com/Automattic/vip/releases/tag/v2.8.0
+
+### 2.7.1 (10 January 2021)
+- #950 Switch to npm-shrinkwrap
+- #947  [dev-env] List all dev env alias
+- #944  Add `vip whoami` command
+- #942  Envvar: Show message when there is an attempt to change the New Relic key.
+
+https://github.com/Automattic/vip/releases/tag/v2.7.1
+
+### 2.7.0 (07 December 2021)
+- #941  [dev-env] Bump lando CLI dependency
+- #938  Hide roll back message after SQL Import failure for launched sites
+- #936  Sets jest maxWorkers to 4
+
+https://github.com/Automattic/vip/releases/tag/v2.7.0
+
+### 2.6.0 (23 November 2021)
+- #921  [dev-env] Introuces update to change existing environment
+- #928  [dev-env] Switch lando to use our fork
+- #927  [dev-env] Handles user already exists during sql import
+- #925  [dev-env] Fix the issue with dev-env update
+- #924  FORNO-985 Increase SQL Import limit for unlaunched sites to 100GB
+- #923  FORNO-943 Fixes a bug which prevents displaying SQL Import error messages
+- #922  Update eslint-config-wpvip commit hash to c6605d1
+- #873  Pin dependencies
+
 ### 2.5.0 (9 November 2021)
 - #919  [dev-env] Expose lando core logs
 - #916  [dev-env] Save instance data state

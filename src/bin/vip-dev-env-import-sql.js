@@ -9,6 +9,7 @@
  * External dependencies
  */
 import fs from 'fs';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -17,6 +18,7 @@ import command from '../lib/cli/command';
 import { getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { validate } from '../lib/validations/sql';
 
 const examples = [
 	{
@@ -24,7 +26,7 @@ const examples = [
 		description: 'Import the contents of a WordPress database from an SQL file',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --slug my_site`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --slug=my_site`,
 		description: 'Import the contents of a WordPress database from an SQL file into `my_site`',
 	},
 	{
@@ -43,6 +45,7 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
+	.option( 'skip-validate', 'Do not perform file validation.' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ fileName ] = unmatchedArgs;
@@ -51,6 +54,10 @@ command( {
 
 		try {
 			const { resolvedPath, inContainerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
+
+			if ( ! opt.skipValidate ) {
+				await validate( fileName, [] );
+			}
 
 			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
 			await exec( slug, importArg );
@@ -62,7 +69,7 @@ command( {
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( slug, cacheArg );
 
-			const addUserArg = [ 'wp', 'user', 'create', 'vipgo', 'vipgo@go-vip.net', '--user_pass=password', '--role=administrator' ];
+			const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
 			await exec( slug, addUserArg );
 		} catch ( error ) {
 			handleCLIException( error );

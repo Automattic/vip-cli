@@ -5,26 +5,50 @@
 /**
  * External dependencies
  */
-import { prompt, selectRunMock } from 'enquirer';
+import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
+import nock from 'nock';
 
 /**
  * Internal dependencies
  */
 
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
+import { promptForArguments } from '../../../src/lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
 	const SelectClass = class {};
 	SelectClass.prototype.run = _selectRunMock;
+
+	const _confirmRunMock = jest.fn();
+	const ConfirmClass = class {};
+	ConfirmClass.prototype.run = _confirmRunMock;
 	return {
 		prompt: jest.fn(),
 		Select: SelectClass,
 		selectRunMock: _selectRunMock,
+
+		Confirm: ConfirmClass,
+		confirmRunMock: _confirmRunMock,
 	};
 } );
 
+const scope = nock( 'https://raw.githubusercontent.com' )
+	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
+	.reply( 200, [ {
+		ref: '5.9',
+		tag: '5.9',
+		cacheable: true,
+		locked: false,
+		prerelease: false,
+	} ] );
+scope.persist( true );
+
 describe( 'lib/dev-environment/dev-environment-cli', () => {
+	beforeEach( () => {
+		prompt.mockReset();
+		confirmRunMock.mockReset();
+	} );
 	describe( 'getEnvironmentName', () => {
 		it.each( [
 			{ // default value
@@ -94,11 +118,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
 			{ // base tag
-				param: 5.6,
+				param: 5.9,
 				allowLocal: true,
 				expected: {
 					mode: 'image',
-					tag: '5.6',
+					tag: '5.9',
 				},
 			},
 			{ // if local is not allowed
@@ -176,10 +200,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 		it.each( [
 			{
-				tag: '5.6',
+				tag: '5.9',
 				expected: {
 					mode: 'image',
-					tag: '5.6',
+					tag: '5.9',
 				},
 			},
 		] )( 'should return correct component for wordpress %p', async input => {
@@ -189,6 +213,207 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForComponent( 'wordpress', false );
 
 			expect( result ).toStrictEqual( input.expected );
+		} );
+	} );
+	describe( 'promptForArguments', () => {
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					muPlugins: 'mu',
+					clientCode: 'code',
+					wordpress: 'wp',
+				},
+				default: {
+					title: 'b',
+				},
+			},
+		] )( 'should handle title', async input => {
+			prompt.mockResolvedValue( { input: input.default.title } );
+
+			const result = await promptForArguments( input.preselected, input.default );
+
+			if ( input.preselected.title ) {
+				expect( prompt ).toHaveBeenCalledTimes( 0 );
+			} else {
+				expect( prompt ).toHaveBeenCalledTimes( 1 );
+
+				const calledWith = prompt.mock.calls[ 0 ][ 0 ];
+				expect( prompt ).toHaveBeenCalledWith( {
+					...calledWith,
+					initial: input.default.title,
+				} );
+			}
+
+			const expectedValue = input.preselected.title ? input.preselected.title : input.default.title;
+
+			expect( result.wpTitle ).toStrictEqual( expectedValue );
+		} );
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					multisite: false,
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+				},
+				default: {
+					multisite: true,
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+				},
+				default: {
+					multisite: false,
+				},
+			},
+		] )( 'should handle multisite', async input => {
+			confirmRunMock.mockResolvedValue( input.default.multisite );
+
+			const result = await promptForArguments( input.preselected, input.default );
+
+			if ( 'multisite' in input.preselected ) {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 1 );
+			}
+
+			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
+
+			expect( result.multisite ).toStrictEqual( expectedValue );
+		} );
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+					mediaRedirectDomain: 'a',
+				},
+				default: {
+					mediaRedirectDomain: 'b',
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					multisite: true,
+				},
+				default: {
+					mediaRedirectDomain: 'b',
+				},
+			},
+		] )( 'should handle media redirect query', async input => {
+			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
+
+			const result = await promptForArguments( input.preselected, input.default );
+
+			if ( input.preselected.mediaRedirectDomain ) {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 1 );
+			}
+
+			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;
+
+			expect( result.mediaRedirectDomain ).toStrictEqual( expectedValue );
+		} );
+
+		it.each( [
+			{
+				preselected: {
+					title: 'a',
+					mariadb: 'maria_a',
+					elasticsearch: 'elastic_a',
+				},
+				default: {
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+				},
+				default: {
+					mariadb: 'maria_b',
+					elasticsearch: 'elastic_b',
+				},
+			},
+		] )( 'should handle elasticsearch/mariadb', async input => {
+			const result = await promptForArguments( input.preselected, input.default );
+
+			const expectedMaria = input.preselected.mariadb ? input.preselected.mariadb : input.default.mariadb;
+			const expectedElastic = input.preselected.elasticsearch ? input.preselected.elasticsearch : input.default.elasticsearch;
+
+			expect( result.mariadb ).toStrictEqual( expectedMaria );
+			expect( result.elasticsearch ).toStrictEqual( expectedElastic );
+		} );
+		it.each( [
+			{
+				service: 'statsd',
+				preselected: true,
+				expected: true,
+			},
+			{
+				service: 'statsd',
+				expected: false,
+			},
+			{
+				service: 'statsd',
+				default: true,
+				expected: true,
+			},
+			{
+				service: 'statsd',
+				preselected: false,
+				default: true,
+				expected: false,
+			},
+			{
+				service: 'phpmyadmin',
+				preselected: true,
+				default: true,
+				expected: true,
+			},
+			{
+				service: 'xdebug',
+				default: true,
+				expected: true,
+			},
+		] )( 'should handle auxiliary services', async input => {
+			const preselected = {};
+			const defaultOptions = {};
+			if ( 'preselected' in input ) {
+				preselected[ input.service ] = input.preselected;
+			}
+			if ( 'default' in input ) {
+				defaultOptions[ input.service ] = input.default;
+			}
+			const result = await promptForArguments( preselected, defaultOptions );
+
+			expect( result[ input.service ] ).toStrictEqual( input.expected );
 		} );
 	} );
 } );

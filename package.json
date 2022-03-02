@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.5.0",
+  "version": "2.9.1",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -16,12 +16,14 @@
     "vip-config-envvar-set": "dist/bin/vip-config-envvar-set.js",
     "vip-dev-env": "dist/bin/vip-dev-env.js",
     "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
+    "vip-dev-env-update": "dist/bin/vip-dev-env-update.js",
     "vip-dev-env-destroy": "dist/bin/vip-dev-env-destroy.js",
     "vip-dev-env-exec": "dist/bin/vip-dev-env-exec.js",
     "vip-dev-env-import": "dist/bin/vip-dev-env-import.js",
     "vip-dev-env-import-media": "dist/bin/vip-dev-env-import-media.js",
     "vip-dev-env-import-sql": "dist/bin/vip-dev-env-import-sql.js",
     "vip-dev-env-info": "dist/bin/vip-dev-env-info.js",
+    "vip-dev-env-list": "dist/bin/vip-dev-env-list.js",
     "vip-dev-env-start": "dist/bin/vip-dev-env-start.js",
     "vip-dev-env-stop": "dist/bin/vip-dev-env-stop.js",
     "vip-import": "dist/bin/vip-import.js",
@@ -32,8 +34,10 @@
     "vip-import-sql-status": "dist/bin/vip-import-sql-status.js",
     "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
+    "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
+    "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
@@ -66,7 +70,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=10"
+    "node": ">=14.14.0"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
@@ -82,9 +86,8 @@
     "babel-core": "7.0.0-bridge.0",
     "babel-jest": "26.6.3",
     "babel-plugin-module-resolver": "4.1.0",
-    "core-js": "3.12.0",
     "eslint": "7.32.0",
-    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#d0aa883",
+    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#c6605d1",
     "eslint-plugin-flowtype": "5.7.2",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-jest": "24.3.6",
@@ -93,7 +96,7 @@
     "eslint-plugin-no-async-foreach": "0.1.1",
     "eslint-plugin-react": "7.26.0",
     "eslint-plugin-wpcalypso": "5.0.0",
-    "flow-bin": "0.150.0",
+    "flow-bin": "0.172.0",
     "jest": "27.2.1",
     "nock": "13.0.11",
     "prettier": "npm:wp-prettier@2.0.5",
@@ -107,7 +110,7 @@
     "cli-columns": "^4.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
-    "debug": "4.3.2",
+    "debug": "4.3.3",
     "ejs": "^3.1.6",
     "enquirer": "2.3.6",
     "graphql": "15.5.1",
@@ -115,7 +118,7 @@
     "ini": "2.0.0",
     "json2csv": "5.0.6",
     "jwt-decode": "2.2.0",
-    "lando": "git+https://github.com/lando/cli.git#v3.4.3",
+    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "rollbar": "2.22.0",

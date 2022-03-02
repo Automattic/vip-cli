@@ -29,6 +29,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 			environments(id: $envId) {
 				id
 				isK8sResident
+				launched
 				jobs(types: "sql_import") {
 					id
 					type
@@ -84,23 +85,24 @@ async function getStatus( api, appId, envId ) {
 		throw new Error( 'Unable to determine import status from environment' );
 	}
 	const [ environment ] = environments;
-	const { importStatus, jobs } = environment;
+	const { importStatus, jobs, launched } = environment;
+
 	if ( ! environment.isK8sResident && ! jobs?.length ) {
 		return {};
 	}
-
 	const [ importJob ] = jobs;
 
 	return {
 		importStatus,
 		importJob,
+		launched,
 	};
 }
 
-function getErrorMessage( importFailed ) {
+function getErrorMessage( importFailed, launched = false ) {
 	debug( { importFailed } );
 
-	const rollbackMessage = `Your site is ${ chalk.blue(
+	const rollbackMessage = launched ? '' : `Your site is ${ chalk.blue(
 		'automatically being rolled back'
 	) } to the last backup prior to your import job.
 `;
@@ -233,17 +235,20 @@ ${ maybeExitPrompt }
 		new Promise( ( resolve, reject ) => {
 			const checkStatus = async () => {
 				let status;
+
 				try {
 					status = await getStatus( api, app.id, env.id );
 				} catch ( error ) {
 					return reject( { error } );
 				}
+
 				const { importStatus, importJob } = status;
 
 				debug( { importJob } );
 
 				if ( ! importJob ) {
-					return resolve( 'No import job found' );
+					// job meta not yet set, wait and retry
+					return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 				}
 
 				const {
@@ -276,7 +281,7 @@ ${ maybeExitPrompt }
 
 				let failedImportStep;
 
-				if ( jobCreationTime && importStepProgress?.started_at * 1000 > jobCreationTime ) {
+				if ( jobCreationTime && importStepProgress?.started_at * 1000 >= jobCreationTime ) {
 					// The contents of the `import_progress` meta are pertinent to the most recent import job
 					failedImportStep = importStepProgress.steps.find(
 						step =>
@@ -285,7 +290,7 @@ ${ maybeExitPrompt }
 				}
 
 				if ( ! jobSteps.length ) {
-					return reject( { error: 'Could not enumerate the import job steps' } );
+					return reject( { error: 'Could not enumerate the import job steps', launched } );
 				}
 
 				if ( failedImportStep ) {
@@ -306,6 +311,7 @@ ${ maybeExitPrompt }
 						error: 'Import step failed',
 						stepName: failedImportStep.name,
 						errorText: failedImportStep.error,
+						launched,
 					} );
 				}
 
@@ -314,7 +320,7 @@ ${ maybeExitPrompt }
 				setSuffixAndPrint();
 
 				if ( jobStatus === 'error' ) {
-					return reject( { error: 'Import job failed', steps: jobSteps } );
+					return reject( { error: 'Import job failed', steps: jobSteps, launched } );
 				}
 
 				if ( jobStatus !== 'running' && completedAt ) {
@@ -332,7 +338,6 @@ ${ maybeExitPrompt }
 
 	try {
 		const results = await getResults();
-
 		if ( typeof results === 'string' ) {
 			overallStatus = results;
 		} else {
@@ -352,7 +357,7 @@ ${ maybeExitPrompt }
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
 		progressTracker.print( { clearAfter: true } );
-		exit.withError( getErrorMessage( importFailed ) );
+		exit.withError( getErrorMessage( importFailed, importFailed.launched ) );
 	}
 }
 

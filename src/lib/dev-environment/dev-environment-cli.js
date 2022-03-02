@@ -23,7 +23,10 @@ import {
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
+	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
+import { getVersionList } from './dev-environment-core';
+import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -31,7 +34,7 @@ const DEFAULT_SLUG = 'vip-local';
 
 export function handleCLIException( exception: Error ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( 'Environment not found.' === exception.message ) {
+	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
@@ -45,13 +48,7 @@ export function handleCLIException( exception: Error ) {
 	}
 }
 
-type EnvironmentNameOptions = {
-	slug: string,
-	app: string,
-	env: string,
-}
-
-export function getEnvironmentName( options: EnvironmentNameOptions ) {
+export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -65,7 +62,7 @@ export function getEnvironmentName( options: EnvironmentNameOptions ) {
 	return DEFAULT_SLUG;
 }
 
-export function getEnvironmentStartCommand( options: EnvironmentNameOptions ) {
+export function getEnvironmentStartCommand( options: EnvironmentNameOptions ): string {
 	if ( options.slug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ options.slug }`;
 	}
@@ -88,13 +85,6 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-type ComponentConfig = {
-	mode: 'local' | 'image' | 'inherit';
-	dir?: string,
-	image?: string,
-	tag?: string,
-}
-
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
@@ -111,82 +101,96 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 	};
 }
 
-type NewInstanceOptions = {
-	title: string,
-	multisite: boolean,
-	php: string,
-	wordpress: string,
-	muPlugins: string,
-	clientCode: string,
-	elasticsearch: string,
-	mariadb: string,
+export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
+	return {
+		title: appInfo.environment?.name || appInfo.name || '',
+		multisite: !! appInfo?.environment?.isMultisite,
+		mediaRedirectDomain: appInfo.environment?.primaryDomain,
+	};
 }
 
-type AppInfo = {
-	id: number,
-	name: string,
-	repository: string,
-	environment: {
-		name: string,
-		type: string,
-		branch: string,
-		isMultisite: boolean,
-		primaryDomain: string,
-	}
-}
-
-export async function promptForArguments( providedOptions: NewInstanceOptions, appInfo: AppInfo ) {
-	debug( 'Provided options', providedOptions );
+/**
+ * Prompt for arguments
+ * @param {InstanceOptions} preselectedOptions - options to be used without prompt
+ * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
+ * @returns {any} instance data
+ */
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions> ): Promise<InstanceData> {
+	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 
-	const name = appInfo?.environment?.name || appInfo?.name;
 	let multisiteText = 'Multisite';
 	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
 
-	if ( appInfo?.environment ) {
-		const isEnvMultisite = !! appInfo?.environment?.isMultisite;
-		multisiteText += ` (${ name } ${ isEnvMultisite ? 'IS' : 'is NOT' } multisite)`;
-		multisiteDefault = isEnvMultisite;
+	if ( defaultOptions.title ) {
+		multisiteText += ` (${ defaultOptions.title } ${ defaultOptions.multisite ? 'IS' : 'is NOT' } multisite)`;
+		multisiteDefault = defaultOptions.multisite;
 	}
 
-	const instanceData = {
-		wpTitle: providedOptions.title || await promptForText( 'WordPress site title', name || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: 'multisite' in providedOptions ? providedOptions.multisite : await promptForBoolean( multisiteText, multisiteDefault ),
-		elasticsearch: providedOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
-		mariadb: providedOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
-		mediaRedirectDomain: '',
-		wordpress: {},
-		muPlugins: {},
-		clientCode: {},
+	const instanceData: InstanceData = {
+		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
+		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
+		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
+		wordpress: {
+			mode: 'image',
+		},
+		muPlugins: {
+			mode: 'image',
+		},
+		clientCode: {
+			mode: 'image',
+		},
+		statsd: false,
+		phpmyadmin: false,
+		xdebug: false,
+		siteSlug: '',
 	};
 
-	const primaryDomain = appInfo?.environment?.primaryDomain;
-	if ( primaryDomain ) {
-		const mediaRedirectPromptText = `Would you like to redirect to ${ primaryDomain } for missing media files?`;
+	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
+		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
 		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
 		if ( setMediaRedirectDomain ) {
-			instanceData.mediaRedirectDomain = primaryDomain;
+			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain ?? '';
 		}
 	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
-		const option = providedOptions[ component ];
+		const option = ( preselectedOptions[ component ] ?? '' ).toString();
+		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
 
-		instanceData[ component ] = await processComponent( component, option );
+		const result = await processComponent( component, option, defaultValue );
+		if ( null === result ) {
+			throw new Error( 'processComponent() returned null' );
+		}
+
+		instanceData[ component ] = result;
 	}
 
+	for ( const service of [ 'statsd', 'phpmyadmin', 'xdebug' ] ) {
+		if ( service in preselectedOptions ) {
+			instanceData[ service ] = preselectedOptions[ service ];
+		} else if ( service in defaultOptions ) {
+			instanceData[ service ] = defaultOptions[ service ];
+		}
+	}
+
+	debug( 'Instance data after prompts', instanceData );
 	return instanceData;
 }
 
-async function processComponent( component: string, option: string ) {
+async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
+	debug( `processing a component '${ component }', with preselected/deafault - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
-	if ( option ) {
-		result = processComponentOptionInput( option, allowLocal );
+	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
+	if ( preselectedValue ) {
+		result = processComponentOptionInput( preselectedValue, allowLocal );
 	} else {
-		result = await promptForComponent( component, allowLocal );
+		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
 
 	while ( 'local' === result?.mode ) {
@@ -201,7 +205,7 @@ async function processComponent( component: string, option: string ) {
 		} else {
 			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
-			result = await promptForComponent( component, allowLocal );
+			result = await promptForComponent( component, allowLocal, defaultObject );
 		}
 	}
 
@@ -215,7 +219,7 @@ export function resolvePath( input: string ): string {
 	return path.resolve( resolvedPath );
 }
 
-export async function promptForText( message: string, initial: string ) {
+export async function promptForText( message: string, initial: string ): Promise<string> {
 	const nonEmptyValidator = value => {
 		if ( ( value || '' ).trim() ) {
 			return true;
@@ -231,10 +235,10 @@ export async function promptForText( message: string, initial: string ) {
 		validate: nonEmptyValidator,
 	} );
 
-	return result.input.trim();
+	return ( result?.input || '' ).trim();
 }
 
-export async function promptForBoolean( message: string, initial: boolean ) {
+export async function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
 	const confirm = new Confirm( {
 		message,
 		initial,
@@ -249,18 +253,18 @@ const componentDisplayNames = {
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string, allowLocal: boolean ): Promise<ComponentConfig> {
-	debug( `Prompting for ${ component }` );
+export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
+	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const choices = [];
+	const modChoices = [];
 
 	if ( allowLocal ) {
-		choices.push( {
+		modChoices.push( {
 			message: `local folder - where you already have ${ componentDisplayName } code`,
 			value: 'local',
 		} );
 	}
-	choices.push( {
+	modChoices.push( {
 		message: 'image - that gets automatically fetched',
 		value: 'image',
 	} );
@@ -270,13 +274,17 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		initialMode = 'local';
 	}
 
+	if ( defaultObject?.mode ) {
+		initialMode = defaultObject.mode;
+	}
+
 	let modeResult = initialMode;
-	const selectMode = choices.length > 1;
+	const selectMode = modChoices.length > 1;
 	if ( selectMode ) {
-		const initialModeIndex = choices.findIndex( choice => choice.value === initialMode );
+		const initialModeIndex = modChoices.findIndex( choice => choice.value === initialMode );
 		const select = new Select( {
 			message: `How would you like to source ${ componentDisplayName }`,
-			choices,
+			choices: modChoices,
 			initial: initialModeIndex,
 		} );
 
@@ -285,37 +293,87 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
-		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, '' );
+		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, defaultObject?.dir || '' );
 		return {
 			mode: modeResult,
 			dir: directoryPath,
 		};
 	}
-	if ( 'inherit' === modeResult ) {
-		return {
-			mode: modeResult,
-		};
-	}
 
-	// image
+	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
+		const tagChoices = await getTagChoices();
+
+		// First tag not: "Pre-Release"
+		const firstNonPreRelease = tagChoices.find( tag => {
+			return ! tag.match( /Pre\-Release/g );
+		} );
+
+		// Set initialTagIndex as the first non Pre-Release
+		let initialTagIndex = tagChoices.indexOf( firstNonPreRelease );
+
+		if ( defaultObject?.tag ) {
+			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
+			if ( defaultTagIndex !== -1 ) {
+				initialTagIndex = defaultTagIndex;
+			}
+		}
 		const selectTag = new Select( {
 			message,
-			choices: getWordpressImageTags(),
+			choices: tagChoices,
+			initial: initialTagIndex,
 		} );
 		const tag = await selectTag.run();
+
 		return {
 			mode: modeResult,
 			tag,
 		};
 	}
 
+	// image
 	return {
 		mode: modeResult,
 	};
 }
 
-function getWordpressImageTags(): string[] {
-	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
+export function addDevEnvConfigurationOptions( command ) {
+	return command
+		.option( 'wordpress', 'Use a specific WordPress version' )
+		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
+		.option( 'client-code', 'Use the client code from a local directory or VIP skeleton' )
+		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
+		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
+		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
+		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
+}
+
+/**
+ * Provides the list of tag choices for selection
+ */
+export async function getTagChoices() {
+	const tagChoices = [];
+	let tagFormatted, prerelease, mapping;
+	const versions = await getVersionList();
+	if ( versions.length < 1 ) {
+		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
+	}
+
+	for ( const version of versions ) {
+		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
+		prerelease = ( version.prerelease ) ? '(Pre-Release)' : '';
+
+		if ( version.tag !== version.ref ) {
+			mapping = `→ ${ prerelease } ${ version.ref }`;
+		} else {
+			mapping = '';
+		}
+
+		tagChoices.push( `${ tagFormatted } ${ mapping }` );
+	}
+
+	return tagChoices.sort().reverse();
 }

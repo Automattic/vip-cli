@@ -7,6 +7,7 @@
  */
 import xdgBasedir from 'xdg-basedir';
 import fs from 'fs';
+import enquirer from 'enquirer';
 import os from 'os';
 import path from 'path';
 
@@ -23,9 +24,11 @@ import { getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
+jest.mock( 'enquirer' );
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
@@ -55,7 +58,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const promise = startEnvironment( slug );
 
 			await expect( promise ).rejects.toEqual(
-				new Error( 'Environment not found.' )
+				new Error( DEV_ENVIRONMENT_NOT_FOUND )
 			);
 		} );
 	} );
@@ -67,7 +70,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const promise = destroyEnvironment( slug );
 
 			await expect( promise ).rejects.toEqual(
-				new Error( 'Environment not found.' )
+				new Error( DEV_ENVIRONMENT_NOT_FOUND )
 			);
 		} );
 	} );
@@ -232,6 +235,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			},
 		] )( 'should parse query result %p', async input => {
 			app.mockResolvedValue( input.response );
+
+			enquirer.prompt = jest.fn().mockResolvedValue( { env: '' } );
 
 			const result = await getApplicationInformation( input.appId, input.envType );
 
