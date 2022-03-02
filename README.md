@@ -27,6 +27,12 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.9.1 (2 March 2022)
+- #982  Remove unused dependencies - Fixes Error: Cannot find module 'core-js'
+- #978  [dev-env] Added phpmyadmin proxy value
+
+https://github.com/Automattic/vip/releases/tag/v2.9.1
+
 ### 2.9.0 (1 March 2022)
 - #966  [dev-env] Dynamic WordPress Image List
 - #975  [dev-env] prompt On Unselected Env
@@ -38,6 +44,8 @@ By default, we record information about the usage of this tool using an in-house
 - #977  Fix flow errors
 - #976  Fix/duplicate shortcut parameter
 - #968  Update minimum Node version
+
+https://github.com/Automattic/vip/releases/tag/v2.9.0
 
 ### 2.8.2 (27 January 2021)
 - #961  Fixes md5 calculation failing when search-replace is used
