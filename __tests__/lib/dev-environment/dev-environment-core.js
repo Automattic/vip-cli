@@ -95,7 +95,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
 
-			const expectedPath = path.normalize( `${ os.tmpdir() }/vip/dev-environment/${ name }` ); 
+			const expectedPath = path.normalize( `${ os.tmpdir() }/vip/dev-environment/${ name }` );
 
 			expect( filePath ).toBe( expectedPath );
 		} );
