@@ -338,7 +338,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
 		const match = tagRgx.exec( option );
 		if ( ! Array.isArray( match ) || match.length < 2 ) {
-			throw new Error( `Invalid WordPress selection: ${option}` );
+			throw new Error( `Invalid WordPress selection: ${ option }` );
 		}
 
 		const tag = match[ 1 ];

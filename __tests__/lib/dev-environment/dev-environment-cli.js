@@ -33,7 +33,7 @@ jest.mock( 'enquirer', () => {
 	};
 } );
 
-const testReleaseWP =  '5.9';
+const testReleaseWP = '5.9';
 
 const scope = nock( 'https://raw.githubusercontent.com' )
 	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
@@ -434,7 +434,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				defaultOptions[ input.service ] = input.default;
 			}
 			if ( 'wordpress' in input ) {
-				preselected['wordpress'] = input.wordpress;
+				preselected.wordpress = input.wordpress;
 			}
 			const result = await promptForArguments( preselected, defaultOptions );
 
