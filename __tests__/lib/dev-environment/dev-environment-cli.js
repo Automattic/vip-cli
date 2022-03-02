@@ -33,6 +33,8 @@ jest.mock( 'enquirer', () => {
 	};
 } );
 
+const testReleaseWP =  '5.9';
+
 const scope = nock( 'https://raw.githubusercontent.com' )
 	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
 	.reply( 200, [ {
@@ -124,11 +126,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
 			{ // base tag
-				param: '5.9',
+				param: testReleaseWP,
 				allowLocal: true,
 				expected: {
 					mode: 'image',
-					tag: '5.9',
+					tag: testReleaseWP,
 				},
 			},
 			{ // if local is not allowed
@@ -206,14 +208,14 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 		it.each( [
 			{
-				tag: '5.9',
+				tag: testReleaseWP,
 				expected: {
 					mode: 'image',
-					tag: '5.9',
+					tag: testReleaseWP,
 				},
 			},
 		] )( 'should return correct component for wordpress %p', async input => {
-			selectRunMock
+			await selectRunMock
 				.mockResolvedValueOnce( input.tag );
 
 			const result = await promptForComponent( 'wordpress', false );
@@ -268,6 +270,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					wordpress: testReleaseWP,
 					multisite: true,
 				},
 				default: {
@@ -276,6 +279,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					wordpress: testReleaseWP,
 					multisite: false,
 				},
 				default: {
@@ -284,6 +288,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					multisite: true,
@@ -292,13 +297,14 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					multisite: false,
 				},
 			},
 		] )( 'should handle multisite', async input => {
-			confirmRunMock.mockResolvedValue( input.default.multisite );
+			await confirmRunMock.mockResolvedValue( input.default.multisite );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
@@ -318,6 +324,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					title: 'a',
 					multisite: true,
 					mediaRedirectDomain: 'a',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					mediaRedirectDomain: 'b',
@@ -327,6 +334,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					multisite: true,
+					wordpress: testReleaseWP,
 				},
 				default: {
 					mediaRedirectDomain: 'b',
@@ -352,6 +360,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					wordpress: testReleaseWP,
 					mariadb: 'maria_a',
 					elasticsearch: 'elastic_a',
 				},
@@ -361,6 +370,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					mariadb: 'maria_b',
@@ -381,32 +391,38 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				service: 'statsd',
 				preselected: true,
 				expected: true,
+				wordpress: testReleaseWP,
 			},
 			{
 				service: 'statsd',
 				expected: false,
+				wordpress: testReleaseWP,
 			},
 			{
 				service: 'statsd',
 				default: true,
 				expected: true,
+				wordpress: testReleaseWP,
 			},
 			{
 				service: 'statsd',
 				preselected: false,
 				default: true,
 				expected: false,
+				wordpress: testReleaseWP,
 			},
 			{
 				service: 'phpmyadmin',
 				preselected: true,
 				default: true,
 				expected: true,
+				wordpress: testReleaseWP,
 			},
 			{
 				service: 'xdebug',
 				default: true,
 				expected: true,
+				wordpress: testReleaseWP,
 			},
 		] )( 'should handle auxiliary services', async input => {
 			const preselected = {};
@@ -416,6 +432,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			}
 			if ( 'default' in input ) {
 				defaultOptions[ input.service ] = input.default;
+			}
+			if ( 'wordpress' in input ) {
+				preselected['wordpress'] = input.wordpress;
 			}
 			const result = await promptForArguments( preselected, defaultOptions );
 

@@ -312,8 +312,8 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		} );
 
 		// First tag not: "Pre-Release"
-		const firstNonPreRelease = formatted.find( tag => {
-			return ! tag.match( /Pre\-Release/g );
+		const firstNonPreRelease = formatted.find( img => {
+			return ! img.match( /Pre\-Release/g );
 		} );
 
 		// Set initialTagIndex as the first non Pre-Release
@@ -336,10 +336,9 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		// Some of the options are like: '5.7   →  5.7.5'
 		// Extract first occurrence of something that looks like a tag
 		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
-		const match = await tagRgx.exec( option );
-
+		const match = tagRgx.exec( option );
 		if ( ! Array.isArray( match ) || match.length < 2 ) {
-			throw new Error( `Invalid WordPress Selection: ${ option }` );
+			throw new Error( `Invalid WordPress selection: ${option}` );
 		}
 
 		const tag = match[ 1 ];
