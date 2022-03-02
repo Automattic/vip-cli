@@ -307,9 +307,9 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 		// Tag strings come back from the api with excess whitespace
 		// This strips the whitespace for matching to the defaultObject.tag
-		const formatted = tagChoices.map( e => {
-			return e.trim();
-		});
+		const formatted = tagChoices.map( elm => {
+			return elm.trim();
+		} );
 
 		// First tag not: "Pre-Release"
 		const firstNonPreRelease = formatted.find( tag => {

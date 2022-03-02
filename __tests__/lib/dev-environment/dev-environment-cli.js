@@ -36,19 +36,18 @@ jest.mock( 'enquirer', () => {
 const scope = nock( 'https://raw.githubusercontent.com' )
 	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
 	.reply( 200, [ {
-			ref: '3ae9f9ffe311e546b0fd5f82d456b3539e3b8e74',
-			tag: '5.9.1',
-			cacheable: true,
-			locked: false,
-			prerelease: true,
-		}, {
-			ref: '5.9',
-			tag: '5.9',
-			cacheable: true,
-			locked: false,
-			prerelease: false,
-		}
-	] );
+		ref: '3ae9f9ffe311e546b0fd5f82d456b3539e3b8e74',
+		tag: '5.9.1',
+		cacheable: true,
+		locked: false,
+		prerelease: true,
+	}, {
+		ref: '5.9',
+		tag: '5.9',
+		cacheable: true,
+		locked: false,
+		prerelease: false,
+	} ] );
 scope.persist( true );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
