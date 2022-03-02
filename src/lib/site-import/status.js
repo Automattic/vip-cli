@@ -242,7 +242,7 @@ ${ maybeExitPrompt }
 					return reject( { error } );
 				}
 
-				const { importStatus, importJob } = status;
+				const { importStatus, importJob, launched } = status;
 
 				debug( { importJob } );
 
