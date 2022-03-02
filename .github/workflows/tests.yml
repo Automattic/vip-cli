@@ -2,6 +2,9 @@ name: Run VIP-cli tests
 on:
   pull_request
 
+env:
+  NODE_OPTIONS: --unhandled-rejections=warn
+
 jobs:
   Run_windows_tests:
     name: Run Windows Tests
