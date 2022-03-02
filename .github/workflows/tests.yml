@@ -7,6 +7,12 @@ jobs:
     name: Run Windows Tests
     runs-on: windows-latest
     steps:
+      # To prevent issues with fixtures on Windows tests
+      - name: Set git to use LF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
