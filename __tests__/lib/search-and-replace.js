@@ -27,7 +27,7 @@ jest.mock( 'node-fetch' );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 
 let searchReplaceBinaryFilename = `go-search-replace-test-${ process.platform }-${ process.arch }`;
-if ( 'windows' === process.platform ) {
+if ( 'win32' === process.platform ) {
 	searchReplaceBinaryFilename += '.exe';
 }
 
