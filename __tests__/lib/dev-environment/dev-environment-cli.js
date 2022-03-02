@@ -215,7 +215,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			},
 		] )( 'should return correct component for wordpress %p', async input => {
-			await selectRunMock
+			selectRunMock
 				.mockResolvedValueOnce( input.tag );
 
 			const result = await promptForComponent( 'wordpress', false );
@@ -304,7 +304,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			},
 		] )( 'should handle multisite', async input => {
-			await confirmRunMock.mockResolvedValue( input.default.multisite );
+			confirmRunMock.mockResolvedValue( input.default.multisite );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
