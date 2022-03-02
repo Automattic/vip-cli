@@ -305,23 +305,29 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		const message = `${ messagePrefix }Which version would you like`;
 		const tagChoices = await getTagChoices();
 
+		// Tag strings come back from the api with excess whitespace
+		// This strips the whitespace for matching to the defaultObject.tag
+		const formatted = tagChoices.map( e => {
+			return e.trim();
+		});
+
 		// First tag not: "Pre-Release"
-		const firstNonPreRelease = tagChoices.find( tag => {
+		const firstNonPreRelease = formatted.find( tag => {
 			return ! tag.match( /Pre\-Release/g );
 		} );
 
 		// Set initialTagIndex as the first non Pre-Release
-		let initialTagIndex = tagChoices.indexOf( firstNonPreRelease );
+		let initialTagIndex = formatted.indexOf( firstNonPreRelease );
 
 		if ( defaultObject?.tag ) {
-			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
+			const defaultTagIndex = formatted.indexOf( defaultObject.tag );
 			if ( defaultTagIndex !== -1 ) {
 				initialTagIndex = defaultTagIndex;
 			}
 		}
 		const selectTag = new Select( {
 			message,
-			choices: tagChoices,
+			choices: formatted,
 			initial: initialTagIndex,
 		} );
 		const option = await selectTag.run();
@@ -330,8 +336,9 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		// Some of the options are like: '5.7   →  5.7.5'
 		// Extract first occurrence of something that looks like a tag
 		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
-		const match = tagRgx.exec( option );
-		if ( null == match || match.length < 2 ) {
+		const match = await tagRgx.exec( option );
+
+		if ( ! Array.isArray( match ) || match.length < 2 ) {
 			throw new Error( `Invalid WordPress Selection: ${ option }` );
 		}
 
