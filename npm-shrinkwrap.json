@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.8.2",
+  "version": "2.9.1",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -5666,12 +5666,6 @@
       "requires": {
         "mkdir-p": "~0.0.4"
       }
-    },
-    "core-js": {
-      "version": "3.12.0",
-      "resolved": "https://registry.npmjs.org/core-js/-/core-js-3.12.0.tgz",
-      "integrity": "sha512-SaMnchL//WwU2Ot1hhkPflE8gzo7uq1FGvUJ8GKmi3TOU7rGTHIU+eir1WGf6qOtTyxdfdcp10yPdGZ59sQ3hw==",
-      "dev": true
     },
     "core-js-compat": {
       "version": "3.12.0",

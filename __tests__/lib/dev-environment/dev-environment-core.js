@@ -81,19 +81,25 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				() => getEnvironmentPath( '' )
 			).toThrow( new Error( 'Name was not provided' ) );
 		} );
+
 		it( 'should return correct location from xdg', async () => {
 			xdgBasedir.data = 'bar';
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
 
-			expect( filePath ).toBe( `${ xdgBasedir.data }/vip/dev-environment/${ name }` );
+			const expectedPath = path.normalize( `${ xdgBasedir.data }/vip/dev-environment/${ name }` );
+
+			expect( filePath ).toBe( expectedPath );
 		} );
-		it( 'should return tmp path if xdg is not avaiable', async () => {
+
+		it( 'should return tmp path if xdg is not available', async () => {
 			xdgBasedir.data = '';
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
 
-			expect( filePath ).toBe( `${ os.tmpdir() }/vip/dev-environment/${ name }` );
+			const expectedPath = path.normalize( `${ os.tmpdir() }/vip/dev-environment/${ name }` );
+
+			expect( filePath ).toBe( expectedPath );
 		} );
 	} );
 	describe( 'getApplicationInformation', () => {
