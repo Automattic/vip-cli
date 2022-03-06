@@ -69,6 +69,7 @@ export const acceptedExtensions = [
 	'onetoc', ' onetoc2', 'onetmp', 'onepkg', 'oxps',
 	'xps',
 	'odt', 'odp', 'ods', 'odg', 'odc', 'odb', 'odf',
+	'webp',
 	'wp', 'wpd',
 	'key', 'numbers', 'pages',
 ];
