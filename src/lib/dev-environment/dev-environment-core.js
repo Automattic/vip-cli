@@ -497,7 +497,7 @@ async function updateWordPressImage( slug, options ) {
 		// // Write new data and stage for rebuild
 		current.wordpress.tag = version.tag;
 		options.skipRebuild = false;
-		prepareLandoEnv( current, instancePath );
+		await updateEnvironment( current );
 	}
 
 	return;
