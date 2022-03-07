@@ -42,10 +42,11 @@
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
+    "clean": "rimraf dist",
     "prepare": "npm run build",
     "prepack": "npm run prepareConfig:publish",
     "postinstall": "node ./helpers/check-version.js",
-    "build": "npm run prepareConfig:local && babel src -d dist",
+    "build": "npm run clean && npm run prepareConfig:local && babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
@@ -100,7 +101,8 @@
     "jest": "27.2.1",
     "nock": "13.0.11",
     "prettier": "npm:wp-prettier@2.0.5",
-    "publish-please": "5.5.2"
+    "publish-please": "5.5.2",
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
