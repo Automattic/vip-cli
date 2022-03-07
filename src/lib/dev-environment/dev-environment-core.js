@@ -68,9 +68,9 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	await updateWordPressImage( slug, options );
+	const updated = await updateWordPressImage( slug, options );
 
-	if ( options.skipRebuild ) {
+	if ( options.skipRebuild && !updated ) {
 		await landoStart( instancePath );
 	} else {
 		await landoRebuild( instancePath );
@@ -440,15 +440,27 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - A choice to use a different image
  *
  * @param  {Object=} slug slug
- * @param  {Object=} options options
+ * @returns {boolean}
  */
-async function updateWordPressImage( slug, options ) {
+async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
 	const instancePath = getEnvironmentPath( slug );
+	let message;
 
-	// Get the current image tag that the WP image is currently using in the .lando.yml file
-	const current = readEnvironmentData( slug );
+	// Get the current environment configuration
+	try {
+		const current = readEnvironmentData( slug );
+	} catch ( error ) {
+		// This can throw an exception if the env is build with older vip version
+		if ( 'ENOENT' === error.code ) {
+			message = 'Environment was created before update was supported.\n\n'
+			message += 'To update environment please destroy it and create a new one.';
+		} else {
+			message = `An error prevented reading the configuration of: ${slug}\n\n ${error}`;
+		}
+		handleCLIException( new Error( message ) );
+	}
 
 	// filter
 	const filteredVersions = versions.filter( vsn => {
@@ -465,7 +477,7 @@ async function updateWordPressImage( slug, options ) {
 	// If the currently used version is the most up to date: exit.
 	if ( current.wordpress.tag === newestWordPressImage.ref ) {
 		console.log( 'Environment WordPress version is: ' + chalk.green( current.wordpress.tag ) + '  ... 😎 nice! ' );
-		return;
+		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
@@ -494,13 +506,14 @@ async function updateWordPressImage( slug, options ) {
 		const choice = await promptForComponent( 'wordpress' );
 		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 
-		// // Write new data and stage for rebuild
+		// Write new data and stage for rebuild
 		current.wordpress.tag = version.tag;
-		options.skipRebuild = false;
 		await updateEnvironment( current );
+
+		return true;
 	}
 
-	return;
+	return false;
 }
 
 /**
