@@ -68,7 +68,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	await updateWordPressImage( instancePath, options );
+	await updateWordPressImage( slug, options );
 
 	if ( options.skipRebuild ) {
 		await landoStart( instancePath );
@@ -442,19 +442,14 @@ export async function importMediaPath( slug: string, filePath: string ) {
  * @param  {Object=} instancePath Path to local profile
  * @param  {Object=} options options
  */
-async function updateWordPressImage( instancePath, options ) {
+async function updateWordPressImage( slug, options ) {
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
-	const imgRgx = new RegExp( /ghcr\.io\/.*wordpress\:(\d+\.\d+(?:\.\d+)?)/ );
+	const instancePath = getEnvironmentPath( slug );
 	const landoFile = `${ instancePath }/.lando.yml`;
-	let currentWordPressVersion;
 
 	// Get the current image tag that the WP image is currently using in the .lando.yml file
-	const data = fs.readFileSync( landoFile, { encoding: 'utf8', flag: 'r' } );
-	const find = imgRgx.exec( data );
-	if ( Array.isArray( find ) && find.length >= 2 ) {
-		currentWordPressVersion = find[ 1 ];
-	}
+	const current = readEnvironmentData( slug );
 
 	// filter
 	const filteredVersions = versions.filter( vsn => {
@@ -469,17 +464,17 @@ async function updateWordPressImage( instancePath, options ) {
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressVersion === newestWordPressImage.ref ) {
-		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressVersion ) + '  ... 😎 nice! ' );
+	if ( current.wordpress.tag === newestWordPressImage.ref ) {
+		console.log( 'Environment WordPress version is: ' + chalk.green( current.wordpress.tag ) + '  ... 😎 nice! ' );
 		return;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressVersion );
+	const match = filteredVersions.find( ( { ref } ) => ref === current.wordpress.tag );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
-		console.log( `Installed WordPress: ${ currentWordPressVersion } has no available container image in repository. ` );
+		console.log( `Installed WordPress: ${ current.wordpress.tag } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
@@ -494,16 +489,15 @@ async function updateWordPressImage( instancePath, options ) {
 
 	// If the user takes the new WP version path
 	if ( confirm.upgrade ) {
-		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressVersion ) + ' to:' );
+		console.log( 'Upgrading from: ' + chalk.yellow( current.wordpress.tag ) + ' to:' );
 
 		// Select a new image
 		const choice = await promptForComponent( 'wordpress' );
 		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
-		const selectedImage = `ghcr.io/automattic/vip-container-images/wordpress:${ version.tag }`;
 
-		// Change the lando file and rebuild.
-		const edit = data.replace( /ghcr\.io\/.*wordpress\:.*\d+\.\d+(?:\.\d+)?/g, selectedImage );
-		fs.writeFileSync( landoFile, edit );
+		// Write new data
+		current.wordpress.tag = version.tag;
+		prepareLandoEnv( current, instancePath );
 
 		// Stage for rebuild
 		options.skipRebuild = false;
