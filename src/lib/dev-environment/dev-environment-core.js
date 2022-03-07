@@ -68,7 +68,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const updated = await updateWordPressImage( slug, options );
+	const updated = await updateWordPressImage( slug );
 
 	if ( options.skipRebuild && !updated ) {
 		await landoStart( instancePath );
