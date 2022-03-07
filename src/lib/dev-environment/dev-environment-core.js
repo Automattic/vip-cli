@@ -22,7 +22,7 @@ import copydir from 'copy-dir';
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
-import { printTable, promptForComponent, resolvePath } from './dev-environment-cli';
+import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
 import {
 	DEV_ENVIRONMENT_NOT_FOUND,
@@ -70,7 +70,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 
 	const updated = await updateWordPressImage( slug );
 
-	if ( options.skipRebuild && !updated ) {
+	if ( options.skipRebuild && ! updated ) {
 		await landoStart( instancePath );
 	} else {
 		await landoRebuild( instancePath );
@@ -440,24 +440,24 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - A choice to use a different image
  *
  * @param  {Object=} slug slug
- * @returns {boolean}
+ * @return {boolean} boolean
  */
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
-	const instancePath = getEnvironmentPath( slug );
-	let message;
+	let message, envData, currentWordPressTag;
 
 	// Get the current environment configuration
 	try {
-		const current = readEnvironmentData( slug );
+		envData = readEnvironmentData( slug );
+		currentWordPressTag = envData.wordpress.tag;
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
-			message = 'Environment was created before update was supported.\n\n'
+			message = 'Environment was created before update was supported.\n\n';
 			message += 'To update environment please destroy it and create a new one.';
 		} else {
-			message = `An error prevented reading the configuration of: ${slug}\n\n ${error}`;
+			message = `An error prevented reading the configuration of: ${ slug }\n\n ${ error }`;
 		}
 		handleCLIException( new Error( message ) );
 	}
@@ -475,17 +475,17 @@ async function updateWordPressImage( slug ) {
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( current.wordpress.tag === newestWordPressImage.ref ) {
-		console.log( 'Environment WordPress version is: ' + chalk.green( current.wordpress.tag ) + '  ... 😎 nice! ' );
+	if ( currentWordPressTag === newestWordPressImage.ref ) {
+		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressTag ) + '  ... 😎 nice! ' );
 		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = filteredVersions.find( ( { ref } ) => ref === current.wordpress.tag );
+	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressTag );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
-		console.log( `Installed WordPress: ${ current.wordpress.tag } has no available container image in repository. ` );
+		console.log( `Installed WordPress: ${ currentWordPressTag } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
@@ -500,15 +500,15 @@ async function updateWordPressImage( slug ) {
 
 	// If the user takes the new WP version path
 	if ( confirm.upgrade ) {
-		console.log( 'Upgrading from: ' + chalk.yellow( current.wordpress.tag ) + ' to:' );
+		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
 		const choice = await promptForComponent( 'wordpress' );
 		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 
 		// Write new data and stage for rebuild
-		current.wordpress.tag = version.tag;
-		await updateEnvironment( current );
+		envData.wordpress.tag = version.tag;
+		await updateEnvironment( envData );
 
 		return true;
 	}
