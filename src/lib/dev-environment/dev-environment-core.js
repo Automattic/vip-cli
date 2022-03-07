@@ -439,14 +439,13 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - If there is a newer version of the WordPress version currently used
  *   - A choice to use a different image
  *
- * @param  {Object=} instancePath Path to local profile
+ * @param  {Object=} slug slug
  * @param  {Object=} options options
  */
 async function updateWordPressImage( slug, options ) {
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
 	const instancePath = getEnvironmentPath( slug );
-	const landoFile = `${ instancePath }/.lando.yml`;
 
 	// Get the current image tag that the WP image is currently using in the .lando.yml file
 	const current = readEnvironmentData( slug );
@@ -495,12 +494,10 @@ async function updateWordPressImage( slug, options ) {
 		const choice = await promptForComponent( 'wordpress' );
 		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 
-		// Write new data
+		// // Write new data and stage for rebuild
 		current.wordpress.tag = version.tag;
-		prepareLandoEnv( current, instancePath );
-
-		// Stage for rebuild
 		options.skipRebuild = false;
+		prepareLandoEnv( current, instancePath );
 	}
 
 	return;
