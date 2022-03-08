@@ -102,7 +102,7 @@
     "nock": "13.0.11",
     "prettier": "npm:wp-prettier@2.0.5",
     "publish-please": "5.5.2",
-    "rimraf": "^3.0.2"
+    "rimraf": "3.0.2"
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
