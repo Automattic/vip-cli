@@ -43,10 +43,10 @@
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
     "clean": "rimraf dist",
-    "prepare": "npm run build",
+    "prepare": "npm run clean && npm run build",
     "prepack": "npm run prepareConfig:publish",
     "postinstall": "node ./helpers/check-version.js",
-    "build": "npm run clean && npm run prepareConfig:local && babel src -d dist",
+    "build": "npm run prepareConfig:local && babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
