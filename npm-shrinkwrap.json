@@ -5392,8 +5392,8 @@
       }
     },
     "cli-table": {
-      "version": "github:automattic/cli-table#7b14232ba779929e1859b267bf753c150d90a618",
-      "from": "github:automattic/cli-table#7b14232",
+      "version": "git+ssh://git@github.com/automattic/cli-table.git#7b14232ba779929e1859b267bf753c150d90a618",
+      "from": "cli-table@github:automattic/cli-table#7b14232",
       "requires": {
         "chalk": "^2.4.1",
         "wcwidth": "^1.0.1"
@@ -6602,8 +6602,8 @@
       "dev": true
     },
     "eslint-config-wpvip": {
-      "version": "github:automattic/eslint-config-wpvip#c6605d1c3a545d43ac2149cd464ec3c38ebc58d5",
-      "from": "github:automattic/eslint-config-wpvip#c6605d1",
+      "version": "git+ssh://git@github.com/automattic/eslint-config-wpvip.git#c6605d1c3a545d43ac2149cd464ec3c38ebc58d5",
+      "from": "eslint-config-wpvip@github:automattic/eslint-config-wpvip#c6605d1",
       "dev": true,
       "requires": {
         "eslint-config-wpcalypso": "^4.0.0"
@@ -10021,8 +10021,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+https://github.com/Automattic/lando-cli.git#57d2cd8a23e73b3e5165c3e2862b42aa0881ef2f",
-      "from": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
+      "version": "git+ssh://git@github.com/Automattic/lando-cli.git#57d2cd8a23e73b3e5165c3e2862b42aa0881ef2f",
+      "from": "lando@git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
       "requires": {
         "@lando/platformsh": "^0.6.0",
         "axios": "0.21.4",
