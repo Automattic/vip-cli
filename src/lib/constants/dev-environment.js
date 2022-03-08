@@ -21,4 +21,3 @@ export const DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI = '/Automattic/vip-container
 
 export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'worpress-versions.json';
 
-export const DEV_ENVIRONMENT_WORDPRESS_VERSION_FILE = 'wordpress/wp-includes/version.php';
