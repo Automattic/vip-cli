@@ -27,7 +27,7 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 ### 2.9.2 (9 March 2022)
-- #966  [dev-env] Corrections of text for -h menu in dev-env create
+- #980  [dev-env] Fix/tag formatting on stapled images
 
 https://github.com/Automattic/vip/releases/tag/v2.9.2
 
