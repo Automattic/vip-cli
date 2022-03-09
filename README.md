@@ -28,6 +28,9 @@ By default, we record information about the usage of this tool using an in-house
 ## Changelog
 ### 2.9.2 (9 March 2022)
 - #980  [dev-env] Fix/tag formatting on stapled images
+- #986  Clean the build folder prior to rebuilding it
+- #985  Adding webP to the list of accepted extensions for files
+- #972  Run tests in Windows Env
 
 https://github.com/Automattic/vip/releases/tag/v2.9.2
 
