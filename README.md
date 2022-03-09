@@ -26,6 +26,10 @@ For help with contributing to this project, including instructions for local dev
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
 ## Changelog
+### 2.9.2 (9 March 2022)
+- #966  [dev-env] Corrections of text for -h menu in dev-env create
+
+https://github.com/Automattic/vip/releases/tag/v2.9.2
 
 ### 2.9.1 (2 March 2022)
 - #982  Remove unused dependencies - Fixes Error: Cannot find module 'core-js'
