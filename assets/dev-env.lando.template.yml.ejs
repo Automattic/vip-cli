@@ -41,7 +41,7 @@ services:
       command: run.sh
       working_dir: /wp
       healthcheck:
-        test: 'cat /wp/wp-settings.php'
+        test: 'cat /wp/wp-includes/pomo/mo.php'
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
