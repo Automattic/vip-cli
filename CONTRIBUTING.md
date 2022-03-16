@@ -131,3 +131,9 @@ For these cases:
 1. Follow the release steps outlined above (as a `patch` release).
 
 Then, repeat for any additional versions that we need to patch.
+
+### go-search-replace binaries
+
+Some unit tests require some go-search-replace executable binary files to run. Binaries files for several OS architectures can be downloaded from https://github.com/Automattic/go-search-replace/releases/
+
+If, for some reason, you need to compile these binaries yourself, please follow instructions at https://github.com/Automattic/go-search-replace
