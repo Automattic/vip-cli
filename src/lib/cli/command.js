@@ -68,8 +68,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 		this.showVersion();
 	}
 
-	if ( options.debug ) {
-	  debugLib.enable(options.debug === true ? '*' : options.debug );
+	if ( options.debug || options.d ) {
+		debugLib.enable( options.debug === true ? '*' : options.debug );
 	}
 
 	// If we have both an --app/--env and an alias, we need to give a warning
@@ -103,7 +103,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		switch ( command.usage ) {
 			case 'help':
 			case 'version':
-		  	case 'debug':
+			case 'debug':
 				return false;
 
 			default:
@@ -528,7 +528,7 @@ export default function( opts: any ): args {
 	// Add help and version to all subcommands
 	args.option( 'help', 'Output the help for the (sub)command' );
 	args.option( 'version', 'Output the version number' );
-  	args.option( 'debug', 'Activate debug output' );
+	args.option( 'debug', 'Activate debug output' );
 
 	return args;
 }
