@@ -25,6 +25,7 @@ import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
 import * as exit from './exit';
+import debugLib from 'debug';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -57,7 +58,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	//   Usage: vip command subcommand <arg1> <arg2> [options]
 	const name = _opts.usage || null;
 
-	const options = this.parse( parsedAlias.argv, { help: false, name, version: false } );
+	const options = this.parse( parsedAlias.argv, { help: false, name, version: false, debug: false } );
 
 	if ( options.h || options.help ) {
 		this.showHelp();
@@ -65,6 +66,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	if ( options.v || options.version ) {
 		this.showVersion();
+	}
+
+	if ( options.debug ) {
+	  debugLib.enable(options.debug === true ? '*' : options.debug );
 	}
 
 	// If we have both an --app/--env and an alias, we need to give a warning
@@ -98,6 +103,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		switch ( command.usage ) {
 			case 'help':
 			case 'version':
+		  	case 'debug':
 				return false;
 
 			default:
@@ -522,6 +528,7 @@ export default function( opts: any ): args {
 	// Add help and version to all subcommands
 	args.option( 'help', 'Output the help for the (sub)command' );
 	args.option( 'version', 'Output the version number' );
+  	args.option( 'debug', 'Activate debug output' );
 
 	return args;
 }
