@@ -19,5 +19,7 @@ export const DEV_ENVIRONMENT_RAW_GITHUB_HOST = 'raw.githubusercontent.com';
 
 export const DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI = '/Automattic/vip-container-images/master/wordpress/versions.json';
 
-export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'worpress-versions.json';
+export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'wordpress-versions.json';
+
+export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 60;
 
