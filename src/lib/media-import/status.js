@@ -120,7 +120,7 @@ function buildErrorMessage( importFailed ) {
 	}
 
 	message += chalk.red( importFailed.error ? importFailed.error : importFailed );
-	message += '\n\nPlease check the status of your Import using `vip import status @appId.production`';
+	message += '\n\nPlease check the status of your Import using `vip import media status @mysite.production`';
 	message += '\n\nIf this error persists and you are not sure on how to fix, please contact support\n';
 	return message;
 }
