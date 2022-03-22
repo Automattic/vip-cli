@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.7.0",
+  "version": "2.9.2",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -5392,8 +5392,8 @@
       }
     },
     "cli-table": {
-      "version": "github:automattic/cli-table#7b14232ba779929e1859b267bf753c150d90a618",
-      "from": "github:automattic/cli-table#7b14232",
+      "version": "git+ssh://git@github.com/automattic/cli-table.git#7b14232ba779929e1859b267bf753c150d90a618",
+      "from": "cli-table@github:automattic/cli-table#7b14232",
       "requires": {
         "chalk": "^2.4.1",
         "wcwidth": "^1.0.1"
@@ -5667,12 +5667,6 @@
         "mkdir-p": "~0.0.4"
       }
     },
-    "core-js": {
-      "version": "3.12.0",
-      "resolved": "https://registry.npmjs.org/core-js/-/core-js-3.12.0.tgz",
-      "integrity": "sha512-SaMnchL//WwU2Ot1hhkPflE8gzo7uq1FGvUJ8GKmi3TOU7rGTHIU+eir1WGf6qOtTyxdfdcp10yPdGZ59sQ3hw==",
-      "dev": true
-    },
     "core-js-compat": {
       "version": "3.12.0",
       "resolved": "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.12.0.tgz",
@@ -5834,9 +5828,9 @@
       "integrity": "sha512-P6twpd70BcPK34K26uJ1KT3wlhpuOAPoMwJzpsIWUxHZ7wpmbdZL/hQqBDfz7hGurYSa5PhzdhDHtt319hL3ig=="
     },
     "debug": {
-      "version": "4.3.2",
-      "resolved": "https://registry.npmjs.org/debug/-/debug-4.3.2.tgz",
-      "integrity": "sha512-mOp8wKcvj7XxC78zLgw/ZA+6TSgkoE2C/ienthhRD298T7UNwAg9diBpLRxC0mOezLl4B0xV7M0cCO6P/O0Xhw==",
+      "version": "4.3.3",
+      "resolved": "https://registry.npmjs.org/debug/-/debug-4.3.3.tgz",
+      "integrity": "sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==",
       "requires": {
         "ms": "2.1.2"
       }
@@ -6608,8 +6602,8 @@
       "dev": true
     },
     "eslint-config-wpvip": {
-      "version": "github:automattic/eslint-config-wpvip#c6605d1c3a545d43ac2149cd464ec3c38ebc58d5",
-      "from": "github:automattic/eslint-config-wpvip#c6605d1",
+      "version": "git+ssh://git@github.com/automattic/eslint-config-wpvip.git#c6605d1c3a545d43ac2149cd464ec3c38ebc58d5",
+      "from": "eslint-config-wpvip@github:automattic/eslint-config-wpvip#c6605d1",
       "dev": true,
       "requires": {
         "eslint-config-wpcalypso": "^4.0.0"
@@ -7571,9 +7565,9 @@
       "dev": true
     },
     "flow-bin": {
-      "version": "0.150.0",
-      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.150.0.tgz",
-      "integrity": "sha512-s+0dcKJnZZO6mkS92YtJzBZ6vq7i1o77+NggEiiefPpCVsehwPlyRLmEnb6XN9OI5OfXp+kFnZt4q8a3zLNuUg==",
+      "version": "0.172.0",
+      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.172.0.tgz",
+      "integrity": "sha512-v9KolEk3qd+wFc2ABPaSr5/7VWbHOjdAzRaWwynEtaeMcKN0awlx0Q7b71g/XgVf/fWMR+K8q+3s/TCH+Gky/Q==",
       "dev": true
     },
     "follow-redirects": {
@@ -10027,8 +10021,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+https://github.com/Automattic/lando-cli.git#57d2cd8a23e73b3e5165c3e2862b42aa0881ef2f",
-      "from": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
+      "version": "git+ssh://git@github.com/Automattic/lando-cli.git#57d2cd8a23e73b3e5165c3e2862b42aa0881ef2f",
+      "from": "lando@git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
       "requires": {
         "@lando/platformsh": "^0.6.0",
         "axios": "0.21.4",
@@ -10069,6 +10063,14 @@
           "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-3.0.0.tgz",
           "integrity": "sha1-7QMXwyIGT3lGbAKWa922Bas32Zg="
         },
+        "cli-table": {
+          "version": "0.3.11",
+          "resolved": "https://registry.npmjs.org/cli-table/-/cli-table-0.3.11.tgz",
+          "integrity": "sha512-IqLQi4lO0nIB4tcdTpN4LCB9FI3uqrJZK7RC515EnhZ6qBaglkIgICb1wjeAqpdoOabm1+SuQtkXIPdYC93jhQ==",
+          "requires": {
+            "colors": "1.0.3"
+          }
+        },
         "cliui": {
           "version": "4.1.0",
           "resolved": "https://registry.npmjs.org/cliui/-/cliui-4.1.0.tgz",
@@ -10078,6 +10080,11 @@
             "strip-ansi": "^4.0.0",
             "wrap-ansi": "^2.0.0"
           }
+        },
+        "colors": {
+          "version": "1.0.3",
+          "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
+          "integrity": "sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs="
         },
         "find-up": {
           "version": "3.0.0",

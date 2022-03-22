@@ -20,6 +20,7 @@ import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doe
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, getOptionsFromAppInfo } from '../lib/dev-environment/dev-environment-cli';
+import type { InstanceOptions } from '../lib/dev-environment/types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -30,18 +31,18 @@ const examples = [
 	},
 	{
 		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create`,
-		description: 'Creates a local dev environment for prodaction site for id 123',
+		description: 'Creates a local dev environment for production site for id 123',
 	},
 	{
-		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug 'my_site'`,
-		description: 'Creates a local dev environment for prodaction site for id 123 aliased as "my_site"',
+		usage: `vip ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug=my_site`,
+		description: 'Creates a local dev environment aliased as "my_site"',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug test`,
-		description: 'Creates a blank local dev environment with custom name "test", this enables to create multiple independent environments',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug=test`,
+		description: 'Assigning unique slugs to environments allows multiple environments to be created.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress "5.8" --client-code "~/git/my_code"`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --client-code="~/git/my_code"`,
 		description: 'Creates a local multisite dev environment using WP 5.8 and client code is expected to be in "~/git/my_code"',
 	},
 ];
@@ -68,7 +69,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions = {};
+	let defaultOptions: $Shape<InstanceOptions> = {};
 	try {
 		if ( opt.app ) {
 			const appInfo = await getApplicationInformation( opt.app, opt.env );

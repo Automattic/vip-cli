@@ -7,6 +7,7 @@
  * External dependencies
  */
 import debugLib from 'debug';
+import os from 'os';
 import path from 'path';
 import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
@@ -24,6 +25,22 @@ import App from 'lando/lib/app';
 const DEBUG_KEY = '@automattic/vip:bin:dev-environment-lando';
 const debug = debugLib( DEBUG_KEY );
 
+let landoConfRoot;
+
+/**
+ * @returns {string} User configuration root directory (aka userConfRoot in Lando)
+ */
+function getLandoUserConfigurationRoot() {
+	if ( ! landoConfRoot ) {
+		landoConfRoot = path.join( os.tmpdir(), 'lando' );
+	}
+
+	return landoConfRoot;
+}
+
+/**
+ * @returns {object} Lando configuration
+ */
 function getLandoConfig() {
 	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
 
@@ -44,6 +61,7 @@ function getLandoConfig() {
 			},
 		],
 		proxyName: 'vip-dev-env-proxy',
+		userConfRoot: getLandoUserConfigurationRoot(),
 	};
 }
 

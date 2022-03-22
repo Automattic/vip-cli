@@ -25,7 +25,8 @@ import {
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
 } from '../constants/dev-environment';
-import { InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
+import { getVersionList } from './dev-environment-core';
+import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -47,7 +48,7 @@ export function handleCLIException( exception: Error ) {
 	}
 }
 
-export function getEnvironmentName( options: EnvironmentNameOptions ) {
+export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -61,7 +62,7 @@ export function getEnvironmentName( options: EnvironmentNameOptions ) {
 	return DEFAULT_SLUG;
 }
 
-export function getEnvironmentStartCommand( options: EnvironmentNameOptions ) {
+export function getEnvironmentStartCommand( options: EnvironmentNameOptions ): string {
 	if ( options.slug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ options.slug }`;
 	}
@@ -101,12 +102,8 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 }
 
 export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
-	if ( ! appInfo ) {
-		return {};
-	}
-
 	return {
-		title: appInfo.environment?.name || appInfo.name,
+		title: appInfo.environment?.name || appInfo.name || '',
 		multisite: !! appInfo?.environment?.isMultisite,
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
 	};
@@ -118,7 +115,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
  * @returns {any} instance data
  */
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions ): InstanceData {
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions> ): Promise<InstanceData> {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
@@ -137,27 +134,39 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
-		wordpress: {},
-		muPlugins: {},
-		clientCode: {},
+		wordpress: {
+			mode: 'image',
+		},
+		muPlugins: {
+			mode: 'image',
+		},
+		clientCode: {
+			mode: 'image',
+		},
 		statsd: false,
 		phpmyadmin: false,
 		xdebug: false,
+		siteSlug: '',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
 		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
 		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
 		if ( setMediaRedirectDomain ) {
-			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain;
+			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain ?? '';
 		}
 	}
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
-		const option = preselectedOptions[ component ];
-		const defaultValue = defaultOptions[ component ];
+		const option = ( preselectedOptions[ component ] ?? '' ).toString();
+		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
 
-		instanceData[ component ] = await processComponent( component, option, defaultValue );
+		const result = await processComponent( component, option, defaultValue );
+		if ( null === result ) {
+			throw new Error( 'processComponent() returned null' );
+		}
+
+		instanceData[ component ] = result;
 	}
 
 	for ( const service of [ 'statsd', 'phpmyadmin', 'xdebug' ] ) {
@@ -210,7 +219,7 @@ export function resolvePath( input: string ): string {
 	return path.resolve( resolvedPath );
 }
 
-export async function promptForText( message: string, initial: string ) {
+export async function promptForText( message: string, initial: string ): Promise<string> {
 	const nonEmptyValidator = value => {
 		if ( ( value || '' ).trim() ) {
 			return true;
@@ -229,7 +238,7 @@ export async function promptForText( message: string, initial: string ) {
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForBoolean( message: string, initial: boolean ) {
+export async function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
 	const confirm = new Confirm( {
 		message,
 		initial,
@@ -244,7 +253,7 @@ const componentDisplayNames = {
 	clientCode: 'site-code',
 };
 
-export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig ): Promise<ComponentConfig> {
+export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const modChoices = [];
@@ -294,20 +303,45 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	// image with selection
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
-		const tagChoices = getWordpressImageTags();
-		let initialTagIndex = 0;
+		const tagChoices = await getTagChoices();
+
+		// Tag strings come back from the api with excess whitespace
+		// This strips the whitespace for matching to the defaultObject.tag
+		const formatted = tagChoices.map( elm => {
+			return elm.trim();
+		} );
+
+		// First tag not: "Pre-Release"
+		const firstNonPreRelease = formatted.find( img => {
+			return ! img.match( /Pre\-Release/g );
+		} );
+
+		// Set initialTagIndex as the first non Pre-Release
+		let initialTagIndex = formatted.indexOf( firstNonPreRelease );
+
 		if ( defaultObject?.tag ) {
-			const defaultTagIndex = tagChoices.indexOf( defaultObject.tag );
+			const defaultTagIndex = formatted.indexOf( defaultObject.tag );
 			if ( defaultTagIndex !== -1 ) {
 				initialTagIndex = defaultTagIndex;
 			}
 		}
 		const selectTag = new Select( {
 			message,
-			choices: tagChoices,
+			choices: formatted,
 			initial: initialTagIndex,
 		} );
-		const tag = await selectTag.run();
+		const option = await selectTag.run();
+
+		// Validate the input
+		// Some of the options are like: '5.7   →  5.7.5'
+		// Extract first occurrence of something that looks like a tag
+		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
+		const match = tagRgx.exec( option );
+		if ( ! Array.isArray( match ) || match.length < 2 ) {
+			throw new Error( `Invalid WordPress selection: ${ option }` );
+		}
+
+		const tag = match[ 1 ];
 
 		return {
 			mode: modeResult,
@@ -331,9 +365,32 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
-		.option( 'media-redirect-domain', 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
+		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
 }
 
-function getWordpressImageTags(): string[] {
-	return [ '5.8.1', '5.8', '5.7.3', '5.7.2' ];
+/**
+ * Provides the list of tag choices for selection
+ */
+export async function getTagChoices() {
+	const tagChoices = [];
+	let tagFormatted, prerelease, mapping;
+	const versions = await getVersionList();
+	if ( versions.length < 1 ) {
+		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
+	}
+
+	for ( const version of versions ) {
+		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
+		prerelease = ( version.prerelease ) ? '(Pre-Release)' : '';
+
+		if ( version.tag !== version.ref ) {
+			mapping = `→ ${ prerelease } ${ version.ref }`;
+		} else {
+			mapping = '';
+		}
+
+		tagChoices.push( `${ tagFormatted } ${ mapping }` );
+	}
+
+	return tagChoices.sort().reverse();
 }

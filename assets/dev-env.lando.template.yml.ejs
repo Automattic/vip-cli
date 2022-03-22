@@ -7,6 +7,8 @@ proxy:
 <% if ( multisite ) { %>
     - '*.<%= siteSlug %>.vipdev.lndo.site'
 <% } %>
+  phpmyadmin:
+    - <%= siteSlug %>-pma.vipdev.lndo.site
 services:
 
   devtools:
@@ -26,7 +28,7 @@ services:
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.3
+      image: ghcr.io/automattic/vip-container-images/nginx:1.21.6
       command: nginx -g "daemon off;"
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf

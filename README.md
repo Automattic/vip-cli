@@ -26,6 +26,56 @@ For help with contributing to this project, including instructions for local dev
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
 ## Changelog
+### 2.9.2 (9 March 2022)
+- #980  [dev-env] Fix/tag formatting on stapled images
+- #986  Clean the build folder prior to rebuilding it
+- #985  Adding webP to the list of accepted extensions for files
+- #972  Run tests in Windows Env
+
+https://github.com/Automattic/vip/releases/tag/v2.9.2
+
+### 2.9.1 (2 March 2022)
+- #982  Remove unused dependencies - Fixes Error: Cannot find module 'core-js'
+- #978  [dev-env] Added phpmyadmin proxy value
+
+https://github.com/Automattic/vip/releases/tag/v2.9.1
+
+### 2.9.0 (1 March 2022)
+- #966  [dev-env] Dynamic WordPress Image List
+- #975  [dev-env] prompt On Unselected Env
+- #974  [dev-env] Corrections of text for -h menu in dev-env create
+- #973  [dev-env] update Nginx image
+- #971  [dev-env] Use custom add user command
+- #964  [dev-env] Validate sql on import
+- #970  [dev-env] Do not use /tmp as a userConfRoot
+- #977  Fix flow errors
+- #976  Fix/duplicate shortcut parameter
+- #968  Update minimum Node version
+
+https://github.com/Automattic/vip/releases/tag/v2.9.0
+
+### 2.8.2 (27 January 2021)
+- #961  Fixes md5 calculation failing when search-replace is used
+- #959  Fixes md5 calculation for SQL Imports on VIPd
+
+https://github.com/Automattic/vip/releases/tag/v2.8.2
+
+### 2.8.0 (25 January 2021)
+- #952  FORNO-1047: Fix SQL Import for compressed files
+- #955  Add Error prefix for "Failed to fetch logs" msg
+- #946  Add support for the site logs tailing feature
+- #953  [dev-env] Updated list of available wordpress images for dev-env
+- #933  Update dependency debug to v4.3.3
+
+https://github.com/Automattic/vip/releases/tag/v2.8.0
+
+### 2.7.1 (10 January 2021)
+- #950 Switch to npm-shrinkwrap
+- #947  [dev-env] List all dev env alias
+- #944  Add `vip whoami` command
+- #942  Envvar: Show message when there is an attempt to change the New Relic key.
+
+https://github.com/Automattic/vip/releases/tag/v2.7.1
 
 ### 2.7.0 (07 December 2021)
 - #941  [dev-env] Bump lando CLI dependency

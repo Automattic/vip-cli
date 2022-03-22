@@ -27,7 +27,7 @@ import {
 // eslint-disable-next-line no-duplicate-imports
 import type { AppForImport, EnvForImport } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
-import { checkFileAccess, getFileSize, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
+import { checkFileAccess, getFileSize, getFileMeta, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
 import { staticSqlValidations, getTableNames } from 'lib/validations/sql';
 import { siteTypeValidations } from 'lib/validations/site-type';
@@ -37,8 +37,9 @@ import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
-import { isFile } from '../lib/client-file-uploader';
+import { detectCompressedMimeType, FileMeta, isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
+import path from 'path';
 
 export type WPSiteListType = {
 	id: string,
@@ -373,10 +374,23 @@ command( {
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opts ) => {
-		const { app, env, searchReplace, skipValidate } = opts;
+		const { app, env } = opts;
+		let { skipValidate, searchReplace } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
+		const fileMeta = await getFileMeta( fileName );
+
+		if ( fileMeta.isCompressed ) {
+			console.log(
+				chalk.yellowBright(
+					'You are importing a compressed file. Validation and search-replace operation will be skipped.'
+				)
+			);
+
+			skipValidate = true;
+			searchReplace = undefined;
+		}
 
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
@@ -490,14 +504,17 @@ Processing the SQL import for your environment...
 			progressTracker.setUploadPercentage( percentage );
 		};
 
+		fileMeta.fileName = fileNameToUpload;
+
 		try {
 			const {
-				fileMeta: { basename, md5 },
+				fileMeta: { basename },
+				md5,
 				result,
 			} = await uploadImportSqlFileToS3( {
 				app,
 				env,
-				fileName: fileNameToUpload,
+				fileMeta,
 				progressCallback,
 			} );
 
