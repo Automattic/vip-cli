@@ -44,6 +44,7 @@ export function handleCLIException( exception: Error ) {
 		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
 		message = message.replace( 'ERROR: ', '' );
 
+		debug( exception );
 		console.log( errorPrefix, message );
 	}
 }
