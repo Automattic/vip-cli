@@ -40,6 +40,8 @@ services:
       image: ghcr.io/automattic/vip-container-images/php-fpm:7.4
       command: run.sh
       working_dir: /wp
+      healthcheck:
+        test: 'cat /wp/wp-includes/pomo/mo.php'
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>

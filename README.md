@@ -26,6 +26,17 @@ For help with contributing to this project, including instructions for local dev
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
 ## Changelog
+
+### 2.9.3 (29 March 2022)
+- #995 Add debug call to dev-envs handleCLIException
+- #992 Add --debug flag to all commands
+- #993 [dev-env] Fix in caching version list.
+- #994 Fix typo in error message
+- #990 [dev-env] Add check for wp folder map add/php_healthcheck
+- #991 Adds optional channing since `progress` can be null as per GraphQL schema
+- #989 Fixes unit test error `bsdthread_register error`
+- #987 Add support for M1 Macs in the search-replace tests
+
 ### 2.9.2 (9 March 2022)
 - #980  [dev-env] Fix/tag formatting on stapled images
 - #986  Clean the build folder prior to rebuilding it

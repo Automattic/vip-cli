@@ -45,6 +45,14 @@ export function handleCLIException( exception: Error ) {
 		message = message.replace( 'ERROR: ', '' );
 
 		console.log( errorPrefix, message );
+
+		if ( ! process.env.DEBUG ) {
+			console.log( `Please re-run the command with "${ chalk.bold( 'DEBUG=@automattic/vip:bin:dev-environment' ) }" prepended to it and provide the stack trace on the support ticket.` );
+			console.log( chalk.bold( '\nExample:\n' ) );
+			console.log( 'DEBUG=@automattic/vip:bin:dev-environment vip dev-env create\n' );
+		}
+
+		debug( exception );
 	}
 }
 
