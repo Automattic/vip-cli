@@ -123,6 +123,7 @@
     "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.1-patch2021_12_06",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
+    "proxy-agent": "^5.0.0",
     "rollbar": "2.22.0",
     "semver": "7.3.5",
     "single-line-log": "1.1.2",
