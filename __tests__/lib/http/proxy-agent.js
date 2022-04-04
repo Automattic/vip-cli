@@ -123,5 +123,17 @@ describe( 'validate CreateProxyAgent', () => {
 		expect( agent ).toBeNull();
 	} );
 
+	it( 'validates invalid url', async () => {
+		const url = 'wpAPI.org/api';
+
+		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.HTTPS_PROXY = 'https://myproxy.com';
+
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+
+		const agent = createProxyAgent( url );
+		expect( agent ).toBeNull();
+	} );
+
 	// TODO - No Proxy tests
 } );
