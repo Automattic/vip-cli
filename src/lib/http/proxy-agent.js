@@ -13,18 +13,13 @@ import { HttpProxyAgent } from 'http-proxy-agent';
 // The setting of it to any value allows this module to create a proxy agent based on proxy environment variables
 // If not set, this module will revert back to the previous functionality (hence being fully backward compatible and non-breaking for users)
 
-// Allow users to use either lower or uppercase versions of proxy variable names (uppercase will get precedence)
-const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null;
-const HTTP_PROXY = process.env.HTTP_PROXY || process.env.http_proxy || null;
-const NO_PROXY = process.env.NO_PROXY || process.env.no_proxy || null;
-const VIP_PROXY = process.env.VIP_PROXY || null;
-const PROXY_FEATURE_ENABLED = process.env.VIP_PROXY_OTHER_ENABLED || null;
+// TODO - Validate URL or have some default case?
 
 function createProxyAgent( url ) {
 	// VIP Socks Proxy should take precedence, should be fully backward compatible
-	if ( VIP_PROXY ) {
-		return new SocksProxyAgent( VIP_PROXY );
-	} else if ( PROXY_FEATURE_ENABLED && ! CoveredInNoProxy( url ) && ( HTTPS_PROXY || HTTP_PROXY ) ) {
+	if ( process.env.VIP_PROXY ) {
+		return new SocksProxyAgent( process.env.VIP_PROXY );
+	} else if ( process.env.VIP_PROXY_OTHER_ENABLED && ! CoveredInNoProxy( url ) && ( ( process.env.HTTPS_PROXY || process.env.https_proxy ) || ( process.env.HTTP_PROXY || process.env.http_proxy ) ) ) {
 		return GetWebProxyAgentBasedOnProtocol( url );
 	}
 	// If no environment variables are set, the no proxy is in effect, or if the proxy enable is not set return null (equivilant of no Proxy agent)
@@ -43,7 +38,7 @@ function createProxyAgent( url ) {
 //	- Gitlab Article on Standardizing NO_PROXY: https://about.gitlab.com/blog/2021/01/27/we-need-to-talk-no-proxy/
 function CoveredInNoProxy( url ) {
 	// Allow for the use of a single wild card "*" which means nothing should go through the proxy
-	return true;
+	return false;
 }
 
 // Returns either an HTTPS or HTTP ProxyAgent based on the protocol of the given URL
@@ -55,10 +50,10 @@ function CoveredInNoProxy( url ) {
 //	- either the environment variable HTTP_PROXY or HTTPS_PROXY is set
 function GetWebProxyAgentBasedOnProtocol( url ) {
 	const protocol = url.substr( 0, 5 );
-	if ( protocol.equals( 'https' ) && HTTPS_PROXY ) {
-		return new HttpsProxyAgent( HTTPS_PROXY );
-	} else if ( protocol.equals( 'http:' ) && HTTP_PROXY ) {
-		return new HttpProxyAgent( HTTP_PROXY );
+	if ( protocol === 'https' && process.env.HTTPS_PROXY ) {
+		return new HttpsProxyAgent( process.env.HTTPS_PROXY );
+	} else if ( protocol === 'http:' && process.env.HTTP_PROXY ) {
+		return new HttpProxyAgent( process.env.HTTP_PROXY );
 	}
 }
 
