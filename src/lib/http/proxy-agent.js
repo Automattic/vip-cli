@@ -1,7 +1,9 @@
 /**
  * External dependencies
  */
-import ProxyAgent from 'proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
 
 /**
  * Internal dependencies
@@ -21,7 +23,7 @@ const PROXY_FEATURE_ENABLED = process.env.VIP_PROXY_OTHER_ENABLED | null;
 export default function createProxyAgent( url ) {
 	// VIP Socks Proxy should take precedence, should be fully backward compatible
 	if ( VIP_PROXY ) {
-		return new ProxyAgent( VIP_PROXY );
+		return new SocksProxyAgent( VIP_PROXY );
 	} else if ( PROXY_FEATURE_ENABLED && ! CoveredInNoProxy( url ) && ( HTTPS_PROXY || HTTP_PROXY ) ) {
 		return GetWebProxyAgentBasedOnProtocol( url );
 	}
@@ -54,8 +56,8 @@ function CoveredInNoProxy( url ) {
 function GetWebProxyAgentBasedOnProtocol( url ) {
 	const protocol = url.substr( 0, 5 );
 	if ( protocol.equals( 'https' ) && HTTPS_PROXY ) {
-		return new ProxyAgent( HTTPS_PROXY );
+		return new HttpsProxyAgent( HTTPS_PROXY );
 	} else if ( protocol.equals( 'http:' ) && HTTP_PROXY ) {
-		return new ProxyAgent( HTTP_PROXY );
+		return new HttpProxyAgent( HTTP_PROXY );
 	}
 }
