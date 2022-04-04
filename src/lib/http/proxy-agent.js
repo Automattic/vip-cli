@@ -14,13 +14,13 @@ import { HttpProxyAgent } from 'http-proxy-agent';
 // If not set, this module will revert back to the previous functionality (hence being fully backward compatible and non-breaking for users)
 
 // Allow users to use either lower or uppercase versions of proxy variable names (uppercase will get precedence)
-const HTTPS_PROXY = process.env.HTTPS_PROXY | process.env.https_proxy | null;
-const HTTP_PROXY = process.env.HTTP_PROXY | process.env.http_proxy | null;
-const NO_PROXY = process.env.NO_PROXY | process.env.no_proxy | null;
-const VIP_PROXY = process.env.VIP_PROXY | null;
-const PROXY_FEATURE_ENABLED = process.env.VIP_PROXY_OTHER_ENABLED | null;
+const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null;
+const HTTP_PROXY = process.env.HTTP_PROXY || process.env.http_proxy || null;
+const NO_PROXY = process.env.NO_PROXY || process.env.no_proxy || null;
+const VIP_PROXY = process.env.VIP_PROXY || null;
+const PROXY_FEATURE_ENABLED = process.env.VIP_PROXY_OTHER_ENABLED || null;
 
-export default function createProxyAgent( url ) {
+function createProxyAgent( url ) {
 	// VIP Socks Proxy should take precedence, should be fully backward compatible
 	if ( VIP_PROXY ) {
 		return new SocksProxyAgent( VIP_PROXY );
@@ -61,3 +61,6 @@ function GetWebProxyAgentBasedOnProtocol( url ) {
 		return new HttpProxyAgent( HTTP_PROXY );
 	}
 }
+
+// Exports
+module.exports = { createProxyAgent };
