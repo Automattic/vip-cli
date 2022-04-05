@@ -127,7 +127,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	describe( 'processComponentOptionInput', () => {
 		it.each( [
 			{ // base tag
-				param: testReleaseWP,
+				param: testReleaseTag,
 				allowLocal: true,
 				expected: {
 					mode: 'image',
@@ -210,10 +210,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 		it.each( [
 			{
-				tag: testReleaseWP,
+				tag: testReleaseTag,
 				expected: {
 					mode: 'image',
-					tag: testReleaseWP,
+					tag: testReleaseTag,
 				},
 			},
 		] )( 'should return correct component for wordpress %p', async input => {
@@ -272,7 +272,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 					multisite: true,
 				},
 				default: {
@@ -281,7 +281,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 					multisite: false,
 				},
 				default: {
@@ -290,7 +290,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 				},
 				default: {
 					multisite: true,
@@ -299,7 +299,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 				},
 				default: {
 					multisite: false,
@@ -326,7 +326,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					title: 'a',
 					multisite: true,
 					mediaRedirectDomain: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 				},
 				default: {
 					mediaRedirectDomain: 'b',
@@ -336,7 +336,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					multisite: true,
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 				},
 				default: {
 					mediaRedirectDomain: 'b',
@@ -362,7 +362,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 					mariadb: 'maria_a',
 					elasticsearch: 'elastic_a',
 				},
@@ -372,7 +372,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
-					wordpress: testReleaseWP,
+					wordpress: testReleaseTag,
 				},
 				default: {
 					mariadb: 'maria_b',
@@ -393,38 +393,38 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				service: 'statsd',
 				preselected: true,
 				expected: true,
-				wordpress: testReleaseWP,
+				wordpress: testReleaseTag,
 			},
 			{
 				service: 'statsd',
 				expected: false,
-				wordpress: testReleaseWP,
+				wordpress: testReleaseTag,
 			},
 			{
 				service: 'statsd',
 				default: true,
 				expected: true,
-				wordpress: testReleaseWP,
+				wordpress: testReleaseTag,
 			},
 			{
 				service: 'statsd',
 				preselected: false,
 				default: true,
 				expected: false,
-				wordpress: testReleaseWP,
+				wordpress: testReleaseTag,
 			},
 			{
 				service: 'phpmyadmin',
 				preselected: true,
 				default: true,
 				expected: true,
-				wordpress: testReleaseWP,
+				wordpress: testReleaseTag,
 			},
 			{
 				service: 'xdebug',
 				default: true,
 				expected: true,
-				wordpress: testReleaseWP,
+				wordpress: testReleaseTag,
 			},
 		] )( 'should handle auxiliary services', async input => {
 			const preselected = {};
