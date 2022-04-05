@@ -445,11 +445,12 @@ export async function importMediaPath( slug: string, filePath: string ) {
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
-	let message, envData, currentWordPressTag;
+	let message, envData, currentWordPressTag, currentWordPressRef;
 
 	// Get the current environment configuration
 	try {
 		envData = readEnvironmentData( slug );
+		currentWordPressRef = envData.wordpress.ref;
 		currentWordPressTag = envData.wordpress.tag;
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
@@ -472,20 +473,20 @@ async function updateWordPressImage( slug ) {
 
 	// Newest WordPress Image
 	const newestWordPressImage = filteredVersions[ 0 ];
-	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
+	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.ref ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressTag === newestWordPressImage.ref ) {
-		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressTag ) + '  ... 😎 nice! ' );
+	if ( currentWordPressRef === newestWordPressImage.ref ) {
+		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressRef ) + '  ... 😎 nice! ' );
 		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressTag );
+	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressRef );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
-		console.log( `Installed WordPress: ${ currentWordPressTag } has no available container image in repository. ` );
+		console.log( `Installed WordPress: ${ currentWordPressRef } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
@@ -508,6 +509,7 @@ async function updateWordPressImage( slug ) {
 
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
+		envData.wordpress.ref = version.ref;
 		await updateEnvironment( envData );
 
 		return true;

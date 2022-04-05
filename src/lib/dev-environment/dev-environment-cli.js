@@ -333,6 +333,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 				initialTagIndex = defaultTagIndex;
 			}
 		}
+
 		const selectTag = new Select( {
 			message,
 			choices: formatted,
@@ -343,17 +344,24 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		// Validate the input
 		// Some of the options are like: '5.7   →  5.7.5'
 		// Extract first occurrence of something that looks like a tag
-		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
-		const match = tagRgx.exec( option );
-		if ( ! Array.isArray( match ) || match.length < 2 ) {
+		const tagRgx = new RegExp( /^(\d+\.\d+(?:\.\d+)?)/ );
+		const refRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)$/ );
+		const tagMatch = tagRgx.exec( option );
+		const refMatch = refRgx.exec( option );
+		if ( ! Array.isArray( tagMatch ) || tagMatch.length < 2 ) {
 			throw new Error( `Invalid WordPress selection: ${ option }` );
 		}
+		const tag = tagMatch[ 1 ];
+		let ref = tag;
 
-		const tag = match[ 1 ];
+		if ( refMatch ) {
+			ref = refMatch[ 1 ];
+		}
 
 		return {
 			mode: modeResult,
 			tag,
+			ref,
 		};
 	}
 
