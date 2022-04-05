@@ -132,7 +132,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				expected: {
 					mode: 'image',
 					tag: testReleaseTag,
-					tag: testReleaseRef
+					ref: testReleaseRef,
 				},
 			},
 			{ // if local is not allowed
