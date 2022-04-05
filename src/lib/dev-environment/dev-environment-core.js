@@ -445,13 +445,11 @@ export async function importMediaPath( slug: string, filePath: string ) {
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
 	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
-	let message, envData, currentWordPressTag, currentWordPressRef;
+	let message, envData;
 
 	// Get the current environment configuration
 	try {
 		envData = readEnvironmentData( slug );
-		currentWordPressRef = envData.wordpress.ref;
-		currentWordPressTag = envData.wordpress.tag;
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
@@ -476,17 +474,17 @@ async function updateWordPressImage( slug ) {
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.ref ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressRef === newestWordPressImage.ref ) {
-		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressRef ) + '  ... 😎 nice! ' );
+	if ( envData.wordpress.ref === newestWordPressImage.ref ) {
+		console.log( 'Environment WordPress version is: ' + chalk.green( envData.wordpress.ref ) + '  ... 😎 nice! ' );
 		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressRef );
+	const match = filteredVersions.find( ( { ref } ) => ref === envData.wordpress.ref );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
-		console.log( `Installed WordPress: ${ currentWordPressRef } has no available container image in repository. ` );
+		console.log( `Installed WordPress: ${ envData.wordpress.ref } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
@@ -500,8 +498,8 @@ async function updateWordPressImage( slug ) {
 	} );
 
 	// If the user takes the new WP version path
-	if ( confirm.upgrade ) {
-		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
+	if ( confirm.hasOwnProperty( 'upgrade' ) && confirm.upgrade ) {
+		console.log( 'Upgrading from: ' + chalk.yellow( envData.wordpress.ref ) + ' to:' );
 
 		// Select a new image
 		const choice = await promptForComponent( 'wordpress' );
