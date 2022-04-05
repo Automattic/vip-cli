@@ -34,18 +34,12 @@ jest.mock( 'enquirer', () => {
 } );
 
 const testReleaseTag = '5.9';
-const testReleaseRef = '5.9.2';
+const testReleaseRef = '5.9';
 
 const scope = nock( 'https://raw.githubusercontent.com' )
 	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
 	.reply( 200, [ {
-		ref: '5.9.1',
-		tag: '5.9.1',
-		cacheable: true,
-		locked: false,
-		prerelease: true,
-	}, {
-		ref: '5.9.2',
+		ref: '5.9',
 		tag: '5.9',
 		cacheable: true,
 		locked: false,
@@ -132,7 +126,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				expected: {
 					mode: 'image',
 					tag: testReleaseTag,
-					ref: testReleaseRef,
 				},
 			},
 			{ // if local is not allowed
@@ -213,6 +206,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				tag: testReleaseTag,
 				expected: {
 					mode: 'image',
+					ref: testReleaseRef,
 					tag: testReleaseTag,
 				},
 			},
