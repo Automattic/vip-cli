@@ -44,7 +44,7 @@ describe( 'validate CreateProxyAgent', () => {
 		expect( agent ).toBeNull();
 	} );
 
-	it( 'validates socks proxy takes precedence over feature flag', async () => {
+	it( 'validates socks proxy takes precedence over everything', async () => {
 		const url = 'https://wpAPI.org/api';
 
 		process.env.VIP_PROXY = 'socks5://myproxy.com:4022';
@@ -60,6 +60,7 @@ describe( 'validate CreateProxyAgent', () => {
 		const url = 'https://wpAPI.org/api';
 
 		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.NO_PROXY = '*';
 		process.env.VIP_PROXY = 'socks5://myproxy.com:4022';
 		process.env.HTTPS_PROXY = 'https://myproxy.com';
 
@@ -123,7 +124,7 @@ describe( 'validate CreateProxyAgent', () => {
 		expect( agent ).toBeNull();
 	} );
 
-	it( 'validates invalid url', async () => {
+	it( 'validates invalid url to proxy (no protocol given)', async () => {
 		const url = 'wpAPI.org/api';
 
 		process.env.VIP_PROXY_OTHER_ENABLED = '1';
@@ -135,5 +136,73 @@ describe( 'validate CreateProxyAgent', () => {
 		expect( agent ).toBeNull();
 	} );
 
-	// TODO - No Proxy tests
+	it( 'validates no proxy single wildcard', async () => {
+		const url = 'https://wpAPI.org/api';
+
+		// Even though HTTPS_PROXY is set, the NO_PROXY is applicable to the URL and should not be proxied
+		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.HTTPS_PROXY = 'https://myproxy.com';
+		process.env.NO_PROXY = '*';
+
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+
+		const agent = createProxyAgent( url );
+		expect( agent ).toBeNull();
+	} );
+
+	it( 'validates no proxy domain wildcard', async () => {
+		const url = 'https://wpAPI.wp.org/api';
+
+		// Even though HTTPS_PROXY is set, the NO_PROXY is applicable to the URL and should not be proxied
+		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.HTTP_PROXY = 'https://myproxy.com';
+		process.env.NO_PROXY = '*.wp,.lndo.site,foo.bar.org';
+
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+
+		const agent = createProxyAgent( url );
+		expect( agent ).toBeNull();
+	} );
+
+	it( 'validates no proxy subdomain', async () => {
+		const url = 'https://wpAPI.org/api';
+
+		// Even though HTTPS_PROXY is set, the NO_PROXY is applicable to the URL and should not be proxied
+		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.HTTPS_PROXY = 'https://myproxy.com';
+		process.env.NO_PROXY = 'wpAPI.org';
+
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+
+		const agent = createProxyAgent( url );
+		expect( agent ).toBeNull();
+	} );
+
+	it( 'validates no proxy does not apply', async () => {
+		const url = 'https://wpAPI.wp.org/api';
+
+		// The url should be proxied by the HTTPS proxy because the given NO_PROXY does not apply
+		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.HTTPS_PROXY = 'https://myproxy.com';
+		process.env.NO_PROXY = 'wpAPI.org,.lndo.site,foo.bar.org';
+
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+
+		const agent = createProxyAgent( url );
+		expect( agent ).not.toBeNull();
+		expect( agent ).toBeInstanceOf( HttpsProxyAgent );
+	} );
+
+	it( 'validates no proxy by itself does nothing', async () => {
+		const url = 'wpAPI.wp.org/api';
+
+		// An odd case is if a client has NO_PROXY and VIP_PROXY_OTHER_ENABLED set (should not return a proxyAgent)
+		process.env.VIP_PROXY_OTHER_ENABLED = '1';
+		process.env.NO_PROXY = 'wpAPI.org,.lndo.site,foo.bar.org';
+
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+
+		const agent = createProxyAgent( url );
+		expect( agent ).toBeNull();
+	} );
 } );
