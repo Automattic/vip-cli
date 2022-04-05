@@ -33,7 +33,8 @@ jest.mock( 'enquirer', () => {
 	};
 } );
 
-const testReleaseWP = '5.9';
+const testReleaseTag = '5.9';
+const testReleaseRef = '5.9.2';
 
 const scope = nock( 'https://raw.githubusercontent.com' )
 	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
@@ -130,7 +131,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				allowLocal: true,
 				expected: {
 					mode: 'image',
-					tag: testReleaseWP,
+					tag: testReleaseTag,
+					tag: testReleaseRef
 				},
 			},
 			{ // if local is not allowed
