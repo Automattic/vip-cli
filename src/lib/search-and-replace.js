@@ -24,7 +24,7 @@ import * as exit from 'lib/cli/exit';
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
 const flatten = arr => {
-	return arr.reduce( function( flat, toFlatten ) {
+	return arr.reduce( ( flat, toFlatten ) => {
 		return flat.concat( Array.isArray( toFlatten ) ? flatten( toFlatten ) : toFlatten );
 	}, [] );
 };

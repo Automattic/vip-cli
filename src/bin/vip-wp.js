@@ -62,7 +62,7 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 		commandRunning = false;
 
 		// TODO handle this better
-		console.log( 'Error: ' + err.message );
+		console.error( 'Error: ' + err.message );
 	} );
 
 	stdoutStream.on( 'end', async () => {
@@ -354,7 +354,7 @@ commandWrapper( {
 
 			bindStreamEvents( { subShellRl, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
 
-			currentJob.socket.on( 'reconnect', async () => {
+			currentJob.socket.io.on( 'reconnect', async () => {
 				// Close old streams
 				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
@@ -375,7 +375,7 @@ commandWrapper( {
 				subShellRl.resume();
 			} );
 
-			currentJob.socket.on( 'reconnect_attempt', () => {
+			currentJob.socket.io.on( 'reconnect_attempt', () => {
 				// create a new input stream so that we can still catch things like SIGINT while reconnectin
 				if ( currentJob.stdinStream ) {
 					process.stdin.unpipe( currentJob.stdinStream );

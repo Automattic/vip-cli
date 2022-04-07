@@ -9,7 +9,6 @@
  * External dependencies
  */
 import fs from 'fs';
-import chalk from 'chalk';
 
 /**
  * Internal dependencies

@@ -37,9 +37,8 @@ import * as exit from 'lib/cli/exit';
 import { fileLineValidations } from 'lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
 import { ProgressTracker } from 'lib/cli/progress';
-import { detectCompressedMimeType, FileMeta, isFile } from '../lib/client-file-uploader';
+import { isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import path from 'path';
 
 export type WPSiteListType = {
 	id: string,
