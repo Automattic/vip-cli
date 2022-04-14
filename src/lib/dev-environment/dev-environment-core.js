@@ -444,13 +444,12 @@ export async function importMediaPath( slug: string, filePath: string ) {
  */
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
-	let message, envData, currentWordPressTag, currentWordPressRef;
+	let message, envData, currentWordPressTag;
 
 	// Get the current environment configuration
 	try {
 		envData = readEnvironmentData( slug );
 		currentWordPressTag = envData.wordpress.tag;
-		currentWordPressRef = envData.wordpress.ref || envData.wordpress.tag;
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
@@ -471,20 +470,20 @@ async function updateWordPressImage( slug ) {
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressTag === newestWordPressImage.tag && currentWordPressRef === newestWordPressImage.ref ) {
+	if ( currentWordPressTag === newestWordPressImage.tag ) {
 		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressTag ) + '  ... 😎 nice! ' );
 		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = versions.find( ( { ref, tag } ) => ref === currentWordPressRef && tag === currentWordPressTag );
+	const match = versions.find( ( { tag } ) => tag === currentWordPressTag );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
-		console.log( `Installed WordPress: ${ currentWordPressTag } (${ currentWordPressRef }) has no available container image in repository. ` );
+		console.log( `Installed WordPress: ${ currentWordPressTag } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
-		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
+		console.log( 'Environment WordPress version is: ' + chalk.yellow( `${ match.tag } (${ match.ref })`) );
 		if ( envData.wordpress.doNotUpgrade || false ) {
 			return false;
 		}
