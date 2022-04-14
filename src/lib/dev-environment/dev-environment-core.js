@@ -444,7 +444,8 @@ export async function importMediaPath( slug: string, filePath: string ) {
  */
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
-	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
+	// Either a tag (e.g. 5.7.5) or a git SHA from the official repository.
+	const refRgx = new RegExp( /(\d+\.\d+(?:\.\d+)|[a-z0-9]{40})/ );
 	let message, envData, currentWordPressTag;
 
 	// Get the current environment configuration
