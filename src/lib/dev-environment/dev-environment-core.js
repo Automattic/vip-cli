@@ -444,14 +444,13 @@ export async function importMediaPath( slug: string, filePath: string ) {
  */
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
-	// Either a tag (e.g. 5.7.5) or a git SHA from the official repository.
-	const refRgx = new RegExp( /(\d+\.\d+(?:\.\d+)|[a-z0-9]{40})/ );
-	let message, envData, currentWordPressTag;
+	let message, envData, currentWordPressTag, currentWordPressRef;
 
 	// Get the current environment configuration
 	try {
 		envData = readEnvironmentData( slug );
 		currentWordPressTag = envData.wordpress.tag;
+		currentWordPressRef = envData.wordpress.ref || envData.wordpress.tag;
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
@@ -461,57 +460,67 @@ async function updateWordPressImage( slug ) {
 			message = `An error prevented reading the configuration of: ${ slug }\n\n ${ error }`;
 		}
 		handleCLIException( new Error( message ) );
+		return false;
 	}
 
-	// filter
-	const filteredVersions = versions.filter( vsn => {
-		return refRgx.test( vsn.ref );
-	} );
-
 	// sort
-	filteredVersions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
+	versions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
 
 	// Newest WordPress Image
-	const newestWordPressImage = filteredVersions[ 0 ];
+	const newestWordPressImage = versions[ 0 ];
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressTag === newestWordPressImage.ref ) {
+	if ( currentWordPressTag === newestWordPressImage.tag && currentWordPressRef === newestWordPressImage.ref ) {
 		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressTag ) + '  ... 😎 nice! ' );
 		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressTag );
+	const match = versions.find( ( { ref, tag } ) => ref === currentWordPressRef && tag === currentWordPressTag );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
-		console.log( `Installed WordPress: ${ currentWordPressTag } has no available container image in repository. ` );
+		console.log( `Installed WordPress: ${ currentWordPressTag } (${ currentWordPressRef }) has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
+		if ( envData.wordpress.doNotUpgrade || false ) {
+			return false;
+		}
 	}
 
 	// Prompt the user to select a new WordPress Version
 	const confirm = await prompt( {
-		type: 'confirm',
+		type: 'select',
 		name: 'upgrade',
 		message: 'Would You like to change the WordPress version? ',
+		choices: [
+			'yes',
+			'no',
+			"don't ask anymore",
+		],
 	} );
 
 	// If the user takes the new WP version path
-	if ( confirm.upgrade ) {
+	if ( confirm.upgrade === 'yes' ) {
 		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
 		const choice = await promptForComponent( 'wordpress' );
-		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
+		const version = versions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
+		envData.wordpress.ref = version.ref;
 		await updateEnvironment( envData );
 
 		return true;
+	}
+	if ( confirm.upgrade === "don't ask anymore" ) {
+		envData.wordpress.doNotUpgrade = true;
+		console.log( "We won't ask about upgrading this environment anymore." );
+		await updateEnvironment( envData );
 	}
 
 	return false;
@@ -546,7 +555,6 @@ export async function getVersionList() {
 	let res;
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 	const cacheFile = path.join( mainEnvironmentPath, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
-
 	// Handle from cache
 	try {
 		// If the cache doesn't exist, create it
