@@ -483,7 +483,7 @@ async function updateWordPressImage( slug ) {
 		console.log( `Installed WordPress: ${ currentWordPressTag } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
-		console.log( 'Environment WordPress version is: ' + chalk.yellow( `${ match.tag } (${ match.ref })`) );
+		console.log( 'Environment WordPress version is: ' + chalk.yellow( `${ match.tag } (${ match.ref })` ) );
 		if ( envData.wordpress.doNotUpgrade || false ) {
 			return false;
 		}

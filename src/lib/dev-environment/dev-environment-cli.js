@@ -8,7 +8,7 @@
  */
 import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
-import { prompt, Confirm, Select, Choice } from 'enquirer';
+import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
@@ -352,7 +352,7 @@ export async function getTagChoices() {
 		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
 	}
 
-	const choices = versions.map( ( version ) => {
+	const choices = versions.map( version => {
 		let mapping;
 		const tagFormatted = version.tag.padEnd( 8 - version.tag.length );
 		const prerelease = version.prerelease ? '(Pre-Release)' : '';
