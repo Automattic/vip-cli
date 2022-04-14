@@ -8,7 +8,7 @@
  */
 import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
-import { prompt, Confirm, Select } from 'enquirer';
+import { prompt, Confirm, Select, Choice } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
@@ -312,48 +312,15 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
 		const tagChoices = await getTagChoices();
-
-		// Tag strings come back from the api with excess whitespace
-		// This strips the whitespace for matching to the defaultObject.tag
-		const formatted = tagChoices.map( elm => {
-			return elm.trim();
-		} );
-
-		// First tag not: "Pre-Release"
-		const firstNonPreRelease = formatted.find( img => {
-			return ! img.match( /Pre\-Release/g );
-		} );
-
-		// Set initialTagIndex as the first non Pre-Release
-		let initialTagIndex = formatted.indexOf( firstNonPreRelease );
-
-		if ( defaultObject?.tag ) {
-			const defaultTagIndex = formatted.indexOf( defaultObject.tag );
-			if ( defaultTagIndex !== -1 ) {
-				initialTagIndex = defaultTagIndex;
-			}
-		}
 		const selectTag = new Select( {
 			message,
-			choices: formatted,
-			initial: initialTagIndex,
+			choices: tagChoices,
 		} );
 		const option = await selectTag.run();
 
-		// Validate the input
-		// Some of the options are like: '5.7   →  5.7.5'
-		// Extract first occurrence of something that looks like a tag
-		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
-		const match = tagRgx.exec( option );
-		if ( ! Array.isArray( match ) || match.length < 2 ) {
-			throw new Error( `Invalid WordPress selection: ${ option }` );
-		}
-
-		const tag = match[ 1 ];
-
 		return {
 			mode: modeResult,
-			tag,
+			tag: option,
 		};
 	}
 
@@ -380,16 +347,15 @@ export function addDevEnvConfigurationOptions( command ) {
  * Provides the list of tag choices for selection
  */
 export async function getTagChoices() {
-	const tagChoices = [];
-	let tagFormatted, prerelease, mapping;
 	const versions = await getVersionList();
 	if ( versions.length < 1 ) {
 		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
 	}
 
-	for ( const version of versions ) {
-		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
-		prerelease = ( version.prerelease ) ? '(Pre-Release)' : '';
+	const choices = versions.map( ( version ) => {
+		let mapping;
+		const tagFormatted = version.tag.padEnd( 8 - version.tag.length );
+		const prerelease = version.prerelease ? '(Pre-Release)' : '';
 
 		if ( version.tag !== version.ref ) {
 			mapping = `→ ${ prerelease } ${ version.ref }`;
@@ -397,8 +363,12 @@ export async function getTagChoices() {
 			mapping = '';
 		}
 
-		tagChoices.push( `${ tagFormatted } ${ mapping }` );
-	}
+		return {
+			name: version.tag,
+			message: `${ tagFormatted } ${ mapping }`,
+			value: version.tag,
+		};
+	} );
 
-	return tagChoices.sort().reverse();
+	return choices;
 }
