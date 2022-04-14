@@ -555,6 +555,7 @@ export async function getVersionList() {
 	let res;
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 	const cacheFile = path.join( mainEnvironmentPath, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
+
 	// Handle from cache
 	try {
 		// If the cache doesn't exist, create it
