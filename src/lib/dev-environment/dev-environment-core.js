@@ -519,6 +519,7 @@ async function updateWordPressImage( slug ) {
 	if ( confirm.upgrade === "don't ask anymore" ) {
 		envData.wordpress.doNotUpgrade = true;
 		console.log( "We won't ask about upgrading this environment anymore." );
+		console.log( 'To manually upgrade please run:' + `${ chalk.yellow( `vip dev-env update --slug=${ slug }` ) }` );
 		await updateEnvironment( envData );
 	}
 
