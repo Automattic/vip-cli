@@ -205,6 +205,7 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } ) => {
 	currentJob.socket.io.on( 'reconnect', async () => {
 		debug( '-------- reconnect' );
+		rollbar.info( 'WP-CLI socket.io.on( \'reconnect\' )', { custom: { code: 'wp-cli-on-reconnect', commandGuid: cliCommand.guid } } );
 
 		// Close old streams
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
@@ -230,6 +231,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 
 	currentJob.socket.on( 'retry', async () => {
 		debug( '-------- retry' );
+		rollbar.info( 'WP-CLI socket.io.on( \'retry\' )', { custom: { code: 'wp-cli-on-retry', commandGuid: cliCommand.guid } } );
 
 		setTimeout( () => {
 			currentJob.socket.io.engine.close();
