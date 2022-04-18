@@ -199,6 +199,52 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 	return { stdinStream, stdoutStream, socket };
 };
 
+const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } ) => {
+	currentJob.socket.io.on( 'reconnect', async () => {
+		console.log( '-------- reconnect' );
+		// Close old streams
+		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+		trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
+
+		currentJob = await launchCommandAndGetStreams( {
+			guid: cliCommand.guid,
+			inputToken: inputToken,
+			offset: currentOffset,
+		} );
+
+		// Rebind new streams
+		pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
+		bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
+
+		bindReconnectEvents( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } );
+
+		// Resume readline interface
+		subShellRl.resume();
+	} );
+
+	currentJob.socket.on( 'retry', async () => {
+		console.log( '-------- retry' );
+
+		setTimeout( () => {
+			currentJob.socket.io.engine.close();
+		}, 5000 );
+	} );
+
+	currentJob.socket.io.on( 'reconnect_attempt', () => {
+		// create a new input stream so that we can still catch things like SIGINT while reconnectin
+		if ( currentJob.stdinStream ) {
+			process.stdin.unpipe( currentJob.stdinStream );
+		}
+		process.stdin.pipe( IOStream.createStream() );
+		currentJob.stdoutStream = IOStream.createStream();
+		bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
+
+		console.error( 'There was an error connecting to the server. Retrying...' );
+	} );
+};
+
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
@@ -354,38 +400,7 @@ commandWrapper( {
 
 			bindStreamEvents( { subShellRl, commonTrackingParams, isSubShell, stdoutStream: currentJob.stdoutStream } );
 
-			currentJob.socket.io.on( 'reconnect', async () => {
-				// Close old streams
-				unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-				trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
-
-				currentJob = await launchCommandAndGetStreams( {
-					guid: cliCommand.guid,
-					inputToken: inputToken,
-					offset: currentOffset,
-				} );
-
-				// Rebind new streams
-				pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-				bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
-
-				// Resume readline interface
-				subShellRl.resume();
-			} );
-
-			currentJob.socket.io.on( 'reconnect_attempt', () => {
-				// create a new input stream so that we can still catch things like SIGINT while reconnectin
-				if ( currentJob.stdinStream ) {
-					process.stdin.unpipe( currentJob.stdinStream );
-				}
-				process.stdin.pipe( IOStream.createStream() );
-				currentJob.stdoutStream = IOStream.createStream();
-				bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
-
-				console.error( 'There was an error connecting to the server. Retrying...' );
-			} );
+			bindReconnectEvents( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } );
 		} );
 
 		// Fix to re-add the \n character that readline strips when terminal == true
