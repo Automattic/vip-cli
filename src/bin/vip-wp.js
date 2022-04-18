@@ -233,7 +233,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 	} );
 
 	currentJob.socket.io.on( 'reconnect_attempt', () => {
-		// create a new input stream so that we can still catch things like SIGINT while reconnectin
+		// create a new input stream so that we can still catch things like SIGINT while reconnecting
 		if ( currentJob.stdinStream ) {
 			process.stdin.unpipe( currentJob.stdinStream );
 		}
