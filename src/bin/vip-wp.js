@@ -10,6 +10,7 @@ import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import readline from 'readline';
 import { Writable } from 'stream';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -23,6 +24,8 @@ import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 import { rollbar } from 'lib/rollbar';
 import createSocksProxyAgent from 'lib/http/socks-proxy-agent';
+
+const debug = debugLib( '@automattic/vip:wp' );
 
 const appQuery = `id, name,
 	organization {
@@ -201,7 +204,8 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 
 const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } ) => {
 	currentJob.socket.io.on( 'reconnect', async () => {
-		console.log( '-------- reconnect' );
+		debug( '-------- reconnect' );
+
 		// Close old streams
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
@@ -225,7 +229,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 	} );
 
 	currentJob.socket.on( 'retry', async () => {
-		console.log( '-------- retry' );
+		debug( '-------- retry' );
 
 		setTimeout( () => {
 			currentJob.socket.io.engine.close();
