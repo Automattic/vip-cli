@@ -39,7 +39,7 @@ function createProxyAgent( url ) {
 // Determine if a NO_PROXY variable is applicable to a given URL
 // Parameters:
 //	- url (string): absolute desintation URL (including the protocol)
-//	- no_proxy_string (string | null): string representation of the environments current NO_PROXY or no_proxy variable (NO_PROXY takes precedence)
+//	- noProxyString (string | null): string representation of the environments current NO_PROXY or no_proxy variable (NO_PROXY takes precedence)
 // Returns:
 //	- (boolean) true/false depending on result
 // NO_PROXY Rules (based directly on underlying dependency):
@@ -47,9 +47,9 @@ function createProxyAgent( url ) {
 // 2. *.site: do not proxy any subdomain of a domain
 // 3. abc.com: do not proxy www.abc.com, abc.com, etc.
 // See getProxyForUrl on npmjs.org for full "ruleset"
-function CoveredInNoProxy( url, no_proxy_string ) {
+function CoveredInNoProxy( url, noProxyString ) {
 	// If the NO_PROXY env variable is not set, then the URL is not covered in the NO_PROXY (utility below does not handle this case)
-	if ( ! no_proxy_string ) {
+	if ( ! noProxyString ) {
 		return false;
 	}
 	// If getProxyForUrl returns an empty string, then the host should not be proxied
