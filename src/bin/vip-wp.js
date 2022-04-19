@@ -140,19 +140,7 @@ const cancelCommand = async guid => {
 		} );
 };
 
-const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) => {
-	const token = await Token.get();
-	const socket = SocketIO( `${ API_HOST }/wp-cli`, {
-		transportOptions: {
-			polling: {
-				extraHeaders: {
-					Authorization: `Bearer ${ token.raw }`,
-				},
-			},
-		},
-		agent: createSocksProxyAgent(),
-	} );
-
+const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 0 } ) => {
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();
 
@@ -203,8 +191,12 @@ const launchCommandAndGetStreams = async ( { guid, inputToken, offset = 0 } ) =>
 };
 
 const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } ) => {
+	currentJob.socket.io.removeAllListeners( 'reconnect' );
+	currentJob.socket.io.removeAllListeners( 'reconnect_attempt' );
+	currentJob.socket.removeAllListeners( 'retry' );
+
 	currentJob.socket.io.on( 'reconnect', async () => {
-		debug( '-------- reconnect' );
+		debug( 'socket.io: reconnect' );
 		rollbar.info( 'WP-CLI socket.io.on( \'reconnect\' )', { custom: { code: 'wp-cli-on-reconnect', commandGuid: cliCommand.guid } } );
 
 		// Close old streams
@@ -213,6 +205,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
 
 		currentJob = await launchCommandAndGetStreams( {
+			socket: currentJob.socket,
 			guid: cliCommand.guid,
 			inputToken: inputToken,
 			offset: currentOffset,
@@ -230,7 +223,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 	} );
 
 	currentJob.socket.on( 'retry', async () => {
-		debug( '-------- retry' );
+		debug( 'socket: retry' );
 		rollbar.info( 'WP-CLI socket.io.on( \'retry\' )', { custom: { code: 'wp-cli-on-retry', commandGuid: cliCommand.guid } } );
 
 		setTimeout( () => {
@@ -238,7 +231,13 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		}, 5000 );
 	} );
 
-	currentJob.socket.io.on( 'reconnect_attempt', () => {
+	currentJob.socket.io.on( 'reconnect_attempt', attempt => {
+		console.error( 'There was an error connecting to the server. Retrying...' );
+
+		if ( attempt > 1 ) {
+			return;
+		}
+
 		// create a new input stream so that we can still catch things like SIGINT while reconnecting
 		if ( currentJob.stdinStream ) {
 			process.stdin.unpipe( currentJob.stdinStream );
@@ -246,8 +245,6 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		process.stdin.pipe( IOStream.createStream() );
 		currentJob.stdoutStream = IOStream.createStream();
 		bindStreamEvents( { subShellRl, isSubShell, commonTrackingParams, stdoutStream: currentJob.stdoutStream } );
-
-		console.error( 'There was an error connecting to the server. Retrying...' );
 	} );
 };
 
@@ -395,7 +392,20 @@ commandWrapper( {
 				rollbar.info( 'WP-CLI Command containing single quotes', { custom: { code: 'wp-cli-single-quotes', commandGuid: cliCommand.guid } } );
 			}
 
+			const token = await Token.get();
+			const socket = SocketIO( `${ API_HOST }/wp-cli`, {
+				transportOptions: {
+					polling: {
+						extraHeaders: {
+							Authorization: `Bearer ${ token.raw }`,
+						},
+					},
+				},
+				agent: createSocksProxyAgent(),
+			} );
+
 			currentJob = await launchCommandAndGetStreams( {
+				socket,
 				guid: cliCommand.guid,
 				inputToken: inputToken,
 			} );
