@@ -27,6 +27,11 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.9.4 (07 April 2022)
+- #996 Clean up lint warnings
+- #1001 Fix reconnect event listeners
+- #1000 Bump socket.io-client from 4.0.1 to 4.4.1
+
 ### 2.9.3 (29 March 2022)
 - #995 Add debug call to dev-envs handleCLIException
 - #992 Add --debug flag to all commands
