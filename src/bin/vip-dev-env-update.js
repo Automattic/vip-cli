@@ -60,6 +60,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag,
 			elasticsearch: currentInstanceData.elasticsearch,
+			php: currentInstanceData.php,
 			mariadb: currentInstanceData.mariadb,
 			statsd: currentInstanceData.statsd,
 			phpmyadmin: currentInstanceData.phpmyadmin,

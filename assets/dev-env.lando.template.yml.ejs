@@ -37,7 +37,7 @@ services:
   php:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/php-fpm:7.4
+      image: <%= php %>
       command: run.sh
       working_dir: /wp
       healthcheck:
