@@ -70,6 +70,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	}
 
 	let defaultOptions: $Shape<InstanceOptions> = {};
+
 	try {
 		if ( opt.app ) {
 			const appInfo = await getApplicationInformation( opt.app, opt.env );

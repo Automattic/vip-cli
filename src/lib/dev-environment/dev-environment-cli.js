@@ -155,7 +155,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		phpmyadmin: false,
 		xdebug: false,
 		siteSlug: '',
+		enterpriseSearchEnabled: preselectedOptions.enterpriseSearchEnabled || defaultOptions.enterpriseSearchEnabled,
 	};
+
+	const promptLabels = {
+		xdebug: 'XDebug',
+		phpmyadmin: 'phpMyAdmin',
+	}
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
 		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
@@ -177,11 +183,16 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData[ component ] = result;
 	}
 
-	for ( const service of [ 'statsd', 'phpmyadmin', 'xdebug' ] ) {
-		if ( service in preselectedOptions ) {
-			instanceData[ service ] = preselectedOptions[ service ];
-		} else if ( service in defaultOptions ) {
-			instanceData[ service ] = defaultOptions[ service ];
+	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Enterprise Search?', defaultOptions.enterpriseSearchEnabled );
+	if ( instanceData.enterpriseSearchEnabled ) {
+		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
+	} else {
+		instanceData.statsd = false;
+	}
+
+	for ( const service of [ 'phpmyadmin', 'xdebug' ] ) {
+		if ( service in instanceData ) {
+			instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
 		}
 	}
 

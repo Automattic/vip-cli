@@ -22,4 +22,3 @@ export const DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI = '/Automattic/vip-container
 export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'wordpress-versions.json';
 
 export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 86400; // once per day
-
