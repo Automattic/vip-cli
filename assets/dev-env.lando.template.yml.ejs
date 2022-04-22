@@ -95,7 +95,7 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
-
+<% if ( enterpriseSearchEnabled ) { %>
   vip-search:
     type: compose
     services:
@@ -115,7 +115,7 @@ services:
         - search_data:/usr/share/elasticsearch/data
     volumes:
       search_data:
-
+<% } %>
 <% if ( statsd ) { %>
   statsd:
     type: compose
