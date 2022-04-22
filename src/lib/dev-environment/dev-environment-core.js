@@ -143,6 +143,8 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
+	instanceData.enterpiseSearchEnabled = instanceData.enterpiseSearchEnabled || false;
+
 	return newInstanceData;
 }
 
