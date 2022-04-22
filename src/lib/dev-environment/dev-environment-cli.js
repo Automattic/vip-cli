@@ -24,6 +24,7 @@ import {
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import { getVersionList } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
@@ -140,7 +141,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
 		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
-		php: preselectedOptions.php || defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion,
+		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
 		wordpress: {
@@ -254,6 +255,38 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 	} );
 
 	return confirm.run();
+}
+
+function resolvePhpVersion( version: string ): string {
+	debug( `Resolving PHP version '${ version }'` );
+	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
+
+	// eslint-disable-next-line eqeqeq -- use loose comparison because commander resolves '8.0' to '8'
+	const index = versions.findIndex( value => value == version );
+	if ( index === -1 ) {
+		const image = images.find( value => value === version );
+		return image ?? images[ 0 ];
+	}
+
+	return images[ index ];
+}
+
+export async function promptForPhpVersion( initialValue: string ): Promise<string> {
+	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
+
+	const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const initial = images.findIndex( version => version === initialValue );
+
+	const select = new Select( {
+		message: 'PHP version to use',
+		choices,
+		initial,
+	} );
+
+	const answer = await select.run();
+	return resolvePhpVersion( answer );
 }
 
 const componentDisplayNames = {
@@ -381,7 +414,7 @@ export function addDevEnvConfigurationOptions( command ) {
 /**
  * Provides the list of tag choices for selection
  */
-export async function getTagChoices() {
+export async function getTagChoices(): Promise<string[]> {
 	const tagChoices = [];
 	let tagFormatted, prerelease, mapping;
 	const versions = await getVersionList();
