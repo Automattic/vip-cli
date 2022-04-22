@@ -161,7 +161,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
-	}
+	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
 		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
