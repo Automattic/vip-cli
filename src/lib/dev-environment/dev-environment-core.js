@@ -444,7 +444,6 @@ export async function importMediaPath( slug: string, filePath: string ) {
  */
 async function updateWordPressImage( slug ) {
 	const versions = await getVersionList();
-	const refRgx = new RegExp( /\d+\.\d+(?:\.\d+)?/ );
 	let message, envData, currentWordPressTag;
 
 	// Get the current environment configuration
@@ -460,57 +459,68 @@ async function updateWordPressImage( slug ) {
 			message = `An error prevented reading the configuration of: ${ slug }\n\n ${ error }`;
 		}
 		handleCLIException( new Error( message ) );
+		return false;
 	}
 
-	// filter
-	const filteredVersions = versions.filter( vsn => {
-		return refRgx.test( vsn.ref );
-	} );
-
 	// sort
-	filteredVersions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
+	versions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
 
 	// Newest WordPress Image
-	const newestWordPressImage = filteredVersions[ 0 ];
+	const newestWordPressImage = versions[ 0 ];
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressTag === newestWordPressImage.ref ) {
+	if ( currentWordPressTag === newestWordPressImage.tag ) {
 		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressTag ) + '  ... 😎 nice! ' );
 		return false;
 	}
 
 	// Determine if there is an image available for the current WordPress version
-	const match = filteredVersions.find( ( { ref } ) => ref === currentWordPressTag );
+	const match = versions.find( ( { tag } ) => tag === currentWordPressTag );
 
 	// If there is no available image for the currently installed version, give user a path to change
 	if ( typeof match === 'undefined' ) {
 		console.log( `Installed WordPress: ${ currentWordPressTag } has no available container image in repository. ` );
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
-		console.log( 'Environment WordPress version is: ' + chalk.yellow( match.ref ) );
+		console.log( 'Environment WordPress version is: ' + chalk.yellow( `${ match.tag } (${ match.ref })` ) );
+		if ( envData.wordpress.doNotUpgrade || false ) {
+			return false;
+		}
 	}
 
 	// Prompt the user to select a new WordPress Version
 	const confirm = await prompt( {
-		type: 'confirm',
+		type: 'select',
 		name: 'upgrade',
 		message: 'Would You like to change the WordPress version? ',
+		choices: [
+			'yes',
+			'no',
+			"no (don't ask anymore)",
+		],
 	} );
 
 	// If the user takes the new WP version path
-	if ( confirm.upgrade ) {
+	if ( confirm.upgrade === 'yes' ) {
 		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
 		const choice = await promptForComponent( 'wordpress' );
-		const version = filteredVersions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
+		const version = versions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
+		envData.wordpress.ref = version.ref;
 		await updateEnvironment( envData );
 
 		return true;
+	}
+	if ( confirm.upgrade === "no (don't ask anymore)" ) {
+		envData.wordpress.doNotUpgrade = true;
+		console.log( "We won't ask about upgrading this environment anymore." );
+		console.log( 'To manually upgrade please run:' + `${ chalk.yellow( `vip dev-env update --slug=${ slug }` ) }` );
+		await updateEnvironment( envData );
 	}
 
 	return false;
