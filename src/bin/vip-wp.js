@@ -231,6 +231,17 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		}, 5000 );
 	} );
 
+	currentJob.socket.on( 'exit', async ( { exitCode, message } ) => {
+		debug( 'socket: exit. Code: %d. Message: %s', exitCode, message );
+
+		if ( message ) {
+			console.log( message );
+		}
+
+		currentJob.socket.close();
+		process.exit( exitCode );
+	} );
+
 	currentJob.socket.io.on( 'reconnect_attempt', attempt => {
 		console.error( 'There was an error connecting to the server. Retrying...' );
 
