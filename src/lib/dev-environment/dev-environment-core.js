@@ -30,6 +30,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI,
 	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
+	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import type { AppInfo, InstanceData } from './types';
 
@@ -143,8 +144,9 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	instanceData.enterpiseSearchEnabled = instanceData.enterpiseSearchEnabled || false;
+	newInstanceData.enterpriseSearchEnabled = instanceData.enterpriseSearchEnabled || false;
 
+	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	return newInstanceData;
 }
 

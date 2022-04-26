@@ -24,6 +24,7 @@ import {
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import { getVersionList } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
@@ -140,6 +141,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
 		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
 		wordpress: {
@@ -266,6 +268,38 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 	return confirm.run();
 }
 
+function resolvePhpVersion( version: string ): string {
+	debug( `Resolving PHP version '${ version }'` );
+	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
+
+	// eslint-disable-next-line eqeqeq -- use loose comparison because commander resolves '8.0' to '8'
+	const index = versions.findIndex( value => value == version );
+	if ( index === -1 ) {
+		const image = images.find( value => value === version );
+		return image ?? images[ 0 ];
+	}
+
+	return images[ index ];
+}
+
+export async function promptForPhpVersion( initialValue: string ): Promise<string> {
+	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
+
+	const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const initial = images.findIndex( version => version === initialValue );
+
+	const select = new Select( {
+		message: 'PHP version to use',
+		choices,
+		initial,
+	} );
+
+	const answer = await select.run();
+	return resolvePhpVersion( answer );
+}
+
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
@@ -351,7 +385,8 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
-		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
+		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
+		.option( 'php', 'Explicitly choose PHP version to use' );
 }
 
 /**
@@ -363,7 +398,7 @@ export async function getTagChoices() {
 		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
 	}
 
-	const choices = versions.map( version => {
+	return versions.map( version => {
 		let mapping;
 		const tagFormatted = version.tag.padEnd( 8 - version.tag.length );
 		const prerelease = version.prerelease ? '(Pre-Release)' : '';
@@ -380,6 +415,4 @@ export async function getTagChoices() {
 			value: version.tag,
 		};
 	} );
-
-	return choices;
 }
