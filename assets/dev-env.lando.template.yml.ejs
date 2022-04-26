@@ -22,7 +22,6 @@ services:
     volumes:
       devtools: {}
       scripts:
-
   nginx:
     type: compose
     ssl: true
@@ -37,11 +36,9 @@ services:
   php:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/php-fpm:7.4
+      image: <%= php %>
       command: run.sh
       working_dir: /wp
-      healthcheck:
-        test: 'cat /wp/wp-includes/pomo/mo.php'
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
@@ -95,7 +92,7 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
-
+<% if ( enterpriseSearchEnabled ) { %>
   vip-search:
     type: compose
     services:
@@ -115,7 +112,7 @@ services:
         - search_data:/usr/share/elasticsearch/data
     volumes:
       search_data:
-
+<% } %>
 <% if ( statsd ) { %>
   statsd:
     type: compose
