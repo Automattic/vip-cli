@@ -238,6 +238,8 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 			console.log( message );
 		}
 
+		currentJob.stdinStream.destroy();
+		currentJob.stdoutStream.destroy();
 		currentJob.socket.close();
 		process.exit( exitCode );
 	} );
