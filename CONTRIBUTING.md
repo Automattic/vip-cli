@@ -50,14 +50,6 @@ Our release flow for VIP CLI follows this pattern:
 ### Changelogs
 Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
 
-### Release Schedule
-
-The VIP Customer Experience squad conducts releases on Tuesdays from 4AM to 5PM Pacific Time (US). Releases are regular but do not happen every Tuesday. Please coordinate with the VIP Customer Experience squad if you'd like to lead your own release.
-
-As part of the release process, our squad merges changes from the `develop` branch to the `master` branch. Therefore, do not merge changes into `develop` unless it is ready for release (or use a feature flag to disable it).
-
-Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via `npm` at any time outside of our release window. All other changes should participate in our release window.
-
 ## Releasing / Publishing
 
 ### Pre-publish Checks
