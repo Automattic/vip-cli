@@ -27,6 +27,14 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.9.5 (26 April 2022)
+- #1005 [dev-env] updateWordPress image improvements
+- #1006 Remove renovate.json
+- #1007 Set up CodeQL Scanning
+- #1008 WP-CLI: Reattach Reconnect-Related Events After a Successful Reconnection
+- #1009 Add ability to choose a PHP image to use
+- #1010 [dev-env] Add Enterprise Search, XDebug, phpMyAdmin options to the config wizard.
+
 ### 2.9.4 (07 April 2022)
 - #996 Clean up lint warnings
 - #1001 Fix reconnect event listeners
