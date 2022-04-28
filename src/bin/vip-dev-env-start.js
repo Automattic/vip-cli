@@ -15,6 +15,7 @@ import { exec } from 'child_process';
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
@@ -37,6 +38,10 @@ command()
 	.option( 'skip-rebuild', 'Only start stopped services' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		const startProcessing = new Date();
+
+		await trackEvent( 'dev_env_start_command_execute', opt );
+
 		const slug = getEnvironmentName( opt );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
@@ -60,7 +65,11 @@ command()
 			}
 
 			await startEnvironment( slug, options );
+
+			const processingTime = new Date() - startProcessing;
+			await trackEvent( 'dev_env_start_command_success', { processingTime } );
 		} catch ( error ) {
+			await trackEvent( 'dev_env_start_command_error', { error: error.message } );
 			handleCLIException( error );
 		}
 	} );
