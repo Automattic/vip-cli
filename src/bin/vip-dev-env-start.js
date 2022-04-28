@@ -43,7 +43,6 @@ command()
 		const slug = getEnvironmentName( opt );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
-
 		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
 
 

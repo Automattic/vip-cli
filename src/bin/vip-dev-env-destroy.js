@@ -14,11 +14,13 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { destroyEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -40,6 +42,9 @@ command()
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
 
+		const trackingInfo = getEnvTrackingInfo( slug );
+		await trackEvent( 'dev_env_destroy_command_execute', trackingInfo );
+
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		try {
@@ -48,7 +53,10 @@ command()
 
 			const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 			console.log( message );
+			await trackEvent( 'dev_env_destroy_command_success', trackingInfo );
 		} catch ( error ) {
+			const errorTrackingInfo = Object.assign( {}, trackingInfo, { error: error.message } );
+			await trackEvent( 'dev_env_destroy_command_error', errorTrackingInfo );
 			exit.withError( error.message );
 		}
 	} );

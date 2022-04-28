@@ -14,6 +14,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
@@ -59,6 +60,9 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = getEnvironmentName( opt );
 	debug( 'Args: ', arg, 'Options: ', opt );
 
+	const trackingInfo = { slug };
+	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
+
 	const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
 
 	const environmentAlreadyExists = doesEnvironmentExist( slug );
@@ -93,7 +97,11 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );
+
+		await trackEvent( 'dev_env_create_command_success', trackingInfo );
 	} catch ( error ) {
+		const errorTrackingInfo = Object.assign( {}, trackingInfo, { error: error.message } );
+		await trackEvent( 'dev_env_create_command_error', errorTrackingInfo );
 		exit.withError( error.message );
 	}
 } );

@@ -420,7 +420,14 @@ export async function getTagChoices() {
 export function getEnvTrackingInfo( slug: string ): any {
 	try {
 		const envData = readEnvironmentData( slug );
-		return Object.assign( {}, envData, { slug } );
+		const result = { slug };
+		for ( const key of Object.keys( envData ) ) {
+			// track doesnt like camelCase
+			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
+			result[ snakeCasedKey ] = envData[ key ];
+		}
+
+		return result;
 	} catch ( err ) {
 		return {
 			slug,
