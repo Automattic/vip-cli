@@ -26,7 +26,7 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getVersionList } from './dev-environment-core';
+import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -415,4 +415,15 @@ export async function getTagChoices() {
 			value: version.tag,
 		};
 	} );
+}
+
+export function getEnvTrackingInfo( slug: string ): any {
+	try {
+		const envData = readEnvironmentData( slug );
+		return Object.assign( {}, envData, { slug } );
+	} catch ( err ) {
+		return {
+			slug,
+		};
+	}
 }

@@ -20,6 +20,7 @@ import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -39,10 +40,12 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const startProcessing = new Date();
-
-		await trackEvent( 'dev_env_start_command_execute', opt );
-
 		const slug = getEnvironmentName( opt );
+
+		const trackingInfo = getEnvTrackingInfo( slug );
+
+		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
+
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
@@ -67,9 +70,11 @@ command()
 			await startEnvironment( slug, options );
 
 			const processingTime = new Date() - startProcessing;
-			await trackEvent( 'dev_env_start_command_success', { processingTime } );
+			const successTrackingInfo = Object.assign( {}, trackingInfo, { processingTime } );
+			await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
 		} catch ( error ) {
-			await trackEvent( 'dev_env_start_command_error', { error: error.message } );
+			const errorTrackingInfo = Object.assign( {}, trackingInfo, { error: error.message } );
+			await trackEvent( 'dev_env_start_command_error', errorTrackingInfo );
 			handleCLIException( error );
 		}
 	} );
