@@ -29,8 +29,8 @@ function createProxyAgent( url ) {
 	// VIP Socks Proxy should take precedence, should be fully backward compatible
 	if ( VIP_PROXY ) {
 		return new SocksProxyAgent( VIP_PROXY );
-	} else if ( process.env.VIP_PROXY_OTHER_ENABLED && ! CoveredInNoProxy( url, NO_PROXY ) && ( HTTPS_PROXY || HTTP_PROXY ) ) {
-		return GetWebProxyAgentBasedOnProtocol( url, HTTPS_PROXY, HTTP_PROXY );
+	} else if ( process.env.VIP_PROXY_OTHER_ENABLED && ! coveredInNoProxy( url, NO_PROXY ) && ( HTTPS_PROXY || HTTP_PROXY ) ) {
+		return getWebProxyAgentBasedOnProtocol( url, HTTPS_PROXY, HTTP_PROXY );
 	}
 	// If no environment variables are set, the no proxy is in effect, or if the proxy enable is not set return null (equivilant of no Proxy agent)
 	return null;
@@ -47,7 +47,7 @@ function createProxyAgent( url ) {
 // 2. *.site: do not proxy any subdomain of a domain
 // 3. abc.com: do not proxy www.abc.com, abc.com, etc.
 // See getProxyForUrl on npmjs.org for full "ruleset"
-function CoveredInNoProxy( url, noProxyString ) {
+function coveredInNoProxy( url, noProxyString ) {
 	// If the NO_PROXY env variable is not set, then the URL is not covered in the NO_PROXY (utility below does not handle this case)
 	if ( ! noProxyString ) {
 		return false;
@@ -67,7 +67,7 @@ function CoveredInNoProxy( url, noProxyString ) {
 //	- either the environment variable HTTP_PROXY or HTTPS_PROXY is set
 // Returns:
 //	- Either an instance of httpsProxyAgent or httpProxy agent depending on passed in values
-function GetWebProxyAgentBasedOnProtocol( url, httpsProxy, httpProxy ) {
+function getWebProxyAgentBasedOnProtocol( url, httpsProxy, httpProxy ) {
 	const protocol = url.substr( 0, 5 );
 	if ( protocol !== 'https' && protocol !== 'http:' ) {
 		return null;
