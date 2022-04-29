@@ -15,20 +15,20 @@ describe( 'validate CreateProxyAgent', () => {
 	beforeEach( () => {
 		// While this seems redundant, this handles the case if a user has proxy variables currently set that may affect the first
 		// test. The afterEach handle all other tests
-		delete process.env.VIP_PROXY;
-		delete process.env.HTTPS_PROXY;
-		delete process.env.HTTP_PROXY;
-		delete process.env.NO_PROXY;
-		delete process.env.VIP_PROXY_OTHER_ENABLED;
+		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'VIP_PROXY_OTHER_ENABLED' ];
+		for ( const envVar of envVarsToClear ) {
+			delete process.env[ envVar ];
+		}
 	} );
 	afterEach( () => {
 		// Clear all relevant environment variables as they will carryover to each test otherwise
-		delete process.env.VIP_PROXY;
-		delete process.env.HTTPS_PROXY;
-		delete process.env.HTTP_PROXY;
-		delete process.env.NO_PROXY;
-		delete process.env.VIP_PROXY_OTHER_ENABLED;
+		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'VIP_PROXY_OTHER_ENABLED' ];
+		for ( const envVar of envVarsToClear ) {
+			delete process.env[ envVar ];
+		}
 	} );
+
+	// TODO - Move to a table driven approach (see: https://github.com/Automattic/vip/blob/add/proxy-support/__tests__/lib/http/proxy-agent.js)
 
 	it( 'should validate feature flag', async () => {
 		const url = 'https://wpAPI.org/api';

@@ -5,6 +5,7 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
+import debug from 'debug';
 
 /**
  * Internal dependencies
@@ -28,6 +29,7 @@ function createProxyAgent( url ) {
 
 	// VIP Socks Proxy should take precedence, should be fully backward compatible
 	if ( VIP_PROXY ) {
+		debug( `Enabling VIP_PROXY proxy support using config: ${ VIP_PROXY }` );
 		return new SocksProxyAgent( VIP_PROXY );
 	} else if ( process.env.VIP_PROXY_OTHER_ENABLED && ! coveredInNoProxy( url, NO_PROXY ) && ( HTTPS_PROXY || HTTP_PROXY ) ) {
 		return getWebProxyAgentBasedOnProtocol( url, HTTPS_PROXY, HTTP_PROXY );
@@ -69,6 +71,7 @@ function coveredInNoProxy( url, noProxyString ) {
 //	- Either an instance of httpsProxyAgent or httpProxy agent depending on passed in values
 function getWebProxyAgentBasedOnProtocol( url, httpsProxy, httpProxy ) {
 	const protocol = url.substr( 0, 5 );
+	// TODO - Do we need both https and http here? What's the difference?
 	if ( protocol !== 'https' && protocol !== 'http:' ) {
 		return null;
 	}

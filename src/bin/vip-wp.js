@@ -140,7 +140,6 @@ const cancelCommand = async guid => {
 		} );
 };
 
-// TODO - Do we need to add the proxy agent here somewhere?
 const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 0 } ) => {
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();
@@ -415,7 +414,7 @@ commandWrapper( {
 						},
 					},
 				},
-				agent: createSocksProxyAgent(),
+				agent: createProxyAgent(),
 			} );
 
 			currentJob = await launchCommandAndGetStreams( {
