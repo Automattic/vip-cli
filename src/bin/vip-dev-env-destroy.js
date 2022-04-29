@@ -16,14 +16,13 @@ import chalk from 'chalk';
  */
 import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
-import * as exit from 'lib/cli/exit';
 import { destroyEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import {
-  getEnvTrackingInfo,
-  handleCLIException,
-} from "../lib/dev-environment/dev-environment-cli";
+	getEnvTrackingInfo,
+	handleCLIException,
+} from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

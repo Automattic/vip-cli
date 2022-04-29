@@ -21,10 +21,10 @@ import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doe
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 import {
-  addDevEnvConfigurationOptions,
-  getOptionsFromAppInfo,
-  handleCLIException,
-} from "../lib/dev-environment/dev-environment-cli";
+	addDevEnvConfigurationOptions,
+	getOptionsFromAppInfo,
+	handleCLIException,
+} from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
