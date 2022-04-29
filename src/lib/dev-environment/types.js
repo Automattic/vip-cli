@@ -7,6 +7,7 @@ export interface InstanceOptions {
 	clientCode?: string;
 	elasticsearch?: string;
 	mariadb?: string;
+	php?: string;
 	mediaRedirectDomain?: string;
 	statsd?: boolean;
 	phpmyadmin?: boolean;
@@ -52,4 +53,5 @@ export interface InstanceData {
 	xdebug: boolean;
 	elasticsearch: string;
 	mariadb: string;
+	php: string;
 }

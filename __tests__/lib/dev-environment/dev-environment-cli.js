@@ -7,7 +7,6 @@
  */
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
-
 /**
  * Internal dependencies
  */
@@ -309,9 +308,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( 'multisite' in input.preselected ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 3 );
 			} else {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 1 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
 			}
 
 			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
@@ -346,9 +345,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( input.preselected.mediaRedirectDomain ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 0 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 3 );
 			} else {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 1 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
 			}
 
 			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;
@@ -385,60 +384,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 			expect( result.mariadb ).toStrictEqual( expectedMaria );
 			expect( result.elasticsearch ).toStrictEqual( expectedElastic );
-		} );
-		it.each( [
-			{
-				service: 'statsd',
-				preselected: true,
-				expected: true,
-				wordpress: testReleaseWP,
-			},
-			{
-				service: 'statsd',
-				expected: false,
-				wordpress: testReleaseWP,
-			},
-			{
-				service: 'statsd',
-				default: true,
-				expected: true,
-				wordpress: testReleaseWP,
-			},
-			{
-				service: 'statsd',
-				preselected: false,
-				default: true,
-				expected: false,
-				wordpress: testReleaseWP,
-			},
-			{
-				service: 'phpmyadmin',
-				preselected: true,
-				default: true,
-				expected: true,
-				wordpress: testReleaseWP,
-			},
-			{
-				service: 'xdebug',
-				default: true,
-				expected: true,
-				wordpress: testReleaseWP,
-			},
-		] )( 'should handle auxiliary services', async input => {
-			const preselected = {};
-			const defaultOptions = {};
-			if ( 'preselected' in input ) {
-				preselected[ input.service ] = input.preselected;
-			}
-			if ( 'default' in input ) {
-				defaultOptions[ input.service ] = input.default;
-			}
-			if ( 'wordpress' in input ) {
-				preselected.wordpress = input.wordpress;
-			}
-			const result = await promptForArguments( preselected, defaultOptions );
-
-			expect( result[ input.service ] ).toStrictEqual( input.expected );
 		} );
 	} );
 } );

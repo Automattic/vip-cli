@@ -17,6 +17,7 @@ import os from 'os';
 /**
  * Internal dependencies
  */
+import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_SUBCOMMAND,
@@ -24,15 +25,16 @@ import {
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getVersionList } from './dev-environment-core';
+import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
 
-export function handleCLIException( exception: Error ) {
+export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
@@ -46,10 +48,19 @@ export function handleCLIException( exception: Error ) {
 
 		console.log( errorPrefix, message );
 
+		if ( trackKey ) {
+			try {
+				const errorTrackingInfo = { ...trackBaseInfo, error: message };
+				await trackEvent( trackKey, errorTrackingInfo );
+			} catch ( trackException ) {
+				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
+			}
+		}
+
 		if ( ! process.env.DEBUG ) {
-			console.log( `Please re-run the command with "${ chalk.bold( 'DEBUG=@automattic/vip:bin:dev-environment' ) }" prepended to it and provide the stack trace on the support ticket.` );
+			console.log( `Please re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
 			console.log( chalk.bold( '\nExample:\n' ) );
-			console.log( 'DEBUG=@automattic/vip:bin:dev-environment vip dev-env create\n' );
+			console.log( 'vip dev-env create --debug @automattic/vip:bin:dev-environment \n' );
 		}
 
 		debug( exception );
@@ -140,6 +151,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
 		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
 		wordpress: {
@@ -155,6 +167,12 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		phpmyadmin: false,
 		xdebug: false,
 		siteSlug: '',
+		enterpriseSearchEnabled: preselectedOptions.enterpriseSearchEnabled || defaultOptions.enterpriseSearchEnabled,
+	};
+
+	const promptLabels = {
+		xdebug: 'XDebug',
+		phpmyadmin: 'phpMyAdmin',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -177,11 +195,16 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData[ component ] = result;
 	}
 
-	for ( const service of [ 'statsd', 'phpmyadmin', 'xdebug' ] ) {
-		if ( service in preselectedOptions ) {
-			instanceData[ service ] = preselectedOptions[ service ];
-		} else if ( service in defaultOptions ) {
-			instanceData[ service ] = defaultOptions[ service ];
+	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Enterprise Search?', defaultOptions.enterpriseSearchEnabled );
+	if ( instanceData.enterpriseSearchEnabled ) {
+		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
+	} else {
+		instanceData.statsd = false;
+	}
+
+	for ( const service of [ 'phpmyadmin', 'xdebug' ] ) {
+		if ( service in instanceData ) {
+			instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
 		}
 	}
 
@@ -255,6 +278,38 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 	return confirm.run();
 }
 
+function resolvePhpVersion( version: string ): string {
+	debug( `Resolving PHP version '${ version }'` );
+	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
+
+	// eslint-disable-next-line eqeqeq -- use loose comparison because commander resolves '8.0' to '8'
+	const index = versions.findIndex( value => value == version );
+	if ( index === -1 ) {
+		const image = images.find( value => value === version );
+		return image ?? images[ 0 ];
+	}
+
+	return images[ index ];
+}
+
+export async function promptForPhpVersion( initialValue: string ): Promise<string> {
+	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
+
+	const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+	const initial = images.findIndex( version => version === initialValue );
+
+	const select = new Select( {
+		message: 'PHP version to use',
+		choices,
+		initial,
+	} );
+
+	const answer = await select.run();
+	return resolvePhpVersion( answer );
+}
+
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
@@ -312,48 +367,15 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	if ( component === 'wordpress' ) {
 		const message = `${ messagePrefix }Which version would you like`;
 		const tagChoices = await getTagChoices();
-
-		// Tag strings come back from the api with excess whitespace
-		// This strips the whitespace for matching to the defaultObject.tag
-		const formatted = tagChoices.map( elm => {
-			return elm.trim();
-		} );
-
-		// First tag not: "Pre-Release"
-		const firstNonPreRelease = formatted.find( img => {
-			return ! img.match( /Pre\-Release/g );
-		} );
-
-		// Set initialTagIndex as the first non Pre-Release
-		let initialTagIndex = formatted.indexOf( firstNonPreRelease );
-
-		if ( defaultObject?.tag ) {
-			const defaultTagIndex = formatted.indexOf( defaultObject.tag );
-			if ( defaultTagIndex !== -1 ) {
-				initialTagIndex = defaultTagIndex;
-			}
-		}
 		const selectTag = new Select( {
 			message,
-			choices: formatted,
-			initial: initialTagIndex,
+			choices: tagChoices,
 		} );
 		const option = await selectTag.run();
 
-		// Validate the input
-		// Some of the options are like: '5.7   →  5.7.5'
-		// Extract first occurrence of something that looks like a tag
-		const tagRgx = new RegExp( /(\d+\.\d+(?:\.\d+)?)/ );
-		const match = tagRgx.exec( option );
-		if ( ! Array.isArray( match ) || match.length < 2 ) {
-			throw new Error( `Invalid WordPress selection: ${ option }` );
-		}
-
-		const tag = match[ 1 ];
-
 		return {
 			mode: modeResult,
-			tag,
+			tag: option,
 		};
 	}
 
@@ -373,23 +395,23 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
-		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' );
+		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
+		.option( 'php', 'Explicitly choose PHP version to use' );
 }
 
 /**
  * Provides the list of tag choices for selection
  */
 export async function getTagChoices() {
-	const tagChoices = [];
-	let tagFormatted, prerelease, mapping;
 	const versions = await getVersionList();
 	if ( versions.length < 1 ) {
 		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
 	}
 
-	for ( const version of versions ) {
-		tagFormatted = version.tag.padEnd( 8 - version.tag.length );
-		prerelease = ( version.prerelease ) ? '(Pre-Release)' : '';
+	return versions.map( version => {
+		let mapping;
+		const tagFormatted = version.tag.padEnd( 8 - version.tag.length );
+		const prerelease = version.prerelease ? '(Pre-Release)' : '';
 
 		if ( version.tag !== version.ref ) {
 			mapping = `→ ${ prerelease } ${ version.ref }`;
@@ -397,8 +419,28 @@ export async function getTagChoices() {
 			mapping = '';
 		}
 
-		tagChoices.push( `${ tagFormatted } ${ mapping }` );
-	}
+		return {
+			name: version.tag,
+			message: `${ tagFormatted } ${ mapping }`,
+			value: version.tag,
+		};
+	} );
+}
 
-	return tagChoices.sort().reverse();
+export function getEnvTrackingInfo( slug: string ): any {
+	try {
+		const envData = readEnvironmentData( slug );
+		const result = { slug };
+		for ( const key of Object.keys( envData ) ) {
+			// track doesnt like camelCase
+			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
+			result[ snakeCasedKey ] = envData[ key ];
+		}
+
+		return result;
+	} catch ( err ) {
+		return {
+			slug,
+		};
+	}
 }
