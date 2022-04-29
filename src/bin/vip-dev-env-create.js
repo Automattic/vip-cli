@@ -14,12 +14,17 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
-import { addDevEnvConfigurationOptions, getOptionsFromAppInfo } from '../lib/dev-environment/dev-environment-cli';
+import {
+	addDevEnvConfigurationOptions,
+	getOptionsFromAppInfo,
+	handleCLIException,
+} from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -59,6 +64,9 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = getEnvironmentName( opt );
 	debug( 'Args: ', arg, 'Options: ', opt );
 
+	const trackingInfo = { slug };
+	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
+
 	const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
 
 	const environmentAlreadyExists = doesEnvironmentExist( slug );
@@ -93,7 +101,9 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );
+
+		await trackEvent( 'dev_env_create_command_success', trackingInfo );
 	} catch ( error ) {
-		exit.withError( error.message );
+		await handleCLIException( error, 'dev_env_create_command_error', trackingInfo );
 	}
 } );
