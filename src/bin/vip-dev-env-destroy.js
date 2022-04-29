@@ -20,7 +20,10 @@ import * as exit from 'lib/cli/exit';
 import { destroyEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
+import {
+  getEnvTrackingInfo,
+  handleCLIException,
+} from "../lib/dev-environment/dev-environment-cli";
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -55,8 +58,6 @@ command()
 			console.log( message );
 			await trackEvent( 'dev_env_destroy_command_success', trackingInfo );
 		} catch ( error ) {
-			const errorTrackingInfo = Object.assign( {}, trackingInfo, { error: error.message } );
-			await trackEvent( 'dev_env_destroy_command_error', errorTrackingInfo );
-			exit.withError( error.message );
+			await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfo );
 		}
 	} );

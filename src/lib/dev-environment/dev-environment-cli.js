@@ -17,6 +17,7 @@ import os from 'os';
 /**
  * Internal dependencies
  */
+import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_SUBCOMMAND,
@@ -33,7 +34,7 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
 
-export function handleCLIException( exception: Error ) {
+export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
@@ -46,6 +47,15 @@ export function handleCLIException( exception: Error ) {
 		message = message.replace( 'ERROR: ', '' );
 
 		console.log( errorPrefix, message );
+
+		if ( trackKey ) {
+			try {
+				const errorTrackingInfo = { ...trackBaseInfo, error: message };
+				await trackEvent( trackKey, errorTrackingInfo );
+			} catch ( trackException ) {
+				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
+			}
+		}
 
 		if ( ! process.env.DEBUG ) {
 			console.log( `Please re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
