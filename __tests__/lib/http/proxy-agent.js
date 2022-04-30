@@ -31,39 +31,36 @@ describe( 'validate CreateProxyAgent', () => {
 	// Tests checking for null results
 	it.each( [
 		{
-			envVars: {
-				VIP_PROXY: '',
-				HTTPS_PROXY: '',
-				HTTP_PROXY: '',
-				NO_PROXY: '',
-				VIP_PROXY_OTHER_ENABLED: '',
-			},
+			// No proxies set, should do nothing
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
-	] )( 'should return null with env: $envVars', async ( { envVars, urlToHit, expectedClassName } ) => {
-		// Run helper function to set environment variables
-		setEnvironmentVariabeles( envVars );
-		// We have to dynamically import the module so we can set environment variables above
-		// All tests must be async to support this dynamic import, otherwise the modified env variables are not picked up
-		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-		const agent = createProxyAgent( urlToHit );
-		expect( agent ).not.toBeNull();
-	} );
-
-	// Test checking for non-null results
-	it.each( [
 		{
-			envVars: {
-				VIP_PROXY: '',
-				HTTPS_PROXY: '',
-				HTTP_PROXY: '',
-				NO_PROXY: '',
-				VIP_PROXY_OTHER_ENABLED: '',
-			},
-			urlToHit: 'https://wpAPI.org/api',
-			expectedClassName: 'HttpProxyAgent',
+			// HTTPS Proxy set, but feature flag is not set, do nothing
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '' } ],
+			urlToHit: 'http://wpAPI.org/api',
 		},
-	] )( 'should return $expectedClassName with url: $urlToHit and env: $envVars', async ( { envVars, urlToHit, expectedClassName, expectNullResults } ) => {
+		{
+			// Proxy is enabled, but NO_PROXY is in effect
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '*' } ],
+			urlToHit: 'https://wpAPI.org/api',
+		},
+		{
+			// Proxy is enabled, but NO_PROXY is in effect
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '*.wp,.lndo.site,foo.bar.org' } ],
+			urlToHit: 'https://wpAPI.wp.org/api',
+		},
+		{
+			// Proxy is enabled, but NO_PROXY is in effect
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: 'wpAPI.org' } ],
+			urlToHit: 'https://wpAPI.org/api',
+		},
+		{
+			// Only the NO_PROXY is set, nothing should be proxied
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
+			urlToHit: 'https://wpAPI.org/api',
+		},
+	] )( 'should return null with %o', async ( { envVars, urlToHit } ) => {
 		// Run helper function to set environment variables
 		setEnvironmentVariabeles( envVars );
 		// We have to dynamically import the module so we can set environment variables above
@@ -71,197 +68,52 @@ describe( 'validate CreateProxyAgent', () => {
 		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
 		const agent = createProxyAgent( urlToHit );
 		expect( agent ).toBeNull();
+	} );
+
+	// Test checking for non-null results
+	it.each( [
+		{
+			// Validate VIP_PROXY takes precedence over everything
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { NO_PROXY: '' } ],
+			urlToHit: 'https://wpAPI.org/api',
+			expectedClassName: 'SocksProxyAgent',
+		},
+		{
+			// Validate VIP_PROXY takes precedence over other set proxies
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '*' } ],
+			urlToHit: 'https://wpAPI.org/api',
+			expectedClassName: 'SocksProxyAgent',
+		},
+		{
+			// Validate HTTPS_PROXY can be created
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '' } ],
+			urlToHit: 'https://wpAPI.org/api',
+			expectedClassName: 'HttpsProxyAgent',
+		},
+		{
+			// Validate request is proxied if active no_proxy does not apply
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
+			urlToHit: 'https://wpAPI.org/api',
+			expectedClassName: 'HttpsProxyAgent',
+		},
+	] )( 'should return proxy with %o', async ( { expectedClassName, urlToHit, envVars } ) => {
+		// Run helper function to set environment variables
+		setEnvironmentVariabeles( envVars );
+		// We have to dynamically import the module so we can set environment variables above
+		// All tests must be async to support this dynamic import, otherwise the modified env variables are not picked up
+		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+		const agent = createProxyAgent( urlToHit );
+		expect( agent ).not.toBeNull();
 		expect( agent ).toBeInstanceOf( expectedClassName );
 	} );
 
 	// Helper function to set environment variables based on passed in object
-	// envVars of the form:
-	// {
-	// 	'VIP_PROXY' : '',
-	// 	'HTTPS_PROXY' : '',
-	// 	'HTTP_PROXY' : '',
-	// 	'NO_PROXY' : '',
-	// 	'VIP_PROXY_OTHER_ENABLED' : ''
-	// }
+	// envVars of the form: [ { VAR: 'VALUE' }, { VAR1: 'VALUE1' }, ... ]
 	function setEnvironmentVariabeles( envVars ) {
-		if ( envVars.VIP_PROXY ) {
-			process.env.VIP_PROXY = envVars.VIP_PROXY;
-		}
-		if ( envVars.HTTPS_PROXY ) {
-			process.env.HTTPS_PROXY = envVars.HTTPS_PROXY;
-		}
-		if ( envVars.HTTP_PROXY ) {
-			process.env.HTTP_PROXY = envVars.HTTP_PROXY;
-		}
-		if ( envVars.NO_PROXY ) {
-			process.env.NO_PROXY = envVars.NO_PROXY;
-		}
-		if ( envVars.VIP_PROXY_OTHER_ENABLED ) {
-			process.env.VIP_PROXY_OTHER_ENABLED = envVars.VIP_PROXY_OTHER_ENABLED;
+		for ( const index in envVars ) {
+			for ( const key in envVars[ index ] ) {
+				process.env.key = envVars[ index ].key;
+			}
 		}
 	}
-
-	// TODO - Move to a table driven approach (see: https://github.com/Automattic/vip/blob/add/proxy-support/__tests__/lib/http/proxy-agent.js)
-
-	// it( 'should validate feature flag', async () => {
-	// 	const url = 'https://wpAPI.org/api';
-	// 	// Since the VIP_PROXY_OTHER_ENABLED is not set, all other proxy variables should be ignored  (EXCEPT VIP_PROXY)
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com:4022';
-	// 	process.env.NO_PROXY = '.wp,.lndo.site';
-
-	// 	// We have to dynamically import the module so we can set environment variables above
-	// 	// All tests must be async to support this dynamic import, otherwise the modified env variables are not picked up
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should validate VIP_PROXY takes precedence over everything', async () => {
-	// 	const url = 'https://wpAPI.org/api';
-	// 	// Even though VIP_PROXY_OTHER_ENABLED is not set, the VIP_PROXY variable should take precedence to keep backwards compatibility
-	// 	process.env.VIP_PROXY = 'socks5://myproxy.com:4022';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).not.toBeNull();
-	// 	expect( agent ).toBeInstanceOf( SocksProxyAgent );
-	// } );
-
-	// it( 'should validate VIP_PROXY takes precedence over other set proxies', async () => {
-	// 	const url = 'https://wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.NO_PROXY = '*';
-	// 	process.env.VIP_PROXY = 'socks5://myproxy.com:4022';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).not.toBeNull();
-	// 	expect( agent ).toBeInstanceOf( SocksProxyAgent );
-	// } );
-
-	// it( 'should create https proxy', async () => {
-	// 	const url = 'https://wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).not.toBeNull();
-	// 	expect( agent ).toBeInstanceOf( HttpsProxyAgent );
-	// } );
-
-	// it( 'should create http proxy', async () => {
-	// 	// Note the URL must also be http for this to work
-	// 	const url = 'http://wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTP_PROXY = 'http://myproxy.com';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).not.toBeNull();
-	// 	expect( agent ).toBeInstanceOf( HttpProxyAgent );
-	// } );
-
-	// it( 'should validate non-matching URL to protocol (https)', async () => {
-	// 	// Since the given URL uses https and the only proxy env variable set is HTTP, the request should not be proxied
-	// 	const url = 'https://wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTP_PROXY = 'http://myproxy.com';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should validate non-matching URL to protocol (http)', async () => {
-	// 	const url = 'http://wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should validate invalid URL to proxy (no protocol given)', async () => {
-	// 	const url = 'wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should not proxy based on solo wildcard', async () => {
-	// 	const url = 'https://wpAPI.org/api';
-	// 	// Even though HTTPS_PROXY is set, the NO_PROXY is applicable to the URL and should not be proxied
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-	// 	process.env.NO_PROXY = '*';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should not proxy based on domain wildcard', async () => {
-	// 	const url = 'https://wpAPI.wp.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTP_PROXY = 'https://myproxy.com';
-	// 	process.env.NO_PROXY = '*.wp,.lndo.site,foo.bar.org';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should not proxy based on matching subdomain', async () => {
-	// 	const url = 'https://wpAPI.org/api';
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-	// 	process.env.NO_PROXY = 'wpAPI.org';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
-
-	// it( 'should proxy when no_proxy does not apply', async () => {
-	// 	const url = 'https://wpAPI.wp.org/api';
-	// 	// The url should be proxied by the HTTPS proxy because the given NO_PROXY does not apply
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.HTTPS_PROXY = 'https://myproxy.com';
-	// 	process.env.NO_PROXY = 'wpAPI.org,.lndo.site,foo.bar.org';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).not.toBeNull();
-	// 	expect( agent ).toBeInstanceOf( HttpsProxyAgent );
-	// } );
-
-	// it( 'should not proxy when no_proxy is set by itself', async () => {
-	// 	const url = 'wpAPI.wp.org/api';
-	// 	// An odd case is if a client has NO_PROXY and VIP_PROXY_OTHER_ENABLED set (should not return a proxyAgent)
-	// 	process.env.VIP_PROXY_OTHER_ENABLED = '1';
-	// 	process.env.NO_PROXY = 'wpAPI.org,.lndo.site,foo.bar.org';
-
-	// 	const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
-
-	// 	const agent = createProxyAgent( url );
-	// 	expect( agent ).toBeNull();
-	// } );
 } );
