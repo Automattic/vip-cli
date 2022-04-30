@@ -46,14 +46,17 @@ function createProxyAgent( url ) {
 //	- (boolean) true/false depending on result
 // NO_PROXY Rules (based directly on underlying dependency):
 // 1. * (alone): proxy nothing
-// 2. *.site: do not proxy any subdomain of a domain
+// 2. *.site: do not proxy any subdomain of a domain (top level domain must still be given)
+//		Example: '.api' does NOT match wp.api.org, but '.api.org' does (see tests)
 // 3. abc.com: do not proxy www.abc.com, abc.com, etc.
-// See getProxyForUrl on npmjs.org for full "ruleset"
+// See proxy-from-env on npmjs.org for full "ruleset"
 function coveredInNoProxy( url, noProxyString ) {
 	// If the NO_PROXY env variable is not set, then the URL is not covered in the NO_PROXY (utility below does not handle this case)
 	if ( ! noProxyString ) {
 		return false;
 	}
+	console.log( 'DEBUG' );
+	console.log( getProxyForUrl( url ) );
 	// If getProxyForUrl returns an empty string, then the host should not be proxied
 	// This isn't the most straight forward way to determine if a NO_PROXY is applicable, but the only package I could find that is relatively new and maintained
 	return getProxyForUrl( url ) === '';

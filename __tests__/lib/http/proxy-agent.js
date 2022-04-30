@@ -47,7 +47,7 @@ describe( 'validate CreateProxyAgent', () => {
 		},
 		{
 			// Proxy is enabled, but NO_PROXY is in effect
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '*.wp,.lndo.site,foo.bar.org' } ],
+			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '.wp.org,.lndo.site,foo.bar.org' } ],
 			urlToHit: 'https://wpAPI.wp.org/api',
 		},
 		{
@@ -76,27 +76,27 @@ describe( 'validate CreateProxyAgent', () => {
 			// Validate VIP_PROXY takes precedence over everything
 			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
-			expectedClassName: 'SocksProxyAgent',
+			expectedClass: SocksProxyAgent,
 		},
 		{
 			// Validate VIP_PROXY takes precedence over other set proxies
 			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '*' } ],
 			urlToHit: 'https://wpAPI.org/api',
-			expectedClassName: 'SocksProxyAgent',
+			expectedClass: SocksProxyAgent,
 		},
 		{
 			// Validate HTTPS_PROXY can be created
 			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
-			expectedClassName: 'HttpsProxyAgent',
+			expectedClass: HttpsProxyAgent,
 		},
 		{
 			// Validate request is proxied if active no_proxy does not apply
 			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
-			urlToHit: 'https://wpAPI.org/api',
-			expectedClassName: 'HttpsProxyAgent',
+			urlToHit: 'https://wpAPI2.org/api',
+			expectedClass: HttpsProxyAgent,
 		},
-	] )( 'should return proxy with %o', async ( { expectedClassName, urlToHit, envVars } ) => {
+	] )( 'should return proxy with %o', async ( { envVars, urlToHit, expectedClass } ) => {
 		// Run helper function to set environment variables
 		setEnvironmentVariabeles( envVars );
 		// We have to dynamically import the module so we can set environment variables above
@@ -104,7 +104,7 @@ describe( 'validate CreateProxyAgent', () => {
 		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
 		const agent = createProxyAgent( urlToHit );
 		expect( agent ).not.toBeNull();
-		expect( agent ).toBeInstanceOf( expectedClassName );
+		expect( agent ).toBeInstanceOf( expectedClass );
 	} );
 
 	// Helper function to set environment variables based on passed in object
@@ -112,7 +112,7 @@ describe( 'validate CreateProxyAgent', () => {
 	function setEnvironmentVariabeles( envVars ) {
 		for ( const index in envVars ) {
 			for ( const key in envVars[ index ] ) {
-				process.env.key = envVars[ index ].key;
+				process.env[ key ] = envVars[ index ][ key ];
 			}
 		}
 	}
