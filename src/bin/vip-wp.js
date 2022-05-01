@@ -414,7 +414,7 @@ commandWrapper( {
 						},
 					},
 				},
-				agent: createProxyAgent(),
+				agent: createProxyAgent( API_HOST ),
 			} );
 
 			currentJob = await launchCommandAndGetStreams( {
