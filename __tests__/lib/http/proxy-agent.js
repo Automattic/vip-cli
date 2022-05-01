@@ -12,15 +12,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 
 describe( 'validate CreateProxyAgent', () => {
 	beforeEach( () => {
-		// While this seems redundant, this handles the case if a user has proxy variables currently set that may affect the first
-		// test. The afterEach handle all other tests
-		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'VIP_PROXY_OTHER_ENABLED' ];
-		for ( const envVar of envVarsToClear ) {
-			delete process.env[ envVar ];
-		}
-	} );
-	afterEach( () => {
-		// Clear all relevant environment variables as they will carryover to each test otherwise
+		// Clear all applicable environment variables before running test so each test starts "clean"
+		// using beforeEach instead of afterEach in case the client running tests has env variables set before the first test is run
 		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'VIP_PROXY_OTHER_ENABLED' ];
 		for ( const envVar of envVarsToClear ) {
 			delete process.env[ envVar ];
