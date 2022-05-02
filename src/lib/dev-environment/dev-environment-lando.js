@@ -22,7 +22,7 @@ import App from 'lando/lib/app';
 /**
  * This file will hold all the interactions with lando library
  */
-const DEBUG_KEY = '@automattic/vip:bin:dev-environment-lando';
+const DEBUG_KEY = '@automattic/vip:bin:dev-environment';
 const debug = debugLib( DEBUG_KEY );
 
 let landoConfRoot;
