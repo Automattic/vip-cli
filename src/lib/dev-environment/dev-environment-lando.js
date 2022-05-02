@@ -159,6 +159,10 @@ export async function landoInfo( instancePath: string ) {
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
 	const isUp = await isEnvUp( app );
+	const frontEndUrl = app.info
+		.find( service => 'nginx' === service.service )
+		?.urls[ 0 ];
+	const loginUrl = `${ frontEndUrl }wp-admin/`;
 
 	const extraService = await getExtraServicesConnections( lando, app );
 	appInfo = {
@@ -170,6 +174,12 @@ export async function landoInfo( instancePath: string ) {
 
 	// Drop vipdev prefix
 	appInfo.name = appInfo.name.replace( /^vipdev/, '' );
+
+	// Add login information and documentation link
+	appInfo[ 'Login URL' ] = loginUrl;
+	appInfo[ 'Default username' ] = 'vipgo';
+	appInfo[ 'Default password' ] = 'password';
+	appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/tips/';
 
 	return appInfo;
 }
