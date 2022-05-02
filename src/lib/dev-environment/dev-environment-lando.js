@@ -46,7 +46,9 @@ function getLandoConfig() {
 
 	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
 
-	const logLevelConsole = ( process.env.DEBUG || '' ).includes( DEBUG_KEY ) ? 'debug' : 'warn';
+	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
+	const isAllDebugSelected = process.env.DEBUG === '*';
+	const logLevelConsole = ( isAllDebugSelected || isLandoDebugSelected ) ? 'debug' : 'warn';
 
 	return {
 		logLevelConsole,
