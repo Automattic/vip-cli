@@ -12,8 +12,9 @@
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 
@@ -37,9 +38,13 @@ command( {
 		const [ filePath ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );
 
+		const trackingInfo = getEnvTrackingInfo( slug );
+		await trackEvent( 'dev_env_import_media_command_execute', trackingInfo );
+
 		try {
 			await importMediaPath( slug, filePath );
+			await trackEvent( 'dev_env_import_media_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error );
+			handleCLIException( error, 'dev_env_import_media_command_error', trackingInfo );
 		}
 	} );

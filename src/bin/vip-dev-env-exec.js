@@ -12,10 +12,12 @@
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { exec } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
 
 const examples = [
 	{
@@ -38,6 +40,9 @@ command( { wildcardCommand: true } )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = getEnvironmentName( opt );
 
+		const trackingInfo = getEnvTrackingInfo( slug );
+		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );
+
 		try {
 			// to avoid confusion let's enforce -- as a splitter for arguments for this command and wp itself
 			const argSplitterIx = process.argv.findIndex( argument => '--' === argument );
@@ -52,7 +57,8 @@ command( { wildcardCommand: true } )
 			}
 
 			await exec( slug, arg );
+			await trackEvent( 'dev_env_exec_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error );
+			handleCLIException( error, 'dev_env_exec_command_error', trackingInfo );
 		}
 	} );
