@@ -19,7 +19,7 @@ import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException} from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

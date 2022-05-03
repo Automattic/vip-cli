@@ -14,7 +14,6 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
-import { console } from "inspector";
 
 /**
  * Internal dependencies
