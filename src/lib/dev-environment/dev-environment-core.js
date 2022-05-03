@@ -20,7 +20,7 @@ import copydir from 'copy-dir';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild, ensureDockerInstalled } from './dev-environment-lando';
+import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
 import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
