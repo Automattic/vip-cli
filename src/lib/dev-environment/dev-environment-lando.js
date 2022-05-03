@@ -14,6 +14,7 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
+import { console } from "inspector";
 
 /**
  * Internal dependencies
@@ -293,4 +294,18 @@ async function ensureNoOrphantProxyContainer( lando ) {
 	}
 
 	await proxyContainer.remove();
+}
+
+export async function ensureDockerInstalled() {
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	lando.log.verbose( 'docker-engine exists: %s', lando.engine.dockerInstalled );
+	if ( lando.engine.dockerInstalled === false ) {
+		throw Error( 'docker could not be located!' );
+	}
+	lando.log.verbose( 'docker-compose exists: %s', lando.engine.composeInstalled );
+	if ( lando.engine.composeInstalled === false ) {
+		throw Error( 'docker-compose could not be located!' );
+	}
 }
