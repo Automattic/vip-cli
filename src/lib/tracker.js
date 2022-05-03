@@ -14,7 +14,7 @@ import env from './env';
 
 let analytics = null;
 
-async function init(): Analytics {
+async function init(): Promise<Analytics> {
 	const uuid = await Token.uuid();
 
 	const clients = {};
@@ -30,21 +30,21 @@ async function init(): Analytics {
 	return analytics;
 }
 
-async function getInstance(): Analytics {
+async function getInstance(): Promise<Analytics> {
 	if ( analytics ) {
 		return analytics;
 	}
 
-	analytics = init();
+	analytics = await init();
 
 	return analytics;
 }
 
 export async function trackEvent( ...args ): Promise<Response> {
-	await Token.uuid();
 	try {
+		await Token.uuid();
 		const client = await getInstance();
-		return client.trackEvent( ...args );
+		return await client.trackEvent( ...args );
 	} catch ( err ) {
 		debug( 'trackEvent() failed', err );
 	}
