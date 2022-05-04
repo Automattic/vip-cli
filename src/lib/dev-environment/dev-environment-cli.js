@@ -30,7 +30,7 @@ import {
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
-import { ensureDockerInstalled } from './dev-environment-lando';
+import { validateDockerInstalled } from './dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -71,7 +71,7 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 
 export const validateDependencies = async () => {
 	try {
-		await ensureDockerInstalled();
+		await validateDockerInstalled();
 	} catch ( exception ) {
 		exit.withError( exception.message );
 	}
