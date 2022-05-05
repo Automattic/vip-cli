@@ -68,7 +68,7 @@ command()
 			await startEnvironment( slug, options );
 
 			const processingTime = new Date() - startProcessing;
-			const successTrackingInfo = { ...trackingInfo, processingTime };
+			const successTrackingInfo = { ...trackingInfo, processing_time: processingTime };
 			await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_start_command_error', trackingInfo );
