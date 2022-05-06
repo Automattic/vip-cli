@@ -13,10 +13,12 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { printEnvironmentInfo, printAllEnvironmentsInfo } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
+import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -42,6 +44,9 @@ command()
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
 
+		const trackingInfo = opt.all ? { all: true } : getEnvTrackingInfo( slug );
+		await trackEvent( 'dev_env_info_command_execute', trackingInfo );
+
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		try {
@@ -50,7 +55,8 @@ command()
 			} else {
 				await printEnvironmentInfo( slug );
 			}
+			await trackEvent( 'dev_env_info_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error );
+			handleCLIException( error, 'dev_env_info_command_error', trackingInfo );
 		}
 	} );

@@ -12,6 +12,7 @@
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { printAllEnvironmentsInfo } from 'lib/dev-environment/dev-environment-core';
 import { handleCLIException } from 'lib/dev-environment/dev-environment-cli';
@@ -27,9 +28,13 @@ const examples = [
 command()
 	.examples( examples )
 	.argv( process.argv, async () => {
+		const trackingInfo = { all: true };
+		await trackEvent( 'dev_env_list_command_execute', trackingInfo );
+
 		try {
 			await printAllEnvironmentsInfo();
+			await trackEvent( 'dev_env_list_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error );
+			handleCLIException( error, 'dev_env_list_command_error', trackingInfo );
 		}
 	} );

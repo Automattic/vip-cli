@@ -14,10 +14,11 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { addDevEnvConfigurationOptions, handleCLIException, promptForArguments } from '../lib/dev-environment/dev-environment-cli';
+import { addDevEnvConfigurationOptions, getEnvTrackingInfo, handleCLIException, promptForArguments } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
@@ -37,6 +38,9 @@ addDevEnvConfigurationOptions( cmd );
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = getEnvironmentName( opt );
+
+	const trackingInfo = getEnvTrackingInfo( slug );
+	await trackEvent( 'dev_env_update_command_execute', trackingInfo );
 
 	try {
 		const environmentAlreadyExists = doesEnvironmentExist( slug );
@@ -77,12 +81,13 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		const message = '\n' + chalk.green( '✓' ) + ' environment updated. Restart environment for changes to take an affect.';
 		console.log( message );
+		await trackEvent( 'dev_env_update_command_success', trackingInfo );
 	} catch ( error ) {
 		if ( 'ENOENT' === error.code ) {
 			const message = 'Environment was created before update was supported.\n\nTo update environment please destroy it and create a new one.';
-			handleCLIException( new Error( message ) );
+			handleCLIException( new Error( message ), 'dev_env_update_command_error', trackingInfo );
 		} else {
-			handleCLIException( error );
+			handleCLIException( error, 'dev_env_update_command_error', trackingInfo );
 		}
 	}
 } );

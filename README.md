@@ -26,6 +26,16 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.10.0 (4 May 2022)
+
+- #1021 [dev-env] Add login info and documentation link to `dev-env info`
+- #1023 [dev-env] Skip the trunk from the prompt about the latest available WordPress versions
+- #1019 [dev-env] Unifies lando and other dev-env debug logs
+- #1018 [dev-env] enable lando debug on `--debug`
+- #1017 [dev-env] Adding tracking for create and destroy sub commands
+- #1016 [dev-env] Adding tracking for start sub command
+- #1020 [dev-env] More tracking
+
 ### 2.9.5 (26 April 2022)
 
 - #1005 [dev-env] updateWordPress image improvements
