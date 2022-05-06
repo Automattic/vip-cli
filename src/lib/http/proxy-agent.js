@@ -3,6 +3,7 @@
  */
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
 import debug from 'debug';
 
@@ -10,33 +11,44 @@ import debug from 'debug';
  * Internal dependencies
  */
 
-// Note: This module requires the use of a special environment variable "VIP_PROXY_OTHER_ENABLED"
+// Note: This module requires the use of a special environment variable "VIP_USE_SYSTEM_PROXY"
 // The setting of it to any value allows this module to create a proxy agent based on proxy environment variables
 // If not set, this module will revert back to the previous functionality (hence being fully backward compatible and non-breaking for users)
 
 // This function returns a proxy given a few scenarios (in order of precedence):
 // 1. VIP_PROXY is set: a SOCKS proxy is returned same as the previous version of this module
 // 2. No applicable variables are set: null is returned (thus, no proxy agent is returned)
-// 3. VIP_PROXY_OTHER_ENABLED and HTTPS_PROXY are set: an HTTPS_PROXY is returned (assuming the given url uses the https protocol)
-// 4. NO_PROXY is set along with VIP_PROXY_OTHER ENABLED and HTTPS_PROXY: An HTTPS_PROXY is returned assuming NO_PROXY is not applicable to the URL
-// Note: HTTP_PROXY is not supported at this time as the wp url is always https in production
+// 3. VIP_USE_SYSTEM_PROXY and SOCKS_PROXY are set: a SOCKS_PROXY is returned
+// 4. VIP_USE_SYSTEM_PROXY and HTTPS_PROXY are set: an HTTPS_PROXY is returned
+// 5. VIP_USE_SYSTEM_PROXY and HTTP_PROXY are set: an HTTP_PROXY is returned
+// 6. NO_PROXY is set along with VIP_USE_SYSTEM_PROXY and any system proxy: null is returned if the no proxy applies, otherwise the first active proxy is used
+// This allows near full customization by the client of what proxy should be used, instead of making assumptions based on the URL string
 function createProxyAgent( url ) {
-	const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null;
 	const VIP_PROXY = process.env.VIP_PROXY || process.env.vip_proxy || null;
+	const SOCKS_PROXY = process.env.SOCKS_PROXY || process.env.socks_proxy || null;
+	const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null;
+	const HTTP_PROXY = process.env.HTTP_PROXY || process.env.http_proxy || null;
 	const NO_PROXY = process.env.NO_PROXY || process.env.no_proxy || null;
 
-	// VIP Socks Proxy should take precedence, should be fully backward compatible
+	// VIP Socks Proxy should take precedence and should be fully backward compatible
 	if ( VIP_PROXY ) {
 		debug( `Enabling VIP_PROXY proxy support using config: ${ VIP_PROXY }` );
 		return new SocksProxyAgent( VIP_PROXY );
-	} else if ( process.env.VIP_PROXY_OTHER_ENABLED && ! coveredInNoProxy( url, NO_PROXY ) && HTTPS_PROXY ) {
-		// Determine if an HTTPS proxy applies to the URL
-		const protocol = url.substr( 0, 5 );
-		if ( protocol === 'https' ) {
+	}
+	// Now check for any system proxy usage
+	if ( process.env.VIP_USE_SYSTEM_PROXY && ! coveredInNoProxy( url, NO_PROXY ) ) {
+		if ( SOCKS_PROXY ) {
+			debug( `Enabling SOCKS proxy support using config: ${ SOCKS_PROXY }` );
+			return new SocksProxyAgent( SOCKS_PROXY );
+		}
+		if ( HTTPS_PROXY ) {
 			debug( `Enabling HTTPS proxy support using config: ${ HTTPS_PROXY }` );
 			return new HttpsProxyAgent( HTTPS_PROXY );
 		}
-		return null;
+		if ( HTTP_PROXY ) {
+			debug( `Enabling HTTP proxy support using config: ${ HTTP_PROXY }` );
+			return new HttpProxyAgent( HTTP_PROXY );
+		}
 	}
 	// If no environment variables are set, the no proxy is in effect, or if the proxy enable is not set return null (equivilant of no Proxy agent)
 	return null;

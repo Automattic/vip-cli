@@ -4,6 +4,7 @@
  */
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
 
 /**
  * Internal dependencies
@@ -14,7 +15,7 @@ describe( 'validate CreateProxyAgent', () => {
 	beforeEach( () => {
 		// Clear all applicable environment variables before running test so each test starts "clean"
 		// using beforeEach instead of afterEach in case the client running tests has env variables set before the first test is run
-		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'VIP_PROXY_OTHER_ENABLED' ];
+		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'SOCKS_PROXY', 'VIP_USE_SYSTEM_PROXY' ];
 		for ( const envVar of envVarsToClear ) {
 			delete process.env[ envVar ];
 		}
@@ -24,32 +25,42 @@ describe( 'validate CreateProxyAgent', () => {
 	it.each( [
 		{
 			// No proxies set, should do nothing
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { NO_PROXY: '' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 		{
 			// HTTPS Proxy set, but feature flag is not set, do nothing
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: '' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
+			urlToHit: 'http://wpAPI.org/api',
+		},
+		{
+			// HTTP Proxy set, but feature flag is not set, do nothing
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
+			urlToHit: 'http://wpAPI.org/api',
+		},
+		{
+			// SOCKS Proxy (not VIP) set, but feature flag is not set, do nothing
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: 'socks5://myproxy.com:4022' }, { NO_PROXY: '' } ],
 			urlToHit: 'http://wpAPI.org/api',
 		},
 		{
 			// Proxy is enabled, but NO_PROXY is in effect
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: '*' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '*' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 		{
 			// Proxy is enabled, but NO_PROXY is in effect
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: '.wp.org,.lndo.site,foo.bar.org' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '.wp.org,.lndo.site,foo.bar.org' } ],
 			urlToHit: 'https://wpAPI.wp.org/api',
 		},
 		{
 			// Proxy is enabled, but NO_PROXY is in effect
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: 'wpAPI.org' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: 'socks5://myproxy.com:4022' }, { NO_PROXY: 'wpAPI.org' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 		{
 			// Only the NO_PROXY is set, nothing should be proxied
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 	] )( 'should return null with %o', async ( { envVars, urlToHit } ) => {
@@ -64,26 +75,38 @@ describe( 'validate CreateProxyAgent', () => {
 	// Test checking for non-null results
 	it.each( [
 		{
-			// Validate VIP_PROXY takes precedence over everything
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: '' }, { NO_PROXY: '' } ],
+			// Validate VIP_PROXY takes precedence over the feature flag
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
 			expectedClass: SocksProxyAgent,
 		},
 		{
 			// Validate VIP_PROXY takes precedence over other set proxies
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: '*' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: 'socks5://myproxy.com:4022' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '*' } ],
 			urlToHit: 'https://wpAPI.org/api',
 			expectedClass: SocksProxyAgent,
 		},
 		{
-			// Validate HTTPS_PROXY can be created
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: '' } ],
+			// Validate SOCKS_PROXY is the first system proxy checked for
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: 'socks5://myproxy.com:4022' }, { NO_PROXY: '' } ],
+			urlToHit: 'https://wpAPI.org/api',
+			expectedClass: SocksProxyAgent,
+		},
+		{
+			// Validate HTTPS_PROXY is the second system proxy checked for
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
 			expectedClass: HttpsProxyAgent,
 		},
 		{
+			// Validate HTTP_PROXY is the third system proxy checked for
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
+			urlToHit: 'https://wpAPI.org/api',
+			expectedClass: HttpProxyAgent,
+		},
+		{
 			// Validate request is proxied if active no_proxy does not apply
-			envVars: [ { VIP_PROXY_OTHER_ENABLED: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
 			urlToHit: 'https://wpAPI2.org/api',
 			expectedClass: HttpsProxyAgent,
 		},
