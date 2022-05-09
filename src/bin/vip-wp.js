@@ -352,7 +352,7 @@ commandWrapper( {
 						}
 
 						// Pass all input to a `wp db query` command.
-						_dbCommand = `db query ${ _dbCommand }`;
+						_dbCommand = `db query "${ _dbCommand }"`;
 						debug( `Issuing db command: ${ _dbCommand }` );
 
 						let result;
