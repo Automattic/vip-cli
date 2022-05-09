@@ -360,7 +360,7 @@ commandWrapper( {
 							result = await getTokenForCommand( appId, envId, _dbCommand );
 						} catch ( error ) {
 							const [ gqlError ] = error?.graphQLErrors || [];
-							const errorMessage = `ERROR: ${ gqlError?.message || 'An unexpected occurred.' }`;
+							const errorMessage = `ERROR: ${ gqlError?.message || 'Could not execute the query.' }`;
 							callback( errorMessage );
 							return;
 						}
