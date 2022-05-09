@@ -261,6 +261,10 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 	} );
 };
 
+function printDbUsage() {
+	console.log( 'TODO: Print usage' );
+}
+
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
@@ -315,6 +319,71 @@ commandWrapper( {
 
 		// We'll handle our own errors, thank you
 		disableGlobalGraphQLErrorHandling();
+
+		if ( args?.length > 0 && 'db' === args[ 0 ].toLowerCase() ) {
+			const dbArgs = args.slice( 1 );
+			const dbSubcommand = ( dbArgs.shift() || '' ).toLowerCase();
+			debug( `command: db, subcommand: ${ dbSubcommand }` );
+			if ( '' === dbSubcommand ) {
+				console.error( 'ERROR: db subcommand is missing.' );
+				printDbUsage();
+				process.exit( 1 );
+			}
+			if ( ! [ 'cli', 'columns', 'export', 'prefix', 'query', 'search', 'size', 'tables' ].includes( dbSubcommand ) ) {
+				console.error( `ERROR: Unsupported db subcommand: ${ dbSubcommand }` );
+				printDbUsage();
+				process.exit( 1 );
+			}
+
+			if ( 'cli' === dbSubcommand || ( 'query' === dbSubcommand && ! dbArgs.length ) ) {
+				console.log( `Welcome to the WPVIP database console for ${ appId }.${ envName } (${ appName })` );
+				console.log( 'Please visit this page for more information: https://wpvip.com/example-doc-link-FIXME' );
+
+				debug( 'starting db repl' );
+
+				const repl = require( 'repl' );
+				const replServer = repl.start( {
+					prompt: `wp db (${ appId }.${ envName }) > `,
+					eval: async function( dbCommand, context, filename, callback ) {
+						let _dbCommand = dbCommand.trim();
+						if ( 0 === _dbCommand.length ) {
+							// There was no input. Just return to the prompt.
+							return callback();
+						}
+
+						// Pass all input to a `wp db query` command.
+						_dbCommand = `db query ${ _dbCommand }`;
+						debug( `Issuing db command: ${ _dbCommand }` );
+
+						let result;
+						try {
+							result = await getTokenForCommand( appId, envId, _dbCommand );
+						} catch ( error ) {
+							const [ gqlError ] = error?.graphQLErrors || [];
+							const errorMessage = `ERROR: ${ gqlError?.message || 'An unexpected occurred.' }`;
+							callback( errorMessage );
+							return;
+						}
+
+						// Finish the evaluation and return to the prompt.
+						debug( 'Finished db command evaluation.' );
+						if ( result ) {
+							callback( null, result );
+							return;
+						}
+						callback();
+					},
+				} );
+
+				replServer.on( 'exit', () => {
+					debug( 'db repl server exited. Exiting process.' );
+					process.exit();
+				} );
+
+				// The repl will handle it from here.
+				return;
+			}
+		}
 
 		const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
