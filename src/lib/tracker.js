@@ -8,6 +8,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics' );
  */
 import Analytics from './analytics/index';
 import Tracks from './analytics/clients/tracks';
+import Pendo from './analytics/clients/pendo';
 import Token from 'lib/token';
 import config from 'root/config/config.json';
 import env from './env';
@@ -17,15 +18,22 @@ let analytics = null;
 async function init(): Promise<Analytics> {
 	const uuid = await Token.uuid();
 
-	const clients = {};
+	const clients = [];
 
 	const tracksUserType = config.tracksUserType;
 	const tracksEventPrefix = config.tracksEventPrefix;
+
 	if ( tracksUserType && tracksEventPrefix ) {
-		clients.tracks = new Tracks( uuid, tracksUserType, tracksEventPrefix, env );
+		clients.push( new Tracks( uuid, tracksUserType, tracksEventPrefix, env ) );
+
+		clients.push( new Pendo( {
+			env,
+			eventPrefix: tracksEventPrefix,
+			userId: uuid,
+		} ) );
 	}
 
-	analytics = new Analytics( clients );
+	analytics = new Analytics( { clients } );
 
 	return analytics;
 }
