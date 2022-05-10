@@ -5,7 +5,8 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
-import debug from 'debug';
+import debugLib from 'debug';
+const debug = debugLib( 'vip:proxy-agent' );
 
 /**
  * Internal dependencies
