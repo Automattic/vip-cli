@@ -24,6 +24,7 @@ import {
 	addDevEnvConfigurationOptions,
 	getOptionsFromAppInfo,
 	handleCLIException,
+	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 
@@ -61,6 +62,8 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
+	await validateDependencies();
+
 	const slug = getEnvironmentName( opt );
 	debug( 'Args: ', arg, 'Options: ', opt );
 
