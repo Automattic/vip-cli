@@ -44,20 +44,11 @@ Our release flow for VIP CLI follows this pattern:
 - Include a Changelog for all npm version releases, including any minor or major versions
 - This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
 - Merge changes from your feature branch to the `develop` branch
-- Please do not merge any changes into the `master` branch yet. All features/changes that are not ready to be public should stay in the `develop` branch to avoid conflicts when releasing urgent fixes.
-- Changes from the `develop` branch are merged to `master` and released on NPM following our release schedule
-- Any team member that is part of our NPM organization can release new minor or major versions, but please have a Customer Experience (Pâtisserie) team member look over the changes first.
+- If you are ready to release your changes publicly, merge your changes from the `develop` branch to the `master` branch. All changes that are not ready to be public should be feature flagged or stay in the `develop` branch to avoid conflicts when releasing urgent fixes (not recommended).
+- Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform-patisserie channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
 
 ### Changelogs
 Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
-
-### Release Schedule
-
-The VIP Customer Experience squad conducts releases on Tuesdays from 4AM to 5PM Pacific Time (US). Releases are regular but do not happen every Tuesday. Please coordinate with the VIP Customer Experience squad if you'd like to lead your own release.
-
-As part of the release process, our squad merges changes from the `develop` branch to the `master` branch. Therefore, do not merge changes into `develop` unless it is ready for release (or use a feature flag to disable it).
-
-Fixes for urgent or breaking bugs may be merged straight to the `master` branch and released publicly via `npm` at any time outside of our release window. All other changes should participate in our release window.
 
 ## Releasing / Publishing
 

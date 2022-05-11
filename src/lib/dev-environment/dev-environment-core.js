@@ -467,10 +467,10 @@ async function updateWordPressImage( slug ) {
 	}
 
 	// sort
-	versions.sort( ( before, after ) => ( before.tag < after.tag ) ? 1 : -1 );
+	versions.sort( ( before, after ) => before.tag < after.tag ? 1 : -1 );
 
-	// Newest WordPress Image
-	const newestWordPressImage = versions[ 0 ];
+	// Newest WordPress Image but that is not trunk
+	const newestWordPressImage = versions.find( ( { tag } ) => tag !== 'trunk' );
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
