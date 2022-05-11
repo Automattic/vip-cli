@@ -70,7 +70,6 @@ export default class Pendo implements AnalyticsClient {
 
 	async send( eventName: string, eventProps: {} ): Promise<any> {
 		const body = {
-			accountId: this.context.accountId,
 			context: this.context,
 			event: eventName,
 			properties: eventProps,
