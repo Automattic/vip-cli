@@ -444,7 +444,9 @@ export function getEnvTrackingInfo( slug: string ): any {
 		for ( const key of Object.keys( envData ) ) {
 			// track doesnt like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
-			result[ snakeCasedKey ] = envData[ key ];
+			const value = DEV_ENVIRONMENT_COMPONENTS.includes( key ) ? JSON.stringify( envData[ key ] ) : envData[ key ];
+
+			result[ snakeCasedKey ] = value;
 		}
 
 		return result;
