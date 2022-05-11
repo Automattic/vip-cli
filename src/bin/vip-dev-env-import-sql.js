@@ -15,7 +15,7 @@ import fs from 'fs';
  */
 import { trackEvent } from 'lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentName, getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { validate } from '../lib/validations/sql';
@@ -48,6 +48,7 @@ command( {
 	.option( 'skip-validate', 'Do not perform file validation.' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+		await validateDependencies();
 		const [ fileName ] = unmatchedArgs;
 		const { searchReplace, inPlace } = opt;
 		const slug = getEnvironmentName( opt );

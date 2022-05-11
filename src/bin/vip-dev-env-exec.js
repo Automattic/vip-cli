@@ -17,7 +17,7 @@ import command from 'lib/cli/command';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { exec } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 
 const examples = [
 	{
@@ -38,6 +38,7 @@ command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
+		await validateDependencies();
 		const slug = getEnvironmentName( opt );
 
 		const trackingInfo = getEnvTrackingInfo( slug );

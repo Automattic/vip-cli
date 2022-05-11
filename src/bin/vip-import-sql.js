@@ -39,6 +39,7 @@ import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 
 import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
+import { rollbar } from 'lib/rollbar';
 
 export type WPSiteListType = {
 	id: string,
@@ -378,7 +379,7 @@ command( {
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
-		const fileMeta = await getFileMeta( fileName );
+		let fileMeta = await getFileMeta( fileName );
 
 		if ( fileMeta.isCompressed ) {
 			console.log(
@@ -464,6 +465,9 @@ Processing the SQL import for your environment...
 			setProgressTrackerPrefixAndSuffix();
 			progressTracker.stopPrinting();
 			progressTracker.print( { clearAfter: true } );
+
+			rollbar.error( failureError );
+
 			exit.withError( failureError );
 		};
 
@@ -487,6 +491,8 @@ Processing the SQL import for your environment...
 			}
 
 			fileNameToUpload = outputFileName;
+			fileMeta = await getFileMeta( fileNameToUpload );
+
 			progressTracker.stepSuccess( 'replace' );
 		} else {
 			progressTracker.stepSkipped( 'replace' );

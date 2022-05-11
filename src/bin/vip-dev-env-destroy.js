@@ -22,6 +22,7 @@ import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	handleCLIException,
+	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -42,6 +43,7 @@ command()
 	.option( 'soft', 'Keep config files needed to start an environment intact' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		await validateDependencies();
 		const slug = getEnvironmentName( opt );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
