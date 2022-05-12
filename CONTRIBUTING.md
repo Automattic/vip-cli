@@ -10,6 +10,11 @@ Tests are powered by [Jest](https://jestjs.io).
 
 ## Developing
 
+### Node version
+
+To develop use the minimum supported node version. You can take a look in the `package.json` `engines` configuration
+or, if you use tools like `nvm` you can run `nvm use` to ensure you're running the right one.
+
 ### Local Dev
 
 To test against a local instance of Parker, you can use the `API_HOST` env var. You'll also want to nullify the `VIP_PROXY` env var as well.
@@ -66,6 +71,7 @@ We use `prepack` because:
 
 - `prepareConfig:local` runs on `npm build` and we want to make sure those values are overriden.
 - This is the latest npm event that we can run on before publishing. (Note: we tried `prepublishOnly` but files added during that step [don't get included in the build](https://github.com/Automattic/vip/commit/c7dabe1b0f73ec9e6e8c05ccff0c41281e4cd5e8)).
+- From npm v8 `prepare` runs in many commands (`npm install | npm pack | npm publish`) as such we 
 
 ### New Releases
 
