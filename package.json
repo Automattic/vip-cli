@@ -41,6 +41,7 @@
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
+    "preinstall": "npm run prepareConfig:local",
     "test": "npm run lint && npm run flow && jest --coverage",
     "clean": "rimraf dist",
     "prepare": "npm run clean && npm run buildNoEnvironment",
