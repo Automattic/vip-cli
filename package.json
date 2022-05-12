@@ -43,10 +43,11 @@
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",
     "clean": "rimraf dist",
-    "prepare": "npm run clean && npm run build",
+    "prepare": "npm run clean && npm run buildNoEnvironment",
     "prepack": "npm run prepareConfig:publish",
     "postinstall": "node ./helpers/check-version.js",
-    "build": "npm run prepareConfig:local && babel src -d dist",
+    "buildNoEnvironment": "babel src -d dist",
+    "build": "npm run prepareConfig:local && npm run buildNoEnvironment",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
@@ -71,7 +72,8 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=14.14.0",
+    "npm": ">=6.0.0"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
