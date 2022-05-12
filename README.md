@@ -26,6 +26,10 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.11.1 (12 May 2022)
+
+- Hotfix to use correct production config.json in the NPM published package
+
 ### 2.11.0 (11 May 2022)
 
 - #1022 [dev-env] Validate docker installed
