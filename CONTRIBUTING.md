@@ -71,7 +71,6 @@ We use `prepack` because:
 
 - `prepareConfig:local` runs on `npm build` and we want to make sure those values are overriden.
 - This is the latest npm event that we can run on before publishing. (Note: we tried `prepublishOnly` but files added during that step [don't get included in the build](https://github.com/Automattic/vip/commit/c7dabe1b0f73ec9e6e8c05ccff0c41281e4cd5e8)).
-- From npm v8 `prepare` runs in many commands (`npm install | npm pack | npm publish`) as such we 
 
 ### New Releases
 
