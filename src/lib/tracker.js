@@ -10,7 +10,7 @@ import Analytics from './analytics/index';
 import Tracks from './analytics/clients/tracks';
 import Pendo from './analytics/clients/pendo';
 import Token from 'lib/token';
-import config from 'root/config/config.json';
+import config from 'lib/cli/config';
 import env from './env';
 
 let analytics = null;
