@@ -19,7 +19,7 @@ import command from 'lib/cli/command';
 import { stopEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
+import { validateDependencies, getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -34,6 +34,7 @@ command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		await validateDependencies();
 		const slug = getEnvironmentName( opt );
 
 		debug( 'Args: ', arg, 'Options: ', opt );

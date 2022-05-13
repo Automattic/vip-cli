@@ -26,6 +26,22 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.11.2 (12 May 2022)
+
+- Hotfix to use correct production config.json in the NPM published package caused by a different NPM version in the build process.
+
+### 2.11.1 (12 May 2022)
+
+- Hotfix to use correct production config.json in the NPM published package
+
+### 2.11.0 (11 May 2022)
+
+- #1022 [dev-env] Validate docker installed
+- #1026 [dev-env] adds tracking to stop subcommand
+- #1028 Re-calculate the fileMeta if file gets changed by the searchAndReplace
+- #1029 Adds Pendo analytics client
+- #1030 [dev-env] Fix failure tracking
+
 ### 2.10.0 (4 May 2022)
 
 - #1021 [dev-env] Add login info and documentation link to `dev-env info`
