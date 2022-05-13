@@ -55,7 +55,7 @@
     "prepareConfig:publish": "node ./helpers/prepare-config.js publish",
     "publish-please": "publish-please",
     "prepublishOnly": "publish-please guard",
-    "check-version": "check-node-version --package"
+    "prePublishScript": "check-node-version --package && npm test"
   },
   "repository": {
     "type": "git",
