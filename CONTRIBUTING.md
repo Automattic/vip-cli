@@ -96,7 +96,7 @@ Then, let's publish:
 1. Push the tag to GitHub (`git push --tags`)
 1. Push the master branch `git push`
 1. Make sure you're part of the Automattic organization in npm
-1. Publish the release to npm (`npm run publish-please --access public`)
+1. Publish the release to npm (`npm run publish-please --access public`) the script will do some extra checks (npm version, branch, etc) to ensure everything is correct. If all looks good, proceed.
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
 1. Push `master` changes (mostly the version bump) to `develop` (`git checkout develop && git merge master` )
 
