@@ -3811,10 +3811,9 @@
       }
     },
     "@tootallnate/once": {
-      "version": "1.1.2",
-      "resolved": "https://registry.npmjs.org/@tootallnate/once/-/once-1.1.2.tgz",
-      "integrity": "sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==",
-      "dev": true
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/@tootallnate/once/-/once-2.0.0.tgz",
+      "integrity": "sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A=="
     },
     "@types/babel__core": {
       "version": "7.1.12",
@@ -7757,6 +7756,14 @@
         "netrc": "^0.1.4"
       },
       "dependencies": {
+        "agent-base": {
+          "version": "4.3.0",
+          "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-4.3.0.tgz",
+          "integrity": "sha512-salcGninV0nPrwpGNn4VTXBb1SOuXQBiqbrNXoeizJsHrsL6ERFM2Ne3JUSBWRE6aeNJI2ROP/WEEIDUiDe3cg==",
+          "requires": {
+            "es6-promisify": "^5.0.0"
+          }
+        },
         "debug": {
           "version": "3.2.7",
           "resolved": "https://registry.npmjs.org/debug/-/debug-3.2.7.tgz",
@@ -7770,6 +7777,15 @@
           "resolved": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.2.6.tgz",
           "integrity": "sha512-FrMqZ/FONtHnbqO651UPpfRUVukIEwJhXMfdr/JWAmrDbeYBu773b1J6gdWDyRIj4hvvzQEHoEOTrdR8o6KLYA==",
           "requires": {
+            "debug": "^3.1.0"
+          }
+        },
+        "https-proxy-agent": {
+          "version": "2.2.4",
+          "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-2.2.4.tgz",
+          "integrity": "sha512-OmvfoQ53WLjtA9HeYP9RNrWMJzzAz1JGaSFr1nijg0PVR1JaD/xbJq1mdEIIlxGpXp9eSe/O2LgU9DJmTPd0Eg==",
+          "requires": {
+            "agent-base": "^4.3.0",
             "debug": "^3.1.0"
           }
         }
@@ -8048,41 +8064,22 @@
       "integrity": "sha512-carPklcUh7ROWRK7Cv27RPtdhYhUsela/ue5/jKzjegVvXDqM2ILE9Q2BGn9JZJh1g87cp56su/FgQSzcWS8cQ=="
     },
     "http-proxy-agent": {
-      "version": "4.0.1",
-      "resolved": "https://registry.npmjs.org/http-proxy-agent/-/http-proxy-agent-4.0.1.tgz",
-      "integrity": "sha512-k0zdNgqWTGA6aeIRVpvfVob4fL52dTfaehylg0Y4UvSySvOq/Y+BOyPrgpUrA7HylqvU8vIZGsRuXmspskV0Tg==",
-      "dev": true,
+      "version": "5.0.0",
+      "resolved": "https://registry.npmjs.org/http-proxy-agent/-/http-proxy-agent-5.0.0.tgz",
+      "integrity": "sha512-n2hY8YdoRE1i7r6M0w9DIw5GgZN0G25P8zLCRQ8rjXtTU3vsNFBI/vWK/UIeE6g5MUUz6avwAPXmL6Fy9D/90w==",
       "requires": {
-        "@tootallnate/once": "1",
+        "@tootallnate/once": "2",
         "agent-base": "6",
         "debug": "4"
       }
     },
     "https-proxy-agent": {
-      "version": "2.2.4",
-      "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-2.2.4.tgz",
-      "integrity": "sha512-OmvfoQ53WLjtA9HeYP9RNrWMJzzAz1JGaSFr1nijg0PVR1JaD/xbJq1mdEIIlxGpXp9eSe/O2LgU9DJmTPd0Eg==",
+      "version": "5.0.1",
+      "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-5.0.1.tgz",
+      "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",
       "requires": {
-        "agent-base": "^4.3.0",
-        "debug": "^3.1.0"
-      },
-      "dependencies": {
-        "agent-base": {
-          "version": "4.3.0",
-          "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-4.3.0.tgz",
-          "integrity": "sha512-salcGninV0nPrwpGNn4VTXBb1SOuXQBiqbrNXoeizJsHrsL6ERFM2Ne3JUSBWRE6aeNJI2ROP/WEEIDUiDe3cg==",
-          "requires": {
-            "es6-promisify": "^5.0.0"
-          }
-        },
-        "debug": {
-          "version": "3.2.7",
-          "resolved": "https://registry.npmjs.org/debug/-/debug-3.2.7.tgz",
-          "integrity": "sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==",
-          "requires": {
-            "ms": "^2.1.1"
-          }
-        }
+        "agent-base": "6",
+        "debug": "4"
       }
     },
     "human-signals": {
@@ -9883,11 +9880,28 @@
         "xml-name-validator": "^3.0.0"
       },
       "dependencies": {
+        "@tootallnate/once": {
+          "version": "1.1.2",
+          "resolved": "https://registry.npmjs.org/@tootallnate/once/-/once-1.1.2.tgz",
+          "integrity": "sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==",
+          "dev": true
+        },
         "acorn": {
           "version": "8.5.0",
           "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.5.0.tgz",
           "integrity": "sha512-yXbYeFy+jUuYd3/CDcg2NkIYE991XYX/bje7LmjJigUciaeO1JR4XxXgCIV1/Zc/dRuFEyw1L0pbA+qynJkW5Q==",
           "dev": true
+        },
+        "http-proxy-agent": {
+          "version": "4.0.1",
+          "resolved": "https://registry.npmjs.org/http-proxy-agent/-/http-proxy-agent-4.0.1.tgz",
+          "integrity": "sha512-k0zdNgqWTGA6aeIRVpvfVob4fL52dTfaehylg0Y4UvSySvOq/Y+BOyPrgpUrA7HylqvU8vIZGsRuXmspskV0Tg==",
+          "dev": true,
+          "requires": {
+            "@tootallnate/once": "1",
+            "agent-base": "6",
+            "debug": "4"
+          }
         },
         "https-proxy-agent": {
           "version": "5.0.0",
@@ -11874,6 +11888,11 @@
       "integrity": "sha512-vGrhOavPSTz4QVNuBNdcNXePNdNMaO1xj9yBeH1ScQPjk/rhg9sSlCXPhMkFuaNNW/syTvYqsnbIJxMBfRbbag==",
       "dev": true
     },
+    "proxy-from-env": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-1.1.0.tgz",
+      "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg=="
+    },
     "prr": {
       "version": "1.0.1",
       "resolved": "https://registry.npmjs.org/prr/-/prr-1.0.1.tgz",
@@ -12711,9 +12730,9 @@
       "integrity": "sha512-8mo9bslnBO3tr5PEVFzMPIWwWnipGS0xVbYf65zxDqfNwmzYn1LpiKNrR6DlClusuvo+hDHd1zKpmfAe83NQSQ=="
     },
     "smart-buffer": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/smart-buffer/-/smart-buffer-4.1.0.tgz",
-      "integrity": "sha512-iVICrxOzCynf/SNaBQCw34eM9jROU/s5rzIhpOvzhzuYHfJR/DhZfDkXiZSgKXfgv26HT3Yni3AV/DGw0cGnnw=="
+      "version": "4.2.0",
+      "resolved": "https://registry.npmjs.org/smart-buffer/-/smart-buffer-4.2.0.tgz",
+      "integrity": "sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg=="
     },
     "snapdragon": {
       "version": "0.8.2",
@@ -12890,20 +12909,20 @@
       }
     },
     "socks": {
-      "version": "2.5.1",
-      "resolved": "https://registry.npmjs.org/socks/-/socks-2.5.1.tgz",
-      "integrity": "sha512-oZCsJJxapULAYJaEYBSzMcz8m3jqgGrHaGhkmU/o/PQfFWYWxkAaA0UMGImb6s6tEXfKi959X6VJjMMQ3P6TTQ==",
+      "version": "2.6.2",
+      "resolved": "https://registry.npmjs.org/socks/-/socks-2.6.2.tgz",
+      "integrity": "sha512-zDZhHhZRY9PxRruRMR7kMhnf3I8hDs4S3f9RecfnGxvcBHQcKcIH/oUcEWffsfl1XxdYlA7nnlGbbTvPz9D8gA==",
       "requires": {
         "ip": "^1.1.5",
-        "smart-buffer": "^4.1.0"
+        "smart-buffer": "^4.2.0"
       }
     },
     "socks-proxy-agent": {
-      "version": "5.0.0",
-      "resolved": "https://registry.npmjs.org/socks-proxy-agent/-/socks-proxy-agent-5.0.0.tgz",
-      "integrity": "sha512-lEpa1zsWCChxiynk+lCycKuC502RxDWLKJZoIhnxrWNjLSDGYRFflHA1/228VkRcnv9TIb8w98derGbpKxJRgA==",
+      "version": "5.0.1",
+      "resolved": "https://registry.npmjs.org/socks-proxy-agent/-/socks-proxy-agent-5.0.1.tgz",
+      "integrity": "sha512-vZdmnjb9a2Tz6WEQVIurybSwElwPxMZaIc7PzqbJTrezcKNznv6giT7J7tZDZ1BojVaa1jvO/UiUdhDVB0ACoQ==",
       "requires": {
-        "agent-base": "6",
+        "agent-base": "^6.0.2",
         "debug": "4",
         "socks": "^2.3.3"
       }
