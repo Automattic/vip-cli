@@ -41,14 +41,12 @@
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
-    "preinstall": "npm run prepareConfig:local",
     "test": "npm run lint && npm run flow && jest --coverage",
     "clean": "rimraf dist",
-    "prepare": "npm run clean && npm run buildNoEnvironment",
+    "prepare": "npm run clean && npm run build",
     "prepack": "npm run prepareConfig:publish",
     "postinstall": "node ./helpers/check-version.js",
-    "buildNoEnvironment": "babel src -d dist",
-    "build": "npm run prepareConfig:local && npm run buildNoEnvironment",
+    "build": "npm run prepareConfig:local && babel src -d dist",
     "build:watch": "babel src -d dist --watch",
     "flow": "flow",
     "jest": "jest",
@@ -73,8 +71,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=14.14.0",
-    "npm": ">=6.0.0"
+    "node": ">=14.14.0"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
