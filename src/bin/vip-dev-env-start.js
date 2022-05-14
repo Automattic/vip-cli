@@ -18,9 +18,8 @@ import { exec } from 'child_process';
 import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -39,6 +38,8 @@ command()
 	.option( 'skip-rebuild', 'Only start stopped services' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		await validateDependencies();
+
 		const startProcessing = new Date();
 		const slug = getEnvironmentName( opt );
 
@@ -68,7 +69,7 @@ command()
 			await startEnvironment( slug, options );
 
 			const processingTime = new Date() - startProcessing;
-			const successTrackingInfo = { ...trackingInfo, processingTime };
+			const successTrackingInfo = { ...trackingInfo, processing_time: processingTime };
 			await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_start_command_error', trackingInfo );

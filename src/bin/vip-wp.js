@@ -23,7 +23,7 @@ import { confirm } from 'lib/cli/prompt';
 import { trackEvent } from 'lib/tracker';
 import Token from '../lib/token';
 import { rollbar } from 'lib/rollbar';
-import createSocksProxyAgent from 'lib/http/socks-proxy-agent';
+import { createProxyAgent } from 'lib/http/proxy-agent';
 
 const debug = debugLib( '@automattic/vip:wp' );
 
@@ -518,7 +518,7 @@ commandWrapper( {
 						},
 					},
 				},
-				agent: createSocksProxyAgent(),
+				agent: createProxyAgent( API_HOST ),
 			} );
 
 			currentJob = await launchCommandAndGetStreams( {

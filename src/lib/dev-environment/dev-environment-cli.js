@@ -17,6 +17,7 @@ import os from 'os';
 /**
  * Internal dependencies
  */
+import * as exit from 'lib/cli/exit';
 import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -29,6 +30,7 @@ import {
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
+import { validateDockerInstalled } from './dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -50,7 +52,7 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 
 		if ( trackKey ) {
 			try {
-				const errorTrackingInfo = { ...trackBaseInfo, error: message };
+				const errorTrackingInfo = { ...trackBaseInfo, failure: message };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
 				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
@@ -66,6 +68,14 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 		debug( exception );
 	}
 }
+
+export const validateDependencies = async () => {
+	try {
+		await validateDockerInstalled();
+	} catch ( exception ) {
+		exit.withError( exception.message );
+	}
+};
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	if ( options.slug ) {
@@ -434,7 +444,9 @@ export function getEnvTrackingInfo( slug: string ): any {
 		for ( const key of Object.keys( envData ) ) {
 			// track doesnt like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
-			result[ snakeCasedKey ] = envData[ key ];
+			const value = DEV_ENVIRONMENT_COMPONENTS.includes( key ) ? JSON.stringify( envData[ key ] ) : envData[ key ];
+
+			result[ snakeCasedKey ] = value;
 		}
 
 		return result;

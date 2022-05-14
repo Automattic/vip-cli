@@ -18,7 +18,7 @@ import command from 'lib/cli/command';
 import { printEnvironmentInfo, printAllEnvironmentsInfo } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -42,6 +42,7 @@ command()
 	.option( 'all', 'Show Info for all local dev environments' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		await validateDependencies();
 		const slug = getEnvironmentName( opt );
 
 		const trackingInfo = opt.all ? { all: true } : getEnvTrackingInfo( slug );

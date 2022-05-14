@@ -15,14 +15,18 @@ const client_info = {
 
 export default class Analytics {
 	constructor( {
-		tracks = new AnalyticsClientStub(),
+		clients = new AnalyticsClientStub(),
 	} ) {
-		this.tracks = tracks;
+		this.clients = clients;
 	}
 
 	async trackEvent( name, props = {} ): Promise {
-		return Promise.all( [
-			this.tracks.trackEvent( name, Object.assign( {}, client_info, props ) ),
-		] );
+		return Promise.all( this.clients.map( client => {
+			return client.trackEvent( name, {
+				// eslint-disable-next-line camelcase
+				...client_info,
+				...props,
+			} );
+		} ) );
 	}
 }
