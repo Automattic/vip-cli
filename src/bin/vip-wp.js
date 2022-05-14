@@ -46,6 +46,8 @@ const NON_TTY_COLUMNS = 100;
 const NON_TTY_ROWS = 15;
 const cancelCommandChar = '\x03';
 
+const PERMITTED_DB_COMMANDS = [ 'cli', 'columns', 'export', 'prefix', 'query', 'search', 'size', 'tables' ];
+
 let currentJob = null;
 let currentOffset = 0;
 let commandRunning = false;
@@ -329,7 +331,7 @@ commandWrapper( {
 				printDbUsage();
 				process.exit( 1 );
 			}
-			if ( ! [ 'cli', 'columns', 'export', 'prefix', 'query', 'search', 'size', 'tables' ].includes( dbSubcommand ) ) {
+			if ( ! PERMITTED_DB_COMMANDS.includes( dbSubcommand ) ) {
 				console.error( `ERROR: Unsupported db subcommand: ${ dbSubcommand }` );
 				printDbUsage();
 				process.exit( 1 );
