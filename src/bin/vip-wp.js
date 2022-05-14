@@ -341,23 +341,35 @@ commandWrapper( {
 
 				debug( 'starting db repl' );
 
+				let buffer = '';
+
 				const repl = require( 'repl' );
 				const replServer = repl.start( {
 					prompt: `wp db (${ appId }.${ envName }) > `,
-					eval: async function( dbCommand, context, filename, callback ) {
-						let _dbCommand = dbCommand.trim();
-						if ( 0 === _dbCommand.length ) {
-							// There was no input. Just return to the prompt.
-							return callback();
+					eval: async function( dbCommand, _context, _filename, callback ) {
+						const _dbCommand = dbCommand.trim();
+						const sendIt = _dbCommand.endsWith( ';' );
+						buffer += _dbCommand;
+						debug( { _dbCommand, buffer } );
+						if ( ! sendIt ) {
+							if ( _dbCommand.length ) {
+								buffer += ' ';
+							}
+							callback();
+							return;
 						}
 
 						// Pass all input to a `wp db query` command.
-						_dbCommand = `db query "${ _dbCommand }"`;
-						debug( `Issuing db command: ${ _dbCommand }` );
+						const toSend = `db query "${ buffer }"`;
+
+						// Clear the buffer for the next query.
+						buffer = '';
+
+						debug( `Issuing db command: ${ toSend }` );
 
 						let result;
 						try {
-							result = await getTokenForCommand( appId, envId, _dbCommand );
+							result = await getTokenForCommand( appId, envId, toSend );
 						} catch ( error ) {
 							const [ gqlError ] = error?.graphQLErrors || [];
 							const errorMessage = `ERROR: ${ gqlError?.message || 'Could not execute the query.' }`;
@@ -367,11 +379,32 @@ commandWrapper( {
 
 						// Finish the evaluation and return to the prompt.
 						debug( 'Finished db command evaluation.' );
-						if ( result ) {
-							callback( null, result );
+						if ( ! result ) {
+							callback();
 							return;
 						}
-						callback();
+						const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
+
+						const token = await Token.get();
+						const socket = SocketIO( `${ API_HOST }/wp-cli`, {
+							transportOptions: {
+								polling: {
+									extraHeaders: {
+										Authorization: `Bearer ${ token.raw }`,
+									},
+								},
+							},
+							agent: createSocksProxyAgent(),
+						} );
+
+						currentJob = await launchCommandAndGetStreams( {
+							socket,
+							guid: cliCommand.guid,
+							inputToken: inputToken,
+						} );
+
+						currentJob.stdoutStream.on( 'end', callback );
+						currentJob.stdoutStream.pipe( process.stdout );
 					},
 				} );
 
