@@ -396,7 +396,7 @@ commandWrapper( {
 									},
 								},
 							},
-							agent: createSocksProxyAgent(),
+							agent: createProxyAgent( API_HOST ),
 						} );
 
 						currentJob = await launchCommandAndGetStreams( {
