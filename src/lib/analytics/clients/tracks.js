@@ -107,12 +107,6 @@ export default class Tracks implements AnalyticsClient {
 	}
 
 	send( extraParams: {} ): Promise<any> {
-		if ( process.env.DO_NOT_TRACK ) {
-			debug( 'send() => skipping per DO_NOT_TRACK variable' );
-
-			return Promise.resolve( 'tracks disabled per DO_NOT_TRACK variable' );
-		}
-
 		const params = Object.assign( {}, this.baseParams, extraParams );
 
 		const method = 'POST';

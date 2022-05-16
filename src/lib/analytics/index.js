@@ -1,8 +1,15 @@
 /**
+ * External dependencies
+ */
+import debugLib from 'debug';
+
+/**
  * Internal dependencies
  */
 import AnalyticsClientStub from './clients/stub';
 import env from '../env';
+
+const debug = debugLib( '@automattic/vip:analytics' );
 
 /* eslint-disable camelcase */
 const client_info = {
@@ -21,6 +28,12 @@ export default class Analytics {
 	}
 
 	async trackEvent( name, props = {} ): Promise {
+		if ( process.env.DO_NOT_TRACK ) {
+			debug( `trackEvent() for ${ name } => skipping per DO_NOT_TRACK variable` );
+
+			return Promise.resolve( `Skipping trackEvent for ${ name } (DO_NOT_TRACK)` );
+		}
+
 		return Promise.all( this.clients.map( client => {
 			return client.trackEvent( name, {
 				// eslint-disable-next-line camelcase
