@@ -10,6 +10,11 @@ Tests are powered by [Jest](https://jestjs.io).
 
 ## Developing
 
+### Node version
+
+To develop use the minimum supported node version. You can take a look in the `package.json` `engines` configuration
+or, if you use tools like `nvm` you can run `nvm use` to ensure you're running the right one.
+
 ### Local Dev
 
 To test against a local instance of Parker, you can use the `API_HOST` env var. You'll also want to nullify the `VIP_PROXY` env var as well.
@@ -91,7 +96,7 @@ Then, let's publish:
 1. Push the tag to GitHub (`git push --tags`)
 1. Push the master branch `git push`
 1. Make sure you're part of the Automattic organization in npm
-1. Publish the release to npm (`npm run publish-please --access public`)
+1. Publish the release to npm (`npm run publish-please --access public`) the script will do some extra checks (npm version, branch, etc) to ensure everything is correct. If all looks good, proceed.
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
 1. Push `master` changes (mostly the version bump) to `develop` (`git checkout develop && git merge master` )
 
