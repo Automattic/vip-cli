@@ -449,6 +449,8 @@ export function getEnvTrackingInfo( slug: string ): any {
 			result[ snakeCasedKey ] = value;
 		}
 
+		result.php = result.php?.replace( /.*:/, '' );
+
 		return result;
 	} catch ( err ) {
 		return {
