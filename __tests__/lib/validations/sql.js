@@ -98,7 +98,10 @@ describe( 'lib/validations/sql', () => {
 			debug( 'output', output );
 		} );
 		it( 'use statement', () => {
-			expect( output ).toContain( 'USE <DATABASE_NAME> statement on line(s)' );
+			expect( output ).toContain( 'Siteurl/home options pointing to *.vipdev.lndo.site domain was not found' );
+		} );
+		it( 'not correct siteUrl', () => {
+			expect( output ).toContain( 'Siteurl/home options pointing to *.vipdev.lndo.site domain was not found' );
 		} );
 	} );
 } );

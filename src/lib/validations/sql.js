@@ -215,6 +215,15 @@ const checks: Checks = {
 		excerpt: 'Siteurl/home options',
 		recommendation: '',
 	},
+	siteHomeUrlLando: {
+		matcher: "'(siteurl|home)',\\s?'([^']+vipdev.lndo.site)'",
+		matchHandler: ( lineNumber, results ) => results[ 2 ],
+		outputFormatter: requiredCheckFormatter,
+		results: [],
+		message: 'Siteurl/home options pointing to *.vipdev.lndo.site domain',
+		excerpt: 'Siteurl/home options pointing to lando domain',
+		recommendation: 'Use search-replace to change environment\'s domain',
+	},
 	engineInnoDB: {
 		matcher: / ENGINE=(?!(InnoDB))/i,
 		matchHandler: lineNumber => lineNumber,
@@ -227,6 +236,7 @@ const checks: Checks = {
 			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
+const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
 export const postValidation = async ( filename: string, isImport: boolean = false ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
@@ -346,7 +356,7 @@ const perLineValidations = ( line: string, runAsImport: boolean, skipChecks: str
 	lineNum += 1;
 };
 
-const execute = ( line: string, isImport: boolean = true, skipChecks: string[] = [ 'useStatement' ] ) => {
+const execute = ( line: string, isImport: boolean = true, skipChecks: string[] = DEV_ENV_SPECIFIC_CHECKS ) => {
 	perLineValidations( line, isImport, skipChecks );
 };
 
@@ -363,7 +373,7 @@ export const staticSqlValidations = {
 };
 
 // For standalone SQL validations
-export const validate = async ( filename: string, skipChecks: string[] = [ 'useStatement' ] ) => {
+export const validate = async ( filename: string, skipChecks: string[] = DEV_ENV_SPECIFIC_CHECKS ) => {
 	const readInterface = await getReadInterface( filename );
 	readInterface.on( 'line', line => {
 		execute( line, false, skipChecks );

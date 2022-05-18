@@ -60,7 +60,7 @@ command( {
 			const { resolvedPath, inContainerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
 			if ( ! opt.skipValidate ) {
-				await validate( fileName, [] );
+				await validate( resolvedPath, [] );
 			}
 
 			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
