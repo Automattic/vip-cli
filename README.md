@@ -26,6 +26,17 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.12.0 (19 May 2022)
+
+- #1035 and #1032 Improved publishing checks to publish on npm
+- #1037 [dev-env] only record the php version numbers   update/clean_php_version
+- #999  Add Feature to Support HTTPS/HTTP/NO_PROXY Settings
+- #1036 Move DO_NOT_TRACK handling to Analytics lib
+- #1033 [dev-env] Bump lando in order to support node 18
+
+#### Special thanks
+frank-cerny for the contribution on #1036
+
 ### 2.11.2 (12 May 2022)
 
 - Hotfix to use correct production config.json in the NPM published package caused by a different NPM version in the build process.
