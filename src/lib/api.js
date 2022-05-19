@@ -18,7 +18,7 @@ import chalk from 'chalk';
  */
 import Token from './token';
 import env from './env';
-import createSocksProxyAgent from 'lib/http/socks-proxy-agent';
+import { createProxyAgent } from 'lib/http/proxy-agent';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
@@ -76,7 +76,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		return forward( operation );
 	} );
 
-	const proxyAgent = createSocksProxyAgent();
+	const proxyAgent = createProxyAgent( API_URL );
 
 	const httpLink = new HttpLink( {
 		uri: API_URL,
