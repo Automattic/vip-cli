@@ -216,7 +216,7 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: "'(siteurl|home)',\\s?'([^']+vipdev.lndo.site)'",
+		matcher: "'(siteurl|home)',\\s*'([^']+vipdev\\.lndo\\.site)'",
 		matchHandler: ( lineNumber, results ) => results[ 2 ],
 		outputFormatter: requiredCheckFormatter,
 		results: [],
