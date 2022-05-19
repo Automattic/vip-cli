@@ -1,7 +1,5 @@
 # Built files
 dist
-# This is generated as part of `npm run prepareConfig`
-config/config.json
 
 # Logs
 /logs

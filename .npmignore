@@ -10,9 +10,8 @@ jest.setup.js
 appveyor.yml
 coverage
 
-# The final `config.json` is generated.
-# We don't need to publish the source files.
-config/config.*.json
+# We don't publish the local config file
+config/config.local.json
 
 # Logs
 /logs

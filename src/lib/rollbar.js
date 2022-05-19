@@ -2,7 +2,7 @@
  * Internal dependencies
  */
 import env from './env';
-import config from 'root/config/config.json';
+import config from 'lib/cli/config';
 
 const Rollbar = require( 'rollbar' );
 export const rollbar = new Rollbar( {

@@ -12,7 +12,7 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import config from 'root/config/config.json';
+import config from 'lib/cli/config';
 import command, { containsAppEnvArgument } from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
