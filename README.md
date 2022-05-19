@@ -35,7 +35,7 @@ By default, we record information about the usage of this tool using an in-house
 - #1033 [dev-env] Bump lando in order to support node 18
 
 #### Special thanks
-frank-cerny for the contribution on #1036
+frank-cerny for the contribution on #999
 
 ### 2.11.2 (12 May 2022)
 
