@@ -68,7 +68,7 @@ command()
 
 			await startEnvironment( slug, options );
 
-			const processingTime = new Date() - startProcessing;
+			const processingTime = Math.ceil( ( new Date() - startProcessing ) / 1000 ); // in secods
 			const successTrackingInfo = { ...trackingInfo, processing_time: processingTime };
 			await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
 		} catch ( error ) {
