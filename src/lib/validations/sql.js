@@ -56,6 +56,12 @@ export type Checks = {
 	siteHomeUrl: CheckType,
 };
 
+interface ValidationOptions {
+	isImport: boolean,
+	skipChecks: string[],
+	extraCheckParams: Record<string, any>,
+}
+
 const generalCheckFormatter = ( check: CheckType ) => {
 	const errors = [];
 	const infos = [];
@@ -282,22 +288,23 @@ const checks: Checks = {
 };
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
-export const postValidation = async ( filename: string, isImport: boolean = false ) => {
-	await trackEvent( 'import_validate_sql_command_execute', { is_import: isImport } );
+const postValidation = async ( options: ValidationOptions ) => {
+	await trackEvent( 'import_validate_sql_command_execute', { is_import: options.isImport } );
 
-	if ( ! isImport ) {
+	if ( ! options.isImport ) {
 		log( `Finished processing ${ lineNum } lines.` );
 		console.log( '\n' );
 	}
 
 	const errorSummary = {};
-	const checkEntries: any = Object.entries( checks );
+	const checkEntries: any = Object.entries( checks )
+		.filter( ( [ type ] ) => ! options.skipChecks.includes( type ) );
 
 	let formattedErrors = [];
 	let formattedInfos = [];
 
 	for ( const [ type, check ]: [ string, CheckType ] of checkEntries ) {
-		const formattedOutput = check.outputFormatter( check, type, isImport );
+		const formattedOutput = check.outputFormatter( check, type, options.isImport );
 
 		formattedErrors = formattedErrors.concat( formattedOutput.errors );
 		formattedInfos = formattedInfos.concat( formattedOutput.infos );
@@ -335,7 +342,7 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 
 	if ( problemsFound > 0 ) {
 		await trackEvent( 'import_validate_sql_command_failure', {
-			is_import: isImport,
+			is_import: options.isImport,
 			error: errorSummary,
 		} );
 
@@ -354,19 +361,19 @@ export const postValidation = async ( filename: string, isImport: boolean = fals
 			errorOutput.push( '' );
 		} );
 
-		if ( isImport ) {
+		if ( options.isImport ) {
 			throw new Error( errorOutput.join( '\n' ) );
 		}
 
 		exit.withError( errorOutput.join( '\n' ) );
 	}
 
-	if ( ! isImport ) {
+	if ( ! options.isImport ) {
 		console.log( formattedInfos.join( '\n' ) );
 		console.log( '' );
 	}
 
-	await trackEvent( 'import_validate_sql_command_success', { is_import: isImport } );
+	await trackEvent( 'import_validate_sql_command_success', { is_import: options.isImport } );
 };
 
 export const getTableNames = () => {
@@ -381,12 +388,6 @@ const checkForTableName = line => {
 		tableNames.push( tableName );
 	}
 };
-
-interface ValidationOptions {
-	isImport: boolean,
-	skipChecks: string[],
-	extraCheckParams: Record<string, any>,
-}
 
 const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
 	isImport: true,
@@ -414,11 +415,12 @@ const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_
 	lineNum += 1;
 };
 
-const postLineExecutionProcessing = async ( {
-	fileName,
-	isImport,
-}: PostLineExecutionProcessingParams ) => {
-	await postValidation( fileName, isImport );
+const postLineExecutionProcessing = async ( { isImport, skipChecks }: PostLineExecutionProcessingParams ) => {
+	await postValidation( {
+		isImport: isImport || false,
+		skipChecks: skipChecks || DEV_ENV_SPECIFIC_CHECKS,
+		extraCheckParams: {},
+	} );
 };
 
 export const staticSqlValidations = {
@@ -438,5 +440,5 @@ export const validate = async ( filename: string, options: ValidationOptions = D
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await postLineExecutionProcessing( { filename, isImport: false } );
+	await postLineExecutionProcessing( { isImport: options.isImport, skipChecks: options.skipChecks } );
 };

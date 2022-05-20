@@ -26,6 +26,7 @@ export type PostLineExecutionProcessingParams = {
     envId?: number,
     fileName?: string,
     isImport?: boolean,
+	skipChecks?: string[],
 }
 
 function openFile( filename, flags = 'r', mode = 666 ) {
