@@ -91,17 +91,22 @@ describe( 'lib/validations/sql', () => {
 			try {
 				output = '';
 				const sqlFileDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dev-env.sql' );
-				await validate( sqlFileDumpPath, [] );
+				await validate( sqlFileDumpPath, {
+					isImport: false,
+					skipChecks: [],
+					extraCheckParams: { siteHomeUrlLando: 'test.domain' },
+				} );
 			} catch ( err ) {
 				debug( 'Error:', err.toString() );
 			}
 			debug( 'output', output );
 		} );
 		it( 'use statement', () => {
-			expect( output ).toContain( 'Siteurl/home options pointing to *.vipdev.lndo.site domain was not found' );
+			expect( output ).toContain( 'USE <DATABASE_NAME> statement on' );
 		} );
 		it( 'not correct siteUrl', () => {
-			expect( output ).toContain( 'Siteurl/home options pointing to *.vipdev.lndo.site domain was not found' );
+			expect( output ).toContain( 'Siteurl/home options not pointing to lando domain' );
+			expect( output ).toContain( 'Use \'--search-replace="super-empoyees.com,test.domain"\' switch to replace the domain' );
 		} );
 	} );
 } );

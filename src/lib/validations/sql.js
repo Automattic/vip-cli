@@ -422,7 +422,7 @@ const postLineExecutionProcessing = async ( {
 };
 
 export const staticSqlValidations = {
-	perLineValidations,
+	execute: perLineValidations,
 	postLineExecutionProcessing,
 };
 
