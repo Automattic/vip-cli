@@ -22,10 +22,10 @@ export type PerLineValidationObject = {
 };
 
 export type PostLineExecutionProcessingParams = {
-    appId?: number,
-    envId?: number,
-    fileName?: string,
-    isImport?: boolean,
+	appId?: number,
+	envId?: number,
+	fileName?: string,
+	isImport?: boolean,
 	skipChecks?: string[],
 }
 
