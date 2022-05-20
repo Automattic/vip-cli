@@ -30,18 +30,47 @@ function formatRecommendation( message ) {
 	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
 
-const errorCheckFormatter = check => {
+export type CheckResult = {
+	lineNumber?: number,
+	text?: string,
+	recomendation?: string,
+	falsePositive?: boolean,
+}
+
+export type CheckType = {
+	excerpt: string,
+	matchHandler: ( lineNumber: number, result: any, extraParam: any ) => CheckResult,
+	matcher: RegExp | string,
+	message: string,
+	outputFormatter: Function,
+	recommendation: string,
+	results: Array<CheckResult>,
+};
+
+export type Checks = {
+	trigger: CheckType,
+	dropDB: CheckType,
+	alterUser: CheckType,
+	dropTable: CheckType,
+	createTable: CheckType,
+	siteHomeUrl: CheckType,
+};
+
+const generalCheckFormatter = ( check: CheckType ) => {
 	const errors = [];
 	const infos = [];
 
-	if ( check.results.length > 0 ) {
+	const validProblems = check.results.filter( result => ! result.falsePositive );
+	if ( validProblems.length > 0 ) {
 		problemsFound += 1;
-		errors.push( {
-			error: formatError( `${ check.message } on line(s) ${ check.results.join( ', ' ) }.` ),
-			recommendation: formatRecommendation( check.recommendation ),
-		} );
+		for ( const problem of validProblems ) {
+			errors.push( {
+				error: formatError( `${ problem.text || check.message } on line ${ problem.lineNumber || '' }.` ),
+				recommendation: formatRecommendation( problem.recomendation || check.recommendation ),
+			} );
+		}
 	} else {
-		infos.push( `✅ ${ check.message } was found ${ check.results.length } times.` );
+		infos.push( `✅ ${ check.message } was found 0 times.` );
 	}
 
 	return {
@@ -50,7 +79,28 @@ const errorCheckFormatter = check => {
 	};
 };
 
-const requiredCheckFormatter = ( check, type, isImport ) => {
+const lineNumberCheckFormatter = ( check: CheckType ) => {
+	const errors = [];
+	const infos = [];
+
+	if ( check.results.length > 0 ) {
+		problemsFound += 1;
+		const lineNumbers = check.results.map( result => result.lineNumber );
+		errors.push( {
+			error: formatError( `${ check.message } on line(s) ${ lineNumbers.join( ', ' ) }.` ),
+			recommendation: formatRecommendation( check.recommendation ),
+		} );
+	} else {
+		infos.push( `✅ ${ check.message } was found 0 times.` );
+	}
+
+	return {
+		errors,
+		infos,
+	};
+};
+
+const requiredCheckFormatter = ( check: CheckType, type, isImport ) => {
 	const errors = [];
 	const infos = [];
 
@@ -77,11 +127,11 @@ const requiredCheckFormatter = ( check, type, isImport ) => {
 	};
 };
 
-const infoCheckFormatter = check => {
+const infoCheckFormatter = ( check: CheckType ) => {
 	const infos = [];
 
 	check.results.forEach( item => {
-		infos.push( item );
+		infos.push( item.text );
 	} );
 
 	return {
@@ -90,11 +140,12 @@ const infoCheckFormatter = check => {
 	};
 };
 
-function checkTablePrefixes( tables, errors, infos ) {
+function checkTablePrefixes( results: CheckResult[], errors, infos ) {
 	const wpTables = [],
 		notWPTables = [],
 		wpMultisiteTables = [];
-	tables.forEach( tableName => {
+	results.forEach( result => {
+		const tableName = result.text || '';
 		if ( tableName.match( /^wp_(\d+_)/ ) ) {
 			wpMultisiteTables.push( tableName );
 		} else if ( tableName.match( /^wp_/ ) ) {
@@ -122,30 +173,11 @@ function checkTablePrefixes( tables, errors, infos ) {
 	}
 }
 
-export type CheckType = {
-	excerpt: string,
-	matchHandler: Function,
-	matcher: RegExp | string,
-	message: string,
-	outputFormatter: Function,
-	recommendation: string,
-	results: Array<string | empty>,
-};
-
-export type Checks = {
-	trigger: CheckType,
-	dropDB: CheckType,
-	alterUser: CheckType,
-	dropTable: CheckType,
-	createTable: CheckType,
-	siteHomeUrl: CheckType,
-};
-
 const checks: Checks = {
 	binaryLogging: {
 		matcher: /SET @@SESSION.sql_log_bin/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'SET @@SESSION.sql_log_bin statement',
 		excerpt: "'SET @@SESSION.sql_log_bin' statement should not be present (case-insensitive)",
@@ -154,8 +186,8 @@ const checks: Checks = {
 	trigger: {
 		// Match `CREATE (DEFINER=`root`@`host`) TRIGGER`
 		matcher: /^CREATE (\(?DEFINER=`?(\w*)(`@`)?(\w*\.*%?)*`?\)?)?(| )TRIGGER/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'TRIGGER statement',
 		excerpt: "'TRIGGER' statement should not be present (case-sensitive)",
@@ -163,8 +195,8 @@ const checks: Checks = {
 	},
 	dropDB: {
 		matcher: /^DROP DATABASE/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'DROP DATABASE statement',
 		excerpt: "'DROP DATABASE' should not be present (case-insensitive)",
@@ -172,8 +204,8 @@ const checks: Checks = {
 	},
 	useStatement: {
 		matcher: /^USE /i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'USE <DATABASE_NAME> statement',
 		excerpt: "'USE <DATABASE_NAME>' should not be present (case-insensitive)",
@@ -181,8 +213,8 @@ const checks: Checks = {
 	},
 	alterUser: {
 		matcher: /^(ALTER USER|SET PASSWORD)/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'ALTER USER statement',
 		excerpt: "'ALTER USER' should not be present (case-insensitive)",
@@ -190,7 +222,7 @@ const checks: Checks = {
 	},
 	dropTable: {
 		matcher: /^DROP TABLE IF EXISTS `?([a-z0-9_]*)/i,
-		matchHandler: ( lineNumber, results ) => results[ 1 ],
+		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
 		outputFormatter: requiredCheckFormatter,
 		results: [],
 		message: 'DROP TABLE',
@@ -199,7 +231,7 @@ const checks: Checks = {
 	},
 	createTable: {
 		matcher: /^CREATE TABLE (?:IF NOT EXISTS )?`?([a-z0-9_]*)/i,
-		matchHandler: ( lineNumber, results ) => results[ 1 ],
+		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
 		outputFormatter: requiredCheckFormatter,
 		results: [],
 		message: 'CREATE TABLE',
@@ -208,7 +240,7 @@ const checks: Checks = {
 	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
-		matchHandler: ( lineNumber, results ) => results[ 0 ],
+		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
 		message: 'Siteurl/home matches',
@@ -216,18 +248,31 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: "'(siteurl|home)',\\s*'([^']+vipdev\\.lndo\\.site)'",
-		matchHandler: ( lineNumber, results ) => results[ 2 ],
-		outputFormatter: requiredCheckFormatter,
+		matcher: "'(siteurl|home)',\\s?'(.*?)'",
+		matchHandler: ( lineNumber, results, expectedDomain ) => {
+			const foundDomain = results[ 2 ].replace( /https?:\/\//, '' );
+			console.log('Check', foundDomain, expectedDomain);
+			if ( ! foundDomain.trim() ) {
+				return { falsePositive: true };
+			}
+			if ( foundDomain.includes( expectedDomain ) ) {
+				return { falsePositive: true };
+			}
+			return {
+				lineNumber,
+				recomendation: `Use '--search-replace="${ foundDomain },${ expectedDomain }"' switch to replace the domain`,
+			};
+		},
+		outputFormatter: generalCheckFormatter,
 		results: [],
-		message: 'Siteurl/home options pointing to *.vipdev.lndo.site domain',
-		excerpt: 'Siteurl/home options pointing to lando domain',
+		message: 'Siteurl/home options not pointing to lando domain',
+		excerpt: 'Siteurl/home options not pointing to lando domain',
 		recommendation: 'Use search-replace to change environment\'s domain',
 	},
 	engineInnoDB: {
 		matcher: / ENGINE=(?!(InnoDB))/i,
-		matchHandler: lineNumber => lineNumber,
-		outputFormatter: errorCheckFormatter,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'ENGINE != InnoDB',
 		excerpt: "'ENGINE=InnoDB' should be present (case-insensitive) for all tables",
@@ -338,27 +383,38 @@ const checkForTableName = line => {
 	}
 };
 
-const perLineValidations = ( line: string, runAsImport: boolean, skipChecks: string[] ) => {
+interface ValidationOptions {
+	isImport: boolean,
+	skipChecks: string[],
+	extraCheckParams: Record<string, any>,
+}
+
+const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
+	isImport: true,
+	skipChecks: DEV_ENV_SPECIFIC_CHECKS,
+	extraCheckParams: {},
+};
+
+const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
 	if ( lineNum % 500 === 0 ) {
-		runAsImport ? '' : log( `Reading line ${ lineNum } ` );
+		options.isImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
 
 	checkForTableName( line );
 
-	const checkKeys = Object.keys( checks ).filter( checkItem => ! skipChecks.includes( checkItem ) );
-	const checkValues: any = checkKeys.map( checkKey => checks[ checkKey ] );
-	checkValues.forEach( ( check: CheckType ) => {
+	const checkKeys = Object.keys( checks ).filter( checkItem => ! options.skipChecks.includes( checkItem ) );
+	for (const checkKey of checkKeys) {
+		const check: CheckType = checks[ checkKey ];
 		const results = line.match( check.matcher );
+		const extraCheckParams = options.extraCheckParams[ checkKey ];
 		if ( results ) {
-			check.results.push( check.matchHandler( lineNum, results ) );
+			check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
 		}
-	} );
+	}
+
 	lineNum += 1;
 };
 
-const execute = ( line: string, isImport: boolean = true, skipChecks: string[] = DEV_ENV_SPECIFIC_CHECKS ) => {
-	perLineValidations( line, isImport, skipChecks );
-};
 
 const postLineExecutionProcessing = async ( {
 	fileName,
@@ -368,15 +424,16 @@ const postLineExecutionProcessing = async ( {
 };
 
 export const staticSqlValidations = {
-	execute,
+	perLineValidations,
 	postLineExecutionProcessing,
 };
 
 // For standalone SQL validations
-export const validate = async ( filename: string, skipChecks: string[] = DEV_ENV_SPECIFIC_CHECKS ) => {
+export const validate = async ( filename: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
 	const readInterface = await getReadInterface( filename );
+	options.isImport = false;
 	readInterface.on( 'line', line => {
-		execute( line, false, skipChecks );
+		perLineValidations( line, options );
 	} );
 
 	// Block until the processing completes
