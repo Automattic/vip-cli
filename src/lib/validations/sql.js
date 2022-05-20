@@ -251,7 +251,6 @@ const checks: Checks = {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
 		matchHandler: ( lineNumber, results, expectedDomain ) => {
 			const foundDomain = results[ 2 ].replace( /https?:\/\//, '' );
-			console.log('Check', foundDomain, expectedDomain);
 			if ( ! foundDomain.trim() ) {
 				return { falsePositive: true };
 			}
@@ -403,7 +402,7 @@ const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_
 	checkForTableName( line );
 
 	const checkKeys = Object.keys( checks ).filter( checkItem => ! options.skipChecks.includes( checkItem ) );
-	for (const checkKey of checkKeys) {
+	for ( const checkKey of checkKeys ) {
 		const check: CheckType = checks[ checkKey ];
 		const results = line.match( check.matcher );
 		const extraCheckParams = options.extraCheckParams[ checkKey ];
@@ -414,7 +413,6 @@ const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_
 
 	lineNum += 1;
 };
-
 
 const postLineExecutionProcessing = async ( {
 	fileName,
