@@ -70,6 +70,8 @@ services:
         - ":3306"
       healthcheck:
         test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
+        interval: 2s
+        retries: 60
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
       volumes:
@@ -108,6 +110,8 @@ services:
         - ":9200"
       healthcheck:
         test: "curl --noproxy '*' -XGET localhost:9200"
+        interval: 2s
+        retries: 60
       volumes:
         - search_data:/usr/share/elasticsearch/data
     volumes:

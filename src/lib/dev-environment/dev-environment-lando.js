@@ -109,6 +109,10 @@ async function healthcheckHook( app: App, lando: Lando ) {
 			const containersWithHealthCheck = list.filter( container => container.status.includes( 'health' ) );
 			const notHealthyContainers = containersWithHealthCheck.filter( container => ! container.status.includes( 'healthy' ) );
 
+			for ( const container of containersWithHealthCheck ) {
+				debug( `Health Check result ${ container.service }: ${ container.status }` );
+			}
+
 			if ( notHealthyContainers.length ) {
 				for ( const container of notHealthyContainers ) {
 					console.log( `Waiting for service ${ container.service } ...` );
