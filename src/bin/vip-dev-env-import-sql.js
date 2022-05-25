@@ -60,7 +60,12 @@ command( {
 			const { resolvedPath, inContainerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
 			if ( ! opt.skipValidate ) {
-				await validate( fileName, [] );
+				const expectedDomain = `${ slug }.vipdev.lndo.site`;
+				await validate( resolvedPath, {
+					isImport: false,
+					skipChecks: [],
+					extraCheckParams: { siteHomeUrlLando: expectedDomain },
+				} );
 			}
 
 			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
