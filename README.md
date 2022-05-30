@@ -14,7 +14,7 @@ Then, launch the command and follow the prompts:
 vip
 ```
 
-If you need more information, check out our [VIP CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
+If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
 
 ## Contributing
 
@@ -212,7 +212,7 @@ Fixes:
 - #844 Expose DB and expose extra services in info table
 - #865 spawn WP-CLI as root to allow for FS operations
 - #895 Fix rmdir deprecation warning
-- #870 Add the VIP CLI release process and release schedule
+- #870 Add the VIP-CLI release process and release schedule
 
 Dependencies updates:
 
