@@ -10146,6 +10146,14 @@
           "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-3.0.1.tgz",
           "integrity": "sha512-+O9Jct8wf++lXxxFc4hc8LsjaSq0HFzzL7cVsw8pRDIPdjKD2mT4ytDZlLuSBZ4cLKZFXIrMGO7DbQCtMJJMKw=="
         },
+        "cli-table": {
+          "version": "0.3.11",
+          "resolved": "https://registry.npmjs.org/cli-table/-/cli-table-0.3.11.tgz",
+          "integrity": "sha512-IqLQi4lO0nIB4tcdTpN4LCB9FI3uqrJZK7RC515EnhZ6qBaglkIgICb1wjeAqpdoOabm1+SuQtkXIPdYC93jhQ==",
+          "requires": {
+            "colors": "1.0.3"
+          }
+        },
         "cliui": {
           "version": "4.1.0",
           "resolved": "https://registry.npmjs.org/cliui/-/cliui-4.1.0.tgz",
@@ -10155,6 +10163,11 @@
             "strip-ansi": "^4.0.0",
             "wrap-ansi": "^2.0.0"
           }
+        },
+        "colors": {
+          "version": "1.0.3",
+          "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
+          "integrity": "sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs="
         },
         "find-up": {
           "version": "3.0.0",

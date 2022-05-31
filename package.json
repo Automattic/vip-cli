@@ -7,6 +7,8 @@
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-cache": "dist/bin/vip-cache.js",
+    "vip-cache-purge": "dist/bin/vip-cache-purge.js",
     "vip-config": "dist/bin/vip-config.js",
     "vip-config-envvar": "dist/bin/vip-config-envvar.js",
     "vip-config-envvar-delete": "dist/bin/vip-config-envvar-delete.js",
