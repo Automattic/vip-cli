@@ -19,8 +19,8 @@ import * as exit from 'lib/cli/exit';
 
 const examples = [
 	{
-		usage: 'vip @123.production cache purge <URL1> <URL2>',
-		description: 'Clear cache for a Node.js URL',
+		usage: 'vip @123.production cache purge <URL>',
+		description: 'Clear cache for a URL',
 	},
 ];
 
@@ -39,16 +39,14 @@ export async function cachePurgeCommand( urls, opt ): void {
 	} catch ( err ) {
 		await trackEvent( 'cache_purge_command_error', { ...trackingParams, error: err.message } );
 
-		exit.withError( `Failed to purge cache object error: ${ err.message }` );
+		exit.withError( `Failed to purge cache object: ${ err.message }` );
 	}
 
 	await trackEvent( 'cache_purge_command_success', trackingParams );
 
-	const output = [
-		`- Purged URLs: ${ purgeCacheObject.urls.join( ',' ) }`,
-	];
-
-	console.log( output.join( '\n' ) );
+	purgeCacheObject.urls.forEach( url => {
+		console.log( `- Purged URL: ${ url }` );
+	} );
 }
 
 command( {
@@ -57,6 +55,7 @@ command( {
 	envContext: true,
 	requiredArgs: 1,
 	wildcardCommand: true,
+	usage: 'vip @123.production cache purge <URL>',
 } )
 	.examples( examples )
 	.argv( process.argv, cachePurgeCommand );

@@ -56,11 +56,7 @@ describe( 'cachePurgeCommand()', () => {
 		await cachePurgeCommand( args, opts );
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
-		expect( console.log ).toHaveBeenCalledWith(
-			/* eslint-disable indent */
-	'- Purged URLs: url'
-				/* eslint-enable indent */
-		);
+		expect( console.log ).toHaveBeenCalledWith( '- Purged URLs: url' );
 
 		const trackingParams = {
 			app_id: 1,
@@ -91,7 +87,7 @@ describe( 'cachePurgeCommand()', () => {
 		};
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to purge cache object error: Something went wrong :(' );
+		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to purge cache object: Something went wrong :(' );
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
