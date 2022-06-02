@@ -29,7 +29,7 @@ jest.mock( 'lib/tracker', () => ( {
 } ) );
 
 describe( 'cachePurgeCommand()', () => {
-	const args = { urls: [ 'url' ] };
+	const args = [ 'url' ];
 	const opts = {
 		app: {
 			id: 1,
@@ -56,12 +56,13 @@ describe( 'cachePurgeCommand()', () => {
 		await cachePurgeCommand( args, opts );
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
-		expect( console.log ).toHaveBeenCalledWith( '- Purged URLs: url' );
+		expect( console.log ).toHaveBeenCalledWith( '- Purged URL: url' );
 
 		const trackingParams = {
 			app_id: 1,
 			command: 'vip cache purge',
 			env_id: 3,
+			from_file: false,
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
@@ -84,6 +85,7 @@ describe( 'cachePurgeCommand()', () => {
 			app_id: 1,
 			command: 'vip cache purge',
 			env_id: 3,
+			from_file: false,
 		};
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
@@ -92,5 +94,27 @@ describe( 'cachePurgeCommand()', () => {
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_error', { ...trackingParams, error: 'Something went wrong :(' } );
+	} );
+
+	it( 'should handle error if urls is empty', async () => {
+		const promise = cachePurgeCommand( [], opts );
+
+		await expect( promise ).rejects.toBe( 'EXIT CACHE PURGE WITH ERROR' );
+
+		expect( console.log ).toHaveBeenCalledTimes( 0 );
+
+		const trackingParams = {
+			app_id: 1,
+			command: 'vip cache purge',
+			env_id: 3,
+			from_file: false,
+		};
+
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( exit.withError ).toHaveBeenCalledWith( 'You need at least an URL to purge cache' );
+
+		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_error', trackingParams );
 	} );
 } );
