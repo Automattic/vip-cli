@@ -4,7 +4,7 @@
 import * as tracker from 'lib/tracker';
 import * as exit from 'lib/cli/exit';
 import purgeCacheLib from 'lib/api/cache-purge';
-import { cachePurgeCommand } from '../../src/bin/vip-cache-purge';
+import { cachePurgeCommand } from '../../src/bin/vip-cache-purge-url';
 import { readFromFile } from 'lib/read-file';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
