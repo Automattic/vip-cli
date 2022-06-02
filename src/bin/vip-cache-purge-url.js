@@ -20,11 +20,11 @@ import * as exit from 'lib/cli/exit';
 
 const examples = [
 	{
-		usage: 'vip @123.production cache purge-url <URL>',
+		usage: 'vip cache purge-url <URL>',
 		description: 'Purge cache for a URL',
 	},
 	{
-		usage: 'vip @123.production cache purge-url --from-file=/dev/vip/urls.txt',
+		usage: 'vip cache purge-url --from-file=/dev/vip/urls.txt',
 		description: 'Purge cache for multiple URLs',
 	},
 ];
@@ -73,7 +73,7 @@ command( {
 	appQuery,
 	envContext: true,
 	wildcardCommand: true,
-	usage: 'vip @123.production cache purge-url <URL>',
+	usage: 'vip cache purge-url <URL>',
 } )
 	.option( 'from-file', 'Read URLs from file (useful for multiline input)' )
 	.examples( examples )
