@@ -57,9 +57,6 @@ export async function purgeCache( appId: number, envId: number, urls: Array<stri
 	const response = await api.mutate( { mutation, variables } );
 
 	const { data: { purgeCacheObject } } = response;
-	if ( ! purgeCacheObject ) {
-		throw new Error( 'Something went wrong :(' );
-	}
 
 	return purgeCacheObject;
 }

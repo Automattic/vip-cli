@@ -78,7 +78,7 @@ describe( 'cachePurgeCommand()', () => {
 
 	it( 'should handle error when request fails', async () => {
 		purgeCacheLib.purgeCache.mockImplementation( () => {
-			throw new Error( 'Something went wrong :(' );
+			throw new Error( 'Domain domain.go-vip.net is not assigned to this environment' );
 		} );
 
 		const promise = cachePurgeCommand( args, opts );
@@ -95,11 +95,11 @@ describe( 'cachePurgeCommand()', () => {
 		};
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to purge cache object: Something went wrong :(' );
+		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to purge cache object: Domain domain.go-vip.net is not assigned to this environment' );
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_error', { ...trackingParams, error: 'Something went wrong :(' } );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_error', { ...trackingParams, error: 'Domain domain.go-vip.net is not assigned to this environment' } );
 		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 
