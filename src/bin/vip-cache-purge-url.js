@@ -20,15 +20,19 @@ import * as exit from 'lib/cli/exit';
 
 const examples = [
 	{
-		usage: 'vip @123.production cache purge <URL>',
-		description: 'Clear cache for a URL',
+		usage: 'vip @123.production cache purge-url <URL>',
+		description: 'Purge cache for a URL',
+	},
+	{
+		usage: 'vip @123.production cache purge-url --from-file=/dev/vip/urls.txt',
+		description: 'Purge cache for multiple URLs',
 	},
 ];
 
 export async function cachePurgeCommand( urls = [], opt = {} ): void {
 	const trackingParams = {
 		app_id: opt.app.id,
-		command: 'vip cache purge',
+		command: 'vip cache purge-url',
 		env_id: opt.env.id,
 		from_file: !! opt.fromFile,
 	};
@@ -45,7 +49,7 @@ export async function cachePurgeCommand( urls = [], opt = {} ): void {
 	if ( ! urls.length ) {
 		await trackEvent( 'cache_purge_command_error', trackingParams );
 
-		exit.withError( 'You need at least an URL to purge cache' );
+		exit.withError( 'You need at least one URL to purge the cache' );
 	}
 
 	let purgeCacheObject = {};
@@ -69,7 +73,7 @@ command( {
 	appQuery,
 	envContext: true,
 	wildcardCommand: true,
-	usage: 'vip @123.production cache purge <URL>',
+	usage: 'vip @123.production cache purge-url <URL>',
 } )
 	.option( 'from-file', 'Read URLs from file (useful for multiline input)' )
 	.examples( examples )

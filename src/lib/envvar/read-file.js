@@ -15,7 +15,6 @@ import { readFromFile } from '../read-file';
 
 export async function readVariableFromFile( path ): Promise<string> {
 	debug( `Loading variable value from file ${ JSON.stringify( path ) }` );
-	const data = await readFromFile( path );
 
-	return data;
+	return await readFromFile( path );
 }

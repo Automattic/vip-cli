@@ -5,6 +5,7 @@ import * as tracker from 'lib/tracker';
 import * as exit from 'lib/cli/exit';
 import purgeCacheLib from 'lib/api/cache-purge';
 import { cachePurgeCommand } from '../../src/bin/vip-cache-purge';
+import { readFromFile } from 'lib/read-file';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
@@ -26,6 +27,10 @@ jest.mock( 'lib/api/cache-purge', () => ( {
 
 jest.mock( 'lib/tracker', () => ( {
 	trackEvent: jest.fn(),
+} ) );
+
+jest.mock( 'lib/read-file', () => ( {
+	readFromFile: jest.fn(),
 } ) );
 
 describe( 'cachePurgeCommand()', () => {
@@ -60,7 +65,7 @@ describe( 'cachePurgeCommand()', () => {
 
 		const trackingParams = {
 			app_id: 1,
-			command: 'vip cache purge',
+			command: 'vip cache purge-url',
 			env_id: 3,
 			from_file: false,
 		};
@@ -68,6 +73,7 @@ describe( 'cachePurgeCommand()', () => {
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_success', trackingParams );
+		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 
 	it( 'should handle error when request fails', async () => {
@@ -83,7 +89,7 @@ describe( 'cachePurgeCommand()', () => {
 
 		const trackingParams = {
 			app_id: 1,
-			command: 'vip cache purge',
+			command: 'vip cache purge-url',
 			env_id: 3,
 			from_file: false,
 		};
@@ -94,6 +100,7 @@ describe( 'cachePurgeCommand()', () => {
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_error', { ...trackingParams, error: 'Something went wrong :(' } );
+		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 
 	it( 'should handle error if urls is empty', async () => {
@@ -105,16 +112,17 @@ describe( 'cachePurgeCommand()', () => {
 
 		const trackingParams = {
 			app_id: 1,
-			command: 'vip cache purge',
+			command: 'vip cache purge-url',
 			env_id: 3,
 			from_file: false,
 		};
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'You need at least an URL to purge cache' );
+		expect( exit.withError ).toHaveBeenCalledWith( 'You need at least one URL to purge the cache' );
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_command_execute', trackingParams );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_command_error', trackingParams );
+		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 } );
