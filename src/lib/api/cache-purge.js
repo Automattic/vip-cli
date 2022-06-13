@@ -14,17 +14,17 @@ import gql from 'graphql-tag';
 import API from 'lib/api';
 
 const mutation = gql`
-	mutation PurgeCacheObjectMutation(
+	mutation PurgePageCacheMutation(
 		$appId: Int!
 		$envId: Int!
-		$urls: [String]!
+		$urls: [String!]!
 	) {
-		purgeCacheObject( input: {
+		purgePageCache( input: {
 			appId: $appId
 			environmentId: $envId
 			urls: $urls
 		} ) {
-			status
+			success
 			urls
 		}
 	}
@@ -56,7 +56,7 @@ export async function purgeCache( appId: number, envId: number, urls: Array<stri
 
 	const response = await api.mutate( { mutation, variables } );
 
-	const { data: { purgeCacheObject } } = response;
+	const { data: { purgePageCache } } = response;
 
-	return purgeCacheObject;
+	return purgePageCache;
 }
