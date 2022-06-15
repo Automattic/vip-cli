@@ -114,6 +114,7 @@ describe( 'cachePurgeCommand()', () => {
 			app_id: 1,
 			command: 'vip cache purge-url',
 			env_id: 3,
+			error: 'No URL provided',
 			from_file: false,
 		};
 
