@@ -114,7 +114,6 @@ describe( 'cachePurgeCommand()', () => {
 			app_id: 1,
 			command: 'vip cache purge-url',
 			env_id: 3,
-			error: 'No URL provided',
 			from_file: false,
 		};
 
@@ -123,7 +122,7 @@ describe( 'cachePurgeCommand()', () => {
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_url_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_error', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_error', { ...trackingParams, error: 'No URL provided' } );
 		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 } );
