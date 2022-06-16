@@ -184,7 +184,7 @@ export async function landoInfo( instancePath: string ) {
 	}
 
 	// Add documentation link
-	appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/tips/';
+	appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
 
 	return appInfo;
 }
