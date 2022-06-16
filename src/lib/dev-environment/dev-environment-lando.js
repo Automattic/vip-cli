@@ -101,13 +101,40 @@ function addHooks( app: App, lando: Lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
 }
 
+const healthChecks = {
+	database: 'mysql -uroot --silent --execute "SHOW DATABASES;"',
+	'vip-search': "curl -s --noproxy '*' -XGET localhost:9200",
+	php: '[[ -f /wp/wp-includes/pomo/mo.php ]]',
+};
+
 async function healthcheckHook( app: App, lando: Lando ) {
 	try {
 		await lando.Promise.retry( async () => {
 			const list = await lando.engine.list( { project: app.project } );
 
-			const containersWithHealthCheck = list.filter( container => container.status.includes( 'health' ) );
-			const notHealthyContainers = containersWithHealthCheck.filter( container => ! container.status.includes( 'healthy' ) );
+			const notHealthyContainers = [];
+			for ( const container of list ) {
+				if ( healthChecks[ container.service ] ) {
+					try {
+						debug( `Testing ${ container.service }: ${ healthChecks[ container.service ] }` );
+						await app.engine.run( {
+							id: container.id,
+							cmd: healthChecks[ container.service ],
+							compose: app.compose,
+							project: app.project,
+							opts: {
+								silent: true,
+								noTTY: true,
+								cstdio: 'pipe',
+								services: [ container.service ],
+							},
+						} );
+					} catch ( e ) {
+						debug( `${ container.service } Health check failed` );
+						notHealthyContainers.push( container );
+					}
+				}
+			}
 
 			if ( notHealthyContainers.length ) {
 				for ( const container of notHealthyContainers ) {
@@ -184,7 +211,7 @@ export async function landoInfo( instancePath: string ) {
 	}
 
 	// Add documentation link
-	appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/tips/';
+	appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
 
 	return appInfo;
 }

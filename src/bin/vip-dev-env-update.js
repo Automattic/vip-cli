@@ -70,6 +70,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			statsd: currentInstanceData.statsd,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
+			enterpriseSearchEnabled: currentInstanceData.enterpriseSearchEnabled,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,
 			title: '',

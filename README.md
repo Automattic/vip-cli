@@ -26,6 +26,17 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.13.0 (16 Jun 2022)
+
+- #1046	Add Cache Purge Command
+- #1050	[dev-env] Change docs link
+- #1047	[dev-env] Bump lando package
+- #1044	[dev-env] Fix healthchecks No. 2
+- #1043	[dev-env] add docker-compose v2 support
+- #1042	[dev-env] Fix search popup during wizard
+- #1038	[dev-env] Adds domain validation during sql import
+- #1040	[dev-env] track dev-env start time in seconds
+
 ### 2.12.0 (19 May 2022)
 
 - #1035 and #1032 Improved publishing checks to publish on npm
