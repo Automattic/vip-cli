@@ -10104,8 +10104,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+https://github.com/Automattic/lando-cli.git#3289bab60b4cd6011bb8f26397e4aa9ae99d8eb9",
-      "from": "git+https://github.com/Automattic/lando-cli.git#3289bab60b4cd6011bb8f26397e4aa9ae99d8eb9",
+      "version": "git+https://github.com/Automattic/lando-cli.git#3c74058161e51c9f482e6fa2727f616070853b98",
+      "from": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_06_20",
       "requires": {
         "@lando/platformsh": "^0.6.0",
         "axios": "0.21.4",
