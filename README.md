@@ -14,7 +14,7 @@ Then, launch the command and follow the prompts:
 vip
 ```
 
-If you need more information, check out our [VIP CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
+If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
 
 ## Contributing
 
@@ -25,6 +25,12 @@ For help with contributing to this project, including instructions for local dev
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
 ## Changelog
+
+### 2.13.1 (20 Jun 2022)
+
+- #1052 [dev-env] Update/lando compose version
+- #1045 README: Fix Typo `VIP CLI` => `VIP-CLI`
+- #1048 Switch to GitHub Actions
 
 ### 2.13.0 (16 Jun 2022)
 
@@ -223,7 +229,7 @@ Fixes:
 - #844 Expose DB and expose extra services in info table
 - #865 spawn WP-CLI as root to allow for FS operations
 - #895 Fix rmdir deprecation warning
-- #870 Add the VIP CLI release process and release schedule
+- #870 Add the VIP-CLI release process and release schedule
 
 Dependencies updates:
 
