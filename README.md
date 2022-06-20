@@ -26,6 +26,12 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.13.1 (20 Jun 2022)
+
+- #1052 [dev-env] Update/lando compose version
+- #1045 README: Fix Typo `VIP CLI` => `VIP-CLI`
+- #1048 Switch to GitHub Actions
+
 ### 2.13.0 (16 Jun 2022)
 
 - #1046	Add Cache Purge Command
