@@ -129,7 +129,7 @@ async function healthcheckHook( app: App, lando: Lando ) {
 								services: [ container.service ],
 							},
 						} );
-					} catch ( e ) {
+					} catch ( exception ) {
 						debug( `${ container.service } Health check failed` );
 						notHealthyContainers.push( container );
 					}

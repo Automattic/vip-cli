@@ -206,7 +206,7 @@ export async function printEnvironmentInfo( slug: string ) {
 	printTable( appInfo );
 }
 
-export async function exec( slug: string, args: Array<string>, options: any = {}) {
+export async function exec( slug: string, args: Array<string>, options: any = {} ) {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
