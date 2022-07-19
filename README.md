@@ -26,6 +26,13 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.14.0 (19 Jul 2022)
+
+- #1059 Update engines to show support for npm > 6
+- #1058 [dev-env] switch dev-env error during import to warning
+- #1057 [dev-env] Update debug instruction example
+- #1055 [dev-env] Makes exec attempt to run the task even if env seems to be down
+
 ### 2.13.1 (20 Jun 2022)
 
 - #1052 [dev-env] Update/lando compose version
