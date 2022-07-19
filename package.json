@@ -72,7 +72,7 @@
   "license": "MIT",
   "engines": {
     "node": ">=14.14.0",
-    "npm": "^6 "
+    "npm": ">=6"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"

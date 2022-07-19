@@ -129,7 +129,7 @@ async function healthcheckHook( app: App, lando: Lando ) {
 								services: [ container.service ],
 							},
 						} );
-					} catch ( e ) {
+					} catch ( exception ) {
 						debug( `${ container.service } Health check failed` );
 						notHealthyContainers.push( container );
 					}
@@ -269,17 +269,19 @@ async function isEnvUp( app ) {
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
-export async function landoExec( instancePath: string, toolName: string, args: Array<string> ) {
+export async function landoExec( instancePath: string, toolName: string, args: Array<string>, options: any ) {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
 	await app.init();
 
-	const isUp = await isEnvUp( app );
+	if ( ! options.force ) {
+		const isUp = await isEnvUp( app );
 
-	if ( ! isUp ) {
-		throw new Error( 'environment needs to be started before running wp command' );
+		if ( ! isUp ) {
+			throw new Error( 'environment needs to be started before running wp command' );
+		}
 	}
 
 	const tool = app.config.tooling[ toolName ];

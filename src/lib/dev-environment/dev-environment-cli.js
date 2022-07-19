@@ -60,9 +60,9 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 		}
 
 		if ( ! process.env.DEBUG ) {
-			console.log( `Please re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
+			console.log( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
 			console.log( chalk.bold( '\nExample:\n' ) );
-			console.log( 'vip dev-env create --debug @automattic/vip:bin:dev-environment \n' );
+			console.log( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
 		}
 
 		debug( exception );
