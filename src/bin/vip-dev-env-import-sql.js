@@ -43,7 +43,7 @@ command( {
 	requiredArgs: 1,
 } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
+	.option( [ 'r', 'search-replace' ], 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'skip-validate', 'Do not perform file validation.' )
 	.examples( examples )
