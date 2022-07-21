@@ -68,8 +68,6 @@ services:
       command: docker-entrypoint.sh mysqld
       ports:
         - ":3306"
-      healthcheck:
-        test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
       volumes:
@@ -106,8 +104,6 @@ services:
         discovery.type: 'single-node'
       ports:
         - ":9200"
-      healthcheck:
-        test: "curl --noproxy '*' -XGET localhost:9200"
       volumes:
         - search_data:/usr/share/elasticsearch/data
     volumes:
