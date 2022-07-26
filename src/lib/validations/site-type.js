@@ -16,7 +16,7 @@ import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import {
 	isMultisitePrimaryDomainMapped,
-	getPrimaryDomainFromSQL,
+	getPrimaryDomain,
 } from 'lib/validations/is-multisite-domain-mapped';
 import { getMultilineStatement } from 'lib/validations/utils';
 import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
@@ -36,9 +36,9 @@ export const siteTypeValidations = {
 			isMultiSiteSqlDump = true;
 		}
 	},
-	postLineExecutionProcessing: async ( { appId, envId }: PostLineExecutionProcessingParams ) => {
+	postLineExecutionProcessing: async ( { appId, envId, searchReplace }: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
-		const primaryDomainFromSQL = getPrimaryDomainFromSQL( wpSiteInsertStatement );
+		const primaryDomainFromSQL = getPrimaryDomain( wpSiteInsertStatement, searchReplace );
 		const isPrimaryDomainMapped =
 			primaryDomainFromSQL &&
 			( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
@@ -74,7 +74,7 @@ export const siteTypeValidations = {
 				error_type: 'multisite-import-where-primary-domain-unmapped',
 			} );
 			throw new Error(
-				`The SQL dump provided would set the network's main site domain to ${ primaryDomainFromSQL }, however this domain is not mapped to the target environment.`
+				`This import would set the network's main site domain to ${ primaryDomainFromSQL }, however this domain is not mapped to the target environment.`
 			);
 		}
 	},

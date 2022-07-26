@@ -21,27 +21,46 @@ import * as exit from 'lib/cli/exit';
  * @param {array} statements An array of SQL statements
  * @returns {string} The domain
  */
-export const getPrimaryDomainFromSQL = statements => {
+export const getPrimaryDomainFromSQL = ( statements: array ) => {
 	if ( ! statements.length ) {
 		return '';
 	}
 
-	const SQL_WP_SITE_DOMAINS_REGEX = /\(1\s*,\s*'(.*?)'/s;
-	const matches = statements[ 0 ]?.join( '' ).match( SQL_WP_SITE_DOMAINS_REGEX );
+	const SQL_WP_SITE_DOMAINS_REGEX = /\(1,'(.*?)'/s;
+	const matches = statements[ 0 ]?.join( '' ).replace( /\s/g, '' ).match( SQL_WP_SITE_DOMAINS_REGEX );
 	return matches ? matches[ 1 ] : '';
 };
 
 /**
- * Checks whether a domain is in a list of domains
+ * Apply search-replacements to a domain
  *
- * @param {string} domainToFind The domain to look for in the list
- * @param {array} domains An array of domains mapped to the environment
- * @returns {boolean} Whether the primary domain is in the list of mapped domains
+ * @param {string} domain The domain to apply replacements to
+ * @param {(string|array)} searchReplace The search-replace pairs
+ * @returns {string} The processed domain
  */
-const isPrimaryDomainMapped = ( domainToFind, domains ) => {
-	// TODO: Should also check if the domain is found in any search-replace `to` values
-	// If so, we should consider the domain mapped
-	return domains.some( domain => domain === domainToFind );
+const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | array ) {
+	if ( searchReplace ) {
+		let pairs = searchReplace;
+		if ( ! Array.isArray( pairs ) ) {
+			pairs = [ searchReplace ];
+		}
+		const domainReplacements = pairs.map( pair => pair.split( ',' ) );
+		const primaryDomainReplacement = domainReplacements.find( pair => pair[ 0 ] === domain );
+		return primaryDomainReplacement?.[ 1 ] ?? domain;
+	}
+	return domain;
+};
+
+/**
+ * Get the primary domain as it will be imported
+ *
+ * @param {array} statements An array of SQL statements
+ * @param {(string|array)} searchReplace The search-replace pairs
+ * @returns {string} The replaced domain, or the domain as found in the SQL dump
+ */
+export const getPrimaryDomain = function( statements: array, searchReplace?: string | array ) {
+	const domainFromSQL = getPrimaryDomainFromSQL( statements );
+	return maybeSearchReplacePrimaryDomain( domainFromSQL, searchReplace );
 };
 
 /**
@@ -49,13 +68,13 @@ const isPrimaryDomainMapped = ( domainToFind, domains ) => {
  *
  * @param {number} appId The ID of the app in GOOP
  * @param {number} envId The ID of the enviroment in GOOP
- * @param {array} primaryDomainFromSQL The primary domain found in the provided SQL file
+ * @param {string} primaryDomain The primary domain found in the provided SQL file
  * @returns {boolean} Whether the primary domain is mapped
  */
 export async function isMultisitePrimaryDomainMapped(
 	appId: number,
 	envId: number,
-	primaryDomainFromSQL: array
+	primaryDomain: string,
 ): Promise<boolean> {
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -104,5 +123,5 @@ export async function isMultisitePrimaryDomainMapped(
 	}
 
 	const mappedDomains = environments[ 0 ]?.domains?.nodes?.map( domain => domain.name );
-	return isPrimaryDomainMapped( primaryDomainFromSQL, mappedDomains );
+	return mappedDomains.includes( primaryDomain );
 }

@@ -238,6 +238,7 @@ export type validateAndGetTableNamesInputType = {
 	appId: number,
 	envId: number,
 	fileNameToUpload: string,
+	searchReplace?: string | array,
 };
 
 export async function validateAndGetTableNames( {
@@ -245,6 +246,7 @@ export async function validateAndGetTableNames( {
 	appId,
 	envId,
 	fileNameToUpload,
+	searchReplace,
 }: validateAndGetTableNamesInputType ): Promise<Array<string>> {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	if ( skipValidate ) {
@@ -252,7 +254,7 @@ export async function validateAndGetTableNames( {
 		return [];
 	}
 	try {
-		await fileLineValidations( appId, envId, fileNameToUpload, validations );
+		await fileLineValidations( appId, envId, fileNameToUpload, validations, searchReplace );
 	} catch ( validateErr ) {
 		console.log( '' );
 		exit.withError( `${ validateErr.message }
@@ -415,6 +417,7 @@ command( {
 			appId,
 			envId,
 			fileNameToUpload,
+			searchReplace,
 		} );
 
 		// display playbook of what will happen during execution
