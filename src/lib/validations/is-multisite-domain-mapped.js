@@ -38,7 +38,7 @@ export const getPrimaryDomainFromSQL = ( statements: array ) => {
  * @param {(string|array)} searchReplace The search-replace pairs
  * @returns {string} The processed domain
  */
-const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | array ) {
+export const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | array ) {
 	if ( searchReplace ) {
 		let pairs = searchReplace;
 		if ( ! Array.isArray( pairs ) ) {
@@ -112,7 +112,6 @@ export async function isMultisitePrimaryDomainMapped(
 		} );
 		exit.withError( `StartImport call failed: ${ GraphQlError }` );
 	}
-
 	if ( ! Array.isArray( res?.data?.app?.environments ) ) {
 		return false;
 	}
@@ -123,5 +122,6 @@ export async function isMultisitePrimaryDomainMapped(
 	}
 
 	const mappedDomains = environments[ 0 ]?.domains?.nodes?.map( domain => domain.name );
+
 	return mappedDomains.includes( primaryDomain );
 }
