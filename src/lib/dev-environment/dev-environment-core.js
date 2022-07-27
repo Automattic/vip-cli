@@ -298,7 +298,7 @@ export function getEnvironmentPath( name: string ): string {
 		throw new Error( 'Name was not provided' );
 	}
 
-	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	const mainEnvironmentPath = process.env.VIP_DEV_ENV_LOCATION || xdgBasedir.data || os.tmpdir();
 
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
