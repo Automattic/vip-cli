@@ -17,7 +17,7 @@ export function getMultilineStatement( statementRegex ) {
 	 */
 	return line => {
 		const shouldStartCapture = statementRegex.test( line );
-		const shouldEndCapture = isCapturing && /;$/.test( line );
+		const shouldEndCapture = ( shouldStartCapture || isCapturing ) && /;$/.test( line );
 		if ( shouldStartCapture ) {
 			isCapturing = true;
 			matchingStatements[ index ] = [];
