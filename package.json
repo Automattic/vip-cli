@@ -40,7 +40,10 @@
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
-    "vip-wp": "dist/bin/vip-wp.js"
+    "vip-wp": "dist/bin/vip-wp.js",
+    "vip-settings": "dist/bin/vip-settings.js",
+    "vip-settings-software": "dist/bin/vip-settings-software.js",
+    "vip-settings-software-get": "dist/bin/vip-settings-software-get.js"
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage",

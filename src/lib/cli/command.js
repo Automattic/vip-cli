@@ -163,7 +163,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 									${ _opts.appQuery }
 								}
 							}
-						}`,
+						}
+						${ _opts.appQueryFragments || '' }
+						`,
 						variables: {
 							first: 100,
 							after: null, // TODO make dynamic?
