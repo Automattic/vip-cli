@@ -9,7 +9,7 @@
 import { GB_IN_BYTES, MB_IN_BYTES } from 'lib/constants/file-size';
 
 export const SQL_IMPORT_FILE_SIZE_LIMIT = 100 * GB_IN_BYTES;
-export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 350 * MB_IN_BYTES;
+export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 1 * GB_IN_BYTES;
 
 export interface AppForImport {
 	id: number;
