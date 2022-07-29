@@ -164,8 +164,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 								}
 							}
 						}
-						${ _opts.appQueryFragments || '' }
-						`,
+						${ _opts.appQueryFragments || '' }`,
 						variables: {
 							first: 100,
 							after: null, // TODO make dynamic?
@@ -230,7 +229,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		} else {
 			let appLookup;
 			try {
-				appLookup = await app( options.app, _opts.appQuery );
+				appLookup = await app( options.app, _opts.appQuery, _opts.appQueryFragments );
 			} catch ( err ) {
 				await trackEvent( 'command_appcontext_param_error', {
 					error: 'App lookup failed',
