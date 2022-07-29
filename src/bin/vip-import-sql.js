@@ -257,7 +257,7 @@ export async function validateAndGetTableNames( {
 		await fileLineValidations( appId, envId, fileNameToUpload, validations, searchReplace );
 	} catch ( validateErr ) {
 		console.log( '' );
-		exit.withError( `${ validateErr.message }
+		exit.withError( `${ validateErr.message }\n
 If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow( '--skip-validate' ) } option.
 ` );
 	}

@@ -74,7 +74,9 @@ export const siteTypeValidations = {
 				error_type: 'multisite-import-where-primary-domain-unmapped',
 			} );
 			throw new Error(
-				`This import would set the network's main site domain to ${ primaryDomainFromSQL }, however this domain is not mapped to the target environment.`
+				'This import would set the network\'s main site domain to ' + primaryDomainFromSQL +
+				', however this domain is not mapped to the target environment. Please replace this domain in your ' +
+				'import file, or map it to the environment.'
 			);
 		}
 	},
