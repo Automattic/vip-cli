@@ -26,6 +26,15 @@ By default, we record information about the usage of this tool using an in-house
 
 ## Changelog
 
+### 2.15.0 (3 Aug 2022)
+
+- #1067 FORNO-1244: SQL Import: Increase max import size for launched sites to 1GB
+- #1064 FORNO-1254: SQL Import: Add multisite primary domain validation
+- #1062 [dev-env] Change wizard wording
+- #1065 [dev-env] Update default software versions for PHP and Elasticsearch
+- #1063 [dev-env] Remove redundant healthchecks
+- #1061 [dev-env] Fix duplicate shortcuts
+
 ### 2.14.0 (19 Jul 2022)
 
 - #1059 Update engines to show support for npm > 6
