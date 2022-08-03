@@ -205,7 +205,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData[ component ] = result;
 	}
 
-	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Enterprise Search?', defaultOptions.enterpriseSearchEnabled );
+	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.enterpriseSearchEnabled );
 	if ( instanceData.enterpriseSearchEnabled ) {
 		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
 	} else {
