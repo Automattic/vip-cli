@@ -5,6 +5,7 @@ export interface InstanceOptions {
 	wordpress?: string;
 	muPlugins?: string;
 	clientCode?: string;
+	elasticsearchEnabled?: boolean;
 	elasticsearch?: string;
 	mariadb?: string;
 	php?: string;
@@ -12,7 +13,6 @@ export interface InstanceOptions {
 	statsd?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
-	elasticsearchEnabled?: boolean;
 }
 
 export type AppInfo = {
