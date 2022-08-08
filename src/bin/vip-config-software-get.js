@@ -37,11 +37,18 @@ command( {
 		softwareSettings.nodejs,
 	]
 		.filter( softwareSetting => !! softwareSetting )
-		.map( softwareSetting => ( {
-			name: softwareSetting.name,
-			current: softwareSetting.current.version,
-			pinned: softwareSetting.pinned,
-		} ) );
+		.map( softwareSetting => {
+			let version = softwareSetting.current.version;
+			if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
+				version += ' (managed updates)';
+			}
+
+			return {
+				name: softwareSetting.name,
+				slug: softwareSetting.slug,
+				version,
+			};
+		} );
 
 	return preFormated;
 } );
