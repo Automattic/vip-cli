@@ -238,19 +238,50 @@ async function processComponent( component: string, preselectedValue: string, de
 		const resolvedPath = resolvePath( result.dir || '' );
 		result.dir = resolvedPath;
 
-		const isDirectory = resolvedPath && fs.existsSync( resolvedPath ) && fs.lstatSync( resolvedPath ).isDirectory();
-		const isEmpty = isDirectory ? fs.readdirSync( resolvedPath ).length === 0 : true;
+		const { result: isPathValid, message } = validateLocalPath( component, resolvedPath );
 
-		if ( isDirectory && ! isEmpty ) {
+		if ( isPathValid ) {
 			break;
 		} else {
-			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component, allowLocal, defaultObject );
 		}
 	}
 
 	return result;
+}
+
+function validateLocalPath( component: string, providedPath: string ) {
+	if ( ! isNonEmptyDirectory( providedPath ) ) {
+		const message = `Provided path "${ providedPath }" does not point to a valid or existing directory.`;
+		return {
+			result: false,
+			message,
+		};
+	}
+
+	if ( component === 'clientCode' ) {
+		const themesPath = path.resolve( providedPath, 'themes' );
+		if ( ! isNonEmptyDirectory( themesPath ) ) {
+			const message = `Provided path "${ providedPath }" does not have a non-empty themes subdirectory.`;
+			return {
+				result: false,
+				message,
+			};
+		}
+	}
+
+	return {
+		result: true,
+		message: '',
+	};
+}
+
+function isNonEmptyDirectory( directoryPath: string ) {
+	const isDirectory = directoryPath && fs.existsSync( directoryPath ) && fs.lstatSync( directoryPath ).isDirectory();
+	const isEmpty = isDirectory ? fs.readdirSync( directoryPath ).length === 0 : true;
+
+	return ! isEmpty && isDirectory;
 }
 
 export function resolvePath( input: string ): string {
