@@ -14,7 +14,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { appQuery, appQueryFragments } from 'lib/settings/software';
+import { appQuery, appQueryFragments } from 'lib/config/software';
 
 command( {
 	appContext: true,
@@ -31,9 +31,9 @@ command( {
 	}
 
 	const preFormated = [
-		softwareSettings.muplugins,
 		softwareSettings.wordpress,
 		softwareSettings.php,
+		softwareSettings.muplugins,
 		softwareSettings.nodejs,
 	]
 		.filter( softwareSetting => !! softwareSetting )
