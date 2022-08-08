@@ -177,7 +177,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		phpmyadmin: false,
 		xdebug: false,
 		siteSlug: '',
-		enterpriseSearchEnabled: preselectedOptions.enterpriseSearchEnabled || defaultOptions.enterpriseSearchEnabled,
+		elasticsearchEnabled: preselectedOptions.elasticsearchEnabled || defaultOptions.elasticsearchEnabled,
 	};
 
 	const promptLabels = {
@@ -205,8 +205,8 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData[ component ] = result;
 	}
 
-	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.enterpriseSearchEnabled );
-	if ( instanceData.enterpriseSearchEnabled ) {
+	instanceData.elasticsearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.elasticsearchEnabled );
+	if ( instanceData.elasticsearchEnabled ) {
 		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
 	} else {
 		instanceData.statsd = false;

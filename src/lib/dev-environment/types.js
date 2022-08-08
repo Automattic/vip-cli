@@ -12,7 +12,7 @@ export interface InstanceOptions {
 	statsd?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
-	enterpriseSearchEnabled?: boolean;
+	elasticsearchEnabled?: boolean;
 }
 
 export type AppInfo = {

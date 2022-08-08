@@ -144,7 +144,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	newInstanceData.enterpriseSearchEnabled = instanceData.enterpriseSearchEnabled || false;
+	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	return newInstanceData;
