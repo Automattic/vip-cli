@@ -248,7 +248,15 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
 
-	return JSON.parse( instanceDataString );
+	const instanceData = JSON.parse( instanceDataString );
+
+	// REMOVEME after the wheel of time spins around few times
+	if ( instanceData.enterpriseSearchEnabled ) {
+		// enterpriseSearchEnabled was renamed to elasticsearchEnabled
+		instanceData.elasticsearchEnabled = instanceData.enterpriseSearchEnabled;
+	}
+
+	return instanceData;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
