@@ -52,7 +52,7 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 
 		if ( trackKey ) {
 			try {
-				const errorTrackingInfo = { ...trackBaseInfo, failure: message };
+				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
 				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
