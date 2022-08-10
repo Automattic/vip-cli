@@ -31,11 +31,14 @@ jobs:
         run: npm ci
         working-directory: vip
 
-      - name: Unit Tests
-        working-directory: vip
-        run: npm run jest
-      
+      # - name: Unit Tests
+      #   working-directory: vip
+      #   run: npm run jest
+
+      # - name: Build it
+      #   working-directory: vip
+      #   run: npm run pack
+
       - name: Test Command line
         working-directory: vip
-        run: |
-          node ./dist/bin/vip app
+        run: ./__tests__/e2e_test.bat
