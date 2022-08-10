@@ -261,9 +261,25 @@ function validateLocalPath( component: string, providedPath: string ) {
 	}
 
 	if ( component === 'clientCode' ) {
-		const themesPath = path.resolve( providedPath, 'themes' );
-		if ( ! isNonEmptyDirectory( themesPath ) ) {
-			const message = `Provided path "${ providedPath }" does not have a non-empty themes subdirectory.`;
+		const files = {
+			languages: false,
+			plugins: false,
+			themes: false,
+			private: false,
+			images: false,
+			'client-mu-plugins': false,
+			'vip-config': false,
+		};
+
+		const missingFiles = [];
+		for ( const file of Object.keys( files ) ) {
+			const filePath = path.resolve( providedPath, file );
+			if ( ! fs.existsSync( filePath ) ) {
+				missingFiles.push( file );
+			}
+		}
+		if ( missingFiles.length > 0 ) {
+			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }`;
 			return {
 				result: false,
 				message,
