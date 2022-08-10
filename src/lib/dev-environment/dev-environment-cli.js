@@ -261,18 +261,10 @@ function validateLocalPath( component: string, providedPath: string ) {
 	}
 
 	if ( component === 'clientCode' ) {
-		const files = {
-			languages: false,
-			plugins: false,
-			themes: false,
-			private: false,
-			images: false,
-			'client-mu-plugins': false,
-			'vip-config': false,
-		};
+		const files = [ 'languages', 'plugins', 'themes', 'private', 'images', 'client-mu-plugins', 'vip-config' ];
 
 		const missingFiles = [];
-		for ( const file of Object.keys( files ) ) {
+		for ( const file of files ) {
 			const filePath = path.resolve( providedPath, file );
 			if ( ! fs.existsSync( filePath ) ) {
 				missingFiles.push( file );
