@@ -160,6 +160,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		elasticsearchEnabled: false,
 		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
@@ -177,7 +178,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		phpmyadmin: false,
 		xdebug: false,
 		siteSlug: '',
-		enterpriseSearchEnabled: preselectedOptions.enterpriseSearchEnabled || defaultOptions.enterpriseSearchEnabled,
 	};
 
 	const promptLabels = {
@@ -205,8 +205,14 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData[ component ] = result;
 	}
 
-	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.enterpriseSearchEnabled );
-	if ( instanceData.enterpriseSearchEnabled ) {
+	debug( `Processing elasticsearch with preselected "${ preselectedOptions.elasticsearch }"` );
+	if ( 'elasticsearch' in preselectedOptions ) {
+		instanceData.elasticsearchEnabled = !! preselectedOptions.elasticsearch;
+	} else {
+		instanceData.elasticsearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.elasticsearchEnabled );
+	}
+
+	if ( instanceData.elasticsearchEnabled ) {
 		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
 	} else {
 		instanceData.statsd = false;
@@ -214,7 +220,11 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	for ( const service of [ 'phpmyadmin', 'xdebug' ] ) {
 		if ( service in instanceData ) {
-			instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
+			if ( service in preselectedOptions ) {
+				instanceData[ service ] = preselectedOptions[ service ];
+			} else {
+				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
+			}
 		}
 	}
 
@@ -403,7 +413,7 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
-		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
+		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use or false to disable it', undefined, value => 'false' === value?.toLowerCase?.() ? false : value )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use' );
