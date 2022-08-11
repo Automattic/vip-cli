@@ -48,7 +48,8 @@ const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
 type StartEnvironmentOptions = {
-	skipRebuild: boolean
+	skipRebuild: boolean,
+	skipWpVersionsCheck: boolean
 };
 
 type SQLImportPaths = {
@@ -69,7 +70,10 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const updated = await updateWordPressImage( slug );
+	let updated = false;
+	if ( ! options.skipWpVersionsCheck ) {
+		updated = await updateWordPressImage( slug );
+	}
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( instancePath );
