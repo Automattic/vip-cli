@@ -24,7 +24,7 @@ if NOT %errorlevel% == 0 (
 
 echo "== Starting dev-env"
 
-call vip dev-env start
+call vip dev-env start --skip-wp-versions-check
 
 if NOT %errorlevel% == 0 (
     echo "== Dev-env failed to start"
