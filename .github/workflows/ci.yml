@@ -3,6 +3,8 @@ name: CI
 on:
   push:
   workflow_dispatch:
+  release:
+    types: [published]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -65,3 +67,28 @@ jobs:
 
       - name: Run tests
         run: npm run jest
+
+  publish:
+    needs: [test]
+    if: github.event_name == 'release' && github.event.action == 'created'
+    name: Publish to npm
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install dependencies
+        run: npm run build
+
+      - uses: Automattic/vip-actions/npm-publish@v1
+        with:
+          release_type: patch
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
