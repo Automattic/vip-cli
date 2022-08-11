@@ -1,44 +1,52 @@
-name: Run VIP-cli tests
+name: Run linux based image
 on:
   pull_request
 
-env:
-  NODE_OPTIONS: --unhandled-rejections=warn
-
 jobs:
-  Run_windows_tests:
-    name: Run Windows Tests
+  Try_pull_image:
+    name: Try pull Image
     runs-on: windows-latest
     steps:
-      # To prevent issues with fixtures on Windows tests
-      - name: Set git to use LF
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
+      - name: Image pull step
+        run: docker pull ubuntu
 
-      - name: Check out repository code
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-          path: vip
+# name: Run VIP-cli tests
+# on:
+#   pull_request
 
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with:
-          node-version: 'lts/*'
+# env:
+#   NODE_OPTIONS: --unhandled-rejections=warn
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: vip
+# jobs:
+#   Run_windows_tests:
+#     name: Run Windows Tests
+#     runs-on: windows-latest
+#     steps:
+#       # To prevent issues with fixtures on Windows tests
+#       - name: Set git to use LF
+#         run: |
+#           git config --global core.autocrlf false
+#           git config --global core.eol lf
 
-      # - name: Unit Tests
-      #   working-directory: vip
-      #   run: npm run jest
+#       - name: Check out repository code
+#         uses: actions/checkout@v2
+#         with:
+#           submodules: true
+#           path: vip
 
-      # - name: Build it
-      #   working-directory: vip
-      #   run: npm run pack
+#       - name: Setup Node
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: 'lts/*'
 
-      - name: Test Command line
-        working-directory: vip
-        run: ./__tests__/e2e_test.bat
+#       # - name: Install dependencies
+#       #   run: npm ci
+#       #   working-directory: vip
+
+#       # - name: Unit Tests
+#       #   working-directory: vip
+#       #   run: npm run jest
+
+#       - name: Test Command line
+#         working-directory: vip
+#         run: ./__tests__/e2e_test.bat
