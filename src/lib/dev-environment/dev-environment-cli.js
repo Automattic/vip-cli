@@ -271,7 +271,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 			}
 		}
 		if ( missingFiles.length > 0 ) {
-			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }`;
+			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
 			return {
 				result: false,
 				message,
