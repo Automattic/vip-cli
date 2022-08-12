@@ -90,7 +90,7 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
-<% if ( enterpriseSearchEnabled ) { %>
+<% if ( elasticsearchEnabled ) { %>
   vip-search:
     type: compose
     services:

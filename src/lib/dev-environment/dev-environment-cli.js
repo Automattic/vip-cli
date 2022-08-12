@@ -52,7 +52,7 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 
 		if ( trackKey ) {
 			try {
-				const errorTrackingInfo = { ...trackBaseInfo, failure: message };
+				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
 				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
@@ -160,6 +160,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		elasticsearchEnabled: false,
 		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
@@ -177,7 +178,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		phpmyadmin: false,
 		xdebug: false,
 		siteSlug: '',
-		enterpriseSearchEnabled: preselectedOptions.enterpriseSearchEnabled || defaultOptions.enterpriseSearchEnabled,
 	};
 
 	const promptLabels = {
@@ -205,8 +205,14 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData[ component ] = result;
 	}
 
-	instanceData.enterpriseSearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.enterpriseSearchEnabled );
-	if ( instanceData.enterpriseSearchEnabled ) {
+	debug( `Processing elasticsearch with preselected "${ preselectedOptions.elasticsearch }"` );
+	if ( 'elasticsearch' in preselectedOptions ) {
+		instanceData.elasticsearchEnabled = !! preselectedOptions.elasticsearch;
+	} else {
+		instanceData.elasticsearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.elasticsearchEnabled );
+	}
+
+	if ( instanceData.elasticsearchEnabled ) {
 		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
 	} else {
 		instanceData.statsd = false;
@@ -214,7 +220,11 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	for ( const service of [ 'phpmyadmin', 'xdebug' ] ) {
 		if ( service in instanceData ) {
-			instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
+			if ( service in preselectedOptions ) {
+				instanceData[ service ] = preselectedOptions[ service ];
+			} else {
+				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
+			}
 		}
 	}
 
@@ -238,19 +248,58 @@ async function processComponent( component: string, preselectedValue: string, de
 		const resolvedPath = resolvePath( result.dir || '' );
 		result.dir = resolvedPath;
 
-		const isDirectory = resolvedPath && fs.existsSync( resolvedPath ) && fs.lstatSync( resolvedPath ).isDirectory();
-		const isEmpty = isDirectory ? fs.readdirSync( resolvedPath ).length === 0 : true;
+		const { result: isPathValid, message } = validateLocalPath( component, resolvedPath );
 
-		if ( isDirectory && ! isEmpty ) {
+		if ( isPathValid ) {
 			break;
 		} else {
-			const message = `Provided path "${ resolvedPath }" does not point to a valid or existing directory.`;
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component, allowLocal, defaultObject );
 		}
 	}
 
 	return result;
+}
+
+function validateLocalPath( component: string, providedPath: string ) {
+	if ( ! isNonEmptyDirectory( providedPath ) ) {
+		const message = `Provided path "${ providedPath }" does not point to a valid or existing directory.`;
+		return {
+			result: false,
+			message,
+		};
+	}
+
+	if ( component === 'clientCode' ) {
+		const files = [ 'languages', 'plugins', 'themes', 'private', 'images', 'client-mu-plugins', 'vip-config' ];
+
+		const missingFiles = [];
+		for ( const file of files ) {
+			const filePath = path.resolve( providedPath, file );
+			if ( ! fs.existsSync( filePath ) ) {
+				missingFiles.push( file );
+			}
+		}
+		if ( missingFiles.length > 0 ) {
+			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
+			return {
+				result: false,
+				message,
+			};
+		}
+	}
+
+	return {
+		result: true,
+		message: '',
+	};
+}
+
+function isNonEmptyDirectory( directoryPath: string ) {
+	const isDirectory = directoryPath && fs.existsSync( directoryPath ) && fs.lstatSync( directoryPath ).isDirectory();
+	const isEmpty = isDirectory ? fs.readdirSync( directoryPath ).length === 0 : true;
+
+	return ! isEmpty && isDirectory;
 }
 
 export function resolvePath( input: string ): string {
@@ -403,7 +452,7 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
-		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use' )
+		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use or false to disable it', undefined, value => 'false' === value?.toLowerCase?.() ? false : value )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use' );

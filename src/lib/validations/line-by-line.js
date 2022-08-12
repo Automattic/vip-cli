@@ -27,6 +27,7 @@ export type PostLineExecutionProcessingParams = {
 	fileName?: string,
 	isImport?: boolean,
 	skipChecks?: string[],
+	searchReplace?: string | array,
 }
 
 function openFile( filename, flags = 'r', mode = 666 ) {
@@ -55,7 +56,7 @@ export async function getReadInterface( filename: string ) {
 	} );
 }
 
-export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject> ) {
+export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject>, searchReplace: string | array ) {
 	const isImport = true;
 	const readInterface = await getReadInterface( fileName );
 
@@ -77,7 +78,7 @@ export async function fileLineValidations( appId: number, envId: number, fileNam
 
 	return Promise.all( validations.map( async validation => {
 		if ( validation.hasOwnProperty( 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
-			return validation.postLineExecutionProcessing( { fileName, isImport, appId, envId } );
+			return validation.postLineExecutionProcessing( { fileName, isImport, appId, envId, searchReplace } );
 		}
 	} ) );
 }

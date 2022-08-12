@@ -48,7 +48,8 @@ const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
 type StartEnvironmentOptions = {
-	skipRebuild: boolean
+	skipRebuild: boolean,
+	skipWpVersionsCheck: boolean
 };
 
 type SQLImportPaths = {
@@ -69,7 +70,10 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const updated = await updateWordPressImage( slug );
+	let updated = false;
+	if ( ! options.skipWpVersionsCheck ) {
+		updated = await updateWordPressImage( slug );
+	}
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( instancePath );
@@ -144,7 +148,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	newInstanceData.enterpriseSearchEnabled = instanceData.enterpriseSearchEnabled || false;
+	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	return newInstanceData;
@@ -248,7 +252,15 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
 
-	return JSON.parse( instanceDataString );
+	const instanceData = JSON.parse( instanceDataString );
+
+	// REMOVEME after the wheel of time spins around few times
+	if ( instanceData.enterpriseSearchEnabled ) {
+		// enterpriseSearchEnabled was renamed to elasticsearchEnabled
+		instanceData.elasticsearchEnabled = instanceData.enterpriseSearchEnabled;
+	}
+
+	return instanceData;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {
