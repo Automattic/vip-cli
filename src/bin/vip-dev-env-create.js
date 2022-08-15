@@ -64,13 +64,19 @@ cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	await validateDependencies();
 
-	const slug = getEnvironmentName( opt );
+	const environmentNameOptions = {
+		slug: opt.slug,
+		app: opt.app,
+		env: opt.env,
+		allowAppEnv: true,
+	};
+	const slug = getEnvironmentName( environmentNameOptions );
 	debug( 'Args: ', arg, 'Options: ', opt );
 
 	const trackingInfo = { slug };
 	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
 
-	const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
+	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
 
 	const environmentAlreadyExists = doesEnvironmentExist( slug );
 	if ( environmentAlreadyExists ) {
