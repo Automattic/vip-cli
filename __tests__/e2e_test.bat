@@ -20,3 +20,15 @@ if NOT %errorlevel% == 0 (
     echo "== Failed to create dev-env"
     exit 1
 )
+
+call ls -al C:\Users\runneradmin\.local\share\vip\dev-environment\vip-local
+if NOT %errorlevel% == 0 (
+    echo "== local environment folder not found"
+    exit 1
+)
+
+call cat C:\Users\runneradmin\.local\share\vip\dev-environment\vip-local\.lando.yml
+if NOT %errorlevel% == 0 (
+    echo "== local environment lando config not found"
+    exit 1
+)
