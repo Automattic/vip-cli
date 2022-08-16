@@ -30,6 +30,7 @@ import {
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 import { validateDockerInstalled } from './dev-environment-lando';
+import UserError from '../cli/userError';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -89,8 +90,8 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 			return appName;
 		}
 
-		const message = `This command does not support @app.env notation. Use '--slug ${ appName }' instead. Falling back to the default '${ DEFAULT_SLUG }' development environment`;
-		console.log( chalk.yellow( 'Warning:' ), message );
+		const message = `This command does not support @app.env notation. Use '--slug ${ appName }' instead to target a specific local environment.`;
+		throw new UserError( message );
 	}
 
 	return DEFAULT_SLUG;
