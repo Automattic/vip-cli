@@ -77,14 +77,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				expected: 'foo',
 			},
-			{ // When app.env is not allowed use default value
-				options: {
-					allowAppEnv: false,
-					app: '123',
-					env: 'bar.car',
-				},
-				expected: 'vip-local',
-			},
 			{ // construct name from app and env
 				options: {
 					allowAppEnv: true,
@@ -106,6 +98,18 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = getEnvironmentName( input.options );
 
 			expect( result ).toStrictEqual( input.expected );
+		} );
+		it( 'should throw an exception if used the app.env when not allowed', () => {
+			const options = {
+				allowAppEnv: false,
+				app: '123',
+				env: 'bar',
+			};
+
+			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug 123-bar' instead to target a specific local environment.";
+			expect( () => {
+				getEnvironmentName( options );
+			} ).toThrow( expectedErrorMessage );
 		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {
