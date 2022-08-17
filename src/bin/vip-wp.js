@@ -408,12 +408,13 @@ commandWrapper( {
 			const token = await Token.get();
 			const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 				transportOptions: {
-					polling: {
+					websocket: {
 						extraHeaders: {
 							Authorization: `Bearer ${ token.raw }`,
 						},
 					},
 				},
+				transports: [ 'websocket' ],
 				agent: createProxyAgent( API_HOST ),
 			} );
 
