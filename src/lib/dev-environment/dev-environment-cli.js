@@ -90,7 +90,7 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 			return appName;
 		}
 
-		const message = `This command does not support @app.env notation. Use '--slug ${ appName }' instead to target a specific local environment.`;
+		const message = `This command does not support @app.env notation. Use '--slug=${ appName }' to target the local environment.`;
 		throw new UserError( message );
 	}
 
