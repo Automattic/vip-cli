@@ -37,7 +37,7 @@ describe( 'is-multisite-domain-mapped', () => {
 			expect( domain ).toEqual( 'www.example.com' );
 		} );
 
-		it( 'should return an empty string when statement not found', () => {
+		it( 'should return an empty string if no wp_site INSERT statement is found', () => {
 			const domain = getPrimaryDomainFromSQL( statementNotFound );
 			expect( domain ).toEqual( '' );
 		} );
@@ -64,9 +64,14 @@ describe( 'is-multisite-domain-mapped', () => {
 	} );
 
 	describe( 'getPrimaryDomain', () => {
-		it( 'should return the domain from wp_site INSERT statement', () => {
+		it( 'should return the domain from a wp_site INSERT statement', () => {
 			const domain = getPrimaryDomain( capturedStatement );
 			expect( domain ).toEqual( 'www.example.com' );
+		} );
+
+		it( 'should return an empty string if no wp_site INSERT statement is found', () => {
+			const domain = getPrimaryDomain( statementNotFound );
+			expect( domain ).toEqual( '' );
 		} );
 
 		it( 'should apply relevant search-replacements to the domain found in the wp_site INSERT statement', () => {
@@ -109,13 +114,7 @@ describe( 'is-multisite-domain-mapped', () => {
 			expect( isMapped ).toEqual( true );
 		} );
 
-		it( 'should return true if the SQL does not contain a wp_site INSERT statement', async () => {
-			const domain = getPrimaryDomainFromSQL( statementNotFound );
-			const isMapped = await isMultisitePrimaryDomainMapped( 1, 1, domain );
-			expect( isMapped ).toEqual( true );
-		} );
-
-		it( 'should return false if the domain is mapped to the environment', async () => {
+		it( 'should return false if the domain is not mapped to the environment', async () => {
 			const isMapped = await isMultisitePrimaryDomainMapped( 1, 1, 'test.com' );
 			expect( isMapped ).toEqual( false );
 		} );
