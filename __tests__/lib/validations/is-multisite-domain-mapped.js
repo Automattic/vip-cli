@@ -29,10 +29,17 @@ describe( 'is-multisite-domain-mapped', () => {
 		],
 	];
 
+	const statementNotFound = [];
+
 	describe( 'getPrimaryDomainFromSQL', () => {
 		it( 'should extract the domain from a wp_site INSERT statement', () => {
 			const domain = getPrimaryDomainFromSQL( capturedStatement );
 			expect( domain ).toEqual( 'www.example.com' );
+		} );
+
+		it( 'should return an empty string when statement not found', () => {
+			const domain = getPrimaryDomainFromSQL( statementNotFound );
+			expect( domain ).toEqual( '' );
 		} );
 	} );
 
@@ -69,7 +76,7 @@ describe( 'is-multisite-domain-mapped', () => {
 	} );
 
 	describe( 'isMultisitePrimaryDomainMapped', () => {
-		it( 'return true if the domain is mapped to the environment', async () => {
+		beforeEach( () => {
 			const {
 				protocol,
 				host,
@@ -93,10 +100,24 @@ describe( 'is-multisite-domain-mapped', () => {
 					},
 				},
 			} );
+		} );
 
+		afterEach( nock.cleanAll );
+
+		it( 'should return true if the domain is mapped to the environment', async () => {
 			const isMapped = await isMultisitePrimaryDomainMapped( 1, 1, 'www.example.com' );
 			expect( isMapped ).toEqual( true );
-			nock.cleanAll();
+		} );
+
+		it( 'should return true if the SQL does not contain a wp_site INSERT statement', async () => {
+			const domain = getPrimaryDomainFromSQL( statementNotFound );
+			const isMapped = await isMultisitePrimaryDomainMapped( 1, 1, domain );
+			expect( isMapped ).toEqual( true );
+		} );
+
+		it( 'should return false if the domain is mapped to the environment', async () => {
+			const isMapped = await isMultisitePrimaryDomainMapped( 1, 1, 'test.com' );
+			expect( isMapped ).toEqual( false );
 		} );
 	} );
 } );

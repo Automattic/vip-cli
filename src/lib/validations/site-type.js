@@ -39,9 +39,7 @@ export const siteTypeValidations = {
 	postLineExecutionProcessing: async ( { appId, envId, searchReplace }: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const primaryDomainFromSQL = getPrimaryDomain( wpSiteInsertStatement, searchReplace );
-		const isPrimaryDomainMapped =
-			primaryDomainFromSQL &&
-			( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
+		const isPrimaryDomainMapped = await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL );
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
 		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
