@@ -106,7 +106,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				env: 'bar',
 			};
 
-			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug 123-bar' instead to target a specific local environment.";
+			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug=123-bar' to target the local environment.";
 			expect( () => {
 				getEnvironmentName( options );
 			} ).toThrow( expectedErrorMessage );
