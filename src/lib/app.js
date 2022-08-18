@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import { NODEJS_SITE_TYPE_IDS, WORDPRESS_SITE_TYPE_IDS } from '../constants/vipgo';
+import { NODEJS_SITE_TYPE_IDS, WORDPRESS_SITE_TYPE_IDS } from './constants/vipgo';
 
 /**
  * Is this a WordPress application?

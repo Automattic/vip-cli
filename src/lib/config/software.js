@@ -2,12 +2,18 @@
  * External dependencies
  */
 import { Select, Confirm } from 'enquirer';
-import { isAppNodejs, isAppWordPress } from '../utils/app';
+import gql from 'graphql-tag';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
+import { isAppNodejs, isAppWordPress } from '../app';
+import API from '../api';
+import UserError from '../user-error';
 
+const UPDATE_PROGRESS_POLL_INTERVAL = 5;
+const debug = debugLib( '@automattic/vip:bin:config-software' );
 
 export const appQuery = `
 	id,
@@ -60,6 +66,60 @@ export const appQueryFragments = `fragment Software on AppEnvironmentSoftwareSet
 		}
 	}
 `;
+
+const updateSoftwareMutation = gql`
+	mutation UpdateSoftwareSettings(
+		$appId: Int!
+		$envId: Int!
+		$component: String!
+		$version: String!
+	) {
+		updateSoftwareSettings(
+			input: {
+				appId: $appId
+				environmentId: $envId
+				softwareName: $component
+				softwareVersion: $version
+			}
+		) {
+			php {
+			...Software
+			}
+			wordpress {
+			...Software
+			}
+			muplugins {
+			...Software
+			}
+			nodejs {
+			...Software
+			}
+		}
+	}
+	${ appQueryFragments }
+`;
+
+const updateJobQuery = gql`
+	query UpdateJob($appId: Int!, $envId: Int!) {
+		app(id: $appId ) {
+			environments(id: $envId) {
+				jobs (types:["upgrade_php", "upgrade_wordpress", "upgrade_muplugins", "upgrade_nodejs"]) {
+					type
+					completedAt
+					createdAt
+					inProgressLock
+					progress {
+						status
+						steps {
+							step
+							name
+							status
+						}
+					}
+				}
+			}
+		}
+	}`;
 
 const COMPONENT_NAMES = {
 	wordpress: 'WordPress',
@@ -117,15 +177,13 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 
 	if ( userProvidedComponent ) {
 		if ( ! validComponents.includes( userProvidedComponent ) ) {
-			// TODO throw user error
-			throw Error( `Component ${ userProvidedComponent } is not supported. Use one of: ${ validComponents.join( ',' ) }` );
+			throw new UserError( `Component ${ userProvidedComponent } is not supported. Use one of: ${ validComponents.join( ',' ) }` );
 		}
 		return userProvidedComponent;
 	}
 
 	if ( validComponents.length === 0 ) {
-		// TODO throw user error
-		throw Error( 'No components are supported for this application' );
+		throw new UserError( 'No components are supported for this application' );
 	}
 
 	if ( validComponents.length === 1 ) {
@@ -149,8 +207,7 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 	if ( userProvidedVersion ) {
 		const validValues = versionChoices.map( item => item.value );
 		if ( ! validValues.includes( userProvidedVersion ) ) {
-			// TODO throw user error
-			throw Error( `Version ${ userProvidedVersion } is not supported for ${ COMPONENT_NAMES[ component ] }. Use one of: ${ validValues.join( ',' ) }` );
+			throw new UserError( `Version ${ userProvidedVersion } is not supported for ${ COMPONENT_NAMES[ component ] }. Use one of: ${ validValues.join( ',' ) }` );
 		}
 		return userProvidedVersion;
 	}
@@ -189,6 +246,75 @@ export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOpti
 		};
 	}
 
-	// TODO throw user error
-	process.exit( 0 );
+	throw new UserError( 'Update cancelled' );
+};
+
+interface TrigerUpdateOptions {
+	appId: number,
+	envId: number,
+	component: string,
+	version: string,
+}
+
+export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
+	debug( 'Triggering update', variables );
+	const api = await API();
+
+	return await api.mutate( { mutation: updateSoftwareMutation, variables } );
+};
+
+const _getLatestJob = async ( appId: number, envId: number ) => {;
+	const api = await API();
+	let latestJob = null;
+	const result = await api.query( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
+	const jobs = result?.data?.app?.environments[ 0 ].jobs || [];
+	for ( const job of jobs ) {
+		if ( latestJob ) {
+			if ( job.createdAt > latestJob.createdAt ) {
+				latestJob = job;
+			}
+		} else {
+			latestJob = job;
+		}
+	}
+	return latestJob;
+};
+
+const _getCompletedJob = async ( appId: number, envId: number ) => {
+	const latestJob = await _getLatestJob( appId, envId );
+	debug( 'Latest job result:', latestJob );
+
+	if ( ! latestJob.inProgressLock ) {
+		return latestJob;
+	}
+
+	debug( `Sleep for ${ UPDATE_PROGRESS_POLL_INTERVAL } seconds` );
+	await new Promise( resolve => setTimeout( resolve, UPDATE_PROGRESS_POLL_INTERVAL * 1000 ) );
+
+	return _getCompletedJob( appId, envId );
+};
+
+interface UpdateResult {
+	ok: boolean,
+	errorMessage: string,
+}
+
+export const getUpdateResult = async ( appId: number, envId: number ): UpdateResult => {
+	debug( 'Getting update result', { appId, envId } );
+
+	const completedJob = await _getCompletedJob( appId, envId );
+
+	const success = completedJob?.progress?.status === 'success';
+	if ( success ) {
+		return {
+			ok: true,
+		};
+	}
+
+	const failedStep = completedJob?.progress?.steps?.find( step => step.status === 'failed' );
+	const error = failedStep ? `Failed during step: ${ failedStep.name }` : 'Software update failed';
+	return {
+		ok: completedJob?.progress?.status === 'success',
+		errorMessage: error,
+	};
 };
