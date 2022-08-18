@@ -18,4 +18,5 @@ command( {
 	requiredArgs: 1,
 } )
 	.command( 'get', 'Read current software settings' )
+	.command( 'update', 'Update software settings' )
 	.argv( process.argv );

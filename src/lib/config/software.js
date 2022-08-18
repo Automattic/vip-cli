@@ -224,7 +224,6 @@ interface UpdateData {
 	version: string,
 }
 
-
 export interface UpdatePromptOptions {
 	component?: string,
 	version?: string,
@@ -263,7 +262,7 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	return await api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
-const _getLatestJob = async ( appId: number, envId: number ) => {;
+const _getLatestJob = async ( appId: number, envId: number ) => {
 	const api = await API();
 	let latestJob = null;
 	const result = await api.query( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
@@ -314,7 +313,7 @@ export const getUpdateResult = async ( appId: number, envId: number ): UpdateRes
 	const failedStep = completedJob?.progress?.steps?.find( step => step.status === 'failed' );
 	const error = failedStep ? `Failed during step: ${ failedStep.name }` : 'Software update failed';
 	return {
-		ok: completedJob?.progress?.status === 'success',
+		ok: false,
 		errorMessage: error,
 	};
 };
