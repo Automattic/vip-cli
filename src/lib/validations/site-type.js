@@ -67,13 +67,18 @@ export const siteTypeValidations = {
 
 		// Get Primary Domain
 		const primaryDomainFromSQL = getPrimaryDomain( wpSiteInsertStatement, searchReplace );
+
 		// Check if Primary Domain exists (empty string does not qualify)
 		const primaryDomainExists = primaryDomainFromSQL || '' !== primaryDomainFromSQL;
+
 		// Check if primary domain is mapped only if it exists
+		// Also saves on a call to Parker by checking ahead
 		if ( primaryDomainExists ) {
-			// Also saves on a call to Parker by checking ahead
 			const isPrimaryDomainMapped = ( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
-			if ( isMultiSite && isPrimaryDomainMapped ) {
+
+			// If site is multisite AND the primary domain is exists AND the primary is unmapped
+			// then throw an error
+			if ( isMultiSite && ! isPrimaryDomainMapped ) {
 				await track( 'import_sql_command_error', {
 					error_type: 'multisite-import-where-primary-domain-unmapped',
 				} );
