@@ -38,9 +38,6 @@ export const siteTypeValidations = {
 	},
 	postLineExecutionProcessing: async ( { appId, envId, searchReplace }: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
-		const primaryDomainFromSQL = getPrimaryDomain( wpSiteInsertStatement, searchReplace );
-		const isPrimaryDomainMapped = primaryDomainFromSQL && ( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
-		const isPrimaryDomainValid = isPrimaryDomainMapped || '' === primaryDomainFromSQL;
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
 		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
@@ -68,15 +65,24 @@ export const siteTypeValidations = {
 			);
 		}
 
-		if ( isMultiSite && ! isPrimaryDomainValid ) {
-			await track( 'import_sql_command_error', {
-				error_type: 'multisite-import-where-primary-domain-unmapped',
-			} );
-			throw new Error(
-				'This import would set the network\'s main site domain to ' + primaryDomainFromSQL +
-				', however this domain is not mapped to the target environment. Please replace this domain in your ' +
-				'import file, or map it to the environment.'
-			);
+		// Get Primary Domain
+		const primaryDomainFromSQL = getPrimaryDomain( wpSiteInsertStatement, searchReplace );
+		// Check if Primary Domain exists (empty string does not qualify)
+		const primaryDomainExists = primaryDomainFromSQL || '' !== primaryDomainFromSQL;
+		// Check if primary domain is mapped only if it exists
+		if ( primaryDomainExists ) {
+			// Also saves on a call to Parker by checking ahead
+			const isPrimaryDomainMapped = ( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
+			if ( isMultiSite && isPrimaryDomainMapped ) {
+				await track( 'import_sql_command_error', {
+					error_type: 'multisite-import-where-primary-domain-unmapped',
+				} );
+				throw new Error(
+					'This import would set the network\'s main site domain to ' + primaryDomainFromSQL +
+					', however this domain is not mapped to the target environment. Please replace this domain in your ' +
+					'import file, or map it to the environment.'
+				);
+			}
 		}
 	},
 };
