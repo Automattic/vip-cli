@@ -39,8 +39,8 @@ export const siteTypeValidations = {
 	postLineExecutionProcessing: async ( { appId, envId, searchReplace }: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const primaryDomainFromSQL = getPrimaryDomain( wpSiteInsertStatement, searchReplace );
-		const primaryDomainExists = primaryDomainFromSQL && '' !== primaryDomainFromSQL;
-		const isPrimaryDomainMapped = primaryDomainExists && ( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
+		const isPrimaryDomainMapped = primaryDomainFromSQL && ( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
+		const isPrimaryDomainValid = isPrimaryDomainMapped || '' === primaryDomainFromSQL;
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
 		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
@@ -68,7 +68,7 @@ export const siteTypeValidations = {
 			);
 		}
 
-		if ( isMultiSite && ! isPrimaryDomainMapped ) {
+		if ( isMultiSite && ! isPrimaryDomainValid ) {
 			await track( 'import_sql_command_error', {
 				error_type: 'multisite-import-where-primary-domain-unmapped',
 			} );
