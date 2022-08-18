@@ -33,7 +33,17 @@ const cmd = command( {
 	appQueryFragments,
 	envContext: true,
 	wildcardCommand: true,
-} );
+	usage: 'vip config software update <wordpress|php|nodejs|muplugins> <version> <version>',
+} ).examples( [
+	{
+		usage: 'vip config software update wordpress 6.0',
+		description: 'Update WordPress to 6.0.x',
+	},
+	{
+		usage: 'vip config software update nodejs 16',
+		description: 'Update Node.js to v16',
+	},
+] );
 cmd.option( 'force', 'Auto-confirm update' );
 cmd.argv( process.argv, async ( arg: string[], opt ) => {
 	const { app, env } = opt;
