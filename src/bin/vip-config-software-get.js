@@ -22,20 +22,35 @@ command( {
 	appQueryFragments,
 	envContext: true,
 	format: true,
+	wildcardCommand: true,
 } ).argv( process.argv, async ( arg: string[], { env } ) => {
 	const { softwareSettings } = env;
 
 	if ( softwareSettings === null ) {
+		// TODO throw user error
 		console.log( chalk.yellow( 'Note:' ), 'Software settings are not supported for this environmnet.' );
 		process.exit();
 	}
 
-	const preFormated = [
-		softwareSettings.wordpress,
-		softwareSettings.php,
-		softwareSettings.muplugins,
-		softwareSettings.nodejs,
-	]
+	let choosenSettings = [];
+	if ( arg.length > 0 ) {
+		const component = arg[ 0 ];
+		if ( ! softwareSettings[ component ] ) {
+			// TODO throw user error
+			console.log( chalk.yellow( 'Note:' ), `Software settings for ${ component } are not supported for this environmnet.` );
+			process.exit();
+		}
+		choosenSettings = [ softwareSettings[ component ] ];
+	} else {
+		choosenSettings = [
+			softwareSettings.wordpress,
+			softwareSettings.php,
+			softwareSettings.muplugins,
+			softwareSettings.nodejs,
+		];
+	}
+
+	const preFormated = choosenSettings
 		.filter( softwareSetting => !! softwareSetting )
 		.map( softwareSetting => {
 			let version = softwareSetting.current.version;
