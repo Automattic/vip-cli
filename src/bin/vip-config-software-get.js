@@ -16,6 +16,18 @@ import chalk from 'chalk';
 import command from 'lib/cli/command';
 import { appQuery, appQueryFragments } from 'lib/config/software';
 
+// Command examples
+const examples = [
+	{
+		usage: 'vip config software get wordpress',
+		description: 'Read current software settings for WordPress',
+	},
+	{
+		usage: 'vip config software get',
+		description: 'Read current software settings for all components',
+	},
+];
+
 command( {
 	appContext: true,
 	appQuery,
@@ -23,7 +35,8 @@ command( {
 	envContext: true,
 	format: true,
 	wildcardCommand: true,
-} ).argv( process.argv, async ( arg: string[], { env } ) => {
+	usage: 'vip config software get <wordpress|php|nodejs|muplugins>',
+} ).examples( examples ).argv( process.argv, async ( arg: string[], { env } ) => {
 	const { softwareSettings } = env;
 
 	if ( softwareSettings === null ) {
@@ -37,7 +50,7 @@ command( {
 		const component = arg[ 0 ];
 		if ( ! softwareSettings[ component ] ) {
 			// TODO throw user error
-			console.log( chalk.yellow( 'Note:' ), `Software settings for ${ component } are not supported for this environmnet.` );
+			console.log( chalk.yellow( 'Note:' ), `Software settings for ${ component } are not supported for this environment.` );
 			process.exit();
 		}
 		choosenSettings = [ softwareSettings[ component ] ];
