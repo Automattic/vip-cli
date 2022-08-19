@@ -66,7 +66,9 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 
 	const updateData = await promptForUpdate( app.typeId, updateOptions, softwareSettings );
 
-	const progressTracker = new ProgressTracker( UPDATE_SOFTWARE_PROGRESS_STEPS );
+	const hasProcessJob = updateData.component !== 'nodejs';
+	const steps = hasProcessJob ? UPDATE_SOFTWARE_PROGRESS_STEPS : [ UPDATE_SOFTWARE_PROGRESS_STEPS[ 0 ] ];
+	const progressTracker = new ProgressTracker( steps );
 
 	progressTracker.startPrinting();
 	progressTracker.stepRunning( 'trigger' );
@@ -76,19 +78,25 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 
 	progressTracker.stepSuccess( 'trigger' );
 
-	const { ok, errorMessage } = await getUpdateResult( app.id, env.id );
+	if ( hasProcessJob ) {
+		const { ok, errorMessage } = await getUpdateResult( app.id, env.id );
 
-	if ( ok ) {
-		progressTracker.stepSuccess( 'process' );
-	} else {
-		progressTracker.stepFailed( 'process' );
-	}
-	progressTracker.print();
-	progressTracker.stopPrinting();
+		if ( ok ) {
+			progressTracker.stepSuccess( 'process' );
+		} else {
+			progressTracker.stepFailed( 'process' );
+		}
+		progressTracker.print();
+		progressTracker.stopPrinting();
 
-	if ( ok ) {
-		console.log( chalk.green( '✓' ) + ' Software update complete' );
+		if ( ok ) {
+			console.log( chalk.green( '✓' ) + ' Software update complete' );
+		} else {
+			throw Error( errorMessage );
+		}
 	} else {
-		throw Error( errorMessage );
+		progressTracker.print();
+		progressTracker.stopPrinting();
+		console.log( chalk.green( '✓' ) + ` A new build of the application code has been initiated and will be deployed using Node.js v${ updateData.version } when the build is successful` );
 	}
 } );
