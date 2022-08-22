@@ -197,8 +197,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					mode: 'image',
 				},
 			},
-			{ // clientCode have just one tag
-				component: 'clientCode',
+			{ // appCode have just one tag
+				component: 'appCode',
 				mode: 'image',
 				expected: {
 					mode: 'image',
@@ -238,7 +238,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					muPlugins: 'mu',
-					clientCode: 'code',
+					appCode: 'code',
 					wordpress: 'wp',
 				},
 				default: {
@@ -247,7 +247,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					muPlugins: 'mu',
-					clientCode: 'code',
+					appCode: 'code',
 					wordpress: 'wp',
 				},
 				default: {

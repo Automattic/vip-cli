@@ -49,8 +49,8 @@ const examples = [
 		description: 'Assigning unique slugs to environments allows multiple environments to be created.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --client-code="~/git/my_code"`,
-		description: 'Creates a local multisite dev environment using WP 5.8 and client code is expected to be in "~/git/my_code"',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --app-code="~/git/my_code"`,
+		description: 'Creates a local multisite dev environment using WP 5.8 and application code is expected to be in "~/git/my_code"',
 	},
 ];
 

@@ -61,7 +61,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		};
 
 		const defaultOptions: InstanceOptions = {
-			clientCode: currentInstanceData.clientCode.dir || currentInstanceData.clientCode.tag || 'latest',
+			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag,
 			elasticsearchEnabled: currentInstanceData.elasticsearchEnabled,

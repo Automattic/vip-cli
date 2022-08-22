@@ -4,7 +4,7 @@ export interface InstanceOptions {
 	multisite: boolean;
 	wordpress?: string;
 	muPlugins?: string;
-	clientCode?: string;
+	appCode?: string;
 	elasticsearchEnabled?: boolean;
 	elasticsearch?: string;
 	mariadb?: string;
@@ -48,7 +48,7 @@ export interface InstanceData {
 	multisite: boolean;
 	wordpress: ComponentConfig;
 	muPlugins: ComponentConfig;
-	clientCode: ComponentConfig;
+	appCode: ComponentConfig;
 	mediaRedirectDomain: string;
 	statsd: boolean;
 	phpmyadmin: boolean;
