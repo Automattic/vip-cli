@@ -50,7 +50,7 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 	const { softwareSettings } = env;
 
 	if ( softwareSettings === null ) {
-		throw UserError( 'Software settings are not supported for this environmnet.' );
+		throw UserError( 'Software settings are not supported for this environment.' );
 	}
 
 	const updateOptions: UpdatePromptOptions = {
@@ -74,7 +74,7 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 	progressTracker.stepRunning( 'trigger' );
 
 	const triggerResult = await triggerUpdate( { appId: app.id, envId: env.id, ...updateData } );
-	debug( 'Trigered update with result', triggerResult );
+	debug( 'Triggered update with result', triggerResult );
 
 	progressTracker.stepSuccess( 'trigger' );
 

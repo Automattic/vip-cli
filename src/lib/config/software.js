@@ -245,7 +245,7 @@ export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOpti
 		};
 	}
 
-	throw new UserError( 'Update cancelled' );
+	throw new UserError( 'Update canceled' );
 };
 
 interface TrigerUpdateOptions {
