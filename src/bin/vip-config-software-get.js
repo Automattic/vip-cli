@@ -8,7 +8,6 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -16,7 +15,7 @@ import chalk from 'chalk';
 import command from 'lib/cli/command';
 import { formatData } from 'lib/cli/format';
 import { appQuery, appQueryFragments } from 'lib/config/software';
-import UserError from '../lib/cli/userError';
+import UserError from 'lib/cli/userError';
 
 // Command examples
 const examples = [
@@ -42,7 +41,7 @@ command( {
 	const { softwareSettings } = opt.env;
 
 	if ( softwareSettings === null ) {
-		throw new UserError( chalk.yellow( 'Note:' ), 'Software settings are not supported for this environment.' );
+		throw new UserError( 'Software settings are not supported for this environment.' );
 	}
 
 	let chosenSettings = [];
