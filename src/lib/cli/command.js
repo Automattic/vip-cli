@@ -26,11 +26,15 @@ import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
 import * as exit from './exit';
 import debugLib from 'debug';
+import UserError from './userError';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
 	if ( err.code === 'EPIPE' ) {
 		return;
+	}
+	if ( err instanceof UserError ) {
+		exit.withError( err.message );
 	}
 
 	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );

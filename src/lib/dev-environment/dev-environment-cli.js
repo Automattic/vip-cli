@@ -21,7 +21,6 @@ import * as exit from 'lib/cli/exit';
 import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
-	DEV_ENVIRONMENT_SUBCOMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
@@ -31,6 +30,7 @@ import {
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 import { validateDockerInstalled } from './dev-environment-lando';
+import UserError from '../cli/userError';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -85,27 +85,24 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	if ( options.app ) {
 		const envSuffix = options.env ? `-${ options.env }` : '';
 
-		return options.app + envSuffix;
+		const appName = options.app + envSuffix;
+		if ( options.allowAppEnv ) {
+			return appName;
+		}
+
+		const message = `This command does not support @app.env notation. Use '--slug=${ appName }' to target the local environment.`;
+		throw new UserError( message );
 	}
 
 	return DEFAULT_SLUG;
 }
 
-export function getEnvironmentStartCommand( options: EnvironmentNameOptions ): string {
-	if ( options.slug ) {
-		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ options.slug }`;
+export function getEnvironmentStartCommand( slug: string ): string {
+	if ( ! slug || slug === DEFAULT_SLUG ) {
+		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
 
-	if ( options.app ) {
-		let application = `@${ options.app }`;
-		if ( options.env ) {
-			application += `.${ options.env }`;
-		}
-
-		return `vip ${ application } ${ DEV_ENVIRONMENT_SUBCOMMAND } start`;
-	}
-
-	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
+	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ slug }`;
 }
 
 export function printTable( data: Object ) {

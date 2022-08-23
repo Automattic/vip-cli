@@ -39,6 +39,7 @@ export type EnvironmentNameOptions = {
 	slug: string;
 	app: string;
 	env: string;
+	allowAppEnv?: boolean;
 }
 
 export interface InstanceData {
