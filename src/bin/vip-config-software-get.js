@@ -16,6 +16,7 @@ import chalk from 'chalk';
 import command from 'lib/cli/command';
 import { formatData } from 'lib/cli/format';
 import { appQuery, appQueryFragments } from 'lib/config/software';
+import UserError from '../lib/cli/userError';
 
 // Command examples
 const examples = [
@@ -41,18 +42,14 @@ command( {
 	const { softwareSettings } = opt.env;
 
 	if ( softwareSettings === null ) {
-		// TODO throw user error
-		console.log( chalk.yellow( 'Note:' ), 'Software settings are not supported for this environment.' );
-		process.exit();
+		throw new UserError( chalk.yellow( 'Note:' ), 'Software settings are not supported for this environment.' );
 	}
 
 	let chosenSettings = [];
 	if ( arg.length > 0 ) {
 		const component = arg[ 0 ];
 		if ( ! softwareSettings[ component ] ) {
-			// TODO throw user error
-			console.log( chalk.yellow( 'Note:' ), `Software settings for ${ component } are not supported for this environment.` );
-			process.exit();
+			throw new UserError( `Software settings for ${ component } are not supported for this environment.` );
 		}
 		chosenSettings = [ softwareSettings[ component ] ];
 	} else {
