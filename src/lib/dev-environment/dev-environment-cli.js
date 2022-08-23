@@ -444,15 +444,28 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	};
 }
 
+const FALSE_OPTIONS = [ 'false', 'no', 'n', '0' ];
+export function processBooleanOption( value: string ): boolean {
+	if ( ! value ) {
+		return false;
+	}
+
+	if ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+		return false;
+	}
+
+	return true;
+}
+
 export function addDevEnvConfigurationOptions( command ) {
 	return command
 		.option( 'wordpress', 'Use a specific WordPress version' )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
 		.option( 'client-code', 'Use the client code from a local directory or VIP skeleton' )
-		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
-		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
-		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, value => 'false' !== value?.toLowerCase?.() )
-		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use or false to disable it', undefined, value => 'false' === value?.toLowerCase?.() ? false : value )
+		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, processBooleanOption )
+		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
+		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
+		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use or false to disable it', undefined, value => FALSE_OPTIONS.includes( value?.toLowerCase?.() ) ? false : value )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use' );
