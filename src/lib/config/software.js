@@ -26,6 +26,7 @@ export const appQuery = `
 		id
 		name
 		type
+		uniqueLabel
 		softwareSettings {
 			php {
 			  ...Software

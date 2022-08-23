@@ -97,6 +97,9 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 	} else {
 		progressTracker.print();
 		progressTracker.stopPrinting();
-		console.log( chalk.green( '✓' ) + ` A new build of the application code has been initiated and will be deployed using Node.js v${ updateData.version } when the build is successful` );
+		const deploymentsLink = `https://dashboard.wpvip.com/apps/${ app.id }/${ env.uniqueLabel }/deploys`;
+		const message = ` A new build of the application code has been initiated and will be deployed using Node.js v${ updateData.version } when the build is successful\n` +
+			`View the deployments page in VIP Dashboard for progress updates. - ${ deploymentsLink }`;
+		console.log( chalk.green( '✓' ) + message );
 	}
 } );
