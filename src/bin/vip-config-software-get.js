@@ -12,6 +12,7 @@
 /**
  * Internal dependencies
  */
+import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { formatData } from 'lib/cli/format';
 import { appQuery, appQueryFragments } from 'lib/config/software';
@@ -38,6 +39,12 @@ command( {
 	format: true,
 	usage: 'vip config software get <wordpress|php|nodejs|muplugins>',
 } ).examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
+	const trackingInfo = {
+		environment_id: opt.env?.id,
+		args: JSON.stringify( arg ),
+	};
+	await trackEvent( 'config_software_get_execute', trackingInfo );
+
 	const { softwareSettings } = opt.env;
 
 	if ( softwareSettings === null ) {
@@ -76,4 +83,6 @@ command( {
 		} );
 
 	console.log( formatData( preFormatted, opt.format ) );
+
+	await trackEvent( 'config_software_get_success', trackingInfo );
 } );
