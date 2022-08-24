@@ -4,6 +4,7 @@ export const appQuery = `
 	type,
 	organization { id, name },
 	environments{
+		appId
 		id
 		name
 		type
