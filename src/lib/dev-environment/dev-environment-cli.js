@@ -168,7 +168,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		muPlugins: {
 			mode: 'image',
 		},
-		clientCode: {
+		appCode: {
 			mode: 'image',
 		},
 		statsd: false,
@@ -267,7 +267,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 		};
 	}
 
-	if ( component === 'clientCode' ) {
+	if ( component === 'appCode' ) {
 		const files = [ 'languages', 'plugins', 'themes', 'private', 'images', 'client-mu-plugins', 'vip-config' ];
 
 		const missingFiles = [];
@@ -369,7 +369,7 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
-	clientCode: 'site-code',
+	appCode: 'application code',
 };
 
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
@@ -384,12 +384,12 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		} );
 	}
 	modChoices.push( {
-		message: 'image - that gets automatically fetched',
+		message: 'demo image - that gets automatically fetched',
 		value: 'image',
 	} );
 
 	let initialMode = 'image';
-	if ( 'clientCode' === component ) {
+	if ( 'appCode' === component ) {
 		initialMode = 'local';
 	}
 
@@ -458,7 +458,7 @@ export function addDevEnvConfigurationOptions( command ) {
 	return command
 		.option( 'wordpress', 'Use a specific WordPress version' )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
-		.option( 'client-code', 'Use the client code from a local directory or VIP skeleton' )
+		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
 		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )

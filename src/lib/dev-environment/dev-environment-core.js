@@ -254,10 +254,21 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceData = JSON.parse( instanceDataString );
 
+	/**
+	 ***********************************
+	 * BACKWARDS COMPATIBILITY SECTION
+	 ***********************************/
+
 	// REMOVEME after the wheel of time spins around few times
 	if ( instanceData.enterpriseSearchEnabled ) {
 		// enterpriseSearchEnabled was renamed to elasticsearchEnabled
 		instanceData.elasticsearchEnabled = instanceData.enterpriseSearchEnabled;
+	}
+
+	// REMOVEME after the wheel of time spins around few times
+	if ( instanceData.clientCode ) {
+		// clientCode was renamed to appCode
+		instanceData.appCode = instanceData.clientCode;
 	}
 
 	return instanceData;
