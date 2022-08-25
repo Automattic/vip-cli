@@ -50,7 +50,7 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 	const { softwareSettings } = env;
 
 	if ( softwareSettings === null ) {
-		throw UserError( 'Software settings are not supported for this environment.' );
+		throw new UserError( 'Software settings are not supported for this environment.' );
 	}
 
 	const updateOptions: UpdatePromptOptions = {
