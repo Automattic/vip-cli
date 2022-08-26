@@ -284,7 +284,7 @@ const _getCompletedJob = async ( appId: number, envId: number ) => {
 	const latestJob = await _getLatestJob( appId, envId );
 	debug( 'Latest job result:', latestJob );
 
-	if ( ! latestJob.inProgressLock ) {
+	if ( ! latestJob || ! latestJob.inProgressLock ) {
 		return latestJob;
 	}
 
@@ -304,7 +304,7 @@ export const getUpdateResult = async ( appId: number, envId: number ): UpdateRes
 
 	const completedJob = await _getCompletedJob( appId, envId );
 
-	const success = completedJob?.progress?.status === 'success';
+	const success = ! completedJob || completedJob?.progress?.status === 'success';
 	if ( success ) {
 		return {
 			ok: true,
