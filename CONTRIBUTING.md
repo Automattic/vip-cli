@@ -78,7 +78,7 @@ Prepare the release by making sure that:
 
 1. All relevant PRs have been merged.
 1. The release has been tested across macOS, Windows, and Linux.
-1. The [changelog](https://github.com/Automattic/vip/blob/master/README.md#changelog) has been updated on `master`.
+1. The [changelog](https://github.com/Automattic/vip/blob/master/CHANGELOG.md) has been updated on `master`.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this, just-in-case).
 
 #### Changelog Generator Hint:
