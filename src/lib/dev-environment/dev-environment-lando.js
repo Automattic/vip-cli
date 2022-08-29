@@ -192,14 +192,14 @@ export async function landoInfo( instancePath: string ) {
 
 	const extraService = await getExtraServicesConnections( lando, app );
 	appInfo = {
+		slug: appInfo.name.replace( /^vipdev/, '' ),
 		...appInfo,
 		...extraService,
 	};
 
-	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
+	delete appInfo.name;
 
-	// Drop vipdev prefix
-	appInfo.name = appInfo.name.replace( /^vipdev/, '' );
+	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
 
 	// Add login information
 	if ( frontEndUrl ) {

@@ -26,11 +26,15 @@ import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
 import * as exit from './exit';
 import debugLib from 'debug';
+import UserError from './userError';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
 	if ( err.code === 'EPIPE' ) {
 		return;
+	}
+	if ( err instanceof UserError ) {
+		exit.withError( err.message );
 	}
 
 	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );
@@ -163,7 +167,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 									${ _opts.appQuery }
 								}
 							}
-						}`,
+						}
+						${ _opts.appQueryFragments || '' }`,
 						variables: {
 							first: 100,
 							after: null, // TODO make dynamic?
@@ -228,7 +233,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		} else {
 			let appLookup;
 			try {
-				appLookup = await app( options.app, _opts.appQuery );
+				appLookup = await app( options.app, _opts.appQuery, _opts.appQueryFragments );
 			} catch ( err ) {
 				await trackEvent( 'command_appcontext_param_error', {
 					error: 'App lookup failed',

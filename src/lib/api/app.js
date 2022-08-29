@@ -10,9 +10,12 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
-export default async function( app: string | number, fields: ?any ): Promise<any> {
+export default async function( app: string | number, fields: ?any, fragments: ?string ): Promise<any> {
 	if ( ! fields ) {
 		fields = 'id,name';
+	}
+	if ( ! fragments ) {
+		fragments = '';
 	}
 
 	const api = await API();
@@ -28,7 +31,8 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 							${ fields }
 						}
 					}
-				}`,
+				}
+				${ fragments || '' }`,
 				variables: {
 					name: app,
 				},
@@ -54,7 +58,8 @@ export default async function( app: string | number, fields: ?any ): Promise<any
 				app( id: $id ){
 					${ fields }
 				}
-			}`,
+			}
+			${ fragments || '' }`,
 			variables: {
 				id: app,
 			},
