@@ -283,19 +283,13 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 
 const _getLatestJob = async ( appId: number, envId: number ) => {
 	const api = await API();
-	let latestJob = null;
 	const result = await api.query( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
 	const jobs = result?.data?.app?.environments[ 0 ].jobs || [];
-	for ( const job of jobs ) {
-		if ( latestJob ) {
-			if ( job.createdAt > latestJob.createdAt ) {
-				latestJob = job;
-			}
-		} else {
-			latestJob = job;
-		}
+
+	if ( jobs.length ) {
+		return jobs.reduce( ( prev, current ) => ( prev.createdAt > current.createdAt ) ? prev : current );
 	}
-	return latestJob;
+	return null;
 };
 
 const _getCompletedJob = async ( appId: number, envId: number ) => {
