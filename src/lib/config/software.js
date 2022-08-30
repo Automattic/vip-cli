@@ -129,8 +129,12 @@ const COMPONENT_NAMES = {
 	nodejs: 'Node.js',
 };
 
-const _optionsForVersion = ( options, current ) => {
+const MANAGED_OPTION_KEY = 'managed_latest';
+
+const _optionsForVersion = ( softwareSettings ) => {
+	const { options, current, pinned, slug } = softwareSettings;
 	const versionChoices = {
+		managed: [],
 		supported: [],
 		test: [],
 		deprecated: [],
@@ -154,10 +158,24 @@ const _optionsForVersion = ( options, current ) => {
 		}
 	}
 
-	const allOptions = [ ...versionChoices.supported, ...versionChoices.test, ...versionChoices.deprecated ];
+	if ( slug === 'wordpress' ) {
+		versionChoices.managed.push( {
+			message: 'Managed updates',
+			value: MANAGED_OPTION_KEY,
+		} );
+	}
+
+	const allOptions = [
+		...versionChoices.managed,
+		...versionChoices.supported,
+		...versionChoices.test,
+		...versionChoices.deprecated,
+	];
 
 	return allOptions.map( option => {
-		if ( option.value === current ) {
+		const isActivePinned = option.value === MANAGED_OPTION_KEY && ! pinned;
+		const isActiveVersion = option.value === current.version && pinned;
+		if ( isActivePinned || isActiveVersion ) {
 			return {
 				message: `Active: ${ option.message }`,
 				value: option.value,
@@ -203,7 +221,7 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 };
 
 const _processComponentVersion = async ( softwareSettings, component: string, userProvidedVersion: string | undefined ) => {
-	const versionChoices = _optionsForVersion( softwareSettings[ component ].options, softwareSettings[ component ].current.version );
+	const versionChoices = _optionsForVersion( softwareSettings[ component ] );
 
 	if ( userProvidedVersion ) {
 		const validValues = versionChoices.map( item => item.value );
