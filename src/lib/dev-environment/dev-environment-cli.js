@@ -379,7 +379,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	if ( allowLocal ) {
 		modChoices.push( {
-			message: `local folder - where you already have ${ componentDisplayName } code`,
+			message: `local folder - where you already have ${ componentDisplayName }`,
 			value: 'local',
 		} );
 	}
