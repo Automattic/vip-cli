@@ -371,20 +371,25 @@ const componentDisplayNames = {
 	muPlugins: 'vip-go-mu-plugins',
 	appCode: 'application code',
 };
+const componentDemoyNames = {
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'vip-go-skeleton',
+};
 
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
+	const componentDemoName = componentDemoyNames[ component ] || component;
 	const modChoices = [];
 
 	if ( allowLocal ) {
 		modChoices.push( {
-			message: `local folder - where you already have ${ componentDisplayName }`,
+			message: `Custom - Path to a locally cloned ${ componentDisplayName } directory`,
 			value: 'local',
 		} );
 	}
 	modChoices.push( {
-		message: 'demo image - that gets automatically fetched',
+		message: `Demo - Automatically fetched ${ componentDemoName }`,
 		value: 'image',
 	} );
 
