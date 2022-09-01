@@ -30,7 +30,7 @@ import {
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 import { validateDockerInstalled } from './dev-environment-lando';
-import UserError from '../cli/userError';
+import UserError from '../user-error';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

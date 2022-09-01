@@ -26,7 +26,7 @@ import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
 import * as exit from './exit';
 import debugLib from 'debug';
-import UserError from './userError';
+import UserError from '../user-error';
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
