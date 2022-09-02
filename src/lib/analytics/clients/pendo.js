@@ -9,7 +9,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:pendo' );
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
-import API from 'lib/api';
+import http from 'lib/api/http';
 
 /**
  * Pendo analytics client.
@@ -80,9 +80,7 @@ export default class Pendo implements AnalyticsClient {
 
 		debug( 'send()', body );
 
-		const { apiFetch } = await API();
-
-		const response = await apiFetch( Pendo.ENDPOINT, {
+		const response = await http( Pendo.ENDPOINT, {
 			method: 'POST',
 			body,
 		} );
