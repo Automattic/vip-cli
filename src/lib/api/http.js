@@ -1,5 +1,11 @@
+/**
+ * External dependencies
+ */
 import fetch from 'node-fetch';
 
+/**
+ * Internal dependencies
+ */
 import Token from 'lib/token';
 import env from 'lib/env';
 import { createProxyAgent } from 'lib/http/proxy-agent';
