@@ -78,7 +78,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 
 	const proxyAgent = createProxyAgent( API_URL );
 
-	const http = require('./api/http').default;
+	const http = require( './api/http' ).default;
 
 	const httpLink = new HttpLink( {
 		uri: API_URL,

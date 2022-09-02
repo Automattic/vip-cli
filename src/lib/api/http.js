@@ -53,4 +53,4 @@ export default async ( path, options = {} ) => {
 			body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
 		},
 	} );
-}
+};
