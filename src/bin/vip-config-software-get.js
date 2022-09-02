@@ -16,7 +16,7 @@ import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import { formatData } from 'lib/cli/format';
 import { appQuery, appQueryFragments } from 'lib/config/software';
-import UserError from 'lib/cli/userError';
+import UserError from 'lib/user-error';
 
 // Command examples
 const examples = [

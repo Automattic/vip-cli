@@ -30,7 +30,7 @@ import {
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 import { validateDockerInstalled } from './dev-environment-lando';
-import UserError from '../cli/userError';
+import UserError from '../user-error';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -371,20 +371,25 @@ const componentDisplayNames = {
 	muPlugins: 'vip-go-mu-plugins',
 	appCode: 'application code',
 };
+const componentDemoyNames = {
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'vip-go-skeleton',
+};
 
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
+	const componentDemoName = componentDemoyNames[ component ] || component;
 	const modChoices = [];
 
 	if ( allowLocal ) {
 		modChoices.push( {
-			message: `local folder - where you already have ${ componentDisplayName } code`,
+			message: `Custom - Path to a locally cloned ${ componentDisplayName } directory`,
 			value: 'local',
 		} );
 	}
 	modChoices.push( {
-		message: 'demo image - that gets automatically fetched',
+		message: `Demo - Automatically fetched ${ componentDemoName }`,
 		value: 'image',
 	} );
 
