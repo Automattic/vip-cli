@@ -17,6 +17,7 @@ import command, { containsAppEnvArgument } from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
+import logout from '../lib/logout';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -32,8 +33,8 @@ const runCmd = async function() {
 	const cmd = command();
 	cmd
 		.command( 'logout', 'Logout from your current session', async () => {
-			await Token.purge();
-			await trackEvent( 'logout_command_execute' );
+			await logout();
+
 			console.log( 'You are successfully logged out.' );
 		} )
 		.command( 'app', 'List and modify your VIP applications' )
