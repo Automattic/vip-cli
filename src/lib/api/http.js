@@ -5,7 +5,7 @@ import env from 'lib/env';
 import { createProxyAgent } from 'lib/http/proxy-agent';
 import { API_HOST } from 'lib/api';
 
-const debug = require('debug')('@automattic/vip:http');
+const debug = require( 'debug' )( '@automattic/vip:http' );
 
 /**
  * Call the Public API with an arbitrary path (e.g. to connect to REST endpoints).
