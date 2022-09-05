@@ -5501,6 +5501,12 @@
           "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-3.0.1.tgz",
           "integrity": "sha512-+O9Jct8wf++lXxxFc4hc8LsjaSq0HFzzL7cVsw8pRDIPdjKD2mT4ytDZlLuSBZ4cLKZFXIrMGO7DbQCtMJJMKw=="
         },
+        "colors": {
+          "version": "1.4.0",
+          "resolved": "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz",
+          "integrity": "sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==",
+          "optional": true
+        },
         "is-fullwidth-code-point": {
           "version": "2.0.0",
           "resolved": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-2.0.0.tgz",
@@ -5642,10 +5648,9 @@
       "dev": true
     },
     "colors": {
-      "version": "1.4.0",
-      "resolved": "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz",
-      "integrity": "sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==",
-      "optional": true
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
+      "integrity": "sha512-pFGrxThWcWQ2MsAz6RtgeWe4NK2kUE1WfsrvvlctdII745EW9I0yflqhe7++M5LEc7bV2c/9/5zc8sFcpL0Drw=="
     },
     "combined-stream": {
       "version": "1.0.8",
@@ -5898,9 +5903,9 @@
       }
     },
     "dayjs": {
-      "version": "1.11.4",
-      "resolved": "https://registry.npmjs.org/dayjs/-/dayjs-1.11.4.tgz",
-      "integrity": "sha512-Zj/lPM5hOvQ1Bf7uAvewDaUcsJoI6JmNqmHhHl3nyumwe0XHwt8sWdOVAPACJzCebL8gQCi+K49w7iKWnGwX9g=="
+      "version": "1.11.5",
+      "resolved": "https://registry.npmjs.org/dayjs/-/dayjs-1.11.5.tgz",
+      "integrity": "sha512-CAdX5Q3YW3Gclyo5Vpqkgpj8fSdLQcRuzfX6mC6Phy0nfJ0eGYOeS7m4mt2plDWLAtA4TqTakvbboHvUxfe4iA=="
     },
     "debug": {
       "version": "4.3.3",
@@ -10104,8 +10109,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+https://github.com/Automattic/lando-cli.git#db79d2c19e110b3dea32120c56eea7a3df100ad3",
-      "from": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_08_11",
+      "version": "git+https://github.com/Automattic/lando-cli.git#93b9137e2570025b771fc734fd92e694755917a1",
+      "from": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_09_05",
       "requires": {
         "@lando/platformsh": "^0.6.0",
         "axios": "0.21.4",
@@ -10163,11 +10168,6 @@
             "strip-ansi": "^4.0.0",
             "wrap-ansi": "^2.0.0"
           }
-        },
-        "colors": {
-          "version": "1.0.3",
-          "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
-          "integrity": "sha512-pFGrxThWcWQ2MsAz6RtgeWe4NK2kUE1WfsrvvlctdII745EW9I0yflqhe7++M5LEc7bV2c/9/5zc8sFcpL0Drw=="
         },
         "find-up": {
           "version": "3.0.0",
@@ -11865,9 +11865,9 @@
       }
     },
     "platformsh-client": {
-      "version": "0.1.205",
-      "resolved": "https://registry.npmjs.org/platformsh-client/-/platformsh-client-0.1.205.tgz",
-      "integrity": "sha512-VxJ6aWQzujv+nhwBsbC7OMWq+yHRHi0m3Z1yQA5mqVAplHHM6PgRrsEmUa+balCXhKksj8Y+YPYCB7epJ7Y0lw==",
+      "version": "0.1.207",
+      "resolved": "https://registry.npmjs.org/platformsh-client/-/platformsh-client-0.1.207.tgz",
+      "integrity": "sha512-Ox32Rpjbiqgap9ilR231eQNCb4BtObeCCbwTlc8o1/3FZqK1R4CfP6E5jVDXpQ3UzyhKMgFT40w7UGo43OaM/g==",
       "requires": {
         "atob": "^2.1.2",
         "basename": "^0.1.2",
@@ -14460,11 +14460,6 @@
           "version": "1.0.0",
           "resolved": "https://registry.npmjs.org/async/-/async-1.0.0.tgz",
           "integrity": "sha512-5mO7DX4CbJzp9zjaFXusQQ4tzKJARjNB1Ih1pVBi8wkbmXy/xzIDgEMXxWePLzt2OdFwaxfneIlT1nCiXubrPQ=="
-        },
-        "colors": {
-          "version": "1.0.3",
-          "resolved": "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz",
-          "integrity": "sha512-pFGrxThWcWQ2MsAz6RtgeWe4NK2kUE1WfsrvvlctdII745EW9I0yflqhe7++M5LEc7bV2c/9/5zc8sFcpL0Drw=="
         }
       }
     },
