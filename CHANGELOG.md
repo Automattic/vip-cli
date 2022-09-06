@@ -1,5 +1,12 @@
 ## Changelog
 
+### 2.17.0 (06 Sep 2022)
+- #1093 [dev-env] use latest proxy image
+- #1091 Extract http helper into standalone function
+- #1090 Add tracking to software update
+- #1083 Software Management: Update
+- #1089 [dev-env] Fix wording in wizard
+
 ### 2.16.0 (29 Aug 2022)
 
 - #1086	Add tracking to config software get
