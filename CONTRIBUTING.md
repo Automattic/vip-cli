@@ -85,7 +85,7 @@ Prepare the release by making sure that:
 
 ```
 export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
-gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s*\S\+\s*\S\+\s*$//' -e 's/^/- #/'
+gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
 ```
 
 Then, let's publish:
