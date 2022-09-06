@@ -45,6 +45,7 @@ const runCmd = async function() {
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'whoami', 'Display details about the currently logged-in user' )
+		.command( 'validate-env', 'Run checks and tests to validate your local environment' )
 		.command( 'wp', 'Run WP CLI commands against an environment' );
 
 	cmd.argv( process.argv );
