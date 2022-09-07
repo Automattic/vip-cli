@@ -225,6 +225,9 @@ export async function printEnvironmentInfo( slug: string, options: PrintOptions 
 		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
 		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
 		appInfo[ 'App Code' ] = parseComponentForInfo( environmentData.appCode );
+		if ( environmentData.mediaRedirectDomain ) {
+			appInfo[ 'Media Redirect' ] = environmentData.mediaRedirectDomain;
+		}
 	}
 
 	printTable( appInfo );
