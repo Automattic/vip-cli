@@ -17,18 +17,21 @@ import command from 'lib/cli/command';
 import { formatData } from 'lib/cli/format';
 import { appQuery, appQueryFragments } from 'lib/config/software';
 import UserError from 'lib/user-error';
+import { formatSoftwareSettings } from '../lib/config/software';
 
 // Command examples
 const examples = [
 	{
-		usage: 'vip @mysite.develop config software get wordpress --format json',
-		description: 'Read current software settings for WordPress in JSON format',
+		usage: 'vip @mysite.develop config software get wordpress --include options --format json',
+		description: 'Read current software settings for WordPress in JSON format including options',
 	},
 	{
 		usage: 'vip @mysite.develop config software get',
 		description: 'Read current software settings for all components',
 	},
 ];
+
+const VALID_INCLUDES = [ 'options' ];
 
 command( {
 	appContext: true,
@@ -38,51 +41,53 @@ command( {
 	wildcardCommand: true,
 	format: true,
 	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
-} ).examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
-	const trackingInfo = {
-		environment_id: opt.env?.id,
-		args: JSON.stringify( arg ),
-	};
-	await trackEvent( 'config_software_get_execute', trackingInfo );
+} ).option( 'include', `Extra information to be included. Valida values: ${ VALID_INCLUDES.join( ',' ) }` )
+	.examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
+		const trackingInfo = {
+			environment_id: opt.env?.id,
+			args: JSON.stringify( arg ),
+		};
+		await trackEvent( 'config_software_get_execute', trackingInfo );
 
-	const { softwareSettings } = opt.env;
-
-	if ( softwareSettings === null ) {
-		throw new UserError( 'Software settings are not supported for this environment.' );
-	}
-
-	let chosenSettings = [];
-	if ( arg.length > 0 ) {
-		const component = arg[ 0 ];
-		if ( ! softwareSettings[ component ] ) {
-			throw new UserError( `Software settings for ${ component } are not supported for this environment.` );
-		}
-		chosenSettings = [ softwareSettings[ component ] ];
-	} else {
-		chosenSettings = [
-			softwareSettings.wordpress,
-			softwareSettings.php,
-			softwareSettings.muplugins,
-			softwareSettings.nodejs,
-		];
-	}
-
-	const preFormatted = chosenSettings
-		.filter( softwareSetting => !! softwareSetting )
-		.map( softwareSetting => {
-			let version = softwareSetting.current.version;
-			if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
-				version += ' (managed updates)';
+		let include = [];
+		if ( opt.include ) {
+			if ( Array.isArray( opt.include ) ) {
+				include = opt.include;
+			} else {
+				include = [ opt.include ];
 			}
+			const invalidIncludes = include.filter( ( includeKey: any ) => ! VALID_INCLUDES.includes( includeKey ) );
+			if ( invalidIncludes.length > 0 ) {
+				throw new UserError( `Invalid include value(s): ${ invalidIncludes.join( ',' ) }` );
+			}
+		}
+		const { softwareSettings } = opt.env;
 
-			return {
-				name: softwareSetting.name,
-				slug: softwareSetting.slug,
-				version,
-			};
-		} );
+		if ( softwareSettings === null ) {
+			throw new UserError( 'Software settings are not supported for this environment.' );
+		}
 
-	console.log( formatData( preFormatted, opt.format ) );
+		let chosenSettings = [];
+		if ( arg.length > 0 ) {
+			const component = arg[ 0 ];
+			if ( ! softwareSettings[ component ] ) {
+				throw new UserError( `Software settings for ${ component } are not supported for this environment.` );
+			}
+			chosenSettings = [ softwareSettings[ component ] ];
+		} else {
+			chosenSettings = [
+				softwareSettings.wordpress,
+				softwareSettings.php,
+				softwareSettings.muplugins,
+				softwareSettings.nodejs,
+			];
+		}
 
-	await trackEvent( 'config_software_get_success', trackingInfo );
-} );
+		const preFormatted = chosenSettings
+			.filter( softwareSetting => !! softwareSetting )
+			.map( softwareSetting => formatSoftwareSettings( softwareSetting, include, opt.format ) );
+
+		console.log( formatData( preFormatted, opt.format ) );
+
+		await trackEvent( 'config_software_get_success', trackingInfo );
+	} );

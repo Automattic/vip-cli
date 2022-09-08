@@ -330,3 +330,24 @@ export const getUpdateResult = async ( appId: number, envId: number ): UpdateRes
 		errorMessage: error,
 	};
 };
+
+export const formatSoftwareSettings = ( softwareSetting: SoftwareSettings, includes: string[], format: string ) => {
+	let version = softwareSetting.current.version;
+	if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
+		version += ' (managed updates)';
+	}
+	const result = {
+		name: softwareSetting.name,
+		slug: softwareSetting.slug,
+		version,
+	};
+
+	if ( includes.includes( 'options' ) ) {
+		result.options = _optionsForVersion( softwareSetting ).map( option => option.value );
+		if ( format !== 'json' ) {
+			result.options = result.options.join( ',' );
+		}
+	}
+
+	return result;
+};
