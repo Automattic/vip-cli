@@ -21,7 +21,6 @@ import app from 'lib/api/app';
 import { formatData, formatSearchReplaceValues } from './format';
 import pkg from 'root/package.json';
 import { trackEvent } from 'lib/tracker';
-import pager from 'lib/cli/pager';
 import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
 import * as exit from './exit';
@@ -470,9 +469,8 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 			const formattedOut = formatData( res, options.format );
 
-			const page = pager();
-			page.write( formattedOut + '\n' );
-			page.end();
+			console.log( formattedOut );
+
 			return {};
 		}
 	}
