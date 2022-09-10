@@ -37,6 +37,12 @@ export const appQuery = `
 		appId
 		name
 		type
+		buildConfiguration {
+            buildType
+            nodeBuildDockerEnv,
+            nodeJSVersion,
+            npmToken,
+        }
 		environmentVariables {
 			nodes {
 				name,
@@ -78,6 +84,10 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 	const harmonia = new Harmonia();
 	harmonia.setSource( 'vip-cli' );
 
+	if ( harmoniaArgs.buildType !== 'nodejs' ) {
+		exit.withError( 'Currently only Node.JS applications are supported.' );
+	}
+
 	// Register the default tests.
 	harmonia.registerDefaultTests();
 
@@ -86,8 +96,9 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 		siteID: opt.app.id,
 		nodejsVersion: harmoniaArgs.nodejsVersion,
 		repository: opt.app.repo,
-		baseURL: 'http://localhost:' + opt.port,
-		//		topRequests: testURLs,
+		baseURL: 'http://localhost:' + harmoniaArgs.port,
+		dockerBuildEnvs: harmoniaArgs.nodeBuildDockerEnv,
+		topRequests: [], // TODO: get top 10 of most requested URLs
 	} );
 
 	// Get package.json
@@ -123,9 +134,6 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 	} catch ( error ) {
 		// nothing
 	}
-
-	// console.log( envVars.all() );
-	// console.log( siteOptions.all() );
 
 	// Save dotenv in the site config
 	siteOptions.set( 'dotenv', dotenvOptions );
@@ -334,7 +342,12 @@ function validateArgs( opt ): {} {
 		outputFile = opt.output;
 	}
 
-	args.nodejsVersion = opt.nodeVersion ?? 'unknown';	// TODO: get from Parker
+	// Configuration fetched from Parker
+	args.nodejsVersion = opt.nodeVersion ?? opt.env.buildConfiguration.nodeJSVersion;	// TODO: get from Parker
+	args.buildType = opt.env.buildConfiguration.buildType;
+	args.npmToken = opt.env.buildConfiguration.npmToken;
+	args.nodeBuildDockerEnv = opt.env.buildConfiguration.nodeBuildDockerEnv;
+
 	args.port = opt.port ?? Math.floor( Math.random() * 1000 ) + 3001; // Get a PORT from 3001 and 3999
 
 	return args;
