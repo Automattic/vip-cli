@@ -19,7 +19,7 @@ import { debug, getEnvContext } from 'lib/envvar/logging';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
 
-const baseUsage = 'vip config envvar get';
+const baseUsage = 'vip @mysite.develop config envvar get';
 
 // Command examples
 const examples = [

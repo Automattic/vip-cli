@@ -20,7 +20,7 @@ import { debug, getEnvContext } from 'lib/envvar/logging';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
 
-const baseUsage = 'vip config envvar delete';
+const baseUsage = 'vip @mysite.develop config envvar delete';
 
 // Command examples
 const examples = [
