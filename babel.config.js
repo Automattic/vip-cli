@@ -8,7 +8,6 @@ module.exports = {
 				},
 			},
 		],
-		'@babel/preset-flow',
 	],
 	plugins: [
 		'@babel/plugin-transform-modules-commonjs',
