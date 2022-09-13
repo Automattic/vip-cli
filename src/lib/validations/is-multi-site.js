@@ -1,9 +1,4 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import gql from 'graphql-tag';

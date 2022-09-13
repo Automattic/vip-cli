@@ -1,8 +1,4 @@
 /**
- * @format
- */
-
-/**
  * External dependencies
  */
 import xdgBasedir from 'xdg-basedir';

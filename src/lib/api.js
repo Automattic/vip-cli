@@ -1,9 +1,4 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import fetch from 'node-fetch';

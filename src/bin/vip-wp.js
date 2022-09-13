@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @flow
 
 /**
  * External dependencies

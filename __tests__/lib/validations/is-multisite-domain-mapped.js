@@ -1,8 +1,4 @@
 /**
- * @format
- */
-
-/**
  * External dependencies
  */
 import nock from 'nock';

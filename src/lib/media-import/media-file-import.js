@@ -1,9 +1,4 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * Internal dependencies
  */
 import { GB_IN_BYTES } from 'lib/constants/file-size';

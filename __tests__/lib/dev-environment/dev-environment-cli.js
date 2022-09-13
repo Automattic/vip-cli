@@ -1,8 +1,4 @@
 /**
- * @format
- */
-
-/**
  * External dependencies
  */
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
