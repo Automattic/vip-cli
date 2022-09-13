@@ -330,7 +330,6 @@ export function getEnvironmentPath( name ) {
 }
 
 export async function getApplicationInformation( appId, envType ) {
-	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `
 		id,
 		name,

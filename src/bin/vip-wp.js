@@ -95,7 +95,6 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 
 	return api
 		.mutate( {
-			// $FlowFixMe: gql template is not supported by flow
 			mutation: gql`
 				mutation TriggerWPCLICommandMutation($input: AppEnvironmentTriggerWPCLICommandInput ){
 					triggerWPCLICommandOnAppEnvironment( input: $input ) {
@@ -121,7 +120,6 @@ const cancelCommand = async guid => {
 	const api = await API();
 	return api
 		.mutate( {
-		// $FlowFixMe: gql template is not supported by flow
 			mutation: gql`
 			mutation cancelWPCLICommand($input: CancelWPCLICommandInput ){
 				cancelWPCLICommand( input: $input ) {

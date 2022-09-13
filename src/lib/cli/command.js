@@ -154,7 +154,6 @@ args.argv = async function( argv, cb ) {
 			try {
 				res = await api
 					.query( {
-						// $FlowFixMe: gql template is not supported by flow
 						query: gql`query Apps( $first: Int, $after: String ) {
 							apps( first: $first, after: $after ) {
 								total

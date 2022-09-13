@@ -20,7 +20,6 @@ export default async function( app, fields, fragments ) {
 	if ( isNaN( app ) ) {
 		const res = await api
 			.query( {
-				// $FlowFixMe: gql template is not supported by flow
 				query: gql`query App( $name: String ) {
 					apps( first: 1, name: $name ) {
 						total,
@@ -51,7 +50,6 @@ export default async function( app, fields, fragments ) {
 
 	const res = await api
 		.query( {
-			// $FlowFixMe: gql template is not supported by flow
 			query: gql`query App( $id: Int ) {
 				app( id: $id ){
 					${ fields }
