@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import ini from 'ini';
 
-export default async function getRepoFromGitConfig(): Promise<string> {
+export default async function getRepoFromGitConfig() {
 	const file = await find();
 
 	if ( ! file.length ) {
@@ -41,7 +41,7 @@ export default async function getRepoFromGitConfig(): Promise<string> {
 	return;
 }
 
-async function find( dir ): Promise<string> {
+async function find( dir ) {
 	dir = dir || process.cwd();
 
 	const test = dir + '/.git/config';
@@ -62,7 +62,7 @@ async function find( dir ): Promise<string> {
 	return find( up.join( path.sep ) );
 }
 
-async function exists( file ): Promise<boolean> {
+async function exists( file ) {
 	return new Promise( resolve => {
 		fs.access( file, fs.constants.F_OK, err => resolve( ! err ) );
 	} );

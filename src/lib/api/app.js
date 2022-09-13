@@ -10,7 +10,7 @@ import gql from 'graphql-tag';
  */
 import API from 'lib/api';
 
-export default async function( app: string | number, fields: ?any, fragments: ?string ): Promise<any> {
+export default async function( app, fields, fragments ) {
 	if ( ! fields ) {
 		fields = 'id,name';
 	}

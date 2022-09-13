@@ -5,14 +5,7 @@
  */
 import chalk from 'chalk';
 
-type Options = {};
-
-export type Tuple = {
-	key: string,
-	value: string,
-};
-
-export function formatData( data: Array<any>, format: string, opts: ?Options ): string {
+export function formatData( data, format, opts ) {
 	if ( ! data || ! data.length ) {
 		return '';
 	}
@@ -36,7 +29,7 @@ export function formatData( data: Array<any>, format: string, opts: ?Options ): 
 	}
 }
 
-export function formatEnvironment( environment: string ): string {
+export function formatEnvironment( environment ) {
 	if ( 'production' === environment.toLowerCase() ) {
 		return chalk.red( environment.toUpperCase() );
 	}
@@ -44,7 +37,7 @@ export function formatEnvironment( environment: string ): string {
 	return chalk.blueBright( environment.toLowerCase() );
 }
 
-function ids( data: Array<any> ): string {
+function ids( data ) {
 	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );
 	if ( 0 > fields.indexOf( 'id' ) ) {
 		return 'No ID field found';
@@ -56,7 +49,7 @@ function ids( data: Array<any> ): string {
 	return id.join( ' ' );
 }
 
-function csv( data: Array<any> ): string {
+function csv( data ) {
 	const { Parser } = require( 'json2csv' );
 	const fields = Object.keys( data[ 0 ] );
 
@@ -65,7 +58,7 @@ function csv( data: Array<any> ): string {
 	return parser.parse( data );
 }
 
-export function table( data: Array<any> ): string {
+export function table( data ) {
 	const Table = require( 'cli-table' );
 	const fields = Object.keys( data[ 0 ] );
 	const dataTable = new Table( {
@@ -84,7 +77,7 @@ export function table( data: Array<any> ): string {
 	return dataTable.toString();
 }
 
-function formatFields( fields: Array<string> ) {
+function formatFields( fields ) {
 	return fields.map( field => {
 		return field
 			.split( /(?=[A-Z])/ )
@@ -93,7 +86,7 @@ function formatFields( fields: Array<string> ) {
 	} );
 }
 
-export function keyValue( values: Array<Tuple> ): string {
+export function keyValue( values ) {
 	const lines = [];
 	const pairs = values.length > 0;
 
@@ -116,7 +109,7 @@ export function keyValue( values: Array<Tuple> ): string {
 	return lines.join( '\n' );
 }
 
-export function requoteArgs( args: Array<string> ): Array<string> {
+export function requoteArgs( args ) {
 	return args.map( arg => {
 		if ( arg.includes( '--' ) && arg.includes( '=' ) && arg.includes( ' ' ) ) {
 			return arg.replace( /^--(.*)=(.*)$/, '--$1="$2"' );
@@ -130,7 +123,7 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 	} );
 }
 
-export function capitalize( str: string ): string {
+export function capitalize( str ) {
 	if ( typeof str !== 'string' || ! str.length ) {
 		return '';
 	}
@@ -140,7 +133,7 @@ export function capitalize( str: string ): string {
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
-	count: number;
+	count;
 
 	constructor() {
 		this.count = 0;
@@ -159,7 +152,7 @@ export class RunningSprite {
 	}
 }
 
-export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
+export function getGlyphForStatus( status, runningSprite ) {
 	switch ( status ) {
 		default:
 			return '';

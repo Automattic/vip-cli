@@ -16,9 +16,9 @@ import * as featureFlags from 'lib/api/feature-flags';
 import Token from 'lib/token';
 
 export async function checkFeatureEnabled(
-	featureName: string,
-	exitOnFalse: boolean = false
-): Promise<boolean> {
+	featureName,
+	exitOnFalse = false
+) {
 	// TODO: eventually let's look at more feature flags coming from the public api,
 	// for now, let's see if the user of the CLI is VIP
 	await trackEvent( 'checkFeatureEnabled_start', { featureName, exitOnFalse } );
@@ -65,6 +65,6 @@ export async function checkIfUserIsVip() {
 	return false;
 }
 
-export async function exitWhenFeatureDisabled( featureName: string ): Promise<boolean> {
+export async function exitWhenFeatureDisabled( featureName ) {
 	return checkFeatureEnabled( featureName, true );
 }

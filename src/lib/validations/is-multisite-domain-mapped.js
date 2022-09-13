@@ -21,7 +21,7 @@ import * as exit from 'lib/cli/exit';
  * @param {array} statements An array of SQL statements
  * @returns {string} The domain
  */
-export const getPrimaryDomainFromSQL = ( statements: array ) => {
+export const getPrimaryDomainFromSQL = ( statements ) => {
 	if ( ! statements.length ) {
 		return '';
 	}
@@ -38,7 +38,7 @@ export const getPrimaryDomainFromSQL = ( statements: array ) => {
  * @param {(string|array)} searchReplace The search-replace pairs
  * @returns {string} The processed domain
  */
-export const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | array ) {
+export const maybeSearchReplacePrimaryDomain = function( domain, searchReplace ) {
 	if ( searchReplace ) {
 		let pairs = searchReplace;
 		if ( ! Array.isArray( pairs ) ) {
@@ -58,7 +58,7 @@ export const maybeSearchReplacePrimaryDomain = function( domain: string, searchR
  * @param {(string|array)} searchReplace The search-replace pairs
  * @returns {string} The replaced domain, or the domain as found in the SQL dump
  */
-export const getPrimaryDomain = function( statements: array, searchReplace?: string | array ) {
+export const getPrimaryDomain = function( statements, searchReplace ) {
 	const domainFromSQL = getPrimaryDomainFromSQL( statements );
 	return maybeSearchReplacePrimaryDomain( domainFromSQL, searchReplace );
 };
@@ -72,10 +72,10 @@ export const getPrimaryDomain = function( statements: array, searchReplace?: str
  * @returns {boolean} Whether the primary domain is mapped
  */
 export async function isMultisitePrimaryDomainMapped(
-	appId: number,
-	envId: number,
-	primaryDomain: string,
-): Promise<boolean> {
+	appId,
+	envId,
+	primaryDomain,
+) {
 	const track = trackEventWithEnv.bind( null, appId, envId );
 	const api = await API();
 	let res;

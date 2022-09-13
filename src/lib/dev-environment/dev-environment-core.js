@@ -32,7 +32,6 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import type { AppInfo, ComponentConfig, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -47,17 +46,7 @@ const homeDirPathInsideContainers = '/user';
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
-type StartEnvironmentOptions = {
-	skipRebuild: boolean,
-	skipWpVersionsCheck: boolean
-};
-
-type SQLImportPaths = {
-	resolvedPath: string,
-	inContainerPath: string
-}
-
-export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
+export async function startEnvironment( slug, options ) {
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -84,7 +73,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 	await printEnvironmentInfo( slug, { extended: false } );
 }
 
-export async function stopEnvironment( slug: string ) {
+export async function stopEnvironment( slug ) {
 	debug( 'Will stop an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -100,7 +89,7 @@ export async function stopEnvironment( slug: string ) {
 	await landoStop( instancePath );
 }
 
-export async function createEnvironment( instanceData: InstanceData ) {
+export async function createEnvironment( instanceData ) {
 	const slug = instanceData.siteSlug;
 	debug( 'Will create an environment', slug, 'with instanceData: ', instanceData );
 
@@ -119,7 +108,7 @@ export async function createEnvironment( instanceData: InstanceData ) {
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
 
-export async function updateEnvironment( instanceData: InstanceData ) {
+export async function updateEnvironment( instanceData ) {
 	const slug = instanceData.siteSlug;
 	debug( 'Will update an environment', slug, 'with instanceData: ', instanceData );
 
@@ -138,9 +127,9 @@ export async function updateEnvironment( instanceData: InstanceData ) {
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
 
-function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
+function preProcessInstanceData( instanceData ) {
 	const newInstanceData = {
-		...( instanceData: Object ),
+		...( instanceData ),
 	};
 
 	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
@@ -154,7 +143,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	return newInstanceData;
 }
 
-export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
+export async function destroyEnvironment( slug, removeFiles ) {
 	debug( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
@@ -180,11 +169,7 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	}
 }
 
-interface PrintOptions {
-	extended?: boolean
-}
-
-export async function printAllEnvironmentsInfo( options: PrintOptions ) {
+export async function printAllEnvironmentsInfo( options ) {
 	const allEnvNames = getAllEnvironmentNames();
 
 	debug( 'Will print info for all environments. Names found: ', allEnvNames );
@@ -196,14 +181,14 @@ export async function printAllEnvironmentsInfo( options: PrintOptions ) {
 	}
 }
 
-function parseComponentForInfo( component: ComponentConfig ): string {
+function parseComponentForInfo( component ) {
 	if ( component.mode === 'local' ) {
 		return component.dir || '';
 	}
 	return component.tag || '[demo-image]';
 }
 
-export async function printEnvironmentInfo( slug: string, options: PrintOptions ) {
+export async function printEnvironmentInfo( slug, options ) {
 	debug( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -233,7 +218,7 @@ export async function printEnvironmentInfo( slug: string, options: PrintOptions 
 	printTable( appInfo );
 }
 
-export async function exec( slug: string, args: Array<string>, options: any = {} ) {
+export async function exec( slug, args, options = {} ) {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -256,7 +241,7 @@ export async function exec( slug: string, args: Array<string>, options: any = {}
 	await landoExec( instancePath, command, commandArgs, options );
 }
 
-export function doesEnvironmentExist( slug: string ): boolean {
+export function doesEnvironmentExist( slug ) {
 	debug( 'Will check for environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -266,7 +251,7 @@ export function doesEnvironmentExist( slug: string ): boolean {
 	return fs.existsSync( instancePath );
 }
 
-export function readEnvironmentData( slug: string ): InstanceData {
+export function readEnvironmentData( slug ) {
 	debug( 'Will try to get instance data for environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -339,7 +324,7 @@ function getAllEnvironmentNames() {
 	return envNames;
 }
 
-export function getEnvironmentPath( name: string ): string {
+export function getEnvironmentPath( name ) {
 	if ( ! name ) {
 		throw new Error( 'Name was not provided' );
 	}
@@ -349,7 +334,7 @@ export function getEnvironmentPath( name: string ): string {
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
 
-export async function getApplicationInformation( appId: number, envType: string | null ): Promise<AppInfo> {
+export async function getApplicationInformation( appId, envType ) {
 	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `
 		id,
@@ -410,7 +395,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 	return appData;
 }
 
-export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
+export async function resolveImportPath( slug, fileName, searchReplace, inPlace ) {
 	let resolvedPath = resolvePath( fileName );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
@@ -454,7 +439,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 	};
 }
 
-export async function importMediaPath( slug: string, filePath: string ) {
+export async function importMediaPath( slug, filePath ) {
 	const resolvedPath = resolvePath( filePath );
 
 	if ( ! fs.existsSync( resolvedPath ) || ! fs.lstatSync( resolvedPath ).isDirectory() ) {

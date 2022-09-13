@@ -27,7 +27,7 @@ export default class Analytics {
 		this.clients = clients;
 	}
 
-	async trackEvent( name, props = {} ): Promise {
+	async trackEvent( name, props = {} ) {
 		if ( process.env.DO_NOT_TRACK ) {
 			debug( `trackEvent() for ${ name } => skipping per DO_NOT_TRACK variable` );
 

@@ -38,7 +38,7 @@ command( {
 	wildcardCommand: true,
 	format: true,
 	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
-} ).examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
+} ).examples( examples ).argv( process.argv, async ( arg, opt ) => {
 	const trackingInfo = {
 		environment_id: opt.env?.id,
 		args: JSON.stringify( arg ),

@@ -25,7 +25,6 @@ import {
 	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
 } from 'lib/site-import/db-file-import';
 // eslint-disable-next-line no-duplicate-imports
-import type { AppForImport, EnvForImport } from 'lib/site-import/db-file-import';
 import { importSqlCheckStatus } from 'lib/site-import/status';
 import { checkFileAccess, getFileSize, getFileMeta, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
 import { trackEventWithEnv } from 'lib/tracker';
@@ -40,11 +39,6 @@ import { ProgressTracker } from 'lib/cli/progress';
 import { isFile } from '../lib/client-file-uploader';
 import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
 import { rollbar } from 'lib/rollbar';
-
-export type WPSiteListType = {
-	id: string,
-	homeUrl: string,
-};
 
 const appQuery = `
 	id,
@@ -94,7 +88,7 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
-export async function gates( app: AppForImport, env: EnvForImport, fileName: string ) {
+export async function gates( app, env, fileName ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -214,7 +208,7 @@ const promptToContinue = async ( {
 	formattedEnvironment,
 	track,
 	domain,
-} ): Promise<void> => {
+} ) => {
 	console.log();
 	const promptToMatch = domain.toUpperCase();
 	const promptResponse = await prompt( {
@@ -233,21 +227,13 @@ const promptToContinue = async ( {
 	}
 };
 
-export type validateAndGetTableNamesInputType = {
-	skipValidate: boolean,
-	appId: number,
-	envId: number,
-	fileNameToUpload: string,
-	searchReplace?: string | array,
-};
-
 export async function validateAndGetTableNames( {
 	skipValidate,
 	appId,
 	envId,
 	fileNameToUpload,
 	searchReplace,
-}: validateAndGetTableNamesInputType ): Promise<Array<string>> {
+} ) {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	if ( skipValidate ) {
 		console.log( 'Skipping SQL file validation.' );
@@ -375,7 +361,7 @@ command( {
 		'process.stdout'
 	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opts ) => {
+	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
 		let { skipValidate, searchReplace } = opts;
 		const { id: envId, appId } = env;

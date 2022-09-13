@@ -35,7 +35,7 @@ const query = gql`
 	}
 `;
 
-export default async function getEnvVars( appId: number, envId: number ) {
+export default async function getEnvVars( appId, envId ) {
 	const api = await API();
 
 	const variables = {

@@ -47,7 +47,7 @@ command( {
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'skip-validate', 'Do not perform file validation.' )
 	.examples( examples )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		await validateDependencies();
 		const [ fileName ] = unmatchedArgs;
 		const { searchReplace, inPlace } = opt;

@@ -46,7 +46,7 @@ const cmd = command( {
 	},
 ] );
 cmd.option( 'force', 'Auto-confirm update' );
-cmd.argv( process.argv, async ( arg: string[], opt ) => {
+cmd.argv( process.argv, async ( arg, opt ) => {
 	const { app, env } = opt;
 	const { softwareSettings } = env;
 
@@ -62,7 +62,7 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 			throw new UserError( 'Software settings are not supported for this environment.' );
 		}
 
-		const updateOptions: UpdatePromptOptions = {
+		const updateOptions = {
 			force: !! opt.force,
 		};
 

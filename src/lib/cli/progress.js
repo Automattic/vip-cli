@@ -15,25 +15,25 @@ const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report i
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
 export class ProgressTracker {
-	hasFailure: boolean;
-	hasPrinted: boolean;
-	initialized: boolean;
-	printInterval: IntervalID;
+	hasFailure;
+	hasPrinted;
+	initialized;
+	printInterval;
 
 	// Track the state of each step
-	stepsFromCaller: Map<string, Object>;
-	stepsFromServer: Map<string, Object>;
+	stepsFromCaller;
+	stepsFromServer;
 
 	// Spinnerz go brrrr
-	runningSprite: RunningSprite;
+	runningSprite;
 
 	// This gets printed before the step status
-	prefix: string;
+	prefix;
 
 	// This gets printed after the step status
-	suffix: string;
+	suffix;
 
-	constructor( steps: Object[] ) {
+	constructor( steps ) {
 		this.runningSprite = new RunningSprite();
 		this.hasFailure = false;
 		this.stepsFromCaller = this.mapSteps( steps );
@@ -42,18 +42,18 @@ export class ProgressTracker {
 		this.suffix = '';
 	}
 
-	getSteps(): Map<string, Object> {
+	getSteps() {
 		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
 	}
 
-	mapSteps( steps: Object[] ): Map<string, Object> {
+	mapSteps( steps ) {
 		return steps.reduce( ( map, { id, name, status } ) => {
 			map.set( id, { id, name, status: status || 'pending' } );
 			return map;
 		}, new Map() );
 	}
 
-	setUploadPercentage( percentage: string ) {
+	setUploadPercentage( percentage ) {
 		const uploadStep = this.stepsFromCaller.get( 'upload' );
 		if ( ! uploadStep ) {
 			return;
@@ -61,7 +61,7 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( 'upload', { ...uploadStep, percentage } );
 	}
 
-	setStepsFromServer( steps: Object[] ) {
+	setStepsFromServer( steps ) {
 		const formattedSteps = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
 			name,
@@ -88,19 +88,19 @@ export class ProgressTracker {
 		return steps.find( ( { status } ) => status === 'pending' );
 	}
 
-	stepRunning( stepId: string ) {
+	stepRunning( stepId ) {
 		this.setStatusForStepId( stepId, 'running' );
 	}
 
-	stepFailed( stepId: string ) {
+	stepFailed( stepId ) {
 		this.setStatusForStepId( stepId, 'failed' );
 	}
 
-	stepSkipped( stepId: string ) {
+	stepSkipped( stepId ) {
 		this.setStatusForStepId( stepId, 'skipped' );
 	}
 
-	stepSuccess( stepId: string ) {
+	stepSuccess( stepId ) {
 		this.setStatusForStepId( stepId, 'success' );
 		// The stepSuccess helper automatically sets the next step to "running"
 		const nextStep = this.getNextStep();
@@ -114,7 +114,7 @@ export class ProgressTracker {
 		return ! [ ...this.getSteps().values() ].some( ( { status } ) => status !== 'success' );
 	}
 
-	setStatusForStepId( stepId: string, status: string ) {
+	setStatusForStepId( stepId, status ) {
 		const step = this.stepsFromCaller.get( stepId );
 		if ( ! step ) {
 			// Only allowed to update existing steps with this method
@@ -135,7 +135,7 @@ export class ProgressTracker {
 		} );
 	}
 
-	startPrinting( prePrintCallback: Function = () => {} ) {
+	startPrinting( prePrintCallback = () => {} ) {
 		this.printInterval = setInterval( () => {
 			prePrintCallback();
 			this.print();
@@ -148,7 +148,7 @@ export class ProgressTracker {
 		}
 	}
 
-	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
+	print( { clearAfter = false } = {} ) {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();

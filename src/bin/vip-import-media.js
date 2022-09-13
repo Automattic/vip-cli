@@ -104,7 +104,7 @@ Are you sure you want to import the contents of the url?
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
-	.argv( process.argv, async ( args: string[], opts ) => {
+	.argv( process.argv, async ( args, opts ) => {
 		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } = opts;
 		const [ url ] = args;
 

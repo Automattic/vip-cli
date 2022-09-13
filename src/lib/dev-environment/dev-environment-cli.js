@@ -28,7 +28,6 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
-import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
 import { validateDockerInstalled } from './dev-environment-lando';
 import UserError from '../user-error';
 
@@ -36,7 +35,7 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
 
-export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
+export async function handleCLIException( exception, trackKey, trackBaseInfo = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
@@ -77,7 +76,7 @@ export const validateDependencies = async () => {
 	}
 };
 
-export function getEnvironmentName( options: EnvironmentNameOptions ): string {
+export function getEnvironmentName( options ) {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -97,7 +96,7 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	return DEFAULT_SLUG;
 }
 
-export function getEnvironmentStartCommand( slug: string ): string {
+export function getEnvironmentStartCommand( slug ) {
 	if ( ! slug || slug === DEFAULT_SLUG ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
@@ -105,13 +104,13 @@ export function getEnvironmentStartCommand( slug: string ): string {
 	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ slug }`;
 }
 
-export function printTable( data: Object ) {
+export function printTable( data ) {
 	const formattedData = formatters.formatData( data, { format: 'table' }, { border: false } );
 
 	console.log( formattedData );
 }
 
-export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
+export function processComponentOptionInput( passedParam, allowLocal ) {
 	// cast to string
 	const param = passedParam + '';
 	if ( allowLocal && param.includes( '/' ) ) {
@@ -127,7 +126,7 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 	};
 }
 
-export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
+export function getOptionsFromAppInfo( appInfo ) {
 	return {
 		title: appInfo.environment?.name || appInfo.name || '',
 		multisite: !! appInfo?.environment?.isMultisite,
@@ -141,7 +140,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
  * @returns {any} instance data
  */
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions> ): Promise<InstanceData> {
+export async function promptForArguments( preselectedOptions, defaultOptions ) {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
@@ -154,7 +153,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		multisiteDefault = defaultOptions.multisite;
 	}
 
-	const instanceData: InstanceData = {
+	const instanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
 		elasticsearchEnabled: false,
@@ -229,7 +228,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	return instanceData;
 }
 
-async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
+async function processComponent( component, preselectedValue, defaultValue ) {
 	debug( `processing a component '${ component }', with preselected/deafault - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
@@ -258,7 +257,7 @@ async function processComponent( component: string, preselectedValue: string, de
 	return result;
 }
 
-function validateLocalPath( component: string, providedPath: string ) {
+function validateLocalPath( component, providedPath ) {
 	if ( ! isNonEmptyDirectory( providedPath ) ) {
 		const message = `Provided path "${ providedPath }" does not point to a valid or existing directory.`;
 		return {
@@ -292,21 +291,21 @@ function validateLocalPath( component: string, providedPath: string ) {
 	};
 }
 
-function isNonEmptyDirectory( directoryPath: string ) {
+function isNonEmptyDirectory( directoryPath ) {
 	const isDirectory = directoryPath && fs.existsSync( directoryPath ) && fs.lstatSync( directoryPath ).isDirectory();
 	const isEmpty = isDirectory ? fs.readdirSync( directoryPath ).length === 0 : true;
 
 	return ! isEmpty && isDirectory;
 }
 
-export function resolvePath( input: string ): string {
+export function resolvePath( input ) {
 	// Resolve does not do ~ reliably
 	const resolvedPath = input.replace( /^~/, os.homedir() );
 	// And resolve to handle relative paths
 	return path.resolve( resolvedPath );
 }
 
-export async function promptForText( message: string, initial: string ): Promise<string> {
+export async function promptForText( message, initial ) {
 	const nonEmptyValidator = value => {
 		if ( ( value || '' ).trim() ) {
 			return true;
@@ -325,7 +324,7 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
+export async function promptForBoolean( message, initial ) {
 	const confirm = new Confirm( {
 		message,
 		initial,
@@ -334,10 +333,10 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 	return confirm.run();
 }
 
-function resolvePhpVersion( version: string ): string {
+function resolvePhpVersion( version ) {
 	debug( `Resolving PHP version '${ version }'` );
 	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
+	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ) ) );
 
 	// eslint-disable-next-line eqeqeq -- use loose comparison because commander resolves '8.0' to '8'
 	const index = versions.findIndex( value => value == version );
@@ -349,7 +348,7 @@ function resolvePhpVersion( version: string ): string {
 	return images[ index ];
 }
 
-export async function promptForPhpVersion( initialValue: string ): Promise<string> {
+export async function promptForPhpVersion( initialValue ) {
 	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
 
 	const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
@@ -376,7 +375,7 @@ const componentDemoyNames = {
 	appCode: 'vip-go-skeleton',
 };
 
-export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
+export async function promptForComponent( component, allowLocal, defaultObject ) {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const componentDemoName = componentDemoyNames[ component ] || component;
@@ -447,7 +446,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 }
 
 const FALSE_OPTIONS = [ 'false', 'no', 'n', '0' ];
-export function processBooleanOption( value: string ): boolean {
+export function processBooleanOption( value ) {
 	if ( ! value ) {
 		return false;
 	}
@@ -501,7 +500,7 @@ export async function getTagChoices() {
 	} );
 }
 
-export function getEnvTrackingInfo( slug: string ): any {
+export function getEnvTrackingInfo( slug ) {
 	try {
 		const envData = readEnvironmentData( slug );
 		const result = { slug };

@@ -12,7 +12,7 @@ import { NODEJS_SITE_TYPE_IDS, WORDPRESS_SITE_TYPE_IDS } from './constants/vipgo
  * @param       {int} appTypeId application type ID
  * @constructor
  */
-export function isAppWordPress( appTypeId: number ) {
+export function isAppWordPress( appTypeId ) {
 	return WORDPRESS_SITE_TYPE_IDS.includes( appTypeId );
 }
 
@@ -21,6 +21,6 @@ export function isAppWordPress( appTypeId: number ) {
  * @param       {int} appTypeId application type ID
  * @constructor
  */
-export function isAppNodejs( appTypeId: number ) {
+export function isAppNodejs( appTypeId ) {
 	return NODEJS_SITE_TYPE_IDS.includes( appTypeId );
 }

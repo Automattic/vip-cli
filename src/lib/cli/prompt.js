@@ -10,10 +10,9 @@ import { prompt } from 'enquirer';
  */
 /* eslint-disable no-duplicate-imports */
 import { keyValue } from './format';
-import type { Tuple } from './format';
 /* eslint-enable no-duplicate-imports */
 
-export async function confirm( values: Array<Tuple>, message: string, skipPrompt: boolean = false ): Promise<boolean> {
+export async function confirm( values, message, skipPrompt = false ) {
 	console.log( keyValue( values ) );
 
 	if ( ! skipPrompt ) {

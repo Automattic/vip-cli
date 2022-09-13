@@ -24,7 +24,7 @@ const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
-export async function getLogs( arg: string[], opt ): Promise<void> {
+export async function getLogs( arg, opt ) {
 	validateInputs( opt.type, opt.limit, opt.format );
 
 	const trackingParams = getBaseTrackingParams( opt );
@@ -59,7 +59,7 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 	printLogs( logs.nodes, opt.format );
 }
 
-export async function followLogs( opt ): Promise<void> {
+export async function followLogs( opt ) {
 	let after = null;
 	let isFirstRequest = true;
 	// How many times have we polled?
@@ -152,7 +152,7 @@ function printLogs( logs, format ) {
 	console.log( output );
 }
 
-export function validateInputs( type: string, limit: number, format: string ): void {
+export function validateInputs( type, limit, format ) {
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
 		exit.withError( `Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.` );
 	}

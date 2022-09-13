@@ -67,7 +67,7 @@ function getLandoConfig() {
 	};
 }
 
-export async function landoStart( instancePath: string ) {
+export async function landoStart( instancePath ) {
 	debug( 'Will start lando app on path:', instancePath );
 
 	const lando = new Lando( getLandoConfig() );
@@ -81,7 +81,7 @@ export async function landoStart( instancePath: string ) {
 	await app.start();
 }
 
-export async function landoRebuild( instancePath: string ) {
+export async function landoRebuild( instancePath ) {
 	debug( 'Will rebuild lando app on path:', instancePath );
 
 	const lando = new Lando( getLandoConfig() );
@@ -97,7 +97,7 @@ export async function landoRebuild( instancePath: string ) {
 	await app.rebuild();
 }
 
-function addHooks( app: App, lando: Lando ) {
+function addHooks( app, lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
 }
 
@@ -107,7 +107,7 @@ const healthChecks = {
 	php: '[[ -f /wp/wp-includes/pomo/mo.php ]]',
 };
 
-async function healthcheckHook( app: App, lando: Lando ) {
+async function healthcheckHook( app, lando ) {
 	try {
 		await lando.Promise.retry( async () => {
 			const list = await lando.engine.list( { project: app.project } );
@@ -150,7 +150,7 @@ async function healthcheckHook( app: App, lando: Lando ) {
 	}
 }
 
-export async function landoStop( instancePath: string ) {
+export async function landoStop( instancePath ) {
 	debug( 'Will stop lando app on path:', instancePath );
 
 	const lando = new Lando( getLandoConfig() );
@@ -162,7 +162,7 @@ export async function landoStop( instancePath: string ) {
 	await app.stop();
 }
 
-export async function landoDestroy( instancePath: string ) {
+export async function landoDestroy( instancePath ) {
 	debug( 'Will destroy lando app on path:', instancePath );
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
@@ -173,7 +173,7 @@ export async function landoDestroy( instancePath: string ) {
 	await app.destroy();
 }
 
-export async function landoInfo( instancePath: string ) {
+export async function landoInfo( instancePath ) {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 
@@ -269,7 +269,7 @@ async function isEnvUp( app ) {
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
-export async function landoExec( instancePath: string, toolName: string, args: Array<string>, options: any ) {
+export async function landoExec( instancePath, toolName, args, options ) {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 

@@ -13,7 +13,7 @@ import { promises as fs } from 'fs';
  */
 import * as exit from 'lib/cli/exit';
 
-export async function readFromFile( path ): Promise<string> {
+export async function readFromFile( path ) {
 	const data = await fs.readFile( path, 'binary' )
 		.catch( ( { message } ) => {
 			// Provide friendly version of common error.

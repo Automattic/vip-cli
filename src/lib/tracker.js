@@ -15,7 +15,7 @@ import env from './env';
 
 let analytics = null;
 
-async function init(): Promise<Analytics> {
+async function init() {
 	const uuid = await Token.uuid();
 
 	const clients = [];
@@ -38,7 +38,7 @@ async function init(): Promise<Analytics> {
 	return analytics;
 }
 
-async function getInstance(): Promise<Analytics> {
+async function getInstance() {
 	if ( analytics ) {
 		return analytics;
 	}
@@ -48,7 +48,7 @@ async function getInstance(): Promise<Analytics> {
 	return analytics;
 }
 
-export async function trackEvent( ...args ): Promise<Response> {
+export async function trackEvent( ...args ) {
 	try {
 		await Token.uuid();
 		const client = await getInstance();
@@ -58,7 +58,7 @@ export async function trackEvent( ...args ): Promise<Response> {
 	}
 }
 
-export async function aliasUser( vipUserId ): Promise<Response> {
+export async function aliasUser( vipUserId ) {
 	try {
 		if ( vipUserId ) {
 			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
@@ -69,6 +69,6 @@ export async function aliasUser( vipUserId ): Promise<Response> {
 	}
 }
 
-export async function trackEventWithEnv( appId, envId, eventName, eventProps = {} ): Promise<Response> {
+export async function trackEventWithEnv( appId, envId, eventName, eventProps = {} ) {
 	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
 }

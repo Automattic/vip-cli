@@ -46,12 +46,12 @@ export const appQuery = `
 	}
 `;
 
-export function validateName( name: string ): boolean {
+export function validateName( name ) {
 	const sanitizedName = name.trim().toUpperCase().replace( /[^A-Z0-9_]/g, '' );
 	return name === sanitizedName && /^[A-Z]/.test( sanitizedName );
 }
 
-export function validateNameWithMessage( name: string ): boolean {
+export function validateNameWithMessage( name ) {
 	debug( `Validating environment variable name ${ JSON.stringify( name ) }` );
 
 	if ( ! validateName( name ) ) {

@@ -8,18 +8,17 @@ const Configstore = require( 'configstore' );
 /**
  * Internal dependencies
  */
-import type { Keychain } from './keychain';
 
-export default class Insecure implements Keychain {
-	file: string;
+export default class Insecure {
+	file;
 
-	constructor( file: string ) {
+	constructor( file ) {
 		this.file = file;
 
 		this.configstore = new Configstore( this.file );
 	}
 
-	getPassword( service: string ): Promise<string> {
+	getPassword( service ) {
 		return new Promise( ( resolve, reject ) => {
 			let password = null;
 
@@ -33,7 +32,7 @@ export default class Insecure implements Keychain {
 		} );
 	}
 
-	setPassword( service: string, password: string ): Promise<boolean> {
+	setPassword( service, password ) {
 		return new Promise( ( resolve, reject ) => {
 			try {
 				this.configstore.set( service, password );
@@ -45,7 +44,7 @@ export default class Insecure implements Keychain {
 		} );
 	}
 
-	deletePassword( service: string ): Promise<boolean> {
+	deletePassword( service ) {
 		return new Promise( ( resolve, reject ) => {
 			try {
 				this.configstore.delete( service );

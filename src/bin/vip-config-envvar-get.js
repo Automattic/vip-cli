@@ -29,7 +29,7 @@ const examples = [
 	},
 ];
 
-export async function getEnvVarCommand( arg: string[], opt ): void {
+export async function getEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 

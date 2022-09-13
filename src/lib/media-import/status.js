@@ -53,12 +53,6 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 }
 `;
 
-export type MediaImportCheckStatusInput = {
-	app: Object,
-	env: Object,
-	progressTracker: MediaImportProgressTracker,
-};
-
 async function getStatus( api, appId, envId ) {
 	const response = await api.query( {
 		query: IMPORT_MEDIA_PROGRESS_QUERY,
@@ -80,7 +74,7 @@ async function getStatus( api, appId, envId ) {
 	return mediaImportStatus;
 }
 
-export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
+export function getGlyphForStatus( status, runningSprite ) {
 	switch ( status ) {
 		case 'INITIALIZING':
 			return '○';
@@ -149,7 +143,7 @@ export async function mediaImportCheckStatus( {
 	env,
 	progressTracker,
 	exportFileErrorsToJson,
-}: MediaImportCheckStatusInput ) {
+} ) {
 	// Stop printing so we can pass our callback
 	progressTracker.stopPrinting();
 
@@ -203,7 +197,7 @@ ${ maybeExitPrompt }
 		new Promise( ( resolve, reject ) => {
 			let startDate = Date.now();
 			let pollIntervalDecreasing = false;
-			const checkStatus = async ( pollInterval: number ) => {
+			const checkStatus = async ( pollInterval ) => {
 				let mediaImportStatus;
 				try {
 					mediaImportStatus = await getStatus( api, app.id, env.id );

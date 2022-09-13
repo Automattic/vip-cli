@@ -37,29 +37,6 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 // How many parts will upload at the same time
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
-export type FileMeta = {
-	basename: string,
-	fileContent?: string | Buffer | ReadStream,
-	fileName: string,
-	fileSize: number,
-	isCompressed: boolean,
-};
-
-export interface GetSignedUploadRequestDataArgs {
-	action: | 'AbortMultipartUpload'
-		| 'CreateMultipartUpload'
-		| 'CompleteMultipartUpload'
-		| 'ListParts'
-		| 'PutObject'
-		| 'UploadPart';
-	etagResults?: Array<Object>;
-	appId: number;
-	envId: number;
-	basename: string;
-	partNumber?: number;
-	uploadId?: string;
-}
-
 export const getWorkingTempDir = async () =>
 	new Promise( ( resolve, reject ) => {
 		fs.mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ), ( err, dir ) => {
@@ -70,14 +47,7 @@ export const getWorkingTempDir = async () =>
 		} );
 	} );
 
-export type UploadArguments = {
-	app: Object,
-	env: Object,
-	fileName: string,
-	progressCallback?: Function,
-};
-
-export const getFileMD5Hash = async ( fileName: string ) =>
+export const getFileMD5Hash = async ( fileName ) =>
 	new Promise( ( resolve, reject ) =>
 		fs
 			.createReadStream( fileName )
@@ -88,7 +58,7 @@ export const getFileMD5Hash = async ( fileName: string ) =>
 			.on( 'error', error => reject( `could not generate file hash: ${ error }` ) )
 	);
 
-export const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) =>
+export const gzipFile = async ( uncompressedFileName, compressedFileName ) =>
 	new Promise( ( resolve, reject ) =>
 		fs
 			.createReadStream( uncompressedFileName )
@@ -98,7 +68,7 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
 
-export async function getFileMeta( fileName: string ): Promise<FileMeta> {
+export async function getFileMeta( fileName ) {
 	return new Promise( async resolve => {
 		const fileSize = await getFileSize( fileName );
 
@@ -124,7 +94,7 @@ export async function uploadImportSqlFileToS3( {
 	env,
 	fileMeta,
 	progressCallback,
-}: UploadArguments ) {
+} ) {
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
@@ -181,19 +151,12 @@ export async function uploadImportSqlFileToS3( {
 	};
 }
 
-export type UploadUsingArguments = {
-	app: Object,
-	env: Object,
-	fileMeta: FileMeta,
-	progressCallback?: Function,
-};
-
 export async function uploadUsingPutObject( {
 	app,
 	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
 	progressCallback,
-}: UploadUsingArguments ) {
+} ) {
 	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
@@ -254,7 +217,7 @@ export async function uploadUsingMultipart( {
 	env,
 	fileMeta,
 	progressCallback,
-}: UploadUsingArguments ) {
+} ) {
 	const { basename } = fileMeta;
 
 	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the Multipart API.` );
@@ -325,7 +288,7 @@ export async function getSignedUploadRequestData( {
 	etagResults,
 	uploadId = undefined,
 	partNumber = undefined,
-}: GetSignedUploadRequestDataArgs ): Promise<Object> {
+} ) {
 	const { apiFetch } = await API();
 	const response = await apiFetch( '/upload/site-import-presigned-url', {
 		method: 'POST',
@@ -339,15 +302,15 @@ export async function getSignedUploadRequestData( {
 	return response.json();
 }
 
-export async function checkFileAccess( fileName: string ): Promise<void> {
+export async function checkFileAccess( fileName ) {
 	return fs.promises.access( fileName, fs.R_OK );
 }
 
-export async function getFileStats( fileName: string ): Promise<fs.Stats> {
+export async function getFileStats( fileName ) {
 	return fs.promises.stat( fileName );
 }
 
-export async function isFile( fileName: string ): Promise<boolean> {
+export async function isFile( fileName ) {
 	try {
 		const stats = await getFileStats( fileName );
 		return stats.isFile();
@@ -357,12 +320,12 @@ export async function isFile( fileName: string ): Promise<boolean> {
 	}
 }
 
-export async function getFileSize( fileName: string ): Promise<number> {
+export async function getFileSize( fileName ) {
 	const stats = await getFileStats( fileName );
 	return stats.size;
 }
 
-export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {
+export async function detectCompressedMimeType( fileName ) {
 	const ZIP_MAGIC_NUMBER = '504b0304';
 	const GZ_MAGIC_NUMBER = '1f8b';
 
@@ -385,13 +348,7 @@ export async function detectCompressedMimeType( fileName: string ): Promise<stri
 	} );
 }
 
-export type PartBoundaries = {
-	end: number,
-	index: number,
-	partSize: number,
-	start: number,
-};
-export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
+export function getPartBoundaries( fileSize ) {
 	if ( fileSize < 1 ) {
 		throw 'fileSize must be greater than zero';
 	}
@@ -407,15 +364,6 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 	} );
 }
 
-type UploadPartsArgs = {
-	app: Object,
-	env: Object,
-	fileMeta: FileMeta,
-	uploadId: string,
-	parts: Array<any>,
-	progressCallback?: Function,
-};
-
 export async function uploadParts( {
 	app,
 	env,
@@ -423,7 +371,7 @@ export async function uploadParts( {
 	uploadId,
 	parts,
 	progressCallback,
-}: UploadPartsArgs ) {
+} ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
 	const partPercentages = new Array( parts.length ).fill( 0 );
@@ -497,14 +445,6 @@ export async function uploadParts( {
 	return allDone;
 }
 
-export type UploadPartArgs = {
-	app: Object,
-	env: Object,
-	fileMeta: FileMeta,
-	part: Object,
-	progressPassThrough: PassThrough,
-	uploadId: string,
-};
 export async function uploadPart( {
 	app,
 	env,
@@ -512,7 +452,7 @@ export async function uploadPart( {
 	part,
 	progressPassThrough,
 	uploadId,
-}: UploadPartArgs ) {
+} ) {
 	const { end, index, partSize, start } = part;
 	const s3PartNumber = index + 1; // S3 multipart is indexed from 1
 
@@ -572,21 +512,13 @@ export async function uploadPart( {
 	};
 }
 
-export type CompleteMultipartUploadArgs = {
-	app: Object,
-	env: Object,
-	basename: string,
-	uploadId: string,
-	etagResults: Array<any>,
-};
-
 export async function completeMultipartUpload( {
 	app,
 	env,
 	basename,
 	uploadId,
 	etagResults,
-}: CompleteMultipartUploadArgs ) {
+} ) {
 	const completeMultipartUploadRequestData = await getSignedUploadRequestData( {
 		action: 'CompleteMultipartUpload',
 		appId: app.id,

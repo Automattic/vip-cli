@@ -19,12 +19,12 @@ import {
 // Config
 export const SERVICE = 'vip-go-cli';
 export default class Token {
-	raw: string;
-	id: number;
-	iat: Date;
-	exp: Date;
+	raw;
+	id;
+	iat;
+	exp;
 
-	constructor( token: string ): void {
+	constructor( token ) {
 		if ( ! token ) {
 			return;
 		}
@@ -50,7 +50,7 @@ export default class Token {
 		}
 	}
 
-	valid(): boolean {
+	valid() {
 		if ( ! this.id ) {
 			return false;
 		}
@@ -67,7 +67,7 @@ export default class Token {
 		return now > this.iat && now < this.exp;
 	}
 
-	expired(): boolean {
+	expired() {
 		if ( ! this.exp ) {
 			return false;
 		}
@@ -76,7 +76,7 @@ export default class Token {
 		return now > this.exp;
 	}
 
-	static async uuid(): string {
+	static async uuid() {
 		const service = Token.getServiceName( '-uuid' );
 
 		let _uuid = await keychain.getPassword( service );
@@ -88,31 +88,31 @@ export default class Token {
 		return _uuid;
 	}
 
-	static async setUuid( _uuid: string ) {
+	static async setUuid( _uuid ) {
 		const service = Token.getServiceName( '-uuid' );
 		await keychain.setPassword( service, _uuid );
 	}
 
-	static async set( token: string ): Promise<boolean> {
+	static async set( token ) {
 		const service = Token.getServiceName();
 
 		return keychain.setPassword( service, token );
 	}
 
-	static async get(): Promise<Token> {
+	static async get() {
 		const service = Token.getServiceName();
 
 		const token = await keychain.getPassword( service );
 		return new Token( token );
 	}
 
-	static async purge(): Promise<boolean> {
+	static async purge() {
 		const service = Token.getServiceName();
 
 		return keychain.deletePassword( service );
 	}
 
-	static getServiceName( modifier: string = '' ): string {
+	static getServiceName( modifier = '' ) {
 		let service = SERVICE;
 
 		if ( PRODUCTION_API_HOST !== API_HOST ) {

@@ -4,11 +4,11 @@
  * External dependencies
  */
 
-exports.isAlias = function( alias: string ): boolean {
+exports.isAlias = function( alias ) {
 	return /^@[A-Za-z0-9\.\-]+$/.test( alias );
 };
 
-exports.parseEnvAlias = function( alias: string ) {
+exports.parseEnvAlias = function( alias ) {
 	if ( ! exports.isAlias( alias ) ) {
 		throw new Error( 'Invalid environment alias. Aliases are in the format of @app-name or @app-name.environment-name' );
 	}
@@ -30,9 +30,9 @@ exports.parseEnvAlias = function( alias: string ) {
 	return { app, env };
 };
 
-exports.parseEnvAliasFromArgv = function( processArgv: Array<string> ) {
+exports.parseEnvAliasFromArgv = function( processArgv ) {
 	// Clone to not affect original arvg
-	const argv = ( processArgv.slice( 0 ): Array<string> );
+	const argv = ( processArgv.slice( 0 ) );
 
 	// If command included a `--` to indicate end of named args, lets only consider aliases
 	// _before_ it, so that it can be passed to other commands directly

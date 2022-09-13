@@ -17,7 +17,7 @@ import * as exit from 'lib/cli/exit';
 
 const isMultiSite = new WeakMap();
 
-export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Promise<boolean> {
+export async function isMultiSiteInSiteMeta( appId, envId ) {
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
 	// if we've already been through this, avoid doing it again within the same process

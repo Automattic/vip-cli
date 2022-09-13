@@ -45,7 +45,7 @@ export const appQuery = `
 	}
 `;
 
-export async function purgeCache( appId: number, envId: number, urls: Array<string> ) {
+export async function purgeCache( appId, envId, urls ) {
 	const api = await API();
 
 	const variables = {

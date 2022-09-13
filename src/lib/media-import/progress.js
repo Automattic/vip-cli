@@ -15,28 +15,22 @@ import { RunningSprite } from 'lib/cli/format';
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 
 export class MediaImportProgressTracker {
-	hasFailure: boolean;
-	hasPrinted: boolean;
-	initialized: boolean;
-	printInterval: IntervalID;
-	status: {
-		importId: number,
-		siteId: number,
-		status: string,
-		filesTotal: number,
-		filesProcessed: number,
-	};
+	hasFailure;
+	hasPrinted;
+	initialized;
+	printInterval;
+	status;
 
 	// Spinnerz go brrrr
-	runningSprite: RunningSprite;
+	runningSprite;
 
 	// This gets printed before the step status
-	prefix: string;
+	prefix;
 
 	// This gets printed after the step status
-	suffix: string;
+	suffix;
 
-	constructor( status: Object[] ) {
+	constructor( status ) {
 		this.runningSprite = new RunningSprite();
 		this.hasFailure = false;
 		this.status = Object.assign( {}, status );
@@ -44,14 +38,14 @@ export class MediaImportProgressTracker {
 		this.suffix = '';
 	}
 
-	setStatus( status: Object ) {
+	setStatus( status ) {
 		if ( 'FAILED' === status.status ) {
 			this.hasFailure = true;
 		}
 		this.status = Object.assign( {}, status );
 	}
 
-	startPrinting( prePrintCallback: Function = () => {} ) {
+	startPrinting( prePrintCallback = () => {} ) {
 		this.printInterval = setInterval( () => {
 			prePrintCallback();
 			this.print();
@@ -64,7 +58,7 @@ export class MediaImportProgressTracker {
 		}
 	}
 
-	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
+	print( { clearAfter = false } = {} ) {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();

@@ -35,7 +35,7 @@ const query = gql`
 `;
 
 // List the names (but not values) of environment variables.
-export default async function listEnvVars( appId: number, envId: number ) {
+export default async function listEnvVars( appId, envId ) {
 	const api = await API();
 
 	const variables = {

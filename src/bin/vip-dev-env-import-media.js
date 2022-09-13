@@ -34,7 +34,7 @@ command( {
 } )
 	.examples( examples )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		await validateDependencies();
 		const [ filePath ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );

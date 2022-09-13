@@ -27,7 +27,6 @@ import {
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import type { InstanceOptions } from '../lib/dev-environment/types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -87,7 +86,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions: $Shape<InstanceOptions> = {};
+	let defaultOptions = {};
 
 	try {
 		if ( opt.app ) {

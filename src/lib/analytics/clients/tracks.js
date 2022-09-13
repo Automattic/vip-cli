@@ -10,7 +10,6 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
 /**
  * Internal dependencies
  */
-import type { AnalyticsClient } from './client';
 import { checkIfUserIsVip } from '../../cli/apiConfig';
 
 const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
@@ -23,19 +22,16 @@ const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
 
 // TODO: add batch support (can include multiples in `events` array)
 
-export default class Tracks implements AnalyticsClient {
-	eventPrefix: string;
-	userAgent: string;
-	baseParams: {
-		'commonProps[_ui]': string,
-		'commonProps[_ut]': string,
-	};
+export default class Tracks {
+	eventPrefix;
+	userAgent;
+	baseParams;
 
 	static get ENDPOINT() {
 		return 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 	}
 
-	constructor( userId: string, userType: string, eventPrefix: string, env: {} ) {
+	constructor( userId, userType, eventPrefix, env ) {
 		this.eventPrefix = eventPrefix;
 
 		this.userAgent = env.userAgent;
@@ -47,7 +43,7 @@ export default class Tracks implements AnalyticsClient {
 		};
 	}
 
-	async trackEvent( name: string, eventProps = {} ): Promise<any> {
+	async trackEvent( name, eventProps = {} ) {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
@@ -106,7 +102,7 @@ export default class Tracks implements AnalyticsClient {
 		return Promise.resolve( false );
 	}
 
-	send( extraParams: {} ): Promise<any> {
+	send( extraParams ) {
 		const params = Object.assign( {}, this.baseParams, extraParams );
 
 		const method = 'POST';

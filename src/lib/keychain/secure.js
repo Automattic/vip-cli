@@ -9,7 +9,7 @@ import keytar from 'keytar';
  */
 import Keychain from './keychain';
 
-export default class Secure implements Keychain {
+export default class Secure {
 	getPassword( service ) {
 		return keytar.getPassword( service, service );
 	}

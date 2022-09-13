@@ -66,7 +66,7 @@ describe( 'deleteEnvVarCommand', () => {
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];
 
-	function setFixtures( name: string, skipConfirmation = '' ) {
+	function setFixtures( name, skipConfirmation = '' ) {
 		args = [ name ];
 		opts = {
 			app: {

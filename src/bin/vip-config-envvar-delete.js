@@ -30,7 +30,7 @@ const examples = [
 	},
 ];
 
-export async function deleteEnvVarCommand( arg: string[], opt ) {
+export async function deleteEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 

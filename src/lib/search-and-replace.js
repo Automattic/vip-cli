@@ -29,19 +29,6 @@ const flatten = arr => {
 	}, [] );
 };
 
-export type GetReadAndWriteStreamsOptions = {
-	fileName: string,
-	inPlace: boolean,
-	output: boolean | string | Buffer | stream$Writable,
-};
-
-export type GetReadAndWriteStreamsOutput = {
-	outputFileName?: string,
-	readStream: stream$Readable | Buffer,
-	usingStdOut: boolean,
-	writeStream: stream$Writable | Buffer,
-};
-
 function makeTempDir() {
 	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
 	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
@@ -52,7 +39,7 @@ export function getReadAndWriteStreams( {
 	fileName,
 	inPlace,
 	output,
-}: GetReadAndWriteStreamsOptions ): GetReadAndWriteStreamsOutput {
+} ) {
 	let writeStream;
 	let usingStdOut = false;
 	let outputFileName;
@@ -111,24 +98,12 @@ export function getReadAndWriteStreams( {
 	};
 }
 
-export type SearchReplaceOptions = {
-	isImport: boolean,
-	inPlace: boolean,
-	output: boolean | string | Buffer | stream$Writable,
-};
-
-export type SearchReplaceOutput = {
-	inputFileName: string,
-	outputFileName?: string,
-	usingStdOut: boolean,
-};
-
 export const searchAndReplace = async (
-	fileName: string,
-	pairs: Array<string> | string,
-	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
-	binary: string | null = null
-): Promise<SearchReplaceOutput> => {
+	fileName,
+	pairs,
+	{ isImport = true, inPlace = false, output = process.stdout },
+	binary = null
+) => {
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();

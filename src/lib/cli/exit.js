@@ -13,7 +13,7 @@ import chalk from 'chalk';
  */
 import env from 'lib/env';
 
-export function withError( message: string ) {
+export function withError( message ) {
 	console.log( `${ chalk.red( 'Error: ' ) } ${ message.toString().replace( /^Error:\s*/, '' ) }` );
 
 	// Debug ouput is printed below error output both for information

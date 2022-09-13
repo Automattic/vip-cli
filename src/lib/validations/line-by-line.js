@@ -16,19 +16,6 @@ import debugLib from 'debug';
 import * as exit from 'lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
-export type PerLineValidationObject = {
-	execute: Function,
-	postLineExecutionProcessing?: Function,
-};
-
-export type PostLineExecutionProcessingParams = {
-	appId?: number,
-	envId?: number,
-	fileName?: string,
-	isImport?: boolean,
-	skipChecks?: string[],
-	searchReplace?: string | array,
-}
 
 function openFile( filename, flags = 'r', mode = 666 ) {
 	return new Promise( ( resolve, reject ) => {
@@ -41,7 +28,7 @@ function openFile( filename, flags = 'r', mode = 666 ) {
 	} );
 }
 
-export async function getReadInterface( filename: string ) {
+export async function getReadInterface( filename ) {
 	let fd;
 	try {
 		fd = await openFile( filename );
@@ -56,7 +43,7 @@ export async function getReadInterface( filename: string ) {
 	} );
 }
 
-export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject>, searchReplace: string | array ) {
+export async function fileLineValidations( appId, envId, fileName, validations, searchReplace ) {
 	const isImport = true;
 	const readInterface = await getReadInterface( fileName );
 

@@ -13,7 +13,6 @@ import updateNotifier from 'update-notifier';
  * Internal dependencies
  */
 /* eslint-disable no-duplicate-imports */
-import type { Tuple } from './prompt';
 import { confirm } from './prompt';
 /* eslint-enable no-duplicate-imports */
 import API from 'lib/api';
@@ -45,7 +44,7 @@ process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
 let _opts = {};
-args.argv = async function( argv, cb ): Promise<any> {
+args.argv = async function( argv, cb ) {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
 	// A usage option allows us to override the default usage text, which isn't
@@ -329,7 +328,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info: Array<Tuple> = [];
+		const info = [];
 
 		if ( options.app ) {
 			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
@@ -478,7 +477,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 	return options;
 };
 
-function validateOpts( opts: any ): Error {
+function validateOpts( opts ) {
 	if ( opts.app ) {
 		if ( typeof ( opts.app ) !== 'string' && typeof ( opts.app ) !== 'number' ) {
 			return new Error( 'Invalid --app' );
@@ -500,7 +499,7 @@ function validateOpts( opts: any ): Error {
 	}
 }
 
-export default function( opts: any ): args {
+export default function( opts ) {
 	_opts = Object.assign( {
 		appContext: false,
 		appQuery: 'id,name',

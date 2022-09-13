@@ -16,7 +16,6 @@ import * as exit from 'lib/cli/exit';
 import { trackEvent } from 'lib/tracker';
 import { getReadInterface } from 'lib/validations/line-by-line';
 // eslint-disable-next-line no-duplicate-imports
-import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -34,40 +33,7 @@ function formatRecommendation( message ) {
 	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
 
-export type CheckResult = {
-	lineNumber?: number,
-	text?: string,
-	recomendation?: string,
-	falsePositive?: boolean,
-	warning?: boolean,
-}
-
-export type CheckType = {
-	excerpt: string,
-	matchHandler: ( lineNumber: number, result: any, extraParam: any ) => CheckResult,
-	matcher: RegExp | string,
-	message: string,
-	outputFormatter: Function,
-	recommendation: string,
-	results: Array<CheckResult>,
-};
-
-export type Checks = {
-	trigger: CheckType,
-	dropDB: CheckType,
-	alterUser: CheckType,
-	dropTable: CheckType,
-	createTable: CheckType,
-	siteHomeUrl: CheckType,
-};
-
-interface ValidationOptions {
-	isImport: boolean,
-	skipChecks: string[],
-	extraCheckParams: Record<string, any>,
-}
-
-const generalCheckFormatter = ( check: CheckType ) => {
+const generalCheckFormatter = ( check ) => {
 	const errors = [];
 	const infos = [];
 
@@ -101,7 +67,7 @@ const generalCheckFormatter = ( check: CheckType ) => {
 	};
 };
 
-const lineNumberCheckFormatter = ( check: CheckType ) => {
+const lineNumberCheckFormatter = ( check ) => {
 	const errors = [];
 	const infos = [];
 
@@ -122,7 +88,7 @@ const lineNumberCheckFormatter = ( check: CheckType ) => {
 	};
 };
 
-const requiredCheckFormatter = ( check: CheckType, type, isImport ) => {
+const requiredCheckFormatter = ( check, type, isImport ) => {
 	const errors = [];
 	const infos = [];
 
@@ -149,7 +115,7 @@ const requiredCheckFormatter = ( check: CheckType, type, isImport ) => {
 	};
 };
 
-const infoCheckFormatter = ( check: CheckType ) => {
+const infoCheckFormatter = ( check ) => {
 	const infos = [];
 
 	check.results.forEach( item => {
@@ -162,7 +128,7 @@ const infoCheckFormatter = ( check: CheckType ) => {
 	};
 };
 
-function checkTablePrefixes( results: CheckResult[], errors, infos ) {
+function checkTablePrefixes( results, errors, infos ) {
 	const wpTables = [],
 		notWPTables = [],
 		wpMultisiteTables = [];
@@ -195,7 +161,7 @@ function checkTablePrefixes( results: CheckResult[], errors, infos ) {
 	}
 }
 
-const checks: Checks = {
+const checks = {
 	binaryLogging: {
 		matcher: /SET @@SESSION.sql_log_bin/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
@@ -305,7 +271,7 @@ const checks: Checks = {
 };
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
-const postValidation = async ( options: ValidationOptions ) => {
+const postValidation = async ( options ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: options.isImport } );
 
 	if ( ! options.isImport ) {
@@ -314,14 +280,14 @@ const postValidation = async ( options: ValidationOptions ) => {
 	}
 
 	const errorSummary = {};
-	const checkEntries: any = Object.entries( checks )
+	const checkEntries = Object.entries( checks )
 		.filter( ( [ type ] ) => ! options.skipChecks.includes( type ) );
 
 	const formattedWarnings = [];
 	let formattedErrors = [];
 	let formattedInfos = [];
 
-	for ( const [ type, check ]: [ string, CheckType ] of checkEntries ) {
+	for ( const [ type, check ] of checkEntries ) {
 		const formattedOutput = check.outputFormatter( check, type, options.isImport );
 
 		for ( const error of formattedOutput.errors ) {
@@ -428,13 +394,13 @@ const checkForTableName = line => {
 	}
 };
 
-const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
+const DEFAULT_VALIDATION_OPTIONS = {
 	isImport: true,
 	skipChecks: DEV_ENV_SPECIFIC_CHECKS,
 	extraCheckParams: {},
 };
 
-const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
+const perLineValidations = ( line, options = DEFAULT_VALIDATION_OPTIONS ) => {
 	if ( lineNum % 500 === 0 ) {
 		options.isImport ? '' : log( `Reading line ${ lineNum } ` );
 	}
@@ -443,7 +409,7 @@ const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_
 
 	const checkKeys = Object.keys( checks ).filter( checkItem => ! options.skipChecks.includes( checkItem ) );
 	for ( const checkKey of checkKeys ) {
-		const check: CheckType = checks[ checkKey ];
+		const check = checks[ checkKey ];
 		const results = line.match( check.matcher );
 		const extraCheckParams = options.extraCheckParams[ checkKey ];
 		if ( results ) {
@@ -454,7 +420,7 @@ const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_
 	lineNum += 1;
 };
 
-const postLineExecutionProcessing = async ( { isImport, skipChecks }: PostLineExecutionProcessingParams ) => {
+const postLineExecutionProcessing = async ( { isImport, skipChecks } ) => {
 	await postValidation( {
 		isImport: isImport || false,
 		skipChecks: skipChecks || DEV_ENV_SPECIFIC_CHECKS,
@@ -468,7 +434,7 @@ export const staticSqlValidations = {
 };
 
 // For standalone SQL validations
-export const validate = async ( filename: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
+export const validate = async ( filename, options = DEFAULT_VALIDATION_OPTIONS ) => {
 	const readInterface = await getReadInterface( filename );
 	options.isImport = false;
 	readInterface.on( 'line', line => {

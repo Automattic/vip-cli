@@ -35,7 +35,7 @@ const mutation = gql`
 	}
 `;
 
-export default async function setEnvVar( appId: number, envId: number, name: string, value: string ) {
+export default async function setEnvVar( appId, envId, name, value ) {
 	const api = await API();
 
 	const variables = {

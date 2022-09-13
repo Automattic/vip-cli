@@ -64,12 +64,6 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 	}
 `;
 
-export type ImportSqlCheckStatusInput = {
-	app: Object,
-	env: Object,
-	progressTracker: ProgressTracker,
-};
-
 async function getStatus( api, appId, envId ) {
 	const response = await api.query( {
 		query: IMPORT_SQL_PROGRESS_QUERY,
@@ -166,7 +160,7 @@ export async function importSqlCheckStatus( {
 	app,
 	env,
 	progressTracker,
-}: ImportSqlCheckStatusInput ) {
+} ) {
 	// Stop printing so we can pass our callback
 	progressTracker.stopPrinting();
 

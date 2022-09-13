@@ -30,7 +30,7 @@ const examples = [
 	},
 ];
 
-export async function getAllEnvVarsCommand( arg: string[], opt ): void {
+export async function getAllEnvVarsCommand( arg, opt ) {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,

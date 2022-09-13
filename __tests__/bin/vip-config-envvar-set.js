@@ -71,7 +71,7 @@ describe( 'setEnvVarCommand', () => {
 	const executeEvent = [ 'envvar_set_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_set_command_success', eventPayload ];
 
-	function setFixtures( name: string, fromFile = '', skipConfirmation = '' ) {
+	function setFixtures( name, fromFile = '', skipConfirmation = '' ) {
 		args = [ name ];
 		opts = {
 			app: {

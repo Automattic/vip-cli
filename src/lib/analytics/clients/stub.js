@@ -1,11 +1,10 @@
 /**
  * Internal dependencies
  */
-import type { AnalyticsClient } from './client';
 
-export default class AnalyticsClientStub implements AnalyticsClient {
+export default class AnalyticsClientStub {
 	// eslint-disable-next-line no-unused-vars
-	trackEvent( name: string, props: {} ): Promise<Response> {
+	trackEvent( name, props ) {
 		return new Promise( resolve => resolve( true ) );
 	}
 }

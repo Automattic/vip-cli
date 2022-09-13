@@ -186,7 +186,7 @@ const _optionsForVersion = ( softwareSettings ) => {
 	} );
 };
 
-const _processComponent = async ( appTypeId: number, userProvidedComponent: string | undefined ) => {
+const _processComponent = async ( appTypeId, userProvidedComponent ) => {
 	const validComponents = [];
 	if ( isAppWordPress( appTypeId ) ) {
 		validComponents.push( 'wordpress', 'php', 'muplugins' );
@@ -220,7 +220,7 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 	return await select.run();
 };
 
-const _processComponentVersion = async ( softwareSettings, component: string, userProvidedVersion: string | undefined ) => {
+const _processComponentVersion = async ( softwareSettings, component, userProvidedVersion ) => {
 	const versionChoices = _optionsForVersion( softwareSettings[ component ] );
 
 	if ( userProvidedVersion ) {
@@ -238,18 +238,7 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 	return await versionSelect.run();
 };
 
-interface UpdateData {
-	component: string,
-	version: string,
-}
-
-export interface UpdatePromptOptions {
-	component?: string,
-	version?: string,
-	force?: boolean,
-}
-
-export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOptions, softwareSettings ): UpdateData => {
+export const promptForUpdate = async ( appTypeId, opts, softwareSettings ) => {
 	const component = await _processComponent( appTypeId, opts.component );
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
@@ -267,21 +256,14 @@ export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOpti
 	throw new UserError( 'Update canceled' );
 };
 
-interface TrigerUpdateOptions {
-	appId: number,
-	envId: number,
-	component: string,
-	version: string,
-}
-
-export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
+export const triggerUpdate = async ( variables ) => {
 	debug( 'Triggering update', variables );
 	const api = await API();
 
 	return await api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
-const _getLatestJob = async ( appId: number, envId: number ) => {
+const _getLatestJob = async ( appId, envId ) => {
 	const api = await API();
 	const result = await api.query( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
 	const jobs = result?.data?.app?.environments[ 0 ].jobs || [];
@@ -292,7 +274,7 @@ const _getLatestJob = async ( appId: number, envId: number ) => {
 	return null;
 };
 
-const _getCompletedJob = async ( appId: number, envId: number ) => {
+const _getCompletedJob = async ( appId, envId ) => {
 	const latestJob = await _getLatestJob( appId, envId );
 	debug( 'Latest job result:', latestJob );
 
@@ -306,12 +288,7 @@ const _getCompletedJob = async ( appId: number, envId: number ) => {
 	return _getCompletedJob( appId, envId );
 };
 
-interface UpdateResult {
-	ok: boolean,
-	errorMessage: string,
-}
-
-export const getUpdateResult = async ( appId: number, envId: number ): UpdateResult => {
+export const getUpdateResult = async ( appId, envId ) => {
 	debug( 'Getting update result', { appId, envId } );
 
 	const completedJob = await _getCompletedJob( appId, envId );

@@ -19,7 +19,6 @@ import {
 	getPrimaryDomain,
 } from 'lib/validations/is-multisite-domain-mapped';
 import { getMultilineStatement } from 'lib/validations/utils';
-import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
 
 const debug = debugLib( 'vip:vip-import-sql' );
 
@@ -28,7 +27,7 @@ let wpSiteInsertStatement;
 const getWpSiteInsertStatement = getMultilineStatement( /INSERT INTO `wp_site`/s );
 
 export const siteTypeValidations = {
-	execute: ( line: string ) => {
+	execute: ( line ) => {
 		const lineIsMultiSite = sqlDumpLineIsMultiSite( line );
 		wpSiteInsertStatement = getWpSiteInsertStatement( line );
 
@@ -36,7 +35,7 @@ export const siteTypeValidations = {
 			isMultiSiteSqlDump = true;
 		}
 	},
-	postLineExecutionProcessing: async ( { appId, envId, searchReplace }: PostLineExecutionProcessingParams ) => {
+	postLineExecutionProcessing: async ( { appId, envId, searchReplace } ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const track = trackEventWithEnv.bind( null, appId, envId );
 

@@ -8,18 +8,17 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:pendo' );
 /**
  * Internal dependencies
  */
-import type { AnalyticsClient } from './client';
 import http from 'lib/api/http';
 
 /**
  * Pendo analytics client.
  */
 
-export default class Pendo implements AnalyticsClient {
-	eventPrefix: string;
-	userAgent: string;
-	userId: string;
-	context: { [ key: string ]: string } = {};
+export default class Pendo {
+	eventPrefix;
+	userAgent;
+	userId;
+	context = {};
 
 	static get ENDPOINT() {
 		return '/pendo';
@@ -29,10 +28,6 @@ export default class Pendo implements AnalyticsClient {
 		userId,
 		eventPrefix,
 		env,
-	}: {
-		userId: string,
-		eventPrefix: string,
-		env: { [ key: string ]: string }
 	} ) {
 		this.eventPrefix = eventPrefix;
 		this.userAgent = env.userAgent;
@@ -41,9 +36,9 @@ export default class Pendo implements AnalyticsClient {
 	}
 
 	async trackEvent(
-		eventName: string,
-		eventProps: { [ key: string ]: string } = {}
-	): Promise<any> {
+		eventName,
+		eventProps = {}
+	) {
 		if ( ! eventName.startsWith( this.eventPrefix ) ) {
 			eventName = this.eventPrefix + eventName;
 		}
@@ -68,7 +63,7 @@ export default class Pendo implements AnalyticsClient {
 		return Promise.resolve( false );
 	}
 
-	async send( eventName: string, eventProps: {} ): Promise<any> {
+	async send( eventName, eventProps ) {
 		const body = {
 			context: this.context,
 			event: eventName,

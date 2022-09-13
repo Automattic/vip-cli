@@ -34,7 +34,7 @@ const mutation = gql`
 	}
 `;
 
-export default async function deleteEnvVar( appId: number, envId: number, name: string ) {
+export default async function deleteEnvVar( appId, envId, name ) {
 	const api = await API();
 
 	const variables = {

@@ -13,16 +13,16 @@ import { BooleanPrompt, prompt } from 'enquirer';
  * Internal dependencies
  */
 
-export function cancel(): void {
+export function cancel() {
 	console.log( chalk.yellow( 'Command cancelled by user.' ) );
 	process.exit();
 }
 
-export function confirm( message: string ): Promise<boolean> {
+export function confirm( message ) {
 	return new BooleanPrompt( { message } ).run().catch( () => false );
 }
 
-export async function promptForValue( message: string, mustMatch?: string ): Promise<string> {
+export async function promptForValue( message, mustMatch ) {
 	const response = await prompt( {
 		message,
 		name: 'str',
