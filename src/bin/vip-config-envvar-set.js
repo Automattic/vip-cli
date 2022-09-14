@@ -21,7 +21,7 @@ import { readVariableFromFile } from 'lib/envvar/read-file';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
 
-const baseUsage = 'vip config envvar set';
+const baseUsage = 'vip @mysite.develop config envvar set';
 
 const NEW_RELIC_ENVVAR_KEY = 'NEW_RELIC_LICENSE_KEY';
 

@@ -34,14 +34,14 @@ const cmd = command( {
 	appQueryFragments,
 	envContext: true,
 	wildcardCommand: true,
-	usage: 'vip config software update <wordpress|php|nodejs|muplugins> <version>',
+	usage: 'vip @mysite.develop config software update <wordpress|php|nodejs|muplugins> <version>',
 } ).examples( [
 	{
-		usage: 'vip config software update wordpress 6.0',
+		usage: 'vip @mysite.develop config software update wordpress 6.0',
 		description: 'Update WordPress to 6.0.x',
 	},
 	{
-		usage: 'vip config software update nodejs 16',
+		usage: 'vip @mysite.develop config software update nodejs 16',
 		description: 'Update Node.js to v16',
 	},
 ] );

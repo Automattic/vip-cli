@@ -36,6 +36,7 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'all', 'Show Info for all local dev environments' )
+	.option( 'extended', 'Show extended information about the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		await validateDependencies();
@@ -47,10 +48,13 @@ command()
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		try {
+			const options = {
+				extended: !! opt.extended,
+			};
 			if ( opt.all ) {
-				await printAllEnvironmentsInfo();
+				await printAllEnvironmentsInfo( options );
 			} else {
-				await printEnvironmentInfo( slug );
+				await printEnvironmentInfo( slug, options );
 			}
 			await trackEvent( 'dev_env_info_command_success', trackingInfo );
 		} catch ( error ) {

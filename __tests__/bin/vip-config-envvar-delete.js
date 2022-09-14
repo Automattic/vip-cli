@@ -62,7 +62,7 @@ describe( 'vip config envvar delete', () => {
 
 describe( 'deleteEnvVarCommand', () => {
 	let args, opts;
-	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip config envvar delete' ) } );
+	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip @mysite.develop config envvar delete' ) } );
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];
 
