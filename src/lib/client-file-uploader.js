@@ -20,7 +20,7 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
+import http from 'lib/api/http';
 import { MB_IN_BYTES } from 'lib/constants/file-size';
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
@@ -326,8 +326,7 @@ export async function getSignedUploadRequestData( {
 	uploadId = undefined,
 	partNumber = undefined,
 }: GetSignedUploadRequestDataArgs ): Promise<Object> {
-	const { apiFetch } = await API();
-	const response = await apiFetch( '/upload/site-import-presigned-url', {
+	const response = await http( '/upload/site-import-presigned-url', {
 		method: 'POST',
 		body: { action, appId, basename, envId, etagResults, partNumber, uploadId },
 	} );
