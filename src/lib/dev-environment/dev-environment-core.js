@@ -33,6 +33,7 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import type { AppInfo, ComponentConfig, InstanceData } from './types';
+import { appQueryFragments as softwareQueryFragment } from '../config/software';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -366,10 +367,18 @@ export async function getApplicationInformation( appId: number, envType: string 
 			isMultisite,
 			primaryDomain {
 				name
+			},
+			softwareSettings {
+				php {
+				  ...Software
+				}
+				wordpress {
+				  ...Software
+				}
 			}
 		}`;
 
-	const queryResult = await app( appId, fieldsQuery );
+	const queryResult = await app( appId, fieldsQuery, softwareQueryFragment );
 
 	const appData = {};
 
@@ -403,6 +412,8 @@ export async function getApplicationInformation( appId: number, envType: string 
 				type: envData.type,
 				isMultisite: envData.isMultisite,
 				primaryDomain: envData.primaryDomain?.name || '',
+				php: envData.softwareSettings?.php?.current?.version || '',
+				wordpress: envData.softwareSettings?.wordpress?.current?.version || '',
 			};
 		}
 	}

@@ -25,6 +25,8 @@ export type AppInfo = {
 		branch: string;
 		isMultisite: boolean;
 		primaryDomain: string;
+		php: string;
+		wordpress: string;
 	};
 }
 

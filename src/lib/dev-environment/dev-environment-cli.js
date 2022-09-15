@@ -132,6 +132,8 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 		title: appInfo.environment?.name || appInfo.name || '',
 		multisite: !! appInfo?.environment?.isMultisite,
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
+		php: appInfo.environment?.php || '',
+		wordpress: appInfo.environment?.wordpress || '',
 	};
 }
 
