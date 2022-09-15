@@ -48,10 +48,10 @@ command( {
 	.option( 'skip-validate', 'Do not perform file validation.' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
-		await validateDependencies();
 		const [ fileName ] = unmatchedArgs;
 		const { searchReplace, inPlace } = opt;
 		const slug = getEnvironmentName( opt );
+		await validateDependencies( slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_import_sql_command_execute', trackingInfo );

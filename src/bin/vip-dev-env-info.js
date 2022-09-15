@@ -39,8 +39,8 @@ command()
 	.option( 'extended', 'Show extended information about the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		await validateDependencies();
 		const slug = getEnvironmentName( opt );
+		await validateDependencies( slug );
 
 		const trackingInfo = opt.all ? { all: true } : getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_info_command_execute', trackingInfo );

@@ -43,8 +43,8 @@ command()
 	.option( 'soft', 'Keep config files needed to start an environment intact' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		await validateDependencies();
 		const slug = getEnvironmentName( opt );
+		await validateDependencies( slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_destroy_command_execute', trackingInfo );

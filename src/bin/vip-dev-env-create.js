@@ -63,8 +63,6 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	await validateDependencies();
-
 	const environmentNameOptions = {
 		slug: opt.slug,
 		app: opt.app,
@@ -72,6 +70,9 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		allowAppEnv: true,
 	};
 	const slug = getEnvironmentName( environmentNameOptions );
+
+	await validateDependencies( slug );
+
 	debug( 'Args: ', arg, 'Options: ', opt );
 
 	const trackingInfo = { slug };

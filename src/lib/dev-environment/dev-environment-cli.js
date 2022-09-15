@@ -69,12 +69,37 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 	}
 }
 
-export const validateDependencies = async () => {
+const verifyDNSResolution = ( slug: string ) => {
+	const dns = require( 'dns' );
+	const expectedIP = '127.0.0.1';
+	const testDomain = `${ slug }.vipdev.lndo.site`;
+	const advice = `Please add following line to hosts file on your system:\n${ expectedIP } ${ testDomain }`;
+
+	debug( `Verifying DNS resolution for ${ testDomain }` );
+	return new Promise( ( resolve, reject ) => {
+		dns.lookup( testDomain, ( error, address ) => {
+			debug( `Got DNS response ${ address }` );
+
+			if ( error ) {
+				reject( new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }` ) );
+			}
+
+			if ( address !== expectedIP ) {
+				reject( new UserError( `DNS resolution for ${ testDomain } returned unexpected IP ${ address }. Expected value is ${ expectedIP }. ${ advice }` ) );
+			}
+
+			resolve();
+		} );
+	} );
+};
+
+export const validateDependencies = async ( slug: string ) => {
 	try {
 		await validateDockerInstalled();
 	} catch ( exception ) {
-		exit.withError( exception.message );
+		throw new UserError( exception.message );
 	}
+	await verifyDNSResolution( slug );
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
