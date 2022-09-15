@@ -148,6 +148,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						branch: 'dev',
 						isMultisite: true,
 						primaryDomain: '',
+						php: '',
+						wordpress: '',
 					},
 				},
 			},
@@ -193,6 +195,18 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 							primaryDomain: {
 								name: 'test.develop.com',
 							},
+							softwareSettings: {
+								php: {
+									current: {
+										version: '8.1',
+									},
+								},
+								wordpress: {
+									current: {
+										version: '6.2',
+									},
+								},
+							},
 						},
 						{
 							name: 'prodName',
@@ -212,6 +226,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						branch: 'dev',
 						isMultisite: true,
 						primaryDomain: 'test.develop.com',
+						php: '8.1',
+						wordpress: '6.2',
 					},
 				},
 			},
