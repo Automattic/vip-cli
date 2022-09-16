@@ -32,7 +32,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import type { AppInfo, InstanceData } from './types';
+import type { AppInfo, ComponentConfig, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -81,7 +81,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		await landoRebuild( instancePath );
 	}
 
-	await printEnvironmentInfo( slug );
+	await printEnvironmentInfo( slug, { extended: false } );
 }
 
 export async function stopEnvironment( slug: string ) {
@@ -180,7 +180,11 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	}
 }
 
-export async function printAllEnvironmentsInfo() {
+interface PrintOptions {
+	extended?: boolean
+}
+
+export async function printAllEnvironmentsInfo( options: PrintOptions ) {
 	const allEnvNames = getAllEnvironmentNames();
 
 	debug( 'Will print info for all environments. Names found: ', allEnvNames );
@@ -188,11 +192,18 @@ export async function printAllEnvironmentsInfo() {
 	console.log( 'Found ' + chalk.bold( allEnvNames.length ) + ' environments' + ( allEnvNames.length ? ':' : '.' ) );
 	for ( const envName of allEnvNames ) {
 		console.log( '\n' );
-		await printEnvironmentInfo( envName );
+		await printEnvironmentInfo( envName, options );
 	}
 }
 
-export async function printEnvironmentInfo( slug: string ) {
+function parseComponentForInfo( component: ComponentConfig ): string {
+	if ( component.mode === 'local' ) {
+		return component.dir || '';
+	}
+	return component.tag || '[demo-image]';
+}
+
+export async function printEnvironmentInfo( slug: string, options: PrintOptions ) {
 	debug( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -206,6 +217,18 @@ export async function printEnvironmentInfo( slug: string ) {
 	}
 
 	const appInfo = await landoInfo( instancePath );
+	if ( options.extended ) {
+		const environmentData = readEnvironmentData( slug );
+		appInfo.title = environmentData.wpTitle;
+		appInfo.multisite = !! environmentData.multisite;
+		appInfo.php = environmentData.php.split( ':' )[ 1 ];
+		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
+		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
+		appInfo[ 'App Code' ] = parseComponentForInfo( environmentData.appCode );
+		if ( environmentData.mediaRedirectDomain ) {
+			appInfo[ 'Media Redirect' ] = environmentData.mediaRedirectDomain;
+		}
+	}
 
 	printTable( appInfo );
 }

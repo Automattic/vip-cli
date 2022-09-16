@@ -1,5 +1,14 @@
 ## Changelog
 
+### 2.18.0 (15 Sep 2022)
+- #1103	Force the preference for WebSocket in case we see an error during connection
+- #1102	Remove http proxy support
+- #1096	[dev-env] Supports extended information table
+- #1100	Add GitHub action to mark inactive issues and PRs as stale
+- #1099	Add @app.env to commands help
+- #1092	Improve login + logout
+- #1097	Don't pipe output through less
+
 ### 2.17.0 (06 Sep 2022)
 - #1093 [dev-env] use latest proxy image
 - #1091 Extract http helper into standalone function

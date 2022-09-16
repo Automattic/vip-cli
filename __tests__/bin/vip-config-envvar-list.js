@@ -67,7 +67,7 @@ describe( 'listEnvVarsCommand', () => {
 		},
 		format: 'csv',
 	};
-	const eventPayload = expect.objectContaining( { command: 'vip config envvar list' } );
+	const eventPayload = expect.objectContaining( { command: 'vip @mysite.develop config envvar list' } );
 	const executeEvent = [ 'envvar_list_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_list_command_success', eventPayload ];
 

@@ -107,7 +107,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	try {
 		await createEnvironment( instanceData );
 
-		await printEnvironmentInfo( slug );
+		await printEnvironmentInfo( slug, { extended: false } );
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );

@@ -21,11 +21,11 @@ import UserError from 'lib/user-error';
 // Command examples
 const examples = [
 	{
-		usage: 'vip config software get wordpress --format json',
+		usage: 'vip @mysite.develop config software get wordpress --format json',
 		description: 'Read current software settings for WordPress in JSON format',
 	},
 	{
-		usage: 'vip config software get',
+		usage: 'vip @mysite.develop config software get',
 		description: 'Read current software settings for all components',
 	},
 ];
@@ -37,7 +37,7 @@ command( {
 	envContext: true,
 	wildcardCommand: true,
 	format: true,
-	usage: 'vip config software get <wordpress|php|nodejs|muplugins>',
+	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
 } ).examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
 	const trackingInfo = {
 		environment_id: opt.env?.id,
