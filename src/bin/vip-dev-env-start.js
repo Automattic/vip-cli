@@ -36,6 +36,7 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'skip-rebuild', 'Only start stopped services' )
+	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip propting for wordpress update if non latest' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		await validateDependencies();
@@ -50,6 +51,7 @@ command()
 
 		const options = {
 			skipRebuild: !! opt.skipRebuild,
+			skipWpVersionsCheck: !! opt.skipWpVersionsCheck,
 		};
 		try {
 			if ( process.platform === 'win32' ) {

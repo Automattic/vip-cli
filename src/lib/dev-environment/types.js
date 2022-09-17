@@ -4,7 +4,8 @@ export interface InstanceOptions {
 	multisite: boolean;
 	wordpress?: string;
 	muPlugins?: string;
-	clientCode?: string;
+	appCode?: string;
+	elasticsearchEnabled?: boolean;
 	elasticsearch?: string;
 	mariadb?: string;
 	php?: string;
@@ -12,7 +13,6 @@ export interface InstanceOptions {
 	statsd?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
-	enterpriseSearchEnabled?: boolean;
 }
 
 export type AppInfo = {
@@ -39,6 +39,7 @@ export type EnvironmentNameOptions = {
 	slug: string;
 	app: string;
 	env: string;
+	allowAppEnv?: boolean;
 }
 
 export interface InstanceData {
@@ -47,7 +48,7 @@ export interface InstanceData {
 	multisite: boolean;
 	wordpress: ComponentConfig;
 	muPlugins: ComponentConfig;
-	clientCode: ComponentConfig;
+	appCode: ComponentConfig;
 	mediaRedirectDomain: string;
 	statsd: boolean;
 	phpmyadmin: boolean;

@@ -36,6 +36,7 @@ const examples = [
 
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'force', 'Disabling validations before task execution', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		await validateDependencies();
@@ -57,7 +58,8 @@ command( { wildcardCommand: true } )
 				arg = process.argv.slice( argSplitterIx + 1 );
 			}
 
-			await exec( slug, arg );
+			const options = { force: opt.force };
+			await exec( slug, arg, options );
 			await trackEvent( 'dev_env_exec_command_success', trackingInfo );
 		} catch ( error ) {
 			handleCLIException( error, 'dev_env_exec_command_error', trackingInfo );

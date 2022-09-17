@@ -24,6 +24,7 @@ import {
 	addDevEnvConfigurationOptions,
 	getOptionsFromAppInfo,
 	handleCLIException,
+	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
@@ -48,15 +49,15 @@ const examples = [
 		description: 'Assigning unique slugs to environments allows multiple environments to be created.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --client-code="~/git/my_code"`,
-		description: 'Creates a local multisite dev environment using WP 5.8 and client code is expected to be in "~/git/my_code"',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --app-code="~/git/my_code"`,
+		description: 'Creates a local multisite dev environment using WP 5.8 and application code is expected to be in "~/git/my_code"',
 	},
 ];
 
 const cmd = command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site' )
-	.option( 'multisite', 'Enable multisite install', undefined, value => 'false' !== value?.toLowerCase?.() );
+	.option( 'multisite', 'Enable multisite install', undefined, processBooleanOption );
 
 addDevEnvConfigurationOptions( cmd );
 
@@ -64,13 +65,19 @@ cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	await validateDependencies();
 
-	const slug = getEnvironmentName( opt );
+	const environmentNameOptions = {
+		slug: opt.slug,
+		app: opt.app,
+		env: opt.env,
+		allowAppEnv: true,
+	};
+	const slug = getEnvironmentName( environmentNameOptions );
 	debug( 'Args: ', arg, 'Options: ', opt );
 
 	const trackingInfo = { slug };
 	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
 
-	const startCommand = chalk.bold( getEnvironmentStartCommand( opt ) );
+	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
 
 	const environmentAlreadyExists = doesEnvironmentExist( slug );
 	if ( environmentAlreadyExists ) {
@@ -100,7 +107,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	try {
 		await createEnvironment( instanceData );
 
-		await printEnvironmentInfo( slug );
+		await printEnvironmentInfo( slug, { extended: false } );
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );

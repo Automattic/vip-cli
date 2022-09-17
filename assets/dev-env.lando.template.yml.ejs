@@ -68,8 +68,6 @@ services:
       command: docker-entrypoint.sh mysqld
       ports:
         - ":3306"
-      healthcheck:
-        test: 'mysql -uroot --silent --execute "SHOW DATABASES;"'
       environment:
         MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
       volumes:
@@ -92,7 +90,7 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
-<% if ( enterpriseSearchEnabled ) { %>
+<% if ( elasticsearchEnabled ) { %>
   vip-search:
     type: compose
     services:
@@ -106,8 +104,6 @@ services:
         discovery.type: 'single-node'
       ports:
         - ":9200"
-      healthcheck:
-        test: "curl --noproxy '*' -XGET localhost:9200"
       volumes:
         - search_data:/usr/share/elasticsearch/data
     volumes:
@@ -151,7 +147,7 @@ services:
       mu-plugins: {}
 <% } %>
 
-<% if ( clientCode.mode == 'image' ) { %>
+<% if ( appCode.mode == 'image' ) { %>
   client-code:
     type: compose
     services:
@@ -209,7 +205,7 @@ tooling:
 <% } else { %>
         - <%= muPlugins.dir %>:/wp/wp-content/mu-plugins
 <% } %>
-<% if ( clientCode.mode == 'image' ) { %>
+<% if ( appCode.mode == 'image' ) { %>
         - type: volume
           source: clientcode_clientmuPlugins
           target: /wp/wp-content/client-mu-plugins
@@ -247,12 +243,12 @@ tooling:
           volume:
             nocopy: true
 <% } else { %>
-        - <%= clientCode.dir %>/client-mu-plugins:/wp/wp-content/client-mu-plugins
-        - <%= clientCode.dir %>/images:/wp/wp-content/images
-        - <%= clientCode.dir %>/languages:/wp/wp-content/languages
-        - <%= clientCode.dir %>/plugins:/wp/wp-content/plugins
-        - <%= clientCode.dir %>/private:/wp/wp-content/private
-        - <%= clientCode.dir %>/themes:/wp/wp-content/themes
-        - <%= clientCode.dir %>/vip-config:/wp/wp-content/vip-config
+        - <%= appCode.dir %>/client-mu-plugins:/wp/wp-content/client-mu-plugins
+        - <%= appCode.dir %>/images:/wp/wp-content/images
+        - <%= appCode.dir %>/languages:/wp/wp-content/languages
+        - <%= appCode.dir %>/plugins:/wp/wp-content/plugins
+        - <%= appCode.dir %>/private:/wp/wp-content/private
+        - <%= appCode.dir %>/themes:/wp/wp-content/themes
+        - <%= appCode.dir %>/vip-config:/wp/wp-content/vip-config
 <% } %>
 <% } %>

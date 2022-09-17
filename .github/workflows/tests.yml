@@ -34,8 +34,7 @@ jobs:
       - name: Unit Tests
         working-directory: vip
         run: npm run jest
-      
+
       - name: Test Command line
         working-directory: vip
-        run: |
-          node ./dist/bin/vip app
+        run: ./__tests__/e2e_test.bat

@@ -4,7 +4,6 @@
  */
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { HttpProxyAgent } from 'http-proxy-agent';
 
 /**
  * Internal dependencies
@@ -15,7 +14,7 @@ describe( 'validate CreateProxyAgent', () => {
 	beforeEach( () => {
 		// Clear all applicable environment variables before running test so each test starts "clean"
 		// using beforeEach instead of afterEach in case the client running tests has env variables set before the first test is run
-		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'SOCKS_PROXY', 'VIP_USE_SYSTEM_PROXY' ];
+		const envVarsToClear = [ 'VIP_PROXY', 'HTTPS_PROXY', 'NO_PROXY', 'SOCKS_PROXY', 'VIP_USE_SYSTEM_PROXY' ];
 		for ( const envVar of envVarsToClear ) {
 			delete process.env[ envVar ];
 		}
@@ -25,17 +24,12 @@ describe( 'validate CreateProxyAgent', () => {
 	it.each( [
 		{
 			// No proxies set, should do nothing
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 		{
 			// HTTPS Proxy set, but feature flag is not set, do nothing
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
-			urlToHit: 'http://wpAPI.org/api',
-		},
-		{
-			// HTTP Proxy set, but feature flag is not set, do nothing
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'http://wpAPI.org/api',
 		},
 		{
@@ -50,18 +44,12 @@ describe( 'validate CreateProxyAgent', () => {
 		},
 		{
 			// Proxy is enabled, but NO_PROXY is in effect
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: 'http://myproxy.com' },
-				{ SOCKS_PROXY: '' }, { NO_PROXY: '.wp.org,.lndo.site,foo.bar.org' } ],
-			urlToHit: 'https://wpAPI.wp.org/api',
-		},
-		{
-			// Proxy is enabled, but NO_PROXY is in effect
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: 'socks5://myproxy.com:4022' }, { NO_PROXY: 'wpAPI.org' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { SOCKS_PROXY: 'socks5://myproxy.com:4022' }, { NO_PROXY: 'wpAPI.org' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 		{
 			// Only the NO_PROXY is set, nothing should be proxied
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
+			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { SOCKS_PROXY: '' }, { NO_PROXY: 'wpAPI.org,.lndo.site,foo.bar.org' } ],
 			urlToHit: 'https://wpAPI.org/api',
 		},
 	] )( 'should return null with %o', async ( { envVars, urlToHit } ) => {
@@ -99,12 +87,6 @@ describe( 'validate CreateProxyAgent', () => {
 			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: 'https://myproxy.com' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
 			urlToHit: 'https://wpAPI.org/api',
 			expectedClass: HttpsProxyAgent,
-		},
-		{
-			// Validate HTTP_PROXY is the third system proxy checked for
-			envVars: [ { VIP_USE_SYSTEM_PROXY: '1' }, { VIP_PROXY: '' }, { HTTPS_PROXY: '' }, { HTTP_PROXY: 'http://myproxy.com' }, { SOCKS_PROXY: '' }, { NO_PROXY: '' } ],
-			urlToHit: 'https://wpAPI.org/api',
-			expectedClass: HttpProxyAgent,
 		},
 		{
 			// Validate request is proxied if active no_proxy does not apply

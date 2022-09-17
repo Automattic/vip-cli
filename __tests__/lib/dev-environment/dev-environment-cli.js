@@ -68,8 +68,18 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				expected: 'foo',
 			},
+			{ // When app.env is not allowed use default value
+				options: {
+					allowAppEnv: false,
+					app: '123',
+					env: 'bar.car',
+					slug: 'foo',
+				},
+				expected: 'foo',
+			},
 			{ // construct name from app and env
 				options: {
+					allowAppEnv: true,
 					app: '123',
 					env: 'bar.car',
 				},
@@ -77,6 +87,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 			{ // custom name takes precedence
 				options: {
+					allowAppEnv: true,
 					slug: 'foo',
 					app: '123',
 					env: 'bar.car',
@@ -88,36 +99,35 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
+		it( 'should throw an exception if used the app.env when not allowed', () => {
+			const options = {
+				allowAppEnv: false,
+				app: '123',
+				env: 'bar',
+			};
+
+			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug=123-bar' to target the local environment.";
+			expect( () => {
+				getEnvironmentName( options );
+			} ).toThrow( expectedErrorMessage );
+		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {
 		it.each( [
 			{ // default value
-				options: {},
+				slug: undefined,
 				expected: 'vip dev-env start',
 			},
 			{ // use custom name
-				options: {
-					slug: 'foo',
-				},
+				slug: 'foo',
 				expected: 'vip dev-env start --slug foo',
-			},
-			{ // construct name from app and env
-				options: {
-					app: '123',
-					env: 'bar.car',
-				},
-				expected: 'vip @123.bar.car dev-env start',
 			},
 			{ // custom name takes precedence
-				options: {
-					slug: 'foo',
-					app: '123',
-					env: 'bar.car',
-				},
-				expected: 'vip dev-env start --slug foo',
+				slug: '',
+				expected: 'vip dev-env start',
 			},
 		] )( 'should get correct start command', async input => {
-			const result = getEnvironmentStartCommand( input.options );
+			const result = getEnvironmentStartCommand( input.slug );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -187,8 +197,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					mode: 'image',
 				},
 			},
-			{ // clientCode have just one tag
-				component: 'clientCode',
+			{ // appCode have just one tag
+				component: 'appCode',
 				mode: 'image',
 				expected: {
 					mode: 'image',
@@ -228,7 +238,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					muPlugins: 'mu',
-					clientCode: 'code',
+					appCode: 'code',
 					wordpress: 'wp',
 				},
 				default: {
@@ -237,7 +247,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					muPlugins: 'mu',
-					clientCode: 'code',
+					appCode: 'code',
 					wordpress: 'wp',
 				},
 				default: {

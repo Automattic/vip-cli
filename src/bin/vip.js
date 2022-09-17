@@ -17,6 +17,7 @@ import command, { containsAppEnvArgument } from 'lib/cli/command';
 import Token from 'lib/token';
 import { trackEvent, aliasUser } from 'lib/tracker';
 import { rollbar } from 'lib/rollbar';
+import logout from '../lib/logout';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -32,11 +33,12 @@ const runCmd = async function() {
 	const cmd = command();
 	cmd
 		.command( 'logout', 'Logout from your current session', async () => {
-			await Token.purge();
-			await trackEvent( 'logout_command_execute' );
+			await logout();
+
 			console.log( 'You are successfully logged out.' );
 		} )
 		.command( 'app', 'List and modify your VIP applications' )
+		.command( 'cache', 'Manage page cache for your VIP applications' )
 		.command( 'config', 'Set configuration for your VIP applications' )
 		.command( 'dev-env', 'Use local dev-environment' )
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
@@ -54,11 +56,12 @@ const rootCmd = async function() {
 
 	const isHelpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
 	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
+	const isLoginCommand = process.argv.some( arg => arg === 'login' );
 	const isDevEnvCommandWithoutEnv = process.argv.some( arg => arg === 'dev-env' ) && ! containsAppEnvArgument( process.argv );
 
 	debug( 'Argv:', process.argv );
 
-	if ( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) ) {
+	if ( ! isLoginCommand && ( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) ) ) {
 		runCmd();
 	} else {
 		console.log();
@@ -141,6 +144,12 @@ const rootCmd = async function() {
 		await aliasUser( token.id );
 
 		await trackEvent( 'login_command_token_submit_success' );
+
+		if ( isLoginCommand ) {
+			console.log( 'You are now logged in - see `vip -h` for a list of available commands.' );
+
+			process.exit();
+		}
 
 		runCmd();
 	}

@@ -1,12 +1,14 @@
 {
   "name": "@automattic/vip",
-  "version": "2.12.0",
+  "version": "2.18.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-cache": "dist/bin/vip-cache.js",
+    "vip-cache-purge-url": "dist/bin/vip-cache-purge-url.js",
     "vip-config": "dist/bin/vip-config.js",
     "vip-config-envvar": "dist/bin/vip-config-envvar.js",
     "vip-config-envvar-delete": "dist/bin/vip-config-envvar-delete.js",
@@ -14,6 +16,9 @@
     "vip-config-envvar-get-all": "dist/bin/vip-config-envvar-get-all.js",
     "vip-config-envvar-list": "dist/bin/vip-config-envvar-list.js",
     "vip-config-envvar-set": "dist/bin/vip-config-envvar-set.js",
+    "vip-config-software": "dist/bin/vip-config-software.js",
+    "vip-config-software-get": "dist/bin/vip-config-software-get.js",
+    "vip-config-software-update": "dist/bin/vip-config-software-update.js",
     "vip-dev-env": "dist/bin/vip-dev-env.js",
     "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
     "vip-dev-env-update": "dist/bin/vip-dev-env-update.js",
@@ -70,7 +75,7 @@
   "license": "MIT",
   "engines": {
     "node": ">=14.14.0",
-    "npm": "^6 "
+    "npm": ">=6"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
@@ -117,12 +122,11 @@
     "enquirer": "2.3.6",
     "graphql": "15.5.1",
     "graphql-tag": "2.12.6",
-    "http-proxy-agent": "^5.0.0",
     "https-proxy-agent": "^5.0.1",
     "ini": "2.0.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_06_13",
+    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_09_05",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",

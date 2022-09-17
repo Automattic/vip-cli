@@ -78,10 +78,12 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 
 	const proxyAgent = createProxyAgent( API_URL );
 
+	const http = require( './api/http' ).default;
+
 	const httpLink = new HttpLink( {
 		uri: API_URL,
 		headers,
-		fetch,
+		fetch: http,
 		fetchOptions: {
 			agent: proxyAgent,
 		},
@@ -91,31 +93,6 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
 		cache: new InMemoryCache(),
 	} );
-
-	/**
-	 * Call the Public API with an arbitrary path (e.g. to connect to REST endpoints).
-	 * This will include the token in an Authorization header so requests are "logged-in."
-	 * @param {string} path API path to pass to `fetch` -- will be prefixed by the API_HOST
-	 * @param {object} options options to pass to `fetch`
-	 * @returns {Promise} Return value of the `fetch` call
-	 */
-	apiClient.apiFetch = ( path: string, options = {} ): Promise<any> =>
-		fetch( `${ API_HOST }${ path }`, {
-			...options,
-			...{
-				agent: proxyAgent,
-				headers: {
-					...headers,
-					...{
-						'Content-Type': 'application/json',
-					},
-					...options.headers,
-				},
-			},
-			...{
-				body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
-			},
-		} );
 
 	return apiClient;
 }

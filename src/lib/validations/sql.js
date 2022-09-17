@@ -26,6 +26,10 @@ function formatError( message ) {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
 }
 
+function formatWarning( message ) {
+	return `${ chalk.yellow( 'Warning:' ) } ${ message }`;
+}
+
 function formatRecommendation( message ) {
 	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
@@ -35,6 +39,7 @@ export type CheckResult = {
 	text?: string,
 	recomendation?: string,
 	falsePositive?: boolean,
+	warning?: boolean,
 }
 
 export type CheckType = {
@@ -68,12 +73,23 @@ const generalCheckFormatter = ( check: CheckType ) => {
 
 	const validProblems = check.results.filter( result => ! result.falsePositive );
 	if ( validProblems.length > 0 ) {
-		problemsFound += 1;
+		if ( validProblems.some( result => ! result.warning ) ) {
+			problemsFound += 1;
+		}
+
 		for ( const problem of validProblems ) {
-			errors.push( {
-				error: formatError( `${ problem.text || check.message } on line ${ problem.lineNumber || '' }.` ),
-				recommendation: formatRecommendation( problem.recomendation || check.recommendation ),
-			} );
+			const text = `${ problem.text || check.message } on line ${ problem.lineNumber || '' }.`;
+			if ( problem.warning ) {
+				errors.push( {
+					warning: formatWarning( text ),
+					recommendation: formatRecommendation( problem.recomendation || check.recommendation ),
+				} );
+			} else {
+				errors.push( {
+					error: formatError( text ),
+					recommendation: formatRecommendation( problem.recomendation || check.recommendation ),
+				} );
+			}
 		}
 	} else {
 		infos.push( `✅ ${ check.message } was found 0 times.` );
@@ -264,6 +280,7 @@ const checks: Checks = {
 				return { falsePositive: true };
 			}
 			return {
+				warning: true,
 				lineNumber,
 				recomendation: `Use '--search-replace="${ foundDomain },${ expectedDomain }"' switch to replace the domain`,
 			};
@@ -300,13 +317,20 @@ const postValidation = async ( options: ValidationOptions ) => {
 	const checkEntries: any = Object.entries( checks )
 		.filter( ( [ type ] ) => ! options.skipChecks.includes( type ) );
 
+	const formattedWarnings = [];
 	let formattedErrors = [];
 	let formattedInfos = [];
 
 	for ( const [ type, check ]: [ string, CheckType ] of checkEntries ) {
 		const formattedOutput = check.outputFormatter( check, type, options.isImport );
 
-		formattedErrors = formattedErrors.concat( formattedOutput.errors );
+		for ( const error of formattedOutput.errors ) {
+			if ( error.warning ) {
+				formattedWarnings.push( error );
+			} else {
+				formattedErrors.push( error );
+			}
+		}
 		formattedInfos = formattedInfos.concat( formattedOutput.infos );
 
 		errorSummary[ type ] = check.results.length;
@@ -338,6 +362,21 @@ const postValidation = async ( options: ValidationOptions ) => {
 			recommendation: formatRecommendation( 'Ensure that there are no duplicate tables in your SQL dump' ),
 		};
 		formattedErrors = formattedErrors.concat( errorObject );
+	}
+
+	if ( formattedWarnings.length ) {
+		const warningOutput = [];
+		formattedWarnings.forEach( warning => {
+			warningOutput.push( warning.warning );
+
+			if ( warning.recommendation ) {
+				warningOutput.push( warning.recommendation );
+			}
+
+			warningOutput.push( '' );
+		} );
+		console.log( warningOutput.join( '\n' ) );
+		console.log( '' );
 	}
 
 	if ( problemsFound > 0 ) {

@@ -32,7 +32,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import type { AppInfo, InstanceData } from './types';
+import type { AppInfo, ComponentConfig, InstanceData } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -48,7 +48,8 @@ const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
 type StartEnvironmentOptions = {
-	skipRebuild: boolean
+	skipRebuild: boolean,
+	skipWpVersionsCheck: boolean
 };
 
 type SQLImportPaths = {
@@ -69,7 +70,10 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const updated = await updateWordPressImage( slug );
+	let updated = false;
+	if ( ! options.skipWpVersionsCheck ) {
+		updated = await updateWordPressImage( slug );
+	}
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( instancePath );
@@ -77,7 +81,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 		await landoRebuild( instancePath );
 	}
 
-	await printEnvironmentInfo( slug );
+	await printEnvironmentInfo( slug, { extended: false } );
 }
 
 export async function stopEnvironment( slug: string ) {
@@ -144,7 +148,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	newInstanceData.enterpriseSearchEnabled = instanceData.enterpriseSearchEnabled || false;
+	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	return newInstanceData;
@@ -176,7 +180,11 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
 	}
 }
 
-export async function printAllEnvironmentsInfo() {
+interface PrintOptions {
+	extended?: boolean
+}
+
+export async function printAllEnvironmentsInfo( options: PrintOptions ) {
 	const allEnvNames = getAllEnvironmentNames();
 
 	debug( 'Will print info for all environments. Names found: ', allEnvNames );
@@ -184,11 +192,18 @@ export async function printAllEnvironmentsInfo() {
 	console.log( 'Found ' + chalk.bold( allEnvNames.length ) + ' environments' + ( allEnvNames.length ? ':' : '.' ) );
 	for ( const envName of allEnvNames ) {
 		console.log( '\n' );
-		await printEnvironmentInfo( envName );
+		await printEnvironmentInfo( envName, options );
 	}
 }
 
-export async function printEnvironmentInfo( slug: string ) {
+function parseComponentForInfo( component: ComponentConfig ): string {
+	if ( component.mode === 'local' ) {
+		return component.dir || '';
+	}
+	return component.tag || '[demo-image]';
+}
+
+export async function printEnvironmentInfo( slug: string, options: PrintOptions ) {
 	debug( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -202,12 +217,24 @@ export async function printEnvironmentInfo( slug: string ) {
 	}
 
 	const appInfo = await landoInfo( instancePath );
+	if ( options.extended ) {
+		const environmentData = readEnvironmentData( slug );
+		appInfo.title = environmentData.wpTitle;
+		appInfo.multisite = !! environmentData.multisite;
+		appInfo.php = environmentData.php.split( ':' )[ 1 ];
+		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
+		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
+		appInfo[ 'App Code' ] = parseComponentForInfo( environmentData.appCode );
+		if ( environmentData.mediaRedirectDomain ) {
+			appInfo[ 'Media Redirect' ] = environmentData.mediaRedirectDomain;
+		}
+	}
 
 	printTable( appInfo );
 }
 
-export async function exec( slug: string, args: Array<string> ) {
-	debug( 'Will run a wp command on env', slug, 'with args', args );
+export async function exec( slug: string, args: Array<string>, options: any = {} ) {
+	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -226,7 +253,7 @@ export async function exec( slug: string, args: Array<string> ) {
 		commandArgs = [ ...args.map( argument => argument.replace( '--new-site-', '--' ) ) ];
 	}
 
-	await landoExec( instancePath, command, commandArgs );
+	await landoExec( instancePath, command, commandArgs, options );
 }
 
 export function doesEnvironmentExist( slug: string ): boolean {
@@ -248,7 +275,26 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
 
-	return JSON.parse( instanceDataString );
+	const instanceData = JSON.parse( instanceDataString );
+
+	/**
+	 ***********************************
+	 * BACKWARDS COMPATIBILITY SECTION
+	 ***********************************/
+
+	// REMOVEME after the wheel of time spins around few times
+	if ( instanceData.enterpriseSearchEnabled ) {
+		// enterpriseSearchEnabled was renamed to elasticsearchEnabled
+		instanceData.elasticsearchEnabled = instanceData.enterpriseSearchEnabled;
+	}
+
+	// REMOVEME after the wheel of time spins around few times
+	if ( instanceData.clientCode ) {
+		// clientCode was renamed to appCode
+		instanceData.appCode = instanceData.clientCode;
+	}
+
+	return instanceData;
 }
 
 async function prepareLandoEnv( instanceData, instancePath ) {

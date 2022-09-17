@@ -3,7 +3,6 @@
  */
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { HttpProxyAgent } from 'http-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
 import debugLib from 'debug';
 const debug = debugLib( 'vip:proxy-agent' );
@@ -21,14 +20,12 @@ const debug = debugLib( 'vip:proxy-agent' );
 // 2. No applicable variables are set: null is returned (thus, no proxy agent is returned)
 // 3. VIP_USE_SYSTEM_PROXY and SOCKS_PROXY are set: a SOCKS_PROXY is returned
 // 4. VIP_USE_SYSTEM_PROXY and HTTPS_PROXY are set: an HTTPS_PROXY is returned
-// 5. VIP_USE_SYSTEM_PROXY and HTTP_PROXY are set: an HTTP_PROXY is returned
-// 6. NO_PROXY is set along with VIP_USE_SYSTEM_PROXY and any system proxy: null is returned if the no proxy applies, otherwise the first active proxy is used
+// 5. NO_PROXY is set along with VIP_USE_SYSTEM_PROXY and any system proxy: null is returned if the no proxy applies, otherwise the first active proxy is used
 // This allows near full customization by the client of what proxy should be used, instead of making assumptions based on the URL string
 function createProxyAgent( url ) {
 	const VIP_PROXY = process.env.VIP_PROXY || process.env.vip_proxy || null;
 	const SOCKS_PROXY = process.env.SOCKS_PROXY || process.env.socks_proxy || null;
 	const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null;
-	const HTTP_PROXY = process.env.HTTP_PROXY || process.env.http_proxy || null;
 	const NO_PROXY = process.env.NO_PROXY || process.env.no_proxy || null;
 
 	// VIP Socks Proxy should take precedence and should be fully backward compatible
@@ -45,10 +42,6 @@ function createProxyAgent( url ) {
 		if ( HTTPS_PROXY ) {
 			debug( `Enabling HTTPS proxy support using config: ${ HTTPS_PROXY }` );
 			return new HttpsProxyAgent( HTTPS_PROXY );
-		}
-		if ( HTTP_PROXY ) {
-			debug( `Enabling HTTP proxy support using config: ${ HTTP_PROXY }` );
-			return new HttpProxyAgent( HTTP_PROXY );
 		}
 	}
 	// If no environment variables are set, the no proxy is in effect, or if the proxy enable is not set return null (equivilant of no Proxy agent)

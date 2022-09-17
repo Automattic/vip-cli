@@ -194,6 +194,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 	currentJob.socket.io.removeAllListeners( 'reconnect' );
 	currentJob.socket.io.removeAllListeners( 'reconnect_attempt' );
 	currentJob.socket.removeAllListeners( 'retry' );
+	currentJob.socket.removeAllListeners( 'connect_error' );
 
 	currentJob.socket.io.on( 'reconnect', async () => {
 		debug( 'socket.io: reconnect' );
@@ -229,6 +230,15 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		setTimeout( () => {
 			currentJob.socket.io.engine.close();
 		}, 5000 );
+	} );
+
+	currentJob.socket.on( 'connect_error', () => {
+		debug( 'socket: connect_error; forcing the preference for websocket' );
+		rollbar.info( 'WP-CLI socket.on( \'connect_error\' )', { custom: { code: 'wp-cli-on-connect_error', commandGuid: cliCommand.guid } } );
+
+		// Force the preference for WebSocket in case we see an error during connection
+		// https://socket.io/docs/v3/client-initialization/#low-level-engine-options
+		currentJob.socket.io.opts.transports = [ 'websocket', 'polling' ];
 	} );
 
 	currentJob.socket.on( 'exit', async ( { exitCode, message } ) => {
@@ -406,12 +416,17 @@ commandWrapper( {
 			}
 
 			const token = await Token.get();
+			const extraHeaders = {
+				Authorization: `Bearer ${ token.raw }`,
+			};
+
 			const socket = SocketIO( `${ API_HOST }/wp-cli`, {
 				transportOptions: {
 					polling: {
-						extraHeaders: {
-							Authorization: `Bearer ${ token.raw }`,
-						},
+						extraHeaders,
+					},
+					websocket: {
+						extraHeaders,
 					},
 				},
 				agent: createProxyAgent( API_HOST ),
