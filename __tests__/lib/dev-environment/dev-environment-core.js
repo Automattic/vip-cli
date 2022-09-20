@@ -278,12 +278,13 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			expect( searchAndReplace ).not.toHaveBeenCalled();
 
 			await expect( promise ).rejects.toEqual(
-				new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' )
+				new Error( 'The provided file undefined does not exist or it is not valid (see "--help" for examples)' )
 			);
 		} );
 
 		it( 'should resolve the path and replace it with /user', async () => {
 			fs.existsSync.mockReturnValue( true );
+			fs.lstatSync.mockReturnValue( { isDirectory: () => false } );
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
