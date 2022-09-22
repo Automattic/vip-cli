@@ -86,7 +86,7 @@ command( {
 				if ( doIndex ) {
 					await exec( slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
 				}
-			} catch( e ) {
+			} catch ( e ) {
 				// Exception means they don't have vip-search enabled.
 			}
 
