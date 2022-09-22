@@ -269,7 +269,11 @@ async function isEnvUp( app ) {
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
-export async function landoExec( instancePath: string, toolName: string, args: Array<string>, options: any ) {
+interface LandoExecOptions {
+	force?: boolean
+}
+
+export async function landoExec( instancePath: string, toolName: string, args: Array<string>, options: LandoExecOptions ) {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 

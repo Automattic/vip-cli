@@ -68,18 +68,21 @@ command( {
 				} );
 			}
 
+			const execOptions = {
+				force: !! opt.skipValidate,
+			};
 			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
-			await exec( slug, importArg );
+			await exec( slug, importArg, execOptions );
 
 			if ( searchReplace && searchReplace.length && ! inPlace ) {
 				fs.unlinkSync( resolvedPath );
 			}
 
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
-			await exec( slug, cacheArg );
+			await exec( slug, cacheArg, execOptions );
 
 			const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
-			await exec( slug, addUserArg );
+			await exec( slug, addUserArg, execOptions );
 			await trackEvent( 'dev_env_import_sql_command_success', trackingInfo );
 		} catch ( error ) {
 			handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );
