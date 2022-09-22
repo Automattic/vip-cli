@@ -61,7 +61,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Automattic/vip.git"
+    "url": "git+https://github.com/Automattic/vip-cli.git"
   },
   "keywords": [
     "cli",
@@ -78,9 +78,9 @@
     "npm": ">=6"
   },
   "bugs": {
-    "url": "https://github.com/Automattic/vip/issues"
+    "url": "https://github.com/Automattic/vip-cli/issues"
   },
-  "homepage": "https://github.com/Automattic/vip#readme",
+  "homepage": "https://github.com/Automattic/vip-cli#readme",
   "devDependencies": {
     "@babel/cli": "7.17.10",
     "@babel/core": "7.18.5",

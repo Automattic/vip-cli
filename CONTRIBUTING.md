@@ -70,7 +70,7 @@ As part of the publish flow, we run the `prepareConfig:publish` task on `prepack
 We use `prepack` because:
 
 - `prepareConfig:local` runs on `npm build` and we want to make sure those values are overriden.
-- This is the latest npm event that we can run on before publishing. (Note: we tried `prepublishOnly` but files added during that step [don't get included in the build](https://github.com/Automattic/vip/commit/c7dabe1b0f73ec9e6e8c05ccff0c41281e4cd5e8)).
+- This is the latest npm event that we can run on before publishing. (Note: we tried `prepublishOnly` but files added during that step [don't get included in the build](https://github.com/Automattic/vip-cli/commit/c7dabe1b0f73ec9e6e8c05ccff0c41281e4cd5e8)).
 
 ### New Releases
 
@@ -97,7 +97,7 @@ Then, let's publish:
 1. Push the trunk branch `git push`
 1. Make sure you're part of the Automattic organization in npm
 1. Publish the release to npm (`npm run publish-please --access public`) the script will do some extra checks (npm version, branch, etc) to ensure everything is correct. If all looks good, proceed.
-1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
+1. Edit [the release on GitHub](https://github.com/Automattic/vip-cli/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
 1. Push `trunk` changes (mostly the version bump) to `develop` (`git checkout develop && git merge trunk` )
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
