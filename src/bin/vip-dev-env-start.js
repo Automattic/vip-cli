@@ -39,10 +39,10 @@ command()
 	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip propting for wordpress update if non latest' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		await validateDependencies();
+		const slug = getEnvironmentName( opt );
+		await validateDependencies( slug );
 
 		const startProcessing = new Date();
-		const slug = getEnvironmentName( opt );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_start_command_execute', trackingInfo );

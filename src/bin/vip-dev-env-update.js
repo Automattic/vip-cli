@@ -37,8 +37,8 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	await validateDependencies();
 	const slug = getEnvironmentName( opt );
+	await validateDependencies( slug );
 
 	const trackingInfo = getEnvTrackingInfo( slug );
 	await trackEvent( 'dev_env_update_command_execute', trackingInfo );

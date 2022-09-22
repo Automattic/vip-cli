@@ -34,7 +34,7 @@ command()
 		await trackEvent( 'dev_env_list_command_execute', trackingInfo );
 
 		try {
-			await printAllEnvironmentsInfo();
+			await printAllEnvironmentsInfo( {} );
 			await trackEvent( 'dev_env_list_command_success', trackingInfo );
 		} catch ( error ) {
 			handleCLIException( error, 'dev_env_list_command_error', trackingInfo );

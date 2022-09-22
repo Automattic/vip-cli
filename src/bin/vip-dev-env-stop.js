@@ -34,8 +34,8 @@ command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		await validateDependencies();
 		const slug = getEnvironmentName( opt );
+		await validateDependencies( slug );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
