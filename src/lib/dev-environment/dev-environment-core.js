@@ -33,6 +33,8 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import type { AppInfo, ComponentConfig, InstanceData } from './types';
+import { appQueryFragments as softwareQueryFragment } from '../config/software';
+import UserError from '../user-error';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -366,10 +368,18 @@ export async function getApplicationInformation( appId: number, envType: string 
 			isMultisite,
 			primaryDomain {
 				name
+			},
+			softwareSettings {
+				php {
+				  ...Software
+				}
+				wordpress {
+				  ...Software
+				}
 			}
 		}`;
 
-	const queryResult = await app( appId, fieldsQuery );
+	const queryResult = await app( appId, fieldsQuery, softwareQueryFragment );
 
 	const appData = {};
 
@@ -403,6 +413,8 @@ export async function getApplicationInformation( appId: number, envType: string 
 				type: envData.type,
 				isMultisite: envData.isMultisite,
 				primaryDomain: envData.primaryDomain?.name || '',
+				php: envData.softwareSettings?.php?.current?.version || '',
+				wordpress: envData.softwareSettings?.wordpress?.current?.version || '',
 			};
 		}
 	}
@@ -411,10 +423,16 @@ export async function getApplicationInformation( appId: number, envType: string 
 }
 
 export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
+	debug( `Will try to resolve path - ${ fileName }` );
 	let resolvedPath = resolvePath( fileName );
 
+	debug( `Filename ${ fileName } resolved to ${ resolvedPath }` );
+
 	if ( ! fs.existsSync( resolvedPath ) ) {
-		throw new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' );
+		throw new UserError( `The provided file ${ resolvedPath } does not exist or it is not valid (see "--help" for examples)` );
+	}
+	if ( fs.lstatSync( resolvedPath ).isDirectory() ) {
+		throw new UserError( `The provided file ${ resolvedPath } is a directory. Please point to a sql file.` );
 	}
 
 	// Run Search and Replace if the --search-replace flag was provided

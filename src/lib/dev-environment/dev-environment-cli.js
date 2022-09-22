@@ -38,7 +38,10 @@ const DEFAULT_SLUG = 'vip-local';
 
 export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
+	if ( exception instanceof UserError ) {
+		// User errors are handled in global error handler
+		throw exception;
+	} else if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
@@ -132,6 +135,8 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 		title: appInfo.environment?.name || appInfo.name || '',
 		multisite: !! appInfo?.environment?.isMultisite,
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
+		php: appInfo.environment?.php || '',
+		wordpress: appInfo.environment?.wordpress || '',
 	};
 }
 
