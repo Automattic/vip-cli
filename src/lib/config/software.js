@@ -217,7 +217,9 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 		message: 'Component to update',
 		choices,
 	} );
-	return await select.run();
+	return await select.run().catch( () => {
+		throw new UserError( 'Command cancelled by user.' );
+	} );
 };
 
 const _processComponentVersion = async ( softwareSettings, component: string, userProvidedVersion: string | undefined ) => {
@@ -235,7 +237,9 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 		message: `Version for ${ COMPONENT_NAMES[ component ] } to upgrade to`,
 		choices: versionChoices,
 	} );
-	return await versionSelect.run();
+	return await versionSelect.run().catch( () => {
+		throw new UserError( 'Command cancelled by user.' );
+	} );
 };
 
 interface UpdateData {
@@ -255,7 +259,9 @@ export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOpti
 
 	const confirm = opts.force || await new Confirm( {
 		message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
-	} ).run();
+	} ).run().catch( () => {
+		throw new UserError( 'Command cancelled by user.' );
+	} );
 
 	if ( confirm ) {
 		return {
