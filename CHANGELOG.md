@@ -1,5 +1,8 @@
 ## Changelog
 
+### 2.19.2 (23 Sep 2022)
+- #1116 Reverted #1049 changes 
+
 ### 2.19.0 (23 Sep 2022)
 - #1108 [dev-env] Validate import file and add debug lines
 - #1107 [dev-env] Validate dns lookup
