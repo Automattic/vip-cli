@@ -29,7 +29,7 @@ import {
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
-import { validateDockerInstalled } from './dev-environment-lando';
+import { validateDockerInstalled, validateDockerUser } from './dev-environment-lando';
 import UserError from '../user-error';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -107,6 +107,7 @@ export const validateDependencies = async ( slug: string ) => {
 	progressTracker.stepRunning( 'docker' );
 	try {
 		await validateDockerInstalled();
+		await validateDockerUser();
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
