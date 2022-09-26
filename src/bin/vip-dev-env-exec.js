@@ -39,8 +39,8 @@ command( { wildcardCommand: true } )
 	.option( 'force', 'Disabling validations before task execution', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
-		await validateDependencies();
 		const slug = getEnvironmentName( opt );
+		await validateDependencies( slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );

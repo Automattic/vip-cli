@@ -1,5 +1,11 @@
 ## Changelog
 
+### 2.19.0 (23 Sep 2022)
+- #1108 [dev-env] Validate import file and add debug lines
+- #1107 [dev-env] Validate dns lookup
+- #1104 [dev-env] fetch php and wordpress versions for creation wizard
+- #1049 Fix security issues
+
 ### 2.18.0 (15 Sep 2022)
 - #1103	Force the preference for WebSocket in case we see an error during connection
 - #1102	Remove http proxy support
