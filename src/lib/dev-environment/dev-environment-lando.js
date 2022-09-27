@@ -14,6 +14,7 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
+import UserError from '../user-error';
 
 /**
  * Internal dependencies
@@ -280,7 +281,7 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 		const isUp = await isEnvUp( app );
 
 		if ( ! isUp ) {
-			throw new Error( 'environment needs to be started before running wp command' );
+			throw new UserError( 'Environment needs to be started before running wp command' );
 		}
 	}
 
