@@ -366,6 +366,11 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 
 function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version '${ version }'` );
+
+	if ( version.startsWith( 'image:' ) ) {
+		return version;
+	}
+
 	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
 

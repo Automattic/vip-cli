@@ -153,6 +153,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
+	if ( newInstanceData.php.startsWith( 'image:' ) ) {
+		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
+	}
+
 	return newInstanceData;
 }
 
