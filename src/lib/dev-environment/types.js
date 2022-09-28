@@ -13,6 +13,7 @@ export interface InstanceOptions {
 	statsd?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
+	xdebugConfig?: string;
 }
 
 export type AppInfo = {
