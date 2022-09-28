@@ -367,7 +367,7 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version '${ version }'` );
 
-	if ( version.startsWith( 'image:' ) ) {
+	if ( typeof version === 'string' && version.startsWith( 'image:' ) ) {
 		return version;
 	}
 
