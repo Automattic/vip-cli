@@ -14,6 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
+import { spawn } from 'child_process';
 
 /**
  * Internal dependencies
@@ -29,7 +30,8 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
+import { generateVSCodeWorkspace, getAllEnvironmentNames, getVSCodeWorkspacePath, getVersionList, readEnvironmentData } from './dev-environment-core';
+
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -709,5 +711,24 @@ export function getEnvTrackingInfo( slug: string ): any {
 		return {
 			slug,
 		};
+	}
+}
+
+export interface PostStartOptions {
+	openVSCode: boolean
+}
+
+export async function postStart( slug: strin, options: PostStartOptions ) {
+	const workspacePath = getVSCodeWorkspacePath( slug );
+
+	if ( fs.existsSync( workspacePath ) ) {
+		console.log( `VSCode workspace already exists, skipping creation. To use it run:\ncode ${ workspacePath }` );
+	} else {
+		generateVSCodeWorkspace( slug );
+		console.log( `VSCode workspace generated to use it run:\ncode ${ workspacePath }` );
+	}
+
+	if ( options.openVSCode ) {
+		spawn( 'code', [ workspacePath ] );
 	}
 }
