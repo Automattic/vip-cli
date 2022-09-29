@@ -40,9 +40,11 @@ services:
       command: run.sh
       working_dir: /wp
       environment:
-        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
-
+        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+<% if ( xdebugConfig ) { %>
+        XDEBUG_CONFIG: "<%= xdebugConfig %>"
+<% } %>
         LANDO_NO_USER_PERMS: 'enable'
 
 
