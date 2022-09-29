@@ -45,7 +45,7 @@ const cmd = command( {
 		description: 'Update Node.js to v16',
 	},
 ] );
-cmd.option( 'force', 'Auto-confirm update' );
+cmd.option( 'yes', 'Auto-confirm update' );
 cmd.argv( process.argv, async ( arg: string[], opt ) => {
 	const { app, env } = opt;
 	const { softwareSettings } = env;
@@ -63,7 +63,7 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 		}
 
 		const updateOptions: UpdatePromptOptions = {
-			force: !! opt.force,
+			force: !! opt.yes,
 		};
 
 		if ( arg.length > 0 ) {
