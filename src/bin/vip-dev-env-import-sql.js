@@ -82,7 +82,7 @@ command( {
 
 			try {
 				await exec( slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-				const doIndex = await promptForBoolean( 'Do you wnat to index data in ElasticSearch (used by enterprise search)?', true );
+				const doIndex = await promptForBoolean( 'Do you want to index data in ElasticSearch (used by enterprise search)?', true );
 				if ( doIndex ) {
 					await exec( slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
 				}
