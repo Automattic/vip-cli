@@ -76,7 +76,12 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			title: '',
 		};
 
-		const instanceData = await promptForArguments( preselectedOptions, defaultOptions );
+		const providedOptions = Object.keys( opt )
+			.filter( option => option.length > 1 ) // Filter out single letter aliases
+			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
+
+		const supressPrompts = providedOptions.length > 0;
+		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, supressPrompts );
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );

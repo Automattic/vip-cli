@@ -169,12 +169,17 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * Prompt for arguments
  * @param {InstanceOptions} preselectedOptions - options to be used without prompt
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
+ * @param {boolean} supressPrompts - supress prompts and use default values where needed
  * @returns {any} instance data
  */
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions> ): Promise<InstanceData> {
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions>, supressPrompts: boolean = false ): Promise<InstanceData> {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
-	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
+	if ( supressPrompts ) {
+		preselectedOptions = { ...defaultOptions, ...preselectedOptions };
+	} else {
+		console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
+	}
 
 	let multisiteText = 'Multisite';
 	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
