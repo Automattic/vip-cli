@@ -96,8 +96,8 @@ const verifyDNSResolution = ( slug: string ) => {
 	} );
 };
 const VALIDATION_STEPS = [
-	{ id: 'docker', name: 'Check for docker instalation' },
-	{ id: 'compose', name: 'Check for docker-compose instalation' },
+	{ id: 'docker', name: 'Check for docker installation },
+	{ id: 'compose', name: 'Check for docker-compose installation },
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 export const validateDependencies = async ( slug: string ) => {
