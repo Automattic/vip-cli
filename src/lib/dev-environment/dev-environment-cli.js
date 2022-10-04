@@ -17,6 +17,7 @@ import os from 'os';
 /**
  * Internal dependencies
  */
+import { ProgressTracker } from 'lib/cli/progress';
 import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -94,14 +95,31 @@ const verifyDNSResolution = ( slug: string ) => {
 		} );
 	} );
 };
-
+const VALIDATION_STEPS = [
+	{ id: 'docker', name: 'Check for docker installation' },
+	{ id: 'compose', name: 'Check for docker-compose installation' },
+	{ id: 'dns', name: 'Check DNS resolution' },
+];
 export const validateDependencies = async ( slug: string ) => {
+	const progressTracker = new ProgressTracker( VALIDATION_STEPS );
+	console.log( 'Running validation steps...' );
+	progressTracker.startPrinting();
+	progressTracker.stepRunning( 'docker' );
 	try {
 		await validateDockerInstalled();
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
+	progressTracker.stepSuccess( 'docker' );
+	progressTracker.stepSuccess( 'compose' );
+	progressTracker.print();
+
 	await verifyDNSResolution( slug );
+
+	progressTracker.stepSuccess( 'dns' );
+
+	progressTracker.print();
+	progressTracker.stopPrinting();
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
