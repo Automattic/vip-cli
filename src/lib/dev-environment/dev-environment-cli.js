@@ -17,7 +17,6 @@ import os from 'os';
 /**
  * Internal dependencies
  */
-import * as exit from 'lib/cli/exit';
 import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -314,6 +313,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 			}
 		}
 		if ( missingFiles.length > 0 ) {
+			// eslint-disable-next-line max-len
 			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
 			return {
 				result: false,
@@ -488,11 +488,7 @@ export function processBooleanOption( value: string ): boolean {
 		return false;
 	}
 
-	if ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
-		return false;
-	}
-
-	return true;
+	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
 }
 
 export function addDevEnvConfigurationOptions( command ) {

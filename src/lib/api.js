@@ -6,7 +6,6 @@
 /**
  * External dependencies
  */
-import fetch from 'node-fetch';
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
 import { ApolloLink } from '@apollo/client/link/core';
 import { setContext } from '@apollo/client/link/context';
@@ -22,7 +21,7 @@ import { createProxyAgent } from 'lib/http/proxy-agent';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
-export const API_HOST = process.env.API_HOST || PRODUCTION_API_HOST;
+export const API_HOST = ( process.env.API_HOST || PRODUCTION_API_HOST: string );
 export const API_URL = `${ API_HOST }/graphql`;
 
 let globalGraphQLErrorHandlingEnabled = true;
@@ -89,10 +88,8 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		},
 	} );
 
-	const apiClient = new ApolloClient( {
+	return new ApolloClient( {
 		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
 		cache: new InMemoryCache(),
 	} );
-
-	return apiClient;
 }
