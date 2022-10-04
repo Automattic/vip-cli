@@ -354,7 +354,7 @@ export async function validateDockerInstalled() {
 	}
 }
 
-export async function validateDockerUser() {
+export async function validateDockerAccess() {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
 
@@ -363,6 +363,6 @@ export async function validateDockerUser() {
 	try {
 		await docker.info();
 	} catch ( error ) {
-		throw Error( 'Failed to connect to docker. Please follow the following instructions to add yourself to the docker group - https://docs.docker.com/engine/install/linux-postinstall/' );
+		throw Error( 'Failed to connect to docker. Please verify that the current user is part of docker group and has access to docker commands.' );
 	}
 }
