@@ -177,9 +177,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
-    user: root
+    user: www-data
     cmd:
-      - wp --allow-root
+      - wp
 
   add-site:
     service: php
