@@ -356,10 +356,6 @@ async function validateArgs( opt ): Promise<{}> {
 		outputJson = true;
 	}
 
-	if ( opt.output ) {
-		outputFile = opt.output;
-	}
-
 	// Get build information from API and store it in the env object
 	const buildConfig = await getBuildConfiguration( opt.env );
 	// TODO: if missing information, ask with user input
