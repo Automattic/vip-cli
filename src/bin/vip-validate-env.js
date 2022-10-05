@@ -17,6 +17,10 @@ import {
 } from '@automattic/vip-go-preflight-checks';
 
 import path from 'path';
+import gql from 'graphql-tag';
+import { writeFileSync, readFileSync } from 'fs';
+import dotenv from 'ini';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -24,9 +28,7 @@ import path from 'path';
 import command from 'lib/cli/command';
 import { trackEvent } from 'lib/tracker';
 import * as exit from 'lib/cli/exit';
-import { writeFileSync, readFileSync } from 'fs';
-import dotenv from 'ini';
-import chalk from 'chalk';
+import API from 'lib/api';
 
 export const appQuery = `
 	id
@@ -37,12 +39,6 @@ export const appQuery = `
 		appId
 		name
 		type
-		buildConfiguration {
-            buildType
-            nodeBuildDockerEnv,
-            nodeJSVersion,
-            npmToken,
-        }
 		environmentVariables {
 			nodes {
 				name,
@@ -57,7 +53,6 @@ export const appQuery = `
 `;
 
 let suppressOutput = false;
-let outputFile = null;
 let outputJson = false;
 
 function logToConsole( ...messages: string[] ) {
@@ -72,8 +67,38 @@ function logToConsole( ...messages: string[] ) {
 	messages.forEach( message => console.log( message ) );
 }
 
+async function getBuildConfiguration( environment ) {
+	const api = await API();
+
+	const buildConfigQuery = gql`
+	query BuildConfig( $appId: Int, $envId: Int ) {
+        app(id: $appId) {
+            environments(id: $envId) {
+                id,
+                buildConfiguration {
+					buildType
+					nodeBuildDockerEnv,
+					nodeJSVersion,
+					npmToken,
+                }
+            }
+        }
+	}`;
+
+	const result = await api.query( {
+		query: buildConfigQuery,
+		fetchPolicy: 'network-only',
+		variables: {
+			appId: environment.appId,
+			envId: environment.id,
+		},
+	} );
+
+	return result.data.app.environments[ 0 ].buildConfiguration;
+}
+
 export async function bootstrapHarmonia( arg: string[], opt ) {
-	const harmoniaArgs = validateArgs( opt );
+	const harmoniaArgs = await validateArgs( opt );
 
 	logToConsole( '  /\\  /\\__ _ _ __ _ __ ___   ___  _ __ (_) __ _ ' );
 	logToConsole( ' / /_/ / _` | \'__| \'_ ` _ \\ / _ \\| \'_ \\| |/ _` |' );
@@ -158,7 +183,8 @@ function setupEvents( harmonia: Harmonia ) {
 
 	// Register the event handlers to output some information during the execution
 	harmonia.on( 'beforeTestSuite', ( suite: TestSuite ) => {
-		logToConsole( ` >> Running test suite ${ chalk.bold( suite.name ) } - ${ chalk.italic( suite.description ) } ` );
+		const description = suite.description ? `- ${ chalk.italic( suite.description ) }` : '';
+		logToConsole( ` >> Running test suite ${ chalk.bold( suite.name ) } ${ description } ` );
 		logToConsole();
 	} );
 
@@ -251,16 +277,6 @@ function runHarmonia( harmonia ) {
 }
 
 function handleResults( harmonia, results: TestResult[] ) {
-	// If there is a output file, write the JSON to the file
-	if ( outputFile ) {
-		// If output file was passed, try to create it.
-		try {
-			writeFileSync( outputFile, harmonia.resultsJSON() );
-		} catch ( error ) {
-			console.error( `Error writing to output file at ${ outputFile }: ${ error.message }` );
-		}
-	}
-
 	// If the output is JSON, reenable the logToConsole output and print-out the json format.
 	if ( outputJson ) {
 		suppressOutput = false;
@@ -319,7 +335,7 @@ function handleResults( harmonia, results: TestResult[] ) {
 	process.exit( 0 );
 }
 
-function validateArgs( opt ): {} {
+async function validateArgs( opt ): Promise<{}> {
 	const args = {};
 
 	// Verbose
@@ -332,6 +348,8 @@ function validateArgs( opt ): {} {
 		Harmonia.setCwd( opt.path );
 	}
 
+	// TODO: validate path, check if it's git repository and remote is the same as VIP Go env
+
 	// If the JSON option is enabled, all the stdout should be suppressed to prevent polluting the output.
 	if ( opt.json ) {
 		suppressOutput = true;
@@ -342,11 +360,13 @@ function validateArgs( opt ): {} {
 		outputFile = opt.output;
 	}
 
-	// Configuration fetched from Parker
-	args.nodejsVersion = opt.nodeVersion ?? opt.env.buildConfiguration.nodeJSVersion;	// TODO: get from Parker
-	args.buildType = opt.env.buildConfiguration.buildType;
-	args.npmToken = opt.env.buildConfiguration.npmToken;
-	args.nodeBuildDockerEnv = opt.env.buildConfiguration.nodeBuildDockerEnv;
+	// Get build information from API and store it in the env object
+	const buildConfig = await getBuildConfiguration( opt.env );
+	// TODO: if missing information, ask with user input
+	args.nodejsVersion = opt.nodeVersion ?? buildConfig.nodeJSVersion;
+	args.buildType = buildConfig.buildType;
+	args.npmToken = buildConfig.npmToken;
+	args.nodeBuildDockerEnv = buildConfig.nodeBuildDockerEnv;
 
 	args.port = opt.port ?? Math.floor( Math.random() * 1000 ) + 3001; // Get a PORT from 3001 and 3999
 
@@ -364,12 +384,15 @@ command( {
 	.option( 'wait', 'Configure the time to wait in ms for the app to boot up. Do not change unless you have issues', 3000 )
 	.option( [ 'p', 'port' ], 'Configure the port to use for the app (defaults to a random port between 3001 and 3999)' )
 	.option( 'json', 'Output the results as JSON', false )
-	.option( 'output', 'Output the results to a file' )
 	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
 			usage: 'vip @mysite.production validate-env',
 			description: 'Run checks and tests and validate your local environment against the production environment',
+		},
+		{
+			usage: 'vip @mysite.production validate-env --json > results.json',
+			description: 'Run checks and tests, but output the results in JSON format, and redirects the output to a file',
 		},
 	] )
 	.argv( process.argv, bootstrapHarmonia );
