@@ -32,10 +32,6 @@ const examples = [
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp shell`,
 		description: 'Use dev-environment "my_site" to run interactive wp shell',
 	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- db`,
-		description: 'Use dev-environment to run interactive mysql shell connected to the environment\'s database',
-	},
 ];
 
 command( { wildcardCommand: true } )
