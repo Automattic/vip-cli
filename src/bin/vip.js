@@ -31,7 +31,7 @@ if ( config && config.environment !== 'production' ) {
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
-const runCmd = async function () {
+const runCmd = async function() {
 	const cmd = command();
 	cmd
 		.command( 'logout', 'Logout from your current session', async () => {
@@ -53,7 +53,7 @@ const runCmd = async function () {
 	cmd.argv( process.argv );
 };
 
-const rootCmd = async function () {
+const rootCmd = async function() {
 	let token = await Token.get();
 
 	const isHelpCommand = process.argv.some(
