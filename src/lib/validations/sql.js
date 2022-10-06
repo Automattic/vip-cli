@@ -260,6 +260,15 @@ const checks: Checks = {
 		excerpt: "'CREATE TABLE' should be present (case-insensitive)",
 		recommendation: 'Check import settings to include CREATE TABLE statements',
 	},
+	alterTable: {
+		matcher: /^ALTER TABLE `?([a-z0-9_]*)/i,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
+		results: [],
+		message: 'ALTER TABLE statement',
+		excerpt: "'ALTER TABLE' should not be present (case-insensitive)",
+		recommendation: 'Define table structure in the CREATE TABLE statement',
+	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),

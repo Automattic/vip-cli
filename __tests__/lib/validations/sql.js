@@ -70,6 +70,9 @@ describe( 'lib/validations/sql', () => {
 		it( 'use statement should be ok', () => {
 			expect( output ).not.toContain( '\'USE <DATABASE_NAME>\' should not be present (case-insensitive)' );
 		} );
+		it( 'instances of ALTER TABLE statements', () => {
+			expect( output ).toContain( 'ALTER TABLE statement on line(s) 36' );
+		} );
 	} );
 	describe( 'it fails when the SQL has (using bad-sql-duplicate-tables.sql)', () => {
 		beforeAll( async () => {
