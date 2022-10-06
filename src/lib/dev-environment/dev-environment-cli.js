@@ -111,7 +111,7 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	}
 
 	if ( options.app ) {
-	const envSuffix = options.env ? `-${ options.env }` : '';
+		const envSuffix = options.env ? `-${ options.env }` : '';
 
 		const appName = options.app + envSuffix;
 		if ( options.allowAppEnv ) {
