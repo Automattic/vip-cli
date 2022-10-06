@@ -25,12 +25,12 @@ const examples = [
 		description: 'Use dev-environment to run `wp post list`',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp shell`,
-		description: 'Use dev-environment "my_site" to run interactive wp shell',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp post list --posts_per_page=500`,
+		description: 'Use dev-environment "my-site" to run `wp post list --posts_per_page=500`',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- add-site --new-site-slug subsite --new-site-title "New Subsite"`,
-		description: 'Execute script to add a subsite to multisite dev environment',
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp shell`,
+		description: 'Use dev-environment "my_site" to run interactive wp shell',
 	},
 ];
 
