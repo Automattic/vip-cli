@@ -22,8 +22,8 @@ import { formatSoftwareSettings } from '../lib/config/software';
 // Command examples
 const examples = [
 	{
-		usage: 'vip @mysite.develop config software get wordpress --include options --format json',
-		description: 'Read current software settings for WordPress in JSON format including options',
+		usage: 'vip @mysite.develop config software get wordpress --include available_versions --format json',
+		description: 'Read current software settings for WordPress in JSON format including available versions',
 	},
 	{
 		usage: 'vip @mysite.develop config software get',
