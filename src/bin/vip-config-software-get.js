@@ -31,7 +31,7 @@ const examples = [
 	},
 ];
 
-const VALID_INCLUDES = [ 'options' ];
+const VALID_INCLUDES = [ 'available_versions' ];
 
 command( {
 	appContext: true,

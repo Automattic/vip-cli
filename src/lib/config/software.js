@@ -342,10 +342,10 @@ export const formatSoftwareSettings = ( softwareSetting: SoftwareSettings, inclu
 		version,
 	};
 
-	if ( includes.includes( 'options' ) ) {
-		result.options = _optionsForVersion( softwareSetting ).map( option => option.value );
+	if ( includes.includes( 'available_versions' ) ) {
+		result.available_versions = _optionsForVersion( softwareSetting ).map( option => option.value );
 		if ( format !== 'json' ) {
-			result.options = result.options.join( ',' );
+			result.available_versions = result.available_versions.join( ',' );
 		}
 	}
 
