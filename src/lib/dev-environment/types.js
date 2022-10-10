@@ -56,6 +56,7 @@ export interface InstanceData {
 	statsd: boolean;
 	phpmyadmin: boolean;
 	xdebug: boolean;
+	xdebugConfig?: string;
 	elasticsearch: string;
 	mariadb: string;
 	php: string;
