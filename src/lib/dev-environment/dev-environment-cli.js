@@ -29,7 +29,7 @@ import {
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
-import { validateDockerInstalled } from './dev-environment-lando';
+import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -98,6 +98,7 @@ const verifyDNSResolution = ( slug: string ) => {
 const VALIDATION_STEPS = [
 	{ id: 'docker', name: 'Check for docker installation' },
 	{ id: 'compose', name: 'Check for docker-compose installation' },
+	{ id: 'access', name: 'Check access to docker for current user' },
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 export const validateDependencies = async ( slug: string ) => {
@@ -112,6 +113,15 @@ export const validateDependencies = async ( slug: string ) => {
 	}
 	progressTracker.stepSuccess( 'docker' );
 	progressTracker.stepSuccess( 'compose' );
+	progressTracker.print();
+
+	try {
+		await validateDockerAccess();
+	} catch ( exception ) {
+		throw new UserError( exception.message );
+	}
+
+	progressTracker.stepSuccess( 'access' );
 	progressTracker.print();
 
 	await verifyDNSResolution( slug );

@@ -181,12 +181,6 @@ tooling:
     cmd:
       - wp
 
-  add-site:
-    service: php
-    description: "Add site to a multisite installation"
-    cmd:
-      - bash /dev-tools/add-site.sh
-
   db:
     service: php
     description: "Connect to the DB using mysql client (e.g. allow to run imports)"

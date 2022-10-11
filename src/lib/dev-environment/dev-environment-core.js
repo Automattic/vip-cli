@@ -250,10 +250,7 @@ export async function exec( slug: string, args: Array<string>, options: any = {}
 
 	const command = args.shift();
 
-	let commandArgs = [ ...args ];
-	if ( 'add-site' === command ) {
-		commandArgs = [ ...args.map( argument => argument.replace( '--new-site-', '--' ) ) ];
-	}
+	const commandArgs = [ ...args ];
 
 	await landoExec( instancePath, command, commandArgs, options );
 }

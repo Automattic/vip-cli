@@ -353,3 +353,16 @@ export async function validateDockerInstalled() {
 		throw Error( 'docker-compose could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/' );
 	}
 }
+
+export async function validateDockerAccess() {
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const docker = lando.engine.docker;
+	lando.log.verbose( 'Fetching docker info to verify user is in docker group' );
+	try {
+		await docker.info();
+	} catch ( error ) {
+		throw Error( 'Failed to connect to docker. Please verify that the current user is part of docker group and has access to docker commands.' );
+	}
+}
