@@ -267,7 +267,7 @@ const checks: Checks = {
 		results: [],
 		message: 'ALTER TABLE statement',
 		excerpt: "'ALTER TABLE' should not be present (case-insensitive)",
-		recommendation: 'Define table structure in the CREATE TABLE statement',
+		recommendation: 'Remove these lines and define table structure in the CREATE TABLE statement instead',
 	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
