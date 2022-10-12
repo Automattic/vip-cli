@@ -75,7 +75,11 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 	debug( 'Args: ', arg, 'Options: ', opt );
 
-	const trackingInfo = { slug };
+	const trackingInfo = {
+		slug,
+		app: opt.app,
+		env: opt.env,
+	};
 	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
 
 	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
