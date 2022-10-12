@@ -577,6 +577,12 @@ async function updateWordPressImage( slug ) {
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
 		envData.wordpress.ref = version.ref;
+
+		// Ensure xdebugConfig is not undefined (needed by .lando.yml template)
+		if ( ! envData.xdebugConfig ) {
+			envData.xdebugConfig = '';
+		}
+
 		await updateEnvironment( envData );
 
 		return true;
