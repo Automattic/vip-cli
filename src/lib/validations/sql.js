@@ -275,8 +275,8 @@ const checks: Checks = {
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
 		message: 'SET UNIQUE_CHECKS = 0',
-		excerpt: "'UNIQUE_CHECKS' must not be disabled",
-		recommendation: 'Remove these lines',
+		excerpt: "'SET UNIQUE_CHECKS = 0' should not be present",
+		recommendation: "'UNIQUE_CHECKS' must not be disabled. These lines should be removed",
 	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
