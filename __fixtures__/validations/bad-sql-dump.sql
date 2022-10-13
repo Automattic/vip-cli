@@ -37,3 +37,5 @@ ALTER TABLE wp_options
 	ADD PRIMARY KEY (`option_id`),
 	ADD UNIQUE KEY `option_name` (`option_name`),
 	ADD KEY `autoload` (`autoload`);
+
+SET UNIQUE_CHECKS = 0;
