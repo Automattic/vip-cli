@@ -276,7 +276,7 @@ const checks: Checks = {
 		results: [],
 		message: 'SET UNIQUE_CHECKS = 0',
 		excerpt: "'SET UNIQUE_CHECKS = 0' should not be present",
-		recommendation: "'UNIQUE_CHECKS' cannot not be disabled. These lines should be removed",
+		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
 	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
