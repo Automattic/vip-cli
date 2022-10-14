@@ -269,6 +269,15 @@ const checks: Checks = {
 		excerpt: "'ALTER TABLE' should not be present (case-insensitive)",
 		recommendation: 'Remove these lines and define table structure in the CREATE TABLE statement instead',
 	},
+	uniqueChecks: {
+		matcher: /^SET UNIQUE_CHECKS\s*=\s*0/i,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
+		results: [],
+		message: 'SET UNIQUE_CHECKS = 0',
+		excerpt: "'SET UNIQUE_CHECKS = 0' should not be present",
+		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
+	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
