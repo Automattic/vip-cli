@@ -371,7 +371,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					title: 'a',
 					wordpress: testReleaseWP,
 					mariadb: 'maria_a',
-					elasticsearch: 'elastic_a',
 				},
 				default: {
 				},
@@ -383,17 +382,14 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				default: {
 					mariadb: 'maria_b',
-					elasticsearch: 'elastic_b',
 				},
 			},
-		] )( 'should handle elasticsearch/mariadb', async input => {
+		] )( 'should handle mariadb', async input => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			const expectedMaria = input.preselected.mariadb ? input.preselected.mariadb : input.default.mariadb;
-			const expectedElastic = input.preselected.elasticsearch ? input.preselected.elasticsearch : input.default.elasticsearch;
 
 			expect( result.mariadb ).toStrictEqual( expectedMaria );
-			expect( result.elasticsearch ).toStrictEqual( expectedElastic );
 		} );
 	} );
 } );
