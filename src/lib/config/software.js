@@ -131,7 +131,7 @@ const COMPONENT_NAMES = {
 
 const MANAGED_OPTION_KEY = 'managed_latest';
 
-const _optionsForVersion = ( softwareSettings ) => {
+const _optionsForVersion = softwareSettings => {
 	const { options, current, pinned, slug } = softwareSettings;
 	const versionChoices = {
 		managed: [],
@@ -217,7 +217,7 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 		message: 'Component to update',
 		choices,
 	} );
-	return await select.run().catch( () => {
+	return select.run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
 	} );
 };
@@ -237,7 +237,7 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 		message: `Version for ${ COMPONENT_NAMES[ component ] } to upgrade to`,
 		choices: versionChoices,
 	} );
-	return await versionSelect.run().catch( () => {
+	return versionSelect.run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
 	} );
 };
@@ -284,7 +284,7 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	debug( 'Triggering update', variables );
 	const api = await API();
 
-	return await api.mutate( { mutation: updateSoftwareMutation, variables } );
+	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
 const _getLatestJob = async ( appId: number, envId: number ) => {
