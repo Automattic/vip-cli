@@ -133,7 +133,7 @@ services:
             nocopy: true
 
 <% if ( muPlugins.mode == 'image' ) { %>
-  mu-plugins:
+  vip-mu-plugins:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
@@ -150,7 +150,7 @@ services:
 <% } %>
 
 <% if ( appCode.mode == 'image' ) { %>
-  client-code:
+  demo-app-code:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/skeleton:latest
