@@ -19,8 +19,6 @@ import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, promptForBo
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { validate } from '../lib/validations/sql';
-import { confirm } from '../lib/cli/prompt';
-import { prompt } from 'enquirer';
 
 const examples = [
 	{
@@ -86,7 +84,7 @@ command( {
 				if ( doIndex ) {
 					await exec( slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
 				}
-			} catch ( e ) {
+			} catch ( err ) {
 				// Exception means they don't have vip-search enabled.
 			}
 

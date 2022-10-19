@@ -403,10 +403,7 @@ const postValidation = async ( options: ValidationOptions ) => {
 			error: errorSummary,
 		} );
 
-		const errorOutput = [
-			`SQL validation failed due to ${ chalk.red( problemsFound ) } error(s)`,
-			'',
-		];
+		const errorOutput = [];
 
 		formattedErrors.forEach( error => {
 			errorOutput.push( error.error );
@@ -417,6 +414,8 @@ const postValidation = async ( options: ValidationOptions ) => {
 
 			errorOutput.push( '' );
 		} );
+
+		errorOutput.push( chalk.bold.red( `SQL validation failed due to ${ problemsFound } error(s)` ) );
 
 		if ( options.isImport ) {
 			throw new Error( errorOutput.join( '\n' ) );

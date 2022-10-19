@@ -1,5 +1,28 @@
 ## Changelog
 
+### 2.20.0 (23 Sep 2022)
+
+- #1121  Add support for custom PHP images                                  
+- #1136  SQL Import: Add validation for unique_checks being disabled 
+- #1131  SQL Import - Add ALTER TABLE statement validation    
+- #1134  [dev-env] add app and env to tracks when creating env               
+- #1135  [dev-env] Make xdebug config not break during wp update          
+- #1098  Include options into reading software config    
+- #1114  [dev-env] Verify current user is a docker user            
+- #1130  Update/exec help                                                       
+- #1125  add validation output                                                   
+- #1127  Run wp-cli as www-data                                               
+- #1120  Update php-fpm image names                                              
+- #1126  Update memcached to 1.6-alpine3.16                                      
+- #1124  [dev-env] Supress Setup wizard during update              
+- #1111  [dev-env] prompt for es index after db import   
+- #1119  Use --yes instead of --force 
+- #1115  [dev-env] reclasify most common error
+- #1122  [dev-env] support xdebug_config environment variable 
+- #1129  Fix ESLint/Flow/SonarScan issues
+- #1133  Add PHP 8.2 image
+- #1141  SQL validation: Change formatting to make it more readable
+
 ### 2.19.2 (23 Sep 2022)
 - #1116 Reverted #1049 changes 
 
