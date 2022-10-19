@@ -28,7 +28,6 @@ import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-enviro
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
-jest.mock( 'enquirer' );
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
@@ -258,7 +257,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		] )( 'should parse query result %p', async input => {
 			app.mockResolvedValue( input.response );
 
-			enquirer.prompt = jest.fn().mockResolvedValue( { env: '' } );
+			jest.spyOn( enquirer, 'prompt' ).mockImplementation().mockResolvedValue( { env: '' } );
 
 			const result = await getApplicationInformation( input.appId, input.envType );
 

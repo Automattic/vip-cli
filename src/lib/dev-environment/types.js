@@ -13,6 +13,7 @@ export interface InstanceOptions {
 	statsd?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
+	xdebugConfig?: string;
 }
 
 export type AppInfo = {
@@ -55,6 +56,7 @@ export interface InstanceData {
 	statsd: boolean;
 	phpmyadmin: boolean;
 	xdebug: boolean;
+	xdebugConfig?: string;
 	elasticsearch: string;
 	mariadb: string;
 	php: string;

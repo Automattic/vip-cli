@@ -40,9 +40,11 @@ services:
       command: run.sh
       working_dir: /wp
       environment:
-        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
-
+        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+<% if ( xdebugConfig ) { %>
+        XDEBUG_CONFIG: "<%= xdebugConfig %>"
+<% } %>
         LANDO_NO_USER_PERMS: 'enable'
 
 
@@ -78,7 +80,7 @@ services:
   memcached:
     type: memcached:custom
     overrides:
-      image: memcached:1.6-alpine3.14
+      image: memcached:1.6-alpine3.16
       command: docker-entrypoint.sh memcached
 
 <% if ( phpmyadmin ) { %>
@@ -175,15 +177,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
-    user: root
+    user: www-data
     cmd:
-      - wp --allow-root
-
-  add-site:
-    service: php
-    description: "Add site to a multisite installation"
-    cmd:
-      - bash /dev-tools/add-site.sh
+      - wp
 
   db:
     service: php

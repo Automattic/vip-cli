@@ -153,6 +153,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
+	if ( newInstanceData.php.startsWith( 'image:' ) ) {
+		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
+	}
+
 	return newInstanceData;
 }
 
@@ -250,10 +254,7 @@ export async function exec( slug: string, args: Array<string>, options: any = {}
 
 	const command = args.shift();
 
-	let commandArgs = [ ...args ];
-	if ( 'add-site' === command ) {
-		commandArgs = [ ...args.map( argument => argument.replace( '--new-site-', '--' ) ) ];
-	}
+	const commandArgs = [ ...args ];
 
 	await landoExec( instancePath, command, commandArgs, options );
 }
@@ -580,6 +581,12 @@ async function updateWordPressImage( slug ) {
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
 		envData.wordpress.ref = version.ref;
+
+		// Ensure xdebugConfig is not undefined (needed by .lando.yml template)
+		if ( ! envData.xdebugConfig ) {
+			envData.xdebugConfig = '';
+		}
+
 		await updateEnvironment( envData );
 
 		return true;

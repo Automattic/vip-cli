@@ -131,7 +131,7 @@ const COMPONENT_NAMES = {
 
 const MANAGED_OPTION_KEY = 'managed_latest';
 
-const _optionsForVersion = ( softwareSettings ) => {
+const _optionsForVersion = softwareSettings => {
 	const { options, current, pinned, slug } = softwareSettings;
 	const versionChoices = {
 		managed: [],
@@ -217,7 +217,9 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 		message: 'Component to update',
 		choices,
 	} );
-	return await select.run();
+	return select.run().catch( () => {
+		throw new UserError( 'Command cancelled by user.' );
+	} );
 };
 
 const _processComponentVersion = async ( softwareSettings, component: string, userProvidedVersion: string | undefined ) => {
@@ -235,7 +237,9 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 		message: `Version for ${ COMPONENT_NAMES[ component ] } to upgrade to`,
 		choices: versionChoices,
 	} );
-	return await versionSelect.run();
+	return versionSelect.run().catch( () => {
+		throw new UserError( 'Command cancelled by user.' );
+	} );
 };
 
 interface UpdateData {
@@ -255,7 +259,9 @@ export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOpti
 
 	const confirm = opts.force || await new Confirm( {
 		message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
-	} ).run();
+	} ).run().catch( () => {
+		throw new UserError( 'Command cancelled by user.' );
+	} );
 
 	if ( confirm ) {
 		return {
@@ -278,7 +284,7 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	debug( 'Triggering update', variables );
 	const api = await API();
 
-	return await api.mutate( { mutation: updateSoftwareMutation, variables } );
+	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
 const _getLatestJob = async ( appId: number, envId: number ) => {
@@ -329,4 +335,25 @@ export const getUpdateResult = async ( appId: number, envId: number ): UpdateRes
 		ok: false,
 		errorMessage: error,
 	};
+};
+
+export const formatSoftwareSettings = ( softwareSetting: SoftwareSettings, includes: string[], format: string ) => {
+	let version = softwareSetting.current.version;
+	if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
+		version += ' (managed updates)';
+	}
+	const result = {
+		name: softwareSetting.name,
+		slug: softwareSetting.slug,
+		version,
+	};
+
+	if ( includes.includes( 'available_versions' ) ) {
+		result.available_versions = _optionsForVersion( softwareSetting ).map( option => option.value );
+		if ( format !== 'json' ) {
+			result.available_versions = result.available_versions.join( ',' );
+		}
+	}
+
+	return result;
 };

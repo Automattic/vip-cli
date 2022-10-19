@@ -15,7 +15,7 @@ import fs from 'fs';
  */
 import { trackEvent } from 'lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { validate } from '../lib/validations/sql';
@@ -77,6 +77,16 @@ command( {
 
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( slug, cacheArg );
+
+			try {
+				await exec( slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
+				const doIndex = await promptForBoolean( 'Do you want to index data in ElasticSearch (used by enterprise search)?', true );
+				if ( doIndex ) {
+					await exec( slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
+				}
+			} catch ( err ) {
+				// Exception means they don't have vip-search enabled.
+			}
 
 			const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
 			await exec( slug, addUserArg );

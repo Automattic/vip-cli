@@ -17,7 +17,7 @@ import os from 'os';
 /**
  * Internal dependencies
  */
-import * as exit from 'lib/cli/exit';
+import { ProgressTracker } from 'lib/cli/progress';
 import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -29,7 +29,7 @@ import {
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
-import { validateDockerInstalled } from './dev-environment-lando';
+import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -95,14 +95,41 @@ const verifyDNSResolution = ( slug: string ) => {
 		} );
 	} );
 };
-
+const VALIDATION_STEPS = [
+	{ id: 'docker', name: 'Check for docker installation' },
+	{ id: 'compose', name: 'Check for docker-compose installation' },
+	{ id: 'access', name: 'Check access to docker for current user' },
+	{ id: 'dns', name: 'Check DNS resolution' },
+];
 export const validateDependencies = async ( slug: string ) => {
+	const progressTracker = new ProgressTracker( VALIDATION_STEPS );
+	console.log( 'Running validation steps...' );
+	progressTracker.startPrinting();
+	progressTracker.stepRunning( 'docker' );
 	try {
 		await validateDockerInstalled();
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
+	progressTracker.stepSuccess( 'docker' );
+	progressTracker.stepSuccess( 'compose' );
+	progressTracker.print();
+
+	try {
+		await validateDockerAccess();
+	} catch ( exception ) {
+		throw new UserError( exception.message );
+	}
+
+	progressTracker.stepSuccess( 'access' );
+	progressTracker.print();
+
 	await verifyDNSResolution( slug );
+
+	progressTracker.stepSuccess( 'dns' );
+
+	progressTracker.print();
+	progressTracker.stopPrinting();
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
@@ -169,12 +196,17 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * Prompt for arguments
  * @param {InstanceOptions} preselectedOptions - options to be used without prompt
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
+ * @param {boolean} supressPrompts - supress prompts and use default values where needed
  * @returns {any} instance data
  */
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions> ): Promise<InstanceData> {
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions>, supressPrompts: boolean = false ): Promise<InstanceData> {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
-	console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
+	if ( supressPrompts ) {
+		preselectedOptions = { ...defaultOptions, ...preselectedOptions };
+	} else {
+		console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
+	}
 
 	let multisiteText = 'Multisite';
 	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
@@ -204,6 +236,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		statsd: false,
 		phpmyadmin: false,
 		xdebug: false,
+		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
 	};
 
@@ -250,7 +283,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
 			} else {
-				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, instanceData[ service ] );
+				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, defaultOptions[ service ] );
 			}
 		}
 	}
@@ -308,6 +341,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 			}
 		}
 		if ( missingFiles.length > 0 ) {
+			// eslint-disable-next-line max-len
 			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
 			return {
 				result: false,
@@ -366,6 +400,11 @@ export async function promptForBoolean( message: string, initial: boolean ): Pro
 
 function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version '${ version }'` );
+
+	if ( typeof version === 'string' && version.startsWith( 'image:' ) ) {
+		return version;
+	}
+
 	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
 
@@ -482,11 +521,7 @@ export function processBooleanOption( value: string ): boolean {
 		return false;
 	}
 
-	if ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
-		return false;
-	}
-
-	return true;
+	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
 }
 
 export function addDevEnvConfigurationOptions( command ) {
@@ -497,6 +532,7 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
+		.option( 'xdebug_config', 'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable' )
 		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use or false to disable it', undefined, value => FALSE_OPTIONS.includes( value?.toLowerCase?.() ) ? false : value )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )

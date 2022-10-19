@@ -260,6 +260,24 @@ const checks: Checks = {
 		excerpt: "'CREATE TABLE' should be present (case-insensitive)",
 		recommendation: 'Check import settings to include CREATE TABLE statements',
 	},
+	alterTable: {
+		matcher: /^ALTER TABLE `?([a-z0-9_]*)/i,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
+		results: [],
+		message: 'ALTER TABLE statement',
+		excerpt: "'ALTER TABLE' should not be present (case-insensitive)",
+		recommendation: 'Remove these lines and define table structure in the CREATE TABLE statement instead',
+	},
+	uniqueChecks: {
+		matcher: /^SET UNIQUE_CHECKS\s*=\s*0/i,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
+		results: [],
+		message: 'SET UNIQUE_CHECKS = 0',
+		excerpt: "'SET UNIQUE_CHECKS = 0' should not be present",
+		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
+	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
@@ -385,10 +403,7 @@ const postValidation = async ( options: ValidationOptions ) => {
 			error: errorSummary,
 		} );
 
-		const errorOutput = [
-			`SQL validation failed due to ${ chalk.red( problemsFound ) } error(s)`,
-			'',
-		];
+		const errorOutput = [];
 
 		formattedErrors.forEach( error => {
 			errorOutput.push( error.error );
@@ -399,6 +414,8 @@ const postValidation = async ( options: ValidationOptions ) => {
 
 			errorOutput.push( '' );
 		} );
+
+		errorOutput.push( chalk.bold.red( `SQL validation failed due to ${ problemsFound } error(s)` ) );
 
 		if ( options.isImport ) {
 			throw new Error( errorOutput.join( '\n' ) );

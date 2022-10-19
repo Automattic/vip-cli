@@ -26,8 +26,10 @@ export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 86400; // once per day
 
 export const DEV_ENVIRONMENT_PHP_VERSIONS = {
 	// eslint-disable-next-line quote-props
-	'8.1': 'ghcr.io/automattic/vip-container-images/php-fpm-alt:8.1',
-	'8.0': 'ghcr.io/automattic/vip-container-images/php-fpm-alt:8.0',
-	// eslint-disable-next-line quote-props -- flow does nit support non-string keys
-	'7.4': 'ghcr.io/automattic/vip-container-images/php-fpm-alt:7.4',
+	'8.2': 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
+	// eslint-disable-next-line quote-props
+	'8.1': 'ghcr.io/automattic/vip-container-images/php-fpm:8.1',
+	'8.0': 'ghcr.io/automattic/vip-container-images/php-fpm:8.0',
+	// eslint-disable-next-line quote-props -- flow does not support non-string keys
+	'7.4': 'ghcr.io/automattic/vip-container-images/php-fpm:7.4',
 };
