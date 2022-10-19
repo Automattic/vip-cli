@@ -50,7 +50,7 @@ Our release flow for VIP CLI follows this pattern:
 - This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
 - Merge changes from your feature branch to the `develop` branch
 - If you are ready to release your changes publicly, merge your changes from the `develop` branch to the `master` branch. All changes that are not ready to be public should be feature flagged or stay in the `develop` branch to avoid conflicts when releasing urgent fixes (not recommended).
-- Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform-patisserie channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
+- Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
 
 ### Changelogs
 Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
