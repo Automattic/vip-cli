@@ -14,7 +14,7 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.8
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.9
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -92,11 +92,11 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
-<% if ( elasticsearchEnabled ) { %>
-  vip-search:
+<% if ( elasticsearch ) { %>
+  elasticsearch:
     type: compose
     services:
-      image: elasticsearch:<%= elasticsearch %>
+      image: elasticsearch:7.17.2
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'

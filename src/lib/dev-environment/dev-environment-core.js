@@ -150,7 +150,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
+	newInstanceData.elasticsearch = instanceData.elasticsearch || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
@@ -286,9 +286,9 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	 ***********************************/
 
 	// REMOVEME after the wheel of time spins around few times
-	if ( instanceData.enterpriseSearchEnabled ) {
-		// enterpriseSearchEnabled was renamed to elasticsearchEnabled
-		instanceData.elasticsearchEnabled = instanceData.enterpriseSearchEnabled;
+	if ( instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled ) {
+		// enterpriseSearchEnabled and elasticsearchEnabled was renamed to elasticsearch
+		instanceData.elasticsearch = instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled;
 	}
 
 	// REMOVEME after the wheel of time spins around few times
