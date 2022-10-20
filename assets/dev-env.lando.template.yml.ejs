@@ -104,6 +104,7 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+        xpack.security.enabled: 'false'
       ports:
         - ":9200"
       volumes:
