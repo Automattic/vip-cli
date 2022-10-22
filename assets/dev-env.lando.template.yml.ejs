@@ -27,7 +27,7 @@ services:
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.6
+      image: ghcr.io/automattic/vip-container-images/nginx:1.23.1
       command: nginx -g "daemon off;"
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
