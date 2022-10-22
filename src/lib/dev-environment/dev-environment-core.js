@@ -157,6 +157,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
 
+	if ( ! newInstanceData.xdebugConfig ) {
+		newInstanceData.xdebugConfig = '';
+	}
+
 	return newInstanceData;
 }
 
@@ -581,11 +585,6 @@ async function updateWordPressImage( slug ) {
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
 		envData.wordpress.ref = version.ref;
-
-		// Ensure xdebugConfig is not undefined (needed by .lando.yml template)
-		if ( ! envData.xdebugConfig ) {
-			envData.xdebugConfig = '';
-		}
 
 		await updateEnvironment( envData );
 
