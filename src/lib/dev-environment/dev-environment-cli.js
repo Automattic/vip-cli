@@ -28,13 +28,26 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
 import { getVersionList, readEnvironmentData } from './dev-environment-core';
-import type { AppInfo, ComponentConfig, InstanceOptions, EnvironmentNameOptions, InstanceData } from './types';
+import type {
+	AppInfo,
+	ComponentConfig,
+	InstanceOptions,
+	EnvironmentNameOptions,
+	InstanceData,
+	WordPressConfig,
+} from './types';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
+import typeof Command from 'lib/cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
+
+// Forward declaratrion to avoid no-use-before-define
+declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
+// eslint-disable-next-line no-redeclare
+declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
 
 export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
@@ -196,14 +209,14 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * Prompt for arguments
  * @param {InstanceOptions} preselectedOptions - options to be used without prompt
  * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
- * @param {boolean} supressPrompts - supress prompts and use default values where needed
+ * @param {boolean} suppressPrompts - supress prompts and use default values where needed
  * @returns {any} instance data
  */
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: $Shape<InstanceOptions>, supressPrompts: boolean = false ): Promise<InstanceData> {
+export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions, suppressPrompts: boolean = false ): Promise<InstanceData> {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
-	if ( supressPrompts ) {
-		preselectedOptions = { ...defaultOptions, ...preselectedOptions };
+	if ( suppressPrompts ) {
+		preselectedOptions = { ...( defaultOptions: Object ), ...( preselectedOptions: Object ) };
 	} else {
 		console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 	}
@@ -225,6 +238,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
 		wordpress: {
 			mode: 'image',
+			tag: '',
 		},
 		muPlugins: {
 			mode: 'image',
@@ -268,7 +282,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	if ( 'elasticsearch' in preselectedOptions ) {
 		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
-		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.elasticsearch );
+		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
 	}
 
 	if ( instanceData.elasticsearch ) {
@@ -282,7 +296,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
 			} else {
-				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, defaultOptions[ service ] );
+				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, ( ( defaultOptions[ service ]: any ): boolean ) );
 			}
 		}
 	}
@@ -370,7 +384,7 @@ export function resolvePath( input: string ): string {
 }
 
 export async function promptForText( message: string, initial: string ): Promise<string> {
-	const nonEmptyValidator = value => {
+	const nonEmptyValidator = ( value: ?string ) => {
 		if ( ( value || '' ).trim() ) {
 			return true;
 		}
@@ -444,7 +458,8 @@ const componentDemoyNames = {
 	appCode: 'vip-go-skeleton',
 };
 
-export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig> {
+// eslint-disable-next-line no-redeclare
+export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig | WordPressConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const componentDemoName = componentDemoyNames[ component ] || component;
@@ -502,10 +517,10 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		} );
 		const option = await selectTag.run();
 
-		return {
-			mode: modeResult,
+		return ( {
+			mode: 'image',
 			tag: option,
-		};
+		}: WordPressConfig );
 	}
 
 	// image
@@ -523,7 +538,7 @@ export function processBooleanOption( value: string ): boolean {
 	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
 }
 
-export function addDevEnvConfigurationOptions( command ) {
+export function addDevEnvConfigurationOptions( command: Command ): any {
 	return command
 		.option( 'wordpress', 'Use a specific WordPress version' )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
@@ -541,10 +556,30 @@ export function addDevEnvConfigurationOptions( command ) {
 /**
  * Provides the list of tag choices for selection
  */
-export async function getTagChoices() {
-	const versions = await getVersionList();
+export async function getTagChoices(): Promise<{ name: string, message: string, value: string }[]> {
+	let versions = await getVersionList();
 	if ( versions.length < 1 ) {
-		return [ '5.9', '5.8', '5.7', '5.6', '5.5' ];
+		versions = [ {
+			ref: '5.9.5',
+			tag: '5.9',
+			cacheable: true,
+			locked: true,
+			prerelease: false,
+		},
+		{
+			ref: '5.8.6',
+			tag: '5.8',
+			cacheable: true,
+			locked: true,
+			prerelease: false,
+		},
+		{
+			ref: '5.7.8',
+			tag: '5.7',
+			cacheable: true,
+			locked: true,
+			prerelease: false,
+		} ];
 	}
 
 	return versions.map( version => {
@@ -569,11 +604,11 @@ export async function getTagChoices() {
 export function getEnvTrackingInfo( slug: string ): any {
 	try {
 		const envData = readEnvironmentData( slug );
-		const result = { slug };
+		const result: { [string]: string } = { slug };
 		for ( const key of Object.keys( envData ) ) {
 			// track doesnt like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
-			const value = DEV_ENVIRONMENT_COMPONENTS.includes( key ) ? JSON.stringify( envData[ key ] ) : envData[ key ];
+			const value = ( ( DEV_ENVIRONMENT_COMPONENTS.includes( key ) ? JSON.stringify( envData[ key ] ) : envData[ key ]: any ): string );
 
 			result[ snakeCasedKey ] = value;
 		}
