@@ -79,7 +79,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = await fs.existsSync( instancePath );
+	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
