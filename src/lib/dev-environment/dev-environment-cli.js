@@ -499,6 +499,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		const selectTag = new Select( {
 			message,
 			choices: tagChoices,
+			initial: defaultObject?.tag || '',
 		} );
 		const option = await selectTag.run();
 
