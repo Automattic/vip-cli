@@ -13,6 +13,8 @@ export interface InstanceOptions {
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	xdebugConfig?: string;
+
+	[index: string]: string | boolean;
 }
 
 export type AppInfo = {
@@ -37,6 +39,13 @@ export type ComponentConfig = {
 	tag?: string;
 }
 
+export type WordPressConfig = {
+	mode: 'image';
+	tag: string;
+	ref?: string;
+	doNotUpgrade?: boolean;
+};
+
 export type EnvironmentNameOptions = {
 	slug: string;
 	app: string;
@@ -48,7 +57,7 @@ export interface InstanceData {
 	siteSlug: string;
 	wpTitle: string;
 	multisite: boolean;
-	wordpress: ComponentConfig;
+	wordpress: WordPressConfig;
 	muPlugins: ComponentConfig;
 	appCode: ComponentConfig;
 	mediaRedirectDomain: string;
@@ -58,4 +67,7 @@ export interface InstanceData {
 	xdebugConfig?: string;
 	mariadb: string;
 	php: string;
+	elasticsearch?: string | boolean;
+
+	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }
