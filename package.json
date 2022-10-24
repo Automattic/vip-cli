@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.20.0",
+  "version": "2.21.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
