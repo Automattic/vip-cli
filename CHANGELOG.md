@@ -1,24 +1,35 @@
 ## Changelog
 
+### 2.21.0 (24 Oct 2022)
+
+- #1143 [dev-env] adds default for wordpress version prompt
+- #1146 fix(dev-env): Resolve the "xdebugConfig is not defined" issue
+- #1142 Update Slack channel on which to (optionally) ping before release
+- #1144 fix: Suppress ES security-related warnings
+- #1132 [PIE-3105] Update VIP-CLI command line output
+- #1118 Remove unused confirmation prompt during sql import
+- #1137 [dev-env] simplify and rename elasticsearch service config
+- #1138 [dev-env] Update/rename app code and mu-plugins
+
 ### 2.20.0 (19 Oct 2022)
 
-- #1121  Add support for custom PHP images                                  
-- #1136  SQL Import: Add validation for unique_checks being disabled 
-- #1131  SQL Import - Add ALTER TABLE statement validation    
-- #1134  [dev-env] add app and env to tracks when creating env               
-- #1135  [dev-env] Make xdebug config not break during wp update          
-- #1098  Include options into reading software config    
-- #1114  [dev-env] Verify current user is a docker user            
-- #1130  Update/exec help                                                       
-- #1125  add validation output                                                   
-- #1127  Run wp-cli as www-data                                               
-- #1120  Update php-fpm image names                                              
-- #1126  Update memcached to 1.6-alpine3.16                                      
-- #1124  [dev-env] Supress Setup wizard during update              
-- #1111  [dev-env] prompt for es index after db import   
-- #1119  Use --yes instead of --force 
+- #1121  Add support for custom PHP images
+- #1136  SQL Import: Add validation for unique_checks being disabled
+- #1131  SQL Import - Add ALTER TABLE statement validation
+- #1134  [dev-env] add app and env to tracks when creating env
+- #1135  [dev-env] Make xdebug config not break during wp update
+- #1098  Include options into reading software config
+- #1114  [dev-env] Verify current user is a docker user
+- #1130  Update/exec help
+- #1125  add validation output
+- #1127  Run wp-cli as www-data
+- #1120  Update php-fpm image names
+- #1126  Update memcached to 1.6-alpine3.16
+- #1124  [dev-env] Supress Setup wizard during update
+- #1111  [dev-env] prompt for es index after db import
+- #1119  Use --yes instead of --force
 - #1115  [dev-env] reclasify most common error
-- #1122  [dev-env] support xdebug_config environment variable 
+- #1122  [dev-env] support xdebug_config environment variable
 - #1129  Fix ESLint/Flow/SonarScan issues
 - #1133  Add PHP 8.2 image
 - #1141  SQL validation: Change formatting to make it more readable
@@ -26,7 +37,7 @@
 https://github.com/Automattic/vip-cli/releases/tag/v2.20.0
 
 ### 2.19.2 (23 Sep 2022)
-- #1116 Reverted #1049 changes 
+- #1116 Reverted #1049 changes
 
 ### 2.19.0 (23 Sep 2022)
 - #1108 [dev-env] Validate import file and add debug lines

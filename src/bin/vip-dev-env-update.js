@@ -64,7 +64,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag,
-			elasticsearchEnabled: currentInstanceData.elasticsearchEnabled,
 			elasticsearch: currentInstanceData.elasticsearch,
 			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
 			mariadb: currentInstanceData.mariadb,

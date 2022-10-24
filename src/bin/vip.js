@@ -23,7 +23,9 @@ const debug = debugLib( '@automattic/vip:bin:vip' );
 
 if ( config && config.environment !== 'production' ) {
 	debug( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
-	debug( 'You should `npm link` your locally checked out copy of this repo as part of your development setup.' );
+	debug(
+		'You should `npm link` your locally checked out copy of this repo as part of your development setup.'
+	);
 }
 
 // Config
@@ -54,28 +56,38 @@ const runCmd = async function() {
 const rootCmd = async function() {
 	let token = await Token.get();
 
-	const isHelpCommand = process.argv.some( arg => arg === 'help' || arg === '-h' || arg === '--help' );
+	const isHelpCommand = process.argv.some(
+		arg => arg === 'help' || arg === '-h' || arg === '--help'
+	);
 	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
 	const isLoginCommand = process.argv.some( arg => arg === 'login' );
-	const isDevEnvCommandWithoutEnv = process.argv.some( arg => arg === 'dev-env' ) && ! containsAppEnvArgument( process.argv );
+	const isDevEnvCommandWithoutEnv =
+		process.argv.some( arg => arg === 'dev-env' ) && ! containsAppEnvArgument( process.argv );
 
 	debug( 'Argv:', process.argv );
 
-	if ( ! isLoginCommand && ( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) ) ) {
+	if (
+		! isLoginCommand &&
+		( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) )
+	) {
 		runCmd();
 	} else {
 		console.log();
-		console.log( '  Welcome to' );
 		console.log( '   _    __ ________         ________    ____' );
-		console.log( '  | |  / //  _/ __ \       / ____/ /   /  _/' );
+		console.log( '  | |  / //  _/ __        / ____/ /   /  _/' );
 		console.log( '  | | / / / // /_/ /______/ /   / /    / /  ' );
 		console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
-		console.log( '  |___//___/_/           \____/_____/___/   ' );
+		console.log( '  |___//___/_/           ____/_____/___/   ' );
 		console.log();
-		console.log( '  VIP CLI is your tool for interacting with and managing your VIP applications.' );
+		console.log(
+			'  VIP-CLI is your tool for interacting with and managing your VIP applications.'
+		);
 		console.log();
 
-		console.log( `  To get started, we need an access token for your VIP account. We'll open ${ tokenURL } in your web browser; follow the instructions there to continue.` );
+		console.log(
+			'  Authenticate your installation of VIP-CLI with your Personal Access Token. This URL will be opened in your web browser automatically so that you can retrieve your token: ' +
+				tokenURL
+		);
 		console.log();
 
 		await trackEvent( 'login_command_execute' );
@@ -83,7 +95,7 @@ const rootCmd = async function() {
 		const answer = await prompt( {
 			type: 'confirm',
 			name: 'continue',
-			message: 'Ready?',
+			message: 'Ready to authenticate?',
 		} );
 
 		if ( ! answer.continue ) {

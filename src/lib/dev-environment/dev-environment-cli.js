@@ -219,8 +219,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
 		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
-		elasticsearchEnabled: false,
-		elasticsearch: preselectedOptions.elasticsearch || defaultOptions.elasticsearch || DEV_ENVIRONMENT_DEFAULTS.elasticsearchVersion,
+		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb || DEV_ENVIRONMENT_DEFAULTS.mariadbVersion,
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
@@ -267,12 +266,12 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	debug( `Processing elasticsearch with preselected "${ preselectedOptions.elasticsearch }"` );
 	if ( 'elasticsearch' in preselectedOptions ) {
-		instanceData.elasticsearchEnabled = !! preselectedOptions.elasticsearch;
+		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
-		instanceData.elasticsearchEnabled = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.elasticsearchEnabled );
+		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', defaultOptions.elasticsearch );
 	}
 
-	if ( instanceData.elasticsearchEnabled ) {
+	if ( instanceData.elasticsearch ) {
 		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
 	} else {
 		instanceData.statsd = false;
@@ -500,6 +499,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		const selectTag = new Select( {
 			message,
 			choices: tagChoices,
+			initial: defaultObject?.tag || '',
 		} );
 		const option = await selectTag.run();
 
@@ -533,7 +533,7 @@ export function addDevEnvConfigurationOptions( command ) {
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug_config', 'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable' )
-		.option( 'elasticsearch', 'Explicitly choose Elasticsearch version to use or false to disable it', undefined, value => FALSE_OPTIONS.includes( value?.toLowerCase?.() ) ? false : value )
+		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use' );

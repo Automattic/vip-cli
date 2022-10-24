@@ -150,11 +150,15 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	newInstanceData.elasticsearchEnabled = instanceData.elasticsearchEnabled || false;
+	newInstanceData.elasticsearch = instanceData.elasticsearch || false;
 
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
+	}
+
+	if ( ! newInstanceData.xdebugConfig ) {
+		newInstanceData.xdebugConfig = '';
 	}
 
 	return newInstanceData;
@@ -286,9 +290,9 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	 ***********************************/
 
 	// REMOVEME after the wheel of time spins around few times
-	if ( instanceData.enterpriseSearchEnabled ) {
-		// enterpriseSearchEnabled was renamed to elasticsearchEnabled
-		instanceData.elasticsearchEnabled = instanceData.enterpriseSearchEnabled;
+	if ( instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled ) {
+		// enterpriseSearchEnabled and elasticsearchEnabled was renamed to elasticsearch
+		instanceData.elasticsearch = instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled;
 	}
 
 	// REMOVEME after the wheel of time spins around few times
@@ -581,11 +585,6 @@ async function updateWordPressImage( slug ) {
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
 		envData.wordpress.ref = version.ref;
-
-		// Ensure xdebugConfig is not undefined (needed by .lando.yml template)
-		if ( ! envData.xdebugConfig ) {
-			envData.xdebugConfig = '';
-		}
 
 		await updateEnvironment( envData );
 

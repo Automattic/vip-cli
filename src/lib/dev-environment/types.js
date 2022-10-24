@@ -5,8 +5,7 @@ export interface InstanceOptions {
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
-	elasticsearchEnabled?: boolean;
-	elasticsearch?: string;
+	elasticsearch?: boolean;
 	mariadb?: string;
 	php?: string;
 	mediaRedirectDomain?: string;
@@ -57,7 +56,6 @@ export interface InstanceData {
 	phpmyadmin: boolean;
 	xdebug: boolean;
 	xdebugConfig?: string;
-	elasticsearch: string;
 	mariadb: string;
 	php: string;
 }
