@@ -1,6 +1,6 @@
 ## Changelog
 
-### 2.20.0 (23 Sep 2022)
+### 2.20.0 (19 Oct 2022)
 
 - #1121  Add support for custom PHP images                                  
 - #1136  SQL Import: Add validation for unique_checks being disabled 
@@ -22,6 +22,8 @@
 - #1129  Fix ESLint/Flow/SonarScan issues
 - #1133  Add PHP 8.2 image
 - #1141  SQL validation: Change formatting to make it more readable
+
+https://github.com/Automattic/vip-cli/releases/tag/v2.20.0
 
 ### 2.19.2 (23 Sep 2022)
 - #1116 Reverted #1049 changes 
