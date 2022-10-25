@@ -112,7 +112,7 @@
   "dependencies": {
     "@apollo/client": "^3.3.6",
     "@automattic/vip-search-replace": "^1.0.15",
-    "args": "5.0.1",
+    "args": "5.0.3",
     "chalk": "4.1.2",
     "cli-columns": "^4.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
