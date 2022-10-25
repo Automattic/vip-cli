@@ -57,7 +57,7 @@ function ids( data: Array<any> ): string {
 }
 
 function csv( data: Array<any> ): string {
-	const { Parser } = require( 'json2csv' );
+	const { Parser } = require( '@json2csv/plainjs' );
 	const fields = Object.keys( data[ 0 ] );
 
 	const parser = new Parser( { fields: formatFields( fields ) } );
