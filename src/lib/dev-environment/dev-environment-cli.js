@@ -13,6 +13,7 @@ import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import dns from 'dns';
 
 /**
  * Internal dependencies
@@ -85,29 +86,25 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 	}
 }
 
-const verifyDNSResolution = ( slug: string ) => {
-	const dns = require( 'dns' );
+const verifyDNSResolution = async ( slug: string ): Promise<void> => {
 	const expectedIP = '127.0.0.1';
 	const testDomain = `${ slug }.vipdev.lndo.site`;
 	const advice = `Please add following line to hosts file on your system:\n${ expectedIP } ${ testDomain }`;
 
 	debug( `Verifying DNS resolution for ${ testDomain }` );
-	return new Promise( ( resolve, reject ) => {
-		dns.lookup( testDomain, ( error, address ) => {
-			debug( `Got DNS response ${ address }` );
+	let address;
+	try {
+		address = await dns.promises.lookup( testDomain, 4 );
+		debug( `Got DNS response ${ address.address }` );
+	} catch ( error ) {
+		throw new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }` );
+	}
 
-			if ( error ) {
-				reject( new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }` ) );
-			}
-
-			if ( address !== expectedIP ) {
-				reject( new UserError( `DNS resolution for ${ testDomain } returned unexpected IP ${ address }. Expected value is ${ expectedIP }. ${ advice }` ) );
-			}
-
-			resolve();
-		} );
-	} );
+	if ( address.address !== expectedIP ) {
+		throw new UserError( `DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }. ${ advice }` );
+	}
 };
+
 const VALIDATION_STEPS = [
 	{ id: 'docker', name: 'Check for docker installation' },
 	{ id: 'compose', name: 'Check for docker-compose installation' },
