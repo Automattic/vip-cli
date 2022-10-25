@@ -446,6 +446,16 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 	debug( `Will try to resolve path - ${ fileName }` );
 	let resolvedPath = resolvePath( fileName );
 
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	const environmentExists = fs.existsSync( instancePath );
+
+	if ( ! environmentExists ) {
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+	}
+
 	debug( `Filename ${ fileName } resolved to ${ resolvedPath }` );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
@@ -467,10 +477,9 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
 		}
 
-		const environmentPath = getEnvironmentPath( slug );
 		const baseName = path.basename( outputFileName );
 
-		resolvedPath = path.join( environmentPath, baseName );
+		resolvedPath = path.join( instancePath, baseName );
 		fs.renameSync( outputFileName, resolvedPath );
 	}
 
