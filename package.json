@@ -118,7 +118,7 @@
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
     "debug": "4.3.3",
-    "ejs": "^3.1.6",
+    "ejs": "^3.1.8",
     "enquirer": "2.3.6",
     "graphql": "15.5.1",
     "graphql-tag": "2.12.5",
