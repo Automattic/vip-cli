@@ -383,11 +383,11 @@ command( {
 	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
-			usage: 'vip @mysite.production validate-env',
+			usage: 'vip @mysite.production validate',
 			description: 'Run checks and tests and validate your local environment against the production environment',
 		},
 		{
-			usage: 'vip @mysite.production validate-env --json > results.json',
+			usage: 'vip @mysite.production validate --json > results.json',
 			description: 'Run checks and tests, but output the results in JSON format, and redirects the output to a file',
 		},
 	] )
