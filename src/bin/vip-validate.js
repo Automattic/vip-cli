@@ -18,7 +18,7 @@ import {
 
 import path from 'path';
 import gql from 'graphql-tag';
-import { writeFileSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import dotenv from 'ini';
 import chalk from 'chalk';
 
@@ -26,7 +26,6 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { trackEvent } from 'lib/tracker';
 import * as exit from 'lib/cli/exit';
 import API from 'lib/api';
 
@@ -149,6 +148,11 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 		PORT: harmoniaArgs.port,
 		...customEnvVars,
 	} );
+
+	// Add NPM_TOKEN environment variable, if present
+	if ( harmoniaArgs.npmToken ) {
+		envVars.set( 'NPM_TOKEN', harmoniaArgs.npmToken );
+	}
 
 	// Get from .env, if exists
 	let dotenvOptions: object = {};
@@ -348,8 +352,6 @@ async function validateArgs( opt ): Promise<{}> {
 		Harmonia.setCwd( opt.path );
 	}
 
-	// TODO: validate path, check if it's git repository and remote is the same as VIP Go env
-
 	// If the JSON option is enabled, all the stdout should be suppressed to prevent polluting the output.
 	if ( opt.json ) {
 		suppressOutput = true;
@@ -358,7 +360,7 @@ async function validateArgs( opt ): Promise<{}> {
 
 	// Get build information from API and store it in the env object
 	const buildConfig = await getBuildConfiguration( opt.env );
-	// TODO: if missing information, ask with user input
+
 	args.nodejsVersion = opt.nodeVersion ?? buildConfig.nodeJSVersion;
 	args.buildType = buildConfig.buildType;
 	args.npmToken = buildConfig.npmToken;
