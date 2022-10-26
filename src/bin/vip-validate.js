@@ -259,7 +259,7 @@ function setupEvents( harmonia: Harmonia ) {
 		const documentation = issue.documentation ? `(${ issue.documentation })` : '';
 
 		// Replace \n with \n\t\t to keep new lines aligned
-		const message = issue.message.replace( '\n', '\n\t\t' );
+		const message = issue.message.replace( /\n/g, '\n\t\t' );
 		logToConsole( `    ${ issueTypeString } \t${ message } ${ documentation }` );
 
 		// If it's a Blocker or Error, and the issue includes a stdout, print it out.
