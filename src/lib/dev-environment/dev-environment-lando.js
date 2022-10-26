@@ -14,6 +14,7 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
+import UserError from '../user-error';
 
 /**
  * Internal dependencies
@@ -280,7 +281,7 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 		const isUp = await isEnvUp( app );
 
 		if ( ! isUp ) {
-			throw new Error( 'environment needs to be started before running wp command' );
+			throw new UserError( 'Environment needs to be started before running wp command' );
 		}
 	}
 
@@ -350,5 +351,18 @@ export async function validateDockerInstalled() {
 	lando.log.verbose( 'docker-compose exists: %s', lando.engine.composeInstalled );
 	if ( lando.engine.composeInstalled === false ) {
 		throw Error( 'docker-compose could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/' );
+	}
+}
+
+export async function validateDockerAccess() {
+	const lando = new Lando( getLandoConfig() );
+	await lando.bootstrap();
+
+	const docker = lando.engine.docker;
+	lando.log.verbose( 'Fetching docker info to verify user is in docker group' );
+	try {
+		await docker.info();
+	} catch ( error ) {
+		throw Error( 'Failed to connect to docker. Please verify that the current user is part of docker group and has access to docker commands.' );
 	}
 }

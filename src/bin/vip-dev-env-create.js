@@ -63,8 +63,6 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	await validateDependencies();
-
 	const environmentNameOptions = {
 		slug: opt.slug,
 		app: opt.app,
@@ -72,9 +70,16 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		allowAppEnv: true,
 	};
 	const slug = getEnvironmentName( environmentNameOptions );
+
+	await validateDependencies( slug );
+
 	debug( 'Args: ', arg, 'Options: ', opt );
 
-	const trackingInfo = { slug };
+	const trackingInfo = {
+		slug,
+		app: opt.app,
+		env: opt.env,
+	};
 	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
 
 	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
@@ -107,7 +112,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	try {
 		await createEnvironment( instanceData );
 
-		await printEnvironmentInfo( slug );
+		await printEnvironmentInfo( slug, { extended: false } );
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );

@@ -14,7 +14,7 @@ services:
   devtools:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.8
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.9
       command: sleep infinity
       volumes:
         - devtools:/dev-tools
@@ -27,7 +27,7 @@ services:
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.21.6
+      image: ghcr.io/automattic/vip-container-images/nginx:1.23.2
       command: nginx -g "daemon off;"
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
@@ -40,9 +40,11 @@ services:
       command: run.sh
       working_dir: /wp
       environment:
-        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
         STATSD: <%= statsd ? 'enable' : 'disable' %>
-
+        XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
+<% if ( xdebugConfig ) { %>
+        XDEBUG_CONFIG: "<%= xdebugConfig %>"
+<% } %>
         LANDO_NO_USER_PERMS: 'enable'
 
 
@@ -78,7 +80,7 @@ services:
   memcached:
     type: memcached:custom
     overrides:
-      image: memcached:1.6-alpine3.14
+      image: memcached:1.6-alpine3.16
       command: docker-entrypoint.sh memcached
 
 <% if ( phpmyadmin ) { %>
@@ -90,11 +92,11 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
-<% if ( elasticsearchEnabled ) { %>
-  vip-search:
+<% if ( elasticsearch ) { %>
+  elasticsearch:
     type: compose
     services:
-      image: elasticsearch:<%= elasticsearch %>
+      image: elasticsearch:7.17.2
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
@@ -102,6 +104,7 @@ services:
         ELASTICSEARCH_NODE_NAME: 'lando'
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
+        xpack.security.enabled: 'false'
       ports:
         - ":9200"
       volumes:
@@ -131,7 +134,7 @@ services:
             nocopy: true
 
 <% if ( muPlugins.mode == 'image' ) { %>
-  mu-plugins:
+  vip-mu-plugins:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
@@ -148,7 +151,7 @@ services:
 <% } %>
 
 <% if ( appCode.mode == 'image' ) { %>
-  client-code:
+  demo-app-code:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/skeleton:latest
@@ -175,15 +178,9 @@ tooling:
   wp:
     service: php
     description: "Run WP-CLI command"
-    user: root
+    user: www-data
     cmd:
-      - wp --allow-root
-
-  add-site:
-    service: php
-    description: "Add site to a multisite installation"
-    cmd:
-      - bash /dev-tools/add-site.sh
+      - wp
 
   db:
     service: php

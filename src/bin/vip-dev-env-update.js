@@ -37,8 +37,8 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	await validateDependencies();
 	const slug = getEnvironmentName( opt );
+	await validateDependencies( slug );
 
 	const trackingInfo = getEnvTrackingInfo( slug );
 	await trackEvent( 'dev_env_update_command_execute', trackingInfo );
@@ -64,7 +64,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag,
-			elasticsearchEnabled: currentInstanceData.elasticsearchEnabled,
 			elasticsearch: currentInstanceData.elasticsearch,
 			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
 			mariadb: currentInstanceData.mariadb,
@@ -76,7 +75,12 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			title: '',
 		};
 
-		const instanceData = await promptForArguments( preselectedOptions, defaultOptions );
+		const providedOptions = Object.keys( opt )
+			.filter( option => option.length > 1 ) // Filter out single letter aliases
+			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
+
+		const supressPrompts = providedOptions.length > 0;
+		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, supressPrompts );
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );

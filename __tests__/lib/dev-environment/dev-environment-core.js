@@ -28,7 +28,6 @@ import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-enviro
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( 'fs' );
-jest.mock( 'enquirer' );
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
@@ -148,6 +147,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						branch: 'dev',
 						isMultisite: true,
 						primaryDomain: '',
+						php: '',
+						wordpress: '',
 					},
 				},
 			},
@@ -193,6 +194,18 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 							primaryDomain: {
 								name: 'test.develop.com',
 							},
+							softwareSettings: {
+								php: {
+									current: {
+										version: '8.1',
+									},
+								},
+								wordpress: {
+									current: {
+										version: '6.2',
+									},
+								},
+							},
 						},
 						{
 							name: 'prodName',
@@ -212,6 +225,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						branch: 'dev',
 						isMultisite: true,
 						primaryDomain: 'test.develop.com',
+						php: '8.1',
+						wordpress: '6.2',
 					},
 				},
 			},
@@ -242,7 +257,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		] )( 'should parse query result %p', async input => {
 			app.mockResolvedValue( input.response );
 
-			enquirer.prompt = jest.fn().mockResolvedValue( { env: '' } );
+			jest.spyOn( enquirer, 'prompt' ).mockImplementation().mockResolvedValue( { env: '' } );
 
 			const result = await getApplicationInformation( input.appId, input.envType );
 
@@ -262,12 +277,13 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			expect( searchAndReplace ).not.toHaveBeenCalled();
 
 			await expect( promise ).rejects.toEqual(
-				new Error( 'The provided file does not exist or it is not valid (see "--help" for examples)' )
+				new Error( 'The provided file undefined does not exist or it is not valid (see "--help" for examples)' )
 			);
 		} );
 
 		it( 'should resolve the path and replace it with /user', async () => {
 			fs.existsSync.mockReturnValue( true );
+			fs.lstatSync.mockReturnValue( { isDirectory: () => false } );
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 

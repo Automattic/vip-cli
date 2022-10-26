@@ -32,3 +32,10 @@ INSERT INTO wp_options (option_name, option_value, autoload)
         ('home', 'https://super-empoyees.com', 'yes');
 
 SET @@SESSION.SQL_LOG_BIN= 0;
+
+ALTER TABLE wp_options
+	ADD PRIMARY KEY (`option_id`),
+	ADD UNIQUE KEY `option_name` (`option_name`),
+	ADD KEY `autoload` (`autoload`);
+
+SET UNIQUE_CHECKS = 0;

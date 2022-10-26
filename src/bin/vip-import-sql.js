@@ -359,8 +359,6 @@ command( {
 	envContext: true,
 	requiredArgs: 1,
 	module: 'import-sql',
-	requireConfirm: 'Are you sure you want to import the contents of the provided SQL file?',
-	skipConfirmPrompt: true,
 } )
 	.command( 'status', 'Check the status of the current running import' )
 	.option(

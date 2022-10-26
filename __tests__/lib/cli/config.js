@@ -47,7 +47,7 @@ describe( 'utils/cli/config', () => {
 			const config = require( 'lib/cli/config' );
 			expect( config.default ).toMatchObject( expected );
 		} catch ( error ) {
-			expect( hasError ).toBeTruthy();
+			expect( hasError ).toBe( true );
 		}
 	} );
 } );
