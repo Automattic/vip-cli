@@ -81,9 +81,9 @@
       }
     },
     "@automattic/vip-go-preflight-checks": {
-      "version": "2.0.7",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.7.tgz",
-      "integrity": "sha512-yZ2qnvyqNz67Hx12O9nWOKtwq5HtCGrmFz2PFXSPyYCdGxj1K/F+GnGNvjcJ6CmhTGyt7XDBfmedFa/Ny7dVWA==",
+      "version": "2.0.9",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.9.tgz",
+      "integrity": "sha512-AT/yM2VmjhtUG1AaEvC0Vypnnl0PxgGVL2MgjU6mnqO9ra1HB8DWso5VU0kI2L6MjU4qKSmb36vck/LzMJ97OQ==",
       "requires": {
         "chalk": "^4.1.2",
         "command-line-args": "^5.2.1",
@@ -93,6 +93,7 @@
         "execa": "^5.1.1",
         "get-urls": "^10.0.1",
         "github-api": "^3.4.0",
+        "node-abort-controller": "^3.0.1",
         "node-fetch": "^2.6.7",
         "semver": "^7.3.5",
         "strip-ansi": "^6.0.1",
@@ -11398,6 +11399,11 @@
           "optional": true
         }
       }
+    },
+    "node-abort-controller": {
+      "version": "3.0.1",
+      "resolved": "https://registry.npmjs.org/node-abort-controller/-/node-abort-controller-3.0.1.tgz",
+      "integrity": "sha512-/ujIVxthRs+7q6hsdjHMaj8hRG9NuWmwrz+JdRwZ14jdFoKSkm+vDsCbF9PLpnSqjaWQJuTmVtcWHNLr+vrOFw=="
     },
     "node-addon-api": {
       "version": "3.2.1",
