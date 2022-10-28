@@ -27,7 +27,7 @@ import chalk from 'chalk';
  */
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
-import API from 'lib/api';
+import { default as API, enableGlobalGraphQLErrorHandling, disableGlobalGraphQLErrorHandling } from '../lib/api';
 
 export const appQuery = `
 	id
@@ -66,8 +66,11 @@ function logToConsole( ...messages: string[] ) {
 	messages.forEach( message => console.log( message ) );
 }
 
-async function getBuildConfiguration( environment ) {
+async function getBuildConfiguration( application, environment ) {
 	const api = await API();
+
+	// Disable the global GraphQL error handling, so we can catch Unauthorized errors and recommend next steps.
+	disableGlobalGraphQLErrorHandling();
 
 	const buildConfigQuery = gql`
 	query BuildConfig( $appId: Int, $envId: Int ) {
@@ -84,16 +87,34 @@ async function getBuildConfiguration( environment ) {
         }
 	}`;
 
-	const result = await api.query( {
-		query: buildConfigQuery,
-		fetchPolicy: 'network-only',
-		variables: {
-			appId: environment.appId,
-			envId: environment.id,
-		},
-	} );
+	try {
+		const result = await api.query( {
+			query: buildConfigQuery,
+			fetchPolicy: 'network-only',
+			variables: {
+				appId: environment.appId,
+				envId: environment.id,
+			},
+		} );
 
-	return result.data.app.environments[ 0 ].buildConfiguration;
+		// Reenable GraphQL error handling
+		enableGlobalGraphQLErrorHandling();
+
+		return result.data.app.environments[ 0 ].buildConfiguration;
+	} catch ( error ) {
+		if ( error.graphQLErrors && error.graphQLErrors.find( gqlError => gqlError.message === 'Unauthorized' ) ) {
+			console.log( `${ chalk.red( 'Error:' ) } You don't have the required permissions to run validations for this app, and to create the testing environment.\n` +
+				`You must be either be an admin of the ${ chalk.bold.underline( application.organization.name ) } organization, or, alternatively,\n` +
+				`a guest of that organization and an admin of the ${ chalk.bold.underline( application.name ) } application.\n\n` +
+				'You can read more about organization and application roles on our documentation:\n' +
+				chalk.underline( 'https://docs.wpvip.com/technical-references/enterprise-authentication/' ) );
+
+			process.exit( 1 );
+		} else {
+			// Handle it elsewhere
+			throw error;
+		}
+	}
 }
 
 export async function bootstrapHarmonia( arg: string[], opt ) {
@@ -359,7 +380,7 @@ async function validateArgs( opt ): Promise<{}> {
 	}
 
 	// Get build information from API and store it in the env object
-	const buildConfig = await getBuildConfiguration( opt.env );
+	const buildConfig = await getBuildConfiguration( opt.app, opt.env );
 
 	args.nodejsVersion = opt.nodeVersion ?? buildConfig.nodeJSVersion;
 	args.buildType = buildConfig.buildType;
