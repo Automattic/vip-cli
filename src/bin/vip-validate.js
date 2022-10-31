@@ -144,6 +144,7 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 		baseURL: 'http://localhost:' + harmoniaArgs.port,
 		dockerBuildEnvs: harmoniaArgs.nodeBuildDockerEnv,
 		topRequests: [], // TODO: get top 10 of most requested URLs
+		wait: harmoniaArgs.wait,
 	} );
 
 	// Get package.json
@@ -387,6 +388,7 @@ async function validateArgs( opt ): Promise<{}> {
 	args.npmToken = buildConfig.npmToken;
 	args.nodeBuildDockerEnv = buildConfig.nodeBuildDockerEnv;
 
+	args.wait = opt.wait ?? 3000;
 	args.port = opt.port ?? Math.floor( Math.random() * 1000 ) + 3001; // Get a PORT from 3001 and 3999
 
 	return args;
