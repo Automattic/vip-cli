@@ -81,9 +81,9 @@
       }
     },
     "@automattic/vip-go-preflight-checks": {
-      "version": "2.0.9",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.9.tgz",
-      "integrity": "sha512-AT/yM2VmjhtUG1AaEvC0Vypnnl0PxgGVL2MgjU6mnqO9ra1HB8DWso5VU0kI2L6MjU4qKSmb36vck/LzMJ97OQ==",
+      "version": "2.0.10",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.10.tgz",
+      "integrity": "sha512-002yKr7w1i+ZGkAK1tmYMma+k8Y6LWEoiUq2J4OTVui2mYkG3WCTB2gp5Kk9jllF+hVG/v3J/Bam+OhrIB3hBQ==",
       "requires": {
         "chalk": "^4.1.2",
         "command-line-args": "^5.2.1",
