@@ -322,9 +322,9 @@ const displayPlaybook = ( {
 			const multiSiteBreakdown = siteArray.map( wpSite => {
 				let siteRegex;
 				if ( wpSite.id === 1 ) {
-					siteRegex = /wp_[a-z]+/i;
+					siteRegex = /^wp_[a-z]+/i;
 				} else {
-					siteRegex = new RegExp( `wp_${ wpSite.id }_[a-z]+`, 'i' );
+					siteRegex = new RegExp( `^wp_${ wpSite.id }_[a-z]+`, 'i' );
 				}
 				const tableNamesInGroup = tableNames.filter( name => siteRegex.test( name ) );
 				return {
