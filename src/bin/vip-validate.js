@@ -221,17 +221,17 @@ function setupEvents( harmonia: Harmonia ) {
 	harmonia.on( 'afterTest', ( test: Test, result: TestResult ) => {
 		switch ( result.getType() ) {
 			case TestResultType.Success:
-				logToConsole( `  ${ chalk.bgGreen( 'Test passed with no errors' ) }` );
+				logToConsole( `   ✅  ${ chalk.bgGreen( ' Test passed with no errors. ' ) }` );
 				break;
 			case TestResultType.Failed:
-				logToConsole( `  ${ chalk.bgRed( `Test failed with ${ result.getErrors().length } errors..` ) }` );
+				logToConsole( `   ❌  ${ chalk.bgRed( ` Test failed with ${ result.getErrors().length } errors. ` ) }` );
 				break;
 			case TestResultType.PartialSuccess:
-				logToConsole( `  ${ chalk.bgYellow( 'Test partially succeeded.' ) }` );
+				logToConsole( `   ✅  ${ chalk.bgYellow( ' Test partially succeeded. ' ) }` );
 				break;
 			case TestResultType.Aborted:
-				logToConsole( `  ${ chalk.bgRedBright.underline( 'Test aborted!' ) } - There was a critical error that makes`,
-					'the application fully incompatible with VIP Go.' );
+				logToConsole( `   ❌  ${ chalk.bgRedBright.underline( ' Test aborted! ' ) } - There was a critical error that makes`,
+					'the application incompatible with the VIP Platform.' );
 				break;
 			case TestResultType.Skipped:
 				logToConsole( `  ${ chalk.bgGrey.bold( ' Skipped ' ) }\t${ result.getLastNotice().message }` );
@@ -311,7 +311,7 @@ function handleResults( harmonia, results: TestResult[] ) {
 	}
 
 	// Calculate the results
-	const resultCounter = harmonia.countResults( true );
+	const resultCounter = harmonia.countResults( false );
 
 	const testSuiteResults = results.filter( result => result instanceof TestSuiteResult );
 
@@ -334,8 +334,9 @@ function handleResults( harmonia, results: TestResult[] ) {
 	}
 
 	logToConsole();
-	logToConsole( ` > Total of ${ chalk.bold( results.length ) } tests executed, ${ testSuiteResults.length } of which are Test Suites.` );
+	logToConsole( ` > Total of ${ chalk.bold( results.length - testSuiteResults.length ) } tests have been executed.` );
 	logToConsole();
+
 	// If there is a Aborted test result
 	if ( resultCounter[ TestResultType.Aborted ] ) {
 		logToConsole( `${ chalk.bold.bgRedBright( '  NOT PASS  ' ) } There was a critical failure that makes the application ` +
@@ -409,11 +410,11 @@ command( {
 	.examples( [
 		{
 			usage: 'vip @mysite.production validate',
-			description: 'Run checks and tests and validate your local environment against the production environment',
+			description: 'Validate your local environment against the production environment',
 		},
 		{
 			usage: 'vip @mysite.production validate --json > results.json',
-			description: 'Run checks and tests, but output the results in JSON format, and redirects the output to a file',
+			description: 'Validate your local environment, but output the results in JSON format, and redirect the output to a file',
 		},
 	] )
 	.argv( process.argv, bootstrapHarmonia );
