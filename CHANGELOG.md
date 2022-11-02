@@ -1,5 +1,21 @@
 ## Changelog
 
+## 2.22.0 (2 Nov 2022)
+
+#1165  Add caching type policy for `WPSite` data                                                           
+#1164  Fix regExp to categorize multisite tables during SQL Imports                                        
+#1163  Pull correct environment's details from API when displaying Multisite SQL Import preflight details  
+#1159  chore(deps): Bump debug from 4.3.3 to 4.3.4                                                         
+#1162  chore(deps): Bump update-notifier from 4.1.3 to 5.1.0                                               
+#1160  chore(deps): Bump json2csv from 5.0.6 to 5.0.7                                                      
+#1158  chore(deps): Bump args from 5.0.1 to 5.0.3                                                          
+#1157  chore(deps): Bump semver from 7.3.5 to 7.3.8                                                        
+#1155  chore(deps): Bump uuid from 8.3.2 to 9.0.0                                                          
+#1154  chore(deps): Update Babel-related packages                                                          
+#1153  chore(deps): Fix security vulnerabilities in dependencies                                           
+#1152  ci: Update workflows                                                                                
+#1151  refactor(dev-env): Modify `verifyDNSResolution()` to use Promises API                               
+
 ### 2.21.0 (24 Oct 2022)
 
 - #1143 [dev-env] adds default for wordpress version prompt
