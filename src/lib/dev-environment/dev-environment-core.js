@@ -32,7 +32,12 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import type { AppInfo, ComponentConfig, InstanceData } from './types';
+import type {
+	AppInfo,
+	ComponentConfig,
+	InstanceData,
+	WordPressConfig,
+} from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
 
@@ -59,7 +64,15 @@ type SQLImportPaths = {
 	inContainerPath: string
 }
 
-export async function startEnvironment( slug: string, options: StartEnvironmentOptions ) {
+type WordPressTag = {
+	ref: string;
+	tag: string;
+	cacheable: boolean;
+	locked: boolean;
+	prerelease: boolean;
+}
+
+export async function startEnvironment( slug: string, options: StartEnvironmentOptions ): Promise<void> {
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -86,7 +99,7 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 	await printEnvironmentInfo( slug, { extended: false } );
 }
 
-export async function stopEnvironment( slug: string ) {
+export async function stopEnvironment( slug: string ): Promise<void> {
 	debug( 'Will stop an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -102,7 +115,7 @@ export async function stopEnvironment( slug: string ) {
 	await landoStop( instancePath );
 }
 
-export async function createEnvironment( instanceData: InstanceData ) {
+export async function createEnvironment( instanceData: InstanceData ): Promise<void> {
 	const slug = instanceData.siteSlug;
 	debug( 'Will create an environment', slug, 'with instanceData: ', instanceData );
 
@@ -121,7 +134,7 @@ export async function createEnvironment( instanceData: InstanceData ) {
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
 
-export async function updateEnvironment( instanceData: InstanceData ) {
+export async function updateEnvironment( instanceData: InstanceData ): Promise<void> {
 	const slug = instanceData.siteSlug;
 	debug( 'Will update an environment', slug, 'with instanceData: ', instanceData );
 
@@ -164,7 +177,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	return newInstanceData;
 }
 
-export async function destroyEnvironment( slug: string, removeFiles: boolean ) {
+export async function destroyEnvironment( slug: string, removeFiles: boolean ): Promise<void> {
 	debug( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
@@ -194,7 +207,7 @@ interface PrintOptions {
 	extended?: boolean
 }
 
-export async function printAllEnvironmentsInfo( options: PrintOptions ) {
+export async function printAllEnvironmentsInfo( options: PrintOptions ): Promise<void> {
 	const allEnvNames = getAllEnvironmentNames();
 
 	debug( 'Will print info for all environments. Names found: ', allEnvNames );
@@ -206,14 +219,14 @@ export async function printAllEnvironmentsInfo( options: PrintOptions ) {
 	}
 }
 
-function parseComponentForInfo( component: ComponentConfig ): string {
+function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): string {
 	if ( component.mode === 'local' ) {
 		return component.dir || '';
 	}
 	return component.tag || '[demo-image]';
 }
 
-export async function printEnvironmentInfo( slug: string, options: PrintOptions ) {
+export async function printEnvironmentInfo( slug: string, options: PrintOptions ): Promise<void> {
 	debug( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -304,7 +317,7 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
-async function prepareLandoEnv( instanceData, instancePath ) {
+async function prepareLandoEnv( instanceData: InstanceData, instancePath: string ): Promise<void> {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
 	const instanceDataFile = JSON.stringify( instanceData );
@@ -314,12 +327,14 @@ async function prepareLandoEnv( instanceData, instancePath ) {
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
-	fs.mkdirSync( instancePath, { recursive: true } );
-	fs.mkdirSync( nginxFolderPath, { recursive: true } );
+	await fs.promises.mkdir( instancePath, { recursive: true } );
+	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
 
-	fs.writeFileSync( landoFileTargetPath, landoFile );
-	fs.writeFileSync( nginxFileTargetPath, nginxFile );
-	fs.writeFileSync( instanceDataTargetPath, instanceDataFile );
+	await Promise.all( [
+		fs.promises.writeFile( landoFileTargetPath, landoFile ),
+		fs.promises.writeFile( nginxFileTargetPath, nginxFile ),
+		fs.promises.writeFile( instanceDataTargetPath, instanceDataFile ),
+	] );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 	debug( `Nginx file created in ${ nginxFileTargetPath }` );
@@ -515,9 +530,9 @@ export async function importMediaPath( slug: string, filePath: string ) {
  * @param  {Object=} slug slug
  * @return {boolean} boolean
  */
-async function updateWordPressImage( slug ) {
+async function updateWordPressImage( slug: string ): Promise<boolean> {
 	const versions = await getVersionList();
-	let message, envData, currentWordPressTag;
+	let message: string, envData, currentWordPressTag: string;
 
 	// Get the current environment configuration
 	try {
@@ -539,7 +554,7 @@ async function updateWordPressImage( slug ) {
 	versions.sort( ( before, after ) => before.tag < after.tag ? 1 : -1 );
 
 	// Newest WordPress Image but that is not trunk
-	const newestWordPressImage = versions.find( ( { tag } ) => tag !== 'trunk' );
+	const newestWordPressImage = ( ( versions.find( ( { tag } ) => tag !== 'trunk' ): any ): WordPressTag );
 	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
 
 	// If the currently used version is the most up to date: exit.
@@ -557,7 +572,7 @@ async function updateWordPressImage( slug ) {
 		console.log( 'You must select a new WordPress image to continue... ' );
 	} else {
 		console.log( 'Environment WordPress version is: ' + chalk.yellow( `${ match.tag } (${ match.ref })` ) );
-		if ( envData.wordpress.doNotUpgrade || false ) {
+		if ( envData.wordpress.doNotUpgrade ) {
 			return false;
 		}
 	}
@@ -579,8 +594,8 @@ async function updateWordPressImage( slug ) {
 		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
-		const choice = await promptForComponent( 'wordpress' );
-		const version = versions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
+		const choice: WordPressConfig = await promptForComponent( 'wordpress', false, null );
+		const version: WordPressTag = ( ( versions.find( ( { tag } ) => tag.trim() === choice.tag.trim() ): any ): WordPressTag );
 
 		// Write new data and stage for rebuild
 		envData.wordpress.tag = version.tag;
@@ -603,7 +618,7 @@ async function updateWordPressImage( slug ) {
 /**
  * Makes a web call to raw.githubusercontent.com
  */
-export async function fetchVersionList() {
+export async function fetchVersionList(): Promise<string> {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
 	return fetch( url ).then( res => res.text() );
 }
@@ -614,7 +629,7 @@ export async function fetchVersionList() {
  * @param  {number} ttl time to live in seconds
  * @returns {boolean} version list expired true/false
  */
-function isVersionListExpired( cacheFile, ttl ) {
+function isVersionListExpired( cacheFile: string, ttl: number ): boolean {
 	const stats = fs.statSync( cacheFile );
 	const expire = new Date( stats.mtime );
 	expire.setSeconds( expire.getSeconds() + ttl );
@@ -625,7 +640,7 @@ function isVersionListExpired( cacheFile, ttl ) {
 /**
  * Uses a cache file to keep the version list in tow until it is ultimately outdated
  */
-export async function getVersionList() {
+export async function getVersionList(): Promise<WordPressTag[]> {
 	let res;
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 	const cacheFile = path.join( mainEnvironmentPath, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
@@ -633,15 +648,10 @@ export async function getVersionList() {
 	// Handle from cache
 	try {
 		// If the cache doesn't exist, create it
-		if ( ! fs.existsSync( cacheFile ) ) {
-			res = await fetchVersionList();
-			fs.writeFileSync( cacheFile, res );
-		}
-
 		// If the cache is expired, refresh it
-		if ( isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
+		if ( ! fs.existsSync( cacheFile ) || isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
 			res = await fetchVersionList();
-			fs.writeFileSync( cacheFile, res );
+			await fs.promises.writeFile( cacheFile, res );
 		}
 	} catch ( err ) {
 		// Soft error handling here, since it's still possible to use a previously cached file.
@@ -651,7 +661,8 @@ export async function getVersionList() {
 
 	// Try to parse the cached file if it exists.
 	try {
-		return JSON.parse( fs.readFileSync( cacheFile ) );
+		const data = await fs.promises.readFile( cacheFile, 'utf8' );
+		return JSON.parse( data );
 	} catch ( err ) {
 		debug( err );
 		return [];
