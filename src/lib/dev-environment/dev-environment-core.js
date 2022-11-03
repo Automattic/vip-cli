@@ -643,10 +643,15 @@ function isVersionListExpired( cacheFile: string, ttl: number ): boolean {
 export async function getVersionList(): Promise<WordPressTag[]> {
 	let res;
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
-	const cacheFile = path.join( mainEnvironmentPath, 'vip', DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
-
+	const cacheFilePath = path.join( mainEnvironmentPath, 'vip' );
+	const cacheFile = path.join( cacheFilePath, DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 	// Handle from cache
 	try {
+		// If the path for the cache file doesn't exist, create it
+		if ( ! fs.existsSync( cacheFilePath ) ) {
+			await fs.promises.mkdir( cacheFilePath, { recursive: true } );
+		}
+
 		// If the cache doesn't exist, create it
 		// If the cache is expired, refresh it
 		if ( ! fs.existsSync( cacheFile ) || isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
