@@ -448,7 +448,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug( `Instance path for ${ slug } is ${ instancePath }` );
 
 	const environmentExists = fs.existsSync( instancePath );
 
