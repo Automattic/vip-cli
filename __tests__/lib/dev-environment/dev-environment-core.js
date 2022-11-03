@@ -270,7 +270,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 
 		it( 'should throw if file does not exist', async () => {
-			fs.existsSync.mockReturnValue( false );
+			fs.existsSync.mockReturnValueOnce( true ); // env exists
+			fs.existsSync.mockReturnValue( false ); // import file does not exist
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
