@@ -28,6 +28,7 @@ import chalk from 'chalk';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { default as API, enableGlobalGraphQLErrorHandling, disableGlobalGraphQLErrorHandling } from '../lib/api';
+import { trackEvent } from 'lib/tracker';
 
 export const appQuery = `
 	id
@@ -53,6 +54,8 @@ export const appQuery = `
 
 let suppressOutput = false;
 let outputJson = false;
+
+let harmoniaArgs = [];
 
 function logToConsole( ...messages: string[] ) {
 	if ( suppressOutput ) {
@@ -109,6 +112,12 @@ async function getBuildConfiguration( application, environment ) {
 				'You can read more about organization and application roles on our documentation:\n' +
 				chalk.underline( 'https://docs.wpvip.com/technical-references/enterprise-authentication/' ) );
 
+			await trackEvent( 'validate_preflight_command_error', {
+				env_id: environment.id,
+				app_id: environment.appId,
+				error: 'unauthorized',
+			} );
+
 			process.exit( 1 );
 		} else {
 			// Handle it elsewhere
@@ -117,8 +126,17 @@ async function getBuildConfiguration( application, environment ) {
 	}
 }
 
-export async function bootstrapHarmonia( arg: string[], opt ) {
-	const harmoniaArgs = await validateArgs( opt );
+export async function vipValidatePreflightCommand( arg: string[], opt ) {
+	harmoniaArgs = await validateArgs( opt );
+
+	const baseTrackingParams = {
+		env_id: opt.env.id,
+		app_id: opt.env.appId,
+		command: 'vip validate preflight',
+		...sanitizeArgsForTracking( harmoniaArgs ),
+	};
+
+	await trackEvent( 'validate_preflight_command_execute', baseTrackingParams );
 
 	logToConsole( '  /\\  /\\__ _ _ __ _ __ ___   ___  _ __ (_) __ _ ' );
 	logToConsole( ' / /_/ / _` | \'__| \'_ ` _ \\ / _ \\| \'_ \\| |/ _` |' );
@@ -130,6 +148,11 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 	harmonia.setSource( 'vip-cli' );
 
 	if ( harmoniaArgs.buildType !== 'nodejs' ) {
+		await trackEvent( 'validate_preflight_command_error', {
+			...baseTrackingParams,
+			error: 'Only Node.JS applications are supported.',
+		} );
+
 		exit.withError( 'Currently only Node.JS applications are supported.' );
 	}
 
@@ -154,6 +177,11 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 		packageJSON = require( packageJSONfile );
 		siteOptions.setPackageJSON( packageJSON );
 	} catch ( error ) {
+		await trackEvent( 'validate_preflight_command_error', {
+			...baseTrackingParams,
+			error: 'Could not find package.json file.',
+		} );
+
 		return exit.withError( `Could not find a 'package.json' in the current folder (${ opt.path }).` );
 	}
 
@@ -193,11 +221,14 @@ export async function bootstrapHarmonia( arg: string[], opt ) {
 	try {
 		harmonia.bootstrap( siteOptions, envVars );
 	} catch ( error ) {
+		await trackEvent( 'validate_preflight_command_error', {
+			...baseTrackingParams,
+			error: error.message,
+		} );
 		return exit.withError( error.message );
 	}
 
 	setupEvents( harmonia );
-
 	runHarmonia( harmonia );
 }
 
@@ -299,21 +330,31 @@ function setupEvents( harmonia: Harmonia ) {
 }
 
 function runHarmonia( harmonia ) {
-	harmonia.run().then( ( results: TestResult[] ) => handleResults( harmonia, results ) );
+	harmonia.run().then( async ( results: TestResult[] ) => await handleResults( harmonia, results ) );
 }
 
-function handleResults( harmonia, results: TestResult[] ) {
+async function handleResults( harmonia, results: TestResult[] ) {
+	// Calculate the results
+	const resultCounter = harmonia.countResults( false );
+	const testSuiteResults = results.filter( result => result instanceof TestSuiteResult );
+
+	// Send success event
+	await trackEvent( 'validate_preflight_command_success', {
+		command: 'vip validate preflight',
+		...sanitizeArgsForTracking( harmoniaArgs ),
+		skipped: resultCounter[ TestResultType.Skipped ],
+		success: resultCounter[ TestResultType.Success ],
+		partial_success: resultCounter[ TestResultType.PartialSuccess ],
+		failed: resultCounter[ TestResultType.Failed ],
+		aborted: resultCounter[ TestResultType.Aborted ],
+	} );
+
 	// If the output is JSON, reenable the logToConsole output and print-out the json format.
 	if ( outputJson ) {
 		suppressOutput = false;
 		logToConsole( harmonia.resultsJSON() );
 		process.exit( 0 );
 	}
-
-	// Calculate the results
-	const resultCounter = harmonia.countResults( false );
-
-	const testSuiteResults = results.filter( result => result instanceof TestSuiteResult );
 
 	// Print the results
 	logToConsole( '\n' + chalk.bgGray( '        HARMONIA RESULTS        \n' ) );
@@ -384,6 +425,9 @@ async function validateArgs( opt ): Promise<{}> {
 	// Get build information from API and store it in the env object
 	const buildConfig = await getBuildConfiguration( opt.app, opt.env );
 
+	args.app_id = opt.app.id;
+	args.env_id = opt.env.id;
+
 	args.nodejsVersion = opt.nodeVersion ?? buildConfig.nodeJSVersion;
 	args.buildType = buildConfig.buildType;
 	args.npmToken = buildConfig.npmToken;
@@ -393,6 +437,27 @@ async function validateArgs( opt ): Promise<{}> {
 	args.port = opt.port ?? Math.floor( Math.random() * 1000 ) + 3001; // Get a PORT from 3001 and 3999
 
 	return args;
+}
+
+/**
+ * Remove sensitive information from the tracked events and snake_case the keys.
+ *
+ * @param {object} args The arguments passed to the command.
+ * @returns {object} Copy of the arguments without sensitive information.
+ */
+function sanitizeArgsForTracking( args: {} ): {} {
+	const protectedKeys = [ 'npmToken', 'nodeBuildDockerEnv' ];
+	const sanitizedArgs = { };
+
+	Object.entries( args ).forEach( ( [ key, value ] ) => {
+		if ( protectedKeys.includes( key ) ) {
+			return;
+		}
+		// snake_case the key, as required by Tracks
+		sanitizedArgs[ key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` ) ] = value;
+	} );
+
+	return sanitizedArgs;
 }
 
 command( {
@@ -417,4 +482,4 @@ command( {
 			description: 'Validate your local environment, but output the results in JSON format, and redirect the output to a file',
 		},
 	] )
-	.argv( process.argv, bootstrapHarmonia );
+	.argv( process.argv, vipValidatePreflightCommand );
