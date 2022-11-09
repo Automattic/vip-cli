@@ -150,10 +150,10 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	if ( harmoniaArgs.buildType !== 'nodejs' ) {
 		await trackEvent( 'validate_preflight_command_error', {
 			...baseTrackingParams,
-			error: 'Only Node.JS applications are supported.',
+			error: 'not-nodejs',
 		} );
 
-		exit.withError( 'Currently only Node.JS applications are supported.' );
+		exit.withError( 'Currently, only Node.js applications are supported.' );
 	}
 
 	// Register the default tests.
@@ -179,7 +179,7 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	} catch ( error ) {
 		await trackEvent( 'validate_preflight_command_error', {
 			...baseTrackingParams,
-			error: 'Could not find package.json file.',
+			error: 'missing-package-json',
 		} );
 
 		return exit.withError( `Could not find a 'package.json' in the current folder (${ opt.path }).` );
