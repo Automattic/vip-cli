@@ -272,6 +272,7 @@ const displayPlaybook = ( {
 	fileName,
 	domain,
 	formattedEnvironment,
+	unformattedEnvironment,
 	isMultiSite,
 	app,
 } ) => {
@@ -293,7 +294,8 @@ const displayPlaybook = ( {
 	if ( isMultiSite ) {
 		// eslint-disable-next-line no-multi-spaces
 		console.log( `  multisite: ${ isMultiSite.toString() }` );
-		siteArray = app?.environments[ 0 ]?.wpSites?.nodes;
+		const selectedEnvironmentObj = app?.environments?.find( env => unformattedEnvironment === env.type );
+		siteArray = selectedEnvironmentObj?.wpSites?.nodes;
 	}
 
 	if ( ! tableNames.length ) {
@@ -320,9 +322,9 @@ const displayPlaybook = ( {
 			const multiSiteBreakdown = siteArray.map( wpSite => {
 				let siteRegex;
 				if ( wpSite.id === 1 ) {
-					siteRegex = /wp_[a-z]+/i;
+					siteRegex = /^wp_[a-z]+/i;
 				} else {
-					siteRegex = new RegExp( `wp_${ wpSite.id }_[a-z]+`, 'i' );
+					siteRegex = new RegExp( `^wp_${ wpSite.id }_[a-z]+`, 'i' );
 				}
 				const tableNamesInGroup = tableNames.filter( name => siteRegex.test( name ) );
 				return {
@@ -426,6 +428,7 @@ command( {
 			fileName,
 			domain,
 			formattedEnvironment,
+			unformattedEnvironment: opts.env.type,
 			isMultiSite,
 			app,
 		} );

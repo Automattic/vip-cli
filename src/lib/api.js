@@ -94,6 +94,15 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 
 	return new ApolloClient( {
 		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
-		cache: new InMemoryCache(),
+		cache: new InMemoryCache( {
+			typePolicies: {
+				WPSite: {
+					// By default the cache key is assumed to be `id` which is not globally unique.
+					// So we are using `id` + `homeUrl` to prevent clashing keys.
+					// Change this to `blogId` + `homeUrl` when we switch to using wpSitesSDS
+					keyFields: [ 'id', 'homeUrl' ],
+				},
+			},
+		} ),
 	} );
 }
