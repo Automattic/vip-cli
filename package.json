@@ -43,6 +43,7 @@
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-validate": "dist/bin/vip-validate.js",
+    "vip-validate-preflight": "dist/bin/vip-validate-preflight.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
