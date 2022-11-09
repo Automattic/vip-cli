@@ -15,5 +15,5 @@ command( {
 } )
 	.command( 'preflight', 'Runs preflight tests to validate if your application is ready to be deployed' )
 	.argv( process.argv, async () => {
-		await trackEvent( 'vip_import_command_execute' );
+		await trackEvent( 'vip_validate_command_execute' );
 	} );
