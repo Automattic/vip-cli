@@ -30,6 +30,10 @@ export function disableGlobalGraphQLErrorHandling() {
 	globalGraphQLErrorHandlingEnabled = false;
 }
 
+export function enableGlobalGraphQLErrorHandling() {
+	globalGraphQLErrorHandlingEnabled = true;
+}
+
 export default async function API( { exitOnError = true } = {} ): Promise<ApolloClient> {
 	const authToken = await Token.get();
 	const headers = {
