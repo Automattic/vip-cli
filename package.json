@@ -113,7 +113,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
-    "@automattic/vip-go-preflight-checks": "^2.0.10",
+    "@automattic/vip-go-preflight-checks": "^2.0.12",
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.3",
     "chalk": "4.1.2",
