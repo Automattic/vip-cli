@@ -396,7 +396,7 @@ async function handleResults( harmonia, results: TestResult[] ) {
 	if ( resultCounter[ TestResultType.Failed ] ) {
 		logToConsole( `${ chalk.bold.bgRed( '  NOT PASS  ' ) } The application has failed some tests, and will very likely have problems in a production ` +
 			'environment. Please review all the errors found in the results.' );
-		process.exit( 0 );
+		process.exit( 1 );
 	}
 
 	logToConsole( `${ chalk.bold.bgGreen( '  PASS  ' ) } Congratulations. The application passes all the tests.` );
