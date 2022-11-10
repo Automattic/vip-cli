@@ -45,6 +45,17 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
 
+const componentDisplayNames = {
+	wordpress: 'WordPress',
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'application code',
+};
+
+const componentDemoNames = {
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'vip-go-skeleton',
+};
+
 // Forward declaratrion to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
 // eslint-disable-next-line no-redeclare
@@ -311,7 +322,7 @@ async function processComponent( component: string, preselectedValue: string, de
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
-		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component] }: ${ preselectedValue }` );
+		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
@@ -449,21 +460,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 	return resolvePhpVersion( answer );
 }
 
-const componentDisplayNames = {
-	wordpress: 'WordPress',
-	muPlugins: 'vip-go-mu-plugins',
-	appCode: 'application code',
-};
-const componentDemoyNames = {
-	muPlugins: 'vip-go-mu-plugins',
-	appCode: 'vip-go-skeleton',
-};
-
 // eslint-disable-next-line no-redeclare
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig | WordPressConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const componentDemoName = componentDemoyNames[ component ] || component;
+	const componentDemoName = componentDemoNames[ component ] || component;
 	const modChoices = [];
 
 	if ( allowLocal ) {
@@ -499,7 +500,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 		modeResult = await select.run();
 	}
 
-	debug( modeResult )
+	debug( modeResult );
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
