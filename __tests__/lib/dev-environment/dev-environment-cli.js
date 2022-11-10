@@ -7,6 +7,7 @@
  */
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
+import os from 'os';
 /**
  * Internal dependencies
  */
@@ -150,14 +151,22 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					tag: '/tmp/wp',
 				},
 			},
-			{ // if local is  allowed
+			// if local is allowed
+			( os.platform() === 'win32' ? {
+				param: 'C:\path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:\path',
+				},
+			} : {
 				param: '~/path',
 				allowLocal: true,
 				expected: {
 					mode: 'local',
 					dir: '~/path',
 				},
-			},
+			} ),
 		] )( 'should process options and use defaults', async input => {
 			const result = processComponentOptionInput( input.param, input.allowLocal );
 
