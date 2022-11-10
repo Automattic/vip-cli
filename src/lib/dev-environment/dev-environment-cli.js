@@ -179,7 +179,8 @@ export function printTable( data: Object ) {
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
-	if ( allowLocal && param.includes( '/' ) ) {
+	// This is a bit of a naive check
+	if ( allowLocal && param.includes( path.sep ) ) {
 		return {
 			mode: 'local',
 			dir: param,
@@ -303,16 +304,19 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 }
 
 async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
-	debug( `processing a component '${ component }', with preselected/deafault - ${ preselectedValue }/${ defaultValue }` );
+	debug( `processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
+		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component] }: ${ preselectedValue }` );
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
+
+	debug( result );
 
 	while ( 'local' === result?.mode ) {
 		const resolvedPath = resolvePath( result.dir || '' );
@@ -494,6 +498,8 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 		modeResult = await select.run();
 	}
+
+	debug( modeResult )
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
