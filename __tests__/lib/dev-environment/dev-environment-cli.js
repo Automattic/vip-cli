@@ -134,7 +134,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		} );
 	} );
 	describe( 'processComponentOptionInput', () => {
-		it.each( [
+		const cases = [
 			{ // base tag
 				param: testReleaseWP,
 				allowLocal: true,
@@ -151,23 +151,35 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					tag: '/tmp/wp',
 				},
 			},
-			// if local is allowed
-			( os.platform() === 'win32' ? {
-				param: 'C:\\path',
-				allowLocal: true,
-				expected: {
-					mode: 'local',
-					dir: 'C:\\path',
-				},
-			} : {
+			{
 				param: '~/path',
 				allowLocal: true,
 				expected: {
 					mode: 'local',
 					dir: '~/path',
 				},
-			} ),
-		] )( 'should process options and use defaults', async input => {
+			},
+		];
+
+		if ( os.platform() === 'win32' ) {
+			cases.push( {
+				param: 'C:\\path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:\\path',
+				},
+			},
+			{
+				param: 'C:/path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:/path',
+				},
+			} );
+		}
+		it.each( cases )( 'should process options and use defaults', async input => {
 			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
