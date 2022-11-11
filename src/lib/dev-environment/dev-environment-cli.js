@@ -191,7 +191,7 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 	// cast to string
 	const param = passedParam + '';
 	// This is a bit of a naive check
-	if ( allowLocal && /[\\\/]/.test(param) ) {
+	if ( allowLocal && /[\\\/]/.test( param ) ) {
 		return {
 			mode: 'local',
 			dir: param,
