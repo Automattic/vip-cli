@@ -1,5 +1,12 @@
 ## Changelog
 
+## 2.23.0 (11 Nov 2022)
+
+- #1169 Preflight Validation: Change return code on error
+- #1095 Harmonia Pre Deploy Validation: Add `validate` command
+- #1156 Validate env before resolving path
+- #1167 dev-env: Fix bug in getVersionList() when path doesn't exist
+
 ## 2.22.0 (2 Nov 2022)
 
 #1165  Add caching type policy for `WPSite` data                                                           
