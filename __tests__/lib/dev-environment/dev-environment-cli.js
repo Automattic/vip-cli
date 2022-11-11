@@ -153,11 +153,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 			// if local is allowed
 			( os.platform() === 'win32' ? {
-				param: 'C:\path',
+				param: 'C:\\path',
 				allowLocal: true,
 				expected: {
 					mode: 'local',
-					dir: 'C:\path',
+					dir: 'C:\\path',
 				},
 			} : {
 				param: '~/path',
