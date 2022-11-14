@@ -32,6 +32,7 @@ import { getVersionList, readEnvironmentData } from './dev-environment-core';
 import type {
 	AppInfo,
 	ComponentConfig,
+	ConfigFileOptions,
 	InstanceOptions,
 	EnvironmentNameOptions,
 	InstanceData,
@@ -44,6 +45,7 @@ import typeof Command from 'lib/cli/command';
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
+const CONFIGURATION_FILE_NAME = '.vip-dev-env.json';
 
 // Forward declaratrion to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
@@ -159,6 +161,10 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		throw new UserError( message );
 	}
 
+	if ( options.configFileSlug ) {
+		return options.configFileSlug;
+	}
+
 	return DEFAULT_SLUG;
 }
 
@@ -168,6 +174,26 @@ export function getEnvironmentStartCommand( slug: string ): string {
 	}
 
 	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ slug }`;
+}
+
+export function getConfigurationFileOptions(): ConfigFileOptions {
+	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
+	let configurationFromFile = {};
+
+	if ( fs.existsSync( configurationFilePath ) ) {
+		const configurationFileContents = fs.readFileSync( configurationFilePath );
+		configurationFromFile = JSON.parse( configurationFileContents );
+	} else {
+		return {};
+	}
+
+	const configuration = sanitizeConfiguration( configurationFromFile );
+
+	return configuration;
+}
+
+function sanitizeConfiguration( configuration: any ): ConfigFileOptions {
+	return configuration;
 }
 
 export function printTable( data: Object ) {

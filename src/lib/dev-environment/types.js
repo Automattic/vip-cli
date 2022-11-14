@@ -48,9 +48,14 @@ export type WordPressConfig = {
 
 export type EnvironmentNameOptions = {
 	slug: string;
+	configFileSlug: string;
 	app: string;
 	env: string;
 	allowAppEnv?: boolean;
+}
+
+export type ConfigFileOptions = {
+	slug?: string;
 }
 
 export interface InstanceData {
