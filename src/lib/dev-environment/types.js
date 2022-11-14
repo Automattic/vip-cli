@@ -54,7 +54,7 @@ export type EnvironmentNameOptions = {
 	allowAppEnv?: boolean;
 }
 
-export type ConfigFileOptions = {
+export type ConfigurationFileOptions = {
 	slug?: string;
 }
 
