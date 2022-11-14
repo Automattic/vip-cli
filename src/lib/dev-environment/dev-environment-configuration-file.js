@@ -14,10 +14,12 @@ import chalk from 'chalk';
 /**
   * Internal dependencies
   */
+import * as exit from 'lib/cli/exit';
 import type {
 	ConfigurationFileOptions,
 	InstanceOptions,
 } from './types';
+import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../constants/dev-environment';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -50,17 +52,70 @@ export function getConfigurationFileOptions(): ConfigurationFileOptions {
 }
 
 function sanitizeConfiguration( configurationFromFile: Object ): ConfigurationFileOptions {
-	const configuration = {};
+	const toBooleanIfDefined = value => {
+		if ( value === undefined ) {
+			return undefined;
+		}
+		return !! value;
+	};
 
-	if ( configurationFromFile?.slug ) {
-		configuration.slug = configurationFromFile.slug;
+	if ( configurationFromFile?.php && ! DEV_ENVIRONMENT_PHP_VERSIONS[ configurationFromFile.php ] ) {
+		const supportedPhpVersions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).join( ', ' );
+		const messageToShow = `PHP version ${ chalk.grey( configurationFromFile.php ) } specified in` +
+			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nChoose one of: ${ supportedPhpVersions }\n`;
+
+		exit.withError( messageToShow );
 	}
 
-	if ( configurationFromFile?.title ) {
-		configuration.title = configurationFromFile.title;
-	}
+	const configuration = {
+		slug: configurationFromFile?.slug,
+		title: configurationFromFile?.title,
+		multisite: toBooleanIfDefined( configurationFromFile?.multisite ),
+		php: configurationFromFile?.php,
+	};
+
+	// Remove undefined values
+	Object.keys( configuration ).forEach( key => configuration[ key ] === undefined && delete configuration[ key ] );
 
 	return configuration;
+}
+
+export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
+	// TODO: Add instance options to override:
+	//    export interface InstanceOptions {
+	//    x   title: string;
+	//    x   multisite: boolean;
+	//        wordpress?: string;
+	//        muPlugins?: string;
+	//        appCode?: string;
+	//        elasticsearch?: boolean;
+	//        mariadb?: string;
+	//    x   php?: string;
+	//        mediaRedirectDomain?: string;
+	//        statsd?: boolean;
+	//        phpmyadmin?: boolean;
+	//        xdebug?: boolean;
+	//        xdebugConfig?: string;
+	//        [index: string]: string | boolean;
+	//    }
+
+	// configurationFileOptions can hold different parameters than present in
+	// preselectedOptions like "slug", or differently named parameters.
+	// Merge only relevant configurationFileOptions into preselectedOptions.
+	const mergeOptions = {
+		title: configurationFileOptions?.title,
+		multisite: configurationFileOptions?.multisite,
+		php: configurationFileOptions?.php,
+	};
+
+	// Remove undefined values
+	Object.keys( mergeOptions ).forEach( key => mergeOptions[ key ] === undefined && delete mergeOptions[ key ] );
+
+	// preselectedOptions (supplied from command-line) override configurationFileOptions
+	return {
+		...mergeOptions,
+		...preselectedOptions,
+	};
 }
 
 export function printConfigurationFileInfo( configurationFile: ConfigurationFileOptions ) {
@@ -70,7 +125,7 @@ export function printConfigurationFileInfo( configurationFile: ConfigurationFile
 		return;
 	}
 
-	console.log( `Found ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using environment with the following configuration:` );
+	console.log( `Found ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using the following configuration defaults:` );
 
 	let configurationFileOutput = '';
 
@@ -84,14 +139,4 @@ export function printConfigurationFileInfo( configurationFile: ConfigurationFile
 	}
 
 	console.log( configurationFileOutput );
-}
-
-export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
-	const { title } = configurationFileOptions;
-
-	// Preselected options take precedence over configuration file options
-	return {
-		title,
-		...preselectedOptions,
-	};
 }
