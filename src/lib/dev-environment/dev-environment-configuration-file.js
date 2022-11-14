@@ -16,6 +16,7 @@ import chalk from 'chalk';
   */
 import type {
 	ConfigurationFileOptions,
+	InstanceOptions,
 } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -48,10 +49,18 @@ export function getConfigurationFileOptions(): ConfigurationFileOptions {
 	return configuration;
 }
 
-function sanitizeConfiguration( configuration: Object ): ConfigurationFileOptions {
-	return {
-		slug: configuration.slug || undefined,
-	};
+function sanitizeConfiguration( configurationFromFile: Object ): ConfigurationFileOptions {
+	const configuration = {};
+
+	if ( configurationFromFile?.slug ) {
+		configuration.slug = configurationFromFile.slug;
+	}
+
+	if ( configurationFromFile?.title ) {
+		configuration.title = configurationFromFile.title;
+	}
+
+	return configuration;
 }
 
 export function printConfigurationFileInfo( configurationFile: ConfigurationFileOptions ) {
@@ -65,9 +74,24 @@ export function printConfigurationFileInfo( configurationFile: ConfigurationFile
 
 	let configurationFileOutput = '';
 
+	// Customized formatter because printTable automatically uppercases keys
+	// which may be confusing for JSON keys
+	const longestKeyLength = Math.max( ...Object.keys( configurationFile ).map( key => key.length ) );
+
 	for ( const [ key, value ] of Object.entries( configurationFile ) ) {
-		configurationFileOutput += `    ${ chalk.cyan( key ) }: ${ value }\n`;
+		const paddedKey = key.padStart( longestKeyLength, ' ' );
+		configurationFileOutput += `    ${ chalk.cyan( paddedKey ) }: ${ value }\n`;
 	}
 
 	console.log( configurationFileOutput );
+}
+
+export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
+	const { title } = configurationFileOptions;
+
+	// Preselected options take precedence over configuration file options
+	return {
+		title,
+		...preselectedOptions,
+	};
 }
