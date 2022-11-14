@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.22.0",
+  "version": "2.23.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -42,6 +42,8 @@
     "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
+    "vip-validate": "dist/bin/vip-validate.js",
+    "vip-validate-preflight": "dist/bin/vip-validate-preflight.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js"
   },
@@ -111,6 +113,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
+    "@automattic/vip-go-preflight-checks": "^2.0.12",
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.3",
     "chalk": "4.1.2",
