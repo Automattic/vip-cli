@@ -19,7 +19,7 @@ import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
-import { getConfigurationFileOptions } from 'lib/dev-environment/dev-environment-configuration-file';
+import { getConfigurationFileOptions, printConfigurationFileInfo } from 'lib/dev-environment/dev-environment-configuration-file';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 import {
 	addDevEnvConfigurationOptions,
@@ -109,6 +109,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		debug( `WARNING: ${ message }`, error.message );
 		console.log( chalk.yellow( 'Warning:' ), message );
 	}
+
+	printConfigurationFileInfo( configurationFileOptions );
 
 	const instanceData = await promptForArguments( opt, defaultOptions );
 	instanceData.siteSlug = slug;

@@ -9,6 +9,7 @@
 import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
+import chalk from 'chalk';
 
 /**
   * Internal dependencies
@@ -47,6 +48,26 @@ export function getConfigurationFileOptions(): ConfigurationFileOptions {
 	return configuration;
 }
 
-function sanitizeConfiguration( configuration: any ): ConfigurationFileOptions {
-	return configuration;
+function sanitizeConfiguration( configuration: Object ): ConfigurationFileOptions {
+	return {
+		slug: configuration.slug || undefined,
+	};
+}
+
+export function printConfigurationFileInfo( configurationFile: ConfigurationFileOptions ) {
+	const isConfigurationFileEmpty = Object.keys( configurationFile ).length === 0;
+
+	if ( isConfigurationFileEmpty ) {
+		return;
+	}
+
+	console.log( `Found ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using environment with the following configuration:` );
+
+	let configurationFileOutput = '';
+
+	for ( const [ key, value ] of Object.entries( configurationFile ) ) {
+		configurationFileOutput += `    ${ chalk.cyan( key ) }: ${ value }\n`;
+	}
+
+	console.log( configurationFileOutput );
 }
