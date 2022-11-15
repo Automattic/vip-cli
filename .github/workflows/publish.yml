@@ -1,4 +1,4 @@
-name: "Changelog"
+name: publish
 on:
   workflow_dispatch:
     inputs:
