@@ -1,3 +1,5 @@
+---
+
 name: publish
 on:
   workflow_dispatch:
@@ -16,11 +18,11 @@ jobs:
     name: Create changelog
     runs-on: ubuntu-latest
     steps:
-    - name: Publish Changelog
-      uses: fjogeleit/http-request-action@v1
-      with:
-        url: 'https://public-api.wordpress.com/wp/v2/sites/vipinternalchangelog.wordpress.com/posts'
-        method: 'POST'
-        customHeaders: '{"Content-Type": "application/json"}'
-        bearerToken: ${{ secrets.CHANGELOG_POST_TOKEN }}
-        data: '{"title": "${{ inputs.title }}", "content": "${{ inputs.content }}", "excerpt": "${{ inputs.title }}", "status": "publish" }'
+      - name: Publish Changelog
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: 'https://public-api.wordpress.com/wp/v2/sites/vipinternalchangelog.wordpress.com/posts'
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          bearerToken: ${{ secrets.CHANGELOG_POST_TOKEN }}
+          data: '{"title": "${{ inputs.title }}", "content": "${{ inputs.content }}", "excerpt": "${{ inputs.title }}", "status": "publish" }'
