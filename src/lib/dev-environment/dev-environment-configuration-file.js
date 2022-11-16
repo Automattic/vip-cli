@@ -106,7 +106,7 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 	}
 
 	const configuration = {
-		slug: siteProperties?.slug,
+		slug,
 		title: siteProperties?.title,
 		multisite: toBooleanIfDefined( siteProperties?.multisite ),
 		php: siteProperties?.php,
@@ -147,7 +147,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 	//    export interface InstanceOptions {
 	//    x   title: string;
 	//    x   multisite: boolean;
-	//        wordpress?: string;
+	//    x   wordpress?: string;
 	//        muPlugins?: string;
 	//        appCode?: string;
 	//        elasticsearch?: boolean;
@@ -161,7 +161,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 	//        [index: string]: string | boolean;
 	//    }
 
-	// configurationFileOptions may hold different parameters than present in
+	// configurationFileOptions can hold different parameters than present in
 	// preselectedOptions like "slug", or differently named parameters.
 	// Merge only relevant configurationFileOptions into preselectedOptions.
 	const mergeOptions = {
@@ -181,24 +181,25 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 	};
 }
 
-export function printConfigurationFileInfo( configurationFile: ConfigurationFileOptions ) {
-	const isConfigurationFileEmpty = Object.keys( configurationFile ).length === 0;
+export function printConfigurationFileInfo( configurationOptions: ConfigurationFileOptions ) {
+	const isConfigurationFileEmpty = Object.keys( configurationOptions ).length === 0;
 
 	if ( isConfigurationFileEmpty ) {
 		return;
 	}
 
-	console.log( `Found ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using the following configuration defaults:` );
+	console.log( `Found ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using configuration defaults:` );
 
-	let configurationFileOutput = '';
+	let configurationFileOutput = `${ chalk.cyan( configurationOptions.slug ) }:\n`;
 
-	// Customized formatter because printTable automatically uppercases keys
-	// which may be confusing for JSON keys
-	const longestKeyLength = Math.max( ...Object.keys( configurationFile ).map( key => key.length ) );
+	// Customized formatter because Lando's printTable() automatically uppercases keys
+	// which may be confusing for YAML configuration
+	for ( const [ key, value ] of Object.entries( configurationOptions ) ) {
+		if ( key === 'slug' ) {
+			continue;
+		}
 
-	for ( const [ key, value ] of Object.entries( configurationFile ) ) {
-		const paddedKey = key.padStart( longestKeyLength, ' ' );
-		configurationFileOutput += `    ${ chalk.cyan( paddedKey ) }: ${ value }\n`;
+		configurationFileOutput += `  ${ chalk.cyan( key ) }: ${ value }\n`;
 	}
 
 	console.log( configurationFileOutput );
