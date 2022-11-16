@@ -85,7 +85,7 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 	}
 
 	const slug = Object.keys( configurationFromFile )[ 0 ];
-	const siteProperties = configurationFromFile[ slug ];
+	const configuration = configurationFromFile[ slug ];
 
 	const stringToBooleanIfDefined = value => {
 		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
@@ -94,20 +94,23 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 		return value === 'true';
 	};
 
-	const configuration = {
+	const sanitizedConfiguration = {
 		slug,
-		title: siteProperties.title,
-		multisite: stringToBooleanIfDefined( siteProperties.multisite ),
-		php: siteProperties.php,
-		wordpress: siteProperties.wordpress,
-		'mu-plugins': siteProperties[ 'mu-plugins' ],
-		'app-code': siteProperties[ 'app-code' ],
+		title: configuration.title,
+		multisite: stringToBooleanIfDefined( configuration.multisite ),
+		php: configuration.php,
+		wordpress: configuration.wordpress,
+		'mu-plugins': configuration[ 'mu-plugins' ],
+		'app-code': configuration[ 'app-code' ],
+		elasticsearch: stringToBooleanIfDefined( configuration.elasticsearch ),
+		phpmyadmin: stringToBooleanIfDefined( configuration.phpmyadmin ),
+		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
 	};
 
 	// Remove undefined values
-	Object.keys( configuration ).forEach( key => configuration[ key ] === undefined && delete configuration[ key ] );
+	Object.keys( sanitizedConfiguration ).forEach( key => sanitizedConfiguration[ key ] === undefined && delete sanitizedConfiguration[ key ] );
 
-	return configuration;
+	return sanitizedConfiguration;
 }
 
 export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
@@ -118,20 +121,20 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 	//    x   wordpress?: string;
 	//    x   muPlugins?: string;
 	//    x   appCode?: string;
-	//        elasticsearch?: boolean;
-	//        mariadb?: string;
+	//    x   elasticsearch?: boolean;
 	//    x   php?: string;
-	//        phpmyadmin?: boolean;
-	//        xdebug?: boolean;
+	//    x   phpmyadmin?: boolean;
+	//    x   xdebug?: boolean;
 	//
 	//        Maybe support:
+	//        mariadb?: string;
 	//        mediaRedirectDomain?: string;
 	//        statsd?: boolean;
 	//        xdebugConfig?: string;
 	//    }
 
 	// configurationFileOptions holds different parameters than present in
-	// preselectedOptions like "slug" and differently named parameters (e.g.
+	// preselectedOptions like "slug", and friendly-named parameters (e.g.
 	// 'app-code' vs 'appCode'). Selectively merge configurationFileOptions
 	// parameters into preselectedOptions.
 	const mergeOptions = {
@@ -141,6 +144,9 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		wordpress: configurationFileOptions.wordpress,
 		muPlugins: configurationFileOptions[ 'mu-plugins' ],
 		appCode: configurationFileOptions[ 'app-code' ],
+		elasticsearch: configurationFileOptions.elasticsearch,
+		phpmyadmin: configurationFileOptions.phpmyadmin,
+		xdebug: configurationFileOptions.xdebug,
 	};
 
 	// Remove undefined values
