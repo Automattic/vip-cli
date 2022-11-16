@@ -20,8 +20,6 @@ import type {
 	ConfigurationFileOptions,
 	InstanceOptions,
 } from './types';
-import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../constants/dev-environment';
-import { getVersionList } from './dev-environment-core';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -61,8 +59,7 @@ export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 			schema: FAILSAFE_SCHEMA,
 		} );
 	} catch ( err ) {
-		// If the configuration file is present but has YAML parsing errors,
-		const messageToShow = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } had could not be loaded:\n` +
+		const messageToShow = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } could not be loaded:\n` +
 			err.toString();
 		exit.withError( messageToShow );
 	}
@@ -90,27 +87,21 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 	const slug = Object.keys( configurationFromFile )[ 0 ];
 	const siteProperties = configurationFromFile[ slug ];
 
-	const toBooleanIfDefined = value => {
-		if ( value === undefined ) {
+	const stringToBooleanIfDefined = value => {
+		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
 			return undefined;
 		}
-		return !! value;
+		return value === 'true';
 	};
-
-	if ( siteProperties?.php ) {
-		validatePhpVersion( siteProperties.php );
-	}
-
-	if ( siteProperties?.wordpress ) {
-		await validateWordpressVersion( siteProperties.wordpress );
-	}
 
 	const configuration = {
 		slug,
-		title: siteProperties?.title,
-		multisite: toBooleanIfDefined( siteProperties?.multisite ),
-		php: siteProperties?.php,
-		wordpress: siteProperties?.wordpress,
+		title: siteProperties.title,
+		multisite: stringToBooleanIfDefined( siteProperties.multisite ),
+		php: siteProperties.php,
+		wordpress: siteProperties.wordpress,
+		'mu-plugins': siteProperties[ 'mu-plugins' ],
+		'app-code': siteProperties[ 'app-code' ],
 	};
 
 	// Remove undefined values
@@ -119,56 +110,37 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 	return configuration;
 }
 
-function validatePhpVersion( phpVersion ) {
-	if ( ! DEV_ENVIRONMENT_PHP_VERSIONS[ phpVersion ] ) {
-		const supportedPhpVersions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).join( ', ' );
-		const messageToShow = `PHP version ${ chalk.grey( phpVersion ) } specified in ` +
-			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedPhpVersions }\n`;
-
-		throw new Error( messageToShow );
-	}
-}
-
-async function validateWordpressVersion( wordpressVersion ): Promise<void> {
-	const wordpressVersionList = await getVersionList();
-	const matchingWordpressVersion = wordpressVersionList.find( version => version.tag === wordpressVersion );
-
-	if ( ! matchingWordpressVersion ) {
-		const supportedWordpressVersions = wordpressVersionList.map( version => version.tag ).join( ', ' );
-		const messageToShow = `WordPress version ${ chalk.grey( wordpressVersion ) } specified in ` +
-			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedWordpressVersions }\n`;
-
-		throw new Error( messageToShow );
-	}
-}
-
 export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
 	// TODO: Add instance options to override:
 	//    export interface InstanceOptions {
 	//    x   title: string;
 	//    x   multisite: boolean;
 	//    x   wordpress?: string;
-	//        muPlugins?: string;
-	//        appCode?: string;
+	//    x   muPlugins?: string;
+	//    x   appCode?: string;
 	//        elasticsearch?: boolean;
 	//        mariadb?: string;
 	//    x   php?: string;
-	//        mediaRedirectDomain?: string;
-	//        statsd?: boolean;
 	//        phpmyadmin?: boolean;
 	//        xdebug?: boolean;
+	//
+	//        Maybe support:
+	//        mediaRedirectDomain?: string;
+	//        statsd?: boolean;
 	//        xdebugConfig?: string;
-	//        [index: string]: string | boolean;
 	//    }
 
-	// configurationFileOptions can hold different parameters than present in
-	// preselectedOptions like "slug", or differently named parameters.
-	// Merge only relevant configurationFileOptions into preselectedOptions.
+	// configurationFileOptions holds different parameters than present in
+	// preselectedOptions like "slug" and differently named parameters (e.g.
+	// 'app-code' vs 'appCode'). Selectively merge configurationFileOptions
+	// parameters into preselectedOptions.
 	const mergeOptions = {
-		title: configurationFileOptions?.title,
-		multisite: configurationFileOptions?.multisite,
-		php: configurationFileOptions?.php,
-		wordpress: configurationFileOptions?.wordpress,
+		title: configurationFileOptions.title,
+		multisite: configurationFileOptions.multisite,
+		php: configurationFileOptions.php,
+		wordpress: configurationFileOptions.wordpress,
+		muPlugins: configurationFileOptions[ 'mu-plugins' ],
+		appCode: configurationFileOptions[ 'app-code' ],
 	};
 
 	// Remove undefined values
@@ -188,19 +160,19 @@ export function printConfigurationFileInfo( configurationOptions: ConfigurationF
 		return;
 	}
 
-	console.log( `Found ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using configuration defaults:` );
-
-	let configurationFileOutput = `${ chalk.cyan( configurationOptions.slug ) }:\n`;
+	console.log( `\nFound ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using configuration defaults:` );
 
 	// Customized formatter because Lando's printTable() automatically uppercases keys
 	// which may be confusing for YAML configuration
+	const settingLines = [];
 	for ( const [ key, value ] of Object.entries( configurationOptions ) ) {
 		if ( key === 'slug' ) {
 			continue;
 		}
 
-		configurationFileOutput += `  ${ chalk.cyan( key ) }: ${ value }\n`;
+		settingLines.push( `  ${ chalk.cyan( key ) }: ${ value }` );
 	}
 
-	console.log( configurationFileOutput );
+	console.log( `${ chalk.cyan( configurationOptions.slug ) }:` );
+	console.log( settingLines.join( '\n' ) + '\n' );
 }

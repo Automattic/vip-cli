@@ -307,7 +307,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 }
 
 async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
-	debug( `processing a component '${ component }', with preselected/deafault - ${ preselectedValue }/${ defaultValue }` );
+	debug( `processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
