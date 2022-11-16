@@ -127,6 +127,7 @@
     "graphql-tag": "2.12.5",
     "https-proxy-agent": "^5.0.1",
     "ini": "2.0.0",
+    "js-yaml": "^4.1.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
     "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_09_05",

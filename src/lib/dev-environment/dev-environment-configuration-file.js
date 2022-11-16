@@ -10,6 +10,7 @@ import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
+import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 
 /**
   * Internal dependencies
@@ -24,7 +25,17 @@ import { getVersionList } from './dev-environment-core';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const CONFIGURATION_FILE_NAME = '.vip-dev-env.json';
+const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
+const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
+  php: 8.0
+  wordpress: 6.0
+  multisite: false
+  phpmyadmin: true
+  elasticsearch: true
+  xdebug: true
+  env:
+    SOME_VAR: "some var value"
+`;
 
 export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
@@ -36,7 +47,7 @@ export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 
 	if ( fileExists ) {
 		debug( 'Reading configuration file from:', configurationFilePath );
-		configurationFileContents = await fs.promises.readFile( configurationFilePath );
+		configurationFileContents = await fs.promises.readFile( configurationFilePath, 'utf8' );
 	} else {
 		return {};
 	}
@@ -44,10 +55,16 @@ export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 	let configurationFromFile = {};
 
 	try {
-		configurationFromFile = JSON.parse( configurationFileContents );
+		configurationFromFile = yaml.load( configurationFileContents, {
+			// Only allow strings, arrays, and objects to be parsed from configuration file
+			// This causes number-looking values like `php: 8.1` to be parsed directly into strings
+			schema: FAILSAFE_SCHEMA,
+		} );
 	} catch ( err ) {
-		debug( 'Error parsing configuration file:', err.toString() );
-		return {};
+		// If the configuration file is present but has YAML parsing errors,
+		const messageToShow = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } had could not be loaded:\n` +
+			err.toString();
+		exit.withError( messageToShow );
 	}
 
 	const configuration = await sanitizeConfiguration( configurationFromFile )
@@ -60,6 +77,19 @@ export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 }
 
 async function sanitizeConfiguration( configurationFromFile: Object ): Promise<ConfigurationFileOptions> {
+	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } couldn't ` +
+		'be loaded. Ensure there is one top-level site slug with options configured as children.\nFor example:\n\n' +
+		chalk.grey( CONFIGURATION_FILE_EXAMPLE );
+
+	if ( Array.isArray( configurationFromFile ) || typeof configurationFromFile !== 'object' ) {
+		throw new Error( genericConfigurationError );
+	} else if ( Object.keys( configurationFromFile ).length !== 1 ) {
+		throw new Error( genericConfigurationError );
+	}
+
+	const slug = Object.keys( configurationFromFile )[ 0 ];
+	const siteProperties = configurationFromFile[ slug ];
+
 	const toBooleanIfDefined = value => {
 		if ( value === undefined ) {
 			return undefined;
@@ -67,40 +97,49 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 		return !! value;
 	};
 
-	if ( configurationFromFile?.php && ! DEV_ENVIRONMENT_PHP_VERSIONS[ configurationFromFile.php ] ) {
-		const supportedPhpVersions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).join( ', ' );
-		const messageToShow = `PHP version ${ chalk.grey( configurationFromFile.php ) } specified in ` +
-			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedPhpVersions }\n`;
-
-		throw new Error( messageToShow );
+	if ( siteProperties?.php ) {
+		validatePhpVersion( siteProperties.php );
 	}
 
-	const wordpressVersionList = await getVersionList();
-
-	if ( configurationFromFile?.wordpress ) {
-		const matchingWordpressVersion = wordpressVersionList.find( version => version.tag === configurationFromFile.wordpress );
-
-		if ( ! matchingWordpressVersion ) {
-			const supportedWordpressVersions = wordpressVersionList.map( version => version.tag ).join( ', ' );
-			const messageToShow = `WordPress version ${ chalk.grey( configurationFromFile.wordpress ) } specified in ` +
-				`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedWordpressVersions }\n`;
-
-			throw new Error( messageToShow );
-		}
+	if ( siteProperties?.wordpress ) {
+		await validateWordpressVersion( siteProperties.wordpress );
 	}
 
 	const configuration = {
-		slug: configurationFromFile?.slug,
-		title: configurationFromFile?.title,
-		multisite: toBooleanIfDefined( configurationFromFile?.multisite ),
-		php: configurationFromFile?.php,
-		wordpress: configurationFromFile?.wordpress,
+		slug: siteProperties?.slug,
+		title: siteProperties?.title,
+		multisite: toBooleanIfDefined( siteProperties?.multisite ),
+		php: siteProperties?.php,
+		wordpress: siteProperties?.wordpress,
 	};
 
 	// Remove undefined values
 	Object.keys( configuration ).forEach( key => configuration[ key ] === undefined && delete configuration[ key ] );
 
 	return configuration;
+}
+
+function validatePhpVersion( phpVersion ) {
+	if ( ! DEV_ENVIRONMENT_PHP_VERSIONS[ phpVersion ] ) {
+		const supportedPhpVersions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).join( ', ' );
+		const messageToShow = `PHP version ${ chalk.grey( phpVersion ) } specified in ` +
+			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedPhpVersions }\n`;
+
+		throw new Error( messageToShow );
+	}
+}
+
+async function validateWordpressVersion( wordpressVersion ): Promise<void> {
+	const wordpressVersionList = await getVersionList();
+	const matchingWordpressVersion = wordpressVersionList.find( version => version.tag === wordpressVersion );
+
+	if ( ! matchingWordpressVersion ) {
+		const supportedWordpressVersions = wordpressVersionList.map( version => version.tag ).join( ', ' );
+		const messageToShow = `WordPress version ${ chalk.grey( wordpressVersion ) } specified in ` +
+			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedWordpressVersions }\n`;
+
+		throw new Error( messageToShow );
+	}
 }
 
 export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
@@ -122,7 +161,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 	//        [index: string]: string | boolean;
 	//    }
 
-	// configurationFileOptions can hold different parameters than present in
+	// configurationFileOptions may hold different parameters than present in
 	// preselectedOptions like "slug", or differently named parameters.
 	// Merge only relevant configurationFileOptions into preselectedOptions.
 	const mergeOptions = {
