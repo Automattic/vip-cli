@@ -64,7 +64,7 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	const configurationFileOptions = getConfigurationFileOptions();
+	const configurationFileOptions = await getConfigurationFileOptions();
 
 	const environmentNameOptions = {
 		slug: opt.slug,

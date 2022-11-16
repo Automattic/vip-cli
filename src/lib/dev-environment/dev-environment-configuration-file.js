@@ -20,18 +20,23 @@ import type {
 	InstanceOptions,
 } from './types';
 import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../constants/dev-environment';
+import { getVersionList } from './dev-environment-core';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const CONFIGURATION_FILE_NAME = '.vip-dev-env.json';
 
-export function getConfigurationFileOptions(): ConfigurationFileOptions {
+export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
 	let configurationFileContents = '';
 
-	if ( fs.existsSync( configurationFilePath ) ) {
+	const fileExists = await fs.promises.access( configurationFilePath, fs.R_OK )
+		.then( () => true )
+		.catch( () => false );
+
+	if ( fileExists ) {
 		debug( 'Reading configuration file from:', configurationFilePath );
-		configurationFileContents = fs.readFileSync( configurationFilePath );
+		configurationFileContents = await fs.promises.readFile( configurationFilePath );
 	} else {
 		return {};
 	}
@@ -45,13 +50,16 @@ export function getConfigurationFileOptions(): ConfigurationFileOptions {
 		return {};
 	}
 
-	const configuration = sanitizeConfiguration( configurationFromFile );
-	debug( 'Sanitized configuration from file:', configuration );
+	const configuration = await sanitizeConfiguration( configurationFromFile )
+		.catch( async ( { message } ) => {
+			exit.withError( message );
+		} );
 
+	debug( 'Sanitized configuration from file:', configuration );
 	return configuration;
 }
 
-function sanitizeConfiguration( configurationFromFile: Object ): ConfigurationFileOptions {
+async function sanitizeConfiguration( configurationFromFile: Object ): Promise<ConfigurationFileOptions> {
 	const toBooleanIfDefined = value => {
 		if ( value === undefined ) {
 			return undefined;
@@ -61,10 +69,24 @@ function sanitizeConfiguration( configurationFromFile: Object ): ConfigurationFi
 
 	if ( configurationFromFile?.php && ! DEV_ENVIRONMENT_PHP_VERSIONS[ configurationFromFile.php ] ) {
 		const supportedPhpVersions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).join( ', ' );
-		const messageToShow = `PHP version ${ chalk.grey( configurationFromFile.php ) } specified in` +
-			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nChoose one of: ${ supportedPhpVersions }\n`;
+		const messageToShow = `PHP version ${ chalk.grey( configurationFromFile.php ) } specified in ` +
+			`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedPhpVersions }\n`;
 
-		exit.withError( messageToShow );
+		throw new Error( messageToShow );
+	}
+
+	const wordpressVersionList = await getVersionList();
+
+	if ( configurationFromFile?.wordpress ) {
+		const matchingWordpressVersion = wordpressVersionList.find( version => version.tag === configurationFromFile.wordpress );
+
+		if ( ! matchingWordpressVersion ) {
+			const supportedWordpressVersions = wordpressVersionList.map( version => version.tag ).join( ', ' );
+			const messageToShow = `WordPress version ${ chalk.grey( configurationFromFile.wordpress ) } specified in ` +
+				`${ chalk.grey( CONFIGURATION_FILE_NAME ) } is not supported.\nSupported versions: ${ supportedWordpressVersions }\n`;
+
+			throw new Error( messageToShow );
+		}
 	}
 
 	const configuration = {
@@ -72,6 +94,7 @@ function sanitizeConfiguration( configurationFromFile: Object ): ConfigurationFi
 		title: configurationFromFile?.title,
 		multisite: toBooleanIfDefined( configurationFromFile?.multisite ),
 		php: configurationFromFile?.php,
+		wordpress: configurationFromFile?.wordpress,
 	};
 
 	// Remove undefined values
@@ -106,6 +129,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		title: configurationFileOptions?.title,
 		multisite: configurationFileOptions?.multisite,
 		php: configurationFileOptions?.php,
+		wordpress: configurationFileOptions?.wordpress,
 	};
 
 	// Remove undefined values
