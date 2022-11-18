@@ -317,6 +317,18 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
+export function writeEnvironmentData( slug: string, data ): Boolean {
+	debug( 'Will try to write instance data for environment', slug );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+
+	fs.writeFileSync( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
+
+	return true;
+}
+
 async function prepareLandoEnv( instanceData: InstanceData, instancePath: string ): Promise<void> {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );

@@ -15,7 +15,10 @@ import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
 import UserError from '../user-error';
+import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 
+
+const isOnline = require( 'is-online' );
 /**
  * Internal dependencies
  */
@@ -100,6 +103,28 @@ export async function landoRebuild( instancePath: string ) {
 
 function addHooks( app: App, lando: Lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
+
+	/**
+	 * Prevent the rebuild from fetching the containers all the time:
+	 * Only do so if we're online and last pull was more than 1 week ago
+	*/
+	app.events.on( 'pre-rebuild', 1, async () => {
+
+		const instanceData = readEnvironmentData( app._name );
+		const plus7Days = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days from now
+		let overrideOpts = { pull: true, nocache: false };
+
+
+		instanceData.pullAfter ??= plus7Days;
+
+		if ( await isOnline() && instanceData.pullAfter < Date.now() ) {
+			overrideOpts.pull = true;
+			instanceData.pullAfter = plus7Days;
+			writeEnvironmentData( app._name, instanceData );
+		}
+
+		app.opts = { ...( app.opts ), ...overrideOpts };
+	} );
 }
 
 const healthChecks = {
