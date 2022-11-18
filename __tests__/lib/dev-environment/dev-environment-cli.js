@@ -94,6 +94,28 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				expected: 'foo',
 			},
+			{ // pull slug from config file option
+				options: {
+					configFileSlug: 'foo',
+				},
+				expected: 'foo',
+			},
+			{ // custom slug takes precedence over config file slug
+				options: {
+					slug: 'foo',
+					configFileSlug: 'bar',
+				},
+				expected: 'foo',
+			},
+			{ // app slug takes precedence over config file slug
+				options: {
+					allowAppEnv: true,
+					app: '123',
+					env: 'bar.car',
+					configFileSlug: 'config-slug',
+				},
+				expected: '123-bar.car',
+			},
 		] )( 'should get correct name', async input => {
 			const result = getEnvironmentName( input.options );
 
