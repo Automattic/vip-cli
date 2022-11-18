@@ -56,6 +56,15 @@ export type EnvironmentNameOptions = {
 
 export type ConfigurationFileOptions = {
 	slug?: string;
+	title?: string,
+	multisite?: boolean,
+	php: string,
+	wordpress: string,
+	'mu-plugins'?: string,
+	'app-code'?: string,
+	elasticsearch?: boolean,
+	phpmyadmin?: boolean,
+	xdebug?: boolean,
 }
 
 export interface InstanceData {

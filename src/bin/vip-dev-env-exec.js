@@ -14,10 +14,17 @@
  */
 import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
-import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
+import {
+	getEnvironmentName,
+	handleCLIException,
+} from 'lib/dev-environment/dev-environment-cli';
 import { exec } from 'lib/dev-environment/dev-environment-core';
+import { getConfigurationFileOptions } from 'lib/dev-environment/dev-environment-configuration-file';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	getEnvTrackingInfo,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 
 const examples = [
 	{
@@ -39,7 +46,19 @@ command( { wildcardCommand: true } )
 	.option( 'force', 'Disabling validations before task execution', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
-		const slug = getEnvironmentName( opt );
+		const environmentNameOptions = {
+			slug: opt.slug,
+			app: opt.app,
+			env: opt.env,
+		};
+
+		// If --slug is specified, skip configuration file.
+		if ( ! opt.slug ) {
+			const configurationFileOptions = await getConfigurationFileOptions();
+			environmentNameOptions.configFileSlug = configurationFileOptions.slug;
+		}
+
+		const slug = getEnvironmentName( environmentNameOptions );
 		await validateDependencies( slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
