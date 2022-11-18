@@ -51,6 +51,16 @@ const scope = nock( 'https://raw.githubusercontent.com' )
 	} ] );
 scope.persist( true );
 
+jest.mock( '../../../src/lib/constants/dev-environment', () => {
+	const devEnvironmentConstants = jest.requireActual( '../../../src/lib/constants/dev-environment' );
+
+	return {
+		...devEnvironmentConstants,
+		// Use separate version file to avoid overwriting actual cached images with mocked values
+		DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY: 'test-wordpress-versions.json',
+	};
+} );
+
 describe( 'lib/dev-environment/dev-environment-cli', () => {
 	beforeEach( () => {
 		prompt.mockReset();
