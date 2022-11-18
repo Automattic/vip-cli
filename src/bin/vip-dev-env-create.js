@@ -17,10 +17,24 @@ import chalk from 'chalk';
 import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
-import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
-import { getConfigurationFileOptions, printConfigurationFileInfo, mergeConfigurationFileOptions } from 'lib/dev-environment/dev-environment-configuration-file';
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
+import { createEnvironment,
+	printEnvironmentInfo,
+	getApplicationInformation,
+	doesEnvironmentExist,
+} from 'lib/dev-environment/dev-environment-core';
+import { getEnvironmentName,
+	promptForArguments,
+	getEnvironmentStartCommand,
+} from 'lib/dev-environment/dev-environment-cli';
+import {
+	getConfigurationFileOptions,
+	printConfigurationFileInfo,
+	mergeConfigurationFileOptions,
+} from 'lib/dev-environment/dev-environment-configuration-file';
+import {
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_SUBCOMMAND,
+} from 'lib/constants/dev-environment';
 import {
 	addDevEnvConfigurationOptions,
 	getOptionsFromAppInfo,
