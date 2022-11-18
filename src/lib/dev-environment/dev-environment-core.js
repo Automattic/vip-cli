@@ -75,7 +75,8 @@ type WordPressTag = {
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ): Promise<void> {
 	const allEnvNames = getAllEnvironmentNames();
 	if ( allEnvNames.length > 1 ) {
-		throw new Error( `More than one environment found: ${ chalk.blue.bold( allEnvNames.join(', ' ) ) }. Please re-run command with the --slug parameter: ${ chalk.bold( "vip dev-env start --slug <env-name>" ) }` );
+		throw new Error( `More than one environment found: ${ chalk.blue.bold( allEnvNames.join( ', ' ) ) }.
+		Please re-run command with the --slug parameter: ${ chalk.bold( 'vip dev-env start --slug <env-name>' ) }` );
 	}
 
 	debug( 'Will start an environment', slug );
