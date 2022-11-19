@@ -317,16 +317,20 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
-export function writeEnvironmentData( slug: string, data ): Boolean {
+/**
+ * Writes the instance data.
+ *
+ * @export
+ * @param {string} slug Env slug
+ * @param {InstanceData} data instance data
+ * @returns {<Promise<void>} Promise
+ */
+export function writeEnvironmentData( slug: string, data: InstanceData ): Boolean {
 	debug( 'Will try to write instance data for environment', slug );
-
 	const instancePath = getEnvironmentPath( slug );
-
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
-	fs.writeFileSync( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
-
-	return true;
+	return fs.promises.writeFile( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
 }
 
 async function prepareLandoEnv( instanceData: InstanceData, instancePath: string ): Promise<void> {

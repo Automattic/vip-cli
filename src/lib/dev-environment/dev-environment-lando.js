@@ -109,17 +109,21 @@ function addHooks( app: App, lando: Lando ) {
 	 * Only do so if we're online and last pull was more than 1 week ago
 	*/
 	app.events.on( 'pre-rebuild', 1, async () => {
-
 		const instanceData = readEnvironmentData( app._name );
-		const plus7Days = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days from now
-		let overrideOpts = { pull: true, nocache: false };
+		const week = 7 * 24 * 60 * 60 * 1000;
+		let shouldPull = null;
+		let overrideOpts = { pull: false, nocache: false };
 
+		if ( instanceData.pullAfter && Date.now() > instanceData.pullAfter ) {
+			shouldPull = true;
+		} else if ( ! instanceData.pullAfter ) {
+			shouldPull = true;
+		}
 
-		instanceData.pullAfter ??= plus7Days;
+		instanceData.pullAfter ??= Date.now() + week;
 
-		if ( await isOnline() && instanceData.pullAfter < Date.now() ) {
+		if ( await isOnline() && shouldPull ) {
 			overrideOpts.pull = true;
-			instanceData.pullAfter = plus7Days;
 			writeEnvironmentData( app._name, instanceData );
 		}
 
