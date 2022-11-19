@@ -62,6 +62,7 @@ const rootCmd = async function() {
 	let token = await Token.get();
 
 	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
+	const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
 	const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
 	const isLoginCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'login' ] );
 	const isDevEnvCommandWithoutEnv = doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) && ! containsAppEnvArgument( process.argv );
@@ -70,7 +71,13 @@ const rootCmd = async function() {
 
 	if (
 		! isLoginCommand &&
-		( isLogoutCommand || isHelpCommand || isDevEnvCommandWithoutEnv || ( token && token.valid() ) )
+		(
+			isLogoutCommand ||
+			isHelpCommand ||
+			isVersionCommand ||
+			isDevEnvCommandWithoutEnv ||
+			( token && token.valid() )
+		)
 	) {
 		runCmd();
 	} else {
