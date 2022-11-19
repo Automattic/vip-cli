@@ -54,16 +54,17 @@ const runCmd = async function() {
 	cmd.argv( process.argv );
 };
 
+function doesArgvHaveAtLeastOneParam( argv: Array, params: Array ) {
+	return argv.some( arg => params.includes( arg ) );
+}
+
 const rootCmd = async function() {
 	let token = await Token.get();
 
-	const isHelpCommand = process.argv.some(
-		arg => arg === 'help' || arg === '-h' || arg === '--help'
-	);
-	const isLogoutCommand = process.argv.some( arg => arg === 'logout' );
-	const isLoginCommand = process.argv.some( arg => arg === 'login' );
-	const isDevEnvCommandWithoutEnv =
-		process.argv.some( arg => arg === 'dev-env' ) && ! containsAppEnvArgument( process.argv );
+	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
+	const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
+	const isLoginCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'login' ] );
+	const isDevEnvCommandWithoutEnv = doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) && ! containsAppEnvArgument( process.argv );
 
 	debug( 'Argv:', process.argv );
 
