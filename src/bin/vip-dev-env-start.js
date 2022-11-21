@@ -36,7 +36,7 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'skip-rebuild', 'Only start stopped services' )
-	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip propting for wordpress update if non latest' )
+	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip prompting for wordpress update if non latest' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
