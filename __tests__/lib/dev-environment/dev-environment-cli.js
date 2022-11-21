@@ -12,7 +12,7 @@ import nock from 'nock';
  */
 
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
-import { promptForArguments } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { promptForArguments, setIsTTY } from '../../../src/lib/dev-environment/dev-environment-cli';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -52,6 +52,9 @@ const scope = nock( 'https://raw.githubusercontent.com' )
 scope.persist( true );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
+	beforeAll( () => {
+		setIsTTY( true );
+	} );
 	beforeEach( () => {
 		prompt.mockReset();
 		confirmRunMock.mockReset();

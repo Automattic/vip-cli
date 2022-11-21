@@ -45,7 +45,16 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const DEFAULT_SLUG = 'vip-local';
 
-const isStdinTTY = Boolean( process.stdin.isTTY );
+let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
+
+/**
+ * Used internally for tests
+ *
+ * @param {boolean} val Value to set
+ */
+export function setIsTTY( val: boolean ): void {
+	isStdinTTY = val;
+}
 
 // Forward declaratrion to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
