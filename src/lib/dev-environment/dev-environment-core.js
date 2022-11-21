@@ -73,12 +73,6 @@ type WordPressTag = {
 }
 
 export async function startEnvironment( slug: string, options: StartEnvironmentOptions ): Promise<void> {
-	const allEnvNames = getAllEnvironmentNames();
-	if ( allEnvNames.length > 1 ) {
-		throw new Error( `More than one environment found: ${ chalk.blue.bold( allEnvNames.join( ', ' ) ) }.
-		Please re-run command with the --slug parameter: ${ chalk.bold( 'vip dev-env start --slug <env-name>' ) }` );
-	}
-
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -347,7 +341,7 @@ async function prepareLandoEnv( instanceData: InstanceData, instancePath: string
 	debug( `Instance data file created in ${ instanceDataTargetPath }` );
 }
 
-function getAllEnvironmentNames() {
+export function getAllEnvironmentNames() {
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
 	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
