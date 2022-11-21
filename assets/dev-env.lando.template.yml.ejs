@@ -67,7 +67,7 @@ services:
     type: compose
     services:
       image: mariadb:<%= mariadb %>
-      command: docker-entrypoint.sh mysqld
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
       ports:
         - ":3306"
       environment:
