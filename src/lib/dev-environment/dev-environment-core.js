@@ -341,7 +341,7 @@ async function prepareLandoEnv( instanceData: InstanceData, instancePath: string
 	debug( `Instance data file created in ${ instanceDataTargetPath }` );
 }
 
-function getAllEnvironmentNames() {
+export function getAllEnvironmentNames() {
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
 	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );

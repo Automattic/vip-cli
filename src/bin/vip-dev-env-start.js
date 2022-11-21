@@ -17,7 +17,7 @@ import { exec } from 'child_process';
  */
 import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
-import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
+import { startEnvironment, getAllEnvironmentNames } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 
@@ -39,6 +39,12 @@ command()
 	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip prompting for wordpress update if non latest' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		const allEnvNames = getAllEnvironmentNames();
+		if ( allEnvNames.length > 1 && typeof opt.slug !== 'string' ) {
+			console.log( `${ chalk.red( 'Error:' ) } More than one environment found: ${ chalk.blue.bold( allEnvNames.join( ', ' ) ) }. Please re-run command with the --slug parameter: ${ chalk.bold( 'vip dev-env start --slug <env-name>' ) }` );
+			return;
+		}
+
 		const slug = getEnvironmentName( opt );
 		await validateDependencies( slug );
 
