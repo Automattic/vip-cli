@@ -28,7 +28,7 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getVersionList, readEnvironmentData } from './dev-environment-core';
+import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -159,7 +159,15 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		throw new UserError( message );
 	}
 
-	return DEFAULT_SLUG;
+	const envs = getAllEnvironmentNames();
+	if ( envs.length === 1 ) {
+		return envs[ 0 ];
+	}
+	if ( envs.length > 1 && typeof options.slug !== 'string' ) {
+		throw new UserError( `More than one environment found: ${ chalk.blue.bold( envs.join( ', ' ) ) }. Please re-run command with the --slug parameter: ${ chalk.bold( 'vip dev-env <subcommand> --slug <env-name>' ) }` );
+	}
+
+	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
 }
 
 export function getEnvironmentStartCommand( slug: string ): string {
