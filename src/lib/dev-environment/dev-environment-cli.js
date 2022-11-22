@@ -172,7 +172,7 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 }
 
 export function getEnvironmentStartCommand( slug: string ): string {
-	if ( ! slug || slug === DEFAULT_SLUG ) {
+	if ( ! slug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
 
