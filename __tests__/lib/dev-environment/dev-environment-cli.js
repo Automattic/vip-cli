@@ -139,10 +139,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		it( 'should throw an error', () => {
 			const options = {};
 
-			const expectedErrorMessage = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter: ${ chalk.bold( 'vip dev-env <subcommand> --slug <env-name>' ) }`;
+			const errorMsg = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter for the targeted environment.`;
 			expect( () => {
 				getEnvironmentName( options );
-			} ).toThrow( expectedErrorMessage );
+			} ).toThrow( errorMsg );
 		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {

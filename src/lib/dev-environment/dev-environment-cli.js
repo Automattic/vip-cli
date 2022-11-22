@@ -43,7 +43,7 @@ import typeof Command from 'lib/cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const DEFAULT_SLUG = 'vip-local';
+export const DEFAULT_SLUG = 'vip-local';
 
 // Forward declaratrion to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
@@ -164,7 +164,8 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		return envs[ 0 ];
 	}
 	if ( envs.length > 1 && typeof options.slug !== 'string' ) {
-		throw new UserError( `More than one environment found: ${ chalk.blue.bold( envs.join( ', ' ) ) }. Please re-run command with the --slug parameter: ${ chalk.bold( 'vip dev-env <subcommand> --slug <env-name>' ) }` );
+		const msg = `More than one environment found: ${ chalk.blue.bold( envs.join( ', ' ) ) }. Please re-run command with the --slug parameter for the targeted environment.`;
+		throw new UserError( msg );
 	}
 
 	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
