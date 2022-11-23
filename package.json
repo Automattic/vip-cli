@@ -130,7 +130,7 @@
     "is-online": "^9.0.1",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "git+https://github.com/Automattic/lando-cli.git#22d28f3de90814536636f8547a3966805343e693",
+    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_09_05",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
