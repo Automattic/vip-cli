@@ -104,30 +104,20 @@ export async function landoRebuild( instancePath: string ) {
 function addHooks( app: App, lando: Lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
 
-	/**
-	 * Prevent the rebuild from fetching the containers all the time:
-	 * Only do so if we're online and last pull was more than 1 week ago
-	*/
-	app.events.on( 'pre-rebuild', 1, async () => {
+	lando.events.on( 'pre-engine-build', 5, async data => {
 		const instanceData = readEnvironmentData( app._name );
 		const week = 7 * 24 * 60 * 60 * 1000;
-		let shouldPull = null;
-		let overrideOpts = { pull: false, nocache: false };
 
-		if ( instanceData.pullAfter && Date.now() > instanceData.pullAfter ) {
-			shouldPull = true;
-		} else if ( ! instanceData.pullAfter ) {
-			shouldPull = true;
+		data.opts.pull = await isOnline() && instanceData.pullAfter < Date.now();
+		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! data.opts.pull ) {
+			data.opts.local = data.opts.pullable;
+			data.opts.pullable = [];
 		}
 
-		instanceData.pullAfter ??= Date.now() + week;
-
-		if ( await isOnline() && shouldPull ) {
-			overrideOpts.pull = true;
+		if ( data.opts.pull || ! instanceData.pullAfter ) {
+			instanceData.pullAfter = Date.now() + week;
 			writeEnvironmentData( app._name, instanceData );
 		}
-
-		app.opts = { ...( app.opts ), ...overrideOpts };
 	} );
 }
 
