@@ -15,13 +15,12 @@ import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
 import UserError from '../user-error';
-import dns from "dns";
-import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import dns from 'dns';
 
 /**
  * Internal dependencies
  */
-
+import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 /**
  * This file will hold all the interactions with lando library
  */
