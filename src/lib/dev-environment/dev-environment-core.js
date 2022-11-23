@@ -320,12 +320,12 @@ export function readEnvironmentData( slug: string ): InstanceData {
 /**
  * Writes the instance data.
  *
- * @export
  * @param {string} slug Env slug
  * @param {InstanceData} data instance data
- * @returns {<Promise<void>} Promise
+ * @returns {Promise} Promise
  */
-export function writeEnvironmentData( slug: string, data: InstanceData ): Boolean {
+
+export function writeEnvironmentData( slug: string, data: InstanceData ): Promise {
 	debug( 'Will try to write instance data for environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );

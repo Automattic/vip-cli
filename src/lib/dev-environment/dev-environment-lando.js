@@ -17,7 +17,6 @@ import App from 'lando/lib/app';
 import UserError from '../user-error';
 import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 
-
 const isOnline = require( 'is-online' );
 /**
  * Internal dependencies
