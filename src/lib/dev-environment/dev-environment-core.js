@@ -324,8 +324,7 @@ export function readEnvironmentData( slug: string ): InstanceData {
  * @param {InstanceData} data instance data
  * @returns {Promise} Promise
  */
-
-export function writeEnvironmentData( slug: string, data: InstanceData ): Promise {
+export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<undefined> {
 	debug( 'Will try to write instance data for environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
