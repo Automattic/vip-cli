@@ -15,9 +15,9 @@ import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
 import UserError from '../user-error';
+import dns from "dns";
 import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 
-const isOnline = require( 'is-online' );
 /**
  * Internal dependencies
  */
@@ -106,7 +106,16 @@ function addHooks( app: App, lando: Lando ) {
 	lando.events.on( 'pre-engine-build', 5, async data => {
 		const instanceData = readEnvironmentData( app._name );
 
-		data.opts.pull = await isOnline() && instanceData.pullAfter < Date.now();
+		let registryResolvable = false;
+		try {
+			registryResolvable = ( await dns.promises.lookup( 'ghcr.io' ) ).address || false;
+			debug( 'Registry ghcr.io is resolvable' );
+		} catch ( err ) {
+			debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
+			registryResolvable = false;
+		}
+
+		data.opts.pull = registryResolvable && instanceData.pullAfter < Date.now();
 		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! data.opts.pull ) {
 			data.opts.local = data.opts.pullable;
 			data.opts.pullable = [];
