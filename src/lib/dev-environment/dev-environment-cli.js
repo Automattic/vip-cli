@@ -28,7 +28,7 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getVersionList, readEnvironmentData } from './dev-environment-core';
+import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -43,7 +43,7 @@ import typeof Command from 'lib/cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const DEFAULT_SLUG = 'vip-local';
+export const DEFAULT_SLUG = 'vip-local';
 
 // Forward declaratrion to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
@@ -159,11 +159,20 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		throw new UserError( message );
 	}
 
-	return DEFAULT_SLUG;
+	const envs = getAllEnvironmentNames();
+	if ( envs.length === 1 ) {
+		return envs[ 0 ];
+	}
+	if ( envs.length > 1 && typeof options.slug !== 'string' ) {
+		const msg = `More than one environment found: ${ chalk.blue.bold( envs.join( ', ' ) ) }. Please re-run command with the --slug parameter for the targeted environment.`;
+		throw new UserError( msg );
+	}
+
+	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
 }
 
 export function getEnvironmentStartCommand( slug: string ): string {
-	if ( ! slug || slug === DEFAULT_SLUG ) {
+	if ( ! slug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
 

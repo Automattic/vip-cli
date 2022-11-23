@@ -5,14 +5,15 @@
 /**
  * External dependencies
  */
+import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
 /**
  * Internal dependencies
  */
 
-import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
-import { promptForArguments } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent, promptForArguments } from 'lib/dev-environment/dev-environment-cli';
+import * as devEnvCore from 'lib/dev-environment/dev-environment-core';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -56,7 +57,12 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		prompt.mockReset();
 		confirmRunMock.mockReset();
 	} );
-	describe( 'getEnvironmentName', () => {
+	describe( 'getEnvironmentName with no environments present', () => {
+		beforeEach( () => {
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			getAllEnvironmentNamesMock.mockReturnValue( [] );
+		} );
+
 		it.each( [
 			{ // default value
 				options: {},
@@ -110,6 +116,33 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			expect( () => {
 				getEnvironmentName( options );
 			} ).toThrow( expectedErrorMessage );
+		} );
+	} );
+	describe( 'getEnvironmentName with 1 environment present', () => {
+		beforeEach( () => {
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site' ] );
+		} );
+
+		it( 'should return first environment found if only one present', () => {
+			const result = getEnvironmentName( {} );
+
+			expect( result ).toStrictEqual( 'single-site' );
+		} );
+	} );
+	describe( 'getEnvironmentName with multiple environments present', () => {
+		beforeEach( () => {
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site', 'ms-site' ] );
+		} );
+
+		it( 'should throw an error', () => {
+			const options = {};
+
+			const errorMsg = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter for the targeted environment.`;
+			expect( () => {
+				getEnvironmentName( options );
+			} ).toThrow( errorMsg );
 		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {
