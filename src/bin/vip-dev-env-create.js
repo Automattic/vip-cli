@@ -18,7 +18,7 @@ import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
+import { DEFAULT_SLUG, getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 import {
 	addDevEnvConfigurationOptions,
@@ -69,7 +69,11 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		env: opt.env,
 		allowAppEnv: true,
 	};
-	const slug = getEnvironmentName( environmentNameOptions );
+
+	let slug = DEFAULT_SLUG;
+	if ( ( Object.keys( opt ).length !== 0 ) ) {
+		slug = getEnvironmentName( environmentNameOptions );
+	}
 
 	await validateDependencies( slug );
 
