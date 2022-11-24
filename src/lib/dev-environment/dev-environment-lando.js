@@ -44,9 +44,11 @@ function getLandoUserConfigurationRoot() {
  * @returns {object} Lando configuration
  */
 function getLandoConfig() {
-	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
+	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
+	const landoPath = path.join( nodeModulesPath, 'lando' );
+	const atLandoPath = path.join( nodeModulesPath, '@lando' );
 
-	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
+	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
 	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
 	const isAllDebugSelected = process.env.DEBUG === '*';
@@ -59,6 +61,11 @@ function getLandoConfig() {
 		postLandoFiles: [ '.lando.local.yml' ],
 		pluginDirs: [
 			landoPath,
+			{
+				path: atLandoPath,
+				subdir: '.',
+				namespace: '@lando',
+			},
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
