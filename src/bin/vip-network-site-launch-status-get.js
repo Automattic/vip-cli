@@ -76,7 +76,7 @@ export async function getLaunchStatus( arg: string[], opt ): void {
 	// TODO convert Launch codes to human readable strings
 	// TODO should we expose the launching status or simply show yes/no like we do
 	if ( networkSiteDetails.launchStatus === LAUNCH_STATUSES.LAUNCHED ) {
-		console.log( `Launch status: ✅ ${ chalk.green( LAUNCH_STATUSES_LABELS.LAUNCHED ) }` );
+		console.log( `Launch status: ${ chalk.green( LAUNCH_STATUSES_LABELS.LAUNCHED ) }` );
 	} else {
 		console.log( `Launch status: ${ chalk.red( LAUNCH_STATUSES_LABELS.NOT_LAUNCHED ) } ` );
 	}
