@@ -9,6 +9,7 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from 'lib/api';
+import { NetworkSiteInfo } from './types';
 
 const query = gql`
     query GetNetworkSite(
@@ -41,7 +42,7 @@ const query = gql`
 `;
 
 // List the names (but not values) of environment variables.
-export default async function getNetworkSite( appId: number, envId: number, blogId: number, envType: string ) {
+export default async function getNetworkSite( appId: number, envId: number, blogId: number, envType: string ): NetworkSiteInfo {
 	const api = await API();
 
 	const variables = {
@@ -53,5 +54,5 @@ export default async function getNetworkSite( appId: number, envId: number, blog
 
 	const { data } = await api.query( { query, variables } );
 	// todo error message if not found
-	return data.app.environments[ 0 ].wpSitesSDS.nodes[ 0 ];
+	return data.app.environments[ 0 ].wpSitesSDS?.nodes[ 0 ];
 }
