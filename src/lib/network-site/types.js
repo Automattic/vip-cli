@@ -1,5 +1,11 @@
 // @flow
+/**
+ * External dependencies
+ */
 
+/**
+ * Internal dependencies
+ */
 import { LAUNCH_STATUSES } from '../constants/network-site';
 
 export type NetworkSiteInfo = {
