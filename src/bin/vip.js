@@ -45,6 +45,7 @@ const runCmd = async function() {
 		.command( 'dev-env', 'Use local dev-environment' )
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'logs', 'Get logs from your VIP applications' )
+		.command( 'network-site', 'Get details on a site in your multisite environment' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'whoami', 'Display details about the currently logged-in user' )
