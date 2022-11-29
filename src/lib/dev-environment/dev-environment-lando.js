@@ -266,7 +266,7 @@ async function isEnvUp( app ) {
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
-	// If all the URLs are reachable than the app is considered 'up'
+	// If all the URLs are reachable then the app is considered 'up'
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
@@ -287,7 +287,7 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 
 	const tool = app.config.tooling[ toolName ];
 	if ( ! tool ) {
-		throw new Error( 'wp is not a known lando task' );
+		throw new Error( `${ toolName } is not a known lando task` );
 	}
 
 	/*

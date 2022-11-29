@@ -257,11 +257,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
+		mailhog: false,
 	};
 
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
+		mailhog: 'MailHog',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -297,7 +299,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.statsd = false;
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug' ] ) {
+	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
 		if ( service in instanceData ) {
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
@@ -557,7 +559,8 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
-		.option( 'php', 'Explicitly choose PHP version to use' );
+		.option( 'php', 'Explicitly choose PHP version to use' )
+		.option( 'mailhog', 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**

@@ -13,6 +13,7 @@ export interface InstanceOptions {
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	xdebugConfig?: string;
+	mailhog?: boolean;
 
 	[index: string]: string | boolean;
 }
@@ -68,6 +69,7 @@ export interface InstanceData {
 	mariadb: string;
 	php: string;
 	elasticsearch?: string | boolean;
+	mailhog: boolean;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }
