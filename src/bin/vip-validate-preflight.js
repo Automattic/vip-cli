@@ -21,14 +21,18 @@ import gql from 'graphql-tag';
 import { readFileSync } from 'fs';
 import dotenv from 'ini';
 import chalk from 'chalk';
+import { prompt } from 'enquirer';
 
 /**
  * Internal dependencies
  */
 import command from 'lib/cli/command';
+import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
 import * as exit from 'lib/cli/exit';
 import { default as API, enableGlobalGraphQLErrorHandling, disableGlobalGraphQLErrorHandling } from '../lib/api';
 import { trackEvent } from 'lib/tracker';
+
+const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];
 
 export const appQuery = `
 	id
@@ -129,9 +133,12 @@ async function getBuildConfiguration( application, environment ) {
 export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	harmoniaArgs = await validateArgs( opt );
 
+	const appId = opt.env?.appId ?? 0;
+	const envId = opt.env?.id ?? 0;
+
 	const baseTrackingParams = {
-		env_id: opt.env.id,
-		app_id: opt.env.appId,
+		env_id: envId,
+		app_id: appId,
 		command: 'vip validate preflight',
 		...sanitizeArgsForTracking( harmoniaArgs ),
 	};
@@ -161,9 +168,9 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 
 	// Create the Site Config objects
 	const siteOptions = new SiteConfig( {
-		siteID: opt.app.id,
+		siteID: envId,
 		nodejsVersion: harmoniaArgs.nodejsVersion,
-		repository: opt.app.repo,
+		repository: opt.app?.repo ?? 'no-repo',
 		baseURL: 'http://localhost:' + harmoniaArgs.port,
 		dockerBuildEnvs: harmoniaArgs.nodeBuildDockerEnv,
 		topRequests: [], // TODO: get top 10 of most requested URLs
@@ -187,7 +194,7 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 
 	const customEnvVars = {};
 
-	if ( opt.env.environmentVariables?.nodes.length > 0 ) {
+	if ( opt.env?.environmentVariables?.nodes.length > 0 ) {
 		opt.env.environmentVariables.nodes.forEach( envVar => {
 			customEnvVars[ envVar.name ] = envVar.value;
 		} );
@@ -422,16 +429,41 @@ async function validateArgs( opt ): Promise<{}> {
 		outputJson = true;
 	}
 
-	// Get build information from API and store it in the env object
-	const buildConfig = await getBuildConfiguration( opt.app, opt.env );
+	if ( opt.app ) {
+		// Get build information from API and store it in the env object
+		const buildConfig = await getBuildConfiguration( opt.app, opt.env );
 
-	args.app_id = opt.app.id;
-	args.env_id = opt.env.id;
+		args.app_id = opt.app.id;
+		args.env_id = opt.env.id;
 
-	args.nodejsVersion = opt.nodeVersion ?? buildConfig.nodeJSVersion;
-	args.buildType = buildConfig.buildType;
-	args.npmToken = buildConfig.npmToken;
-	args.nodeBuildDockerEnv = buildConfig.nodeBuildDockerEnv;
+		args.nodejsVersion = opt.nodeVersion ?? buildConfig.nodeJSVersion;
+		args.buildType = buildConfig.buildType;
+		args.npmToken = buildConfig.npmToken;
+		args.nodeBuildDockerEnv = buildConfig.nodeBuildDockerEnv;
+	} else {
+		args.app_id = 0;
+		args.env_id = 0;
+		args.buildType = 'nodejs';
+
+		// If no node.js version is specified, prompt the user to select one
+		if ( ! opt.nodeVersion ) {
+			// Ask for a node.js version
+			try {
+				const selection = await prompt( {
+					type: 'select',
+					name: 'nodejsVersion',
+					message: 'Which Node.js version do you want to use?',
+					choices: ALLOWED_NODEJS_VERSIONS,
+				} );
+
+				args.nodejsVersion = selection.nodejsVersion;
+			} catch ( err ) {
+				exit.withError( 'No Node.js version selected. Aborting.' );
+			}
+		} else {
+			args.nodejsVersion = opt.nodeVersion;
+		}
+	}
 
 	args.wait = opt.wait ?? 3000;
 	args.port = opt.port ?? Math.floor( Math.random() * 1000 ) + 3001; // Get a PORT from 3001 and 3999
@@ -460,12 +492,27 @@ function sanitizeArgsForTracking( args: {} ): {} {
 	return sanitizedArgs;
 }
 
-command( {
-	appContext: true,
-	appQuery,
-	envContext: true,
+let commandOpts = {
 	module: 'harmonia',
-} )
+};
+
+// The @app.env selector is optional, so we need to check if it was passed
+const parsedAlias = parseEnvAliasFromArgv( process.argv );
+
+if ( parsedAlias.app ) {
+	commandOpts = {
+		...commandOpts,
+		appQuery,
+		envContext: true,
+		appContext: true,
+	};
+} else {
+	logToConsole( chalk.bold.yellow( 'Warning: ' ) +
+		'The preflight tests are running without a provided application and/or environment.\n' +
+		'Some app-dependent configurations, such as environment variables, might not defined.' );
+}
+
+command( commandOpts )
 	.option( 'verbose', 'Increase logging level to include app build and server boot up messages', false )
 	.option( 'node-version', 'Select a specific target Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR' )
 	.option( 'wait', 'Configure the time to wait in ms for the app to boot up. Do not change unless you have issues', 3000 )
@@ -483,3 +530,4 @@ command( {
 		},
 	] )
 	.argv( process.argv, vipValidatePreflightCommand );
+
