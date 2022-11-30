@@ -34,7 +34,15 @@ const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 const runCmd = async function() {
 	const cmd = command();
 	cmd
-		.command( 'logout', 'Logout from your current session', async () => {
+		.command( 'logout', 'Logout from your current session', async ( name, sub, options ) => {
+			if ( options.h || options.help ) {
+				cmd.showHelp();
+			}
+
+			if ( options.v || options.version ) {
+				cmd.showVersion();
+			}
+
 			await logout();
 
 			console.log( 'You are successfully logged out.' );
