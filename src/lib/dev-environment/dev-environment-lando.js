@@ -65,6 +65,7 @@ function getLandoConfig() {
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
+		home: '',
 	};
 }
 
