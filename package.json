@@ -43,6 +43,7 @@
     "vip-network-site": "dist/bin/vip-network-site.js",
     "vip-network-site-launch-status": "dist/bin/vip-network-site-launch-status.js",
     "vip-network-site-launch-status-get": "dist/bin/vip-network-site-launch-status-get.js",
+    "vip-network-site-launch-status-set": "dist/bin/vip-network-site-launch-status-set.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-validate": "dist/bin/vip-validate.js",

@@ -22,8 +22,9 @@ import getNetworkSite from '../lib/network-site/api-get';
 import * as exit from '../lib/cli/exit';
 import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
 import { LAUNCH_STATUSES, LAUNCH_STATUSES_LABELS } from '../lib/constants/network-site';
+import { NETWORK_SITE_BASE_USAGE } from './vip-network-site';
 
-const baseUsage = 'vip @mysite.develop network-site launch-status get';
+const baseUsage = `${ NETWORK_SITE_BASE_USAGE } launch-status get`;
 
 // Command examples
 const examples = [

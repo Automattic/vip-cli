@@ -10,6 +10,8 @@
  */
 import command from 'lib/cli/command';
 
+export const NETWORK_SITE_BASE_USAGE = 'vip @mysite.develop network-site';
+
 command( {
 	requiredArgs: 2,
 } )
