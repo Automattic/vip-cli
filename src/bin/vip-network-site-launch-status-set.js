@@ -21,27 +21,26 @@ import { trackEvent } from 'lib/tracker';
 import * as exit from '../lib/cli/exit';
 import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
 import { LAUNCH_STATUSES } from '../lib/constants/network-site';
-import { NETWORK_SITE_BASE_USAGE } from './vip-network-site';
 import setNetworkSiteLaunchStatus from '../lib/network-site/api-launch-status-set';
 
-const baseUsage = `${ NETWORK_SITE_BASE_USAGE } launch-status set`;
+const baseUsage = 'vip @mysite.develop network-site launch-status set';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ baseUsage } BLOG_ID LAUNCH_STATUS`,
+		usage: `${ baseUsage } BLOG_ID`,
 		description: 'Set the launch status for "BLOG_ID" to LAUNCHED/NOT_LAUNCHED in a multisite environment',
 	},
 ];
 
-export async function getLaunchStatus( arg: string[], opt ): void {
+export async function setLaunchStatus( arg: string[], opt ): void {
 	const [ blogIdStr, launchStatus ] = arg;
 	const blogId = parseInt( blogIdStr, 10 );
 
 	if ( ! Number.isInteger( blogId ) || blogId <= 0 ) {
 		exit.withError( `Invalid blogId: ${ blogId }. It should be a number.` );
 	}
-	if ( ! Object.keys( LAUNCH_STATUSES ).indexOf( launchStatus ) ) {
+	if ( Object.keys( LAUNCH_STATUSES ).indexOf( launchStatus ) === -1 ) {
 		exit.withError( `Invalid launch status: ${ launchStatus }. It should be either ${ LAUNCH_STATUSES.LAUNCHED } or ${ LAUNCH_STATUSES.NOT_LAUNCHED }.` );
 	}
 
@@ -52,7 +51,7 @@ export async function getLaunchStatus( arg: string[], opt ): void {
 		org_id: opt.app.organization.id,
 		variable_name: 'blogId',
 	};
-
+	// TODO add a confirmation before running on production and a --yes/force flag
 	debug( `Request: setting network site launch status for ${ getEnvContext( opt.app, opt.env ) } to ${ launchStatus }` );
 	const isMultiSite = await isMultiSiteInSiteMeta( opt.app.id, opt.env.id );
 	if ( ! isMultiSite ) {
@@ -86,9 +85,9 @@ command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
-	requiredArgs: 1,
+	requiredArgs: 2,
 	usage: `${ baseUsage } <BLOG_ID> <LAUNCH_STATUS>`,
-} )
+} ) // TODO should we use options instead of args?
 	.examples( examples )
-	.argv( process.argv, getLaunchStatus );
+	.argv( process.argv, setLaunchStatus );
 

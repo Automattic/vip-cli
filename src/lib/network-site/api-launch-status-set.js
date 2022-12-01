@@ -15,7 +15,7 @@ const SET_LAUNCH_STATUS_MUTATION = gql`
     mutation UpdateWPSiteLaunchStatusMutation(
         $input: WPSiteLaunchStatusInput
     ) {
-        updateWPSiteLaunchStatus(input: $input){
+        updateWPSiteLaunchStatus( input: $input ){
             networkSiteId
             updated
             launchStatus
@@ -28,10 +28,12 @@ export default async function setNetworkSiteLaunchStatus( appId: number, envId: 
 	const api = await API();
 
 	const variables = {
-		appId,
-		envId,
-		networkSiteId: blogId,
-		launchStatus: launchStatus,
+		input: {
+			appId,
+			environmentId: envId,
+			networkSiteId: blogId,
+			launchStatus: launchStatus,
+		},
 	};
 
 	const { data } = await api.mutate( { SET_LAUNCH_STATUS_MUTATION, variables } );
