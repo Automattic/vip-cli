@@ -18,7 +18,7 @@ import { appQuery } from 'lib/envvar/api';
 import { debug, getEnvContext } from 'lib/envvar/logging';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
-import getNetworkSite from '../lib/network-site/network-site-details';
+import getNetworkSite from '../lib/network-site/api-get';
 import * as exit from '../lib/cli/exit';
 import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
 import { LAUNCH_STATUSES, LAUNCH_STATUSES_LABELS } from '../lib/constants/network-site';
