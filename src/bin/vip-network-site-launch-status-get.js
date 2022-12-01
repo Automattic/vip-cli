@@ -14,7 +14,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import command from 'lib/cli/command';
-import { appQuery, getEnvVar } from 'lib/envvar/api';
+import { appQuery } from 'lib/envvar/api';
 import { debug, getEnvContext } from 'lib/envvar/logging';
 import { rollbar } from 'lib/rollbar';
 import { trackEvent } from 'lib/tracker';
@@ -34,9 +34,6 @@ const examples = [
 ];
 
 export async function getLaunchStatus( arg: string[], opt ): void {
-	// todo add tracking
-	// Help the user by uppercasing input.
-	// TODO validate number
 	const blogId = parseInt( arg[ 0 ], 10 );
 	if ( ! Number.isInteger( blogId ) || blogId <= 0 ) {
 		exit.withError( `Invalid blogId: ${ blogId }. It should be a number.` );
@@ -56,25 +53,25 @@ export async function getLaunchStatus( arg: string[], opt ): void {
 		console.log( chalk.yellow( 'This is not a multisite environment' ) );
 		process.exit();
 	}
-	//await trackEvent( 'network_site_list_command_execute', trackingParams );
-	// TODO (should we always print the launch status?
+	await trackEvent( 'network_site_launch_status_get_command_execute', trackingParams );
+
 	const networkSiteDetails = await getNetworkSite( opt.app.id, opt.env.id, blogId, opt.env.type )
 		.catch( async err => {
-			//rollbar.error( err );
-			//await trackEvent( 'network_site_list_query_error', { ...trackingParams, error: err.message } );
+			rollbar.error( err );
+			await trackEvent( 'network_site_launch_status_get_command_success', { ...trackingParams, error: err.message } );
 
 			throw err;
 		} );
 
-	//await trackEvent( 'network_site_list_command_success', trackingParams );
+	await trackEvent( 'network_site_launch_status_get_command_success', trackingParams );
 
 	if ( ! networkSiteDetails ) {
 		console.log( chalk.yellow( 'No network site information found' ) );
 		process.exit();
 	}
-	// TODO print launch status in different colors
-	// TODO convert Launch codes to human readable strings
-	// TODO should we expose the launching status or simply show yes/no like we do
+
+	console.log( `BlogId: ${ networkSiteDetails.blogId }` );
+	console.log( `SiteURL: ${ networkSiteDetails.siteUrl }` );
 	if ( networkSiteDetails.launchStatus === LAUNCH_STATUSES.LAUNCHED ) {
 		console.log( `Launch status: ${ chalk.green( LAUNCH_STATUSES_LABELS.LAUNCHED ) }` );
 	} else {
