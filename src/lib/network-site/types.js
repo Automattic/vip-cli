@@ -18,3 +18,8 @@ export type NetworkSiteInfo = {
 	timestamp: number;
 }
 
+export type NetworkSiteLaunchStatusSetResponse = {
+	networkSiteId: number;
+	updated: boolean;
+	launchStatus: string;
+}
