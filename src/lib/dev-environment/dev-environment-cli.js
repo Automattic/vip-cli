@@ -45,6 +45,17 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const DEFAULT_SLUG = 'vip-local';
 
+const componentDisplayNames = {
+	wordpress: 'WordPress',
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'application code',
+};
+
+const componentDemoNames = {
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'vip-go-skeleton',
+};
+
 // Forward declaratrion to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
 // eslint-disable-next-line no-redeclare
@@ -188,7 +199,8 @@ export function printTable( data: Object ) {
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
-	if ( allowLocal && param.includes( '/' ) ) {
+	// This is a bit of a naive check
+	if ( allowLocal && /[\\\/]/.test( param ) ) {
 		return {
 			mode: 'local',
 			dir: param,
@@ -314,16 +326,19 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 }
 
 async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
-	debug( `processing a component '${ component }', with preselected/deafault - ${ preselectedValue }/${ defaultValue }` );
+	debug( `processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
+		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
+
+	debug( result );
 
 	while ( 'local' === result?.mode ) {
 		const resolvedPath = resolvePath( result.dir || '' );
@@ -456,21 +471,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 	return resolvePhpVersion( answer );
 }
 
-const componentDisplayNames = {
-	wordpress: 'WordPress',
-	muPlugins: 'vip-go-mu-plugins',
-	appCode: 'application code',
-};
-const componentDemoyNames = {
-	muPlugins: 'vip-go-mu-plugins',
-	appCode: 'vip-go-skeleton',
-};
-
 // eslint-disable-next-line no-redeclare
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig | WordPressConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const componentDemoName = componentDemoyNames[ component ] || component;
+	const componentDemoName = componentDemoNames[ component ] || component;
 	const modChoices = [];
 
 	if ( allowLocal ) {
@@ -505,6 +510,8 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 		modeResult = await select.run();
 	}
+
+	debug( modeResult );
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {

@@ -8,6 +8,7 @@
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
+import os from 'os';
 /**
  * Internal dependencies
  */
@@ -176,7 +177,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		} );
 	} );
 	describe( 'processComponentOptionInput', () => {
-		it.each( [
+		const cases = [
 			{ // base tag
 				param: testReleaseWP,
 				allowLocal: true,
@@ -193,7 +194,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					tag: '/tmp/wp',
 				},
 			},
-			{ // if local is  allowed
+			{
 				param: '~/path',
 				allowLocal: true,
 				expected: {
@@ -201,7 +202,27 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					dir: '~/path',
 				},
 			},
-		] )( 'should process options and use defaults', async input => {
+		];
+
+		if ( os.platform() === 'win32' ) {
+			cases.push( {
+				param: 'C:\\path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:\\path',
+				},
+			},
+			{
+				param: 'C:/path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:/path',
+				},
+			} );
+		}
+		it.each( cases )( 'should process options and use defaults', async input => {
 			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
