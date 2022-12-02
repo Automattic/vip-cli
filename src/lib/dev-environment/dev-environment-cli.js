@@ -67,8 +67,7 @@ const componentDemoNames = {
 	appCode: 'vip-go-skeleton',
 };
 
-
-// Forward declaratrion to avoid no-use-before-define
+// Forward declaration to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
 // eslint-disable-next-line no-redeclare
 declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
