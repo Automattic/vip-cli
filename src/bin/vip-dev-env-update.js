@@ -22,6 +22,7 @@ import { addDevEnvConfigurationOptions, getEnvTrackingInfo, handleCLIException, 
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -38,7 +39,9 @@ addDevEnvConfigurationOptions( cmd );
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = getEnvironmentName( opt );
-	await validateDependencies( slug );
+
+	const lando = await bootstrapLando();
+	await validateDependencies( lando, slug );
 
 	const trackingInfo = getEnvTrackingInfo( slug );
 	await trackEvent( 'dev_env_update_command_execute', trackingInfo );
