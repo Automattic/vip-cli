@@ -481,7 +481,20 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		const baseName = path.basename( outputFileName );
 
 		resolvedPath = path.join( instancePath, baseName );
-		fs.renameSync( outputFileName, resolvedPath );
+
+		try {
+			fs.renameSync( outputFileName, resolvedPath );
+			debug( `Renamed ${ outputFileName } to ${ resolvedPath }` );
+		} catch ( err ) {
+			if ( err.code !== 'EXDEV' ) {
+				throw err;
+			}
+			debug( 'Could not rename across filesystems. Copying the file instead.' );
+			fs.copyFileSync( outputFileName, resolvedPath );
+			debug( `Copied ${ outputFileName } to ${ resolvedPath }` );
+			fs.unlinkSync( outputFileName );
+			debug( `Removed ${ outputFileName }` );
+		}
 	}
 
 	/**
