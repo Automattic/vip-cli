@@ -13,7 +13,7 @@ import os from 'os';
  * Internal dependencies
  */
 
-import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent, promptForArguments } from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent, promptForArguments, setIsTTY } from 'lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from 'lib/dev-environment/dev-environment-core';
 
 jest.mock( 'enquirer', () => {
@@ -64,6 +64,9 @@ jest.mock( '../../../src/lib/constants/dev-environment', () => {
 } );
 
 describe( 'lib/dev-environment/dev-environment-cli', () => {
+	beforeAll( () => {
+		setIsTTY( true );
+	} );
 	beforeEach( () => {
 		prompt.mockReset();
 		confirmRunMock.mockReset();

@@ -45,6 +45,17 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const DEFAULT_SLUG = 'vip-local';
 
+let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
+
+/**
+ * Used internally for tests
+ *
+ * @param {boolean} val Value to set
+ */
+export function setIsTTY( val: boolean ): void {
+	isStdinTTY = val;
+}
+
 const componentDisplayNames = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
@@ -56,7 +67,7 @@ const componentDemoNames = {
 	appCode: 'vip-go-skeleton',
 };
 
-// Forward declaratrion to avoid no-use-before-define
+// Forward declaration to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
 // eslint-disable-next-line no-redeclare
 declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
@@ -348,9 +359,11 @@ async function processComponent( component: string, preselectedValue: string, de
 
 		if ( isPathValid ) {
 			break;
-		} else {
+		} else if ( isStdinTTY ) {
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component, allowLocal, defaultObject );
+		} else {
+			throw new Error( message );
 		}
 	}
 
@@ -407,31 +420,38 @@ export function resolvePath( input: string ): string {
 }
 
 export async function promptForText( message: string, initial: string ): Promise<string> {
-	const nonEmptyValidator = ( value: ?string ) => {
-		if ( ( value || '' ).trim() ) {
-			return true;
-		}
-		return 'value needs to be provided';
-	};
+	let result = { input: initial };
+	if ( isStdinTTY ) {
+		const nonEmptyValidator = ( value: ?string ) => {
+			if ( ( value || '' ).trim() ) {
+				return true;
+			}
+			return 'value needs to be provided';
+		};
 
-	const result = await prompt( {
-		type: 'input',
-		name: 'input',
-		message,
-		initial,
-		validate: nonEmptyValidator,
-	} );
+		result = await prompt( {
+			type: 'input',
+			name: 'input',
+			message,
+			initial,
+			validate: nonEmptyValidator,
+		} );
+	}
 
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
-	const confirm = new Confirm( {
-		message,
-		initial,
-	} );
+export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
+	if ( isStdinTTY ) {
+		const confirm = new Confirm( {
+			message,
+			initial,
+		} );
 
-	return confirm.run();
+		return confirm.run();
+	}
+
+	return Promise.resolve( initial );
 }
 
 function resolvePhpVersion( version: string ): string {
@@ -457,17 +477,21 @@ function resolvePhpVersion( version: string ): string {
 export async function promptForPhpVersion( initialValue: string ): Promise<string> {
 	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
 
-	const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const initial = images.findIndex( version => version === initialValue );
+	let answer = initialValue;
+	if ( isStdinTTY ) {
+		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const initial = images.findIndex( version => version === initialValue );
 
-	const select = new Select( {
-		message: 'PHP version to use',
-		choices,
-		initial,
-	} );
+		const select = new Select( {
+			message: 'PHP version to use',
+			choices,
+			initial,
+		} );
 
-	const answer = await select.run();
+		answer = await select.run();
+	}
+
 	return resolvePhpVersion( answer );
 }
 
@@ -490,7 +514,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	} );
 
 	let initialMode = 'image';
-	if ( 'appCode' === component ) {
+	if ( 'appCode' === component && isStdinTTY ) {
 		initialMode = 'local';
 	}
 
@@ -500,7 +524,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	let modeResult = initialMode;
 	const selectMode = modChoices.length > 1;
-	if ( selectMode ) {
+	if ( selectMode && isStdinTTY ) {
 		const initialModeIndex = modChoices.findIndex( choice => choice.value === initialMode );
 		const select = new Select( {
 			message: `How would you like to source ${ componentDisplayName }`,
@@ -524,14 +548,18 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	// image with selection
 	if ( component === 'wordpress' ) {
-		const message = `${ messagePrefix }Which version would you like`;
 		const tagChoices = await getTagChoices();
-		const selectTag = new Select( {
-			message,
-			choices: tagChoices,
-			initial: defaultObject?.tag || '',
-		} );
-		const option = await selectTag.run();
+		let option = defaultObject?.tag || tagChoices[ 0 ].value;
+		if ( isStdinTTY ) {
+			const message = `${ messagePrefix }Which version would you like`;
+			const selectTag = new Select( {
+				message,
+				choices: tagChoices,
+				initial: option,
+			} );
+
+			option = await selectTag.run();
+		}
 
 		return ( {
 			mode: 'image',
