@@ -28,6 +28,7 @@ import {
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -75,7 +76,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		slug = getEnvironmentName( environmentNameOptions );
 	}
 
-	await validateDependencies( slug );
+	const lando = await bootstrapLando();
+	await validateDependencies( lando, slug );
 
 	debug( 'Args: ', arg, 'Options: ', opt );
 
@@ -116,7 +118,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	try {
 		await createEnvironment( instanceData );
 
-		await printEnvironmentInfo( slug, { extended: false } );
+		await printEnvironmentInfo( lando, slug, { extended: false } );
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );

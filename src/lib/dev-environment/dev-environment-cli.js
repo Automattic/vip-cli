@@ -133,13 +133,15 @@ const VALIDATION_STEPS = [
 	{ id: 'access', name: 'Check access to docker for current user' },
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
-export const validateDependencies = async ( slug: string ) => {
-	const progressTracker = new ProgressTracker( VALIDATION_STEPS );
+
+export const validateDependencies = async ( lando: Lando, slug: string ) => {
+	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
+	const progressTracker = new ProgressTracker( steps );
 	console.log( 'Running validation steps...' );
 	progressTracker.startPrinting();
 	progressTracker.stepRunning( 'docker' );
 	try {
-		await validateDockerInstalled();
+		await validateDockerInstalled( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
@@ -148,7 +150,7 @@ export const validateDependencies = async ( slug: string ) => {
 	progressTracker.print();
 
 	try {
-		await validateDockerAccess();
+		await validateDockerAccess( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
@@ -156,11 +158,12 @@ export const validateDependencies = async ( slug: string ) => {
 	progressTracker.stepSuccess( 'access' );
 	progressTracker.print();
 
-	await verifyDNSResolution( slug );
+	if ( slug ) {
+		await verifyDNSResolution( slug );
+		progressTracker.stepSuccess( 'dns' );
+		progressTracker.print();
+	}
 
-	progressTracker.stepSuccess( 'dns' );
-
-	progressTracker.print();
 	progressTracker.stopPrinting();
 };
 

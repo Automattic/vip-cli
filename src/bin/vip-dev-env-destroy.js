@@ -24,6 +24,7 @@ import {
 	handleCLIException,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -44,7 +45,9 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
-		await validateDependencies( slug );
+
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_destroy_command_execute', trackingInfo );
@@ -53,7 +56,7 @@ command()
 
 		try {
 			const removeFiles = ! ( opt.soft || false );
-			await destroyEnvironment( slug, removeFiles );
+			await destroyEnvironment( lando, slug, removeFiles );
 
 			const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 			console.log( message );

@@ -20,6 +20,7 @@ import command from 'lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -40,7 +41,9 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
-		await validateDependencies( slug );
+
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		const startProcessing = new Date();
 
@@ -68,7 +71,7 @@ command()
 				} );
 			}
 
-			await startEnvironment( slug, options );
+			await startEnvironment( lando, slug, options );
 
 			const processingTime = Math.ceil( ( new Date() - startProcessing ) / 1000 ); // in seconds
 			const successTrackingInfo = { ...trackingInfo, processing_time: processingTime };
