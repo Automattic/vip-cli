@@ -490,7 +490,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 				throw err;
 			}
 			debug( 'Could not rename across filesystems. Copying the file instead.' );
-			fs.copyFileSync( outputFileName, resolvedPath, fs.constants.COPYFILE_FICLONE );
+			fs.copyFileSync( outputFileName, resolvedPath );
 			debug( `Copied ${ outputFileName } to ${ resolvedPath }` );
 			fs.unlinkSync( outputFileName );
 			debug( `Removed ${ outputFileName }` );
