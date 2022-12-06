@@ -19,6 +19,7 @@ import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, promptForBo
 import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { validate } from '../lib/validations/sql';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const examples = [
 	{
@@ -51,7 +52,9 @@ command( {
 		const [ fileName ] = unmatchedArgs;
 		const { searchReplace, inPlace } = opt;
 		const slug = getEnvironmentName( opt );
-		await validateDependencies( slug );
+
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_import_sql_command_execute', trackingInfo );
@@ -69,27 +72,27 @@ command( {
 			}
 
 			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
-			await exec( slug, importArg );
+			await exec( lando, slug, importArg );
 
 			if ( searchReplace && searchReplace.length && ! inPlace ) {
 				fs.unlinkSync( resolvedPath );
 			}
 
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
-			await exec( slug, cacheArg );
+			await exec( lando, slug, cacheArg );
 
 			try {
-				await exec( slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
+				await exec( lando, slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
 				const doIndex = await promptForBoolean( 'Do you want to index data in ElasticSearch (used by enterprise search)?', true );
 				if ( doIndex ) {
-					await exec( slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
+					await exec( lando, slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
 				}
 			} catch ( err ) {
 				// Exception means they don't have vip-search enabled.
 			}
 
 			const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
-			await exec( slug, addUserArg );
+			await exec( lando, slug, addUserArg );
 			await trackEvent( 'dev_env_import_sql_command_success', trackingInfo );
 		} catch ( error ) {
 			handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );

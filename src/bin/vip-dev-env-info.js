@@ -19,6 +19,7 @@ import { printEnvironmentInfo, printAllEnvironmentsInfo } from 'lib/dev-environm
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -40,7 +41,9 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
-		await validateDependencies( slug );
+
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = opt.all ? { all: true } : getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_info_command_execute', trackingInfo );
@@ -52,9 +55,9 @@ command()
 				extended: !! opt.extended,
 			};
 			if ( opt.all ) {
-				await printAllEnvironmentsInfo( options );
+				await printAllEnvironmentsInfo( lando, options );
 			} else {
-				await printEnvironmentInfo( slug, options );
+				await printEnvironmentInfo( lando, slug, options );
 			}
 			await trackEvent( 'dev_env_info_command_success', trackingInfo );
 		} catch ( error ) {

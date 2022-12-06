@@ -65,14 +65,18 @@ function getLandoConfig() {
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
+		home: '',
 	};
 }
 
-export async function landoStart( instancePath: string ) {
-	debug( 'Will start lando app on path:', instancePath );
-
+export async function bootstrapLando(): Promise<Lando> {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
+	return lando;
+}
+
+export async function landoStart( lando: Lando, instancePath: string ) {
+	debug( 'Will start lando app on path:', instancePath );
 
 	const app = lando.getApp( instancePath );
 	await app.init();
@@ -82,11 +86,8 @@ export async function landoStart( instancePath: string ) {
 	await app.start();
 }
 
-export async function landoRebuild( instancePath: string ) {
+export async function landoRebuild( lando: Lando, instancePath: string ) {
 	debug( 'Will rebuild lando app on path:', instancePath );
-
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
 	await app.init();
@@ -151,11 +152,8 @@ async function healthcheckHook( app: App, lando: Lando ) {
 	}
 }
 
-export async function landoStop( instancePath: string ) {
+export async function landoStop( lando: Lando, instancePath: string ) {
 	debug( 'Will stop lando app on path:', instancePath );
-
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
 	await app.init();
@@ -163,10 +161,8 @@ export async function landoStop( instancePath: string ) {
 	await app.stop();
 }
 
-export async function landoDestroy( instancePath: string ) {
+export async function landoDestroy( lando: Lando, instancePath: string ) {
 	debug( 'Will destroy lando app on path:', instancePath );
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
 
 	const app = lando.getApp( instancePath );
 	await app.init();
@@ -174,10 +170,7 @@ export async function landoDestroy( instancePath: string ) {
 	await app.destroy();
 }
 
-export async function landoInfo( instancePath: string ) {
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
-
+export async function landoInfo( lando: Lando, instancePath: string ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
@@ -266,14 +259,11 @@ async function isEnvUp( app ) {
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
-	// If all the URLs are reachable than the app is considered 'up'
+	// If all the URLs are reachable then the app is considered 'up'
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
-export async function landoExec( instancePath: string, toolName: string, args: Array<string>, options: any ) {
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
-
+export async function landoExec( lando: Lando, instancePath: string, toolName: string, args: Array<string>, options: any ) {
 	const app = lando.getApp( instancePath );
 	await app.init();
 
@@ -287,7 +277,7 @@ export async function landoExec( instancePath: string, toolName: string, args: A
 
 	const tool = app.config.tooling[ toolName ];
 	if ( ! tool ) {
-		throw new Error( 'wp is not a known lando task' );
+		throw new Error( `${ toolName } is not a known lando task` );
 	}
 
 	/*
@@ -340,10 +330,7 @@ async function ensureNoOrphantProxyContainer( lando ) {
 	await proxyContainer.remove();
 }
 
-export async function validateDockerInstalled() {
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
-
+export async function validateDockerInstalled( lando: Lando ) {
 	lando.log.verbose( 'docker-engine exists: %s', lando.engine.dockerInstalled );
 	if ( lando.engine.dockerInstalled === false ) {
 		throw Error( 'docker could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/' );
@@ -354,10 +341,7 @@ export async function validateDockerInstalled() {
 	}
 }
 
-export async function validateDockerAccess() {
-	const lando = new Lando( getLandoConfig() );
-	await lando.bootstrap();
-
+export async function validateDockerAccess( lando: Lando ) {
 	const docker = lando.engine.docker;
 	lando.log.verbose( 'Fetching docker info to verify user is in docker group' );
 	try {

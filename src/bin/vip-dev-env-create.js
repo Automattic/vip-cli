@@ -18,7 +18,7 @@ import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
 import * as exit from 'lib/cli/exit';
 import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
+import { DEFAULT_SLUG, getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
 import {
 	addDevEnvConfigurationOptions,
@@ -28,6 +28,7 @@ import {
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -69,9 +70,14 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		env: opt.env,
 		allowAppEnv: true,
 	};
-	const slug = getEnvironmentName( environmentNameOptions );
 
-	await validateDependencies( slug );
+	let slug = DEFAULT_SLUG;
+	if ( ( Object.keys( opt ).length !== 0 ) ) {
+		slug = getEnvironmentName( environmentNameOptions );
+	}
+
+	const lando = await bootstrapLando();
+	await validateDependencies( lando, slug );
 
 	debug( 'Args: ', arg, 'Options: ', opt );
 
@@ -112,7 +118,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	try {
 		await createEnvironment( instanceData );
 
-		await printEnvironmentInfo( slug, { extended: false } );
+		await printEnvironmentInfo( lando, slug, { extended: false } );
 
 		const message = '\n' + chalk.green( '✓' ) + ` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
 		console.log( message );
