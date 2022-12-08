@@ -318,6 +318,21 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
+/**
+ * Writes the instance data.
+ *
+ * @param {string} slug Env slug
+ * @param {InstanceData} data instance data
+ * @returns {Promise} Promise
+ */
+export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<undefined> {
+	debug( 'Will try to write instance data for environment', slug );
+	const instancePath = getEnvironmentPath( slug );
+	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+
+	return fs.promises.writeFile( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
+}
+
 async function prepareLandoEnv( instanceData: InstanceData, instancePath: string ): Promise<void> {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
