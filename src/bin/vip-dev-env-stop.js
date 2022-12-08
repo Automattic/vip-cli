@@ -20,6 +20,7 @@ import { stopEnvironment } from 'lib/dev-environment/dev-environment-core';
 import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { validateDependencies, getEnvTrackingInfo } from '../lib/dev-environment/dev-environment-cli';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -35,7 +36,9 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = getEnvironmentName( opt );
-		await validateDependencies( slug );
+
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
@@ -43,7 +46,7 @@ command()
 		await trackEvent( 'dev_env_stop_command_execute', trackingInfo );
 
 		try {
-			await stopEnvironment( slug );
+			await stopEnvironment( lando, slug );
 
 			const message = chalk.green( '✓' ) + ' environment stopped.\n';
 			console.log( message );

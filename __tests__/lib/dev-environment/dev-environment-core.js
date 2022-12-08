@@ -25,22 +25,28 @@ import { getEnvironmentPath,
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
+import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
-jest.mock( 'fs' );
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
+	const cleanup = () => fs.rmSync( path.join( os.tmpdir(), 'lando' ), { recursive: true, force: true } );
+
+	beforeAll( cleanup );
+	afterAll( cleanup );
+
 	beforeEach( () => {
-		jest.clearAllMocks();
+		jest.resetAllMocks();
+		jest.restoreAllMocks();
 	} );
 
 	describe( 'createEnvironment', () => {
 		it( 'should throw for existing folder', async () => {
 			const slug = 'foo';
-			fs.existsSync.mockReturnValue( true );
+			jest.spyOn( fs, 'existsSync' ).mockReturnValueOnce( true );
 
 			const promise = createEnvironment( { siteSlug: slug } );
 
@@ -52,9 +58,18 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 	describe( 'startEnvironment', () => {
 		it( 'should throw for NON existing folder', async () => {
 			const slug = 'foo';
-			fs.existsSync.mockReturnValue( false );
+			const expectedPath = getEnvironmentPath( slug );
+			fs._originalExistsSync = fs.existsSync;
+			jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
+				if ( fpath === expectedPath ) {
+					return false;
+				}
 
-			const promise = startEnvironment( slug );
+				return fs._originalExistsSync( fpath );
+			} );
+
+			const lando = await bootstrapLando();
+			const promise = startEnvironment( lando, slug );
 
 			await expect( promise ).rejects.toEqual(
 				new Error( DEV_ENVIRONMENT_NOT_FOUND )
@@ -64,9 +79,18 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 	describe( 'destroyEnvironment', () => {
 		it( 'should throw for NON existing folder', async () => {
 			const slug = 'foo';
-			fs.existsSync.mockReturnValue( false );
+			const expectedPath = getEnvironmentPath( slug );
+			fs._originalExistsSync = fs.existsSync;
+			jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
+				if ( fpath === expectedPath ) {
+					return false;
+				}
 
-			const promise = destroyEnvironment( slug );
+				return fs._originalExistsSync( fpath );
+			} );
+
+			const lando = await bootstrapLando();
+			const promise = destroyEnvironment( lando, slug );
 
 			await expect( promise ).rejects.toEqual(
 				new Error( DEV_ENVIRONMENT_NOT_FOUND )
@@ -270,8 +294,9 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 
 		it( 'should throw if file does not exist', async () => {
-			fs.existsSync.mockReturnValueOnce( true ); // env exists
-			fs.existsSync.mockReturnValue( false ); // import file does not exist
+			jest.spyOn( fs, 'existsSync' )
+				.mockReturnValueOnce( true ) // env exists
+				.mockReturnValue( false ); // import file does not exist
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
@@ -283,8 +308,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 
 		it( 'should resolve the path and replace it with /user', async () => {
-			fs.existsSync.mockReturnValue( true );
-			fs.lstatSync.mockReturnValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
+			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
@@ -302,7 +327,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 		it( 'should handle windows path correctly', async () => {
 			path.sep = '\\';
-			fs.existsSync.mockReturnValue( true );
+			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
+			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
 			const resolvedPath = `${ os.homedir() }\\somewhere\\testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
@@ -322,6 +348,10 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			} );
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
+
+			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
+			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'renameSync' ).mockReturnValue( undefined );
 
 			const searchReplace = 'testsite.com,testsite.net';
 
@@ -343,9 +373,16 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 
 		it( 'should call search and replace in place with the proper arguments', async () => {
+			searchAndReplace.mockReturnValue( {
+				outputFileName: 'testfile.sql',
+			} );
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 			const searchReplace = 'testsite.com,testsite.net';
+
+			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
+			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'renameSync' ).mockReturnValue( undefined );
 
 			await resolveImportPath( 'foo', 'testfile.sql', searchReplace, true );
 
