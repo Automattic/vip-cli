@@ -53,7 +53,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		await prompt( {
 			type: 'confirm',
 			name: 'confirm',
-			message: "\nAttach the debugger, once you see 'Debugger attached' above hit 'Y' and 'Enter'",
+			message: "\nAttach the debugger, once you see 'Debugger attached' above hit 'y' to continue",
 		} );
 		alreadyConfirmedDebugAttachment = true;
 	}
