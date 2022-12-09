@@ -53,7 +53,7 @@
     "prepare": "npm run clean && npm run build",
     "postinstall": "node ./helpers/check-version.js",
     "build": "babel src -d dist",
-    "build:watch": "babel src -d dist --watch",
+    "build:watch": "babel src -d dist --watch --source-maps",
     "flow": "flow",
     "jest": "jest",
     "lint": "eslint index.js src __tests__",

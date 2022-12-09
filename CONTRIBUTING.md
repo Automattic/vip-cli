@@ -29,6 +29,35 @@ VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip app
 VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get home
 ```
 
+### Using debugger
+
+Who doesn't like a good console.log for debugging?
+Well, sometimes it's insufficient, luckily it's not too complicated to use a debugger.
+
+1. First, make sure to run the `npm run build:watch`, this will generate source maps
+1. (Optional) run `npm link`
+1. Run the command you want via `node --inspect`, like so:  `node --inspect /opt/homebrew/lib/node_modules/@automattic/vip/dist/bin/vip-dev-env-import-sql.js`
+1. Note the port the debugger is listening on:
+```
+Debugger listening on ws://127.0.0.1:9229/db6c03e9-2585-4a08-a1c6-1fee0295c9ff
+For help, see: https://nodejs.org/en/docs/inspector
+```
+5. In your editor of choice attach to the debugger.
+6. For VSCode: Hit 'Run and Debug' panel, hit the "gear" icon (open launch.json), make your `Attach` configuration entry to look like so:
+Make sure the the `port` and `runtimeExecutable` match
+```json
+	{
+		"name": "Attach",
+		"port": 9229,
+		"request": "attach",
+		"skipFiles": ["<node_internals>/**"],
+		"type": "node",
+		"runtimeExecutable": "/Users/rinat/.nvm/versions/node/v14.18.2/bin/node"
+	}
+```
+7. Set your breakpoints and whatnot, hit the play button.
+8. Squash them bugs.
+
 ### Adding commands
 
 * New command names should use the singular form (e.g. site vs sites).
