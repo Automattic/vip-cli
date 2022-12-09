@@ -339,7 +339,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
-			jest.spyOn( fs, 'renameSync' ).mockReturnValue( undefined );
+			jest.spyOn( fs, 'copyFileSync' ).mockReturnValue( undefined );
 
 			const searchReplace = 'testsite.com,testsite.net';
 
@@ -371,7 +371,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
-			jest.spyOn( fs, 'renameSync' ).mockReturnValue( undefined );
+			jest.spyOn( fs, 'copyFileSync' ).mockReturnValue( undefined );
 
 			await resolveImportPath( 'foo', 'testfile.sql', searchReplace, true );
 
