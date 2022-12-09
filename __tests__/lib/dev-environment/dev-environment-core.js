@@ -315,7 +315,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
-			const expectedResolvedPath = getEnvironmentPath( 'foo' ) + '/testfile.sql';
+			const expectedResolvedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
 			const expectedInContainerPath = '/app/testfile.sql';
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );

@@ -50,8 +50,6 @@ const landoFileName = '.lando.yml';
 const nginxFileName = 'extra.conf';
 const instanceDataFileName = 'instance_data.json';
 
-const homeDirPathInsideContainers = '/user';
-
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
