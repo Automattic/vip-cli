@@ -307,11 +307,16 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			);
 		} );
 
-		it( 'should resolve the path and replace it with /user', async () => {
+		it( 'should resolve the path and copy the file to /app', async () => {
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'copyFileSync' ).mockReturnValue( undefined );
+
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
+
+			const expectedResolvedPath = getEnvironmentPath( 'foo' ) + '/testfile.sql';
+			const expectedInContainerPath = '/app/testfile.sql';
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
@@ -319,25 +324,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			await expect( promise ).resolves.toEqual(
 				{
-					resolvedPath: resolvedPath,
-					inContainerPath: resolvedPath.replace( os.homedir(), '/user' ),
-				}
-			);
-		} );
-
-		it( 'should handle windows path correctly', async () => {
-			path.sep = '\\';
-			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
-			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
-			const resolvedPath = `${ os.homedir() }\\somewhere\\testfile.sql`;
-			resolvePath.mockReturnValue( resolvedPath );
-
-			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
-
-			await expect( promise ).resolves.toEqual(
-				{
-					resolvedPath: resolvedPath,
-					inContainerPath: '/user/somewhere/testfile.sql',
+					resolvedPath: expectedResolvedPath,
+					inContainerPath: expectedInContainerPath,
 				}
 			);
 		} );
@@ -364,11 +352,12 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				inPlace: false,
 			} );
 
-			const expectedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
+			const expectedResolvedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
+			const expectedInContainerPath = '/app/testfile.sql';
 
 			await expect( promise ).resolves.toEqual( {
-				resolvedPath: expectedPath,
-				inContainerPath: expectedPath,
+				resolvedPath: expectedResolvedPath,
+				inContainerPath: expectedInContainerPath,
 			} );
 		} );
 
