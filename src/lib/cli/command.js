@@ -49,7 +49,7 @@ let _opts = {};
 let alreadyConfirmedDebugAttachment = false;
 
 args.argv = async function( argv, cb ): Promise<any> {
-	if ( process.execArgv.includes( '--inspect' ) &&  ! alreadyConfirmedDebugAttachment ) {
+	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',
 			name: 'confirm',
