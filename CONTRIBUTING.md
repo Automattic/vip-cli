@@ -50,7 +50,7 @@ Make sure the `port` matches the port from step 3, and the `runtimeExecutable` m
 		"request": "attach",
 		"skipFiles": ["<node_internals>/**"],
 		"type": "node",
-		"runtimeExecutable": "/Users/rinat/.nvm/versions/node/v14.18.2/bin/node"
+		"runtimeExecutable": "/Users/user/.nvm/versions/node/v14.18.2/bin/node"
 	}
 ```
 7. Set your breakpoints and whatnot, hit the play button.
