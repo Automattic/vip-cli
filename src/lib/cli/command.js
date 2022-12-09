@@ -45,7 +45,18 @@ process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
 
 let _opts = {};
+
+let alreadyConfirmedDebugAttachment = false;
+
 args.argv = async function( argv, cb ): Promise<any> {
+	if ( process.execArgv.includes( '--inspect' ) &&  ! alreadyConfirmedDebugAttachment ) {
+		await prompt( {
+			type: 'confirm',
+			name: 'confirm',
+			message: "\nAttach the debugger, once you see 'Debugger attached' above hit 'Y' and 'Enter'",
+		} );
+		alreadyConfirmedDebugAttachment = true;
+	}
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
 	// A usage option allows us to override the default usage text, which isn't
