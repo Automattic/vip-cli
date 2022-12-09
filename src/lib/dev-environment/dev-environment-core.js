@@ -460,7 +460,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 
 export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
 	debug( `Will try to resolve path - ${ fileName }` );
-	let resolvedPath = resolvePath( fileName );
+	const resolvedPath = resolvePath( fileName );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -481,6 +481,9 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		throw new UserError( `The provided file ${ resolvedPath } is a directory. Please point to a sql file.` );
 	}
 
+	let targetPath: string;
+	let inContainerPath = '/app/';
+
 	// Run Search and Replace if the --search-replace flag was provided
 	if ( searchReplace && searchReplace.length ) {
 		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
@@ -495,32 +498,27 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 
 		const baseName = path.basename( outputFileName );
 
-		resolvedPath = path.join( instancePath, baseName );
+		targetPath = path.join( instancePath, baseName );
+		inContainerPath += baseName;
 
 		try {
-			fs.renameSync( outputFileName, resolvedPath );
-			debug( `Renamed ${ outputFileName } to ${ resolvedPath }` );
+			fs.renameSync( outputFileName, targetPath );
+			debug( `Renamed ${ outputFileName } to ${ targetPath }` );
 		} catch ( err ) {
 			if ( err.code !== 'EXDEV' ) {
 				throw err;
 			}
 			debug( 'Could not rename across filesystems. Copying the file instead.' );
-			fs.copyFileSync( outputFileName, resolvedPath );
-			debug( `Copied ${ outputFileName } to ${ resolvedPath }` );
+			fs.copyFileSync( outputFileName, targetPath );
+			debug( `Copied ${ outputFileName } to ${ targetPath }` );
 			fs.unlinkSync( outputFileName );
 			debug( `Removed ${ outputFileName }` );
 		}
-	}
-
-	/**
-	 * Docker container does not have acces to the host filesystem.
-	 * However lando maps os.homedir() to /user in the container. So if we replace the path in the same way
-	 * in the Docker container will get the file from within the mapped volume under /user.
-	 */
-	let inContainerPath = `/app/${ path.basename( resolvedPath ) }`; //resolvedPath.replace( os.homedir(), homeDirPathInsideContainers );
-	if ( path.sep === '\\' ) {
-		// Because the file path generated for windows will have \ instead of / we need to replace that as well so that the path inside the container (unix) still works.
-		inContainerPath = inContainerPath.replace( /\\/g, '/' );
+	} else {
+		const baseName = path.basename( resolvedPath );
+		targetPath = path.join( instancePath, baseName );
+		inContainerPath += baseName;
+		fs.copyFileSync( resolvedPath, targetPath, fs.constants.COPYFILE_FICLONE );
 	}
 
 	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
