@@ -35,16 +35,14 @@ Who doesn't like a good console.log for debugging?
 Well, sometimes it's insufficient, luckily it's not too complicated to use a debugger.
 
 1. First, make sure to run the `npm run build:watch`, this will generate source maps
-1. (Optional) run `npm link`
-1. Run the command you want via `node --inspect`, like so:  `node --inspect /opt/homebrew/lib/node_modules/@automattic/vip/dist/bin/vip-dev-env-import-sql.js`
+1. Run the command you want via `node --inspect`, like so:  `node --inspect ./dist/bin/vip-dev-env-import-sql.js`
 1. Note the port the debugger is listening on:
 ```
 Debugger listening on ws://127.0.0.1:9229/db6c03e9-2585-4a08-a1c6-1fee0295c9ff
 For help, see: https://nodejs.org/en/docs/inspector
 ```
-5. In your editor of choice attach to the debugger.
-6. For VSCode: Hit 'Run and Debug' panel, hit the "gear" icon (open launch.json), make your `Attach` configuration entry to look like so:
-Make sure the the `port` and `runtimeExecutable` match
+5. In your editor of choice attach to the debugger. For VSCode: Hit 'Run and Debug' panel, hit the "gear" icon (open launch.json), make your `Attach` configuration entry to look like so:
+Make sure the `port` matches the port from step 3, and the `runtimeExecutable` matches the exact `node` executable you ran. If you use a version manager like `nvm`, its especially important to check this.
 ```json
 	{
 		"name": "Attach",
