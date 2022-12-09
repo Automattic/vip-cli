@@ -54,7 +54,7 @@ Make sure the `port` matches the port from step 3, and the `runtimeExecutable` m
 	}
 ```
 7. Set your breakpoints and whatnot, hit the play button.
-8. Squash them bugs.
+8. Squash them bugs 🐛🔨.
 
 ### Adding commands
 
