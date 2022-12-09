@@ -523,7 +523,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 
 	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
 	return {
-		resolvedPath,
+		resolvedPath: targetPath,
 		inContainerPath,
 	};
 }
