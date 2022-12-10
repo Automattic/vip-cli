@@ -315,6 +315,10 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 	tool.app = app;
 	tool.name = toolName;
 
+	if ( options.stdio ) {
+		tool.stdio = options.stdio;
+	}
+
 	const task = landoBuildTask( tool, lando );
 
 	const argv = {
