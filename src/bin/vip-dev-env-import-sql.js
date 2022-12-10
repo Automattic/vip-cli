@@ -74,9 +74,7 @@ command( {
 			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
 			await exec( lando, slug, importArg );
 
-			if ( searchReplace && searchReplace.length && ! inPlace ) {
-				fs.unlinkSync( resolvedPath );
-			}
+			fs.unlinkSync( resolvedPath );
 
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( lando, slug, cacheArg );

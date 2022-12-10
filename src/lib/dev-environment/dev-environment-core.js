@@ -50,8 +50,6 @@ const landoFileName = '.lando.yml';
 const nginxFileName = 'extra.conf';
 const instanceDataFileName = 'instance_data.json';
 
-const homeDirPathInsideContainers = '/user';
-
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
@@ -460,7 +458,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 
 export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
 	debug( `Will try to resolve path - ${ fileName }` );
-	let resolvedPath = resolvePath( fileName );
+	const resolvedPath = resolvePath( fileName );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -481,6 +479,8 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		throw new UserError( `The provided file ${ resolvedPath } is a directory. Please point to a sql file.` );
 	}
 
+	let baseName: string;
+
 	// Run Search and Replace if the --search-replace flag was provided
 	if ( searchReplace && searchReplace.length ) {
 		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
@@ -493,39 +493,20 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
 		}
 
-		const baseName = path.basename( outputFileName );
-
-		resolvedPath = path.join( instancePath, baseName );
-
-		try {
-			fs.renameSync( outputFileName, resolvedPath );
-			debug( `Renamed ${ outputFileName } to ${ resolvedPath }` );
-		} catch ( err ) {
-			if ( err.code !== 'EXDEV' ) {
-				throw err;
-			}
-			debug( 'Could not rename across filesystems. Copying the file instead.' );
-			fs.copyFileSync( outputFileName, resolvedPath );
-			debug( `Copied ${ outputFileName } to ${ resolvedPath }` );
-			fs.unlinkSync( outputFileName );
-			debug( `Removed ${ outputFileName }` );
-		}
+		baseName = path.basename( outputFileName );
+	} else {
+		baseName = path.basename( resolvedPath );
 	}
 
-	/**
-	 * Docker container does not have acces to the host filesystem.
-	 * However lando maps os.homedir() to /user in the container. So if we replace the path in the same way
-	 * in the Docker container will get the file from within the mapped volume under /user.
-	 */
-	let inContainerPath = resolvedPath.replace( os.homedir(), homeDirPathInsideContainers );
-	if ( path.sep === '\\' ) {
-		// Because the file path generated for windows will have \ instead of / we need to replace that as well so that the path inside the container (unix) still works.
-		inContainerPath = inContainerPath.replace( /\\/g, '/' );
-	}
+	const targetPath = path.join( instancePath, baseName );
+	const inContainerPath = `/app/${ baseName }`;
+	debug( `Copying ${ resolvedPath } to ${ targetPath }` );
+	fs.copyFileSync( resolvedPath, targetPath, fs.constants.COPYFILE_FICLONE );
+	debug( `Copied ${ resolvedPath } to ${ targetPath }` );
 
 	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
 	return {
-		resolvedPath,
+		resolvedPath: targetPath,
 		inContainerPath,
 	};
 }
