@@ -54,6 +54,7 @@ command( {
 		const slug = getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
+		lando.events.constructor.prototype.setMaxListeners( 100 );
 		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
