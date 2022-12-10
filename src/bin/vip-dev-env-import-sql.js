@@ -9,6 +9,7 @@
  * External dependencies
  */
 import fs from 'fs';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -73,7 +74,7 @@ command( {
 			}
 
 			const stream = fs.createReadStream( resolvedPath );
-			const importArg = [ 'wp', 'db', 'import', '-' ];
+			const importArg = [ 'db', '--disable-auto-rehash' ];
 			const origIsTTY = process.stdin.isTTY;
 
 			try {
@@ -86,6 +87,7 @@ command( {
 				 */
 				process.stdin.isTTY = false;
 				await exec( lando, slug, importArg, { stdio: [ stream, 'pipe', 'pipe' ] } );
+				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
 			} finally {
 				process.stdin.isTTY = origIsTTY;
 			}
