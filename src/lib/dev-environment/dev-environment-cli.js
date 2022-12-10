@@ -598,7 +598,7 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use' )
-		.option( 'mailhog', 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
+		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**
