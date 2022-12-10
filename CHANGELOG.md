@@ -1,5 +1,9 @@
 ## Changelog
 
+## 2.24.1 (10 Dec 2022)
+
+- #1193 Fix regression in vip dev-env import sql related to the fact we don't mount User's home dir anymore
+
 ## 2.24.0 (06 Dec 2022)
 
 - #1139 fix(dev-env): Fall back to copy when rename fails due to EXDEV
