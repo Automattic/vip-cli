@@ -41,6 +41,16 @@ const examples = [
 	},
 ];
 
+async function openStream( stream: fs.ReadStream ): Promise<void> {
+	return new Promise( ( resolve, reject ) => {
+		stream.on( 'open', () => {
+			stream.off( 'error', reject );
+			resolve();
+		} );
+		stream.on( 'error', reject );
+	} );
+}
+
 command( {
 	requiredArgs: 1,
 } )
@@ -74,6 +84,7 @@ command( {
 			}
 
 			const stream = fs.createReadStream( resolvedPath );
+			await openStream( stream );
 			const importArg = [ 'db', '--disable-auto-rehash' ];
 			const origIsTTY = process.stdin.isTTY;
 
