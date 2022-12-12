@@ -52,7 +52,7 @@
     "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
     "clean": "rimraf dist",
     "prepare": "npm run clean && npm run build",
-    "postinstall": "node ./helpers/check-version.js; node ./helpers/generate-keys.js",
+    "postinstall": "node ./helpers/run-postinstall-scripts.js",
     "build": "babel src -d dist",
     "build:watch": "babel src -d dist --watch --source-maps",
     "flow": "flow",
