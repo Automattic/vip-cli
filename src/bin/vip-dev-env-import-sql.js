@@ -41,20 +41,6 @@ const examples = [
 	},
 ];
 
-async function openStream( stream: fs.ReadStream ): Promise<void> {
-	if ( false === stream.pending ) {
-		return Promise.resolve();
-	}
-
-	return new Promise( ( resolve, reject ) => {
-		stream.on( 'open', () => {
-			stream.off( 'error', reject );
-			resolve();
-		} );
-		stream.on( 'error', reject );
-	} );
-}
-
 command( {
 	requiredArgs: 1,
 } )
@@ -87,8 +73,7 @@ command( {
 				} );
 			}
 
-			const stream = fs.createReadStream( resolvedPath, { encoding: 'utf-8' } );
-			await openStream( stream );
+			const fd = fs.openSync( resolvedPath, 'r' );
 			const importArg = [ 'db', '--disable-auto-rehash' ];
 			const origIsTTY = process.stdin.isTTY;
 
@@ -101,7 +86,7 @@ command( {
 				 * Therefore, for the things to work, we have to pretend that stdin is not a TTY :-)
 				 */
 				process.stdin.isTTY = false;
-				await exec( lando, slug, importArg, { stdio: [ stream, 'pipe', 'pipe' ] } );
+				await exec( lando, slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
 			} finally {
 				process.stdin.isTTY = origIsTTY;
