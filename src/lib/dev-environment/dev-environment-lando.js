@@ -8,19 +8,22 @@
  */
 import debugLib from 'debug';
 import os from 'os';
+import fs from 'fs';
 import path from 'path';
+import xdgBasedir from 'xdg-basedir';
 import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
-import UserError from '../user-error';
 import dns from 'dns';
 
 /**
  * Internal dependencies
  */
 import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import UserError from '../user-error';
+
 /**
  * This file will hold all the interactions with lando library
  */
@@ -110,6 +113,7 @@ function getLandoConfig() {
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
 		home: '',
+		domain: 'lndo.site',
 	};
 }
 
@@ -176,6 +180,22 @@ function addHooks( app: App, lando: Lando ) {
 		if ( data.opts.pull || ! instanceData.pullAfter ) {
 			instanceData.pullAfter = Date.now() + ( 7 * 24 * 60 * 60 * 1000 );
 			writeEnvironmentData( app._name, instanceData );
+		}
+	} );
+
+	// eslint-disable-next-line no-shadow
+	app.events.once( 'ready', ( app: App ) => {
+		if ( xdgBasedir.data ) {
+			const baseDir = path.join( xdgBasedir.data, 'vip' );
+			const certFile = path.join( baseDir, 'lndo.site.pem' );
+			const keyFile = path.join( baseDir, 'lndo.site.key' );
+
+			if ( fs.existsSync( certFile ) && fs.existsSync( keyFile ) ) {
+				fs.copyFileSync( certFile, app._config.caCert );
+				fs.copyFileSync( keyFile, app._config.caKey );
+			} else {
+				console.log( chalk.bold.yellow( 'WARNING:' ), 'Could not find VIP CA data. Please reinstall the package.' );
+			}
 		}
 	} );
 }
