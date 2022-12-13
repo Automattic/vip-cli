@@ -48,7 +48,7 @@ describe( 'vip dev-env create', () => {
 
 		xdgBaseDir.data = tmpPath;
 
-		[ 'HOME', 'PATH', 'HOSTNAME' ].forEach( key => {
+		[ 'HOME', 'PATH', 'HOSTNAME', 'DOCKER_HOST' ].forEach( key => {
 			if ( process.env[ key ] ) {
 				env[ key ] = process.env[ key ];
 			}
@@ -61,7 +61,9 @@ describe( 'vip dev-env create', () => {
 		const expectedSlug = `dev-env-${ getNextID() }`;
 		expect( checkEnvExists( expectedSlug ) ).toBe( false );
 
+		console.log( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ] );
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ], { env } );
+		console.log( result );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );
