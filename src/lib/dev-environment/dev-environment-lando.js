@@ -326,7 +326,9 @@ async function getExtraServicesConnections( lando, app ) {
 	return extraServices;
 }
 
-async function isEnvUp( app ) {
+export async function isEnvUp( lando: Lando, instancePath: string ): Promise<boolean> {
+	const app = await getLandoApplication( lando, instancePath );
+
 	const reachableServices = app.info.filter( service => service.urls.length );
 	const urls = reachableServices.map( service => service.urls ).flat();
 
@@ -337,14 +339,6 @@ async function isEnvUp( app ) {
 
 export async function landoExec( lando: Lando, instancePath: string, toolName: string, args: Array<string>, options: any ) {
 	const app = await getLandoApplication( lando, instancePath );
-
-	if ( ! options.force ) {
-		const isUp = await isEnvUp( app );
-
-		if ( ! isUp ) {
-			throw new UserError( 'Environment needs to be started before running wp command' );
-		}
-	}
 
 	const tool = app.config.tooling[ toolName ];
 	if ( ! tool ) {
