@@ -256,7 +256,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
-	const isUp = await isEnvUp( app );
+	const isUp = await isEnvUp( lando, instancePath );
 	const frontEndUrl = app.info
 		.find( service => 'nginx' === service.service )
 		?.urls[ 0 ];
