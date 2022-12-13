@@ -90,9 +90,6 @@ describe( 'vip dev-env create', () => {
 		const expectedMultisite = false;
 		const expectedPhpVersion = '8.0';
 		const expectedElasticSearch = false;
-		const expectedPhpMyAdmin = false;
-		const expectedXDebug = false;
-		const expectedMailHog = false;
 
 		expect( checkEnvExists( slug ) ).toBe( false );
 
