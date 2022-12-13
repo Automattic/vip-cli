@@ -96,7 +96,7 @@ services:
   elasticsearch:
     type: compose
     services:
-      image: elasticsearch:7.17.2
+      image: elasticsearch:7.17.8
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
