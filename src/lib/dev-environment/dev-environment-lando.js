@@ -70,6 +70,24 @@ function getLandoConfig() {
 	};
 }
 
+const appMap: Map<string, App> = new Map();
+
+async function getLandoApplication( lando: Lando, instancePath: string ): Promise<App> {
+	if ( appMap.has( instancePath ) ) {
+		return Promise.resolve( appMap.get( instancePath ) );
+	}
+
+	const app = lando.getApp( instancePath );
+	addHooks( app, lando );
+	appMap.set( instancePath, app );
+
+	if ( ! app.initialized ) {
+		await app.init();
+	}
+
+	return app;
+}
+
 export async function bootstrapLando(): Promise<Lando> {
 	const lando = new Lando( getLandoConfig() );
 	await lando.bootstrap();
@@ -79,31 +97,22 @@ export async function bootstrapLando(): Promise<Lando> {
 export async function landoStart( lando: Lando, instancePath: string ) {
 	debug( 'Will start lando app on path:', instancePath );
 
-	const app = lando.getApp( instancePath );
-	await app.init();
-
-	addHooks( app, lando );
-
+	const app = await getLandoApplication( lando, instancePath );
 	await app.start();
 }
 
 export async function landoRebuild( lando: Lando, instancePath: string ) {
 	debug( 'Will rebuild lando app on path:', instancePath );
 
-	const app = lando.getApp( instancePath );
-	await app.init();
-
+	const app = await getLandoApplication( lando, instancePath );
 	await ensureNoOrphantProxyContainer( lando );
-
-	addHooks( app, lando );
-
 	await app.rebuild();
 }
 
 function addHooks( app: App, lando: Lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
 
-	lando.events.on( 'pre-engine-build', 5, async data => {
+	lando.events.once( 'pre-engine-build', async data => {
 		const instanceData = readEnvironmentData( app._name );
 
 		let registryResolvable = false;
@@ -180,24 +189,19 @@ async function healthcheckHook( app: App, lando: Lando ) {
 export async function landoStop( lando: Lando, instancePath: string ) {
 	debug( 'Will stop lando app on path:', instancePath );
 
-	const app = lando.getApp( instancePath );
-	await app.init();
-
+	const app = await getLandoApplication( lando, instancePath );
 	await app.stop();
 }
 
 export async function landoDestroy( lando: Lando, instancePath: string ) {
 	debug( 'Will destroy lando app on path:', instancePath );
 
-	const app = lando.getApp( instancePath );
-	await app.init();
-
+	const app = await getLandoApplication( lando, instancePath );
 	await app.destroy();
 }
 
 export async function landoInfo( lando: Lando, instancePath: string ) {
-	const app = lando.getApp( instancePath );
-	await app.init();
+	const app = await getLandoApplication( lando, instancePath );
 
 	let appInfo = landoUtils.startTable( app );
 
@@ -289,8 +293,7 @@ async function isEnvUp( app ) {
 }
 
 export async function landoExec( lando: Lando, instancePath: string, toolName: string, args: Array<string>, options: any ) {
-	const app = lando.getApp( instancePath );
-	await app.init();
+	const app = await getLandoApplication( lando, instancePath );
 
 	if ( ! options.force ) {
 		const isUp = await isEnvUp( app );
@@ -335,7 +338,7 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
  *
  * @param {object} lando Bootstrapped Lando object
  */
-async function ensureNoOrphantProxyContainer( lando ) {
+async function ensureNoOrphantProxyContainer( lando: Lando ) {
 	const proxyContainerName = lando.config.proxyContainer;
 
 	const docker = lando.engine.docker;
