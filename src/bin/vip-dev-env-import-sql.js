@@ -78,7 +78,7 @@ command( {
 				} );
 			}
 
-			const fd = fs.openSync( resolvedPath, 'r' );
+			const fd = await fs.promises.open( resolvedPath, 'r' );
 			const importArg = [ 'db', '--disable-auto-rehash' ];
 			const origIsTTY = process.stdin.isTTY;
 

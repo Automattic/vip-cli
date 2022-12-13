@@ -14,13 +14,14 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
-import UserError from '../user-error';
 import dns from 'dns';
 
 /**
  * Internal dependencies
  */
-import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import { doesEnvironmentExist, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+
 /**
  * This file will hold all the interactions with lando library
  */
@@ -118,6 +119,10 @@ const appMap: Map<string, App> = new Map();
 async function getLandoApplication( lando: Lando, instancePath: string ): Promise<App> {
 	if ( appMap.has( instancePath ) ) {
 		return Promise.resolve( appMap.get( instancePath ) );
+	}
+
+	if ( ! doesEnvironmentExist( instancePath ) ) {
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const app = lando.getApp( instancePath );

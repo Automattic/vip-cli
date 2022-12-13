@@ -14,13 +14,13 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import { destroyEnvironment } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
+import { destroyEnvironment } from '../lib/dev-environment/dev-environment-core';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
+	getEnvironmentName,
 	handleCLIException,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';

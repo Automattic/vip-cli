@@ -182,8 +182,7 @@ export async function destroyEnvironment( lando: Lando, slug: string, removeFile
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = fs.existsSync( instancePath );
-
+	const environmentExists = doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
@@ -232,8 +231,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = fs.existsSync( instancePath );
-
+	const environmentExists = doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
@@ -262,26 +260,12 @@ export async function exec( lando: Lando, slug: string, args: Array<string>, opt
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = fs.existsSync( instancePath );
-
-	if ( ! environmentExists ) {
-		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-	}
-
-	const command = args.shift();
-
-	const commandArgs = [ ...args ];
-
+	const [ command, ...commandArgs ] = args;
 	await landoExec( lando, instancePath, command, commandArgs, options );
 }
 
-export function doesEnvironmentExist( slug: string ): boolean {
-	debug( 'Will check for environment', slug );
-
-	const instancePath = getEnvironmentPath( slug );
-
-	debug( 'Instance path for', slug, 'is:', instancePath );
-
+export function doesEnvironmentExist( instancePath: string ): boolean {
+	debug( 'Will check for environment at', instancePath );
 	return fs.existsSync( instancePath );
 }
 
