@@ -59,10 +59,6 @@ function getLandoConfig() {
 		postLandoFiles: [ '.lando.local.yml' ],
 		pluginDirs: [
 			landoPath,
-			{
-				path: path.join( landoPath, 'integrations' ),
-				subdir: '.',
-			},
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
