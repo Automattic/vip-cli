@@ -11,20 +11,11 @@ import xdgBaseDir from 'xdg-basedir';
  * Internal dependencies
  */
 import { CliTest } from './cli-test';
-import { doesEnvironmentExist, readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
-import { getNextID } from './utils';
+import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
+import { checkEnvExists, getNextID, prepareEnvironment } from './utils';
+import { vipDevEnvCreate } from './commands';
 
 jest.setTimeout( 30 * 1000 );
-
-/**
- * `doesEnvironmentExist()` will need `getEnvironmentPath()` after #1201 gets merged.
- *
- * @param {string} slug Environment slug
- * @returns {boolean} Whether the environment exists
- */
-function checkEnvExists( slug ) {
-	return doesEnvironmentExist( slug );
-}
 
 describe( 'vip dev-env create', () => {
 	/** @type {CliTest} */
@@ -34,25 +25,13 @@ describe( 'vip dev-env create', () => {
 	/** @type {string} */
 	let tmpPath;
 
-	const vipPath = path.resolve( __dirname, '../../dist/bin' );
-	const vipDevEnvCreate = path.join( vipPath, 'vip-dev-env-create.js' );
-
 	beforeAll( async () => {
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
-
-		env = {
-			XDG_DATA_HOME: tmpPath,
-		};
-
 		xdgBaseDir.data = tmpPath;
 
-		[ 'HOME', 'PATH', 'HOSTNAME', 'DOCKER_HOST' ].forEach( key => {
-			if ( process.env[ key ] ) {
-				env[ key ] = process.env[ key ];
-			}
-		} );
+		env = prepareEnvironment( tmpPath );
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
@@ -61,9 +40,7 @@ describe( 'vip dev-env create', () => {
 		const expectedSlug = `dev-env-${ getNextID() }`;
 		expect( checkEnvExists( expectedSlug ) ).toBe( false );
 
-		console.log( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ] );
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ], { env } );
-		console.log( result );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );
