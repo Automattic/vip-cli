@@ -130,6 +130,10 @@ describe( 'vip dev-env destroy', () => {
 			expect( checkEnvExists( slug ) ).toBe( true );
 
 			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env } );
+			if ( result.rc ) {
+				console.log( result.stderr.slice( -500 ) );
+			}
+
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toMatch( /STATUS\s+UP/u );
 
