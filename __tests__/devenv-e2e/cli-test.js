@@ -12,10 +12,11 @@ import { spawn } from 'child_process';
 export class CliTest {
 	/**
 	 * @param {string[]} args Command and its arguments
-	 * @param {*} options Spawn options
+	 * @param {Object} options Spawn options
+	 * @param {boolean} printStderrOnError Whether to print stderr on error
 	 * @returns {Promise<CliResult>} Return value of the command
 	 */
-	spawn( args, options ) {
+	spawn( args, options, printStderrOnError ) {
 		const [ command, ...commandArgs ] = args;
 
 		let stdout = '', stderr = '', finished = false;
@@ -36,11 +37,13 @@ export class CliTest {
 			child.on( 'exit', code => {
 				if ( ! finished ) {
 					finished = true;
-					resolve( {
-						stdout: stdout,
-						stderr: stderr,
-						rc: code === null ? -1 : code,
-					} );
+					const rc = code === null ? -1 : code;
+
+					if ( rc && printStderrOnError ) {
+						console.error( stderr );
+					}
+
+					resolve( { stdout, stderr, rc } );
 				}
 			} );
 
