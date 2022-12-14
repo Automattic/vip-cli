@@ -7,6 +7,7 @@ import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
 import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
+import nock from 'nock';
 
 /**
  * Internal dependencies
@@ -18,6 +19,9 @@ import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 import { getExistingContainers, killContainersExcept } from './docker-utils';
 
 jest.setTimeout( 600 * 1000 );
+
+// Nock is weird :-) If the request goes to a UNIX socket, it parses it in a strange way and sets the host and port to localhost:80
+nock.enableNetConnect( host => host === 'localhost:80' );
 
 describe( 'vip dev-env destroy', () => {
 	/** @type {CliTest} */
@@ -135,6 +139,14 @@ describe( 'vip dev-env destroy', () => {
 			expect( result.stdout ).toContain( 'Environment destroyed' );
 
 			expect( checkEnvExists( slug ) ).toBe( false );
+
+			const containers = await getExistingContainers( docker );
+			for ( const id of containerIDs ) {
+				containers.delete( id );
+			}
+
+			// vip-dev-env-proxy could be running. Not sure whether this is a bug or a feature.
+			expect( containers.size ).toBeLessThanOrEqual( 1 );
 		} );
 	} );
 } );
