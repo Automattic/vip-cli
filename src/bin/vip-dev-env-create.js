@@ -126,5 +126,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		await trackEvent( 'dev_env_create_command_success', trackingInfo );
 	} catch ( error ) {
 		await handleCLIException( error, 'dev_env_create_command_error', trackingInfo );
+		process.exitCode = 1;
 	}
 } );

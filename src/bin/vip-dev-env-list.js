@@ -40,6 +40,7 @@ command()
 			await printAllEnvironmentsInfo( lando, {} );
 			await trackEvent( 'dev_env_list_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error, 'dev_env_list_command_error', trackingInfo );
+			await handleCLIException( error, 'dev_env_list_command_error', trackingInfo );
+			process.exitCode = 1;
 		}
 	} );

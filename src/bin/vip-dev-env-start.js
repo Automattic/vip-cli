@@ -78,5 +78,6 @@ command()
 			await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_start_command_error', trackingInfo );
+			process.exitCode = 1;
 		}
 	} );
