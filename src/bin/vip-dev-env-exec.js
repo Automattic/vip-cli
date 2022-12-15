@@ -21,10 +21,8 @@ import {
 import { exec } from 'lib/dev-environment/dev-environment-core';
 import { getConfigurationFileOptions } from 'lib/dev-environment/dev-environment-configuration-file';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import {
-	getEnvTrackingInfo,
-	validateDependencies,
-} from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const examples = [
 	{
@@ -59,7 +57,8 @@ command( { wildcardCommand: true } )
 		}
 
 		const slug = getEnvironmentName( environmentNameOptions );
-		await validateDependencies( slug );
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );
@@ -72,13 +71,13 @@ command( { wildcardCommand: true } )
 				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
 			}
 
-			let arg = [];
+			let arg: string[] = [];
 			if ( argSplitterFound && argSplitterIx + 1 < process.argv.length ) {
 				arg = process.argv.slice( argSplitterIx + 1 );
 			}
 
 			const options = { force: opt.force };
-			await exec( slug, arg, options );
+			await exec( lando, slug, arg, options );
 			await trackEvent( 'dev_env_exec_command_success', trackingInfo );
 		} catch ( error ) {
 			handleCLIException( error, 'dev_env_exec_command_error', trackingInfo );

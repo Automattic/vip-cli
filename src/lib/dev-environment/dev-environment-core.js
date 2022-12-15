@@ -40,6 +40,7 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
+import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -48,8 +49,6 @@ const nginxFileTemplatePath = path.join( __dirname, '..', '..', '..', 'assets', 
 const landoFileName = '.lando.yml';
 const nginxFileName = 'extra.conf';
 const instanceDataFileName = 'instance_data.json';
-
-const homeDirPathInsideContainers = '/user';
 
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
@@ -72,7 +71,7 @@ type WordPressTag = {
 	prerelease: boolean;
 }
 
-export async function startEnvironment( slug: string, options: StartEnvironmentOptions ): Promise<void> {
+export async function startEnvironment( lando: Lando, slug: string, options: StartEnvironmentOptions ): Promise<void> {
 	debug( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -91,15 +90,15 @@ export async function startEnvironment( slug: string, options: StartEnvironmentO
 	}
 
 	if ( options.skipRebuild && ! updated ) {
-		await landoStart( instancePath );
+		await landoStart( lando, instancePath );
 	} else {
-		await landoRebuild( instancePath );
+		await landoRebuild( lando, instancePath );
 	}
 
-	await printEnvironmentInfo( slug, { extended: false } );
+	await printEnvironmentInfo( lando, slug, { extended: false } );
 }
 
-export async function stopEnvironment( slug: string ): Promise<void> {
+export async function stopEnvironment( lando: Lando, slug: string ): Promise<void> {
 	debug( 'Will stop an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -112,7 +111,7 @@ export async function stopEnvironment( slug: string ): Promise<void> {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	await landoStop( instancePath );
+	await landoStop( lando, instancePath );
 }
 
 export async function createEnvironment( instanceData: InstanceData ): Promise<void> {
@@ -177,7 +176,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	return newInstanceData;
 }
 
-export async function destroyEnvironment( slug: string, removeFiles: boolean ): Promise<void> {
+export async function destroyEnvironment( lando: Lando, slug: string, removeFiles: boolean ): Promise<void> {
 	debug( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
@@ -192,7 +191,7 @@ export async function destroyEnvironment( slug: string, removeFiles: boolean ): 
 	const landoFilePath = path.join( instancePath, landoFileName );
 	if ( fs.existsSync( landoFilePath ) ) {
 		debug( 'Lando file exists, will lando destroy.' );
-		await landoDestroy( instancePath );
+		await landoDestroy( lando, instancePath );
 	} else {
 		debug( "Lando file doesn't exist, skipping lando destroy." );
 	}
@@ -207,7 +206,7 @@ interface PrintOptions {
 	extended?: boolean
 }
 
-export async function printAllEnvironmentsInfo( options: PrintOptions ): Promise<void> {
+export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOptions ): Promise<void> {
 	const allEnvNames = getAllEnvironmentNames();
 
 	debug( 'Will print info for all environments. Names found: ', allEnvNames );
@@ -215,7 +214,7 @@ export async function printAllEnvironmentsInfo( options: PrintOptions ): Promise
 	console.log( 'Found ' + chalk.bold( allEnvNames.length ) + ' environments' + ( allEnvNames.length ? ':' : '.' ) );
 	for ( const envName of allEnvNames ) {
 		console.log( '\n' );
-		await printEnvironmentInfo( envName, options );
+		await printEnvironmentInfo( lando, envName, options );
 	}
 }
 
@@ -226,7 +225,7 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 	return component.tag || '[demo-image]';
 }
 
-export async function printEnvironmentInfo( slug: string, options: PrintOptions ): Promise<void> {
+export async function printEnvironmentInfo( lando: Lando, slug: string, options: PrintOptions ): Promise<void> {
 	debug( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -239,7 +238,7 @@ export async function printEnvironmentInfo( slug: string, options: PrintOptions 
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const appInfo = await landoInfo( instancePath );
+	const appInfo = await landoInfo( lando, instancePath );
 	if ( options.extended ) {
 		const environmentData = readEnvironmentData( slug );
 		appInfo.title = environmentData.wpTitle;
@@ -256,7 +255,7 @@ export async function printEnvironmentInfo( slug: string, options: PrintOptions 
 	printTable( appInfo );
 }
 
-export async function exec( slug: string, args: Array<string>, options: any = {} ) {
+export async function exec( lando: Lando, slug: string, args: Array<string>, options: any = {} ) {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -273,7 +272,7 @@ export async function exec( slug: string, args: Array<string>, options: any = {}
 
 	const commandArgs = [ ...args ];
 
-	await landoExec( instancePath, command, commandArgs, options );
+	await landoExec( lando, instancePath, command, commandArgs, options );
 }
 
 export function doesEnvironmentExist( slug: string ): boolean {
@@ -317,6 +316,21 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
+/**
+ * Writes the instance data.
+ *
+ * @param {string} slug Env slug
+ * @param {InstanceData} data instance data
+ * @returns {Promise} Promise
+ */
+export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<undefined> {
+	debug( 'Will try to write instance data for environment', slug );
+	const instancePath = getEnvironmentPath( slug );
+	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+
+	return fs.promises.writeFile( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
+}
+
 async function prepareLandoEnv( instanceData: InstanceData, instancePath: string ): Promise<void> {
 	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
 	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
@@ -341,7 +355,7 @@ async function prepareLandoEnv( instanceData: InstanceData, instancePath: string
 	debug( `Instance data file created in ${ instanceDataTargetPath }` );
 }
 
-function getAllEnvironmentNames() {
+export function getAllEnvironmentNames(): string[] {
 	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 
 	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
@@ -444,7 +458,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 
 export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
 	debug( `Will try to resolve path - ${ fileName }` );
-	let resolvedPath = resolvePath( fileName );
+	const resolvedPath = resolvePath( fileName );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -465,6 +479,8 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		throw new UserError( `The provided file ${ resolvedPath } is a directory. Please point to a sql file.` );
 	}
 
+	let baseName: string;
+
 	// Run Search and Replace if the --search-replace flag was provided
 	if ( searchReplace && searchReplace.length ) {
 		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
@@ -477,26 +493,20 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
 		}
 
-		const baseName = path.basename( outputFileName );
-
-		resolvedPath = path.join( instancePath, baseName );
-		fs.renameSync( outputFileName, resolvedPath );
+		baseName = path.basename( outputFileName );
+	} else {
+		baseName = path.basename( resolvedPath );
 	}
 
-	/**
-	 * Docker container does not have acces to the host filesystem.
-	 * However lando maps os.homedir() to /user in the container. So if we replace the path in the same way
-	 * in the Docker container will get the file from within the mapped volume under /user.
-	 */
-	let inContainerPath = resolvedPath.replace( os.homedir(), homeDirPathInsideContainers );
-	if ( path.sep === '\\' ) {
-		// Because the file path generated for windows will have \ instead of / we need to replace that as well so that the path inside the container (unix) still works.
-		inContainerPath = inContainerPath.replace( /\\/g, '/' );
-	}
+	const targetPath = path.join( instancePath, baseName );
+	const inContainerPath = `/app/${ baseName }`;
+	debug( `Copying ${ resolvedPath } to ${ targetPath }` );
+	fs.copyFileSync( resolvedPath, targetPath, fs.constants.COPYFILE_FICLONE );
+	debug( `Copied ${ resolvedPath } to ${ targetPath }` );
 
 	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
 	return {
-		resolvedPath,
+		resolvedPath: targetPath,
 		inContainerPath,
 	};
 }

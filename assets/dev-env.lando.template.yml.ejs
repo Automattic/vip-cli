@@ -67,7 +67,7 @@ services:
     type: compose
     services:
       image: mariadb:<%= mariadb %>
-      command: docker-entrypoint.sh mysqld
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
       ports:
         - ":3306"
       environment:
@@ -96,7 +96,7 @@ services:
   elasticsearch:
     type: compose
     services:
-      image: elasticsearch:7.17.2
+      image: elasticsearch:7.17.8
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
@@ -172,6 +172,11 @@ services:
       clientcode_private: {}
       clientcode_themes: {}
       clientcode_vipconfig: {}
+<% } %>
+
+<% if ( mailhog ) { %>
+  mailhog:
+    type: mailhog
 <% } %>
 
 tooling:

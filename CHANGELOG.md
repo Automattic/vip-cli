@@ -1,5 +1,27 @@
 ## Changelog
 
+## 2.24.1 (10 Dec 2022)
+
+- #1193 Fix regression in vip dev-env import sql related to the fact we don't mount User's home dir anymore
+
+## 2.24.0 (06 Dec 2022)
+
+- #1139 fix(dev-env): Fall back to copy when rename fails due to EXDEV
+- #1170 [dev-env] Substitute the check for forward slash to with a cross-platform regex when processing component argument value
+- #1174 Override WordPress image cache key in tests
+- #1175 Dev-env: Throw error if more than one environment found when starting
+- #1177 Logged out `vip --version`
+- #1178 chore(deps): Fix some of vulnerable dependencies
+- #1179 feat(dev-env): Do not prompt for missing values if stdin is not a TTY
+- #1180 fix(dev-env): Fix a typo in parameter description
+- #1181 fix(dev-env): Set SQL_MODE to match our production environment
+- #1182 Dev-env: Throw UserError in getEnvironmentName() instead and default to first one if only one env
+- #1184 Validate Preflight: Allow preflight checks to execute without explicit app and/or env
+- #1185 feat(dev-env): Add support for MailHog
+- #1186 feat(dev-env): Do not mount home directory into containers
+- #1188 fix: Make bin files executables
+- #1189 refactor(dev-env): Bootstrap Lando only once
+
 ## 2.23.0 (11 Nov 2022)
 
 - #1169 Preflight Validation: Change return code on error
@@ -9,19 +31,19 @@
 
 ## 2.22.0 (2 Nov 2022)
 
-#1165  Add caching type policy for `WPSite` data                                                           
-#1164  Fix regExp to categorize multisite tables during SQL Imports                                        
-#1163  Pull correct environment's details from API when displaying Multisite SQL Import preflight details  
-#1159  chore(deps): Bump debug from 4.3.3 to 4.3.4                                                         
-#1162  chore(deps): Bump update-notifier from 4.1.3 to 5.1.0                                               
-#1160  chore(deps): Bump json2csv from 5.0.6 to 5.0.7                                                      
-#1158  chore(deps): Bump args from 5.0.1 to 5.0.3                                                          
-#1157  chore(deps): Bump semver from 7.3.5 to 7.3.8                                                        
-#1155  chore(deps): Bump uuid from 8.3.2 to 9.0.0                                                          
-#1154  chore(deps): Update Babel-related packages                                                          
-#1153  chore(deps): Fix security vulnerabilities in dependencies                                           
-#1152  ci: Update workflows                                                                                
-#1151  refactor(dev-env): Modify `verifyDNSResolution()` to use Promises API                               
+#1165  Add caching type policy for `WPSite` data
+#1164  Fix regExp to categorize multisite tables during SQL Imports
+#1163  Pull correct environment's details from API when displaying Multisite SQL Import preflight details
+#1159  chore(deps): Bump debug from 4.3.3 to 4.3.4
+#1162  chore(deps): Bump update-notifier from 4.1.3 to 5.1.0
+#1160  chore(deps): Bump json2csv from 5.0.6 to 5.0.7
+#1158  chore(deps): Bump args from 5.0.1 to 5.0.3
+#1157  chore(deps): Bump semver from 7.3.5 to 7.3.8
+#1155  chore(deps): Bump uuid from 8.3.2 to 9.0.0
+#1154  chore(deps): Update Babel-related packages
+#1153  chore(deps): Fix security vulnerabilities in dependencies
+#1152  ci: Update workflows
+#1151  refactor(dev-env): Modify `verifyDNSResolution()` to use Promises API
 
 ### 2.21.0 (24 Oct 2022)
 

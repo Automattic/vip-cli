@@ -28,7 +28,7 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getVersionList, readEnvironmentData } from './dev-environment-core';
+import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -43,9 +43,31 @@ import typeof Command from 'lib/cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const DEFAULT_SLUG = 'vip-local';
+export const DEFAULT_SLUG = 'vip-local';
 
-// Forward declaratrion to avoid no-use-before-define
+let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
+
+/**
+ * Used internally for tests
+ *
+ * @param {boolean} val Value to set
+ */
+export function setIsTTY( val: boolean ): void {
+	isStdinTTY = val;
+}
+
+const componentDisplayNames = {
+	wordpress: 'WordPress',
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'application code',
+};
+
+const componentDemoNames = {
+	muPlugins: 'vip-go-mu-plugins',
+	appCode: 'vip-go-skeleton',
+};
+
+// Forward declaration to avoid no-use-before-define
 declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
 // eslint-disable-next-line no-redeclare
 declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
@@ -111,13 +133,15 @@ const VALIDATION_STEPS = [
 	{ id: 'access', name: 'Check access to docker for current user' },
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
-export const validateDependencies = async ( slug: string ) => {
-	const progressTracker = new ProgressTracker( VALIDATION_STEPS );
+
+export const validateDependencies = async ( lando: Lando, slug: string ) => {
+	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
+	const progressTracker = new ProgressTracker( steps );
 	console.log( 'Running validation steps...' );
 	progressTracker.startPrinting();
 	progressTracker.stepRunning( 'docker' );
 	try {
-		await validateDockerInstalled();
+		await validateDockerInstalled( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
@@ -126,7 +150,7 @@ export const validateDependencies = async ( slug: string ) => {
 	progressTracker.print();
 
 	try {
-		await validateDockerAccess();
+		await validateDockerAccess( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
@@ -134,11 +158,12 @@ export const validateDependencies = async ( slug: string ) => {
 	progressTracker.stepSuccess( 'access' );
 	progressTracker.print();
 
-	await verifyDNSResolution( slug );
+	if ( slug ) {
+		await verifyDNSResolution( slug );
+		progressTracker.stepSuccess( 'dns' );
+		progressTracker.print();
+	}
 
-	progressTracker.stepSuccess( 'dns' );
-
-	progressTracker.print();
 	progressTracker.stopPrinting();
 };
 
@@ -163,11 +188,20 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		return options.configFileSlug;
 	}
 
-	return DEFAULT_SLUG;
+	const envs = getAllEnvironmentNames();
+	if ( envs.length === 1 ) {
+		return envs[ 0 ];
+	}
+	if ( envs.length > 1 && typeof options.slug !== 'string' ) {
+		const msg = `More than one environment found: ${ chalk.blue.bold( envs.join( ', ' ) ) }. Please re-run command with the --slug parameter for the targeted environment.`;
+		throw new UserError( msg );
+	}
+
+	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
 }
 
 export function getEnvironmentStartCommand( slug: string ): string {
-	if ( ! slug || slug === DEFAULT_SLUG ) {
+	if ( ! slug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
 
@@ -183,7 +217,8 @@ export function printTable( data: Object ) {
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
-	if ( allowLocal && param.includes( '/' ) ) {
+	// This is a bit of a naive check
+	if ( allowLocal && /[\\\/]/.test( param ) ) {
 		return {
 			mode: 'local',
 			dir: param,
@@ -252,11 +287,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
+		mailhog: false,
 	};
 
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
+		mailhog: 'MailHog',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -292,7 +329,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.statsd = false;
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug' ] ) {
+	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
 		if ( service in instanceData ) {
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
@@ -314,9 +351,12 @@ async function processComponent( component: string, preselectedValue: string, de
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
+		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
+
+	debug( result );
 
 	while ( 'local' === result?.mode ) {
 		const resolvedPath = resolvePath( result.dir || '' );
@@ -326,9 +366,11 @@ async function processComponent( component: string, preselectedValue: string, de
 
 		if ( isPathValid ) {
 			break;
-		} else {
+		} else if ( isStdinTTY ) {
 			console.log( chalk.yellow( 'Warning:' ), message );
 			result = await promptForComponent( component, allowLocal, defaultObject );
+		} else {
+			throw new Error( message );
 		}
 	}
 
@@ -385,31 +427,38 @@ export function resolvePath( input: string ): string {
 }
 
 export async function promptForText( message: string, initial: string ): Promise<string> {
-	const nonEmptyValidator = ( value: ?string ) => {
-		if ( ( value || '' ).trim() ) {
-			return true;
-		}
-		return 'value needs to be provided';
-	};
+	let result = { input: initial };
+	if ( isStdinTTY ) {
+		const nonEmptyValidator = ( value: ?string ) => {
+			if ( ( value || '' ).trim() ) {
+				return true;
+			}
+			return 'value needs to be provided';
+		};
 
-	const result = await prompt( {
-		type: 'input',
-		name: 'input',
-		message,
-		initial,
-		validate: nonEmptyValidator,
-	} );
+		result = await prompt( {
+			type: 'input',
+			name: 'input',
+			message,
+			initial,
+			validate: nonEmptyValidator,
+		} );
+	}
 
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
-	const confirm = new Confirm( {
-		message,
-		initial,
-	} );
+export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
+	if ( isStdinTTY ) {
+		const confirm = new Confirm( {
+			message,
+			initial,
+		} );
 
-	return confirm.run();
+		return confirm.run();
+	}
+
+	return Promise.resolve( initial );
 }
 
 function resolvePhpVersion( version: string ): string {
@@ -435,35 +484,29 @@ function resolvePhpVersion( version: string ): string {
 export async function promptForPhpVersion( initialValue: string ): Promise<string> {
 	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
 
-	const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const initial = images.findIndex( version => version === initialValue );
+	let answer = initialValue;
+	if ( isStdinTTY ) {
+		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const initial = images.findIndex( version => version === initialValue );
 
-	const select = new Select( {
-		message: 'PHP version to use',
-		choices,
-		initial,
-	} );
+		const select = new Select( {
+			message: 'PHP version to use',
+			choices,
+			initial,
+		} );
 
-	const answer = await select.run();
+		answer = await select.run();
+	}
+
 	return resolvePhpVersion( answer );
 }
-
-const componentDisplayNames = {
-	wordpress: 'WordPress',
-	muPlugins: 'vip-go-mu-plugins',
-	appCode: 'application code',
-};
-const componentDemoyNames = {
-	muPlugins: 'vip-go-mu-plugins',
-	appCode: 'vip-go-skeleton',
-};
 
 // eslint-disable-next-line no-redeclare
 export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig | WordPressConfig> {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const componentDemoName = componentDemoyNames[ component ] || component;
+	const componentDemoName = componentDemoNames[ component ] || component;
 	const modChoices = [];
 
 	if ( allowLocal ) {
@@ -478,7 +521,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 	} );
 
 	let initialMode = 'image';
-	if ( 'appCode' === component ) {
+	if ( 'appCode' === component && isStdinTTY ) {
 		initialMode = 'local';
 	}
 
@@ -488,7 +531,7 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	let modeResult = initialMode;
 	const selectMode = modChoices.length > 1;
-	if ( selectMode ) {
+	if ( selectMode && isStdinTTY ) {
 		const initialModeIndex = modChoices.findIndex( choice => choice.value === initialMode );
 		const select = new Select( {
 			message: `How would you like to source ${ componentDisplayName }`,
@@ -498,6 +541,8 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 		modeResult = await select.run();
 	}
+
+	debug( modeResult );
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
@@ -510,14 +555,18 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	// image with selection
 	if ( component === 'wordpress' ) {
-		const message = `${ messagePrefix }Which version would you like`;
 		const tagChoices = await getTagChoices();
-		const selectTag = new Select( {
-			message,
-			choices: tagChoices,
-			initial: defaultObject?.tag || '',
-		} );
-		const option = await selectTag.run();
+		let option = defaultObject?.tag || tagChoices[ 0 ].value;
+		if ( isStdinTTY ) {
+			const message = `${ messagePrefix }Which version would you like`;
+			const selectTag = new Select( {
+				message,
+				choices: tagChoices,
+				initial: option,
+			} );
+
+			option = await selectTag.run();
+		}
 
 		return ( {
 			mode: 'image',
@@ -552,7 +601,8 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
-		.option( 'php', 'Explicitly choose PHP version to use' );
+		.option( 'php', 'Explicitly choose PHP version to use' )
+		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**

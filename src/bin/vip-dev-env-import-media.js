@@ -17,6 +17,7 @@ import command from '../lib/cli/command';
 import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const examples = [
 	{
@@ -37,7 +38,9 @@ command( {
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ filePath ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );
-		await validateDependencies( slug );
+
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_import_media_command_execute', trackingInfo );

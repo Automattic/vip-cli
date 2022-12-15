@@ -18,6 +18,7 @@ import { printAllEnvironmentsInfo } from 'lib/dev-environment/dev-environment-co
 import { handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const examples = [
 	{
@@ -29,12 +30,14 @@ const examples = [
 command()
 	.examples( examples )
 	.argv( process.argv, async () => {
-		await validateDependencies();
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, '' );
+
 		const trackingInfo = { all: true };
 		await trackEvent( 'dev_env_list_command_execute', trackingInfo );
 
 		try {
-			await printAllEnvironmentsInfo( {} );
+			await printAllEnvironmentsInfo( lando, {} );
 			await trackEvent( 'dev_env_list_command_success', trackingInfo );
 		} catch ( error ) {
 			handleCLIException( error, 'dev_env_list_command_error', trackingInfo );

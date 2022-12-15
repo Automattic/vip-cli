@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.23.0",
+  "version": "2.24.1",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -53,7 +53,7 @@
     "prepare": "npm run clean && npm run build",
     "postinstall": "node ./helpers/check-version.js",
     "build": "babel src -d dist",
-    "build:watch": "babel src -d dist --watch",
+    "build:watch": "babel src -d dist --watch --source-maps",
     "flow": "flow",
     "jest": "jest",
     "lint": "eslint index.js src __tests__",
@@ -107,7 +107,7 @@
     "flow-bin": "0.190.1",
     "jest": "27.2.1",
     "nock": "13.0.11",
-    "prettier": "npm:wp-prettier@2.0.5",
+    "prettier": "^2.0.5",
     "publish-please": "5.5.2",
     "rimraf": "3.0.2"
   },
@@ -137,7 +137,7 @@
     "rollbar": "2.22.0",
     "semver": "7.3.8",
     "single-line-log": "1.1.2",
-    "socket.io-client": "4.4.1",
+    "socket.io-client": "^4.5.3",
     "socket.io-stream": "0.9.1",
     "socks-proxy-agent": "^5.0.1",
     "update-notifier": "5.1.0",

@@ -5,14 +5,16 @@
 /**
  * External dependencies
  */
+import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
+import os from 'os';
 /**
  * Internal dependencies
  */
 
-import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent } from 'lib/dev-environment/dev-environment-cli';
-import { promptForArguments } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent, promptForArguments, setIsTTY } from 'lib/dev-environment/dev-environment-cli';
+import * as devEnvCore from 'lib/dev-environment/dev-environment-core';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -51,12 +53,30 @@ const scope = nock( 'https://raw.githubusercontent.com' )
 	} ] );
 scope.persist( true );
 
+jest.mock( '../../../src/lib/constants/dev-environment', () => {
+	const devEnvironmentConstants = jest.requireActual( '../../../src/lib/constants/dev-environment' );
+
+	return {
+		...devEnvironmentConstants,
+		// Use separate version file to avoid overwriting actual cached images with mocked values
+		DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY: 'test-wordpress-versions.json',
+	};
+} );
+
 describe( 'lib/dev-environment/dev-environment-cli', () => {
+	beforeAll( () => {
+		setIsTTY( true );
+	} );
 	beforeEach( () => {
 		prompt.mockReset();
 		confirmRunMock.mockReset();
 	} );
-	describe( 'getEnvironmentName', () => {
+	describe( 'getEnvironmentName with no environments present', () => {
+		beforeEach( () => {
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			getAllEnvironmentNamesMock.mockReturnValue( [] );
+		} );
+
 		it.each( [
 			{ // default value
 				options: {},
@@ -134,6 +154,33 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			} ).toThrow( expectedErrorMessage );
 		} );
 	} );
+	describe( 'getEnvironmentName with 1 environment present', () => {
+		beforeEach( () => {
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site' ] );
+		} );
+
+		it( 'should return first environment found if only one present', () => {
+			const result = getEnvironmentName( {} );
+
+			expect( result ).toStrictEqual( 'single-site' );
+		} );
+	} );
+	describe( 'getEnvironmentName with multiple environments present', () => {
+		beforeEach( () => {
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site', 'ms-site' ] );
+		} );
+
+		it( 'should throw an error', () => {
+			const options = {};
+
+			const errorMsg = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter for the targeted environment.`;
+			expect( () => {
+				getEnvironmentName( options );
+			} ).toThrow( errorMsg );
+		} );
+	} );
 	describe( 'getEnvironmentStartCommand', () => {
 		it.each( [
 			{ // default value
@@ -155,7 +202,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		} );
 	} );
 	describe( 'processComponentOptionInput', () => {
-		it.each( [
+		const cases = [
 			{ // base tag
 				param: testReleaseWP,
 				allowLocal: true,
@@ -172,7 +219,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					tag: '/tmp/wp',
 				},
 			},
-			{ // if local is  allowed
+			{
 				param: '~/path',
 				allowLocal: true,
 				expected: {
@@ -180,7 +227,27 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					dir: '~/path',
 				},
 			},
-		] )( 'should process options and use defaults', async input => {
+		];
+
+		if ( os.platform() === 'win32' ) {
+			cases.push( {
+				param: 'C:\\path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:\\path',
+				},
+			},
+			{
+				param: 'C:/path',
+				allowLocal: true,
+				expected: {
+					mode: 'local',
+					dir: 'C:/path',
+				},
+			} );
+		}
+		it.each( cases )( 'should process options and use defaults', async input => {
 			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
@@ -340,9 +407,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( 'multisite' in input.preselected ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 3 );
-			} else {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
 			}
 
 			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
@@ -377,9 +444,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( input.preselected.mediaRedirectDomain ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 3 );
-			} else {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
 			}
 
 			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;
