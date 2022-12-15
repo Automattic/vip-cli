@@ -40,7 +40,6 @@ services:
       command: run.sh
       working_dir: /wp
       environment:
-        STATSD: <%= statsd ? 'enable' : 'disable' %>
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
 <% if ( xdebugConfig ) { %>
         XDEBUG_CONFIG: "<%= xdebugConfig %>"
@@ -111,13 +110,6 @@ services:
         - search_data:/usr/share/elasticsearch/data
     volumes:
       search_data:
-<% } %>
-<% if ( statsd ) { %>
-  statsd:
-    type: compose
-    services:
-      image: ghcr.io/automattic/vip-container-images/statsd:v0.9.0
-      command: node stats.js /config/statsd-config.js
 <% } %>
 
   wordpress:
