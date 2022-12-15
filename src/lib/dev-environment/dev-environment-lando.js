@@ -192,16 +192,20 @@ const healthChecks = {
 };
 
 async function healthcheckHook( app: App, lando: Lando ) {
+	const now = new Date();
 	try {
 		await lando.Promise.retry( async () => {
 			const list = await lando.engine.list( { project: app.project } );
 
 			const notHealthyContainers = [];
+			const checkPromises = [];
+			const containerOrder = [];
 			for ( const container of list ) {
 				if ( healthChecks[ container.service ] ) {
-					try {
-						debug( `Testing ${ container.service }: ${ healthChecks[ container.service ] }` );
-						await app.engine.run( {
+					debug( `Testing ${ container.service }: ${ healthChecks[ container.service ] }` );
+					containerOrder.push( container );
+					checkPromises.push(
+						app.engine.run( {
 							id: container.id,
 							cmd: healthChecks[ container.service ],
 							compose: app.compose,
@@ -212,13 +216,18 @@ async function healthcheckHook( app: App, lando: Lando ) {
 								cstdio: 'pipe',
 								services: [ container.service ],
 							},
-						} );
-					} catch ( exception ) {
-						debug( `${ container.service } Health check failed` );
-						notHealthyContainers.push( container );
-					}
+						} )
+					);
 				}
 			}
+
+			const results = await Promise.allSettled( checkPromises );
+			results.forEach( ( result, index ) => {
+				if ( result.status === 'rejected' ) {
+					debug( `${ containerOrder[ index ].service } Health check failed` );
+					notHealthyContainers.push( containerOrder[ index ] );
+				}
+			} );
 
 			if ( notHealthyContainers.length ) {
 				for ( const container of notHealthyContainers ) {
@@ -232,6 +241,9 @@ async function healthcheckHook( app: App, lando: Lando ) {
 			console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` );
 		}
 	}
+
+	const duration = new Date().getTime() - now.getTime();
+	debug( `Healthcheck completed in ${ duration }ms` );
 }
 
 export async function landoStop( lando: Lando, instancePath: string ) {
