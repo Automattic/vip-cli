@@ -332,12 +332,16 @@ async function getExtraServicesConnections( lando, app ) {
 }
 
 export async function isEnvUp( lando: Lando, instancePath: string ): Promise<boolean> {
+	const now = new Date();
 	const app = await getLandoApplication( lando, instancePath );
 
 	const reachableServices = app.info.filter( service => service.urls.length );
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'isEnvUp took %d ms', duration );
+
 	// If all the URLs are reachable then the app is considered 'up'
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }

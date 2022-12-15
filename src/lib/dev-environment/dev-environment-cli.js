@@ -135,6 +135,7 @@ const VALIDATION_STEPS = [
 ];
 
 export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+	const now = new Date();
 	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
 	const progressTracker = new ProgressTracker( steps );
 	if ( ! quiet ) {
@@ -177,6 +178,9 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 	if ( ! quiet ) {
 		progressTracker.stopPrinting();
 	}
+
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'Validation checks completed in %d ms', duration );
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
