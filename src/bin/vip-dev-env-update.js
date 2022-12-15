@@ -95,9 +95,11 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	} catch ( error ) {
 		if ( 'ENOENT' === error.code ) {
 			const message = 'Environment was created before update was supported.\n\nTo update environment please destroy it and create a new one.';
-			handleCLIException( new Error( message ), 'dev_env_update_command_error', trackingInfo );
+			await handleCLIException( new Error( message ), 'dev_env_update_command_error', trackingInfo );
 		} else {
-			handleCLIException( error, 'dev_env_update_command_error', trackingInfo );
+			await handleCLIException( error, 'dev_env_update_command_error', trackingInfo );
 		}
+
+		process.exitCode = 1;
 	}
 } );

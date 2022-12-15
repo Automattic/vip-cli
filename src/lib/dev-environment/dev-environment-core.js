@@ -565,7 +565,8 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 		} else {
 			message = `An error prevented reading the configuration of: ${ slug }\n\n ${ error }`;
 		}
-		handleCLIException( new Error( message ) );
+
+		await handleCLIException( new Error( message ) );
 		return false;
 	}
 

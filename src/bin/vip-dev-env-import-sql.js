@@ -94,6 +94,7 @@ command( {
 			await exec( lando, slug, addUserArg );
 			await trackEvent( 'dev_env_import_sql_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );
+			await handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );
+			process.exitCode = 1;
 		}
 	} );
