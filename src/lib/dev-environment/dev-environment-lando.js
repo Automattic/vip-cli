@@ -230,16 +230,12 @@ async function healthcheckHook( app: App, lando: Lando ) {
 			} );
 
 			if ( notHealthyContainers.length ) {
-				for ( const container of notHealthyContainers ) {
-					console.log( `Waiting for service ${ container.service } ...` );
-				}
+				notHealthyContainers.forEach( container => console.log( `Waiting for service ${ container.service } ...` ) );
 				return Promise.reject( notHealthyContainers );
 			}
 		}, { max: 20, backoff: 1000 } );
 	} catch ( containersWithFailingHealthCheck ) {
-		for ( const container of containersWithFailingHealthCheck ) {
-			console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` );
-		}
+		containersWithFailingHealthCheck.forEach( container => console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` ) );
 	}
 
 	const duration = new Date().getTime() - now.getTime();
