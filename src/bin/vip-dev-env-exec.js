@@ -15,7 +15,7 @@
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { exec } from '../lib/dev-environment/dev-environment-core';
+import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
@@ -63,7 +63,7 @@ command( { wildcardCommand: true } )
 			}
 
 			if ( ! opt.force ) {
-				const isUp = await isEnvUp( lando, slug );
+				const isUp = await isEnvUp( lando, getEnvironmentPath( slug ) );
 				if ( ! isUp ) {
 					throw new UserError( 'Environment needs to be started before running a command' );
 				}

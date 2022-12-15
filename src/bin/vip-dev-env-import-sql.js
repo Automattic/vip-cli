@@ -17,7 +17,7 @@ import chalk from 'chalk';
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
+import { exec, getEnvironmentPath, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { validate } from '../lib/validations/sql';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
@@ -66,7 +66,7 @@ command( {
 			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
 			if ( ! opt.skipValidate ) {
-				if ( ! isEnvUp( lando, slug ) ) {
+				if ( ! isEnvUp( lando, getEnvironmentPath( slug ) ) ) {
 					throw new UserError( 'Environment needs to be started first' );
 				}
 
