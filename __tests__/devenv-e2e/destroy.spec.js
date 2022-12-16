@@ -48,7 +48,7 @@ describe( 'vip dev-env destroy', () => {
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stdout ).toContain( 'Error: Environment doesn\'t exist.' );
+		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
 		expect( checkEnvExists( slug ) ).toBe( false );
 	} );
@@ -145,7 +145,7 @@ describe( 'vip dev-env destroy', () => {
 				containers.delete( id );
 			}
 
-			// vip-dev-env-proxy could be running. Not sure whether this is a bug or a feature.
+			// vip-dev-env-proxy could be running
 			expect( containers.size ).toBeLessThanOrEqual( 1 );
 		} );
 	} );

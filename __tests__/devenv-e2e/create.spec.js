@@ -58,7 +58,7 @@ describe( 'vip dev-env create', () => {
 
 		const result2 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
 		expect( result2.rc ).toBeGreaterThan( 0 );
-		expect( result2.stdout ).toContain( 'Error:  Environment already exists' );
+		expect( result2.stderr ).toContain( 'Error:  Environment already exists' );
 		expect( checkEnvExists( slug ) ).toBe( true );
 	} );
 

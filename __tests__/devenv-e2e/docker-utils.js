@@ -2,7 +2,7 @@
 /**
  * External dependencies
  */
-import Docker from 'dockerode';
+import type Docker from 'dockerode';
 
 /**
  * @param {Docker} docker Docker instance
