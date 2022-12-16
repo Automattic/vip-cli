@@ -76,5 +76,6 @@ command()
 			await trackEvent( 'dev_env_destroy_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfo );
+			process.exitCode = 1;
 		}
 	} );
