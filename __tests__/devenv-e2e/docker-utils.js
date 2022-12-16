@@ -1,6 +1,11 @@
 /* eslint-disable id-length */
 
 /**
+ * External dependencies
+ */
+import { dockerComposify } from 'lando/lib/utils';
+
+/**
  * @typedef {import('dockerode')} Docker
  * @typedef {import('dockerode').ContainerInfo} ContainerInfo
  */
@@ -30,7 +35,7 @@ export async function getNewContainers( docker, knownContainers ) {
  * @returns {Promise<ContainerInfo[]>} List of containers
  */
 export function getContainersForProject( docker, project ) {
-	const prefix = project.replace( /-/g, '' );
+	const prefix = dockerComposify( project );
 	return docker.listContainers( {
 		filters: {
 			label: [ `com.docker.compose.project=${ prefix }` ],
