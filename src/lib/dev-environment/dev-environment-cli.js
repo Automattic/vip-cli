@@ -81,27 +81,27 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
-		console.log( errorPrefix, message );
+		console.error( errorPrefix, message );
 	} else {
 		let message = exception.message;
 		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
 		message = message.replace( 'ERROR: ', '' );
 
-		console.log( errorPrefix, message );
+		console.error( errorPrefix, message );
 
 		if ( trackKey ) {
 			try {
 				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
-				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
+				console.warn( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
 			}
 		}
 
 		if ( ! process.env.DEBUG ) {
-			console.log( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
-			console.log( chalk.bold( '\nExample:\n' ) );
-			console.log( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
+			console.error( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
+			console.error( chalk.bold( '\nExample:\n' ) );
+			console.error( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
 		}
 
 		debug( exception );
