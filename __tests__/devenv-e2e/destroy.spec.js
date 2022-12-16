@@ -16,7 +16,7 @@ import { CliTest } from './cli-test';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 import { checkEnvExists, getNextID, prepareEnvironment } from './utils';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
-import { getExistingContainers, killContainersExcept } from './docker-utils';
+import { getContainersForProject, getExistingContainers, killContainersExcept } from './docker-utils';
 
 jest.setTimeout( 600 * 1000 );
 
@@ -140,13 +140,8 @@ describe( 'vip dev-env destroy', () => {
 
 			expect( checkEnvExists( slug ) ).toBe( false );
 
-			const containers = await getExistingContainers( docker );
-			for ( const id of containerIDs ) {
-				containers.delete( id );
-			}
-
-			// vip-dev-env-proxy could be running
-			expect( containers.size ).toBeLessThanOrEqual( 1 );
+			const containers = await getContainersForProject( docker, slug );
+			expect( containers ).toHaveLength( 0 );
 		} );
 	} );
 } );

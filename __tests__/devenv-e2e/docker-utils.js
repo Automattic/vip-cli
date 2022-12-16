@@ -1,8 +1,9 @@
 /* eslint-disable id-length */
+
 /**
- * External dependencies
+ * @typedef {import('dockerode')} Docker
+ * @typedef {import('dockerode').ContainerInfo} ContainerInfo
  */
-import type Docker from 'dockerode';
 
 /**
  * @param {Docker} docker Docker instance
@@ -11,6 +12,30 @@ import type Docker from 'dockerode';
 export async function getExistingContainers( docker ) {
 	const containers = await docker.listContainers( { all: true } );
 	return new Set( containers.map( containerInfo => containerInfo.Id ) );
+}
+
+/**
+ * @param {Docker} docker Docker instance
+ * @param {Set<string>} knownContainers List of container IDs to ignore
+ * @returns {Promise<ContainerInfo[]>} List of new containers
+ */
+export async function getNewContainers( docker, knownContainers ) {
+	const existingContainers = await docker.listContainers( { all: true } );
+	return existingContainers.filter( containerInfo => ! knownContainers.has( containerInfo.Id ) );
+}
+
+/**
+ * @param {Docker} docker Docker instance
+ * @param {string} project Project slug
+ * @returns {Promise<ContainerInfo[]>} List of containers
+ */
+export function getContainersForProject( docker, project ) {
+	const prefix = project.replace( /-/g, '' );
+	return docker.listContainers( {
+		filters: {
+			label: [ `com.docker.compose.project=${ prefix }` ],
+		},
+	} );
 }
 
 /**
@@ -27,12 +52,7 @@ export async function killContainers( docker, ids ) {
  * @param {Set<string>} excluded List of container IDs to keep
  */
 export async function killContainersExcept( docker, excluded ) {
-	const existingContainers = await docker.listContainers( { all: true } );
-	const containers = new Set( existingContainers.map( containerInfo => containerInfo.Id ) );
-
-	for ( const id of excluded ) {
-		containers.delete( id );
-	}
-
-	return killContainers( docker, Array.from( containers ) );
+	const newContainers = await getNewContainers( docker, excluded );
+	const ids = newContainers.map( containerInfo => containerInfo.Id );
+	return killContainers( docker, ids );
 }
