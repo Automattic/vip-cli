@@ -30,5 +30,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Pack and install
+        run: npm pack && npm i -g *.tgz
+
+      - name: Preload Docker images
+        run: |
+          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e true -p true --mailhog true && \
+          vip dev-env start && \
+          vip dev-env destroy
+
       - name: Run tests
         run: npm run test:e2e:dev-env
