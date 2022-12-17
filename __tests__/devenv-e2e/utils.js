@@ -6,11 +6,13 @@ import { doesEnvironmentExist } from '../../src/lib/dev-environment/dev-environm
 let id = 0;
 
 /**
- * @returns {number} Next ID
+ * @returns {string} Project slug
  */
-export function getNextID() {
+export function getProjectSlug() {
 	++id;
-	return id;
+	const workerID = `${ +( process.env.JEST_WORKER_ID || '1' ) }`.padStart( 4, '0' );
+	const envID = `${ id }`.padStart( 4, '0' );
+	return `dev-env-${ workerID }-${ envID }`;
 }
 
 /**

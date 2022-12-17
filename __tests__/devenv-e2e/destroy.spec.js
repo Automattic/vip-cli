@@ -14,7 +14,7 @@ import nock from 'nock';
  */
 import { CliTest } from './cli-test';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getNextID, prepareEnvironment } from './utils';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './utils';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 import { getContainersForProject, getExistingContainers, killContainersExcept } from './docker-utils';
 
@@ -43,7 +43,7 @@ describe( 'vip dev-env destroy', () => {
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
 
 	it( 'should fail if environment does not exist', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
@@ -54,7 +54,7 @@ describe( 'vip dev-env destroy', () => {
 	} );
 
 	it( 'should remove existing environment', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
@@ -70,7 +70,7 @@ describe( 'vip dev-env destroy', () => {
 	} );
 
 	it( 'should remove existing environment even without landofile', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
@@ -90,7 +90,7 @@ describe( 'vip dev-env destroy', () => {
 	} );
 
 	it( 'should keep the files when asked to', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
@@ -122,7 +122,7 @@ describe( 'vip dev-env destroy', () => {
 		afterEach( () => killContainersExcept( docker, containerIDs ) );
 
 		it( 'should stop and destroy it', async () => {
-			const slug = `dev-env-${ getNextID() }`;
+			const slug = getProjectSlug();
 			expect( checkEnvExists( slug ) ).toBe( false );
 
 			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );

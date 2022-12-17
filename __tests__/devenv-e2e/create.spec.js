@@ -12,7 +12,7 @@ import xdgBaseDir from 'xdg-basedir';
  */
 import { CliTest } from './cli-test';
 import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getNextID, prepareEnvironment } from './utils';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './utils';
 import { vipDevEnvCreate } from './commands';
 
 jest.setTimeout( 30 * 1000 );
@@ -37,7 +37,7 @@ describe( 'vip dev-env create', () => {
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
 
 	it( 'should create a new environment', async () => {
-		const expectedSlug = `dev-env-${ getNextID() }`;
+		const expectedSlug = getProjectSlug();
 		expect( checkEnvExists( expectedSlug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ], { env }, true );
@@ -49,7 +49,7 @@ describe( 'vip dev-env create', () => {
 	} );
 
 	it( 'should fail on duplicate slugs', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		const result1 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
@@ -63,7 +63,7 @@ describe( 'vip dev-env create', () => {
 	} );
 
 	it( 'should use sane defaults', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		const expectedMultisite = false;
 		const expectedPhpVersion = '8.0';
 		const expectedElasticSearch = false;
@@ -99,7 +99,7 @@ describe( 'vip dev-env create', () => {
 	} );
 
 	it( 'should be configurable via command line', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		const expectedTitle = 'Test';
 		const expectedMultisite = true;
 		const expectedPhpVersion = '8.0';

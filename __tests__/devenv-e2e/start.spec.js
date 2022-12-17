@@ -13,7 +13,7 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './cli-test';
-import { checkEnvExists, getNextID, prepareEnvironment } from './utils';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './utils';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 import { getContainersForProject, getExistingContainers, killContainersExcept } from './docker-utils';
 
@@ -51,7 +51,7 @@ describe( 'vip dev-env start', () => {
 	afterEach( () => killContainersExcept( docker, containerIDs ) );
 
 	it( 'should fail if environment does not exist', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env } );
@@ -62,7 +62,7 @@ describe( 'vip dev-env start', () => {
 	} );
 
 	it( 'should start an environment', async () => {
-		const slug = `dev-env-${ getNextID() }`;
+		const slug = getProjectSlug();
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
