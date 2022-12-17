@@ -49,7 +49,7 @@
   },
   "scripts": {
     "test": "npm run lint && npm run flow && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
-    "test:e2e:dev-env": "jest __tests__/devenv-e2e/ --testRegex '\\.(test|spec)\\.js$'",
+    "test:e2e:dev-env": "jest __tests__/devenv-e2e/ --testRegex '\\.(test|spec)\\.js$' --maxWorkers=1",
     "clean": "rimraf dist",
     "prepare": "npm run clean && npm run build",
     "postinstall": "node ./helpers/check-version.js",
