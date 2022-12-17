@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import env from 'lib/env';
 
 export function withError( message: string ) {
-	console.log( `${ chalk.red( 'Error: ' ) } ${ message.toString().replace( /^Error:\s*/, '' ) }` );
+	console.error( `${ chalk.red( 'Error: ' ) } ${ message.toString().replace( /^Error:\s*/, '' ) }` );
 
 	// Debug ouput is printed below error output both for information
 	// hierarchy and to make it more likely that the user copies it to their
