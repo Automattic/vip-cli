@@ -19,9 +19,6 @@ import { getContainersForProject, getExistingContainers, killContainersExcept } 
 
 jest.setTimeout( 600 * 1000 );
 
-// Nock is weird :-) If the request goes to a UNIX socket, it parses it in a strange way and sets the host and port to localhost:80
-nock.enableNetConnect( host => host === 'localhost:80' );
-
 describe( 'vip dev-env start', () => {
 	/** @type {CliTest} */
 	let cliTest;
@@ -35,6 +32,9 @@ describe( 'vip dev-env start', () => {
 	let containerIDs;
 
 	beforeAll( async () => {
+		// Nock is weird :-) If the request goes to a UNIX socket, it parses it in a strange way and sets the host and port to localhost:80
+		nock.enableNetConnect( host => host === 'localhost:80' );
+
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
