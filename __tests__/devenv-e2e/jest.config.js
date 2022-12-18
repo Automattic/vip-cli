@@ -1,14 +1,18 @@
-const os = require( 'os' );
+const path = require( 'path' );
 
 /** @type {import('jest').Config} */
 const config = {
 	verbose: true,
-	slowTestThreshold: 15,
+	slowTestThreshold: 30,
 	testRegex: [
 		'\\.(test|spec)\\.js$',
 	],
+	rootDir: path.join( __dirname, '..', '..' ),
+	roots: [
+		'<rootDir>/__tests__/devenv-e2e',
+	],
 	testTimeout: 600000,
-	maxWorkers: process.env.CI ? 1 : os.cpus().length - 1,
+	maxWorkers: 1, // We cannot have more because of the way Lando works
 };
 
 module.exports = config;
