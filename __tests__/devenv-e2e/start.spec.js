@@ -32,8 +32,8 @@ describe( 'vip dev-env start', () => {
 	let containerIDs;
 
 	beforeAll( async () => {
-		// Nock is weird :-) If the request goes to a UNIX socket, it parses it in a strange way and sets the host and port to localhost:80
-		nock.enableNetConnect( host => host === 'localhost:80' );
+		nock.cleanAll();
+		nock.enableNetConnect();
 
 		cliTest = new CliTest();
 
@@ -47,6 +47,7 @@ describe( 'vip dev-env start', () => {
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
+	afterAll( () => nock.restore() );
 
 	afterEach( () => killContainersExcept( docker, containerIDs ) );
 

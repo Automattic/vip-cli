@@ -4,7 +4,7 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterAll, describe, expect, it, jest } from '@jest/globals';
 import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
 import nock from 'nock';
@@ -32,8 +32,8 @@ describe( 'vip dev-env stop', () => {
 	let containerIDs;
 
 	beforeAll( async () => {
-		// Nock is weird :-) If the request goes to a UNIX socket, it parses it in a strange way and sets the host and port to localhost:80
-		nock.enableNetConnect( host => host === 'localhost:80' );
+		nock.cleanAll();
+		nock.enableNetConnect();
 
 		cliTest = new CliTest();
 
@@ -47,6 +47,7 @@ describe( 'vip dev-env stop', () => {
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
+	afterAll( () => nock.restore() );
 
 	afterEach( () => killContainersExcept( docker, containerIDs ) );
 
