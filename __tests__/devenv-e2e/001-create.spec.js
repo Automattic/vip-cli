@@ -75,22 +75,20 @@ describe( 'vip dev-env create', () => {
 		expect( checkEnvExists( slug ) ).toBe( true );
 
 		const data = readEnvironmentData( slug );
-		expect( data ).toEqual(
-			expect.objectContaining( {
-				siteSlug: slug,
-				wpTitle: expect.any( String ),
-				multisite: expectedMultisite,
-				mariadb: '10.3',
-				mediaRedirectDomain: '',
-				elasticsearch: expectedElasticSearch,
-				statsd: false,
-				xdebugConfig: '',
-				php: expect.stringContaining( `:${ expectedPhpVersion }` ),
-				muPlugins: { mode: 'image' },
-				appCode: { mode: 'image' },
-				wordpress: expect.objectContaining( { mode: 'image', tag: expect.any( String ) } ),
-			} )
-		);
+		expect( data ).toMatchObject( {
+			siteSlug: slug,
+			wpTitle: expect.any( String ),
+			multisite: expectedMultisite,
+			mariadb: '10.3',
+			mediaRedirectDomain: '',
+			elasticsearch: expectedElasticSearch,
+			statsd: false,
+			xdebugConfig: '',
+			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
+			muPlugins: { mode: 'image' },
+			appCode: { mode: 'image' },
+			wordpress: expect.objectContaining( { mode: 'image', tag: expect.any( String ) } ),
+		} );
 
 		// Our bugs :-)
 		expect( data ).not.toHaveProperty( 'phpmyadmin' );
@@ -130,24 +128,22 @@ describe( 'vip dev-env create', () => {
 		expect( checkEnvExists( slug ) ).toBe( true );
 
 		const data = readEnvironmentData( slug );
-		expect( data ).toEqual(
-			expect.objectContaining( {
-				siteSlug: slug,
-				wpTitle: expectedTitle,
-				multisite: expectedMultisite,
-				mariadb: '10.3',
-				mediaRedirectDomain: '',
-				elasticsearch: expectedElasticSearch,
-				statsd: false,
-				xdebugConfig: '',
-				php: expect.stringContaining( `:${ expectedPhpVersion }` ),
-				muPlugins: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`
-				appCode: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`
-				wordpress: expect.objectContaining( { mode: 'image', tag: expectedWordPressVersion } ),
-				phpmyadmin: expectedPhpMyAdmin,
-				xdebug: expectedXDebug,
-				mailhog: expectedMailHog,
-			} )
-		);
+		expect( data ).toMatchObject( {
+			siteSlug: slug,
+			wpTitle: expectedTitle,
+			multisite: expectedMultisite,
+			mariadb: '10.3',
+			mediaRedirectDomain: '',
+			elasticsearch: expectedElasticSearch,
+			statsd: false,
+			xdebugConfig: '',
+			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
+			muPlugins: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`
+			appCode: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`
+			wordpress: expect.objectContaining( { mode: 'image', tag: expectedWordPressVersion } ),
+			phpmyadmin: expectedPhpMyAdmin,
+			xdebug: expectedXDebug,
+			mailhog: expectedMailHog,
+		} );
 	} );
 } );
