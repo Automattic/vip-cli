@@ -4,6 +4,8 @@ module.exports = {
 		'./jest.setup.js',
 		'./jest.setupMocks.js',
 	],
-	testURL: 'http://localhost/',
+	testEnvironmentOptions: {
+		url: 'http://localhost/',
+	},
 	maxWorkers: 4,
 };
