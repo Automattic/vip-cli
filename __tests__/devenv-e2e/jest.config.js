@@ -11,6 +11,7 @@ const config = {
 	roots: [
 		'<rootDir>/__tests__/devenv-e2e',
 	],
+	reporters: [ 'default', 'github-actions' ],
 	testTimeout: 600000,
 	maxWorkers: 1, // We cannot have more because of the way Lando works
 };
