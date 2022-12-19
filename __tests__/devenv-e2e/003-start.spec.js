@@ -4,7 +4,7 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { afterAll, describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
 import nock from 'nock';
@@ -12,14 +12,14 @@ import nock from 'nock';
 /**
  * Internal dependencies
  */
-import { CliTest } from './cli-test';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './utils';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart, vipDevEnvStop } from './commands';
-import { getContainersForProject, getExistingContainers, killContainersExcept } from './docker-utils';
+import { CliTest } from './helpers/cli-test';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './helpers/commands';
+import { getContainersForProject, getExistingContainers, killContainersExcept } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
 
-describe( 'vip dev-env stop', () => {
+describe( 'vip dev-env start', () => {
 	/** @type {CliTest} */
 	let cliTest;
 	/** @type {NodeJS.ProcessEnv} */
@@ -55,14 +55,14 @@ describe( 'vip dev-env stop', () => {
 		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env } );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
 		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
 		expect( checkEnvExists( slug ) ).toBe( false );
 	} );
 
-	it( 'should stop a running environment', async () => {
+	it( 'should start an environment', async () => {
 		const slug = getProjectSlug();
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
 		expect( result.rc ).toBe( 0 );
@@ -73,36 +73,28 @@ describe( 'vip dev-env stop', () => {
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'environment stopped' );
+		const containersAfterStart = await getContainersForProject( docker, slug );
+		const expectedServices = [
+			'php',
+			'vip-mu-plugins',
+			'wordpress',
+			'database',
+			'memcached',
+			'demo-app-code',
+			'nginx',
+			'devtools',
+		];
 
-		const containersAfterStop = await getContainersForProject( docker, slug );
-		expect( containersAfterStop ).toHaveLength( 0 );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment destroyed.' );
-		expect( checkEnvExists( slug ) ).toBe( false );
-	} );
-
-	it( 'should not fail if the environment is stopped', async () => {
-		const slug = getProjectSlug();
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-		expect( checkEnvExists( slug ) ).toBe( true );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'environment stopped' );
-
-		const containersAfterStop = await getContainersForProject( docker, slug );
-		expect( containersAfterStop ).toHaveLength( 0 );
+		expectedServices.forEach( service =>
+			expect( containersAfterStart.find( container => container.Labels[ 'com.docker.compose.service' ] === service ) ).not.toBeUndefined()
+		);
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( 'Environment destroyed.' );
 		expect( checkEnvExists( slug ) ).toBe( false );
+
+		const containersAfterDestroy = await getContainersForProject( docker, slug );
+		expect( containersAfterDestroy ).toHaveLength( 0 );
 	} );
 } );

@@ -12,11 +12,11 @@ import nock from 'nock';
 /**
  * Internal dependencies
  */
-import { CliTest } from './cli-test';
+import { CliTest } from './helpers/cli-test';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './utils';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
-import { getContainersForProject, getExistingContainers, killContainersExcept } from './docker-utils';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './helpers/commands';
+import { getContainersForProject, getExistingContainers, killContainersExcept } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
 

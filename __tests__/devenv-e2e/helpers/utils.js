@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import { doesEnvironmentExist } from '../../src/lib/dev-environment/dev-environment-core';
+import { doesEnvironmentExist } from '../../../src/lib/dev-environment/dev-environment-core';
 
 let id = 0;
 

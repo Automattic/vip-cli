@@ -10,10 +10,10 @@ import xdgBaseDir from 'xdg-basedir';
 /**
  * Internal dependencies
  */
-import { CliTest } from './cli-test';
+import { CliTest } from './helpers/cli-test';
 import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './utils';
-import { vipDevEnvCreate } from './commands';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvCreate } from './helpers/commands';
 
 jest.setTimeout( 30 * 1000 );
 

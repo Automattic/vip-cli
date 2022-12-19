@@ -3,7 +3,7 @@
  */
 import { join, resolve } from 'node:path';
 
-const vipPath = resolve( __dirname, '../../dist/bin' );
+const vipPath = resolve( __dirname, '../../../dist/bin' );
 
 export const vipDevEnvCreate = join( vipPath, 'vip-dev-env-create.js' );
 export const vipDevEnvDestroy = join( vipPath, 'vip-dev-env-destroy.js' );
