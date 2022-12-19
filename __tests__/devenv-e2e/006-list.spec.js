@@ -123,6 +123,6 @@ describe( 'vip dev-env list', () => {
 			expect( result.stdout ).toContain( 'Found 1 environment' );
 			expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
 			expect( result.stdout ).toMatch( /STATUS\s+UP/ );
-		} );
+		}, 60000 );
 	} );
 } );
