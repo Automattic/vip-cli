@@ -27,6 +27,8 @@ const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
 const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
   php: 8.0
   wordpress: 6.0
+  app-code: ./site-code
+  mu-plugins: image
   multisite: false
   phpmyadmin: true
   elasticsearch: true
@@ -35,7 +37,7 @@ const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
     SOME_VAR: "some var value"
 `;
 
-export async function getConfigurationFileOptions(): ConfigurationFileOptions {
+export async function getConfigurationFileOptions(): Promise<ConfigurationFileOptions | null> {
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
 	let configurationFileContents = '';
 
@@ -67,6 +69,7 @@ export async function getConfigurationFileOptions(): ConfigurationFileOptions {
 	const configuration = await sanitizeConfiguration( configurationFromFile )
 		.catch( async ( { message } ) => {
 			exit.withError( message );
+			return null;
 		} );
 
 	debug( 'Sanitized configuration from file:', configuration );
@@ -87,7 +90,7 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 	const slug = Object.keys( configurationFromFile )[ 0 ];
 	const configuration = configurationFromFile[ slug ];
 
-	const stringToBooleanIfDefined = value => {
+	const stringToBooleanIfDefined = ( value: any ) => {
 		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
 			return undefined;
 		}
@@ -105,6 +108,7 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 		elasticsearch: stringToBooleanIfDefined( configuration.elasticsearch ),
 		phpmyadmin: stringToBooleanIfDefined( configuration.phpmyadmin ),
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
+		mailhog: stringToBooleanIfDefined( configuration.mailhog ),
 	};
 
 	// Remove undefined values
@@ -114,30 +118,11 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 }
 
 export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
-	// TODO: Add instance options to override:
-	//    export interface InstanceOptions {
-	//    x   title: string;
-	//    x   multisite: boolean;
-	//    x   wordpress?: string;
-	//    x   muPlugins?: string;
-	//    x   appCode?: string;
-	//    x   elasticsearch?: boolean;
-	//    x   php?: string;
-	//    x   phpmyadmin?: boolean;
-	//    x   xdebug?: boolean;
-	//
-	//        Maybe support:
-	//        mariadb?: string;
-	//        mediaRedirectDomain?: string;
-	//        statsd?: boolean;
-	//        xdebugConfig?: string;
-	//    }
-
 	// configurationFileOptions holds different parameters than present in
 	// preselectedOptions like "slug", and friendly-named parameters (e.g.
 	// 'app-code' vs 'appCode'). Selectively merge configurationFileOptions
 	// parameters into preselectedOptions.
-	const mergeOptions = {
+	const configurationFileInstanceOptions: InstanceOptions = {
 		title: configurationFileOptions.title,
 		multisite: configurationFileOptions.multisite,
 		php: configurationFileOptions.php,
@@ -147,16 +132,21 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		elasticsearch: configurationFileOptions.elasticsearch,
 		phpmyadmin: configurationFileOptions.phpmyadmin,
 		xdebug: configurationFileOptions.xdebug,
+		mailhog: configurationFileOptions.mailhog,
 	};
 
-	// Remove undefined values
-	Object.keys( mergeOptions ).forEach( key => mergeOptions[ key ] === undefined && delete mergeOptions[ key ] );
+	const mergedOptions: InstanceOptions = {};
 
-	// preselectedOptions (supplied from command-line) override configurationFileOptions
-	return {
-		...mergeOptions,
-		...preselectedOptions,
-	};
+	Object.keys( configurationFileInstanceOptions ).forEach( key => {
+		// preselectedOptions (supplied from command-line) override configurationFileOptions
+		if ( preselectedOptions[ key ] !== undefined ) {
+			mergedOptions[ key ] = preselectedOptions[ key ];
+		} else if ( configurationFileInstanceOptions[ key ] !== undefined ) {
+			mergedOptions[ key ] = configurationFileInstanceOptions[ key ];
+		}
+	} );
+
+	return mergedOptions;
 }
 
 export function printConfigurationFileInfo( configurationOptions: ConfigurationFileOptions ) {
@@ -176,7 +166,7 @@ export function printConfigurationFileInfo( configurationOptions: ConfigurationF
 			continue;
 		}
 
-		settingLines.push( `  ${ chalk.cyan( key ) }: ${ value }` );
+		settingLines.push( `  ${ chalk.cyan( key ) }: ${ String( value ) }` );
 	}
 
 	console.log( `${ chalk.cyan( configurationOptions.slug ) }:` );

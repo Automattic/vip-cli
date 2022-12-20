@@ -1,7 +1,7 @@
 // @flow
 export interface InstanceOptions {
-	title: string;
-	multisite: boolean;
+	title?: string;
+	multisite?: boolean;
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
@@ -59,13 +59,14 @@ export type ConfigurationFileOptions = {
 	slug?: string;
 	title?: string,
 	multisite?: boolean,
-	php: string,
-	wordpress: string,
+	php?: string,
+	wordpress?: string,
 	'mu-plugins'?: string,
 	'app-code'?: string,
 	elasticsearch?: boolean,
 	phpmyadmin?: boolean,
 	xdebug?: boolean,
+	mailhog?: boolean,
 }
 
 export interface InstanceData {
