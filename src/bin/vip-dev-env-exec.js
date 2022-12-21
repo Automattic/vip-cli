@@ -42,6 +42,7 @@ const examples = [
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'force', 'Disabling validations before task execution', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'quiet', 'Suppress output', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const environmentNameOptions = {
@@ -58,7 +59,7 @@ command( { wildcardCommand: true } )
 
 		const slug = getEnvironmentName( environmentNameOptions );
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
+		await validateDependencies( lando, slug, opt.quiet );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );

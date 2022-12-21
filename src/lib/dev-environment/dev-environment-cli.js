@@ -81,27 +81,27 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
-		console.log( errorPrefix, message );
+		console.error( errorPrefix, message );
 	} else {
 		let message = exception.message;
 		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
 		message = message.replace( 'ERROR: ', '' );
 
-		console.log( errorPrefix, message );
+		console.error( errorPrefix, message );
 
 		if ( trackKey ) {
 			try {
 				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
-				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
+				console.warn( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
 			}
 		}
 
 		if ( ! process.env.DEBUG ) {
-			console.log( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
-			console.log( chalk.bold( '\nExample:\n' ) );
-			console.log( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
+			console.error( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
+			console.error( chalk.bold( '\nExample:\n' ) );
+			console.error( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
 		}
 
 		debug( exception );
@@ -134,20 +134,26 @@ const VALIDATION_STEPS = [
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 
-export const validateDependencies = async ( lando: Lando, slug: string ) => {
+export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
 	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
 	const progressTracker = new ProgressTracker( steps );
-	console.log( 'Running validation steps...' );
-	progressTracker.startPrinting();
-	progressTracker.stepRunning( 'docker' );
+	if ( ! quiet ) {
+		console.log( 'Running validation steps...' );
+		progressTracker.startPrinting();
+		progressTracker.stepRunning( 'docker' );
+	}
+
 	try {
 		await validateDockerInstalled( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
-	progressTracker.stepSuccess( 'docker' );
-	progressTracker.stepSuccess( 'compose' );
-	progressTracker.print();
+
+	if ( ! quiet ) {
+		progressTracker.stepSuccess( 'docker' );
+		progressTracker.stepSuccess( 'compose' );
+		progressTracker.print();
+	}
 
 	try {
 		await validateDockerAccess( lando );
@@ -155,16 +161,22 @@ export const validateDependencies = async ( lando: Lando, slug: string ) => {
 		throw new UserError( exception.message );
 	}
 
-	progressTracker.stepSuccess( 'access' );
-	progressTracker.print();
-
-	if ( slug ) {
-		await verifyDNSResolution( slug );
-		progressTracker.stepSuccess( 'dns' );
+	if ( ! quiet ) {
+		progressTracker.stepSuccess( 'access' );
 		progressTracker.print();
 	}
 
-	progressTracker.stopPrinting();
+	if ( slug ) {
+		await verifyDNSResolution( slug );
+		if ( ! quiet ) {
+			progressTracker.stepSuccess( 'dns' );
+			progressTracker.print();
+		}
+	}
+
+	if ( ! quiet ) {
+		progressTracker.stopPrinting();
+	}
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
