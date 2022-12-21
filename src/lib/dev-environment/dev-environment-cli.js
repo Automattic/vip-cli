@@ -36,6 +36,7 @@ import type {
 	EnvironmentNameOptions,
 	InstanceData,
 	WordPressConfig,
+	ConfigurationFileOptions,
 } from './types';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
@@ -215,8 +216,10 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
 }
 
-export function getEnvironmentStartCommand( slug: string ): string {
-	if ( ! slug ) {
+export function getEnvironmentStartCommand( slug: string, configurationFileOptions: ConfigurationFileOptions ): string {
+	const isUsingConfigurationFileSlug = Object.keys( configurationFileOptions ).length > 0 && configurationFileOptions.slug === slug;
+
+	if ( ! slug || isUsingConfigurationFileSlug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
 
@@ -323,7 +326,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		const option = ( preselectedOptions[ component ] ?? '' ).toString();
 		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
 
-		const result = await processComponent( component, option, defaultValue );
+		const result = await processComponent( component, option, defaultValue, suppressPrompts );
 		if ( null === result ) {
 			throw new Error( 'processComponent() returned null' );
 		}
@@ -358,7 +361,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	return instanceData;
 }
 
-async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
+async function processComponent( component: string, preselectedValue: string, defaultValue: string, suppressPrompts: boolean = false ) {
 	debug( `processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
@@ -366,7 +369,10 @@ async function processComponent( component: string, preselectedValue: string, de
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
-		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
+
+		if ( suppressPrompts === false ) {
+			console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
+		}
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
 	}

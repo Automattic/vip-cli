@@ -192,18 +192,32 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		it.each( [
 			{ // default value
 				slug: undefined,
+				configurationFileOptions: {},
 				expected: 'vip dev-env start',
 			},
 			{ // use custom name
 				slug: 'foo',
+				configurationFileOptions: {},
 				expected: 'vip dev-env start --slug foo',
 			},
 			{ // custom name takes precedence
 				slug: '',
+				configurationFileOptions: {},
 				expected: 'vip dev-env start',
 			},
+			{ // use configuration file
+				slug: undefined,
+				configurationFileOptions: { slug: 'config-file-slug' },
+				expected: 'vip dev-env start',
+			},
+			{ // use slug with configuration file (slug overrides)
+				slug: 'foo',
+				configurationFileOptions: { slug: 'config-file-slug' },
+				expected: 'vip dev-env start --slug foo',
+			},
+
 		] )( 'should get correct start command', async input => {
-			const result = getEnvironmentStartCommand( input.slug );
+			const result = getEnvironmentStartCommand( input.slug, input.configurationFileOptions );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );

@@ -97,7 +97,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	};
 	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
 
-	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
+	const startCommand = chalk.bold( getEnvironmentStartCommand( slug, configurationFileOptions ) );
 
 	const environmentAlreadyExists = doesEnvironmentExist( slug );
 	if ( environmentAlreadyExists ) {
@@ -107,7 +107,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions: $Shape<InstanceOptions> = {};
+	let defaultOptions: InstanceOptions = {};
 
 	try {
 		if ( opt.app ) {
@@ -121,10 +121,16 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		console.log( chalk.yellow( 'Warning:' ), message );
 	}
 
-	printConfigurationFileInfo( configurationFileOptions );
+	let preselectedOptions = opt;
+	let suppressPrompts = false;
 
-	const preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
-	const instanceData = await promptForArguments( preselectedOptions, defaultOptions );
+	if ( configurationFileOptions ) {
+		printConfigurationFileInfo( configurationFileOptions );
+		preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
+		suppressPrompts = true;
+	}
+
+	const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
 	instanceData.siteSlug = slug;
 
 	try {
