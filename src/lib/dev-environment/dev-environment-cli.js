@@ -40,6 +40,7 @@ import type {
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
 import typeof Command from 'lib/cli/command';
+import { getConfigurationFileOptions } from './dev-environment-configuration-file';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -179,7 +180,7 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 	}
 };
 
-export function getEnvironmentName( options: EnvironmentNameOptions ): string {
+export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise<string> {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -196,8 +197,10 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		throw new UserError( message );
 	}
 
-	if ( options.configFileSlug ) {
-		return options.configFileSlug;
+	const configurationFileOptions = await getConfigurationFileOptions();
+
+	if ( configurationFileOptions.slug ) {
+		return configurationFileOptions.slug;
 	}
 
 	const envs = getAllEnvironmentNames();

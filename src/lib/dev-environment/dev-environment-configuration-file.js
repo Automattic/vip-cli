@@ -37,7 +37,7 @@ const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
     SOME_VAR: "some var value"
 `;
 
-export async function getConfigurationFileOptions(): Promise<ConfigurationFileOptions | null> {
+export async function getConfigurationFileOptions(): Promise<ConfigurationFileOptions> {
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
 	let configurationFileContents = '';
 
@@ -69,7 +69,7 @@ export async function getConfigurationFileOptions(): Promise<ConfigurationFileOp
 	const configuration = await sanitizeConfiguration( configurationFromFile )
 		.catch( async ( { message } ) => {
 			exit.withError( message );
-			return null;
+			return {};
 		} );
 
 	debug( 'Sanitized configuration from file:', configuration );

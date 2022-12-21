@@ -15,6 +15,7 @@ import os from 'os';
 
 import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent, promptForArguments, setIsTTY } from 'lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from 'lib/dev-environment/dev-environment-core';
+import * as devEnvConfiguration from 'lib/dev-environment/dev-environment-configuration-file';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -114,34 +115,12 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				expected: 'foo',
 			},
-			{ // pull slug from config file option
-				options: {
-					configFileSlug: 'foo',
-				},
-				expected: 'foo',
-			},
-			{ // custom slug takes precedence over config file slug
-				options: {
-					slug: 'foo',
-					configFileSlug: 'bar',
-				},
-				expected: 'foo',
-			},
-			{ // app slug takes precedence over config file slug
-				options: {
-					allowAppEnv: true,
-					app: '123',
-					env: 'bar.car',
-					configFileSlug: 'config-slug',
-				},
-				expected: '123-bar.car',
-			},
 		] )( 'should get correct name', async input => {
-			const result = getEnvironmentName( input.options );
+			const result = await getEnvironmentName( input.options );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
-		it( 'should throw an exception if used the app.env when not allowed', () => {
+		it( 'should throw an exception if used the app.env when not allowed', async () => {
 			const options = {
 				allowAppEnv: false,
 				app: '123',
@@ -149,9 +128,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			};
 
 			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug=123-bar' to target the local environment.";
-			expect( () => {
-				getEnvironmentName( options );
-			} ).toThrow( expectedErrorMessage );
+			await expect( getEnvironmentName( options ) ).rejects.toThrow( expectedErrorMessage );
 		} );
 	} );
 	describe( 'getEnvironmentName with 1 environment present', () => {
@@ -160,8 +137,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site' ] );
 		} );
 
-		it( 'should return first environment found if only one present', () => {
-			const result = getEnvironmentName( {} );
+		it( 'should return first environment found if only one present', async () => {
+			const result = await getEnvironmentName( {} );
 
 			expect( result ).toStrictEqual( 'single-site' );
 		} );
@@ -172,13 +149,43 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site', 'ms-site' ] );
 		} );
 
-		it( 'should throw an error', () => {
+		it( 'should throw an error', async () => {
 			const options = {};
 
 			const errorMsg = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter for the targeted environment.`;
-			expect( () => {
-				getEnvironmentName( options );
-			} ).toThrow( errorMsg );
+			await expect( getEnvironmentName( options ) ).rejects.toThrow( errorMsg );
+		} );
+	} );
+	describe( 'getEnvironmentName with configuration file present', () => {
+		beforeEach( () => {
+			const getConfigurationFileOptionsMock = jest.spyOn( devEnvConfiguration, 'getConfigurationFileOptions' );
+			getConfigurationFileOptionsMock.mockReturnValue( {
+				slug: 'config-file-slug',
+			} );
+		} );
+
+		it( 'should return configuration file environment', async () => {
+			const result = await getEnvironmentName( {} );
+
+			expect( result ).toStrictEqual( 'config-file-slug' );
+		} );
+
+		it( 'should override configuration file environment with option slug', async () => {
+			const result = await getEnvironmentName( {
+				slug: 'foo',
+			} );
+
+			expect( result ).toStrictEqual( 'foo' );
+		} );
+
+		it( 'should override configuration file environment with app slug', async () => {
+			const result = await getEnvironmentName( {
+				allowAppEnv: true,
+				app: '123',
+				env: 'bar.car',
+			} );
+
+			expect( result ).toStrictEqual( '123-bar.car' );
 		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {

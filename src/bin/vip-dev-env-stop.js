@@ -35,7 +35,7 @@ command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const slug = getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug );

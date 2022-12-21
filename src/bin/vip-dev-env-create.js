@@ -69,26 +69,20 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	let configurationFileOptions = {};
-
-	// If --slug is specified, skip configuration file. This allows escaping
-	// to other dev-env instances and bypassing errors that may be surfaced
-	// from the current directory's configuration file.
-	if ( ! opt.slug ) {
-		configurationFileOptions = await getConfigurationFileOptions();
-	}
+	const configurationFileOptions = await getConfigurationFileOptions();
 
 	const environmentNameOptions = {
 		slug: opt.slug,
-		configFileSlug: configurationFileOptions?.slug,
 		app: opt.app,
 		env: opt.env,
 		allowAppEnv: true,
 	};
 
 	let slug = DEFAULT_SLUG;
-	if ( ( Object.keys( opt ).length !== 0 ) ) {
-		slug = getEnvironmentName( environmentNameOptions );
+
+	const hasConfiguration = ( Object.keys( opt ).length !== 0 ) || Object.keys( configurationFileOptions ).length > 0;
+	if ( hasConfiguration ) {
+		slug = await getEnvironmentName( environmentNameOptions );
 	}
 
 	const lando = await bootstrapLando();

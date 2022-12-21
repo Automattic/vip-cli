@@ -49,7 +49,6 @@ export type WordPressConfig = {
 
 export type EnvironmentNameOptions = {
 	slug: string;
-	configFileSlug: string;
 	app: string;
 	env: string;
 	allowAppEnv?: boolean;

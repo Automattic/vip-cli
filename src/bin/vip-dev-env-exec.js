@@ -19,7 +19,6 @@ import {
 	handleCLIException,
 } from 'lib/dev-environment/dev-environment-cli';
 import { exec } from 'lib/dev-environment/dev-environment-core';
-import { getConfigurationFileOptions } from 'lib/dev-environment/dev-environment-configuration-file';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -45,19 +44,7 @@ command( { wildcardCommand: true } )
 	.option( 'quiet', 'Suppress output', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
-		const environmentNameOptions = {
-			slug: opt.slug,
-			app: opt.app,
-			env: opt.env,
-		};
-
-		// If --slug is specified, skip configuration file.
-		if ( ! opt.slug ) {
-			const configurationFileOptions = await getConfigurationFileOptions();
-			environmentNameOptions.configFileSlug = configurationFileOptions.slug;
-		}
-
-		const slug = getEnvironmentName( environmentNameOptions );
+		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug, opt.quiet );
 

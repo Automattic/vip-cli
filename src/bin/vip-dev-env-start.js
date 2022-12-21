@@ -40,8 +40,7 @@ command()
 	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip prompting for wordpress update if non latest' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const slug = getEnvironmentName( opt );
-
+		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug );
 

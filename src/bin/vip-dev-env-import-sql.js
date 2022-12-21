@@ -51,7 +51,7 @@ command( {
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ fileName ] = unmatchedArgs;
 		const { searchReplace, inPlace } = opt;
-		const slug = getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
 		lando.events.constructor.prototype.setMaxListeners( 100 );

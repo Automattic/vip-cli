@@ -37,7 +37,7 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ filePath ] = unmatchedArgs;
-		const slug = getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug );

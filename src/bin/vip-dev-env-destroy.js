@@ -24,7 +24,6 @@ import {
 	handleCLIException,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import { getConfigurationFileOptions } from 'lib/dev-environment/dev-environment-configuration-file';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -45,19 +44,7 @@ command()
 	.option( 'soft', 'Keep config files needed to start an environment intact' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const environmentNameOptions = {
-			slug: opt.slug,
-			app: opt.app,
-			env: opt.env,
-		};
-
-		// If --slug is specified, skip configuration file.
-		if ( ! opt.slug ) {
-			const configurationFileOptions = await getConfigurationFileOptions();
-			environmentNameOptions.configFileSlug = configurationFileOptions.slug;
-		}
-
-		const slug = getEnvironmentName( environmentNameOptions );
+		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug );
