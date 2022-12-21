@@ -7,6 +7,7 @@ import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
 import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
+import nock from 'nock';
 
 /**
  * Internal dependencies
@@ -14,8 +15,7 @@ import Docker from 'dockerode';
 import { CliTest } from './helpers/cli-test';
 import { getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvInfo, vipDevEnvStart } from './helpers/commands';
-import nock from 'nock';
-import { getExistingContainers, killContainersExcept } from './helpers/docker-utils';
+import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 30 * 1000 );
 
@@ -27,7 +27,7 @@ describe( 'vip dev-env info', () => {
 	/** @type {string} */
 	let tmpPath;
 
-	beforeAll( async () => {
+	beforeAll( () => {
 		nock.cleanAll();
 		nock.enableNetConnect();
 
@@ -71,18 +71,17 @@ describe( 'vip dev-env info', () => {
 	describe( 'for started environments', () => {
 		/** @type {Docker} */
 		let docker;
-		/** @type {string[]} */
-		let containerIDs;
+		/** @type {string} */
+		let slug;
 
-		beforeAll( async () => {
+		beforeAll( () => {
 			docker = new Docker();
-			containerIDs = await getExistingContainers( docker );
 		} );
 
-		afterEach( () => killContainersExcept( docker, containerIDs ) );
+		afterEach( () => killProjectContainers( docker, slug ) );
 
 		it( 'should list them as UP', async () => {
-			const slug = getProjectSlug();
+			slug = getProjectSlug();
 
 			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 			expect( result.rc ).toBe( 0 );

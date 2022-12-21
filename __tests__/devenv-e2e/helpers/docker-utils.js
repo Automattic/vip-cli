@@ -12,25 +12,6 @@ import { dockerComposify } from 'lando/lib/utils';
 
 /**
  * @param {Docker} docker Docker instance
- * @returns {Promise<Set<string>>} List of container IDs
- */
-export async function getExistingContainers( docker ) {
-	const containers = await docker.listContainers( { all: true } );
-	return new Set( containers.map( containerInfo => containerInfo.Id ) );
-}
-
-/**
- * @param {Docker} docker Docker instance
- * @param {Set<string>} knownContainers List of container IDs to ignore
- * @returns {Promise<ContainerInfo[]>} List of new containers
- */
-export async function getNewContainers( docker, knownContainers ) {
-	const existingContainers = await docker.listContainers( { all: true } );
-	return existingContainers.filter( containerInfo => ! knownContainers.has( containerInfo.Id ) );
-}
-
-/**
- * @param {Docker} docker Docker instance
  * @param {string} project Project slug
  * @returns {Promise<ContainerInfo[]>} List of containers
  */
@@ -54,10 +35,12 @@ export async function killContainers( docker, ids ) {
 
 /**
  * @param {Docker} docker Docker instance
- * @param {Set<string>} excluded List of container IDs to keep
+ * @param {string|undefined} project Project slug
  */
-export async function killContainersExcept( docker, excluded ) {
-	const newContainers = await getNewContainers( docker, excluded );
-	const ids = newContainers.map( containerInfo => containerInfo.Id );
-	return killContainers( docker, ids );
+export async function killProjectContainers( docker, project ) {
+	if ( project ) {
+		const containers = await getContainersForProject( docker, project );
+		const ids = containers.map( containerInfo => containerInfo.Id );
+		await killContainers( docker, ids );
+	}
 }

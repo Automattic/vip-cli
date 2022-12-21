@@ -15,7 +15,7 @@ import nock from 'nock';
 import { CliTest } from './helpers/cli-test';
 import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart, vipDevEnvStop } from './helpers/commands';
-import { getContainersForProject, getExistingContainers, killContainersExcept } from './helpers/docker-utils';
+import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
 
@@ -28,8 +28,8 @@ describe( 'vip dev-env stop', () => {
 	let tmpPath;
 	/** @type {Docker} */
 	let docker;
-	/** @type {string[]} */
-	let containerIDs;
+	/** @type {string} */
+	let slug;
 
 	beforeAll( async () => {
 		nock.cleanAll();
@@ -43,16 +43,15 @@ describe( 'vip dev-env stop', () => {
 		env = prepareEnvironment( tmpPath );
 
 		docker = new Docker();
-		containerIDs = await getExistingContainers( docker );
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
 	afterAll( () => nock.restore() );
 
-	afterEach( () => killContainersExcept( docker, containerIDs ) );
+	afterEach( () => killProjectContainers( docker, slug ) );
 
 	it( 'should fail if environment does not exist', async () => {
-		const slug = getProjectSlug();
+		slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env } );
@@ -63,7 +62,7 @@ describe( 'vip dev-env stop', () => {
 	} );
 
 	it( 'should stop a running environment', async () => {
-		const slug = getProjectSlug();
+		slug = getProjectSlug();
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
@@ -87,7 +86,7 @@ describe( 'vip dev-env stop', () => {
 	} );
 
 	it( 'should not fail if the environment is stopped', async () => {
-		const slug = getProjectSlug();
+		slug = getProjectSlug();
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );

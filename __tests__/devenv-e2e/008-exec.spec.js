@@ -15,7 +15,7 @@ import nock from 'nock';
 import { CliTest } from './helpers/cli-test';
 import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvExec, vipDevEnvStart } from './helpers/commands';
-import { getExistingContainers, killContainersExcept } from './helpers/docker-utils';
+import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
 
@@ -58,14 +58,11 @@ describe( 'vip dev-env exec', () => {
 	describe( 'if the environment exists', () => {
 		/** @type {Docker} */
 		let docker;
-		/** @type {string[]} */
-		let containerIDs;
 		/** @type {string} */
 		let slug;
 
 		beforeAll( async () => {
 			docker = new Docker();
-			containerIDs = await getExistingContainers( docker );
 
 			slug = getProjectSlug();
 			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
@@ -81,7 +78,7 @@ describe( 'vip dev-env exec', () => {
 			try {
 				await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
 			} finally {
-				await killContainersExcept( docker, containerIDs );
+				await killProjectContainers( docker, slug );
 			}
 		} );
 

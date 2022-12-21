@@ -16,7 +16,7 @@ import { CliTest } from './helpers/cli-test';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './helpers/commands';
-import { getContainersForProject, getExistingContainers, killContainersExcept } from './helpers/docker-utils';
+import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
 
@@ -112,18 +112,17 @@ describe( 'vip dev-env destroy', () => {
 	describe( 'if the environment is running', () => {
 		/** @type {Docker} */
 		let docker;
-		/** @type {string[]} */
-		let containerIDs;
+		/** @type {string} */
+		let slug;
 
-		beforeAll( async () => {
+		beforeAll( () => {
 			docker = new Docker();
-			containerIDs = await getExistingContainers( docker );
 		} );
 
-		afterEach( () => killContainersExcept( docker, containerIDs ) );
+		afterEach( () => killProjectContainers( docker, slug ) );
 
 		it( 'should stop and destroy it', async () => {
-			const slug = getProjectSlug();
+			slug = getProjectSlug();
 			expect( checkEnvExists( slug ) ).toBe( false );
 
 			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
