@@ -13,8 +13,8 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { getProjectSlug, prepareEnvironment } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvInfo, vipDevEnvStart } from './helpers/commands';
+import { createAndStartEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvCreate, vipDevEnvInfo } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 30 * 1000 );
@@ -83,15 +83,9 @@ describe( 'vip dev-env info', () => {
 		it( 'should list them as UP', async () => {
 			slug = getProjectSlug();
 
-			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
+			await createAndStartEnvironment( cliTest, slug, env );
 
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /STATUS\s+UP/u );
-
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvInfo ], { env }, true );
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvInfo ], { env }, true );
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
 			expect( result.stdout ).toMatch( /STATUS\s+UP/ );

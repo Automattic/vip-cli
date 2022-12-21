@@ -13,8 +13,8 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart, vipDevEnvStop } from './helpers/commands';
+import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvStop } from './helpers/commands';
 import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
@@ -63,45 +63,29 @@ describe( 'vip dev-env stop', () => {
 
 	it( 'should stop a running environment', async () => {
 		slug = getProjectSlug();
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		await createAndStartEnvironment( cliTest, slug, env );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( 'environment stopped' );
 
 		const containersAfterStop = await getContainersForProject( docker, slug );
 		expect( containersAfterStop ).toHaveLength( 0 );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment destroyed.' );
-		expect( checkEnvExists( slug ) ).toBe( false );
+		await destroyEnvironment( cliTest, slug, env, true );
 	} );
 
 	it( 'should not fail if the environment is stopped', async () => {
 		slug = getProjectSlug();
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		await createAndStartEnvironment( cliTest, slug, env );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( 'environment stopped' );
 
 		const containersAfterStop = await getContainersForProject( docker, slug );
 		expect( containersAfterStop ).toHaveLength( 0 );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment destroyed.' );
-		expect( checkEnvExists( slug ) ).toBe( false );
+		await destroyEnvironment( cliTest, slug, env, true );
 	} );
 } );

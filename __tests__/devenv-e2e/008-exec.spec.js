@@ -13,8 +13,8 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvExec, vipDevEnvStart } from './helpers/commands';
+import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvExec } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
@@ -65,18 +65,12 @@ describe( 'vip dev-env exec', () => {
 			docker = new Docker();
 
 			slug = getProjectSlug();
-			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+			await createAndStartEnvironment( cliTest, slug, env );
 		} );
 
 		afterAll( async () => {
 			try {
-				await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
+				await destroyEnvironment( cliTest, slug, env, true );
 			} finally {
 				await killProjectContainers( docker, slug );
 			}

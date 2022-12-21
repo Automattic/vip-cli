@@ -13,8 +13,8 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './helpers/commands';
+import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvStart } from './helpers/commands';
 import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
@@ -63,14 +63,7 @@ describe( 'vip dev-env start', () => {
 
 	it( 'should start an environment', async () => {
 		slug = getProjectSlug();
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-		expect( checkEnvExists( slug ) ).toBe( true );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+		await createAndStartEnvironment( cliTest, slug, env );
 
 		const containersAfterStart = await getContainersForProject( docker, slug );
 		const expectedServices = [
@@ -88,12 +81,9 @@ describe( 'vip dev-env start', () => {
 			expect( containersAfterStart.find( container => container.Labels[ 'com.docker.compose.service' ] === service ) ).not.toBeUndefined()
 		);
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment destroyed.' );
-		expect( checkEnvExists( slug ) ).toBe( false );
+		await destroyEnvironment( cliTest, slug, env, true );
 
-		const containersAfterDestroy = await getContainersForProject( docker, slug );
-		expect( containersAfterDestroy ).toHaveLength( 0 );
+		const containersAfterDestroyPromise = getContainersForProject( docker, slug );
+		return expect( containersAfterDestroyPromise ).resolves.toHaveLength( 0 );
 	} );
 } );

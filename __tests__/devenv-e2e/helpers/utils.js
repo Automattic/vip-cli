@@ -1,7 +1,14 @@
+/* eslint-disable valid-jsdoc */
+/**
+ * External dependencies
+ */
+import { expect } from '@jest/globals';
+
 /**
  * Internal dependencies
  */
 import { doesEnvironmentExist } from '../../../src/lib/dev-environment/dev-environment-core';
+import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 
 let id = 0;
 
@@ -43,4 +50,39 @@ export function prepareEnvironment( xdgDataHome ) {
  */
 export function checkEnvExists( slug ) {
 	return doesEnvironmentExist( slug );
+}
+
+/**
+ * @param {import('./cli-test').CliTest} cliTest CLI Test instance
+ * @param {string} slug Environment slug
+ * @param {NodeJS.ProcessEnv} env Environment
+ * @param {string[]} options Environment creation options
+ */
+export async function createAndStartEnvironment( cliTest, slug, env, options = [] ) {
+	let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ].concat( options ), { env }, true );
+	expect( result.rc ).toBe( 0 );
+	expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
+	expect( checkEnvExists( slug ) ).toBe( true );
+
+	result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
+	expect( result.rc ).toBe( 0 );
+	expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+}
+
+/**
+ * @param {import('./cli-test').CliTest} cliTest CLI Test instance
+ * @param {string} slug Environment slug
+ * @param {NodeJS.ProcessEnv} env Environment
+ * @param {bool} shouldSucceed Whether destruction should succeed
+ */
+export async function destroyEnvironment( cliTest, slug, env, shouldSucceed = true ) {
+	const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, shouldSucceed );
+	if ( shouldSucceed ) {
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( 'Environment files deleted successfully' );
+		expect( result.stdout ).toContain( 'Environment destroyed' );
+		expect( checkEnvExists( slug ) ).toBe( false );
+	} else {
+		expect( result.rc ).toBeGreaterThan( 0 );
+	}
 }

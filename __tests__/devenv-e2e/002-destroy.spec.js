@@ -14,8 +14,8 @@ import nock from 'nock';
  */
 import { CliTest } from './helpers/cli-test';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './helpers/commands';
+import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { vipDevEnvCreate, vipDevEnvDestroy } from './helpers/commands';
 import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
@@ -58,23 +58,18 @@ describe( 'vip dev-env destroy', () => {
 		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( checkEnvExists( slug ) ).toBe( true );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment files deleted successfully' );
-		expect( result.stdout ).toContain( 'Environment destroyed' );
-
-		expect( checkEnvExists( slug ) ).toBe( false );
+		await destroyEnvironment( cliTest, slug, env, true );
 	} );
 
 	it( 'should remove existing environment even without landofile', async () => {
 		const slug = getProjectSlug();
 		expect( checkEnvExists( slug ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( checkEnvExists( slug ) ).toBe( true );
 
@@ -82,12 +77,7 @@ describe( 'vip dev-env destroy', () => {
 		await expect( access( landoFile ) ).resolves.toBeUndefined();
 		await expect( unlink( landoFile ) ).resolves.toBeUndefined();
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment files deleted successfully' );
-		expect( result.stdout ).toContain( 'Environment destroyed' );
-
-		expect( checkEnvExists( slug ) ).toBe( false );
+		await destroyEnvironment( cliTest, slug, env, true );
 	} );
 
 	it( 'should keep the files when asked to', async () => {
@@ -125,23 +115,11 @@ describe( 'vip dev-env destroy', () => {
 			slug = getProjectSlug();
 			expect( checkEnvExists( slug ) ).toBe( false );
 
-			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
-			expect( result.rc ).toBe( 0 );
-			expect( checkEnvExists( slug ) ).toBe( true );
+			await createAndStartEnvironment( cliTest, slug, env );
+			await destroyEnvironment( cliTest, slug, env, true );
 
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /STATUS\s+UP/u );
-
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( 'Environment files deleted successfully' );
-			expect( result.stdout ).toContain( 'Environment destroyed' );
-
-			expect( checkEnvExists( slug ) ).toBe( false );
-
-			const containers = await getContainersForProject( docker, slug );
-			expect( containers ).toHaveLength( 0 );
+			const containersPromise = getContainersForProject( docker, slug );
+			return expect( containersPromise ).resolves.toHaveLength( 0 );
 		} );
 	} );
 } );
