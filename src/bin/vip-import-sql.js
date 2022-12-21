@@ -265,6 +265,15 @@ If you are confident the file does not contain unsupported statements, you can r
 	return getTableNames();
 }
 
+function validateFilename( filename ) {
+	const re = /^[a-z0-9!\-_\.\*\'()]+$/i;
+
+	// Exits if filename contains anything outside a-z A-Z ! - _ . * ( )
+	if ( ! re.test( filename ) ) {
+		exit.withError( 'Error: The characters used in the name of a file for import is limited to [0-9,a-z,A-Z,-,_,.].' );
+	}
+}
+
 const displayPlaybook = ( {
 	launched,
 	tableNames,
@@ -410,6 +419,9 @@ command( {
 		const launched = opts.env.launched;
 
 		let fileNameToUpload = fileName;
+
+		// Exit if filename contains unsafe character
+		validateFilename( fileNameToUpload );
 
 		// SQL file validations
 		const tableNames = await validateAndGetTableNames( {
