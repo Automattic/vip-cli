@@ -39,9 +39,6 @@ command( {
 		const [ filePath ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );
 
-		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
-
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_import_media_command_execute', trackingInfo );
 
