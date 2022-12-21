@@ -14,10 +14,7 @@
  */
 import { trackEvent } from 'lib/tracker';
 import command from 'lib/cli/command';
-import {
-	getEnvironmentName,
-	handleCLIException,
-} from 'lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
 import { exec } from 'lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
