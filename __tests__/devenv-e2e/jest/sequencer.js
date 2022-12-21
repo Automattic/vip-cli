@@ -1,14 +1,16 @@
 /* eslint-disable valid-jsdoc */
-/**
- * External dependencies
- */
 const Sequencer = require( '@jest/test-sequencer' ).default;
+
+/**
+ * @typedef {import('@jest/test-sequencer').ShardOptions} ShardOptions
+ * @typedef {import('@jest/test-result').Test} Test
+ */
 
 class TestSequencer extends Sequencer {
 	/**
-	 * @param {import('@jest/test-result').Test[]} tests All tests
-	 * @param {import('@jest/test-sequencer').ShardOptions} options Sharding options
-	 * @returns {import('@jest/test-result').Test[]} Chunk
+	 * @param {Test[]} tests All tests
+	 * @param {ShardOptions} options Sharding options
+	 * @returns {Test[]} Chunk
 	 */
 	shard( tests, options ) {
 		const { shardIndex, shardCount } = options;
@@ -22,8 +24,8 @@ class TestSequencer extends Sequencer {
 	}
 
 	/**
-	 * @param {import('@jest/test-result').Test[]} tests Tests
-	 * @returns {import('@jest/test-result').Test[]} Sorted tests
+	 * @param {Test[]} tests Tests
+	 * @returns {Test[]} Sorted tests
 	 */
 	sort( tests ) {
 		const copyTests = Array.from( tests );
