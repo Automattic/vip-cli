@@ -14,7 +14,7 @@ import nock from 'nock';
  */
 import { CliTest } from './helpers/cli-test';
 import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvExec, vipDevEnvStart } from './helpers/commands';
+import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvExec, vipDevEnvStart } from './helpers/commands';
 import { getExistingContainers, killContainersExcept } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 );
@@ -26,10 +26,6 @@ describe( 'vip dev-env exec', () => {
 	let env;
 	/** @type {string} */
 	let tmpPath;
-	/** @type {Docker} */
-	let docker;
-	/** @type {string[]} */
-	let containerIDs;
 
 	beforeAll( async () => {
 		nock.cleanAll();
@@ -41,56 +37,72 @@ describe( 'vip dev-env exec', () => {
 		xdgBaseDir.data = tmpPath;
 
 		env = prepareEnvironment( tmpPath );
-
-		docker = new Docker();
-		containerIDs = await getExistingContainers( docker );
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
 	afterAll( () => nock.restore() );
 
-	afterEach( () => killContainersExcept( docker, containerIDs ) );
+	describe( 'if the environment does not exist', () => {
+		it( 'should fail', async () => {
+			const slug = getProjectSlug();
+			expect( checkEnvExists( slug ) ).toBe( false );
 
-	it( 'should fail if environment does not exist', async () => {
-		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug ], { env } );
+			expect( result.rc ).toBeGreaterThan( 0 );
+			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug ], { env } );
-		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
-
-		expect( checkEnvExists( slug ) ).toBe( false );
+			expect( checkEnvExists( slug ) ).toBe( false );
+		} );
 	} );
 
-	it( 'should run known commands', async () => {
-		const slug = getProjectSlug();
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
+	describe( 'if the environment exists', () => {
+		/** @type {Docker} */
+		let docker;
+		/** @type {string[]} */
+		let containerIDs;
+		/** @type {string} */
+		let slug;
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+		beforeAll( async () => {
+			docker = new Docker();
+			containerIDs = await getExistingContainers( docker );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--', 'wp', 'option', 'get', 'home' ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `http://${ slug }.vipdev.lndo.site` );
+			slug = getProjectSlug();
+			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
+			expect( result.rc ).toBe( 0 );
+			expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
+
+			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
+			expect( result.rc ).toBe( 0 );
+			expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+		} );
+
+		afterAll( async () => {
+			try {
+				await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
+			} finally {
+				await killContainersExcept( docker, containerIDs );
+			}
+		} );
+
+		it( 'should run known commands', async () => {
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--', 'wp', 'option', 'get', 'home' ], { env }, true );
+			expect( result.rc ).toBe( 0 );
+			expect( result.stdout ).toContain( `http://${ slug }.vipdev.lndo.site` );
+		} );
+
+		it( 'should fail on unknown commands', async () => {
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--', 'ls' ], { env } );
+			expect( result.rc ).toBeGreaterThan( 0 );
+			expect( result.stderr ).toContain( 'Error: ls is not a known lando task' );
+		} );
+
+		it( 'should not produce superfluous output in silent mode', async () => {
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'home' ], { env }, true );
+			expect( result.rc ).toBe( 0 );
+			expect( result.stdout.trim() ).toBe( `http://${ slug }.vipdev.lndo.site` );
+		} );
+
+		it.todo( 'vip dev-env exec --force' );
 	} );
-
-	it( 'should fail on unknown commands', async () => {
-		const slug = getProjectSlug();
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--', 'ls' ], { env } );
-		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: ls is not a known lando task' );
-	} );
-
-	it.todo( 'vip dev-env exec --force' );
 } );
