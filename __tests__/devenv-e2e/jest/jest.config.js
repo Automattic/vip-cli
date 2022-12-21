@@ -13,7 +13,7 @@ const config = {
 	],
 	reporters: [ 'default', 'github-actions' ],
 	testTimeout: 600000,
-	maxWorkers: 1, // We cannot have more because of the way Lando works
+	maxWorkers: 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 };
 

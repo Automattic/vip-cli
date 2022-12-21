@@ -13,7 +13,6 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { DEFAULT_SLUG } from '../../src/lib/dev-environment/dev-environment-cli';
 import { checkEnvExists, createAndStartEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvList } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
@@ -50,23 +49,6 @@ describe( 'vip dev-env list', () => {
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvList ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( 'Found 0 environments.' );
-	} );
-
-	it( `should list the anonymous environment as "${ DEFAULT_SLUG }"`, async () => {
-		const slug = DEFAULT_SLUG;
-		expect( checkEnvExists( slug ) ).toBe( false );
-
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-		expect( result.stderr ).toBe( '' );
-		expect( checkEnvExists( slug ) ).toBe( true );
-
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvList ], { env }, true );
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Found 1 environment' );
-		expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ DEFAULT_SLUG }` ) );
-		expect( result.stdout ).toMatch( /STATUS\s+DOWN/ );
 	} );
 
 	it( 'should list multiple environments', async () => {
