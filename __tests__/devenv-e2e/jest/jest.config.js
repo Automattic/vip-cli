@@ -13,7 +13,7 @@ const config = {
 	],
 	reporters: [ 'default', 'github-actions' ],
 	testTimeout: 120000,
-	maxWorkers: 2,
+	maxWorkers: process.env.CI ? 1 : 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 };
 
