@@ -173,6 +173,11 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.xdebugConfig = '';
 	}
 
+	// Mailhog migration
+	if ( ! newInstanceData.mailhog ) {
+		newInstanceData.mailhog = false;
+	}
+
 	return newInstanceData;
 }
 
