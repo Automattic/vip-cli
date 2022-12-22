@@ -89,6 +89,6 @@ describe( 'vip dev-env info', () => {
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
 			expect( result.stdout ).toMatch( /STATUS\s+UP/ );
-		}, 60000 );
+		}, 120000 );
 	} );
 } );

@@ -12,7 +12,7 @@ const config = {
 		'<rootDir>/__tests__/devenv-e2e',
 	],
 	reporters: [ 'default', 'github-actions' ],
-	testTimeout: 600000,
+	testTimeout: 120000,
 	maxWorkers: 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 };
