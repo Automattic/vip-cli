@@ -1,5 +1,9 @@
 ## Changelog
 
+## 2.24.2 (22 Dec 2022)
+
+- #1219 fix(dev-env): Fix search/replace on SQL file import
+
 ## 2.24.1 (10 Dec 2022)
 
 - #1193 Fix regression in vip dev-env import sql related to the fact we don't mount User's home dir anymore
