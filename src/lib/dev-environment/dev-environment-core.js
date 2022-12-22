@@ -458,7 +458,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 
 export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
 	debug( `Will try to resolve path - ${ fileName }` );
-	const resolvedPath = resolvePath( fileName );
+	let resolvedPath = resolvePath( fileName );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -493,6 +493,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
 		}
 
+		resolvedPath = outputFileName;
 		baseName = path.basename( outputFileName );
 	} else {
 		baseName = path.basename( resolvedPath );
