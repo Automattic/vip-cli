@@ -270,7 +270,7 @@ function validateFilename( filename ) {
 
 	// Exits if filename contains anything outside a-z A-Z - _ .
 	if ( ! re.test( filename ) ) {
-		exit.withError( 'Error: The characters used in the name of a file for import is limited to [0-9,a-z,A-Z,-,_,.].' );
+		exit.withError( 'Error: The characters used in the name of a file for import are limited to [0-9,a-z,A-Z,-,_,.].' );
 	}
 }
 
