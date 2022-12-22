@@ -266,7 +266,7 @@ If you are confident the file does not contain unsupported statements, you can r
 }
 
 function validateFilename( filename ) {
-	const re = /^[a-z0-9\-_\.]+$/i;
+	const re = /^[a-z0-9\-\_\.]+$/i;
 
 	// Exits if filename contains anything outside a-z A-Z - _ .
 	if ( ! re.test( filename ) ) {
