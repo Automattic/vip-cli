@@ -23,7 +23,7 @@ import type {
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
+export const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
 const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
   php: 8.0
   wordpress: 6.0
@@ -149,14 +149,12 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 	return mergedOptions;
 }
 
-export function printConfigurationFileInfo( configurationOptions: ConfigurationFileOptions ) {
+export function printConfigurationFile( configurationOptions: ConfigurationFileOptions ) {
 	const isConfigurationFileEmpty = Object.keys( configurationOptions ).length === 0;
 
 	if ( isConfigurationFileEmpty ) {
 		return;
 	}
-
-	console.log( `\nFound ${ chalk.gray( CONFIGURATION_FILE_NAME ) }. Using configuration defaults:` );
 
 	// Customized formatter because Lando's printTable() automatically uppercases keys
 	// which may be confusing for YAML configuration

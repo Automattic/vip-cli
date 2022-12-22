@@ -23,6 +23,10 @@ import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import {
+	getConfigurationFileOptions,
+	mergeConfigurationFileOptions,
+} from '../lib/dev-environment/dev-environment-configuration-file';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -56,12 +60,24 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Read instance data', currentInstanceData );
 
-		const preselectedOptions = {
-			// Title and multisite can't be changed during update
+		const configurationFileOptions = await getConfigurationFileOptions();
+		let preselectedOptions = Object.assign( {}, opt );
+
+		if ( Object.keys( configurationFileOptions ).length > 0 ) {
+			preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
+		}
+
+		// Title and multisite can't be changed during update
+		const selectedOptions: InstanceOptions = {
 			title: currentInstanceData.wpTitle,
-			multisite: currentInstanceData.multisite,
-			...opt,
+			multisite: currentInstanceData. multisite,
 		};
+
+		Object.keys( preselectedOptions ).forEach( key => {
+			if ( ! ( key in selectedOptions ) ) {
+				selectedOptions[ key ] = preselectedOptions[ key ];
+			}
+		} );
 
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
@@ -83,7 +99,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => option.length > 1 ) // Filter out single letter aliases
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
-		const supressPrompts = providedOptions.length > 0;
+		const supressPrompts = providedOptions.length > 0 || Object.keys( configurationFileOptions ).length > 0;
 		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, supressPrompts );
 		instanceData.siteSlug = slug;
 

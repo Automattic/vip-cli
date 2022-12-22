@@ -29,7 +29,7 @@ import {
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
-	printConfigurationFileInfo,
+	printConfigurationFile,
 	mergeConfigurationFileOptions,
 } from 'lib/dev-environment/dev-environment-configuration-file';
 import type { InstanceOptions } from '../lib/dev-environment/types';
@@ -124,8 +124,9 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	let preselectedOptions = opt;
 	let suppressPrompts = false;
 
-	if ( configurationFileOptions ) {
-		printConfigurationFileInfo( configurationFileOptions );
+	if ( Object.keys( configurationFileOptions ).length > 0 ) {
+		console.log( '\nUsing configuration from file.' );
+		printConfigurationFile( configurationFileOptions );
 		preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
 		suppressPrompts = true;
 	}

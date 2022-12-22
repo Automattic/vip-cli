@@ -41,7 +41,10 @@ import type {
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
 import typeof Command from 'lib/cli/command';
-import { getConfigurationFileOptions } from './dev-environment-configuration-file';
+import {
+	CONFIGURATION_FILE_NAME,
+	getConfigurationFileOptions,
+} from './dev-environment-configuration-file';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -201,7 +204,10 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 	const configurationFileOptions = await getConfigurationFileOptions();
 
 	if ( configurationFileOptions.slug ) {
-		return configurationFileOptions.slug;
+		const slug = configurationFileOptions.slug;
+		console.log( `Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray( CONFIGURATION_FILE_NAME ) }\n` );
+
+		return slug;
 	}
 
 	const envs = getAllEnvironmentNames();
