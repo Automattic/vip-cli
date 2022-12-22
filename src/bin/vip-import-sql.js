@@ -266,9 +266,9 @@ If you are confident the file does not contain unsupported statements, you can r
 }
 
 function validateFilename( filename ) {
-	const re = /^[a-z0-9!\-_\.\*\'()]+$/i;
+	const re = /^[a-z0-9\-_\.]+$/i;
 
-	// Exits if filename contains anything outside a-z A-Z ! - _ . * ( )
+	// Exits if filename contains anything outside a-z A-Z - _ .
 	if ( ! re.test( filename ) ) {
 		exit.withError( 'Error: The characters used in the name of a file for import is limited to [0-9,a-z,A-Z,-,_,.].' );
 	}
