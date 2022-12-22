@@ -119,8 +119,7 @@ describe( 'vip dev-env import sql', () => {
 
 			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'home' ], { env }, true );
 			expect( result.rc ).toBe( 0 );
-			// FIXME: it does not work
-			// expect( result.stdout.trim() ).toBe( expectedHomeValue );
+			expect( result.stdout.trim() ).toBe( expectedHomeValue );
 		} );
 	} );
 } );
