@@ -28,8 +28,7 @@ class TestSequencer extends Sequencer {
 	 * @returns {Test[]} Sorted tests
 	 */
 	sort( tests ) {
-		const copyTests = Array.from( tests );
-		return copyTests.sort( ( testA, testB ) => ( testA.path > testB.path ? 1 : -1 ) );
+		return tests.sort( ( testA, testB ) => ( testA.path > testB.path ? 1 : -1 ) );
 	}
 }
 
