@@ -134,20 +134,26 @@ const VALIDATION_STEPS = [
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 
-export const validateDependencies = async ( lando: Lando, slug: string ) => {
+export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
 	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
 	const progressTracker = new ProgressTracker( steps );
-	console.log( 'Running validation steps...' );
-	progressTracker.startPrinting();
-	progressTracker.stepRunning( 'docker' );
+	if ( ! quiet ) {
+		console.log( 'Running validation steps...' );
+		progressTracker.startPrinting();
+		progressTracker.stepRunning( 'docker' );
+	}
+
 	try {
 		await validateDockerInstalled( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
-	progressTracker.stepSuccess( 'docker' );
-	progressTracker.stepSuccess( 'compose' );
-	progressTracker.print();
+
+	if ( ! quiet ) {
+		progressTracker.stepSuccess( 'docker' );
+		progressTracker.stepSuccess( 'compose' );
+		progressTracker.print();
+	}
 
 	try {
 		await validateDockerAccess( lando );
@@ -155,16 +161,22 @@ export const validateDependencies = async ( lando: Lando, slug: string ) => {
 		throw new UserError( exception.message );
 	}
 
-	progressTracker.stepSuccess( 'access' );
-	progressTracker.print();
-
-	if ( slug ) {
-		await verifyDNSResolution( slug );
-		progressTracker.stepSuccess( 'dns' );
+	if ( ! quiet ) {
+		progressTracker.stepSuccess( 'access' );
 		progressTracker.print();
 	}
 
-	progressTracker.stopPrinting();
+	if ( slug ) {
+		await verifyDNSResolution( slug );
+		if ( ! quiet ) {
+			progressTracker.stepSuccess( 'dns' );
+			progressTracker.print();
+		}
+	}
+
+	if ( ! quiet ) {
+		progressTracker.stopPrinting();
+	}
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
