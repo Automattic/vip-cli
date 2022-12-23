@@ -58,11 +58,6 @@ type StartEnvironmentOptions = {
 	skipWpVersionsCheck: boolean
 };
 
-type SQLImportPaths = {
-	resolvedPath: string,
-	inContainerPath: string
-}
-
 type WordPressTag = {
 	ref: string;
 	tag: string;
@@ -461,30 +456,19 @@ export async function getApplicationInformation( appId: number, envType: string 
 	return appData;
 }
 
-export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<SQLImportPaths> {
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<string> {
 	debug( `Will try to resolve path - ${ fileName }` );
 	let resolvedPath = resolvePath( fileName );
-
-	const instancePath = getEnvironmentPath( slug );
-
-	debug( `Instance path for ${ slug } is ${ instancePath }` );
-
-	const environmentExists = fs.existsSync( instancePath );
-
-	if ( ! environmentExists ) {
-		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-	}
 
 	debug( `Filename ${ fileName } resolved to ${ resolvedPath }` );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
 		throw new UserError( `The provided file ${ resolvedPath } does not exist or it is not valid (see "--help" for examples)` );
 	}
+
 	if ( fs.lstatSync( resolvedPath ).isDirectory() ) {
 		throw new UserError( `The provided file ${ resolvedPath } is a directory. Please point to a sql file.` );
 	}
-
-	let baseName: string;
 
 	// Run Search and Replace if the --search-replace flag was provided
 	if ( searchReplace && searchReplace.length ) {
@@ -499,22 +483,9 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		}
 
 		resolvedPath = outputFileName;
-		baseName = path.basename( outputFileName );
-	} else {
-		baseName = path.basename( resolvedPath );
 	}
 
-	const targetPath = path.join( instancePath, baseName );
-	const inContainerPath = `/app/${ baseName }`;
-	debug( `Copying ${ resolvedPath } to ${ targetPath }` );
-	fs.copyFileSync( resolvedPath, targetPath, fs.constants.COPYFILE_FICLONE );
-	debug( `Copied ${ resolvedPath } to ${ targetPath }` );
-
-	debug( `Import file path ${ resolvedPath } will be mapped to ${ inContainerPath }` );
-	return {
-		resolvedPath: targetPath,
-		inContainerPath,
-	};
+	return resolvedPath;
 }
 
 export async function importMediaPath( slug: string, filePath: string ) {

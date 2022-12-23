@@ -289,14 +289,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 	} );
 	describe( 'resolveImportPath', () => {
-		afterEach( () => {
-			path.sep = '/';
-		} );
-
 		it( 'should throw if file does not exist', async () => {
-			jest.spyOn( fs, 'existsSync' )
-				.mockReturnValueOnce( true ) // env exists
-				.mockReturnValue( false ); // import file does not exist
+			jest.spyOn( fs, 'existsSync' ).mockReturnValue( false ); // import file does not exist
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
@@ -307,30 +301,21 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			);
 		} );
 
-		it( 'should resolve the path and copy the file to /app', async () => {
+		it( 'should resolve the path', () => {
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
-			jest.spyOn( fs, 'copyFileSync' ).mockReturnValue( undefined );
 
 			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
-
-			const expectedResolvedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
-			const expectedInContainerPath = '/app/testfile.sql';
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
 
 			expect( searchAndReplace ).not.toHaveBeenCalled();
 
-			await expect( promise ).resolves.toEqual(
-				{
-					resolvedPath: expectedResolvedPath,
-					inContainerPath: expectedInContainerPath,
-				}
-			);
+			return expect( promise ).resolves.toEqual( resolvedPath );
 		} );
 
-		it( 'should call search and replace not in place with the proper arguments', async () => {
+		it( 'should call search and replace not in place with the proper arguments', () => {
 			searchAndReplace.mockReturnValue( {
 				outputFileName: 'testfile.sql',
 			} );
@@ -339,7 +324,6 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
-			jest.spyOn( fs, 'copyFileSync' ).mockReturnValue( undefined );
 
 			const searchReplace = 'testsite.com,testsite.net';
 
@@ -352,13 +336,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				inPlace: false,
 			} );
 
-			const expectedResolvedPath = path.join( getEnvironmentPath( 'foo' ), 'testfile.sql' );
-			const expectedInContainerPath = '/app/testfile.sql';
-
-			await expect( promise ).resolves.toEqual( {
-				resolvedPath: expectedResolvedPath,
-				inContainerPath: expectedInContainerPath,
-			} );
+			return expect( promise ).resolves.toEqual( 'testfile.sql' );
 		} );
 
 		it( 'should call search and replace in place with the proper arguments', async () => {

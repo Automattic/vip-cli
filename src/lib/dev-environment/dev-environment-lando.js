@@ -304,24 +304,34 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 		throw new Error( `${ toolName } is not a known lando task` );
 	}
 
-	/*
-	 lando is looking in both passed args and process.argv so we need to do a bit of hack to fake process.argv
-	 so that lando doesn't try to interpret args not meant for wp.
+	const savedArgv = process.argv;
+	try {
+		/*
+			lando is looking in both passed args and process.argv so we need to do a bit of hack to fake process.argv
+			so that lando doesn't try to interpret args not meant for wp.
 
-	 Lando drops first 3 args (<node> <lando> <command>) from process.argv and process rest, so we will fake 3 args + the real args
-	*/
-	process.argv = [ '0', '1', '3' ].concat( args );
+			Lando drops first 3 args (<node> <lando> <command>) from process.argv and process rest, so we will fake 3 args + the real args
+		*/
+		process.argv = [ '0', '1', '3' ].concat( args );
 
-	tool.app = app;
-	tool.name = toolName;
+		tool.app = app;
+		tool.name = toolName;
 
-	const task = landoBuildTask( tool, lando );
+		if ( options.stdio ) {
+			tool.stdio = options.stdio;
+		}
 
-	const argv = {
-		_: args, // eslint-disable-line
-	};
+		const task = landoBuildTask( tool, lando );
 
-	await task.run( argv );
+		const argv = {
+			// eslint-disable-next-line id-length
+			_: args,
+		};
+
+		await task.run( argv );
+	} finally {
+		process.argv = savedArgv;
+	}
 }
 
 /**
