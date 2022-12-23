@@ -7310,9 +7310,9 @@
       "dev": true
     },
     "flow-bin": {
-      "version": "0.190.1",
-      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.190.1.tgz",
-      "integrity": "sha512-5c9/6eEkMTTfdNuK2WwssrKfsUXKMUXlZVJZnrlWiqJpDSVc70/Smwyi9sXict9k/oq0f+Mo5wVH0d7peBYREg==",
+      "version": "0.196.3",
+      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.196.3.tgz",
+      "integrity": "sha512-pmvjlksi1CvkSnDHpcfhDFj/KC3hwSgE2OpzvugW57dfgqfHzqX1UfZIcScGWM5AmP/IeOsQCW383k3zIbEnrA==",
       "dev": true
     },
     "follow-redirects": {
