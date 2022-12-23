@@ -7,13 +7,13 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
+import Table from 'cli-table';
 
 /**
  * Internal dependencies
@@ -217,9 +217,19 @@ export function getEnvironmentStartCommand( slug: string ): string {
 }
 
 export function printTable( data: Object ) {
-	const formattedData = formatters.formatData( data, { format: 'table' }, { border: false } );
-
-	console.log( formattedData );
+	const table = new Table( {
+		chars: {
+			top: '', 'top-mid': '', 'top-left': '', 'top-right': '',
+			bottom: '', 'bottom-mid': '', 'bottom-left': '', 'bottom-right': '',
+			left: '', 'left-mid': '', mid: '', 'mid-mid': '',
+			right: '', 'right-mid': '', middle: ' ',
+		},
+		style: { 'padding-left': 0, 'padding-right': 0, head: [ 'cyan' ] },
+	} );
+	Object.keys( data ).forEach( key => {
+		table.push( { [ key.toUpperCase() ]: Array.isArray( data[ key ] ) ? data[ key ].join( '\n' ) : data[ key ] } );
+	} );
+	console.log( table.toString() );
 }
 
 export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {

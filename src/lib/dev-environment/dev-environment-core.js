@@ -16,6 +16,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
+import type Lando from '@lando/core';
 
 /**
  * Internal dependencies
@@ -40,7 +41,6 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
-import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

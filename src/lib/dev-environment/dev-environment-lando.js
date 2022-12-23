@@ -9,18 +9,19 @@
 import debugLib from 'debug';
 import os from 'os';
 import path from 'path';
-import Lando from 'lando/lib/lando';
-import landoUtils from 'lando/plugins/lando-core/lib/utils';
-import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
+import Lando from '@lando/core';
+import landoUtils from '@lando/core/plugins/lando-core/lib/utils';
+import landoBuildTask from '@lando/core/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
-import App from 'lando/lib/app';
-import UserError from '../user-error';
+import type App from '@lando/core/lib/app';
 import dns from 'dns';
 
 /**
  * Internal dependencies
  */
 import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import UserError from '../user-error';
+
 /**
  * This file will hold all the interactions with lando library
  */
@@ -44,9 +45,11 @@ function getLandoUserConfigurationRoot() {
  * @returns {object} Lando configuration
  */
 function getLandoConfig() {
-	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
+	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
+	const landoPath = path.join( nodeModulesPath, '@lando', 'core' );
+	const atLandoPath = path.join( nodeModulesPath, '@lando' );
 
-	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
+	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
 	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
 	const isAllDebugSelected = process.env.DEBUG === '*';
@@ -59,6 +62,11 @@ function getLandoConfig() {
 		postLandoFiles: [ '.lando.local.yml' ],
 		pluginDirs: [
 			landoPath,
+			{
+				path: atLandoPath,
+				subdir: '.',
+				namespace: '@lando',
+			},
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
@@ -86,6 +94,13 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 
 export async function bootstrapLando(): Promise<Lando> {
 	const lando = new Lando( getLandoConfig() );
+	lando.cli = {
+		makeArt() {},
+		formatData() {},
+		formatOptions() {},
+		confirm() {},
+	};
+
 	await lando.bootstrap();
 	return lando;
 }
