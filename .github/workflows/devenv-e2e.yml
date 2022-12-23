@@ -16,6 +16,7 @@ jobs:
         shard:
           - 1
           - 2
+          - 3
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
