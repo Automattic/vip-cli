@@ -17,7 +17,7 @@ import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProje
 import { vipDevEnvExec, vipDevEnvImportSQL } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
-jest.setTimeout( 600 * 1000 );
+jest.setTimeout( 600 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
 describe( 'vip dev-env import sql', () => {
 	/** @type {CliTest} */

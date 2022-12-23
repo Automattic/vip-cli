@@ -15,7 +15,7 @@ import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/ut
 import { vipDevEnvCreate, vipDevEnvImportMedia } from './helpers/commands';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 
-jest.setTimeout( 30 * 1000 );
+jest.setTimeout( 30 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
 describe( 'vip dev-env import media', () => {
 	/** @type {CliTest} */
