@@ -17,7 +17,7 @@ import { checkEnvExists, createAndStartEnvironment, getProjectSlug, prepareEnvir
 import { vipDevEnvCreate, vipDevEnvList } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
-jest.setTimeout( 30 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
+jest.setTimeout( 60 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
 describe( 'vip dev-env list', () => {
 	/** @type {CliTest} */
