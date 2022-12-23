@@ -89,7 +89,7 @@ describe( 'vip dev-env import sql', () => {
 			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/fail-validation.sql' );
 			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ], { env }, true );
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( 'Success: Imported from' );
+			expect( result.stdout ).toContain( 'Success: Database imported' );
 			expect( result.stdout ).toContain( 'Success: The cache was flushed' );
 
 			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'e2etest' ], { env }, true );
@@ -114,7 +114,7 @@ describe( 'vip dev-env import sql', () => {
 			], { env }, true );
 
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( 'Success: Imported from' );
+			expect( result.stdout ).toContain( 'Success: Database imported' );
 			expect( result.stdout ).toContain( 'Success: The cache was flushed' );
 
 			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'home' ], { env }, true );
