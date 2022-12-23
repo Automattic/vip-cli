@@ -133,7 +133,7 @@
     "ini": "2.0.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "github:automattic/lando-cli.git#lando-main",
+    "lando": "github:automattic/lando-cli.git#3c6fad5",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
