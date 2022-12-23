@@ -67,6 +67,7 @@ describe( 'vip dev-env create', () => {
 		const expectedMultisite = false;
 		const expectedPhpVersion = '8.0';
 		const expectedElasticSearch = false;
+		const expectedMailHog = false;
 
 		expect( checkEnvExists( slug ) ).toBe( false );
 
@@ -88,12 +89,12 @@ describe( 'vip dev-env create', () => {
 			muPlugins: { mode: 'image' },
 			appCode: { mode: 'image' },
 			wordpress: expect.objectContaining( { mode: 'image', tag: expect.any( String ) } ),
+			mailhog: expectedMailHog,
 		} );
 
 		// Our bugs :-)
 		expect( data ).not.toHaveProperty( 'phpmyadmin' );
 		expect( data ).not.toHaveProperty( 'xdebug' );
-		expect( data ).not.toHaveProperty( 'mailhog' );
 	} );
 
 	it( 'should be configurable via command line', async () => {

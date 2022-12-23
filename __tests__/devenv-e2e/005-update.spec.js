@@ -80,12 +80,12 @@ describe( 'vip dev-env update', () => {
 		expect( dataBefore ).toMatchObject( {
 			siteSlug: slug,
 			elasticsearch: expectedElasticSearch,
+			mailhog: expectedMailHog,
 		} );
 
 		// Our bugs :-)
 		expect( dataBefore ).not.toHaveProperty( 'phpmyadmin' );
 		expect( dataBefore ).not.toHaveProperty( 'xdebug' );
-		expect( dataBefore ).not.toHaveProperty( 'mailhog' );
 
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
