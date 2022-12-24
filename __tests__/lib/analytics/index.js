@@ -13,6 +13,7 @@ describe( 'lib/analytics', () => {
 		} );
 
 		it( 'should track events for all clients', async () => {
+			delete process.env.DO_NOT_TRACK;
 			const stubClient1 = new AnalyticsClientStub();
 			const stubClient1Spy = jest.spyOn( stubClient1, 'trackEvent' );
 			const stubClient2 = new AnalyticsClientStub();
