@@ -8,7 +8,7 @@ First, install the package:
 npm install -g @automattic/vip
 ```
 
-The above command may fail if you do not have `make` and `g++` installed. In that case, install them first:
+The above command may fail in linux if you do not have `make` and `g++` installed. In that case, install them first:
 
 ```
 sudo apt install make g++
