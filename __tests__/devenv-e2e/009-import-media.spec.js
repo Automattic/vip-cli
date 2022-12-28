@@ -53,7 +53,7 @@ describe( 'vip dev-env import media', () => {
 		expect( result.rc ).toBe( 0 );
 		expect( checkEnvExists( slug ) ).toBe( true );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ], { env } );
+		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 
 		const uploadsPath = path.join( getEnvironmentPath( slug ), 'uploads' );

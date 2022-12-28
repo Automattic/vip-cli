@@ -479,7 +479,8 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		throw new Error( 'The provided path does not exist or it is not valid (see "--help" for examples)' );
 	}
 
-	if ( ! doesEnvironmentExist( slug ) ) {
+	const environmentPath = getEnvironmentPath( slug );
+	if ( ! doesEnvironmentExist( environmentPath ) ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
@@ -496,7 +497,6 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		}
 	}
 
-	const environmentPath = getEnvironmentPath( slug );
 	const uploadsPath = path.join( environmentPath, uploadPathString );
 
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
