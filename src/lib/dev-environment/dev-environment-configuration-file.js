@@ -33,8 +33,6 @@ const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
   phpmyadmin: true
   elasticsearch: true
   xdebug: true
-  env:
-    SOME_VAR: "some var value"
 `;
 
 export async function getConfigurationFileOptions(): Promise<ConfigurationFileOptions> {
