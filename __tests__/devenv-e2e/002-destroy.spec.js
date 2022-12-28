@@ -62,7 +62,7 @@ describe( 'vip dev-env destroy', () => {
 		expect( result.rc ).toBe( 0 );
 		expect( checkEnvExists( slug ) ).toBe( true );
 
-		await destroyEnvironment( cliTest, slug, env, true );
+		await destroyEnvironment( cliTest, slug, env );
 	} );
 
 	it( 'should remove existing environment even without landofile', async () => {
@@ -77,7 +77,7 @@ describe( 'vip dev-env destroy', () => {
 		await expect( access( landoFile ) ).resolves.toBeUndefined();
 		await expect( unlink( landoFile ) ).resolves.toBeUndefined();
 
-		await destroyEnvironment( cliTest, slug, env, true );
+		await destroyEnvironment( cliTest, slug, env );
 	} );
 
 	it( 'should keep the files when asked to', async () => {
@@ -116,7 +116,7 @@ describe( 'vip dev-env destroy', () => {
 			expect( checkEnvExists( slug ) ).toBe( false );
 
 			await createAndStartEnvironment( cliTest, slug, env );
-			await destroyEnvironment( cliTest, slug, env, true );
+			await destroyEnvironment( cliTest, slug, env );
 
 			const containersPromise = getContainersForProject( docker, slug );
 			return expect( containersPromise ).resolves.toHaveLength( 0 );

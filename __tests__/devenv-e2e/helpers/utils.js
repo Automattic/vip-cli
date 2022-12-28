@@ -73,16 +73,11 @@ export async function createAndStartEnvironment( cliTest, slug, env, options = [
  * @param {import('./cli-test').CliTest} cliTest CLI Test instance
  * @param {string} slug Environment slug
  * @param {NodeJS.ProcessEnv} env Environment
- * @param {bool} shouldSucceed Whether destruction should succeed
  */
-export async function destroyEnvironment( cliTest, slug, env, shouldSucceed = true ) {
-	const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, shouldSucceed );
-	if ( shouldSucceed ) {
-		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'Environment files deleted successfully' );
-		expect( result.stdout ).toContain( 'Environment destroyed' );
-		expect( checkEnvExists( slug ) ).toBe( false );
-	} else {
-		expect( result.rc ).toBeGreaterThan( 0 );
-	}
+export async function destroyEnvironment( cliTest, slug, env ) {
+	const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
+	expect( result.rc ).toBe( 0 );
+	expect( result.stdout ).toContain( 'Environment files deleted successfully' );
+	expect( result.stdout ).toContain( 'Environment destroyed' );
+	expect( checkEnvExists( slug ) ).toBe( false );
 }

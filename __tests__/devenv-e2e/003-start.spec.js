@@ -81,7 +81,7 @@ describe( 'vip dev-env start', () => {
 			expect( containersAfterStart.find( container => container.Labels[ 'com.docker.compose.service' ] === service ) ).not.toBeUndefined()
 		);
 
-		await destroyEnvironment( cliTest, slug, env, true );
+		await destroyEnvironment( cliTest, slug, env );
 
 		const containersAfterDestroyPromise = getContainersForProject( docker, slug );
 		return expect( containersAfterDestroyPromise ).resolves.toHaveLength( 0 );

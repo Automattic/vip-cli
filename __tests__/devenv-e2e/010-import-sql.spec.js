@@ -71,7 +71,7 @@ describe( 'vip dev-env import sql', () => {
 
 		afterAll( async () => {
 			try {
-				await destroyEnvironment( cliTest, slug, env, true );
+				await destroyEnvironment( cliTest, slug, env );
 			} finally {
 				await killProjectContainers( docker, slug );
 			}

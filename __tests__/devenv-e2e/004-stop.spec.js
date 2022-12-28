@@ -72,7 +72,7 @@ describe( 'vip dev-env stop', () => {
 		const containersAfterStop = await getContainersForProject( docker, slug );
 		expect( containersAfterStop ).toHaveLength( 0 );
 
-		await destroyEnvironment( cliTest, slug, env, true );
+		await destroyEnvironment( cliTest, slug, env );
 	} );
 
 	it( 'should not fail if the environment is stopped', async () => {
@@ -86,6 +86,6 @@ describe( 'vip dev-env stop', () => {
 		const containersAfterStop = await getContainersForProject( docker, slug );
 		expect( containersAfterStop ).toHaveLength( 0 );
 
-		await destroyEnvironment( cliTest, slug, env, true );
+		await destroyEnvironment( cliTest, slug, env );
 	} );
 } );
