@@ -495,6 +495,10 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		throw new Error( 'The provided path does not exist or it is not valid (see "--help" for examples)' );
 	}
 
+	if ( ! doesEnvironmentExist( slug ) ) {
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+	}
+
 	const files = fs.readdirSync( resolvedPath );
 	if ( files.indexOf( uploadPathString ) > -1 ) {
 		const confirm = await prompt( {
