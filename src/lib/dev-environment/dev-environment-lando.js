@@ -44,9 +44,11 @@ function getLandoUserConfigurationRoot() {
  * @returns {object} Lando configuration
  */
 function getLandoConfig() {
-	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
+	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
+	const landoPath = path.join( nodeModulesPath, 'lando' );
+	const atLandoPath = path.join( nodeModulesPath, '@lando' );
 
-	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
+	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
 	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
 	const isAllDebugSelected = process.env.DEBUG === '*';
@@ -59,6 +61,51 @@ function getLandoConfig() {
 		postLandoFiles: [ '.lando.local.yml' ],
 		pluginDirs: [
 			landoPath,
+			{
+				path: atLandoPath,
+				subdir: '.',
+				namespace: '@lando',
+			},
+		],
+		disablePlugins: [
+			// Plugins we need:
+			// '@lando/compose',
+			// '@lando/mailhog',
+			// '@lando/memcached',
+			// '@lando/phpmyadmin',
+			// The rest we don't need
+			'@lando/acquia',
+			'@lando/apache',
+			'@lando/argv',
+			'@lando/backdrop',
+			'@lando/dotnet',
+			'@lando/drupal',
+			'@lando/elasticsearch',
+			'@lando/go',
+			'@lando/joomla',
+			'@lando/lagoon',
+			'@lando/lamp',
+			'@lando/laravel',
+			'@lando/lemp',
+			'@lando/mariadb',
+			'@lando/mean',
+			'@lando/mongo',
+			'@lando/mssql',
+			'@lando/mysql',
+			'@lando/nginx',
+			'@lando/node',
+			'@lando/pantheon',
+			'@lando/php',
+			'@lando/platformsh',
+			'@lando/postgres',
+			'@lando/python',
+			'@lando/redis',
+			'@lando/ruby',
+			'@lando/solr',
+			'@lando/symfony',
+			'@lando/tomcat',
+			'@lando/varnish',
+			'@lando/wordpress',
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
@@ -304,24 +351,34 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 		throw new Error( `${ toolName } is not a known lando task` );
 	}
 
-	/*
-	 lando is looking in both passed args and process.argv so we need to do a bit of hack to fake process.argv
-	 so that lando doesn't try to interpret args not meant for wp.
+	const savedArgv = process.argv;
+	try {
+		/*
+			lando is looking in both passed args and process.argv so we need to do a bit of hack to fake process.argv
+			so that lando doesn't try to interpret args not meant for wp.
 
-	 Lando drops first 3 args (<node> <lando> <command>) from process.argv and process rest, so we will fake 3 args + the real args
-	*/
-	process.argv = [ '0', '1', '3' ].concat( args );
+			Lando drops first 3 args (<node> <lando> <command>) from process.argv and process rest, so we will fake 3 args + the real args
+		*/
+		process.argv = [ '0', '1', '3' ].concat( args );
 
-	tool.app = app;
-	tool.name = toolName;
+		tool.app = app;
+		tool.name = toolName;
 
-	const task = landoBuildTask( tool, lando );
+		if ( options.stdio ) {
+			tool.stdio = options.stdio;
+		}
 
-	const argv = {
-		_: args, // eslint-disable-line
-	};
+		const task = landoBuildTask( tool, lando );
 
-	await task.run( argv );
+		const argv = {
+			// eslint-disable-next-line id-length
+			_: args,
+		};
+
+		await task.run( argv );
+	} finally {
+		process.argv = savedArgv;
+	}
 }
 
 /**

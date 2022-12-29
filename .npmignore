@@ -6,6 +6,7 @@ __fixtures__
 __tests__
 jest.config.js
 jest.setup.js
+jest.setupMocks.js
 .travis.yml
 appveyor.yml
 coverage
@@ -28,6 +29,7 @@ node_modules/
 .nvmrc
 .ackrc
 .publishrc
+.prettierrc
 
 # Liniting rules
 .eslintrc.json
@@ -37,3 +39,5 @@ node_modules/
 babel.config.js
 renovate.json
 .github
+
+.vscode

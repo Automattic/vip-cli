@@ -9,6 +9,7 @@
  * External dependencies
  */
 import fs from 'fs';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -61,7 +62,7 @@ command( {
 		await trackEvent( 'dev_env_import_sql_command_execute', trackingInfo );
 
 		try {
-			const { resolvedPath, inContainerPath } = await resolveImportPath( slug, fileName, searchReplace, inPlace );
+			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
 			if ( ! opt.skipValidate ) {
 				const expectedDomain = `${ slug }.vipdev.lndo.site`;
@@ -72,10 +73,28 @@ command( {
 				} );
 			}
 
-			const importArg = [ 'wp', 'db', 'import', inContainerPath ];
-			await exec( lando, slug, importArg );
+			const fd = fs.openSync( resolvedPath, 'r' );
+			const importArg = [ 'db', '--disable-auto-rehash' ];
+			const origIsTTY = process.stdin.isTTY;
 
-			fs.unlinkSync( resolvedPath );
+			try {
+				/**
+				 * When stdin is a TTY, Lando passes the `--tty` flag to Docker.
+				 * This breaks our code when we pass the stream as stdin to Docker.
+				 * exec() then fails with "the input device is not a TTY".
+				 *
+				 * Therefore, for the things to work, we have to pretend that stdin is not a TTY :-)
+				 */
+				process.stdin.isTTY = false;
+				await exec( lando, slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
+				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
+			} finally {
+				process.stdin.isTTY = origIsTTY;
+			}
+
+			if ( searchReplace && searchReplace.length && ! inPlace ) {
+				fs.unlinkSync( resolvedPath );
+			}
 
 			const cacheArg = [ 'wp', 'cache', 'flush' ];
 			await exec( lando, slug, cacheArg );

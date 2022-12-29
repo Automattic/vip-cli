@@ -1,0 +1,45 @@
+name: E2E Tests for Dev Env
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run E2E Tests, shard ${{ matrix.shard }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - 1
+          - 2
+          - 3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: npm
+          cache-dependency-path: npm-shrinkwrap.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pack and install
+        run: npm pack && npm i -g *.tgz
+
+      - name: Preload Docker images
+        run: |
+          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailhog true && \
+          vip dev-env start && \
+          vip dev-env destroy
+
+      - name: Run tests
+        run: npm run test:e2e:dev-env -- --shard=${{ matrix.shard }}/${{ strategy.job-total }}

@@ -191,7 +191,7 @@ tooling:
     service: php
     description: "Connect to the DB using mysql client (e.g. allow to run imports)"
     cmd:
-      - mysql -hdatabase -uwordpress -pwordpress wordpress
+      - mysql -hdatabase -uwordpress -pwordpress -Dwordpress
 
 <% function wpVolumes() { %>
         - ./config:/wp/config
