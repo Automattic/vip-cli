@@ -83,7 +83,6 @@ describe( 'vip dev-env create', () => {
 			mariadb: '10.3',
 			mediaRedirectDomain: '',
 			elasticsearch: expectedElasticSearch,
-			statsd: false,
 			xdebugConfig: '',
 			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
 			muPlugins: { mode: 'image' },
@@ -136,7 +135,6 @@ describe( 'vip dev-env create', () => {
 			mariadb: '10.3',
 			mediaRedirectDomain: '',
 			elasticsearch: expectedElasticSearch,
-			statsd: false,
 			xdebugConfig: '',
 			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
 			muPlugins: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`
