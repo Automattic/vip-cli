@@ -9,7 +9,6 @@ export interface InstanceOptions {
 	mariadb?: string;
 	php?: string;
 	mediaRedirectDomain?: string;
-	statsd?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	xdebugConfig?: string;
@@ -62,7 +61,6 @@ export interface InstanceData {
 	muPlugins: ComponentConfig;
 	appCode: ComponentConfig;
 	mediaRedirectDomain: string;
-	statsd: boolean;
 	phpmyadmin: boolean;
 	xdebug: boolean;
 	xdebugConfig?: string;

@@ -290,7 +290,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		appCode: {
 			mode: 'image',
 		},
-		statsd: false,
 		phpmyadmin: false,
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
@@ -329,12 +328,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
-	}
-
-	if ( instanceData.elasticsearch ) {
-		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
-	} else {
-		instanceData.statsd = false;
 	}
 
 	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
@@ -602,7 +595,6 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'wordpress', 'Use a specific WordPress version' )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
 		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
-		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug_config', 'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable' )

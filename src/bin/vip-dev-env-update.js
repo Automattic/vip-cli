@@ -70,7 +70,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			elasticsearch: currentInstanceData.elasticsearch,
 			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
 			mariadb: currentInstanceData.mariadb,
-			statsd: currentInstanceData.statsd,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
 			mailhog: currentInstanceData.mailhog,
