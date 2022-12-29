@@ -15,7 +15,7 @@ import env from './env';
 
 let analytics = null;
 
-async function init(): Promise< Analytics > {
+async function init(): Promise<Analytics> {
 	const uuid = await Token.uuid();
 
 	const clients = [];
@@ -26,13 +26,11 @@ async function init(): Promise< Analytics > {
 	if ( tracksUserType && tracksEventPrefix ) {
 		clients.push( new Tracks( uuid, tracksUserType, tracksEventPrefix, env ) );
 
-		clients.push(
-			new Pendo( {
-				env,
-				eventPrefix: tracksEventPrefix,
-				userId: uuid,
-			} )
-		);
+		clients.push( new Pendo( {
+			env,
+			eventPrefix: tracksEventPrefix,
+			userId: uuid,
+		} ) );
 	}
 
 	analytics = new Analytics( { clients } );
@@ -40,7 +38,7 @@ async function init(): Promise< Analytics > {
 	return analytics;
 }
 
-async function getInstance(): Promise< Analytics > {
+async function getInstance(): Promise<Analytics> {
 	if ( analytics ) {
 		return analytics;
 	}
@@ -50,7 +48,7 @@ async function getInstance(): Promise< Analytics > {
 	return analytics;
 }
 
-export async function trackEvent( ...args ): Promise< Response > {
+export async function trackEvent( ...args ): Promise<Response> {
 	try {
 		await Token.uuid();
 		const client = await getInstance();
@@ -60,14 +58,10 @@ export async function trackEvent( ...args ): Promise< Response > {
 	}
 }
 
-export async function aliasUser( vipUserId ): Promise< Response > {
+export async function aliasUser( vipUserId ): Promise<Response> {
 	try {
 		if ( vipUserId ) {
-			await trackEvent( '_alias_user', {
-				ui: `vip-${ vipUserId }`,
-				_ut: config.tracksUserType,
-				anonid: Token.uuid(),
-			} );
+			await trackEvent( '_alias_user', { ui: `vip-${ vipUserId }`, _ut: config.tracksUserType, anonid: Token.uuid() } );
 			Token.setUuid( vipUserId );
 		}
 	} catch ( err ) {
@@ -75,11 +69,6 @@ export async function aliasUser( vipUserId ): Promise< Response > {
 	}
 }
 
-export async function trackEventWithEnv(
-	appId,
-	envId,
-	eventName,
-	eventProps = {}
-): Promise< Response > {
+export async function trackEventWithEnv( appId, envId, eventName, eventProps = {} ): Promise<Response> {
 	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
 }
