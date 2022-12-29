@@ -115,12 +115,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				expected: 'foo',
 			},
-		] )( 'should get correct name', async input => {
-			const result = await getEnvironmentName( input.options );
-
-			expect( result ).toStrictEqual( input.expected );
-		} );
-		it( 'should throw an exception if used the app.env when not allowed', async () => {
+		] )( 'should get correct name', input =>
+			expect( getEnvironmentName( input.options ) ).resolves.toStrictEqual( input.expected )
+		);
+		it( 'should throw an exception if used the app.env when not allowed', () => {
 			const options = {
 				allowAppEnv: false,
 				app: '123',
@@ -128,7 +126,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			};
 
 			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug=123-bar' to target the local environment.";
-			await expect( getEnvironmentName( options ) ).rejects.toThrow( expectedErrorMessage );
+			return expect( getEnvironmentName( options ) ).rejects.toThrow( expectedErrorMessage );
 		} );
 	} );
 	describe( 'getEnvironmentName with 1 environment present', () => {
@@ -137,11 +135,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site' ] );
 		} );
 
-		it( 'should return first environment found if only one present', async () => {
-			const result = await getEnvironmentName( {} );
-
-			expect( result ).toStrictEqual( 'single-site' );
-		} );
+		it( 'should return first environment found if only one present', () =>
+			expect( getEnvironmentName( {} ) ).resolves.toStrictEqual( 'single-site' )
+		);
 	} );
 	describe( 'getEnvironmentName with multiple environments present', () => {
 		beforeEach( () => {
@@ -149,11 +145,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site', 'ms-site' ] );
 		} );
 
-		it( 'should throw an error', async () => {
+		it( 'should throw an error', () => {
 			const options = {};
 
 			const errorMsg = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter for the targeted environment.`;
-			await expect( getEnvironmentName( options ) ).rejects.toThrow( errorMsg );
+			return expect( getEnvironmentName( options ) ).rejects.toThrow( errorMsg );
 		} );
 	} );
 	describe( 'getEnvironmentName with configuration file present', () => {
@@ -164,28 +160,26 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			} );
 		} );
 
-		it( 'should return configuration file environment', async () => {
-			const result = await getEnvironmentName( {} );
+		it( 'should return configuration file environment', () =>
+			expect( getEnvironmentName( {} ) ).resolves.toStrictEqual( 'config-file-slug' )
+		);
 
-			expect( result ).toStrictEqual( 'config-file-slug' );
-		} );
-
-		it( 'should override configuration file environment with option slug', async () => {
-			const result = await getEnvironmentName( {
+		it( 'should override configuration file environment with option slug', () => {
+			const resultPromise = getEnvironmentName( {
 				slug: 'foo',
 			} );
 
-			expect( result ).toStrictEqual( 'foo' );
+			return expect( resultPromise ).resolves.toStrictEqual( 'foo' );
 		} );
 
-		it( 'should override configuration file environment with app slug', async () => {
-			const result = await getEnvironmentName( {
+		it( 'should override configuration file environment with app slug', () => {
+			const resultPromise = getEnvironmentName( {
 				allowAppEnv: true,
 				app: '123',
 				env: 'bar.car',
 			} );
 
-			expect( result ).toStrictEqual( '123-bar.car' );
+			return expect( resultPromise ).resolves.toStrictEqual( '123-bar.car' );
 		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {
@@ -216,7 +210,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				expected: 'vip dev-env start --slug foo',
 			},
 
-		] )( 'should get correct start command', async input => {
+		] )( 'should get correct start command', input => {
 			const result = getEnvironmentStartCommand( input.slug, input.configurationFileOptions );
 
 			expect( result ).toStrictEqual( input.expected );
@@ -268,21 +262,21 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			} );
 		}
-		it.each( cases )( 'should process options and use defaults', async input => {
+		it.each( cases )( 'should process options and use defaults', input => {
 			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
 	} );
 	describe( 'promptForText', () => {
-		it( 'should trim provided value', async () => {
+		it( 'should trim provided value', () => {
 			const providedValue = '  bar  ';
 
 			prompt.mockResolvedValue( { input: providedValue } );
 
-			const result = await promptForText( 'Give me something', 'foo' );
+			const resultPromise = promptForText( 'Give me something', 'foo' );
 
-			expect( result ).toStrictEqual( 'bar' );
+			return expect( resultPromise ).resolves.toStrictEqual( 'bar' );
 		} );
 	} );
 	describe( 'promptForComponent', () => {
