@@ -44,9 +44,11 @@ function getLandoUserConfigurationRoot() {
  * @returns {object} Lando configuration
  */
 function getLandoConfig() {
-	const landoPath = path.join( __dirname, '..', '..', '..', 'node_modules', 'lando' );
+	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
+	const landoPath = path.join( nodeModulesPath, 'lando' );
+	const atLandoPath = path.join( nodeModulesPath, '@lando' );
 
-	debug( `Getting lando config, using path '${ landoPath }' for plugins` );
+	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
 	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
 	const isAllDebugSelected = process.env.DEBUG === '*';
@@ -59,6 +61,51 @@ function getLandoConfig() {
 		postLandoFiles: [ '.lando.local.yml' ],
 		pluginDirs: [
 			landoPath,
+			{
+				path: atLandoPath,
+				subdir: '.',
+				namespace: '@lando',
+			},
+		],
+		disablePlugins: [
+			// Plugins we need:
+			// '@lando/compose',
+			// '@lando/mailhog',
+			// '@lando/memcached',
+			// '@lando/phpmyadmin',
+			// The rest we don't need
+			'@lando/acquia',
+			'@lando/apache',
+			'@lando/argv',
+			'@lando/backdrop',
+			'@lando/dotnet',
+			'@lando/drupal',
+			'@lando/elasticsearch',
+			'@lando/go',
+			'@lando/joomla',
+			'@lando/lagoon',
+			'@lando/lamp',
+			'@lando/laravel',
+			'@lando/lemp',
+			'@lando/mariadb',
+			'@lando/mean',
+			'@lando/mongo',
+			'@lando/mssql',
+			'@lando/mysql',
+			'@lando/nginx',
+			'@lando/node',
+			'@lando/pantheon',
+			'@lando/php',
+			'@lando/platformsh',
+			'@lando/postgres',
+			'@lando/python',
+			'@lando/redis',
+			'@lando/ruby',
+			'@lando/solr',
+			'@lando/symfony',
+			'@lando/tomcat',
+			'@lando/varnish',
+			'@lando/wordpress',
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: getLandoUserConfigurationRoot(),
