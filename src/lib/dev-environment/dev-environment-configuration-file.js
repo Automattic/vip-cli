@@ -24,16 +24,6 @@ import type {
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
-const CONFIGURATION_FILE_EXAMPLE = `dev-domain.local:
-  php: 8.0
-  wordpress: 6.0
-  app-code: ./site-code
-  mu-plugins: image
-  multisite: false
-  phpmyadmin: true
-  elasticsearch: true
-  xdebug: true
-`;
 
 export async function getConfigurationFileOptions(): Promise<ConfigurationFileOptions> {
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
@@ -77,7 +67,7 @@ export async function getConfigurationFileOptions(): Promise<ConfigurationFileOp
 async function sanitizeConfiguration( configurationFromFile: Object ): Promise<ConfigurationFileOptions> {
 	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } couldn't ` +
 		'be loaded. Ensure there is one top-level site slug with options configured as children.\nFor example:\n\n' +
-		chalk.grey( CONFIGURATION_FILE_EXAMPLE );
+		chalk.grey( getConfigurationFileExample() );
 
 	if ( Array.isArray( configurationFromFile ) || typeof configurationFromFile !== 'object' ) {
 		throw new Error( genericConfigurationError );
@@ -87,6 +77,23 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 
 	const slug = Object.keys( configurationFromFile )[ 0 ];
 	const configuration = configurationFromFile[ slug ];
+	const validVersions = getAllConfigurationFileVersions().map( version => chalk.cyan( version ) ).join( ', ' );
+
+	if ( ! configuration.version ) {
+		throw new Error(
+			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } does not have a version. ` +
+			`Add a ${ chalk.cyan( 'version' ) } key. For example:\n` +
+			chalk.grey( getConfigurationFileExample() ) +
+			`\nSupported versions: ${ validVersions }.\n`
+		);
+	} else if ( ! isValidConfigurationFileVersion( configuration.version ) ) {
+		throw new Error(
+			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid version. ` +
+			`Update the ${ chalk.cyan( 'version' ) } key. For example:\n` +
+			chalk.grey( getConfigurationFileExample() ) +
+			`\nSupported versions: ${ validVersions }.\n`
+		);
+	}
 
 	const stringToBooleanIfDefined = ( value: any ) => {
 		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
@@ -167,4 +174,34 @@ export function printConfigurationFile( configurationOptions: ConfigurationFileO
 
 	console.log( `${ chalk.cyan( configurationOptions.slug ) }:` );
 	console.log( settingLines.join( '\n' ) + '\n' );
+}
+
+const CONFIGURATION_FILE_VERSIONS = [
+	'0.preview-unstable',
+];
+
+function getAllConfigurationFileVersions(): string[] {
+	return CONFIGURATION_FILE_VERSIONS;
+}
+
+function getLatestConfigurationFileVersion(): string {
+	return CONFIGURATION_FILE_VERSIONS[ CONFIGURATION_FILE_VERSIONS.length - 1 ];
+}
+
+function isValidConfigurationFileVersion( version: string ): boolean {
+	return CONFIGURATION_FILE_VERSIONS.includes( version );
+}
+
+function getConfigurationFileExample(): string {
+	return `dev-domain.local:
+  version: ${ getLatestConfigurationFileVersion() }
+  php: 8.0
+  wordpress: 6.0
+  app-code: ./site-code
+  mu-plugins: image
+  multisite: false
+  phpmyadmin: true
+  elasticsearch: true
+  xdebug: true
+`;
 }
