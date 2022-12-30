@@ -61,9 +61,8 @@ export async function trackEvent( ...args ): Promise<Response> {
 export async function aliasUser( vipUserId ): Promise<Response> {
 	try {
 		if ( vipUserId ) {
-			const prefixedVipUserId = `vip-${ vipUserId }`;
-			await trackEvent( '_alias_user', { ui: prefixedVipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
-			Token.setUuid( prefixedVipUserId );
+			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
+			Token.setUuid( vipUserId );
 		}
 	} catch ( err ) {
 		debug( 'aliasUser() failed', err );

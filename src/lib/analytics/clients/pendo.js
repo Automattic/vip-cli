@@ -10,6 +10,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:pendo' );
  */
 import type { AnalyticsClient } from './client';
 import http from 'lib/api/http';
+import { checkIfUserIsVip } from '../../cli/apiConfig';
 
 /**
  * Pendo analytics client.
@@ -50,12 +51,14 @@ export default class Pendo implements AnalyticsClient {
 
 		debug( 'trackEvent()', eventProps );
 
+		const isVIP = await checkIfUserIsVip( this.userId );
+
 		this.context = {
 			...this.context,
 			org_id: eventProps.org_slug,
 			org_slug: eventProps.org_slug,
 			userAgent: this.userAgent,
-			userId: this.userId,
+			userId: `${ isVIP ? 'vip-' : '' }${ this.userId }`,
 		};
 
 		try {
