@@ -64,7 +64,7 @@ describe( 'vip dev-env info', () => {
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
 		expect( result.stdout ).toMatch( /STATUS\s+DOWN/ );
-		[ 'LOCATION', 'SERVICES', 'NGINX URLS', 'LOGIN URL', 'DEFAULT USERNAME', 'DEFAULT PASSWORD' ]
+		[ 'LOCATION', 'SERVICES' ]
 			.forEach( str => expect( result.stdout ).toContain( str ) );
 	} );
 

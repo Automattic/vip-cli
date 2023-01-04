@@ -6,6 +6,7 @@
  */
 import debugLib from 'debug';
 import os from 'os';
+import fs from 'fs';
 import path from 'path';
 import Lando from 'lando/lib/lando';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
@@ -13,13 +14,14 @@ import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
 import dns from 'dns';
+import xdgBasedir from 'xdg-basedir';
 
 /**
  * Internal dependencies
  */
 import { doesEnvironmentExist, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 
 /**
  * This file will hold all the interactions with lando library
@@ -27,23 +29,10 @@ import UserError from '../user-error';
 const DEBUG_KEY = '@automattic/vip:bin:dev-environment';
 const debug = debugLib( DEBUG_KEY );
 
-let landoConfRoot;
-
 /**
- * @return {string} User configuration root directory (aka userConfRoot in Lando)
+ * @return {Promise<object>} Lando configuration
  */
-function getLandoUserConfigurationRoot() {
-	if ( ! landoConfRoot ) {
-		landoConfRoot = path.join( os.tmpdir(), 'lando' );
-	}
-
-	return landoConfRoot;
-}
-
-/**
- * @return {Object} Lando configuration
- */
-function getLandoConfig() {
+async function getLandoConfig() {
 	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
 	const landoPath = path.join( nodeModulesPath, 'lando' );
 	const atLandoPath = path.join( nodeModulesPath, '@lando' );
@@ -53,6 +42,16 @@ function getLandoConfig() {
 	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
 	const isAllDebugSelected = process.env.DEBUG === '*';
 	const logLevelConsole = ( isAllDebugSelected || isLandoDebugSelected ) ? 'debug' : 'warn';
+
+	const vipDir = path.join( xdgBasedir.data || os.tmpdir(), 'vip' );
+	const landoDir = path.join( vipDir, 'lando' );
+	const fakeHomeDir = path.join( landoDir, 'home' );
+
+	try {
+		await fs.promises.mkdir( fakeHomeDir, { recursive: true } );
+	} catch ( err ) {
+		// Ignore
+	}
 
 	return {
 		logLevelConsole,
@@ -108,8 +107,9 @@ function getLandoConfig() {
 			'@lando/wordpress',
 		],
 		proxyName: 'vip-dev-env-proxy',
-		userConfRoot: getLandoUserConfigurationRoot(),
-		home: '',
+		userConfRoot: landoDir,
+		home: fakeHomeDir,
+		domain: 'lndo.site',
 	};
 }
 
@@ -136,7 +136,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 }
 
 export async function bootstrapLando(): Promise<Lando> {
-	const lando = new Lando( getLandoConfig() );
+	const lando = new Lando( await getLandoConfig() );
 	await lando.bootstrap();
 	return lando;
 }
