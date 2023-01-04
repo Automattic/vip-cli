@@ -13,8 +13,8 @@ import chalk from 'chalk';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 
 /**
-  * Internal dependencies
-  */
+ * Internal dependencies
+ */
 import * as exit from 'lib/cli/exit';
 import type {
 	ConfigurationFileOptions,
@@ -66,34 +66,35 @@ export async function getConfigurationFileOptions(): Promise<ConfigurationFileOp
 
 async function sanitizeConfiguration( configurationFromFile: Object ): Promise<ConfigurationFileOptions> {
 	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } couldn't ` +
-		'be loaded. Ensure there is one top-level site slug with options configured as children.\nFor example:\n\n' +
+		'be loaded. Ensure there is a version and top-level site slug with options configured as children. For example:\n\n' +
 		chalk.grey( getConfigurationFileExample() );
 
 	if ( Array.isArray( configurationFromFile ) || typeof configurationFromFile !== 'object' ) {
 		throw new Error( genericConfigurationError );
-	} else if ( Object.keys( configurationFromFile ).length !== 1 ) {
+	} else if ( Object.keys( configurationFromFile ).length > 2 ) {
 		throw new Error( genericConfigurationError );
 	}
 
-	const slug = Object.keys( configurationFromFile )[ 0 ];
-	const configuration = configurationFromFile[ slug ];
 	const validVersions = getAllConfigurationFileVersions().map( version => chalk.cyan( version ) ).join( ', ' );
 
-	if ( ! configuration.version ) {
+	if ( ! configurationFromFile.version ) {
 		throw new Error(
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } does not have a version. ` +
-			`Add a ${ chalk.cyan( 'version' ) } key. For example:\n` +
+			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is missing a version. ` +
+			`Add a ${ chalk.cyan( 'version' ) } key. For example:\n\n` +
 			chalk.grey( getConfigurationFileExample() ) +
 			`\nSupported versions: ${ validVersions }.\n`
 		);
-	} else if ( ! isValidConfigurationFileVersion( configuration.version ) ) {
+	} else if ( ! isValidConfigurationFileVersion( configurationFromFile.version ) ) {
 		throw new Error(
 			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid version. ` +
-			`Update the ${ chalk.cyan( 'version' ) } key. For example:\n` +
+			`Update the ${ chalk.cyan( 'version' ) } key. For example:\n\n` +
 			chalk.grey( getConfigurationFileExample() ) +
 			`\nSupported versions: ${ validVersions }.\n`
 		);
 	}
+
+	const slug = Object.keys( configurationFromFile ).find( key => key !== 'version' );
+	const configuration = configurationFromFile[ slug ];
 
 	const stringToBooleanIfDefined = ( value: any ) => {
 		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
@@ -193,8 +194,8 @@ function isValidConfigurationFileVersion( version: string ): boolean {
 }
 
 function getConfigurationFileExample(): string {
-	return `dev-domain.local:
-  version: ${ getLatestConfigurationFileVersion() }
+	return `version: ${ getLatestConfigurationFileVersion() }
+dev-domain.local:
   php: 8.0
   wordpress: 6.0
   app-code: ./site-code
