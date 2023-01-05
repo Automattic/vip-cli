@@ -64,27 +64,27 @@ export async function getConfigurationFileOptions(): Promise<ConfigurationFileOp
 	return configuration;
 }
 
-async function sanitizeConfiguration( configurationFromFile: Object ): Promise<ConfigurationFileOptions> {
+async function sanitizeConfiguration( configuration: Object ): Promise<ConfigurationFileOptions> {
 	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } couldn't ` +
-		'be loaded. Ensure there is a version and top-level site slug with options configured as children. For example:\n\n' +
+		`be loaded. Ensure there is a ${ chalk.cyan( 'version' ) } and ${ chalk.cyan( 'slug' ) } configured. For example:\n\n` +
 		chalk.grey( getConfigurationFileExample() );
 
-	if ( Array.isArray( configurationFromFile ) || typeof configurationFromFile !== 'object' ) {
+	if ( Array.isArray( configuration ) || typeof configuration !== 'object' ) {
 		throw new Error( genericConfigurationError );
-	} else if ( Object.keys( configurationFromFile ).length > 2 ) {
+	} else if ( configuration.version === undefined || configuration.slug === undefined ) {
 		throw new Error( genericConfigurationError );
 	}
 
 	const validVersions = getAllConfigurationFileVersions().map( version => chalk.cyan( version ) ).join( ', ' );
 
-	if ( ! configurationFromFile.version ) {
+	if ( ! configuration.version ) {
 		throw new Error(
 			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is missing a version. ` +
 			`Add a ${ chalk.cyan( 'version' ) } key. For example:\n\n` +
 			chalk.grey( getConfigurationFileExample() ) +
 			`\nSupported versions: ${ validVersions }.\n`
 		);
-	} else if ( ! isValidConfigurationFileVersion( configurationFromFile.version ) ) {
+	} else if ( ! isValidConfigurationFileVersion( configuration.version ) ) {
 		throw new Error(
 			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid version. ` +
 			`Update the ${ chalk.cyan( 'version' ) } key. For example:\n\n` +
@@ -92,9 +92,6 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 			`\nSupported versions: ${ validVersions }.\n`
 		);
 	}
-
-	const slug = Object.keys( configurationFromFile ).find( key => key !== 'version' );
-	const configuration = configurationFromFile[ slug ];
 
 	const stringToBooleanIfDefined = ( value: any ) => {
 		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
@@ -104,7 +101,8 @@ async function sanitizeConfiguration( configurationFromFile: Object ): Promise<C
 	};
 
 	const sanitizedConfiguration = {
-		slug,
+		version: configuration.version,
+		slug: configuration.slug,
 		title: configuration.title,
 		multisite: stringToBooleanIfDefined( configuration.multisite ),
 		php: configuration.php,
@@ -166,14 +164,9 @@ export function printConfigurationFile( configurationOptions: ConfigurationFileO
 	// which may be confusing for YAML configuration
 	const settingLines = [];
 	for ( const [ key, value ] of Object.entries( configurationOptions ) ) {
-		if ( key === 'slug' ) {
-			continue;
-		}
-
-		settingLines.push( `  ${ chalk.cyan( key ) }: ${ String( value ) }` );
+		settingLines.push( `${ chalk.cyan( key ) }: ${ String( value ) }` );
 	}
 
-	console.log( `${ chalk.cyan( configurationOptions.slug ) }:` );
 	console.log( settingLines.join( '\n' ) + '\n' );
 }
 
@@ -195,14 +188,14 @@ function isValidConfigurationFileVersion( version: string ): boolean {
 
 function getConfigurationFileExample(): string {
 	return `version: ${ getLatestConfigurationFileVersion() }
-dev-domain.local:
-  php: 8.0
-  wordpress: 6.0
-  app-code: ./site-code
-  mu-plugins: image
-  multisite: false
-  phpmyadmin: true
-  elasticsearch: true
-  xdebug: true
+slug: dev-site
+php: 8.0
+wordpress: 6.0
+app-code: ./site-code
+mu-plugins: image
+multisite: false
+phpmyadmin: true
+elasticsearch: true
+xdebug: true
 `;
 }
