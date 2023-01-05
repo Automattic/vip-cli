@@ -14,10 +14,9 @@
  */
 import { trackEvent } from 'lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const examples = [
 	{
