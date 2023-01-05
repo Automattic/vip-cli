@@ -187,7 +187,7 @@ function addHooks( app: App, lando: Lando ) {
 
 const healthChecks = {
 	database: 'mysql -uroot --silent --execute "SHOW DATABASES;"',
-	'vip-search': "curl -s --noproxy '*' -XGET localhost:9200",
+	elasticsearch: "curl -s --noproxy '*' -XGET localhost:9200",
 	php: '[[ -f /wp/wp-includes/pomo/mo.php ]]',
 };
 
