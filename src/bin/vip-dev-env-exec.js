@@ -12,13 +12,13 @@
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
-import { exec } from 'lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
+import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import UserError from '../lib/user-error';
 
 const examples = [
 	{
@@ -60,6 +60,13 @@ command( { wildcardCommand: true } )
 			let arg: string[] = [];
 			if ( argSplitterFound && argSplitterIx + 1 < process.argv.length ) {
 				arg = process.argv.slice( argSplitterIx + 1 );
+			}
+
+			if ( ! opt.force ) {
+				const isUp = await isEnvUp( lando, getEnvironmentPath( slug ) );
+				if ( ! isUp ) {
+					throw new UserError( 'Environment needs to be started before running a command' );
+				}
 			}
 
 			const options = { force: opt.force };

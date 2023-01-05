@@ -7,7 +7,7 @@ import { expect } from '@jest/globals';
 /**
  * Internal dependencies
  */
-import { doesEnvironmentExist } from '../../../src/lib/dev-environment/dev-environment-core';
+import { doesEnvironmentExist, getEnvironmentPath } from '../../../src/lib/dev-environment/dev-environment-core';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 
 let id = 0;
@@ -27,7 +27,9 @@ export function getProjectSlug() {
  * @returns {NodeJS.ProcessEnv} Environment
  */
 export function prepareEnvironment( xdgDataHome ) {
-	const env = {};
+	const env = {
+		DO_NOT_TRACK: '1',
+	};
 
 	[ 'HOME', 'PATH', 'HOSTNAME', 'DOCKER_HOST' ].forEach( key => {
 		if ( process.env[ key ] ) {
@@ -43,13 +45,11 @@ export function prepareEnvironment( xdgDataHome ) {
 }
 
 /**
- * `doesEnvironmentExist()` will need `getEnvironmentPath()` after #1201 gets merged.
- *
  * @param {string} slug Environment slug
  * @returns {boolean} Whether the environment exists
  */
 export function checkEnvExists( slug ) {
-	return doesEnvironmentExist( slug );
+	return doesEnvironmentExist( getEnvironmentPath( slug ) );
 }
 
 /**

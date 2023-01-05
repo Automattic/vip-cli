@@ -14,13 +14,14 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
-import UserError from '../user-error';
 import dns from 'dns';
 
 /**
  * Internal dependencies
  */
-import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import { doesEnvironmentExist, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+
 /**
  * This file will hold all the interactions with lando library
  */
@@ -118,6 +119,10 @@ const appMap: Map<string, App> = new Map();
 async function getLandoApplication( lando: Lando, instancePath: string ): Promise<App> {
 	if ( appMap.has( instancePath ) ) {
 		return Promise.resolve( appMap.get( instancePath ) );
+	}
+
+	if ( ! doesEnvironmentExist( instancePath ) ) {
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const app = lando.getApp( instancePath );
@@ -251,7 +256,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
-	const isUp = await isEnvUp( app );
+	const isUp = await isEnvUp( lando, instancePath );
 	const frontEndUrl = app.info
 		.find( service => 'nginx' === service.service )
 		?.urls[ 0 ];
@@ -326,25 +331,23 @@ async function getExtraServicesConnections( lando, app ) {
 	return extraServices;
 }
 
-async function isEnvUp( app ) {
+export async function isEnvUp( lando: Lando, instancePath: string ): Promise<boolean> {
+	const now = new Date();
+	const app = await getLandoApplication( lando, instancePath );
+
 	const reachableServices = app.info.filter( service => service.urls.length );
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'isEnvUp took %d ms', duration );
+
 	// If all the URLs are reachable then the app is considered 'up'
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
 export async function landoExec( lando: Lando, instancePath: string, toolName: string, args: Array<string>, options: any ) {
 	const app = await getLandoApplication( lando, instancePath );
-
-	if ( ! options.force ) {
-		const isUp = await isEnvUp( app );
-
-		if ( ! isUp ) {
-			throw new UserError( 'Environment needs to be started before running wp command' );
-		}
-	}
 
 	const tool = app.config.tooling[ toolName ];
 	if ( ! tool ) {
