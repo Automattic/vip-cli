@@ -31,6 +31,7 @@ command()
 	.examples( examples )
 	.argv( process.argv, async () => {
 		const lando = await bootstrapLando();
+		lando.events.constructor.prototype.setMaxListeners( 1024 );
 		await validateDependencies( lando, '' );
 
 		const trackingInfo = { all: true };
