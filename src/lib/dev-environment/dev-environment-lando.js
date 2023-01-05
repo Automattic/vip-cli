@@ -297,7 +297,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 
 const extraServiceDisplayConfiguration = [
 	{
-		name: 'vip-search',
+		name: 'elasticsearch',
 		label: 'enterprise search',
 		protocol: 'http',
 	},
