@@ -6,10 +6,6 @@
  */
 
 /**
- * External dependencies
- */
-
-/**
  * Internal dependencies
  */
 import { trackEvent } from '../lib/tracker';
@@ -69,8 +65,17 @@ command( { wildcardCommand: true } )
 				}
 			}
 
-			const options = { force: opt.force };
-			await exec( lando, slug, arg, options );
+			try {
+				await exec( lando, slug, arg, { stdio: 'inherit' } );
+			} catch ( error ) {
+				if ( error instanceof UserError ) {
+					throw error;
+				}
+
+				// Unfortunately, we are unable to get the exit code from Lando :-(
+				process.exitCode = 1;
+			}
+
 			await trackEvent( 'dev_env_exec_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_exec_command_error', trackingInfo );

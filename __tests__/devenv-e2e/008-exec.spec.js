@@ -85,13 +85,20 @@ describe( 'vip dev-env exec', () => {
 		it( 'should fail on unknown commands', async () => {
 			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--', 'ls' ], { env } );
 			expect( result.rc ).toBeGreaterThan( 0 );
-			expect( result.stderr ).toContain( 'Error: ls is not a known lando task' );
+			expect( result.stderr ).toContain( 'Error:  ls is not a known lando task' );
 		} );
 
 		it( 'should not produce superfluous output in silent mode', async () => {
 			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'home' ], { env }, true );
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout.trim() ).toBe( `http://${ slug }.vipdev.lndo.site` );
+		} );
+
+		it( 'should not be verbose on non-zero exit code', async () => {
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'config', 'has', 'this constant does not exist' ], { env } );
+			expect( result.rc ).toBeGreaterThan( 0 );
+			expect( result.stdout ).toBe( '' );
+			expect( result.stderr ).toBe( '' );
 		} );
 
 		it.todo( 'vip dev-env exec --force' );

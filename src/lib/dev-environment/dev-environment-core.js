@@ -253,7 +253,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 	printTable( appInfo );
 }
 
-export async function exec( lando: Lando, slug: string, args: Array<string>, options: any = {} ) {
+export function exec( lando: Lando, slug: string, args: Array<string>, options: any = {} ): Promise<*> {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -261,7 +261,7 @@ export async function exec( lando: Lando, slug: string, args: Array<string>, opt
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	const [ command, ...commandArgs ] = args;
-	await landoExec( lando, instancePath, command, commandArgs, options );
+	return landoExec( lando, instancePath, command, commandArgs, options );
 }
 
 export function doesEnvironmentExist( instancePath: string ): boolean {
