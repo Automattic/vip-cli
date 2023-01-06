@@ -74,14 +74,14 @@ declare function promptForComponent( component: string, allowLocal: boolean, def
 
 export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( exception instanceof UserError && DEV_ENVIRONMENT_NOT_FOUND !== exception.message ) {
-		// User errors are handled in global error handler
-		throw exception;
-	} else if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
+	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
 		console.error( errorPrefix, message );
+	} else if ( exception instanceof UserError ) {
+		// User errors are handled in global error handler
+		throw exception;
 	} else {
 		let message = exception.message;
 		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
