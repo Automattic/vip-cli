@@ -52,7 +52,7 @@ describe( 'vip dev-env import sql', () => {
 			expect( result.rc ).toBeGreaterThan( 0 );
 			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
-			expect( await checkEnvExists( slug ) ).toBe( false );
+			return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 		} );
 	} );
 

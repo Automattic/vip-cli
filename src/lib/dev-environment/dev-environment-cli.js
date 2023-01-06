@@ -74,7 +74,7 @@ declare function promptForComponent( component: string, allowLocal: boolean, def
 
 export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( exception instanceof UserError ) {
+	if ( exception instanceof UserError && DEV_ENVIRONMENT_NOT_FOUND !== exception.message ) {
 		// User errors are handled in global error handler
 		throw exception;
 	} else if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
