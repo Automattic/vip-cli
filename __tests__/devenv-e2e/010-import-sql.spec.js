@@ -45,14 +45,14 @@ describe( 'vip dev-env import sql', () => {
 	describe( 'if the environment does not exist', () => {
 		it( 'should fail', async () => {
 			const slug = getProjectSlug();
-			expect( checkEnvExists( slug ) ).toBe( false );
+			expect( await checkEnvExists( slug ) ).toBe( false );
 
 			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/empty.sql' );
 			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ], { env } );
 			expect( result.rc ).toBeGreaterThan( 0 );
 			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
-			expect( checkEnvExists( slug ) ).toBe( false );
+			expect( await checkEnvExists( slug ) ).toBe( false );
 		} );
 	} );
 

@@ -93,7 +93,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
 
-	const environmentAlreadyExists = doesEnvironmentExist( getEnvironmentPath( slug ) );
+	const environmentAlreadyExists = await doesEnvironmentExist( getEnvironmentPath( slug ) );
 	if ( environmentAlreadyExists ) {
 		const messageToShow = `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
 			`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;

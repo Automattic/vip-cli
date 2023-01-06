@@ -182,7 +182,7 @@ export async function destroyEnvironment( lando: Lando, slug: string, removeFile
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = doesEnvironmentExist( instancePath );
+	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
@@ -231,7 +231,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = doesEnvironmentExist( instancePath );
+	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
@@ -264,9 +264,15 @@ export async function exec( lando: Lando, slug: string, args: Array<string>, opt
 	await landoExec( lando, instancePath, command, commandArgs, options );
 }
 
-export function doesEnvironmentExist( instancePath: string ): boolean {
+export async function doesEnvironmentExist( instancePath: string ): Promise<boolean> {
 	debug( 'Will check for environment at', instancePath );
-	return fs.existsSync( instancePath );
+	const file = path.join( instancePath, instanceDataFileName );
+	try {
+		const stats = await fs.promises.stat( file );
+		return stats.isFile();
+	} catch ( err ) {
+		return false;
+	}
 }
 
 export function readEnvironmentData( slug: string ): InstanceData {
@@ -480,7 +486,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	}
 
 	const environmentPath = getEnvironmentPath( slug );
-	if ( ! doesEnvironmentExist( environmentPath ) ) {
+	if ( ! await doesEnvironmentExist( environmentPath ) ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 

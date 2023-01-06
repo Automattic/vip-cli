@@ -38,7 +38,7 @@ describe( 'vip dev-env import media', () => {
 
 	it( 'should fail if environment does not exist', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
@@ -47,11 +47,11 @@ describe( 'vip dev-env import media', () => {
 
 	it( 'should copy files if environment exists', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ], { env }, true );
 		expect( result.rc ).toBe( 0 );

@@ -38,20 +38,20 @@ describe( 'vip dev-env update', () => {
 
 	it( 'should fail if the environment does not exist', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate, '--slug', slug ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
 		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 	} );
 
 	it( 'should not update the environment if there are no changes', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const dataBefore = readEnvironmentData( slug );
 
@@ -70,11 +70,11 @@ describe( 'vip dev-env update', () => {
 		const expectedXDebug = false;
 		const expectedMailHog = false;
 
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const dataBefore = readEnvironmentData( slug );
 		expect( dataBefore ).toMatchObject( {
@@ -96,7 +96,7 @@ describe( 'vip dev-env update', () => {
 			'--mailhog', `${ ! expectedMailHog }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const dataAfter = readEnvironmentData( slug );
 		expect( dataAfter ).toMatchObject( {
@@ -112,7 +112,7 @@ describe( 'vip dev-env update', () => {
 		const slug = getProjectSlug();
 		const expectedMultiSite = true;
 
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvCreate,
@@ -120,7 +120,7 @@ describe( 'vip dev-env update', () => {
 			'--multisite', `${ expectedMultiSite }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const dataBefore = readEnvironmentData( slug );
 		expect( dataBefore ).toMatchObject( {
@@ -134,7 +134,7 @@ describe( 'vip dev-env update', () => {
 			'--multisite', `${ ! expectedMultiSite }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const dataAfter = readEnvironmentData( slug );
 		expect( dataAfter ).toMatchObject( {

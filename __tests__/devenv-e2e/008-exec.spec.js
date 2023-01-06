@@ -45,13 +45,13 @@ describe( 'vip dev-env exec', () => {
 	describe( 'if the environment does not exist', () => {
 		it( 'should fail', async () => {
 			const slug = getProjectSlug();
-			expect( checkEnvExists( slug ) ).toBe( false );
+			expect( await checkEnvExists( slug ) ).toBe( false );
 
 			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug ], { env } );
 			expect( result.rc ).toBeGreaterThan( 0 );
 			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
-			expect( checkEnvExists( slug ) ).toBe( false );
+			expect( await checkEnvExists( slug ) ).toBe( false );
 		} );
 	} );
 

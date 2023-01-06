@@ -46,7 +46,7 @@ export function prepareEnvironment( xdgDataHome ) {
 
 /**
  * @param {string} slug Environment slug
- * @returns {boolean} Whether the environment exists
+ * @returns {Promise<boolean>} Whether the environment exists
  */
 export function checkEnvExists( slug ) {
 	return doesEnvironmentExist( getEnvironmentPath( slug ) );
@@ -62,7 +62,7 @@ export async function createAndStartEnvironment( cliTest, slug, env, options = [
 	let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ].concat( options ), { env }, true );
 	expect( result.rc ).toBe( 0 );
 	expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
-	expect( checkEnvExists( slug ) ).toBe( true );
+	expect( await checkEnvExists( slug ) ).toBe( true );
 
 	result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
 	expect( result.rc ).toBe( 0 );
@@ -79,5 +79,5 @@ export async function destroyEnvironment( cliTest, slug, env ) {
 	expect( result.rc ).toBe( 0 );
 	expect( result.stdout ).toContain( 'Environment files deleted successfully' );
 	expect( result.stdout ).toContain( 'Environment destroyed' );
-	expect( checkEnvExists( slug ) ).toBe( false );
+	expect( await checkEnvExists( slug ) ).toBe( false );
 }
