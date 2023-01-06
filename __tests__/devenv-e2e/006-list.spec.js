@@ -54,18 +54,18 @@ describe( 'vip dev-env list', () => {
 	it( 'should list multiple environments', async () => {
 		const slug1 = getProjectSlug();
 		const slug2 = getProjectSlug();
-		expect( checkEnvExists( slug1 ) ).toBe( false );
-		expect( checkEnvExists( slug2 ) ).toBe( false );
+		expect( await checkEnvExists( slug1 ) ).toBe( false );
+		expect( await checkEnvExists( slug2 ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug1 ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug1 }` );
-		expect( checkEnvExists( slug1 ) ).toBe( true );
+		expect( await checkEnvExists( slug1 ) ).toBe( true );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug2 ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug2 }` );
-		expect( checkEnvExists( slug2 ) ).toBe( true );
+		expect( await checkEnvExists( slug2 ) ).toBe( true );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvList ], { env }, true );
 		expect( result.rc ).toBe( 0 );

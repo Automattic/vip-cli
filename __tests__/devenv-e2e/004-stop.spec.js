@@ -52,13 +52,13 @@ describe( 'vip dev-env stop', () => {
 
 	it( 'should fail if environment does not exist', async () => {
 		slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
 		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
-		expect( checkEnvExists( slug ) ).toBe( false );
+		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
 
 	it( 'should stop a running environment', async () => {

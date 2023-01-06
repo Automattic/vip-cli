@@ -46,7 +46,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	await trackEvent( 'dev_env_update_command_execute', trackingInfo );
 
 	try {
-		const environmentAlreadyExists = doesEnvironmentExist( getEnvironmentPath( slug ) );
+		const environmentAlreadyExists = await doesEnvironmentExist( getEnvironmentPath( slug ) );
 		if ( ! environmentAlreadyExists ) {
 			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 		}

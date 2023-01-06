@@ -182,7 +182,7 @@ export async function destroyEnvironment( lando: Lando, slug: string, removeFile
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = doesEnvironmentExist( instancePath );
+	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
@@ -212,8 +212,16 @@ export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOpti
 
 	console.log( 'Found ' + chalk.bold( allEnvNames.length ) + ' environments' + ( allEnvNames.length ? ':' : '.' ) );
 	for ( const envName of allEnvNames ) {
-		console.log( '\n' );
-		await printEnvironmentInfo( lando, envName, options );
+		try {
+			console.log( '\n' );
+			await printEnvironmentInfo( lando, envName, options );
+		} catch ( error ) {
+			if ( error instanceof UserError ) {
+				console.warn( '\nWARNING: "%s" is not a valid environment\n', envName );
+			} else {
+				throw error;
+			}
+		}
 	}
 }
 
@@ -231,9 +239,9 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = doesEnvironmentExist( instancePath );
+	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
-		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const appInfo = await landoInfo( lando, instancePath );
@@ -264,9 +272,15 @@ export function exec( lando: Lando, slug: string, args: Array<string>, options: 
 	return landoExec( lando, instancePath, command, commandArgs, options );
 }
 
-export function doesEnvironmentExist( instancePath: string ): boolean {
+export async function doesEnvironmentExist( instancePath: string ): Promise<boolean> {
 	debug( 'Will check for environment at', instancePath );
-	return fs.existsSync( instancePath );
+	const file = path.join( instancePath, instanceDataFileName );
+	try {
+		const stats = await fs.promises.stat( file );
+		return stats.isFile();
+	} catch ( err ) {
+		return false;
+	}
 }
 
 export function readEnvironmentData( slug: string ): InstanceData {
@@ -480,7 +494,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	}
 
 	const environmentPath = getEnvironmentPath( slug );
-	if ( ! doesEnvironmentExist( environmentPath ) ) {
+	if ( ! await doesEnvironmentExist( environmentPath ) ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 

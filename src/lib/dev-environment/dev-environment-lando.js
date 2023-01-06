@@ -122,7 +122,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 		return Promise.resolve( appMap.get( instancePath ) );
 	}
 
-	if ( ! doesEnvironmentExist( instancePath ) ) {
+	if ( ! await doesEnvironmentExist( instancePath ) ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
