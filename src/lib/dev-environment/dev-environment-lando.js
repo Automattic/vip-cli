@@ -21,6 +21,7 @@ import dns from 'dns';
  */
 import { doesEnvironmentExist, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import UserError from '../user-error';
 
 /**
  * This file will hold all the interactions with lando library
@@ -359,7 +360,7 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 
 	const tool = app.config.tooling[ toolName ];
 	if ( ! tool ) {
-		throw new Error( `${ toolName } is not a known lando task` );
+		throw new UserError( `${ toolName } is not a known lando task` );
 	}
 
 	const savedArgv = process.argv;

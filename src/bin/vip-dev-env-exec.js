@@ -6,10 +6,6 @@
  */
 
 /**
- * External dependencies
- */
-
-/**
  * Internal dependencies
  */
 import { trackEvent } from '../lib/tracker';
@@ -72,6 +68,10 @@ command( { wildcardCommand: true } )
 			try {
 				await exec( lando, slug, arg, { stdio: 'inherit' } );
 			} catch ( error ) {
+				if ( error instanceof UserError ) {
+					throw error;
+				}
+
 				// Unfortunately, we are unable to get the exit code from Lando :-(
 				process.exitCode = 1;
 			}
