@@ -94,6 +94,13 @@ describe( 'vip dev-env exec', () => {
 			expect( result.stdout.trim() ).toBe( `http://${ slug }.vipdev.lndo.site` );
 		} );
 
+		it( 'should not be verbose on non-zero exit code', async () => {
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'config', 'has', 'this constant does not exist' ], { env } );
+			expect( result.rc ).toBeGreaterThan( 0 );
+			expect( result.stdout ).toBe( '' );
+			expect( result.stderr ).toBe( '' );
+		} );
+
 		it.todo( 'vip dev-env exec --force' );
 	} );
 } );
