@@ -65,31 +65,24 @@ export async function getConfigurationFileOptions(): Promise<ConfigurationFileOp
 }
 
 async function sanitizeConfiguration( configuration: Object ): Promise<ConfigurationFileOptions> {
-	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } couldn't ` +
-		`be loaded. Ensure there is a ${ chalk.cyan( 'version' ) } and ${ chalk.cyan( 'slug' ) } configured. For example:\n\n` +
-		chalk.grey( getConfigurationFileExample() );
+	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is available but ` +
+		`couldn't be loaded. Ensure there is a ${ chalk.cyan( 'configuration-version' ) } and ${ chalk.cyan( 'slug' ) } ` +
+		`configured. For example:\n\n${ chalk.grey( getConfigurationFileExample() ) }`;
 
 	if ( Array.isArray( configuration ) || typeof configuration !== 'object' ) {
 		throw new Error( genericConfigurationError );
-	} else if ( configuration.version === undefined || configuration.slug === undefined ) {
+	} else if ( configuration[ 'configuration-version' ] === undefined || configuration.slug === undefined ) {
 		throw new Error( genericConfigurationError );
 	}
 
 	const validVersions = getAllConfigurationFileVersions().map( version => chalk.cyan( version ) ).join( ', ' );
 
-	if ( ! configuration.version ) {
+	if ( ! isValidConfigurationFileVersion( configuration[ 'configuration-version' ] ) ) {
 		throw new Error(
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is missing a version. ` +
-			`Add a ${ chalk.cyan( 'version' ) } key. For example:\n\n` +
+			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid ` +
+			`${ chalk.cyan( 'configuration-version' ) } key. Update to a supported version. For example:\n\n` +
 			chalk.grey( getConfigurationFileExample() ) +
-			`\nSupported versions: ${ validVersions }.\n`
-		);
-	} else if ( ! isValidConfigurationFileVersion( configuration.version ) ) {
-		throw new Error(
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid version. ` +
-			`Update the ${ chalk.cyan( 'version' ) } key. For example:\n\n` +
-			chalk.grey( getConfigurationFileExample() ) +
-			`\nSupported versions: ${ validVersions }.\n`
+			`\nSupported configuration versions: ${ validVersions }.\n`
 		);
 	}
 
@@ -101,7 +94,7 @@ async function sanitizeConfiguration( configuration: Object ): Promise<Configura
 	};
 
 	const sanitizedConfiguration = {
-		version: configuration.version,
+		'configuration-version': configuration[ 'configuration-version' ],
 		slug: configuration.slug,
 		title: configuration.title,
 		multisite: stringToBooleanIfDefined( configuration.multisite ),
@@ -187,7 +180,7 @@ function isValidConfigurationFileVersion( version: string ): boolean {
 }
 
 function getConfigurationFileExample(): string {
-	return `version: ${ getLatestConfigurationFileVersion() }
+	return `configuration-version: ${ getLatestConfigurationFileVersion() }
 slug: dev-site
 php: 8.0
 wordpress: 6.0
