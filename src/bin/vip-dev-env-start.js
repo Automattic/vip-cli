@@ -15,10 +15,10 @@ import { exec } from 'child_process';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
 import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 

@@ -6,19 +6,15 @@
  */
 
 /**
- * External dependencies
- */
-
-/**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
-import { exec } from 'lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
+import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import UserError from '../lib/user-error';
 
 const examples = [
 	{
@@ -61,8 +57,24 @@ command( { wildcardCommand: true } )
 				arg = process.argv.slice( argSplitterIx + 1 );
 			}
 
-			const options = { force: opt.force };
-			await exec( lando, slug, arg, options );
+			if ( ! opt.force ) {
+				const isUp = await isEnvUp( lando, getEnvironmentPath( slug ) );
+				if ( ! isUp ) {
+					throw new UserError( 'Environment needs to be started before running a command' );
+				}
+			}
+
+			try {
+				await exec( lando, slug, arg, { stdio: 'inherit' } );
+			} catch ( error ) {
+				if ( error instanceof UserError ) {
+					throw error;
+				}
+
+				// Unfortunately, we are unable to get the exit code from Lando :-(
+				process.exitCode = 1;
+			}
+
 			await trackEvent( 'dev_env_exec_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_exec_command_error', trackingInfo );

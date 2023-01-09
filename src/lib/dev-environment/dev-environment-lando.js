@@ -14,13 +14,15 @@ import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
-import UserError from '../user-error';
 import dns from 'dns';
 
 /**
  * Internal dependencies
  */
-import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import { doesEnvironmentExist, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import UserError from '../user-error';
+
 /**
  * This file will hold all the interactions with lando library
  */
@@ -120,6 +122,10 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 		return Promise.resolve( appMap.get( instancePath ) );
 	}
 
+	if ( ! await doesEnvironmentExist( instancePath ) ) {
+		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+	}
+
 	const app = lando.getApp( instancePath );
 	addHooks( app, lando );
 	appMap.set( instancePath, app );
@@ -182,21 +188,25 @@ function addHooks( app: App, lando: Lando ) {
 
 const healthChecks = {
 	database: 'mysql -uroot --silent --execute "SHOW DATABASES;"',
-	'vip-search': "curl -s --noproxy '*' -XGET localhost:9200",
+	elasticsearch: "curl -s --noproxy '*' -XGET localhost:9200",
 	php: '[[ -f /wp/wp-includes/pomo/mo.php ]]',
 };
 
 async function healthcheckHook( app: App, lando: Lando ) {
+	const now = new Date();
 	try {
 		await lando.Promise.retry( async () => {
 			const list = await lando.engine.list( { project: app.project } );
 
 			const notHealthyContainers = [];
+			const checkPromises = [];
+			const containerOrder = [];
 			for ( const container of list ) {
 				if ( healthChecks[ container.service ] ) {
-					try {
-						debug( `Testing ${ container.service }: ${ healthChecks[ container.service ] }` );
-						await app.engine.run( {
+					debug( `Testing ${ container.service }: ${ healthChecks[ container.service ] }` );
+					containerOrder.push( container );
+					checkPromises.push(
+						app.engine.run( {
 							id: container.id,
 							cmd: healthChecks[ container.service ],
 							compose: app.compose,
@@ -207,26 +217,30 @@ async function healthcheckHook( app: App, lando: Lando ) {
 								cstdio: 'pipe',
 								services: [ container.service ],
 							},
-						} );
-					} catch ( exception ) {
-						debug( `${ container.service } Health check failed` );
-						notHealthyContainers.push( container );
-					}
+						} )
+					);
 				}
 			}
 
-			if ( notHealthyContainers.length ) {
-				for ( const container of notHealthyContainers ) {
-					console.log( `Waiting for service ${ container.service } ...` );
+			const results = await Promise.allSettled( checkPromises );
+			results.forEach( ( result, index ) => {
+				if ( result.status === 'rejected' ) {
+					debug( `${ containerOrder[ index ].service } Health check failed` );
+					notHealthyContainers.push( containerOrder[ index ] );
 				}
+			} );
+
+			if ( notHealthyContainers.length ) {
+				notHealthyContainers.forEach( container => console.log( `Waiting for service ${ container.service } ...` ) );
 				return Promise.reject( notHealthyContainers );
 			}
 		}, { max: 20, backoff: 1000 } );
 	} catch ( containersWithFailingHealthCheck ) {
-		for ( const container of containersWithFailingHealthCheck ) {
-			console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` );
-		}
+		containersWithFailingHealthCheck.forEach( container => console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` ) );
 	}
+
+	const duration = new Date().getTime() - now.getTime();
+	debug( `Healthcheck completed in ${ duration }ms` );
 }
 
 export async function landoStop( lando: Lando, instancePath: string ) {
@@ -251,7 +265,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
-	const isUp = await isEnvUp( app );
+	const isUp = await isEnvUp( lando, instancePath );
 	const frontEndUrl = app.info
 		.find( service => 'nginx' === service.service )
 		?.urls[ 0 ];
@@ -284,7 +298,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 
 const extraServiceDisplayConfiguration = [
 	{
-		name: 'vip-search',
+		name: 'elasticsearch',
 		label: 'enterprise search',
 		protocol: 'http',
 	},
@@ -326,11 +340,17 @@ async function getExtraServicesConnections( lando, app ) {
 	return extraServices;
 }
 
-async function isEnvUp( app ) {
+export async function isEnvUp( lando: Lando, instancePath: string ): Promise<boolean> {
+	const now = new Date();
+	const app = await getLandoApplication( lando, instancePath );
+
 	const reachableServices = app.info.filter( service => service.urls.length );
 	const urls = reachableServices.map( service => service.urls ).flat();
 
 	const scanResult = await app.scanUrls( urls, { max: 1 } );
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'isEnvUp took %d ms', duration );
+
 	// If all the URLs are reachable then the app is considered 'up'
 	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
@@ -338,17 +358,9 @@ async function isEnvUp( app ) {
 export async function landoExec( lando: Lando, instancePath: string, toolName: string, args: Array<string>, options: any ) {
 	const app = await getLandoApplication( lando, instancePath );
 
-	if ( ! options.force ) {
-		const isUp = await isEnvUp( app );
-
-		if ( ! isUp ) {
-			throw new UserError( 'Environment needs to be started before running wp command' );
-		}
-	}
-
 	const tool = app.config.tooling[ toolName ];
 	if ( ! tool ) {
-		throw new Error( `${ toolName } is not a known lando task` );
+		throw new UserError( `${ toolName } is not a known lando task` );
 	}
 
 	const savedArgv = process.argv;

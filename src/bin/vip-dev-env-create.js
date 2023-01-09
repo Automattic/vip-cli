@@ -14,19 +14,25 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import * as exit from 'lib/cli/exit';
-import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist } from 'lib/dev-environment/dev-environment-core';
-import { DEFAULT_SLUG, getEnvironmentName, promptForArguments, getEnvironmentStartCommand } from 'lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from 'lib/constants/dev-environment';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { createEnvironment, printEnvironmentInfo, getApplicationInformation, doesEnvironmentExist, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import {
+	DEFAULT_SLUG,
+	getEnvironmentName,
+	promptForArguments,
+	getEnvironmentStartCommand,
 	addDevEnvConfigurationOptions,
 	getOptionsFromAppInfo,
 	handleCLIException,
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
+import {
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_SUBCOMMAND,
+} from '../lib/constants/dev-environment';
 import {
 	getConfigurationFileOptions,
 	printConfigurationFile,
@@ -99,7 +105,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 	const startCommand = chalk.bold( getEnvironmentStartCommand( slug, configurationFileOptions ) );
 
-	const environmentAlreadyExists = doesEnvironmentExist( slug );
+	const environmentAlreadyExists = await doesEnvironmentExist( getEnvironmentPath( slug ) );
 	if ( environmentAlreadyExists ) {
 		const messageToShow = `Environment already exists\n\n\nTo start the environment run:\n\n${ startCommand }\n\n` +
 			`To create another environment use ${ chalk.bold( '--slug' ) } option with a unique name.\n`;

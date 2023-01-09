@@ -38,28 +38,28 @@ describe( 'vip dev-env create', () => {
 
 	it( 'should create a new environment', async () => {
 		const expectedSlug = getProjectSlug();
-		expect( checkEnvExists( expectedSlug ) ).toBe( false );
+		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );
 
-		expect( checkEnvExists( expectedSlug ) ).toBe( true );
+		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
 	} );
 
 	it( 'should fail on duplicate slugs', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result1 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result1.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const result2 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
 		expect( result2.rc ).toBeGreaterThan( 0 );
 		expect( result2.stderr ).toContain( 'Error:  Environment already exists' );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		return expect( checkEnvExists( slug ) ).resolves.toBe( true );
 	} );
 
 	it( 'should use sane defaults', async () => {
@@ -69,11 +69,11 @@ describe( 'vip dev-env create', () => {
 		const expectedElasticSearch = false;
 		const expectedMailHog = false;
 
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const data = readEnvironmentData( slug );
 		expect( data ).toMatchObject( {
@@ -83,7 +83,6 @@ describe( 'vip dev-env create', () => {
 			mariadb: '10.3',
 			mediaRedirectDomain: '',
 			elasticsearch: expectedElasticSearch,
-			statsd: false,
 			xdebugConfig: '',
 			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
 			muPlugins: { mode: 'image' },
@@ -108,7 +107,7 @@ describe( 'vip dev-env create', () => {
 		const expectedXDebug = true;
 		const expectedMailHog = true;
 
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [
 			process.argv[ 0 ],
@@ -126,7 +125,7 @@ describe( 'vip dev-env create', () => {
 			'--mailhog', `${ expectedMailHog }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const data = readEnvironmentData( slug );
 		expect( data ).toMatchObject( {
@@ -136,7 +135,6 @@ describe( 'vip dev-env create', () => {
 			mariadb: '10.3',
 			mediaRedirectDomain: '',
 			elasticsearch: expectedElasticSearch,
-			statsd: false,
 			xdebugConfig: '',
 			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
 			muPlugins: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`

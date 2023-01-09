@@ -45,33 +45,33 @@ describe( 'vip dev-env destroy', () => {
 
 	it( 'should fail if environment does not exist', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
 		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
-		expect( checkEnvExists( slug ) ).toBe( false );
+		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
 
 	it( 'should remove existing environment', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		await destroyEnvironment( cliTest, slug, env );
 	} );
 
 	it( 'should remove existing environment even without landofile', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const landoFile = path.join( getEnvironmentPath( slug ), '.lando.yml' );
 		await expect( access( landoFile ) ).resolves.toBeUndefined();
@@ -82,11 +82,11 @@ describe( 'vip dev-env destroy', () => {
 
 	it( 'should keep the files when asked to', async () => {
 		const slug = getProjectSlug();
-		expect( checkEnvExists( slug ) ).toBe( false );
+		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
 		expect( result.rc ).toBe( 0 );
-		expect( checkEnvExists( slug ) ).toBe( true );
+		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug, '--soft' ], { env }, true );
 		expect( result.rc ).toBe( 0 );
@@ -96,7 +96,7 @@ describe( 'vip dev-env destroy', () => {
 		// BUG BUG BUG: this means that `vip dev-env destroy --soft` does not destroy the environment
 		const landoFile = path.join( getEnvironmentPath( slug ), '.lando.yml' );
 		await expect( access( landoFile ) ).resolves.toBeUndefined();
-		expect( checkEnvExists( slug ) ).toBe( true );
+		return expect( checkEnvExists( slug ) ).resolves.toBe( true );
 	} );
 
 	describe( 'if the environment is running', () => {
@@ -113,7 +113,7 @@ describe( 'vip dev-env destroy', () => {
 
 		it( 'should stop and destroy it', async () => {
 			slug = getProjectSlug();
-			expect( checkEnvExists( slug ) ).toBe( false );
+			expect( await checkEnvExists( slug ) ).toBe( false );
 
 			await createAndStartEnvironment( cliTest, slug, env );
 			await destroyEnvironment( cliTest, slug, env );

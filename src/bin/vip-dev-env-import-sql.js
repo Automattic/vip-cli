@@ -14,13 +14,14 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
+import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
+import { exec, getEnvironmentPath, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { validate } from '../lib/validations/sql';
-import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import UserError from '../lib/user-error';
 
 const examples = [
 	{
@@ -55,7 +56,6 @@ command( {
 		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
-		lando.events.constructor.prototype.setMaxListeners( 100 );
 		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
@@ -65,6 +65,10 @@ command( {
 			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
 			if ( ! opt.skipValidate ) {
+				if ( ! isEnvUp( lando, getEnvironmentPath( slug ) ) ) {
+					throw new UserError( 'Environment needs to be started first' );
+				}
+
 				const expectedDomain = `${ slug }.vipdev.lndo.site`;
 				await validate( resolvedPath, {
 					isImport: false,
@@ -73,7 +77,7 @@ command( {
 				} );
 			}
 
-			const fd = fs.openSync( resolvedPath, 'r' );
+			const fd = await fs.promises.open( resolvedPath, 'r' );
 			const importArg = [ 'db', '--disable-auto-rehash' ];
 			const origIsTTY = process.stdin.isTTY;
 

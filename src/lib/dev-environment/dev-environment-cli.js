@@ -79,14 +79,14 @@ declare function promptForComponent( component: string, allowLocal: boolean, def
 
 export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( exception instanceof UserError ) {
-		// User errors are handled in global error handler
-		throw exception;
-	} else if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
+	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
 		console.error( errorPrefix, message );
+	} else if ( exception instanceof UserError ) {
+		// User errors are handled in global error handler
+		throw exception;
 	} else {
 		let message = exception.message;
 		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
@@ -140,6 +140,7 @@ const VALIDATION_STEPS = [
 ];
 
 export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+	const now = new Date();
 	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
 	const progressTracker = new ProgressTracker( steps );
 	if ( ! quiet ) {
@@ -182,6 +183,9 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 	if ( ! quiet ) {
 		progressTracker.stopPrinting();
 	}
+
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'Validation checks completed in %d ms', duration );
 };
 
 export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise<string> {
@@ -306,7 +310,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		appCode: {
 			mode: 'image',
 		},
-		statsd: false,
 		phpmyadmin: false,
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
@@ -345,12 +348,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
-	}
-
-	if ( instanceData.elasticsearch ) {
-		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
-	} else {
-		instanceData.statsd = false;
 	}
 
 	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
@@ -621,7 +618,6 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'wordpress', 'Use a specific WordPress version' )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
 		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
-		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug_config', 'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable' )

@@ -182,8 +182,7 @@ export async function destroyEnvironment( lando: Lando, slug: string, removeFile
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = fs.existsSync( instancePath );
-
+	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
@@ -213,8 +212,16 @@ export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOpti
 
 	console.log( 'Found ' + chalk.bold( allEnvNames.length ) + ' environments' + ( allEnvNames.length ? ':' : '.' ) );
 	for ( const envName of allEnvNames ) {
-		console.log( '\n' );
-		await printEnvironmentInfo( lando, envName, options );
+		try {
+			console.log( '\n' );
+			await printEnvironmentInfo( lando, envName, options );
+		} catch ( error ) {
+			if ( error instanceof UserError ) {
+				console.warn( '\nWARNING: "%s" is not a valid environment\n', envName );
+			} else {
+				throw error;
+			}
+		}
 	}
 }
 
@@ -232,10 +239,9 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = fs.existsSync( instancePath );
-
+	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
-		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
 	const appInfo = await landoInfo( lando, instancePath );
@@ -255,34 +261,26 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 	printTable( appInfo );
 }
 
-export async function exec( lando: Lando, slug: string, args: Array<string>, options: any = {} ) {
+export function exec( lando: Lando, slug: string, args: Array<string>, options: any = {} ): Promise<*> {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
 
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
-	const environmentExists = fs.existsSync( instancePath );
-
-	if ( ! environmentExists ) {
-		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-	}
-
-	const command = args.shift();
-
-	const commandArgs = [ ...args ];
-
-	await landoExec( lando, instancePath, command, commandArgs, options );
+	const [ command, ...commandArgs ] = args;
+	return landoExec( lando, instancePath, command, commandArgs, options );
 }
 
-export function doesEnvironmentExist( slug: string ): boolean {
-	debug( 'Will check for environment', slug );
-
-	const instancePath = getEnvironmentPath( slug );
-
-	debug( 'Instance path for', slug, 'is:', instancePath );
-
-	return fs.existsSync( instancePath );
+export async function doesEnvironmentExist( instancePath: string ): Promise<boolean> {
+	debug( 'Will check for environment at', instancePath );
+	const file = path.join( instancePath, instanceDataFileName );
+	try {
+		const stats = await fs.promises.stat( file );
+		return stats.isFile();
+	} catch ( err ) {
+		return false;
+	}
 }
 
 export function readEnvironmentData( slug: string ): InstanceData {
@@ -495,7 +493,8 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		throw new Error( 'The provided path does not exist or it is not valid (see "--help" for examples)' );
 	}
 
-	if ( ! doesEnvironmentExist( slug ) ) {
+	const environmentPath = getEnvironmentPath( slug );
+	if ( ! await doesEnvironmentExist( environmentPath ) ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
@@ -512,7 +511,6 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		}
 	}
 
-	const environmentPath = getEnvironmentPath( slug );
 	const uploadsPath = path.join( environmentPath, uploadPathString );
 
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
