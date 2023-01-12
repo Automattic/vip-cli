@@ -122,12 +122,25 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 			return arg.replace( /^--(.*)=(.*)$/, '--$1="$2"' );
 		}
 
-		if ( arg.includes( ' ' ) ) {
+		if ( arg.includes( ' ' ) && ! isJsonObject( arg ) ) {
 			return `"${ arg }"`;
 		}
 
 		return arg;
 	} );
+}
+
+export function isJsonObject( str: string ): boolean {
+	return typeof str === 'string' && str.startsWith( '{' ) && isJson( str );
+}
+
+export function isJson( str: string ): boolean {
+	try {
+		JSON.parse( str );
+	} catch ( error ) {
+		return false;
+	}
+	return true;
 }
 
 export function capitalize( str: string ): string {
