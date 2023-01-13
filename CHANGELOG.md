@@ -1,5 +1,9 @@
 ## Changelog
 
+# 2.25.1
+
+- #1239 Downgrade Apollo client to 3.3.6
+
 # 2.25.0
 
 - #1233 Update @automattic/vip-go-preflight-checks to 2.0.16
