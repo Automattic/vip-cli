@@ -26,26 +26,48 @@ command( {
 	envContext: true,
 	wildcardCommand: true,
 	format: true,
+	requiredArgs: 1,
 	usage: 'vip @mysite.develop config notifications add',
-} ).examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
-	const trackingInfo = {
-		environment_id: opt.env?.id,
-		args: JSON.stringify( arg ), // TODO: remove some values we don't want tracked
-	};
-	await trackEvent( 'config_notifications_add_execute', trackingInfo );
+} )
+	.option( 'description', 'Specify an optional description for the notification stream.', '' )
+	.option(
+		'secret',
+		'An optional secret for use in signing the webhook request body. Not valid for email subscriptions.'
+	)
+	.examples( examples )
+	.argv( process.argv, async ( arg: string[], opt ) => {
+		const trackingInfo = {
+			environment_id: opt.env?.id,
+			args: JSON.stringify( arg ), // TODO: remove some values we don't want tracked
+		};
+		await trackEvent( 'config_notifications_add_execute', trackingInfo );
 
-	/**
-     * TODO: Only ask user for a "recipient" and infer the stream type from it.
-     */
-	const [ streamType, streamValue, description, meta ] = arg;
+		const [ streamValue ] = arg;
 
-	const result = await addNotificationStream( opt.env.appId, opt.env.id, streamType, streamValue, true, description, meta );
+		const { description, secret } = opt;
 
-	await trackEvent( 'config_notifications_add_success', trackingInfo );
+		const meta = {};
 
-	const streams = result?.data?.addNotificationStream?.nodes || [];
+		if ( secret ) {
+			meta.secret = secret;
+		}
 
-	// TODO: Return only the the added value instead of the whole list
-	const { notification_stream_id, stream_value } = streams.find( ( { stream_type, stream_value } ) => stream_type === streamType && stream_value === streamValue );
-	console.log( `Successfully added a new notification stream:\n\tID: ${ notification_stream_id }\n\tRecipient: ${ stream_value }` );
-} );
+		const result = await addNotificationStream(
+			opt.env.appId,
+			opt.env.id,
+			streamValue,
+			description,
+			meta
+		);
+
+		await trackEvent( 'config_notifications_add_success', trackingInfo );
+
+		const streams = result?.data?.addNotificationStream?.nodes || [];
+
+		console.log( { streams } );
+
+		console.log(
+			`Successfully added a new notification stream.`
+			//:\n\tID: ${ notification_stream_id }\n\tRecipient: ${ stream_value }`
+		);
+	} );

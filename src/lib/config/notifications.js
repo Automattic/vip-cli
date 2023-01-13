@@ -16,9 +16,7 @@ const addNotificationStreamMutation = gql`
     mutation AddNotificationStream(
         $appId: BigInt!
         $envId: BigInt!
-        $streamType: String!
         $streamValue: String!
-        $active: Boolean
         $description: String
         $meta: String
     ) {
@@ -26,9 +24,7 @@ const addNotificationStreamMutation = gql`
             input: {
                 applicationId: $appId
                 environmentId: $envId
-                streamType: $streamType
                 streamValue: $streamValue
-                active: $active
                 description: $description
                 meta: $meta
             }
@@ -90,17 +86,18 @@ const updateNotificationStreamMutation = gql`
     }
 `;
 
-export async function addNotificationStream( appId: number, envId: number, streamType: string, streamValue: string, active: boolean, description: string, meta: string ) {
+export async function addNotificationStream( appId: number, envId: number, streamValue: string, description: string, meta: any ) {
 	const api = await API();
+
+	const _meta = typeof meta === 'string' ? meta : JSON.stringify( meta );
 
 	const variables = {
 		appId,
 		envId,
-		streamType,
 		streamValue,
-		active,
+		active: true,
 		description,
-		meta,
+		meta: _meta,
 	};
 
 	return api.mutate( { mutation: addNotificationStreamMutation, variables } );
