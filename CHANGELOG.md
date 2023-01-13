@@ -30,6 +30,10 @@
 - #1200 fix(dev-env): Reuse Lando App instead of recreating it every time
 - #1204 Dev-env: Update ES to 7.17.8 to match prod
 - #1205 ci: Pass correct node-version in CI workflow
+- #1199 fix(dev-env): Update `max_allowed_packet` to mirror prod envs
+- #1194 Add debugger instructions
+- #1196 fix(dev-env): Fix ambiguous short option for MailHog/MariaDB
+- #1195 fix(dev-env): increase max number of event listeners for AsyncEvents
 
 ## 2.24.2 (22 Dec 2022)
 
