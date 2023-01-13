@@ -1,5 +1,36 @@
 ## Changelog
 
+# 2.25.0
+
+- #1233 Update @automattic/vip-go-preflight-checks to 2.0.16
+- #1232 fix(dev-env): Make environment existence check more robust
+- #1231 fix(dev-env): Inherit stdio descriptors for 'dev-env exec'
+- #1230 Dev-env: Fix ES service reference
+- #1229 fix(dev-env): Perform ES healthcheck properly
+- #1209 refactor(dev-env): Run health checks in parallel
+- #1201 fix(dev-env): Do not check env is up for every action
+- #1224 fix(tests): do not fail when `DO_NOT_TRACK` is set
+- #1211 fix(dev-env)!: remove support for statsd
+- #1183 feat(dev-env): Add support for the most recent Lando
+- #1203 test(dev-env): Add E2E tests for dev env
+- #1222 chore(deps): Update babel to 7.20.7
+- #1223 chore(deps): Update flow to 0.196.3
+- #1226 Add some additional info on installation
+- #1225 chore: Update dot files
+- #1197 feat(dev-env): Pipe files to Docker instead of copying them when doing SQL import
+- #1221 dev-env: Fix Mailhog being undefined in instance data from older versisons of VIP-CLI
+- #1218 Fix a grammatical mistake in the error message
+- #1217 Add filename validation to sql import
+- #1213 chore(deps): Update jest to 29.3.1 and nock to 13.2.9
+- #1214 chore(deps): Update babel to 7.20
+- #1208 feat(dev-env): Add quiet mode to `vip dev-env exec`
+- #1212 fix(dev-env): Errors should go to stderr, not stdout
+- #1206 fix(dev-env): await handleCLIException() and set proper exit code
+- #1202 fix(dev-env): Do not load integrations for Acquia, Lagoon, Pantheon
+- #1200 fix(dev-env): Reuse Lando App instead of recreating it every time
+- #1204 Dev-env: Update ES to 7.17.8 to match prod
+- #1205 ci: Pass correct node-version in CI workflow
+
 ## 2.24.2 (22 Dec 2022)
 
 - #1219 fix(dev-env): Fix search/replace on SQL file import

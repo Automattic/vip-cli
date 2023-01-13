@@ -29,6 +29,36 @@ VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip app
 VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get home
 ```
 
+### Using debugger
+
+Who doesn't like a good console.log for debugging?
+Well, sometimes it's insufficient, luckily it's not too complicated to use a debugger.
+
+1. First, make sure to run the `npm run build:watch`, this will generate source maps
+2. Run the command you want via `node --inspect`, like so:  `node --inspect ./dist/bin/vip-dev-env-import-sql.js`
+3. Note the port the debugger is listening on:
+```
+Debugger listening on ws://127.0.0.1:9229/db6c03e9-2585-4a08-a1c6-1fee0295c9ff
+For help, see: https://nodejs.org/en/docs/inspector
+```
+4. In your editor of choice attach to the debugger. For VSCode: Hit 'Run and Debug' panel, hit the "gear" icon (open launch.json), make your `Attach` configuration entry to look like so:
+Make sure the `port` matches the port from step 3, and the `runtimeExecutable` matches the exact `node` executable you ran. If you use a version manager like `nvm`, its especially important to check this.
+
+```json
+	{
+		"name": "Attach",
+		"port": 9229,
+		"request": "attach",
+		"skipFiles": ["<node_internals>/**"],
+		"type": "node",
+		"runtimeExecutable": "/Users/user/.nvm/versions/node/v14.18.2/bin/node"
+	}
+```
+
+5. Set your breakpoints and whatnot, hit the play button.
+6. Confirm that you attached the debugger to continue command execution
+7. Squash them bugs 🐛🔨.
+8. [Optional but recommended] Pay it forward and implement a similar approach to other internal/external tooling.
 ### Adding commands
 
 * New command names should use the singular form (e.g. site vs sites).
@@ -43,13 +73,13 @@ New libraries should generally support both CLI and web contexts, though some ca
 
 Our release flow for VIP CLI follows this pattern:
 
-**_feature branch -> develop branch -> master branch -> NPM release_**
+**_feature branch -> develop branch -> trunk branch -> NPM release_**
 
 - For feature branches, please follow A8C branch naming conventions (e.g.- `add/data-sync-command`, `fix/subsite-launch-command`, etc.)
 - Include a Changelog for all npm version releases, including any minor or major versions
 - This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
 - Merge changes from your feature branch to the `develop` branch
-- If you are ready to release your changes publicly, merge your changes from the `develop` branch to the `master` branch. All changes that are not ready to be public should be feature flagged or stay in the `develop` branch to avoid conflicts when releasing urgent fixes (not recommended).
+- If you are ready to release your changes publicly, merge your changes from the `develop` branch to the `trunk` branch. All changes that are not ready to be public should be feature flagged or stay in the `develop` branch to avoid conflicts when releasing urgent fixes (not recommended).
 - Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
 
 ### Changelogs
@@ -78,7 +108,7 @@ Prepare the release by making sure that:
 
 1. All relevant PRs have been merged.
 1. The release has been tested across macOS, Windows, and Linux.
-1. The [changelog](https://github.com/Automattic/vip/blob/master/CHANGELOG.md) has been updated on `master`.
+1. The [changelog](https://github.com/Automattic/vip/blob/trunk/CHANGELOG.md) has been updated on `trunk`.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this, just-in-case).
 
 #### Changelog Generator Hint:
@@ -90,15 +120,15 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 Then, let's publish:
 
-1. Make sure master branch is up to date `git pull`
+1. Make sure trunk branch is up to date `git pull`
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
 1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
-1. Push the master branch `git push`
+1. Push the trunk branch `git push`
 1. Make sure you're part of the Automattic organization in npm
 1. Publish the release to npm (`npm run publish-please --access public`) the script will do some extra checks (npm version, branch, etc) to ensure everything is correct. If all looks good, proceed.
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
-1. Push `master` changes (mostly the version bump) to `develop` (`git checkout develop && git merge master` )
+1. Push `trunk` changes (mostly the version bump) to `develop` (`git checkout develop && git merge trunk` )
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
@@ -111,14 +141,14 @@ In order to do that, please follow this:
 1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
 2. Go to publish-please's config in `.publishrc`
 3. Change the `publishTag` to `next` and `gitTag` to `false` (publish-please will expect the latest commit to have a git tag, but we don't want it in this case)
-4. Commit your changes to `master`
+4. Commit your changes to `trunk`
 5. Run `npm run publish-please`
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 
 ### Patching Old Releases
 
-There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `master` branch.
+There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `trunk` branch.
 
 For these cases:
 

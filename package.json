@@ -48,14 +48,15 @@
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
-    "test": "npm run lint && npm run flow && jest --coverage",
+    "test": "npm run lint && npm run flow && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
+    "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
     "clean": "rimraf dist",
     "prepare": "npm run clean && npm run build",
     "postinstall": "node ./helpers/check-version.js",
     "build": "babel src -d dist",
     "build:watch": "babel src -d dist --watch --source-maps",
     "flow": "flow",
-    "jest": "jest",
+    "jest": "jest --testPathIgnorePatterns __tests__/devenv-e2e/",
     "lint": "eslint index.js src __tests__",
     "publish-please": "publish-please",
     "prepublishOnly": "publish-please guard",
@@ -84,16 +85,18 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@babel/cli": "7.19.3",
-    "@babel/core": "7.19.6",
+    "@babel/cli": "7.20.7",
+    "@babel/core": "7.20.7",
     "@babel/eslint-parser": "7.19.1",
-    "@babel/plugin-transform-modules-commonjs": "7.19.6",
-    "@babel/preset-env": "7.19.4",
+    "@babel/plugin-transform-modules-commonjs": "7.20.11",
+    "@babel/preset-env": "7.20.2",
     "@babel/preset-flow": "7.18.6",
-    "babel-core": "7.0.0-bridge.0",
-    "babel-jest": "26.6.3",
+    "@jest/globals": "^29.3.1",
+    "@jest/test-sequencer": "^29.3.1",
+    "babel-jest": "^29.3.1",
     "babel-plugin-module-resolver": "4.1.0",
     "check-node-version": "^4.2.1",
+    "dockerode": "^3.3.4",
     "eslint": "7.32.0",
     "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#c6605d1",
     "eslint-plugin-flowtype": "5.7.2",
@@ -104,16 +107,17 @@
     "eslint-plugin-no-async-foreach": "0.1.1",
     "eslint-plugin-react": "7.26.0",
     "eslint-plugin-wpcalypso": "5.0.0",
-    "flow-bin": "0.190.1",
-    "jest": "27.2.1",
-    "nock": "13.0.11",
+    "flow-bin": "0.196.3",
+    "jest": "^29.3.1",
+    "jest-environment-jsdom": "^29.3.1",
+    "nock": "13.2.9",
     "prettier": "^2.0.5",
     "publish-please": "5.5.2",
     "rimraf": "3.0.2"
   },
   "dependencies": {
     "@apollo/client": "^3.3.6",
-    "@automattic/vip-go-preflight-checks": "^2.0.12",
+    "@automattic/vip-go-preflight-checks": "^2.0.16",
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.3",
     "chalk": "4.1.2",
@@ -129,7 +133,7 @@
     "ini": "2.0.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "git+https://github.com/Automattic/lando-cli.git#v3.5.2-patch2022_09_05",
+    "lando": "github:automattic/lando-cli.git#3c6fad5",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
@@ -146,5 +150,8 @@
   },
   "optionalDependencies": {
     "keytar": "7.7.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

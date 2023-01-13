@@ -14,13 +14,12 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import { getEnvironmentName } from 'lib/dev-environment/dev-environment-cli';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { addDevEnvConfigurationOptions, getEnvTrackingInfo, handleCLIException, promptForArguments, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { addDevEnvConfigurationOptions, getEnvTrackingInfo, getEnvironmentName, handleCLIException, promptForArguments, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
-import { doesEnvironmentExist, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
+import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
@@ -47,7 +46,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	await trackEvent( 'dev_env_update_command_execute', trackingInfo );
 
 	try {
-		const environmentAlreadyExists = doesEnvironmentExist( slug );
+		const environmentAlreadyExists = await doesEnvironmentExist( getEnvironmentPath( slug ) );
 		if ( ! environmentAlreadyExists ) {
 			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 		}
@@ -70,7 +69,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			elasticsearch: currentInstanceData.elasticsearch,
 			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
 			mariadb: currentInstanceData.mariadb,
-			statsd: currentInstanceData.statsd,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
 			mailhog: currentInstanceData.mailhog,
@@ -95,9 +93,11 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	} catch ( error ) {
 		if ( 'ENOENT' === error.code ) {
 			const message = 'Environment was created before update was supported.\n\nTo update environment please destroy it and create a new one.';
-			handleCLIException( new Error( message ), 'dev_env_update_command_error', trackingInfo );
+			await handleCLIException( new Error( message ), 'dev_env_update_command_error', trackingInfo );
 		} else {
-			handleCLIException( error, 'dev_env_update_command_error', trackingInfo );
+			await handleCLIException( error, 'dev_env_update_command_error', trackingInfo );
 		}
+
+		process.exitCode = 1;
 	}
 } );

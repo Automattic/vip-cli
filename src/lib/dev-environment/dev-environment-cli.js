@@ -74,34 +74,34 @@ declare function promptForComponent( component: string, allowLocal: boolean, def
 
 export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
-	if ( exception instanceof UserError ) {
-		// User errors are handled in global error handler
-		throw exception;
-	} else if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
+	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
 
 		const message = `Environment doesn't exist.\n\n\nTo create a new environment run:\n\n${ createCommand }\n`;
-		console.log( errorPrefix, message );
+		console.error( errorPrefix, message );
+	} else if ( exception instanceof UserError ) {
+		// User errors are handled in global error handler
+		throw exception;
 	} else {
 		let message = exception.message;
 		// if the message has already ERROR prefix we should drop it as we are adding our own cool red Error-prefix
 		message = message.replace( 'ERROR: ', '' );
 
-		console.log( errorPrefix, message );
+		console.error( errorPrefix, message );
 
 		if ( trackKey ) {
 			try {
 				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
-				console.log( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
+				console.warn( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
 			}
 		}
 
 		if ( ! process.env.DEBUG ) {
-			console.log( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
-			console.log( chalk.bold( '\nExample:\n' ) );
-			console.log( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
+			console.error( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
+			console.error( chalk.bold( '\nExample:\n' ) );
+			console.error( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
 		}
 
 		debug( exception );
@@ -134,20 +134,27 @@ const VALIDATION_STEPS = [
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 
-export const validateDependencies = async ( lando: Lando, slug: string ) => {
+export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+	const now = new Date();
 	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
 	const progressTracker = new ProgressTracker( steps );
-	console.log( 'Running validation steps...' );
-	progressTracker.startPrinting();
-	progressTracker.stepRunning( 'docker' );
+	if ( ! quiet ) {
+		console.log( 'Running validation steps...' );
+		progressTracker.startPrinting();
+		progressTracker.stepRunning( 'docker' );
+	}
+
 	try {
 		await validateDockerInstalled( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}
-	progressTracker.stepSuccess( 'docker' );
-	progressTracker.stepSuccess( 'compose' );
-	progressTracker.print();
+
+	if ( ! quiet ) {
+		progressTracker.stepSuccess( 'docker' );
+		progressTracker.stepSuccess( 'compose' );
+		progressTracker.print();
+	}
 
 	try {
 		await validateDockerAccess( lando );
@@ -155,16 +162,25 @@ export const validateDependencies = async ( lando: Lando, slug: string ) => {
 		throw new UserError( exception.message );
 	}
 
-	progressTracker.stepSuccess( 'access' );
-	progressTracker.print();
-
-	if ( slug ) {
-		await verifyDNSResolution( slug );
-		progressTracker.stepSuccess( 'dns' );
+	if ( ! quiet ) {
+		progressTracker.stepSuccess( 'access' );
 		progressTracker.print();
 	}
 
-	progressTracker.stopPrinting();
+	if ( slug ) {
+		await verifyDNSResolution( slug );
+		if ( ! quiet ) {
+			progressTracker.stepSuccess( 'dns' );
+			progressTracker.print();
+		}
+	}
+
+	if ( ! quiet ) {
+		progressTracker.stopPrinting();
+	}
+
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'Validation checks completed in %d ms', duration );
 };
 
 export function getEnvironmentName( options: EnvironmentNameOptions ): string {
@@ -278,7 +294,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		appCode: {
 			mode: 'image',
 		},
-		statsd: false,
 		phpmyadmin: false,
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
@@ -317,12 +332,6 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
-	}
-
-	if ( instanceData.elasticsearch ) {
-		instanceData.statsd = preselectedOptions.statsd || defaultOptions.statsd || false;
-	} else {
-		instanceData.statsd = false;
 	}
 
 	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
@@ -590,7 +599,6 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'wordpress', 'Use a specific WordPress version' )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
 		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
-		.option( 'statsd', 'Enable statsd component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
 		.option( 'xdebug_config', 'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable' )
@@ -598,7 +606,7 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use' )
-		.option( 'mailhog', 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
+		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**

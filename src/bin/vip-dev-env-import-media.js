@@ -14,10 +14,9 @@
  */
 import { trackEvent } from 'lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentName, getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const examples = [
 	{
@@ -39,9 +38,6 @@ command( {
 		const [ filePath ] = unmatchedArgs;
 		const slug = getEnvironmentName( opt );
 
-		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
-
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_import_media_command_execute', trackingInfo );
 
@@ -49,6 +45,7 @@ command( {
 			await importMediaPath( slug, filePath );
 			await trackEvent( 'dev_env_import_media_command_success', trackingInfo );
 		} catch ( error ) {
-			handleCLIException( error, 'dev_env_import_media_command_error', trackingInfo );
+			await handleCLIException( error, 'dev_env_import_media_command_error', trackingInfo );
+			process.exitCode = 1;
 		}
 	} );

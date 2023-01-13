@@ -40,7 +40,6 @@ services:
       command: run.sh
       working_dir: /wp
       environment:
-        STATSD: <%= statsd ? 'enable' : 'disable' %>
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
 <% if ( xdebugConfig ) { %>
         XDEBUG_CONFIG: "<%= xdebugConfig %>"
@@ -67,7 +66,7 @@ services:
     type: compose
     services:
       image: mariadb:<%= mariadb %>
-      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
       ports:
         - ":3306"
       environment:
@@ -96,7 +95,7 @@ services:
   elasticsearch:
     type: compose
     services:
-      image: elasticsearch:7.17.2
+      image: elasticsearch:7.17.8
       command: /usr/local/bin/docker-entrypoint.sh
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
@@ -111,13 +110,6 @@ services:
         - search_data:/usr/share/elasticsearch/data
     volumes:
       search_data:
-<% } %>
-<% if ( statsd ) { %>
-  statsd:
-    type: compose
-    services:
-      image: ghcr.io/automattic/vip-container-images/statsd:v0.9.0
-      command: node stats.js /config/statsd-config.js
 <% } %>
 
   wordpress:
@@ -191,7 +183,7 @@ tooling:
     service: php
     description: "Connect to the DB using mysql client (e.g. allow to run imports)"
     cmd:
-      - mysql -hdatabase -uwordpress -pwordpress wordpress
+      - mysql -hdatabase -uwordpress -pwordpress -Dwordpress
 
 <% function wpVolumes() { %>
         - ./config:/wp/config
