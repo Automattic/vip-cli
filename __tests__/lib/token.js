@@ -1,7 +1,7 @@
 /**
  * Internal dependencies
  */
-import Token, { SERVICE } from 'lib/token';
+import Token, { SERVICE } from '../../src/lib/token';
 
 describe( 'token tests', () => {
 	it( 'should correctly validate token', () => {
@@ -26,6 +26,7 @@ describe( 'token tests', () => {
 		try {
 			token = new Token( rawToken );
 		} catch ( err ) {
+			// Do nothing
 		}
 
 		expect( token ).toBeUndefined();

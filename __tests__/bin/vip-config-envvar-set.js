@@ -1,17 +1,20 @@
+// @flow
+
 /**
  * External dependencies
  */
+import { describe, expect, it, jest } from '@jest/globals';
 
 /**
  * Internal dependencies
  */
-import { setEnvVarCommand } from 'bin/vip-config-envvar-set';
-import command from 'lib/cli/command';
-import { setEnvVar, validateNameWithMessage } from 'lib/envvar/api';
-import { cancel, confirm, promptForValue } from 'lib/envvar/input';
-import { readVariableFromFile } from 'lib/envvar/read-file';
-import { rollbar } from 'lib/rollbar';
-import { trackEvent } from 'lib/tracker';
+import { setEnvVarCommand } from '../../src/bin/vip-config-envvar-set';
+import command from '../../src/lib/cli/command';
+import { setEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
+import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
+import { readVariableFromFile } from '../../src/lib/envvar/read-file';
+import { rollbar } from '../../src/lib/rollbar';
+import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
 	throw 'EXIT'; // can't actually exit the test

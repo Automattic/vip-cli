@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 const path = require( 'node:path' );
 
 /** @type {import('jest').Config} */

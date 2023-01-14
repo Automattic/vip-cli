@@ -5,16 +5,17 @@
  * External dependencies
  */
 import chalk from 'chalk';
+import { setTimeout } from 'timers/promises';
 
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { rollbar } from 'lib/rollbar';
-import { trackEvent } from 'lib/tracker';
-import * as logsLib from 'lib/app-logs/app-logs';
-import * as exit from 'lib/cli/exit';
-import { formatData } from 'lib/cli/format';
+import command from '../lib/cli/command';
+import { rollbar } from '../lib/rollbar';
+import { trackEvent } from '../lib/tracker';
+import * as logsLib from '../lib/app-logs/app-logs';
+import * as exit from '../lib/cli/exit';
+import { formatData } from '../lib/cli/format';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 5000;
@@ -70,6 +71,7 @@ export async function followLogs( opt ): Promise<void> {
 	// Set an initial default delay
 	let delay = DEFAULT_POLLING_DELAY_IN_SECONDS;
 
+	// eslint-disable-next-line no-constant-condition
 	while ( true ) {
 		const limit = isFirstRequest ? opt.limit : LIMIT_MAX;
 
@@ -80,13 +82,16 @@ export async function followLogs( opt ): Promise<void> {
 
 		let logs;
 		try {
+			// eslint-disable-next-line no-await-in-loop
 			logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, limit, after );
 
+			// eslint-disable-next-line no-await-in-loop
 			await trackEvent( 'logs_command_follow_success', {
 				...trackingParams,
 				total: logs?.nodes.length,
 			} );
 		} catch ( error ) {
+			// eslint-disable-next-line no-await-in-loop
 			await trackEvent( 'logs_command_follow_error', { ...trackingParams, error: error.message } );
 
 			// If the first request fails we don't want to retry (it's probably not recoverable)
@@ -113,7 +118,8 @@ export async function followLogs( opt ): Promise<void> {
 			delay = Math.max( ( logs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS ), MIN_POLLING_DELAY_IN_SECONDS );
 		}
 
-		await new Promise( resolve => setTimeout( resolve, delay * 1000 ) );
+		// eslint-disable-next-line no-await-in-loop
+		await setTimeout( delay * 1000 );
 	}
 }
 

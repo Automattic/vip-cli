@@ -13,11 +13,11 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import { currentUserCanImportForApp } from 'lib/site-import/db-file-import';
-import { ProgressTracker } from 'lib/cli/progress';
-import * as exit from 'lib/cli/exit';
-import { capitalize, formatEnvironment, getGlyphForStatus } from 'lib/cli/format';
+import API from '../../lib/api';
+import { currentUserCanImportForApp } from '../../lib/site-import/db-file-import';
+import { ProgressTracker } from '../../lib/cli/progress';
+import * as exit from '../../lib/cli/exit';
+import { capitalize, formatEnvironment, getGlyphForStatus } from '../../lib/cli/format';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -204,6 +204,7 @@ export async function importSqlCheckStatus( {
 					break;
 				}
 			// Intentionally no break to get default case:
+			// eslint-disable-next-line no-fallthrough
 			default:
 				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
 		}
@@ -244,7 +245,8 @@ ${ maybeExitPrompt }
 				const { importStatus, launched } = status;
 				let { importJob } = status;
 
-				let jobStatus, jobSteps = [];
+				let jobStatus,
+					jobSteps = [];
 				if ( env.isK8sResident ) {
 					// in the future the API may provide this in k8s jobs so account for that.
 					// Until then we need to create the importJob from the status object.

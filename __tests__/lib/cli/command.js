@@ -6,7 +6,7 @@
 /**
  * Internal dependencies
  */
-import { containsAppEnvArgument } from 'lib/cli/command';
+import { containsAppEnvArgument } from '../../../src/lib/cli/command';
 
 describe( 'utils/cli/command', () => {
 	describe( 'containsAppEnvArgument', () => {

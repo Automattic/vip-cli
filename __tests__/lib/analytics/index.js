@@ -1,8 +1,8 @@
 /**
  * Internal dependencies
  */
-import Analytics from 'lib/analytics';
-import AnalyticsClientStub from 'lib/analytics/clients/stub';
+import Analytics from '../../../src/lib/analytics';
+import AnalyticsClientStub from '../../../src/lib/analytics/clients/stub';
 
 describe( 'lib/analytics', () => {
 	describe( '.trackEvent()', () => {

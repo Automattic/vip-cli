@@ -17,7 +17,7 @@ import { exec } from 'child_process';
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { startEnvironment } from 'lib/dev-environment/dev-environment-core';
+import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -61,7 +61,7 @@ command()
 				debug( 'Windows platform detected. Applying Docker patch...' );
 
 				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
-					if ( error != null ) {
+					if ( error ) {
 						debug( error );
 						console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
 					} else {

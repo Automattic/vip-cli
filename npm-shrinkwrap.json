@@ -18,6 +18,7 @@
         "cli-columns": "^4.0.0",
         "cli-table": "github:automattic/cli-table#7b14232",
         "configstore": "5.0.1",
+        "copy-dir": "0.4.0",
         "debug": "4.3.4",
         "ejs": "^3.1.8",
         "enquirer": "2.3.6",

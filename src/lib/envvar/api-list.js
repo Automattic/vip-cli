@@ -8,7 +8,7 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
+import API from '../../lib/api';
 
 const query = gql`
 	query GetEnvironmentVariables(

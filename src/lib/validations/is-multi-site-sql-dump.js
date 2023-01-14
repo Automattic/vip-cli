@@ -10,11 +10,11 @@
 /**
  * Internal dependencies
  */
-import { getReadInterface } from 'lib/validations/line-by-line';
-import * as exit from 'lib/cli/exit';
+import { getReadInterface } from '../../lib/validations/line-by-line';
+import * as exit from '../../lib/cli/exit';
 
 const SQL_CREATE_TABLE_IS_MULTISITE_REGEX = /^CREATE TABLE `?(wp_\d+_[a-z0-9_]*|wp_blogs)/i;
-const SQL_CONTAINS_MULTISITE_WP_USERS_REGEX = /\`spam\` tinyint\(2\)|\`deleted\` tinyint\(2\)/i;
+const SQL_CONTAINS_MULTISITE_WP_USERS_REGEX = /`spam` tinyint\(2\)|`deleted` tinyint\(2\)/i;
 
 export function sqlDumpLineIsMultiSite( line: string ): boolean {
 	// determine if we're on a CREATE TABLE statement line what has eg. wp_\d_options OR wp_blogs
@@ -29,6 +29,8 @@ export function sqlDumpLineIsMultiSite( line: string ): boolean {
 }
 
 export function isMultiSiteDumpFile( fileName: string ): Promise<boolean> {
+	// FIXME!!!
+	// eslint-disable-next-line no-async-promise-executor
 	return new Promise( async resolve => {
 		const readInterface = await getReadInterface( fileName );
 		readInterface.on( 'line', line => {

@@ -6,8 +6,8 @@ import { randomBytes } from 'crypto';
 /**
  * Internal dependencies
  */
-import Insecure from 'lib/keychain/insecure';
-import Browser from 'lib/keychain/browser';
+import Insecure from '../../src/lib/keychain/insecure';
+import Browser from '../../src/lib/keychain/browser';
 
 // TODO: Random bytes
 const account = 'vip-cli-test';

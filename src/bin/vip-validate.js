@@ -7,8 +7,8 @@
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { trackEvent } from 'lib/tracker';
+import command from '../lib/cli/command';
+import { trackEvent } from '../lib/tracker';
 
 command( {
 	requiredArgs: 1,

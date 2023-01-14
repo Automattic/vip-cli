@@ -5,11 +5,11 @@
 /**
  * Internal dependencies
  */
-import { getEnvVarCommand } from 'bin/vip-config-envvar-get';
-import command from 'lib/cli/command';
-import { getEnvVar } from 'lib/envvar/api';
-import { rollbar } from 'lib/rollbar';
-import { trackEvent } from 'lib/tracker';
+import { getEnvVarCommand } from '../../src/bin/vip-config-envvar-get';
+import command from '../../src/lib/cli/command';
+import { getEnvVar } from '../../src/lib/envvar/api';
+import { rollbar } from '../../src/lib/rollbar';
+import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
 	throw 'EXIT'; // can't actually exit the test

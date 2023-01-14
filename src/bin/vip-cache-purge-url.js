@@ -12,11 +12,11 @@
 /**
  * Internal dependencies
  */
-import { appQuery, purgeCache } from 'lib/api/cache-purge';
-import command from 'lib/cli/command';
-import { trackEvent } from 'lib/tracker';
-import { readFromFile } from 'lib/read-file';
-import * as exit from 'lib/cli/exit';
+import { appQuery, purgeCache } from '../lib/api/cache-purge';
+import command from '../lib/cli/command';
+import { trackEvent } from '../lib/tracker';
+import { readFromFile } from '../lib/read-file';
+import * as exit from '../lib/cli/exit';
 
 const examples = [
 	{

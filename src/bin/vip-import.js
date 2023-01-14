@@ -7,10 +7,10 @@
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { trackEvent } from 'lib/tracker';
+import command from '../lib/cli/command';
+import { trackEvent } from '../lib/tracker';
 
-command( )
+command()
 	.command( 'sql', 'Import SQL to your database from a file' )
 	.command( 'validate-sql', 'Validate your SQL dump' )
 	.command( 'validate-files', 'Validate your media file library' )

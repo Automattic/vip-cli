@@ -9,10 +9,10 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import API from 'lib/api';
-import { trackEvent } from 'lib/tracker';
-import { rollbar } from 'lib/rollbar';
+import command from '../lib/cli/command';
+import API from '../lib/api';
+import { trackEvent } from '../lib/tracker';
+import { rollbar } from '../lib/rollbar';
 
 command( { format: true } )
 	.argv( process.argv, async () => {

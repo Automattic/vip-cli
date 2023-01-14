@@ -13,7 +13,7 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import * as exit from 'lib/cli/exit';
+import * as exit from '../../lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
 export type PerLineValidationObject = {
@@ -27,24 +27,13 @@ export type PostLineExecutionProcessingParams = {
 	fileName?: string,
 	isImport?: boolean,
 	skipChecks?: string[],
-	searchReplace?: string | array,
-}
-
-function openFile( filename, flags = 'r', mode = 666 ) {
-	return new Promise( ( resolve, reject ) => {
-		fs.open( filename, flags, mode, ( err, fd ) => {
-			if ( err ) {
-				return reject( err );
-			}
-			resolve( fd );
-		} );
-	} );
+	searchReplace?: string | string[],
 }
 
 export async function getReadInterface( filename: string ) {
 	let fd;
 	try {
-		fd = await openFile( filename );
+		fd = await fs.promises.open( filename );
 	} catch ( err ) {
 		exit.withError( 'The file at the provided path is either missing or not readable. Please check the input and try again.' );
 	}
@@ -56,14 +45,14 @@ export async function getReadInterface( filename: string ) {
 	} );
 }
 
-export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject>, searchReplace: string | array ) {
+export async function fileLineValidations( appId: number, envId: number, fileName: string, validations: Array<PerLineValidationObject>, searchReplace: string | string[] ) {
 	const isImport = true;
 	const readInterface = await getReadInterface( fileName );
 
 	debug( 'Validations: ', validations );
 
 	readInterface.on( 'line', line => {
-		validations.map( validation => {
+		validations.forEach( validation => {
 			validation.execute( line );
 		} );
 	} );
@@ -77,7 +66,7 @@ export async function fileLineValidations( appId: number, envId: number, fileNam
 	readInterface.close();
 
 	return Promise.all( validations.map( async validation => {
-		if ( validation.hasOwnProperty( 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
+		if ( Object.prototype.hasOwnProperty.call( validation, 'postLineExecutionProcessing' ) && typeof validation.postLineExecutionProcessing === 'function' ) {
 			return validation.postLineExecutionProcessing( { fileName, isImport, appId, envId, searchReplace } );
 		}
 	} ) );

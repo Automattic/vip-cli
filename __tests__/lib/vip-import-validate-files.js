@@ -8,7 +8,7 @@
 import {
 	folderStructureValidation,
 	isFileSanitized,
-} from 'lib/vip-import-validate-files';
+} from '../../src/lib/vip-import-validate-files';
 
 global.console = { log: jest.fn() };
 

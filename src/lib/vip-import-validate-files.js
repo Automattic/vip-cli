@@ -75,14 +75,14 @@ export const acceptedExtensions = [
 ];
 
 /**
-	* Character validation global variables
+ * Character validation global variables
  *
  * Accepted and prohibited characters for filenames
  */
 
 // Accepted characters in filenames
 // eslint-disable-next-line max-len
-const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', '\'', '×', '@', '`', '?', '*', '!', '\"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
+const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', `'`, '×', '@', '`', '?', '*', '!', '"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
 const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
 
 // Prohibited characters in filenames
@@ -90,7 +90,7 @@ const prohibitedCharacters = [ '+', '%20' ];
 const prohibitedCharactersSet = new Set( prohibitedCharacters );
 
 /**
-	* Recommendations
+ * Recommendations
  *
  * Recommend alternatives to invalid folders or files
  */
@@ -134,15 +134,15 @@ const recommendAcceptableFileNames = () => {
 };
 
 /**
-	* Nested Directory Search
+ * Nested Directory Search
  *
  * Use recursion to identify the nested tree structure of the given media file
-	*
-	* Example media file:
-	*  - Given directory: uploads
-	*   - Nested directories: 2020, 2019, 2018, 2017
-	*    - Nested directories: 01, 02, 03, 04, 05, 06
-	*     - Individual files: image.jpg, image2.jpg, etc.
+ *
+ * Example media file:
+ *  - Given directory: uploads
+ *   - Nested directories: 2020, 2019, 2018, 2017
+ *    - Nested directories: 01, 02, 03, 04, 05, 06
+ *     - Individual files: image.jpg, image2.jpg, etc.
  *
  * @param {string} directory Root directory, or the given (current) directory
  */
@@ -157,7 +157,7 @@ export const findNestedDirectories = directory => {
 		nestedDirectories = fs.readdirSync( directory );
 
 		// Filter out hidden files such as .DS_Store
-		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^\/\.]/g ).test( file ) );
+		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^/.]/g ).test( file ) );
 
 		nestedDirectories.forEach( dir => {
 			// Concatenate the file path of the parent directory with the nested directory
@@ -189,8 +189,8 @@ export const findNestedDirectories = directory => {
  *
  * Identify the index position of each directory to validate the folder structure
  *
- *	@param {string} folderPath Path of the entire folder structure
- *  @param {Boolean} sites Check if site is a multisite or single site
+ * @param {string}  folderPath Path of the entire folder structure
+ * @param {boolean} sites      Check if site is a multisite or single site
  *  @return {Object} indexes
  */
 const getIndexPositionOfFolders = ( folderPath, sites ) => {
@@ -201,18 +201,18 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
 	const directories = pathMutate.split( '/' );
 
 	/**
-		* Upload folder
-		*
-		* Find if an `uploads` folder exists and return its index position
-		*/
+	 * Upload folder
+	 *
+	 * Find if an `uploads` folder exists and return its index position
+	 */
 	const uploadsIndex = directories.indexOf( 'uploads' );
 
 	/**
-		* Multisite folder
-		*
-		* If a sites directory exists, find the directory and return its index position
-		* Find if a siteID folder exists via regex, then obtain that value
-		*/
+	 * Multisite folder
+	 *
+	 * If a sites directory exists, find the directory and return its index position
+	 * Find if a siteID folder exists via regex, then obtain that value
+	 */
 	if ( sites ) {
 		sitesIndex = directories.indexOf( 'sites' );
 
@@ -229,11 +229,11 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
 	}
 
 	/**
-		* Year folder
-		*
-		* Find if a year folder exists via a four digit regex matching pattern,
-		* then obtain that value
-		*/
+	 * Year folder
+	 *
+	 * Find if a year folder exists via a four digit regex matching pattern,
+	 * then obtain that value
+	 */
 	const regexYear = /\b\d{4}\b/g;
 	const year = regexYear.exec( pathMutate ); // Returns an array with the regex-matching value
 
@@ -242,11 +242,11 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
 	}
 
 	/**
-		* Month folder
-		*
-		* Find if a month folder exists via a two digit regex matching pattern,
-		* then obtain that value
-		*/
+	 * Month folder
+	 *
+	 * Find if a month folder exists via a two digit regex matching pattern,
+	 * then obtain that value
+	 */
 	const regexMonth = /\b\d{2}\b/g;
 	const month = regexMonth.exec( pathMutate ); // Returns an array with the regex-matching value
 
@@ -283,7 +283,7 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
  * - Single sites: `uploads/year/month`
  *
  * @param {string} folderPath Path of the entire folder structure
-	* @returns {string|null} Returns null if the folder structure is good; else, returns the folder path
+ * @return {string|null} Returns null if the folder structure is good; else, returns the folder path
  */
 const singleSiteValidation = folderPath => {
 	let errors = 0; // Tally individual folder errors
@@ -298,8 +298,8 @@ const singleSiteValidation = folderPath => {
 	} = getIndexPositionOfFolders( folderPath );
 
 	/**
-		* Logging
-		*/
+	 * Logging
+	 */
 
 	// Uploads folder
 	if ( uploadsIndex === 0 ) {
@@ -348,7 +348,7 @@ const singleSiteValidation = folderPath => {
  * - Multisites: `uploads/sites/siteID/year/month`
  *
  * @param {string} folderPath Path of the entire folder structure
-	* @returns {string|null} Returns null if the folder structure is good; else, returns the folder path
+ * @return {string|null} Returns null if the folder structure is good; else, returns the folder path
  */
 const multiSiteValidation = folderPath => {
 	let errors = 0; // Tally individual folder errors
@@ -365,8 +365,8 @@ const multiSiteValidation = folderPath => {
 	} = getIndexPositionOfFolders( folderPath, true );
 
 	/**
-		* Logging
-		*/
+	 * Logging
+	 */
 
 	// Uploads folder
 	if ( uploadsIndex === 0 ) {
@@ -427,7 +427,7 @@ const multiSiteValidation = folderPath => {
  * Validate folder structures and identify folders that don't follow the recommended structure
  *
  * @param {Array} folderStructureKeys Array of paths for each folder
-	* @return {Array} All the erroneous folder paths in an array
+ * @return {Array} All the erroneous folder paths in an array
  */
 export const folderStructureValidation = folderStructureKeys => {
 	// Collect all the folder paths that aren't in the recommended structure
@@ -459,13 +459,13 @@ export const folderStructureValidation = folderStructureKeys => {
 };
 
 /**
-	* Character validation
+ * Character validation
  *
  * This logic is based on the WordPress core function `sanitize_file_name()`
  * https://developer.wordpress.org/reference/functions/sanitize_file_name/
  *
  * @param {string} file - The current file being validated
- * @returns {Boolean} - Checks if the filename has been sanitized
+ * @return {boolean} - Checks if the filename has been sanitized
  */
 export const isFileSanitized = file => {
 	const filename = path.basename( file );
@@ -495,7 +495,7 @@ export const isFileSanitized = file => {
  * panda_test-4000x6000@2x.jpg (retina display)
  *
  * @param {string} filename The current file being validated
- * @returns {Array} Returns an array of the matching regex characters
+ * @return {Array} Returns an array of the matching regex characters
  */
 const identifyIntermediateImage = filename => {
 	const regex = /(-|_)?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
@@ -539,8 +539,8 @@ export const doesImageHaveExistingSource = file => {
  */
 
 // Log errors for files with invalid file extensions and recommend accepted file types
-export const logErrorsForInvalidFileTypes = invalidFiles => {
-	invalidFiles.map( file => {
+export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ) => {
+	invalidFiles.forEach( file => {
 		console.error( chalk.red( '✕' ), 'File extensions: Invalid file type for file: ', chalk.cyan( `${ file }` ) );
 	} );
 
@@ -551,8 +551,8 @@ export const logErrorsForInvalidFileTypes = invalidFiles => {
 };
 
 // Log errors for files with invalid filenames and show a list of accepted/prohibited chars
-export const logErrorsForInvalidFilenames = invalidFiles => {
-	invalidFiles.map( file => {
+export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ) => {
+	invalidFiles.forEach( file => {
 		console.error( chalk.red( '✕' ), 'Character validation: Invalid filename for file: ', chalk.cyan( `${ file }` ) );
 	} );
 

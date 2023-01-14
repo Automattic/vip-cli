@@ -13,12 +13,12 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { formatData } from 'lib/cli/format';
-import { appQuery, getEnvVars } from 'lib/envvar/api';
-import { debug, getEnvContext } from 'lib/envvar/logging';
-import { rollbar } from 'lib/rollbar';
-import { trackEvent } from 'lib/tracker';
+import command from '../lib/cli/command';
+import { formatData } from '../lib/cli/format';
+import { appQuery, getEnvVars } from '../lib/envvar/api';
+import { debug, getEnvContext } from '../lib/envvar/logging';
+import { rollbar } from '../lib/rollbar';
+import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip @mysite.develop config envvar get-all';
 

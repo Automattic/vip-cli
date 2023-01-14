@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 /**
  * @format
  */
@@ -13,8 +14,16 @@ import os from 'os';
  * Internal dependencies
  */
 
-import { getEnvironmentName, getEnvironmentStartCommand, processComponentOptionInput, promptForText, promptForComponent, promptForArguments, setIsTTY } from 'lib/dev-environment/dev-environment-cli';
-import * as devEnvCore from 'lib/dev-environment/dev-environment-core';
+import {
+	getEnvironmentName,
+	getEnvironmentStartCommand,
+	processComponentOptionInput,
+	promptForText,
+	promptForComponent,
+	promptForArguments,
+	setIsTTY,
+} from '../../../src/lib/dev-environment/dev-environment-cli';
+import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
