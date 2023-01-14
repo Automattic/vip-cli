@@ -3,7 +3,7 @@
 /**
  * External dependencies
  */
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 /**
  * Internal dependencies
@@ -63,13 +63,19 @@ describe( 'vip config envvar delete', () => {
 	} );
 } );
 
+const mockConfirm: JestMockFn<[string], Promise<boolean>> = confirm;
+const mockValidateNameWithMessage: JestMockFn<[string], boolean> = validateNameWithMessage;
+const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = promptForValue;
+const mockDeleteEnvVar: JestMockFn<[number, number, string], Promise<void>> = deleteEnvVar;
+const mockTrackEvent: JestMockFn<[], Promise<Response>> = trackEvent;
+
 describe( 'deleteEnvVarCommand', () => {
 	let args, opts;
 	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip @mysite.develop config envvar delete' ) } );
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];
 
-	function setFixtures( name: string, skipConfirmation = '' ) {
+	function setFixtures( name: string, skipConfirmation: string = '' ) {
 		args = [ name ];
 		opts = {
 			app: {
@@ -90,15 +96,15 @@ describe( 'deleteEnvVarCommand', () => {
 		jest.clearAllMocks();
 
 		// Restore mock implementations we override in tests.
-		confirm.mockImplementation( () => true );
-		validateNameWithMessage.mockImplementation( () => true );
+		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
+		mockValidateNameWithMessage.mockImplementation( () => true );
 	} );
 
 	it( 'validates the name, prompts for confirmation, deletes the variable, and prints success', async () => {
 		const name = 'TEST_VARIABLE';
 
 		setFixtures( name );
-		promptForValue.mockImplementation( () => Promise.resolve( name ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
 
 		await deleteEnvVarCommand( args, opts );
 
@@ -107,7 +113,7 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( confirm ).toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully deleted environment variable' ) );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -116,7 +122,7 @@ describe( 'deleteEnvVarCommand', () => {
 		const skipConfirmation = 'yes';
 
 		setFixtures( name, skipConfirmation );
-		promptForValue.mockImplementation( () => Promise.resolve( name ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
 
 		await deleteEnvVarCommand( args, opts );
 
@@ -125,7 +131,7 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully deleted environment variable' ) );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -134,8 +140,8 @@ describe( 'deleteEnvVarCommand', () => {
 		const cancelEvent = [ 'envvar_delete_user_cancelled_confirmation', eventPayload ];
 
 		setFixtures( name );
-		promptForValue.mockImplementation( () => Promise.resolve( name ) );
-		confirm.mockImplementation( () => Promise.resolve( false ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
+		mockConfirm.mockImplementation( () => Promise.resolve( false ) );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
@@ -144,7 +150,7 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( confirm ).toHaveBeenCalled();
 		expect( cancel ).toHaveBeenCalled();
 		expect( deleteEnvVar ).not.toHaveBeenCalled();
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, cancelEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, cancelEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -153,17 +159,18 @@ describe( 'deleteEnvVarCommand', () => {
 		const errorEvent = [ 'envvar_delete_invalid_name', eventPayload ];
 
 		setFixtures( name );
-		validateNameWithMessage.mockImplementation( () => false );
+		mockValidateNameWithMessage.mockImplementation( () => false );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
+		// $FlowIgnore[method-unbinding] No idea how to fix this
 		expect( process.exit ).toHaveBeenCalledWith( 1 );
 
 		expect( promptForValue ).not.toHaveBeenCalled();
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( deleteEnvVar ).not.toHaveBeenCalled();
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -173,8 +180,8 @@ describe( 'deleteEnvVarCommand', () => {
 		const errorEvent = [ 'envvar_delete_mutation_error', eventPayload ];
 
 		setFixtures( name );
-		promptForValue.mockImplementation( () => Promise.resolve( name ) );
-		deleteEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
+		mockDeleteEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 
@@ -182,7 +189,7 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
 		expect( rollbar.error ).toHaveBeenCalledWith( thrownError );
 	} );
 } );
