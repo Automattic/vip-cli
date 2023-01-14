@@ -77,8 +77,8 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=14.14.0",
-    "npm": ">=6"
+    "node": ">=16.11.0",
+    "npm": ">=8"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
