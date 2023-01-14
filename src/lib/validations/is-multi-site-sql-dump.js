@@ -28,25 +28,21 @@ export function sqlDumpLineIsMultiSite( line: string ): boolean {
 	return false;
 }
 
-export function isMultiSiteDumpFile( fileName: string ): Promise<boolean> {
-	// FIXME!!!
-	// eslint-disable-next-line no-async-promise-executor
-	return new Promise( async resolve => {
-		const readInterface = await getReadInterface( fileName );
-		readInterface.on( 'line', line => {
-			const result = sqlDumpLineIsMultiSite( line );
-			if ( true === result ) {
-				resolve( true );
-			}
-		} );
-
-		readInterface.on( 'error', () => {
-			exit.withError(
-				'An error was encountered while reading your SQL dump file.  Please verify the file contents.'
-			);
-		} );
-		// Block until the processing completes
-		await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
-		resolve( false );
+export async function isMultiSiteDumpFile( fileName: string ): Promise<boolean> {
+	const readInterface = await getReadInterface( fileName );
+	readInterface.on( 'line', line => {
+		const result = sqlDumpLineIsMultiSite( line );
+		if ( true === result ) {
+			return true;
+		}
 	} );
+
+	readInterface.on( 'error', () => {
+		exit.withError(
+			'An error was encountered while reading your SQL dump file.  Please verify the file contents.'
+		);
+	} );
+	// Block until the processing completes
+	await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
+	return false;
 }
