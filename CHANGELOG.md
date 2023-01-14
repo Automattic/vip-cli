@@ -1,10 +1,10 @@
 ## Changelog
 
-# 2.25.1
+### 2.25.1
 
 - #1239 Downgrade Apollo client to 3.3.6
 
-# 2.25.0
+### 2.25.0
 
 - #1233 Update @automattic/vip-go-preflight-checks to 2.0.16
 - #1232 fix(dev-env): Make environment existence check more robust
@@ -39,15 +39,15 @@
 - #1196 fix(dev-env): Fix ambiguous short option for MailHog/MariaDB
 - #1195 fix(dev-env): increase max number of event listeners for AsyncEvents
 
-## 2.24.2 (22 Dec 2022)
+### 2.24.2 (22 Dec 2022)
 
 - #1219 fix(dev-env): Fix search/replace on SQL file import
 
-## 2.24.1 (10 Dec 2022)
+### 2.24.1 (10 Dec 2022)
 
 - #1193 Fix regression in vip dev-env import sql related to the fact we don't mount User's home dir anymore
 
-## 2.24.0 (06 Dec 2022)
+### 2.24.0 (06 Dec 2022)
 
 - #1139 fix(dev-env): Fall back to copy when rename fails due to EXDEV
 - #1170 [dev-env] Substitute the check for forward slash to with a cross-platform regex when processing component argument value
@@ -65,14 +65,14 @@
 - #1188 fix: Make bin files executables
 - #1189 refactor(dev-env): Bootstrap Lando only once
 
-## 2.23.0 (11 Nov 2022)
+### 2.23.0 (11 Nov 2022)
 
 - #1169 Preflight Validation: Change return code on error
 - #1095 Harmonia Pre Deploy Validation: Add `validate` command
 - #1156 Validate env before resolving path
 - #1167 dev-env: Fix bug in getVersionList() when path doesn't exist
 
-## 2.22.0 (2 Nov 2022)
+### 2.22.0 (2 Nov 2022)
 
 #1165  Add caching type policy for `WPSite` data
 #1164  Fix regExp to categorize multisite tables during SQL Imports
