@@ -71,7 +71,6 @@ function getLandoConfig() {
 			// Plugins we need:
 			// '@lando/compose',
 			// '@lando/mailhog',
-			// '@lando/memcached',
 			// '@lando/phpmyadmin',
 			// The rest we don't need
 			'@lando/acquia',
@@ -89,6 +88,7 @@ function getLandoConfig() {
 			'@lando/lemp',
 			'@lando/mariadb',
 			'@lando/mean',
+			'@lando/memcached',
 			'@lando/mongo',
 			'@lando/mssql',
 			'@lando/mysql',
