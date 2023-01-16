@@ -23,12 +23,12 @@ describe( 'utils/cli/format', () => {
 				expected: [ '{"json":"json with spaces"}' ],
 			},
 			{
-				input: [ '{ "json" : "json with spaces outside strings" }' ],
-				expected: [ '{ "json" : "json with spaces outside strings" }' ],
+				input: [ '{ "json"     :    "json with spaces outside strings"     }' ],
+				expected: [ '{ "json"     :    "json with spaces outside strings"     }' ],
 			},
 			{
-				input: [ '{ "json" : "spaces-outside-strings-only" }' ],
-				expected: [ '{ "json" : "spaces-outside-strings-only" }' ],
+				input: [ '{ "json" : "spaces-outside-strings-only"      }' ],
+				expected: [ '{ "json" : "spaces-outside-strings-only"      }' ],
 			},
 			{
 				input: [ '{"json":broken json with spaces}' ],
