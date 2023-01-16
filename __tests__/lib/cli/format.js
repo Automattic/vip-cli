@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import { requoteArgs } from 'lib/cli/format';
+import { requoteArgs } from '../../../src/lib/cli/format';
 
 describe( 'utils/cli/format', () => {
 	describe( 'requoteArgs', () => {
