@@ -6,10 +6,10 @@ import fetch from 'node-fetch';
 /**
  * Internal dependencies
  */
-import Token from 'lib/token';
-import env from 'lib/env';
-import { createProxyAgent } from 'lib/http/proxy-agent';
-import { API_HOST } from 'lib/api';
+import Token from '../../lib/token';
+import env from '../../lib/env';
+import { createProxyAgent } from '../../lib/http/proxy-agent';
+import { API_HOST } from '../../lib/api';
 
 const debug = require( 'debug' )( '@automattic/vip:http' );
 
@@ -19,9 +19,9 @@ const debug = require( 'debug' )( '@automattic/vip:http' );
  *
  * This is simply a wrapper around node-fetch
  *
- * @param {string} path API path to pass to `fetch` -- will be prefixed by the API_HOST
- * @param {object} options options to pass to `fetch`
- * @returns {Promise} Return value of the `fetch` call
+ * @param {string} path    API path to pass to `fetch` -- will be prefixed by the API_HOST
+ * @param {Object} options options to pass to `fetch`
+ * @return {Promise} Return value of the `fetch` call
  */
 export default async ( path, options = {} ) => {
 	let url = path;

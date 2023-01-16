@@ -8,7 +8,7 @@
 /**
  * Internal dependencies
  */
-import { getFileMD5Hash, getFileMeta, getPartBoundaries } from 'lib/client-file-uploader';
+import { getFileMD5Hash, getFileMeta, getPartBoundaries } from '../../src/lib/client-file-uploader';
 
 describe( 'client-file-uploader', () => {
 	describe( 'getFileMeta()', () => {

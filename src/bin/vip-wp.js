@@ -15,15 +15,15 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import API, { API_HOST, disableGlobalGraphQLErrorHandling } from 'lib/api';
-import commandWrapper, { getEnvIdentifier } from 'lib/cli/command';
-import * as exit from 'lib/cli/exit';
-import { formatEnvironment, requoteArgs } from 'lib/cli/format';
-import { confirm } from 'lib/cli/prompt';
-import { trackEvent } from 'lib/tracker';
+import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
+import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { formatEnvironment, requoteArgs } from '../lib/cli/format';
+import { confirm } from '../lib/cli/prompt';
+import { trackEvent } from '../lib/tracker';
 import Token from '../lib/token';
-import { rollbar } from 'lib/rollbar';
-import { createProxyAgent } from 'lib/http/proxy-agent';
+import { rollbar } from '../lib/rollbar';
+import { createProxyAgent } from '../lib/http/proxy-agent';
 
 const debug = debugLib( '@automattic/vip:wp' );
 
@@ -134,7 +134,7 @@ const cancelCommand = async guid => {
 		`,
 			variables: {
 				input: {
-					guid: guid,
+					guid,
 				},
 			},
 		} );
@@ -208,7 +208,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		currentJob = await launchCommandAndGetStreams( {
 			socket: currentJob.socket,
 			guid: cliCommand.guid,
-			inputToken: inputToken,
+			inputToken,
 			offset: currentOffset,
 		} );
 
@@ -331,7 +331,7 @@ commandWrapper( {
 		let countSIGINT = 0;
 
 		const mutableStdout = new Writable( {
-			write: function( chunk, encoding, callback ) {
+			write( chunk, encoding, callback ) {
 				if ( ! this.muted ) {
 					process.stdout.write( chunk, encoding );
 				}
@@ -435,7 +435,7 @@ commandWrapper( {
 			currentJob = await launchCommandAndGetStreams( {
 				socket,
 				guid: cliCommand.guid,
-				inputToken: inputToken,
+				inputToken,
 			} );
 
 			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );

@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 /* eslint-disable id-length */
 
 /**
@@ -11,9 +12,9 @@ import { dockerComposify } from 'lando/lib/utils';
  */
 
 /**
- * @param {Docker} docker Docker instance
+ * @param {Docker} docker  Docker instance
  * @param {string} project Project slug
- * @returns {Promise<ContainerInfo[]>} List of containers
+ * @return {Promise<ContainerInfo[]>} List of containers
  */
 export function getContainersForProject( docker, project ) {
 	const prefix = dockerComposify( project );
@@ -25,8 +26,8 @@ export function getContainersForProject( docker, project ) {
 }
 
 /**
- * @param {Docker} docker Docker instance
- * @param {string[]} ids List of container IDs to kill
+ * @param {Docker}   docker Docker instance
+ * @param {string[]} ids    List of container IDs to kill
  */
 export async function killContainers( docker, ids ) {
 	const containers = ids.map( id => docker.getContainer( id ) );
@@ -34,7 +35,7 @@ export async function killContainers( docker, ids ) {
 }
 
 /**
- * @param {Docker} docker Docker instance
+ * @param {Docker}           docker  Docker instance
  * @param {string|undefined} project Project slug
  */
 export async function killProjectContainers( docker, project ) {

@@ -12,10 +12,10 @@
 /**
  * Internal dependencies
  */
-import { getCurrentUserInfo } from 'lib/api/user';
-import command from 'lib/cli/command';
-import { trackEvent } from 'lib/tracker';
-import * as exit from 'lib/cli/exit';
+import { getCurrentUserInfo } from '../lib/api/user';
+import command from '../lib/cli/command';
+import { trackEvent } from '../lib/tracker';
+import * as exit from '../lib/cli/exit';
 
 export async function whoamiCommand() {
 	const trackingParams = {

@@ -8,7 +8,7 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
+import API from '../../lib/api';
 
 export default async function( app: string | number, fields: ?any, fragments: ?string ): Promise<any> {
 	if ( ! fields ) {

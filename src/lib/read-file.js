@@ -11,7 +11,7 @@ import { promises as fs } from 'fs';
 /**
  * Internal dependencies
  */
-import * as exit from 'lib/cli/exit';
+import * as exit from '../lib/cli/exit';
 
 export async function readFromFile( path ): Promise<string> {
 	const data = await fs.readFile( path, 'binary' )

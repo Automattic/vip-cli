@@ -16,6 +16,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
+import type Lando from 'lando';
 
 /**
  * Internal dependencies
@@ -40,7 +41,6 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
-import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -214,6 +214,7 @@ export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOpti
 	for ( const envName of allEnvNames ) {
 		try {
 			console.log( '\n' );
+			// eslint-disable-next-line no-await-in-loop
 			await printEnvironmentInfo( lando, envName, options );
 		} catch ( error ) {
 			if ( error instanceof UserError ) {
@@ -297,7 +298,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	/**
 	 ***********************************
 	 * BACKWARDS COMPATIBILITY SECTION
-	 ***********************************/
+	 **********************************
+	 */
 
 	// REMOVEME after the wheel of time spins around few times
 	if ( instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled ) {
@@ -317,9 +319,9 @@ export function readEnvironmentData( slug: string ): InstanceData {
 /**
  * Writes the instance data.
  *
- * @param {string} slug Env slug
+ * @param {string}       slug Env slug
  * @param {InstanceData} data instance data
- * @returns {Promise} Promise
+ * @return {Promise} Promise
  */
 export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<undefined> {
 	debug( 'Will try to write instance data for environment', slug );
@@ -525,7 +527,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - If there is a newer version of the WordPress version currently used
  *   - A choice to use a different image
  *
- * @param  {Object=} slug slug
+ * @param {Object=} slug slug
  * @return {boolean} boolean
  */
 async function updateWordPressImage( slug: string ): Promise<boolean> {
@@ -624,9 +626,10 @@ export async function fetchVersionList(): Promise<string> {
 
 /**
  * Encapsulates the logic for determining if a file is expired by an arbitrary TTL
- * @param  {string} cacheFile uri of cache file
- * @param  {number} ttl time to live in seconds
- * @returns {boolean} version list expired true/false
+ *
+ * @param {string} cacheFile uri of cache file
+ * @param {number} ttl       time to live in seconds
+ * @return {boolean} version list expired true/false
  */
 function isVersionListExpired( cacheFile: string, ttl: number ): boolean {
 	const stats = fs.statSync( cacheFile );

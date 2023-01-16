@@ -20,8 +20,8 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import http from 'lib/api/http';
-import { MB_IN_BYTES } from 'lib/constants/file-size';
+import http from '../lib/api/http';
+import { MB_IN_BYTES } from '../lib/constants/file-size';
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -99,24 +99,22 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 	);
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
-	return new Promise( async resolve => {
-		const fileSize = await getFileSize( fileName );
+	const fileSize = await getFileSize( fileName );
 
-		const basename = path.basename( fileName );
-		// TODO Validate File basename...  encodeURIComponent, maybe...?
+	const basename = path.basename( fileName );
+	// TODO Validate File basename...  encodeURIComponent, maybe...?
 
-		const mimeType = await detectCompressedMimeType( fileName );
-		// TODO Only allow a subset of Mime Types...?
+	const mimeType = await detectCompressedMimeType( fileName );
+	// TODO Only allow a subset of Mime Types...?
 
-		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
+	const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
-		resolve( {
-			basename,
-			fileName,
-			fileSize,
-			isCompressed,
-		} );
-	} );
+	return {
+		basename,
+		fileName,
+		fileSize,
+		isCompressed,
+	};
 }
 
 export async function uploadImportSqlFileToS3( {

@@ -8,15 +8,15 @@
 /**
  * External dependencies
  */
-import { trackEventWithEnv } from 'lib/tracker';
-import * as exit from 'lib/cli/exit';
+import { trackEventWithEnv } from '../lib/tracker';
+import * as exit from '../lib/cli/exit';
 
 /**
  * Internal dependencies
  */
-import { isSupportedApp } from 'lib/media-import/media-file-import';
-import command from 'lib/cli/command';
-import { MediaImportProgressTracker } from 'lib/media-import/progress';
+import { isSupportedApp } from '../lib/media-import/media-file-import';
+import command from '../lib/cli/command';
+import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 
 const appQuery = `

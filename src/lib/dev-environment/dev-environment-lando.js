@@ -1,7 +1,5 @@
-/**
- * @flow
- * @format
- */
+// @flow
+// @format
 
 /**
  * External dependencies
@@ -32,7 +30,7 @@ const debug = debugLib( DEBUG_KEY );
 let landoConfRoot;
 
 /**
- * @returns {string} User configuration root directory (aka userConfRoot in Lando)
+ * @return {string} User configuration root directory (aka userConfRoot in Lando)
  */
 function getLandoUserConfigurationRoot() {
 	if ( ! landoConfRoot ) {
@@ -43,7 +41,7 @@ function getLandoUserConfigurationRoot() {
 }
 
 /**
- * @returns {object} Lando configuration
+ * @return {Object} Lando configuration
  */
 function getLandoConfig() {
 	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
@@ -322,6 +320,7 @@ async function getExtraServicesConnections( lando, app ) {
 			continue;
 		}
 
+		// eslint-disable-next-line no-await-in-loop
 		const containerScan = service?.id ? await lando.engine.docker.scan( service?.id ) : null;
 		if ( containerScan?.NetworkSettings?.Ports ) {
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
@@ -401,7 +400,7 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
  * This function tries to detect such scenario and remove the orphant. So that regular flow
  * can safelly add a network and a new proxy container.
  *
- * @param {object} lando Bootstrapped Lando object
+ * @param {Object} lando Bootstrapped Lando object
  */
 async function ensureNoOrphantProxyContainer( lando: Lando ) {
 	const proxyContainerName = lando.config.proxyContainer;

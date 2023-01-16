@@ -9,7 +9,7 @@
 /**
  * Internal dependencies
  */
-import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
+import { sqlDumpLineIsMultiSite } from '../../../src/lib/validations/is-multi-site-sql-dump';
 
 describe( 'is-multi-site-sql-dump', () => {
 	describe( 'sqlDumpLineIsMultiSite', () => {

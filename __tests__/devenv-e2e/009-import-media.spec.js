@@ -59,7 +59,6 @@ describe( 'vip dev-env import media', () => {
 		const uploadsPath = path.join( getEnvironmentPath( slug ), 'uploads' );
 		const file = path.join( uploadsPath, path.basename( __filename ) );
 
-		// eslint-disable-next-line jest/no-truthy-falsy
 		return expect( stat( file ) ).resolves.toBeTruthy();
 	} );
 } );

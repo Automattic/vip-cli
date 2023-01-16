@@ -14,9 +14,8 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { appQuery, appQueryFragments } from 'lib/config/software';
-import { getUpdateResult, promptForUpdate, triggerUpdate } from '../lib/config/software';
+import command from '../lib/cli/command';
+import { appQuery, appQueryFragments, getUpdateResult, promptForUpdate, triggerUpdate } from '../lib/config/software';
 import { ProgressTracker } from '../lib/cli/progress';
 import UserError from '../lib/user-error';
 import { trackEvent } from '../lib/tracker';

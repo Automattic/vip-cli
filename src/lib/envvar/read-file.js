@@ -10,7 +10,7 @@
 /**
  * Internal dependencies
  */
-import { debug } from 'lib/envvar/logging';
+import { debug } from '../../lib/envvar/logging';
 import { readFromFile } from '../read-file';
 
 export async function readVariableFromFile( path ): Promise<string> {

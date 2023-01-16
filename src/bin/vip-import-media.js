@@ -15,12 +15,12 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import API from 'lib/api';
+import command from '../lib/cli/command';
+import API from '../lib/api';
 // eslint-disable-next-line no-duplicate-imports
-import { trackEventWithEnv } from 'lib/tracker';
-import { formatEnvironment } from 'lib/cli/format';
-import { MediaImportProgressTracker } from 'lib/media-import/progress';
+import { trackEventWithEnv } from '../lib/tracker';
+import { formatEnvironment } from '../lib/cli/format';
+import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 
 const appQuery = `

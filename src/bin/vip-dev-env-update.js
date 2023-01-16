@@ -16,11 +16,10 @@ import chalk from 'chalk';
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, getEnvTrackingInfo, getEnvironmentName, handleCLIException, promptForArguments, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );

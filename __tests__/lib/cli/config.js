@@ -35,18 +35,19 @@ describe( 'utils/cli/config', () => {
 		// An array of files would've been nicer but it doesn't play well with jest.doMock
 		if ( ! files.local ) {
 			jest.doMock( 'root/config/config.local.json', () => {
-				throw new Error( );
+				throw new Error();
 			} );
 		}
 		if ( ! files.publish ) {
 			jest.doMock( 'root/config/config.publish.json', () => {
-				throw new Error( );
+				throw new Error();
 			} );
 		}
 		try {
 			const config = require( 'lib/cli/config' );
 			expect( config.default ).toMatchObject( expected );
 		} catch ( error ) {
+			// eslint-disable-next-line jest/no-conditional-expect
 			expect( hasError ).toBe( true );
 		}
 	} );

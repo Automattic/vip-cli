@@ -16,10 +16,10 @@ import { replace } from '@automattic/vip-search-replace';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import { confirm } from 'lib/cli/prompt';
-import { getFileSize } from 'lib/client-file-uploader';
-import * as exit from 'lib/cli/exit';
+import { trackEvent } from '../lib/tracker';
+import { confirm } from '../lib/cli/prompt';
+import { getFileSize } from '../lib/client-file-uploader';
+import * as exit from '../lib/cli/exit';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
@@ -93,7 +93,7 @@ export function getReadAndWriteStreams( {
 				debug( 'Outputting to the provided output stream' );
 			}
 			break;
-		default:
+		default: {
 			const tmpOutFile = path.join( makeTempDir(), path.basename( fileName ) );
 			writeStream = fs.createWriteStream( tmpOutFile );
 			outputFileName = tmpOutFile;
@@ -101,6 +101,7 @@ export function getReadAndWriteStreams( {
 			debug( `Outputting to file: ${ outputFileName }` );
 
 			break;
+		}
 	}
 
 	return {

@@ -12,7 +12,7 @@ import fetch, { Response } from 'node-fetch';
 /**
  * Internal dependencies
  */
-import { validate } from 'lib/validations/sql';
+import { validate } from '../../../src/lib/validations/sql';
 
 const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );
 

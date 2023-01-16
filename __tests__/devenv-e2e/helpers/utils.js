@@ -1,4 +1,5 @@
-/* eslint-disable valid-jsdoc */
+/* eslint-disable jsdoc/valid-types */
+
 /**
  * External dependencies
  */
@@ -13,7 +14,7 @@ import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 let id = 0;
 
 /**
- * @returns {string} Project slug
+ * @return {string} Project slug
  */
 export function getProjectSlug() {
 	++id;
@@ -24,7 +25,7 @@ export function getProjectSlug() {
 
 /**
  * @param {string|undefined} xdgDataHome XDG Data Home
- * @returns {NodeJS.ProcessEnv} Environment
+ * @return {NodeJS.ProcessEnv} Environment
  */
 export function prepareEnvironment( xdgDataHome ) {
 	const env = {
@@ -46,7 +47,7 @@ export function prepareEnvironment( xdgDataHome ) {
 
 /**
  * @param {string} slug Environment slug
- * @returns {Promise<boolean>} Whether the environment exists
+ * @return {Promise<boolean>} Whether the environment exists
  */
 export function checkEnvExists( slug ) {
 	return doesEnvironmentExist( getEnvironmentPath( slug ) );
@@ -54,9 +55,9 @@ export function checkEnvExists( slug ) {
 
 /**
  * @param {import('./cli-test').CliTest} cliTest CLI Test instance
- * @param {string} slug Environment slug
- * @param {NodeJS.ProcessEnv} env Environment
- * @param {string[]} options Environment creation options
+ * @param {string}                       slug    Environment slug
+ * @param {NodeJS.ProcessEnv}            env     Environment
+ * @param {string[]}                     options Environment creation options
  */
 export async function createAndStartEnvironment( cliTest, slug, env, options = [] ) {
 	let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ].concat( options ), { env }, true );
@@ -71,8 +72,8 @@ export async function createAndStartEnvironment( cliTest, slug, env, options = [
 
 /**
  * @param {import('./cli-test').CliTest} cliTest CLI Test instance
- * @param {string} slug Environment slug
- * @param {NodeJS.ProcessEnv} env Environment
+ * @param {string}                       slug    Environment slug
+ * @param {NodeJS.ProcessEnv}            env     Environment
  */
 export async function destroyEnvironment( cliTest, slug, env ) {
 	const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );

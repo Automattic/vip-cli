@@ -1,3 +1,4 @@
+// @flow
 
 /**
  * External dependencies
@@ -7,7 +8,7 @@ import keytar from 'keytar';
 /**
  * Internal dependencies
  */
-import Keychain from './keychain';
+import type { Keychain } from './keychain';
 
 export default class Secure implements Keychain {
 	getPassword( service ) {
