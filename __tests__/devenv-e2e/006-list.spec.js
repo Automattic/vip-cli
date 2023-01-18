@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
@@ -16,6 +16,7 @@ import { CliTest } from './helpers/cli-test';
 import { checkEnvExists, createAndStartEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvList } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
+import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 
 jest.setTimeout( 60 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
@@ -74,6 +75,56 @@ describe( 'vip dev-env list', () => {
 		expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug2 }` ) );
 		expect( result.stdout ).toMatch( /STATUS\s+DOWN/ );
 		expect( result.stdout ).not.toMatch( /STATUS\s+UP/ );
+	} );
+
+	it( 'should be able to handle missing .lando.yml', async () => {
+		const slug = getProjectSlug();
+		expect( await checkEnvExists( slug ) ).toBe( false );
+
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
+		expect( await checkEnvExists( slug ) ).toBe( true );
+
+		await rm( path.join( getEnvironmentPath( slug ), '.lando.yml' ) );
+
+		const result2 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvList ], { env }, true );
+		expect( result2.rc ).toBe( 0 );
+		expect( result2.stdout ).toContain( 'Found 1 environments' );
+		expect( result2.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
+		expect( result2.stdout ).toMatch( /STATUS\s+DOWN/ );
+		expect( result2.stdout ).not.toMatch( /STATUS\s+UP/ );
+
+		// Lando sends everything to stdout :-(
+		expect( result2.stdout ).toContain( 'could not find app in this dir' );
+		expect( result2.stderr ).toContain( 'There was an error initializing Lando, trying to recover' );
+		expect( result2.stderr ).toContain( 'Recovery successful, trying to initialize again' );
+	} );
+
+	it( 'should be able to handle corrupt .lando.yml', async () => {
+		const slug = getProjectSlug();
+		expect( await checkEnvExists( slug ) ).toBe( false );
+
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
+		expect( await checkEnvExists( slug ) ).toBe( true );
+
+		const filename = path.join( getEnvironmentPath( slug ), '.lando.yml' );
+		let data = await readFile( filename, 'utf8' );
+		data = data.replace( /type: compose/gu, 'type: composer' );
+		await writeFile( filename, data );
+		const result2 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvList ], { env }, true );
+		expect( result2.rc ).toBe( 0 );
+		expect( result2.stdout ).toContain( 'Found 1 environments' );
+		expect( result2.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
+		expect( result2.stdout ).toMatch( /STATUS\s+DOWN/ );
+		expect( result2.stdout ).not.toMatch( /STATUS\s+UP/ );
+
+		// Lando sends everything to stdout :-(
+		expect( result2.stdout ).toContain( 'composer is not a supported service type' );
+		expect( result2.stderr ).toContain( 'There was an error initializing Lando, trying to recover' );
+		expect( result2.stderr ).toContain( 'Recovery successful, trying to initialize again' );
 	} );
 
 	describe( 'for started environments', () => {
