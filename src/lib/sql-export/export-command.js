@@ -60,7 +60,8 @@ const BACKUP_AND_JOB_STATUS_QUERY = gql`
 	}
 `;
 
-const GENERATE_DOWNLOAD_LINK_MUTATION = gql`
+// Exporting for test purposes
+export const GENERATE_DOWNLOAD_LINK_MUTATION = gql`
 	mutation GenerateDBBackupCopyUrl($input: AppEnvironmentGenerateDBBackupCopyUrlInput) {
 		generateDBBackupCopyUrl(input: $input) {
 			url
@@ -69,7 +70,8 @@ const GENERATE_DOWNLOAD_LINK_MUTATION = gql`
 	}
 `;
 
-const CREATE_EXPORT_JOB_MUTATION = gql`
+// Exporting for test purposes
+export const CREATE_EXPORT_JOB_MUTATION = gql`
 	mutation BackupDBCopy($input: AppEnvironmentStartDBBackupCopyInput) {
 		startDBBackupCopy(input: $input) {
 			message
@@ -204,7 +206,7 @@ export class ExportCommand {
 
 		// Find the job that generates the export for the latest backup
 		return jobs.find( job => {
-			const metadata = job.metadata.find( m => m.name === 'backupId' );
+			const metadata = job.metadata.find( md => md.name === 'backupId' );
 			return metadata && parseInt( metadata.value, 10 ) === latestBackup.id;
 		} );
 	}
@@ -215,7 +217,7 @@ export class ExportCommand {
 	 */
 	async getExportedFileName() {
 		const job = await this.getExportJob();
-		const metadata = job.metadata.find( m => m.name === 'uploadPath' );
+		const metadata = job.metadata.find( md => md.name === 'uploadPath' );
 		return metadata?.value.split( '/' )[ 1 ];
 	}
 
@@ -252,7 +254,7 @@ export class ExportCommand {
 	 * @returns {boolean} True if the preflight step is successful
 	 */
 	isPrepared( job ) {
-		const step = job?.progress.steps.find( s => s.id === 'preflight' );
+		const step = job?.progress.steps.find( st => st.id === 'preflight' );
 		return step?.status === 'success';
 	}
 
@@ -262,7 +264,7 @@ export class ExportCommand {
 	 * @returns {boolean} True if the upload step is successful
 	 */
 	isCreated( job ) {
-		const step = job?.progress.steps.find( s => s.id === 'upload_backup' );
+		const step = job?.progress.steps.find( st => st.id === 'upload_backup' );
 		return step?.status === 'success';
 	}
 
