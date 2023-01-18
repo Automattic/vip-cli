@@ -1,7 +1,5 @@
-/**
- * @flow
- * @format
- */
+// @flow
+// @format
 
 /**
  * External dependencies
@@ -14,11 +12,11 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import { getGlyphForStatus } from 'lib/cli/format';
-import { ProgressTracker } from 'lib/cli/progress';
-import * as exit from 'lib/cli/exit';
-import { pollUntil } from 'lib/utils';
+import API from './api';
+import { getGlyphForStatus } from './cli/format';
+import { ProgressTracker } from './cli/progress';
+import * as exit from './cli/exit';
+import { pollUntil } from './utils';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -82,11 +80,12 @@ export const CREATE_EXPORT_JOB_MUTATION = gql`
 
 /**
  * Fetches the latest backup and job status for an environment
- * @param {int} appId Application ID
- * @param {int} envId Environment ID
- * @resolves {Promise} A promise which resolves to the latest backup and job status
+ *
+ * @param {number} appId Application ID
+ * @param {number} envId Environment ID
+ * @return {Promise}     A promise which resolves to the latest backup and job status
  */
-async function fetchLatestBackupAndJobStatus( appId, envId ) {
+async function fetchLatestBackupAndJobStatus( appId: number, envId: number ): Promise<Object> {
 	const api = await API();
 
 	const response = await api.query( {
@@ -109,12 +108,13 @@ async function fetchLatestBackupAndJobStatus( appId, envId ) {
 
 /**
  * Generates a download link for a backup
- * @param {int} appId Application ID
- * @param {int} envId Environment ID
- * @param {int} backupId Backup ID
- * @resolves {Promise} A promise which resolves to the download link
+ *
+ * @param {number} appId    Application ID
+ * @param {number} envId    Environment ID
+ * @param {number} backupId Backup ID
+ * @return {Promise}        A promise which resolves to the download link
  */
-async function generateDownloadLink( appId, envId, backupId ) {
+async function generateDownloadLink( appId: number, envId: number, backupId: number ): Promise<string> {
 	const api = await API();
 	const response = await api.mutate( {
 		mutation: GENERATE_DOWNLOAD_LINK_MUTATION,
@@ -138,13 +138,14 @@ async function generateDownloadLink( appId, envId, backupId ) {
 
 /**
  * Creates an export job for a backup
- * @param {int} appId Application ID
- * @param {int} envId Environment ID
- * @param {int} backupId Backup ID
- * @resolves {Promise} A promise which resolves to null if job creation succeeds
- * @throws {Error} Throws an error if the job creation fails
+ *
+ * @param {number} appId    Application ID
+ * @param {number} envId    Environment ID
+ * @param {number} backupId Backup ID
+ * @return {Promise}        A promise which resolves to null if job creation succeeds
+ * @throws {Error}          Throws an error if the job creation fails
  */
-async function createExportJob( appId, envId, backupId ) {
+async function createExportJob( appId: number, envId: number, backupId: number ): Promise<void> {
 	const api = await API();
 	const response = await api.mutate( {
 		mutation: CREATE_EXPORT_JOB_MUTATION,
@@ -186,10 +187,10 @@ export class SQLExportCommand {
 
 	/**
 	 * Creates an instance of ExportCommand
-	 * @param {object} app The application object
-	 * @param {object} env The environment object
+	 *
+	 * @param {Object} app        The application object
+	 * @param {Object} env        The environment object
 	 * @param {string} outputFile The output file path
-	 * @constructor
 	 */
 	constructor( app, env, outputFile ) {
 		this.app = app;
@@ -205,7 +206,8 @@ export class SQLExportCommand {
 
 	/**
 	 * Fetches the export job of the latest backup
-	 * @resolves {Promise} A promise which resolves to the export job
+	 *
+	 * @return {Promise} A promise which resolves to the export job
 	 */
 	async getExportJob() {
 		const { latestBackup, jobs } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
@@ -219,9 +221,10 @@ export class SQLExportCommand {
 
 	/**
 	 * Fetches the S3 filename of the exported backup
-	 * @resolves {Promise} A promise which resolves to the filename
+	 *
+	 * @return {Promise} A promise which resolves to the filename
 	 */
-	async getExportedFileName() {
+	async getExportedFileName(): Promise<?string> {
 		const job = await this.getExportJob();
 		const metadata = job.metadata.find( md => md.name === 'uploadPath' );
 		return metadata?.value.split( '/' )[ 1 ];
@@ -229,11 +232,12 @@ export class SQLExportCommand {
 
 	/**
 	 * Downloads the exported file
+	 *
 	 * @param {string} url The download URL
-	 * @resolves {Promise} A promise which resolves to the path of the downloaded file
+	 * @return {Promise} A promise which resolves to the path of the downloaded file
 	 * @throws {Error} Throws an error if the download fails
 	 */
-	async downloadExportedFile( url ) {
+	async downloadExportedFile( url: string ): Promise<string> {
 		const filename = this.outputFile || ( await this.getExportedFileName() ) || 'exported.sql.gz';
 		const file = fs.createWriteStream( filename );
 
@@ -256,27 +260,30 @@ export class SQLExportCommand {
 
 	/**
 	 * Checks if the export job's preflight step is successful
-	 * @param {object} job The export job
-	 * @returns {boolean} True if the preflight step is successful
+	 *
+	 * @param {Object} job The export job
+	 * @return {boolean} True if the preflight step is successful
 	 */
-	isPrepared( job ) {
+	isPrepared( job: Object ): boolean {
 		const step = job?.progress.steps.find( st => st.id === 'preflight' );
 		return step?.status === 'success';
 	}
 
 	/**
 	 * Checks if the export job's S3 upload step is successful
-	 * @param {object} job The export job
-	 * @returns {boolean} True if the upload step is successful
+	 *
+	 * @param {Object} job The export job
+	 * @return {boolean} True if the upload step is successful
 	 */
-	isCreated( job ) {
+	isCreated( job: Object ): boolean {
 		const step = job?.progress.steps.find( st => st.id === 'upload_backup' );
 		return step?.status === 'success';
 	}
 
 	/**
 	 * Stops the progress tracker
-	 * @returns {void}
+	 *
+	 * @return {void}
 	 */
 	stopProgressTracker() {
 		this.progressTracker.print();
@@ -285,9 +292,10 @@ export class SQLExportCommand {
 
 	/**
 	 * Sequentially runs the steps of the export workflow
-	 * @resolves {Promise} A promise which resolves to void
+	 *
+	 * @return {Promise} A promise which resolves to void
 	 */
-	async runSequence() {
+	async runSequence(): Promise<void> {
 		console.log( `Fetching the latest backup for ${ this.app.name }` );
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 

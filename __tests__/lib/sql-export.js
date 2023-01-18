@@ -5,8 +5,8 @@
 /**
  * Internal dependencies
  */
-import { SQLExportCommand, CREATE_EXPORT_JOB_MUTATION, GENERATE_DOWNLOAD_LINK_MUTATION } from 'lib/sql-export';
-import API from 'lib/api';
+import { SQLExportCommand, CREATE_EXPORT_JOB_MUTATION, GENERATE_DOWNLOAD_LINK_MUTATION } from '../../src/lib/sql-export';
+import API from '../../src/lib/api';
 
 const mockApp = {
 	id: 123,
