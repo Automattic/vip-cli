@@ -15,10 +15,10 @@ import path from 'path';
  * Internal dependencies
  */
 import API from 'lib/api';
-import { getGlyphForStatus } from '../cli/format';
-import { ProgressTracker } from '../cli/progress';
+import { getGlyphForStatus } from 'lib/cli/format';
+import { ProgressTracker } from 'lib/cli/progress';
 import * as exit from 'lib/cli/exit';
-import { pollUntil } from 'lib/common';
+import { pollUntil } from 'lib/utils';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -171,7 +171,7 @@ async function createExportJob( appId, envId, backupId ) {
 /**
  * Class representing an export command workflow
  */
-export class ExportCommand {
+export class SQLExportCommand {
 	app;
 	env;
 	downloadLink;

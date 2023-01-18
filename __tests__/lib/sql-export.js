@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import { ExportCommand, CREATE_EXPORT_JOB_MUTATION, GENERATE_DOWNLOAD_LINK_MUTATION } from 'lib/sql-export/export-command';
+import { SQLExportCommand, CREATE_EXPORT_JOB_MUTATION, GENERATE_DOWNLOAD_LINK_MUTATION } from 'lib/sql-export';
 import API from 'lib/api';
 
 const mockApp = {
@@ -101,7 +101,7 @@ describe( 'lib/ExportCommand', () => {
 	describe( '.getExportJob', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const exportCommand = new ExportCommand( app, env );
+		const exportCommand = new SQLExportCommand( app, env );
 
 		it( 'should return the export job for the latest backup', async () => {
 			const exportJob = await exportCommand.getExportJob();
@@ -112,7 +112,7 @@ describe( 'lib/ExportCommand', () => {
 	describe( '.getExportedFileName', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const exportCommand = new ExportCommand( app, env );
+		const exportCommand = new SQLExportCommand( app, env );
 
 		it( 'should return the filename for the latest backup', async () => {
 			const exportFilename = await exportCommand.getExportedFileName();
@@ -136,7 +136,7 @@ describe( 'lib/ExportCommand', () => {
 			},
 		};
 
-		const exportCommand = new ExportCommand( app, env );
+		const exportCommand = new SQLExportCommand( app, env );
 
 		it( 'should return true if the S3 upload step has completed', async () => {
 			const isCreated = await exportCommand.isCreated( job );
@@ -166,7 +166,7 @@ describe( 'lib/ExportCommand', () => {
 			},
 		};
 
-		const exportCommand = new ExportCommand( app, env );
+		const exportCommand = new SQLExportCommand( app, env );
 
 		it( 'should return true if the preflight step has completed', async () => {
 			const isPrepared = await exportCommand.isPrepared( job );
@@ -183,7 +183,7 @@ describe( 'lib/ExportCommand', () => {
 	describe( '.runSequence', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const exportCommand = new ExportCommand( app, env );
+		const exportCommand = new SQLExportCommand( app, env );
 		const downloadSpy = jest.spyOn( exportCommand, 'downloadExportedFile' );
 		const stepSuccessSpy = jest.spyOn( exportCommand.progressTracker, 'stepSuccess' );
 
