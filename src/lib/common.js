@@ -6,7 +6,7 @@
  * @resolves		{Promise} A promise which resolves when the polling is done
  */
 export async function pollUntil( fn, interval, isDone ) {
-	return new Promise( async ( resolve, reject ) => {
+	return await new Promise( async ( resolve, reject ) => {
 		while ( true ) {
 			try {
 				const result = await fn();
