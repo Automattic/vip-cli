@@ -177,6 +177,12 @@ export class ExportCommand {
 	downloadLink;
 	progressTracker;
 	outputFile;
+	steps = {
+		PREPARE: 'prepare',
+		CREATE: 'create',
+		DOWNLOAD_LINK: 'downloadLink',
+		DOWNLOAD: 'download',
+	};
 
 	/**
 	 * Creates an instance of ExportCommand
@@ -190,10 +196,10 @@ export class ExportCommand {
 		this.env = env;
 		this.outputFile = outputFile;
 		this.progressTracker = new ProgressTracker( [
-			{ id: 'prepare', name: 'Preparing' },
-			{ id: 'create', name: 'Creating backup copy' },
-			{ id: 'downloadLink', name: 'Requesting download link' },
-			{ id: 'download', name: 'Downloading file' },
+			{ id: this.steps.PREPARE, name: 'Preparing' },
+			{ id: this.steps.CREATE, name: 'Creating backup copy' },
+			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
+			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
 	}
 
@@ -304,26 +310,26 @@ export class ExportCommand {
 			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
 		}
 
-		this.progressTracker.stepRunning( 'prepare' );
+		this.progressTracker.stepRunning( this.steps.PREPARE );
 		this.progressTracker.startPrinting();
 
 		await pollUntil( this.getExportJob.bind( this ), EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isPrepared.bind( this ) );
-		this.progressTracker.stepSuccess( 'prepare' );
+		this.progressTracker.stepSuccess( this.steps.PREPARE );
 
 		await pollUntil( this.getExportJob.bind( this ), EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isCreated.bind( this ) );
-		this.progressTracker.stepSuccess( 'create' );
+		this.progressTracker.stepSuccess( this.steps.CREATE );
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
-		this.progressTracker.stepSuccess( 'downloadLink' );
+		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
 
 		// The export file is prepared. Let's download it
 		try {
 			const filepath = await this.downloadExportedFile( url );
-			this.progressTracker.stepSuccess( 'download' );
+			this.progressTracker.stepSuccess( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
 			console.log( `File saved to ${ filepath }` );
 		} catch ( err ) {
-			this.progressTracker.stepFailed( 'download' );
+			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
