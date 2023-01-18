@@ -2,7 +2,7 @@
  * Polls a function until its return value satisfies a condition
  * @param       {function} fn A function to poll
  * @param       {int} interval Poll interval in milliseconds
- * @param       {function} isDone A function that returns true if the polling should stop
+ * @param       {function} isDone A function that accepts the return of `fn`. Stops the polling if it returns true
  * @resolves		{Promise} A promise which resolves when the polling is done
  */
 export async function pollUntil( fn, interval, isDone ) {
