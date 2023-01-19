@@ -99,6 +99,7 @@ describe( 'vip dev-env list', () => {
 		expect( result2.stdout ).toContain( 'could not find app in this dir' );
 		expect( result2.stderr ).toContain( 'There was an error initializing Lando, trying to recover' );
 		expect( result2.stderr ).toContain( 'Recovery successful, trying to initialize again' );
+		expect( result2.stderr ).not.toContain( 'Backed up' );
 	} );
 
 	it( 'should be able to handle corrupt .lando.yml', async () => {
@@ -125,6 +126,7 @@ describe( 'vip dev-env list', () => {
 		expect( result2.stdout ).toContain( 'composer is not a supported service type' );
 		expect( result2.stderr ).toContain( 'There was an error initializing Lando, trying to recover' );
 		expect( result2.stderr ).toContain( 'Recovery successful, trying to initialize again' );
+		expect( result2.stderr ).toContain( 'Backed up' );
 	} );
 
 	describe( 'for started environments', () => {
