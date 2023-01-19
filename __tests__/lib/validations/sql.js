@@ -107,8 +107,8 @@ describe( 'lib/validations/sql', () => {
 			}
 			debug( 'output', output );
 		} );
-		it( 'use statement', () => {
-			expect( output ).toContain( 'USE <DATABASE_NAME> statement on' );
+		it( 'use statement should be ok', () => {
+			expect( output ).not.toContain( 'USE <DATABASE_NAME> statement on' );
 		} );
 		it( 'not correct siteUrl', () => {
 			expect( output ).toContain( 'Siteurl/home options not pointing to lando domain' );
