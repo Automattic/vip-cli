@@ -62,12 +62,9 @@ command( {
 
 		await trackEvent( 'config_notifications_add_success', trackingInfo );
 
-		const streams = result?.data?.addNotificationStream?.nodes || [];
-
-		console.log( { streams } );
+		const notificationStream = result?.data?.addNotificationStream;
 
 		console.log(
-			`Successfully added a new notification stream.`
-			//:\n\tID: ${ notification_stream_id }\n\tRecipient: ${ stream_value }`
+			`Successfully added a new notification stream.\n\tID: ${ notificationStream.notification_stream_id }\n\tRecipient: ${ notificationStream.stream_value }`
 		);
 	} );

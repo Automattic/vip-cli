@@ -29,19 +29,16 @@ const addNotificationStreamMutation = gql`
                 meta: $meta
             }
        ) {
-        nodes {
-            notification_stream_id
-            target_type
-            target_id
-            description
-            stream_type
-            stream_value
-            active
-            meta
-            created_at
-            updated_at
-        }
-        total
+		notification_stream_id
+		target_type
+		target_id
+		description
+		stream_type
+		stream_value
+		active
+		meta
+		created_at
+		updated_at
        }
     }
 `;
@@ -51,7 +48,6 @@ const updateNotificationStreamMutation = gql`
         $notificationStreamId: BigInt!
         $appId: BigInt!
         $envId: BigInt!
-        $streamType: String!
         $streamValue: String!
         $active: Boolean
         $description: String
@@ -62,26 +58,22 @@ const updateNotificationStreamMutation = gql`
                 notificationStreamId: $notificationStreamId
                 applicationId: $appId
                 environmentId: $envId
-                streamType: $streamType
                 streamValue: $streamValue
                 active: $active
                 description: $description
                 meta: $meta
             }
        ) {
-        nodes {
-            notification_stream_id
-            target_type
-            target_id
-            description
-            stream_type
-            stream_value
-            active
-            meta
-            created_at
-            updated_at
-        }
-        total
+        notification_stream_id
+		target_type
+		target_id
+		description
+		stream_type
+		stream_value
+		active
+		meta
+		created_at
+		updated_at
        }
     }
 `;
@@ -103,14 +95,13 @@ export async function addNotificationStream( appId: number, envId: number, strea
 	return api.mutate( { mutation: addNotificationStreamMutation, variables } );
 }
 
-export async function updateNotificationStream( appId: number, envId: number, notificationStreamId: number, streamType: string, streamValue: string, description: string, meta: string, active: boolean ) {
+export async function updateNotificationStream( appId: number, envId: number, notificationStreamId: number, streamValue: string, description: string, meta: string, active: boolean ) {
 	const api = await API();
 
 	const variables = {
 		appId,
 		envId,
 		notificationStreamId,
-		streamType,
 		streamValue,
 		active,
 		description,
@@ -118,7 +109,7 @@ export async function updateNotificationStream( appId: number, envId: number, no
 	};
 
 	variables.active = Boolean( variables.active );
-
+console.log( {variables} )
 	return api.mutate( { mutation: updateNotificationStreamMutation, variables } );
 }
 

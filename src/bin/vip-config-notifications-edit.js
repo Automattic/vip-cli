@@ -15,7 +15,7 @@ import { appQuery, updateNotificationStream } from 'lib/config/notifications';
 // Command examples
 const examples = [
 	{
-		usage: 'vip @mysite.develop config notifications edit 1234',
+		usage: 'vip @mysite.develop config notifications edit <notificationStreamId> <recipient>',
 		description: 'Edit an existing notification stream for this environment',
 	},
 ];
@@ -27,25 +27,50 @@ command( {
 	wildcardCommand: true,
 	format: true,
 	usage: 'vip @mysite.develop config notifications edit <notification_stream_id>',
-} ).examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
-	const trackingInfo = {
-		environment_id: opt.env?.id,
-		args: JSON.stringify( arg ), // TODO: remove some values we don't want tracked
-	};
-	await trackEvent( 'config_notifications_add_execute', trackingInfo );
+} )
+	.option( 'description', 'Specify an optional description for the notification stream.', '' )
+	.option(
+		'secret',
+		'An optional secret for use in signing the webhook request body. Not valid for email subscriptions.'
+	)
+	.examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
+		const trackingInfo = {
+			environment_id: opt.env?.id,
+			args: JSON.stringify( arg ), // TODO: remove some values we don't want tracked
+		};
+		await trackEvent( 'config_notifications_update_execute', trackingInfo );
 
-	/**
-     * TODO: Only ask user for a "recipient" and infer the stream type from it.
-     */
-	const [ notification_stream_id, streamType, streamValue, description, meta, active ] = arg;
+		const [ _notificationStreamId, streamValue ] = arg;
+		const notificationStreamId = parseInt( _notificationStreamId, 10 );
 
-	const result = await updateNotificationStream( opt.env.appId, opt.env.id, notification_stream_id, streamType, streamValue, description, meta, active );
+		if ( typeof notificationStreamId !== 'number' ) {
+			console.error( 'Error: Notification stream ID must be an integer' );
+			process.exit( 1 );
+		}
 
-	await trackEvent( 'config_notifications_update_success', trackingInfo );
+		const { description, secret } = opt;
 
-	const streams = result?.data?.addNotificationStream?.nodes || [];
+		const meta = {};
 
-	// TODO: Return only the the added value instead of the whole list
-//	const { notification_stream_id: , stream_value } = streams.find( ( { stream_type, stream_value } ) => stream_type === streamType && stream_value === streamValue );
-//	console.log( `Successfully updated notification stream:\n\tID: ${ notification_stream_id }\n\tRecipient: ${ stream_value }` );
-} );
+		if ( secret ) {
+			meta.secret = secret;
+		}
+		console.log( { notificationStreamId, streamValue } );
+//appId: number, envId: number, notificationStreamId: number, streamValue: string, description: string, meta: string, active: boolean
+		const result = await updateNotificationStream(
+			opt.env.appId,
+			opt.env.id,
+			notificationStreamId,
+			streamValue,
+			description,
+			meta
+		);
+
+		await trackEvent( 'config_notifications_update_success', trackingInfo );
+
+		const notificationStream = result?.data?.updateNotificationStream;
+
+		console.log(
+			`Successfully edited notification stream ID: ${ notificationStream.notification_stream_id }\n\tRecipient: ${ notificationStream.stream_value }`
+		);
+	} );
