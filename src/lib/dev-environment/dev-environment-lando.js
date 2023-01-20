@@ -356,8 +356,9 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 
 	delete appInfo.name;
 
+	const hasResults = Object.values( health ).length > 0;
 	const hasWarnings = Object.values( health ).some( status => ! status );
-	if ( ! hasWarnings ) {
+	if ( hasResults && ! hasWarnings ) {
 		appInfo.status = chalk.green( 'UP' );
 	} else if ( health.nginx ) {
 		appInfo.status = chalk.yellow( 'PARTIALLY UP' );
