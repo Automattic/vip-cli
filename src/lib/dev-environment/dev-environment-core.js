@@ -168,6 +168,14 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.xdebugConfig = '';
 	}
 
+	if ( ! newInstanceData.xdebug ) {
+		newInstanceData.xdebug = false;
+	}
+
+	if ( ! newInstanceData.phpmyadmin ) {
+		newInstanceData.phpmyadmin = false;
+	}
+
 	// Mailhog migration
 	if ( ! newInstanceData.mailhog ) {
 		newInstanceData.mailhog = false;

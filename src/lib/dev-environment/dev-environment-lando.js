@@ -19,9 +19,14 @@ import xdgBasedir from 'xdg-basedir';
 /**
  * Internal dependencies
  */
-import { doesEnvironmentExist, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
-import UserError from '../user-error';
+import {
+	doesEnvironmentExist,
+	readEnvironmentData,
+	updateEnvironment,
+	writeEnvironmentData,
+} from './dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import UserError from '../user-error';
 
 /**
  * This file will hold all the interactions with lando library
@@ -115,6 +120,45 @@ async function getLandoConfig() {
 
 const appMap: Map<string, App> = new Map();
 
+async function regenerateLandofile( instancePath: string ): Promise<void> {
+	const landoFile = path.join( instancePath, '.lando.yml' );
+
+	try {
+		const now = new Date().toISOString().replace( /[^\d]/g, '' ).slice( 0, -3 );
+		const backup = `${ landoFile }.${ now }`;
+		await fs.promises.rename( landoFile, backup );
+		console.warn( chalk.yellow( 'Backed up %s to %s' ), landoFile, backup );
+	} catch ( err ) {
+		// Rename failed - possible the file does not exist. Silently ignoring.
+	}
+
+	const slug = path.basename( instancePath );
+	const currentInstanceData = readEnvironmentData( slug );
+	await updateEnvironment( currentInstanceData );
+}
+
+async function landoRecovery( lando: Lando, instancePath: string, error: Error ): Promise<App> {
+	debug( 'Error initializing Lando app', error );
+	console.warn( chalk.yellow( 'There was an error initializing Lando, trying to recover...' ) );
+	try {
+		await regenerateLandofile( instancePath );
+	} catch ( err ) {
+		console.error( `${ chalk.bold.red( 'Recovery failed, aborting.' ) } Please recreate the environment or contact support.` );
+		throw err;
+	}
+
+	console.error( chalk.green( 'Recovery successful, trying to initialize again...' ) );
+	try {
+		const app = lando.getApp( instancePath );
+		addHooks( app, lando );
+		await app.init();
+		return app;
+	} catch ( initError ) {
+		console.error( `${ chalk.bold.red( 'Initialization failed, aborting.' ) } Please recreate the environment or contact support.` );
+		throw initError;
+	}
+}
+
 async function getLandoApplication( lando: Lando, instancePath: string ): Promise<App> {
 	if ( appMap.has( instancePath ) ) {
 		return Promise.resolve( appMap.get( instancePath ) );
@@ -124,14 +168,17 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const app = lando.getApp( instancePath );
-	addHooks( app, lando );
-	appMap.set( instancePath, app );
+	let app;
 
-	if ( ! app.initialized ) {
+	try {
+		app = lando.getApp( instancePath );
+		addHooks( app, lando );
 		await app.init();
+	} catch ( error ) {
+		app = await landoRecovery( lando, instancePath, error );
 	}
 
+	appMap.set( instancePath, app );
 	return app;
 }
 
