@@ -46,7 +46,14 @@ async function getLandoConfig() {
 
 	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
 	const isAllDebugSelected = process.env.DEBUG === '*';
-	const logLevelConsole = ( isAllDebugSelected || isLandoDebugSelected ) ? 'debug' : 'warn';
+	let logLevelConsole;
+	if ( isAllDebugSelected ) {
+		logLevelConsole = 'silly';
+	} else if ( isLandoDebugSelected ) {
+		logLevelConsole = 'debug';
+	} else {
+		logLevelConsole = 'warn';
+	}
 
 	const vipDir = path.join( xdgBasedir.data || os.tmpdir(), 'vip' );
 	const landoDir = path.join( vipDir, 'lando' );
