@@ -40,7 +40,7 @@ command( {
 	wildcardCommand: true,
 	format: true,
 	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
-} ).option( 'include', `Extra information to be included. Valida values: ${ VALID_INCLUDES.join( ',' ) }` )
+} ).option( 'include', `Extra information to be included. Valid values: ${ VALID_INCLUDES.join( ',' ) }` )
 	.examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
 		const trackingInfo = {
 			environment_id: opt.env?.id,
