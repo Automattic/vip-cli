@@ -540,6 +540,10 @@ export async function importMediaPath( slug: string, filePath: string ) {
  */
 async function updateWordPressImage( slug: string ): Promise<boolean> {
 	const versions = await getVersionList();
+	if ( ! versions.length ) {
+		return false;
+	}
+
 	let message: string, envData, currentWordPressTag: string;
 
 	// Get the current environment configuration
@@ -627,9 +631,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 /**
  * Makes a web call to raw.githubusercontent.com
  */
-export async function fetchVersionList(): Promise<string> {
+export async function fetchVersionList(): Promise<any> {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	return fetch( url ).then( res => res.text() );
+	return fetch( url ).then( res => res.json() );
 }
 
 /**
@@ -666,7 +670,7 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 		// If the cache is expired, refresh it
 		if ( ! fs.existsSync( cacheFile ) || isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
 			res = await fetchVersionList();
-			await fs.promises.writeFile( cacheFile, res );
+			await fs.promises.writeFile( cacheFile, JSON.stringify( res ) );
 		}
 	} catch ( err ) {
 		// Soft error handling here, since it's still possible to use a previously cached file.
