@@ -115,6 +115,7 @@ async function getLandoConfig() {
 		userConfRoot: landoDir,
 		home: fakeHomeDir,
 		domain: 'lndo.site',
+		version: 'unknown',
 	};
 }
 
