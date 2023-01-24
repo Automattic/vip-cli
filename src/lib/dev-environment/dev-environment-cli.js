@@ -359,8 +359,13 @@ async function processComponent( component: string, preselectedValue: string, de
 	const allowLocal = component !== 'wordpress';
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
+		if ( component === 'wordpress' && preselectedValue.indexOf( '.' ) === -1 && ! isNaN( parseFloat( preselectedValue ) ) ) {
+			preselectedValue = parseFloat( preselectedValue ).toFixed( 1 ); // Major releases ending in .0 aren't parsed correctly. This converts it back to a valid version.
+		}
 		result = processComponentOptionInput( preselectedValue, allowLocal );
-		console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
+		if ( allowLocal ) {
+			console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
+		}
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
 	}
