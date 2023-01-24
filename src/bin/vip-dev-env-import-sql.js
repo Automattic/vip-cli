@@ -66,7 +66,10 @@ command( {
 			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
 			// Remove the `USE` and `CREATE DATABASE` statements from the SQL file.
-			ChildProcess.execSync( `sed --in-place -E '/^(USE|CREATE DATABASE)/Id' ${ resolvedPath }` );
+			ChildProcess.execFileSync(
+				'sed',
+				[ '--in-place', '-E', '/^(USE|CREATE DATABASE)/Id', resolvedPath ],
+			);
 
 			if ( ! opt.skipValidate ) {
 				if ( ! isEnvUp( lando, getEnvironmentPath( slug ) ) ) {
