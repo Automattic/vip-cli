@@ -550,6 +550,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 	try {
 		envData = readEnvironmentData( slug );
 		currentWordPressTag = envData.wordpress.tag;
+		if ( currentWordPressTag === 'trunk' ) {
+			return false;
+		}
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
