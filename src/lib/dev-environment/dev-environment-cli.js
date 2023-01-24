@@ -626,22 +626,22 @@ export async function getTagChoices(): Promise<{ name: string, message: string, 
 	let versions = await getVersionList();
 	if ( versions.length < 1 ) {
 		versions = [ {
+			ref: '6.1.1',
+			tag: '6.1',
+			cacheable: true,
+			locked: true,
+			prerelease: false,
+		},
+		{
+			ref: '6.0.3',
+			tag: '6.0',
+			cacheable: true,
+			locked: true,
+			prerelease: false,
+		},
+		{
 			ref: '5.9.5',
 			tag: '5.9',
-			cacheable: true,
-			locked: true,
-			prerelease: false,
-		},
-		{
-			ref: '5.8.6',
-			tag: '5.8',
-			cacheable: true,
-			locked: true,
-			prerelease: false,
-		},
-		{
-			ref: '5.7.8',
-			tag: '5.7',
 			cacheable: true,
 			locked: true,
 			prerelease: false,
