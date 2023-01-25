@@ -359,9 +359,6 @@ async function processComponent( component: string, preselectedValue: string, de
 	const allowLocal = component !== 'wordpress';
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
-		if ( component === 'wordpress' && preselectedValue.indexOf( '.' ) === -1 && ! isNaN( parseFloat( preselectedValue ) ) ) {
-			preselectedValue = parseFloat( preselectedValue ).toFixed( 1 ); // Major releases ending in .0 aren't parsed correctly. This converts it back to a valid version.
-		}
 		result = processComponentOptionInput( preselectedValue, allowLocal );
 		if ( allowLocal ) {
 			console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
@@ -486,8 +483,7 @@ function resolvePhpVersion( version: string ): string {
 	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
 
-	// eslint-disable-next-line eqeqeq -- use loose comparison because commander resolves '8.0' to '8'
-	const index = versions.findIndex( value => value == version );
+	const index = versions.findIndex( value => value === version );
 	if ( index === -1 ) {
 		const image = images.find( value => value === version );
 		return image ?? images[ 0 ];
@@ -604,9 +600,18 @@ export function processBooleanOption( value: string ): boolean {
 	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
 }
 
+export function processVersionOption( value: string ): string {
+	if ( ! isNaN( value ) && value % 1 === 0 ) {
+		// If it's an Integer passed in, let's ensure that it has a decimal in it to match the version tags e.g. 6 => 6.0
+		return parseFloat( value ).toFixed( 1 );
+	}
+
+	return value;
+}
+
 export function addDevEnvConfigurationOptions( command: Command ): any {
 	return command
-		.option( 'wordpress', 'Use a specific WordPress version' )
+		.option( 'wordpress', 'Use a specific WordPress version', undefined, processVersionOption )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
 		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
@@ -615,7 +620,7 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
-		.option( 'php', 'Explicitly choose PHP version to use' )
+		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
 		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
 }
 
