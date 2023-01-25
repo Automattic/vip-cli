@@ -11,6 +11,10 @@ jest.setupMocks.js
 appveyor.yml
 coverage
 
+# Flow
+flow-typed
+.flowconfig
+
 # We don't publish the local config file
 config/config.local.json
 
@@ -35,7 +39,6 @@ node_modules/
 .eslintrc.json
 
 # Configs
-.flowconfig
 babel.config.js
 renovate.json
 .github

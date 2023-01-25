@@ -11,17 +11,17 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import { trackEventWithEnv } from 'lib/tracker';
-import * as exit from 'lib/cli/exit';
+import API from '../../lib/api';
+import { trackEventWithEnv } from '../../lib/tracker';
+import * as exit from '../../lib/cli/exit';
 
 /**
  * Extracts the domain for site with ID 1 from an INSERT INTO `wp_site` SQL statement
  *
- * @param {array} statements An array of SQL statements
- * @returns {string} The domain
+ * @param {Array} statements An array of SQL statements
+ * @return {string} The domain
  */
-export const getPrimaryDomainFromSQL = ( statements: array ) => {
+export const getPrimaryDomainFromSQL = ( statements: string[] ): string => {
 	if ( ! statements.length ) {
 		return '';
 	}
@@ -34,16 +34,13 @@ export const getPrimaryDomainFromSQL = ( statements: array ) => {
 /**
  * Apply search-replacements to a domain
  *
- * @param {string} domain The domain to apply replacements to
- * @param {(string|array)} searchReplace The search-replace pairs
- * @returns {string} The processed domain
+ * @param {string}           domain        The domain to apply replacements to
+ * @param {(string | Array)} searchReplace The search-replace pairs
+ * @return {string} The processed domain
  */
-export const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | array ) {
+export const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | string[] ): string {
 	if ( searchReplace ) {
-		let pairs = searchReplace;
-		if ( ! Array.isArray( pairs ) ) {
-			pairs = [ searchReplace ];
-		}
+		const pairs = Array.isArray( searchReplace ) ? searchReplace : [ searchReplace ];
 		const domainReplacements = pairs.map( pair => pair.split( ',' ) );
 		const primaryDomainReplacement = domainReplacements.find( pair => pair[ 0 ] === domain );
 		return primaryDomainReplacement?.[ 1 ] ?? domain;
@@ -54,11 +51,11 @@ export const maybeSearchReplacePrimaryDomain = function( domain: string, searchR
 /**
  * Get the primary domain as it will be imported
  *
- * @param {array} statements An array of SQL statements
- * @param {(string|array)} searchReplace The search-replace pairs
- * @returns {string} The replaced domain, or the domain as found in the SQL dump
+ * @param {Array}            statements    An array of SQL statements
+ * @param {(string | Array)} searchReplace The search-replace pairs
+ * @return {string} The replaced domain, or the domain as found in the SQL dump
  */
-export const getPrimaryDomain = function( statements: array, searchReplace?: string | array ) {
+export const getPrimaryDomain = function( statements: string[], searchReplace?: string | string[] ) {
 	const domainFromSQL = getPrimaryDomainFromSQL( statements );
 	return maybeSearchReplacePrimaryDomain( domainFromSQL, searchReplace );
 };
@@ -66,10 +63,10 @@ export const getPrimaryDomain = function( statements: array, searchReplace?: str
 /**
  * Gets the mapped domains and checks if the primary domain from the provided SQL dump is one of them
  *
- * @param {number} appId The ID of the app in GOOP
- * @param {number} envId The ID of the enviroment in GOOP
+ * @param {number} appId         The ID of the app in GOOP
+ * @param {number} envId         The ID of the enviroment in GOOP
  * @param {string} primaryDomain The primary domain found in the provided SQL file
- * @returns {boolean} Whether the primary domain is mapped
+ * @return {boolean} Whether the primary domain is mapped
  */
 export async function isMultisitePrimaryDomainMapped(
 	appId: number,

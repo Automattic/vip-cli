@@ -5,34 +5,32 @@
  */
 import chalk from 'chalk';
 
-type Options = {};
-
 export type Tuple = {
 	key: string,
 	value: string,
 };
 
-export function formatData( data: Array<any>, format: string, opts: ?Options ): string {
+export function formatData( data: Array<any>, format: string ): string {
 	if ( ! data || ! data.length ) {
 		return '';
 	}
 
 	switch ( format ) {
 		case 'ids':
-			return ids( data, opts );
+			return ids( data );
 
 		case 'json':
 			return JSON.stringify( data, null, '\t' );
 
 		case 'csv':
-			return csv( data, opts );
+			return csv( data );
 
 		case 'keyValue':
-			return keyValue( data, opts );
+			return keyValue( data );
 
 		case 'table':
 		default:
-			return table( data, opts );
+			return table( data );
 	}
 }
 
@@ -97,7 +95,9 @@ export function keyValue( values: Array<Tuple> ): string {
 	const lines = [];
 	const pairs = values.length > 0;
 
-	pairs ? lines.push( '===================================' ) : '';
+	if ( pairs ) {
+		lines.push( '===================================' );
+	}
 
 	for ( const { key, value } of values ) {
 		let formattedValue = value;

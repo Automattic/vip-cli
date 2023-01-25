@@ -9,7 +9,7 @@ import { stdout as singleLogLine } from 'single-line-log';
 /**
  * Internal dependencies
  */
-import { getGlyphForStatus, RunningSprite } from 'lib/cli/format';
+import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
@@ -106,7 +106,6 @@ export class ProgressTracker {
 		const nextStep = this.getNextStep();
 		if ( nextStep ) {
 			this.stepRunning( nextStep.id );
-			return;
 		}
 	}
 

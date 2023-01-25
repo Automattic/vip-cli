@@ -105,7 +105,7 @@ command( {
 
 			try {
 				await exec( lando, slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-				const doIndex = await promptForBoolean( 'Do you want to index data in ElasticSearch (used by enterprise search)?', true );
+				const doIndex = await promptForBoolean( 'Do you want to index data in Elasticsearch (used by Enterprise Search)?', true );
 				if ( doIndex ) {
 					await exec( lando, slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
 				}

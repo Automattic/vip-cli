@@ -14,10 +14,10 @@ import * as path from 'path';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import { currentUserCanImportForApp } from 'lib/media-import/media-file-import';
-import { MediaImportProgressTracker } from 'lib/media-import/progress';
-import { capitalize, formatEnvironment, formatData } from 'lib/cli/format';
+import API from '../../lib/api';
+import { currentUserCanImportForApp } from '../../lib/media-import/media-file-import';
+import { MediaImportProgressTracker } from '../../lib/media-import/progress';
+import { capitalize, formatEnvironment, formatData } from '../../lib/cli/format';
 
 import { RunningSprite } from '../cli/format';
 
@@ -273,7 +273,7 @@ ${ maybeExitPrompt }
 				progressTracker.suffix += `. ${ chalk.italic.yellow( 'File-errors report size threshold reached.' ) }`;
 			}
 			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
-			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ !! exportFileErrorsToJson ? '.json' : '.txt' }`;
+			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ exportFileErrorsToJson ? '.json' : '.txt' }`;
 			try {
 				await fsp.writeFile( errorsFile, formattedData );
 				progressTracker.suffix += `\n\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;

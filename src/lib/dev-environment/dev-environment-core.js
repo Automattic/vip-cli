@@ -16,6 +16,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
+import type Lando from 'lando';
 
 /**
  * Internal dependencies
@@ -40,7 +41,6 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
-import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -168,6 +168,14 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.xdebugConfig = '';
 	}
 
+	if ( ! newInstanceData.xdebug ) {
+		newInstanceData.xdebug = false;
+	}
+
+	if ( ! newInstanceData.phpmyadmin ) {
+		newInstanceData.phpmyadmin = false;
+	}
+
 	// Mailhog migration
 	if ( ! newInstanceData.mailhog ) {
 		newInstanceData.mailhog = false;
@@ -214,6 +222,7 @@ export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOpti
 	for ( const envName of allEnvNames ) {
 		try {
 			console.log( '\n' );
+			// eslint-disable-next-line no-await-in-loop
 			await printEnvironmentInfo( lando, envName, options );
 		} catch ( error ) {
 			if ( error instanceof UserError ) {
@@ -297,7 +306,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	/**
 	 ***********************************
 	 * BACKWARDS COMPATIBILITY SECTION
-	 ***********************************/
+	 **********************************
+	 */
 
 	// REMOVEME after the wheel of time spins around few times
 	if ( instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled ) {
@@ -317,9 +327,9 @@ export function readEnvironmentData( slug: string ): InstanceData {
 /**
  * Writes the instance data.
  *
- * @param {string} slug Env slug
+ * @param {string}       slug Env slug
  * @param {InstanceData} data instance data
- * @returns {Promise} Promise
+ * @return {Promise} Promise
  */
 export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<undefined> {
 	debug( 'Will try to write instance data for environment', slug );
@@ -525,11 +535,15 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - If there is a newer version of the WordPress version currently used
  *   - A choice to use a different image
  *
- * @param  {Object=} slug slug
+ * @param {Object=} slug slug
  * @return {boolean} boolean
  */
 async function updateWordPressImage( slug: string ): Promise<boolean> {
 	const versions = await getVersionList();
+	if ( ! versions.length ) {
+		return false;
+	}
+
 	let message: string, envData, currentWordPressTag: string;
 
 	// Get the current environment configuration
@@ -617,23 +631,27 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 /**
  * Makes a web call to raw.githubusercontent.com
  */
-export async function fetchVersionList(): Promise<string> {
+export function fetchVersionList(): Promise<any> {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	return fetch( url ).then( res => res.text() );
+	return fetch( url ).then( res => res.json() );
 }
 
 /**
  * Encapsulates the logic for determining if a file is expired by an arbitrary TTL
- * @param  {string} cacheFile uri of cache file
- * @param  {number} ttl time to live in seconds
- * @returns {boolean} version list expired true/false
+ *
+ * @param {string} cacheFile uri of cache file
+ * @param {number} ttl       time to live in seconds
+ * @return {Promise<boolean>} version list expired true/false
  */
-function isVersionListExpired( cacheFile: string, ttl: number ): boolean {
-	const stats = fs.statSync( cacheFile );
-	const expire = new Date( stats.mtime );
-	expire.setSeconds( expire.getSeconds() + ttl );
+async function isVersionListExpired( cacheFile: string, ttl: number ): Promise<boolean> {
+	try {
+		const { mtime: expire } = await fs.promises.stat( cacheFile );
+		expire.setSeconds( expire.getSeconds() + ttl );
 
-	return ( +new Date > expire );
+		return ( +new Date > expire );
+	} catch ( err ) {
+		return true;
+	}
 }
 
 /**
@@ -651,11 +669,10 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 			await fs.promises.mkdir( cacheFilePath, { recursive: true } );
 		}
 
-		// If the cache doesn't exist, create it
-		// If the cache is expired, refresh it
-		if ( ! fs.existsSync( cacheFile ) || isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
+		// If the cache does not exist or has expired, refresh it
+		if ( await isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
 			res = await fetchVersionList();
-			await fs.promises.writeFile( cacheFile, res );
+			await fs.promises.writeFile( cacheFile, JSON.stringify( res ) );
 		}
 	} catch ( err ) {
 		// Soft error handling here, since it's still possible to use a previously cached file.
@@ -669,6 +686,12 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 		return JSON.parse( data );
 	} catch ( err ) {
 		debug( err );
-		return [];
+		return [ {
+			ref: 'HEAD',
+			tag: 'trunk',
+			cacheable: false,
+			locked: false,
+			prerelease: true,
+		} ];
 	}
 }

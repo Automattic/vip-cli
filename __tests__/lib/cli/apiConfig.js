@@ -9,11 +9,11 @@
 /**
  * Internal dependencies
  */
-import { checkFeatureEnabled, exitWhenFeatureDisabled } from 'lib/cli/apiConfig';
-import * as featureFlags from 'lib/api/feature-flags';
-import Token from 'lib/token';
+import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../../../src/lib/cli/apiConfig';
+import * as featureFlags from '../../../src/lib/api/feature-flags';
+import Token from '../../../src/lib/token';
 
-jest.mock( 'lib/tracker' );
+jest.mock( '../../../src/lib/tracker' );
 const getFeatureSpy = jest.spyOn( featureFlags, 'get' );
 
 describe( 'apiConfig', () => {

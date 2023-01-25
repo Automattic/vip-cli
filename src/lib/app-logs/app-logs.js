@@ -11,7 +11,7 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
+import API from '../../lib/api';
 
 export const LIMIT_MAX = 5000;
 

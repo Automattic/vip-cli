@@ -1,14 +1,53 @@
 ## Changelog
 
-## 2.24.2 (22 Dec 2022)
+### 2.25.1
+
+- #1239 Downgrade Apollo client to 3.3.6
+
+### 2.25.0
+
+- #1233 Update @automattic/vip-go-preflight-checks to 2.0.16
+- #1232 fix(dev-env): Make environment existence check more robust
+- #1231 fix(dev-env): Inherit stdio descriptors for 'dev-env exec'
+- #1230 Dev-env: Fix ES service reference
+- #1229 fix(dev-env): Perform ES healthcheck properly
+- #1209 refactor(dev-env): Run health checks in parallel
+- #1201 fix(dev-env): Do not check env is up for every action
+- #1224 fix(tests): do not fail when `DO_NOT_TRACK` is set
+- #1211 fix(dev-env)!: remove support for statsd
+- #1183 feat(dev-env): Add support for the most recent Lando
+- #1203 test(dev-env): Add E2E tests for dev env
+- #1222 chore(deps): Update babel to 7.20.7
+- #1223 chore(deps): Update flow to 0.196.3
+- #1226 Add some additional info on installation
+- #1225 chore: Update dot files
+- #1197 feat(dev-env): Pipe files to Docker instead of copying them when doing SQL import
+- #1221 dev-env: Fix Mailhog being undefined in instance data from older versisons of VIP-CLI
+- #1218 Fix a grammatical mistake in the error message
+- #1217 Add filename validation to sql import
+- #1213 chore(deps): Update jest to 29.3.1 and nock to 13.2.9
+- #1214 chore(deps): Update babel to 7.20
+- #1208 feat(dev-env): Add quiet mode to `vip dev-env exec`
+- #1212 fix(dev-env): Errors should go to stderr, not stdout
+- #1206 fix(dev-env): await handleCLIException() and set proper exit code
+- #1202 fix(dev-env): Do not load integrations for Acquia, Lagoon, Pantheon
+- #1200 fix(dev-env): Reuse Lando App instead of recreating it every time
+- #1204 Dev-env: Update ES to 7.17.8 to match prod
+- #1205 ci: Pass correct node-version in CI workflow
+- #1199 fix(dev-env): Update `max_allowed_packet` to mirror prod envs
+- #1194 Add debugger instructions
+- #1196 fix(dev-env): Fix ambiguous short option for MailHog/MariaDB
+- #1195 fix(dev-env): increase max number of event listeners for AsyncEvents
+
+### 2.24.2 (22 Dec 2022)
 
 - #1219 fix(dev-env): Fix search/replace on SQL file import
 
-## 2.24.1 (10 Dec 2022)
+### 2.24.1 (10 Dec 2022)
 
 - #1193 Fix regression in vip dev-env import sql related to the fact we don't mount User's home dir anymore
 
-## 2.24.0 (06 Dec 2022)
+### 2.24.0 (06 Dec 2022)
 
 - #1139 fix(dev-env): Fall back to copy when rename fails due to EXDEV
 - #1170 [dev-env] Substitute the check for forward slash to with a cross-platform regex when processing component argument value
@@ -26,14 +65,14 @@
 - #1188 fix: Make bin files executables
 - #1189 refactor(dev-env): Bootstrap Lando only once
 
-## 2.23.0 (11 Nov 2022)
+### 2.23.0 (11 Nov 2022)
 
 - #1169 Preflight Validation: Change return code on error
 - #1095 Harmonia Pre Deploy Validation: Add `validate` command
 - #1156 Validate env before resolving path
 - #1167 dev-env: Fix bug in getVersionList() when path doesn't exist
 
-## 2.22.0 (2 Nov 2022)
+### 2.22.0 (2 Nov 2022)
 
 #1165  Add caching type policy for `WPSite` data
 #1164  Fix regExp to categorize multisite tables during SQL Imports

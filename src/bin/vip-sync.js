@@ -11,11 +11,11 @@ import { stdout } from 'single-line-log';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import app from 'lib/api/app';
-import command from 'lib/cli/command';
-import { formatEnvironment } from 'lib/cli/format';
-import { trackEvent } from 'lib/tracker';
+import API from '../lib/api';
+import app from '../lib/api/app';
+import command from '../lib/cli/command';
+import { formatEnvironment } from '../lib/cli/format';
+import { trackEvent } from '../lib/tracker';
 
 const appQuery = `id,name,environments{
 	id,appId,type,name,defaultDomain,branch,datacenter,syncProgress{
@@ -25,7 +25,7 @@ const appQuery = `id,name,environments{
 
 command( {
 	appContext: true,
-	appQuery: appQuery,
+	appQuery,
 	childEnvContext: true,
 	module: 'sync',
 	requireConfirm: 'Are you sure you want to sync from production?',
