@@ -495,7 +495,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		// Adding this for consistency:
 		// If the --in-place flag was false, we need to create a temporary file
 		// Irrespectively of whether the --search-replace flag was provided or not
-		return copyToTempFile( resolvedPath );
+		resolvedPath = copyToTempFile( resolvedPath );
 	}
 
 	return resolvedPath;
