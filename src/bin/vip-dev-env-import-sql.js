@@ -103,7 +103,7 @@ command( {
 				process.stdin.isTTY = origIsTTY;
 			}
 
-			if ( searchReplace && searchReplace.length && ! inPlace ) {
+			if ( ! inPlace ) {
 				fs.unlinkSync( resolvedPath );
 			}
 
