@@ -22,7 +22,7 @@ import type Lando from 'lando';
  * Internal dependencies
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
-import { searchAndReplace } from '../search-and-replace';
+import { copyToTempFile, searchAndReplace } from '../search-and-replace';
 import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
 import {
@@ -41,6 +41,7 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
+import { ChildProcess } from 'child_process';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -491,6 +492,11 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		}
 
 		resolvedPath = outputFileName;
+	} else if ( ! inPlace ) {
+		// Adding this for consistency:
+		// If the --in-place flag was false, we need to create a temporary file
+		// Irrespectively of whether the --search-replace flag was provided or not
+		return copyToTempFile( resolvedPath );
 	}
 
 	return resolvedPath;
