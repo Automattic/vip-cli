@@ -41,7 +41,6 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
-import { ChildProcess } from 'child_process';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
