@@ -134,6 +134,11 @@ const VALIDATION_STEPS = [
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 
+const DEFAULT_OPTS = {
+	php: '8.0',
+	wp: 'trunk',
+};
+
 export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
 	const now = new Date();
 	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
@@ -611,7 +616,7 @@ export function processVersionOption( value: string ): string {
 
 export function addDevEnvConfigurationOptions( command: Command ): any {
 	return command
-		.option( 'wordpress', 'Use a specific WordPress version', undefined, processVersionOption )
+		.option( 'wordpress', 'Use a specific WordPress version', DEFAULT_OPTS.wp, processVersionOption )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
 		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
 		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
@@ -620,7 +625,7 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( 'mariadb', 'Explicitly choose MariaDB version to use' )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
-		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
+		.option( 'php', 'Explicitly choose PHP version to use', DEFAULT_OPTS.php, processVersionOption )
 		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
 }
 
