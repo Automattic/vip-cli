@@ -164,6 +164,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
 
+	if ( isNaN( newInstanceData.wordpress.tag ) ) {
+		newInstanceData.wordpress.tag = 'trunk';
+	}
+
 	if ( ! newInstanceData.xdebugConfig ) {
 		newInstanceData.xdebugConfig = '';
 	}
