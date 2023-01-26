@@ -535,7 +535,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - If there is a newer version of the WordPress version currently used
  *   - A choice to use a different image
  *
- * @param {Object=} slug slug
+ * @param {string} slug slug
  * @return {boolean} boolean
  */
 async function updateWordPressImage( slug: string ): Promise<boolean> {
@@ -550,6 +550,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 	try {
 		envData = readEnvironmentData( slug );
 		currentWordPressTag = envData.wordpress.tag;
+		if ( currentWordPressTag === 'trunk' ) {
+			return false;
+		}
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
