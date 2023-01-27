@@ -44,8 +44,8 @@ async function getLandoConfig() {
 
 	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
-	const isLandoDebugSelected = ( process.env.DEBUG || '' ).includes( DEBUG_KEY );
-	const isAllDebugSelected = process.env.DEBUG === '*';
+	const isLandoDebugSelected = debugLib.enabled( DEBUG_KEY );
+	const isAllDebugSelected = debugLib.enabled( '"*"' );
 	let logLevelConsole;
 	if ( isAllDebugSelected ) {
 		logLevelConsole = 'silly';
