@@ -115,6 +115,7 @@ async function getLandoConfig() {
 		userConfRoot: landoDir,
 		home: fakeHomeDir,
 		domain: 'lndo.site',
+		version: 'unknown',
 	};
 }
 
@@ -421,6 +422,7 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 
 		tool.app = app;
 		tool.name = toolName;
+		tool.dir = '/';
 
 		if ( options.stdio ) {
 			tool.stdio = options.stdio;

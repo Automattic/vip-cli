@@ -22,7 +22,7 @@ import type Lando from 'lando';
  * Internal dependencies
  */
 import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
-import { searchAndReplace } from '../search-and-replace';
+import { copyToTempFile, searchAndReplace } from '../search-and-replace';
 import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
 import {
@@ -491,6 +491,11 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 		}
 
 		resolvedPath = outputFileName;
+	} else if ( ! inPlace ) {
+		// Adding this for consistency:
+		// If the --in-place flag was false, we need to create a temporary file
+		// Irrespectively of whether the --search-replace flag was provided or not
+		resolvedPath = copyToTempFile( resolvedPath );
 	}
 
 	return resolvedPath;
@@ -535,17 +540,24 @@ export async function importMediaPath( slug: string, filePath: string ) {
  *   - If there is a newer version of the WordPress version currently used
  *   - A choice to use a different image
  *
- * @param {Object=} slug slug
+ * @param {string} slug slug
  * @return {boolean} boolean
  */
 async function updateWordPressImage( slug: string ): Promise<boolean> {
 	const versions = await getVersionList();
+	if ( ! versions.length ) {
+		return false;
+	}
+
 	let message: string, envData, currentWordPressTag: string;
 
 	// Get the current environment configuration
 	try {
 		envData = readEnvironmentData( slug );
 		currentWordPressTag = envData.wordpress.tag;
+		if ( currentWordPressTag === 'trunk' ) {
+			return false;
+		}
 	} catch ( error ) {
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
@@ -627,9 +639,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 /**
  * Makes a web call to raw.githubusercontent.com
  */
-export async function fetchVersionList(): Promise<string> {
+export function fetchVersionList(): Promise<any> {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	return fetch( url ).then( res => res.text() );
+	return fetch( url ).then( res => res.json() );
 }
 
 /**
@@ -637,14 +649,17 @@ export async function fetchVersionList(): Promise<string> {
  *
  * @param {string} cacheFile uri of cache file
  * @param {number} ttl       time to live in seconds
- * @return {boolean} version list expired true/false
+ * @return {Promise<boolean>} version list expired true/false
  */
-function isVersionListExpired( cacheFile: string, ttl: number ): boolean {
-	const stats = fs.statSync( cacheFile );
-	const expire = new Date( stats.mtime );
-	expire.setSeconds( expire.getSeconds() + ttl );
+async function isVersionListExpired( cacheFile: string, ttl: number ): Promise<boolean> {
+	try {
+		const { mtime: expire } = await fs.promises.stat( cacheFile );
+		expire.setSeconds( expire.getSeconds() + ttl );
 
-	return ( +new Date > expire );
+		return ( +new Date > expire );
+	} catch ( err ) {
+		return true;
+	}
 }
 
 /**
@@ -662,11 +677,10 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 			await fs.promises.mkdir( cacheFilePath, { recursive: true } );
 		}
 
-		// If the cache doesn't exist, create it
-		// If the cache is expired, refresh it
-		if ( ! fs.existsSync( cacheFile ) || isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
+		// If the cache does not exist or has expired, refresh it
+		if ( await isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
 			res = await fetchVersionList();
-			await fs.promises.writeFile( cacheFile, res );
+			await fs.promises.writeFile( cacheFile, JSON.stringify( res ) );
 		}
 	} catch ( err ) {
 		// Soft error handling here, since it's still possible to use a previously cached file.
@@ -680,6 +694,12 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 		return JSON.parse( data );
 	} catch ( err ) {
 		debug( err );
-		return [];
+		return [ {
+			ref: 'HEAD',
+			tag: 'trunk',
+			cacheable: false,
+			locked: false,
+			prerelease: true,
+		} ];
 	}
 }
