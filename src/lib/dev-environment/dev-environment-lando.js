@@ -511,6 +511,17 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 	}
 }
 
+export async function landoShell( lando: Lando, instancePath: string, service: string, user: string ): Promise<void> {
+	const app = await getLandoApplication( lando, instancePath );
+	const shellTask = lando.tasks.find( task => task.command === 'ssh' );
+	await shellTask.run( {
+		command: [ '/bin/sh', '-c', 'if [ -x /bin/bash ]; then /bin/bash -i; else /bin/sh -i; fi; exit 0' ],
+		service,
+		user,
+		_app: app,
+	} );
+}
+
 /**
  * Sometimes the proxy network seems to disapper leaving only orphant stopped proxy container.
  * It seems to happen while restarting/powering off computer. This container would then failed
