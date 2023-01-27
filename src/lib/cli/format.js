@@ -131,7 +131,7 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 }
 
 export function isJsonObject( str: string ): boolean {
-	return typeof str === 'string' && str.startsWith( '{' ) && isJson( str );
+	return typeof str === 'string' && str.trim().startsWith( '{' ) && isJson( str );
 }
 
 export function isJson( str: string ): boolean {
