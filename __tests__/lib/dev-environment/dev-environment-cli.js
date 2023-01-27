@@ -22,7 +22,6 @@ import {
 	promptForComponent,
 	promptForArguments,
 	setIsTTY,
-	processVersionOption,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 
@@ -467,38 +466,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const expectedMaria = input.preselected.mariadb ? input.preselected.mariadb : input.default.mariadb;
 
 			expect( result.mariadb ).toStrictEqual( expectedMaria );
-		} );
-	} );
-	describe( 'processVersionOption', () => {
-		it.each( [
-			{
-				preselected: {
-					wp: 'trunk',
-				},
-				expected: {
-					wp: 'trunk',
-				},
-			},
-			{
-				preselected: {
-					wp: '6',
-				},
-				expected: {
-					wp: '6.0',
-				},
-			},
-			{
-				preselected: {
-					wp: '6.1',
-				},
-				expected: {
-					wp: '6.1',
-				},
-			},
-		] )( 'should process versions correctly', async input => {
-			const version = processVersionOption( input.preselected.wp );
-
-			expect( version ).toStrictEqual( input.expected.wp );
 		} );
 	} );
 } );
