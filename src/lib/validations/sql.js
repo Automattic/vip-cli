@@ -228,6 +228,15 @@ const checks: Checks = {
 		excerpt: "'DROP DATABASE' should not be present (case-insensitive)",
 		recommendation: 'Remove these lines',
 	},
+	useStatement: {
+		matcher: /^USE /i,
+		matchHandler: lineNumber => ( { lineNumber } ),
+		outputFormatter: lineNumberCheckFormatter,
+		results: [],
+		message: 'USE <DATABASE_NAME> statement',
+		excerpt: "'USE <DATABASE_NAME>' should not be present (case-insensitive)",
+		recommendation: 'Remove these lines',
+	},
 	alterUser: {
 		matcher: /^(ALTER USER|SET PASSWORD)/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
@@ -316,7 +325,7 @@ const checks: Checks = {
 			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
-const DEV_ENV_SPECIFIC_CHECKS = [ 'siteHomeUrlLando' ];
+const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
 function findDuplicates( arr: Array<*>, where: Set<*> ) {
 	const filtered = arr.filter( item => {

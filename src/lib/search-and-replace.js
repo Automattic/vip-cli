@@ -48,15 +48,6 @@ function makeTempDir() {
 	return tmpDir;
 }
 
-export function copyToTempFile( fileName ) {
-	const midputFileName = path.join( makeTempDir(), path.basename( fileName ) );
-	fs.copyFileSync( fileName, midputFileName );
-
-	debug( `Copied input file to ${ midputFileName }` );
-
-	return midputFileName;
-}
-
 export function getReadAndWriteStreams( {
 	fileName,
 	inPlace,
@@ -67,7 +58,10 @@ export function getReadAndWriteStreams( {
 	let outputFileName;
 
 	if ( inPlace ) {
-		const midputFileName = copyToTempFile( fileName );
+		const midputFileName = path.join( makeTempDir(), path.basename( fileName ) );
+		fs.copyFileSync( fileName, midputFileName );
+
+		debug( `Copied input file to ${ midputFileName }` );
 
 		debug( `Set output to the original file path ${ fileName }` );
 
