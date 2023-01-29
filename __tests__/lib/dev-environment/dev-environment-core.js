@@ -22,7 +22,7 @@ import { getEnvironmentPath,
 	getApplicationInformation,
 	resolveImportPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import * as searchReplaceModule from '../../../src/lib/search-and-replace';
+import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
@@ -31,8 +31,6 @@ jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
-
-const { searchAndReplace } = searchReplaceModule;
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	const cleanup = () => fs.rmSync( path.join( os.tmpdir(), 'lando' ), { recursive: true, force: true } );
@@ -306,9 +304,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		it( 'should resolve the path', () => {
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
-			jest.spyOn( searchReplaceModule, 'copyToTempFile' ).mockReturnValue( '/tmp/abcd/testfile.sql' );
 
-			const resolvedPath = '/tmp/abcd/testfile.sql';
+			const resolvedPath = `${ os.homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );

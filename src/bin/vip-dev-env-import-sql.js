@@ -10,7 +10,6 @@
  */
 import fs from 'fs';
 import chalk from 'chalk';
-import ChildProcess from 'child_process';
 
 /**
  * Internal dependencies
@@ -65,12 +64,6 @@ command( {
 		try {
 			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
 
-			// Remove the `USE` and `CREATE DATABASE` statements from the SQL file.
-			ChildProcess.execFileSync(
-				'sed',
-				[ '--in-place', '-E', '/^(USE|CREATE DATABASE)/Id', resolvedPath ],
-			);
-
 			if ( ! opt.skipValidate ) {
 				if ( ! isEnvUp( lando, getEnvironmentPath( slug ) ) ) {
 					throw new UserError( 'Environment needs to be started first' );
@@ -103,7 +96,7 @@ command( {
 				process.stdin.isTTY = origIsTTY;
 			}
 
-			if ( ! inPlace ) {
+			if ( searchReplace && searchReplace.length && ! inPlace ) {
 				fs.unlinkSync( resolvedPath );
 			}
 
