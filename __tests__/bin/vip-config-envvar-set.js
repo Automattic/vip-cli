@@ -1,17 +1,20 @@
+// @flow
+
 /**
  * External dependencies
  */
+import { describe, expect, it, jest } from '@jest/globals';
 
 /**
  * Internal dependencies
  */
-import { setEnvVarCommand } from 'bin/vip-config-envvar-set';
-import command from 'lib/cli/command';
-import { setEnvVar, validateNameWithMessage } from 'lib/envvar/api';
-import { cancel, confirm, promptForValue } from 'lib/envvar/input';
-import { readVariableFromFile } from 'lib/envvar/read-file';
-import { rollbar } from 'lib/rollbar';
-import { trackEvent } from 'lib/tracker';
+import { setEnvVarCommand } from '../../src/bin/vip-config-envvar-set';
+import command from '../../src/lib/cli/command';
+import { setEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
+import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
+import { readVariableFromFile } from '../../src/lib/envvar/read-file';
+import { rollbar } from '../../src/lib/rollbar';
+import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
 	throw 'EXIT'; // can't actually exit the test
@@ -59,6 +62,13 @@ jest.mock( 'lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
+const mockConfirm: JestMockFn<[string], Promise<boolean>> = confirm;
+const mockValidateNameWithMessage: JestMockFn<[string], boolean> = validateNameWithMessage;
+const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = promptForValue;
+const mockSetEnvVar: JestMockFn<[number, number, string, string], Promise<void>> = setEnvVar;
+const mockTrackEvent: JestMockFn<[], Promise<Response>> = trackEvent;
+const mockReadVariableFromFile: JestMockFn<[any], Promise<string>> = readVariableFromFile;
+
 describe( 'vip config envvar set', () => {
 	it( 'registers as a command', () => {
 		expect( command ).toHaveBeenCalled();
@@ -71,7 +81,7 @@ describe( 'setEnvVarCommand', () => {
 	const executeEvent = [ 'envvar_set_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_set_command_success', eventPayload ];
 
-	function setFixtures( name: string, fromFile = '', skipConfirmation = '' ) {
+	function setFixtures( name: string, fromFile: string = '', skipConfirmation: string = '' ) {
 		args = [ name ];
 		opts = {
 			app: {
@@ -93,16 +103,17 @@ describe( 'setEnvVarCommand', () => {
 		jest.clearAllMocks();
 
 		// Restore mock implementations we override in tests.
-		confirm.mockImplementation( () => true );
-		validateNameWithMessage.mockImplementation( () => true );
+		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
+		mockValidateNameWithMessage.mockImplementation( () => true );
 	} );
 
 	it( 'validates the name, prompts for confirmation, sets the variable, and prints success', async () => {
 		const name = 'TEST_VARIABLE';
+		// $FlowIgnore[method-unbinding] No idea how to fix this
 		const value = 'test value';
 
 		setFixtures( name );
-		promptForValue.mockImplementation( () => Promise.resolve( value ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
 
 		await setEnvVarCommand( args, opts );
 
@@ -112,7 +123,7 @@ describe( 'setEnvVarCommand', () => {
 		expect( confirm ).toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully set environment variable' ) );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -122,7 +133,7 @@ describe( 'setEnvVarCommand', () => {
 		const fromFile = '/some/path';
 
 		setFixtures( name, fromFile );
-		readVariableFromFile.mockImplementation( () => Promise.resolve( value ) );
+		mockReadVariableFromFile.mockImplementation( () => Promise.resolve( value ) );
 
 		await setEnvVarCommand( args, opts );
 
@@ -132,7 +143,7 @@ describe( 'setEnvVarCommand', () => {
 		expect( confirm ).toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully set environment variable' ) );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -142,7 +153,7 @@ describe( 'setEnvVarCommand', () => {
 		const skipConfirmation = 'yes';
 
 		setFixtures( name, '', skipConfirmation );
-		promptForValue.mockImplementation( () => Promise.resolve( value ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
 
 		await setEnvVarCommand( args, opts );
 
@@ -152,7 +163,7 @@ describe( 'setEnvVarCommand', () => {
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully set environment variable' ) );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -162,8 +173,8 @@ describe( 'setEnvVarCommand', () => {
 		const cancelEvent = [ 'envvar_set_user_cancelled_confirmation', eventPayload ];
 
 		setFixtures( name );
-		promptForValue.mockImplementation( () => Promise.resolve( value ) );
-		confirm.mockImplementation( () => Promise.resolve( false ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		mockConfirm.mockImplementation( () => Promise.resolve( false ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
@@ -172,7 +183,7 @@ describe( 'setEnvVarCommand', () => {
 		expect( confirm ).toHaveBeenCalled();
 		expect( cancel ).toHaveBeenCalled();
 		expect( setEnvVar ).not.toHaveBeenCalled();
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, cancelEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, cancelEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -181,18 +192,19 @@ describe( 'setEnvVarCommand', () => {
 		const errorEvent = [ 'envvar_set_invalid_name', eventPayload ];
 
 		setFixtures( name );
-		validateNameWithMessage.mockImplementation( () => false );
+		mockValidateNameWithMessage.mockImplementation( () => false );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
+		// $FlowIgnore[method-unbinding] No idea how to fix this
 		expect( process.exit ).toHaveBeenCalledWith( 1 );
 
 		expect( promptForValue ).not.toHaveBeenCalled();
 		expect( readVariableFromFile ).not.toHaveBeenCalled();
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( setEnvVar ).not.toHaveBeenCalled();
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
 		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
@@ -203,8 +215,8 @@ describe( 'setEnvVarCommand', () => {
 		const errorEvent = [ 'envvar_set_mutation_error', eventPayload ];
 
 		setFixtures( name );
-		promptForValue.mockImplementation( () => Promise.resolve( value ) );
-		setEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		mockSetEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 
@@ -212,7 +224,7 @@ describe( 'setEnvVarCommand', () => {
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
-		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
+		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
 		expect( rollbar.error ).toHaveBeenCalledWith( thrownError );
 	} );
 } );

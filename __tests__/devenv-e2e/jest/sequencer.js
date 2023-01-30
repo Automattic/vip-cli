@@ -1,4 +1,4 @@
-/* eslint-disable valid-jsdoc */
+/* eslint-disable jsdoc/valid-types */
 const Sequencer = require( '@jest/test-sequencer' ).default;
 
 /**
@@ -8,9 +8,9 @@ const Sequencer = require( '@jest/test-sequencer' ).default;
 
 class TestSequencer extends Sequencer {
 	/**
-	 * @param {Test[]} tests All tests
+	 * @param {Test[]}       tests   All tests
 	 * @param {ShardOptions} options Sharding options
-	 * @returns {Test[]} Chunk
+	 * @return {Test[]} Chunk
 	 */
 	shard( tests, options ) {
 		const { shardIndex, shardCount } = options;
@@ -25,7 +25,7 @@ class TestSequencer extends Sequencer {
 
 	/**
 	 * @param {Test[]} tests Tests
-	 * @returns {Test[]} Sorted tests
+	 * @return {Test[]} Sorted tests
 	 */
 	sort( tests ) {
 		return tests.sort( ( testA, testB ) => ( testA.path > testB.path ? 1 : -1 ) );

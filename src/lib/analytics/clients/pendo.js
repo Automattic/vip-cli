@@ -9,7 +9,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics:clients:pendo' );
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
-import http from 'lib/api/http';
+import http from '../../../lib/api/http';
 
 /**
  * Pendo analytics client.

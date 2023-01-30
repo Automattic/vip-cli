@@ -11,15 +11,15 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import { trackEventWithEnv } from 'lib/tracker';
-import { sqlDumpLineIsMultiSite } from 'lib/validations/is-multi-site-sql-dump';
-import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
+import { trackEventWithEnv } from '../../lib/tracker';
+import { sqlDumpLineIsMultiSite } from '../../lib/validations/is-multi-site-sql-dump';
+import { isMultiSiteInSiteMeta } from '../../lib/validations/is-multi-site';
 import {
 	isMultisitePrimaryDomainMapped,
 	getPrimaryDomain,
-} from 'lib/validations/is-multisite-domain-mapped';
-import { getMultilineStatement } from 'lib/validations/utils';
-import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
+} from '../../lib/validations/is-multisite-domain-mapped';
+import { getMultilineStatement } from '../../lib/validations/utils';
+import type { PostLineExecutionProcessingParams } from '../../lib/validations/line-by-line';
 
 const debug = debugLib( 'vip:vip-import-sql' );
 

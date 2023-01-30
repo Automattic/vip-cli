@@ -65,7 +65,7 @@ describe( 'vip dev-env update', () => {
 
 	it( 'should update the environment', async () => {
 		const slug = getProjectSlug();
-		const expectedElasticSearch = false;
+		const expectedElasticsearch = false;
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailHog = false;
@@ -79,18 +79,16 @@ describe( 'vip dev-env update', () => {
 		const dataBefore = readEnvironmentData( slug );
 		expect( dataBefore ).toMatchObject( {
 			siteSlug: slug,
-			elasticsearch: expectedElasticSearch,
+			elasticsearch: expectedElasticsearch,
+			phpmyadmin: expectedPhpMyAdmin,
+			xdebug: expectedXDebug,
 			mailhog: expectedMailHog,
 		} );
-
-		// Our bugs :-)
-		expect( dataBefore ).not.toHaveProperty( 'phpmyadmin' );
-		expect( dataBefore ).not.toHaveProperty( 'xdebug' );
 
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
-			'-e', `${ ! expectedElasticSearch }`,
+			'-e', `${ ! expectedElasticsearch }`,
 			'-p', `${ ! expectedPhpMyAdmin }`,
 			'-x', `${ ! expectedXDebug }`,
 			'--mailhog', `${ ! expectedMailHog }`,
@@ -101,7 +99,7 @@ describe( 'vip dev-env update', () => {
 		const dataAfter = readEnvironmentData( slug );
 		expect( dataAfter ).toMatchObject( {
 			siteSlug: slug,
-			elasticsearch: ! expectedElasticSearch,
+			elasticsearch: ! expectedElasticsearch,
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
 			mailhog: ! expectedMailHog,

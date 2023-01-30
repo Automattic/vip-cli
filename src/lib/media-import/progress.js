@@ -9,8 +9,8 @@ import { stdout as singleLogLine } from 'single-line-log';
 /**
  * Internal dependencies
  */
-import { getGlyphForStatus } from 'lib/media-import/status';
-import { RunningSprite } from 'lib/cli/format';
+import { getGlyphForStatus } from '../../lib/media-import/status';
+import { RunningSprite } from '../../lib/cli/format';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 

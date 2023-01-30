@@ -13,12 +13,12 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import { appQuery, deleteEnvVar, validateNameWithMessage } from 'lib/envvar/api';
-import { cancel, confirm, promptForValue } from 'lib/envvar/input';
-import { debug, getEnvContext } from 'lib/envvar/logging';
-import { rollbar } from 'lib/rollbar';
-import { trackEvent } from 'lib/tracker';
+import command from '../lib/cli/command';
+import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
+import { cancel, confirm, promptForValue } from '../lib/envvar/input';
+import { debug, getEnvContext } from '../lib/envvar/logging';
+import { rollbar } from '../lib/rollbar';
+import { trackEvent } from '../lib/tracker';
 
 const baseUsage = 'vip @mysite.develop config envvar delete';
 

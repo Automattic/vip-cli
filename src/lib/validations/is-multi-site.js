@@ -11,15 +11,13 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import { trackEventWithEnv } from 'lib/tracker';
-import * as exit from 'lib/cli/exit';
+import API from '../../lib/api';
+import { trackEventWithEnv } from '../../lib/tracker';
+import * as exit from '../../lib/cli/exit';
 
 const isMultiSite = new WeakMap();
 
 export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Promise<boolean> {
-	const track = trackEventWithEnv.bind( null, appId, envId );
-
 	// if we've already been through this, avoid doing it again within the same process
 	if ( isMultiSite.has( arguments ) && 'boolean' === typeof isMultiSite.get( arguments ) ) {
 		return Boolean( isMultiSite.get( arguments ) );
@@ -52,6 +50,7 @@ export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Pro
 			},
 		} );
 	} catch ( GraphQlError ) {
+		const track = trackEventWithEnv.bind( null, appId, envId );
 		await track( 'import_sql_command_error', {
 			error_type: 'GraphQL-MultiSite-Check-failed',
 			gql_err: GraphQlError,

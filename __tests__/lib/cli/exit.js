@@ -5,8 +5,8 @@
 /**
  * Internal dependencies
  */
-import { withError } from 'lib/cli/exit';
-import env from 'lib/env';
+import { withError } from '../../../src/lib/cli/exit';
+import env from '../../../src/lib/env';
 
 // Mock console.log()
 let output;

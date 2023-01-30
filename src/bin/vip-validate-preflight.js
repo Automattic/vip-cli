@@ -26,11 +26,11 @@ import { prompt } from 'enquirer';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
+import command from '../lib/cli/command';
 import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
-import * as exit from 'lib/cli/exit';
+import * as exit from '../lib/cli/exit';
 import { default as API, enableGlobalGraphQLErrorHandling, disableGlobalGraphQLErrorHandling } from '../lib/api';
-import { trackEvent } from 'lib/tracker';
+import { trackEvent } from '../lib/tracker';
 
 const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];
 
@@ -474,8 +474,8 @@ async function validateArgs( opt ): Promise<{}> {
 /**
  * Remove sensitive information from the tracked events and snake_case the keys.
  *
- * @param {object} args The arguments passed to the command.
- * @returns {object} Copy of the arguments without sensitive information.
+ * @param {Object} args The arguments passed to the command.
+ * @return {Object} Copy of the arguments without sensitive information.
  */
 function sanitizeArgsForTracking( args: {} ): {} {
 	const protectedKeys = [ 'npmToken', 'nodeBuildDockerEnv' ];

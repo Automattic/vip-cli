@@ -77,10 +77,14 @@ services:
       database_data:
 
   memcached:
-    type: memcached:custom
-    overrides:
+    type: compose
+    services:
       image: memcached:1.6-alpine3.16
-      command: docker-entrypoint.sh memcached
+      command: memcached -m 64
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:

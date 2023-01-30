@@ -37,8 +37,6 @@ export default async function getRepoFromGitConfig(): Promise<string> {
 
 		return repo;
 	}
-
-	return;
 }
 
 async function find( dir ): Promise<string> {

@@ -11,7 +11,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import env from 'lib/env';
+import env from '../../lib/env';
 
 export function withError( message: string ) {
 	console.error( `${ chalk.red( 'Error: ' ) } ${ message.toString().replace( /^Error:\s*/, '' ) }` );

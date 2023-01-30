@@ -28,4 +28,4 @@ if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined'
 	exportValue = new Browser();
 }
 
-module.exports = exportValue;
+export default exportValue;

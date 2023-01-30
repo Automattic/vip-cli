@@ -5,34 +5,32 @@
  */
 import chalk from 'chalk';
 
-type Options = {};
-
 export type Tuple = {
 	key: string,
 	value: string,
 };
 
-export function formatData( data: Array<any>, format: string, opts: ?Options ): string {
+export function formatData( data: Array<any>, format: string ): string {
 	if ( ! data || ! data.length ) {
 		return '';
 	}
 
 	switch ( format ) {
 		case 'ids':
-			return ids( data, opts );
+			return ids( data );
 
 		case 'json':
 			return JSON.stringify( data, null, '\t' );
 
 		case 'csv':
-			return csv( data, opts );
+			return csv( data );
 
 		case 'keyValue':
-			return keyValue( data, opts );
+			return keyValue( data );
 
 		case 'table':
 		default:
-			return table( data, opts );
+			return table( data );
 	}
 }
 
@@ -97,7 +95,9 @@ export function keyValue( values: Array<Tuple> ): string {
 	const lines = [];
 	const pairs = values.length > 0;
 
-	pairs ? lines.push( '===================================' ) : '';
+	if ( pairs ) {
+		lines.push( '===================================' );
+	}
 
 	for ( const { key, value } of values ) {
 		let formattedValue = value;
@@ -122,12 +122,25 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 			return arg.replace( /^--(.*)=(.*)$/, '--$1="$2"' );
 		}
 
-		if ( arg.includes( ' ' ) ) {
+		if ( arg.includes( ' ' ) && ! isJsonObject( arg ) ) {
 			return `"${ arg }"`;
 		}
 
 		return arg;
 	} );
+}
+
+export function isJsonObject( str: string ): boolean {
+	return typeof str === 'string' && str.trim().startsWith( '{' ) && isJson( str );
+}
+
+export function isJson( str: string ): boolean {
+	try {
+		JSON.parse( str );
+	} catch ( error ) {
+		return false;
+	}
+	return true;
 }
 
 export function capitalize( str: string ): string {

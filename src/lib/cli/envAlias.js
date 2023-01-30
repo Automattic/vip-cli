@@ -4,12 +4,12 @@
  * External dependencies
  */
 
-exports.isAlias = function( alias: string ): boolean {
-	return /^@[A-Za-z0-9\.\-]+$/.test( alias );
-};
+function isAlias( alias: string ): boolean {
+	return /^@[A-Za-z0-9.-]+$/.test( alias );
+}
 
-exports.parseEnvAlias = function( alias: string ) {
-	if ( ! exports.isAlias( alias ) ) {
+function parseEnvAlias( alias: string ) {
+	if ( ! isAlias( alias ) ) {
 		throw new Error( 'Invalid environment alias. Aliases are in the format of @app-name or @app-name.environment-name' );
 	}
 
@@ -20,7 +20,7 @@ exports.parseEnvAlias = function( alias: string ) {
 	// Also convert to lowercase because mixed case environment names would cause problems
 	const [ app, ...rest ] = stripped.split( '.' );
 
-	let env = undefined;
+	let env;
 
 	// Rejoin the env on '.' (if present), to handle instance names (env.instance-01)
 	if ( rest && rest.length ) {
@@ -28,9 +28,9 @@ exports.parseEnvAlias = function( alias: string ) {
 	}
 
 	return { app, env };
-};
+}
 
-exports.parseEnvAliasFromArgv = function( processArgv: Array<string> ) {
+function parseEnvAliasFromArgv( processArgv: Array<string> ) {
 	// Clone to not affect original arvg
 	const argv = ( processArgv.slice( 0 ): Array<string> );
 
@@ -44,17 +44,23 @@ exports.parseEnvAliasFromArgv = function( processArgv: Array<string> ) {
 		argsBeforeDashDash = argv.slice( 0, dashDashIndex );
 	}
 
-	const alias = argsBeforeDashDash.find( arg => exports.isAlias( arg ) );
+	const alias = argsBeforeDashDash.find( arg => isAlias( arg ) );
 
 	if ( ! alias ) {
 		return { argv };
 	}
 
 	// If we did have an alias, split it up into app/env
-	const parsedAlias = exports.parseEnvAlias( alias );
+	const parsedAlias = module.exports.parseEnvAlias( alias );
 
 	// Splice out the alias
 	argv.splice( argv.indexOf( alias ), 1 );
 
 	return { argv, ...parsedAlias };
+}
+
+module.exports = {
+	isAlias,
+	parseEnvAlias,
+	parseEnvAliasFromArgv,
 };

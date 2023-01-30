@@ -7,8 +7,8 @@ import url from 'url';
 /**
  * Internal dependencies
  */
-import Tracks from 'lib/analytics/clients/tracks';
-import * as apiConfig from 'lib/cli/apiConfig';
+import Tracks from '../../../../src/lib/analytics/clients/tracks';
+import * as apiConfig from '../../../../src/lib/cli/apiConfig';
 
 describe( 'lib/analytics/tracks', () => {
 	const {

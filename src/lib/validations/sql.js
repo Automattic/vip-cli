@@ -12,25 +12,25 @@ import { stdout as log } from 'single-line-log';
 /**
  * Internal dependencies
  */
-import * as exit from 'lib/cli/exit';
-import { trackEvent } from 'lib/tracker';
-import { getReadInterface } from 'lib/validations/line-by-line';
+import * as exit from '../../lib/cli/exit';
+import { trackEvent } from '../../lib/tracker';
+import { getReadInterface } from '../../lib/validations/line-by-line';
 // eslint-disable-next-line no-duplicate-imports
-import type { PostLineExecutionProcessingParams } from 'lib/validations/line-by-line';
+import type { PostLineExecutionProcessingParams } from '../../lib/validations/line-by-line';
 
 let problemsFound = 0;
 let lineNum = 1;
 const tableNames = [];
 
-function formatError( message ) {
+function formatError( message: string ): string {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
 }
 
-function formatWarning( message ) {
+function formatWarning( message: string ): string {
 	return `${ chalk.yellow( 'Warning:' ) } ${ message }`;
 }
 
-function formatRecommendation( message ) {
+function formatRecommendation( message: string ): string {
 	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
 
@@ -60,6 +60,10 @@ export type Checks = {
 	createTable: CheckType,
 	siteHomeUrl: CheckType,
 };
+
+type Record<T, V> = {
+	[T]: V
+}
 
 interface ValidationOptions {
 	isImport: boolean,
@@ -323,6 +327,19 @@ const checks: Checks = {
 };
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
+function findDuplicates( arr: Array<*>, where: Set<*> ) {
+	const filtered = arr.filter( item => {
+		if ( where.has( item ) ) {
+			where.delete( item );
+			return false;
+		}
+
+		return true;
+	} );
+
+	return [ ...new Set( filtered ) ];
+}
+
 const postValidation = async ( options: ValidationOptions ) => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: options.isImport } );
 
@@ -361,19 +378,7 @@ const postValidation = async ( options: ValidationOptions ) => {
 		// there was a duplciate table
 		problemsFound++;
 
-		function findDuplicates( arr ) {
-			const filtered = arr.filter( item => {
-				if ( tableNamesSet.has( item ) ) {
-					tableNamesSet.delete( item );
-				} else {
-					return item;
-				}
-			} );
-
-			return [ ...new Set( filtered ) ];
-		}
-
-		const duplicates = findDuplicates( tableNames );
+		const duplicates = findDuplicates( tableNames, tableNamesSet );
 
 		const errorObject = {
 			error: formatError( 'Duplicate table names were found: ' + duplicates.join( ',' ) ),
@@ -452,8 +457,8 @@ const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
 };
 
 const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
-	if ( lineNum % 500 === 0 ) {
-		options.isImport ? '' : log( `Reading line ${ lineNum } ` );
+	if ( options.isImport && lineNum % 500 === 0 ) {
+		log( `Reading line ${ lineNum } ` );
 	}
 
 	checkForTableName( line );

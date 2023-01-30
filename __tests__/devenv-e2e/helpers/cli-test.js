@@ -5,21 +5,23 @@ import { spawn } from 'child_process';
 
 /**
  * @typedef {Object} CliResult
- * @property {string} stdout
- * @property {string} stderr
- * @property {number} rc
+ * @property {string} stdout Standard output
+ * @property {string} stderr Standard error
+ * @property {number} rc     Return code
  */
 export class CliTest {
 	/**
-	 * @param {string[]} args Command and its arguments
-	 * @param {Object} options Spawn options
-	 * @param {boolean} printStderrOnError Whether to print stderr on error
-	 * @returns {Promise<CliResult>} Return value of the command
+	 * @param {string[]} args               Command and its arguments
+	 * @param {Object}   options            Spawn options
+	 * @param {boolean}  printStderrOnError Whether to print stderr on error
+	 * @return {Promise<CliResult>} Return value of the command
 	 */
 	spawn( args, options, printStderrOnError ) {
 		const [ command, ...commandArgs ] = args;
 
-		let stdout = '', stderr = '', finished = false;
+		let stdout = '',
+			stderr = '',
+			finished = false;
 
 		return new Promise( ( resolve, reject ) => {
 			const child = spawn( command, commandArgs, options );

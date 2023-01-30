@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import { validateName } from 'lib/envvar/api';
+import { validateName } from '../../../src/lib/envvar/api';
 
 describe( 'validateName', () => {
 	it( 'validates allowed names', () => {

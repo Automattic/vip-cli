@@ -18,7 +18,7 @@ import dns from 'dns';
 /**
  * Internal dependencies
  */
-import { ProgressTracker } from 'lib/cli/progress';
+import { ProgressTracker } from '../../lib/cli/progress';
 import { trackEvent } from '../tracker';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -39,7 +39,7 @@ import type {
 } from './types';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
-import typeof Command from 'lib/cli/command';
+import typeof Command from '../../lib/cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -230,7 +230,7 @@ export function processComponentOptionInput( passedParam: string, allowLocal: bo
 	// cast to string
 	const param = passedParam + '';
 	// This is a bit of a naive check
-	if ( allowLocal && /[\\\/]/.test( param ) ) {
+	if ( allowLocal && /[\\/]/.test( param ) ) {
 		return {
 			mode: 'local',
 			dir: param,
@@ -255,11 +255,13 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 
 /**
  * Prompt for arguments
+ *
  * @param {InstanceOptions} preselectedOptions - options to be used without prompt
- * @param {InstanceOptions} defaultOptions - options to be used as default values for prompt
- * @param {boolean} suppressPrompts - supress prompts and use default values where needed
- * @returns {any} instance data
+ * @param {InstanceOptions} defaultOptions     - options to be used as default values for prompt
+ * @param {boolean}         suppressPrompts    - supress prompts and use default values where needed
+ * @return {any} instance data
  */
+// eslint-disable-next-line complexity
 export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions, suppressPrompts: boolean = false ): Promise<InstanceData> {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
@@ -319,6 +321,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		const option = ( preselectedOptions[ component ] ?? '' ).toString();
 		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
 
+		// eslint-disable-next-line no-await-in-loop
 		const result = await processComponent( component, option, defaultValue );
 		if ( null === result ) {
 			throw new Error( 'processComponent() returned null' );
@@ -339,6 +342,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
 			} else {
+				// eslint-disable-next-line no-await-in-loop
 				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, ( ( defaultOptions[ service ]: any ): boolean ) );
 			}
 		}
@@ -373,6 +377,7 @@ async function processComponent( component: string, preselectedValue: string, de
 			break;
 		} else if ( isStdinTTY ) {
 			console.log( chalk.yellow( 'Warning:' ), message );
+			// eslint-disable-next-line no-await-in-loop
 			result = await promptForComponent( component, allowLocal, defaultObject );
 		} else {
 			throw new Error( message );

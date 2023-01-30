@@ -1,6 +1,9 @@
+// @flow
+
 /**
  * External dependencies
  */
+import type { Response } from 'node-fetch';
 const debug = require( 'debug' )( '@automattic/vip:analytics' );
 
 /**
@@ -9,8 +12,8 @@ const debug = require( 'debug' )( '@automattic/vip:analytics' );
 import Analytics from './analytics/index';
 import Tracks from './analytics/clients/tracks';
 import Pendo from './analytics/clients/pendo';
-import Token from 'lib/token';
-import config from 'lib/cli/config';
+import Token from '../lib/token';
+import config from '../lib/cli/config';
 import env from './env';
 
 let analytics = null;

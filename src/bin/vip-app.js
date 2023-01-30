@@ -9,9 +9,9 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import command, { getEnvIdentifier } from 'lib/cli/command';
-import app from 'lib/api/app';
-import { trackEvent } from 'lib/tracker';
+import command, { getEnvIdentifier } from '../lib/cli/command';
+import app from '../lib/api/app';
+import { trackEvent } from '../lib/tracker';
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip app <app>', 'Pass an app name or ID to get details about that app' )

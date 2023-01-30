@@ -1,10 +1,30 @@
 ## Changelog
 
-# 2.25.1
+### 2.26.0
+
+- #1237 Skip requoting if the arg is a valid JSON Object
+- #1258 fix(dev-env): Get more verbose logs from Lando in debug mode
+- #1249 refactor(dev-env): Do not use Lando's memcached plugin
+- #1266 fix(dev-env): Fix incorrect working directory when vip dev-env exec is run from a 8 level deep directory
+- #1263 Dev-env: Do not prompt to update WP version if trunk is used
+- #1244 chore(deps): Pin @apollo/client to 3.3.6
+- #1261 fix(dev-env): Gracefully handle failures to fetch WP versions
+- #1257 fix(dev-env): Fix "This app was built on a different version of Lando" warning
+- #1260 Config Software: fix small typo in "include" usage
+- #1250 feat(dev-env): Implement upgrade path for changes affecting .lando.yml
+- #1259 Add notifications commands to package.json
+- #1228 fix(dev-env): Do not use a temporary directory for Lando
+- #1251 Fix lint errors fix/lint-errors
+- #1247 Add library to facilitate SQL backup export
+- #1246 fix(dev-env): ElasticSearch => Elasticsearch
+- #1243 fix: Fix peer dependencies and code style issues
+- #1242 chore: Set minimum Node.js version to 16
+
+### 2.25.1
 
 - #1239 Downgrade Apollo client to 3.3.6
 
-# 2.25.0
+### 2.25.0
 
 - #1233 Update @automattic/vip-go-preflight-checks to 2.0.16
 - #1232 fix(dev-env): Make environment existence check more robust
@@ -39,15 +59,15 @@
 - #1196 fix(dev-env): Fix ambiguous short option for MailHog/MariaDB
 - #1195 fix(dev-env): increase max number of event listeners for AsyncEvents
 
-## 2.24.2 (22 Dec 2022)
+### 2.24.2 (22 Dec 2022)
 
 - #1219 fix(dev-env): Fix search/replace on SQL file import
 
-## 2.24.1 (10 Dec 2022)
+### 2.24.1 (10 Dec 2022)
 
 - #1193 Fix regression in vip dev-env import sql related to the fact we don't mount User's home dir anymore
 
-## 2.24.0 (06 Dec 2022)
+### 2.24.0 (06 Dec 2022)
 
 - #1139 fix(dev-env): Fall back to copy when rename fails due to EXDEV
 - #1170 [dev-env] Substitute the check for forward slash to with a cross-platform regex when processing component argument value
@@ -65,14 +85,14 @@
 - #1188 fix: Make bin files executables
 - #1189 refactor(dev-env): Bootstrap Lando only once
 
-## 2.23.0 (11 Nov 2022)
+### 2.23.0 (11 Nov 2022)
 
 - #1169 Preflight Validation: Change return code on error
 - #1095 Harmonia Pre Deploy Validation: Add `validate` command
 - #1156 Validate env before resolving path
 - #1167 dev-env: Fix bug in getVersionList() when path doesn't exist
 
-## 2.22.0 (2 Nov 2022)
+### 2.22.0 (2 Nov 2022)
 
 #1165  Add caching type policy for `WPSite` data
 #1164  Fix regExp to categorize multisite tables during SQL Imports

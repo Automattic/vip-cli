@@ -17,29 +17,28 @@ import { prompt } from 'enquirer';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
+import command from '../lib/cli/command';
 import {
 	currentUserCanImportForApp,
 	isSupportedApp,
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
-} from 'lib/site-import/db-file-import';
-// eslint-disable-next-line no-duplicate-imports
-import type { AppForImport, EnvForImport } from 'lib/site-import/db-file-import';
-import { importSqlCheckStatus } from 'lib/site-import/status';
-import { checkFileAccess, getFileSize, getFileMeta, uploadImportSqlFileToS3 } from 'lib/client-file-uploader';
-import { trackEventWithEnv } from 'lib/tracker';
-import { staticSqlValidations, getTableNames } from 'lib/validations/sql';
-import { siteTypeValidations } from 'lib/validations/site-type';
-import { searchAndReplace } from 'lib/search-and-replace';
-import API from 'lib/api';
-import * as exit from 'lib/cli/exit';
-import { fileLineValidations } from 'lib/validations/line-by-line';
-import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from 'lib/cli/format';
-import { ProgressTracker } from 'lib/cli/progress';
-import { isFile } from '../lib/client-file-uploader';
-import { isMultiSiteInSiteMeta } from 'lib/validations/is-multi-site';
-import { rollbar } from 'lib/rollbar';
+	type AppForImport,
+	type EnvForImport,
+} from '../lib/site-import/db-file-import';
+import { importSqlCheckStatus } from '../lib/site-import/status';
+import { checkFileAccess, getFileSize, getFileMeta, isFile, uploadImportSqlFileToS3 } from '../lib/client-file-uploader';
+import { trackEventWithEnv } from '../lib/tracker';
+import { staticSqlValidations, getTableNames } from '../lib/validations/sql';
+import { siteTypeValidations } from '../lib/validations/site-type';
+import { searchAndReplace } from '../lib/search-and-replace';
+import API from '../lib/api';
+import * as exit from '../lib/cli/exit';
+import { fileLineValidations } from '../lib/validations/line-by-line';
+import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
+import { ProgressTracker } from '../lib/cli/progress';
+import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
+import { rollbar } from '../lib/rollbar';
 
 export type WPSiteListType = {
 	id: string,
@@ -266,7 +265,7 @@ If you are confident the file does not contain unsupported statements, you can r
 }
 
 function validateFilename( filename ) {
-	const re = /^[a-z0-9\-\_\.]+$/i;
+	const re = /^[a-z0-9\-_.]+$/i;
 
 	// Exits if filename contains anything outside a-z A-Z - _ .
 	if ( ! re.test( filename ) ) {
@@ -351,7 +350,7 @@ const displayPlaybook = ( {
 				);
 			}
 			console.log( chalk.yellow( 'The following sites will be affected by the import:' ) );
-			multiSiteBreakdown.map( siteObject => {
+			multiSiteBreakdown.forEach( siteObject => {
 				console.log();
 				console.log(
 					chalk.blueBright(
@@ -542,8 +541,8 @@ Processing the SQL import for your environment...
 			startImportVariables.input = {
 				id: app.id,
 				environmentId: env.id,
-				basename: basename,
-				md5: md5,
+				basename,
+				md5,
 				searchReplace: [],
 			};
 
