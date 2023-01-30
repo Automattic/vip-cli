@@ -44,3 +44,5 @@ renovate.json
 .github
 
 .vscode
+.idea
+*.iml
