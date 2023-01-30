@@ -111,7 +111,7 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise<voi
 
 export async function createEnvironment( instanceData: InstanceData ): Promise<void> {
 	const slug = instanceData.siteSlug;
-	debug( 'Will create an environment', slug, 'with instanceData: ', instanceData );
+	debug( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -124,13 +124,14 @@ export async function createEnvironment( instanceData: InstanceData ): Promise<v
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
 
 export async function updateEnvironment( instanceData: InstanceData ): Promise<void> {
 	const slug = instanceData.siteSlug;
-	debug( 'Will update an environment', slug, 'with instanceData: ', instanceData );
+	debug( 'Will process an environment', slug, 'with instanceData for updating: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -143,6 +144,7 @@ export async function updateEnvironment( instanceData: InstanceData ): Promise<v
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
@@ -162,6 +164,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
+	}
+
+	if ( isNaN( instanceData.wordpress.tag ) ) {
+		newInstanceData.wordpress.tag = 'trunk';
 	}
 
 	if ( ! newInstanceData.xdebugConfig ) {
