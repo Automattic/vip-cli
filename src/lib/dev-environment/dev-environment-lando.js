@@ -511,11 +511,18 @@ export async function landoExec( lando: Lando, instancePath: string, toolName: s
 	}
 }
 
-export async function landoShell( lando: Lando, instancePath: string, service: string, user: string ): Promise<void> {
+export async function landoShell( lando: Lando, instancePath: string, service: string, user: string, command: string[] ): Promise<void> {
 	const app = await getLandoApplication( lando, instancePath );
 	const shellTask = lando.tasks.find( task => task.command === 'ssh' );
+
+	if ( ! command.length ) {
+		const interactive = process.stdin.isTTY ? '-i' : '';
+		command = [ '/bin/sh', '-c', `if [ -x /bin/bash ]; then /bin/bash ${ interactive }; else /bin/sh ${ interactive }; fi; exit 0` ];
+	}
+
+	debug( 'Running command "%o" in service "%s" as user "%s"', command, service, user );
 	await shellTask.run( {
-		command: [ '/bin/sh', '-c', 'if [ -x /bin/bash ]; then /bin/bash -i; else /bin/sh -i; fi; exit 0' ],
+		command,
 		service,
 		user,
 		_app: app,

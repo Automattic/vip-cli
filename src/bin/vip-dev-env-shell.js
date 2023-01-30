@@ -25,26 +25,45 @@ const examples = [
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell`,
 		description: 'Spawns a shell in the dev environment',
 	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -- ls -lha`,
+		description: 'Runs `ls -lha` command in the shell in the dev environment',
+	},
 ];
 
-command()
+function getCommand( args: string[] ): string[] {
+	const splitterIdx = process.argv.findIndex( argument => '--' === argument );
+	if ( args.length > 0 && splitterIdx === -1 ) {
+		throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
+	}
+
+	let cmd: string[] = [];
+	if ( splitterIdx !== -1 && splitterIdx + 1 < process.argv.length ) {
+		cmd = process.argv.slice( splitterIdx + 1 );
+	}
+
+	return cmd;
+}
+
+command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'root', 'Spawn a root shell' )
 	.examples( examples )
-	.argv( process.argv, async ( arg, opt ) => {
+	.argv( process.argv, async ( args, opt ) => {
 		const slug = getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, '' );
+		await validateDependencies( lando, '', true );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_shell_command_execute', trackingInfo );
 
-		debug( 'Args: ', arg, 'Options: ', opt );
+		debug( 'Args: ', args, 'Options: ', opt );
 
 		const isRoot = !! opt.root;
+		const cmd = getCommand( args );
 		try {
-			await landoShell( lando, getEnvironmentPath( slug ), 'php', isRoot ? 'root' : 'www-data' );
+			await landoShell( lando, getEnvironmentPath( slug ), 'php', isRoot ? 'root' : 'www-data', cmd );
 			await trackEvent( 'dev_env_shell_command_success', trackingInfo );
 		} catch ( error ) {
 			if ( ! error.hide ) {
