@@ -137,7 +137,7 @@ async function regenerateLandofile( instancePath: string ): Promise<void> {
 		await fs.promises.rename( landoFile, backup );
 		console.warn( chalk.yellow( 'Backed up %s to %s' ), landoFile, backup );
 	} catch ( err ) {
-		// Rename failed - possible the file does not exist. Silently ignoring.
+		// Rename failed - possibly the file does not exist. Silently ignoring.
 	}
 
 	const slug = path.basename( instancePath );
@@ -211,32 +211,8 @@ export async function landoRebuild( lando: Lando, instancePath: string ) {
 	await app.rebuild();
 }
 
-function fixUpServiceURLs( app: App ) {
-	app.info
-		.forEach( service => {
-			service.urls.forEach( ( url, idx, arr ) => {
-				arr[ idx ] = url.replace( /\/\/localhost:/, '//127.0.0.1:' );
-			} );
-		} );
-}
-
 async function addHooks( app: App, lando: Lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
-
-	let fixAddresses = false;
-
-	try {
-		const result = await dns.promises.lookup( 'localhost' );
-		fixAddresses = ( result.family === 6 );
-	} catch ( err ) {
-		console.warn( 'WARNING: unable to resolve "localhost". Danger, Will Robinson, danger!' );
-		fixAddresses = true;
-	}
-
-	if ( fixAddresses ) {
-		app.events.on( 'ready', 5, () => fixUpServiceURLs( app ) );
-		app.events.on( 'post-start', 9, () => fixUpServiceURLs( app ) );
-	}
 
 	lando.events.once( 'pre-engine-build', async data => {
 		const instanceData = readEnvironmentData( app._name );
