@@ -610,6 +610,7 @@ export function processVersionOption( value: string ): string {
 }
 
 export function addDevEnvConfigurationOptions( command: Command ): any {
+	// We leave the third parameter to undefined on some because the defaults are handled in preProcessInstanceData()
 	return command
 		.option( 'wordpress', 'Use a specific WordPress version', undefined, processVersionOption )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
