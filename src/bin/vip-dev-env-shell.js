@@ -26,6 +26,10 @@ const examples = [
 		description: 'Spawns a shell in the dev environment',
 	},
 	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -r`,
+		description: 'Spawns a shell in the dev environment under root user',
+	},
+	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -- ls -lha`,
 		description: 'Runs `ls -lha` command in the shell in the dev environment',
 	},
