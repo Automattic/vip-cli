@@ -13,10 +13,9 @@ import fetch from 'node-fetch';
 import chalk from 'chalk';
 import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
-import { PassThrough, pipeline } from 'stream';
+import { pipeline, PassThrough } from 'node:stream/promises';
 import { Parser as XmlParser } from 'xml2js';
 import debugLib from 'debug';
-import { promisify } from 'util';
 
 /**
  * Internal dependencies
@@ -109,8 +108,7 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 export const unzipFile = async ( inputFilename: string, outputFilename: string ) => {
 	const source = fs.createReadStream( inputFilename );
 	const destination = fs.createWriteStream( outputFilename );
-	const pipe = promisify( pipeline );
-	await pipe( source, createGunzip(), destination );
+	await pipeline( source, createGunzip(), destination );
 };
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
