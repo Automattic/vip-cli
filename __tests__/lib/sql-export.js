@@ -180,7 +180,7 @@ describe( 'lib/ExportCommand', () => {
 		} );
 	} );
 
-	describe( '.runSequence', () => {
+	describe( '.run', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
 		const exportCommand = new SQLExportCommand( app, env );
@@ -197,7 +197,7 @@ describe( 'lib/ExportCommand', () => {
 		} );
 
 		it( 'should sequentially run all the steps', async () => {
-			await exportCommand.runSequence();
+			await exportCommand.run();
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink' );
