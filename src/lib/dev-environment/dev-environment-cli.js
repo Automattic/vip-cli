@@ -708,9 +708,9 @@ export class DevEnvSQLImportCommand {
 		this.slug = getEnvironmentName( options );
 	}
 
-	async run() {
+	async run( silent = false ) {
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, this.slug );
+		await validateDependencies( lando, this.slug, silent );
 
 		const { searchReplace, inPlace } = this.options;
 		const resolvedPath = await resolveImportPath( this.slug, this.fileName, searchReplace, inPlace );
@@ -742,7 +742,10 @@ export class DevEnvSQLImportCommand {
 			 */
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
-			console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
+
+			if ( ! silent ) {
+				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
+			}
 		} finally {
 			process.stdin.isTTY = origIsTTY;
 		}
