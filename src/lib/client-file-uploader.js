@@ -11,11 +11,12 @@ import os from 'os';
 import path from 'path';
 import fetch from 'node-fetch';
 import chalk from 'chalk';
-import { createGzip } from 'zlib';
+import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
-import { PassThrough } from 'stream';
+import { PassThrough, pipeline } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import debugLib from 'debug';
+import { promisify } from 'util';
 
 /**
  * Internal dependencies
@@ -97,6 +98,20 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.on( 'finish', resolve )
 			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
+
+/**
+ * Extract a .gz file and save it to a specified location
+ *
+ * @param {string} inputFilename  The file to unzip
+ * @param {string} outputFilename The file where the unzipped data will be written
+ * @return {Promise} A promise that resolves when the file is unzipped
+ */
+export const unzipFile = async ( inputFilename: string, outputFilename: string ) => {
+	const source = fs.createReadStream( inputFilename );
+	const destination = fs.createWriteStream( outputFilename );
+	const pipe = promisify( pipeline );
+	await pipe( source, createGunzip(), destination );
+};
 
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
 	const fileSize = await getFileSize( fileName );
