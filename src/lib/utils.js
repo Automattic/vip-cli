@@ -50,5 +50,13 @@ export async function pollUntil( fn, interval, isDone ) {
 export function makeTempDir( prefix = 'vip-cli' ) {
 	const tempDir = fs.mkdtempSync( path.join( os.tmpdir(), `${ prefix }-` ) );
 	debug( `Created a directory to hold temporary files: ${ tempDir }` );
+
+	process.on( 'exit', () => {
+		if ( fs.existsSync( tempDir ) ) {
+			fs.rmSync( tempDir, { recursive: true } );
+			debug( `Removed temporary directory: ${ tempDir }` );
+		}
+	} );
+
 	return tempDir;
 }

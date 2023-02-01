@@ -149,15 +149,6 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	/**
-	 * Removes the temporary directory
-	 *
-	 * @return {void}
-	 */
-	async cleanup() {
-		fs.rmSync( this.tmpDir, { recursive: true } );
-	}
-
-	/**
 	 * Sequentially runs the commands to export, search-replace, and import the SQL file
 	 * to the local environment
 	 *
@@ -203,7 +194,5 @@ export class DevEnvSyncSQLCommand {
 		} catch ( err ) {
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
-
-		this.cleanup();
 	}
 }
