@@ -16,7 +16,7 @@ import command from '../lib/cli/command';
 import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
-import { DevEnvSyncSQLCommand } from '../lib/dev-environment/dev-environment-sync-sql';
+import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 
 const examples = [
