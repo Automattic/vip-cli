@@ -14,8 +14,9 @@
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvTrackingInfo, handleCLIException, DevEnvSQLImportCommand } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
 
 const examples = [
 	{
@@ -46,7 +47,7 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ fileName ] = unmatchedArgs;
-		const cmd = new DevEnvSQLImportCommand( fileName, opt );
+		const cmd = new DevEnvImportSQLCommand( fileName, opt );
 		const trackingInfo = getEnvTrackingInfo( cmd.slug );
 
 		try {

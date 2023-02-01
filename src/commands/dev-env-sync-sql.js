@@ -17,12 +17,12 @@ import { replace } from '@automattic/vip-search-replace';
  * Internal dependencies
  */
 
-import { unzipFile } from '../client-file-uploader';
-import { SQLExportCommand } from '../sql-export';
-import { makeTempDir } from '../utils';
-import { getReadInterface } from '../validations/line-by-line';
-import { DevEnvSQLImportCommand } from './dev-environment-cli';
-import * as exit from '../cli/exit';
+import { unzipFile } from '../lib/client-file-uploader';
+import { ExportSQLCommand } from './export-sql';
+import { makeTempDir } from '../lib/utils';
+import { getReadInterface } from '../lib/validations/line-by-line';
+import * as exit from '../lib/cli/exit';
+import { DevEnvImportSQLCommand } from './dev-env-import-sql';
 
 /**
  * Finds the site home url from the SQL line
@@ -109,7 +109,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the export is complete
 	 */
 	async generateExport() {
-		const exportCommand = new SQLExportCommand( this.app, this.env, this.gzFile );
+		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile );
 		await exportCommand.run();
 	}
 
@@ -144,7 +144,7 @@ export class DevEnvSyncSQLCommand {
 			inPlace: true,
 			skipValidate: true,
 		};
-		const importCommand = new DevEnvSQLImportCommand( this.sqlFile, importOptions );
+		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions );
 		await importCommand.run( true );
 	}
 

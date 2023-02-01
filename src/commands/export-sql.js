@@ -174,7 +174,7 @@ async function createExportJob( appId, envId, backupId ) {
 /**
  * Class representing an export command workflow
  */
-export class SQLExportCommand {
+export class ExportSQLCommand {
 	app;
 	env;
 	downloadLink;
