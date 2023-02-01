@@ -94,7 +94,7 @@ API.mockImplementation( () => {
 	};
 } );
 
-describe( 'lib/ExportCommand', () => {
+describe( 'commands/ExportSQLCommand', () => {
 	beforeEach( () => {
 	} );
 
