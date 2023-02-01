@@ -4,7 +4,6 @@ export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }
 export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
-	mariadbVersion: '10.3',
 	phpVersion: '8.0',
 };
 

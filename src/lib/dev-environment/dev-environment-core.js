@@ -187,6 +187,11 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mailhog = false;
 	}
 
+	// MariaDB migration
+	if ( ! newInstanceData.mariadb ) {
+		newInstanceData.mariadb = undefined;
+	}
+
 	return newInstanceData;
 }
 
