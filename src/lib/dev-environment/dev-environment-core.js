@@ -216,7 +216,8 @@ export async function destroyEnvironment( lando: Lando, slug: string, removeFile
 }
 
 interface PrintOptions {
-	extended?: boolean
+	extended?: boolean;
+	suppressWarnings?: boolean;
 }
 
 export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOptions ): Promise<void> {
@@ -259,7 +260,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const appInfo = await landoInfo( lando, instancePath );
+	const appInfo = await landoInfo( lando, instancePath, !! options.suppressWarnings );
 	if ( options.extended ) {
 		const environmentData = readEnvironmentData( slug );
 		appInfo.title = environmentData.wpTitle;

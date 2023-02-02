@@ -310,7 +310,7 @@ export async function landoDestroy( lando: Lando, instancePath: string ) {
 	await app.destroy();
 }
 
-export async function landoInfo( lando: Lando, instancePath: string ) {
+export async function landoInfo( lando: Lando, instancePath: string, suppressWarnings: boolean ) {
 	const app = await getLandoApplication( lando, instancePath );
 
 	let appInfo = landoUtils.startTable( app );
@@ -351,7 +351,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 		appInfo[ 'Default password' ] = 'password';
 	}
 
-	if ( hasWarnings ) {
+	if ( ! suppressWarnings && hasWarnings ) {
 		let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
 		Object.keys( health ).forEach( service => {
 			if ( ! health[ service ] ) {
