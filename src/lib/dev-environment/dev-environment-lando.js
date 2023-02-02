@@ -355,7 +355,7 @@ export async function landoInfo( lando: Lando, instancePath: string, suppressWar
 		let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
 		Object.keys( health ).forEach( service => {
 			if ( ! health[ service ] ) {
-				message += `  ${ chalk.red( service ) }\n`;
+				message += `${ chalk.red( service ) }\n`;
 			}
 		} );
 		appInfo[ 'Health warnings' ] = message;
