@@ -59,6 +59,8 @@ services:
           volume:
             nocopy: true
 <% wpVolumes() %>
+    run_as_root:
+      - chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp
     run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
