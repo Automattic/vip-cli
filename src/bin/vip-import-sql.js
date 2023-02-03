@@ -265,7 +265,16 @@ If you are confident the file does not contain unsupported statements, you can r
 	return getTableNames();
 }
 
-function validateFilename( filename ) {
+/**
+ * Validates the file name or path to be imported
+ * @param {string} fileNameOrPath File name or path to be validated
+ * @returns {void}
+ * @throws {Error} If the file name contains anything outside (a-z A-Z - _ .)
+ */
+export function validateFilename( fileNameOrPath ) {
+	// Fetch only the file name from file path
+	let filename = path.basename( fileNameOrPath );
+
 	const re = /^[a-z0-9\-_.]+$/i;
 
 	// Exits if filename contains anything outside a-z A-Z - _ .
@@ -418,11 +427,8 @@ command( {
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
-		// Fetch only the file name from file path
-		let fileNameToUpload = path.basename( fileNameOrPath );
-
 		// Exit if filename contains unsafe character
-		validateFilename( fileNameToUpload );
+		validateFilename( fileNameOrPath );
 
 		// SQL file validations
 		const tableNames = await validateAndGetTableNames( {
