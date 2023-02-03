@@ -13,6 +13,7 @@ import columns from 'cli-columns';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -387,9 +388,9 @@ command( {
 		const { app, env } = opts;
 		let { skipValidate, searchReplace } = opts;
 		const { id: envId, appId } = env;
-		const [ fileName ] = arg;
+		const [ fileNameOrPath ] = arg;
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
-		let fileMeta = await getFileMeta( fileName );
+		let fileMeta = await getFileMeta( fileNameOrPath );
 
 		if ( fileMeta.isCompressed ) {
 			console.log(
@@ -410,14 +411,15 @@ command( {
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
-		await gates( app, env, fileName );
+		await gates( app, env, fileNameOrPath );
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
-		let fileNameToUpload = fileName;
+		// Fetch only the file name from file path
+		let fileNameToUpload = path.basename( fileNameOrPath );
 
 		// Exit if filename contains unsafe character
 		validateFilename( fileNameToUpload );
@@ -436,7 +438,7 @@ command( {
 			launched,
 			tableNames,
 			searchReplace,
-			fileName,
+			fileNameOrPath,
 			domain,
 			formattedEnvironment,
 			unformattedEnvironment: opts.env.type,
@@ -492,7 +494,7 @@ Processing the SQL import for your environment...
 		if ( searchReplace && searchReplace.length ) {
 			progressTracker.stepRunning( 'replace' );
 
-			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
+			const { outputFileName } = await searchAndReplace( fileNameOrPath, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
 				output: true,
