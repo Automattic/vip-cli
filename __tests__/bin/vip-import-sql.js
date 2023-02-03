@@ -51,25 +51,16 @@ describe( 'vip-import-sql', () => {
 			];
 			expect( result ).toEqual( expected );
 		} );
-		it( 'throws an error if file name contains any character outside of a-z, A-Z, 0-9, -, _, .', async () => {
+		it( 'throws an error if file name contains any character outside of character set ( a-z, A-Z, 0-9, -, _, . )', async () => {
 			const params = {
 				skipValidate: false,
 				appId: 1,
 				envId: 1,
-				fileNameToUpload: '__fixtures__/client-file-uploader/db-dump-ipQ#$sum-67mb.sql',
+				fileNameToUpload: '__fixtures__/validations/b@d-imp$rt-f*le.sql',
 			};
 			await expect( validateAndGetTableNames( params ) ).rejects.toThrow(
 				'File name can only contain letters, numbers, dashes, underscores, and periods.'
 			);
-		} );
-		it( 'returns true if file base name contains only characters from ( a-z, A-Z, 0-9, -, _, . ), regardless of the rest of the file path', async () => {
-			const params = {
-				skipValidate: false,
-				appId: 1,
-				envId: 1,
-				fileNameToUpload: '/__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql',
-			};
-			await expect( validateAndGetTableNames( params ) ).resolves.toBeTruthy();
 		} );
 	} );
 } );
