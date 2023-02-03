@@ -438,7 +438,7 @@ command( {
 			launched,
 			tableNames,
 			searchReplace,
-			fileNameOrPath,
+			fileName: fileNameOrPath,
 			domain,
 			formattedEnvironment,
 			unformattedEnvironment: opts.env.type,
