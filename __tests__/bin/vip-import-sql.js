@@ -58,7 +58,7 @@ describe( 'vip-import-sql', () => {
 				skipValidate: false,
 				appId: 1,
 				envId: 1,
-				fileNameToUpload: '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql',
+				fileNameToUpload: '__fixtures__/validations/b@d-imp$rt-f*le.sql',
 			};
 			await expect( validateAndGetTableNames( params ) ).rejects.toThrow(
 				'File name can only contain letters, numbers, dashes, underscores, and periods.'
