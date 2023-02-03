@@ -428,7 +428,7 @@ command( {
 			skipValidate,
 			appId,
 			envId,
-			fileName,
+			fileNameToUpload,
 			searchReplace,
 		} );
 
