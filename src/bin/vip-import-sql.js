@@ -418,11 +418,10 @@ command( {
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
+		let fileNameToUpload = fileName;
+
 		// Extract base file name and exit if it contains unsafe character
 		validateFilename( path.basename( fileName ) );
-
-		// Fetch only the filename from file path
-		let fileNameToUpload = fileName;
 
 		// SQL file validations
 		const tableNames = await validateAndGetTableNames( {
