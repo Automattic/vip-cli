@@ -8,20 +8,15 @@
 /**
  * External dependencies
  */
-import fs from 'fs';
-import chalk from 'chalk';
 
 /**
  * Internal dependencies
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentName, getEnvTrackingInfo, handleCLIException, promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { exec, getEnvironmentPath, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
+import { getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { validate } from '../lib/validations/sql';
-import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
-import UserError from '../lib/user-error';
+import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
 
 const examples = [
 	{
@@ -52,69 +47,11 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ fileName ] = unmatchedArgs;
-		const { searchReplace, inPlace } = opt;
-		const slug = getEnvironmentName( opt );
-
-		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
-
-		const trackingInfo = getEnvTrackingInfo( slug );
-		await trackEvent( 'dev_env_import_sql_command_execute', trackingInfo );
+		const cmd = new DevEnvImportSQLCommand( fileName, opt );
+		const trackingInfo = getEnvTrackingInfo( cmd.slug );
 
 		try {
-			const resolvedPath = await resolveImportPath( slug, fileName, searchReplace, inPlace );
-
-			if ( ! opt.skipValidate ) {
-				if ( ! isEnvUp( lando, getEnvironmentPath( slug ) ) ) {
-					throw new UserError( 'Environment needs to be started first' );
-				}
-
-				const expectedDomain = `${ slug }.vipdev.lndo.site`;
-				await validate( resolvedPath, {
-					isImport: false,
-					skipChecks: [],
-					extraCheckParams: { siteHomeUrlLando: expectedDomain },
-				} );
-			}
-
-			const fd = await fs.promises.open( resolvedPath, 'r' );
-			const importArg = [ 'db', '--disable-auto-rehash' ];
-			const origIsTTY = process.stdin.isTTY;
-
-			try {
-				/**
-				 * When stdin is a TTY, Lando passes the `--tty` flag to Docker.
-				 * This breaks our code when we pass the stream as stdin to Docker.
-				 * exec() then fails with "the input device is not a TTY".
-				 *
-				 * Therefore, for the things to work, we have to pretend that stdin is not a TTY :-)
-				 */
-				process.stdin.isTTY = false;
-				await exec( lando, slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
-				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
-			} finally {
-				process.stdin.isTTY = origIsTTY;
-			}
-
-			if ( searchReplace && searchReplace.length && ! inPlace ) {
-				fs.unlinkSync( resolvedPath );
-			}
-
-			const cacheArg = [ 'wp', 'cache', 'flush' ];
-			await exec( lando, slug, cacheArg );
-
-			try {
-				await exec( lando, slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-				const doIndex = await promptForBoolean( 'Do you want to index data in Elasticsearch (used by Enterprise Search)?', true );
-				if ( doIndex ) {
-					await exec( lando, slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
-				}
-			} catch ( err ) {
-				// Exception means they don't have vip-search enabled.
-			}
-
-			const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
-			await exec( lando, slug, addUserArg );
+			await cmd.run();
 			await trackEvent( 'dev_env_import_sql_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );

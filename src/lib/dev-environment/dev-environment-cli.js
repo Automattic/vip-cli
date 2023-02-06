@@ -20,6 +20,7 @@ import dns from 'dns';
  */
 import { ProgressTracker } from '../../lib/cli/progress';
 import { trackEvent } from '../tracker';
+
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
