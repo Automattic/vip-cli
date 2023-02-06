@@ -15,7 +15,7 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 
-const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
+const debug = debugLib( '@automattic/vip:lib:utils' );
 
 /**
  * Polls a function until its return value satisfies a condition
