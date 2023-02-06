@@ -12,7 +12,7 @@
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
+import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { getEnvironmentName, getEnvTrackingInfo, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';

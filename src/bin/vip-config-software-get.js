@@ -12,12 +12,11 @@
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import { formatData } from 'lib/cli/format';
-import { appQuery, appQueryFragments } from 'lib/config/software';
-import UserError from 'lib/user-error';
-import { formatSoftwareSettings } from '../lib/config/software';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
+import { formatData } from '../lib/cli/format';
+import { appQuery, appQueryFragments, formatSoftwareSettings } from '../lib/config/software';
+import UserError from '../lib/user-error';
 
 // Command examples
 const examples = [
@@ -41,7 +40,7 @@ command( {
 	wildcardCommand: true,
 	format: true,
 	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
-} ).option( 'include', `Extra information to be included. Valida values: ${ VALID_INCLUDES.join( ',' ) }` )
+} ).option( 'include', `Extra information to be included. Valid values: ${ VALID_INCLUDES.join( ',' ) }` )
 	.examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
 		const trackingInfo = {
 			environment_id: opt.env?.id,

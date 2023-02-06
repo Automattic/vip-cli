@@ -6,10 +6,10 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import API from 'lib/api';
-import { getRecentLogs } from 'lib/app-logs/app-logs';
+import API from '../../../src/lib/api';
+import { getRecentLogs } from '../../../src/lib/app-logs/app-logs';
 
-jest.mock( 'lib/api', () => jest.fn() );
+jest.mock( '../../../src/lib/api', () => jest.fn() );
 
 const EXPECTED_QUERY = gql`
 	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $after: String ) {

@@ -16,11 +16,10 @@ import chalk from 'chalk';
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
+import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
 import { addDevEnvConfigurationOptions, getEnvTrackingInfo, getEnvironmentName, handleCLIException, promptForArguments, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -65,7 +64,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
-			wordpress: currentInstanceData.wordpress.tag,
+			wordpress: currentInstanceData.wordpress.tag || 'trunk',
 			elasticsearch: currentInstanceData.elasticsearch,
 			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
 			mariadb: currentInstanceData.mariadb,
@@ -81,8 +80,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => option.length > 1 ) // Filter out single letter aliases
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
-		const supressPrompts = providedOptions.length > 0;
-		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, supressPrompts );
+		const suppressPrompts = providedOptions.length > 0;
+		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );

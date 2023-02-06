@@ -6,7 +6,7 @@ import os from 'os';
 /**
  * Internal dependencies
  */
-import pkg from 'root/package.json';
+import pkg from '../../package.json';
 
 const env = {
 	app: {

@@ -17,7 +17,7 @@ import chalk from 'chalk';
  */
 import Token from './token';
 import env from './env';
-import { createProxyAgent } from 'lib/http/proxy-agent';
+import { createProxyAgent } from '../lib/http/proxy-agent';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
@@ -61,7 +61,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		}
 	} );
 
-	const withToken = setContext( async () =>{
+	const withToken = setContext( async () => {
 		const token = await Token.get();
 
 		return { token };

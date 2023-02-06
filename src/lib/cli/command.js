@@ -12,15 +12,12 @@ import updateNotifier from 'update-notifier';
 /**
  * Internal dependencies
  */
-/* eslint-disable no-duplicate-imports */
-import type { Tuple } from './prompt';
 import { confirm } from './prompt';
-/* eslint-enable no-duplicate-imports */
-import API from 'lib/api';
-import app from 'lib/api/app';
-import { formatData, formatSearchReplaceValues } from './format';
-import pkg from 'root/package.json';
-import { trackEvent } from 'lib/tracker';
+import API from '../../lib/api';
+import app from '../../lib/api/app';
+import { formatData, formatSearchReplaceValues, type Tuple } from './format';
+import pkg from '../../../package.json';
+import { trackEvent } from '../../lib/tracker';
 import { parseEnvAliasFromArgv } from './envAlias';
 import { rollbar } from '../rollbar';
 import * as exit from './exit';
@@ -48,6 +45,7 @@ let _opts = {};
 
 let alreadyConfirmedDebugAttachment = false;
 
+// eslint-disable-next-line complexity
 args.argv = async function( argv, cb ): Promise<any> {
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
@@ -357,7 +355,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		switch ( _opts.module ) {
-			case 'import-sql':
+			case 'import-sql': {
 				const site = options.env;
 				if ( site && site.primaryDomain ) {
 					const primaryDomainName = site.primaryDomain.name;
@@ -365,7 +363,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 
 				// Site launched details
-				const haveLaunchedField = site.hasOwnProperty( 'launched' );
+				const haveLaunchedField = Object.prototype.hasOwnProperty.call( site, 'launched' );
 
 				if ( haveLaunchedField ) {
 					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
@@ -373,10 +371,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 					info.push( { key: 'Launched?', value: `${ chalk.cyan( launched ) }` } );
 				}
 
-				this.sub && info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
+				if ( this.sub ) {
+					info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
+				}
 
 				options.skipValidate =
-					options.hasOwnProperty( 'skipValidate' ) &&
+					Object.prototype.hasOwnProperty.call( options, 'skipValidate' ) &&
 					!! options.skipValidate &&
 					! [ 'false', 'no' ].includes( options.skipValidate );
 
@@ -387,7 +387,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 				// Show S-R params if the `search-replace` flag is set
 				const searchReplace = options.searchReplace;
 
-				const assignSRValues = ( from, to ) =>{
+				const assignSRValues = ( from, to ) => {
 					const pairs = {
 						From: `${ from }`,
 						To: `${ to }`,
@@ -404,7 +404,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 
 				break;
-			case 'sync':
+			}
+
+			case 'sync': {
 				const { backup, canSync, errors } = options.env.syncPreview;
 
 				if ( ! canSync ) {
@@ -425,18 +427,20 @@ args.argv = async function( argv, cb ): Promise<any> {
 				}
 				info.push( { key: 'Replacements', value: '\n' + formatData( replacements, 'table' ) } );
 				break;
+			}
+
 			case 'import-media':
 				info.push( { key: 'Archive URL', value: chalk.blue.underline( this.sub ) } );
 
-				options.overwriteExistingFiles = options.hasOwnProperty( 'overwriteExistingFiles' ) &&
+				options.overwriteExistingFiles = Object.prototype.hasOwnProperty.call( options, 'overwriteExistingFiles' ) &&
 					!! options.overwriteExistingFiles && ! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
 				info.push( { key: 'Overwrite any existing files', value: options.overwriteExistingFiles ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
 
-				options.importIntermediateImages = options.hasOwnProperty( 'importIntermediateImages' ) &&
+				options.importIntermediateImages = Object.prototype.hasOwnProperty.call( options, 'importIntermediateImages' ) &&
 					!! options.importIntermediateImages && ! [ 'false', 'no' ].includes( options.importIntermediateImages );
 				info.push( { key: 'Import intermediate image files', value: options.importIntermediateImages ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
 
-				options.exportFileErrorsToJson = options.hasOwnProperty( 'exportFileErrorsToJson' ) &&
+				options.exportFileErrorsToJson = Object.prototype.hasOwnProperty.call( options, 'exportFileErrorsToJson' ) &&
 					!! options.exportFileErrorsToJson && ! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
 				info.push( { key: 'Export any file errors encountered to a JSON file instead of a plain text file',
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );

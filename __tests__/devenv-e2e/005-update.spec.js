@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { mkdtemp, rm } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
@@ -65,7 +65,7 @@ describe( 'vip dev-env update', () => {
 
 	it( 'should update the environment', async () => {
 		const slug = getProjectSlug();
-		const expectedElasticSearch = false;
+		const expectedElasticsearch = false;
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailHog = false;
@@ -79,18 +79,16 @@ describe( 'vip dev-env update', () => {
 		const dataBefore = readEnvironmentData( slug );
 		expect( dataBefore ).toMatchObject( {
 			siteSlug: slug,
-			elasticsearch: expectedElasticSearch,
+			elasticsearch: expectedElasticsearch,
+			phpmyadmin: expectedPhpMyAdmin,
+			xdebug: expectedXDebug,
 			mailhog: expectedMailHog,
 		} );
-
-		// Our bugs :-)
-		expect( dataBefore ).not.toHaveProperty( 'phpmyadmin' );
-		expect( dataBefore ).not.toHaveProperty( 'xdebug' );
 
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
-			'-e', `${ ! expectedElasticSearch }`,
+			'-e', `${ ! expectedElasticsearch }`,
 			'-p', `${ ! expectedPhpMyAdmin }`,
 			'-x', `${ ! expectedXDebug }`,
 			'--mailhog', `${ ! expectedMailHog }`,
@@ -101,7 +99,7 @@ describe( 'vip dev-env update', () => {
 		const dataAfter = readEnvironmentData( slug );
 		expect( dataAfter ).toMatchObject( {
 			siteSlug: slug,
-			elasticsearch: ! expectedElasticSearch,
+			elasticsearch: ! expectedElasticsearch,
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
 			mailhog: ! expectedMailHog,
@@ -141,5 +139,46 @@ describe( 'vip dev-env update', () => {
 			siteSlug: slug,
 			multisite: expectedMultiSite,
 		} );
+	} );
+
+	it( 'does not replace mariadb with mysql', async () => {
+		const slug = getProjectSlug();
+		const basePath = path.join( tmpPath, 'vip', 'dev-environment', slug );
+		await mkdir( basePath );
+
+		const src = [
+			path.join( __dirname, '../../__fixtures__/dev-env-e2e/instance_data_mariadb.json' ),
+			path.join( __dirname, '../../__fixtures__/dev-env-e2e/.lando_mariadb.yml' ),
+		];
+
+		const dst = [
+			path.join( basePath, 'instance_data.json' ),
+			path.join( basePath, '.lando.yml' ),
+		];
+
+		await Promise.all( [
+			copyFile( src[ 0 ], dst[ 0 ] ),
+			copyFile( src[ 1 ], dst[ 1 ] ),
+		] );
+
+		expect( await checkEnvExists( slug ) ).toBe( true );
+
+		const result = await cliTest.spawn( [
+			process.argv[ 0 ], vipDevEnvUpdate,
+			'--slug', slug,
+			'--mailhog', 'true',
+		], { env }, true );
+		expect( result.rc ).toBe( 0 );
+
+		const dataAfter = readEnvironmentData( slug );
+		expect( dataAfter ).toMatchObject( {
+			mariadb: expect.any( String ),
+			mailhog: true,
+		} );
+
+		const landofile = await readFile( dst[ 1 ], 'utf8' );
+		expect( landofile ).not.toContain( 'image: mysql:' );
+		expect( landofile ).toContain( 'image: mariadb:' );
+		expect( landofile ).toContain( 'mailhog:' );
 	} );
 } );

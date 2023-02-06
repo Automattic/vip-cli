@@ -2,11 +2,11 @@
  * Internal dependencies
  */
 import os from 'os';
-import * as tracker from 'lib/tracker';
-import * as logsLib from 'lib/app-logs/app-logs';
-import * as exit from 'lib/cli/exit';
-import { rollbar } from 'lib/rollbar';
-import { getLogs } from 'bin/vip-logs';
+import * as tracker from '../../src/lib/tracker';
+import * as logsLib from '../../src/lib/app-logs/app-logs';
+import * as exit from '../../src/lib/cli/exit';
+import { rollbar } from '../../src/lib/rollbar';
+import { getLogs } from '../../src/bin/vip-logs';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );

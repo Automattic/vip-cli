@@ -16,9 +16,9 @@ import {
 	maybeSearchReplacePrimaryDomain,
 	getPrimaryDomain,
 	isMultisitePrimaryDomainMapped,
-} from 'lib/validations/is-multisite-domain-mapped';
+} from '../../../src/lib/validations/is-multisite-domain-mapped';
 
-import { API_URL } from 'lib/api';
+import { API_URL } from '../../../src/lib/api';
 
 describe( 'is-multisite-domain-mapped', () => {
 	const capturedStatement = [

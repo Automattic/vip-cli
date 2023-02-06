@@ -11,17 +11,17 @@ import os from 'os';
 import path from 'path';
 import fetch from 'node-fetch';
 import chalk from 'chalk';
-import { createGzip } from 'zlib';
+import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
-import { PassThrough } from 'stream';
+import { pipeline, PassThrough } from 'node:stream/promises';
 import { Parser as XmlParser } from 'xml2js';
 import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
-import http from 'lib/api/http';
-import { MB_IN_BYTES } from 'lib/constants/file-size';
+import http from '../lib/api/http';
+import { MB_IN_BYTES } from '../lib/constants/file-size';
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -98,25 +98,36 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
 			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
 	);
 
+/**
+ * Extract a .gz file and save it to a specified location
+ *
+ * @param {string} inputFilename  The file to unzip
+ * @param {string} outputFilename The file where the unzipped data will be written
+ * @return {Promise} A promise that resolves when the file is unzipped
+ */
+export const unzipFile = async ( inputFilename: string, outputFilename: string ) => {
+	const source = fs.createReadStream( inputFilename );
+	const destination = fs.createWriteStream( outputFilename );
+	await pipeline( source, createGunzip(), destination );
+};
+
 export async function getFileMeta( fileName: string ): Promise<FileMeta> {
-	return new Promise( async resolve => {
-		const fileSize = await getFileSize( fileName );
+	const fileSize = await getFileSize( fileName );
 
-		const basename = path.basename( fileName );
-		// TODO Validate File basename...  encodeURIComponent, maybe...?
+	const basename = path.basename( fileName );
+	// TODO Validate File basename...  encodeURIComponent, maybe...?
 
-		const mimeType = await detectCompressedMimeType( fileName );
-		// TODO Only allow a subset of Mime Types...?
+	const mimeType = await detectCompressedMimeType( fileName );
+	// TODO Only allow a subset of Mime Types...?
 
-		const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
+	const isCompressed = [ 'application/zip', 'application/gzip' ].includes( mimeType );
 
-		resolve( {
-			basename,
-			fileName,
-			fileSize,
-			isCompressed,
-		} );
-	} );
+	return {
+		basename,
+		fileName,
+		fileSize,
+		isCompressed,
+	};
 }
 
 export async function uploadImportSqlFileToS3( {

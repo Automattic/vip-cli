@@ -8,16 +8,16 @@
 /**
  * External dependencies
  */
-import { trackEventWithEnv } from 'lib/tracker';
-import * as exit from 'lib/cli/exit';
+import { trackEventWithEnv } from '../lib/tracker';
+import * as exit from '../lib/cli/exit';
 
 /**
  * Internal dependencies
  */
-import { isSupportedApp } from 'lib/site-import/db-file-import';
-import { importSqlCheckStatus } from 'lib/site-import/status';
-import command from 'lib/cli/command';
-import { ProgressTracker } from 'lib/cli/progress';
+import { isSupportedApp } from '../lib/site-import/db-file-import';
+import { importSqlCheckStatus } from '../lib/site-import/status';
+import command from '../lib/cli/command';
+import { ProgressTracker } from '../lib/cli/progress';
 
 const appQuery = `
 id,

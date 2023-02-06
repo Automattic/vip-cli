@@ -13,9 +13,9 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
-import * as exit from 'lib/cli/exit';
-import { searchAndReplace } from 'lib/search-and-replace';
+import command from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { searchAndReplace } from '../lib/search-and-replace';
 
 const debug = debugLib( '@automattic/vip:bin:vip-search-replace' );
 

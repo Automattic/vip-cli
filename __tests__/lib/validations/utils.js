@@ -10,8 +10,8 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-import { getMultilineStatement } from 'lib/validations/utils';
-import { getReadInterface } from 'lib/validations/line-by-line';
+import { getMultilineStatement } from '../../../src/lib/validations/utils';
+import { getReadInterface } from '../../../src/lib/validations/line-by-line';
 
 describe( 'utils', () => {
 	describe( 'getMultilineStatement', () => {

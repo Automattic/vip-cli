@@ -11,7 +11,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { debug } from 'lib/envvar/logging';
+import { debug } from '../../lib/envvar/logging';
 import deleteEnvVar from './api-delete';
 import getEnvVar from './api-get';
 import getEnvVars from './api-get-all';

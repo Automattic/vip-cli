@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.24.2",
+  "version": "2.26.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -80,16 +80,17 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=14.14.0",
-    "npm": ">=6"
+    "node": ">=16.11.0",
+    "npm": ">=8"
   },
   "bugs": {
     "url": "https://github.com/Automattic/vip/issues"
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
+    "@automattic/eslint-plugin-wpvip": "^0.3.0",
     "@babel/cli": "7.20.7",
-    "@babel/core": "7.20.7",
+    "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.19.1",
     "@babel/plugin-transform-modules-commonjs": "7.20.11",
     "@babel/preset-env": "7.20.2",
@@ -100,16 +101,8 @@
     "babel-plugin-module-resolver": "4.1.0",
     "check-node-version": "^4.2.1",
     "dockerode": "^3.3.4",
-    "eslint": "7.32.0",
-    "eslint-config-wpvip": "github:automattic/eslint-config-wpvip#c6605d1",
-    "eslint-plugin-flowtype": "5.7.2",
-    "eslint-plugin-import": "2.22.1",
-    "eslint-plugin-jest": "24.3.6",
-    "eslint-plugin-json": "3.0.0",
-    "eslint-plugin-jsx-a11y": "6.4.1",
-    "eslint-plugin-no-async-foreach": "0.1.1",
-    "eslint-plugin-react": "7.26.0",
-    "eslint-plugin-wpcalypso": "5.0.0",
+    "eslint": "^8.31.0",
+    "eslint-plugin-flowtype": "^8.0.3",
     "flow-bin": "0.196.3",
     "jest": "^29.3.1",
     "jest-environment-jsdom": "^29.3.1",
@@ -119,7 +112,7 @@
     "rimraf": "3.0.2"
   },
   "dependencies": {
-    "@apollo/client": "^3.3.6",
+    "@apollo/client": "3.3.6",
     "@automattic/vip-go-preflight-checks": "^2.0.16",
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.3",
@@ -127,6 +120,7 @@
     "cli-columns": "^4.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
     "configstore": "5.0.1",
+    "copy-dir": "0.4.0",
     "debug": "4.3.4",
     "ejs": "^3.1.8",
     "enquirer": "2.3.6",
@@ -136,7 +130,7 @@
     "ini": "2.0.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "github:automattic/lando-cli.git#3c6fad5",
+    "lando": "github:automattic/lando-cli.git#67b675a",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",

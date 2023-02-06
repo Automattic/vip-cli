@@ -56,7 +56,7 @@ describe( 'validate CreateProxyAgent', () => {
 		setEnvironmentVariabeles( envVars );
 		// We have to dynamically import the module so we can set environment variables above
 		// All tests must be async to support this dynamic import, otherwise the modified env variables are not picked up
-		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+		const createProxyAgent = ( await import( '../../../src/lib/http/proxy-agent' ) ).createProxyAgent;
 		const agent = createProxyAgent( urlToHit );
 		expect( agent ).toBeNull();
 	} );
@@ -97,7 +97,7 @@ describe( 'validate CreateProxyAgent', () => {
 		},
 	] )( 'should return proxy with %o', async ( { envVars, urlToHit, expectedClass } ) => {
 		setEnvironmentVariabeles( envVars );
-		const createProxyAgent = ( await import( 'lib/http/proxy-agent' ) ).createProxyAgent;
+		const createProxyAgent = ( await import( '../../../src/lib/http/proxy-agent' ) ).createProxyAgent;
 		const agent = createProxyAgent( urlToHit );
 		expect( agent ).not.toBeNull();
 		expect( agent ).toBeInstanceOf( expectedClass );

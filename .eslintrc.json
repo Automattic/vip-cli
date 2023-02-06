@@ -1,10 +1,24 @@
 {
+  "parser": "@babel/eslint-parser",
+  "plugins": [
+    "flowtype"
+  ],
   "extends": [
-    "wpvip"
+    "plugin:@automattic/wpvip/base",
+    "plugin:@automattic/wpvip/testing",
+    "plugin:flowtype/recommended"
   ],
   "rules": {
     "no-console": 0,
-    "no-process-exit": 0
+    "no-process-exit": 0,
+    "jsdoc/check-tag-names": [1, {
+      "definedTags": ["flow", "format"]
+    }],
+    "security/detect-object-injection": 0,
+    "security/detect-non-literal-fs-filename": 0,
+    "security/detect-unsafe-regex": 0,
+    "security/detect-non-literal-regexp": 0,
+    "security/detect-non-literal-require": 0
   },
   "globals": {
     "test": true,

@@ -13,12 +13,11 @@ import debugLib from 'debug';
 /**
  * Internal dependencies
  */
-import { trackEvent } from 'lib/tracker';
-import command from 'lib/cli/command';
-import { printEnvironmentInfo, printAllEnvironmentsInfo } from 'lib/dev-environment/dev-environment-core';
-import { getEnvironmentName, handleCLIException } from 'lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from 'lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { trackEvent } from '../lib/tracker';
+import command from '../lib/cli/command';
+import { printEnvironmentInfo, printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-core';
+import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -53,6 +52,7 @@ command()
 		try {
 			const options = {
 				extended: !! opt.extended,
+				suppressWarnings: true,
 			};
 			if ( opt.all ) {
 				await printAllEnvironmentsInfo( lando, options );

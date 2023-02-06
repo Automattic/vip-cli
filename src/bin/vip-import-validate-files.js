@@ -8,12 +8,11 @@ import url from 'url';
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs';
-import { promisify } from 'util';
 
 /**
  * Internal dependencies
  */
-import command from 'lib/cli/command';
+import command from '../lib/cli/command';
 import {
 	acceptedExtensions,
 	findNestedDirectories,
@@ -25,10 +24,7 @@ import {
 	logErrorsForInvalidFilenames,
 	summaryLogs,
 } from '../lib/vip-import-validate-files';
-import { trackEvent } from 'lib/tracker';
-
-// Promisify to use async/await
-const stat = promisify( fs.stat );
+import { trackEvent } from '../lib/tracker';
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
@@ -90,7 +86,8 @@ command( { requiredArgs: 1, format: true } )
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
 			// Check if file is a directory
-			const stats = await stat( file );
+			// eslint-disable-next-line no-await-in-loop
+			const stats = await fs.promises.stat( file );
 			const isFolder = stats.isDirectory();
 
 			const extension = path.extname( file ); // Extract the extension of the file

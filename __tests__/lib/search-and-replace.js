@@ -13,10 +13,10 @@ import searchReplaceLib from '@automattic/vip-search-replace';
 /**
  * Internal dependencies
  */
-import { searchAndReplace } from 'lib/search-and-replace';
+import { searchAndReplace } from '../../src/lib/search-and-replace';
 // Import prompt as a module since that's how we implement it in lib/search-and-replace.js,
 // as opposed to importing prompt.confirm on its own
-import * as prompt from 'lib/cli/prompt';
+import * as prompt from '../../src/lib/cli/prompt';
 
 global.console = { log: jest.fn(), error: jest.fn() };
 

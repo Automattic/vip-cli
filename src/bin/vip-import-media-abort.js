@@ -12,15 +12,15 @@ import gql from 'graphql-tag';
 import chalk from 'chalk';
 
 /**
-* Internal dependencies
-*/
-import { isSupportedApp } from 'lib/media-import/media-file-import';
-import command from 'lib/cli/command';
-import API from 'lib/api';
-import * as exit from 'lib/cli/exit';
+ * Internal dependencies
+ */
+import { isSupportedApp } from '../lib/media-import/media-file-import';
+import command from '../lib/cli/command';
+import API from '../lib/api';
+import * as exit from '../lib/cli/exit';
 // eslint-disable-next-line no-duplicate-imports
-import { trackEventWithEnv } from 'lib/tracker';
-import { MediaImportProgressTracker } from 'lib/media-import/progress';
+import { trackEventWithEnv } from '../lib/tracker';
+import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 
 const appQuery = `

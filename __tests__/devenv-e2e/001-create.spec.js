@@ -66,7 +66,9 @@ describe( 'vip dev-env create', () => {
 		const slug = getProjectSlug();
 		const expectedMultisite = false;
 		const expectedPhpVersion = '8.0';
-		const expectedElasticSearch = false;
+		const expectedElasticsearch = false;
+		const expectedPhpMyAdmin = false;
+		const expectedXDebug = false;
 		const expectedMailHog = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
@@ -80,20 +82,17 @@ describe( 'vip dev-env create', () => {
 			siteSlug: slug,
 			wpTitle: expect.any( String ),
 			multisite: expectedMultisite,
-			mariadb: '10.3',
 			mediaRedirectDomain: '',
-			elasticsearch: expectedElasticSearch,
+			elasticsearch: expectedElasticsearch,
 			xdebugConfig: '',
 			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
 			muPlugins: { mode: 'image' },
 			appCode: { mode: 'image' },
 			wordpress: expect.objectContaining( { mode: 'image', tag: expect.any( String ) } ),
+			phpmyadmin: expectedPhpMyAdmin,
+			xdebug: expectedXDebug,
 			mailhog: expectedMailHog,
 		} );
-
-		// Our bugs :-)
-		expect( data ).not.toHaveProperty( 'phpmyadmin' );
-		expect( data ).not.toHaveProperty( 'xdebug' );
 	} );
 
 	it( 'should be configurable via command line', async () => {
@@ -102,7 +101,7 @@ describe( 'vip dev-env create', () => {
 		const expectedMultisite = true;
 		const expectedPhpVersion = '8.0';
 		const expectedWordPressVersion = '6.1';
-		const expectedElasticSearch = true;
+		const expectedElasticsearch = true;
 		const expectedPhpMyAdmin = true;
 		const expectedXDebug = true;
 		const expectedMailHog = true;
@@ -119,7 +118,7 @@ describe( 'vip dev-env create', () => {
 			'--php', expectedPhpVersion,
 			'--wordpress', expectedWordPressVersion,
 			'--mu-plugins', 'image',
-			'-e', `${ expectedElasticSearch }`,
+			'-e', `${ expectedElasticsearch }`,
 			'-p', `${ expectedPhpMyAdmin }`,
 			'-x', `${ expectedXDebug }`,
 			'--mailhog', `${ expectedMailHog }`,
@@ -132,9 +131,8 @@ describe( 'vip dev-env create', () => {
 			siteSlug: slug,
 			wpTitle: expectedTitle,
 			multisite: expectedMultisite,
-			mariadb: '10.3',
 			mediaRedirectDomain: '',
-			elasticsearch: expectedElasticSearch,
+			elasticsearch: expectedElasticsearch,
 			xdebugConfig: '',
 			php: expect.stringContaining( `:${ expectedPhpVersion }` ),
 			muPlugins: expect.objectContaining( { mode: 'image' } ), // BUG: our code adds `{ tag: 'image' }`
