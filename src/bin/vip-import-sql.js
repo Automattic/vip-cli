@@ -13,7 +13,6 @@ import columns from 'cli-columns';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import path from 'path';
 
 /**
  * Internal dependencies
@@ -419,7 +418,7 @@ command( {
 		const launched = opts.env.launched;
 
 		// Extract base file name and exit if it contains unsafe character
-		validateFilename( path.basename( fileName ) );
+		validateFilename( fileMeta.basename );
 
 		let fileNameToUpload = fileName;
 
