@@ -1,5 +1,14 @@
 ## Changelog
 
+### 2.26.1
+
+- #1275 Prepare v2.26.1
+- #1271 refactor(dev-env): Switch to mysql:8
+- #1273 Add library for the dev-env-sync-sql command
+- #1274 Run validation on filename & not on full filepath
+- #1272 fix(dev-env): Suppress health warnings for new environments
+- #1234 fix(dev-env): Force IPv4 for services bound to localhost
+
 ### 2.26.0
 
 - #1237 Skip requoting if the arg is a valid JSON Object
