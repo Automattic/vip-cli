@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import { SQLExportCommand, CREATE_EXPORT_JOB_MUTATION, GENERATE_DOWNLOAD_LINK_MUTATION } from '../../src/lib/sql-export';
+import { ExportSQLCommand, CREATE_EXPORT_JOB_MUTATION, GENERATE_DOWNLOAD_LINK_MUTATION } from '../../src/commands/export-sql';
 import API from '../../src/lib/api';
 
 const mockApp = {
@@ -94,14 +94,14 @@ API.mockImplementation( () => {
 	};
 } );
 
-describe( 'lib/ExportCommand', () => {
+describe( 'commands/ExportSQLCommand', () => {
 	beforeEach( () => {
 	} );
 
 	describe( '.getExportJob', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const exportCommand = new SQLExportCommand( app, env );
+		const exportCommand = new ExportSQLCommand( app, env );
 
 		it( 'should return the export job for the latest backup', async () => {
 			const exportJob = await exportCommand.getExportJob();
@@ -112,7 +112,7 @@ describe( 'lib/ExportCommand', () => {
 	describe( '.getExportedFileName', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const exportCommand = new SQLExportCommand( app, env );
+		const exportCommand = new ExportSQLCommand( app, env );
 
 		it( 'should return the filename for the latest backup', async () => {
 			const exportFilename = await exportCommand.getExportedFileName();
@@ -136,7 +136,7 @@ describe( 'lib/ExportCommand', () => {
 			},
 		};
 
-		const exportCommand = new SQLExportCommand( app, env );
+		const exportCommand = new ExportSQLCommand( app, env );
 
 		it( 'should return true if the S3 upload step has completed', async () => {
 			const isCreated = await exportCommand.isCreated( job );
@@ -166,7 +166,7 @@ describe( 'lib/ExportCommand', () => {
 			},
 		};
 
-		const exportCommand = new SQLExportCommand( app, env );
+		const exportCommand = new ExportSQLCommand( app, env );
 
 		it( 'should return true if the preflight step has completed', async () => {
 			const isPrepared = await exportCommand.isPrepared( job );
@@ -180,10 +180,10 @@ describe( 'lib/ExportCommand', () => {
 		} );
 	} );
 
-	describe( '.runSequence', () => {
+	describe( '.run', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const exportCommand = new SQLExportCommand( app, env );
+		const exportCommand = new ExportSQLCommand( app, env );
 		const downloadSpy = jest.spyOn( exportCommand, 'downloadExportedFile' );
 		const stepSuccessSpy = jest.spyOn( exportCommand.progressTracker, 'stepSuccess' );
 
@@ -197,7 +197,7 @@ describe( 'lib/ExportCommand', () => {
 		} );
 
 		it( 'should sequentially run all the steps', async () => {
-			await exportCommand.runSequence();
+			await exportCommand.run();
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink' );

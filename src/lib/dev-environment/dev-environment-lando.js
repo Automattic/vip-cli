@@ -137,7 +137,7 @@ async function regenerateLandofile( instancePath: string ): Promise<void> {
 		await fs.promises.rename( landoFile, backup );
 		console.warn( chalk.yellow( 'Backed up %s to %s' ), landoFile, backup );
 	} catch ( err ) {
-		// Rename failed - possible the file does not exist. Silently ignoring.
+		// Rename failed - possibly the file does not exist. Silently ignoring.
 	}
 
 	const slug = path.basename( instancePath );
@@ -180,7 +180,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 
 	try {
 		app = lando.getApp( instancePath );
-		addHooks( app, lando );
+		await addHooks( app, lando );
 		await app.init();
 	} catch ( error ) {
 		app = await landoRecovery( lando, instancePath, error );
@@ -211,7 +211,7 @@ export async function landoRebuild( lando: Lando, instancePath: string ) {
 	await app.rebuild();
 }
 
-function addHooks( app: App, lando: Lando ) {
+async function addHooks( app: App, lando: Lando ) {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
 
 	lando.events.once( 'pre-engine-build', async data => {
@@ -310,7 +310,7 @@ export async function landoDestroy( lando: Lando, instancePath: string ) {
 	await app.destroy();
 }
 
-export async function landoInfo( lando: Lando, instancePath: string ) {
+export async function landoInfo( lando: Lando, instancePath: string, suppressWarnings: boolean ) {
 	const app = await getLandoApplication( lando, instancePath );
 
 	let appInfo = landoUtils.startTable( app );
@@ -318,7 +318,7 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 	const reachableServices = app.info.filter( service => service.urls.length );
 	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
-	const isUp = await isEnvUp( lando, instancePath );
+	const health = await checkEnvHealth( lando, instancePath );
 	const frontEndUrl = app.info
 		.find( service => 'nginx' === service.service )
 		?.urls[ 0 ];
@@ -332,7 +332,15 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 
 	delete appInfo.name;
 
-	appInfo.status = isUp ? chalk.green( 'UP' ) : chalk.yellow( 'DOWN' );
+	const hasResults = Object.values( health ).length > 0;
+	const hasWarnings = Object.values( health ).some( status => ! status );
+	if ( hasResults && ! hasWarnings ) {
+		appInfo.status = chalk.green( 'UP' );
+	} else if ( health.nginx ) {
+		appInfo.status = chalk.yellow( 'PARTIALLY UP' );
+	} else {
+		appInfo.status = chalk.red( 'DOWN' );
+	}
 
 	// Add login information
 	if ( frontEndUrl ) {
@@ -341,6 +349,16 @@ export async function landoInfo( lando: Lando, instancePath: string ) {
 		appInfo[ 'Login URL' ] = loginUrl;
 		appInfo[ 'Default username' ] = 'vipgo';
 		appInfo[ 'Default password' ] = 'password';
+	}
+
+	if ( ! suppressWarnings && hasWarnings ) {
+		let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
+		Object.keys( health ).forEach( service => {
+			if ( ! health[ service ] ) {
+				message += `${ chalk.red( service ) }\n`;
+			}
+		} );
+		appInfo[ 'Health warnings' ] = message;
 	}
 
 	// Add documentation link
@@ -358,6 +376,10 @@ const extraServiceDisplayConfiguration = [
 	{
 		name: 'phpmyadmin',
 		// Skipping, as the phpmyadmin was already printed by the regular services
+		skip: true,
+	},
+	{
+		name: 'mailhog',
 		skip: true,
 	},
 ];
@@ -394,19 +416,56 @@ async function getExtraServicesConnections( lando, app ) {
 	return extraServices;
 }
 
+type Record<T, V> = {
+	[T]: V
+};
+
+export async function checkEnvHealth( lando: Lando, instancePath: string ): Promise<Record<string, boolean>> {
+	type ScanResult = {
+		url: string;
+		status: boolean;
+		color: 'green' | 'yellow' | 'red';
+	};
+
+	const urls: Record<string, string> = {};
+
+	const now = new Date();
+
+	const app = await getLandoApplication( lando, instancePath );
+	app.info
+		.filter( service => service.urls.length )
+		.forEach( service => {
+			service.urls.forEach( url => {
+				urls[ url ] = service.service;
+			} );
+		} );
+
+	const scanResults: ScanResult[] = await app.scanUrls( Object.keys( urls ), { max: 1 } );
+	const result: Record<string, boolean> = {};
+
+	scanResults.forEach( scanResult => {
+		result[ urls[ scanResult.url ] ] = scanResult.status;
+	} );
+
+	const duration = new Date().getTime() - now.getTime();
+	debug( 'checkEnvHealth took %d ms', duration );
+
+	return result;
+}
+
 export async function isEnvUp( lando: Lando, instancePath: string ): Promise<boolean> {
 	const now = new Date();
 	const app = await getLandoApplication( lando, instancePath );
 
 	const reachableServices = app.info.filter( service => service.urls.length );
-	const urls = reachableServices.map( service => service.urls ).flat();
+	const webUrls = reachableServices.map( service => service.urls ).flat().filter( url => ! url.match( /^https?:\/\/(localhost|127\.0\.0\.1):/ ) );
 
-	const scanResult = await app.scanUrls( urls, { max: 1 } );
+	const scanResult = await app.scanUrls( webUrls, { max: 1 } );
 	const duration = new Date().getTime() - now.getTime();
 	debug( 'isEnvUp took %d ms', duration );
 
 	// If all the URLs are reachable then the app is considered 'up'
-	return scanResult?.length && scanResult.filter( result => result.status ).length === scanResult.length;
+	return scanResult.length && scanResult.filter( result => result.status ).length === scanResult.length;
 }
 
 export async function landoExec( lando: Lando, instancePath: string, toolName: string, args: Array<string>, options: any ) {

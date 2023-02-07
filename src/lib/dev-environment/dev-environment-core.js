@@ -111,7 +111,7 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise<voi
 
 export async function createEnvironment( instanceData: InstanceData ): Promise<void> {
 	const slug = instanceData.siteSlug;
-	debug( 'Will create an environment', slug, 'with instanceData: ', instanceData );
+	debug( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -124,13 +124,14 @@ export async function createEnvironment( instanceData: InstanceData ): Promise<v
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
 
 export async function updateEnvironment( instanceData: InstanceData ): Promise<void> {
 	const slug = instanceData.siteSlug;
-	debug( 'Will update an environment', slug, 'with instanceData: ', instanceData );
+	debug( 'Will process an environment', slug, 'with instanceData for updating: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -143,6 +144,7 @@ export async function updateEnvironment( instanceData: InstanceData ): Promise<v
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	await prepareLandoEnv( preProcessedInstanceData, instancePath );
 }
@@ -164,6 +166,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
 
+	if ( isNaN( instanceData.wordpress.tag ) ) {
+		newInstanceData.wordpress.tag = 'trunk';
+	}
+
 	if ( ! newInstanceData.xdebugConfig ) {
 		newInstanceData.xdebugConfig = '';
 	}
@@ -179,6 +185,11 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	// Mailhog migration
 	if ( ! newInstanceData.mailhog ) {
 		newInstanceData.mailhog = false;
+	}
+
+	// MariaDB migration
+	if ( ! newInstanceData.mariadb ) {
+		newInstanceData.mariadb = undefined;
 	}
 
 	return newInstanceData;
@@ -210,7 +221,8 @@ export async function destroyEnvironment( lando: Lando, slug: string, removeFile
 }
 
 interface PrintOptions {
-	extended?: boolean
+	extended?: boolean;
+	suppressWarnings?: boolean;
 }
 
 export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOptions ): Promise<void> {
@@ -253,7 +265,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const appInfo = await landoInfo( lando, instancePath );
+	const appInfo = await landoInfo( lando, instancePath, !! options.suppressWarnings );
 	if ( options.extended ) {
 		const environmentData = readEnvironmentData( slug );
 		appInfo.title = environmentData.wpTitle;

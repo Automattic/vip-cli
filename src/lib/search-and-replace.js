@@ -7,7 +7,6 @@
  * External dependencies
  */
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import chalk from 'chalk';
 import debugLib from 'debug';
@@ -20,6 +19,7 @@ import { trackEvent } from '../lib/tracker';
 import { confirm } from '../lib/cli/prompt';
 import { getFileSize } from '../lib/client-file-uploader';
 import * as exit from '../lib/cli/exit';
+import { makeTempDir } from './utils';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
@@ -42,12 +42,6 @@ export type GetReadAndWriteStreamsOutput = {
 	writeStream: stream$Writable | Buffer,
 };
 
-function makeTempDir() {
-	const tmpDir = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-search-replace-' ) );
-	debug( `Created a directory to hold temporary files: ${ tmpDir }` );
-	return tmpDir;
-}
-
 export function getReadAndWriteStreams( {
 	fileName,
 	inPlace,
@@ -58,7 +52,7 @@ export function getReadAndWriteStreams( {
 	let outputFileName;
 
 	if ( inPlace ) {
-		const midputFileName = path.join( makeTempDir(), path.basename( fileName ) );
+		const midputFileName = path.join( makeTempDir( 'vip-search-replace' ), path.basename( fileName ) );
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
@@ -94,7 +88,7 @@ export function getReadAndWriteStreams( {
 			}
 			break;
 		default: {
-			const tmpOutFile = path.join( makeTempDir(), path.basename( fileName ) );
+			const tmpOutFile = path.join( makeTempDir( 'vip-search-replace' ), path.basename( fileName ) );
 			writeStream = fs.createWriteStream( tmpOutFile );
 			outputFileName = tmpOutFile;
 
