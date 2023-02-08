@@ -67,7 +67,7 @@ async function getLandoConfig() {
 	if ( fs.existsSync( globalLandoConfigFile ) ) {
 		try {
 			globalConfig = yaml.safeLoad( fs.readFileSync( globalLandoConfigFile ) );
-		} catch( err ) {
+		} catch ( err ) {
 			debug( `Failed to parse global Lando config file '${ globalLandoConfigFile }': ${ err }` );
 		}
 	}
