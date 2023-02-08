@@ -9,6 +9,7 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import Lando from 'lando/lib/lando';
+import { buildConfig } from 'lando/lib/bootstrap';
 import landoUtils from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
@@ -42,7 +43,7 @@ async function getLandoConfig() {
 	const landoPath = path.join( nodeModulesPath, 'lando' );
 	const atLandoPath = path.join( nodeModulesPath, '@lando' );
 
-	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
+	debug( `Getting Lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
 	const isLandoDebugSelected = debugLib.enabled( DEBUG_KEY );
 	const isAllDebugSelected = debugLib.enabled( '"*"' );
@@ -65,8 +66,9 @@ async function getLandoConfig() {
 		// Ignore
 	}
 
-	return {
+	const config = {
 		logLevelConsole,
+		configSources: [ path.join( landoDir, 'config.yml' ) ],
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
 		postLandoFiles: [ '.lando.local.yml' ],
@@ -124,6 +126,8 @@ async function getLandoConfig() {
 		domain: 'lndo.site',
 		version: 'unknown',
 	};
+
+	return buildConfig( config );
 }
 
 const appMap: Map<string, App> = new Map();
