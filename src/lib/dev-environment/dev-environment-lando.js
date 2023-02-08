@@ -15,6 +15,8 @@ import chalk from 'chalk';
 import App from 'lando/lib/app';
 import dns from 'dns';
 import xdgBasedir from 'xdg-basedir';
+import yaml from 'js-yaml';
+import merge from 'lodash.merge';
 
 /**
  * Internal dependencies
@@ -42,7 +44,7 @@ async function getLandoConfig() {
 	const landoPath = path.join( nodeModulesPath, 'lando' );
 	const atLandoPath = path.join( nodeModulesPath, '@lando' );
 
-	debug( `Getting lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
+	debug( `Getting Lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
 	const isLandoDebugSelected = debugLib.enabled( DEBUG_KEY );
 	const isAllDebugSelected = debugLib.enabled( '"*"' );
@@ -59,13 +61,24 @@ async function getLandoConfig() {
 	const landoDir = path.join( vipDir, 'lando' );
 	const fakeHomeDir = path.join( landoDir, 'home' );
 
+	let globalConfig = {};
+	const globalLandoConfigFile = path.join( landoDir, 'config.yml' );
+
+	if ( fs.existsSync( globalLandoConfigFile ) ) {
+		try {
+			globalConfig = yaml.safeLoad( fs.readFileSync( globalLandoConfigFile ) );
+		} catch( err ) {
+			debug( `Failed to parse global Lando config file '${ globalLandoConfigFile }': ${ err }` );
+		}
+	}
+
 	try {
 		await fs.promises.mkdir( fakeHomeDir, { recursive: true } );
 	} catch ( err ) {
 		// Ignore
 	}
 
-	return {
+	return merge( {
 		logLevelConsole,
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
@@ -123,7 +136,7 @@ async function getLandoConfig() {
 		home: fakeHomeDir,
 		domain: 'lndo.site',
 		version: 'unknown',
-	};
+	}, globalConfig );
 }
 
 const appMap: Map<string, App> = new Map();
