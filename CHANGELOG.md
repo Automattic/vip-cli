@@ -1,5 +1,11 @@
 ## Changelog
 
+### 2.26.2
+
+- #1278	Prepare v2.26.2
+- #1277	Fix the PassThrough class import
+- #1276	[dev-env] Add ability to override default options for lando with a global Lando config.yml
+
 ### 2.26.1
 
 - #1275 Prepare v2.26.1
