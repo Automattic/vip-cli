@@ -13,7 +13,8 @@ import fetch from 'node-fetch';
 import chalk from 'chalk';
 import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
-import { pipeline, PassThrough } from 'node:stream/promises';
+import { pipeline } from 'node:stream/promises';
+import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import debugLib from 'debug';
 
