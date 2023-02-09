@@ -124,10 +124,15 @@ export class DevEnvSyncSQLCommand {
 		const replacements = this.siteUrls.reduce( ( acc, url ) => [ ...acc, url, this.landoDomain ], [] );
 		const readStream = fs.createReadStream( this.sqlFile );
 		const replacedStream = await replace( readStream, replacements );
-		replacedStream.pipe( fs.createWriteStream( this.sqlFile ) );
+
+		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
+		replacedStream.pipe( fs.createWriteStream( outputFile ) );
 
 		return new Promise( ( resolve, reject ) => {
-			replacedStream.on( 'finish', resolve );
+			replacedStream.on( 'finish', () => {
+				fs.renameSync( outputFile, this.sqlFile );
+				resolve();
+			} );
 			replacedStream.on( 'error', reject );
 		} );
 	}

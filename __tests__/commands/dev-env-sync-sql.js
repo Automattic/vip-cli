@@ -44,6 +44,7 @@ const mockWriteStream = getMockStream( [ { name: 'finish' } ], 20 );
 
 jest.spyOn( fs, 'createReadStream' ).mockReturnValue( mockReadStream );
 jest.spyOn( fs, 'createWriteStream' ).mockReturnValue( mockWriteStream );
+jest.spyOn( fs, 'renameSync' ).mockImplementation( () => {} );
 jest.mock( '@automattic/vip-search-replace', () => {
 	return {
 		replace: jest.fn(),
