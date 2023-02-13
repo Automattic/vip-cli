@@ -37,7 +37,7 @@ import {
 	getConfigurationFileOptions,
 	printConfigurationFile,
 	mergeConfigurationFileOptions,
-} from 'lib/dev-environment/dev-environment-configuration-file';
+} from '../lib/dev-environment/dev-environment-configuration-file';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 

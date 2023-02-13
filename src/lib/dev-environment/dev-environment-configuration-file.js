@@ -15,7 +15,7 @@ import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 /**
  * Internal dependencies
  */
-import * as exit from 'lib/cli/exit';
+import * as exit from '../cli/exit';
 import type {
 	ConfigurationFileOptions,
 	InstanceOptions,

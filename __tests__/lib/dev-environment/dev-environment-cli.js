@@ -25,7 +25,7 @@ import {
 	processVersionOption,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
-import * as devEnvConfiguration from 'lib/dev-environment/dev-environment-configuration-file';
+import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
