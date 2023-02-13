@@ -21,7 +21,7 @@ import type Lando from 'lando';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild } from './dev-environment-lando';
+import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild, landoLogs } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
 import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
@@ -251,6 +251,23 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 		return component.dir || '';
 	}
 	return component.tag || '[demo-image]';
+}
+
+export async function showLogs( lando: Lando, slug: string, options: any = {} ): Promise<*> {
+	debug( 'Will display logs command on env', slug, 'with options', options );
+
+	const instancePath = getEnvironmentPath( slug );
+
+	debug( 'Instance path for', slug, 'is:', instancePath );
+
+	if ( options.service ) {
+		const appInfo = await landoInfo( lando, instancePath );
+		if ( ! appInfo.services.includes( options.service ) ) {
+			throw new UserError( `Invalid service '${ options.service }'. Please choose from one: ${ appInfo.services }` );
+		}
+	}
+
+	return landoLogs( lando, instancePath, options );
 }
 
 export async function printEnvironmentInfo( lando: Lando, slug: string, options: PrintOptions ): Promise<void> {
