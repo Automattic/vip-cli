@@ -52,6 +52,7 @@ command()
 		try {
 			const options = {
 				extended: !! opt.extended,
+				suppressWarnings: true,
 			};
 			if ( opt.all ) {
 				await printAllEnvironmentsInfo( lando, options );

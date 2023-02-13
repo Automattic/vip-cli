@@ -59,28 +59,42 @@ services:
           volume:
             nocopy: true
 <% wpVolumes() %>
+    run_as_root:
+      - chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp
     run:
       - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
 
   database:
     type: compose
     services:
+<% if ( mariadb ) { %>
       image: mariadb:<%= mariadb %>
       command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
+<% } else { %>
+      image: mysql:8
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --default-authentication-plugin=mysql_native_password
+<% } %>
       ports:
         - ":3306"
       environment:
-        MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
+        MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+        MYSQL_USER: wordpress
+        MYSQL_PASSWORD: wordpress
+        MYSQL_DATABASE: wordpress
       volumes:
         - database_data:/var/lib/mysql
     volumes:
       database_data:
 
   memcached:
-    type: memcached:custom
-    overrides:
+    type: compose
+    services:
       image: memcached:1.6-alpine3.16
-      command: docker-entrypoint.sh memcached
+      command: memcached -m 64
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:

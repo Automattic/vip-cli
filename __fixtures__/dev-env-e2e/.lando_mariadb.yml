@@ -1,0 +1,258 @@
+name: vip-local
+env_file:
+  - .env
+proxy:
+  nginx:
+    - vip-local.vipdev.lndo.site
+
+  phpmyadmin:
+    - vip-local-pma.vipdev.lndo.site
+services:
+
+  devtools:
+    type: compose
+    services:
+      image: ghcr.io/automattic/vip-container-images/dev-tools:0.9
+      command: sleep infinity
+      volumes:
+        - devtools:/dev-tools
+        - scripts:/scripts
+    volumes:
+      devtools: {}
+      scripts:
+  nginx:
+    type: compose
+    ssl: true
+    sslExpose: false
+    services:
+      image: ghcr.io/automattic/vip-container-images/nginx:1.23.2
+      command: nginx -g "daemon off;"
+      volumes:
+        - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
+
+        - ./config:/wp/config
+        - ./log:/wp/log
+        - ./uploads:/wp/wp-content/uploads
+        - ./wordpress:/wp
+
+        - type: volume
+          source: mu-plugins
+          target: /wp/wp-content/mu-plugins
+          volume:
+            nocopy: true
+
+
+        - type: volume
+          source: clientcode_clientmuPlugins
+          target: /wp/wp-content/client-mu-plugins
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_images
+          target: /wp/wp-content/images
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_languages
+          target: /wp/wp-content/languages
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_plugins
+          target: /wp/wp-content/plugins
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_private
+          # FIXME: Do we need this to be out of /wp for local development?
+          target: /wp/wp-content/private
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_themes
+          target: /wp/wp-content/themes
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_vipconfig
+          target: /wp/wp-content/vip-config
+          volume:
+            nocopy: true
+
+
+
+  php:
+    type: compose
+    services:
+      image: ghcr.io/automattic/vip-container-images/php-fpm:8.0
+      command: run.sh
+      working_dir: /wp
+      environment:
+        XDEBUG: disable
+
+        LANDO_NO_USER_PERMS: 'enable'
+
+
+      volumes:
+        - type: volume
+          source: devtools
+          target: /dev-tools
+          volume:
+            nocopy: true
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
+
+        - ./config:/wp/config
+        - ./log:/wp/log
+        - ./uploads:/wp/wp-content/uploads
+        - ./wordpress:/wp
+
+        - type: volume
+          source: mu-plugins
+          target: /wp/wp-content/mu-plugins
+          volume:
+            nocopy: true
+
+
+        - type: volume
+          source: clientcode_clientmuPlugins
+          target: /wp/wp-content/client-mu-plugins
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_images
+          target: /wp/wp-content/images
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_languages
+          target: /wp/wp-content/languages
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_plugins
+          target: /wp/wp-content/plugins
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_private
+          # FIXME: Do we need this to be out of /wp for local development?
+          target: /wp/wp-content/private
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_themes
+          target: /wp/wp-content/themes
+          volume:
+            nocopy: true
+        - type: volume
+          source: clientcode_vipconfig
+          target: /wp/wp-content/vip-config
+          volume:
+            nocopy: true
+
+
+    run:
+      - sh /dev-tools/setup.sh database root "http://vip-local.vipdev.lndo.site/" "VIP Dev" 
+
+  database:
+    type: compose
+    services:
+      image: mariadb:10.3
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
+      ports:
+        - ":3306"
+      environment:
+        MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'true'
+      volumes:
+        - database_data:/var/lib/mysql
+    volumes:
+      database_data:
+
+  memcached:
+    type: compose
+    services:
+      image: memcached:1.6-alpine3.16
+      command: memcached -m 64
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
+
+
+
+
+  wordpress:
+    type: compose
+    services:
+      image: ghcr.io/automattic/vip-container-images/wordpress:6.1
+      command: sh -c "rsync -a /wp/ /shared/; chown www-data -R /shared; sleep infinity"
+      volumes:
+        - ./wordpress:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
+
+
+  vip-mu-plugins:
+    type: compose
+    services:
+      image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
+      command: sh /run.sh
+      volumes:
+        - mu-plugins:/shared
+        - type: volume
+          source: scripts
+          target: /scripts
+          volume:
+            nocopy: true
+    volumes:
+      mu-plugins: {}
+
+
+
+  demo-app-code:
+    type: compose
+    services:
+      image: ghcr.io/automattic/vip-container-images/skeleton:latest
+      command: sleep infinity
+      volumes:
+        - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
+        - clientcode_images:/clientcode/images
+        - clientcode_languages:/clientcode/languages
+        - clientcode_plugins:/clientcode/plugins
+        - clientcode_private:/clientcode/private
+        - clientcode_themes:/clientcode/themes
+        - clientcode_vipconfig:/clientcode/vip-config
+    volumes:
+      clientcode_clientmuPlugins: {}
+      clientcode_images: {}
+      clientcode_languages: {}
+      clientcode_plugins: {}
+      clientcode_private: {}
+      clientcode_themes: {}
+      clientcode_vipconfig: {}
+
+
+
+
+tooling:
+  wp:
+    service: php
+    description: "Run WP-CLI command"
+    user: www-data
+    cmd:
+      - wp
+
+  db:
+    service: php
+    description: "Connect to the DB using mysql client (e.g. allow to run imports)"
+    cmd:
+      - mysql -hdatabase -uwordpress -pwordpress -Dwordpress
+
+

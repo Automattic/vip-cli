@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.25.1",
+  "version": "2.26.2",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -109,7 +109,7 @@
     "rimraf": "3.0.2"
   },
   "dependencies": {
-    "@apollo/client": "^3.3.6",
+    "@apollo/client": "3.3.6",
     "@automattic/vip-go-preflight-checks": "^2.0.16",
     "@automattic/vip-search-replace": "^1.0.15",
     "args": "5.0.3",
@@ -128,7 +128,7 @@
     "js-yaml": "^4.1.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "github:automattic/lando-cli.git#3c6fad5",
+    "lando": "github:automattic/lando-cli.git#67b675a",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",

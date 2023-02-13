@@ -79,7 +79,7 @@ export interface InstanceData {
 	phpmyadmin: boolean;
 	xdebug: boolean;
 	xdebugConfig?: string;
-	mariadb: string;
+	mariadb?: string;
 	php: string;
 	elasticsearch?: string | boolean;
 	mailhog: boolean;

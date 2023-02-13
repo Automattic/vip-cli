@@ -174,7 +174,7 @@ async function createExportJob( appId, envId, backupId ) {
 /**
  * Class representing an export command workflow
  */
-export class SQLExportCommand {
+export class ExportSQLCommand {
 	app;
 	env;
 	downloadLink;
@@ -297,7 +297,7 @@ export class SQLExportCommand {
 	 *
 	 * @return {Promise} A promise which resolves to void
 	 */
-	async runSequence() {
+	async run() {
 		console.log( `Fetching the latest backup for ${ this.app.name }` );
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 

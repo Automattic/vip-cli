@@ -1,5 +1,40 @@
 ## Changelog
 
+### 2.26.2
+
+- #1278	Prepare v2.26.2
+- #1277	Fix the PassThrough class import
+- #1276	[dev-env] Add ability to override default options for lando with a global Lando config.yml
+
+### 2.26.1
+
+- #1275 Prepare v2.26.1
+- #1271 refactor(dev-env): Switch to mysql:8
+- #1273 Add library for the dev-env-sync-sql command
+- #1274 Run validation on filename & not on full filepath
+- #1272 fix(dev-env): Suppress health warnings for new environments
+- #1234 fix(dev-env): Force IPv4 for services bound to localhost
+
+### 2.26.0
+
+- #1237 Skip requoting if the arg is a valid JSON Object
+- #1258 fix(dev-env): Get more verbose logs from Lando in debug mode
+- #1249 refactor(dev-env): Do not use Lando's memcached plugin
+- #1266 fix(dev-env): Fix incorrect working directory when vip dev-env exec is run from a 8 level deep directory
+- #1263 Dev-env: Do not prompt to update WP version if trunk is used
+- #1244 chore(deps): Pin @apollo/client to 3.3.6
+- #1261 fix(dev-env): Gracefully handle failures to fetch WP versions
+- #1257 fix(dev-env): Fix "This app was built on a different version of Lando" warning
+- #1260 Config Software: fix small typo in "include" usage
+- #1250 feat(dev-env): Implement upgrade path for changes affecting .lando.yml
+- #1259 Add notifications commands to package.json
+- #1228 fix(dev-env): Do not use a temporary directory for Lando
+- #1251 Fix lint errors fix/lint-errors
+- #1247 Add library to facilitate SQL backup export
+- #1246 fix(dev-env): ElasticSearch => Elasticsearch
+- #1243 fix: Fix peer dependencies and code style issues
+- #1242 chore: Set minimum Node.js version to 16
+
 ### 2.25.1
 
 - #1239 Downgrade Apollo client to 3.3.6

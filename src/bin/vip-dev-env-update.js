@@ -68,7 +68,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		// Title and multisite can't be changed during update
 		const selectedOptions: InstanceOptions = {
 			title: currentInstanceData.wpTitle,
-			multisite: currentInstanceData. multisite,
+			multisite: currentInstanceData.multisite,
 		};
 
 		Object.keys( preselectedOptions ).forEach( key => {
@@ -80,7 +80,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
-			wordpress: currentInstanceData.wordpress.tag,
+			wordpress: currentInstanceData.wordpress.tag || 'trunk',
 			elasticsearch: currentInstanceData.elasticsearch,
 			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
 			mariadb: currentInstanceData.mariadb,
@@ -96,8 +96,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => option.length > 1 ) // Filter out single letter aliases
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
-		const supressPrompts = providedOptions.length > 0 || Object.keys( configurationFileOptions ).length > 0;
-		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, supressPrompts );
+		const suppressPrompts = providedOptions.length > 0 || Object.keys( configurationFileOptions ).length > 0;
+		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );
