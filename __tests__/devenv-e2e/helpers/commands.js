@@ -15,3 +15,4 @@ export const vipDevEnvList = join( vipPath, 'vip-dev-env-list.js' );
 export const vipDevEnvStart = join( vipPath, 'vip-dev-env-start.js' );
 export const vipDevEnvStop = join( vipPath, 'vip-dev-env-stop.js' );
 export const vipDevEnvUpdate = join( vipPath, 'vip-dev-env-update.js' );
+export const vipDevEnvLogs = join( vipPath, 'vip-dev-env-logs.js' );

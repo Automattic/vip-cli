@@ -263,7 +263,7 @@ export async function showLogs( lando: Lando, slug: string, options: any = {} ):
 	if ( options.service ) {
 		const appInfo = await landoInfo( lando, instancePath );
 		if ( ! appInfo.services.includes( options.service ) ) {
-			throw new UserError( `Invalid service '${ options.service }'. Please choose from one: ${ appInfo.services }` );
+			throw new UserError( `Service '${ options.service }' not found. Please choose from one: ${ appInfo.services }` );
 		}
 	}
 
