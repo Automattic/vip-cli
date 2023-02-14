@@ -65,7 +65,7 @@ describe( 'vip dev-env configuration file', () => {
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		await writeConfigurationFile( tmpWorkingDirectoryPath, {
-			slug,
+			'configuration-version': '0.preview-unstable',
 		} );
 
 		const spawnOptions = {
