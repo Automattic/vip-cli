@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
+// @flow
+// @format
 
 /**
  * External dependencies
