@@ -17,7 +17,7 @@ import { vipDevEnvCreate } from './helpers/commands';
 
 jest.setTimeout( 30 * 1000 );
 
-describe( 'vip dev-env create', () => {
+describe( 'vip dev-env configuration file', () => {
 	/** @type {CliTest} */
 	let cliTest;
 	/** @type {NodeJS.ProcessEnv} */
