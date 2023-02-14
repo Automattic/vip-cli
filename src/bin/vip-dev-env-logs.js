@@ -30,14 +30,14 @@ const examples = [
 		description: 'Return logs from the "elasticsearch" service from a local dev environment named "my_site"',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site --service=elasticsearch --follow`,
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site --service=elasticsearch -f`,
 		description: 'Follow logs from the "elasticsearch" service from a local dev environment named "my_site"',
 	},
 ];
 
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'follow', 'Follow logs for a specific service in local dev environment' )
+	.option( [ 'f', 'follow' ], 'Follow logs for a specific service in local dev environment' )
 	.option( 'service', 'Show logs for a specific service in local dev environment. Defaults to all if none passed in.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
