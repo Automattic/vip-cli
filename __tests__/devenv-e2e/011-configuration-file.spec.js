@@ -13,7 +13,7 @@ import xdgBaseDir from 'xdg-basedir';
 import { CliTest } from './helpers/cli-test';
 import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
 import { checkEnvExists, getProjectSlug, prepareEnvironment, writeConfigurationFile } from './helpers/utils';
-import { vipDevEnvCreate } from './helpers/commands';
+import { vipDevEnvCreate, vipDevEnvUpdate } from './helpers/commands';
 
 jest.setTimeout( 30 * 1000 );
 
@@ -156,5 +156,66 @@ describe( 'vip dev-env configuration file', () => {
 		} );
 
 		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
+	} );
+
+	it( 'should update the environment from file', async () => {
+		const slug = getProjectSlug();
+		const expectedElasticsearch = false;
+		const expectedPhpMyAdmin = false;
+		const expectedXDebug = false;
+		const expectedMailHog = false;
+
+		expect( await checkEnvExists( slug ) ).toBe( false );
+
+		// Setup initial environment
+		await writeConfigurationFile( tmpWorkingDirectoryPath, {
+			'configuration-version': '0.preview-unstable',
+			slug,
+			elasticsearch: expectedElasticsearch,
+			phpmyadmin: expectedPhpMyAdmin,
+			xdebug: expectedXDebug,
+			mailhog: expectedMailHog,
+		} );
+
+		const spawnOptions = {
+			env,
+			cwd: tmpWorkingDirectoryPath,
+		};
+
+		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], spawnOptions, true );
+		expect( result.rc ).toBe( 0 );
+		expect( await checkEnvExists( slug ) ).toBe( true );
+
+		const dataBefore = readEnvironmentData( slug );
+		expect( dataBefore ).toMatchObject( {
+			siteSlug: slug,
+			elasticsearch: expectedElasticsearch,
+			phpmyadmin: expectedPhpMyAdmin,
+			xdebug: expectedXDebug,
+			mailhog: expectedMailHog,
+		} );
+
+		// Update environment from changed configuration file
+		await writeConfigurationFile( tmpWorkingDirectoryPath, {
+			'configuration-version': '0.preview-unstable',
+			slug,
+			elasticsearch: ! expectedElasticsearch,
+			phpmyadmin: ! expectedPhpMyAdmin,
+			xdebug: ! expectedXDebug,
+			mailhog: ! expectedMailHog,
+		} );
+
+		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate ], spawnOptions, true );
+		expect( result.rc ).toBe( 0 );
+		expect( await checkEnvExists( slug ) ).toBe( true );
+
+		const dataAfter = readEnvironmentData( slug );
+		expect( dataAfter ).toMatchObject( {
+			siteSlug: slug,
+			elasticsearch: ! expectedElasticsearch,
+			phpmyadmin: ! expectedPhpMyAdmin,
+			xdebug: ! expectedXDebug,
+			mailhog: ! expectedMailHog,
+		} );
 	} );
 } );
