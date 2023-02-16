@@ -129,9 +129,9 @@ const verifyDNSResolution = async ( slug: string ): Promise<void> => {
 };
 
 const VALIDATION_STEPS = [
-	{ id: 'docker', name: 'Check for docker installation' },
+	{ id: 'docker', name: 'Check for Docker installation' },
 	{ id: 'compose', name: 'Check for docker-compose installation' },
-	{ id: 'access', name: 'Check access to docker for current user' },
+	{ id: 'access', name: 'Check Docker connectivity' },
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 

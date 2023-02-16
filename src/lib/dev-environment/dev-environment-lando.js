@@ -554,10 +554,10 @@ export async function validateDockerInstalled( lando: Lando ) {
 
 export async function validateDockerAccess( lando: Lando ) {
 	const docker = lando.engine.docker;
-	lando.log.verbose( 'Fetching docker info to verify user is in docker group' );
+	lando.log.verbose( 'Fetching docker info to verify Docker connection' );
 	try {
 		await docker.info();
 	} catch ( error ) {
-		throw Error( 'Failed to connect to docker. Please verify that the current user is part of docker group and has access to docker commands.' );
+		throw Error( 'Failed to connect to Docker. Please verify that Docker engine (service) is running and follow the troubleshooting instructions for your platform.' );
 	}
 }
