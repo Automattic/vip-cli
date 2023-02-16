@@ -29,7 +29,15 @@ import {
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_SUBCOMMAND } from '../lib/constants/dev-environment';
+import {
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_SUBCOMMAND,
+} from '../lib/constants/dev-environment';
+import {
+	getConfigurationFileOptions,
+	printConfigurationFile,
+	mergeConfigurationFileOptions,
+} from '../lib/dev-environment/dev-environment-configuration-file';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
@@ -67,6 +75,8 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
+	const configurationFileOptions = await getConfigurationFileOptions();
+
 	const environmentNameOptions = {
 		slug: opt.slug,
 		app: opt.app,
@@ -75,8 +85,10 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	};
 
 	let slug = DEFAULT_SLUG;
-	if ( ( Object.keys( opt ).length !== 0 ) ) {
-		slug = getEnvironmentName( environmentNameOptions );
+
+	const hasConfiguration = ( Object.keys( opt ).length !== 0 ) || Object.keys( configurationFileOptions ).length > 0;
+	if ( hasConfiguration ) {
+		slug = await getEnvironmentName( environmentNameOptions );
 	}
 
 	const lando = await bootstrapLando();
@@ -91,7 +103,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	};
 	await trackEvent( 'dev_env_create_command_execute', trackingInfo );
 
-	const startCommand = chalk.bold( getEnvironmentStartCommand( slug ) );
+	const startCommand = chalk.bold( getEnvironmentStartCommand( slug, configurationFileOptions ) );
 
 	const environmentAlreadyExists = await doesEnvironmentExist( getEnvironmentPath( slug ) );
 	if ( environmentAlreadyExists ) {
@@ -101,7 +113,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions: $Shape<InstanceOptions> = {};
+	let defaultOptions: InstanceOptions = {};
 
 	try {
 		if ( opt.app ) {
@@ -115,7 +127,17 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		console.log( chalk.yellow( 'Warning:' ), message );
 	}
 
-	const instanceData = await promptForArguments( opt, defaultOptions );
+	let preselectedOptions = opt;
+	let suppressPrompts = false;
+
+	if ( Object.keys( configurationFileOptions ).length > 0 ) {
+		console.log( '\nUsing configuration from file.' );
+		printConfigurationFile( configurationFileOptions );
+		preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
+		suppressPrompts = true;
+	}
+
+	const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
 	instanceData.siteSlug = slug;
 
 	try {

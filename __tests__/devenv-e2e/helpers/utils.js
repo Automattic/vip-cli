@@ -3,7 +3,10 @@
 /**
  * External dependencies
  */
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { expect } from '@jest/globals';
+import { dump } from 'js-yaml';
 
 /**
  * Internal dependencies
@@ -81,4 +84,13 @@ export async function destroyEnvironment( cliTest, slug, env ) {
 	expect( result.stdout ).toContain( 'Environment files deleted successfully' );
 	expect( result.stdout ).toContain( 'Environment destroyed' );
 	expect( await checkEnvExists( slug ) ).toBe( false );
+}
+
+/**
+ * @param {string} workingDirectoryPath Directory path that will contain the configuration file
+ * @param {Object} configuration        Configuration file values
+ */
+export async function writeConfigurationFile( workingDirectoryPath, configuration ) {
+	const configurationLines = dump( configuration );
+	await writeFile( path.join( workingDirectoryPath, '.vip-dev-env.yml' ), configurationLines, 'utf8' );
 }

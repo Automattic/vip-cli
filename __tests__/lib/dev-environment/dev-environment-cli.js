@@ -25,6 +25,7 @@ import {
 	processVersionOption,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
+import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -124,11 +125,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 				expected: 'foo',
 			},
-		] )( 'should get correct name', async input => {
-			const result = getEnvironmentName( input.options );
-
-			expect( result ).toStrictEqual( input.expected );
-		} );
+		] )( 'should get correct name', input =>
+			expect( getEnvironmentName( input.options ) ).resolves.toStrictEqual( input.expected )
+		);
 		it( 'should throw an exception if used the app.env when not allowed', () => {
 			const options = {
 				allowAppEnv: false,
@@ -137,9 +136,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			};
 
 			const expectedErrorMessage = "This command does not support @app.env notation. Use '--slug=123-bar' to target the local environment.";
-			expect( () => {
-				getEnvironmentName( options );
-			} ).toThrow( expectedErrorMessage );
+			return expect( getEnvironmentName( options ) ).rejects.toThrow( expectedErrorMessage );
 		} );
 	} );
 	describe( 'getEnvironmentName with 1 environment present', () => {
@@ -148,11 +145,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site' ] );
 		} );
 
-		it( 'should return first environment found if only one present', () => {
-			const result = getEnvironmentName( {} );
-
-			expect( result ).toStrictEqual( 'single-site' );
-		} );
+		it( 'should return first environment found if only one present', () =>
+			expect( getEnvironmentName( {} ) ).resolves.toStrictEqual( 'single-site' )
+		);
 	} );
 	describe( 'getEnvironmentName with multiple environments present', () => {
 		beforeEach( () => {
@@ -164,27 +159,69 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const options = {};
 
 			const errorMsg = `More than one environment found: ${ chalk.blue.bold( 'single-site, ms-site' ) }. Please re-run command with the --slug parameter for the targeted environment.`;
-			expect( () => {
-				getEnvironmentName( options );
-			} ).toThrow( errorMsg );
+			return expect( getEnvironmentName( options ) ).rejects.toThrow( errorMsg );
+		} );
+	} );
+	describe( 'getEnvironmentName with configuration file present', () => {
+		beforeEach( () => {
+			const getConfigurationFileOptionsMock = jest.spyOn( devEnvConfiguration, 'getConfigurationFileOptions' );
+			getConfigurationFileOptionsMock.mockReturnValue( {
+				slug: 'config-file-slug',
+			} );
+		} );
+
+		it( 'should return configuration file environment', () =>
+			expect( getEnvironmentName( {} ) ).resolves.toStrictEqual( 'config-file-slug' )
+		);
+
+		it( 'should override configuration file environment with option slug', () => {
+			const resultPromise = getEnvironmentName( {
+				slug: 'foo',
+			} );
+
+			return expect( resultPromise ).resolves.toStrictEqual( 'foo' );
+		} );
+
+		it( 'should override configuration file environment with app slug', () => {
+			const resultPromise = getEnvironmentName( {
+				allowAppEnv: true,
+				app: '123',
+				env: 'bar.car',
+			} );
+
+			return expect( resultPromise ).resolves.toStrictEqual( '123-bar.car' );
 		} );
 	} );
 	describe( 'getEnvironmentStartCommand', () => {
 		it.each( [
 			{ // default value
 				slug: undefined,
+				configurationFileOptions: {},
 				expected: 'vip dev-env start',
 			},
 			{ // use custom name
 				slug: 'foo',
+				configurationFileOptions: {},
 				expected: 'vip dev-env start --slug foo',
 			},
 			{ // custom name takes precedence
 				slug: '',
+				configurationFileOptions: {},
 				expected: 'vip dev-env start',
 			},
-		] )( 'should get correct start command', async input => {
-			const result = getEnvironmentStartCommand( input.slug );
+			{ // use configuration file
+				slug: undefined,
+				configurationFileOptions: { slug: 'config-file-slug' },
+				expected: 'vip dev-env start',
+			},
+			{ // use slug with configuration file (slug overrides)
+				slug: 'foo',
+				configurationFileOptions: { slug: 'config-file-slug' },
+				expected: 'vip dev-env start --slug foo',
+			},
+
+		] )( 'should get correct start command', input => {
+			const result = getEnvironmentStartCommand( input.slug, input.configurationFileOptions );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
@@ -235,21 +272,21 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			} );
 		}
-		it.each( cases )( 'should process options and use defaults', async input => {
+		it.each( cases )( 'should process options and use defaults', input => {
 			const result = processComponentOptionInput( input.param, input.allowLocal );
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
 	} );
 	describe( 'promptForText', () => {
-		it( 'should trim provided value', async () => {
+		it( 'should trim provided value', () => {
 			const providedValue = '  bar  ';
 
 			prompt.mockResolvedValue( { input: providedValue } );
 
-			const result = await promptForText( 'Give me something', 'foo' );
+			const resultPromise = promptForText( 'Give me something', 'foo' );
 
-			expect( result ).toStrictEqual( 'bar' );
+			return expect( resultPromise ).resolves.toStrictEqual( 'bar' );
 		} );
 	} );
 	describe( 'promptForComponent', () => {

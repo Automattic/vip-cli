@@ -13,7 +13,7 @@ import chalk from 'chalk';
 /**
  * Internal dependencies
  */
-import { getEnvironmentName, promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import { getEnvironmentPath, resolveImportPath, exec } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
@@ -25,10 +25,10 @@ export class DevEnvImportSQLCommand {
 	slug;
 	trackingInfo;
 
-	constructor( fileName, options ) {
+	constructor( fileName, options, slug ) {
 		this.fileName = fileName;
 		this.options = options;
-		this.slug = getEnvironmentName( options );
+		this.slug = slug;
 	}
 
 	async run( silent = false ) {
