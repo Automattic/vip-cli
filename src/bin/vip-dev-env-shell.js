@@ -20,6 +20,20 @@ import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environme
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
+const userMap = {
+	devtools: 'www-data',
+	nginx: 'www-data',
+	php: 'www-data',
+	database: 'mysql',
+	memcached: 'memcache',
+	wordpress: 'www-data',
+	'vip-mu-plugins': 'www-data',
+	'demo-app-code': 'www-data',
+	elasticsearch: 'elasticsearch',
+	phpmyadmin: 'www-data',
+	mailhog: 'mailhog',
+};
+
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell`,
@@ -32,6 +46,10 @@ const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -- ls -lha`,
 		description: 'Runs `ls -lha` command in the shell in the dev environment',
+	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -S database -- ls -lha`,
+		description: 'Runs `ls -lha` command in the shell of the database service in the dev environment',
 	},
 ];
 
@@ -52,6 +70,7 @@ function getCommand( args: string[] ): string[] {
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'root', 'Spawn a root shell' )
+	.option( 'service', 'Spawn a shell in a specific service (php if omitted)' )
 	.examples( examples )
 	.argv( process.argv, async ( args, opt ) => {
 		const slug = getEnvironmentName( opt );
@@ -65,9 +84,11 @@ command( { wildcardCommand: true } )
 		debug( 'Args: ', args, 'Options: ', opt );
 
 		const isRoot = !! opt.root;
+		const service = opt.service || 'php';
+		const user = isRoot ? 'root' : userMap[ service ] || 'www-data';
 		const cmd = getCommand( args );
 		try {
-			await landoShell( lando, getEnvironmentPath( slug ), 'php', isRoot ? 'root' : 'www-data', cmd );
+			await landoShell( lando, getEnvironmentPath( slug ), service, user, cmd );
 			await trackEvent( 'dev_env_shell_command_success', trackingInfo );
 		} catch ( error ) {
 			if ( ! error.hide ) {
