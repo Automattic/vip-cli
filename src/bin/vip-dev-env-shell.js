@@ -73,7 +73,7 @@ command( { wildcardCommand: true } )
 	.option( 'service', 'Spawn a shell in a specific service (php if omitted)' )
 	.examples( examples )
 	.argv( process.argv, async ( args, opt ) => {
-		const slug = getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, '', true );
