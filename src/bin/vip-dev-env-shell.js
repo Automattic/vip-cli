@@ -91,6 +91,8 @@ command( { wildcardCommand: true } )
 			await landoShell( lando, getEnvironmentPath( slug ), service, user, cmd );
 			await trackEvent( 'dev_env_shell_command_success', trackingInfo );
 		} catch ( error ) {
+			// error.hide comes from Lando to  between normal errors and non-zero exit code from commands.
+			// We don't want to track the latter as errors.
 			if ( ! error.hide ) {
 				await handleCLIException( error, 'dev_env_shell_command_error', trackingInfo );
 				process.exitCode = 1;
