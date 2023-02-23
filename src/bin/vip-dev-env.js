@@ -26,4 +26,5 @@ command( {
 	.command( 'list', 'Provides basic info about all local dev environments' )
 	.command( 'exec', 'Execute an operation on a dev environment' )
 	.command( 'import', 'Import data into a local WordPress environment' )
+	.command( 'logs', 'View logs from a local WordPress environment' )
 	.argv( process.argv );
