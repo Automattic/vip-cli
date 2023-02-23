@@ -80,19 +80,21 @@ describe( 'token tests (insecure)', () => {
 } );
 
 describe( 'token tests (browser)', () => {
-	// mock localStorage
-	global.localStorage = {
-		data: {},
-		getItem( key ) {
-			return this.data[ key ];
-		},
-		setItem( key, value ) {
-			this.data[ key ] = value;
-		},
-		removeItem( key ) {
-			delete this.data[ key ];
-		},
-	};
+	if ( 'undefined' === typeof global.localStorage ) {
+		// mock localStorage
+		global.localStorage = {
+			data: {},
+			getItem( key ) {
+				return this.data[ key ];
+			},
+			setItem( key, value ) {
+				this.data[ key ] = value;
+			},
+			removeItem( key ) {
+				delete this.data[ key ];
+			},
+		};
+	}
 
 	keychain = new Browser();
 
