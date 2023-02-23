@@ -11,6 +11,7 @@
 
 import fs from 'fs';
 import chalk from 'chalk';
+import urlLib from 'url';
 import { replace } from '@automattic/vip-search-replace';
 
 /**
@@ -35,8 +36,8 @@ function findSiteHomeUrl( sql ) {
 	const results = sql.match( regex );
 
 	if ( results ) {
-		const domain = results[ 2 ].replace( /https?:\/\//, '' );
-		return domain;
+		const url = results[ 2 ];
+		return urlLib.parse( url ).hostname;
 	}
 
 	return null;
@@ -53,16 +54,16 @@ async function extractSiteUrls( sqlFile ) {
 	const readInterface = await getReadInterface( sqlFile );
 
 	return new Promise( ( resolve, reject ) => {
-		const domains = [];
+		const domains = new Set();
 		readInterface.on( 'line', line => {
 			const domain = findSiteHomeUrl( line );
 			if ( domain ) {
-				domains.push( domain );
+				domains.add( '//' + domain );
 			}
 		} );
 
 		readInterface.on( 'close', () => {
-			resolve( domains );
+			resolve( [ ...domains ] );
 		} );
 
 		readInterface.on( 'error', reject );
@@ -91,7 +92,7 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	get landoDomain() {
-		return `${ this.slug }.vipdev.lndo.site`;
+		return `//${ this.slug }.vipdev.lndo.site`;
 	}
 
 	get sqlFile() {
