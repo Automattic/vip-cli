@@ -207,6 +207,20 @@ export async function landoStart( lando: Lando, instancePath: string ) {
 	await app.start();
 }
 
+export async function landoLogs( lando: Lando, instancePath: string, options: {} ) {
+	debug( 'Will show lando logs on path:', instancePath, ' with options: ', options );
+
+	const app = await getLandoApplication( lando, instancePath );
+	const logTask = lando.tasks.find( task => task.command === 'logs' );
+
+	await logTask.run( {
+		follow: options.follow,
+		service: options.service,
+		timestamps: options.timestamps,
+		_app: app,
+	} );
+}
+
 export async function landoRebuild( lando: Lando, instancePath: string ) {
 	debug( 'Will rebuild lando app on path:', instancePath );
 
@@ -572,10 +586,10 @@ export async function validateDockerInstalled( lando: Lando ) {
 
 export async function validateDockerAccess( lando: Lando ) {
 	const docker = lando.engine.docker;
-	lando.log.verbose( 'Fetching docker info to verify user is in docker group' );
+	lando.log.verbose( 'Fetching docker info to verify Docker connection' );
 	try {
 		await docker.info();
 	} catch ( error ) {
-		throw Error( 'Failed to connect to docker. Please verify that the current user is part of docker group and has access to docker commands.' );
+		throw Error( 'Failed to connect to Docker. Please verify that Docker engine (service) is running and follow the troubleshooting instructions for your platform.' );
 	}
 }

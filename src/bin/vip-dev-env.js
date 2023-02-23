@@ -27,4 +27,5 @@ command( {
 	.command( 'exec', 'Execute a WP-CLI command in local dev environment' )
 	.command( 'import', 'Import data into a local WordPress environment' )
 	.command( 'shell', 'Spawns a shell in a dev environment' )
+	.command( 'logs', 'View logs from a local WordPress environment' )
 	.argv( process.argv );

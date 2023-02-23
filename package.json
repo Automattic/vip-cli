@@ -32,6 +32,7 @@
     "vip-dev-env-shell": "dist/bin/vip-dev-env-shell.js",
     "vip-dev-env-start": "dist/bin/vip-dev-env-start.js",
     "vip-dev-env-stop": "dist/bin/vip-dev-env-stop.js",
+    "vip-dev-env-logs": "dist/bin/vip-dev-env-logs.js",
     "vip-import": "dist/bin/vip-import.js",
     "vip-import-media": "dist/bin/vip-import-media.js",
     "vip-import-media-abort": "dist/bin/vip-import-media-abort.js",
