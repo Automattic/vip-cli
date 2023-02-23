@@ -85,11 +85,11 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the SQL file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
-			cmd.siteUrls = [ 'test.go-vip.com' ];
+			cmd.siteUrls = [ '//test.go-vip.com' ];
 			cmd.slug = 'test-slug';
 
 			await cmd.runSearchReplace();
-			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ 'test.go-vip.com', 'test-slug.vipdev.lndo.site' ] );
+			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ '//test.go-vip.com', '//test-slug.vipdev.lndo.site' ] );
 		} );
 	} );
 
