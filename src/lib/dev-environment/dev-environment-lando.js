@@ -254,7 +254,7 @@ async function addHooks( app: App, lando: Lando ): Promise<void> {
 			registryResolvable = false;
 		}
 
-		data.opts.pull = registryResolvable && instanceData.pullAfter < Date.now();
+		data.opts.pull = registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now();
 		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! data.opts.pull ) {
 			data.opts.local = data.opts.pullable;
 			data.opts.pullable = [];

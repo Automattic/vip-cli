@@ -83,6 +83,7 @@ export interface InstanceData {
 	php: string;
 	elasticsearch?: string | boolean;
 	mailhog: boolean;
+	pullAfter?: number;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }
