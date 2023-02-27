@@ -207,7 +207,13 @@ export async function landoStart( lando: Lando, instancePath: string ) {
 	await app.start();
 }
 
-export async function landoLogs( lando: Lando, instancePath: string, options: {} ) {
+export interface LandoLogsOptions {
+	follow: boolean;
+	service: string;
+	timestamps: boolean;
+}
+
+export async function landoLogs( lando: Lando, instancePath: string, options: LandoLogsOptions ) {
 	debug( 'Will show lando logs on path:', instancePath, ' with options: ', options );
 
 	const app = await getLandoApplication( lando, instancePath );
