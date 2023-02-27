@@ -254,9 +254,10 @@ async function addHooks( app: App, lando: Lando ): Promise<void> {
 			registryResolvable = false;
 		}
 
-		const pull = registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now();
+		const pull = ( registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now() );
 		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! pull ) {
-			data.opts.pull = false;
+			// Settigs `data.opts.pullable` to an empty array prevents Lando from pulling images with `docker pull`.
+			// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
 			data.opts.local = data.opts.pullable;
 			data.opts.pullable = [];
 		}
