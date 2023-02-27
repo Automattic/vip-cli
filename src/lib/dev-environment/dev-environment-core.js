@@ -21,7 +21,7 @@ import type Lando from 'lando';
 /**
  * Internal dependencies
  */
-import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild, landoLogs } from './dev-environment-lando';
+import { type LandoLogsOptions, landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild, landoLogs } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
 import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
@@ -267,7 +267,7 @@ export async function showLogs( lando: Lando, slug: string, options: any = {} ):
 		}
 	}
 
-	return landoLogs( lando, instancePath, options );
+	return landoLogs( lando, instancePath, ( options: LandoLogsOptions ) );
 }
 
 export async function printEnvironmentInfo( lando: Lando, slug: string, options: PrintOptions ): Promise<void> {
