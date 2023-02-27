@@ -35,6 +35,10 @@ import UserError from '../user-error';
 const DEBUG_KEY = '@automattic/vip:bin:dev-environment';
 const debug = debugLib( DEBUG_KEY );
 
+type Record<T, V> = {
+	[T]: V
+};
+
 /**
  * @return {Promise<object>} Lando configuration
  */
@@ -200,14 +204,14 @@ export async function bootstrapLando(): Promise<Lando> {
 	return lando;
 }
 
-export async function landoStart( lando: Lando, instancePath: string ) {
+export async function landoStart( lando: Lando, instancePath: string ): Promise<void> {
 	debug( 'Will start lando app on path:', instancePath );
 
 	const app = await getLandoApplication( lando, instancePath );
 	await app.start();
 }
 
-export async function landoLogs( lando: Lando, instancePath: string, options: {} ) {
+export async function landoLogs( lando: Lando, instancePath: string, options: {} ): Promise<void> {
 	debug( 'Will show lando logs on path:', instancePath, ' with options: ', options );
 
 	const app = await getLandoApplication( lando, instancePath );
@@ -221,7 +225,7 @@ export async function landoLogs( lando: Lando, instancePath: string, options: {}
 	} );
 }
 
-export async function landoRebuild( lando: Lando, instancePath: string ) {
+export async function landoRebuild( lando: Lando, instancePath: string ): Promise<void> {
 	debug( 'Will rebuild lando app on path:', instancePath );
 
 	const app = await getLandoApplication( lando, instancePath );
@@ -229,7 +233,7 @@ export async function landoRebuild( lando: Lando, instancePath: string ) {
 	await app.rebuild();
 }
 
-async function addHooks( app: App, lando: Lando ) {
+async function addHooks( app: App, lando: Lando ): Promise<void> {
 	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
 
 	lando.events.once( 'pre-engine-build', async data => {
@@ -263,7 +267,7 @@ const healthChecks = {
 	php: '[[ -f /wp/wp-includes/pomo/mo.php ]]',
 };
 
-async function healthcheckHook( app: App, lando: Lando ) {
+async function healthcheckHook( app: App, lando: Lando ): Promise<void> {
 	const now = new Date();
 	try {
 		await lando.Promise.retry( async () => {
@@ -314,21 +318,21 @@ async function healthcheckHook( app: App, lando: Lando ) {
 	debug( `Healthcheck completed in ${ duration }ms` );
 }
 
-export async function landoStop( lando: Lando, instancePath: string ) {
+export async function landoStop( lando: Lando, instancePath: string ): Promise<void> {
 	debug( 'Will stop lando app on path:', instancePath );
 
 	const app = await getLandoApplication( lando, instancePath );
 	await app.stop();
 }
 
-export async function landoDestroy( lando: Lando, instancePath: string ) {
+export async function landoDestroy( lando: Lando, instancePath: string ): Promise<void> {
 	debug( 'Will destroy lando app on path:', instancePath );
 
 	const app = await getLandoApplication( lando, instancePath );
 	await app.destroy();
 }
 
-export async function landoInfo( lando: Lando, instancePath: string, suppressWarnings: boolean ) {
+export async function landoInfo( lando: Lando, instancePath: string, suppressWarnings: boolean ): Promise<Record<string, any>> {
 	const app = await getLandoApplication( lando, instancePath );
 
 	let appInfo = landoUtils.startTable( app );
@@ -402,8 +406,8 @@ const extraServiceDisplayConfiguration = [
 	},
 ];
 
-async function getExtraServicesConnections( lando, app ) {
-	const extraServices = {};
+async function getExtraServicesConnections( lando: Lando, app: App ): Promise<Record<string, string>> {
+	const extraServices: Record<string, string> = {};
 	const allServices = await lando.engine.list( { project: app.project } );
 
 	for ( const service of allServices ) {
@@ -433,10 +437,6 @@ async function getExtraServicesConnections( lando, app ) {
 
 	return extraServices;
 }
-
-type Record<T, V> = {
-	[T]: V
-};
 
 export async function checkEnvHealth( lando: Lando, instancePath: string ): Promise<Record<string, boolean>> {
 	type ScanResult = {
@@ -553,7 +553,7 @@ export async function landoShell( lando: Lando, instancePath: string, service: s
  *
  * @param {Object} lando Bootstrapped Lando object
  */
-async function ensureNoOrphantProxyContainer( lando: Lando ) {
+async function ensureNoOrphantProxyContainer( lando: Lando ): Promise<void> {
 	const proxyContainerName = lando.config.proxyContainer;
 
 	const docker = lando.engine.docker;
@@ -573,7 +573,7 @@ async function ensureNoOrphantProxyContainer( lando: Lando ) {
 	await proxyContainer.remove();
 }
 
-export async function validateDockerInstalled( lando: Lando ) {
+export async function validateDockerInstalled( lando: Lando ): Promise<void> {
 	lando.log.verbose( 'docker-engine exists: %s', lando.engine.dockerInstalled );
 	if ( lando.engine.dockerInstalled === false ) {
 		throw Error( 'docker could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/' );
@@ -584,7 +584,7 @@ export async function validateDockerInstalled( lando: Lando ) {
 	}
 }
 
-export async function validateDockerAccess( lando: Lando ) {
+export async function validateDockerAccess( lando: Lando ): Promise<void> {
 	const docker = lando.engine.docker;
 	lando.log.verbose( 'Fetching docker info to verify Docker connection' );
 	try {
