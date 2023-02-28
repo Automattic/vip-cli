@@ -1,5 +1,19 @@
 ## Changelog
 
+### 2.27.0
+
+- #1287 fix(dev-env): Pull fresh images for new environments
+- #1288 fix(flow): Fix Flow issues
+- #1286 fix(dev-env): Provide Flow typings for `landoLogs()`
+- #1285 refactor(dev-env): Refactor Lando template to avoid running unnecessary scripts
+- #1280 Dev-env: Add command to view logs `vip dev-env logs`
+- #1267 feat(dev-env): Add `vip dev-env shell` command
+- #1283 fix(dev-env): Add missing `await`
+- #1284 test: Do not mock `localStorage` if `global.localStorage` is defined
+- #1281 [dev-env] Update the wording for Docker connection check
+- #1173 Add dev-env configuration file
+- #1279 Add some clarification to test-release process
+
 ### 2.26.2
 
 - #1278	Prepare v2.26.2
