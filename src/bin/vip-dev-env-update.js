@@ -21,6 +21,10 @@ import { addDevEnvConfigurationOptions, getEnvTrackingInfo, getEnvironmentName, 
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import {
+	getConfigurationFileOptions,
+	mergeConfigurationFileOptions,
+} from '../lib/dev-environment/dev-environment-configuration-file';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -36,7 +40,7 @@ addDevEnvConfigurationOptions( cmd );
 
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
-	const slug = getEnvironmentName( opt );
+	const slug = await getEnvironmentName( opt );
 
 	const lando = await bootstrapLando();
 	await validateDependencies( lando, slug );
@@ -54,12 +58,24 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Read instance data', currentInstanceData );
 
-		const preselectedOptions = {
-			// Title and multisite can't be changed during update
+		const configurationFileOptions = await getConfigurationFileOptions();
+		let preselectedOptions = Object.assign( {}, opt );
+
+		if ( Object.keys( configurationFileOptions ).length > 0 ) {
+			preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
+		}
+
+		// Title and multisite can't be changed during update
+		const selectedOptions: InstanceOptions = {
 			title: currentInstanceData.wpTitle,
 			multisite: currentInstanceData.multisite,
-			...opt,
 		};
+
+		Object.keys( preselectedOptions ).forEach( key => {
+			if ( ! ( key in selectedOptions ) ) {
+				selectedOptions[ key ] = preselectedOptions[ key ];
+			}
+		} );
 
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
@@ -80,7 +96,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => option.length > 1 ) // Filter out single letter aliases
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
-		const suppressPrompts = providedOptions.length > 0;
+		const suppressPrompts = providedOptions.length > 0 || Object.keys( configurationFileOptions ).length > 0;
 		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
 		instanceData.siteSlug = slug;
 

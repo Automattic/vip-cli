@@ -37,10 +37,15 @@ import type {
 	EnvironmentNameOptions,
 	InstanceData,
 	WordPressConfig,
+	ConfigurationFileOptions,
 } from './types';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
 import typeof Command from '../../lib/cli/command';
+import {
+	CONFIGURATION_FILE_NAME,
+	getConfigurationFileOptions,
+} from './dev-environment-configuration-file';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -129,9 +134,9 @@ const verifyDNSResolution = async ( slug: string ): Promise<void> => {
 };
 
 const VALIDATION_STEPS = [
-	{ id: 'docker', name: 'Check for docker installation' },
+	{ id: 'docker', name: 'Check for Docker installation' },
 	{ id: 'compose', name: 'Check for docker-compose installation' },
-	{ id: 'access', name: 'Check access to docker for current user' },
+	{ id: 'access', name: 'Check Docker connectivity' },
 	{ id: 'dns', name: 'Check DNS resolution' },
 ];
 
@@ -184,7 +189,7 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 	debug( 'Validation checks completed in %d ms', duration );
 };
 
-export function getEnvironmentName( options: EnvironmentNameOptions ): string {
+export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise<string> {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -201,6 +206,15 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 		throw new UserError( message );
 	}
 
+	const configurationFileOptions = await getConfigurationFileOptions();
+
+	if ( configurationFileOptions.slug ) {
+		const slug = configurationFileOptions.slug;
+		console.log( `Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray( CONFIGURATION_FILE_NAME ) }\n` );
+
+		return slug;
+	}
+
 	const envs = getAllEnvironmentNames();
 	if ( envs.length === 1 ) {
 		return envs[ 0 ];
@@ -213,8 +227,10 @@ export function getEnvironmentName( options: EnvironmentNameOptions ): string {
 	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
 }
 
-export function getEnvironmentStartCommand( slug: string ): string {
-	if ( ! slug ) {
+export function getEnvironmentStartCommand( slug: string, configurationFileOptions: ConfigurationFileOptions ): string {
+	const isUsingConfigurationFileSlug = Object.keys( configurationFileOptions ).length > 0 && configurationFileOptions.slug === slug;
+
+	if ( ! slug || isUsingConfigurationFileSlug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
 	}
 
@@ -282,7 +298,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: 'multisite' in preselectedOptions ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		multisite: preselectedOptions.multisite !== undefined ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
 		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
@@ -323,7 +339,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
 
 		// eslint-disable-next-line no-await-in-loop
-		const result = await processComponent( component, option, defaultValue );
+		const result = await processComponent( component, option, defaultValue, suppressPrompts );
 		if ( null === result ) {
 			throw new Error( 'processComponent() returned null' );
 		}
@@ -353,7 +369,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	return instanceData;
 }
 
-async function processComponent( component: string, preselectedValue: string, defaultValue: string ) {
+async function processComponent( component: string, preselectedValue: string, defaultValue: string, suppressPrompts: boolean = false ) {
 	debug( `processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }` );
 	let result = null;
 
@@ -361,7 +377,8 @@ async function processComponent( component: string, preselectedValue: string, de
 	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
-		if ( allowLocal ) {
+
+		if ( allowLocal && suppressPrompts === false ) {
 			console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
 		}
 	} else {

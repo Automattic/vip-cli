@@ -36,7 +36,7 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
 		const [ filePath ] = unmatchedArgs;
-		const slug = getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_import_media_command_execute', trackingInfo );

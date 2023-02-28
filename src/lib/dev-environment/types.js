@@ -1,7 +1,7 @@
 // @flow
 export interface InstanceOptions {
-	title: string;
-	multisite: boolean;
+	title?: string;
+	multisite?: boolean;
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
@@ -53,6 +53,21 @@ export type EnvironmentNameOptions = {
 	allowAppEnv?: boolean;
 }
 
+export type ConfigurationFileOptions = {
+	version?: string;
+	slug?: string;
+	title?: string;
+	multisite?: boolean;
+	php?: string;
+	wordpress?: string;
+	'mu-plugins'?: string;
+	'app-code'?: string;
+	elasticsearch?: boolean;
+	phpmyadmin?: boolean;
+	xdebug?: boolean;
+	mailhog?: boolean;
+}
+
 export interface InstanceData {
 	siteSlug: string;
 	wpTitle: string;
@@ -68,6 +83,7 @@ export interface InstanceData {
 	php: string;
 	elasticsearch?: string | boolean;
 	mailhog: boolean;
+	pullAfter?: number;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }

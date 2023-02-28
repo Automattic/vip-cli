@@ -44,7 +44,7 @@ command()
 	.option( 'soft', 'Keep config files needed to start an environment intact' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const slug = getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug );

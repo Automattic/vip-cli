@@ -37,8 +37,7 @@ command( { wildcardCommand: true } )
 	.option( 'quiet', 'Suppress output', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
-		const slug = getEnvironmentName( opt );
-
+		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, slug, opt.quiet );
 

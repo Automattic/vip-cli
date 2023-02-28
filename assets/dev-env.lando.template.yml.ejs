@@ -9,8 +9,8 @@ proxy:
 <% } %>
   phpmyadmin:
     - <%= siteSlug %>-pma.vipdev.lndo.site
-services:
 
+services:
   devtools:
     type: compose
     services:
@@ -19,16 +19,24 @@ services:
       volumes:
         - devtools:/dev-tools
         - scripts:/scripts
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
     volumes:
       devtools: {}
       scripts:
+
   nginx:
     type: compose
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.23.2
+      image: ghcr.io/automattic/vip-container-images/nginx:1.23.3
       command: nginx -g "daemon off;"
+      environment:
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
@@ -45,8 +53,7 @@ services:
         XDEBUG_CONFIG: "<%= xdebugConfig %>"
 <% } %>
         LANDO_NO_USER_PERMS: 'enable'
-
-
+        LANDO_NEEDS_EXEC: 1
       volumes:
         - type: volume
           source: devtools
@@ -81,6 +88,9 @@ services:
         MYSQL_USER: wordpress
         MYSQL_PASSWORD: wordpress
         MYSQL_DATABASE: wordpress
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
       volumes:
         - database_data:/var/lib/mysql
     volumes:
@@ -105,6 +115,7 @@ services:
       environment:
         UPLOAD_LIMIT: 4G
 <% } %>
+
 <% if ( elasticsearch ) { %>
   elasticsearch:
     type: compose
@@ -118,6 +129,9 @@ services:
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
         xpack.security.enabled: 'false'
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
       ports:
         - ":9200"
       volumes:
@@ -130,7 +144,7 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
-      command: sh -c "rsync -a /wp/ /shared/; chown www-data -R /shared; sleep infinity"
+      command: sh -c "rsync -a --chown=www-data:www-data /wp/ /shared/; sleep infinity"
       volumes:
         - ./wordpress:/shared
         - type: volume
@@ -152,6 +166,9 @@ services:
           target: /scripts
           volume:
             nocopy: true
+      environment:
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
     volumes:
       mu-plugins: {}
 <% } %>
