@@ -37,6 +37,7 @@ const appQuery = `
 		type
 		name
 		primaryDomain { name }
+		uniqueLabel
 	}
 `;
 

@@ -14,7 +14,7 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-import API from '../lib/api';
+import API, { disableGlobalGraphQLErrorHandling, enableGlobalGraphQLErrorHandling } from '../lib/api';
 import { getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
@@ -148,8 +148,11 @@ async function generateDownloadLink( appId, envId, backupId ) {
  * @throws {Error} Throws an error if the job creation fails
  */
 async function createExportJob( appId, envId, backupId ) {
+	// Disable global error handling so that we can handle errors ourselves
+	disableGlobalGraphQLErrorHandling();
+
 	const api = await API();
-	const response = await api.mutate( {
+	await api.mutate( {
 		mutation: CREATE_EXPORT_JOB_MUTATION,
 		variables: {
 			input: {
@@ -160,15 +163,8 @@ async function createExportJob( appId, envId, backupId ) {
 		},
 	} );
 
-	const {
-		data: {
-			startDBBackupCopy: { success },
-		},
-	} = response;
-
-	if ( ! success ) {
-		throw new Error();
-	}
+	// Re-enable global error handling
+	enableGlobalGraphQLErrorHandling();
 }
 
 /**
@@ -307,17 +303,24 @@ export class ExportSQLCommand {
 			console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
 		}
 
-		// See if there is an existing export job for the latest backup
-		if ( ! await this.getExportJob() ) {
+		if ( await this.getExportJob() ) {
+			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
+		} else {
 			console.log( `Creating a new export for the backup with timestamp ${ latestBackup.createdAt }` );
 
 			try {
 				await createExportJob( this.app.id, this.env.id, latestBackup.id );
 			} catch ( err ) {
+				// Todo: match error code instead of message substring
+				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
+					exit.withError(
+						'There is an export job already running for this site: ' +
+						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
+						'Currently, we allow only one export job per site. Please try again later.'
+					);
+				}
 				exit.withError( `Error creating export job: ${ err?.message }` );
 			}
-		} else {
-			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
 		}
 
 		this.progressTracker.stepRunning( this.steps.PREPARE );
