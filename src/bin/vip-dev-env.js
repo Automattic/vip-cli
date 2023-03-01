@@ -15,7 +15,7 @@
 import command from '../lib/cli/command';
 
 command( {
-	requiredArgs: 1,
+	requiredArgs: 0,
 } )
 	.command( 'create', 'Create a new local dev environment' )
 	.command( 'update', 'Update an already created local dev environment' )
