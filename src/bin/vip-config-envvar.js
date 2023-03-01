@@ -15,7 +15,7 @@
 import command from '../lib/cli/command';
 
 command( {
-	requiredArgs: 1,
+	requiredArgs: 0,
 } )
 	.command( 'delete', 'Permanently delete an environment variable' )
 	.command( 'get', 'Get the value of an environment variable' )

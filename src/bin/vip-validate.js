@@ -11,7 +11,7 @@ import command from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( {
-	requiredArgs: 1,
+	requiredArgs: 0,
 } )
 	.command( 'preflight', 'Runs preflight tests to validate if your application is ready to be deployed' )
 	.argv( process.argv, async () => {
