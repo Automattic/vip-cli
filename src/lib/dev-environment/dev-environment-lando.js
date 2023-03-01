@@ -166,7 +166,6 @@ async function landoRecovery( lando: Lando, instancePath: string, error: Error )
 	console.error( chalk.green( 'Recovery successful, trying to initialize again...' ) );
 	try {
 		const app = lando.getApp( instancePath );
-		addHooks( app, lando );
 		await app.init();
 		return app;
 	} catch ( initError ) {
@@ -188,7 +187,6 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 
 	try {
 		app = lando.getApp( instancePath );
-		await addHooks( app, lando );
 		await app.init();
 	} catch ( error ) {
 		app = await landoRecovery( lando, instancePath, error );
@@ -200,6 +198,32 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 
 export async function bootstrapLando(): Promise<Lando> {
 	const lando = new Lando( await getLandoConfig() );
+	lando.events.once( 'pre-engine-build', async ( data: App ) => {
+		const instanceData = readEnvironmentData( data.name );
+
+		let registryResolvable = false;
+		try {
+			registryResolvable = ( await dns.promises.lookup( 'ghcr.io' ) ).address || false;
+			debug( 'Registry ghcr.io is resolvable' );
+		} catch ( err ) {
+			debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
+			registryResolvable = false;
+		}
+
+		const pull = registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now();
+		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! pull ) {
+			// Setting `data.opts.pullable` to an empty array prevents Lando from pulling images with `docker pull`.
+			// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
+			data.opts.local = data.opts.pullable;
+			data.opts.pullable = [];
+		}
+
+		if ( pull || ! instanceData.pullAfter ) {
+			instanceData.pullAfter = Date.now() + ( 7 * 24 * 60 * 60 * 1000 );
+			writeEnvironmentData( data.name, instanceData );
+		}
+	} );
+
 	await lando.bootstrap();
 	return lando;
 }
@@ -237,93 +261,6 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 	const app = await getLandoApplication( lando, instancePath );
 	await ensureNoOrphantProxyContainer( lando );
 	await app.rebuild();
-}
-
-async function addHooks( app: App, lando: Lando ): Promise<void> {
-	app.events.on( 'post-start', 1, () => healthcheckHook( app, lando ) );
-
-	lando.events.once( 'pre-engine-build', async data => {
-		const instanceData = readEnvironmentData( app._name );
-
-		let registryResolvable = false;
-		try {
-			registryResolvable = ( await dns.promises.lookup( 'ghcr.io' ) ).address || false;
-			debug( 'Registry ghcr.io is resolvable' );
-		} catch ( err ) {
-			debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
-			registryResolvable = false;
-		}
-
-		const pull = ( registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now() );
-		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! pull ) {
-			// Settigs `data.opts.pullable` to an empty array prevents Lando from pulling images with `docker pull`.
-			// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
-			data.opts.local = data.opts.pullable;
-			data.opts.pullable = [];
-		}
-
-		if ( pull || ! instanceData.pullAfter ) {
-			instanceData.pullAfter = Date.now() + ( 7 * 24 * 60 * 60 * 1000 );
-			writeEnvironmentData( app._name, instanceData );
-		}
-	} );
-}
-
-const healthChecks = {
-	database: 'mysql -uroot --silent --execute "SHOW DATABASES;"',
-	elasticsearch: "curl -s --noproxy '*' -XGET localhost:9200",
-	php: '[[ -f /wp/wp-includes/pomo/mo.php ]]',
-};
-
-async function healthcheckHook( app: App, lando: Lando ): Promise<void> {
-	const now = new Date();
-	try {
-		await lando.Promise.retry( async () => {
-			const list = await lando.engine.list( { project: app.project } );
-
-			const notHealthyContainers = [];
-			const checkPromises = [];
-			const containerOrder = [];
-			for ( const container of list ) {
-				if ( healthChecks[ container.service ] ) {
-					debug( `Testing ${ container.service }: ${ healthChecks[ container.service ] }` );
-					containerOrder.push( container );
-					checkPromises.push(
-						app.engine.run( {
-							id: container.id,
-							cmd: healthChecks[ container.service ],
-							compose: app.compose,
-							project: app.project,
-							opts: {
-								silent: true,
-								noTTY: true,
-								cstdio: 'pipe',
-								services: [ container.service ],
-							},
-						} )
-					);
-				}
-			}
-
-			const results = await Promise.allSettled( checkPromises );
-			results.forEach( ( result, index ) => {
-				if ( result.status === 'rejected' ) {
-					debug( `${ containerOrder[ index ].service } Health check failed` );
-					notHealthyContainers.push( containerOrder[ index ] );
-				}
-			} );
-
-			if ( notHealthyContainers.length ) {
-				notHealthyContainers.forEach( container => console.log( `Waiting for service ${ container.service } ...` ) );
-				return Promise.reject( notHealthyContainers );
-			}
-		}, { max: 20, backoff: 1000 } );
-	} catch ( containersWithFailingHealthCheck ) {
-		containersWithFailingHealthCheck.forEach( container => console.log( chalk.yellow( 'WARNING:' ) + ` Service ${ container.service } failed healthcheck` ) );
-	}
-
-	const duration = new Date().getTime() - now.getTime();
-	debug( `Healthcheck completed in ${ duration }ms` );
 }
 
 export async function landoStop( lando: Lando, instancePath: string ): Promise<void> {
