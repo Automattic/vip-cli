@@ -63,7 +63,7 @@ async function extractSiteUrls( sqlFile ) {
 		} );
 
 		readInterface.on( 'close', () => {
-			resolve( [ ...domains ] );
+			resolve( Array.from( domains ) );
 		} );
 
 		readInterface.on( 'error', reject );
