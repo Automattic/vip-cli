@@ -146,11 +146,10 @@ export class DevEnvSyncSQLCommand {
 	 */
 	async runImport() {
 		const importOptions = {
-			slug: this.slug,
 			inPlace: true,
 			skipValidate: true,
 		};
-		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions );
+		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run( true );
 	}
 
