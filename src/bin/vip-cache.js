@@ -15,7 +15,7 @@
 import command from '../lib/cli/command';
 
 command( {
-	requiredArgs: 2,
+	requiredArgs: 1,
 } )
 	.command( 'purge-url', 'Purge page cache' )
 	.argv( process.argv );
