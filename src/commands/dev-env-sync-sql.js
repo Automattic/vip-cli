@@ -174,7 +174,7 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			await this.track( 'error', { errorMessage: 'Could not extract the exported SQL file' } );
+			await this.track( 'archive_extraction_error', { errorMessage: err?.message } );
 			exit.withError( `Error extracting the SQL export: ${ err?.message }` );
 		}
 
@@ -193,7 +193,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
-			await this.track( 'error', { errorMessage: 'Could not run the search-replace operation' } );
+			await this.track( 'search_replace_error', { errorMessage: err?.message } );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
 
@@ -202,7 +202,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
-			await this.track( 'error', { errorMessage: 'Failed when importing the SQL file after search-replace operation' } );
+			await this.track( 'sql_import_error', { errorMessage: err?.message } );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}

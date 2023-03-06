@@ -301,7 +301,7 @@ export class ExportSQLCommand {
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
-			await this.track( 'error', { errorMessage: 'No backup found for the site' } );
+			await this.track( 'no_backup_found_error', { errorMessage: 'No backup found for the site' } );
 			exit.withError( `No backup found for site ${ this.app.name }` );
 		} else {
 			console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
@@ -317,7 +317,7 @@ export class ExportSQLCommand {
 			} catch ( err ) {
 				// Todo: match error code instead of message substring
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
-					await this.track( 'error', { errorMessage: 'An export job was already running for the site' } );
+					await this.track( 'export_job_already_running_error', { errorMessage: err?.message } );
 					exit.withError(
 						'There is an export job already running for this site: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
@@ -349,7 +349,7 @@ export class ExportSQLCommand {
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
-			await this.track( 'error', { errorMessage: 'Error downloading exported file' } );
+			await this.track( 'download_failed_error', { errorMessage: err?.message } );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
 	}
