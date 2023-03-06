@@ -76,18 +76,21 @@ export class DevEnvSyncSQLCommand {
 	slug;
 	tmpDir;
 	siteUrls;
+	track;
 
 	/**
 	 * Creates a new instance of the command
 	 *
-	 * @param {string} app  The app object
-	 * @param {string} env  The environment object
-	 * @param {string} slug The site slug
+	 * @param {string}   app       The app object
+	 * @param {string}   env       The environment object
+	 * @param {string}   slug      The site slug
+	 * @param {Function} trackerFn Function to call for tracking
 	 */
-	constructor( app, env, slug ) {
+	constructor( app, env, slug, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.slug = slug;
+		this.track = trackerFn;
 		this.tmpDir = makeTempDir();
 	}
 
@@ -110,7 +113,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the export is complete
 	 */
 	async generateExport() {
-		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile );
+		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile, this.track );
 		await exportCommand.run();
 	}
 
@@ -171,6 +174,7 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
+			await this.track( 'error', { errorMessage: 'Could not extract the exported SQL file' } );
 			exit.withError( `Error extracting the SQL export: ${ err?.message }` );
 		}
 
@@ -189,6 +193,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
+			await this.track( 'error', { errorMessage: 'Could not run the search-replace operation' } );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
 
@@ -197,6 +202,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
+			await this.track( 'error', { errorMessage: 'Failed when importing the SQL file after search-replace operation' } );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}
