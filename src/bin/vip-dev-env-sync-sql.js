@@ -59,7 +59,7 @@ command( {
 		const envPath = getEnvironmentPath( slug );
 
 		if ( ! await isEnvUp( lando, envPath ) ) {
-			await trackerFn( 'error', { errorMessage: 'Environment was not running' } );
+			await trackerFn( 'env_not_running_error', { errorMessage: 'Environment was not running' } );
 			throw new UserError( 'Environment needs to be started first' );
 		}
 
