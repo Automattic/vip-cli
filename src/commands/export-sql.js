@@ -182,15 +182,17 @@ export class ExportSQLCommand {
 		DOWNLOAD_LINK: 'downloadLink',
 		DOWNLOAD: 'download',
 	};
+	track;
 
 	/**
 	 * Creates an instance of SQLExportCommand
 	 *
-	 * @param {any}    app        The application object
-	 * @param {any}    env        The environment object
-	 * @param {string} outputFile The output file path
+	 * @param {any}      app        The application object
+	 * @param {any}      env        The environment object
+	 * @param {string}   outputFile The output file path
+	 * @param {Function} trackerFn  The progress tracker function
 	 */
-	constructor( app, env, outputFile ) {
+	constructor( app, env, outputFile, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.outputFile = outputFile;
@@ -200,6 +202,7 @@ export class ExportSQLCommand {
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
+		this.track = trackerFn;
 	}
 
 	/**
@@ -298,6 +301,7 @@ export class ExportSQLCommand {
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
+			await this.track( 'error', { errorMessage: 'No backup found for the site' } );
 			exit.withError( `No backup found for site ${ this.app.name }` );
 		} else {
 			console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
@@ -313,6 +317,7 @@ export class ExportSQLCommand {
 			} catch ( err ) {
 				// Todo: match error code instead of message substring
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
+					await this.track( 'error', { errorMessage: 'An export job was already running for the site' } );
 					exit.withError(
 						'There is an export job already running for this site: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
@@ -344,6 +349,7 @@ export class ExportSQLCommand {
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
+			await this.track( 'error', { errorMessage: 'Error downloading exported file' } );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
 	}

@@ -18,6 +18,7 @@ import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-
 import UserError from '../lib/user-error';
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{
@@ -51,13 +52,18 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, slug } ) => {
+		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', { app: app.id, env: env.uniqueLabel, slug } );
+		await trackerFn( 'execute' );
+
 		const lando = await bootstrapLando();
 		const envPath = getEnvironmentPath( slug );
 
 		if ( ! await isEnvUp( lando, envPath ) ) {
+			await trackerFn( 'error', { errorMessage: 'Environment was not running' } );
 			throw new UserError( 'Environment needs to be started first' );
 		}
 
-		const cmd = new DevEnvSyncSQLCommand( app, env, slug );
+		const cmd = new DevEnvSyncSQLCommand( app, env, slug, trackerFn );
 		await cmd.run();
+		await trackerFn( 'success' );
 	} );
