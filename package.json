@@ -87,7 +87,7 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@automattic/eslint-plugin-wpvip": "^0.3.0",
+    "@automattic/eslint-plugin-wpvip": "^0.4.0",
     "@babel/cli": "7.21.0",
     "@babel/core": "7.21.0",
     "@babel/eslint-parser": "7.19.1",
@@ -100,7 +100,7 @@
     "babel-plugin-module-resolver": "5.0.0",
     "check-node-version": "^4.2.1",
     "dockerode": "^3.3.4",
-    "eslint": "^8.31.0",
+    "eslint": "^8.35.0",
     "eslint-plugin-flowtype": "^8.0.3",
     "flow-bin": "0.201.0",
     "jest": "^29.4.3",

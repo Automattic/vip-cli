@@ -6,7 +6,8 @@
   "extends": [
     "plugin:@automattic/wpvip/base",
     "plugin:@automattic/wpvip/testing",
-    "plugin:flowtype/recommended"
+    "plugin:flowtype/recommended",
+    "plugin:jest/recommended"
   ],
   "rules": {
     "no-console": 0,
@@ -21,7 +22,6 @@
     "security/detect-non-literal-require": 0
   },
   "globals": {
-    "test": true,
-    "jest": true
+    "jest/globals": true
   }
 }
