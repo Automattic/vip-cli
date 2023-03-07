@@ -102,7 +102,7 @@
     "dockerode": "^3.3.4",
     "eslint": "^8.31.0",
     "eslint-plugin-flowtype": "^8.0.3",
-    "flow-bin": "0.196.3",
+    "flow-bin": "0.201.0",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "^29.4.3",
     "nock": "13.2.9",
