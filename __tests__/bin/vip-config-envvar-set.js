@@ -24,8 +24,14 @@ jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
+interface CommandMockType {
+	argv: () => CommandMockType;
+	examples: () => CommandMockType;
+	option: () => CommandMockType;
+}
+
 jest.mock( 'lib/cli/command', () => {
-	const commandMock = {
+	const commandMock: CommandMockType = {
 		argv: () => commandMock,
 		examples: () => commandMock,
 		option: () => commandMock,
@@ -216,7 +222,7 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
-		mockSetEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
+		mockSetEnvVar.mockImplementation( () => Promise.reject<void>( thrownError ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 
