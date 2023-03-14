@@ -26,8 +26,8 @@ import {
 	addDevEnvConfigurationOptions,
 	getOptionsFromAppInfo,
 	handleCLIException,
-	processBooleanOption,
 	validateDependencies,
+	processStringBooleanOption,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -64,12 +64,16 @@ const examples = [
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --app-code="~/git/my_code"`,
 		description: 'Creates a local multisite dev environment using WP 5.8 and application code is expected to be in "~/git/my_code"',
 	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite=subdirectory --wordpress="5.8" --app-code="~/git/my_code"`,
+		description: 'Creates a local multisite dev environment with a subdirectory URL structure using WP 5.8 and application code is expected to be in "~/git/my_code"',
+	},
 ];
 
 const cmd = command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site' )
-	.option( 'multisite', 'Enable multisite install', undefined, processBooleanOption );
+	.option( 'multisite', 'Enable multisite install', undefined, processStringBooleanOption );
 
 addDevEnvConfigurationOptions( cmd );
 
