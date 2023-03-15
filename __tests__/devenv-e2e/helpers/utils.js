@@ -68,7 +68,7 @@ export async function createAndStartEnvironment( cliTest, slug, env, options = [
 	expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
 	expect( await checkEnvExists( slug ) ).toBe( true );
 
-	result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env }, true );
+	result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ], { env }, true );
 	expect( result.rc ).toBe( 0 );
 	expect( result.stdout ).toMatch( /STATUS\s+UP/u );
 }
