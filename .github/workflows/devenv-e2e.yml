@@ -38,7 +38,7 @@ jobs:
       - name: Preload Docker images
         run: |
           vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailhog true && \
-          vip dev-env start && \
+          vip dev-env start -w && \
           vip dev-env destroy
 
       - name: Run tests

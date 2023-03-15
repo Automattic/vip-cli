@@ -54,7 +54,7 @@ describe( 'vip dev-env start', () => {
 		slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug ], { env } );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ], { env } );
 		expect( result.rc ).toBeGreaterThan( 0 );
 		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
 
