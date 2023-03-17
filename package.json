@@ -138,7 +138,7 @@
     "semver": "7.3.8",
     "single-line-log": "1.1.2",
     "socket.io-client": "^4.5.3",
-    "socket.io-stream": "0.9.1",
+    "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
     "socks-proxy-agent": "^5.0.1",
     "update-notifier": "5.1.0",
     "uuid": "9.0.0",
