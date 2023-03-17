@@ -29,7 +29,7 @@
         "js-yaml": "^4.1.0",
         "json2csv": "5.0.7",
         "jwt-decode": "2.2.0",
-        "lando": "github:automattic/lando-cli.git#39ee968",
+        "lando": "github:automattic/lando-cli.git#82e2a5e",
         "node-fetch": "^2.6.1",
         "opn": "5.5.0",
         "proxy-from-env": "^1.1.0",
@@ -3062,14 +3062,6 @@
       "dependencies": {
         "@jridgewell/resolve-uri": "3.1.0",
         "@jridgewell/sourcemap-codec": "1.4.14"
-      }
-    },
-    "node_modules/@lando/argv": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/@lando/argv/-/argv-1.1.0.tgz",
-      "integrity": "sha512-nBM6Rk1XorQdxad0CJTxDaNKrj+ITUg3u9rZYrOiF1KI5oImBJRBKjwf1EhnktJ63HmLGTq+sZQsR8veJmf1GQ==",
-      "engines": {
-        "node": ">=14.0.0"
       }
     },
     "node_modules/@lando/compose": {
@@ -11278,10 +11270,9 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#39ee968e158f12ea8ca8a01c6c4c4c650b23f211",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#82e2a5eb95b218310aee54aaa274d206bb826a2c",
       "license": "GPL-3.0",
       "dependencies": {
-        "@lando/argv": "^1.1.0",
         "@lando/compose": "^0.5.0",
         "@lando/mailhog": "^0.5.0",
         "@lando/phpmyadmin": "^0.5.0",
@@ -11291,7 +11282,7 @@
         "cli-table": "^0.3.1",
         "cli-table3": "^0.5.1",
         "copy-dir": "^0.4.0",
-        "dayjs": "^1.8.25",
+        "dayjs": "^1.11.7",
         "dockerode": "^2.4.2",
         "glob": "^7.1.3",
         "inquirer": "^6.2.1",
@@ -11303,13 +11294,13 @@
         "mkdirp": "^0.5.1",
         "node-cache": "^4.1.1",
         "object-hash": "^1.1.8",
-        "semver": "^7.3.2",
+        "semver": "^7.3.8",
         "shelljs": "^0.8.4",
         "string-argv": "0.1.1",
         "sudo-block": "^2.0.0",
         "through": "^2.3.8",
-        "transliteration": "^2.2.0",
-        "uuid": "^3.2.1",
+        "transliteration": "^2.3.5",
+        "uuid": "^9.0.0",
         "valid-url": "^1.0.9",
         "winston": "2.4.5",
         "yargonaut": "^1.1.2",
@@ -11614,15 +11605,6 @@
       "integrity": "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==",
       "dependencies": {
         "safe-buffer": "~5.1.0"
-      }
-    },
-    "node_modules/lando/node_modules/uuid": {
-      "version": "3.4.0",
-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-3.4.0.tgz",
-      "integrity": "sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==",
-      "deprecated": "Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.",
-      "bin": {
-        "uuid": "bin/uuid"
       }
     },
     "node_modules/lando/node_modules/which-module": {
@@ -18249,11 +18231,6 @@
         "@jridgewell/sourcemap-codec": "1.4.14"
       }
     },
-    "@lando/argv": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/@lando/argv/-/argv-1.1.0.tgz",
-      "integrity": "sha512-nBM6Rk1XorQdxad0CJTxDaNKrj+ITUg3u9rZYrOiF1KI5oImBJRBKjwf1EhnktJ63HmLGTq+sZQsR8veJmf1GQ=="
-    },
     "@lando/compose": {
       "version": "0.5.0",
       "resolved": "https://registry.npmjs.org/@lando/compose/-/compose-0.5.0.tgz",
@@ -24494,10 +24471,9 @@
       "dev": true
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#39ee968e158f12ea8ca8a01c6c4c4c650b23f211",
-      "from": "lando@github:automattic/lando-cli.git#39ee968",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#82e2a5eb95b218310aee54aaa274d206bb826a2c",
+      "from": "lando@github:automattic/lando-cli.git#82e2a5e",
       "requires": {
-        "@lando/argv": "^1.1.0",
         "@lando/compose": "^0.5.0",
         "@lando/mailhog": "^0.5.0",
         "@lando/phpmyadmin": "^0.5.0",
@@ -24507,7 +24483,7 @@
         "cli-table": "^0.3.1",
         "cli-table3": "^0.5.1",
         "copy-dir": "^0.4.0",
-        "dayjs": "^1.8.25",
+        "dayjs": "^1.11.7",
         "dockerode": "^2.4.2",
         "glob": "^7.1.3",
         "inquirer": "^6.2.1",
@@ -24519,13 +24495,13 @@
         "mkdirp": "^0.5.1",
         "node-cache": "^4.1.1",
         "object-hash": "^1.1.8",
-        "semver": "^7.3.2",
+        "semver": "^7.3.8",
         "shelljs": "^0.8.4",
         "string-argv": "0.1.1",
         "sudo-block": "^2.0.0",
         "through": "^2.3.8",
-        "transliteration": "^2.2.0",
-        "uuid": "^3.2.1",
+        "transliteration": "^2.3.5",
+        "uuid": "^9.0.0",
         "valid-url": "^1.0.9",
         "winston": "2.4.5",
         "yargonaut": "^1.1.2",
@@ -24784,11 +24760,6 @@
               }
             }
           }
-        },
-        "uuid": {
-          "version": "3.4.0",
-          "resolved": "https://registry.npmjs.org/uuid/-/uuid-3.4.0.tgz",
-          "integrity": "sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A=="
         },
         "which-module": {
           "version": "2.0.0",
