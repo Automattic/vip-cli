@@ -89,8 +89,11 @@ const parseOutput = (output) => {
         }
         if (currentSection === SECTION_EXAMPLES) {
             const description = line.replace('- ', '');
+            lineIx++;
+            const example = lines[lineIx] && lines[lineIx].trim();
             result.examples.push({
                 description,
+                example,
             });
         }
 
