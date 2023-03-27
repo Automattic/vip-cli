@@ -88,12 +88,14 @@ const parseOutput = (output) => {
             continue;
         }
         if (currentSection === SECTION_EXAMPLES) {
-            const description = line.replace('- ', '');
-            lineIx++;
-            const example = lines[lineIx] && lines[lineIx].trim();
+            let description = '';
+            while(!lines[lineIx].trim().startsWith('$')) {
+                description += lines[lineIx++];
+            }
+            const usage = lines[lineIx] && lines[lineIx].trim();
             result.examples.push({
                 description,
-                example,
+                usage,
             });
         }
 
