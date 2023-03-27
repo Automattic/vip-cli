@@ -29,7 +29,7 @@
         "js-yaml": "^4.1.0",
         "json2csv": "5.0.7",
         "jwt-decode": "2.2.0",
-        "lando": "github:automattic/lando-cli.git#82e2a5e",
+        "lando": "github:automattic/lando-cli.git#4d334a8",
         "node-fetch": "^2.6.1",
         "opn": "5.5.0",
         "proxy-from-env": "^1.1.0",
@@ -11270,7 +11270,7 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#82e2a5eb95b218310aee54aaa274d206bb826a2c",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#4d334a87783b82b4abdb04f59c32f4d55d2e9334",
       "license": "GPL-3.0",
       "dependencies": {
         "@lando/compose": "^0.5.0",
@@ -24459,8 +24459,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#82e2a5eb95b218310aee54aaa274d206bb826a2c",
-      "from": "lando@github:automattic/lando-cli.git#82e2a5e",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#4d334a87783b82b4abdb04f59c32f4d55d2e9334",
+      "from": "lando@github:automattic/lando-cli.git#4d334a8",
       "requires": {
         "@lando/compose": "^0.5.0",
         "@lando/mailhog": "^0.5.0",
