@@ -58,24 +58,15 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Read instance data', currentInstanceData );
 
-		const configurationFileOptions = await getConfigurationFileOptions();
-		let preselectedOptions = Object.assign( {}, opt );
-
-		if ( Object.keys( configurationFileOptions ).length > 0 ) {
-			preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
-		}
-
-		// Title and multisite can't be changed during update
-		const selectedOptions: InstanceOptions = {
+		const preselectedOptions: InstanceOptions = {
 			title: currentInstanceData.wpTitle,
 			multisite: currentInstanceData.multisite,
-		};
+			...opt
+		}
 
-		Object.keys( preselectedOptions ).forEach( key => {
-			if ( ! ( key in selectedOptions ) ) {
-				selectedOptions[ key ] = preselectedOptions[ key ];
-			}
-		} );
+		const configurationFileOptions = await getConfigurationFileOptions();
+		const thereAreOptionsFromConfigFile = Object.keys( configurationFileOptions ).length > 0;
+		const finalPreselectedOptions = mergeConfigurationFileOptions( preselectedOptions, configurationFileOptions )
 
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
@@ -96,8 +87,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => option.length > 1 ) // Filter out single letter aliases
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
-		const suppressPrompts = providedOptions.length > 0 || Object.keys( configurationFileOptions ).length > 0;
-		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
+		const suppressPrompts = providedOptions.length > 0 || thereAreOptionsFromConfigFile;
+		const instanceData = await promptForArguments( finalPreselectedOptions, defaultOptions, suppressPrompts );
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );
