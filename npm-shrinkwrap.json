@@ -13252,12 +13252,6 @@
         "node": ">=4"
       }
     },
-    "node_modules/publish-please/node_modules/lodash": {
-      "version": "4.17.20",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.20.tgz",
-      "integrity": "sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==",
-      "dev": true
-    },
     "node_modules/publish-please/node_modules/semver": {
       "version": "5.6.0",
       "resolved": "https://registry.npmjs.org/semver/-/semver-5.6.0.tgz",
@@ -25996,7 +25990,7 @@
         "elegant-status": "1.1.0",
         "inquirer": "6.2.0",
         "is-ci": "1.2.1",
-        "lodash": "4.17.20",
+        "lodash": "4.17.21",
         "micromatch": "3.1.10",
         "node-emoji": "1.8.1",
         "osenv": "0.1.5",
@@ -26038,7 +26032,7 @@
             "cli-width": "^2.0.0",
             "external-editor": "^3.0.0",
             "figures": "^2.0.0",
-            "lodash": "^4.17.10",
+            "lodash": "4.17.21",
             "mute-stream": "0.0.7",
             "run-async": "^2.2.0",
             "rxjs": "^6.1.0",
@@ -26060,12 +26054,6 @@
           "version": "2.0.0",
           "resolved": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-2.0.0.tgz",
           "integrity": "sha512-VHskAKYM8RfSFXwee5t5cbN5PZeq1Wrh6qd5bkyiXIf6UQcN6w/A0eXM9r6t8d+GYOh+o6ZhiEnb88LN/Y8m2w==",
-          "dev": true
-        },
-        "lodash": {
-          "version": "4.17.20",
-          "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.20.tgz",
-          "integrity": "sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==",
           "dev": true
         },
         "semver": {

@@ -148,6 +148,11 @@
   "optionalDependencies": {
     "keytar": "7.7.0"
   },
+  "overrides": {
+    "publish-please": {
+      "lodash": "4.17.21"
+    }
+  },
   "publishConfig": {
     "access": "public"
   }
