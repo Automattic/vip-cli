@@ -61,12 +61,12 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const preselectedOptions: InstanceOptions = {
 			title: currentInstanceData.wpTitle,
 			multisite: currentInstanceData.multisite,
-			...opt
-		}
+			...opt,
+		};
 
 		const configurationFileOptions = await getConfigurationFileOptions();
 		const thereAreOptionsFromConfigFile = Object.keys( configurationFileOptions ).length > 0;
-		const finalPreselectedOptions = mergeConfigurationFileOptions( preselectedOptions, configurationFileOptions )
+		const finalPreselectedOptions = mergeConfigurationFileOptions( preselectedOptions, configurationFileOptions );
 
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
