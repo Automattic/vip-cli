@@ -19,11 +19,11 @@ type Record<T, V> = {
  * @param {string} filepath Path to the file
  * @return {string[]} Array of certificates
  */
-export async function splitca( filepath: string ): Promise<string> {
+export async function splitca( filepath: string ): Promise<string[]> {
 	const ca: string[] = [];
 	const data = await readFile( filepath, 'utf-8' );
 	if ( data.indexOf( '-END CERTIFICATE-' ) < 0 || data.indexOf( '-BEGIN CERTIFICATE-' ) < 0 ) {
-		throw Error( "File does not contain 'BEGIN CERTIFICATE' or 'END CERTIFICATE'" );
+		throw new Error( "File does not contain 'BEGIN CERTIFICATE' or 'END CERTIFICATE'" );
 	}
 
 	const chain = data.split( '\n' );
@@ -64,11 +64,10 @@ export async function getDockerSocket(): Promise<string | null> {
 			// This is a UNIX socket, strip the leading `unix://` prefix and make sure the path starts with a slash.
 			// (there are cases when the path is prefixed with two or three slashes)
 			paths.push( possibleSocket.replace( /^unix:\/+/, '/' ) );
-		} else {
-			// `DOCKER_HOST` is not set, or it is set to an empty string, so we will try to use the default socket path.
-			paths.push( '/var/run/docker.sock' );
 		}
 
+		// Try the default location
+		paths.push( '/var/run/docker.sock' );
 		// Try an alternative location
 		paths.push( path.join( homedir(), '.docker', 'run', 'docker.sock' ) );
 
