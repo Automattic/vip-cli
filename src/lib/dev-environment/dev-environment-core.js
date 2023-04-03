@@ -17,6 +17,7 @@ import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
 import type Lando from 'lando';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Internal dependencies
@@ -192,6 +193,9 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mariadb = undefined;
 	}
 
+	// newInstanceData
+	newInstanceData.autologinKey = uuid();
+
 	return newInstanceData;
 }
 
@@ -282,9 +286,14 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const appInfo = await landoInfo( lando, instancePath, !! options.suppressWarnings );
+	const environmentData = readEnvironmentData( slug );
+	const appInfo = await landoInfo(
+		lando,
+		instancePath,
+		{ suppressWarnings: !! options.suppressWarnings, autologinKey: environmentData.autologinKey }
+	);
+
 	if ( options.extended ) {
-		const environmentData = readEnvironmentData( slug );
 		appInfo.title = environmentData.wpTitle;
 		appInfo.multisite = !! environmentData.multisite;
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];

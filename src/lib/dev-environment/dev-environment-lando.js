@@ -240,7 +240,12 @@ export async function landoDestroy( lando: Lando, instancePath: string ): Promis
 	await app.destroy();
 }
 
-export async function landoInfo( lando: Lando, instancePath: string, suppressWarnings: boolean ): Promise<Record<string, any>> {
+interface LandoInfoOptions {
+	suppressWarnings?: boolean;
+	autologinKey?: string
+}
+
+export async function landoInfo( lando: Lando, instancePath: string, options: LandoInfoOptions = {} ): Promise<Record<string, any>> {
 	const app = await getLandoApplication( lando, instancePath );
 
 	let appInfo = landoUtils.startTable( app );
@@ -274,14 +279,17 @@ export async function landoInfo( lando: Lando, instancePath: string, suppressWar
 
 	// Add login information
 	if ( frontEndUrl ) {
-		const loginUrl = `${ frontEndUrl }wp-admin/`;
+		let loginUrl = `${ frontEndUrl }wp-admin/`;
+		if ( options.autologinKey ) {
+			loginUrl += `?vip-dev-autologin=${ options.autologinKey }`;
+		}
 
 		appInfo[ 'Login URL' ] = loginUrl;
 		appInfo[ 'Default username' ] = 'vipgo';
 		appInfo[ 'Default password' ] = 'password';
 	}
 
-	if ( ! suppressWarnings && hasWarnings ) {
+	if ( ! options.suppressWarnings && hasWarnings ) {
 		let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
 		Object.keys( health ).forEach( service => {
 			if ( ! health[ service ] ) {

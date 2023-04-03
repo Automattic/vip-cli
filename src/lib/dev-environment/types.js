@@ -84,6 +84,7 @@ export interface InstanceData {
 	elasticsearch?: string | boolean;
 	mailhog: boolean;
 	pullAfter?: number;
+	autologinKey?: string;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }
