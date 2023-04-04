@@ -130,7 +130,7 @@
     "js-yaml": "^4.1.0",
     "json2csv": "5.0.7",
     "jwt-decode": "2.2.0",
-    "lando": "github:automattic/lando-cli.git#4d334a8",
+    "lando": "github:automattic/lando-cli.git#d75a4e8",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
@@ -151,6 +151,15 @@
   "overrides": {
     "publish-please": {
       "lodash": "4.17.21"
+    },
+    "@lando/compose": {
+      "js-yaml": "^4.1.0"
+    },
+    "@lando/mailhog": {
+      "js-yaml": "^4.1.0"
+    },
+    "@lando/phpmyadmin": {
+      "js-yaml": "^4.1.0"
     }
   },
   "publishConfig": {
