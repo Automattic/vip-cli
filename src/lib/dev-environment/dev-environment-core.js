@@ -91,6 +91,7 @@ export async function startEnvironment( lando: Lando, slug: string, options: Sta
 	}
 
 	await printEnvironmentInfo( lando, slug, { extended: false } );
+	generateVSCodeWorkspace( slug );
 }
 
 export async function stopEnvironment( lando: Lando, slug: string ): Promise<void> {
@@ -726,4 +727,64 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 			prerelease: true,
 		} ];
 	}
+}
+
+/**
+ * Functions generates workspace config including the launch config
+ * @param {string} slug - The slug of the environment to generate workspace config for
+ * @returns {string} Workspace path
+ */
+export function generateVSCodeWorkspace( slug: string ) {
+	debug( 'Generating VSCode Workspace' );
+	const location = getEnvironmentPath( slug );
+	const workspacePath = getVSCodeWorkspacePath( slug );
+	const instanceData = readEnvironmentData( slug );
+
+	const pathMappings = {};
+	const folders = [ { path: location } ];
+
+	if ( instanceData.muPlugins?.dir ) {
+		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
+
+		folders.push( { path: instanceData.muPlugins.dir } );
+	}
+	if ( instanceData.appCode?.dir ) {
+		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
+		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'images' );
+		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'languages' );
+		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'plugins' );
+		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'private' );
+		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'themes' );
+		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
+
+		folders.push( { path: instanceData.appCode.dir } );
+	}
+
+	const workspace = {
+		folders,
+		launch: {
+			version: '0.2.0',
+			configurations: [
+				{
+					name: `Debug ${ slug }`,
+					type: 'php',
+					request: 'launch',
+					port: 9003,
+					pathMappings,
+				},
+			],
+		},
+	};
+
+	fs.writeFileSync( workspacePath, JSON.stringify( workspace, null, 2 ) );
+
+	return workspacePath;
+}
+
+
+export function getVSCodeWorkspacePath( slug: string ) {
+	const location = getEnvironmentPath( slug );
+	const workspacePath = path.join( location, `${ slug }.code-workspace` );
+
+	return workspacePath;
 }
