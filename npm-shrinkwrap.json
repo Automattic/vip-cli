@@ -106,7 +106,7 @@
         "dockerode": "^3.3.4",
         "eslint": "^8.35.0",
         "eslint-plugin-flowtype": "^8.0.3",
-        "flow-bin": "0.202.1",
+        "flow-bin": "^0.203.1",
         "jest": "^29.5.0",
         "jest-environment-jsdom": "^29.5.0",
         "nock": "13.3.0",
@@ -8135,9 +8135,9 @@
       "dev": true
     },
     "node_modules/flow-bin": {
-      "version": "0.202.1",
-      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.202.1.tgz",
-      "integrity": "sha512-bXMnyu+ktp3j0Ryl2YHu7hR/VoCt8/+naXksMBWUIUpyKVCri8eFBpb0IE2y5u3hcSRVCsZYNPAYgFJ250hMhg==",
+      "version": "0.203.1",
+      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.203.1.tgz",
+      "integrity": "sha512-W/SX7QnRmBYS0TjfgtGb9ltPZzlsNeTZ7wA1yqwChxbLaQtrxGtO4K5GKtjRwAtucMQSebB7Ao++u21fRmC4TQ==",
       "dev": true,
       "bin": {
         "flow": "cli.js"
@@ -21773,9 +21773,9 @@
       "dev": true
     },
     "flow-bin": {
-      "version": "0.202.1",
-      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.202.1.tgz",
-      "integrity": "sha512-bXMnyu+ktp3j0Ryl2YHu7hR/VoCt8/+naXksMBWUIUpyKVCri8eFBpb0IE2y5u3hcSRVCsZYNPAYgFJ250hMhg==",
+      "version": "0.203.1",
+      "resolved": "https://registry.npmjs.org/flow-bin/-/flow-bin-0.203.1.tgz",
+      "integrity": "sha512-W/SX7QnRmBYS0TjfgtGb9ltPZzlsNeTZ7wA1yqwChxbLaQtrxGtO4K5GKtjRwAtucMQSebB7Ao++u21fRmC4TQ==",
       "dev": true
     },
     "follow-redirects": {
