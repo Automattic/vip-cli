@@ -34,7 +34,7 @@ jobs:
 
       - name: Unit Tests
         working-directory: vip
-        run: npm run jest -- --testTimeout=45000
+        run: npm run jest
 
       - name: Test Command line
         working-directory: vip

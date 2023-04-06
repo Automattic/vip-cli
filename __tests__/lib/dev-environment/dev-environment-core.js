@@ -10,6 +10,7 @@ import fs from 'fs';
 import enquirer from 'enquirer';
 import os from 'os';
 import path from 'path';
+import child from 'child_process';
 
 /**
  * Internal dependencies
@@ -26,6 +27,7 @@ import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
+import { EventEmitter } from 'stream';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( '../../../src/lib/api/app' );
@@ -43,14 +45,30 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		jest.restoreAllMocks();
 	} );
 
+	const mockedExec = ( command, options, callback ) => {
+		const emitter = new EventEmitter();
+
+		setImmediate( () => {
+			if ( /docker-compose/.test( command ) ) {
+				callback( null, '2.12.2', '' );
+			} else if ( /docker/.test( command ) ) {
+				callback( null, '23.0.4', '' );
+			} else {
+				callback( new Error(), '', '' );
+			}
+		} );
+
+		return emitter;
+	};
+
 	describe( 'createEnvironment', () => {
-		it( 'should throw for existing folder', async () => {
+		it( 'should throw for existing folder', () => {
 			const slug = 'foo';
 			jest.spyOn( fs, 'existsSync' ).mockReturnValueOnce( true );
 
 			const promise = createEnvironment( { siteSlug: slug } );
 
-			await expect( promise ).rejects.toEqual(
+			return expect( promise ).rejects.toEqual(
 				new Error( 'Environment already exists.' )
 			);
 		} );
@@ -68,16 +86,19 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				return fs._originalExistsSync( fpath );
 			} );
 
+			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
+
 			const lando = await bootstrapLando();
 			const promise = startEnvironment( lando, slug );
 
-			await expect( promise ).rejects.toEqual(
+			return expect( promise ).rejects.toEqual(
 				new Error( DEV_ENVIRONMENT_NOT_FOUND )
 			);
 		} );
 	} );
 	describe( 'destroyEnvironment', () => {
 		it( 'should throw for NON existing folder', async () => {
+			delete process.env.DEBUG;
 			const slug = 'foo';
 			const expectedPath = getEnvironmentPath( slug );
 			fs._originalExistsSync = fs.existsSync;
@@ -89,23 +110,25 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				return fs._originalExistsSync( fpath );
 			} );
 
+			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
+
 			const lando = await bootstrapLando();
 			const promise = destroyEnvironment( lando, slug );
 
-			await expect( promise ).rejects.toEqual(
+			return expect( promise ).rejects.toEqual(
 				new Error( DEV_ENVIRONMENT_NOT_FOUND )
 			);
 		} );
 	} );
 
 	describe( 'getEnvironmentPath', () => {
-		it( 'should throw for empty name', async () => {
+		it( 'should throw for empty name', () => {
 			expect(
 				() => getEnvironmentPath( '' )
 			).toThrow( new Error( 'Name was not provided' ) );
 		} );
 
-		it( 'should return correct location from xdg', async () => {
+		it( 'should return correct location from xdg', () => {
 			xdgBasedir.data = 'bar';
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
@@ -115,7 +138,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			expect( filePath ).toBe( expectedPath );
 		} );
 
-		it( 'should return tmp path if xdg is not available', async () => {
+		it( 'should return tmp path if xdg is not available', () => {
 			xdgBasedir.data = '';
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
