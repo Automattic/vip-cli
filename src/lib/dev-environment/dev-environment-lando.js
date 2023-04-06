@@ -27,7 +27,6 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
-import { getDockerSocket, getEngineConfig } from './docker-utils';
 import UserError from '../user-error';
 
 /**
@@ -161,13 +160,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 }
 
 export async function bootstrapLando(): Promise<Lando> {
-	const socket = await getDockerSocket();
-	const config = await getLandoConfig();
-	if ( socket ) {
-		config.engineConfig = await getEngineConfig( socket );
-	}
-
-	const lando = new Lando( config );
+	const lando = new Lando( await getLandoConfig() );
 	lando.events.once( 'pre-engine-build', async ( data: App ) => {
 		const instanceData = readEnvironmentData( data.name );
 
