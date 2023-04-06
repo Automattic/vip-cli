@@ -98,8 +98,6 @@ export async function getEngineConfig( dockerHost: string ): Promise<Record<stri
 			throw new Error( 'Invalid DOCKER_HOST format' );
 		}
 	} else {
-		opts.host = '127.0.0.1';
-		opts.port = '2375';
 		opts.socketPath = dockerHost;
 	}
 
