@@ -141,9 +141,9 @@ describe( 'getEngineConfig', () => {
 	} );
 
 	it.each( [
-		[ '/var/run/docker.sock', {}, { host: '127.0.0.1', port: '2375', socketPath: '/var/run/docker.sock', protocol: 'http' } ],
+		[ '/var/run/docker.sock', {}, { socketPath: '/var/run/docker.sock', protocol: 'http' } ],
 		[ 'tcp://127.0.0.1:2376', {}, { host: '127.0.0.1', port: '2376', protocol: 'https' } ],
-		[ '/var/run/docker.sock', { DOCKER_CLIENT_TIMEOUT: '100' }, { host: '127.0.0.1', port: '2375', socketPath: '/var/run/docker.sock', protocol: 'http', timeout: 100 } ],
+		[ '/var/run/docker.sock', { DOCKER_CLIENT_TIMEOUT: '100' }, { socketPath: '/var/run/docker.sock', protocol: 'http', timeout: 100 } ],
 	] )( 'For %s and %j return %j', ( socket, environment, expected ) => {
 		process.env = environment;
 		return expect( getEngineConfig( socket ) ).resolves.toEqual( expect.objectContaining( expected ) );
