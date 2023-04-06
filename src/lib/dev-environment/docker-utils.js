@@ -14,7 +14,7 @@ type Record<T, V> = {
 };
 
 /**
- * Reads a Certificate Authroity file and returns it as an array of certificates
+ * Reads a Certificate Authority file and returns it as an array of certificates
  *
  * @param {string} filepath Path to the file
  * @return {string[]} Array of certificates
