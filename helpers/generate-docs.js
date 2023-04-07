@@ -101,7 +101,7 @@ const parseOutput = (output) => {
 }
 
 const processCommand = async (subcommands) => {
-	console.log('Processing', subcommands.join(' '), '...');
+	console.error('Processing', subcommands.join(' '), '...');
 
 	const output = await runCommand(subcommands.concat(['--help']));
 	const parsedOutput = parseOutput(output);
