@@ -118,13 +118,8 @@ const processCommand = async (subcommands) => {
 	return parsedOutput;
 }
 
-const getVersion = async () => {
-	const output = await runCommand(['--version']);
-	return output;
-}
-
 (async () => {
-	const version = await getVersion();
+	const version = await runCommand(['--version'])
 
 	const result = await processCommand([]);
 	result.version = version;
