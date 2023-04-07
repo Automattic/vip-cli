@@ -77,7 +77,7 @@ const parseOutput = (output) => {
         }
         if (currentSection === SECTION_OPTIONS) {
             if (line.match(OPTION_REGEXP)) {
-                const [_, option, description] = line.match(OPTION_REGEXP);
+                const [, option, description] = line.match(OPTION_REGEXP);
                 result.options.push({
                     option,
                     description,
