@@ -1,29 +1,27 @@
 const { spawn } = require('child_process');
 const path = require('path');
+const { once } = require('events');
 
 async function runCommand(subcommands) {
-    let args = subcommands.concat('--help');
-    const childProcess = spawn('vip', args);
+	const childProcess = spawn('vip', subcommands);
 
-    let output = '';
+	let output = '';
 
-    for await (const data of childProcess.stdout) {
-        output += data.toString();
-    }
-    for await (const data of childProcess.stderr) {
-        output += data.toString();
-    }
+	for await (const data of childProcess.stdout) {
+		output += data.toString();
+	}
+	for await (const data of childProcess.stderr) {
+		output += data.toString();
+	}
 
-    const exitCode = await new Promise(resolve => {
-        childProcess.on('exit', resolve);
-    });
+	const [exitCode] = await once(childProcess, 'exit');
 
-    if (exitCode !== 0) {
-        console.log('o', output);
-        throw new Error(`Script exited with code ${exitCode}`);
-    }
+	if (exitCode !== 0) {
+		console.log('o', output);
+		throw new Error(`Script exited with code ${exitCode}`);
+	}
 
-    return output.trim();
+	return output.trim();
 }
 
 const USAGE_REGEXP = /Usage: (.*)/;
@@ -34,95 +32,102 @@ const SECTION_COMMAND = 'commands';
 const SECTION_OPTIONS = 'options';
 const SECTION_EXAMPLES = 'examples';
 
-
 const parseOutput = (output) => {
-    const result = {};
+	const result = {};
 
-    const lines = output.split('\n');
-    let currentSection = '';
+	const lines = output.split('\n');
+	let currentSection = '';
 
-    for (let lineIx = 0; lineIx < lines.length; lineIx++) {
-        const line = lines[lineIx].trim();
-        if (!line) {
-            continue;
-        }
-        if (line.startsWith('Usage:')) {
-            result.usage = line.match(USAGE_REGEXP)[1];
-            continue;
-        }
+	for (let lineIx = 0; lineIx < lines.length; lineIx++) {
+		const line = lines[lineIx].trim();
+		if (!line) {
+			continue;
+		}
+		if (line.startsWith('Usage:')) {
+			result.usage = line.match(USAGE_REGEXP)[1];
+			continue;
+		}
 
-        if (line.startsWith('Commands:')) {
-            result.commands = [];
-            currentSection = SECTION_COMMAND;
-            continue;
-        }
-        if (line.startsWith('Options:')) {
-            result.options = [];
-            currentSection = SECTION_OPTIONS;
-            continue;
-        }
-        if (line.startsWith('Examples:')) {
-            result.examples = [];
-            currentSection = SECTION_EXAMPLES;
-            continue;
-        }
+		if (line.startsWith('Commands:')) {
+			result.commands = [];
+			currentSection = SECTION_COMMAND;
+			continue;
+		}
+		if (line.startsWith('Options:')) {
+			result.options = [];
+			currentSection = SECTION_OPTIONS;
+			continue;
+		}
+		if (line.startsWith('Examples:')) {
+			result.examples = [];
+			currentSection = SECTION_EXAMPLES;
+			continue;
+		}
 
-        if (currentSection === SECTION_COMMAND) {
-            const [, command, description] = line.match(COMMAND_REGEXP);
-            result.commands.push({
-                command,
-                description,
-            });
-            continue;
-        }
-        if (currentSection === SECTION_OPTIONS) {
-            if (line.match(OPTION_REGEXP)) {
-                const [, option, description] = line.match(OPTION_REGEXP);
-                result.options.push({
-                    option,
-                    description,
-                });
-            } else {
-                console.log('Unknown option', line);
-            }
-            continue;
-        }
-        if (currentSection === SECTION_EXAMPLES) {
-            let description = '';
-            while(!lines[lineIx].trim().startsWith('$')) {
-                description += lines[lineIx++];
-            }
-            const usage = lines[lineIx] && lines[lineIx].trim();
-            result.examples.push({
-                description,
-                usage,
-            });
-        }
+		if (currentSection === SECTION_COMMAND) {
+			const [, command, description] = line.match(COMMAND_REGEXP);
+			result.commands.push({
+				command,
+				description,
+			});
+			continue;
+		}
+		if (currentSection === SECTION_OPTIONS) {
+			if (line.match(OPTION_REGEXP)) {
+				const [, option, description] = line.match(OPTION_REGEXP);
+				result.options.push({
+					option,
+					description,
+				});
+			} else {
+				console.log('Unknown option', line);
+			}
+			continue;
+		}
+		if (currentSection === SECTION_EXAMPLES) {
+			let description = '';
+			while (!lines[lineIx].trim().startsWith('$')) {
+				description += lines[lineIx++];
+			}
+			const usage = lines[lineIx] && lines[lineIx].trim();
+			result.examples.push({
+				description,
+				usage,
+			});
+		}
+	}
 
-    }
-
-
-    return result;
+	return result;
 }
 
 const processCommand = async (subcommands) => {
-    const output = await runCommand(subcommands);
-    const parsedOutput = parseOutput(output);
+	console.log('Processing', subcommands.join(' '), '...');
 
-    const commandCount = parsedOutput.commands?.length || 0;
-    for (let commandIx = 0; commandIx < commandCount; commandIx++) {
-        const element = parsedOutput.commands[commandIx];
-        const commandOutput = await processCommand(subcommands.concat([element.command]));
-        commandOutput.name = element.command;
-        commandOutput.description = element.description;
-        parsedOutput.commands[commandIx] = commandOutput;
+	const output = await runCommand(subcommands.concat(['--help']));
+	const parsedOutput = parseOutput(output);
 
-    }
+	const commandCount = parsedOutput.commands?.length || 0;
+	for (let commandIx = 0; commandIx < commandCount; commandIx++) {
+		const element = parsedOutput.commands[commandIx];
+		const commandOutput = await processCommand(subcommands.concat([element.command]));
+		commandOutput.name = element.command;
+		commandOutput.description = element.description;
+		parsedOutput.commands[commandIx] = commandOutput;
+	}
 
-    return parsedOutput;
+	return parsedOutput;
+}
+
+const getVersion = async () => {
+	const output = await runCommand(['--version']);
+	return output;
 }
 
 (async () => {
-    const result = await processCommand([]);
-    console.log(JSON.stringify(result, null, 2));
+	const version = await getVersion();
+
+	const result = await processCommand([]);
+	result.version = version;
+
+	console.log(JSON.stringify(result, null, 2));
 })()
