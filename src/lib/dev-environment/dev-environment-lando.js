@@ -138,64 +138,82 @@ async function landoRecovery( lando: Lando, instancePath: string, error: Error )
 }
 
 async function getLandoApplication( lando: Lando, instancePath: string ): Promise<App> {
-	if ( appMap.has( instancePath ) ) {
-		return Promise.resolve( appMap.get( instancePath ) );
-	}
-
-	if ( ! await doesEnvironmentExist( instancePath ) ) {
-		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-	}
-
-	let app;
-
+	const started = new Date();
 	try {
-		app = lando.getApp( instancePath );
-		await app.init();
-	} catch ( error ) {
-		app = await landoRecovery( lando, instancePath, error );
-	}
+		if ( appMap.has( instancePath ) ) {
+			return Promise.resolve( appMap.get( instancePath ) );
+		}
 
-	appMap.set( instancePath, app );
-	return app;
+		if ( ! await doesEnvironmentExist( instancePath ) ) {
+			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+		}
+
+		let app;
+
+		try {
+			app = lando.getApp( instancePath );
+			await app.init();
+		} catch ( error ) {
+			app = await landoRecovery( lando, instancePath, error );
+		}
+
+		appMap.set( instancePath, app );
+		return app;
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'getLandoApplication() took %d ms', duration );
+	}
 }
 
 export async function bootstrapLando(): Promise<Lando> {
-	const lando = new Lando( await getLandoConfig() );
-	lando.events.once( 'pre-engine-build', async ( data: App ) => {
-		const instanceData = readEnvironmentData( data.name );
+	const started = new Date();
+	try {
+		const lando = new Lando( await getLandoConfig() );
+		lando.events.once( 'pre-engine-build', async ( data: App ) => {
+			const instanceData = readEnvironmentData( data.name );
 
-		let registryResolvable = false;
-		try {
-			registryResolvable = ( await dns.promises.lookup( 'ghcr.io' ) ).address || false;
-			debug( 'Registry ghcr.io is resolvable' );
-		} catch ( err ) {
-			debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
-			registryResolvable = false;
-		}
+			let registryResolvable = false;
+			try {
+				registryResolvable = ( await dns.promises.lookup( 'ghcr.io' ) ).address || false;
+				debug( 'Registry ghcr.io is resolvable' );
+			} catch ( err ) {
+				debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
+				registryResolvable = false;
+			}
 
-		const pull = registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now();
-		if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! pull ) {
-			// Setting `data.opts.pullable` to an empty array prevents Lando from pulling images with `docker pull`.
-			// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
-			data.opts.local = data.opts.pullable;
-			data.opts.pullable = [];
-		}
+			const pull = registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now();
+			if ( Array.isArray( data.opts.pullable ) && Array.isArray( data.opts.local ) && data.opts.local.length === 0 && ! pull ) {
+				// Setting `data.opts.pullable` to an empty array prevents Lando from pulling images with `docker pull`.
+				// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
+				data.opts.local = data.opts.pullable;
+				data.opts.pullable = [];
+			}
 
-		if ( pull || ! instanceData.pullAfter ) {
-			instanceData.pullAfter = Date.now() + ( 7 * 24 * 60 * 60 * 1000 );
-			writeEnvironmentData( data.name, instanceData );
-		}
-	} );
+			if ( pull || ! instanceData.pullAfter ) {
+				instanceData.pullAfter = Date.now() + ( 7 * 24 * 60 * 60 * 1000 );
+				writeEnvironmentData( data.name, instanceData );
+			}
+		} );
 
-	await lando.bootstrap();
-	return lando;
+		await lando.bootstrap();
+		return lando;
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'bootstrapLando() took %d ms', duration );
+	}
 }
 
 export async function landoStart( lando: Lando, instancePath: string ): Promise<void> {
-	debug( 'Will start lando app on path:', instancePath );
+	const started = new Date();
+	try {
+		debug( 'Will start lando app on path:', instancePath );
 
-	const app = await getLandoApplication( lando, instancePath );
-	await app.start();
+		const app = await getLandoApplication( lando, instancePath );
+		await app.start();
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'landoStart() took %d ms', duration );
+	}
 }
 
 export interface LandoLogsOptions {
@@ -205,39 +223,63 @@ export interface LandoLogsOptions {
 }
 
 export async function landoLogs( lando: Lando, instancePath: string, options: LandoLogsOptions ) {
-	debug( 'Will show lando logs on path:', instancePath, ' with options: ', options );
+	const started = new Date();
+	try {
+		debug( 'Will show lando logs on path:', instancePath, ' with options: ', options );
 
-	const app = await getLandoApplication( lando, instancePath );
-	const logTask = lando.tasks.find( task => task.command === 'logs' );
+		const app = await getLandoApplication( lando, instancePath );
+		const logTask = lando.tasks.find( task => task.command === 'logs' );
 
-	await logTask.run( {
-		follow: options.follow,
-		service: options.service,
-		timestamps: options.timestamps,
-		_app: app,
-	} );
+		await logTask.run( {
+			follow: options.follow,
+			service: options.service,
+			timestamps: options.timestamps,
+			_app: app,
+		} );
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'landoLogs() took %d ms', duration );
+	}
 }
 
 export async function landoRebuild( lando: Lando, instancePath: string ): Promise<void> {
-	debug( 'Will rebuild lando app on path:', instancePath );
+	const started = new Date();
+	try {
+		debug( 'Will rebuild lando app on path:', instancePath );
 
-	const app = await getLandoApplication( lando, instancePath );
-	await ensureNoOrphantProxyContainer( lando );
-	await app.rebuild();
+		const app = await getLandoApplication( lando, instancePath );
+		await ensureNoOrphantProxyContainer( lando );
+		await app.rebuild();
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'landoRebuild() took %d ms', duration );
+	}
 }
 
 export async function landoStop( lando: Lando, instancePath: string ): Promise<void> {
-	debug( 'Will stop lando app on path:', instancePath );
+	const started = new Date();
+	try {
+		debug( 'Will stop lando app on path:', instancePath );
 
-	const app = await getLandoApplication( lando, instancePath );
-	await app.stop();
+		const app = await getLandoApplication( lando, instancePath );
+		await app.stop();
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'landoStop() took %d ms', duration );
+	}
 }
 
 export async function landoDestroy( lando: Lando, instancePath: string ): Promise<void> {
-	debug( 'Will destroy lando app on path:', instancePath );
+	const started = new Date();
+	try {
+		debug( 'Will destroy lando app on path:', instancePath );
 
-	const app = await getLandoApplication( lando, instancePath );
-	await app.destroy();
+		const app = await getLandoApplication( lando, instancePath );
+		await app.destroy();
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'landoDestroy() took %d ms', duration );
+	}
 }
 
 interface LandoInfoOptions {
@@ -246,63 +288,69 @@ interface LandoInfoOptions {
 }
 
 export async function landoInfo( lando: Lando, instancePath: string, options: LandoInfoOptions = {} ): Promise<Record<string, any>> {
-	const app = await getLandoApplication( lando, instancePath );
+	const started = new Date();
+	try {
+		const app = await getLandoApplication( lando, instancePath );
 
-	let appInfo = landoUtils.startTable( app );
+		let appInfo = landoUtils.startTable( app );
 
-	const reachableServices = app.info.filter( service => service.urls.length );
-	reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
+		const reachableServices = app.info.filter( service => service.urls.length );
+		reachableServices.forEach( service => appInfo[ `${ service.service } urls` ] = service.urls );
 
-	const health = await checkEnvHealth( lando, instancePath );
-	const frontEndUrl = app.info
-		.find( service => 'nginx' === service.service )
-		?.urls[ 0 ];
+		const health = await checkEnvHealth( lando, instancePath );
+		const frontEndUrl = app.info
+			.find( service => 'nginx' === service.service )
+			?.urls[ 0 ];
 
-	const extraService = await getExtraServicesConnections( lando, app );
-	appInfo = {
-		slug: appInfo.name.replace( /^vipdev/, '' ),
-		...appInfo,
-		...extraService,
-	};
+		const extraService = await getExtraServicesConnections( lando, app );
+		appInfo = {
+			slug: appInfo.name.replace( /^vipdev/, '' ),
+			...appInfo,
+			...extraService,
+		};
 
-	delete appInfo.name;
+		delete appInfo.name;
 
-	const hasResults = Object.values( health ).length > 0;
-	const hasWarnings = Object.values( health ).some( status => ! status );
-	if ( hasResults && ! hasWarnings ) {
-		appInfo.status = chalk.green( 'UP' );
-	} else if ( health.nginx ) {
-		appInfo.status = chalk.yellow( 'PARTIALLY UP' );
-	} else {
-		appInfo.status = chalk.red( 'DOWN' );
-	}
-
-	// Add login information
-	if ( frontEndUrl ) {
-		let loginUrl = `${ frontEndUrl }wp-admin/`;
-		if ( options.autologinKey ) {
-			loginUrl += `?vip-dev-autologin=${ options.autologinKey }`;
+		const hasResults = Object.values( health ).length > 0;
+		const hasWarnings = Object.values( health ).some( status => ! status );
+		if ( hasResults && ! hasWarnings ) {
+			appInfo.status = chalk.green( 'UP' );
+		} else if ( health.nginx ) {
+			appInfo.status = chalk.yellow( 'PARTIALLY UP' );
+		} else {
+			appInfo.status = chalk.red( 'DOWN' );
 		}
 
-		appInfo[ 'Login URL' ] = loginUrl;
-		appInfo[ 'Default username' ] = 'vipgo';
-		appInfo[ 'Default password' ] = 'password';
-	}
-
-	if ( ! options.suppressWarnings && hasWarnings ) {
-		let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
-		Object.keys( health ).forEach( service => {
-			if ( ! health[ service ] ) {
-				message += `${ chalk.red( service ) }\n`;
+		// Add login information
+		if ( frontEndUrl ) {
+			let loginUrl = `${ frontEndUrl }wp-admin/`;
+			if ( options.autologinKey ) {
+				loginUrl += `?vip-dev-autologin=${ options.autologinKey }`;
 			}
-		} );
-		appInfo[ 'Health warnings' ] = message;
+
+			appInfo[ 'Login URL' ] = loginUrl;
+			appInfo[ 'Default username' ] = 'vipgo';
+			appInfo[ 'Default password' ] = 'password';
+		}
+
+		if ( ! options.suppressWarnings && hasWarnings ) {
+			let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
+			Object.keys( health ).forEach( service => {
+				if ( ! health[ service ] ) {
+					message += `${ chalk.red( service ) }\n`;
+				}
+			} );
+			appInfo[ 'Health warnings' ] = message;
+		}
+
+		// Add documentation link
+		appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
+
+		return appInfo;
+	} finally {
+		const duration = new Date().getTime() - started.getTime();
+		debug( 'landoInfo() took %d ms', duration );
 	}
-
-	// Add documentation link
-	appInfo.Documentation = 'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
-
-	return appInfo;
 }
 
 const extraServiceDisplayConfiguration = [
