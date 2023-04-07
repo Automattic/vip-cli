@@ -109,7 +109,7 @@ const processCommand = async (subcommands) => {
     const output = await runCommand(subcommands);
     const parsedOutput = parseOutput(output);
 
-    const commandCount = parsedOutput.commands && parsedOutput.commands.length || 0;
+    const commandCount = parsedOutput.commands?.length || 0;
     for (let commandIx = 0; commandIx < commandCount; commandIx++) {
         const element = parsedOutput.commands[commandIx];
         const commandOutput = await processCommand(subcommands.concat([element.command]));
