@@ -68,7 +68,7 @@ const parseOutput = (output) => {
         }
 
         if (currentSection === SECTION_COMMAND) {
-            const [_, command, description] = line.match(COMMAND_REGEXP);
+            const [, command, description] = line.match(COMMAND_REGEXP);
             result.commands.push({
                 command,
                 description,
