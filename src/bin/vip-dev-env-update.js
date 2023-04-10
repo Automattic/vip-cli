@@ -17,7 +17,15 @@ import chalk from 'chalk';
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
-import { addDevEnvConfigurationOptions, getEnvTrackingInfo, getEnvironmentName, handleCLIException, promptForArguments, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	addDevEnvConfigurationOptions,
+	getEnvTrackingInfo,
+	getEnvironmentName,
+	handleCLIException,
+	handleDeprecatedOptions,
+	promptForArguments,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -41,6 +49,8 @@ addDevEnvConfigurationOptions( cmd );
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = await getEnvironmentName( opt );
+
+	handleDeprecatedOptions( opt );
 
 	const lando = await bootstrapLando();
 	await validateDependencies( lando, slug );

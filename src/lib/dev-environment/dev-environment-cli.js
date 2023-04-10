@@ -639,6 +639,7 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
+		.option( [ 'G', 'mailhog' ], 'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)', undefined, processBooleanOption )
 		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption );
 }
 
@@ -709,5 +710,16 @@ export function getEnvTrackingInfo( slug: string ): any {
 		return {
 			slug,
 		};
+	}
+}
+
+export function handleDeprecatedOptions( opts: any ): void {
+	if ( opts.mailhog ) {
+		console.warn( chalk.yellow( 'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.' ) );
+		if ( opts.mailpit === undefined ) {
+			opts.mailpit = opts.mailhog;
+		}
+
+		delete opts.mailhog;
 	}
 }
