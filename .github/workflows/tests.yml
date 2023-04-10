@@ -4,6 +4,7 @@ on:
 
 env:
   NODE_OPTIONS: --unhandled-rejections=warn
+  DO_NOT_TRACK: '1'
 
 jobs:
   Run_windows_tests:
