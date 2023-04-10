@@ -32,6 +32,7 @@ const userMap = {
 	elasticsearch: 'elasticsearch',
 	phpmyadmin: 'www-data',
 	mailhog: 'mailhog',
+	mailpit: 'root',
 };
 
 const examples = [

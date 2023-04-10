@@ -86,6 +86,7 @@ async function getLandoConfig() {
 		],
 		disablePlugins: [
 			'@lando/argv',
+			'@lando/mailhog',
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,
@@ -358,6 +359,10 @@ const extraServiceDisplayConfiguration = [
 	},
 	{
 		name: 'mailhog',
+		skip: true,
+	},
+	{
+		name: 'mailpit',
 		skip: true,
 	},
 ];

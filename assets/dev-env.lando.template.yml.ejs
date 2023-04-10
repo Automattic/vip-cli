@@ -9,6 +9,8 @@ proxy:
 <% } %>
   phpmyadmin:
     - <%= siteSlug %>-pma.vipdev.lndo.site
+  mailpit:
+    - <%= siteSlug %>-mailpit.vipdev.lndo.site:8025
 
 services:
   devtools:
@@ -197,9 +199,19 @@ services:
       clientcode_vipconfig: {}
 <% } %>
 
-<% if ( mailhog ) { %>
-  mailhog:
-    type: mailhog
+<% if ( mailpit ) { %>
+  mailpit:
+    type: compose
+    services:
+      image: axllent/mailpit:latest
+      command: /mailpit
+      ports:
+        - ":1025"
+        - ":8025"
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
 <% } %>
 
 tooling:

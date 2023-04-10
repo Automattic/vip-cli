@@ -77,7 +77,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			mariadb: currentInstanceData.mariadb,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
-			mailhog: currentInstanceData.mailhog,
+			mailpit: currentInstanceData.mailpit ?? currentInstanceData.mailhog,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,
 			title: '',
