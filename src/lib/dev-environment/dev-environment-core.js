@@ -352,6 +352,7 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	if ( instanceData.mailhog ) {
 		instanceData.mailpit = instanceData.mailhog;
+		delete instanceData.mailhog;
 	}
 
 	return instanceData;
