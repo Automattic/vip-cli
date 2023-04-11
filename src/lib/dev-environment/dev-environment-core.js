@@ -771,7 +771,7 @@ export function generateVSCodeWorkspace( slug: string ) {
 	return workspacePath;
 }
 
-const generatePathMappings = ( instanceData : InstanceData ) => {
+const generatePathMappings = ( instanceData: InstanceData ) => {
 	const pathMappings = {};
 
 	if ( instanceData.muPlugins?.dir ) {
