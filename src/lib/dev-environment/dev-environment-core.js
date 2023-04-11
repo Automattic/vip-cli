@@ -740,23 +740,13 @@ export function generateVSCodeWorkspace( slug: string ) {
 	const workspacePath = getVSCodeWorkspacePath( slug );
 	const instanceData = readEnvironmentData( slug );
 
-	const pathMappings = {};
+	const pathMappings = generatePathMappings( instanceData );
 	const folders = [ { path: location } ];
 
 	if ( instanceData.muPlugins?.dir ) {
-		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
-
 		folders.push( { path: instanceData.muPlugins.dir } );
 	}
 	if ( instanceData.appCode?.dir ) {
-		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
-		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'images' );
-		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'languages' );
-		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'plugins' );
-		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'private' );
-		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'themes' );
-		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
-
 		folders.push( { path: instanceData.appCode.dir } );
 	}
 
@@ -780,6 +770,24 @@ export function generateVSCodeWorkspace( slug: string ) {
 
 	return workspacePath;
 }
+
+const generatePathMappings = ( instanceData : InstanceData ) => {
+	const pathMappings = {};
+
+	if ( instanceData.muPlugins?.dir ) {
+		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
+	}
+	if ( instanceData.appCode?.dir ) {
+		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
+		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'images' );
+		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'languages' );
+		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'plugins' );
+		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'private' );
+		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'themes' );
+		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
+	}
+	return pathMappings;
+};
 
 export function getVSCodeWorkspacePath( slug: string ) {
 	const location = getEnvironmentPath( slug );
