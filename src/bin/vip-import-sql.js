@@ -190,7 +190,7 @@ const examples = [
 	{
 		usage: 'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --search-replace="example.com/from,example.com/to"',
 		description:
-			'Perform multiple search and replace tasks, then import the updated file to your site.'
+			'Perform multiple search and replace tasks, then import the updated file to your site.',
 	},
 	// `in-place` flag
 	{
