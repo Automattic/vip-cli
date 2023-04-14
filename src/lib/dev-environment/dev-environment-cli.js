@@ -295,7 +295,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: preselectedOptions.multisite !== undefined ? resolveMultisite( preselectedOptions.multisite ) : await resolveMultisite( promptForTextBoolean( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
+		multisite: preselectedOptions.multisite !== undefined ? resolveMultisite( preselectedOptions.multisite ) : resolveMultisite( await promptForTextBoolean( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
 		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
