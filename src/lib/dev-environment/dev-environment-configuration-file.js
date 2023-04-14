@@ -129,6 +129,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		elasticsearch: configurationFileOptions.elasticsearch,
 		phpmyadmin: configurationFileOptions.phpmyadmin,
 		xdebug: configurationFileOptions.xdebug,
+		xdebugConfig: configurationFileOptions[ 'xdebug-config' ],
 		mailhog: configurationFileOptions.mailhog,
 	};
 
