@@ -740,7 +740,7 @@ export function generateVSCodeWorkspace( slug: string ) {
 	const workspacePath = getVSCodeWorkspacePath( slug );
 	const instanceData = readEnvironmentData( slug );
 
-	const pathMappings = generatePathMappings( instanceData );
+	const pathMappings = generatePathMappings( location, instanceData );
 	const folders = [ { path: location } ];
 
 	if ( instanceData.muPlugins?.dir ) {
@@ -771,19 +771,21 @@ export function generateVSCodeWorkspace( slug: string ) {
 	return workspacePath;
 }
 
-const generatePathMappings = ( instanceData: InstanceData ) => {
+const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
 	const pathMappings = {};
+
+	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
 
 	if ( instanceData.muPlugins?.dir ) {
 		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
 	}
 	if ( instanceData.appCode?.dir ) {
 		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
-		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'images' );
-		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'languages' );
-		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'plugins' );
-		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'private' );
-		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'wp-content', 'themes' );
+		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'images' );
+		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'languages' );
+		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'plugins' );
+		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'private' );
+		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
 		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
 	}
 	return pathMappings;
