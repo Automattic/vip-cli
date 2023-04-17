@@ -475,7 +475,7 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForTextBoolean( message: string, initial: string | boolean ): Promise<string | boolean> {
+export async function promptForTextOrBoolean( message: string, initial: string | boolean ): Promise<string | boolean> {
 	let result = { input: initial };
 
 	if ( isStdinTTY ) {
@@ -640,7 +640,7 @@ export function processBooleanOption( value: string ): boolean {
 }
 
 const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ];
-export function processStringBooleanOption( value: string | boolean ): string | boolean {
+export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
 	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
 		return false;
 	}
