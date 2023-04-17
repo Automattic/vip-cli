@@ -295,7 +295,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForTextBoolean( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
+		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForTextOrBoolean( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
 		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
@@ -487,7 +487,7 @@ export async function promptForTextBoolean( message: string, initial: string | b
 		} );
 	}
 
-	return processStringBooleanOption( ( result?.input || initial.toString() ).trim() );
+	return processStringOrBooleanOption( ( result?.input || initial.toString() ).trim() );
 }
 
 export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {

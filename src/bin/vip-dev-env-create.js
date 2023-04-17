@@ -27,7 +27,7 @@ import {
 	getOptionsFromAppInfo,
 	handleCLIException,
 	validateDependencies,
-	processStringBooleanOption,
+	processStringOrBooleanOption,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -73,7 +73,7 @@ const examples = [
 const cmd = command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'title', 'Title for the WordPress site' )
-	.option( 'multisite', 'Enable multisite install', undefined, processStringBooleanOption );
+	.option( 'multisite', 'Enable multisite install', undefined, processStringOrBooleanOption );
 
 addDevEnvConfigurationOptions( cmd );
 
