@@ -475,7 +475,7 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForTextBoolean( message: string, initial: string | boolean ): Promise<string | boolean> {
+export async function promptForTextOrBoolean( message: string, initial: string | boolean ): Promise<string | boolean> {
 	let result = { input: initial };
 
 	if ( isStdinTTY ) {
