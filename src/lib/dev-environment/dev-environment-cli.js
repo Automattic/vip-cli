@@ -640,7 +640,7 @@ export function processBooleanOption( value: string ): boolean {
 }
 
 const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ];
-export function processStringBooleanOption( value: string | boolean ): string | boolean {
+export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
 	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
 		return false;
 	}
