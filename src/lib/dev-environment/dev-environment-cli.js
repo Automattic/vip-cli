@@ -295,7 +295,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForTextOrBoolean( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
+		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForMultisite( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
 		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
@@ -475,7 +475,7 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForTextOrBoolean( message: string, initial: string | boolean ): Promise<string | boolean> {
+export async function promptForMultisite( message: string, initial: string | boolean ): Promise<string | boolean> {
 	let result = { input: initial };
 
 	if ( isStdinTTY ) {
@@ -487,7 +487,20 @@ export async function promptForTextOrBoolean( message: string, initial: string |
 		} );
 	}
 
-	return processStringOrBooleanOption( ( result?.input || initial.toString() ).trim() );
+	let input = ( result?.input || initial.toString() ).trim();
+	const multisiteOptions = [ 'subdomain', 'subdirectory' ];
+	const allowedOptions = [ ...FALSE_OPTIONS, ...TRUE_OPTIONS, ...multisiteOptions, 'none' ];
+
+	if ( ! allowedOptions.includes( input ) && isStdinTTY ) {
+		const select = new Select( {
+			message: `Please choose a valid option for multisite:`,
+			choices: [ ...multisiteOptions, 'false' ],
+		} );
+
+		input = await select.run();
+	}
+
+	return processStringOrBooleanOption( input );
 }
 
 export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
