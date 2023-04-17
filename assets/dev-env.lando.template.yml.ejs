@@ -69,8 +69,12 @@ services:
     run_as_root:
       - chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp
     run:
-      - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% if ( multisite === 'subdirectory' ) { %> <%= multisite %> <% } %> <% } %>
-
+      - sh /dev-tools/setup.sh \
+        --host database \
+        --user root \
+        --domain "http://<%= siteSlug %>.vipdev.lndo.site/" \
+        --title "<%= wpTitle %>" \
+        <% if ( multisite ) { %> --ms-domain "<%= siteSlug %>.vipdev.lndo.site" <% if ( multisite === true || multisite === 'subdomain' ) { %> --subdomain <% } %> <% } %>
   database:
     type: compose
     services:
