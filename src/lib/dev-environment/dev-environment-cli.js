@@ -14,7 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 
 /**
  * Internal dependencies
@@ -719,6 +719,15 @@ export interface PostStartOptions {
 }
 
 export async function postStart( slug: strin, options: PostStartOptions ) {
+	if ( ! isVSCodeInstalled() ) {
+		if ( options.openVSCode ) {
+			console.log( 'VSCode not detected, skipping opening VSCode' );
+		}
+
+		debug( 'VSCode is not installed, skipping workspace creation' );
+		return;
+	}
+
 	const workspacePath = getVSCodeWorkspacePath( slug );
 
 	if ( fs.existsSync( workspacePath ) ) {
@@ -732,3 +741,12 @@ export async function postStart( slug: strin, options: PostStartOptions ) {
 		spawn( 'code', [ workspacePath ] );
 	}
 }
+
+const isVSCodeInstalled = () => {
+	try {
+		const result = spawnSync( 'code', [ '--version' ] );
+		return result.status === 0;
+	} catch ( err ) {
+		return false;
+	}
+};
