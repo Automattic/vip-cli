@@ -1,0 +1,27 @@
+name: Publish docs
+
+on:
+  push
+
+
+# on:
+#   release:
+#     types: [published]
+
+jobs:
+  publish-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - run: npm i -g @automattic/vip
+      - run: node ./helpers/generate-docs.js > /tmp/docs.json
+      - name: Send docs to docs site
+        env:
+          DOCS_SECRET_TOKEN: ${{ secrets.DOCS_SECRET_TOKEN }}
+        run: |
+          curl -X POST -v \
+            -H "Authorization: Bearer $DOCS_SECRET_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @/tmp/docs.json \
+            https://develop-docs.wpvip.com/wp-json/vip/v1/vip-cli
