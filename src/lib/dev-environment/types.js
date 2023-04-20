@@ -65,6 +65,7 @@ export type ConfigurationFileOptions = {
 	elasticsearch?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
+	'xdebug-config'?: string;
 	mailhog?: boolean;
 }
 
