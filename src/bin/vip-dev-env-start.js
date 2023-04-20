@@ -81,8 +81,5 @@ command()
 			process.exitCode = 1;
 		}
 
-		const postStartOptions: PostStartOptions = {
-			openVSCode: !! opt.vscode,
-		};
-		await postStart( slug, postStartOptions );
+		await postStart( slug, { openVSCode: !! opt.vscode } );
 	} );

@@ -15,6 +15,8 @@ import path from 'path';
 import os from 'os';
 import dns from 'dns';
 import { spawn, spawnSync } from 'child_process';
+import { which } from 'shelljs';
+
 
 /**
  * Internal dependencies
@@ -718,35 +720,39 @@ export interface PostStartOptions {
 	openVSCode: boolean
 }
 
-export async function postStart( slug: strin, options: PostStartOptions ) {
-	if ( ! isVSCodeInstalled() ) {
-		if ( options.openVSCode ) {
-			console.log( 'VSCode not detected, skipping opening VSCode' );
-		}
-
-		debug( 'VSCode is not installed, skipping workspace creation' );
-		return;
-	}
-
-	const workspacePath = getVSCodeWorkspacePath( slug );
-
-	if ( fs.existsSync( workspacePath ) ) {
-		console.log( `VSCode workspace already exists, skipping creation. To use it run:\ncode ${ workspacePath }` );
-	} else {
-		generateVSCodeWorkspace( slug );
-		console.log( `VSCode workspace generated to use it run:\ncode ${ workspacePath }` );
-	}
-
+export async function postStart( slug: string, options: PostStartOptions ) {
 	if ( options.openVSCode ) {
-		spawn( 'code', [ workspacePath ] );
+		launchVSCode( slug );
 	}
 }
 
-const isVSCodeInstalled = () => {
-	try {
-		const result = spawnSync( 'code', [ '--version' ] );
-		return result.status === 0;
-	} catch ( err ) {
-		return false;
+const launchVSCode = ( slug: string ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug );
+
+	if ( fs.existsSync( workspacePath ) ) {
+		console.log( 'VSCode workspace already exists, skipping creation.' );
+	} else {
+		generateVSCodeWorkspace( slug );
+		console.log( 'VSCode workspace generated' );
 	}
+
+	const vsCodeExecutable = getVSCodeExecutable();
+	if ( vsCodeExecutable ) {
+		spawn( vsCodeExecutable, [ workspacePath ] );
+	} else {
+		console.log( `VSCode not detected in path, please open ${ workspacePath } with VSCode` );
+	}
+};
+
+const getVSCodeExecutable = () => {
+	const candidates = [ 'code', 'code-insiders', 'codium' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
 };
