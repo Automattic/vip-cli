@@ -4,6 +4,7 @@
  * External dependencies
  */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
+import type { Response } from 'node-fetch';
 
 /**
  * Internal dependencies
