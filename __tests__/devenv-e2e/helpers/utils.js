@@ -1,5 +1,3 @@
-/* eslint-disable jsdoc/valid-types */
-
 /**
  * External dependencies
  */

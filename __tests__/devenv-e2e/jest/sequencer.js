@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/valid-types */
 const Sequencer = require( '@jest/test-sequencer' ).default;
 
 /**
