@@ -573,7 +573,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 		return false;
 	}
 
-	let message: string, envData, currentWordPressTag: string;
+	let message: string;
+	let envData;
+	let currentWordPressTag: string;
 
 	// Get the current environment configuration
 	try {

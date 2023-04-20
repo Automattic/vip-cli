@@ -194,7 +194,10 @@ export const findNestedDirectories = directory => {
  *  @return {Object} indexes
  */
 const getIndexPositionOfFolders = ( folderPath, sites ) => {
-	let sitesIndex, siteIDIndex, yearIndex, monthIndex;
+	let sitesIndex;
+	let siteIDIndex;
+	let yearIndex;
+	let monthIndex;
 	let pathMutate = folderPath; // Mutate `path` for multisites
 
 	// Turn the path into an array to determine index position

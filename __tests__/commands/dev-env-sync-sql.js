@@ -4,7 +4,7 @@
 import { describe, expect, jest } from '@jest/globals';
 import fs from 'fs';
 import { replace } from '@automattic/vip-search-replace';
-import { PassThrough, Stream } from 'stream';
+import { PassThrough } from 'stream';
 
 /**
  * Internal dependencies
