@@ -14,9 +14,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
-import { spawn, spawnSync } from 'child_process';
+import { spawn } from 'child_process';
 import { which } from 'shelljs';
-
 
 /**
  * Internal dependencies
