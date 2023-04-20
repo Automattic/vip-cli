@@ -248,6 +248,9 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 		debug( 'Will rebuild lando app on path:', instancePath );
 
 		const app = await getLandoApplication( lando, instancePath );
+
+		app.events.on( 'post-stop', async () => removeDevToolsVolume( lando, app ) );
+
 		await ensureNoOrphantProxyContainer( lando );
 		await app.rebuild();
 	} finally {
@@ -505,6 +508,33 @@ export async function landoShell( lando: Lando, instancePath: string, service: s
 		user,
 		_app: app,
 	} );
+}
+
+/**
+ * Dev-tools volume can get stale and is not updated when the new version of dev-tools
+ * image is installed. Removing it during rebuild ensures the content is freshly populated
+ * on startup.
+ *
+ * @param {Lando} lando
+ * @param {App}   app
+ */
+async function removeDevToolsVolume( lando: Lando, app: App ) {
+	const devToolsVolumeName = `${ app.name }_data_devtools`;
+	const devToolsVolume = await lando.engine.docker.getVolume( devToolsVolumeName );
+
+	if ( devToolsVolume ) {
+		debug( 'Attempting to removing dev-tools volume' );
+		try {
+			await devToolsVolume.remove();
+			debug( 'Dev-tools volume removed' );
+		} catch ( err ) {
+			if ( err.statusCode === 404 ) {
+				debug( 'Volume already removed' );
+			} else {
+				debug( 'Failed to remove volume', err );
+			}
+		}
+	}
 }
 
 /**
