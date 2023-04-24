@@ -249,7 +249,7 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 
 		const app = await getLandoApplication( lando, instancePath );
 
-		app.events.on( 'post-stop', async () => removeDevToolsVolume( lando, app ) );
+		app.events.on( 'post-uninstall', async () => removeDevToolsVolumes( lando, app ) );
 
 		await ensureNoOrphantProxyContainer( lando );
 		await app.rebuild();
@@ -511,29 +511,44 @@ export async function landoShell( lando: Lando, instancePath: string, service: s
 }
 
 /**
- * Dev-tools volume can get stale and is not updated when the new version of dev-tools
+ * Dev-tools volumes can get stale and is not updated when the new version of dev-tools
  * image is installed. Removing it during rebuild ensures the content is freshly populated
  * on startup.
  *
  * @param {Lando} lando
  * @param {App}   app
  */
-async function removeDevToolsVolume( lando: Lando, app: App ) {
-	const devToolsVolumeName = `${ app.name }_data_devtools`;
-	const devToolsVolume = await lando.engine.docker.getVolume( devToolsVolumeName );
+async function removeDevToolsVolumes( lando: Lando, app: App ) {
+	debug( 'Attempting to removing dev-tools volumes' );
 
-	if ( devToolsVolume ) {
-		debug( 'Attempting to removing dev-tools volume' );
-		try {
-			await devToolsVolume.remove();
-			debug( 'Dev-tools volume removed' );
-		} catch ( err ) {
-			if ( err.statusCode === 404 ) {
-				debug( 'Volume already removed' );
-			} else {
-				debug( 'Failed to remove volume', err );
-			}
-		}
+	const scanResult = await lando.engine.docker.listVolumes();
+	const devToolsVolumeNames = ( scanResult?.Volumes || [] )
+		.map( volume => volume.Name )
+		.filter( volumeName => new RegExp( `${ app.name }.*devtools` ).test( volumeName ) );
+
+	const removalPromises = devToolsVolumeNames.map( volumeName => removeVolume( lando, volumeName ) );
+	await Promise.all( removalPromises );
+}
+
+/**
+ * Remove volume
+ *
+ * @param {Lando}  lando
+ * @param {string} volumeName
+ */
+async function removeVolume( lando: Lando, volumeName: string ) {
+	debug( `Removing devtools volume ${ volumeName }` );
+	const devToolsVolume = await lando.engine.docker.getVolume( volumeName );
+	if ( ! devToolsVolume ) {
+		debug( `Volume ${ volumeName } not found` );
+		return;
+	}
+
+	try {
+		await devToolsVolume.remove();
+		debug( `${ volumeName } volume removed` );
+	} catch ( err ) {
+		debug( `Failed to remove volume ${ volumeName }`, err );
 	}
 }
 
