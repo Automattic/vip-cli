@@ -1,0 +1,24 @@
+{
+	"name": "Node.js",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:0-18-bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/devcontainers/features/sshd:1": {}
+	},
+	"postCreateCommand": "npm install && npm link",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"DigitalBrainstem.javascript-ejs-support",
+				"GraphQL.vscode-graphql-syntax",
+				"flowtype.flow-for-vscode",
+				"GitHub.copilot",
+				"esbenp.prettier-vscode"
+			],
+			"settings": {
+				"javascript.validate.enable": false
+			}
+		}
+	}
+}
