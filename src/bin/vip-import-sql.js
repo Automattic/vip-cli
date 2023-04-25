@@ -176,26 +176,32 @@ export async function gates( app: AppForImport, env: EnvForImport, fileName: str
 const examples = [
 	// `sql` subcommand
 	{
-		usage: 'vip import sql @mysite.develop <file.sql>',
+		usage: 'vip import sql @mysite.develop file.sql',
 		description: 'Import the given SQL file to your site',
 	},
 	// `search-replace` flag
 	{
-		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to"',
+		usage: 'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com"',
 		description:
 			'Perform a Search and Replace, then import the replaced file to your site.\n' +
 			'       * Ensure there are no spaces between your search-replace parameters',
 	},
+	// `search-replace` flag
+	{
+		usage: 'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --search-replace="example.com/from,example.com/to"',
+		description:
+			'Perform multiple search and replace tasks, then import the updated file to your site.',
+	},
 	// `in-place` flag
 	{
-		usage: 'vip import sql @mysite.develop <file.sql> --search-replace="from,to" --in-place',
+		usage: 'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --in-place',
 		description:
-			'Search and Replace on the input <file.sql>, then import the replaced file to your site',
+			'Search and Replace on the input `file.sql`, then import the updated file to your site',
 	},
 	// `output` flag
 	{
 		usage:
-			'vip import sql @mysite.develop <file.sql> --search-replace="from,to" --output="<output.sql>"',
+			'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --output="output.sql"',
 		description:
 			'Output the performed Search and Replace to the specified output file, then import the replaced file to your site\n' +
 			'       * Has no effect when the `in-place` flag is used',
@@ -375,7 +381,7 @@ command( {
 		'skip-validate',
 		'Do not perform pre-upload file validation. If unsupported entries are present, the import is likely to fail'
 	)
-	.option( 'search-replace', 'Perform Search and Replace on the specified SQL file' )
+	.option( 'search-replace', 'Search for a given URL in the SQL file and replace it with another. The format for the value is `<from-url>,<to-url>` (e.g. --search-replace="https://from.com,https://to.com"' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option(
 		'output',
