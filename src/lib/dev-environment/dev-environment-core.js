@@ -774,8 +774,6 @@ export function generateVSCodeWorkspace( slug: string ) {
 const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
 	const pathMappings = {};
 
-	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
-
 	if ( instanceData.muPlugins?.dir ) {
 		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
 	}
@@ -788,6 +786,9 @@ const generatePathMappings = ( location: string, instanceData: InstanceData ) =>
 		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
 		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
 	}
+
+	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
+
 	return pathMappings;
 };
 
