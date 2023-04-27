@@ -69,7 +69,7 @@ describe( 'vip dev-env create', () => {
 		const expectedElasticsearch = false;
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
-		const expectedMailHog = false;
+		const expectedMailpit = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -91,7 +91,7 @@ describe( 'vip dev-env create', () => {
 			wordpress: expect.objectContaining( { mode: 'image', tag: expect.any( String ) } ),
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 		} );
 	} );
 
@@ -104,7 +104,7 @@ describe( 'vip dev-env create', () => {
 		const expectedElasticsearch = true;
 		const expectedPhpMyAdmin = true;
 		const expectedXDebug = true;
-		const expectedMailHog = true;
+		const expectedMailpit = true;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -121,7 +121,7 @@ describe( 'vip dev-env create', () => {
 			'-e', `${ expectedElasticsearch }`,
 			'-p', `${ expectedPhpMyAdmin }`,
 			'-x', `${ expectedXDebug }`,
-			'--mailhog', `${ expectedMailHog }`,
+			'-A', `${ expectedMailpit }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
@@ -140,7 +140,7 @@ describe( 'vip dev-env create', () => {
 			wordpress: expect.objectContaining( { mode: 'image', tag: expectedWordPressVersion } ),
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 		} );
 	} );
 } );
