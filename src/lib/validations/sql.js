@@ -167,9 +167,9 @@ const infoCheckFormatter = ( check: CheckType ) => {
 };
 
 function checkTablePrefixes( results: CheckResult[], errors, infos ) {
-	const wpTables = [],
-		notWPTables = [],
-		wpMultisiteTables = [];
+	const wpTables = [];
+	const notWPTables = [];
+	const wpMultisiteTables = [];
 	results.forEach( result => {
 		const tableName = result.text || '';
 		if ( tableName.match( /^wp_(\d+_)/ ) ) {

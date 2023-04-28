@@ -12,9 +12,6 @@
   "rules": {
     "no-console": 0,
     "no-process-exit": 0,
-    "jsdoc/check-tag-names": [1, {
-      "definedTags": ["flow", "format"]
-    }],
     "security/detect-object-injection": 0,
     "security/detect-non-literal-fs-filename": 0,
     "security/detect-unsafe-regex": 0,

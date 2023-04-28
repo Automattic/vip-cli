@@ -19,9 +19,9 @@ export class CliTest {
 	spawn( args, options, printStderrOnError ) {
 		const [ command, ...commandArgs ] = args;
 
-		let stdout = '',
-			stderr = '',
-			finished = false;
+		let stdout = '';
+		let stderr = '';
+		let finished = false;
 
 		return new Promise( ( resolve, reject ) => {
 			const child = spawn( command, commandArgs, options );

@@ -245,8 +245,8 @@ ${ maybeExitPrompt }
 				const { importStatus, launched } = status;
 				let { importJob } = status;
 
-				let jobStatus,
-					jobSteps = [];
+				let jobStatus;
+				let jobSteps = [];
 				if ( env.isK8sResident ) {
 					// in the future the API may provide this in k8s jobs so account for that.
 					// Until then we need to create the importJob from the status object.

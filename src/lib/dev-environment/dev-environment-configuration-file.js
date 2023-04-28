@@ -105,7 +105,7 @@ async function sanitizeConfiguration( configuration: Object ): Promise<Configura
 		elasticsearch: stringToBooleanIfDefined( configuration.elasticsearch ),
 		phpmyadmin: stringToBooleanIfDefined( configuration.phpmyadmin ),
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
-		mailhog: stringToBooleanIfDefined( configuration.mailhog ),
+		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
 	};
 
 	// Remove undefined values
@@ -130,7 +130,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		phpmyadmin: configurationFileOptions.phpmyadmin,
 		xdebug: configurationFileOptions.xdebug,
 		xdebugConfig: configurationFileOptions[ 'xdebug-config' ],
-		mailhog: configurationFileOptions.mailhog,
+		mailpit: configurationFileOptions.mailpit ?? configurationFileOptions.mailhog,
 	};
 
 	const mergedOptions: InstanceOptions = {};

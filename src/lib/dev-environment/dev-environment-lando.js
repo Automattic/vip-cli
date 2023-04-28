@@ -27,6 +27,7 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import { getDockerSocket, getEngineConfig } from './docker-utils';
 import UserError from '../user-error';
 
 /**
@@ -86,6 +87,7 @@ async function getLandoConfig() {
 		],
 		disablePlugins: [
 			'@lando/argv',
+			'@lando/mailhog',
 		],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,
@@ -168,7 +170,13 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 export async function bootstrapLando(): Promise<Lando> {
 	const started = new Date();
 	try {
-		const lando = new Lando( await getLandoConfig() );
+		const socket = await getDockerSocket();
+		const config = await getLandoConfig();
+		if ( socket ) {
+			config.engineConfig = await getEngineConfig( socket );
+		}
+
+		const lando = new Lando( config );
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {
 			const instanceData = readEnvironmentData( data.name );
 
@@ -256,12 +264,38 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 	}
 }
 
+/**
+ * @return {Promise<import('dockerode').NetworkInspectInfo | null>}
+ */
+async function getBridgeNetwork( lando: Lando ) {
+	const networkName = lando.config.networkBridge || 'lando_bridge_network';
+	try {
+		return lando.engine.getNetwork( networkName ).inspect();
+	} catch ( err ) {
+		debug( 'Error getting network %s: %s', networkName, err.message );
+		return null;
+	}
+}
+
+async function cleanUpLandoProxy( lando: Lando ): Promise<void> {
+	const network = await getBridgeNetwork( lando );
+	if ( network && network.Containers && ! Object.keys( network.Containers ).length ) {
+		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer );
+		try {
+			await proxy.remove( { force: true } );
+		} catch ( err ) {
+			debug( 'Error removing proxy container: %s', err.message );
+		}
+	}
+}
+
 export async function landoStop( lando: Lando, instancePath: string ): Promise<void> {
 	const started = new Date();
 	try {
 		debug( 'Will stop lando app on path:', instancePath );
 
 		const app = await getLandoApplication( lando, instancePath );
+		app.events.once( 'post-stop', () => cleanUpLandoProxy( lando ));
 		await app.stop();
 	} finally {
 		const duration = new Date().getTime() - started.getTime();
@@ -275,6 +309,7 @@ export async function landoDestroy( lando: Lando, instancePath: string ): Promis
 		debug( 'Will destroy lando app on path:', instancePath );
 
 		const app = await getLandoApplication( lando, instancePath );
+		app.events.once( 'post-stop', () => cleanUpLandoProxy( lando ));
 		await app.destroy();
 	} finally {
 		const duration = new Date().getTime() - started.getTime();
@@ -358,6 +393,10 @@ const extraServiceDisplayConfiguration = [
 	},
 	{
 		name: 'mailhog',
+		skip: true,
+	},
+	{
+		name: 'mailpit',
 		skip: true,
 	},
 ];

@@ -6,13 +6,14 @@ export interface InstanceOptions {
 	muPlugins?: string;
 	appCode?: string;
 	elasticsearch?: boolean;
-	mariadb?: string;
+	mariadb?: string; // Legacy
 	php?: string;
 	mediaRedirectDomain?: string;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	xdebugConfig?: string;
-	mailhog?: boolean;
+	mailhog?: boolean; // Legacy
+	mailpit?: boolean;
 
 	[index: string]: string | boolean;
 }
@@ -66,7 +67,8 @@ export type ConfigurationFileOptions = {
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	'xdebug-config'?: string;
-	mailhog?: boolean;
+	mailhog?: boolean; // Legacy
+	mailpit?: boolean;
 }
 
 export interface InstanceData {
@@ -80,10 +82,11 @@ export interface InstanceData {
 	phpmyadmin: boolean;
 	xdebug: boolean;
 	xdebugConfig?: string;
-	mariadb?: string;
+	mariadb?: string; // Legacy
 	php: string;
 	elasticsearch?: string | boolean;
-	mailhog: boolean;
+	mailhog?: boolean; // Legacy
+	mailpit: boolean;
 	pullAfter?: number;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
