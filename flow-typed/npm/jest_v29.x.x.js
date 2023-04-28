@@ -1,5 +1,5 @@
-// flow-typed signature: af2b62bc6138fab6d78e4402797ede32
-// flow-typed version: 8ae3266e34/jest_v29.x.x/flow_>=v0.134.x
+// flow-typed signature: e7e15809217257d048281290b4cbfeb6
+// flow-typed version: 9a968c602c/jest_v29.x.x/flow_>=v0.201.x
 
 type JestMockFn<TArguments: $ReadOnlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
@@ -659,7 +659,7 @@ interface JestExpectType {
    * Use .toBeInstanceOf(Class) to check that an object is an instance of a
    * class.
    */
-  toBeInstanceOf(cls: Class<*>): void;
+  toBeInstanceOf(cls: Class<any>): void;
   /**
    * .toBeNull() is the same as .toBe(null) but the error messages are a bit
    * nicer.
@@ -858,7 +858,7 @@ type JestObjectType = {
    * Returns a new, unused mock function. Optionally takes a mock
    * implementation.
    */
-  fn<TArguments: $ReadOnlyArray<*>, TReturn>(
+  fn<TArguments: $ReadOnlyArray<any>, TReturn>(
     implementation?: (...args: TArguments) => TReturn
   ): JestMockFn<TArguments, TReturn>,
   /**

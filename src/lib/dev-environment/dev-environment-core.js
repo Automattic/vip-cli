@@ -182,9 +182,9 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.phpmyadmin = false;
 	}
 
-	// Mailhog migration
-	if ( ! newInstanceData.mailhog ) {
-		newInstanceData.mailhog = false;
+	// Mailpit migration
+	if ( ! newInstanceData.mailpit ) {
+		newInstanceData.mailpit = newInstanceData.mailhog ?? false;
 	}
 
 	// MariaDB migration
@@ -261,7 +261,7 @@ export async function showLogs( lando: Lando, slug: string, options: any = {} ):
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	if ( options.service ) {
-		const appInfo = await landoInfo( lando, instancePath );
+		const appInfo = await landoInfo( lando, instancePath, false );
 		if ( ! appInfo.services.includes( options.service ) ) {
 			throw new UserError( `Service '${ options.service }' not found. Please choose from one: ${ appInfo.services }` );
 		}
@@ -348,6 +348,11 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	if ( instanceData.clientCode ) {
 		// clientCode was renamed to appCode
 		instanceData.appCode = instanceData.clientCode;
+	}
+
+	if ( instanceData.mailhog ) {
+		instanceData.mailpit = instanceData.mailhog;
+		delete instanceData.mailhog;
 	}
 
 	return instanceData;
@@ -573,7 +578,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 		return false;
 	}
 
-	let message: string, envData, currentWordPressTag: string;
+	let message: string;
+	let envData;
+	let currentWordPressTag: string;
 
 	// Get the current environment configuration
 	try {

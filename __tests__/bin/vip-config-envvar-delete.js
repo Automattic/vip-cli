@@ -4,6 +4,7 @@
  * External dependencies
  */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
+import type { Response } from 'node-fetch';
 
 /**
  * Internal dependencies
@@ -76,7 +77,8 @@ const mockDeleteEnvVar: JestMockFn<[number, number, string], Promise<void>> = de
 const mockTrackEvent: JestMockFn<[], Promise<Response>> = trackEvent;
 
 describe( 'deleteEnvVarCommand', () => {
-	let args, opts;
+	let args;
+	let opts;
 	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip @mysite.develop config envvar delete' ) } );
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];

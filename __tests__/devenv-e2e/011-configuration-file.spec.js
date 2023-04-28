@@ -109,7 +109,7 @@ describe( 'vip dev-env configuration file', () => {
 		const expectedElasticsearch = true;
 		const expectedPhpMyAdmin = true;
 		const expectedXDebug = true;
-		const expectedMailHog = true;
+		const expectedMailpit = true;
 
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
@@ -123,7 +123,7 @@ describe( 'vip dev-env configuration file', () => {
 			elasticsearch: expectedElasticsearch,
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 			'mu-plugins': 'image',
 			'app-code': 'image',
 		} );
@@ -152,7 +152,7 @@ describe( 'vip dev-env configuration file', () => {
 			wordpress: expect.objectContaining( { mode: 'image', tag: expectedWordPressVersion } ),
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 		} );
 
 		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
@@ -163,7 +163,7 @@ describe( 'vip dev-env configuration file', () => {
 		const expectedElasticsearch = false;
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
-		const expectedMailHog = false;
+		const expectedMailpit = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -174,7 +174,7 @@ describe( 'vip dev-env configuration file', () => {
 			elasticsearch: expectedElasticsearch,
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 		} );
 
 		const spawnOptions = {
@@ -192,7 +192,7 @@ describe( 'vip dev-env configuration file', () => {
 			elasticsearch: expectedElasticsearch,
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 		} );
 
 		// Update environment from changed configuration file
@@ -202,7 +202,7 @@ describe( 'vip dev-env configuration file', () => {
 			elasticsearch: ! expectedElasticsearch,
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
-			mailhog: ! expectedMailHog,
+			mailpit: ! expectedMailpit,
 		} );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate ], spawnOptions, true );
@@ -215,7 +215,7 @@ describe( 'vip dev-env configuration file', () => {
 			elasticsearch: ! expectedElasticsearch,
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
-			mailhog: ! expectedMailHog,
+			mailpit: ! expectedMailpit,
 		} );
 	} );
 } );

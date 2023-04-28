@@ -4,6 +4,7 @@
  * External dependencies
  */
 import { describe, expect, it, jest } from '@jest/globals';
+import type { Response } from 'node-fetch';
 
 /**
  * Internal dependencies
@@ -82,7 +83,8 @@ describe( 'vip config envvar set', () => {
 } );
 
 describe( 'setEnvVarCommand', () => {
-	let args, opts;
+	let args;
+	let opts;
 	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip @mysite.develop config envvar set' ) } );
 	const executeEvent = [ 'envvar_set_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_set_command_success', eventPayload ];

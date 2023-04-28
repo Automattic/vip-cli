@@ -320,13 +320,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
-		mailhog: false,
+		mailpit: false,
 	};
 
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
-		mailhog: 'MailHog',
+		mailpit: 'Mailpit',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -357,7 +357,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
+	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit' ] ) {
 		if ( service in instanceData ) {
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
@@ -642,7 +642,8 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
-		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
+		.option( [ 'G', 'mailhog' ], 'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)', undefined, processBooleanOption )
+		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**
@@ -755,3 +756,14 @@ const getVSCodeExecutable = () => {
 	}
 	return null;
 };
+
+export function handleDeprecatedOptions( opts: any ): void {
+	if ( opts.mailhog ) {
+		console.warn( chalk.yellow( 'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.' ) );
+		if ( opts.mailpit === undefined ) {
+			opts.mailpit = opts.mailhog;
+		}
+
+		delete opts.mailhog;
+	}
+}
