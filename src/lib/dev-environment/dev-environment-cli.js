@@ -14,6 +14,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
+import { spawn } from 'child_process';
+import { which } from 'shelljs';
 
 /**
  * Internal dependencies
@@ -29,7 +31,8 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
+import { generateVSCodeWorkspace, getAllEnvironmentNames, getVSCodeWorkspacePath, getVersionList, readEnvironmentData } from './dev-environment-core';
+
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -712,6 +715,47 @@ export function getEnvTrackingInfo( slug: string ): any {
 		};
 	}
 }
+
+export interface PostStartOptions {
+	openVSCode: boolean
+}
+
+export async function postStart( slug: string, options: PostStartOptions ) {
+	if ( options.openVSCode ) {
+		launchVSCode( slug );
+	}
+}
+
+const launchVSCode = ( slug: string ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug );
+
+	if ( fs.existsSync( workspacePath ) ) {
+		console.log( 'VSCode workspace already exists, skipping creation.' );
+	} else {
+		generateVSCodeWorkspace( slug );
+		console.log( 'VSCode workspace generated' );
+	}
+
+	const vsCodeExecutable = getVSCodeExecutable();
+	if ( vsCodeExecutable ) {
+		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	} else {
+		console.log( `VSCode not detected in path, please open ${ workspacePath } with VSCode` );
+	}
+};
+
+const getVSCodeExecutable = () => {
+	const candidates = [ 'code', 'code-insiders', 'codium' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
+};
 
 export function handleDeprecatedOptions( opts: any ): void {
 	if ( opts.mailhog ) {

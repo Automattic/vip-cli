@@ -19,7 +19,7 @@ import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException, postStart } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -37,7 +37,8 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'skip-rebuild', 'Only start stopped services' )
-	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip prompting for wordpress update if non latest' )
+	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip propting for wordpress update if non latest' )
+	.option( 'vscode', 'Open environment workspace in VSCode' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
@@ -79,4 +80,6 @@ command()
 			await handleCLIException( error, 'dev_env_start_command_error', trackingInfo );
 			process.exitCode = 1;
 		}
+
+		await postStart( slug, { openVSCode: !! opt.vscode } );
 	} );

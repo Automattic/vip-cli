@@ -734,3 +734,74 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 		} ];
 	}
 }
+
+/**
+ * Functions generates workspace config including the launch config
+ *
+ * @param {string} slug - The slug of the environment to generate workspace config for
+ * @return {string} Workspace path
+ */
+export function generateVSCodeWorkspace( slug: string ) {
+	debug( 'Generating VSCode Workspace' );
+	const location = getEnvironmentPath( slug );
+	const workspacePath = getVSCodeWorkspacePath( slug );
+	const instanceData = readEnvironmentData( slug );
+
+	const pathMappings = generatePathMappings( location, instanceData );
+	const folders = [ { path: location } ];
+
+	if ( instanceData.muPlugins?.dir ) {
+		folders.push( { path: instanceData.muPlugins.dir } );
+	}
+	if ( instanceData.appCode?.dir ) {
+		folders.push( { path: instanceData.appCode.dir } );
+	}
+
+	const workspace = {
+		folders,
+		launch: {
+			version: '0.2.0',
+			configurations: [
+				{
+					name: `Debug ${ slug }`,
+					type: 'php',
+					request: 'launch',
+					port: 9003,
+					pathMappings,
+				},
+			],
+		},
+	};
+
+	fs.writeFileSync( workspacePath, JSON.stringify( workspace, null, 2 ) );
+
+	return workspacePath;
+}
+
+const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
+	const pathMappings = {};
+
+	if ( instanceData.muPlugins?.dir ) {
+		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
+	}
+	if ( instanceData.appCode?.dir ) {
+		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
+		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'images' );
+		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'languages' );
+		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'plugins' );
+		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'private' );
+		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
+		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
+	}
+
+	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
+
+	return pathMappings;
+};
+
+export function getVSCodeWorkspacePath( slug: string ) {
+	const location = getEnvironmentPath( slug );
+	const workspacePath = path.join( location, `${ slug }.code-workspace` );
+
+	return workspacePath;
+}
