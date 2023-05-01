@@ -115,6 +115,7 @@ async function regenerateLandofile( instancePath: string ): Promise<void> {
 
 	const slug = path.basename( instancePath );
 	const currentInstanceData = readEnvironmentData( slug );
+	currentInstanceData.pullAfter = 0;
 	await updateEnvironment( currentInstanceData );
 }
 
