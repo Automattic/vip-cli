@@ -115,6 +115,7 @@ async function regenerateLandofile( instancePath: string ): Promise<void> {
 
 	const slug = path.basename( instancePath );
 	const currentInstanceData = readEnvironmentData( slug );
+	currentInstanceData.pullAfter = 0;
 	await updateEnvironment( currentInstanceData );
 }
 
@@ -270,7 +271,7 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 async function getBridgeNetwork( lando: Lando ) {
 	const networkName = lando.config.networkBridge || 'lando_bridge_network';
 	try {
-		return lando.engine.getNetwork( networkName ).inspect();
+		return await lando.engine.getNetwork( networkName ).inspect();
 	} catch ( err ) {
 		debug( 'Error getting network %s: %s', networkName, err.message );
 		return null;
