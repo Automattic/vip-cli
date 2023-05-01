@@ -1,5 +1,9 @@
 ## Changelog
 
+### 2.28.1
+
+- #1123 [dev-env] Add VSCode workspace config on start
+
 ### 2.28.0
 
 - #1343 fix(dev-env): Force image pulling after recovering Landofile
