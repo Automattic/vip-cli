@@ -1,5 +1,9 @@
 ## Changelog
 
+### 2.28.2
+
+- #1330 chore(deps): Update xml2js to 0.5.0
+
 ### 2.28.1
 
 - #1123 [dev-env] Add VSCode workspace config on start
