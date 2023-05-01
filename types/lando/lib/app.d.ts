@@ -9,7 +9,7 @@ export interface ServiceInfo {
 	healthy: boolean;
 }
 
-interface ScanResult {
+export interface ScanResult {
 	url: string;
 	status: boolean;
 	color: 'green' | 'yellow' | 'red';
@@ -71,6 +71,7 @@ declare class App {
 	metrics: any;
 	Promise: any;
 	events: import("lando/lib/events");
+	urls: ScanResult[] | undefined;
 	scanUrls: (urls: string[], options?: { max?: number, waitCodes?: number[] }) => Promise<ScanResult[]>;
 	/**
 	 * The apps configuration
