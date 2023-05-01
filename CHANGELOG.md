@@ -1,5 +1,53 @@
 ## Changelog
 
+### 2.28.0
+
+- #1343 fix(dev-env): Force image pulling after recovering Landofile
+- #1342 fix(dev-env): Do not fail when lando_bridge_network does not exist
+- #1329 feat(dev-env)!: Replace MailHog with Mailpit
+- #1340 feat(dev-env): Kill lando proxy when last env stops
+- #1324 feat(dev-env): Better detection of a Docker socket
+- #1332 Update inline search-replace help for import sql command
+- #1338 chore(dev-deps): Update @automattic/eslint-plugin-wpvip from 0.4.0 to 0.5.2
+- #1337 chore(dev-deps): Update flow-bin from 0.203.1 to 0.204.0
+- #1336 chore(dev-deps): Update eslint from 8.37.0 to 8.38.0
+- #1325 tests: Fix timing out tests on Windows
+- #1333 [dev-env] Readds xdebug_config to vip dev-env update
+- #1328 feat(dev-env): Profile Lando-related functions
+- #1326 tests(e2e): Force Jest to exit after all tests have completed running
+- #1327 ci: Set `DO_NOT_TRACK=1` for E2E tests
+- #1323 Revert "feat(dev-env): Better detection of a Docker socket"
+- #1316 feat(dev-env): Better detection of a Docker socket
+- #1321 chore(dev-deps): Update Babel-related packages
+- #1320 chore(dev-deps): Update flow-bin from 0.202.1 to 0.203.1
+- #1319 chore(dev-deps): Update eslint from 8.36.0 to 8.37.0
+- #1318 chore(deps): Update lando to d75a4e8
+- #1315 Fix preselected options on update
+- #1314 chore(deps): Update socket.io-client to 4.6.1
+- #1311 chore(dev-deps): Update eslint to 8.36.0
+- #1310 chore(deps): Update ejs to 3.1.9
+- #1312 chore(dev-deps): Update prettier to 2.8.7
+- #1309 chore(dev-deps): Update flow-bin to 0.202.1
+- #1308 chore(dev-deps): Update dockerode to 3.3.5
+- #1307 chore(dev-deps): Update nock to 13.3.0
+- #1306 chore(dev-deps): Forcefully update lodash for publish-please to 4.17.21
+- #1305 chore(deps): Update Lando
+- #1303 chore(deps): Replace socket.io-stream with @wearemothership/socket.io-stream
+- #1301 chore(deps): Update lando-cli
+- #1302 fix(ci): Do not prompt for WP update
+- #1297 chore(dev-deps): Update Jest-related packages to 29.5.0
+- #1299 chore(dev-deps): Update eslint-related stuff
+- #1298 chore(dev-deps): Update flow-bin from 0.196.3 to 0.201.0
+- #1293 chore(dev-deps): Update Babel-related packages
+- #1300 chore(deps): Update Lando
+- #1294 chore(dev-deps): Update Jest-related packages to 29.4.3
+- #1296 Add trackers to capture execute, success and error events
+- #1292 Fix requiredArgs for other vip commands
+- #1290 Fail with a msg if an export job with a different backup is running
+- #1254 refactor(dev-env): Remove healthcheck hook
+- #1291 Dev-env: Fix silent failing when passing invalid subcommand
+- #1282 Prefix urls with // to fix the search-replace problem
+
 ### 2.27.0
 
 - #1287 fix(dev-env): Pull fresh images for new environments
