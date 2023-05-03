@@ -71,6 +71,7 @@ describe( 'vip dev-env update', () => {
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailpit = false;
+		const expectedPhoton = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -85,6 +86,7 @@ describe( 'vip dev-env update', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 
 		result = await cliTest.spawn( [
@@ -94,6 +96,7 @@ describe( 'vip dev-env update', () => {
 			'-p', `${ ! expectedPhpMyAdmin }`,
 			'-x', `${ ! expectedXDebug }`,
 			'-A', `${ ! expectedMailpit }`,
+			'-H', `${ ! expectedPhoton }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
@@ -105,6 +108,7 @@ describe( 'vip dev-env update', () => {
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
+			photon: ! expectedPhoton,
 		} );
 	} );
 

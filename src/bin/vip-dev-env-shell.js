@@ -33,6 +33,7 @@ const userMap = {
 	phpmyadmin: 'www-data',
 	mailhog: 'mailhog',
 	mailpit: 'root',
+	photon: 'root',
 };
 
 const examples = [

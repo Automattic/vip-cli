@@ -14,6 +14,7 @@ export interface InstanceOptions {
 	xdebugConfig?: string;
 	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
+	photon?: boolean;
 
 	[index: string]: string | boolean;
 }
@@ -70,6 +71,7 @@ export type ConfigurationFileOptions = {
 	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
+	photon?: boolean;
 }
 
 export interface InstanceData {
@@ -88,6 +90,7 @@ export interface InstanceData {
 	elasticsearch?: string | boolean;
 	mailhog?: boolean; // Legacy
 	mailpit: boolean;
+	photon: boolean;
 	pullAfter?: number;
 	autologinKey?: string;
 

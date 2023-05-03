@@ -448,6 +448,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				expect( prompt ).toHaveBeenCalledTimes( 0 );
 			} else {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
 			}
 
 			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
@@ -483,9 +484,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( input.preselected.mediaRedirectDomain ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
-			} else {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 6 );
 			}
 
 			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;
