@@ -14,7 +14,7 @@ location ^~ /wp-content/uploads/ {
     fastcgi_param SCRIPT_FILENAME /usr/share/webapps/photon/index.php;
     fastcgi_param SCRIPT_NAME /index.php;
 
-    if ($request_uri ~* \.(gif|jp?eg|png)\?) {
+    if ($request_uri ~* \.(gif|jpe?g|png)\?) {
         fastcgi_pass photon:9000;
     }
 }
