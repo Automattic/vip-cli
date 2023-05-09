@@ -70,11 +70,11 @@ describe( 'vip config envvar delete', () => {
 	} );
 } );
 
-const mockConfirm: JestMockFn<[string], Promise<boolean>> = confirm;
-const mockValidateNameWithMessage: JestMockFn<[string], boolean> = validateNameWithMessage;
-const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = promptForValue;
-const mockDeleteEnvVar: JestMockFn<[number, number, string], Promise<void>> = deleteEnvVar;
-const mockTrackEvent: JestMockFn<[], Promise<Response>> = trackEvent;
+const mockConfirm: JestMockFn<[string], Promise<boolean>> = ( ( confirm: any ): JestMockFn<[string], Promise<boolean>> );
+const mockValidateNameWithMessage: JestMockFn<[string], boolean> = ( ( validateNameWithMessage: any ): JestMockFn<[string], boolean> );
+const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = ( ( promptForValue: any ): JestMockFn<[string, string], Promise<string>> );
+const mockDeleteEnvVar: JestMockFn<[number, number, string], Promise<void>> = ( ( deleteEnvVar: any ): JestMockFn<[number, number, string], Promise<void>> );
+const mockTrackEvent: JestMockFn<[], Promise<Response>> = ( ( trackEvent: any ): JestMockFn<[], Promise<Response>> );
 
 describe( 'deleteEnvVarCommand', () => {
 	let args;

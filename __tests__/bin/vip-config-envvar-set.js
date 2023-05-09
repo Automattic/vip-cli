@@ -69,12 +69,12 @@ jest.mock( 'lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-const mockConfirm: JestMockFn<[string], Promise<boolean>> = confirm;
-const mockValidateNameWithMessage: JestMockFn<[string], boolean> = validateNameWithMessage;
-const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = promptForValue;
-const mockSetEnvVar: JestMockFn<[number, number, string, string], Promise<void>> = setEnvVar;
-const mockTrackEvent: JestMockFn<[], Promise<Response>> = trackEvent;
-const mockReadVariableFromFile: JestMockFn<[any], Promise<string>> = readVariableFromFile;
+const mockConfirm: JestMockFn<[string], Promise<boolean>> = ( ( confirm: any ): JestMockFn<[string], Promise<boolean>> );
+const mockValidateNameWithMessage: JestMockFn<[string], boolean> = ( ( validateNameWithMessage: any ): JestMockFn<[string], boolean> );
+const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = ( ( promptForValue: any ): JestMockFn<[string, string], Promise<string>> );
+const mockSetEnvVar: JestMockFn<[number, number, string, string], Promise<void>> = ( ( setEnvVar: any ): JestMockFn<[number, number, string, string], Promise<void>> );
+const mockTrackEvent: JestMockFn<[], Promise<Response>> = ( ( trackEvent: any ): JestMockFn<[], Promise<Response>> );
+const mockReadVariableFromFile: JestMockFn<[any], Promise<string>> = ( ( readVariableFromFile: any ): JestMockFn<[any], Promise<string>> );
 
 describe( 'vip config envvar set', () => {
 	it( 'registers as a command', () => {
