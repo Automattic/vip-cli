@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.27.0",
+  "version": "2.28.2",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -87,12 +87,12 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@automattic/eslint-plugin-wpvip": "^0.4.0",
-    "@babel/cli": "7.21.0",
-    "@babel/core": "7.21.4",
-    "@babel/eslint-parser": "7.21.3",
-    "@babel/plugin-transform-modules-commonjs": "7.21.2",
-    "@babel/preset-env": "7.21.4",
+    "@automattic/eslint-plugin-wpvip": "^0.5.2",
+    "@babel/cli": "7.21.5",
+    "@babel/core": "7.21.8",
+    "@babel/eslint-parser": "7.21.8",
+    "@babel/plugin-transform-modules-commonjs": "7.21.5",
+    "@babel/preset-env": "7.21.5",
     "@babel/preset-flow": "7.21.4",
     "@jest/globals": "^29.5.0",
     "@jest/test-sequencer": "^29.5.0",
@@ -102,10 +102,10 @@
     "dockerode": "^3.3.4",
     "eslint": "^8.35.0",
     "eslint-plugin-flowtype": "^8.0.3",
-    "flow-bin": "^0.203.1",
+    "flow-bin": "^0.205.1",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",
-    "nock": "13.3.0",
+    "nock": "13.3.1",
     "prettier": "^2.0.5",
     "publish-please": "5.5.2",
     "rimraf": "3.0.2"
@@ -135,7 +135,8 @@
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
     "rollbar": "2.22.0",
-    "semver": "7.3.8",
+    "semver": "7.5.0",
+    "shelljs": "^0.8.5",
     "single-line-log": "1.1.2",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
@@ -143,7 +144,7 @@
     "update-notifier": "5.1.0",
     "uuid": "9.0.0",
     "xdg-basedir": "^4.0.0",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.5.0"
   },
   "optionalDependencies": {
     "keytar": "7.7.0"

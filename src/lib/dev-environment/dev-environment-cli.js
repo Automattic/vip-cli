@@ -14,6 +14,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
+import { spawn } from 'child_process';
+import { which } from 'shelljs';
 
 /**
  * Internal dependencies
@@ -29,7 +31,8 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
+import { generateVSCodeWorkspace, getAllEnvironmentNames, getVSCodeWorkspacePath, getVersionList, readEnvironmentData } from './dev-environment-core';
+
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -317,13 +320,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
-		mailhog: false,
+		mailpit: false,
 	};
 
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
-		mailhog: 'MailHog',
+		mailpit: 'Mailpit',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -354,7 +357,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
+	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit' ] ) {
 		if ( service in instanceData ) {
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
@@ -639,7 +642,8 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
-		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
+		.option( [ 'G', 'mailhog' ], 'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)', undefined, processBooleanOption )
+		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**
@@ -709,5 +713,57 @@ export function getEnvTrackingInfo( slug: string ): any {
 		return {
 			slug,
 		};
+	}
+}
+
+export interface PostStartOptions {
+	openVSCode: boolean
+}
+
+export async function postStart( slug: string, options: PostStartOptions ) {
+	if ( options.openVSCode ) {
+		launchVSCode( slug );
+	}
+}
+
+const launchVSCode = ( slug: string ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug );
+
+	if ( fs.existsSync( workspacePath ) ) {
+		console.log( 'VSCode workspace already exists, skipping creation.' );
+	} else {
+		generateVSCodeWorkspace( slug );
+		console.log( 'VSCode workspace generated' );
+	}
+
+	const vsCodeExecutable = getVSCodeExecutable();
+	if ( vsCodeExecutable ) {
+		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	} else {
+		console.log( `VSCode not detected in path, please open ${ workspacePath } with VSCode` );
+	}
+};
+
+const getVSCodeExecutable = () => {
+	const candidates = [ 'code', 'code-insiders', 'codium' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
+};
+
+export function handleDeprecatedOptions( opts: any ): void {
+	if ( opts.mailhog ) {
+		console.warn( chalk.yellow( 'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.' ) );
+		if ( opts.mailpit === undefined ) {
+			opts.mailpit = opts.mailhog;
+		}
+
+		delete opts.mailhog;
 	}
 }

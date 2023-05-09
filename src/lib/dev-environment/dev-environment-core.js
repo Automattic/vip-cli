@@ -183,9 +183,9 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.phpmyadmin = false;
 	}
 
-	// Mailhog migration
-	if ( ! newInstanceData.mailhog ) {
-		newInstanceData.mailhog = false;
+	// Mailpit migration
+	if ( ! newInstanceData.mailpit ) {
+		newInstanceData.mailpit = newInstanceData.mailhog ?? false;
 	}
 
 	// MariaDB migration
@@ -265,7 +265,7 @@ export async function showLogs( lando: Lando, slug: string, options: any = {} ):
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	if ( options.service ) {
-		const appInfo = await landoInfo( lando, instancePath );
+		const appInfo = await landoInfo( lando, instancePath, false );
 		if ( ! appInfo.services.includes( options.service ) ) {
 			throw new UserError( `Service '${ options.service }' not found. Please choose from one: ${ appInfo.services }` );
 		}
@@ -357,6 +357,11 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	if ( instanceData.clientCode ) {
 		// clientCode was renamed to appCode
 		instanceData.appCode = instanceData.clientCode;
+	}
+
+	if ( instanceData.mailhog ) {
+		instanceData.mailpit = instanceData.mailhog;
+		delete instanceData.mailhog;
 	}
 
 	return instanceData;
@@ -582,7 +587,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 		return false;
 	}
 
-	let message: string, envData, currentWordPressTag: string;
+	let message: string;
+	let envData;
+	let currentWordPressTag: string;
 
 	// Get the current environment configuration
 	try {
@@ -735,4 +742,75 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 			prerelease: true,
 		} ];
 	}
+}
+
+/**
+ * Functions generates workspace config including the launch config
+ *
+ * @param {string} slug - The slug of the environment to generate workspace config for
+ * @return {string} Workspace path
+ */
+export function generateVSCodeWorkspace( slug: string ) {
+	debug( 'Generating VSCode Workspace' );
+	const location = getEnvironmentPath( slug );
+	const workspacePath = getVSCodeWorkspacePath( slug );
+	const instanceData = readEnvironmentData( slug );
+
+	const pathMappings = generatePathMappings( location, instanceData );
+	const folders = [ { path: location } ];
+
+	if ( instanceData.muPlugins?.dir ) {
+		folders.push( { path: instanceData.muPlugins.dir } );
+	}
+	if ( instanceData.appCode?.dir ) {
+		folders.push( { path: instanceData.appCode.dir } );
+	}
+
+	const workspace = {
+		folders,
+		launch: {
+			version: '0.2.0',
+			configurations: [
+				{
+					name: `Debug ${ slug }`,
+					type: 'php',
+					request: 'launch',
+					port: 9003,
+					pathMappings,
+				},
+			],
+		},
+	};
+
+	fs.writeFileSync( workspacePath, JSON.stringify( workspace, null, 2 ) );
+
+	return workspacePath;
+}
+
+const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
+	const pathMappings = {};
+
+	if ( instanceData.muPlugins?.dir ) {
+		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
+	}
+	if ( instanceData.appCode?.dir ) {
+		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
+		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'images' );
+		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'languages' );
+		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'plugins' );
+		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'private' );
+		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
+		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
+	}
+
+	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
+
+	return pathMappings;
+};
+
+export function getVSCodeWorkspacePath( slug: string ) {
+	const location = getEnvironmentPath( slug );
+	const workspacePath = path.join( location, `${ slug }.code-workspace` );
+
+	return workspacePath;
 }
