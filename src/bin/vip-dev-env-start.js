@@ -48,6 +48,7 @@ command()
 		const startProcessing = new Date();
 
 		const trackingInfo = getEnvTrackingInfo( slug );
+		trackingInfo.vscode = !! opt.vscode;
 		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
