@@ -1,5 +1,15 @@
 ## Changelog
 
+### 2.28.3
+
+- #1352 chore(deps): Update node-fetch from 2.6.9 to 2.6.11
+- #1348 chore(deps): Update Lando
+- #1347 [dev-env] add vscode flag to event tracking for start
+- #1353 chore(dev-deps): Update nock from 13.3.0 to 13.3.1
+- #1351 chore(deps): Update semver from 7.3.8 to 7.5.0
+- #1350 chore(dev-deps): Update Babel-related packages
+- #1349 chore(dev-deps): Update packages related to liniting
+
 ### 2.28.2
 
 - #1330 chore(deps): Update xml2js to 0.5.0
