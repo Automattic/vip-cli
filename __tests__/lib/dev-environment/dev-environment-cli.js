@@ -1,7 +1,5 @@
 /* eslint-disable jest/no-conditional-expect */
-/**
- * @format
- */
+// @format
 
 /**
  * External dependencies
@@ -10,10 +8,10 @@ import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
 import os from 'os';
+
 /**
  * Internal dependencies
  */
-
 import {
 	getEnvironmentName,
 	getEnvironmentStartCommand,
@@ -23,9 +21,11 @@ import {
 	promptForArguments,
 	setIsTTY,
 	processVersionOption,
+	resolvePhpVersion,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
+import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -538,4 +538,22 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			expect( version ).toStrictEqual( input.expected.wp );
 		} );
 	} );
+
+	describe( 'resolvePhpVersion', () => {
+		it.each( [
+			[ 7.4,   DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
+			[ 8.0,   DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ] ],
+			[ 8.1,   DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
+			[ 8.2,   DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
+			[ 8,     DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ] ],
+			[ '7.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
+			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ] ],
+			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
+			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
+			[ 'image:php:8.0', 'image:php:8.0' ]
+		] )( 'should process versions correctly', async ( input, expected ) => {
+			const actual = resolvePhpVersion( input );
+			expect( actual ).toStrictEqual( expected );
+		} );
+	} )
 } );

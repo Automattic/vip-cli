@@ -494,23 +494,28 @@ export function promptForBoolean( message: string, initial: boolean ): Promise<b
 	return Promise.resolve( initial );
 }
 
-function resolvePhpVersion( version: string ): string {
-	debug( `Resolving PHP version '${ version }'` );
+export function resolvePhpVersion( version: string | number ): string {
+	if ( typeof version !== 'string' ) {
+		version = version?.toString() || '';
+	}
 
-	if ( typeof version === 'string' && version.startsWith( 'image:' ) ) {
+	debug( `Resolving PHP version %j`, version );
+
+	if ( version.startsWith( 'image:' ) ) {
 		return version;
 	}
 
-	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
-
-	const index = versions.findIndex( value => value === version );
-	if ( index === -1 ) {
+	let result: string;
+	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
+		const images: string[] = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value === version );
-		return image ?? images[ 0 ];
+		result = image ?? images[ 0 ];
+	} else {
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
 	}
 
-	return images[ index ];
+	debug( 'Resolved PHP image: %j', result );
+	return result;
 }
 
 export async function promptForPhpVersion( initialValue: string ): Promise<string> {
