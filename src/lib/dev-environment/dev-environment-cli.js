@@ -509,7 +509,17 @@ export function resolvePhpVersion( version: string | number ): string {
 	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
 		const images: string[] = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value === version );
-		result = image ?? images[ 0 ];
+		if ( image ) {
+			result = image;
+		} else if ( version.indexOf( '/' ) !== -1 ) {
+			// Assuming this is a Docker image
+			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
+			// and then called `vip dev-env update` again. The custom image won't match our images
+			// but we still want to use it.
+			result = version;
+		} else {
+			result = images[ 0 ];
+		}
 	} else {
 		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
 	}

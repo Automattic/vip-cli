@@ -550,7 +550,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ] ],
 			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
 			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
-			[ 'image:php:8.0', 'image:php:8.0' ]
+			[ 'image:php:8.0', 'image:php:8.0' ],
+			[ 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0', 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0' ]
 		] )( 'should process versions correctly', async ( input, expected ) => {
 			const actual = resolvePhpVersion( input );
 			expect( actual ).toStrictEqual( expected );
