@@ -564,7 +564,9 @@ async function removeDevToolsVolumes( lando: Lando, app: App ) {
 	const scanResult = await lando.engine.docker.listVolumes();
 	const devToolsVolumeNames = ( scanResult?.Volumes || [] )
 		.map( volume => volume.Name )
-		.filter( volumeName => new RegExp( `${ app.name }.*devtools` ).test( volumeName ) );
+		.filter( volumeName => new RegExp( `${ app.project }.*devtools` ).test( volumeName ) );
+
+	debug( 'Will remove', devToolsVolumeNames );
 
 	const removalPromises = devToolsVolumeNames.map( volumeName => removeVolume( lando, volumeName ) );
 	await Promise.all( removalPromises );
