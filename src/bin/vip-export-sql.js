@@ -43,6 +43,7 @@ command( {
 	envContext: true,
 	module: 'export-sql',
 	requiredArgs: 0,
+  usage: 'vip export sql'
 } )
 	.option(
 		'output',
