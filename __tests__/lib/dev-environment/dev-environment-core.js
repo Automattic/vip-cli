@@ -11,6 +11,7 @@ import enquirer from 'enquirer';
 import os from 'os';
 import path from 'path';
 import child from 'child_process';
+import { expect, jest } from '@jest/globals';
 
 /**
  * Internal dependencies
@@ -22,12 +23,14 @@ import { getEnvironmentPath,
 	destroyEnvironment,
 	getApplicationInformation,
 	resolveImportPath,
+	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
 import { EventEmitter } from 'stream';
+import UserError from '../../../src/lib/user-error';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( '../../../src/lib/api/app' );
@@ -382,6 +385,26 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				output: true,
 				inPlace: true,
 			} );
+		} );
+	} );
+
+	describe( 'readEnvironmentData', () => {
+		it( 'should throw an error when the file is not readable', () => {
+			jest.spyOn( fs, 'readFileSync' ).mockImplementation( () => {
+				throw new Error( 'EACCESS' );
+			});
+
+			expect( () => readEnvironmentData( 'foo' ) ).toThrow( expect.objectContaining( {
+				message: expect.stringContaining( 'There was an error reading file' ),
+			} ) );
+		} );
+
+		it( 'should throw when the file cannot be parsed', () => {
+			jest.spyOn( fs, 'readFileSync' ).mockReturnValueOnce( '{' );
+
+			expect( () => readEnvironmentData( 'foo' ) ).toThrow( expect.objectContaining( {
+				message: expect.stringContaining( 'There was an error parsing file' ),
+			} ) );
 		} );
 	} );
 } );
