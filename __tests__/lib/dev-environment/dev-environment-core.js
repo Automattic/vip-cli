@@ -1,6 +1,4 @@
-/**
- * @format
- */
+// @format
 
 /**
  * External dependencies
@@ -11,6 +9,7 @@ import enquirer from 'enquirer';
 import os from 'os';
 import path from 'path';
 import child from 'child_process';
+import { EventEmitter } from 'stream';
 import { expect, jest } from '@jest/globals';
 
 /**
@@ -29,8 +28,6 @@ import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
-import { EventEmitter } from 'stream';
-import UserError from '../../../src/lib/user-error';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( '../../../src/lib/api/app' );
