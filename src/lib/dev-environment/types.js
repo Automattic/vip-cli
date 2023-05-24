@@ -88,6 +88,7 @@ export interface InstanceData {
 	mailhog?: boolean; // Legacy
 	mailpit: boolean;
 	pullAfter?: number;
+	autologinKey?: string;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }

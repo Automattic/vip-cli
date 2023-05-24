@@ -60,6 +60,8 @@ describe( 'vip dev-env update', () => {
 
 		const dataAfter = readEnvironmentData( slug );
 
+		delete dataBefore.autologinKey;
+		delete dataAfter.autologinKey;
 		expect( dataBefore ).toEqual( dataAfter );
 	} );
 
