@@ -337,9 +337,19 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
-	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+	let instanceDataString;
+	let instanceData;
+	try {
+		instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+	} catch ( err ) {
+		throw new UserError( `There was an error reading file "${instanceDataTargetPath}": ${err.message}.` );
+	}
 
-	const instanceData = JSON.parse( instanceDataString );
+	try {
+		instanceData = JSON.parse( instanceDataString );
+	} catch ( err ) {
+		throw new UserError( `There was an error parsing file "${instanceDataTargetPath}": ${err.message}. You may need to recreate the environment.` );
+	}
 
 	/**
 	 ***********************************
