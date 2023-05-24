@@ -14,7 +14,7 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-import API from '../lib/api';
+import API, { disableGlobalGraphQLErrorHandling, enableGlobalGraphQLErrorHandling } from '../lib/api';
 import { getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
@@ -148,8 +148,11 @@ async function generateDownloadLink( appId, envId, backupId ) {
  * @throws {Error} Throws an error if the job creation fails
  */
 async function createExportJob( appId, envId, backupId ) {
+	// Disable global error handling so that we can handle errors ourselves
+	disableGlobalGraphQLErrorHandling();
+
 	const api = await API();
-	const response = await api.mutate( {
+	await api.mutate( {
 		mutation: CREATE_EXPORT_JOB_MUTATION,
 		variables: {
 			input: {
@@ -160,15 +163,8 @@ async function createExportJob( appId, envId, backupId ) {
 		},
 	} );
 
-	const {
-		data: {
-			startDBBackupCopy: { success },
-		},
-	} = response;
-
-	if ( ! success ) {
-		throw new Error();
-	}
+	// Re-enable global error handling
+	enableGlobalGraphQLErrorHandling();
 }
 
 /**
@@ -186,15 +182,17 @@ export class ExportSQLCommand {
 		DOWNLOAD_LINK: 'downloadLink',
 		DOWNLOAD: 'download',
 	};
+	track;
 
 	/**
 	 * Creates an instance of SQLExportCommand
 	 *
-	 * @param {any}    app        The application object
-	 * @param {any}    env        The environment object
-	 * @param {string} outputFile The output file path
+	 * @param {any}      app        The application object
+	 * @param {any}      env        The environment object
+	 * @param {string}   outputFile The output file path
+	 * @param {Function} trackerFn  The progress tracker function
 	 */
-	constructor( app, env, outputFile ) {
+	constructor( app, env, outputFile, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.outputFile = outputFile;
@@ -204,6 +202,7 @@ export class ExportSQLCommand {
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
+		this.track = trackerFn;
 	}
 
 	/**
@@ -302,22 +301,31 @@ export class ExportSQLCommand {
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
+			await this.track( 'no_backup_found_error', { errorMessage: 'No backup found for the site' } );
 			exit.withError( `No backup found for site ${ this.app.name }` );
 		} else {
 			console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
 		}
 
-		// See if there is an existing export job for the latest backup
-		if ( ! await this.getExportJob() ) {
+		if ( await this.getExportJob() ) {
+			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
+		} else {
 			console.log( `Creating a new export for the backup with timestamp ${ latestBackup.createdAt }` );
 
 			try {
 				await createExportJob( this.app.id, this.env.id, latestBackup.id );
 			} catch ( err ) {
+				// Todo: match error code instead of message substring
+				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
+					await this.track( 'export_job_already_running_error', { errorMessage: err?.message } );
+					exit.withError(
+						'There is an export job already running for this site: ' +
+						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
+						'Currently, we allow only one export job per site. Please try again later.'
+					);
+				}
 				exit.withError( `Error creating export job: ${ err?.message }` );
 			}
-		} else {
-			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
 		}
 
 		this.progressTracker.stepRunning( this.steps.PREPARE );
@@ -341,6 +349,7 @@ export class ExportSQLCommand {
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
+			await this.track( 'download_failed_error', { errorMessage: err?.message } );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
 	}

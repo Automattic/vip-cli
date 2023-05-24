@@ -14,6 +14,7 @@
  */
 import command from '../lib/cli/command';
 import { ExportSQLCommand } from '../commands/export-sql';
+import { makeCommandTracker } from '../lib/tracker';
 
 
 const examples = [
@@ -51,6 +52,10 @@ command( {
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, output } ) => {
-    const exportCommand = new ExportSQLCommand( app, env, output );
+    const trackerFn = makeCommandTracker( 'export_sql', { app: app.id, env: env.uniqueLabel } );
+		await trackerFn( 'execute' );
+
+    const exportCommand = new ExportSQLCommand( app, env, output, trackerFn );
     await exportCommand.run();
+    await trackerFn( 'success' );
   } );
