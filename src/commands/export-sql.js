@@ -245,7 +245,7 @@ export class ExportSQLCommand {
 		return new Promise( ( resolve, reject ) => {
 			https.get( url, response => {
 				response.pipe( file );
-				const total = parseInt(response.headers['content-length'], 10);
+				const total = parseInt( response.headers[ 'content-length' ], 10 );
 				let current = 0;
 
 				file.on( 'finish', () => {
@@ -258,12 +258,12 @@ export class ExportSQLCommand {
 					reject( err );
 				} );
 
-				response.on('data', chunk => {
+				response.on( 'data', chunk => {
 					current += chunk.length;
 					this.progressTracker.setProgress(
-						`- ${((100 * current) / total).toFixed(2)}% (${formatBytes(current)}/${formatBytes(total)})`
+						`- ${ ( ( 100 * current ) / total ).toFixed( 2 ) }% (${ formatBytes( current ) }/${ formatBytes( total ) })`
 					);
-				});
+				} );
 			} );
 		} );
 	}
@@ -310,8 +310,8 @@ export class ExportSQLCommand {
 			try {
 				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
 			} catch ( err ) {
-				await this.track( 'cannot_write_to_path', { errorMessage: `Cannot write to the specified path: ${err?.message}` } );
-				exit.withError( `Cannot write to the specified path: ${err?.message}` );
+				await this.track( 'command_error', { error_type: 'cannot_write_to_path', error_message: `Cannot write to the specified path: ${ err?.message }` } );
+				exit.withError( `Cannot write to the specified path: ${ err?.message }` );
 			}
 		}
 
@@ -319,7 +319,7 @@ export class ExportSQLCommand {
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
-			await this.track( 'no_backup_found_error', { errorMessage: 'No backup found for the site' } );
+			await this.track( 'command_error', { error_type: 'no_backup_found', error_message: 'No backup found for the site' } );
 			exit.withError( `No backup found for site ${ this.app.name }` );
 		} else {
 			console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
@@ -335,7 +335,7 @@ export class ExportSQLCommand {
 			} catch ( err ) {
 				// Todo: match error code instead of message substring
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
-					await this.track( 'export_job_already_running_error', { errorMessage: err?.message } );
+					await this.track( 'command_error', { error_type: 'job_already_running', error_message: err?.message } );
 					exit.withError(
 						'There is an export job already running for this site: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
@@ -367,7 +367,7 @@ export class ExportSQLCommand {
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
-			await this.track( 'download_failed_error', { errorMessage: err?.message } );
+			await this.track( 'command_error', { error_type: 'download_failed', error_message: err?.message } );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
 	}
