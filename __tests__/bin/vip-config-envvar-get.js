@@ -8,7 +8,6 @@
 import { getEnvVarCommand } from '../../src/bin/vip-config-envvar-get';
 import command from '../../src/lib/cli/command';
 import { getEnvVar } from '../../src/lib/envvar/api';
-import { rollbar } from '../../src/lib/rollbar';
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -16,7 +15,6 @@ function mockExit() {
 }
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
 jest.mock( 'lib/cli/command', () => {
@@ -77,7 +75,6 @@ describe( 'getEnvVarCommand', () => {
 
 		expect( console.log ).toHaveBeenCalledWith( 'banana' );
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'exits with message when the env var doesn’t exist', async () => {
@@ -88,7 +85,6 @@ describe( 'getEnvVarCommand', () => {
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'The environment variable "HELLO" does not exist' ) );
 		expect( process.exit ).toHaveBeenCalled();
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'rethrows error thrown from getEnvVar', async () => {
@@ -99,7 +95,6 @@ describe( 'getEnvVarCommand', () => {
 		await expect( () => getEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, queryErrorEvent ] );
-		expect( rollbar.error ).toHaveBeenCalledWith( thrownError );
 	} );
 } );
 

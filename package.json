@@ -136,7 +136,6 @@
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
-    "rollbar": "2.22.0",
     "semver": "7.5.1",
     "shelljs": "^0.8.5",
     "single-line-log": "1.1.2",

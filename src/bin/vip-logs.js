@@ -11,7 +11,6 @@ import { setTimeout } from 'timers/promises';
  * Internal dependencies
  */
 import command from '../lib/cli/command';
-import { rollbar } from '../lib/rollbar';
 import { trackEvent } from '../lib/tracker';
 import * as logsLib from '../lib/app-logs/app-logs';
 import * as exit from '../lib/cli/exit';
@@ -40,8 +39,6 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 
 		logs = await logsLib.getRecentLogs( opt.app.id, opt.env.id, opt.type, opt.limit );
 	} catch ( error ) {
-		rollbar.error( error );
-
 		await trackEvent( 'logs_command_error', { ...trackingParams, error: error.message } );
 
 		return exit.withError( error.message );
@@ -103,7 +100,6 @@ export async function followLogs( opt ): Promise<void> {
 			delay += DEFAULT_POLLING_DELAY_IN_SECONDS;
 			delay = Math.min( delay, MAX_POLLING_DELAY_IN_SECONDS );
 			console.error( `${ chalk.red( 'Error:' ) } Failed to fetch logs. Trying again in ${ delay } seconds.` );
-			rollbar.error( error );
 		}
 
 		if ( logs ) {
