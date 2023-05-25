@@ -61,6 +61,15 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( 'upload', { ...uploadStep, percentage } );
 	}
 
+	setProgress( progress: string ) {
+		const step = this.getCurrentStep();
+		if ( ! step ) {
+			return;
+		}
+
+		this.stepsFromCaller.set( step.id, { ...step, progress } );
+	}
+
 	setStepsFromServer( steps: Object[] ) {
 		const formattedSteps = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
@@ -86,6 +95,15 @@ export class ProgressTracker {
 		}
 		const steps = [ ...this.getSteps().values() ];
 		return steps.find( ( { status } ) => status === 'pending' );
+	}
+
+	getCurrentStep() {
+		if ( this.allStepsSucceeded() ) {
+			return undefined;
+		}
+
+		const steps = [ ...this.getSteps().values() ];
+		return steps.find( ( { status } ) => status === 'running' );
 	}
 
 	stepRunning( stepId: string ) {
@@ -153,13 +171,15 @@ export class ProgressTracker {
 			singleLogLine.clear();
 		}
 		const stepValues = [ ...this.getSteps().values() ];
-		const logs = stepValues.reduce( ( accumulator, { name, id, percentage, status } ) => {
+		const logs = stepValues.reduce( ( accumulator, { name, id, percentage, status, progress } ) => {
 			const statusIcon = getGlyphForStatus( status, this.runningSprite );
 			let suffix = '';
 			if ( id === 'upload' ) {
 				if ( status === 'running' && percentage ) {
 					suffix = percentage;
 				}
+			} else if ( progress ) {
+				suffix = progress;
 			}
 			return `${ accumulator }${ statusIcon } ${ name } ${ suffix }\n`;
 		}, '' );

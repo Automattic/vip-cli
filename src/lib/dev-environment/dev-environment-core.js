@@ -17,6 +17,7 @@ import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
 import type Lando from 'lando';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Internal dependencies
@@ -161,7 +162,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	newInstanceData.elasticsearch = instanceData.elasticsearch || false;
 
-	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
+	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ];
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
@@ -191,6 +192,9 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	if ( ! newInstanceData.mariadb ) {
 		newInstanceData.mariadb = undefined;
 	}
+
+	// newInstanceData
+	newInstanceData.autologinKey = uuid();
 
 	return newInstanceData;
 }
@@ -282,9 +286,14 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const appInfo = await landoInfo( lando, instancePath, !! options.suppressWarnings );
+	const environmentData = readEnvironmentData( slug );
+	const appInfo = await landoInfo(
+		lando,
+		instancePath,
+		{ suppressWarnings: !! options.suppressWarnings, autologinKey: environmentData.autologinKey }
+	);
+
 	if ( options.extended ) {
-		const environmentData = readEnvironmentData( slug );
 		appInfo.title = environmentData.wpTitle;
 		appInfo.multisite = !! environmentData.multisite;
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];
@@ -328,9 +337,19 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
-	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+	let instanceDataString;
+	let instanceData;
+	try {
+		instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+	} catch ( err ) {
+		throw new UserError( `There was an error reading file "${instanceDataTargetPath}": ${err.message}.` );
+	}
 
-	const instanceData = JSON.parse( instanceDataString );
+	try {
+		instanceData = JSON.parse( instanceDataString );
+	} catch ( err ) {
+		throw new UserError( `There was an error parsing file "${instanceDataTargetPath}": ${err.message}. You may need to recreate the environment.` );
+	}
 
 	/**
 	 ***********************************

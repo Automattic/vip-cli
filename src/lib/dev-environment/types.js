@@ -69,6 +69,7 @@ export type ConfigurationFileOptions = {
 	'xdebug-config'?: string;
 	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
+	'media-redirect-domain'?: string;
 }
 
 export interface InstanceData {
@@ -88,6 +89,7 @@ export interface InstanceData {
 	mailhog?: boolean; // Legacy
 	mailpit: boolean;
 	pullAfter?: number;
+	autologinKey?: string;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }

@@ -54,6 +54,9 @@ services:
 <% if ( xdebugConfig ) { %>
         XDEBUG_CONFIG: "<%= xdebugConfig %>"
 <% } %>
+<% if ( autologinKey ) { %>
+        VIP_DEV_AUTOLOGIN_KEY: "<%= autologinKey %>"
+<% } %>
         LANDO_NO_USER_PERMS: 'enable'
         LANDO_NEEDS_EXEC: 1
       volumes:
