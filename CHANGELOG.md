@@ -1,5 +1,17 @@
 ## Changelog
 
+### 2.29.0
+
+- #1362	feature(dev-env): Add vip export sql command
+- #1357	chore(deps): Update semver from 7.5.0 to 7.5.1
+- #1360	chore(dev-deps): Update flow-bin from 0.205.1 to 0.206.0
+- #1365	chore(deps): Fix CVE-2023-32695
+- #1356	fix(dev-env): Handle `--media-redirect-domain` in `vip dev-env update`
+- #1361	chore(dev-deps): Update packages related to linting
+- #1364	fix(dev-env): Fix "Cannot read properties of undefined" in `preProcessInstanceData()`
+- #1363	fix(dev-env): Add error handling to readEnvironmentData()
+- #1317	Auto-login support
+
 ### 2.28.3
 
 - #1352 chore(deps): Update node-fetch from 2.6.9 to 2.6.11
