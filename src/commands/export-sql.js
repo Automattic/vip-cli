@@ -339,7 +339,7 @@ export class ExportSQLCommand {
 					exit.withError(
 						'There is an export job already running for this site: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
-						'Currently, we allow only one export job per site. Please try again later.'
+						'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
 				}
 				exit.withError( `Error creating export job: ${ err?.message }` );
