@@ -19,8 +19,12 @@ import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
   {
-    usage: 'vip export sql @mysite.develop --output=/home/user/export.sql.gz',
-    description: 'Export SQL file from your site and save it to the specified location',
+    usage: 'vip export sql @mysite.develop',
+    description: 'Export SQL file from your site and save it to the current directory',
+  },
+  {
+    usage: 'vip export sql @mysite.develop --output=~/Desktop/export.sql.gz',
+    description: 'The output file can be specified with the --output flag',
   }
 ];
 
