@@ -18,7 +18,7 @@ import API, { disableGlobalGraphQLErrorHandling, enableGlobalGraphQLErrorHandlin
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
-import { pollUntil } from '../lib/utils';
+import { getAbsolutePath, pollUntil } from '../lib/utils';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -195,7 +195,7 @@ export class ExportSQLCommand {
 	constructor( app, env, outputFile, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
-		this.outputFile = outputFile;
+		this.outputFile = typeof outputFile === 'string' ? getAbsolutePath( outputFile ) : null;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
@@ -306,6 +306,15 @@ export class ExportSQLCommand {
 	 * @return {Promise} A promise which resolves to void
 	 */
 	async run() {
+		if ( this.outputFile ) {
+			try {
+				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
+			} catch ( err ) {
+				await this.track( 'cannot_write_to_path', { errorMessage: `Cannot write to the specified path: ${err?.message}` } );
+				exit.withError( `Cannot write to the specified path: ${err?.message}` );
+			}
+		}
+
 		console.log( `Fetching the latest backup for ${ this.app.name }` );
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
