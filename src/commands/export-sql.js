@@ -15,7 +15,7 @@ import path from 'path';
  * Internal dependencies
  */
 import API, { disableGlobalGraphQLErrorHandling, enableGlobalGraphQLErrorHandling } from '../lib/api';
-import { getGlyphForStatus } from '../lib/cli/format';
+import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
 import { pollUntil } from '../lib/utils';
@@ -245,6 +245,8 @@ export class ExportSQLCommand {
 		return new Promise( ( resolve, reject ) => {
 			https.get( url, response => {
 				response.pipe( file );
+				const total = parseInt(response.headers['content-length'], 10);
+				let current = 0;
 
 				file.on( 'finish', () => {
 					file.close();
@@ -255,6 +257,13 @@ export class ExportSQLCommand {
 					fs.unlink( filename );
 					reject( err );
 				} );
+
+				response.on('data', chunk => {
+					current += chunk.length;
+					this.progressTracker.setProgress(
+						`- ${((100 * current) / total).toFixed(2)}% (${formatBytes(current)}/${formatBytes(total)})`
+					);
+				});
 			} );
 		} );
 	}
