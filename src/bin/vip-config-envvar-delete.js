@@ -17,7 +17,6 @@ import command from '../lib/cli/command';
 import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
-import { rollbar } from '../lib/rollbar';
 import { trackEvent } from '../lib/tracker';
 
 const baseUsage = 'vip @mysite.develop config envvar delete';
@@ -66,7 +65,6 @@ export async function deleteEnvVarCommand( arg: string[], opt ) {
 
 	await deleteEnvVar( opt.app.id, opt.env.id, name )
 		.catch( async err => {
-			rollbar.error( err );
 			await trackEvent( 'envvar_delete_mutation_error', { ...trackingParams, error: err.message } );
 
 			throw err;
