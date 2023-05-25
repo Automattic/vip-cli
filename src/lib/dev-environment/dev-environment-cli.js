@@ -494,11 +494,7 @@ export function promptForBoolean( message: string, initial: boolean ): Promise<b
 	return Promise.resolve( initial );
 }
 
-export function resolvePhpVersion( version: string | number ): string {
-	if ( typeof version !== 'string' ) {
-		version = version?.toString() || '';
-	}
-
+export function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version %j`, version );
 
 	if ( version.startsWith( 'image:' ) ) {
@@ -535,7 +531,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 	if ( isStdinTTY ) {
 		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		const initial = images.findIndex( version => version === initialValue );
+		let initial = images.findIndex( version => version === initialValue );
+		if (initial === -1) {
+			choices.push(initialValue);
+			initial = choices.length - 1;
+		}
 
 		const select = new Select( {
 			message: 'PHP version to use',
@@ -642,7 +642,7 @@ export function processVersionOption( value: string ): string {
 		return parseFloat( value ).toFixed( 1 );
 	}
 
-	return value;
+	return value + '';
 }
 
 export function addDevEnvConfigurationOptions( command: Command ): any {

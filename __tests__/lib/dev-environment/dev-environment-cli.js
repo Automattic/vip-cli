@@ -370,6 +370,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 		] )( 'should handle title', async input => {
 			prompt.mockResolvedValue( { input: input.default.title } );
+			selectRunMock.mockResolvedValue( '' );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
@@ -428,6 +429,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 		] )( 'should handle multisite', async input => {
 			confirmRunMock.mockResolvedValue( input.default.multisite );
+			selectRunMock.mockResolvedValue( '' );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
@@ -465,6 +467,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 		] )( 'should handle media redirect query', async input => {
 			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
+			selectRunMock.mockResolvedValue( '' );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
@@ -499,6 +502,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			},
 		] )( 'should handle mariadb', async input => {
+			selectRunMock.mockResolvedValue( '' );
+
 			const result = await promptForArguments( input.preselected, input.default );
 
 			const expectedMaria = input.preselected.mariadb ? input.preselected.mariadb : input.default.mariadb;
@@ -541,11 +546,6 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 	describe( 'resolvePhpVersion', () => {
 		it.each( [
-			[ 7.4,   DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
-			[ 8.0,   DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ] ],
-			[ 8.1,   DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
-			[ 8.2,   DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
-			[ 8,     DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ] ],
 			[ '7.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
 			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ] ],
 			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
