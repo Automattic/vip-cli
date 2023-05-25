@@ -69,6 +69,7 @@ export type ConfigurationFileOptions = {
 	'xdebug-config'?: string;
 	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
+	'media-redirect-domain'?: string;
 }
 
 export interface InstanceData {

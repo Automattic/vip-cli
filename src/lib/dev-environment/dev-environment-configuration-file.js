@@ -71,7 +71,9 @@ async function sanitizeConfiguration( configuration: Object ): Promise<Configura
 
 	if ( Array.isArray( configuration ) || typeof configuration !== 'object' ) {
 		throw new Error( genericConfigurationError );
-	} else if ( configuration[ 'configuration-version' ] === undefined || configuration.slug === undefined ) {
+	}
+
+	if ( configuration[ 'configuration-version' ] === undefined || configuration.slug === undefined ) {
 		throw new Error( genericConfigurationError );
 	}
 
@@ -106,6 +108,7 @@ async function sanitizeConfiguration( configuration: Object ): Promise<Configura
 		phpmyadmin: stringToBooleanIfDefined( configuration.phpmyadmin ),
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
+		'media-redirect-domain': configuration[ 'media-redirect-domain' ],
 	};
 
 	// Remove undefined values
@@ -131,6 +134,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		xdebug: configurationFileOptions.xdebug,
 		xdebugConfig: configurationFileOptions[ 'xdebug-config' ],
 		mailpit: configurationFileOptions.mailpit ?? configurationFileOptions.mailhog,
+		mediaRedirectDomain: configurationFileOptions[ 'media-redirect-domain' ],
 	};
 
 	const mergedOptions: InstanceOptions = {};
