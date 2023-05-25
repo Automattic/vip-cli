@@ -494,23 +494,34 @@ export function promptForBoolean( message: string, initial: boolean ): Promise<b
 	return Promise.resolve( initial );
 }
 
-function resolvePhpVersion( version: string ): string {
-	debug( `Resolving PHP version '${ version }'` );
+export function resolvePhpVersion( version: string ): string {
+	debug( `Resolving PHP version %j`, version );
 
-	if ( typeof version === 'string' && version.startsWith( 'image:' ) ) {
+	if ( version.startsWith( 'image:' ) ) {
 		return version;
 	}
 
-	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
-
-	const index = versions.findIndex( value => value === version );
-	if ( index === -1 ) {
+	let result: string;
+	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
+		const images: string[] = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value === version );
-		return image ?? images[ 0 ];
+		if ( image ) {
+			result = image;
+		} else if ( version.indexOf( '/' ) !== -1 ) {
+			// Assuming this is a Docker image
+			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
+			// and then called `vip dev-env update` again. The custom image won't match our images
+			// but we still want to use it.
+			result = version;
+		} else {
+			result = images[ 0 ];
+		}
+	} else {
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
 	}
 
-	return images[ index ];
+	debug( 'Resolved PHP image: %j', result );
+	return result;
 }
 
 export async function promptForPhpVersion( initialValue: string ): Promise<string> {
@@ -520,7 +531,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 	if ( isStdinTTY ) {
 		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		const initial = images.findIndex( version => version === initialValue );
+		let initial = images.findIndex( version => version === initialValue );
+		if (initial === -1) {
+			choices.push(initialValue);
+			initial = choices.length - 1;
+		}
 
 		const select = new Select( {
 			message: 'PHP version to use',
@@ -627,7 +642,7 @@ export function processVersionOption( value: string ): string {
 		return parseFloat( value ).toFixed( 1 );
 	}
 
-	return value;
+	return value + '';
 }
 
 export function addDevEnvConfigurationOptions( command: Command ): any {
