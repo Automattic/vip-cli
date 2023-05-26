@@ -213,10 +213,10 @@ export const formatBytes = ( bytes, decimals = 2 ) => {
 		return '0 Bytes';
 	}
 
-	const kk = 1024;
+	const bytesMultiplier = 1024;
 	const dm = decimals < 0 ? 0 : decimals;
 	const sizes = [ 'bytes', 'KB', 'MB', 'GB', 'TB' ];
-	const idx = Math.floor( Math.log( bytes ) / Math.log( kk ) );
+	const idx = Math.floor( Math.log( bytes ) / Math.log( bytesMultiplier ) );
 
-	return parseFloat( ( bytes / Math.pow( kk, idx ) ).toFixed( dm ) ) + ' ' + sizes[ idx ];
-}
+	return parseFloat( ( bytes / Math.pow( bytesMultiplier, idx ) ).toFixed( dm ) ) + ' ' + sizes[ idx ];
+};
