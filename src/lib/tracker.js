@@ -10,6 +10,7 @@ const debug = require( 'debug' )( '@automattic/vip:analytics' );
  * Internal dependencies
  */
 import Analytics from './analytics/index';
+import type { AnalyticsClient } from "./analytics/clients/client";
 import Tracks from './analytics/clients/tracks';
 import Pendo from './analytics/clients/pendo';
 import Token from '../lib/token';
@@ -21,7 +22,7 @@ let analytics = null;
 async function init(): Promise<Analytics> {
 	const uuid = await Token.uuid();
 
-	const clients = [];
+	const clients: AnalyticsClient[] = [];
 
 	const tracksUserType = config.tracksUserType;
 	const tracksEventPrefix = config.tracksEventPrefix;
@@ -36,9 +37,7 @@ async function init(): Promise<Analytics> {
 		} ) );
 	}
 
-	analytics = new Analytics( { clients } );
-
-	return analytics;
+	return new Analytics( { clients } );
 }
 
 async function getInstance(): Promise<Analytics> {
@@ -51,7 +50,7 @@ async function getInstance(): Promise<Analytics> {
 	return analytics;
 }
 
-export async function trackEvent( ...args ): Promise<Response> {
+export async function trackEvent( ...args ): Promise<any> {
 	try {
 		await Token.uuid();
 		const client = await getInstance();
@@ -61,11 +60,11 @@ export async function trackEvent( ...args ): Promise<Response> {
 	}
 }
 
-export async function aliasUser( vipUserId ): Promise<Response> {
+export async function aliasUser( vipUserId ): Promise<void> {
 	try {
 		if ( vipUserId ) {
-			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: Token.uuid() } );
-			Token.setUuid( vipUserId );
+			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: await Token.uuid() } );
+			await Token.setUuid( vipUserId );
 		}
 	} catch ( err ) {
 		debug( 'aliasUser() failed', err );

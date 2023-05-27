@@ -249,12 +249,12 @@ ${ maybeExitPrompt }
 				}
 
 				setTimeout( () => {
-					checkStatus( pollInterval );
+					void checkStatus( pollInterval );
 				}, pollInterval );
 			};
 
 			// Kick off the check
-			checkStatus( IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
+			void checkStatus( IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
 		} );
 
 	try {
