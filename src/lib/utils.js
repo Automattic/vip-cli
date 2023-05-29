@@ -58,3 +58,22 @@ export function makeTempDir( prefix = 'vip-cli' ) {
 
 	return tempDir;
 }
+
+/**
+ * Get absolute path to a file
+ * 
+ * @param {string} filePath Path to the file
+ * 
+ * @return {string} Absolute path to the file
+ */
+export function getAbsolutePath( filePath ) {
+	if ( filePath.startsWith( '/' ) ) {
+		return filePath;
+	}
+
+	if ( filePath.startsWith( '~') ) {
+		return filePath.replace( '~', os.homedir() );
+	}
+
+	return path.join( process.cwd(), filePath );
+}

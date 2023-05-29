@@ -17,6 +17,7 @@ import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
 import type Lando from 'lando';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Internal dependencies
@@ -161,7 +162,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	newInstanceData.elasticsearch = instanceData.elasticsearch || false;
 
-	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default;
+	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ];
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
@@ -191,6 +192,9 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	if ( ! newInstanceData.mariadb ) {
 		newInstanceData.mariadb = undefined;
 	}
+
+	// newInstanceData
+	newInstanceData.autologinKey = uuid();
 
 	return newInstanceData;
 }
@@ -282,9 +286,14 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const appInfo = await landoInfo( lando, instancePath, !! options.suppressWarnings );
+	const environmentData = readEnvironmentData( slug );
+	const appInfo = await landoInfo(
+		lando,
+		instancePath,
+		{ suppressWarnings: !! options.suppressWarnings, autologinKey: environmentData.autologinKey }
+	);
+
 	if ( options.extended ) {
-		const environmentData = readEnvironmentData( slug );
 		appInfo.title = environmentData.wpTitle;
 		appInfo.multisite = !! environmentData.multisite;
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];
@@ -328,9 +337,19 @@ export function readEnvironmentData( slug: string ): InstanceData {
 
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
-	const instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+	let instanceDataString;
+	let instanceData;
+	try {
+		instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
+	} catch ( err ) {
+		throw new UserError( `There was an error reading file "${instanceDataTargetPath}": ${err.message}.` );
+	}
 
-	const instanceData = JSON.parse( instanceDataString );
+	try {
+		instanceData = JSON.parse( instanceDataString );
+	} catch ( err ) {
+		throw new UserError( `There was an error parsing file "${instanceDataTargetPath}": ${err.message}. You may need to recreate the environment.` );
+	}
 
 	/**
 	 ***********************************
@@ -733,4 +752,75 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 			prerelease: true,
 		} ];
 	}
+}
+
+/**
+ * Functions generates workspace config including the launch config
+ *
+ * @param {string} slug - The slug of the environment to generate workspace config for
+ * @return {string} Workspace path
+ */
+export function generateVSCodeWorkspace( slug: string ) {
+	debug( 'Generating VSCode Workspace' );
+	const location = getEnvironmentPath( slug );
+	const workspacePath = getVSCodeWorkspacePath( slug );
+	const instanceData = readEnvironmentData( slug );
+
+	const pathMappings = generatePathMappings( location, instanceData );
+	const folders = [ { path: location } ];
+
+	if ( instanceData.muPlugins?.dir ) {
+		folders.push( { path: instanceData.muPlugins.dir } );
+	}
+	if ( instanceData.appCode?.dir ) {
+		folders.push( { path: instanceData.appCode.dir } );
+	}
+
+	const workspace = {
+		folders,
+		launch: {
+			version: '0.2.0',
+			configurations: [
+				{
+					name: `Debug ${ slug }`,
+					type: 'php',
+					request: 'launch',
+					port: 9003,
+					pathMappings,
+				},
+			],
+		},
+	};
+
+	fs.writeFileSync( workspacePath, JSON.stringify( workspace, null, 2 ) );
+
+	return workspacePath;
+}
+
+const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
+	const pathMappings = {};
+
+	if ( instanceData.muPlugins?.dir ) {
+		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
+	}
+	if ( instanceData.appCode?.dir ) {
+		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
+		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'images' );
+		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'languages' );
+		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'plugins' );
+		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'private' );
+		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
+		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
+	}
+
+	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
+
+	return pathMappings;
+};
+
+export function getVSCodeWorkspacePath( slug: string ) {
+	const location = getEnvironmentPath( slug );
+	const workspacePath = path.join( location, `${ slug }.code-workspace` );
+
+	return workspacePath;
 }

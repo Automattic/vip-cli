@@ -9,7 +9,6 @@ import { getAllEnvVarsCommand } from '../../src/bin/vip-config-envvar-get-all';
 import command from '../../src/lib/cli/command';
 import { formatData } from '../../src/lib/cli/format';
 import { getEnvVars } from '../../src/lib/envvar/api';
-import { rollbar } from '../../src/lib/rollbar';
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -17,7 +16,6 @@ function mockExit() {
 }
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
 jest.mock( 'lib/cli/command', () => {
@@ -83,7 +81,6 @@ describe( 'getAllEnvVarsCommand', () => {
 
 		expect( formatData ).toHaveBeenCalledWith( returnedEnvVars, 'csv' );
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'exits with message when there are no env vars', async () => {
@@ -95,7 +92,6 @@ describe( 'getAllEnvVarsCommand', () => {
 		expect( process.exit ).toHaveBeenCalled();
 		expect( formatData ).not.toHaveBeenCalled();
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'rethrows error thrown from getEnvVars', async () => {
@@ -107,7 +103,6 @@ describe( 'getAllEnvVarsCommand', () => {
 
 		expect( formatData ).not.toHaveBeenCalled();
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, queryErrorEvent ] );
-		expect( rollbar.error ).toHaveBeenCalledWith( thrownError );
 	} );
 } );
 

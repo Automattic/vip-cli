@@ -115,6 +115,7 @@ async function regenerateLandofile( instancePath: string ): Promise<void> {
 
 	const slug = path.basename( instancePath );
 	const currentInstanceData = readEnvironmentData( slug );
+	currentInstanceData.pullAfter = 0;
 	await updateEnvironment( currentInstanceData );
 }
 
@@ -256,6 +257,9 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 		debug( 'Will rebuild lando app on path:', instancePath );
 
 		const app = await getLandoApplication( lando, instancePath );
+
+		app.events.on( 'post-uninstall', async () => removeDevToolsVolumes( lando, app ) );
+
 		await ensureNoOrphantProxyContainer( lando );
 		await app.rebuild();
 	} finally {
@@ -270,7 +274,7 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 async function getBridgeNetwork( lando: Lando ) {
 	const networkName = lando.config.networkBridge || 'lando_bridge_network';
 	try {
-		return lando.engine.getNetwork( networkName ).inspect();
+		return await lando.engine.getNetwork( networkName ).inspect();
 	} catch ( err ) {
 		debug( 'Error getting network %s: %s', networkName, err.message );
 		return null;
@@ -317,7 +321,12 @@ export async function landoDestroy( lando: Lando, instancePath: string ): Promis
 	}
 }
 
-export async function landoInfo( lando: Lando, instancePath: string, suppressWarnings: boolean ): Promise<Record<string, any>> {
+interface LandoInfoOptions {
+	suppressWarnings?: boolean;
+	autologinKey?: string
+}
+
+export async function landoInfo( lando: Lando, instancePath: string, options: LandoInfoOptions = {} ): Promise<Record<string, any>> {
 	const started = new Date();
 	try {
 		const app = await getLandoApplication( lando, instancePath );
@@ -353,14 +362,17 @@ export async function landoInfo( lando: Lando, instancePath: string, suppressWar
 
 		// Add login information
 		if ( frontEndUrl ) {
-			const loginUrl = `${ frontEndUrl }wp-admin/`;
+			let loginUrl = `${ frontEndUrl }wp-admin/`;
+			if ( options.autologinKey ) {
+				loginUrl += `?vip-dev-autologin=${ options.autologinKey }`;
+			}
 
 			appInfo[ 'Login URL' ] = loginUrl;
 			appInfo[ 'Default username' ] = 'vipgo';
 			appInfo[ 'Default password' ] = 'password';
 		}
 
-		if ( ! suppressWarnings && hasWarnings ) {
+		if ( ! options.suppressWarnings && hasWarnings ) {
 			let message = chalk.bold.yellow( 'The following services have failed health checks:\n' );
 			Object.keys( health ).forEach( service => {
 				if ( ! health[ service ] ) {
@@ -536,6 +548,50 @@ export async function landoShell( lando: Lando, instancePath: string, service: s
 		user,
 		_app: app,
 	} );
+}
+
+/**
+ * Dev-tools volumes can get stale and is not updated when the new version of dev-tools
+ * image is installed. Removing it during rebuild ensures the content is freshly populated
+ * on startup.
+ *
+ * @param {Lando} lando
+ * @param {App}   app
+ */
+async function removeDevToolsVolumes( lando: Lando, app: App ) {
+	debug( 'Attempting to removing dev-tools volumes' );
+
+	const scanResult = await lando.engine.docker.listVolumes();
+	const devToolsVolumeNames = ( scanResult?.Volumes || [] )
+		.map( volume => volume.Name )
+		.filter( volumeName => new RegExp( `${ app.project }.*devtools` ).test( volumeName ) );
+
+	debug( 'Will remove', devToolsVolumeNames );
+
+	const removalPromises = devToolsVolumeNames.map( volumeName => removeVolume( lando, volumeName ) );
+	await Promise.all( removalPromises );
+}
+
+/**
+ * Remove volume
+ *
+ * @param {Lando}  lando
+ * @param {string} volumeName
+ */
+async function removeVolume( lando: Lando, volumeName: string ) {
+	debug( `Removing devtools volume ${ volumeName }` );
+	const devToolsVolume = await lando.engine.docker.getVolume( volumeName );
+	if ( ! devToolsVolume ) {
+		debug( `Volume ${ volumeName } not found` );
+		return;
+	}
+
+	try {
+		await devToolsVolume.remove();
+		debug( `${ volumeName } volume removed` );
+	} catch ( err ) {
+		debug( `Failed to remove volume ${ volumeName }`, err );
+	}
 }
 
 /**

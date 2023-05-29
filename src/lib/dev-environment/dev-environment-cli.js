@@ -14,6 +14,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
+import { spawn } from 'child_process';
+import { which } from 'shelljs';
 
 /**
  * Internal dependencies
@@ -29,7 +31,8 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
+import { generateVSCodeWorkspace, getAllEnvironmentNames, getVSCodeWorkspacePath, getVersionList, readEnvironmentData } from './dev-environment-core';
+
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -525,23 +528,34 @@ function resolveMultisite( value: string | boolean ): string | boolean {
 	return value;
 }
 
-function resolvePhpVersion( version: string ): string {
-	debug( `Resolving PHP version '${ version }'` );
+export function resolvePhpVersion( version: string ): string {
+	debug( `Resolving PHP version %j`, version );
 
-	if ( typeof version === 'string' && version.startsWith( 'image:' ) ) {
+	if ( version.startsWith( 'image:' ) ) {
 		return version;
 	}
 
-	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
-
-	const index = versions.findIndex( value => value === version );
-	if ( index === -1 ) {
+	let result: string;
+	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
+		const images: string[] = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value === version );
-		return image ?? images[ 0 ];
+		if ( image ) {
+			result = image;
+		} else if ( version.indexOf( '/' ) !== -1 ) {
+			// Assuming this is a Docker image
+			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
+			// and then called `vip dev-env update` again. The custom image won't match our images
+			// but we still want to use it.
+			result = version;
+		} else {
+			result = images[ 0 ];
+		}
+	} else {
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
 	}
 
-	return images[ index ];
+	debug( 'Resolved PHP image: %j', result );
+	return result;
 }
 
 export async function promptForPhpVersion( initialValue: string ): Promise<string> {
@@ -551,7 +565,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 	if ( isStdinTTY ) {
 		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		const initial = images.findIndex( version => version === initialValue );
+		let initial = images.findIndex( version => version === initialValue );
+		if (initial === -1) {
+			choices.push(initialValue);
+			initial = choices.length - 1;
+		}
 
 		const select = new Select( {
 			message: 'PHP version to use',
@@ -671,7 +689,7 @@ export function processVersionOption( value: string ): string {
 		return parseFloat( value ).toFixed( 1 );
 	}
 
-	return value;
+	return value + '';
 }
 
 export function addDevEnvConfigurationOptions( command: Command ): any {
@@ -759,6 +777,47 @@ export function getEnvTrackingInfo( slug: string ): any {
 		};
 	}
 }
+
+export interface PostStartOptions {
+	openVSCode: boolean
+}
+
+export async function postStart( slug: string, options: PostStartOptions ) {
+	if ( options.openVSCode ) {
+		launchVSCode( slug );
+	}
+}
+
+const launchVSCode = ( slug: string ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug );
+
+	if ( fs.existsSync( workspacePath ) ) {
+		console.log( 'VSCode workspace already exists, skipping creation.' );
+	} else {
+		generateVSCodeWorkspace( slug );
+		console.log( 'VSCode workspace generated' );
+	}
+
+	const vsCodeExecutable = getVSCodeExecutable();
+	if ( vsCodeExecutable ) {
+		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	} else {
+		console.log( `VSCode not detected in path, please open ${ workspacePath } with VSCode` );
+	}
+};
+
+const getVSCodeExecutable = () => {
+	const candidates = [ 'code', 'code-insiders', 'codium' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
+};
 
 export function handleDeprecatedOptions( opts: any ): void {
 	if ( opts.mailhog ) {

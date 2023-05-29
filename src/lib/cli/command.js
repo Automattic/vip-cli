@@ -19,7 +19,6 @@ import { formatData, formatSearchReplaceValues, type Tuple } from './format';
 import pkg from '../../../package.json';
 import { trackEvent } from '../../lib/tracker';
 import { parseEnvAliasFromArgv } from './envAlias';
-import { rollbar } from '../rollbar';
 import * as exit from './exit';
 import debugLib from 'debug';
 import UserError from '../user-error';
@@ -188,7 +187,6 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: message,
 				} );
 
-				rollbar.error( err );
 				exit.withError( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 			}
 
@@ -220,7 +218,6 @@ args.argv = async function( argv, cb ): Promise<any> {
 					process.exit();
 				}
 
-				rollbar.error( err );
 				exit.withError( err.message || err );
 			}
 
@@ -315,7 +312,6 @@ args.argv = async function( argv, cb ): Promise<any> {
 					process.exit();
 				}
 
-				rollbar.error( err );
 				exit.withError( err.message || err );
 			}
 

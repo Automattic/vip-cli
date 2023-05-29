@@ -75,3 +75,11 @@ export async function aliasUser( vipUserId ): Promise<Response> {
 export async function trackEventWithEnv( appId, envId, eventName, eventProps = {} ): Promise<Response> {
 	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
 }
+
+export function makeCommandTracker( command, trackingInfo = {} ) {
+	const trackerFn = async ( type, data = {} ) => {
+		await trackEvent( `${ command }_command_${ type }`, { ...trackingInfo, ...data } );
+	};
+
+	return trackerFn;
+}
