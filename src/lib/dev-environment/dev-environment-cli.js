@@ -81,7 +81,7 @@ declare function promptForComponent( component: 'wordpress', allowLocal: false, 
 // eslint-disable-next-line no-redeclare
 declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
 
-export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo: any = {} ) {
+export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
