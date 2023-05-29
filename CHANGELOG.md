@@ -1,5 +1,9 @@
 ## Changelog
 
+### 2.29.1
+
+- #1372 fix(export): Make vip-export-sql.js executable
+
 ### 2.29.0
 
 - #1362	feature(dev-env): Add vip export sql command
