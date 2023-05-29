@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -15,7 +13,7 @@ import { NODEJS_SITE_TYPE_IDS, WORDPRESS_SITE_TYPE_IDS } from './constants/vipgo
  * @param {number} appTypeId application type ID
  * @return {boolean} Whether this a WordPress application
  */
-export function isAppWordPress( appTypeId: number ): boolean {
+export function isAppWordPress( appTypeId: string ): boolean {
 	return WORDPRESS_SITE_TYPE_IDS.includes( appTypeId );
 }
 
