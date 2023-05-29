@@ -375,9 +375,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( input.preselected.title ) {
-				expect( prompt ).toHaveBeenCalledTimes( 0 );
-			} else {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
+			} else {
+				expect( prompt ).toHaveBeenCalledTimes( 2 );
 
 				const calledWith = prompt.mock.calls[ 0 ][ 0 ];
 				expect( prompt ).toHaveBeenCalledWith( {
@@ -395,7 +395,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					wordpress: testReleaseWP,
-					multisite: true,
+					multisite: 'subdomain',
 				},
 				default: {
 				},
@@ -415,7 +415,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					wordpress: testReleaseWP,
 				},
 				default: {
-					multisite: true,
+					multisite: false,
 				},
 			},
 			{
@@ -424,7 +424,16 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					wordpress: testReleaseWP,
 				},
 				default: {
-					multisite: false,
+					multisite: 'subdirectory',
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					wordpress: testReleaseWP,
+				},
+				default: {
+					multisite: true,
 				},
 			},
 		] )( 'should handle multisite', async input => {
@@ -434,9 +443,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( 'multisite' in input.preselected ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
+				expect( prompt ).toHaveBeenCalledTimes( 0 );
 			} else {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
+				expect( prompt ).toHaveBeenCalledTimes( 1 );
 			}
 
 			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;

@@ -292,16 +292,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	}
 
 	let multisiteText = 'Multisite';
-	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
-
 	if ( defaultOptions.title ) {
 		multisiteText += ` (${ defaultOptions.title } ${ defaultOptions.multisite ? 'IS' : 'is NOT' } multisite)`;
-		multisiteDefault = defaultOptions.multisite;
 	}
 
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: preselectedOptions.multisite !== undefined ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForMultisite( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
 		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
@@ -481,6 +478,34 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
+export async function promptForMultisite( message: string, initial: string | boolean ): Promise<string | boolean> {
+	let result = { input: initial };
+
+	if ( isStdinTTY ) {
+		result = await prompt( {
+			type: 'input',
+			name: 'input',
+			message,
+			initial,
+		} );
+	}
+
+	let input = ( result?.input || initial.toString() ).trim();
+	const multisiteOptions = [ 'subdomain', 'subdirectory' ];
+	const allowedOptions = [ ...FALSE_OPTIONS, ...TRUE_OPTIONS, ...multisiteOptions, 'none' ];
+
+	if ( ! allowedOptions.includes( input ) && isStdinTTY ) {
+		const select = new Select( {
+			message: `Please choose a valid option for multisite:`,
+			choices: [ ...multisiteOptions, 'false' ],
+		} );
+
+		input = await select.run();
+	}
+
+	return processStringOrBooleanOption( input );
+}
+
 export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
 	if ( isStdinTTY ) {
 		const confirm = new Confirm( {
@@ -492,6 +517,15 @@ export function promptForBoolean( message: string, initial: boolean ): Promise<b
 	}
 
 	return Promise.resolve( initial );
+}
+
+function resolveMultisite( value: string | boolean ): string | boolean {
+	const allowedValues = [ 'subdomain', 'subdirectory' ];
+	if ( typeof value === 'string' && ! allowedValues.includes( value ) ) {
+		return DEV_ENVIRONMENT_DEFAULTS.multisite;
+	}
+
+	return value;
 }
 
 export function resolvePhpVersion( version: string ): string {
@@ -634,6 +668,19 @@ export function processBooleanOption( value: string ): boolean {
 	}
 
 	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
+}
+
+const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ];
+export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
+	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+		return false;
+	}
+
+	if ( TRUE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+		return true;
+	}
+
+	return value;
 }
 
 export function processVersionOption( value: string ): string {
