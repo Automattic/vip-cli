@@ -1,5 +1,12 @@
 module.exports = {
 	presets: [
+		'@babel/preset-flow',
+		[
+			"@babel/preset-typescript",
+			{
+				"allowDeclareFields": true
+			}
+		],
 		[
 			'@babel/preset-env',
 			{
@@ -8,7 +15,6 @@ module.exports = {
 				},
 			},
 		],
-		'@babel/preset-flow',
 	],
 	plugins: [
 		'@babel/plugin-transform-modules-commonjs',
@@ -24,4 +30,7 @@ module.exports = {
 			},
 		],
 	],
+	ignore: [
+		"**/*.d.ts"
+	]
 };
