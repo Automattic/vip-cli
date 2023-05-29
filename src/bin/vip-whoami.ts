@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
  * @format
  */
 
@@ -18,16 +17,20 @@ import { trackEvent } from '../lib/tracker';
 import * as exit from '../lib/cli/exit';
 
 export async function whoamiCommand() {
-	const trackingParams = {
+	const trackingParams: { command: string } = {
 		command: 'vip whoami',
 	};
 
 	await trackEvent( 'whoami_command_execute', trackingParams );
 
-	let currentUser = {};
+	let currentUser = {} as {
+		displayName: string;
+		id: number;
+		isVIP: boolean;
+	};
 	try {
 		currentUser = await getCurrentUserInfo();
-	} catch ( err ) {
+	} catch ( err: any ) {
 		await trackEvent( 'whoami_command_error', { ...trackingParams, error: err.message } );
 
 		exit.withError( `Failed to fetch information about the currently logged-in user error: ${ err.message }` );
@@ -35,7 +38,7 @@ export async function whoamiCommand() {
 
 	await trackEvent( 'whoami_command_success', trackingParams );
 
-	const output = [
+	const output: string[] = [
 		`- Howdy ${ currentUser.displayName }!`,
 		`- Your user ID is ${ currentUser.id }`,
 	];
@@ -55,4 +58,3 @@ command( { usage: 'vip whoami' } )
 		},
 	] )
 	.argv( process.argv, whoamiCommand );
-
