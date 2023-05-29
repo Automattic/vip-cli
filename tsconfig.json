@@ -22,7 +22,8 @@
   },
   "include": [
     "src",
-    "types",
+    "helpers",
+    "config",
     "__tests__",
     "__fixtures__",
     "noImplictAnyImportBypass.d.ts"
