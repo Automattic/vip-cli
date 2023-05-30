@@ -1,5 +1,15 @@
 ## Changelog
 
+### 2.30.0
+
+- #1264	feature(dev-env): Add dev-env-sync-sql command
+- #1376	refactor: Convert keychain to TypeScript
+- #1370	fix: Fix issues found by SonarCloud
+- #1374	Add TypeScript support
+- #1334	Dev-env: Allow --multisite to accept boolean, subdirectory, or subdomain values
+- #1375	fix(api): Set non-zero exit code on error
+- #1373	Reverting accidental push to vip-cli
+
 ### 2.29.1
 
 - #1372 fix(export): Make vip-export-sql.js executable
