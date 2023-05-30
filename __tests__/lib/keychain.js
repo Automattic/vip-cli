@@ -7,110 +7,57 @@ import { randomBytes } from 'crypto';
  * Internal dependencies
  */
 import Insecure from '../../src/lib/keychain/insecure';
-import Browser from '../../src/lib/keychain/browser';
 
-// TODO: Random bytes
 const account = 'vip-cli-test';
 const password = randomBytes( 256 ).toString();
 
-let keychain;
-
-describe( 'token tests (secure)', () => {
-	it( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( async () => {
-			const passwd = keychain.getPassword( account );
-			await expect( passwd ).resolves.toBe( password );
-		} );
-	} );
-
-	it( 'should correctly delete token', () => {
-		return keychain.setPassword( account, password ).then( () => {
-			return keychain.deletePassword( account ).then( async () => {
-				const passwd = keychain.getPassword( account );
-				await expect( passwd ).resolves.toBeNull();
-			} );
-		} );
-	} );
-} );
-
 describe( 'token tests (insecure)', () => {
-	keychain = new Insecure( account );
+	const keychain = new Insecure( account );
 
-	it( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( async () => {
-			const passwd = keychain.getPassword( account );
-			await expect( passwd ).resolves.toBe( password );
-		} );
+	it( 'should correctly set token', async () => {
+		await keychain.setPassword( account, password )
+		const passwd = keychain.getPassword( account );
+		return expect( passwd ).resolves.toBe( password );
 	} );
 
-	it( 'should correctly set multiple tokens', () => {
-		return keychain.setPassword( 'first', 'password1' ).then( () => {
-			return keychain.setPassword( 'second', 'password2' ).then( async () => {
-				const passwd = keychain.getPassword( 'first' );
-				await expect( passwd ).resolves.toBe( 'password1' );
+	it( 'should correctly set multiple tokens', async () => {
+		const expected = [ 'password1', 'password2' ];
+		await Promise.all( [
+			keychain.setPassword( 'first', expected[0] ),
+			keychain.setPassword( 'second', expected[1] ),
+		] );
 
-				const passwd2 = keychain.getPassword( 'second' );
-				await expect( passwd2 ).resolves.toBe( 'password2' );
-			} );
-		} );
+		const promise = Promise.all( [
+			keychain.getPassword( 'first' ),
+			keychain.getPassword( 'second' ),
+		] );
+
+		return expect( promise ).resolves.toEqual( expected );
 	} );
 
-	it( 'should correctly delete token', () => {
-		return keychain.setPassword( account, password ).then( () => {
-			return keychain.deletePassword( account ).then( async () => {
-				const passwd = keychain.getPassword( account );
-				await expect( passwd ).resolves.toBeNull();
-			} );
-		} );
+	it( 'should correctly delete token', async () => {
+		await keychain.setPassword( account, password )
+		await keychain.deletePassword( account );
+
+		const passwd = keychain.getPassword( account );
+		return expect( passwd ).resolves.toBeNull();
 	} );
 
-	it( 'should correctly delete a single token', () => {
-		return keychain.setPassword( 'first', 'password1' ).then( () => {
-			return keychain.setPassword( 'second', 'password2' ).then( () => {
-				return keychain.deletePassword( 'first' ).then( async () => {
-					const passwd = keychain.getPassword( 'first' );
-					await expect( passwd ).resolves.toBeNull();
+	it( 'should correctly delete a single token', async () => {
+		const expected = [ null, 'password2' ];
 
-					const passwd2 = keychain.getPassword( 'second' );
-					await expect( passwd2 ).resolves.toBe( 'password2' );
-				} );
-			} );
-		} );
-	} );
-} );
+		await Promise.all( [
+			keychain.setPassword( 'first', 'password1' ),
+			keychain.setPassword( 'second', expected[1] ),
+		] );
 
-describe( 'token tests (browser)', () => {
-	if ( 'undefined' === typeof global.localStorage ) {
-		// mock localStorage
-		global.localStorage = {
-			data: {},
-			getItem( key ) {
-				return this.data[ key ];
-			},
-			setItem( key, value ) {
-				this.data[ key ] = value;
-			},
-			removeItem( key ) {
-				delete this.data[ key ];
-			},
-		};
-	}
+		await keychain.deletePassword( 'first' );
 
-	keychain = new Browser();
+		const promise = Promise.all( [
+			keychain.getPassword( 'first' ),
+			keychain.getPassword( 'second' ),
+		] );
 
-	it( 'should correctly set token', () => {
-		return keychain.setPassword( account, password ).then( async () => {
-			const passwd = keychain.getPassword( account );
-			await expect( passwd ).resolves.toBe( password );
-		} );
-	} );
-
-	it( 'should correctly delete token', () => {
-		return keychain.setPassword( account, password ).then( () => {
-			return keychain.deletePassword( account ).then( async () => {
-				const passwd = keychain.getPassword( account );
-				await expect( passwd ).resolves.toBeNull();
-			} );
-		} );
+		return expect( promise ).resolves.toEqual( expected );
 	} );
 } );

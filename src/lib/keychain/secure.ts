@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -11,15 +9,16 @@ import keytar from 'keytar';
 import type { Keychain } from './keychain';
 
 export default class Secure implements Keychain {
-	getPassword( service ) {
+	getPassword( service: string ): Promise<string | null> {
 		return keytar.getPassword( service, service );
 	}
 
-	setPassword( service, password ) {
-		return keytar.setPassword( service, service, password );
+	async setPassword( service: string, password: string ): Promise<boolean> {
+		await keytar.setPassword( service, service, password );
+		return true;
 	}
 
-	deletePassword( service ) {
+	deletePassword( service: string ): Promise<boolean> {
 		return keytar.deletePassword( service, service );
 	}
 }
