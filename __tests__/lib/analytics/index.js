@@ -7,7 +7,12 @@ import { afterEach, describe, expect, it, jest } from '@jest/globals';
  * Internal dependencies
  */
 import Analytics from '../../../src/lib/analytics';
-import AnalyticsClientStub from '../../../src/lib/analytics/clients/stub';
+
+class AnalyticsClientStub {
+	trackEvent() {
+		return Promise.resolve( false );
+	}
+}
 
 describe( 'lib/analytics', () => {
 	describe( '.trackEvent()', () => {
