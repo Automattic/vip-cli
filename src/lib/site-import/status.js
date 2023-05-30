@@ -256,7 +256,7 @@ ${ maybeExitPrompt }
 
 						// if the progress meta isn't filled out yet, wait until it is.
 						if ( ! statusSteps ) {
-							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL ); // NOSONAR
 						}
 
 						jobSteps = statusSteps.map( step => {
@@ -361,11 +361,11 @@ ${ maybeExitPrompt }
 
 				overallStatus = 'running';
 
-				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL ); // NOSONAR
 			};
 
 			// Kick off the check
-			checkStatus();
+			void checkStatus();
 		} );
 
 	try {

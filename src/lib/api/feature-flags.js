@@ -11,10 +11,11 @@ import gql from 'graphql-tag';
 import API from '../../lib/api';
 
 let api;
-API()
+// If Token.get() fails, we may have an unhandled rejection
+void API()
 	.then( client => {
 		api = client;
-	}	);
+	} );
 
 const isVipQuery = gql`
 	query isVIP {

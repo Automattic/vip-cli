@@ -18,9 +18,9 @@ const getFeatureSpy = jest.spyOn( featureFlags, 'get' );
 
 describe( 'apiConfig', () => {
 	beforeEach( () => {
-		Token.set( 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA' );
-
 		getFeatureSpy.mockClear();
+
+		return Token.set( 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA' );
 	} );
 
 	describe( 'checkFeatureEnabled', () => {

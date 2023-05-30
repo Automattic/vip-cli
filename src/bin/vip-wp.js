@@ -199,7 +199,7 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 		// Close old streams
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
-		trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
+		trackEvent( 'wpcli_command_reconnect', commonTrackingParams ).catch( () => {});
 
 		currentJob = await launchCommandAndGetStreams( {
 			socket: currentJob.socket,
@@ -295,7 +295,7 @@ commandWrapper( {
 		};
 		/* eslint-enable camelcase */
 
-		trackEvent( 'wpcli_command_execute', commonTrackingParams );
+		trackEvent( 'wpcli_command_execute', commonTrackingParams ).catch( () => {} );
 
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
@@ -310,7 +310,7 @@ commandWrapper( {
 			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName }?` );
 
 			if ( ! yes ) {
-				trackEvent( 'wpcli_confirm_cancel', commonTrackingParams );
+				trackEvent( 'wpcli_confirm_cancel', commonTrackingParams ).catch( () => {} );
 
 				console.log( 'Command cancelled' );
 				process.exit();
@@ -440,7 +440,7 @@ commandWrapper( {
 		process.stdin.on( 'data', data => {
 			// only run this in interactive mode for prompts from WP commands
 			if ( commandRunning && 0 === Buffer.compare( data, Buffer.from( '\r' ) ) ) {
-				if ( currentJob && currentJob.stdinStream ) {
+				if ( currentJob?.stdinStream ) {
 					currentJob.stdinStream.write( '\n' );
 				}
 			}
@@ -456,7 +456,7 @@ commandWrapper( {
 			// write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
 
-			if ( currentJob && currentJob.stdoutStream ) {
+			if ( currentJob?.stdoutStream ) {
 				currentJob.stdoutStream.end();
 			}
 

@@ -76,7 +76,7 @@ const rootCmd = async function() {
 			isHelpCommand ||
 			isVersionCommand ||
 			isDevEnvCommandWithoutEnv ||
-			( token && token.valid() )
+			token?.valid()
 		)
 	) {
 		await runCmd();
@@ -174,4 +174,5 @@ const rootCmd = async function() {
 	}
 };
 
-rootCmd();
+// We may end up having an unhandled rejection here :-(
+void rootCmd();

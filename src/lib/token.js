@@ -76,7 +76,7 @@ export default class Token {
 		return now > this.exp;
 	}
 
-	static async uuid(): string {
+	static async uuid(): Promise<string> {
 		const service = Token.getServiceName( '-uuid' );
 
 		let _uuid = await keychain.getPassword( service );
@@ -88,7 +88,7 @@ export default class Token {
 		return _uuid;
 	}
 
-	static async setUuid( _uuid: string ) {
+	static async setUuid( _uuid: string ): Promise<void> {
 		const service = Token.getServiceName( '-uuid' );
 		await keychain.setPassword( service, _uuid );
 	}
