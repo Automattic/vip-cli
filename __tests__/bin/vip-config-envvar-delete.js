@@ -13,6 +13,7 @@ import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
 import command from '../../src/lib/cli/command';
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
+// $FlowExpectedError[cannot-resolve-module]
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -58,7 +59,7 @@ jest.mock( 'lib/envvar/logging', () => ( {
 	getEnvContext: () => 'test',
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 

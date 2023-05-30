@@ -1,7 +1,8 @@
 /**
  * External dependencies
  */
-import fetch from 'node-fetch';
+import fetch, { type Response, type RequestInit } from 'node-fetch';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -11,7 +12,7 @@ import env from '../../lib/env';
 import { createProxyAgent } from '../../lib/http/proxy-agent';
 import { API_HOST } from '../../lib/api';
 
-const debug = require( 'debug' )( '@automattic/vip:http' );
+const debug = debugLib( '@automattic/vip:http' );
 
 /**
  * Call the Public API with an arbitrary path (e.g. to connect to REST endpoints).
@@ -23,7 +24,7 @@ const debug = require( 'debug' )( '@automattic/vip:http' );
  * @param {Object} options options to pass to `fetch`
  * @return {Promise} Return value of the `fetch` call
  */
-export default async ( path, options = {} ) => {
+export default async ( path: string, options: RequestInit = {} ): Promise<Response> => {
 	let url = path;
 
 	// For convenience, we support just passing in the path to this function...
@@ -34,29 +35,19 @@ export default async ( path, options = {} ) => {
 
 	const authToken = await Token.get();
 
-	const headers = {
-		'User-Agent': env.userAgent,
-		Authorization: authToken ? `Bearer ${ authToken.raw }` : null,
-	};
-
 	const proxyAgent = createProxyAgent( url );
 
 	debug( 'running fetch', url );
 
 	return fetch( url, {
 		...options,
-		...{
-			agent: proxyAgent,
-			headers: {
-				...headers,
-				...{
-					'Content-Type': 'application/json',
-				},
-				...options.headers,
-			},
+		agent: proxyAgent ?? undefined,
+		headers: {
+			Authorization: `Bearer ${ authToken.raw }`,
+			'User-Agent': env.userAgent,
+			'Content-Type': 'application/json',
+			...( options.headers ?? {} ),
 		},
-		...{
-			body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
-		},
+		body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
 	} );
 };
