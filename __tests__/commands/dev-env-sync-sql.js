@@ -44,6 +44,7 @@ const mockWriteStream = getMockStream( [ { name: 'finish' } ], 20 );
 
 jest.spyOn( fs, 'createReadStream' ).mockReturnValue( mockReadStream );
 jest.spyOn( fs, 'createWriteStream' ).mockReturnValue( mockWriteStream );
+jest.spyOn( fs, 'renameSync' ).mockImplementation( () => {} );
 jest.mock( '@automattic/vip-search-replace', () => {
 	return {
 		replace: jest.fn(),
@@ -84,11 +85,11 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the SQL file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
-			cmd.siteUrls = [ 'test.go-vip.com' ];
+			cmd.siteUrls = [ '//test.go-vip.com' ];
 			cmd.slug = 'test-slug';
 
 			await cmd.runSearchReplace();
-			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ 'test.go-vip.com', 'test-slug.vipdev.lndo.site' ] );
+			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ '//test.go-vip.com', '//test-slug.vipdev.lndo.site' ] );
 		} );
 	} );
 
