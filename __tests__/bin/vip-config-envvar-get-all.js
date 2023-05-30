@@ -40,7 +40,7 @@ jest.mock( 'lib/envvar/logging', () => ( {
 	getEnvContext: () => 'test',
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 

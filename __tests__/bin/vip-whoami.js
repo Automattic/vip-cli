@@ -24,7 +24,7 @@ jest.mock( 'lib/api/user', () => ( {
 	getCurrentUserInfo: jest.fn(),
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 

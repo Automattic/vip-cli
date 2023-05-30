@@ -8,7 +8,7 @@
 import { validateAndGetTableNames } from '../../src/bin/vip-import-sql';
 import * as exit from '../../src/lib/cli/exit';
 
-jest.mock( 'lib/tracker' );
+jest.mock( '../../src/lib/tracker' );
 jest.mock( 'lib/validations/site-type' );
 jest.mock( 'lib/validations/is-multi-site' );
 jest.mock( 'lib/api/feature-flags' );
