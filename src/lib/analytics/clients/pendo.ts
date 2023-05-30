@@ -1,49 +1,43 @@
-// @flow
-
 /**
  * External dependencies
  */
-const debug = require( 'debug' )( '@automattic/vip:analytics:clients:pendo' );
+import { Response } from 'node-fetch';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
 import http from '../../../lib/api/http';
+import { type Env } from '../../env';
+
+const debug = debugLib( '@automattic/vip:analytics:clients:pendo' );
+
+interface PendoOptions {
+	userId: string;
+	eventPrefix: string;
+	env: Env;
+}
 
 /**
  * Pendo analytics client.
  */
-
 export default class Pendo implements AnalyticsClient {
-	eventPrefix: string;
-	userAgent: string;
-	userId: string;
-	context: { [ key: string ]: string } = {};
+	private eventPrefix: string;
+	private userAgent: string;
+	private userId: string;
+	private context: Env & Record<string, unknown> & { userId?: string };
 
-	static get ENDPOINT() {
-		return '/pendo';
+	static readonly ENDPOINT = '/pendo';
+
+	constructor( options: PendoOptions ) {
+		this.eventPrefix = options.eventPrefix;
+		this.userAgent = options.env.userAgent;
+		this.userId = options.userId;
+		this.context = { ...options.env };
 	}
 
-	constructor( {
-		userId,
-		eventPrefix,
-		env,
-	}: {
-		userId: string,
-		eventPrefix: string,
-		env: { [ key: string ]: string }
-	} ) {
-		this.eventPrefix = eventPrefix;
-		this.userAgent = env.userAgent;
-		this.userId = userId;
-		this.context = { ...env };
-	}
-
-	async trackEvent(
-		eventName: string,
-		eventProps: { [ key: string ]: string } = {}
-	): Promise<any> {
+	async trackEvent( eventName: string, eventProps: Record<string, unknown> = {} ): Promise<Response | false> {
 		if ( ! eventName.startsWith( this.eventPrefix ) ) {
 			eventName = this.eventPrefix + eventName;
 		}
@@ -62,33 +56,31 @@ export default class Pendo implements AnalyticsClient {
 			return await this.send( eventName, eventProps );
 		} catch ( error ) {
 			debug( error );
+			return Promise.resolve( false );
 		}
-
-		// Resolve to false instead of rejecting
-		return Promise.resolve( false );
 	}
 
-	async send( eventName: string, eventProps: {} ): Promise<any> {
+	async send( eventName: string, eventProps: Record<string, unknown> ): Promise<Response> {
 		const body = {
 			context: this.context,
 			event: eventName,
 			properties: eventProps,
 			timestamp: Date.now(),
 			type: 'track',
-			visitorId: `${ this.context.userId }`,
+			visitorId: `${ this.context.userId! }`,
 		};
 
 		debug( 'send()', body );
 
 		const response = await http( Pendo.ENDPOINT, {
 			method: 'POST',
-			body,
+			body: JSON.stringify( body ),
 		} );
 
 		const responseText = await response.text();
 
 		debug( 'response', responseText );
 
-		return responseText;
+		return response;
 	}
 }

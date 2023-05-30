@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /**
  * External dependencies
  */
+import type { Url } from 'url';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
@@ -22,11 +24,11 @@ const debug = debugLib( 'vip:proxy-agent' );
 // 4. VIP_USE_SYSTEM_PROXY and HTTPS_PROXY are set: an HTTPS_PROXY is returned
 // 5. NO_PROXY is set along with VIP_USE_SYSTEM_PROXY and any system proxy: null is returned if the no proxy applies, otherwise the first active proxy is used
 // This allows near full customization by the client of what proxy should be used, instead of making assumptions based on the URL string
-export function createProxyAgent( url ) {
-	const VIP_PROXY = process.env.VIP_PROXY || process.env.vip_proxy || null;
-	const SOCKS_PROXY = process.env.SOCKS_PROXY || process.env.socks_proxy || null;
-	const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null;
-	const NO_PROXY = process.env.NO_PROXY || process.env.no_proxy || null;
+export function createProxyAgent( url: string | Url ): SocksProxyAgent | HttpsProxyAgent | null {
+	const VIP_PROXY = process.env.VIP_PROXY || process.env.vip_proxy || null;       // NOSONAR
+	const SOCKS_PROXY = process.env.SOCKS_PROXY || process.env.socks_proxy || null; // NOSONAR
+	const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null; // NOSONAR
+	const NO_PROXY = process.env.NO_PROXY || process.env.no_proxy || null;          // NOSONAR
 
 	// VIP Socks Proxy should take precedence and should be fully backward compatible
 	if ( VIP_PROXY ) {
@@ -60,7 +62,7 @@ export function createProxyAgent( url ) {
 //		Example: '.api' does NOT match wp.api.org, but '.api.org' does (see tests)
 // 3. abc.com: do not proxy www.abc.com, abc.com, etc.
 // See proxy-from-env on npmjs.org for full "ruleset"
-function coveredInNoProxy( url, noProxyString ) {
+function coveredInNoProxy( url: string | Url, noProxyString: string | null ): boolean {
 	// If the NO_PROXY env variable is not set, then the URL is not covered in the NO_PROXY (utility below does not handle this case)
 	if ( ! noProxyString ) {
 		return false;

@@ -1,19 +1,26 @@
-// @flow
-
 /**
  * External dependencies
  */
-import fetch from 'node-fetch';
+import fetch, { type Response } from 'node-fetch';
 import querystring from 'querystring';
-const debug = require( 'debug' )( '@automattic/vip:analytics:clients:tracks' );
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import type { AnalyticsClient } from './client';
 import { checkIfUserIsVip } from '../../cli/apiConfig';
+import type { Env } from '../../env';
+
+const debug = debugLib( '@automattic/vip:analytics:clients:tracks' );
 
 const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
+
+interface BaseParams {
+	'commonProps[_ui]': string;
+	'commonProps[_ut]': string;
+	'commonProps[_via_ua]': string;
+}
 
 /**
  * Simple class for tracking using Automattic Tracks.
@@ -24,18 +31,13 @@ const validEventOrPropNamePattern = /^[a-z_][a-z0-9_]*$/;
 // TODO: add batch support (can include multiples in `events` array)
 
 export default class Tracks implements AnalyticsClient {
-	eventPrefix: string;
-	userAgent: string;
-	baseParams: {
-		'commonProps[_ui]': string,
-		'commonProps[_ut]': string,
-	};
+	private eventPrefix: string;
+	private userAgent: string;
+	private baseParams: BaseParams;
 
-	static get ENDPOINT() {
-		return 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
-	}
+	static readonly ENDPOINT = 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 
-	constructor( userId: string, userType: string, eventPrefix: string, env: {} ) {
+	constructor( userId: string, userType: string, eventPrefix: string, env: Env ) {
 		this.eventPrefix = eventPrefix;
 
 		this.userAgent = env.userAgent;
@@ -47,7 +49,7 @@ export default class Tracks implements AnalyticsClient {
 		};
 	}
 
-	async trackEvent( name: string, eventProps = {} ): Promise<any> {
+	async trackEvent( name: string, eventProps: Record<string, unknown> = {} ): Promise<Response | false> {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
@@ -64,9 +66,10 @@ export default class Tracks implements AnalyticsClient {
 
 		eventProps.is_vip = await checkIfUserIsVip();	// Add `is_vip` flag to every Tracks event recorded
 
-		const event = Object.assign( {
+		const event: Record<string, unknown> = {
 			_en: name,
-		}, eventProps );
+			...eventProps,
+		};
 
 		// For when we want to support batched events
 		const events = [ event ];
@@ -103,11 +106,11 @@ export default class Tracks implements AnalyticsClient {
 		}
 
 		// Resolve to false instead of rejecting
-		return Promise.resolve( false );
+		return false;
 	}
 
-	send( extraParams: {} ): Promise<any> {
-		const params = Object.assign( {}, this.baseParams, extraParams );
+	send( extraParams: Record<string, unknown> ): Promise<Response> {
+		const params = { ...this.baseParams, ...extraParams };
 
 		const method = 'POST';
 		const body = querystring.stringify( params );
@@ -118,7 +121,6 @@ export default class Tracks implements AnalyticsClient {
 
 		debug( 'send()', body );
 
-		// eslint-disable-next-line no-undef
 		return fetch( Tracks.ENDPOINT, {
 			method,
 			body,

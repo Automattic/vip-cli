@@ -1,15 +1,14 @@
-// @flow
-
 /**
  * External dependencies
  */
+import type { Response } from 'node-fetch';
 import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
-import AnalyticsClientStub from './clients/stub';
 import env from '../env';
+import type { AnalyticsClient } from './clients/client';
 
 const debug = debugLib( '@automattic/vip:analytics' );
 
@@ -23,25 +22,22 @@ const client_info = {
 /* eslint-enable camelcase */
 
 export default class Analytics {
-	constructor( {
-		clients = new AnalyticsClientStub(),
-	} ) {
+	private clients: AnalyticsClient[];
+
+	constructor( clients: AnalyticsClient[] ) {
 		this.clients = clients;
 	}
 
-	async trackEvent( name, props = {} ): Promise {
+	async trackEvent( name: string, props: Record<string, unknown> = {} ): Promise<(Response | false)[]> {
 		if ( process.env.DO_NOT_TRACK ) {
 			debug( `trackEvent() for ${ name } => skipping per DO_NOT_TRACK variable` );
-
-			return Promise.resolve( `Skipping trackEvent for ${ name } (DO_NOT_TRACK)` );
+			return [];
 		}
 
-		return Promise.all( this.clients.map( client => {
-			return client.trackEvent( name, {
-				// eslint-disable-next-line camelcase
-				...client_info,
-				...props,
-			} );
-		} ) );
+		return Promise.all( this.clients.map( client => client.trackEvent( name, {
+			// eslint-disable-next-line camelcase
+			...client_info,
+			...props,
+		} ) ) );
 	}
 }

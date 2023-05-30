@@ -1,10 +1,8 @@
-// @flow
-
 /**
  * External dependencies
  */
 import type { Response } from 'node-fetch';
-const debug = require( 'debug' )( '@automattic/vip:analytics' );
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
@@ -17,7 +15,9 @@ import Token from '../lib/token';
 import config from '../lib/cli/config';
 import env from './env';
 
-let analytics = null;
+const debug = debugLib( '@automattic/vip:analytics' );
+
+let analytics: Analytics | null = null;
 
 async function init(): Promise<Analytics> {
 	const uuid = await Token.uuid();
@@ -37,7 +37,7 @@ async function init(): Promise<Analytics> {
 		} ) );
 	}
 
-	return new Analytics( { clients } );
+	return new Analytics( clients );
 }
 
 async function getInstance(): Promise<Analytics> {
@@ -50,33 +50,34 @@ async function getInstance(): Promise<Analytics> {
 	return analytics;
 }
 
-export async function trackEvent( ...args ): Promise<any> {
+export async function trackEvent( name: string, props: Record<string, unknown> = {} ): Promise<(false | Response)[]> {
 	try {
 		await Token.uuid();
 		const client = await getInstance();
-		return await client.trackEvent( ...args );
+		return await client.trackEvent( name, props );
 	} catch ( err ) {
 		debug( 'trackEvent() failed', err );
+		return [];
 	}
 }
 
-export async function aliasUser( vipUserId ): Promise<void> {
-	try {
-		if ( vipUserId ) {
+export async function aliasUser( vipUserId: number ): Promise<void> {
+	if ( vipUserId ) {
+		try {
 			await trackEvent( '_alias_user', { ui: vipUserId, _ut: config.tracksUserType, anonid: await Token.uuid() } );
-			await Token.setUuid( vipUserId );
+			await Token.setUuid( `${ vipUserId }` );
+		} catch ( err ) {
+			debug( 'aliasUser() failed', err );
 		}
-	} catch ( err ) {
-		debug( 'aliasUser() failed', err );
 	}
 }
 
-export async function trackEventWithEnv( appId, envId, eventName, eventProps = {} ): Promise<Response> {
+export function trackEventWithEnv( appId: string | number, envId: string | number, eventName: string, eventProps: Record<string, unknown> = {} ): Promise<false | unknown[]> {
 	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
 }
 
-export function makeCommandTracker( command, trackingInfo = {} ) {
-	const trackerFn = async ( type, data = {} ) => {
+export function makeCommandTracker( command: string, trackingInfo: Record<string, unknown> = {} ): (type: string, data?: Record<string, unknown>) => Promise<void> {
+	const trackerFn = async ( type: string, data: Record<string, unknown> = {} ) => {
 		await trackEvent( `${ command }_command_${ type }`, { ...trackingInfo, ...data } );
 	};
 

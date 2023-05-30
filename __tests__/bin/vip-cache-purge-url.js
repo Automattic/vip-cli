@@ -25,7 +25,7 @@ jest.mock( 'lib/api/cache-purge', () => ( {
 	purgeCache: jest.fn(),
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 

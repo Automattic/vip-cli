@@ -14,6 +14,7 @@ import command from '../../src/lib/cli/command';
 import { setEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
 import { readVariableFromFile } from '../../src/lib/envvar/read-file';
+// $FlowExpectedError[cannot-resolve-module]
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -63,7 +64,7 @@ jest.mock( 'lib/envvar/read-file', () => ( {
 	readVariableFromFile: jest.fn(),
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
