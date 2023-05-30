@@ -38,7 +38,6 @@ import { fileLineValidations } from '../lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
-import { rollbar } from '../lib/rollbar';
 
 export type WPSiteListType = {
 	id: string,
@@ -486,8 +485,6 @@ Processing the SQL import for your environment...
 			setProgressTrackerPrefixAndSuffix();
 			progressTracker.stopPrinting();
 			progressTracker.print( { clearAfter: true } );
-
-			rollbar.error( failureError );
 
 			exit.withError( failureError );
 		};

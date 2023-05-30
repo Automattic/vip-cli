@@ -28,4 +28,5 @@ command( {
 	.command( 'import', 'Import data into a local WordPress environment' )
 	.command( 'shell', 'Spawns a shell in a dev environment' )
 	.command( 'logs', 'View logs from a local WordPress environment' )
+	.command( 'sync', 'Pull data from production to local development environment' )
 	.argv( process.argv );

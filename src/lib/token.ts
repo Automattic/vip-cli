@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -16,15 +14,21 @@ import {
 	PRODUCTION_API_HOST,
 } from './api';
 
+interface Payload {
+	id?: number;
+	iat?: number;
+	exp?: number;
+}
+
 // Config
 export const SERVICE = 'vip-go-cli';
 export default class Token {
-	raw: string;
-	id: number;
-	iat: Date;
-	exp: Date;
+	private _raw?: string;
+	private _id?: number;
+	private iat?: Date;
+	private exp?: Date;
 
-	constructor( token: string ): void {
+	constructor( token: string ) {
 		if ( ! token ) {
 			return;
 		}
@@ -34,11 +38,11 @@ export default class Token {
 			return;
 		}
 
-		const decodedToken = jwtDecode( token );
-		this.raw = token;
+		const decodedToken = jwtDecode<Payload>( token );
+		this._raw = token;
 
 		if ( decodedToken.id ) {
-			this.id = decodedToken.id;
+			this._id = decodedToken.id;
 		}
 
 		if ( decodedToken.iat ) {
@@ -51,7 +55,7 @@ export default class Token {
 	}
 
 	valid(): boolean {
-		if ( ! this.id ) {
+		if ( ! this._id ) {
 			return false;
 		}
 
@@ -76,7 +80,15 @@ export default class Token {
 		return now > this.exp;
 	}
 
-	static async uuid(): string {
+	get id(): number {
+		return this._id ?? NaN;
+	}
+
+	get raw(): string {
+		return this._raw ?? '';
+	}
+
+	static async uuid(): Promise<string> {
 		const service = Token.getServiceName( '-uuid' );
 
 		let _uuid = await keychain.getPassword( service );
@@ -88,12 +100,12 @@ export default class Token {
 		return _uuid;
 	}
 
-	static async setUuid( _uuid: string ) {
+	static async setUuid( _uuid: string ): Promise<void> {
 		const service = Token.getServiceName( '-uuid' );
 		await keychain.setPassword( service, _uuid );
 	}
 
-	static async set( token: string ): Promise<boolean> {
+	static set( token: string ): Promise<boolean> {
 		const service = Token.getServiceName();
 
 		return keychain.setPassword( service, token );
@@ -102,11 +114,11 @@ export default class Token {
 	static async get(): Promise<Token> {
 		const service = Token.getServiceName();
 
-		const token = await keychain.getPassword( service );
+		const token = await keychain.getPassword( service ) ?? '';
 		return new Token( token );
 	}
 
-	static async purge(): Promise<boolean> {
+	static purge(): Promise<boolean> {
 		const service = Token.getServiceName();
 
 		return keychain.deletePassword( service );

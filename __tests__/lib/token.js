@@ -23,12 +23,7 @@ describe( 'token tests', () => {
 		// eslint-disable-next-line max-len
 		const rawToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImp0aSI6IjRhM2RmYjE5LTBhMWQtNDE3YS05ODM2LTdjZWIwZTBkM2Q4NSIsImlhdCI6MTUxNjEyMzU1NywiZXhwIjoxNTE2MTI3zM4fQ.atx1YhxB6SQoW99aL97tXNlyJlXWEPZ3Cf1zyfxizvs';
 		let token;
-		try {
-			token = new Token( rawToken );
-		} catch ( err ) {
-			// Do nothing
-		}
-
+		expect( () => { token = new Token( rawToken ); } ).toThrow();
 		expect( token ).toBeUndefined();
 	} );
 

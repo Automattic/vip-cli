@@ -16,7 +16,6 @@ import chalk from 'chalk';
 import command from '../lib/cli/command';
 import { appQuery, getEnvVar } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
-import { rollbar } from '../lib/rollbar';
 import { trackEvent } from '../lib/tracker';
 
 const baseUsage = 'vip @mysite.develop config envvar get';
@@ -29,7 +28,7 @@ const examples = [
 	},
 ];
 
-export async function getEnvVarCommand( arg: string[], opt ): void {
+export async function getEnvVarCommand( arg: string[], opt ): Promise<void> {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 
@@ -46,7 +45,6 @@ export async function getEnvVarCommand( arg: string[], opt ): void {
 
 	const envvar = await getEnvVar( opt.app.id, opt.env.id, name )
 		.catch( async err => {
-			rollbar.error( err );
 			await trackEvent( 'envvar_get_query_error', { ...trackingParams, error: err.message } );
 
 			throw err;

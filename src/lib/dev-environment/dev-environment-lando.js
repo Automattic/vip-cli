@@ -200,7 +200,7 @@ export async function bootstrapLando(): Promise<Lando> {
 
 			if ( pull || ! instanceData.pullAfter ) {
 				instanceData.pullAfter = Date.now() + ( 7 * 24 * 60 * 60 * 1000 );
-				writeEnvironmentData( data.name, instanceData );
+				await writeEnvironmentData( data.name, instanceData );
 			}
 		} );
 
@@ -283,7 +283,7 @@ async function getBridgeNetwork( lando: Lando ) {
 
 async function cleanUpLandoProxy( lando: Lando ): Promise<void> {
 	const network = await getBridgeNetwork( lando );
-	if ( network && network.Containers && ! Object.keys( network.Containers ).length ) {
+	if ( network?.Containers && ! Object.keys( network.Containers ).length ) {
 		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer );
 		try {
 			await proxy.remove( { force: true } );

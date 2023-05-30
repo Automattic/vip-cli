@@ -18,7 +18,6 @@ import { appQuery, setEnvVar, validateNameWithMessage } from '../lib/envvar/api'
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { readVariableFromFile } from '../lib/envvar/read-file';
-import { rollbar } from '../lib/rollbar';
 import { trackEvent } from '../lib/tracker';
 
 const baseUsage = 'vip @mysite.develop config envvar set';
@@ -92,7 +91,6 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 
 	await setEnvVar( opt.app.id, opt.env.id, name, value )
 		.catch( async err => {
-			rollbar.error( err );
 			await trackEvent( 'envvar_set_mutation_error', { ...trackingParams, error: err.message } );
 
 			throw err;

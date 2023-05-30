@@ -22,7 +22,6 @@ import { formatEnvironment, requoteArgs } from '../lib/cli/format';
 import { confirm } from '../lib/cli/prompt';
 import { trackEvent } from '../lib/tracker';
 import Token from '../lib/token';
-import { rollbar } from '../lib/rollbar';
 import { createProxyAgent } from '../lib/http/proxy-agent';
 
 const debug = debugLib( '@automattic/vip:wp' );
@@ -173,7 +172,6 @@ const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 
 
 	IOStream( socket ).on( 'error', err => {
 		// This returns the error so it can be catched by the socket.on('error')
-		rollbar.error( err );
 		return err;
 	} );
 
@@ -183,7 +181,6 @@ const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 
 			return;
 		}
 
-		rollbar.error( err );
 		console.log( err );
 	} );
 
@@ -198,12 +195,11 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 
 	currentJob.socket.io.on( 'reconnect', async () => {
 		debug( 'socket.io: reconnect' );
-		rollbar.info( 'WP-CLI socket.io.on( \'reconnect\' )', { custom: { code: 'wp-cli-on-reconnect', commandGuid: cliCommand.guid } } );
 
 		// Close old streams
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
-		trackEvent( 'wpcli_command_reconnect', commonTrackingParams );
+		trackEvent( 'wpcli_command_reconnect', commonTrackingParams ).catch( () => {});
 
 		currentJob = await launchCommandAndGetStreams( {
 			socket: currentJob.socket,
@@ -225,7 +221,6 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 
 	currentJob.socket.on( 'retry', async () => {
 		debug( 'socket: retry' );
-		rollbar.info( 'WP-CLI socket.io.on( \'retry\' )', { custom: { code: 'wp-cli-on-retry', commandGuid: cliCommand.guid } } );
 
 		setTimeout( () => {
 			currentJob.socket.io.engine.close();
@@ -234,7 +229,6 @@ const bindReconnectEvents = ( { cliCommand, inputToken, subShellRl, commonTracki
 
 	currentJob.socket.on( 'connect_error', () => {
 		debug( 'socket: connect_error; forcing the preference for websocket' );
-		rollbar.info( 'WP-CLI socket.on( \'connect_error\' )', { custom: { code: 'wp-cli-on-connect_error', commandGuid: cliCommand.guid } } );
 
 		// Force the preference for WebSocket in case we see an error during connection
 		// https://socket.io/docs/v3/client-initialization/#low-level-engine-options
@@ -301,7 +295,7 @@ commandWrapper( {
 		};
 		/* eslint-enable camelcase */
 
-		trackEvent( 'wpcli_command_execute', commonTrackingParams );
+		trackEvent( 'wpcli_command_execute', commonTrackingParams ).catch( () => {} );
 
 		if ( isSubShell ) {
 			// Reset the cursor (can get messed up with enquirer)
@@ -316,7 +310,7 @@ commandWrapper( {
 			], `Are you sure you want to run this command on ${ formatEnvironment( envName ) } for site ${ appName }?` );
 
 			if ( ! yes ) {
-				trackEvent( 'wpcli_confirm_cancel', commonTrackingParams );
+				trackEvent( 'wpcli_confirm_cancel', commonTrackingParams ).catch( () => {} );
 
 				console.log( 'Command cancelled' );
 				process.exit();
@@ -396,7 +390,6 @@ commandWrapper( {
 					} );
 				} else {
 					// Else, other type of error, just dump it
-					rollbar.error( error );
 					console.log( error );
 				}
 
@@ -410,10 +403,6 @@ commandWrapper( {
 			}
 
 			const { data: { triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken } } } = result;
-
-			if ( line.includes( "'" ) ) {
-				rollbar.info( 'WP-CLI Command containing single quotes', { custom: { code: 'wp-cli-single-quotes', commandGuid: cliCommand.guid } } );
-			}
 
 			const token = await Token.get();
 			const extraHeaders = {
@@ -451,7 +440,7 @@ commandWrapper( {
 		process.stdin.on( 'data', data => {
 			// only run this in interactive mode for prompts from WP commands
 			if ( commandRunning && 0 === Buffer.compare( data, Buffer.from( '\r' ) ) ) {
-				if ( currentJob && currentJob.stdinStream ) {
+				if ( currentJob?.stdinStream ) {
 					currentJob.stdinStream.write( '\n' );
 				}
 			}
@@ -467,7 +456,7 @@ commandWrapper( {
 			// write out CTRL-C/SIGINT
 			process.stdin.write( cancelCommandChar );
 
-			if ( currentJob && currentJob.stdoutStream ) {
+			if ( currentJob?.stdoutStream ) {
 				currentJob.stdoutStream.end();
 			}
 

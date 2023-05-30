@@ -18,9 +18,9 @@ command( {
 	.example( 'vip import validate-sql <file>', 'Run the import validation against file' )
 	.argv( process.argv, async arg => {
 		const filename = arg[ 0 ];
-		if ( ! arg && ! filename ) {
+		if ( ! filename ) {
 			exit.withError( 'You must pass in a filename' );
 		}
 
-		validate( filename );
+		await validate( filename );
 	} );

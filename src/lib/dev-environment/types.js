@@ -1,7 +1,7 @@
 // @flow
 export interface InstanceOptions {
 	title?: string;
-	multisite?: boolean;
+	multisite?: boolean | 'subdomain' | 'subdirectory';
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
@@ -58,7 +58,7 @@ export type ConfigurationFileOptions = {
 	version?: string;
 	slug?: string;
 	title?: string;
-	multisite?: boolean;
+	multisite?: boolean | 'subdomain' | 'subdirectory';
 	php?: string;
 	wordpress?: string;
 	'mu-plugins'?: string;
@@ -75,7 +75,7 @@ export type ConfigurationFileOptions = {
 export interface InstanceData {
 	siteSlug: string;
 	wpTitle: string;
-	multisite: boolean;
+	multisite: boolean | 'subdomain' | 'subdirectory';
 	wordpress: WordPressConfig;
 	muPlugins: ComponentConfig;
 	appCode: ComponentConfig;

@@ -255,7 +255,7 @@ export interface UpdatePromptOptions {
 	force?: boolean,
 }
 
-export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOptions, softwareSettings ): UpdateData => {
+export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOptions, softwareSettings ): Promise<UpdateData> => {
 	const component = await _processComponent( appTypeId, opts.component );
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
@@ -315,11 +315,11 @@ const _getCompletedJob = async ( appId: number, envId: number ) => {
 };
 
 interface UpdateResult {
-	ok: boolean,
-	errorMessage: string,
+	ok: boolean;
+	errorMessage?: string;
 }
 
-export const getUpdateResult = async ( appId: number, envId: number ): UpdateResult => {
+export const getUpdateResult = async ( appId: number, envId: number ): Promise<UpdateResult> => {
 	debug( 'Getting update result', { appId, envId } );
 
 	const completedJob = await _getCompletedJob( appId, envId );

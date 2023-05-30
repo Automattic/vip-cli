@@ -47,7 +47,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 				chalk.red( 'Unauthorized:' ),
 				'You are unauthorized to perform this request, please logout with `vip logout` then try again.'
 			);
-			process.exit();
+			process.exit( 1 );
 		}
 
 		if ( graphQLErrors && graphQLErrors.length && globalGraphQLErrorHandlingEnabled ) {
@@ -56,7 +56,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 			} );
 
 			if ( exitOnError ) {
-				process.exit();
+				process.exit( 1 );
 			}
 		}
 	} );

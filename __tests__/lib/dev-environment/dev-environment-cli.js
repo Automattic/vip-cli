@@ -1,7 +1,5 @@
 /* eslint-disable jest/no-conditional-expect */
-/**
- * @format
- */
+// @format
 
 /**
  * External dependencies
@@ -10,10 +8,10 @@ import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
 import os from 'os';
+
 /**
  * Internal dependencies
  */
-
 import {
 	getEnvironmentName,
 	getEnvironmentStartCommand,
@@ -23,9 +21,11 @@ import {
 	promptForArguments,
 	setIsTTY,
 	processVersionOption,
+	resolvePhpVersion,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
+import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -370,13 +370,14 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 		] )( 'should handle title', async input => {
 			prompt.mockResolvedValue( { input: input.default.title } );
+			selectRunMock.mockResolvedValue( '' );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( input.preselected.title ) {
-				expect( prompt ).toHaveBeenCalledTimes( 0 );
-			} else {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
+			} else {
+				expect( prompt ).toHaveBeenCalledTimes( 2 );
 
 				const calledWith = prompt.mock.calls[ 0 ][ 0 ];
 				expect( prompt ).toHaveBeenCalledWith( {
@@ -394,7 +395,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					title: 'a',
 					wordpress: testReleaseWP,
-					multisite: true,
+					multisite: 'subdomain',
 				},
 				default: {
 				},
@@ -414,7 +415,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					wordpress: testReleaseWP,
 				},
 				default: {
-					multisite: true,
+					multisite: false,
 				},
 			},
 			{
@@ -423,18 +424,28 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					wordpress: testReleaseWP,
 				},
 				default: {
-					multisite: false,
+					multisite: 'subdirectory',
+				},
+			},
+			{
+				preselected: {
+					title: 'a',
+					wordpress: testReleaseWP,
+				},
+				default: {
+					multisite: true,
 				},
 			},
 		] )( 'should handle multisite', async input => {
 			confirmRunMock.mockResolvedValue( input.default.multisite );
+			selectRunMock.mockResolvedValue( '' );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( 'multisite' in input.preselected ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
+				expect( prompt ).toHaveBeenCalledTimes( 0 );
 			} else {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
+				expect( prompt ).toHaveBeenCalledTimes( 1 );
 			}
 
 			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
@@ -465,6 +476,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			},
 		] )( 'should handle media redirect query', async input => {
 			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
+			selectRunMock.mockResolvedValue( '' );
 
 			const result = await promptForArguments( input.preselected, input.default );
 
@@ -499,6 +511,8 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				},
 			},
 		] )( 'should handle mariadb', async input => {
+			selectRunMock.mockResolvedValue( '' );
+
 			const result = await promptForArguments( input.preselected, input.default );
 
 			const expectedMaria = input.preselected.mariadb ? input.preselected.mariadb : input.default.mariadb;
@@ -538,4 +552,18 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			expect( version ).toStrictEqual( input.expected.wp );
 		} );
 	} );
+
+	describe( 'resolvePhpVersion', () => {
+		it.each( [
+			[ '7.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
+			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ] ],
+			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
+			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
+			[ 'image:php:8.0', 'image:php:8.0' ],
+			[ 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0', 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0' ]
+		] )( 'should process versions correctly', async ( input, expected ) => {
+			const actual = resolvePhpVersion( input );
+			expect( actual ).toStrictEqual( expected );
+		} );
+	} )
 } );

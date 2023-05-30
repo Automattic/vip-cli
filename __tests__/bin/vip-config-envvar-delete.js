@@ -13,7 +13,6 @@ import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
 import command from '../../src/lib/cli/command';
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
-import { rollbar } from '../../src/lib/rollbar';
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -21,7 +20,6 @@ function mockExit() {
 }
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-jest.spyOn( rollbar, 'error' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
 interface CommandMockType {
@@ -122,7 +120,6 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully deleted environment variable' ) );
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'skips confirmation when --skip-confirmation is set', async () => {
@@ -140,7 +137,6 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
 		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully deleted environment variable' ) );
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'cancels when user does not confirm', async () => {
@@ -159,7 +155,6 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( cancel ).toHaveBeenCalled();
 		expect( deleteEnvVar ).not.toHaveBeenCalled();
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, cancelEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'rejects an invalid name and exits', async () => {
@@ -179,7 +174,6 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( deleteEnvVar ).not.toHaveBeenCalled();
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
-		expect( rollbar.error ).not.toHaveBeenCalled();
 	} );
 
 	it( 'rethrows error thrown from deleteEnvVar', async () => {
@@ -198,6 +192,5 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( confirm ).toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
-		expect( rollbar.error ).toHaveBeenCalledWith( thrownError );
 	} );
 } );
