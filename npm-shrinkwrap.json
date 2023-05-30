@@ -28,7 +28,7 @@
         "ini": "2.0.0",
         "js-yaml": "^4.1.0",
         "json2csv": "5.0.7",
-        "jwt-decode": "2.2.0",
+        "jwt-decode": "3.1.2",
         "lando": "github:automattic/lando-cli.git#d58d9b3",
         "node-fetch": "^2.6.1",
         "opn": "5.5.0",
@@ -112,7 +112,6 @@
         "@types/ejs": "^3.1.2",
         "@types/js-yaml": "^4.0.5",
         "@types/json2csv": "5.0.3",
-        "@types/jwt-decode": "2.2.0",
         "@types/node-fetch": "^2.6.4",
         "@types/opn": "5.5.0",
         "@types/proxy-from-env": "^1.0.1",
@@ -3600,12 +3599,6 @@
       "version": "0.0.29",
       "resolved": "https://registry.npmjs.org/@types/json5/-/json5-0.0.29.tgz",
       "integrity": "sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==",
-      "dev": true
-    },
-    "node_modules/@types/jwt-decode": {
-      "version": "2.2.0",
-      "resolved": "https://registry.npmjs.org/@types/jwt-decode/-/jwt-decode-2.2.0.tgz",
-      "integrity": "sha512-iY8jTNNQtU+6msAbBP3KyiYvdWcT4oGBJJCKq5VTjMZDkhcz1PzXnbCYG/W/O6ntIm3IgbfBbFZj17FKh3pK7A==",
       "dev": true
     },
     "node_modules/@types/minimatch": {
@@ -11274,9 +11267,9 @@
       }
     },
     "node_modules/jwt-decode": {
-      "version": "2.2.0",
-      "resolved": "https://registry.npmjs.org/jwt-decode/-/jwt-decode-2.2.0.tgz",
-      "integrity": "sha1-fYa9VmefWM5qhHBKZX3TkruoGnk="
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/jwt-decode/-/jwt-decode-3.1.2.tgz",
+      "integrity": "sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A=="
     },
     "node_modules/keytar": {
       "version": "7.7.0",
@@ -18349,12 +18342,6 @@
       "integrity": "sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==",
       "dev": true
     },
-    "@types/jwt-decode": {
-      "version": "2.2.0",
-      "resolved": "https://registry.npmjs.org/@types/jwt-decode/-/jwt-decode-2.2.0.tgz",
-      "integrity": "sha512-iY8jTNNQtU+6msAbBP3KyiYvdWcT4oGBJJCKq5VTjMZDkhcz1PzXnbCYG/W/O6ntIm3IgbfBbFZj17FKh3pK7A==",
-      "dev": true
-    },
     "@types/minimatch": {
       "version": "5.1.2",
       "resolved": "https://registry.npmjs.org/@types/minimatch/-/minimatch-5.1.2.tgz",
@@ -24111,9 +24098,9 @@
       }
     },
     "jwt-decode": {
-      "version": "2.2.0",
-      "resolved": "https://registry.npmjs.org/jwt-decode/-/jwt-decode-2.2.0.tgz",
-      "integrity": "sha1-fYa9VmefWM5qhHBKZX3TkruoGnk="
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/jwt-decode/-/jwt-decode-3.1.2.tgz",
+      "integrity": "sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A=="
     },
     "keytar": {
       "version": "7.7.0",

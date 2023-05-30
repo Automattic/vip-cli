@@ -1,22 +1,24 @@
-/* global window */
 /**
  * External dependencies
  */
-const debug = require( 'debug' )( '@automattic/vip:keychain' );
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
 import Insecure from './keychain/insecure';
 import Browser from './keychain/browser';
+import type { Keychain } from './keychain/keychain';
 
-let exportValue = {};
+let exportValue: Keychain;
 if ( typeof window === 'undefined' || typeof window.localStorage === 'undefined' ) {
 	// node
 
+	const debug = debugLib( '@automattic/vip:keychain' );
+
 	try {
 		// Try using Secure keychain ("keytar") first
-		const Secure = require( './keychain/secure' );
+		const Secure = require( './keychain/secure' ) as Keychain & (new() => Keychain);
 		exportValue = new Secure();
 	} catch ( error ) {
 		debug( 'Cannot use Secure keychain; falling back to Insecure keychain (Details: %o)', error );
