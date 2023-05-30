@@ -63,7 +63,7 @@ const queryMock = jest.fn().mockImplementation( () => {
 	};
 } );
 
-jest.mock( 'lib/api', () => jest.fn() );
+jest.mock( '../../src/lib/api', () => jest.fn() );
 API.mockImplementation( () => {
 	return {
 		query: queryMock,

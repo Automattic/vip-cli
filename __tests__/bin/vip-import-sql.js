@@ -11,7 +11,7 @@ import * as exit from '../../src/lib/cli/exit';
 jest.mock( '../../src/lib/tracker' );
 jest.mock( 'lib/validations/site-type' );
 jest.mock( 'lib/validations/is-multi-site' );
-jest.mock( 'lib/api/feature-flags' );
+jest.mock( '../../src/lib/api/feature-flags' );
 jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' );
 
