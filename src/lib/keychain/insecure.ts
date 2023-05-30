@@ -21,8 +21,12 @@ export default class Insecure implements Keychain {
 	getPassword( service: string ): Promise<string | null> {
 		try {
 			const value: unknown = this.configstore.get( service );
+			if ( null === value || undefined === value ) {
+				return Promise.resolve( null );
+			}
+
 			// eslint-disable-next-line @typescript-eslint/no-base-to-string
-			return Promise.resolve( null === value || undefined === value ? null : value.toString() ); // NOSONAR
+			return Promise.resolve( value.toString() ); // NOSONAR
 		} catch ( err ) {
 			return Promise.reject( err );
 		}
