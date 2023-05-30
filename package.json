@@ -54,7 +54,7 @@
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
-    "test": "npm run lint && npm run flow && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
+    "test": "npm run lint && npm run flow && npm run check-types && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
     "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
     "clean": "rimraf dist",
     "prepare": "npm run clean && npm run build",
