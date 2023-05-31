@@ -66,6 +66,8 @@ replace.mockResolvedValue( mockReadStream );
 unzipFile.mockResolvedValue();
 getReadInterface.mockReturnValue( getMockStream( [ { name: 'close' } ] ), 100 );
 
+jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+
 describe( 'commands/DevEnvSyncSQLCommand', () => {
 	const app = { id: 123, name: 'test-app' };
 	const env = { id: 456, name: 'test-env' };

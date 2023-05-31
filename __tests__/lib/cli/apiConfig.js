@@ -5,6 +5,7 @@
 /**
  * External dependencies
  */
+import { describe, it, expect, jest } from '@jest/globals';
 
 /**
  * Internal dependencies
@@ -15,6 +16,9 @@ import Token from '../../../src/lib/token';
 
 jest.mock( '../../../src/lib/tracker' );
 const getFeatureSpy = jest.spyOn( featureFlags, 'get' );
+
+jest.spyOn( console, 'error' ).mockImplementation( () => {} );
+jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
 describe( 'apiConfig', () => {
 	beforeEach( () => {

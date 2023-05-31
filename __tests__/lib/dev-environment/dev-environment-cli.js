@@ -27,6 +27,8 @@ import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-co
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
 
+jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
 	const SelectClass = class {};
