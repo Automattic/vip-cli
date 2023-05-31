@@ -1,4 +1,3 @@
-// @flow
 // @format
 
 /**
@@ -24,23 +23,23 @@ export async function checkFeatureEnabled(
 	let isVIP;
 	try {
 		const res = await featureFlags.get();
-		if ( res?.data?.me?.isVIP !== undefined ) {
+		if ( res?.data.me?.isVIP !== undefined ) {
 			isVIP = res.data.me.isVIP;
 		} else {
 			isVIP = false;
 		}
 	} catch ( err ) {
-		const message = err.toString();
+		const message = ( err as Error ).toString();
 		await trackEvent( 'checkFeatureEnabled_fetch_error', {
 			featureName,
 			exitOnFalse,
 			error: message,
 		} );
 
-		exit.withError( 'Failed to determine if feature is enabled' + message );
+		exit.withError( `Failed to determine if feature is enabled: ${ message }` );
 	}
 
-	if ( exitOnFalse === true && isVIP === false ) {
+	if ( exitOnFalse && isVIP === false ) {
 		exit.withError( 'The feature you are attempting to use is not currently enabled.' );
 	}
 
@@ -53,10 +52,10 @@ export async function checkFeatureEnabled(
 export async function checkIfUserIsVip() {
 	const token = await Token.get();
 
-	if ( token && token.valid() ) {
+	if ( token.valid() ) {
 		const res = await featureFlags.get();
 
-		return !! res?.data?.me?.isVIP;
+		return !! res?.data.me?.isVIP;
 	}
 
 	return false;

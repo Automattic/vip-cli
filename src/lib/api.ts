@@ -1,12 +1,9 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
  */
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
+import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client/core';
 import { ApolloLink } from '@apollo/client/link/core';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
@@ -18,31 +15,33 @@ import chalk from 'chalk';
 import Token from './token';
 import env from './env';
 import { createProxyAgent } from '../lib/http/proxy-agent';
+import http from './api/http';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
-export const API_HOST = ( process.env.API_HOST || PRODUCTION_API_HOST: string );
+// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+export const API_HOST = ( process.env.API_HOST || PRODUCTION_API_HOST ); // NOSONAR
 export const API_URL = `${ API_HOST }/graphql`;
 
 let globalGraphQLErrorHandlingEnabled = true;
 
-export function disableGlobalGraphQLErrorHandling() {
+export function disableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = false;
 }
 
-export function enableGlobalGraphQLErrorHandling() {
+export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
-export default async function API( { exitOnError = true } = {} ): Promise<ApolloClient> {
+export default async function API( { exitOnError = true } = {} ): Promise<ApolloClient<NormalizedCacheObject>> {
 	const authToken = await Token.get();
 	const headers = {
 		'User-Agent': env.userAgent,
-		Authorization: authToken ? `Bearer ${ authToken.raw }` : null,
+		Authorization: `Bearer ${ authToken.raw }`,
 	};
 
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
-		if ( networkError && networkError.statusCode === 401 ) {
+		if ( networkError && 'statusCode' in networkError && networkError.statusCode === 401 ) {
 			console.error(
 				chalk.red( 'Unauthorized:' ),
 				'You are unauthorized to perform this request, please logout with `vip logout` then try again.'
@@ -50,7 +49,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 			process.exit( 1 );
 		}
 
-		if ( graphQLErrors && graphQLErrors.length && globalGraphQLErrorHandlingEnabled ) {
+		if ( graphQLErrors?.length && globalGraphQLErrorHandlingEnabled ) {
 			graphQLErrors.forEach( error => {
 				console.error( chalk.red( 'Error:' ), error.message );
 			} );
@@ -61,18 +60,19 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		}
 	} );
 
-	const withToken = setContext( async () => {
+	const withToken = setContext( async () : Promise<{ token: Token }> => {
 		const token = await Token.get();
 
 		return { token };
 	} );
 
 	const authLink = new ApolloLink( ( operation, forward ) => {
-		const { token } = operation.getContext();
+		const ctx = operation.getContext();
+		const token = ctx.token as Token;
 
 		operation.setContext( {
 			headers: {
-				Authorization: token ? `Bearer ${ token.raw }` : null,
+				Authorization: `Bearer ${ token.raw }`,
 			},
 		} );
 
@@ -80,8 +80,6 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 	} );
 
 	const proxyAgent = createProxyAgent( API_URL );
-
-	const http = require( './api/http' ).default;
 
 	const httpLink = new HttpLink( {
 		uri: API_URL,
@@ -92,7 +90,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		},
 	} );
 
-	return new ApolloClient( {
+	return new ApolloClient<NormalizedCacheObject>( {
 		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
 		cache: new InMemoryCache( {
 			typePolicies: {

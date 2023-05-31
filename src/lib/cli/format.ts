@@ -1,36 +1,45 @@
-/** @format */
-// @flow
+// @format
+
 /**
  * External dependencies
  */
 import chalk from 'chalk';
+import { Parser } from 'json2csv';
+import Table from 'cli-table';
 
-export type Tuple = {
+export interface Tuple {
 	key: string,
 	value: string,
+}
+
+type Stringable = string | {
+    toString: () => string;
 };
 
-export function formatData( data: Array<any>, format: string ): string {
-	if ( ! data || ! data.length ) {
+export function formatData( data: Tuple[], format: 'keyValue' ): string;
+export function formatData( data: Record<string, Stringable>[], format: 'table' ): string;
+export function formatData( data: Record<string, unknown>[], format: 'ids' | 'json' | 'csv' ): string;
+export function formatData( data: Record<string, unknown>[] | Tuple[], format: 'keyValue' | 'ids' | 'json' | 'csv' | 'table' ): string {
+	if ( ! data.length ) {
 		return '';
 	}
 
 	switch ( format ) {
 		case 'ids':
-			return ids( data );
+			return ids( data as Record<string, unknown>[] );
 
 		case 'json':
 			return JSON.stringify( data, null, '\t' );
 
 		case 'csv':
-			return csv( data );
+			return csv( data as Record<string, unknown>[] );
 
 		case 'keyValue':
-			return keyValue( data );
+			return keyValue( data as Tuple[] );
 
 		case 'table':
 		default:
-			return table( data );
+			return table( data as Record<string, Stringable>[] );
 	}
 }
 
@@ -42,20 +51,17 @@ export function formatEnvironment( environment: string ): string {
 	return chalk.blueBright( environment.toLowerCase() );
 }
 
-function ids( data: Array<any> ): string {
+function ids( data: Record<string, unknown>[] ): string {
 	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );
 	if ( 0 > fields.indexOf( 'id' ) ) {
 		return 'No ID field found';
 	}
 
-	const id = [];
-	data.forEach( datum => id.push( datum.id ) );
-
+	const id = data.map( datum => datum.id );
 	return id.join( ' ' );
 }
 
-function csv( data: Array<any> ): string {
-	const { Parser } = require( 'json2csv' );
+function csv( data: Record<string, unknown>[] ): string {
 	const fields = Object.keys( data[ 0 ] );
 
 	const parser = new Parser( { fields: formatFields( fields ) } );
@@ -63,8 +69,7 @@ function csv( data: Array<any> ): string {
 	return parser.parse( data );
 }
 
-export function table( data: Array<any> ): string {
-	const Table = require( 'cli-table' );
+export function table( data: Record<string, Stringable>[] ): string {
 	const fields = Object.keys( data[ 0 ] );
 	const dataTable = new Table( {
 		head: formatFields( fields ),
@@ -74,15 +79,14 @@ export function table( data: Array<any> ): string {
 	} );
 
 	data.forEach( datum => {
-		const row = [];
-		fields.forEach( field => row.push( datum[ field ] ) );
+		const row = fields.map( field => datum[ field ].toString() );
 		dataTable.push( row );
 	} );
 
 	return dataTable.toString();
 }
 
-function formatFields( fields: Array<string> ) {
+function formatFields( fields: string[] ) {
 	return fields.map( field => {
 		return field
 			.split( /(?=[A-Z])/ )
@@ -91,7 +95,7 @@ function formatFields( fields: Array<string> ) {
 	} );
 }
 
-export function keyValue( values: Array<Tuple> ): string {
+export function keyValue( values: Tuple[] ): string {
 	const lines = [];
 	const pairs = values.length > 0;
 
@@ -100,11 +104,15 @@ export function keyValue( values: Array<Tuple> ): string {
 	}
 
 	for ( const { key, value } of values ) {
-		let formattedValue = value;
+		let formattedValue: string;
 
-		switch ( key.toLowerCase() ) {
+		switch ( key.toLowerCase() ) { // NOSONAR
 			case 'environment':
 				formattedValue = formatEnvironment( value );
+				break;
+
+			default:
+				formattedValue = value;
 				break;
 		}
 
@@ -116,10 +124,10 @@ export function keyValue( values: Array<Tuple> ): string {
 	return lines.join( '\n' );
 }
 
-export function requoteArgs( args: Array<string> ): Array<string> {
+export function requoteArgs( args: string[] ): string[] {
 	return args.map( arg => {
 		if ( arg.includes( '--' ) && arg.includes( '=' ) && arg.includes( ' ' ) ) {
-			return arg.replace( /^--(.*)=(.*)$/, '--$1="$2"' );
+			return arg.replace( /^--([^=]*)=(.*)$/, '--$1="$2"' );
 		}
 
 		if ( arg.includes( ' ' ) && ! isJsonObject( arg ) ) {
@@ -130,23 +138,24 @@ export function requoteArgs( args: Array<string> ): Array<string> {
 	} );
 }
 
-export function isJsonObject( str: string ): boolean {
+export function isJsonObject( str: unknown ): boolean {
 	return typeof str === 'string' && str.trim().startsWith( '{' ) && isJson( str );
 }
 
 export function isJson( str: string ): boolean {
 	try {
 		JSON.parse( str );
+		return true;
 	} catch ( error ) {
 		return false;
 	}
-	return true;
 }
 
-export function capitalize( str: string ): string {
+export function capitalize( str: unknown ): string {
 	if ( typeof str !== 'string' || ! str.length ) {
 		return '';
 	}
+
 	return str[ 0 ].toUpperCase() + str.slice( 1 );
 }
 
@@ -172,10 +181,8 @@ export class RunningSprite {
 	}
 }
 
-export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
+export function getGlyphForStatus( status: string, runningSprite: RunningSprite ): string {
 	switch ( status ) {
-		default:
-			return '';
 		case 'pending':
 			return '○';
 		case 'running':
@@ -188,27 +195,26 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 			return chalk.yellow( '✕' );
 		case 'skipped':
 			return chalk.green( '-' );
+		default:
+			return '';
 	}
 }
 
 // Format Search and Replace values to output
-export const formatSearchReplaceValues = ( values, message ) => {
+export function formatSearchReplaceValues<T = unknown>( values: string | string[], message: ( from: string, to: string ) => T ): T[] {
 	// Convert single pair S-R values to arrays
 	const searchReplaceValues = typeof values === 'string' ? [ values ] : values;
 
-	const formattedOutput = searchReplaceValues.map( pairs => {
+	return searchReplaceValues.map( pairs => {
 		// Turn each S-R pair into its own array, then trim away whitespace
 		const [ from, to ] = pairs.split( ',' ).map( pair => pair.trim() );
 
-		const output = message( from, to );
-
-		return output;
+		return message( from, to );
 	} );
-	return formattedOutput;
-};
+}
 
 // Format bytes into kilobytes, megabytes, etc based on the size
-export const formatBytes = ( bytes, decimals = 2 ) => {
+export const formatBytes = ( bytes: number, decimals = 2 ): string => {
 	if ( 0 === bytes ) {
 		return '0 Bytes';
 	}
@@ -218,5 +224,5 @@ export const formatBytes = ( bytes, decimals = 2 ) => {
 	const sizes = [ 'bytes', 'KB', 'MB', 'GB', 'TB' ];
 	const idx = Math.floor( Math.log( bytes ) / Math.log( bytesMultiplier ) );
 
-	return parseFloat( ( bytes / Math.pow( bytesMultiplier, idx ) ).toFixed( dm ) ) + ' ' + sizes[ idx ];
+	return `${ parseFloat( ( bytes / Math.pow( bytesMultiplier, idx ) ).toFixed( dm ) ) } ${ sizes[ idx ] }`;
 };
