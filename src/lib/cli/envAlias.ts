@@ -28,7 +28,13 @@ export function parseEnvAlias( alias: string ) {
 	return { app, env };
 }
 
-export function parseEnvAliasFromArgv( processArgv: string[] ) {
+interface ParsedAlias {
+	argv: string[];
+	app?: string;
+	env?: string;
+}
+
+export function parseEnvAliasFromArgv( processArgv: string[] ): ParsedAlias {
 	// Clone to not affect original arvg
 	const argv = processArgv.slice( 0 );
 
