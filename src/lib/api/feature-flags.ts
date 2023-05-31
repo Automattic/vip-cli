@@ -8,6 +8,7 @@ import gql from 'graphql-tag';
  */
 import API from '../../lib/api';
 import { ApolloClient, ApolloQueryResult, NormalizedCacheObject } from '@apollo/client';
+import type { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';
 
 let api: ApolloClient<NormalizedCacheObject>;
 
@@ -25,14 +26,8 @@ const isVipQuery = gql`
 	}
 `;
 
-interface IsVipResponse {
-	me?: {
-		isVIP?: boolean | null;
-	}
-}
-
-export async function get(): Promise<ApolloQueryResult<IsVipResponse> | undefined> {
-	return await api.query<IsVipResponse>( {
+export async function get(): Promise<ApolloQueryResult<IsVipQuery> | undefined> {
+	return await api.query<IsVipQuery, IsVipQueryVariables>( {
 		query: isVipQuery,
 		fetchPolicy: 'cache-first',
 	} );
