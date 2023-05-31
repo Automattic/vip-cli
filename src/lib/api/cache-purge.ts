@@ -1,7 +1,4 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
@@ -12,6 +9,8 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
+import type { PurgePageCacheMutationMutation, PurgePageCacheMutationMutationVariables } from './cache-purge.generated';
+import type { PurgePageCachePayload } from '../../graphqlTypes';
 
 const mutation = gql`
 	mutation PurgePageCacheMutation(
@@ -45,7 +44,7 @@ export const appQuery = `
 	}
 `;
 
-export async function purgeCache( appId: number, envId: number, urls: Array<string> ) {
+export async function purgeCache( appId: number, envId: number, urls: string[] ): Promise<PurgePageCachePayload | null> {
 	const api = await API();
 
 	const variables = {
@@ -54,9 +53,6 @@ export async function purgeCache( appId: number, envId: number, urls: Array<stri
 		urls,
 	};
 
-	const response = await api.mutate( { mutation, variables } );
-
-	const { data: { purgePageCache } } = response;
-
-	return purgePageCache;
+	const response = await api.mutate<PurgePageCacheMutationMutation, PurgePageCacheMutationMutationVariables>( { mutation, variables } );
+	return response.data?.purgePageCache ?? null;
 }
