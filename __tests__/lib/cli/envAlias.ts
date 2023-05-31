@@ -1,13 +1,20 @@
 /* eslint-disable jest/no-conditional-expect */
 /**
+ * External dependencies
+ */
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
+
+/**
  * Internal dependencies
  */
-import envAlias from '../../../src/lib/cli/envAlias';
+import * as envAlias from '../../../src/lib/cli/envAlias';
 
 const parseEnvAliasSpy = jest.spyOn( envAlias, 'parseEnvAlias' );
 
 describe( 'utils/cli/envAlias', () => {
-	afterEach( parseEnvAliasSpy.mockClear );
+	afterEach( () => {
+		parseEnvAliasSpy.mockClear();
+	} );
 
 	describe( 'isAlias()', () => {
 		it.each( [
