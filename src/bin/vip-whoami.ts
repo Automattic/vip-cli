@@ -27,7 +27,7 @@ export async function whoamiCommand() {
 	let currentUser: User;
 	try {
 		currentUser = await getCurrentUserInfo();
-	} catch ( err: any ) {
+	} catch ( err: Error ) {
 		await trackEvent( 'whoami_command_error', { ...trackingParams, error: err.message } );
 
 		exit.withError( `Failed to fetch information about the currently logged-in user error: ${ err.message }` );
