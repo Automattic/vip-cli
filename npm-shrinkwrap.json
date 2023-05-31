@@ -12,7 +12,7 @@
       "dependencies": {
         "@apollo/client": "3.3.6",
         "@automattic/vip-go-preflight-checks": "^2.0.16",
-        "@automattic/vip-search-replace": "^1.0.15",
+        "@automattic/vip-search-replace": "^1.1.0",
         "args": "5.0.3",
         "chalk": "4.1.2",
         "cli-columns": "^4.0.0",
@@ -441,9 +441,9 @@
       }
     },
     "node_modules/@automattic/vip-search-replace": {
-      "version": "1.0.20",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.0.20.tgz",
-      "integrity": "sha512-d3tBS9cBYMR5lKE+Ht4cU40PlRuqCHBS31g6GEQgEHNuPT98nOQAY1xEr9B2hHTO8dzT2AO1Nfhm9ccqji2hSg==",
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.0.tgz",
+      "integrity": "sha512-2jKE5/+b4lVF5pRXmuHcM5bSp14sYsHKHiAcsmcCY5yUM6+EGv6JTnAAxxLwW2SkWrbVACWmzVcz3xkYs4arLg==",
       "cpu": [
         "ia32",
         "x64",
@@ -15465,9 +15465,9 @@
       }
     },
     "@automattic/vip-search-replace": {
-      "version": "1.0.20",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.0.20.tgz",
-      "integrity": "sha512-d3tBS9cBYMR5lKE+Ht4cU40PlRuqCHBS31g6GEQgEHNuPT98nOQAY1xEr9B2hHTO8dzT2AO1Nfhm9ccqji2hSg==",
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.0.tgz",
+      "integrity": "sha512-2jKE5/+b4lVF5pRXmuHcM5bSp14sYsHKHiAcsmcCY5yUM6+EGv6JTnAAxxLwW2SkWrbVACWmzVcz3xkYs4arLg==",
       "requires": {
         "debug": "^4.2.0",
         "follow-redirects": "^1.13.0"
