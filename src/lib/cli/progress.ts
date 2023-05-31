@@ -1,5 +1,4 @@
-// @flow
-/** @format */
+// @format
 
 /**
  * External dependencies
@@ -14,15 +13,24 @@ import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
+interface Step extends Record<string, string> {
+	id: string;
+	name: string;
+}
+
+interface StepFromServer {
+	name: string;
+	status: string;
+}
+
 export class ProgressTracker {
 	hasFailure: boolean;
 	hasPrinted: boolean;
-	initialized: boolean;
-	printInterval: IntervalID;
+	printInterval: NodeJS.Timer | undefined;
 
 	// Track the state of each step
-	stepsFromCaller: Map<string, Object>;
-	stepsFromServer: Map<string, Object>;
+	stepsFromCaller: Map<string, Step>;
+	stepsFromServer: Map<string, Step>;
 
 	// Spinnerz go brrrr
 	runningSprite: RunningSprite;
@@ -33,24 +41,25 @@ export class ProgressTracker {
 	// This gets printed after the step status
 	suffix: string;
 
-	constructor( steps: Object[] ) {
+	constructor( steps: Step[] ) {
 		this.runningSprite = new RunningSprite();
 		this.hasFailure = false;
+		this.hasPrinted = false;
 		this.stepsFromCaller = this.mapSteps( steps );
 		this.stepsFromServer = new Map();
 		this.prefix = '';
 		this.suffix = '';
 	}
 
-	getSteps(): Map<string, Object> {
+	getSteps(): Map<string, Step> {
 		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
 	}
 
-	mapSteps( steps: Object[] ): Map<string, Object> {
+	mapSteps( steps: Step[] ): Map<string, Step> {
 		return steps.reduce( ( map, { id, name, status } ) => {
 			map.set( id, { id, name, status: status || 'pending' } );
 			return map;
-		}, new Map() );
+		}, new Map<string, Step>() );
 	}
 
 	setUploadPercentage( percentage: string ) {
@@ -70,8 +79,8 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( step.id, { ...step, progress } );
 	}
 
-	setStepsFromServer( steps: Object[] ) {
-		const formattedSteps = steps.map( ( { name, status }, index ) => ( {
+	setStepsFromServer( steps: StepFromServer[] ) {
+		const formattedSteps: Step[] = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
 			name,
 			status,
@@ -89,7 +98,7 @@ export class ProgressTracker {
 		this.stepsFromServer = this.mapSteps( formattedSteps );
 	}
 
-	getNextStep() {
+	getNextStep(): Step | undefined {
 		if ( this.allStepsSucceeded() ) {
 			return undefined;
 		}
@@ -97,7 +106,7 @@ export class ProgressTracker {
 		return steps.find( ( { status } ) => status === 'pending' );
 	}
 
-	getCurrentStep() {
+	getCurrentStep(): Step | undefined {
 		if ( this.allStepsSucceeded() ) {
 			return undefined;
 		}
@@ -106,15 +115,15 @@ export class ProgressTracker {
 		return steps.find( ( { status } ) => status === 'running' );
 	}
 
-	stepRunning( stepId: string ) {
+	stepRunning( stepId: string ): void {
 		this.setStatusForStepId( stepId, 'running' );
 	}
 
-	stepFailed( stepId: string ) {
+	stepFailed( stepId: string ): void {
 		this.setStatusForStepId( stepId, 'failed' );
 	}
 
-	stepSkipped( stepId: string ) {
+	stepSkipped( stepId: string ): void {
 		this.setStatusForStepId( stepId, 'skipped' );
 	}
 
@@ -127,8 +136,8 @@ export class ProgressTracker {
 		}
 	}
 
-	allStepsSucceeded() {
-		return ! [ ...this.getSteps().values() ].some( ( { status } ) => status !== 'success' );
+	allStepsSucceeded(): boolean {
+		return [ ...this.getSteps().values() ].every( ( { status } ) => status === 'success' );
 	}
 
 	setStatusForStepId( stepId: string, status: string ) {
@@ -152,20 +161,20 @@ export class ProgressTracker {
 		} );
 	}
 
-	startPrinting( prePrintCallback: Function = () => {} ) {
+	startPrinting( prePrintCallback: () => unknown = () => {} ): void {
 		this.printInterval = setInterval( () => {
 			prePrintCallback();
 			this.print();
 		}, PRINT_INTERVAL );
 	}
 
-	stopPrinting() {
+	stopPrinting(): void {
 		if ( this.printInterval ) {
 			clearInterval( this.printInterval );
 		}
 	}
 
-	print( { clearAfter = false }: { clearAfter?: boolean } = {} ) {
+	print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();

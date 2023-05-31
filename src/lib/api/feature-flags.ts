@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -9,8 +7,10 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
+import { ApolloClient, ApolloQueryResult, NormalizedCacheObject } from '@apollo/client';
 
-let api;
+let api: ApolloClient<NormalizedCacheObject>;
+
 // If Token.get() fails, we may have an unhandled rejection
 void API()
 	.then( client => {
@@ -25,10 +25,15 @@ const isVipQuery = gql`
 	}
 `;
 
-export async function get() {
-	const res = await api.query( {
+interface IsVipResponse {
+	me?: {
+		isVIP?: boolean | null;
+	}
+}
+
+export async function get(): Promise<ApolloQueryResult<IsVipResponse> | undefined> {
+	return await api.query<IsVipResponse>( {
 		query: isVipQuery,
 		fetchPolicy: 'cache-first',
 	} );
-	return res;
 }
