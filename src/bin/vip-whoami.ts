@@ -12,6 +12,7 @@
  * Internal dependencies
  */
 import { getCurrentUserInfo } from '../lib/api/user';
+import { User } from '../graphqlTypes';
 import command from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 import * as exit from '../lib/cli/exit';
@@ -23,11 +24,7 @@ export async function whoamiCommand() {
 
 	await trackEvent( 'whoami_command_execute', trackingParams );
 
-	let currentUser = {} as {
-		displayName: string;
-		id: number;
-		isVIP: boolean;
-	};
+	let currentUser: User;
 	try {
 		currentUser = await getCurrentUserInfo();
 	} catch ( err: any ) {
