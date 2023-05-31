@@ -14,6 +14,7 @@ jest.mock( 'lib/validations/is-multi-site' );
 jest.mock( '../../src/lib/api/feature-flags' );
 jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' );
+jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
 describe( 'vip-import-sql', () => {
 	describe( 'validateAndGetTableNames', () => {
