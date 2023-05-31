@@ -28,16 +28,17 @@ export async function whoamiCommand() {
 	try {
 		currentUser = await getCurrentUserInfo();
 	} catch ( err: Error ) {
-		await trackEvent( 'whoami_command_error', { ...trackingParams, error: err.message } );
+		const error = err as Error;
+		await trackEvent( 'whoami_command_error', { ...trackingParams, error: error.message } );
 
-		exit.withError( `Failed to fetch information about the currently logged-in user error: ${ err.message }` );
+		exit.withError( `Failed to fetch information about the currently logged-in user error: ${ error.message }` );
 	}
 
 	await trackEvent( 'whoami_command_success', trackingParams );
 
 	const output: string[] = [
-		`- Howdy ${ currentUser.displayName }!`,
-		`- Your user ID is ${ currentUser.id }`,
+		`- Howdy ${ currentUser.displayName ?? 'user' }!`,
+		`- Your user ID is ${ currentUser.id ?? ' not found' }`,
 	];
 
 	if ( currentUser.isVIP ) {
