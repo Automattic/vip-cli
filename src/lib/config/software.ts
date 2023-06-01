@@ -1,8 +1,7 @@
-// @flow
-
 /**
  * External dependencies
  */
+import { setTimeout } from 'node:timers/promises';
 import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
 import debugLib from 'debug';
@@ -13,6 +12,8 @@ import debugLib from 'debug';
 import { isAppNodejs, isAppWordPress } from '../app';
 import API from '../api';
 import UserError from '../user-error';
+import { UpdateJobQueryVariables } from './software.generated';
+import { JobInterface, Query } from '../../graphqlTypes';
 
 const UPDATE_PROGRESS_POLL_INTERVAL = 5;
 const debug = debugLib( '@automattic/vip:bin:config-software' );
@@ -131,11 +132,44 @@ const COMPONENT_NAMES = {
 	nodejs: 'Node.js',
 };
 
+type ComponentName = keyof typeof COMPONENT_NAMES;
+
 const MANAGED_OPTION_KEY = 'managed_latest';
 
-const _optionsForVersion = softwareSettings => {
+interface SoftwareSetting {
+	options: Option[];
+	current: {
+		version: string;
+	};
+	pinned: boolean;
+	name: string;
+	slug: string;
+}
+
+type SoftwareSettings = Record<ComponentName, SoftwareSetting>;
+
+interface Option {
+	deprecated: boolean;
+	unstable: boolean;
+	version: string;
+}
+
+interface VersionChoice {
+	message: string;
+	value: string;
+	disabled?: boolean;
+}
+
+interface VersionChoices {
+	managed: VersionChoice[];
+	supported: VersionChoice[];
+	test: VersionChoice[];
+	deprecated: VersionChoice[];
+}
+
+const _optionsForVersion = ( softwareSettings: SoftwareSetting ): VersionChoice[] => {
 	const { options, current, pinned, slug } = softwareSettings;
-	const versionChoices = {
+	const versionChoices: VersionChoices = {
 		managed: [],
 		supported: [],
 		test: [],
@@ -188,8 +222,8 @@ const _optionsForVersion = softwareSettings => {
 	} );
 };
 
-const _processComponent = async ( appTypeId: number, userProvidedComponent: string | undefined ) => {
-	const validComponents = [];
+const _processComponent = ( appTypeId: number, userProvidedComponent?: ComponentName ): Promise<ComponentName> => {
+	const validComponents: ComponentName[] = [];
 	if ( isAppWordPress( appTypeId ) ) {
 		validComponents.push( 'wordpress', 'php', 'muplugins' );
 	} else if ( isAppNodejs( appTypeId ) ) {
@@ -200,7 +234,8 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 		if ( ! validComponents.includes( userProvidedComponent ) ) {
 			throw new UserError( `Component ${ userProvidedComponent } is not supported. Use one of: ${ validComponents.join( ',' ) }` );
 		}
-		return userProvidedComponent;
+
+		return Promise.resolve( userProvidedComponent );
 	}
 
 	if ( validComponents.length === 0 ) {
@@ -208,23 +243,24 @@ const _processComponent = async ( appTypeId: number, userProvidedComponent: stri
 	}
 
 	if ( validComponents.length === 1 ) {
-		return validComponents[ 0 ];
+		return Promise.resolve( validComponents[ 0 ] );
 	}
 
 	const choices = validComponents.map( item => ( {
 		message: COMPONENT_NAMES[ item ],
 		value: item,
 	} ) );
+	
 	const select = new Select( {
 		message: 'Component to update',
 		choices,
 	} );
 	return select.run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
-	} );
+	} ) as Promise<ComponentName>;
 };
 
-const _processComponentVersion = async ( softwareSettings, component: string, userProvidedVersion: string | undefined ) => {
+const _processComponentVersion = ( softwareSettings: SoftwareSettings, component: ComponentName, userProvidedVersion?: string ): Promise<string> => {
 	const versionChoices = _optionsForVersion( softwareSettings[ component ] );
 
 	if ( userProvidedVersion ) {
@@ -232,7 +268,8 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 		if ( ! validValues.includes( userProvidedVersion ) ) {
 			throw new UserError( `Version ${ userProvidedVersion } is not supported for ${ COMPONENT_NAMES[ component ] }. Use one of: ${ validValues.join( ',' ) }` );
 		}
-		return userProvidedVersion;
+
+		return Promise.resolve( userProvidedVersion );
 	}
 
 	const versionSelect = new Select( {
@@ -241,25 +278,26 @@ const _processComponentVersion = async ( softwareSettings, component: string, us
 	} );
 	return versionSelect.run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
-	} );
+	} ) ;
 };
 
 interface UpdateData {
-	component: string,
-	version: string,
+	component: ComponentName;
+	version: string;
 }
 
 export interface UpdatePromptOptions {
-	component?: string,
-	version?: string,
-	force?: boolean,
+	component?: ComponentName;
+	version?: string;
+	force?: boolean;
 }
 
-export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOptions, softwareSettings ): Promise<UpdateData> => {
+export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOptions, softwareSettings: SoftwareSettings ): Promise<UpdateData> => {
 	const component = await _processComponent( appTypeId, opts.component );
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
-	const confirm = opts.force || await new Confirm( {
+	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+	const confirm: boolean = opts.force || await new Confirm( { // NOSONAR
 		message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
 	} ).run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
@@ -289,62 +327,74 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
-const _getLatestJob = async ( appId: number, envId: number ) => {
+const _getLatestJob = async ( appId: number, envId: number ): Promise<JobInterface | null> => {
 	const api = await API();
-	const result = await api.query( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
-	const jobs = result?.data?.app?.environments[ 0 ].jobs || [];
+	const result = await api.query<Query, UpdateJobQueryVariables>( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
+	const jobs = result.data.app?.environments?.[0]?.jobs ?? [];
 
 	if ( jobs.length ) {
-		return jobs.reduce( ( prev, current ) => ( prev.createdAt > current.createdAt ) ? prev : current );
+		return jobs.reduce( ( prev, current ) => ( ( prev?.createdAt || '' ) > ( current?.createdAt || '' ) ) ? prev : current );
 	}
 	return null;
 };
 
-const _getCompletedJob = async ( appId: number, envId: number ) => {
+const _getCompletedJob = async ( appId: number, envId: number ): Promise<JobInterface | null> => {
 	const latestJob = await _getLatestJob( appId, envId );
 	debug( 'Latest job result:', latestJob );
 
-	if ( ! latestJob || ! latestJob.inProgressLock ) {
+	if ( ! latestJob?.inProgressLock ) {
 		return latestJob;
 	}
 
 	debug( `Sleep for ${ UPDATE_PROGRESS_POLL_INTERVAL } seconds` );
-	await new Promise( resolve => setTimeout( resolve, UPDATE_PROGRESS_POLL_INTERVAL * 1000 ) );
-
+	await setTimeout( UPDATE_PROGRESS_POLL_INTERVAL * 1000 );
 	return _getCompletedJob( appId, envId );
 };
 
-interface UpdateResult {
-	ok: boolean;
-	errorMessage?: string;
+interface UpdateResultSuccess {
+	ok: true;
 }
+
+interface UpdateResultError {
+	ok: false;
+	errorMessage: string;
+}
+
+type UpdateResult = UpdateResultSuccess | UpdateResultError;
 
 export const getUpdateResult = async ( appId: number, envId: number ): Promise<UpdateResult> => {
 	debug( 'Getting update result', { appId, envId } );
 
 	const completedJob = await _getCompletedJob( appId, envId );
 
-	const success = ! completedJob || completedJob?.progress?.status === 'success';
+	const success = ! completedJob || completedJob.progress?.status === 'success';
 	if ( success ) {
 		return {
 			ok: true,
 		};
 	}
 
-	const failedStep = completedJob?.progress?.steps?.find( step => step.status === 'failed' );
-	const error = failedStep ? `Failed during step: ${ failedStep.name }` : 'Software update failed';
+	const failedStep = completedJob.progress?.steps?.find( step => step?.status === 'failed' );
+	const error = failedStep ? `Failed during step: ${ failedStep.name! }` : 'Software update failed';
 	return {
 		ok: false,
 		errorMessage: error,
 	};
 };
 
-export const formatSoftwareSettings = ( softwareSetting: SoftwareSettings, includes: string[], format: string ) => {
+interface FormatSoftwareSettingsResult {
+	name: string;
+	slug: string;
+	version: string;
+	available_versions?: string | string[];
+}
+
+export const formatSoftwareSettings = ( softwareSetting: SoftwareSetting, includes: string[], format: string ): FormatSoftwareSettingsResult => {
 	let version = softwareSetting.current.version;
 	if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
 		version += ' (managed updates)';
 	}
-	const result = {
+	const result: FormatSoftwareSettingsResult = {
 		name: softwareSetting.name,
 		slug: softwareSetting.slug,
 		version,
