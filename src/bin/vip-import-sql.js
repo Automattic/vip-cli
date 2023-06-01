@@ -368,7 +368,7 @@ const displayPlaybook = ( {
 	}
 };
 
-command( {
+void command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
@@ -573,7 +573,7 @@ Processing the SQL import for your environment...
 		} catch ( uploadError ) {
 			await track( 'import_sql_command_error', {
 				error_type: 'upload_failed',
-				upload_error: uploadError,
+				upload_error: uploadError.message,
 			} );
 
 			progressTracker.stepFailed( 'upload' );
