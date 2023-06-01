@@ -11,7 +11,9 @@ import type { Response } from 'node-fetch';
  */
 import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
 import command from '../../src/lib/cli/command';
+// $FlowExpectedError[cannot-resolve-module]
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
+// $FlowExpectedError[cannot-resolve-module]
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
 // $FlowExpectedError[cannot-resolve-module]
 import { trackEvent } from '../../src/lib/tracker';
