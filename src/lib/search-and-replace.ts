@@ -1,15 +1,14 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
  */
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
+import { red } from 'chalk';
 import debugLib from 'debug';
+import type { Readable, Writable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { replace } from '@automattic/vip-search-replace';
 
 /**
@@ -23,24 +22,18 @@ import { makeTempDir } from './utils';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
-const flatten = arr => {
-	return arr.reduce( ( flat, toFlatten ) => {
-		return flat.concat( Array.isArray( toFlatten ) ? flatten( toFlatten ) : toFlatten );
-	}, [] );
-};
+export interface GetReadAndWriteStreamsOptions {
+	fileName: string;
+	inPlace: boolean;
+	output: boolean | string | Writable;
+}
 
-export type GetReadAndWriteStreamsOptions = {
-	fileName: string,
-	inPlace: boolean,
-	output: boolean | string | Buffer | stream$Writable,
-};
-
-export type GetReadAndWriteStreamsOutput = {
-	outputFileName?: string,
-	readStream: stream$Readable | Buffer,
-	usingStdOut: boolean,
-	writeStream: stream$Writable | Buffer,
-};
+export interface GetReadAndWriteStreamsOutput {
+	outputFileName?: string;
+	readStream: Readable;
+	usingStdOut: boolean;
+	writeStream: Writable;
+}
 
 export function getReadAndWriteStreams( {
 	fileName,
@@ -106,21 +99,21 @@ export function getReadAndWriteStreams( {
 	};
 }
 
-export type SearchReplaceOptions = {
+export interface SearchReplaceOptions {
 	isImport: boolean,
 	inPlace: boolean,
-	output: boolean | string | Buffer | stream$Writable,
-};
+	output: boolean | string | Writable,
+}
 
-export type SearchReplaceOutput = {
+export interface SearchReplaceOutput {
 	inputFileName: string,
 	outputFileName?: string,
 	usingStdOut: boolean,
-};
+}
 
 export const searchAndReplace = async (
 	fileName: string,
-	pairs: Array<string> | string,
+	pairs: string[] | string,
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise<SearchReplaceOutput> => {
@@ -130,7 +123,7 @@ export const searchAndReplace = async (
 	const fileSize = getFileSize( fileName );
 
 	// if we don't have any pairs to replace with, return the input file
-	if ( ! pairs || ! pairs.length ) {
+	if ( ! pairs.length ) {
 		throw new Error( 'No search and replace parameters provided.' );
 	}
 
@@ -140,8 +133,7 @@ export const searchAndReplace = async (
 	}
 
 	// determine all the replacements required
-	const replacementsArr = pairs.map( pair => pair.split( ',' ).map( str => str.trim() ) );
-	const replacements = flatten( replacementsArr );
+	const replacements = pairs.flatMap( pair => pair.split( ',' ).map( str => str.trim() ) );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
 	if ( inPlace ) {
@@ -170,34 +162,25 @@ export const searchAndReplace = async (
 	try {
 		replacedStream = await replace( readStream, replacements, binary );
 	} catch ( replaceError ) {
-		exit.withError( replaceError );
+		// replace() throws strings... OMG
+		exit.withError( replaceError as string | Error );
 	}
 
-	const result = await new Promise( ( resolve, reject ) => {
-		replacedStream
-			.pipe( writeStream )
-			.on( 'finish', () => {
-				resolve( {
-					inputFileName: fileName,
-					outputFileName,
-					usingStdOut,
-				} );
-			} )
-			.on( 'error', () => {
-				console.log(
-					chalk.red(
-						"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
-					)
-				);
-
-				reject();
-			} );
-	} );
+	try {
+		await pipeline( replacedStream, writeStream );
+	} catch ( error ) {
+		console.log( red( "Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions." ) );
+		throw error;
+	}
 
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
 	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
 
-	return result;
+	return {
+		inputFileName: fileName,
+		outputFileName,
+		usingStdOut,
+	};
 };

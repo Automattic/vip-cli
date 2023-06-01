@@ -174,8 +174,8 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			await this.track( 'archive_extraction_error', { errorMessage: err?.message } );
-			exit.withError( `Error extracting the SQL export: ${ err?.message }` );
+			await this.track( 'archive_extraction_error', { errorMessage: err.message } );
+			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
 
 		try {
