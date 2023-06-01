@@ -337,7 +337,7 @@ export class ExportSQLCommand {
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
 					await this.track( 'error', { error_type: 'job_already_running', error_message: err?.message } );
 					exit.withError(
-						'There is an export job already running for this site: ' +
+						'There is an export job already running for this environment: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
 						'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
