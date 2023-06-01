@@ -27,8 +27,8 @@ export async function whoamiCommand() {
 	let currentUser: User;
 	try {
 		currentUser = await getCurrentUserInfo();
-	} catch ( err: any ) { // eslint-disable-line
-		const error = err as Error;
+	} catch ( err: unknown ) { // eslint-disable-line
+		const error = err instanceof Error ? err : new Error( 'Unknown error' );
 		await trackEvent( 'whoami_command_error', { ...trackingParams, error: error.message } );
 
 		exit.withError( `Failed to fetch information about the currently logged-in user error: ${ error.message }` );
