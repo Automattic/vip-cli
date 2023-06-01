@@ -1,15 +1,13 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
  */
-import fs, { ReadStream } from 'fs';
+import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
+import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import os from 'os';
 import path from 'path';
-import fetch from 'node-fetch';
+import fetch, { HeaderInit, RequestInit } from 'node-fetch';
 import chalk from 'chalk';
 import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
@@ -38,13 +36,18 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 // How many parts will upload at the same time
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
-export type FileMeta = {
-	basename: string,
-	fileContent?: string | Buffer | ReadStream,
-	fileName: string,
-	fileSize: number,
-	isCompressed: boolean,
-};
+// TODO: Replace with a proper definitions once we convert lib/cli/command.js to TypeScript
+interface WithId {
+	id: number;
+}
+
+interface FileMeta {
+	basename: string;
+	fileContent?: string | Buffer | ReadStream;
+	fileName: string;
+	fileSize: number;
+	isCompressed: boolean;
+}
 
 export interface GetSignedUploadRequestDataArgs {
 	action: | 'AbortMultipartUpload'
@@ -53,7 +56,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'ListParts'
 		| 'PutObject'
 		| 'UploadPart';
-	etagResults?: Array<Object>;
+	etagResults?: Object[];
 	appId: number;
 	envId: number;
 	basename: string;
@@ -61,43 +64,37 @@ export interface GetSignedUploadRequestDataArgs {
 	uploadId?: string;
 }
 
-export const getWorkingTempDir = async () =>
-	new Promise( ( resolve, reject ) => {
-		fs.mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ), ( err, dir ) => {
-			if ( err ) {
-				return reject( err );
-			}
-			resolve( dir );
-		} );
-	} );
+const getWorkingTempDir = (): Promise<string> => mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ) );
 
-export type UploadArguments = {
-	app: Object,
-	env: Object,
-	fileName: string,
-	progressCallback?: Function,
+interface UploadArguments {
+	app: WithId;
+	env: WithId;
+	fileMeta: FileMeta;
+	progressCallback?: Function;
+}
+
+export const getFileMD5Hash = async ( fileName: string ): Promise<string> => {
+	const src = createReadStream( fileName );
+	const dst = createHash( 'md5' );
+	try {
+		await pipeline( src, dst );
+		return dst.digest().toString( 'hex' );
+	} catch ( err ) {
+		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
+	}
 };
 
-export const getFileMD5Hash = async ( fileName: string ) =>
-	new Promise( ( resolve, reject ) =>
-		fs
-			.createReadStream( fileName )
-			.pipe( createHash( 'md5' ).setEncoding( 'hex' ) )
-			.on( 'finish', function() {
-				resolve( this.read() );
-			} )
-			.on( 'error', error => reject( `could not generate file hash: ${ error }` ) )
-	);
-
-export const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) =>
-	new Promise( ( resolve, reject ) =>
-		fs
-			.createReadStream( uncompressedFileName )
-			.pipe( createGzip() )
-			.pipe( fs.createWriteStream( compressedFileName ) )
-			.on( 'finish', resolve )
-			.on( 'error', error => reject( `could not compress file: ${ error }` ) )
-	);
+const gzipFile = async ( uncompressedFileName: string, compressedFileName: string ) => {
+	try {
+		await pipeline(
+			createReadStream( uncompressedFileName ),
+			createGzip(),
+			createWriteStream( compressedFileName )
+		);
+	} catch ( err ) {
+		throw new Error( `could not compress file: ${ ( err as Error ).message }` );
+	}
+}
 
 /**
  * Extract a .gz file and save it to a specified location
@@ -106,9 +103,9 @@ export const gzipFile = async ( uncompressedFileName: string, compressedFileName
  * @param {string} outputFilename The file where the unzipped data will be written
  * @return {Promise} A promise that resolves when the file is unzipped
  */
-export const unzipFile = async ( inputFilename: string, outputFilename: string ) => {
-	const source = fs.createReadStream( inputFilename );
-	const destination = fs.createWriteStream( outputFilename );
+export const unzipFile = async ( inputFilename: string, outputFilename: string ): Promise<void> => {
+	const source = createReadStream( inputFilename );
+	const destination = createWriteStream( outputFilename );
 	await pipeline( source, createGunzip(), destination );
 };
 
@@ -141,7 +138,7 @@ export async function uploadImportSqlFileToS3( {
 	try {
 		tmpDir = await getWorkingTempDir();
 	} catch ( err ) {
-		throw `Unable to create temporary working directory: ${ err }`;
+		throw new Error( `Unable to create temporary working directory: ${ ( err as Error ).message }` );
 	}
 
 	debug(
@@ -193,19 +190,38 @@ export async function uploadImportSqlFileToS3( {
 	};
 }
 
-export type UploadUsingArguments = {
-	app: Object,
-	env: Object,
-	fileMeta: FileMeta,
-	progressCallback?: Function,
-};
+interface UploadUsingArguments {
+	app: WithId;
+	env: WithId;
+	fileMeta: FileMeta;
+	progressCallback?: Function;
+}
 
-export async function uploadUsingPutObject( {
+interface PresignedRequest {
+	options: {
+		headers: HeaderInit;
+	};
+	url: string;
+}
+
+/**
+ * @see https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html#API_CompleteMultipartUpload_Example_3
+ */
+interface UploadErrorResponse {
+	Error: {
+		Code: string;
+		Message: string;
+		RequestId: string;
+		HostId: string;
+	};
+}
+
+async function uploadUsingPutObject( {
 	app,
 	env,
 	fileMeta: { basename, fileContent, fileName, fileSize },
 	progressCallback,
-}: UploadUsingArguments ) {
+}: UploadUsingArguments ): Promise<string> {
 	debug( `Uploading ${ chalk.cyan( basename ) } to S3 using the \`PutObject\` command` );
 
 	const presignedRequest = await getSignedUploadRequestData( {
@@ -223,9 +239,9 @@ export async function uploadUsingPutObject( {
 
 	let readBytes = 0;
 	const progressPassThrough = new PassThrough();
-	progressPassThrough.on( 'data', data => {
+	progressPassThrough.on( 'data', ( data: Buffer | string ) => {
 		readBytes += data.length;
-		const percentage = Math.floor( ( 100 * readBytes ) / fileSize ) + '%';
+		const percentage = `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%`;
 		debug( percentage );
 		if ( typeof progressCallback === 'function' ) {
 			progressCallback( percentage );
@@ -234,7 +250,7 @@ export async function uploadUsingPutObject( {
 
 	const response = await fetch( presignedRequest.url, {
 		...fetchOptions,
-		body: fileContent ? fileContent : fs.createReadStream( fileName ).pipe( progressPassThrough ),
+		body: fileContent ? fileContent : createReadStream( fileName ).pipe( progressPassThrough ),
 	} );
 
 	if ( response.status === 200 ) {
@@ -251,17 +267,30 @@ export async function uploadUsingPutObject( {
 
 	let parsedResponse;
 	try {
-		parsedResponse = await parser.parseStringPromise( result );
+		parsedResponse = await parser.parseStringPromise( result ) as UploadErrorResponse;
 	} catch ( err ) {
-		throw `Invalid response from cloud service. ${ err }`;
+		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }` );
 	}
 
-	const { Code, Message } = parsedResponse.Error || {};
+	const { Code, Message } = parsedResponse.Error;
 
-	throw `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }`;
+	throw new Error( `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }` );
 }
 
-export async function uploadUsingMultipart( {
+/**
+ * @see https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html#API_CreateMultipartUpload_ResponseSyntax
+ */
+interface CreateMultipartUploadResponse {
+	InitiateMultipartUploadResult: {
+		Bucket: string;
+		Key: string;
+		UploadId: string;
+	}
+}
+
+type CreateMultipartUploadResult = CreateMultipartUploadResponse | UploadErrorResponse;
+
+async function uploadUsingMultipart( {
 	app,
 	env,
 	fileMeta,
@@ -290,19 +319,15 @@ export async function uploadUsingMultipart( {
 		ignoreAttrs: true,
 	} );
 
-	const parsedResponse = await parser.parseStringPromise( multipartUploadResult );
+	const parsedResponse = await parser.parseStringPromise( multipartUploadResult ) as CreateMultipartUploadResult;
 
-	if ( parsedResponse.Error ) {
+	if ( 'Error' in parsedResponse ) {
 		const { Code, Message } = parsedResponse.Error;
-		throw `Unable to create cloud storage object. Error: ${ JSON.stringify( { Code, Message } ) }`;
+		throw new Error( `Unable to create cloud storage object. Error: ${ JSON.stringify( { Code, Message } ) }` );
 	}
 
-	if (
-		! parsedResponse &&
-		parsedResponse.InitiateMultipartUploadResult &&
-		parsedResponse.InitiateMultipartUploadResult.UploadId
-	) {
-		throw `Unable to get Upload ID from cloud storage. Error: ${ multipartUploadResult }`;
+	if ( ! ('InitiateMultipartUploadResult' in parsedResponse) || ! parsedResponse.InitiateMultipartUploadResult.UploadId ) {
+		throw new Error( `Unable to get Upload ID from cloud storage. Error: ${ multipartUploadResult }` );
 	}
 
 	const uploadId = parsedResponse.InitiateMultipartUploadResult.UploadId;
@@ -329,7 +354,7 @@ export async function uploadUsingMultipart( {
 	} );
 }
 
-export async function getSignedUploadRequestData( {
+async function getSignedUploadRequestData( {
 	action,
 	appId,
 	basename,
@@ -337,74 +362,66 @@ export async function getSignedUploadRequestData( {
 	etagResults,
 	uploadId = undefined,
 	partNumber = undefined,
-}: GetSignedUploadRequestDataArgs ): Promise<Object> {
+}: GetSignedUploadRequestDataArgs ): Promise<PresignedRequest> {
 	const response = await http( '/upload/site-import-presigned-url', {
 		method: 'POST',
 		body: { action, appId, basename, envId, etagResults, partNumber, uploadId },
 	} );
 
 	if ( response.status !== 200 ) {
-		throw ( await response.text() ) || response.statusText;
+		throw new Error( ( await response.text() ) || response.statusText );
 	}
 
-	return response.json();
+	return response.json() as Promise<PresignedRequest>;
 }
 
 export async function checkFileAccess( fileName: string ): Promise<void> {
-	return fs.promises.access( fileName, fs.R_OK );
-}
-
-export async function getFileStats( fileName: string ): Promise<fs.Stats> {
-	return fs.promises.stat( fileName );
+	return access( fileName, constants.R_OK );
 }
 
 export async function isFile( fileName: string ): Promise<boolean> {
 	try {
-		const stats = await getFileStats( fileName );
+		const stats = await stat( fileName );
 		return stats.isFile();
 	} catch ( err ) {
-		debug( `isFile error: ${ err }` );
+		debug( `isFile error: ${ ( err as Error ).message }` );
 		return false;
 	}
 }
 
 export async function getFileSize( fileName: string ): Promise<number> {
-	const stats = await getFileStats( fileName );
+	const stats = await stat( fileName );
 	return stats.size;
 }
 
-export async function detectCompressedMimeType( fileName: string ): Promise<string | void> {
+export async function detectCompressedMimeType( fileName: string ): Promise<string> {
 	const ZIP_MAGIC_NUMBER = '504b0304';
 	const GZ_MAGIC_NUMBER = '1f8b';
 
-	let fileHeader = '';
+	const file = await open( fileName, 'r' );
+	const { buffer } = await file.read( Buffer.alloc( 4 ), 0, 4, 0 );
+	const fileHeader = buffer.toString( 'hex' );
 
-	return new Promise( resolve => {
-		fs.createReadStream( fileName, { start: 0, end: 8, encoding: 'hex' } )
-			.on( 'data', data => {
-				fileHeader += data;
-			} )
-			.on( 'end', () => {
-				if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
-					return resolve( 'application/zip' );
-				}
-				if ( GZ_MAGIC_NUMBER === fileHeader.slice( 0, GZ_MAGIC_NUMBER.length ) ) {
-					return resolve( 'application/gzip' );
-				}
-				resolve();
-			} );
-	} );
+	if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
+		return 'application/zip';
+	}
+
+	if ( GZ_MAGIC_NUMBER === fileHeader.slice( 0, GZ_MAGIC_NUMBER.length ) ) {
+		return 'application/gzip';
+	}
+
+	return '';
 }
 
-export type PartBoundaries = {
+export interface PartBoundaries {
 	end: number,
 	index: number,
 	partSize: number,
 	start: number,
-};
-export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
+}
+export function getPartBoundaries( fileSize: number ): PartBoundaries[] {
 	if ( fileSize < 1 ) {
-		throw 'fileSize must be greater than zero';
+		throw new Error( 'fileSize must be greater than zero' );
 	}
 
 	const numParts = Math.ceil( fileSize / UPLOAD_PART_SIZE );
@@ -418,14 +435,21 @@ export function getPartBoundaries( fileSize: number ): Array<PartBoundaries> {
 	} );
 }
 
-type UploadPartsArgs = {
-	app: Object,
-	env: Object,
+interface Part {
+	start: number;
+	end: number;
+	index: number;
+	partSize: number;
+}
+
+interface UploadPartsArgs {
+	app: WithId,
+	env: WithId,
 	fileMeta: FileMeta,
 	uploadId: string,
-	parts: Array<any>,
+	parts: Part[],
 	progressCallback?: Function,
-};
+}
 
 export async function uploadParts( {
 	app,
@@ -437,10 +461,10 @@ export async function uploadParts( {
 }: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
 	let totalBytesRead = 0;
-	const partPercentages = new Array( parts.length ).fill( 0 );
+	const partPercentages = new Array<number>( parts.length ).fill( 0 );
 
 	const readyForPartUpload = () =>
-		new Promise( resolve => {
+		new Promise<void>( resolve => {
 			const canDoInterval = setInterval( () => {
 				if ( uploadsInProgress < MAX_CONCURRENT_PART_UPLOADS ) {
 					uploadsInProgress++;
@@ -451,7 +475,7 @@ export async function uploadParts( {
 		} );
 
 	const updateProgress = () => {
-		const percentage = Math.floor( ( 100 * totalBytesRead ) / fileMeta.fileSize ) + '%';
+		const percentage = `${ Math.floor( ( 100 * totalBytesRead ) / fileMeta.fileSize ) }%`;
 
 		if ( typeof progressCallback === 'function' ) {
 			progressCallback( percentage );
@@ -479,7 +503,7 @@ export async function uploadParts( {
 			const progressPassThrough = new PassThrough();
 
 			let partBytesRead = 0;
-			progressPassThrough.on( 'data', data => {
+			progressPassThrough.on( 'data', ( data: Buffer | string ) => {
 				totalBytesRead += data.length;
 				partBytesRead += data.length;
 				partPercentages[ index ] = Math.floor( ( 100 * partBytesRead ) / partSize );
@@ -508,15 +532,15 @@ export async function uploadParts( {
 	return allDone;
 }
 
-export type UploadPartArgs = {
-	app: Object,
-	env: Object,
+export interface UploadPartArgs {
+	app: WithId,
+	env: WithId,
 	fileMeta: FileMeta,
-	part: Object,
+	part: Part,
 	progressPassThrough: PassThrough,
 	uploadId: string,
-};
-export async function uploadPart( {
+}
+async function uploadPart( {
 	app,
 	env,
 	fileMeta: { basename, fileName },
@@ -538,7 +562,7 @@ export async function uploadPart( {
 			partNumber: s3PartNumber,
 			uploadId,
 		} );
-		const fetchOptions = partUploadRequestData.options;
+		const fetchOptions: RequestInit = partUploadRequestData.options;
 		fetchOptions.headers = {
 			...fetchOptions.headers,
 			'Content-Length': `${ partSize }`, // This has to be a string
@@ -550,13 +574,13 @@ export async function uploadPart( {
 			 */
 		};
 
-		fetchOptions.body = fs.createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
+		fetchOptions.body = createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
 
 		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
 			const responseHeaders = fetchResponse.headers.raw();
 			const [ etag ] = responseHeaders.etag;
-			return JSON.parse( etag );
+			return JSON.parse( etag ) as string;
 		}
 
 		const result = await fetchResponse.text();
@@ -567,14 +591,9 @@ export async function uploadPart( {
 			ignoreAttrs: true,
 		} );
 
-		const parsed = await parser.parseStringPromise( result );
-
-		if ( parsed.Error ) {
-			const { Code, Message } = parsed.Error;
-			throw `Unable to upload file part. Error: ${ JSON.stringify( { Code, Message } ) }`;
-		}
-
-		return parsed;
+		const parsed = await parser.parseStringPromise( result ) as UploadErrorResponse;
+		const { Code, Message } = parsed.Error;
+		throw new Error( `Unable to upload file part. Error: ${ JSON.stringify( { Code, Message } ) }` );
 	};
 
 	return {
@@ -583,21 +602,39 @@ export async function uploadPart( {
 	};
 }
 
-export type CompleteMultipartUploadArgs = {
-	app: Object,
-	env: Object,
+export interface CompleteMultipartUploadArgs {
+	app: WithId,
+	env: WithId,
 	basename: string,
 	uploadId: string,
-	etagResults: Array<any>,
-};
+	etagResults: Object[],
+}
 
-export async function completeMultipartUpload( {
+/**
+ * @see https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html#API_CompleteMultipartUpload_ResponseSyntax
+ */
+interface CompleteMultipartUploadResponse {
+	CompleteMultipartUploadResult: {
+		Location: string;
+		Bucket: string;
+		Key: string;
+		ETag: string;
+		ChecksumCRC32: string;
+		ChecksumCRC32C: string;
+		ChecksumSHA1: string;
+		ChecksumSHA256: string;
+	};
+}
+
+type CompleteMultipartUploadResult = CompleteMultipartUploadResponse | UploadErrorResponse;
+
+async function completeMultipartUpload( {
 	app,
 	env,
 	basename,
 	uploadId,
 	etagResults,
-}: CompleteMultipartUploadArgs ) {
+}: CompleteMultipartUploadArgs ): Promise<CompleteMultipartUploadResponse> {
 	const completeMultipartUploadRequestData = await getSignedUploadRequestData( {
 		action: 'CompleteMultipartUpload',
 		appId: app.id,
@@ -633,11 +670,11 @@ export async function completeMultipartUpload( {
 		ignoreAttrs: true,
 	} );
 
-	const parsed = await parser.parseStringPromise( result );
+	const parsed = await parser.parseStringPromise( result ) as CompleteMultipartUploadResult;
 
-	if ( parsed.Error ) {
+	if ( 'Error' in parsed ) {
 		const { Code, Message } = parsed.Error;
-		throw `Unable to complete the upload. Error: ${ JSON.stringify( { Code, Message } ) }`;
+		throw new Error( `Unable to complete the upload. Error: ${ JSON.stringify( { Code, Message } ) }` );
 	}
 
 	return parsed;
