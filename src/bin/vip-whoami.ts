@@ -27,7 +27,7 @@ export async function whoamiCommand() {
 	let currentUser: User;
 	try {
 		currentUser = await getCurrentUserInfo();
-	} catch ( err: unknown ) { // eslint-disable-line
+	} catch ( err: unknown ) {
 		const error = err instanceof Error ? err : new Error( 'Unknown error' );
 		await trackEvent( 'whoami_command_error', { ...trackingParams, error: error.message } );
 
