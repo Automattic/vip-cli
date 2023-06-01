@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @format
- */
-
-/**
  * External dependencies
  */
 
