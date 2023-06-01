@@ -26,11 +26,11 @@ jest.mock( 'lib/cli/command', () => {
 	return jest.fn( () => commandMock );
 } );
 
-jest.mock( 'lib/envvar/api', () => ( {
+jest.mock( '../../src/lib/envvar/api', () => ( {
 	getEnvVar: jest.fn(),
 } ) );
 
-jest.mock( 'lib/envvar/logging', () => ( {
+jest.mock( '../../src/lib/envvar/logging', () => ( {
 	debug: jest.fn(),
 	getEnvContext: () => 'test',
 } ) );

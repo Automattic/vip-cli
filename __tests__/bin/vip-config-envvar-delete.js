@@ -45,18 +45,18 @@ jest.mock( '../../src/lib/cli/format', () => ( {
 	formatData: jest.fn(),
 } ) );
 
-jest.mock( 'lib/envvar/api', () => ( {
+jest.mock( '../../src/lib/envvar/api', () => ( {
 	deleteEnvVar: jest.fn( () => Promise.resolve() ),
 	validateNameWithMessage: jest.fn( () => true ),
 } ) );
 
-jest.mock( 'lib/envvar/input', () => ( {
+jest.mock( '../../src/lib/envvar/input', () => ( {
 	cancel: jest.fn( mockExit ),
 	confirm: jest.fn( () => Promise.resolve( true ) ),
 	promptForValue: jest.fn(),
 } ) );
 
-jest.mock( 'lib/envvar/logging', () => ( {
+jest.mock( '../../src/lib/envvar/logging', () => ( {
 	debug: jest.fn(),
 	getEnvContext: () => 'test',
 } ) );
