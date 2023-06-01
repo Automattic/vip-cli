@@ -66,7 +66,7 @@ describe( 'getRecentLogs()', () => {
 			query: queryMock,
 		} ) );
 
-		queryMock.mockImplementation( () => {} );
+		queryMock.mockImplementation( () => ({ data: {} }) );
 
 		const result = getRecentLogs( 1, 3, 'batch', 1200 );
 

@@ -1,7 +1,4 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
@@ -52,7 +49,7 @@ export function validateName( name: string ): boolean {
 }
 
 export function validateNameWithMessage( name: string ): boolean {
-	debug( `Validating environment variable name ${ JSON.stringify( name ) }` );
+	debug( `Validating environment variable name "${ name }"` );
 
 	if ( ! validateName( name ) ) {
 		const message = [

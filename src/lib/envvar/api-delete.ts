@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -9,6 +7,8 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
+import type { DeleteEnvironmentVariableMutation, DeleteEnvironmentVariableMutationVariables } from './api-delete.generated';
+import type { FetchResult } from '@apollo/client';
 
 const mutation = gql`
 	mutation DeleteEnvironmentVariable(
@@ -34,7 +34,7 @@ const mutation = gql`
 	}
 `;
 
-export default async function deleteEnvVar( appId: number, envId: number, name: string ) {
+export default async function deleteEnvVar( appId: number, envId: number, name: string ): Promise<FetchResult<DeleteEnvironmentVariableMutation>> {
 	const api = await API();
 
 	const variables = {
@@ -43,5 +43,5 @@ export default async function deleteEnvVar( appId: number, envId: number, name: 
 		name,
 	};
 
-	return api.mutate( { mutation, variables } );
+	return api.mutate<DeleteEnvironmentVariableMutation, DeleteEnvironmentVariableMutationVariables>( { mutation, variables } );
 }
