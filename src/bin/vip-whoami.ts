@@ -48,7 +48,7 @@ export async function whoamiCommand() {
 	console.log( output.join( '\n' ) );
 }
 
-command( { usage: 'vip whoami' } )
+void command( { usage: 'vip whoami' } )
 	.examples( [
 		{
 			usage: 'vip whoami',
