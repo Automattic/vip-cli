@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -8,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Accepted media file extensions
-export const acceptedExtensions = [
+export const acceptedExtensions: string[] = [
 	'jpg', 'jpeg', 'jpe',
 	'gif',
 	'png',
@@ -96,7 +94,7 @@ const prohibitedCharactersSet = new Set( prohibitedCharacters );
  */
 
 // Recommend the WordPress year/month file structure for media files
-const recommendedFileStructure = () => {
+const recommendedFileStructure = (): void => {
 	console.log(
 		chalk.underline( 'We recommend the WordPress default folder structure for your media files: \n\n' ) +
 		chalk.underline( 'Single sites:' ) +
@@ -111,17 +109,16 @@ const recommendedFileStructure = () => {
 };
 
 // Recommend accepted file types
-const recommendAcceptableFileTypes = () => {
+const recommendAcceptableFileTypes = (): void => {
 	console.log(
 		'Accepted file types: \n\n' +
-		chalk.magenta( `${ acceptedExtensions }` )
+		chalk.magenta( `${ acceptedExtensions.join(', ') }` )
 	);
 	console.log();
 };
 
 // Accepted file name characters
-const recommendAcceptableFileNames = () => {
-	// const acceptedCharacters = 'Non-English characters, spaces, ( ) [ ] ~';
+const recommendAcceptableFileNames = (): void => {
 	const allowedCharacters = [ ...acceptedCharactersSet ].join( ' ' );
 	const notAllowedCharacters = [ ...prohibitedCharactersSet ].join( ' ' );
 
@@ -146,11 +143,16 @@ const recommendAcceptableFileNames = () => {
  *
  * @param {string} directory Root directory, or the given (current) directory
  */
-const files = [];
-const folderStructureObj = {};
+const files: string[] = [];
+const folderStructureObj: Record<string, boolean> = {};
 
-export const findNestedDirectories = directory => {
-	let nestedDirectories;
+interface FindNestedDirectoriesResult {
+	files: string[];
+	folderStructureObj: Record<string, boolean>;
+}
+
+export const findNestedDirectories = ( directory: string ): FindNestedDirectoriesResult | undefined => {
+	let nestedDirectories: string[];
 
 	try {
 		// Read nested directories within the given directory
@@ -177,12 +179,23 @@ export const findNestedDirectories = directory => {
 			}
 		} );
 	} catch ( error ) {
-		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ error.message }` );
+		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ ( error as Error ).message }` );
 		return;
 	}
 
 	return { files, folderStructureObj };
 };
+
+interface IndexPositionsSingleSite {
+	uploadsIndex: number | undefined;
+	yearIndex: number | undefined;
+	monthIndex: number | undefined;
+}
+
+interface IndexPositionsMultiSite extends IndexPositionsSingleSite {
+	sitesIndex: number | undefined;
+	siteIDIndex: number | undefined;
+}
 
 /**
  * Folder structure validation
@@ -191,13 +204,15 @@ export const findNestedDirectories = directory => {
  *
  * @param {string}  folderPath Path of the entire folder structure
  * @param {boolean} sites      Check if site is a multisite or single site
- *  @return {Object} indexes
+ * @return {Object} indexes
  */
-const getIndexPositionOfFolders = ( folderPath, sites ) => {
-	let sitesIndex;
-	let siteIDIndex;
-	let yearIndex;
-	let monthIndex;
+function getIndexPositionOfFolders( folderPath: string, sites?: false ): IndexPositionsSingleSite;
+function getIndexPositionOfFolders( folderPath: string, sites?: true ): IndexPositionsMultiSite;
+function getIndexPositionOfFolders( folderPath: string, sites = false ): IndexPositionsSingleSite | IndexPositionsMultiSite {
+	let sitesIndex: number | undefined;
+	let siteIDIndex: number | undefined;
+	let yearIndex: number | undefined;
+	let monthIndex: number | undefined;
 	let pathMutate = folderPath; // Mutate `path` for multisites
 
 	// Turn the path into an array to determine index position
@@ -224,11 +239,11 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
 
 		if ( siteID ) {
 			siteIDIndex = directories.indexOf( siteID[ 1 ] );
-		}
 
-		// Remove the multisite-specific path to avoid confusing a 2 digit site ID with the month
-		// e.g.- `uploads/sites/11/2020/06` -> `uploads/2020/06`
-		pathMutate = pathMutate.replace( siteID[ 0 ], '' );
+			// Remove the multisite-specific path to avoid confusing a 2 digit site ID with the month
+			// e.g.- `uploads/sites/11/2020/06` -> `uploads/2020/06`
+			pathMutate = pathMutate.replace( siteID[ 0 ], '' );
+		}
 	}
 
 	/**
@@ -274,7 +289,7 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
 		yearIndex,
 		monthIndex,
 	};
-};
+}
 
 /**
  * Single site folder structure validation
@@ -288,7 +303,7 @@ const getIndexPositionOfFolders = ( folderPath, sites ) => {
  * @param {string} folderPath Path of the entire folder structure
  * @return {string|null} Returns null if the folder structure is good; else, returns the folder path
  */
-const singleSiteValidation = folderPath => {
+const singleSiteValidation = ( folderPath: string ): string | null => {
 	let errors = 0; // Tally individual folder errors
 
 	console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
@@ -353,7 +368,7 @@ const singleSiteValidation = folderPath => {
  * @param {string} folderPath Path of the entire folder structure
  * @return {string|null} Returns null if the folder structure is good; else, returns the folder path
  */
-const multiSiteValidation = folderPath => {
+const multiSiteValidation = ( folderPath: string ): string | null => {
 	let errors = 0; // Tally individual folder errors
 
 	console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
@@ -432,13 +447,13 @@ const multiSiteValidation = folderPath => {
  * @param {Array} folderStructureKeys Array of paths for each folder
  * @return {Array} All the erroneous folder paths in an array
  */
-export const folderStructureValidation = folderStructureKeys => {
+export const folderStructureValidation = ( folderStructureKeys: string[] ): string[] => {
 	// Collect all the folder paths that aren't in the recommended structure
-	const allErrors = [];
+	const allErrors: string[] = [];
 
 	// Loop through each path to validate the folder structure format
 	for ( const folderPath of folderStructureKeys ) {
-		let badFolders;
+		let badFolders: string | null;
 
 		// Check for multisite folder structure
 		if ( folderPath.search( 'sites' ) !== -1 ) {
@@ -470,7 +485,7 @@ export const folderStructureValidation = folderStructureKeys => {
  * @param {string} file - The current file being validated
  * @return {boolean} - Checks if the filename has been sanitized
  */
-export const isFileSanitized = file => {
+export const isFileSanitized = ( file: string ): boolean => {
 	const filename = path.basename( file );
 
 	let sanitizedFile = filename;
@@ -500,13 +515,13 @@ export const isFileSanitized = file => {
  * @param {string} filename The current file being validated
  * @return {Array} Returns an array of the matching regex characters
  */
-const identifyIntermediateImage = filename => {
-	const regex = /(-|_)?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
-	return filename.match( regex );
+const identifyIntermediateImage = ( filename: string ): RegExpMatchArray | null => {
+	const regex = /([_-])?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
+	return filename.match( regex ); // NOSONAR
 };
 
 // Check if an intermediate image has an existing original (source) image
-export const doesImageHaveExistingSource = file => {
+export const doesImageHaveExistingSource = ( file: string ): string | false => {
 	const filename = path.basename( file );
 
 	// Intermediate image regex check
@@ -514,7 +529,7 @@ export const doesImageHaveExistingSource = file => {
 
 	if ( null !== intermediateImage ) {
 		const imageSizing = intermediateImage[ 0 ]; // First capture group of the regex validation
-		const extension = path.extname( filename ).substr( 1 ); // Extension of the path (e.g.- `.jpg`)
+		const extension = path.extname( filename ).slice( 1 ); // Extension of the path (e.g.- `.jpg`)
 
 		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
 		// e.g.- `panda4000x6000.png` -> `panda.png`
@@ -531,8 +546,9 @@ export const doesImageHaveExistingSource = file => {
 		if ( fs.existsSync( originalImage ) ) {
 			return originalImage;
 		}
-		return false;
 	}
+
+	return false;
 };
 
 /**
@@ -542,7 +558,7 @@ export const doesImageHaveExistingSource = file => {
  */
 
 // Log errors for files with invalid file extensions and recommend accepted file types
-export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ) => {
+export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ): void => {
 	invalidFiles.forEach( file => {
 		console.error( chalk.red( '✕' ), 'File extensions: Invalid file type for file: ', chalk.cyan( `${ file }` ) );
 	} );
@@ -554,7 +570,7 @@ export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ) => {
 };
 
 // Log errors for files with invalid filenames and show a list of accepted/prohibited chars
-export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ) => {
+export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ): void => {
 	invalidFiles.forEach( file => {
 		console.error( chalk.red( '✕' ), 'Character validation: Invalid filename for file: ', chalk.cyan( `${ file }` ) );
 	} );
@@ -566,7 +582,7 @@ export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ) => {
 };
 
 // Log errors for intermediate image file duplicates
-export const logErrorsForIntermediateImages = obj => {
+export const logErrorsForIntermediateImages = ( obj: Record<string, string> ): void => {
 	for ( const original in obj ) {
 		console.error(
 			chalk.red( '✕' ),
@@ -578,6 +594,15 @@ export const logErrorsForIntermediateImages = obj => {
 	console.log( '------------------------------------------------------------' );
 };
 
+interface SummaryLogsParams {
+	folderErrorsLength: number;
+	intImagesErrorsLength: number;
+	fileTypeErrorsLength: number;
+	filenameErrorsLength: number;
+	totalFiles: number;
+	totalFolders: number;
+}
+
 export const summaryLogs = ( {
 	folderErrorsLength,
 	intImagesErrorsLength,
@@ -585,30 +610,31 @@ export const summaryLogs = ( {
 	filenameErrorsLength,
 	totalFiles,
 	totalFolders,
-} ) => {
+}: SummaryLogsParams ) => {
+	const messages: string[] = [];
 	if ( folderErrorsLength > 0 ) {
-		folderErrorsLength = chalk.bgYellow( ' RECOMMENDED ' ) + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total`;
+		messages.push( chalk.bgYellow( ' RECOMMENDED ' ) + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total` );
 	} else {
-		folderErrorsLength = chalk.bgGreen( '    PASS     ' ) + chalk.bold.green( ` ${ totalFolders } folders, ` ) + `${ totalFolders } folders total`;
+		messages.push( chalk.bgGreen( '    PASS     ' ) + chalk.bold.green( ` ${ totalFolders } folders, ` ) + `${ totalFolders } folders total` );
 	}
 
 	if ( intImagesErrorsLength > 0 ) {
-		intImagesErrorsLength = chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total`;
+		messages.push( chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total` );
 	} else {
-		intImagesErrorsLength = chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total`;
+		messages.push( chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total` );
 	}
 
 	if ( fileTypeErrorsLength > 0 ) {
-		fileTypeErrorsLength = chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total`;
+		messages.push( chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total` );
 	} else {
-		fileTypeErrorsLength = chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total`;
+		messages.push( chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total` );
 	}
 
 	if ( filenameErrorsLength ) {
-		filenameErrorsLength = chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total`;
+		messages.push( chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total` );
 	} else {
-		filenameErrorsLength = chalk.bgGreen( '    PASS     ' ) + chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total`;
+		messages.push( chalk.bgGreen( '    PASS     ' ) + chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total` );
 	}
 
-	console.log( `\n${ folderErrorsLength }\n${ intImagesErrorsLength }\n${ fileTypeErrorsLength }\n${ filenameErrorsLength }\n` );
+	console.log( `\n${ messages.join( '\n' ) }\n` );
 };

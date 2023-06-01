@@ -1,13 +1,10 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
  */
 import chalk from 'chalk';
-import { BooleanPrompt, prompt } from 'enquirer';
+import { Confirm, prompt } from 'enquirer';
 
 /**
  * Internal dependencies
@@ -19,11 +16,16 @@ export function cancel(): void {
 }
 
 export function confirm( message: string ): Promise<boolean> {
-	return new BooleanPrompt( { message } ).run().catch( () => false );
+	return new Confirm( { message } ).run().catch( () => false );
+}
+
+interface Answer {
+	// FIXME: can it really be undefined?
+	str?: string;
 }
 
 export async function promptForValue( message: string, mustMatch?: string ): Promise<string> {
-	const response = await prompt( {
+	const { str } = await prompt<Answer>( {
 		message,
 		name: 'str',
 		type: 'input',
@@ -36,5 +38,5 @@ export async function promptForValue( message: string, mustMatch?: string ): Pro
 		},
 	} );
 
-	return response.str?.trim() || '';
+	return str?.trim() ?? '';
 }

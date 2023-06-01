@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -9,6 +7,7 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
+import type { GetEnvironmentVariablesQuery, GetEnvironmentVariablesQueryVariables } from './api-list.generated';
 
 const query = gql`
 	query GetEnvironmentVariables(
@@ -35,7 +34,7 @@ const query = gql`
 `;
 
 // List the names (but not values) of environment variables.
-export default async function listEnvVars( appId: number, envId: number ) {
+export default async function listEnvVars( appId: number, envId: number ): Promise<string[]> {
 	const api = await API();
 
 	const variables = {
@@ -43,7 +42,9 @@ export default async function listEnvVars( appId: number, envId: number ) {
 		envId,
 	};
 
-	const { data } = await api.query( { query, variables } );
+	const { data } = await api.query<GetEnvironmentVariablesQuery, GetEnvironmentVariablesQueryVariables>( { query, variables } );
 
-	return data.app.environments[ 0 ].environmentVariables.nodes.map( ( { name } ) => name );
+	const nodes = data.app?.environments?.[0] ?.environmentVariables?.nodes ?? [];
+
+	return nodes.map( ( entry ) => entry?.name ?? '' );
 }

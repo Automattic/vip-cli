@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -9,6 +7,8 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
+import type { AddEnvironmentVariableMutation, AddEnvironmentVariableMutationVariables } from './api-set.generated';
+import type { FetchResult } from '@apollo/client';
 
 const mutation = gql`
 	mutation AddEnvironmentVariable(
@@ -35,7 +35,7 @@ const mutation = gql`
 	}
 `;
 
-export default async function setEnvVar( appId: number, envId: number, name: string, value: string ) {
+export default async function setEnvVar( appId: number, envId: number, name: string, value: string ): Promise<FetchResult<AddEnvironmentVariableMutation>> {
 	const api = await API();
 
 	const variables = {
@@ -45,5 +45,5 @@ export default async function setEnvVar( appId: number, envId: number, name: str
 		value,
 	};
 
-	return api.mutate( { mutation, variables } );
+	return api.mutate<AddEnvironmentVariableMutation, AddEnvironmentVariableMutationVariables>( { mutation, variables } );
 }

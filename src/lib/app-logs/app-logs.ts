@@ -1,7 +1,4 @@
-/**
- * @flow
- * @format
- */
+// @format
 
 /**
  * External dependencies
@@ -12,6 +9,8 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
+import { Query } from 'src/graphqlTypes';
+import { GetAppLogsQueryVariables } from './app-logs.generated';
 
 export const LIMIT_MAX = 5000;
 
@@ -33,16 +32,16 @@ const QUERY_ENVIRONMENT_LOGS = gql`
 	}
 `;
 
-type GetRecentLogsResponse = {
-	nodes: Array<{ timestamp: string, message: string }>,
+interface GetRecentLogsResponse {
+	nodes: { timestamp: string, message: string }[],
 	nextCursor: string,
 	pollingDelaySeconds: number,
-};
+}
 
 export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after?: string ): Promise<GetRecentLogsResponse> {
 	const api = await API( { exitOnError: false } );
 
-	const response = await api.query( {
+	const response = await api.query<Query, GetAppLogsQueryVariables>( {
 		query: QUERY_ENVIRONMENT_LOGS,
 		variables: {
 			appId,
@@ -53,11 +52,11 @@ export async function getRecentLogs( appId: number, envId: number, type: string,
 		},
 	} );
 
-	const logs = response?.data?.app?.environments[ 0 ]?.logs;
+	const logs = response.data.app?.environments?.[ 0 ]?.logs;
 
 	if ( ! logs?.nodes ) {
 		throw new Error( 'Unable to query logs' );
 	}
 
-	return logs;
+	return logs as GetRecentLogsResponse;
 }
