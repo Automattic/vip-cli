@@ -1,4 +1,3 @@
-// @flow
 export interface InstanceOptions {
 	title?: string;
 	multisite?: boolean | 'subdomain' | 'subdirectory';
@@ -16,18 +15,18 @@ export interface InstanceOptions {
 	mailpit?: boolean;
 	photon?: boolean;
 
-	[index: string]: string | boolean;
+	[index: string]: unknown;
 }
 
 export type AppInfo = {
-	id?: number;
-	name?: string;
-	repository?: string;
+	id?: number | null;
+	name?: string | null;
+	repository?: string | null;
 	environment?: {
-		name: string;
-		type: string;
-		branch: string;
-		isMultisite: boolean;
+		name?: string | null;
+		type?: string | null;
+		branch?: string | null;
+		isMultisite?: boolean | null;
 		primaryDomain: string;
 		php: string;
 		wordpress: string;
@@ -75,6 +74,7 @@ export type ConfigurationFileOptions = {
 }
 
 export interface InstanceData {
+	[index: string]: unknown;
 	siteSlug: string;
 	wpTitle: string;
 	multisite: boolean | 'subdomain' | 'subdirectory';
@@ -93,6 +93,4 @@ export interface InstanceData {
 	photon: boolean;
 	pullAfter?: number;
 	autologinKey?: string;
-
-	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }

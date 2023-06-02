@@ -42,6 +42,7 @@ import type {
 } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
+import { AppEnvironment } from '../../graphqlTypes';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -152,7 +153,7 @@ export async function updateEnvironment( instanceData: InstanceData ): Promise<v
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	const newInstanceData = {
-		...( instanceData: Object ),
+		...( instanceData ),
 	};
 
 	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
@@ -162,12 +163,13 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	newInstanceData.elasticsearch = instanceData.elasticsearch || false;
 
-	newInstanceData.php = instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ];
+	newInstanceData.php = (instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ]) as string;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
 
-	if ( isNaN( instanceData.wordpress.tag ) ) {
+	// FIXME: isNaN supports only number in TypeScript, actually, because isNaN('123') returns false despite being a string
+	if ( isNaN( instanceData.wordpress.tag as unknown as number ) ) {
 		newInstanceData.wordpress.tag = 'trunk';
 	}
 
@@ -261,7 +263,7 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 	return component.tag || '[demo-image]';
 }
 
-export async function showLogs( lando: Lando, slug: string, options: any = {} ): Promise<*> {
+export async function showLogs( lando: Lando, slug: string, options: Record<string, string> = {} ): Promise<void|undefined> {
 	debug( 'Will display logs command on env', slug, 'with options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -269,13 +271,13 @@ export async function showLogs( lando: Lando, slug: string, options: any = {} ):
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	if ( options.service ) {
-		const appInfo = await landoInfo( lando, instancePath, false );
+		const appInfo: { services: string } = await landoInfo( lando, instancePath, false );
 		if ( ! appInfo.services.includes( options.service ) ) {
 			throw new UserError( `Service '${ options.service }' not found. Please choose from one: ${ appInfo.services }` );
 		}
 	}
 
-	return landoLogs( lando, instancePath, ( options: LandoLogsOptions ) );
+	return landoLogs( lando, instancePath, ( options ) );
 }
 
 export async function printEnvironmentInfo( lando: Lando, slug: string, options: PrintOptions ): Promise<void> {
@@ -312,7 +314,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 	printTable( appInfo );
 }
 
-export function exec( lando: Lando, slug: string, args: Array<string>, options: any = {} ): Promise<*> {
+export function exec( lando: Lando, slug: string, args: string[], options: Record<string, string> = {} ): Promise<undefined|void> {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -342,16 +344,18 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
 	let instanceDataString;
-	let instanceData;
+	let instanceData: InstanceData;
 	try {
 		instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
-	} catch ( err ) {
+	} catch ( error: unknown ) {
+		const err = error as Error
 		throw new UserError( `There was an error reading file "${instanceDataTargetPath}": ${err.message}.` );
 	}
 
 	try {
-		instanceData = JSON.parse( instanceDataString );
-	} catch ( err ) {
+		instanceData = JSON.parse( instanceDataString ) as InstanceData;
+	} catch ( error: unknown ) {
+		const err = error as Error
 		throw new UserError( `There was an error parsing file "${instanceDataTargetPath}": ${err.message}. You may need to recreate the environment.` );
 	}
 
@@ -364,13 +368,13 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	// REMOVEME after the wheel of time spins around few times
 	if ( instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled ) {
 		// enterpriseSearchEnabled and elasticsearchEnabled was renamed to elasticsearch
-		instanceData.elasticsearch = instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled;
+		instanceData.elasticsearch = (instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled) as boolean;
 	}
 
 	// REMOVEME after the wheel of time spins around few times
 	if ( instanceData.clientCode ) {
 		// clientCode was renamed to appCode
-		instanceData.appCode = instanceData.clientCode;
+		instanceData.appCode = instanceData.clientCode as ComponentConfig;
 	}
 
 	if ( instanceData.mailhog ) {
@@ -381,14 +385,14 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
-/**
+/**9
  * Writes the instance data.
  *
  * @param {string}       slug Env slug
  * @param {InstanceData} data instance data
  * @return {Promise} Promise
  */
-export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<undefined> {
+export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<void|undefined> {
 	debug( 'Will try to write instance data for environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
@@ -427,7 +431,7 @@ export function getAllEnvironmentNames(): string[] {
 
 	const doWeHaveAnyEnvironment = fs.existsSync( baseDir );
 
-	let envNames = [];
+	let envNames: string[] = [];
 	if ( doWeHaveAnyEnvironment ) {
 		const files = fs.readdirSync( baseDir );
 
@@ -480,14 +484,15 @@ export async function getApplicationInformation( appId: number, envType: string 
 
 	const queryResult = await app( appId, fieldsQuery, softwareQueryFragment );
 
-	const appData = {};
+	const appData = {} as AppInfo
 
 	if ( queryResult ) {
 		appData.id = queryResult.id;
 		appData.name = queryResult.name;
 		appData.repository = queryResult.repository?.htmlUrl;
 
-		const environments = queryResult.environments || [];
+		// FIXME: This is casted as AppEnvironment[] but pedantically, Parker's schema made it so that the array may contain nullable. Code-wise though, that doesn't actually happen.
+		const environments = (queryResult.environments || []) as AppEnvironment[];
 		let envData;
 		if ( envType ) {
 			envData = environments.find( candidateEnv => candidateEnv.type === envType );
@@ -612,13 +617,14 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 		if ( currentWordPressTag === 'trunk' ) {
 			return false;
 		}
-	} catch ( error ) {
+	} catch ( err: unknown ) {
+		const error = err as Error & {code: string}
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
 			message = 'Environment was created before update was supported.\n\n';
 			message += 'To update environment please destroy it and create a new one.';
 		} else {
-			message = `An error prevented reading the configuration of: ${ slug }\n\n ${ error }`;
+			message = `An error prevented reading the configuration of: ${ slug }\n\n ${ error.message }`;
 		}
 
 		await handleCLIException( new Error( message ) );
@@ -627,13 +633,12 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 
 	// sort
 	versions.sort( ( before, after ) => before.tag < after.tag ? 1 : -1 );
-
 	// Newest WordPress Image but that is not trunk
-	const newestWordPressImage = ( ( versions.find( ( { tag } ) => tag !== 'trunk' ): any ): WordPressTag );
-	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage.tag ) );
+	const newestWordPressImage = versions.find( ( { tag } ) => tag !== 'trunk' );
+	console.log( 'The most recent WordPress version available is: ' + chalk.green( newestWordPressImage?.tag ) );
 
 	// If the currently used version is the most up to date: exit.
-	if ( currentWordPressTag === newestWordPressImage.tag ) {
+	if ( currentWordPressTag === newestWordPressImage?.tag ) {
 		console.log( 'Environment WordPress version is: ' + chalk.green( currentWordPressTag ) + '  ... 😎 nice! ' );
 		return false;
 	}
@@ -670,11 +675,12 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 
 		// Select a new image
 		const choice: WordPressConfig = await promptForComponent( 'wordpress', false, null );
-		const version: WordPressTag = ( ( versions.find( ( { tag } ) => tag.trim() === choice.tag.trim() ): any ): WordPressTag );
+		const version: WordPressTag | undefined = versions.find( ( { tag } ) => tag.trim() === choice.tag.trim() );
 
 		// Write new data and stage for rebuild
-		envData.wordpress.tag = version.tag;
-		envData.wordpress.ref = version.ref;
+		// FIXME: version?.tag is possibly null. Should we throw if we can't find a version somehow?
+		envData.wordpress.tag = version?.tag || '';
+		envData.wordpress.ref = version?.ref;
 
 		await updateEnvironment( envData );
 
@@ -693,9 +699,9 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 /**
  * Makes a web call to raw.githubusercontent.com
  */
-export function fetchVersionList(): Promise<any> {
+export function fetchVersionList(): Promise<WordPressTag[]> {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	return fetch( url ).then( res => res.json() );
+	return fetch( url ).then( res => res.json() as unknown as WordPressTag[] );
 }
 
 /**
@@ -710,7 +716,8 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise<b
 		const { mtime: expire } = await fs.promises.stat( cacheFile );
 		expire.setSeconds( expire.getSeconds() + ttl );
 
-		return ( +new Date > expire );
+		// FIXME: There's no tests for isVersionListExpired so we have this type nightmare for now
+		return ( +new Date > (expire as unknown as number) );
 	} catch ( err ) {
 		return true;
 	}
@@ -732,7 +739,7 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 		}
 
 		// If the cache does not exist or has expired, refresh it
-		if ( await isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
+		if ( await isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL as number ) ) {
 			res = await fetchVersionList();
 			await fs.promises.writeFile( cacheFile, JSON.stringify( res ) );
 		}
@@ -745,7 +752,7 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 	// Try to parse the cached file if it exists.
 	try {
 		const data = await fs.promises.readFile( cacheFile, 'utf8' );
-		return JSON.parse( data );
+		return JSON.parse( data ) as WordPressTag[];
 	} catch ( err ) {
 		debug( err );
 		return [ {
@@ -802,7 +809,7 @@ export function generateVSCodeWorkspace( slug: string ) {
 }
 
 const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
-	const pathMappings = {};
+	const pathMappings: Record<string, string> = {};
 
 	if ( instanceData.muPlugins?.dir ) {
 		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
