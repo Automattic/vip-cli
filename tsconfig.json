@@ -17,9 +17,6 @@
       "*": [
         "./types/*",
         "./node_modules/*"
-      ],
-      "src/*": [
-        "./src/*"
       ]
     },
     // It's worth enabling this, I promise!
