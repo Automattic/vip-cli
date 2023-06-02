@@ -13,6 +13,12 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "paths": {
+      "*": [
+        "./types/*",
+        "./node_modules/*"
+      ]
+    },
     // It's worth enabling this, I promise!
     "noImplicitAny": true
   },

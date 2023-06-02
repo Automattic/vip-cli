@@ -29,7 +29,7 @@ export async function promptForValue( message: string, mustMatch?: string ): Pro
 		message,
 		name: 'str',
 		type: 'input',
-		validate: input => {
+		validate: (input: string) => {
 			if ( mustMatch && input !== mustMatch ) {
 				return `Please type ${ mustMatch } to proceed or ESC to cancel`;
 			}
