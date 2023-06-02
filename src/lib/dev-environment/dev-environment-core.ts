@@ -618,7 +618,7 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 			return false;
 		}
 	} catch ( err: unknown ) {
-		const error = err as Error & {code: string}
+		const error = err as Error & {code?: string}
 		// This can throw an exception if the env is build with older vip version
 		if ( 'ENOENT' === error.code ) {
 			message = 'Environment was created before update was supported.\n\n';
