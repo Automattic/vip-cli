@@ -14,6 +14,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import dns from 'dns';
+import { spawn } from 'child_process';
+import { which } from 'shelljs';
 
 /**
  * Internal dependencies
@@ -29,7 +31,8 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { getAllEnvironmentNames, getVersionList, readEnvironmentData } from './dev-environment-core';
+import { generateVSCodeWorkspace, getAllEnvironmentNames, getVSCodeWorkspacePath, getVersionList, readEnvironmentData } from './dev-environment-core';
+
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -78,7 +81,7 @@ declare function promptForComponent( component: 'wordpress', allowLocal: false, 
 // eslint-disable-next-line no-redeclare
 declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
 
-export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo?: any = {} ) {
+export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo: any = {} ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
@@ -289,16 +292,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	}
 
 	let multisiteText = 'Multisite';
-	let multisiteDefault = DEV_ENVIRONMENT_DEFAULTS.multisite;
-
 	if ( defaultOptions.title ) {
 		multisiteText += ` (${ defaultOptions.title } ${ defaultOptions.multisite ? 'IS' : 'is NOT' } multisite)`;
-		multisiteDefault = defaultOptions.multisite;
 	}
 
 	const instanceData: InstanceData = {
 		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: preselectedOptions.multisite !== undefined ? preselectedOptions.multisite : await promptForBoolean( multisiteText, !! multisiteDefault ),
+		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForMultisite( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
 		elasticsearch: false,
 		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
@@ -317,13 +317,13 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		xdebug: false,
 		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
-		mailhog: false,
+		mailpit: false,
 	};
 
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
-		mailhog: 'MailHog',
+		mailpit: 'Mailpit',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -354,7 +354,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailhog' ] ) {
+	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit' ] ) {
 		if ( service in instanceData ) {
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
@@ -478,6 +478,34 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
+export async function promptForMultisite( message: string, initial: string | boolean ): Promise<string | boolean> {
+	let result = { input: initial };
+
+	if ( isStdinTTY ) {
+		result = await prompt( {
+			type: 'input',
+			name: 'input',
+			message,
+			initial,
+		} );
+	}
+
+	let input = ( result?.input || initial.toString() ).trim();
+	const multisiteOptions = [ 'subdomain', 'subdirectory' ];
+	const allowedOptions = [ ...FALSE_OPTIONS, ...TRUE_OPTIONS, ...multisiteOptions, 'none' ];
+
+	if ( ! allowedOptions.includes( input ) && isStdinTTY ) {
+		const select = new Select( {
+			message: `Please choose a valid option for multisite:`,
+			choices: [ ...multisiteOptions, 'false' ],
+		} );
+
+		input = await select.run();
+	}
+
+	return processStringOrBooleanOption( input );
+}
+
 export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
 	if ( isStdinTTY ) {
 		const confirm = new Confirm( {
@@ -491,23 +519,43 @@ export function promptForBoolean( message: string, initial: boolean ): Promise<b
 	return Promise.resolve( initial );
 }
 
-function resolvePhpVersion( version: string ): string {
-	debug( `Resolving PHP version '${ version }'` );
+function resolveMultisite( value: string | boolean ): string | boolean {
+	const allowedValues = [ 'subdomain', 'subdirectory' ];
+	if ( typeof value === 'string' && ! allowedValues.includes( value ) ) {
+		return DEV_ENVIRONMENT_DEFAULTS.multisite;
+	}
 
-	if ( typeof version === 'string' && version.startsWith( 'image:' ) ) {
+	return value;
+}
+
+export function resolvePhpVersion( version: string ): string {
+	debug( `Resolving PHP version %j`, version );
+
+	if ( version.startsWith( 'image:' ) ) {
 		return version;
 	}
 
-	const versions = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
-	const images = ( ( Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ): any[] ): string[] );
-
-	const index = versions.findIndex( value => value === version );
-	if ( index === -1 ) {
+	let result: string;
+	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
+		const images: string[] = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value === version );
-		return image ?? images[ 0 ];
+		if ( image ) {
+			result = image;
+		} else if ( version.indexOf( '/' ) !== -1 ) {
+			// Assuming this is a Docker image
+			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
+			// and then called `vip dev-env update` again. The custom image won't match our images
+			// but we still want to use it.
+			result = version;
+		} else {
+			result = images[ 0 ];
+		}
+	} else {
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
 	}
 
-	return images[ index ];
+	debug( 'Resolved PHP image: %j', result );
+	return result;
 }
 
 export async function promptForPhpVersion( initialValue: string ): Promise<string> {
@@ -517,7 +565,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 	if ( isStdinTTY ) {
 		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		const initial = images.findIndex( version => version === initialValue );
+		let initial = images.findIndex( version => version === initialValue );
+		if (initial === -1) {
+			choices.push(initialValue);
+			initial = choices.length - 1;
+		}
 
 		const select = new Select( {
 			message: 'PHP version to use',
@@ -618,13 +670,26 @@ export function processBooleanOption( value: string ): boolean {
 	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
 }
 
+const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ];
+export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
+	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+		return false;
+	}
+
+	if ( TRUE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+		return true;
+	}
+
+	return value;
+}
+
 export function processVersionOption( value: string ): string {
 	if ( ! isNaN( value ) && value % 1 === 0 ) {
 		// If it's an Integer passed in, let's ensure that it has a decimal in it to match the version tags e.g. 6 => 6.0
 		return parseFloat( value ).toFixed( 1 );
 	}
 
-	return value;
+	return value + '';
 }
 
 export function addDevEnvConfigurationOptions( command: Command ): any {
@@ -639,7 +704,8 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
-		.option( [ 'A', 'mailhog' ], 'Enable MailHog. By default it is disabled', undefined, processBooleanOption );
+		.option( [ 'G', 'mailhog' ], 'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)', undefined, processBooleanOption )
+		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**
@@ -709,5 +775,57 @@ export function getEnvTrackingInfo( slug: string ): any {
 		return {
 			slug,
 		};
+	}
+}
+
+export interface PostStartOptions {
+	openVSCode: boolean
+}
+
+export async function postStart( slug: string, options: PostStartOptions ) {
+	if ( options.openVSCode ) {
+		launchVSCode( slug );
+	}
+}
+
+const launchVSCode = ( slug: string ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug );
+
+	if ( fs.existsSync( workspacePath ) ) {
+		console.log( 'VSCode workspace already exists, skipping creation.' );
+	} else {
+		generateVSCodeWorkspace( slug );
+		console.log( 'VSCode workspace generated' );
+	}
+
+	const vsCodeExecutable = getVSCodeExecutable();
+	if ( vsCodeExecutable ) {
+		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	} else {
+		console.log( `VSCode not detected in path, please open ${ workspacePath } with VSCode` );
+	}
+};
+
+const getVSCodeExecutable = () => {
+	const candidates = [ 'code', 'code-insiders', 'codium' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
+};
+
+export function handleDeprecatedOptions( opts: any ): void {
+	if ( opts.mailhog ) {
+		console.warn( chalk.yellow( 'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.' ) );
+		if ( opts.mailpit === undefined ) {
+			opts.mailpit = opts.mailhog;
+		}
+
+		delete opts.mailhog;
 	}
 }

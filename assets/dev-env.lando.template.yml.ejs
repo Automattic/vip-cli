@@ -9,6 +9,8 @@ proxy:
 <% } %>
   phpmyadmin:
     - <%= siteSlug %>-pma.vipdev.lndo.site
+  mailpit:
+    - <%= siteSlug %>-mailpit.vipdev.lndo.site:8025
 
 services:
   devtools:
@@ -52,6 +54,9 @@ services:
 <% if ( xdebugConfig ) { %>
         XDEBUG_CONFIG: "<%= xdebugConfig %>"
 <% } %>
+<% if ( autologinKey ) { %>
+        VIP_DEV_AUTOLOGIN_KEY: "<%= autologinKey %>"
+<% } %>
         LANDO_NO_USER_PERMS: 'enable'
         LANDO_NEEDS_EXEC: 1
       volumes:
@@ -69,8 +74,13 @@ services:
     run_as_root:
       - chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp
     run:
-      - sh /dev-tools/setup.sh database root "http://<%= siteSlug %>.vipdev.lndo.site/" "<%= wpTitle %>" <% if ( multisite ) { %> <%= siteSlug %>.vipdev.lndo.site <% } %>
-
+      - >
+        sh /dev-tools/setup.sh
+        --host database
+        --user root
+        --domain "http://<%= siteSlug %>.vipdev.lndo.site/"
+        --title "<%= wpTitle %>"
+        <% if ( multisite ) { %>--ms-domain "<%= siteSlug %>.vipdev.lndo.site" <% if ( multisite === true || multisite === 'subdomain' ) { %>--subdomain <% } %> <% } %>
   database:
     type: compose
     services:
@@ -197,9 +207,19 @@ services:
       clientcode_vipconfig: {}
 <% } %>
 
-<% if ( mailhog ) { %>
-  mailhog:
-    type: mailhog
+<% if ( mailpit ) { %>
+  mailpit:
+    type: compose
+    services:
+      image: axllent/mailpit:latest
+      command: /mailpit
+      ports:
+        - ":1025"
+        - ":8025"
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
 <% } %>
 
 tooling:

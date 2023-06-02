@@ -37,6 +37,7 @@ node_modules/
 
 # Liniting rules
 .eslintrc.json
+.eslintignore
 
 # Configs
 babel.config.js
@@ -46,3 +47,7 @@ renovate.json
 .vscode
 .idea
 *.iml
+
+parker.gql
+codegen.ts
+*.d.ts

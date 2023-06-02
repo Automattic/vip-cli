@@ -17,7 +17,15 @@ import chalk from 'chalk';
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
-import { addDevEnvConfigurationOptions, getEnvTrackingInfo, getEnvironmentName, handleCLIException, promptForArguments, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	addDevEnvConfigurationOptions,
+	getEnvTrackingInfo,
+	getEnvironmentName,
+	handleCLIException,
+	handleDeprecatedOptions,
+	promptForArguments,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
 import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -42,6 +50,8 @@ cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = await getEnvironmentName( opt );
 
+	handleDeprecatedOptions( opt );
+
 	const lando = await bootstrapLando();
 	await validateDependencies( lando, slug );
 
@@ -58,24 +68,15 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Read instance data', currentInstanceData );
 
-		const configurationFileOptions = await getConfigurationFileOptions();
-		let preselectedOptions = Object.assign( {}, opt );
-
-		if ( Object.keys( configurationFileOptions ).length > 0 ) {
-			preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
-		}
-
-		// Title and multisite can't be changed during update
-		const selectedOptions: InstanceOptions = {
+		const preselectedOptions: InstanceOptions = {
 			title: currentInstanceData.wpTitle,
 			multisite: currentInstanceData.multisite,
+			...opt,
 		};
 
-		Object.keys( preselectedOptions ).forEach( key => {
-			if ( ! ( key in selectedOptions ) ) {
-				selectedOptions[ key ] = preselectedOptions[ key ];
-			}
-		} );
+		const configurationFileOptions = await getConfigurationFileOptions();
+		const thereAreOptionsFromConfigFile = Object.keys( configurationFileOptions ).length > 0;
+		const finalPreselectedOptions = mergeConfigurationFileOptions( preselectedOptions, configurationFileOptions );
 
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
@@ -86,7 +87,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			mariadb: currentInstanceData.mariadb,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
-			mailhog: currentInstanceData.mailhog,
+			mailpit: currentInstanceData.mailpit ?? currentInstanceData.mailhog,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,
 			title: '',
@@ -96,8 +97,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => option.length > 1 ) // Filter out single letter aliases
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
-		const suppressPrompts = providedOptions.length > 0 || Object.keys( configurationFileOptions ).length > 0;
-		const instanceData = await promptForArguments( preselectedOptions, defaultOptions, suppressPrompts );
+		const suppressPrompts = providedOptions.length > 0 || thereAreOptionsFromConfigFile;
+		const instanceData = await promptForArguments( finalPreselectedOptions, defaultOptions, suppressPrompts );
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );

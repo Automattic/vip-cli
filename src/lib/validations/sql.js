@@ -167,16 +167,16 @@ const infoCheckFormatter = ( check: CheckType ) => {
 };
 
 function checkTablePrefixes( results: CheckResult[], errors, infos ) {
-	const wpTables = [],
-		notWPTables = [],
-		wpMultisiteTables = [];
+	const wpTables = [];
+	const notWPTables = [];
+	const wpMultisiteTables = [];
 	results.forEach( result => {
 		const tableName = result.text || '';
-		if ( tableName.match( /^wp_(\d+_)/ ) ) {
+		if ( RegExp(/^wp_(\d+_)/).exec(tableName) ) {
 			wpMultisiteTables.push( tableName );
-		} else if ( tableName.match( /^wp_/ ) ) {
+		} else if ( tableName.startsWith( 'wp_' ) ) {
 			wpTables.push( tableName );
-		} else if ( ! tableName.match( /^wp_/ ) ) {
+		} else {
 			notWPTables.push( tableName );
 		}
 	} );
@@ -327,7 +327,7 @@ const checks: Checks = {
 };
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
-function findDuplicates( arr: Array<*>, where: Set<*> ) {
+function findDuplicates( arr: Array<any>, where: Set<any> ) {
 	const filtered = arr.filter( item => {
 		if ( where.has( item ) ) {
 			where.delete( item );

@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  DO_NOT_TRACK: '1'
+
 jobs:
   test:
     name: Run E2E Tests, shard ${{ matrix.shard }}
@@ -37,7 +40,7 @@ jobs:
 
       - name: Preload Docker images
         run: |
-          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailhog true && \
+          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true && \
           vip dev-env start -w && \
           vip dev-env destroy
 

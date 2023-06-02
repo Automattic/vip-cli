@@ -17,38 +17,37 @@ describe( 'utils/cli/config', () => {
 			description: 'should return development if config.local.json is present',
 			files: { local: true, publish: true },
 			expected: { environment: 'development' },
-			hasError: false,
 		},
 		{
 			description: 'should return production if config.local.json is missing',
 			files: { local: false, publish: true },
 			expected: { environment: 'production' },
-			hasError: false,
 		},
 		{
 			description: 'should throw error if config.local.json and config.publish.json are missing',
 			files: { local: false, publish: false },
-			expected: { error: 'error' },
-			hasError: true,
+			expected: Error,
 		},
-	] )( '$description', ( { files, expected, hasError } ) => {
+	] )( '$description', ( { files, expected } ) => {
 		// An array of files would've been nicer but it doesn't play well with jest.doMock
 		if ( ! files.local ) {
-			jest.doMock( 'root/config/config.local.json', () => {
+			jest.doMock( '../../../config/config.local.json', () => {
 				throw new Error();
 			} );
 		}
 		if ( ! files.publish ) {
-			jest.doMock( 'root/config/config.publish.json', () => {
+			jest.doMock( '../../../config/config.publish.json', () => {
 				throw new Error();
 			} );
 		}
-		try {
-			const config = require( 'lib/cli/config' );
-			expect( config.default ).toMatchObject( expected );
-		} catch ( error ) {
+
+		if ( ! files.local && ! files.publish ) {
 			// eslint-disable-next-line jest/no-conditional-expect
-			expect( hasError ).toBe( true );
+			expect( () => require( '../../../src/lib/cli/config' ) ).toThrow( expected );
+		} else {
+			const config = require( '../../../src/lib/cli/config' );
+			// eslint-disable-next-line jest/no-conditional-expect
+			expect( config.default ).toMatchObject( expected );
 		}
 	} );
 } );

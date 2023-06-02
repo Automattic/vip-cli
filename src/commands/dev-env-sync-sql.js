@@ -11,6 +11,7 @@
 
 import fs from 'fs';
 import chalk from 'chalk';
+import urlLib from 'url';
 import { replace } from '@automattic/vip-search-replace';
 
 /**
@@ -35,8 +36,8 @@ function findSiteHomeUrl( sql ) {
 	const results = sql.match( regex );
 
 	if ( results ) {
-		const domain = results[ 2 ].replace( /https?:\/\//, '' );
-		return domain;
+		const url = results[ 2 ];
+		return urlLib.parse( url ).hostname;
 	}
 
 	return null;
@@ -53,16 +54,16 @@ async function extractSiteUrls( sqlFile ) {
 	const readInterface = await getReadInterface( sqlFile );
 
 	return new Promise( ( resolve, reject ) => {
-		const domains = [];
+		const domains = new Set();
 		readInterface.on( 'line', line => {
 			const domain = findSiteHomeUrl( line );
 			if ( domain ) {
-				domains.push( domain );
+				domains.add( '//' + domain );
 			}
 		} );
 
 		readInterface.on( 'close', () => {
-			resolve( domains );
+			resolve( Array.from( domains ) );
 		} );
 
 		readInterface.on( 'error', reject );
@@ -75,23 +76,26 @@ export class DevEnvSyncSQLCommand {
 	slug;
 	tmpDir;
 	siteUrls;
+	track;
 
 	/**
 	 * Creates a new instance of the command
 	 *
-	 * @param {string} app  The app object
-	 * @param {string} env  The environment object
-	 * @param {string} slug The site slug
+	 * @param {string}   app       The app object
+	 * @param {string}   env       The environment object
+	 * @param {string}   slug      The site slug
+	 * @param {Function} trackerFn Function to call for tracking
 	 */
-	constructor( app, env, slug ) {
+	constructor( app, env, slug, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.slug = slug;
+		this.track = trackerFn;
 		this.tmpDir = makeTempDir();
 	}
 
 	get landoDomain() {
-		return `${ this.slug }.vipdev.lndo.site`;
+		return `//${ this.slug }.vipdev.lndo.site`;
 	}
 
 	get sqlFile() {
@@ -109,7 +113,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the export is complete
 	 */
 	async generateExport() {
-		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile );
+		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile, this.track );
 		await exportCommand.run();
 	}
 
@@ -124,10 +128,15 @@ export class DevEnvSyncSQLCommand {
 		const replacements = this.siteUrls.reduce( ( acc, url ) => [ ...acc, url, this.landoDomain ], [] );
 		const readStream = fs.createReadStream( this.sqlFile );
 		const replacedStream = await replace( readStream, replacements );
-		replacedStream.pipe( fs.createWriteStream( this.sqlFile ) );
+
+		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
+		replacedStream.pipe( fs.createWriteStream( outputFile ) );
 
 		return new Promise( ( resolve, reject ) => {
-			replacedStream.on( 'finish', resolve );
+			replacedStream.on( 'finish', () => {
+				fs.renameSync( outputFile, this.sqlFile );
+				resolve();
+			} );
 			replacedStream.on( 'error', reject );
 		} );
 	}
@@ -140,11 +149,10 @@ export class DevEnvSyncSQLCommand {
 	 */
 	async runImport() {
 		const importOptions = {
-			slug: this.slug,
 			inPlace: true,
 			skipValidate: true,
 		};
-		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions );
+		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run( true );
 	}
 
@@ -166,7 +174,8 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			exit.withError( `Error extracting the SQL export: ${ err?.message }` );
+			await this.track( 'archive_extraction_error', { errorMessage: err.message } );
+			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
 
 		try {
@@ -184,6 +193,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
+			await this.track( 'search_replace_error', { errorMessage: err?.message } );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
 
@@ -192,6 +202,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
+			await this.track( 'import_error', { errorMessage: err?.message } );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}

@@ -245,8 +245,8 @@ ${ maybeExitPrompt }
 				const { importStatus, launched } = status;
 				let { importJob } = status;
 
-				let jobStatus,
-					jobSteps = [];
+				let jobStatus;
+				let jobSteps = [];
 				if ( env.isK8sResident ) {
 					// in the future the API may provide this in k8s jobs so account for that.
 					// Until then we need to create the importJob from the status object.
@@ -256,7 +256,7 @@ ${ maybeExitPrompt }
 
 						// if the progress meta isn't filled out yet, wait until it is.
 						if ( ! statusSteps ) {
-							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL ); // NOSONAR
 						}
 
 						jobSteps = statusSteps.map( step => {
@@ -361,11 +361,11 @@ ${ maybeExitPrompt }
 
 				overallStatus = 'running';
 
-				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
+				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL ); // NOSONAR
 			};
 
 			// Kick off the check
-			checkStatus();
+			void checkStatus();
 		} );
 
 	try {

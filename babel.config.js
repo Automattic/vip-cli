@@ -1,5 +1,12 @@
 module.exports = {
 	presets: [
+		'@babel/preset-flow',
+		[
+			"@babel/preset-typescript",
+			{
+				"allowDeclareFields": true
+			}
+		],
 		[
 			'@babel/preset-env',
 			{
@@ -8,7 +15,6 @@ module.exports = {
 				},
 			},
 		],
-		'@babel/preset-flow',
 	],
 	plugins: [
 		'@babel/plugin-transform-modules-commonjs',
@@ -24,4 +30,14 @@ module.exports = {
 			},
 		],
 	],
+	env: {
+		test: {
+			// see https://github.com/facebook/jest/issues/936#issuecomment-821944391
+			// Jest has no good way of partially mocking a module
+			plugins: ['explicit-exports-references']
+		}
+	},
+	ignore: [
+		"**/*.d.ts"
+	]
 };

@@ -4,7 +4,7 @@
 import { describe, expect, jest } from '@jest/globals';
 import fs from 'fs';
 import { replace } from '@automattic/vip-search-replace';
-import { PassThrough, Stream } from 'stream';
+import { PassThrough } from 'stream';
 
 /**
  * Internal dependencies
@@ -44,6 +44,7 @@ const mockWriteStream = getMockStream( [ { name: 'finish' } ], 20 );
 
 jest.spyOn( fs, 'createReadStream' ).mockReturnValue( mockReadStream );
 jest.spyOn( fs, 'createWriteStream' ).mockReturnValue( mockWriteStream );
+jest.spyOn( fs, 'renameSync' ).mockImplementation( () => {} );
 jest.mock( '@automattic/vip-search-replace', () => {
 	return {
 		replace: jest.fn(),
@@ -65,6 +66,8 @@ replace.mockResolvedValue( mockReadStream );
 unzipFile.mockResolvedValue();
 getReadInterface.mockReturnValue( getMockStream( [ { name: 'close' } ] ), 100 );
 
+jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+
 describe( 'commands/DevEnvSyncSQLCommand', () => {
 	const app = { id: 123, name: 'test-app' };
 	const env = { id: 456, name: 'test-env' };
@@ -84,11 +87,11 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the SQL file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
-			cmd.siteUrls = [ 'test.go-vip.com' ];
+			cmd.siteUrls = [ '//test.go-vip.com' ];
 			cmd.slug = 'test-slug';
 
 			await cmd.runSearchReplace();
-			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ 'test.go-vip.com', 'test-slug.vipdev.lndo.site' ] );
+			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ '//test.go-vip.com', '//test-slug.vipdev.lndo.site' ] );
 		} );
 	} );
 

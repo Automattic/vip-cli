@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/valid-types */
 const path = require( 'node:path' );
 
 /** @type {import('jest').Config} */
@@ -16,6 +15,7 @@ const config = {
 	testTimeout: 120000,
 	maxWorkers: process.env.CI ? 1 : 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
+	forceExit: true,
 };
 
 module.exports = config;

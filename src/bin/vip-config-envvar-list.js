@@ -17,7 +17,6 @@ import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
 import { appQuery, listEnvVars } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
-import { rollbar } from '../lib/rollbar';
 import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip @mysite.develop config envvar list';
@@ -30,7 +29,7 @@ const examples = [
 	},
 ];
 
-export async function listEnvVarsCommand( arg: string[], opt ): void {
+export async function listEnvVarsCommand( arg: string[], opt ): Promise<void> {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,
@@ -44,7 +43,6 @@ export async function listEnvVarsCommand( arg: string[], opt ): void {
 
 	const envvars = await listEnvVars( opt.app.id, opt.env.id )
 		.catch( async err => {
-			rollbar.error( err );
 			await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
 
 			throw err;

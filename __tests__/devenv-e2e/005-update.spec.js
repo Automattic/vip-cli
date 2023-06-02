@@ -60,6 +60,8 @@ describe( 'vip dev-env update', () => {
 
 		const dataAfter = readEnvironmentData( slug );
 
+		delete dataBefore.autologinKey;
+		delete dataAfter.autologinKey;
 		expect( dataBefore ).toEqual( dataAfter );
 	} );
 
@@ -68,7 +70,7 @@ describe( 'vip dev-env update', () => {
 		const expectedElasticsearch = false;
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
-		const expectedMailHog = false;
+		const expectedMailpit = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -82,7 +84,7 @@ describe( 'vip dev-env update', () => {
 			elasticsearch: expectedElasticsearch,
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
-			mailhog: expectedMailHog,
+			mailpit: expectedMailpit,
 		} );
 
 		result = await cliTest.spawn( [
@@ -91,7 +93,7 @@ describe( 'vip dev-env update', () => {
 			'-e', `${ ! expectedElasticsearch }`,
 			'-p', `${ ! expectedPhpMyAdmin }`,
 			'-x', `${ ! expectedXDebug }`,
-			'--mailhog', `${ ! expectedMailHog }`,
+			'-A', `${ ! expectedMailpit }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
@@ -102,7 +104,7 @@ describe( 'vip dev-env update', () => {
 			elasticsearch: ! expectedElasticsearch,
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
-			mailhog: ! expectedMailHog,
+			mailpit: ! expectedMailpit,
 		} );
 	} );
 
@@ -166,19 +168,19 @@ describe( 'vip dev-env update', () => {
 		const result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
-			'--mailhog', 'true',
+			'--mailpit', 'true',
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
 
 		const dataAfter = readEnvironmentData( slug );
 		expect( dataAfter ).toMatchObject( {
 			mariadb: expect.any( String ),
-			mailhog: true,
+			mailpit: true,
 		} );
 
 		const landofile = await readFile( dst[ 1 ], 'utf8' );
 		expect( landofile ).not.toContain( 'image: mysql:' );
 		expect( landofile ).toContain( 'image: mariadb:' );
-		expect( landofile ).toContain( 'mailhog:' );
+		expect( landofile ).toContain( 'mailpit:' );
 	} );
 } );

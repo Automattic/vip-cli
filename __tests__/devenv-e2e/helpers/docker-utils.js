@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/valid-types */
 /* eslint-disable id-length */
 
 /**

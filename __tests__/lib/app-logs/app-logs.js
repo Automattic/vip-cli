@@ -59,18 +59,18 @@ describe( 'getRecentLogs()', () => {
 		} );
 	} );
 
-	it( 'should throw when logs field is not returned', async () => {
+	it( 'should throw when logs field is not returned', () => {
 		const queryMock = jest.fn();
 
 		API.mockImplementation( () => ( {
 			query: queryMock,
 		} ) );
 
-		queryMock.mockImplementation( () => {} );
+		queryMock.mockImplementation( () => ({ data: {} }) );
 
 		const result = getRecentLogs( 1, 3, 'batch', 1200 );
 
-		await expect( result ).rejects.toThrow( 'Unable to query logs' );
+		return expect( result ).rejects.toThrow( 'Unable to query logs' );
 	} );
 } );
 

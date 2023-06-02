@@ -1,18 +1,19 @@
 // @flow
 export interface InstanceOptions {
 	title?: string;
-	multisite?: boolean;
+	multisite?: boolean | 'subdomain' | 'subdirectory';
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
 	elasticsearch?: boolean;
-	mariadb?: string;
+	mariadb?: string; // Legacy
 	php?: string;
 	mediaRedirectDomain?: string;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	xdebugConfig?: string;
-	mailhog?: boolean;
+	mailhog?: boolean; // Legacy
+	mailpit?: boolean;
 
 	[index: string]: string | boolean;
 }
@@ -57,7 +58,7 @@ export type ConfigurationFileOptions = {
 	version?: string;
 	slug?: string;
 	title?: string;
-	multisite?: boolean;
+	multisite?: boolean | 'subdomain' | 'subdirectory';
 	php?: string;
 	wordpress?: string;
 	'mu-plugins'?: string;
@@ -65,13 +66,16 @@ export type ConfigurationFileOptions = {
 	elasticsearch?: boolean;
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
-	mailhog?: boolean;
+	'xdebug-config'?: string;
+	mailhog?: boolean; // Legacy
+	mailpit?: boolean;
+	'media-redirect-domain'?: string;
 }
 
 export interface InstanceData {
 	siteSlug: string;
 	wpTitle: string;
-	multisite: boolean;
+	multisite: boolean | 'subdomain' | 'subdirectory';
 	wordpress: WordPressConfig;
 	muPlugins: ComponentConfig;
 	appCode: ComponentConfig;
@@ -79,11 +83,13 @@ export interface InstanceData {
 	phpmyadmin: boolean;
 	xdebug: boolean;
 	xdebugConfig?: string;
-	mariadb?: string;
+	mariadb?: string; // Legacy
 	php: string;
 	elasticsearch?: string | boolean;
-	mailhog: boolean;
+	mailhog?: boolean; // Legacy
+	mailpit: boolean;
 	pullAfter?: number;
+	autologinKey?: string;
 
 	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }

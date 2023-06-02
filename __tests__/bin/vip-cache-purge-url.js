@@ -12,7 +12,7 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT CACHE PURGE WITH ERROR'; // Prevent actually exiting like the lib does
 } );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
@@ -21,15 +21,15 @@ jest.mock( 'lib/cli/command', () => {
 	return jest.fn( () => commandMock );
 } );
 
-jest.mock( 'lib/api/cache-purge', () => ( {
+jest.mock( '../../src/lib/api/cache-purge', () => ( {
 	purgeCache: jest.fn(),
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-jest.mock( 'lib/read-file', () => ( {
+jest.mock( '../../src/lib/read-file', () => ( {
 	readFromFile: jest.fn(),
 } ) );
 

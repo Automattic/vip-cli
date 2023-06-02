@@ -1,27 +1,39 @@
 {
-  "parser": "@babel/eslint-parser",
-  "plugins": [
-    "flowtype"
-  ],
   "extends": [
     "plugin:@automattic/wpvip/base",
     "plugin:@automattic/wpvip/testing",
-    "plugin:flowtype/recommended",
+    "plugin:@automattic/wpvip/typescript",
     "plugin:jest/recommended"
   ],
   "rules": {
     "no-console": 0,
     "no-process-exit": 0,
-    "jsdoc/check-tag-names": [1, {
-      "definedTags": ["flow", "format"]
-    }],
     "security/detect-object-injection": 0,
     "security/detect-non-literal-fs-filename": 0,
     "security/detect-unsafe-regex": 0,
     "security/detect-non-literal-regexp": 0,
     "security/detect-non-literal-require": 0
   },
-  "globals": {
-    "jest/globals": true
-  }
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "parser": "@babel/eslint-parser",
+      "plugins": [
+        "flowtype"
+      ],
+      "extends": [
+        "plugin:flowtype/recommended"
+      ],
+      "globals": {
+        "jest/globals": true
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": ["./tsconfig.json"]
+      }
+    }
+  ]
 }

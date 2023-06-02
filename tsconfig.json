@@ -1,0 +1,37 @@
+{
+  "extends": "@tsconfig/node16/tsconfig.json",
+  "compilerOptions": {
+    // Target latest version of ECMAScript.
+    "target": "esnext",
+    // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
+    "allowJs": false,
+    // Don't emit; allow Babel to transform files.
+    "noEmit": true,
+    // Can't checkJs if we don't allowJs, so this remains false
+    "checkJs": false,
+    // Disallow features that require cross-file information for emit as we're using Babel
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "./types/*",
+        "./node_modules/*"
+      ]
+    },
+    // It's worth enabling this, I promise!
+    "noImplicitAny": true
+  },
+  "include": [
+    "src",
+    "helpers",
+    "config",
+    "__tests__",
+    "__fixtures__",
+    "noImplictAnyImportBypass.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.js"
+  ]
+}
