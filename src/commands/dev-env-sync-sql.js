@@ -33,14 +33,9 @@ import { DevEnvImportSQLCommand } from './dev-env-import-sql';
  */
 function findSiteHomeUrl( sql ) {
 	const regex = "'(siteurl|home)',\\s?'(.*?)'";
-	const results = sql.match( regex );
+	const url = sql.match( regex )?.[ 2 ] || '';
 
-	if ( results ) {
-		const url = results[ 2 ];
-		return urlLib.parse( url ).hostname;
-	}
-
-	return null;
+	return urlLib.parse( url ).hostname || null;
 }
 
 /**
@@ -58,12 +53,13 @@ async function extractSiteUrls( sqlFile ) {
 		readInterface.on( 'line', line => {
 			const domain = findSiteHomeUrl( line );
 			if ( domain ) {
-				domains.add( '//' + domain );
+				domains.add( domain );
 			}
 		} );
 
 		readInterface.on( 'close', () => {
-			resolve( Array.from( domains ) );
+			// Soring by length so that longest domains are replaced first
+			resolve( Array.from( domains ).sort( ( dom1, dom2 ) => dom2.length - dom1.length ) );
 		} );
 
 		readInterface.on( 'error', reject );
@@ -76,6 +72,7 @@ export class DevEnvSyncSQLCommand {
 	slug;
 	tmpDir;
 	siteUrls;
+	searchReplaceMap;
 	track;
 
 	/**
@@ -95,7 +92,7 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	get landoDomain() {
-		return `//${ this.slug }.vipdev.lndo.site`;
+		return `${ this.slug }.vipdev.lndo.site`;
 	}
 
 	get sqlFile() {
@@ -125,7 +122,7 @@ export class DevEnvSyncSQLCommand {
 	 * @throws {Error} If there is an error reading the file
 	 */
 	async runSearchReplace() {
-		const replacements = this.siteUrls.reduce( ( acc, url ) => [ ...acc, url, this.landoDomain ], [] );
+		const replacements = Object.entries( this.searchReplaceMap ).flat();
 		const readStream = fs.createReadStream( this.sqlFile );
 		const replacedStream = await replace( readStream, replacements );
 
@@ -139,6 +136,26 @@ export class DevEnvSyncSQLCommand {
 			} );
 			replacedStream.on( 'error', reject );
 		} );
+	}
+
+	generateSearchReplaceMap() {
+		this.searchReplaceMap = {};
+
+		for ( const url of this.siteUrls ) {
+			this.searchReplaceMap[ url ] = this.landoDomain;
+		}
+
+		const networkSites = this.env.wpSites.nodes
+		if ( ! networkSites ) return;
+
+		for ( const site of networkSites ) {
+			if ( ! site.blogId || site.blogId === 1 ) continue;
+
+			const url = site.homeUrl.replace( /https?:\/\//, '' );
+			if ( ! this.searchReplaceMap[ url ] ) return;
+
+			this.searchReplaceMap[ url ] = `${ site.blogId }.${ this.landoDomain }`;
+		}
 	}
 
 	/**
@@ -185,11 +202,15 @@ export class DevEnvSyncSQLCommand {
 			exit.withError( `Error extracting site URLs: ${ err?.message }` );
 		}
 
+		console.log( 'Generating search-replace configuration...' );
+		this.generateSearchReplaceMap();
+
 		try {
 			console.log( 'Running the following search-replace operations on the SQL file:' );
-			this.siteUrls.forEach( domain => {
-				console.log( `  ${ domain } -> ${ this.landoDomain }` );
-			} );
+			for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap )  ) {
+				console.log( `  ${ domain } -> ${ landoDomain }` );
+			}
+
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
