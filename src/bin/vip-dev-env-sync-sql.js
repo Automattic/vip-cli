@@ -40,8 +40,9 @@ const appQuery = `
 		primaryDomain { name }
 		uniqueLabel
 		isMultisite
-		wpSites {
+		wpSitesSDS {
 			nodes {
+				id
 				blogId
 				homeUrl
 			}

@@ -145,7 +145,7 @@ export class DevEnvSyncSQLCommand {
 			this.searchReplaceMap[ url ] = this.landoDomain;
 		}
 
-		const networkSites = this.env.wpSites.nodes
+		const networkSites = this.env.wpSitesSDS.nodes
 		if ( ! networkSites ) return;
 
 		for ( const site of networkSites ) {
