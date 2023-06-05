@@ -70,7 +70,7 @@ jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
 describe( 'commands/DevEnvSyncSQLCommand', () => {
 	const app = { id: 123, name: 'test-app' };
-	const env = { id: 456, name: 'test-env', wpSites: {} };
+	const env = { id: 456, name: 'test-env', wpSitesSDS: {} };
 
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
