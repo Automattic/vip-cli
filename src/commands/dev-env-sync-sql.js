@@ -167,7 +167,7 @@ export class DevEnvSyncSQLCommand {
 			await this.generateExport();
 		} catch ( err ) {
 			// this.generateExport probably catches all exceptions and runs exit.withError() already but just in case, let's log it here
-			await this.track('error', { error_type: 'export_sql_backup', errorMessage: err?.message, stack: err?.stack })
+			await this.track( 'error', { error_type: 'export_sql_backup', errorMessage: err?.message, stack: err?.stack } )
 			exit.withError( `Error exporting SQL backup: ${ err?.message }` );
 		}
 
