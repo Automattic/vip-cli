@@ -171,7 +171,7 @@ export class DevEnvSyncSQLCommand {
 			// the following will not get executed if this.generateExport() calls exit.withError() on all exception
 			await this.track( 'error', {
 				error_type: 'export_sql_backup',
-				errorMessage: err?.message,
+				error_message: err?.message,
 				stack: err?.stack
 			} );
 			exit.withError( `Error exporting SQL backup: ${ err?.message }` );
@@ -182,7 +182,11 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			await this.track( 'error', { error_type: 'archive_extraction', errorMessage: err?.message, stack: err?.stack } );
+			await this.track( 'error', {
+				error_type: 'archive_extraction',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
 
@@ -192,7 +196,7 @@ export class DevEnvSyncSQLCommand {
 		} catch ( err ) {
 			await this.track( 'error', {
 				error_type: 'extract_site_urls',
-				errorMessage: err?.message,
+				error_message: err?.message,
 				stack: err?.stack
 			} );
 			exit.withError( `Error extracting site URLs: ${ err?.message }` );
@@ -206,7 +210,11 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
-			await this.track( 'error', { error_type: 'search_replace', errorMessage: err?.message, stack: err?.stack } );
+			await this.track( 'error', {
+				error_type: 'search_replace',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
 
@@ -215,7 +223,11 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
-			await this.track( 'error', { error_type: 'import_sql_file', errorMessage: err?.message, stack: err?.stack } );
+			await this.track( 'error', {
+				error_type: 'import_sql_file',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}
