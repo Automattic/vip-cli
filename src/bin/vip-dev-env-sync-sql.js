@@ -60,7 +60,7 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, slug } ) => {
-		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', { app: app.id, env: env.uniqueLabel, slug } );
+		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', { app: app.id, env: env.uniqueLabel, slug, multisite: env.isMultisite } );
 		await trackerFn( 'execute' );
 
 		const lando = await bootstrapLando();
