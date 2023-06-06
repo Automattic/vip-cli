@@ -209,7 +209,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
-			await this.track( 'error', { error_type: 'import', errorMessage: err?.message, stack: err?.stack } );
+			await this.track( 'error', { error_type: 'import_sql_file', errorMessage: err?.message, stack: err?.stack } );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}
