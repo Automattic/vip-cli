@@ -174,7 +174,7 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			await this.track( 'archive_extraction_error', { errorMessage: err.message } );
+			await this.track( 'error', { error_type: 'archive_extraction', errorMessage: err.message, stack: err?.stack } );
 			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
 
@@ -182,6 +182,7 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Extracting site urls from the SQL file...' );
 			this.siteUrls = await extractSiteUrls( this.sqlFile );
 		} catch ( err ) {
+			await this.track( 'error', { error_type: 'extract_site_urls', errorMessage: err?.message, stack: err?.stack})
 			exit.withError( `Error extracting site URLs: ${ err?.message }` );
 		}
 
@@ -193,7 +194,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
-			await this.track( 'search_replace_error', { errorMessage: err?.message } );
+			await this.track( 'error', { error_type: 'search_replace', errorMessage: err?.message, stack: err?.stack } );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
 
@@ -202,7 +203,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
-			await this.track( 'import_error', { errorMessage: err?.message } );
+			await this.track( 'error', { error_type: 'import', errorMessage: err?.message, stack: err?.stack } );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}
