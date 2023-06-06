@@ -184,7 +184,11 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Extracting site urls from the SQL file...' );
 			this.siteUrls = await extractSiteUrls( this.sqlFile );
 		} catch ( err ) {
-			await this.track( 'error', { error_type: 'extract_site_urls', errorMessage: err?.message, stack: err?.stack})
+			await this.track( 'error', {
+				error_type: 'extract_site_urls',
+				errorMessage: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error extracting site URLs: ${ err?.message }` );
 		}
 

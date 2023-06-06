@@ -310,7 +310,11 @@ export class ExportSQLCommand {
 			try {
 				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
 			} catch ( err ) {
-				await this.track( 'error', { error_type: 'cannot_write_to_path', error_message: `Cannot write to the specified path: ${ err?.message }`, stack: err?.stack, } );
+				await this.track( 'error', {
+					error_type: 'cannot_write_to_path',
+					error_message: `Cannot write to the specified path: ${ err?.message }`,
+					stack: err?.stack
+				} );
 				exit.withError( `Cannot write to the specified path: ${ err?.message }` );
 			}
 		}
