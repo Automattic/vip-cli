@@ -9,8 +9,8 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
-import { Query } from 'src/graphqlTypes';
 import { GetAppLogsQueryVariables } from './app-logs.generated';
+import { Query } from '../../graphqlTypes';
 
 export const LIMIT_MAX = 5000;
 

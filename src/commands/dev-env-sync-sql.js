@@ -166,6 +166,14 @@ export class DevEnvSyncSQLCommand {
 		try {
 			await this.generateExport();
 		} catch ( err ) {
+			// this.generateExport probably catches all exceptions, track the event and runs exit.withError() but if things go really wrong
+			// and we have no tracking data, we would at least have it logged here.
+			// the following will not get executed if this.generateExport() calls exit.withError() on all exception
+			await this.track( 'error', {
+				error_type: 'export_sql_backup',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error exporting SQL backup: ${ err?.message }` );
 		}
 
@@ -174,7 +182,11 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			await this.track( 'archive_extraction_error', { errorMessage: err.message } );
+			await this.track( 'error', {
+				error_type: 'archive_extraction',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
 
@@ -182,6 +194,11 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Extracting site urls from the SQL file...' );
 			this.siteUrls = await extractSiteUrls( this.sqlFile );
 		} catch ( err ) {
+			await this.track( 'error', {
+				error_type: 'extract_site_urls',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error extracting site URLs: ${ err?.message }` );
 		}
 
@@ -193,7 +210,11 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
-			await this.track( 'search_replace_error', { errorMessage: err?.message } );
+			await this.track( 'error', {
+				error_type: 'search_replace',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
 
@@ -202,7 +223,11 @@ export class DevEnvSyncSQLCommand {
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 		} catch ( err ) {
-			await this.track( 'import_error', { errorMessage: err?.message } );
+			await this.track( 'error', {
+				error_type: 'import_sql_file',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}
 	}
