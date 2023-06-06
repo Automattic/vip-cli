@@ -166,6 +166,8 @@ export class DevEnvSyncSQLCommand {
 		try {
 			await this.generateExport();
 		} catch ( err ) {
+			// this.generateExport probably catches all exceptions and runs exit.withError() already but just in case, let's log it here
+			await this.track('error', { error_type: 'export_sql_backup', errorMessage: err?.message, stack: err?.stack })
 			exit.withError( `Error exporting SQL backup: ${ err?.message }` );
 		}
 
@@ -174,7 +176,7 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-			await this.track( 'error', { error_type: 'archive_extraction', errorMessage: err.message, stack: err?.stack } );
+			await this.track( 'error', { error_type: 'archive_extraction', errorMessage: err?.message, stack: err?.stack } );
 			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
 
