@@ -222,6 +222,20 @@ services:
         LANDO_NEEDS_EXEC: 1
 <% } %>
 
+<% if ( photon ) { %>
+  photon:
+    type: compose
+    services:
+      image: ghcr.io/automattic/vip-container-images/photon:latest
+      command: /usr/sbin/php-fpm
+      environment:
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NO_SCRIPTS: 1
+        LANDO_NEEDS_EXEC: 1
+      volumes:
+        - ./uploads:/usr/share/webapps/photon/uploads:ro
+<% } %>
+
 tooling:
   wp:
     service: php

@@ -109,6 +109,7 @@ async function sanitizeConfiguration( configuration: Object ): Promise<Configura
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ],
+		photon: stringToBooleanIfDefined( configuration.photon ),
 	};
 
 	// Remove undefined values
@@ -135,6 +136,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		xdebugConfig: configurationFileOptions[ 'xdebug-config' ],
 		mailpit: configurationFileOptions.mailpit ?? configurationFileOptions.mailhog,
 		mediaRedirectDomain: configurationFileOptions[ 'media-redirect-domain' ],
+		photon: configurationFileOptions.photon,
 	};
 
 	const mergedOptions: InstanceOptions = {};

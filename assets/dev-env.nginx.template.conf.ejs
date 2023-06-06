@@ -1,6 +1,27 @@
-<% if ( mediaRedirectDomain ) { %>
+<% if ( photon ) { %>
 
-location ~* /wp-content/uploads {
+location ^~ /wp-content/uploads/ {
+    expires max;
+    log_not_found off;
+<% if ( mediaRedirectDomain ) { %>
+    if (!-f $request_filename) {
+        rewrite ^/(.*)$ <%= mediaRedirectDomain %>/$1 redirect;
+    }
+<% } %>
+
+    include fastcgi_params;
+    fastcgi_param DOCUMENT_ROOT /usr/share/webapps/photon;
+    fastcgi_param SCRIPT_FILENAME /usr/share/webapps/photon/index.php;
+    fastcgi_param SCRIPT_NAME /index.php;
+
+    if ($request_uri ~* \.(gif|jpe?g|png)\?) {
+        fastcgi_pass photon:9000;
+    }
+}
+
+<% } else if ( mediaRedirectDomain ) { %>
+
+location ^~ /wp-content/uploads {
     expires max;
     log_not_found off;
     try_files $uri @prod_site;

@@ -70,6 +70,7 @@ describe( 'vip dev-env create', () => {
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailpit = false;
+		const expectedPhoton = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -92,6 +93,7 @@ describe( 'vip dev-env create', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 	} );
 
@@ -105,6 +107,7 @@ describe( 'vip dev-env create', () => {
 		const expectedPhpMyAdmin = true;
 		const expectedXDebug = true;
 		const expectedMailpit = true;
+		const expectedPhoton = true;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -122,6 +125,7 @@ describe( 'vip dev-env create', () => {
 			'-p', `${ expectedPhpMyAdmin }`,
 			'-x', `${ expectedXDebug }`,
 			'-A', `${ expectedMailpit }`,
+			'-H', `${ expectedPhoton }`,
 		], { env }, true );
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
@@ -141,6 +145,7 @@ describe( 'vip dev-env create', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 	} );
 } );

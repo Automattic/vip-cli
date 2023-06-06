@@ -110,6 +110,7 @@ describe( 'vip dev-env configuration file', () => {
 		const expectedPhpMyAdmin = true;
 		const expectedXDebug = true;
 		const expectedMailpit = true;
+		const expectedPhoton = true;
 
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
@@ -124,6 +125,7 @@ describe( 'vip dev-env configuration file', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 			'mu-plugins': 'image',
 			'app-code': 'image',
 		} );
@@ -153,6 +155,7 @@ describe( 'vip dev-env configuration file', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 
 		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
@@ -164,6 +167,7 @@ describe( 'vip dev-env configuration file', () => {
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailpit = false;
+		const expectedPhoton = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -175,6 +179,7 @@ describe( 'vip dev-env configuration file', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 
 		const spawnOptions = {
@@ -193,6 +198,7 @@ describe( 'vip dev-env configuration file', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 
 		// Update environment from changed configuration file
@@ -203,6 +209,7 @@ describe( 'vip dev-env configuration file', () => {
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
+			photon: ! expectedPhoton,
 		} );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate ], spawnOptions, true );
@@ -216,6 +223,7 @@ describe( 'vip dev-env configuration file', () => {
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
+			photon: ! expectedPhoton,
 		} );
 	} );
 } );

@@ -318,12 +318,14 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		xdebugConfig: preselectedOptions.xdebugConfig,
 		siteSlug: '',
 		mailpit: false,
+		photon: false,
 	};
 
 	const promptLabels = {
 		xdebug: 'XDebug',
 		phpmyadmin: 'phpMyAdmin',
 		mailpit: 'Mailpit',
+		photon: 'Photon',
 	};
 
 	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -354,7 +356,7 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit' ] ) {
+	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit', 'photon' ] ) {
 		if ( service in instanceData ) {
 			if ( service in preselectedOptions ) {
 				instanceData[ service ] = preselectedOptions[ service ];
@@ -705,7 +707,8 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
 		.option( [ 'G', 'mailhog' ], 'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)', undefined, processBooleanOption )
-		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption );
+		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption )
+		.option( [ 'H', 'photon' ], 'Enable Photon. By default it is disabled', undefined, processBooleanOption );
 }
 
 /**
