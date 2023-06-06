@@ -373,7 +373,11 @@ export class ExportSQLCommand {
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
-			await this.track( 'error', { error_type: 'download_failed', error_message: err?.message, stack: err?.stack, } );
+			await this.track( 'error', {
+				error_type: 'download_failed',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
 	}
