@@ -3,6 +3,7 @@
   "compilerOptions": {
     // Target latest version of ECMAScript.
     "target": "esnext",
+    "module": "CommonJS",
     // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
     "allowJs": false,
     // Don't emit; allow Babel to transform files.
@@ -16,7 +17,10 @@
     "paths": {
       "*": [
         "./types/*",
-        "./node_modules/*"
+        "./node_modules/*",
+        "./node_modules/@types/*",
+        // needed because the noImplicitAnyImportBypass ovverides the node import too
+        "./node_modules/@types/node/*"
       ]
     },
     // It's worth enabling this, I promise!
@@ -28,10 +32,11 @@
     "config",
     "__tests__",
     "__fixtures__",
-    "noImplictAnyImportBypass.d.ts"
+    "noImplicitAnyImportBypass.d.ts",
+    // built-in globals like `console` doesn't work properly with the TypeScript language server without the following line
+    "./node_modules/@types/node/globals.d.ts"
   ],
   "exclude": [
-    "node_modules",
     "**/*.js"
   ]
 }
