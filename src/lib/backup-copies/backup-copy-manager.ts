@@ -2,11 +2,88 @@ import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
-import * as Stream from 'stream';
 import fs from 'fs/promises';
 import fsc, { ReadStream } from 'fs';
+import gql from 'graphql-tag';
+import API from '../../lib/api';
 import ReadableStream = NodeJS.ReadableStream;
-import * as net from 'net';
+import {
+	GetAppBackupsV2Query,
+	GetAppBackupsV2QueryVariables
+} from './backup-copy-manager.generated';
+import { back } from 'nock';
+
+const permissions = [
+	'backup-download:start',
+	'backup-download:generate-url'
+];
+
+const backupsQuery = gql`
+	query GetAppBackupsV2(
+		$appId: Int!
+		$environmentId: Int!
+		$permissions: [String] = []
+		$startDate: String
+		$endDate: String
+		$pagesize: Int
+	) {
+		app(id: $appId) {
+			id
+			environments(id: $environmentId) {
+				backups(first: $pagesize, startDate: $startDate, endDate: $endDate) {
+					total
+					nextCursor
+					nodes {
+						createdAt
+						id
+						environmentId
+						type
+						size
+						filename
+						dataset {
+							displayName
+						}
+					}
+				}
+				permissions(permissions: $permissions) {
+					permission
+					isAllowed
+				}
+			}
+		}
+	}
+`;
+
+interface RemoteBackup {
+	id: number;
+	size: number;
+	filename: string;
+	displayName: string;
+	createdAt: string;
+}
+
+const backupsCopyQuery = gql`
+	query GetBackupCopies(
+		$appId: Int!
+		$environmentId: Int!
+		$pagesize: Int
+	) {
+		dbBackupCopies(environmentId: $environmentId) {
+			nextCursor
+			nodes {
+				id
+				filePath
+				config {
+					backupLabel
+					networkSiteId
+					siteId
+					tables
+					#					TODO: Add backupId as well 
+				}
+			}
+		}
+	}
+`;
 
 export enum BackupConfiguration {
 	SINGLE = 'SINGLE', // single site out of a multi-site
@@ -131,16 +208,16 @@ class BackupCopyManager {
 	generateManifest(): Manifest {
 		return {
 			backup_label: backupConfigurationToLabel[ this.configuration.backupConfiguration ],
-			network_site_id: this.configuration.networkSiteId || null,
+			network_site_id: this.configuration.networkSiteId ?? null,
 			site_id: this.envId,
 			app_id: this.appId,
 			env_id: this.envId,
-			tables: this.configuration.tables || [],
-			downloaded_at: this.downloadedAt || null,
-			imported_at: this.importedAt || null,
+			tables: this.configuration.tables ?? [],
+			downloaded_at: this.downloadedAt ?? null,
+			imported_at: this.importedAt ?? null,
 			backup_id: this.configuration.backupId,
-			created_at: this.createdAt || null,
-			updated_at: this.updatedAt || null,
+			created_at: this.createdAt ?? null,
+			updated_at: this.updatedAt ?? null,
 		};
 	}
 
@@ -205,14 +282,10 @@ class BackupCopyManager {
 
 	static async getAllCachedBackupCopyManagers(): Promise<BackupCopyManager[]> {
 		const folders = await fs.readdir( BackupCopyManager.getCacheRootFolder() );
-		const managers = await Promise.all( folders.map( async folder => {
+		return await Promise.all( folders.map( async folder => {
 			const manifestPath = path.join( folder, MANIFEST_FILE_NAME );
-			const manager = await BackupCopyManager.createFromManifestPath( manifestPath );
-
-			return manager;
+			return await BackupCopyManager.createFromManifestPath( manifestPath );
 		} ) );
-
-		return managers;
 	}
 
 	async getCachedBackupCopyManagers(): Promise<BackupCopyManager[]> {
@@ -228,8 +301,49 @@ class BackupCopyManager {
 
 	}
 
-	async getRemoteBackups() {
+	async getRemoteBackups(): Promise<RemoteBackup[]> {
+		// TODO: Properly paginate as we're returning everything currently
+		const api = await API();
+		// everything is stored in UTC in our back-end
+		// but JS date APIs are in local timezone
+		const today = new Date();
+		const tomorrow = new Date( new Date().setDate( today.getDate() + 1 ) );
+		// we select tomorrow for users that are behind UTC
+		const tomorrowDate = `${ tomorrow.getUTCFullYear() }-${ tomorrow.getUTCMonth() }-${ tomorrow.getDate() }`;
+		// for now, many days ago is for 30 days ago
+		const manyDaysAgo = new Date( new Date().setDate( today.getDate() - 31 ) );
+		const manyDaysAgoDate = `${ manyDaysAgo.getUTCFullYear() }-${ manyDaysAgo.getUTCMonth() }-${ manyDaysAgo.getDate() }`;
 
+		const variables: GetAppBackupsV2QueryVariables = {
+			startDate: tomorrowDate,
+			endDate: manyDaysAgoDate,
+			appId: this.appId,
+			pagesize: 100,
+			environmentId: this.envId,
+			permissions
+		};
+
+		const { data } = await api.query<GetAppBackupsV2Query, GetAppBackupsV2QueryVariables>( {
+			query: backupsQuery,
+			variables
+		} );
+
+		const backupsResponse = data.app?.environments?.pop()?.backups?.nodes || [];
+		return backupsResponse.reduce( ( backups, backupResponse ) => {
+			if ( backupResponse?.createdAt && backupResponse?.id && backupResponse?.size && backupResponse?.dataset?.displayName && backupResponse?.filename ) {
+				// The schema says that these fields as optional even if it can never be optional
+				// I'm tempted to just use the ! operator but that'll trigger eslint
+				backups.push( {
+					createdAt: backupResponse.createdAt,
+					id: backupResponse.id,
+					size: backupResponse.size,
+					displayName: backupResponse.dataset.displayName,
+					filename: backupResponse.filename
+				} );
+			}
+
+			return backups;
+		}, [] as RemoteBackup[] );
 	}
 
 	async getRemoteBackupCopies() {
