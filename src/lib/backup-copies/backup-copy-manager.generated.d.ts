@@ -41,9 +41,7 @@ export type GetAppBackupsV2Query = {
 };
 
 export type GetBackupCopiesQueryVariables = Types.Exact<{
-  appId: Types.Scalars['Int']['input'];
   environmentId: Types.Scalars['Int']['input'];
-  pagesize?: Types.InputMaybe<Types.Scalars['Int']['input']>;
 }>;
 
 export type GetBackupCopiesQuery = {

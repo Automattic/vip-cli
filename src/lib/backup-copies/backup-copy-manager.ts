@@ -9,7 +9,7 @@ import API from '../../lib/api';
 import ReadableStream = NodeJS.ReadableStream;
 import {
 	GetAppBackupsV2Query,
-	GetAppBackupsV2QueryVariables
+	GetAppBackupsV2QueryVariables, GetBackupCopiesQuery, GetBackupCopiesQueryVariables
 } from './backup-copy-manager.generated';
 import { back } from 'nock';
 
@@ -62,11 +62,18 @@ interface RemoteBackup {
 	createdAt: string;
 }
 
+interface RemoteBackupCopy {
+	id?: number; // not implemented
+	backupId?: number; // TODO: Backup copy API is not sending over the backup ID.
+	filePath: string;
+	backupLabel: string;
+	networkSiteId?: number;
+	environmentId: number; // TODO: There's no way to get app ID from an environment ID
+}
+
 const backupsCopyQuery = gql`
 	query GetBackupCopies(
-		$appId: Int!
 		$environmentId: Int!
-		$pagesize: Int
 	) {
 		dbBackupCopies(environmentId: $environmentId) {
 			nextCursor
@@ -346,8 +353,37 @@ class BackupCopyManager {
 		}, [] as RemoteBackup[] );
 	}
 
-	async getRemoteBackupCopies() {
+	async getRemoteBackupCopies(): Promise<RemoteBackupCopy[]> {
+		// TODO: Properly paginate as we're returning everything currently. For now it's ok as backup copies expire in a day or a few days.
+		// and we don't expect there to be too many, anyway.
+		const api = await API();
 
+		const variables: GetBackupCopiesQueryVariables = {
+			environmentId: this.envId
+		};
+
+		const { data } = await api.query<GetBackupCopiesQuery, GetBackupCopiesQueryVariables>( {
+			query: backupsCopyQuery,
+			variables
+		} );
+
+		const backupCopiesResponse = data.dbBackupCopies?.nodes || [];
+		return backupCopiesResponse.reduce( ( backupCopies, response ) => {
+			if ( ! response.config ) {
+				return backupCopies;
+			}
+
+			backupCopies.push( {
+				id: undefined,
+				backupId: undefined,
+				backupLabel: response.config.backupLabel,
+				environmentId: this.envId,
+				filePath: response.filePath,
+				networkSiteId: response.config.networkSiteId || undefined
+			} );
+
+			return backupCopies;
+		}, [] as RemoteBackupCopy[] );
 	}
 
 	// eslint-disable-next-line @typescript-eslint/require-await
@@ -367,6 +403,7 @@ class BackupCopyManager {
 
 	// eslint-disable-next-line @typescript-eslint/require-await
 	async extendRemoteBackupCopyExpiration() {
+		// TODO: No API yet to implement this
 		throw new Error( 'Not implemented yet' );
 	}
 
