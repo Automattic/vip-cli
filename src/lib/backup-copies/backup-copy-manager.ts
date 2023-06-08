@@ -1,17 +1,18 @@
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
-import path from 'path';
 import crypto from 'crypto';
-import fs from 'fs/promises';
-import fsc, { ReadStream } from 'fs';
+import fs, { ReadStream } from 'fs';
+import path, { dirname } from 'path';
 import gql from 'graphql-tag';
 import API from '../../lib/api';
-import ReadableStream = NodeJS.ReadableStream;
 import {
 	GetAppBackupsV2Query,
-	GetAppBackupsV2QueryVariables, GetBackupCopiesQuery, GetBackupCopiesQueryVariables
+	GetAppBackupsV2QueryVariables,
+	GetBackupCopiesQuery,
+	GetBackupCopiesQueryVariables
 } from './backup-copy-manager.generated';
-import { back } from 'nock';
+import { Select } from 'enquirer';
+import { getFolderSize } from '../utils';
 
 const permissions = [
 	'backup-download:start',
@@ -63,29 +64,35 @@ interface RemoteBackup {
 }
 
 interface RemoteBackupCopy {
-	id?: number; // not implemented
-	backupId?: number; // TODO: Backup copy API is not sending over the backup ID.
+	id: number | null; // not implemented
+	backupId: number | null; // TODO: Backup copy API is not sending over the backup ID.
 	filePath: string;
 	backupLabel: string;
-	networkSiteId?: number;
-	environmentId: number; // TODO: There's no way to get app ID from an environment ID
+	networkSiteId: number | null;
+	environmentId: number;
+	appId: number;
 }
 
 const backupsCopyQuery = gql`
 	query GetBackupCopies(
+		$appId: Int!
 		$environmentId: Int!
 	) {
-		dbBackupCopies(environmentId: $environmentId) {
-			nextCursor
-			nodes {
-				id
-				filePath
-				config {
-					backupLabel
-					networkSiteId
-					siteId
-					tables
-					#					TODO: Add backupId as well 
+		app(id: $appId) {
+			environments(id: $environmentId) {
+				dbBackupCopies {
+					nextCursor
+					nodes {
+						id
+						filePath
+						config {
+							backupLabel
+							networkSiteId
+							siteId
+							tables
+							#					TODO: Add backupId as well 
+						}
+					}
 				}
 			}
 		}
@@ -142,24 +149,39 @@ const MANIFEST_FILE_NAME = 'manifest.json';
 
 interface Manifest extends Metadata {
 	downloaded_at: string | null,
-	imported_at: string | null,
+	cache_imported_at: string | null,
 	created_at: string | null,
-	updated_at: string | null
+	cache_updated_at: string | null
 
 }
 
+/**
+ * Creates a manager for handling backups and backup copies that are either at remote or local to the machine.
+ * Generally you'd want to call one of the factory methods, and use the available methods to do some sort of processing.
+ *
+ * For example, let's say you want to select a backup, generate a backup copy for it, then copy it into your local env db. The steps would be as follows:
+ *
+ * 1. Call the select remote backup prompt
+ * 2. Somehow create a backup copy. The prompt gives you enough info for you to generate a backup copy
+ * 3. Then, generate a download link of that backup copy, then download the link into a stream.
+ * 4. Call the writeBackupCopyToFile method.
+ * 5.
+ */
 class BackupCopyManager {
-	private readonly appId: number;
-	private readonly envId: number;
-	private readonly configuration: Configuration;
+	private _manifest?: Manifest;
+	appId: number;
+	envId: number;
+	configuration: Configuration;
 	// useful for finding out which one was the most recently downloaded import
 	downloadedAt?: string | null;
-	// useful for finding out which was the most recently used import
-	importedAt?: string | null;
-	// useful for finding out which was the most recent backup
-	createdAt?: string | null;
+	// useful for finding out which was the most recently imported backup copy cache (hence, the copy)
+	cacheImportedAt?: string | null;
+	// useful for finding out which was the most recent backup that was generated at
+	backupCreatedAt?: string | null;
+	// useful for finding out which was the most recent backup that was generated at
+	backupCopyCreatedAt?: string | null;
 	// not sure how this can be useful yet.
-	updatedAt?: string | null;
+	cacheUpdatedAt?: string | null;
 
 	constructor( appId: number, envId: number, configuration: Configuration ) {
 		this.appId = appId;
@@ -175,7 +197,7 @@ class BackupCopyManager {
 	}
 
 	static async createFromManifestPath( manifestPath: string ) {
-		const buffer = await fs.readFile( manifestPath );
+		const buffer = await fs.promises.readFile( manifestPath );
 		const manifest = JSON.parse( buffer.toString() ) as Manifest;
 
 		return BackupCopyManager.createFromManifest( manifest );
@@ -190,10 +212,10 @@ class BackupCopyManager {
 			network_site_id,
 			backup_label,
 			tables,
-			imported_at,
+			cache_imported_at,
 			created_at,
 			downloaded_at,
-			updated_at
+			cache_updated_at
 		} = manifest;
 		const manager = new BackupCopyManager( app_id, env_id, {
 			backupConfiguration: backupLabelToConfiguration[ backup_label ],
@@ -201,15 +223,31 @@ class BackupCopyManager {
 			tables: tables,
 			networkSiteId: network_site_id || undefined
 		} );
-		manager.importedAt = imported_at;
+		manager.cacheImportedAt = cache_imported_at;
 		manager.downloadedAt = downloaded_at;
-		manager.createdAt = created_at;
+		manager.backupCreatedAt = created_at;
 
 		return manager;
 	}
 
-	onError() {
+	updateDownloadedAt() {
+		this.downloadedAt = new Date().toISOString();
+	}
 
+	updateCacheImportedAt() {
+		this.cacheImportedAt = new Date().toISOString();
+	}
+
+	updateCacheUpdatedAt() {
+		this.cacheUpdatedAt = new Date().toISOString();
+	}
+
+	updateBackupCreatedAt( timestamp: string ) {
+		this.backupCreatedAt = new Date( timestamp ).toISOString();
+	}
+
+	updateBackupCopyCreatedAt( timestamp: string ) {
+		this.backupCopyCreatedAt = new Date( timestamp ).toISOString();
 	}
 
 	generateManifest(): Manifest {
@@ -221,25 +259,31 @@ class BackupCopyManager {
 			env_id: this.envId,
 			tables: this.configuration.tables ?? [],
 			downloaded_at: this.downloadedAt ?? null,
-			imported_at: this.importedAt ?? null,
+			cache_imported_at: this.cacheImportedAt ?? null,
 			backup_id: this.configuration.backupId,
-			created_at: this.createdAt ?? null,
-			updated_at: this.updatedAt ?? null,
+			created_at: this.backupCreatedAt ?? null,
+			cache_updated_at: this.cacheUpdatedAt ?? null,
 		};
+	}
+
+	async writeFileAndRecursivelyCreateFolders( filePath: string, data: Parameters<typeof fs.promises.writeFile>[1] ) {
+		// TODO: This can be generalized so that everyone could use it.
+		await fs.promises.mkdir( dirname( filePath ) );
+		await fs.promises.writeFile( filePath, data );
 	}
 
 	/**
 	 * Gets the root folder where all the cache is stored
 	 */
-	static getCacheRootFolder() {
+	static getCachesFolder() {
 		const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
 		const cacheFilePath = path.join( mainEnvironmentPath, 'vip', 'backup-copy-cache' );
 
 		return cacheFilePath;
 	}
 
-	getFolderPath() {
-		return path.resolve( BackupCopyManager.getCacheRootFolder(), `${ this.appId }-${ this.envId }-${ this.getCacheHash() }` );
+	getCachePath() {
+		return path.resolve( BackupCopyManager.getCachesFolder(), `${ this.appId }-${ this.envId }-${ this.getCacheHash() }` );
 	}
 
 	getCacheHash(): string {
@@ -255,40 +299,65 @@ class BackupCopyManager {
 	}
 
 	getBackupCopyPath() {
-		return path.join( this.getFolderPath(), 'backup-copy.sql.gz' );
+		return path.join( this.getCachePath(), 'backup-copy.sql.gz' );
 	}
 
-	async writeBackupCopyToFile( readStream: ReadableStream ) {
-		await fs.writeFile( this.getBackupCopyPath(), readStream );
+	async writeBackupCopyToFile( readStream: ReadStream ) {
+		await this.writeFileAndRecursivelyCreateFolders( this.getBackupCopyPath(), readStream );
 	}
 
 	getManifestPath() {
-		return path.join( this.getFolderPath(), MANIFEST_FILE_NAME );
+		return path.join( this.getCachePath(), MANIFEST_FILE_NAME );
 	}
 
 	async writeManifestToFile() {
-		await fs.writeFile( this.getManifestPath(), JSON.stringify( this.generateManifest() ) );
+		await this.writeFileAndRecursivelyCreateFolders( this.getManifestPath(), JSON.stringify( this.generateManifest() ) );
 	}
 
-	async readManifestFromFile(): Promise<Manifest> {
-		const buffer = await fs.readFile( this.getManifestPath() );
-		return JSON.parse( buffer.toString() ) as Manifest;
+	async readManifestFromFile( cached = true ): Promise<Manifest> {
+		if ( cached && this._manifest ) {
+			return this._manifest;
+		}
+
+		const buffer = await fs.promises.readFile( this.getManifestPath() );
+		this._manifest = JSON.parse( buffer.toString() ) as Manifest;
+		return this._manifest;
+	}
+
+	getManifest(): Manifest {
+		if ( ! this._manifest ) {
+			throw new Error( 'Manifest is not populated yet. Please run readManifestFromFile first' );
+		}
+
+		return this._manifest;
 	}
 
 	getBackupCopyStream(): ReadStream {
-		return fsc.createReadStream( this.getBackupCopyPath() );
+		return fs.createReadStream( this.getBackupCopyPath() );
 	}
 
 	getProcessedSqlPath() {
-		return path.join( this.getFolderPath(), 'processed.sql' );
+		return path.join( this.getCachePath(), 'processed.sql' );
 	}
 
-	async writeSqlToFile( readStream: ReadStream ) {
-		await fs.writeFile( this.getProcessedSqlPath(), readStream );
+	async writeProcessedSqlToFile( readStream: ReadStream ) {
+		await this.writeFileAndRecursivelyCreateFolders( this.getProcessedSqlPath(), readStream );
+	}
+
+	static async cleanUpBrokenCaches() {
+		const folders = await fs.promises.readdir( BackupCopyManager.getCachesFolder() );
+		await Promise.all( folders.map( async folder => {
+			const manifestPath = path.join( folder, MANIFEST_FILE_NAME );
+			try {
+				await fs.promises.access( manifestPath );
+			} catch ( e ) {
+				await fs.promises.rm( folder, { recursive: true } );
+			}
+		} ) );
 	}
 
 	static async getAllCachedBackupCopyManagers(): Promise<BackupCopyManager[]> {
-		const folders = await fs.readdir( BackupCopyManager.getCacheRootFolder() );
+		const folders = await fs.promises.readdir( BackupCopyManager.getCachesFolder() );
 		return await Promise.all( folders.map( async folder => {
 			const manifestPath = path.join( folder, MANIFEST_FILE_NAME );
 			return await BackupCopyManager.createFromManifestPath( manifestPath );
@@ -301,11 +370,13 @@ class BackupCopyManager {
 	}
 
 	getProcessedSqlStream() {
-		return fsc.createReadStream( this.getProcessedSqlPath() );
+		return fs.createReadStream( this.getProcessedSqlPath() );
 	}
 
+	// eslint-disable-next-line @typescript-eslint/require-await
 	async getRemoteBackupStream() {
-
+		// TODO: This is currently implemented elsewhere and I think it's better to have it here.
+		throw new Error( 'Not implemented yet' );
 	}
 
 	async getRemoteBackups(): Promise<RemoteBackup[]> {
@@ -359,7 +430,8 @@ class BackupCopyManager {
 		const api = await API();
 
 		const variables: GetBackupCopiesQueryVariables = {
-			environmentId: this.envId
+			environmentId: this.envId,
+			appId: this.appId
 		};
 
 		const { data } = await api.query<GetBackupCopiesQuery, GetBackupCopiesQueryVariables>( {
@@ -367,38 +439,79 @@ class BackupCopyManager {
 			variables
 		} );
 
-		const backupCopiesResponse = data.dbBackupCopies?.nodes || [];
+		const backupCopiesResponse = data.app?.environments?.[ 0 ]?.dbBackupCopies?.nodes || [];
 		return backupCopiesResponse.reduce( ( backupCopies, response ) => {
 			if ( ! response.config ) {
 				return backupCopies;
 			}
 
 			backupCopies.push( {
-				id: undefined,
-				backupId: undefined,
+				id: null, // TODO: could we get an ID here too?
+				backupId: null, // TODO: The API is missing this ID
 				backupLabel: response.config.backupLabel,
 				environmentId: this.envId,
 				filePath: response.filePath,
-				networkSiteId: response.config.networkSiteId || undefined
+				networkSiteId: response.config.networkSiteId || null,
+				appId: this.appId
 			} );
 
 			return backupCopies;
 		}, [] as RemoteBackupCopy[] );
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async promptSelectCachedBackup(): Promise<BackupCopyManager> {
-		throw new Error( 'Not implemented yet' );
+	async promptSelectFromRemoteBackups( promptMessage = 'Select a backup to restore' ): Promise<RemoteBackup> {
+		const remoteBackups = await this.getRemoteBackups();
+		const prompt = new Select( {
+			name: 'remoteBackups',
+			message: promptMessage,
+			choices: remoteBackups.map( ( backup, index ) => {
+				return {
+					title: backup.displayName,
+					value: String( index )
+				};
+			} )
+		} );
+		const answerIndex = await prompt.run();
+		const remoteBackup = remoteBackups[ Number( answerIndex ) ];
+
+		return remoteBackup;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async promptSelectCachedBackupCopies(): Promise<BackupCopyManager> {
-		throw new Error( 'Not implemented yet' );
+	async promptSelectFromCachedBackupCopies( promptMessage = 'Select a cached backup copy to restore' ): Promise<BackupCopyManager> {
+		const cachedBackupCopyManagers = await this.getCachedBackupCopyManagers();
+
+		await Promise.all( cachedBackupCopyManagers.map( manager => manager.readManifestFromFile() ) );
+
+		const prompt = new Select( {
+			name: 'cachedBackupCopies',
+			message: promptMessage,
+			choices: cachedBackupCopyManagers.map( ( backupCopyManager, index ) => {
+				return {
+					title: backupCopyManager.getManifest(),
+					value: String( index )
+				};
+			} )
+		} );
+
+		const answer = await prompt.run();
+		return cachedBackupCopyManagers[ Number( answer ) ];
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async promptSelectRemoteBackupCopy(): Promise<BackupCopyManager> {
-		throw new Error( 'Not implemented yet' );
+	async promptSelectRemoteBackupCopy( promptMessage = 'Select a backup copy that has been generated previously' ): Promise<RemoteBackupCopy> {
+		const remoteBackupCopies = await this.getRemoteBackupCopies();
+		const prompt = new Select( {
+			name: 'remoteBackupCopy',
+			message: promptMessage,
+			choices: remoteBackupCopies.map( ( backupCopy, index ) => {
+				return {
+					title: backupCopy.filePath,
+					value: String( index )
+				};
+			} )
+		} );
+
+		const answer = await prompt.run();
+		return remoteBackupCopies[ Number( answer ) ];
 	}
 
 	// eslint-disable-next-line @typescript-eslint/require-await
@@ -407,8 +520,95 @@ class BackupCopyManager {
 		throw new Error( 'Not implemented yet' );
 	}
 
-	// eslint-disable-next-line @typescript-eslint/require-await
-	async cleanUpCache( maxCaches = 10, maxSizeGB = 10 ) {
-		throw new Error( 'Not implemented yet' );
+	async deleteCache(): Promise<void> {
+		await fs.promises.rmdir( this.getCachePath() );
+	}
+
+	/**
+	 * Sort backup copy managers by the default way, that is:
+	 *
+	 * The first one is the most recently imported file
+	 * All the others are sorted by the date the backup was created. in descending order
+	 *
+	 *
+	 * @param managers
+	 */
+	static sortByDefaultInPlace( managers: BackupCopyManager[] ): void {
+		let latestDate = new Date( 0 );
+		let latestIndex: number | null = null;
+
+		managers.forEach( ( manager, index ) => {
+			if ( ! manager.cacheImportedAt ) {
+				return;
+			}
+
+			const cacheImportedAtDate = new Date( manager.cacheImportedAt );
+			if ( cacheImportedAtDate.getTime() > latestDate.getTime() ) {
+				latestDate = cacheImportedAtDate;
+				latestIndex = index;
+			}
+		} );
+
+		const mostRecentlyImported = latestIndex === null ? null : managers[ latestIndex ];
+
+		managers.sort( ( a, b ) => {
+			// assuming we want b to be at the top and a at the bottom at the end, then whenever a is bigger, we return -1, and when b is bigger, we return 1
+			if ( a === mostRecentlyImported ) {
+				return - 1;
+			}
+
+			if ( b === mostRecentlyImported ) {
+				return 1;
+			}
+
+			if ( a.backupCreatedAt && b.backupCreatedAt ) {
+				return new Date( b.backupCreatedAt ).getTime() - new Date( a.backupCreatedAt ).getTime();
+			}
+
+			if ( a.backupCreatedAt && ! b.backupCreatedAt ) {
+				return - 1;
+			}
+
+			if ( b.backupCreatedAt && ! a.backupCreatedAt ) {
+				return 1;
+			}
+
+			if ( ! a.backupCreatedAt && ! b.backupCreatedAt ) {
+				return 0;
+			}
+
+			return 0;
+		} );
+	}
+
+	static async cleanUpCache( maxCount = 10, maxSizeGB = 10 ) {
+		await BackupCopyManager.cleanUpBrokenCaches();
+		const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
+		const managers = await BackupCopyManager.getAllCachedBackupCopyManagers();
+
+		// sort in descending import date
+		BackupCopyManager.sortByDefaultInPlace( managers );
+
+		const cachesExceedingMaxLimit = managers.slice( maxCount );
+		await Promise.all( cachesExceedingMaxLimit.map( cache => cache.deleteCache() ) );
+		const cachesWithinMaxCount = managers.slice( 0, maxCount );
+		let numberOfCachesBeforeSizeLimitReached = 1;
+		let totalSize = 0;
+		for ( let i = 0; i < cachesWithinMaxCount.length; i ++ ) {
+			const cache = cachesWithinMaxCount[ i ];
+
+			// we need the following to be done sequentially, so we have to await in a loop
+			// eslint-disable-next-line no-await-in-loop
+			totalSize += await getFolderSize( cache.getCachePath() );
+
+			if ( totalSize > maxSizeBytes ) {
+				numberOfCachesBeforeSizeLimitReached = i + 1;
+				break;
+			}
+		}
+
+		const cachesExceedingMaxSize = managers.slice( numberOfCachesBeforeSizeLimitReached );
+
+		await Promise.all( cachesExceedingMaxSize.map( cache => cache.deleteCache() ) );
 	}
 }

@@ -73,3 +73,27 @@ export function getAbsolutePath( filePath: string ): string {
 
 	return filePath;
 }
+
+/**
+ * Returns the folder size in bytes
+ */
+export async function getFolderSize( folderPath: string ): Promise<number> {
+	const fileNames = await fs.promises.readdir( folderPath );
+
+	let totalSize = 0;
+
+	for ( const fileName of fileNames ) {
+		const filePath = path.join( folderPath, fileName );
+		// eslint-disable-next-line no-await-in-loop
+		const stat = await fs.promises.stat( filePath );
+
+		if ( stat.isDirectory() ) {
+			// eslint-disable-next-line no-await-in-loop
+			totalSize += await getFolderSize( filePath );
+		} else {
+			totalSize += stat.size;
+		}
+	}
+
+	return totalSize;
+}

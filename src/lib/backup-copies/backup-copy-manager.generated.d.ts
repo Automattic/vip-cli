@@ -41,25 +41,32 @@ export type GetAppBackupsV2Query = {
 };
 
 export type GetBackupCopiesQueryVariables = Types.Exact<{
+  appId: Types.Scalars['Int']['input'];
   environmentId: Types.Scalars['Int']['input'];
 }>;
 
 export type GetBackupCopiesQuery = {
   __typename?: 'Query',
-  dbBackupCopies?: {
-    __typename?: 'DBBackupCopyList',
-    nextCursor?: string | null,
-    nodes: Array<{
-      __typename?: 'DBBackupCopy',
-      id?: number | null,
-      filePath: string,
-      config?: {
-        __typename?: 'DBBackupCopyConfig',
-        backupLabel: string,
-        networkSiteId?: number | null,
-        siteId: number,
-        tables: Array<string>
+  app?: {
+    __typename?: 'App',
+    environments?: Array<{
+      __typename?: 'AppEnvironment',
+      dbBackupCopies?: {
+        __typename?: 'DBBackupCopyList',
+        nextCursor?: string | null,
+        nodes: Array<{
+          __typename?: 'DBBackupCopy',
+          id?: number | null,
+          filePath: string,
+          config?: {
+            __typename?: 'DBBackupCopyConfig',
+            backupLabel: string,
+            networkSiteId?: number | null,
+            siteId: number,
+            tables: Array<string>
+          } | null
+        }>
       } | null
-    }>
+    } | null> | null
   } | null
 };
