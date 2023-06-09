@@ -456,7 +456,7 @@ export class BackupCopyManager {
 		}, [] as RemoteBackupCopy[] );
 	}
 
-	async promptSelectFromRemoteBackups( promptMessage = 'Select a backup to restore' ): Promise<RemoteBackupDetails> {
+	async promptSelectFromRemoteBackups( promptMessage = 'Select a backup to download' ): Promise<RemoteBackupDetails> {
 		const remoteBackups = await this.getRemoteBackups();
 		const prompt = new Select( {
 			message: promptMessage,
@@ -476,7 +476,7 @@ export class BackupCopyManager {
 		return remoteBackup;
 	}
 
-	async promptSelectFromCachedBackupCopies( promptMessage = 'Select a cached backup copy to restore' ): Promise<BackupCopyManager> {
+	async promptSelectFromCachedBackupCopies( promptMessage = 'Select a cached backup copy to sync from' ): Promise<BackupCopyManager> {
 		const cachedBackupCopyManagers = await this.getCachedBackupCopyManagers();
 
 		await Promise.all( cachedBackupCopyManagers.map( manager => manager.readManifestFromFile() ) );

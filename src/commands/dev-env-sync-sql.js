@@ -114,7 +114,9 @@ export class DevEnvSyncSQLCommand {
 	 */
 	async generateExport() {
 		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile, this.track );
-		await exportCommand.run();
+		await exportCommand.run( {
+			promptMessageSelectFromRemoteBackups: 'Select a backup to sync from'
+		} );
 	}
 
 	/**

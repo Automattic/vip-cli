@@ -309,7 +309,8 @@ export class ExportSQLCommand {
 	 *
 	 * @return {Promise} A promise which resolves to void
 	 */
-	async run() {
+	async run( { promptMessageSelectFromRemoteBackups } = {} ) {
+
 		if ( this.outputFile ) {
 			try {
 				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
@@ -336,7 +337,7 @@ export class ExportSQLCommand {
 			console.log( `${ getGlyphForStatus( 'success' ) } Backups found!` );
 		}
 
-		const selectedBackup = await this.backupCopyManager.promptSelectFromRemoteBackups();
+		const selectedBackup = await this.backupCopyManager.promptSelectFromRemoteBackups( promptMessageSelectFromRemoteBackups );
 
 		if ( await this.getExportJob( selectedBackup.processed.id ) ) {
 			console.log( `Attaching to an existing export for the backup with timestamp ${ selectedBackup.processed.createdAt }` );
