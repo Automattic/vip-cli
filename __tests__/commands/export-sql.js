@@ -186,6 +186,19 @@ describe( 'commands/ExportSQLCommand', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
 		const exportCommand = new ExportSQLCommand( app, env );
+		const selectRemoteBackupSpy = jest.spyOn( exportCommand.backupCopyManager, 'promptSelectFromRemoteBackups' );
+		selectRemoteBackupSpy.mockImplementation( () => {
+			return Promise.resolve( {
+				processed: {
+					id: 789,
+					createdAt: '2020-01-01T00:00:00Z',
+				},
+				raw: {
+					id: 789,
+					createdAt: '2020-01-01T00:00:00Z',
+				}
+			} );
+		} );
 		const downloadSpy = jest.spyOn( exportCommand, 'downloadExportedFile' );
 		const stepSuccessSpy = jest.spyOn( exportCommand.progressTracker, 'stepSuccess' );
 
