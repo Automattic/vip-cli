@@ -326,7 +326,8 @@ declare namespace Enquirer {
 
 		export type SelectQuestionOptions = {
 			type?: 'select';
-		} & SelectQuestionOptionsBase;
+			result?: ( this: Select, value: string ) => any;
+		} & Omit<SelectQuestionOptionsBase, 'result'>;
 		export type SelectQuestionOptionsBase = {
 			choices: SelectQuestion.Choice[];
 		} & types.QuestionBase &

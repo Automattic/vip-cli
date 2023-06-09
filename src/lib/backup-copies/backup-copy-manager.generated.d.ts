@@ -4,9 +4,6 @@ export type GetAppBackupsV2QueryVariables = Types.Exact<{
   appId: Types.Scalars['Int']['input'];
   environmentId: Types.Scalars['Int']['input'];
   permissions?: Types.InputMaybe<Array<Types.InputMaybe<Types.Scalars['String']['input']>> | Types.InputMaybe<Types.Scalars['String']['input']>>;
-  startDate?: Types.InputMaybe<Types.Scalars['String']['input']>;
-  endDate?: Types.InputMaybe<Types.Scalars['String']['input']>;
-  pagesize?: Types.InputMaybe<Types.Scalars['Int']['input']>;
 }>;
 
 export type GetAppBackupsV2Query = {

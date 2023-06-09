@@ -15,8 +15,8 @@ export interface RemoteBackupDetails {
 
 export interface RemoteBackup {
 	id: number;
-	size: number;
-	filename: string;
+	size: number | null;
+	filename: string; // this is a filePath actually. Or key
 	displayName: string;
 	createdAt: string;
 }
@@ -52,9 +52,10 @@ interface Metadata {
 }
 
 export interface Manifest extends Metadata {
-	downloaded_at: string | null,
-	cache_imported_at: string | null,
-	created_at: string | null,
-	cache_updated_at: string | null
+	downloaded_at: string;
+	cache_imported_at: string;
+	backup_created_at: string;
+	backup_copy_created_at: string;
+	cache_updated_at: string;
 
 }

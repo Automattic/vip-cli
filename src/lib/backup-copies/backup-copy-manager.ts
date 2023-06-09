@@ -31,14 +31,11 @@ const backupsQuery = gql`
 		$appId: Int!
 		$environmentId: Int!
 		$permissions: [String] = []
-		$startDate: String
-		$endDate: String
-		$pagesize: Int
 	) {
 		app(id: $appId) {
 			id
 			environments(id: $environmentId) {
-				backups(first: $pagesize, startDate: $startDate, endDate: $endDate) {
+				backups {
 					total
 					nextCursor
 					nodes {
@@ -173,7 +170,8 @@ export class BackupCopyManager {
 			backup_label,
 			tables,
 			cache_imported_at,
-			created_at,
+			backup_created_at,
+			backup_copy_created_at,
 			downloaded_at,
 			cache_updated_at
 		} = manifest;
@@ -185,7 +183,8 @@ export class BackupCopyManager {
 		} );
 		manager.cacheImportedAt = cache_imported_at;
 		manager.downloadedAt = downloaded_at;
-		manager.backupCreatedAt = created_at;
+		manager.backupCreatedAt = backup_created_at;
+		manager.backupCopyCreatedAt = backup_copy_created_at;
 
 		return manager;
 	}
@@ -210,9 +209,40 @@ export class BackupCopyManager {
 		this.backupCopyCreatedAt = new Date( timestamp ).toISOString();
 	}
 
+	validateManifestGeneration() {
+		if ( this.configuration.backupId ) {
+			throw new Error( 'Manifest generation failed: configuration.backupId is not set' );
+		}
+
+		const requiredFields = [
+			'downloadedAt',
+			'cacheImportedAt',
+			'backupCreatedAt',
+			'backupCopyCreatedAt',
+			'cacheUpdatedAt',
+			'backupId'
+		];
+
+		requiredFields.forEach( field => {
+			if ( ! (
+				this as unknown as Record<string, string>
+			)[ field ] ) {
+				throw new Error( `Manifest generation failed: ${ field } is not set` );
+			}
+		} );
+	}
+
+	/**
+	 * Manifest should only be available on
+	 */
 	generateManifest(): Manifest {
-		if ( ! this.configuration.backupId ) {
-			throw new Error( 'this.configuration.backupId has not been set, unable to generate a manifest' );
+		this.validateManifestGeneration();
+
+		if ( ! (
+			this.configuration.backupId && this.downloadedAt && this.cacheImportedAt && this.backupCreatedAt && this.backupCopyCreatedAt && this.cacheUpdatedAt
+		) ) {
+			// I'm being pedantic here, validateManifestGeneration should definitely prevent the above fields from being nullish
+			throw new Error( 'Manifest generation failed: A field is not set' );
 		}
 
 		return {
@@ -222,11 +252,12 @@ export class BackupCopyManager {
 			app_id: this.appId,
 			env_id: this.envId,
 			tables: this.configuration.tables ?? [],
-			downloaded_at: this.downloadedAt ?? null,
-			cache_imported_at: this.cacheImportedAt ?? null,
+			downloaded_at: this.downloadedAt,
+			cache_imported_at: this.cacheImportedAt,
 			backup_id: this.configuration.backupId,
-			created_at: this.backupCreatedAt ?? null,
-			cache_updated_at: this.cacheUpdatedAt ?? null,
+			backup_created_at: this.backupCreatedAt,
+			backup_copy_created_at: this.backupCopyCreatedAt,
+			cache_updated_at: this.cacheUpdatedAt,
 		};
 	}
 
@@ -352,36 +383,34 @@ export class BackupCopyManager {
 		const today = new Date();
 		const tomorrow = new Date( new Date().setDate( today.getDate() + 1 ) );
 		// we select tomorrow for users that are behind UTC
-		const tomorrowDate = `${ tomorrow.getUTCFullYear() }-${ tomorrow.getUTCMonth() }-${ tomorrow.getDate() }`;
+		const tomorrowDate = tomorrow.toISOString().split( 'T' )[ 0 ];
 		// for now, many days ago is for 30 days ago
 		const manyDaysAgo = new Date( new Date().setDate( today.getDate() - 31 ) );
-		const manyDaysAgoDate = `${ manyDaysAgo.getUTCFullYear() }-${ manyDaysAgo.getUTCMonth() }-${ manyDaysAgo.getDate() }`;
+		const manyDaysAgoDate = manyDaysAgo.toISOString().split( 'T' )[ 0 ];
 
 		const variables: GetAppBackupsV2QueryVariables = {
-			startDate: tomorrowDate,
-			endDate: manyDaysAgoDate,
 			appId: this.appId,
-			pagesize: 100,
 			environmentId: this.envId,
 			permissions
 		};
 
 		const { data } = await api.query<GetAppBackupsV2Query, GetAppBackupsV2QueryVariables>( {
 			query: backupsQuery,
+			fetchPolicy: 'network-only',
 			variables
 		} );
 
-		const backupsResponse = data.app?.environments?.pop()?.backups?.nodes || [];
+		const backupsResponse = data.app?.environments?.[ 0 ]?.backups?.nodes || [];
 		return backupsResponse.reduce( ( backups, backupResponse ) => {
-			if ( backupResponse?.createdAt && backupResponse?.id && backupResponse?.size && backupResponse?.dataset?.displayName && backupResponse?.filename ) {
+			if ( backupResponse?.createdAt && backupResponse?.id && backupResponse?.filename ) {
 				// The schema says that these fields as optional even if it can never be optional
 				// I'm tempted to just use the ! operator but that'll trigger eslint
 				backups.push( {
 					processed: {
 						createdAt: backupResponse.createdAt,
 						id: backupResponse.id,
-						size: backupResponse.size,
-						displayName: backupResponse.dataset.displayName,
+						size: backupResponse.size || null,
+						displayName: backupResponse.createdAt,
 						filename: backupResponse.filename
 					},
 					raw: backupResponse
@@ -430,14 +459,16 @@ export class BackupCopyManager {
 	async promptSelectFromRemoteBackups( promptMessage = 'Select a backup to restore' ): Promise<RemoteBackupDetails> {
 		const remoteBackups = await this.getRemoteBackups();
 		const prompt = new Select( {
-			name: 'remoteBackups',
 			message: promptMessage,
 			choices: remoteBackups.map( ( backup, index ) => {
 				return {
-					title: backup.processed.displayName,
+					name: backup.processed.displayName,
 					value: String( index )
 				};
-			} )
+			} ),
+			result( value ) {
+				return this.focused?.value;
+			}
 		} );
 		const answerIndex = await prompt.run();
 		const remoteBackup = remoteBackups[ Number( answerIndex ) ];
@@ -451,14 +482,16 @@ export class BackupCopyManager {
 		await Promise.all( cachedBackupCopyManagers.map( manager => manager.readManifestFromFile() ) );
 
 		const prompt = new Select( {
-			name: 'cachedBackupCopies',
 			message: promptMessage,
 			choices: cachedBackupCopyManagers.map( ( backupCopyManager, index ) => {
 				return {
-					title: backupCopyManager.getManifest(),
+					name: `Dated ${ backupCopyManager.getManifest().backup_created_at || '' }, last imported at ${ backupCopyManager.getManifest().cache_imported_at || '' }`,
 					value: String( index )
 				};
-			} )
+			} ),
+			result( value ) {
+				return this.focused?.value;
+			}
 		} );
 
 		const answer = await prompt.run();
