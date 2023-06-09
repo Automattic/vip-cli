@@ -13,6 +13,13 @@ import {
 } from './backup-copy-manager.generated';
 import { Select } from 'enquirer';
 import { getFolderSize } from '../utils';
+import {
+	Configuration,
+	Manifest,
+	RemoteBackup,
+	RemoteBackupCopy,
+	RemoteBackupDetails, RemoteBackupRaw
+} from './types';
 
 const permissions = [
 	'backup-download:start',
@@ -55,24 +62,6 @@ const backupsQuery = gql`
 	}
 `;
 
-interface RemoteBackup {
-	id: number;
-	size: number;
-	filename: string;
-	displayName: string;
-	createdAt: string;
-}
-
-interface RemoteBackupCopy {
-	id: number | null; // not implemented
-	backupId: number | null; // TODO: Backup copy API is not sending over the backup ID.
-	filePath: string;
-	backupLabel: string;
-	networkSiteId: number | null;
-	environmentId: number;
-	appId: number;
-}
-
 const backupsCopyQuery = gql`
 	query GetBackupCopies(
 		$appId: Int!
@@ -111,26 +100,6 @@ export enum BackupLabel {
 	FULL = ''
 }
 
-interface Configuration {
-	networkSiteId?: number;
-	backupConfiguration: BackupConfiguration;
-	backupId: string;
-	tables?: string[];
-}
-
-/**
- * Same structure as our backup copy metadata for compatibility purposes
- */
-interface Metadata {
-	tables: string[];
-	app_id: number;
-	env_id: number;
-	site_id: number;
-	backup_id: string;
-	network_site_id: number | null;
-	backup_label: BackupLabel;
-}
-
 const backupConfigurationToLabel: Record<BackupConfiguration, BackupLabel> = {
 	[ BackupConfiguration.SINGLE ]: BackupLabel.SINGLE,
 	[ BackupConfiguration.PARTIAL ]: BackupLabel.PARTIAL,
@@ -147,14 +116,6 @@ const backupLabelToConfiguration: Record<BackupLabel, BackupConfiguration> = Obj
 
 const MANIFEST_FILE_NAME = 'manifest.json';
 
-interface Manifest extends Metadata {
-	downloaded_at: string | null,
-	cache_imported_at: string | null,
-	created_at: string | null,
-	cache_updated_at: string | null
-
-}
-
 /**
  * Creates a manager for handling backups and backup copies that are either at remote or local to the machine.
  * Generally you'd want to call one of the factory methods, and use the available methods to do some sort of processing.
@@ -167,7 +128,7 @@ interface Manifest extends Metadata {
  * 4. Call the writeBackupCopyToFile method.
  * 5.
  */
-class BackupCopyManager {
+export class BackupCopyManager {
 	private _manifest?: Manifest;
 	appId: number;
 	envId: number;
@@ -189,10 +150,9 @@ class BackupCopyManager {
 		this.configuration = configuration;
 	}
 
-	static createForFullBackup( appId: number, envId: number, backupId: string ) {
+	static createForFullBackup( appId: number, envId: number ) {
 		return new BackupCopyManager( appId, envId, {
-			backupConfiguration: BackupConfiguration.FULL,
-			backupId,
+			backupConfiguration: BackupConfiguration.FULL
 		} );
 	}
 
@@ -251,6 +211,10 @@ class BackupCopyManager {
 	}
 
 	generateManifest(): Manifest {
+		if ( ! this.configuration.backupId ) {
+			throw new Error( 'this.configuration.backupId has not been set, unable to generate a manifest' );
+		}
+
 		return {
 			backup_label: backupConfigurationToLabel[ this.configuration.backupConfiguration ],
 			network_site_id: this.configuration.networkSiteId ?? null,
@@ -374,12 +338,13 @@ class BackupCopyManager {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/require-await
-	async getRemoteBackupStream() {
+	async getRemoteBackupCopyStream() {
 		// TODO: This is currently implemented elsewhere and I think it's better to have it here.
+		// The problem is, there's significant work required for creating a backup copy itself.
 		throw new Error( 'Not implemented yet' );
 	}
 
-	async getRemoteBackups(): Promise<RemoteBackup[]> {
+	async getRemoteBackups(): Promise<RemoteBackupDetails[]> {
 		// TODO: Properly paginate as we're returning everything currently
 		const api = await API();
 		// everything is stored in UTC in our back-end
@@ -412,16 +377,19 @@ class BackupCopyManager {
 				// The schema says that these fields as optional even if it can never be optional
 				// I'm tempted to just use the ! operator but that'll trigger eslint
 				backups.push( {
-					createdAt: backupResponse.createdAt,
-					id: backupResponse.id,
-					size: backupResponse.size,
-					displayName: backupResponse.dataset.displayName,
-					filename: backupResponse.filename
+					processed: {
+						createdAt: backupResponse.createdAt,
+						id: backupResponse.id,
+						size: backupResponse.size,
+						displayName: backupResponse.dataset.displayName,
+						filename: backupResponse.filename
+					},
+					raw: backupResponse
 				} );
 			}
 
 			return backups;
-		}, [] as RemoteBackup[] );
+		}, [] as RemoteBackupDetails[] );
 	}
 
 	async getRemoteBackupCopies(): Promise<RemoteBackupCopy[]> {
@@ -459,14 +427,14 @@ class BackupCopyManager {
 		}, [] as RemoteBackupCopy[] );
 	}
 
-	async promptSelectFromRemoteBackups( promptMessage = 'Select a backup to restore' ): Promise<RemoteBackup> {
+	async promptSelectFromRemoteBackups( promptMessage = 'Select a backup to restore' ): Promise<RemoteBackupDetails> {
 		const remoteBackups = await this.getRemoteBackups();
 		const prompt = new Select( {
 			name: 'remoteBackups',
 			message: promptMessage,
 			choices: remoteBackups.map( ( backup, index ) => {
 				return {
-					title: backup.displayName,
+					title: backup.processed.displayName,
 					value: String( index )
 				};
 			} )

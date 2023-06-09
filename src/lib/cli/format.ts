@@ -181,7 +181,16 @@ export class RunningSprite {
 	}
 }
 
-export function getGlyphForStatus( status: string, runningSprite: RunningSprite ): string {
+type Status =
+	| 'pending'
+	| 'running'
+	| 'success'
+	| 'failed'
+	| 'unknown'
+	| 'skipped'
+	| string
+
+export function getGlyphForStatus( status: Status, runningSprite: RunningSprite ): string {
 	switch ( status ) {
 		case 'pending':
 			return '○';

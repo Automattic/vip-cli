@@ -19,6 +19,7 @@ import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
+import { BackupCopyManager } from '../lib/backup-copies/backup-copy-manager';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -183,6 +184,7 @@ export class ExportSQLCommand {
 		DOWNLOAD: 'download',
 	};
 	track;
+	backupCopyManager;
 
 	/**
 	 * Creates an instance of SQLExportCommand
@@ -203,6 +205,7 @@ export class ExportSQLCommand {
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
 		this.track = trackerFn;
+		this.backupCopyManager = BackupCopyManager.createForFullBackup( this.app.id, this.env.id );
 	}
 
 	/**
@@ -210,13 +213,14 @@ export class ExportSQLCommand {
 	 *
 	 * @return {Promise} A promise which resolves to the export job
 	 */
-	async getExportJob() {
+	async getExportJob( backupId ) {
 		const { latestBackup, jobs } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
+		const searchedBackupId = backupId ?? latestBackup.id;
 
 		// Find the job that generates the export for the latest backup
 		return jobs.find( job => {
 			const metadata = job.metadata.find( md => md.name === 'backupId' );
-			return metadata && parseInt( metadata.value, 10 ) === latestBackup.id;
+			return metadata && parseInt( metadata.value, 10 ) === searchedBackupId;
 		} );
 	}
 
@@ -319,34 +323,47 @@ export class ExportSQLCommand {
 			}
 		}
 
-		console.log( `Fetching the latest backup for ${ this.app.name }` );
+		console.log( `Fetching backups for ${ this.app.name }` );
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
-			await this.track( 'error', { error_type: 'no_backup_found', error_message: 'No backup found for the site' } );
+			await this.track( 'error', {
+				error_type: 'no_backup_found',
+				error_message: 'No backup found for the site'
+			} );
 			exit.withError( `No backup found for site ${ this.app.name }` );
 		} else {
-			console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
+			console.log( `${ getGlyphForStatus( 'success' ) } Backups found!` );
 		}
 
-		if ( await this.getExportJob() ) {
-			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
+		const selectedBackup = await this.backupCopyManager.promptSelectFromRemoteBackups();
+
+		if ( await this.getExportJob( selectedBackup.processed.id ) ) {
+			console.log( `Attaching to an existing export for the backup with timestamp ${ selectedBackup.processed.createdAt }` );
 		} else {
-			console.log( `Creating a new export for the backup with timestamp ${ latestBackup.createdAt }` );
+			console.log( `Creating a new export for the backup with timestamp ${ selectedBackup.processed.createdAt }` );
 
 			try {
-				await createExportJob( this.app.id, this.env.id, latestBackup.id );
+				await createExportJob( this.app.id, this.env.id, selectedBackup.processed.id );
 			} catch ( err ) {
 				// Todo: match error code instead of message substring
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
-					await this.track( 'error', { error_type: 'job_already_running', error_message: err?.message, stack: err?.stack } );
+					await this.track( 'error', {
+						error_type: 'job_already_running',
+						error_message: err?.message,
+						stack: err?.stack
+					} );
 					exit.withError(
 						'There is an export job already running for this environment: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
 						'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
 				} else {
-					await this.track( 'error', { error_type: 'create_export_job', error_message: err?.message, stack: err?.stack })
+					await this.track( 'error', {
+						error_type: 'create_export_job',
+						error_message: err?.message,
+						stack: err?.stack
+					} );
 				}
 				exit.withError( `Error creating export job: ${ err?.message }` );
 			}
@@ -355,13 +372,16 @@ export class ExportSQLCommand {
 		this.progressTracker.stepRunning( this.steps.PREPARE );
 		this.progressTracker.startPrinting();
 
-		await pollUntil( this.getExportJob.bind( this ), EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isPrepared.bind( this ) );
+		const exportJob = this.getExportJob.bind( this );
+		const fnToPoll = () => exportJob( selectedBackup.processed.id );
+
+		await pollUntil( fnToPoll, EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isPrepared.bind( this ) );
 		this.progressTracker.stepSuccess( this.steps.PREPARE );
 
-		await pollUntil( this.getExportJob.bind( this ), EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isCreated.bind( this ) );
+		await pollUntil( fnToPoll, EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isCreated.bind( this ) );
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
-		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
+		const url = await generateDownloadLink( this.app.id, this.env.id, selectedBackup.processed.id );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
 
 		// The export file is prepared. Let's download it
