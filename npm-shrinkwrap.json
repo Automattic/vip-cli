@@ -120,7 +120,7 @@
         "@types/shelljs": "^0.8.12",
         "@types/single-line-log": "1.1.0",
         "@types/update-notifier": "5.1.0",
-        "@types/uuid": "9.0.0",
+        "@types/uuid": "^9.0.2",
         "@types/xml2js": "^0.4.11",
         "babel-jest": "^29.5.0",
         "babel-plugin-module-resolver": "5.0.0",
@@ -134,7 +134,7 @@
         "prettier": "^2.0.5",
         "publish-please": "5.5.2",
         "rimraf": "3.0.2",
-        "typescript": "5.0.4"
+        "typescript": "^5.1.3"
       },
       "engines": {
         "node": ">=16.11.0",
@@ -3588,9 +3588,9 @@
       }
     },
     "node_modules/@types/dockerode": {
-      "version": "3.3.18",
-      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.18.tgz",
-      "integrity": "sha512-4EcP136jNMBZQ4zTHlI1VP2RpIQ2uJvRpjta3W2Cc7Ti7rk2r3TgVKjxR0Tb3NrT9ObXvl7Tv5nxra6BHEpkWg==",
+      "version": "3.3.19",
+      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.19.tgz",
+      "integrity": "sha512-7CC5yIpQi+bHXwDK43b/deYXteP3Lem9gdocVVHJPSRJJLMfbiOchQV3rDmAPkMw+n3GIVj7m1six3JW+VcwwA==",
       "dev": true,
       "dependencies": {
         "@types/docker-modem": "*",
@@ -3934,9 +3934,9 @@
       }
     },
     "node_modules/@types/uuid": {
-      "version": "9.0.0",
-      "resolved": "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.0.tgz",
-      "integrity": "sha512-kr90f+ERiQtKWMz5rP32ltJ/BtULDI5RVO0uavn1HQUOwjx0R1h0rnDYNL0CepF1zL5bSY6FISAfd9tOdDhU5Q==",
+      "version": "9.0.2",
+      "resolved": "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.2.tgz",
+      "integrity": "sha512-kNnC1GFBLuhImSnV7w4njQkUiJi0ZXUycu1rUaouPqiKlXkh77JKgdRnTAp1x5eBwcIwbtI+3otwzuIDEuDoxQ==",
       "dev": true
     },
     "node_modules/@types/xml2js": {
@@ -14489,16 +14489,16 @@
       }
     },
     "node_modules/typescript": {
-      "version": "5.0.4",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.0.4.tgz",
-      "integrity": "sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==",
+      "version": "5.1.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.1.3.tgz",
+      "integrity": "sha512-XH627E9vkeqhlZFQuL+UsyAXEnibT0kWR2FWONlr4sTjvxyJYnyefgrkyECLzM5NenmKzRAy2rR/OlYLA1HkZw==",
       "dev": true,
       "bin": {
         "tsc": "bin/tsc",
         "tsserver": "bin/tsserver"
       },
       "engines": {
-        "node": ">=12.20"
+        "node": ">=14.17"
       }
     },
     "node_modules/typical": {
@@ -17832,9 +17832,9 @@
       }
     },
     "@types/dockerode": {
-      "version": "3.3.18",
-      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.18.tgz",
-      "integrity": "sha512-4EcP136jNMBZQ4zTHlI1VP2RpIQ2uJvRpjta3W2Cc7Ti7rk2r3TgVKjxR0Tb3NrT9ObXvl7Tv5nxra6BHEpkWg==",
+      "version": "3.3.19",
+      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.19.tgz",
+      "integrity": "sha512-7CC5yIpQi+bHXwDK43b/deYXteP3Lem9gdocVVHJPSRJJLMfbiOchQV3rDmAPkMw+n3GIVj7m1six3JW+VcwwA==",
       "dev": true,
       "requires": {
         "@types/docker-modem": "*",
@@ -18139,9 +18139,9 @@
       }
     },
     "@types/uuid": {
-      "version": "9.0.0",
-      "resolved": "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.0.tgz",
-      "integrity": "sha512-kr90f+ERiQtKWMz5rP32ltJ/BtULDI5RVO0uavn1HQUOwjx0R1h0rnDYNL0CepF1zL5bSY6FISAfd9tOdDhU5Q==",
+      "version": "9.0.2",
+      "resolved": "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.2.tgz",
+      "integrity": "sha512-kNnC1GFBLuhImSnV7w4njQkUiJi0ZXUycu1rUaouPqiKlXkh77JKgdRnTAp1x5eBwcIwbtI+3otwzuIDEuDoxQ==",
       "dev": true
     },
     "@types/xml2js": {
@@ -26092,9 +26092,9 @@
       }
     },
     "typescript": {
-      "version": "5.0.4",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.0.4.tgz",
-      "integrity": "sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==",
+      "version": "5.1.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.1.3.tgz",
+      "integrity": "sha512-XH627E9vkeqhlZFQuL+UsyAXEnibT0kWR2FWONlr4sTjvxyJYnyefgrkyECLzM5NenmKzRAy2rR/OlYLA1HkZw==",
       "dev": true
     },
     "typical": {
