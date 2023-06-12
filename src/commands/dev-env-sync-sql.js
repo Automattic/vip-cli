@@ -152,7 +152,7 @@ export class DevEnvSyncSQLCommand {
 			if ( ! site.blogId || site.blogId === 1 ) continue;
 
 			const url = site.homeUrl.replace( /https?:\/\//, '' );
-			if ( ! this.searchReplaceMap[ url ] ) return;
+			if ( ! this.searchReplaceMap[ url ] ) continue;
 
 			this.searchReplaceMap[ url ] = `${ site.blogId }.${ this.landoDomain }`;
 		}
