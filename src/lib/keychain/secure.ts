@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import keytar from 'keytar';
+import keytar from '@postman/node-keytar';
 
 /**
  * Internal dependencies
