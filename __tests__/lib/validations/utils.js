@@ -6,6 +6,7 @@
  * External dependencies
  */
 import path from 'path';
+import { once } from 'node:events';
 
 /**
  * Internal dependencies
@@ -26,7 +27,7 @@ describe( 'utils', () => {
 				statements = getStatementsByLine( line );
 			} );
 
-			await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
+			await once( readInterface, 'close' );
 
 			// expecting the correct number of matching statements
 			expect( statements ).toHaveLength( 4 );
@@ -48,7 +49,7 @@ describe( 'utils', () => {
 				statements = getStatementsByLine( line );
 			} );
 
-			await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
+			await once( readInterface, 'close' );
 			expect( statements[ 0 ].join( '' ).replace( /\s/g, '' ) ).toBe( "INSERTINTO`wp_site`(`id`,`domain`,`path`)VALUES(1,'www.example.com','/');" );
 		} );
 	} );
