@@ -1,14 +1,14 @@
-/* eslint-disable jest/no-conditional-expect */
+/**
+ * External dependencies
+ */
+import { describe, it, expect } from '@jest/globals';
+
 /**
  * Internal dependencies
  */
-import envAlias from '../../../src/lib/cli/envAlias';
-
-const parseEnvAliasSpy = jest.spyOn( envAlias, 'parseEnvAlias' );
+import { isAlias, parseEnvAlias, parseEnvAliasFromArgv } from '../../../src/lib/cli/envAlias';
 
 describe( 'utils/cli/envAlias', () => {
-	afterEach( parseEnvAliasSpy.mockClear );
-
 	describe( 'isAlias()', () => {
 		it.each( [
 			'@app',
@@ -24,7 +24,7 @@ describe( 'utils/cli/envAlias', () => {
 			'@1.env',
 			'@2.MixedCaseEnv',
 		] )( 'should identify valid aliases - %p', alias => {
-			expect( envAlias.isAlias( alias ) ).toBe( true );
+			expect( isAlias( alias ) ).toBe( true );
 		} );
 	} );
 
@@ -97,7 +97,7 @@ describe( 'utils/cli/envAlias', () => {
 			},
 
 		] )( 'should parse out the app and env from an alias', input => {
-			const parsed = envAlias.parseEnvAlias( input.alias );
+			const parsed = parseEnvAlias( input.alias );
 
 			expect( parsed ).toEqual( { app: input.app, env: input.env } );
 		} );
@@ -190,14 +190,9 @@ describe( 'utils/cli/envAlias', () => {
 				},
 			},
 		] )( 'should parse the alias from argv - %p', input => {
-			const result = envAlias.parseEnvAliasFromArgv( input.argv );
+			const result = parseEnvAliasFromArgv( input.argv );
 
 			expect( result ).toEqual( input.expected );
-
-			// If there was an alias, should have parsed it
-			if ( input.argv.includes( '@app.env' ) ) {
-				expect( parseEnvAliasSpy ).toHaveBeenCalledWith( '@app.env' );
-			}
 		} );
 	} );
 } );

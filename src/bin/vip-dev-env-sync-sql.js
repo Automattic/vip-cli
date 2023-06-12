@@ -8,7 +8,6 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -41,6 +40,13 @@ const appQuery = `
 		primaryDomain { name }
 		uniqueLabel
 		isMultisite
+		wpSitesSDS(first:500) {
+			nodes {
+				id
+				blogId
+				homeUrl
+			}
+		}
 	}
 `;
 
@@ -54,22 +60,8 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, slug } ) => {
-		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', { app: app.id, env: env.uniqueLabel, slug } );
+		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', { app: app.id, env: env.uniqueLabel, slug, multisite: env.isMultisite } );
 		await trackerFn( 'execute' );
-
-		if ( env.isMultisite ) {
-			console.log( chalk.yellow( 'You seem to be trying to sync a SQL database for a network site.' ) );
-			console.log( chalk.yellow( 'Unfortunately, the current version of our tool does not yet support syncing network sites.\n' ) );
-			console.log( chalk.yellow( 'However, you can manually export the database using the following command:' ) );
-			console.log( chalk.yellow( chalk.bold( `vip export sql @${ app.id }.${ env.uniqueLabel } --output=${ app.id }-${ env.uniqueLabel }-exported.sql.gz\n` ) ) );
-			console.log( chalk.yellow( 'After exporting the database, you\'ll need to perform the necessary search and replace operations on the exported file to update any relevant data or configurations.' ) );
-			console.log( chalk.yellow( 'See: https://docs.wpvip.com/how-tos/dev-env-add-content/#h-3-import-the-sql-file\n' ) );
-			console.log( chalk.yellow( 'Once you\'ve made the required changes, you can import the modified SQL file into your development environment using the following command:' ) );
-			console.log( chalk.yellow( chalk.bold( `vip dev-env import sql ${ app.id }-${ env.uniqueLabel }-exported.sql.gz --slug=${ slug }` ) ) );
-
-			await trackerFn( 'aborted', { error_type: 'multisite_not_supported' } );
-			process.exit( 0 );
-		}
 
 		const lando = await bootstrapLando();
 		const envPath = getEnvironmentPath( slug );
@@ -80,6 +72,8 @@ command( {
 		}
 
 		const cmd = new DevEnvSyncSQLCommand( app, env, slug, trackerFn );
+		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
+		// We should probably use handleCLIException instead?
 		await cmd.run();
 		await trackerFn( 'success' );
 	} );

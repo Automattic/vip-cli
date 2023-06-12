@@ -27,6 +27,8 @@ import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-co
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
 
+jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
 	const SelectClass = class {};
@@ -446,6 +448,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				expect( prompt ).toHaveBeenCalledTimes( 0 );
 			} else {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
 			}
 
 			const expectedValue = 'multisite' in input.preselected ? input.preselected.multisite : input.default.multisite;
@@ -481,9 +484,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default );
 
 			if ( input.preselected.mediaRedirectDomain ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 4 );
-			} else {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 6 );
 			}
 
 			const expectedValue = input.preselected.mediaRedirectDomain ? input.preselected.mediaRedirectDomain : input.default.mediaRedirectDomain;

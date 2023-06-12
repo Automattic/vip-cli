@@ -14,7 +14,7 @@ rem dev-env tests
 
 echo "== Creating dev-env"
 
-call vip dev-env create --app-code image --title Test --multisite false --php 8.0 --wordpress 6.0 --mu-plugins image -e false -p false -x false --mailpit false
+call vip dev-env create --app-code image --title Test --multisite false --php 8.0 --wordpress 6.0 --mu-plugins image -e false -p false -x false --mailpit false --photon false
 
 if NOT %errorlevel% == 0 (
     echo "== Failed to create dev-env"

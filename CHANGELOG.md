@@ -1,5 +1,30 @@
 ## Changelog
 
+### 2.31.0
+
+- #1397	feature(dev-env): Add ability to sync multisites
+- #1399	chore(dev-deps): Remove stub type definitions
+- #1394	FORNO-1609: Combine all error events into one error event
+- #1345	feat(dev-env): Add Photon
+- #1398	Fix coverage generation
+- #1395	Add types for the other ways of using enquirer
+- #1388	Typescript: refactor `vip-whoami`
+- #1393	refactor: Convert `lib/{app-logs,envvar}` to TypeScript
+- #1392	refactor: Convert `lib/config` to TypeScript
+- #1391	refactor: Convert lib to TypeScript
+- #1390	chore(deps): Update @automattic/vip-search-replace to 1.1.1
+- #1389	Replace 'site' by 'environment' in error msg
+- #1385	refactor: Convert lib/api to TypeScript
+- #1387	chore(deps): Update @automattic/vip-search-replace to 1.1.0
+- #1386	fix: Fix `getAbsolutePath()` and convert `utils.js` to TypeScript
+- #1383	fix(dev-env): Pull uniqueLabel field from backend
+- #1382	test: Reduce noise from tests
+- #1384	fix: Add return type to parseEnvAliasFromArgv()
+- #1381	refactor: Convert lib/cli and dependencies to TypeScript
+- #1377	chore: Configure linting for TS files
+- #1380	chore(dev-deps): Remove jest-environment-jsdom
+- #1378	refactor: Convert analytics and dependencies to TypeScript
+
 ### 2.30.0
 
 - #1264	feature(dev-env): Add dev-env-sync-sql command

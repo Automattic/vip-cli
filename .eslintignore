@@ -1,0 +1,2 @@
+*.generated.d.ts
+src/graphqlTypes.d.ts

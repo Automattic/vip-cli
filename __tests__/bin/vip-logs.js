@@ -22,13 +22,13 @@ jest.mock( 'lib/cli/command', () => {
 	return jest.fn( () => commandMock );
 } );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-jest.mock( 'lib/app-logs/app-logs', () => ( {
+jest.mock( '../../src/lib/app-logs/app-logs', () => ( {
 	// Only mock what is really needed, otherwise exported constants like LIMIT_MAX would be `undefined` during the tests
-	...jest.requireActual( 'lib/app-logs/app-logs' ),
+	...jest.requireActual( '../../src/lib/app-logs/app-logs' ),
 	getRecentLogs: jest.fn(),
 } ) );
 

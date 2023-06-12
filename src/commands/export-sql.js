@@ -310,7 +310,11 @@ export class ExportSQLCommand {
 			try {
 				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
 			} catch ( err ) {
-				await this.track( 'error', { error_type: 'cannot_write_to_path', error_message: `Cannot write to the specified path: ${ err?.message }` } );
+				await this.track( 'error', {
+					error_type: 'cannot_write_to_path',
+					error_message: `Cannot write to the specified path: ${ err?.message }`,
+					stack: err?.stack
+				} );
 				exit.withError( `Cannot write to the specified path: ${ err?.message }` );
 			}
 		}
@@ -335,12 +339,14 @@ export class ExportSQLCommand {
 			} catch ( err ) {
 				// Todo: match error code instead of message substring
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
-					await this.track( 'error', { error_type: 'job_already_running', error_message: err?.message } );
+					await this.track( 'error', { error_type: 'job_already_running', error_message: err?.message, stack: err?.stack } );
 					exit.withError(
-						'There is an export job already running for this site: ' +
+						'There is an export job already running for this environment: ' +
 						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
 						'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
+				} else {
+					await this.track( 'error', { error_type: 'create_export_job', error_message: err?.message, stack: err?.stack })
 				}
 				exit.withError( `Error creating export job: ${ err?.message }` );
 			}
@@ -367,7 +373,11 @@ export class ExportSQLCommand {
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
-			await this.track( 'error', { error_type: 'download_failed', error_message: err?.message } );
+			await this.track( 'error', {
+				error_type: 'download_failed',
+				error_message: err?.message,
+				stack: err?.stack
+			} );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}
 	}

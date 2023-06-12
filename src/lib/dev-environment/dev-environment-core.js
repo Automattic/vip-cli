@@ -183,6 +183,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.phpmyadmin = false;
 	}
 
+	if ( ! newInstanceData.photon ) {
+		newInstanceData.photon = false;
+	}
+
 	// Mailpit migration
 	if ( ! newInstanceData.mailpit ) {
 		newInstanceData.mailpit = newInstanceData.mailhog ?? false;

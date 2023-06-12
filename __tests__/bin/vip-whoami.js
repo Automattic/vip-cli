@@ -11,7 +11,7 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WHOAMI WITH ERROR'; // Prevent actually exiting like the lib does
 } );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
@@ -20,11 +20,11 @@ jest.mock( 'lib/cli/command', () => {
 	return jest.fn( () => commandMock );
 } );
 
-jest.mock( 'lib/api/user', () => ( {
+jest.mock( '../../src/lib/api/user', () => ( {
 	getCurrentUserInfo: jest.fn(),
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 

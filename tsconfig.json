@@ -11,10 +11,12 @@
     "checkJs": false,
     // Disallow features that require cross-file information for emit as we're using Babel
     "isolatedModules": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "root/*": [
-        "./*"
+      "*": [
+        "./types/*",
+        "./node_modules/*"
       ]
     },
     // It's worth enabling this, I promise!

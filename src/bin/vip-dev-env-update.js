@@ -88,6 +88,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
 			mailpit: currentInstanceData.mailpit ?? currentInstanceData.mailhog,
+			photon: currentInstanceData.photon,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,
 			title: '',

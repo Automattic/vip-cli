@@ -27,20 +27,20 @@ jest.mock( 'lib/cli/command', () => {
 	return jest.fn( () => commandMock );
 } );
 
-jest.mock( 'lib/cli/format', () => ( {
+jest.mock( '../../src/lib/cli/format', () => ( {
 	formatData: jest.fn(),
 } ) );
 
-jest.mock( 'lib/envvar/api', () => ( {
+jest.mock( '../../src/lib/envvar/api', () => ( {
 	getEnvVars: jest.fn(),
 } ) );
 
-jest.mock( 'lib/envvar/logging', () => ( {
+jest.mock( '../../src/lib/envvar/logging', () => ( {
 	debug: jest.fn(),
 	getEnvContext: () => 'test',
 } ) );
 
-jest.mock( 'lib/tracker', () => ( {
+jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 

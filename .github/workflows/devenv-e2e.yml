@@ -40,7 +40,7 @@ jobs:
 
       - name: Preload Docker images
         run: |
-          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true && \
+          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true --photon true && \
           vip dev-env start -w && \
           vip dev-env destroy
 

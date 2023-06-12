@@ -1,8 +1,18 @@
 /**
+ * External dependencies
+ */
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
+
+/**
  * Internal dependencies
  */
 import Analytics from '../../../src/lib/analytics';
-import AnalyticsClientStub from '../../../src/lib/analytics/clients/stub';
+
+class AnalyticsClientStub {
+	trackEvent() {
+		return Promise.resolve( false );
+	}
+}
 
 describe( 'lib/analytics', () => {
 	describe( '.trackEvent()', () => {
@@ -18,16 +28,14 @@ describe( 'lib/analytics', () => {
 			const stubClient1Spy = jest.spyOn( stubClient1, 'trackEvent' );
 			const stubClient2 = new AnalyticsClientStub();
 			const stubClient2Spy = jest.spyOn( stubClient2, 'trackEvent' );
-			const analytics = new Analytics( {
-				clients: [
-					stubClient1,
-					stubClient2,
-				],
-			} );
+			const analytics = new Analytics( [
+				stubClient1,
+				stubClient2,
+			] );
 
 			const result = analytics.trackEvent( 'test_event', {} );
 
-			await expect( result ).resolves.toStrictEqual( [ true, true ] );
+			await expect( result ).resolves.toStrictEqual( [ false, false ] );
 			expect( stubClient1Spy ).toHaveBeenCalledTimes( 1 );
 			expect( stubClient2Spy ).toHaveBeenCalledTimes( 1 );
 		} );
@@ -37,15 +45,13 @@ describe( 'lib/analytics', () => {
 
 			const stubClient = new AnalyticsClientStub();
 			const stubClientSpy = jest.spyOn( stubClient, 'trackEvent' );
-			const analytics = new Analytics( {
-				clients: [
-					stubClient,
-				],
-			} );
+			const analytics = new Analytics( [
+				stubClient,
+			] );
 
 			const result = analytics.trackEvent( 'test_event', {} );
 
-			await expect( result ).resolves.toBe( 'Skipping trackEvent for test_event (DO_NOT_TRACK)' );
+			await expect( result ).resolves.toStrictEqual( [] );
 			expect( stubClientSpy ).toHaveBeenCalledTimes( 0 );
 		} );
 	} );
