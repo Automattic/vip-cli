@@ -169,7 +169,7 @@
     "xml2js": "^0.5.0"
   },
   "optionalDependencies": {
-    "keytar": "7.7.0"
+    "@postman/node-keytar": "~7.9.3"
   },
   "overrides": {
     "publish-please": {
