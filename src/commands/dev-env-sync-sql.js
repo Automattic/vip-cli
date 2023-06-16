@@ -110,7 +110,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the export is complete
 	 */
 	async generateExport() {
-		const exportCommand = new ExportSQLCommand( this.app, this.env, this.gzFile, this.track );
+		const exportCommand = new ExportSQLCommand( this.app, this.env, { outputFile: this.gzFile }, this.track );
 		await exportCommand.run();
 	}
 
