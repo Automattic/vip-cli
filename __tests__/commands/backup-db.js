@@ -5,7 +5,6 @@
 /**
  * Internal dependencies
  */
-import chalk from 'chalk';
 import { BackupDBCommand } from '../../src/commands/backup-db';
 import API from '../../src/lib/api';
 
@@ -95,7 +94,7 @@ describe( 'commands/BackupDBCommand', () => {
 			} );
 
 			await cmd.run();
-			expect( logSpy ).toHaveBeenCalledWith( 'Attaching to an already running backup job...' );
+			expect( logSpy ).toHaveBeenNthCalledWith( 1, 'Attaching to an already running backup job...' );
 		} );
 	} );
 } );
