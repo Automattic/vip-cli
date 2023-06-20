@@ -25,6 +25,9 @@ import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environmen
 
 jest.setTimeout( 60 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
+// Allow (validated) unsafe regexp in tests.
+/* eslint-disable security/detect-non-literal-regexp */
+
 describe( 'vip dev-env list', () => {
 	/** @type {CliTest} */
 	let cliTest;

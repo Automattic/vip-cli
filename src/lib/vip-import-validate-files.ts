@@ -644,6 +644,7 @@ export const isFileSanitized = ( file: string ): boolean => {
  * @return {Array} Returns an array of the matching regex characters
  */
 const identifyIntermediateImage = ( filename: string ): RegExpMatchArray | null => {
+	// eslint-disable-next-line security/detect-unsafe-regex
 	const regex = /([_-])?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
 	return filename.match( regex ); // NOSONAR
 };

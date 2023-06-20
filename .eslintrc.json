@@ -3,10 +3,7 @@
   "rules": {
     "no-console": 0,
     "security/detect-object-injection": 0,
-    "security/detect-non-literal-fs-filename": 0,
-    "security/detect-unsafe-regex": 0,
-    "security/detect-non-literal-regexp": 0,
-    "security/detect-non-literal-require": 0
+    "security/detect-non-literal-fs-filename": 0
   },
   "overrides": [
     {

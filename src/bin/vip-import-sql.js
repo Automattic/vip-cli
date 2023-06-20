@@ -352,7 +352,8 @@ const displayPlaybook = ( {
 				if ( wpSite.id === 1 ) {
 					siteRegex = /^wp_[a-z]+/i;
 				} else {
-					siteRegex = new RegExp( `^wp_${ wpSite.id }_[a-z]+`, 'i' );
+					// eslint-disable-next-line security/detect-non-literal-regexp
+					siteRegex = new RegExp( `^wp_${ parseInt( wpSite.id, 10 ) }_[a-z]+`, 'i' );
 				}
 				const tableNamesInGroup = tableNames.filter( name => siteRegex.test( name ) );
 				return {

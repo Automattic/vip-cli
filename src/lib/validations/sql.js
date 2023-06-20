@@ -211,6 +211,7 @@ const checks: Checks = {
 	},
 	trigger: {
 		// Match `CREATE (DEFINER=`root`@`host`) TRIGGER`
+		// eslint-disable-next-line security/detect-unsafe-regex
 		matcher: /^CREATE (\(?DEFINER=`?(\w*)(`@`)?(\w*\.*%?)*`?\)?)?(| )TRIGGER/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,

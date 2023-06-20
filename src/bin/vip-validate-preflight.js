@@ -199,6 +199,7 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	const packageJSONfile = path.resolve( opt.path, 'package.json' );
 	let packageJSON;
 	try {
+		// eslint-disable-next-line security/detect-non-literal-require
 		packageJSON = require( packageJSONfile );
 		siteOptions.setPackageJSON( packageJSON );
 	} catch ( error ) {

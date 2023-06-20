@@ -19,6 +19,9 @@ import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 30 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
+// Allow (validated) unsafe regexp in tests.
+/* eslint-disable security/detect-non-literal-regexp */
+
 describe( 'vip dev-env info', () => {
 	/** @type {CliTest} */
 	let cliTest;
