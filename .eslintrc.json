@@ -1,6 +1,7 @@
 {
   "extends": [ "plugin:@automattic/wpvip/recommended", "plugin:@automattic/wpvip/cli" ],
   "rules": {
+    "no-console": 0,
     "security/detect-object-injection": 0,
     "security/detect-non-literal-fs-filename": 0,
     "security/detect-unsafe-regex": 0,
@@ -12,7 +13,10 @@
       "files": [ "*.js" ],
       "parser": "@babel/eslint-parser",
       "plugins": [ "flowtype" ],
-      "extends": [ "plugin:flowtype/recommended" ]
+      "extends": [ "plugin:flowtype/recommended" ],
+      "rules": {
+        "flowtype/generic-spacing": 0
+      }
     }
   ]
 }

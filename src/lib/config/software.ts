@@ -316,8 +316,8 @@ export const promptForUpdate = async (
 	const component = await _processComponent( appTypeId, opts.component );
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
-	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	const confirm: boolean =
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		opts.force ||
 		( await new Confirm( {
 			// NOSONAR

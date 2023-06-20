@@ -60,6 +60,7 @@ describe( 'utils', () => {
 			} );
 
 			await once( readInterface, 'close' );
+
 			expect( statements[ 0 ].join( '' ).replace( /\s/g, '' ) ).toBe(
 				"INSERTINTO`wp_site`(`id`,`domain`,`path`)VALUES(1,'www.example.com','/');"
 			);
