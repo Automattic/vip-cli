@@ -1,13 +1,6 @@
 {
-  "extends": [
-    "plugin:@automattic/wpvip/base",
-    "plugin:@automattic/wpvip/testing",
-    "plugin:@automattic/wpvip/typescript",
-    "plugin:jest/recommended"
-  ],
+  "extends": [ "plugin:@automattic/wpvip/recommended", "plugin:@automattic/wpvip/cli" ],
   "rules": {
-    "no-console": 0,
-    "no-process-exit": 0,
     "security/detect-object-injection": 0,
     "security/detect-non-literal-fs-filename": 0,
     "security/detect-unsafe-regex": 0,
@@ -16,24 +9,10 @@
   },
   "overrides": [
     {
-      "files": ["*.js"],
+      "files": [ "*.js" ],
       "parser": "@babel/eslint-parser",
-      "plugins": [
-        "flowtype"
-      ],
-      "extends": [
-        "plugin:flowtype/recommended"
-      ],
-      "globals": {
-        "jest/globals": true
-      }
-    },
-    {
-      "files": ["*.ts"],
-      "parser": "@typescript-eslint/parser",
-      "parserOptions": {
-        "project": ["./tsconfig.json"]
-      }
+      "plugins": [ "flowtype" ],
+      "extends": [ "plugin:flowtype/recommended" ]
     }
   ]
 }
