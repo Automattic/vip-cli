@@ -1,9 +1,1 @@
-arrowParens: "avoid"
-bracketSpacing: true
-jsxBracketSameLine: false
-printWidth: 100
-parenSpacing: true
-semi: true
-singleQuote: true
-tabWidth: 2
-useTabs: true
+"@automattic/eslint-plugin-wpvip/prettierrc"

@@ -1,2 +1,3 @@
 *.generated.d.ts
-src/graphqlTypes.d.ts
+/dist/
+/src/graphqlTypes.d.ts
