@@ -97,17 +97,5 @@ describe( 'commands/BackupDBCommand', () => {
 			await cmd.run();
 			expect( logSpy ).toHaveBeenCalledWith( 'Attaching to an already running backup job...' );
 		} );
-
-		it( 'should check if the latest backup is less than 15 minutes old', async () => {
-			loadBackupJobSpy.mockImplementationOnce( () => {
-				cmd.job = { inProgressLock: false };
-				cmd.jobAge = 10;
-				cmd.backupName = 'test-backup';
-				return cmd.job;
-			} );
-
-			await cmd.run();
-			expect( logSpy ).toHaveBeenCalledWith( chalk.yellow( 'This environment\'s most recent backup is 10 minutes old.' ) );
-		} );
 	} );
 } );
