@@ -46,8 +46,6 @@ const config = {
         process.exit( 0 );
     } catch ( error ) {
         bail( error );
-    } finally {
-        bail( 'This package is deprecated. Please use @microsoft/rush instead.' );
     }
 } )();
 
