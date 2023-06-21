@@ -43,6 +43,7 @@ node_modules/
 babel.config.js
 renovate.json
 .github
+.gitattributes
 
 .vscode
 .idea
