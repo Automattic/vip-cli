@@ -10,7 +10,13 @@
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+  getEnvTrackingInfo,
+  getEnvironmentName,
+  handleCLIException,
+  processBooleanOption,
+  validateDependencies,
+} from "../lib/dev-environment/dev-environment-cli";
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
@@ -33,8 +39,8 @@ const examples = [
 
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'force', 'Disabling validations before task execution', undefined, value => 'false' !== value?.toLowerCase?.() )
-	.option( 'quiet', 'Suppress output', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'force', 'Disabling validations before task execution', undefined, processBooleanOption )
+	.option( 'quiet', 'Suppress output', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt );
