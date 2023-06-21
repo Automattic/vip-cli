@@ -19,7 +19,6 @@ import UserError from '../lib/user-error';
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { makeCommandTracker } from '../lib/tracker';
-import c from 'args';
 import {
   getEnvironmentName,
   processBooleanOption,
