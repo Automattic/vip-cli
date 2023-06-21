@@ -131,10 +131,10 @@ export class BackupDBCommand {
 	 *
 	 * @return {void}
 	 */
-		stopProgressTracker() {
-			this.progressTracker.print();
-			this.progressTracker.stopPrinting();
-		}
+	stopProgressTracker() {
+		this.progressTracker.print();
+		this.progressTracker.stopPrinting();
+	}
 
 	async loadBackupJob() {
 		this.job = await getBackupJob( this.app.id, this.env.id );
@@ -153,15 +153,21 @@ export class BackupDBCommand {
 	async run( silent = false ) {
 		this.silent = silent;
 
+		const readMoreMessage = '\nRead more about the limitations around database backups & exports here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
+		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
+		noticeMessage += 'A fresh database backup will be generated only if there hasn\'t one already been created recently, either by our automated system or by a user on your site';
+		noticeMessage += readMoreMessage;
+		this.log( noticeMessage );
+
 		await this.loadBackupJob();
 
-		this.progressTracker.stepRunning( this.steps.PREPARE );
-		this.progressTracker.startPrinting();
-
 		if ( this.job?.inProgressLock ) {
-			this.log( 'Attaching to an already running database backup job...' );
+			this.log( 'Database backup already in progress...' );
 		}	else {
 			try {
+				this.log( 'Creating a new database backup...')
+				this.progressTracker.stepRunning( this.steps.PREPARE );
+				this.progressTracker.startPrinting();
 				await createBackupJob( this.app.id, this.env.id );
 			} catch ( err ) {
 				this.progressTracker.stepFailed( this.steps.PREPARE );
@@ -175,8 +181,8 @@ export class BackupDBCommand {
 					let errMessage = err.message.replace( 'Database backups limit reached', 
 						'New database backup generation failed because there was already one created recently, either by our automated system or by a user on your site' );
 					errMessage = errMessage.replace( 'Retry after', '\nTo create a new backup, you can wait until:' );
-					errMessage += `\nYou can also export the latest backup using the ${ chalk.yellow( 'vip @app.env export sql' ) } command`;
-					errMessage += '\n\nRead more about database backups & exports here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
+					errMessage += `\n\nYou can also export the latest backup using the ${ chalk.green( 'vip @app.env export sql' ) } command`;
+					errMessage += readMoreMessage;
 					exit.withError( errMessage );
 				}
 				await this.track( 'error', {

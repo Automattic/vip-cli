@@ -306,7 +306,7 @@ export class ExportSQLCommand {
 
 	async runBackupJob() {
 		const cmd = new BackupDBCommand( this.app, this.env );
-		await cmd.run( true );
+		await cmd.run( false );
 	}
 
 	/**
@@ -329,7 +329,6 @@ export class ExportSQLCommand {
 		}
 
 		if ( this.generateBackup ) {
-			console.log( `Creating a new backup for ${ this.app.name }` );
 			await this.runBackupJob();
 		}
 
@@ -349,7 +348,7 @@ export class ExportSQLCommand {
 		if ( await this.getExportJob() ) {
 			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
 		} else {
-			console.log( `Creating a new export for the backup with timestamp ${ latestBackup.createdAt }` );
+			console.log( `Exporting database backup with timestamp ${ latestBackup.createdAt }` );
 
 			try {
 				await createExportJob( this.app.id, this.env.id, latestBackup.id );

@@ -59,7 +59,6 @@ API.mockImplementation( () => {
 	};
 } );
 
-// jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
 describe( 'commands/BackupDBCommand', () => {
 	beforeEach( () => {
