@@ -6,7 +6,7 @@ const packageJSON = require( '../package.json' );
 
 const config = {
     gitAllowDirty: true,
-    gitBranch: 'remove/publish-please',
+    gitBranch: 'trunk',
     nodeEnforceVersion: packageJSON.engines.node,
     testBeforePublish: true,
 };
