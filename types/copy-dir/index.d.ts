@@ -1,9 +1,8 @@
-
 interface CopyDir {
-	sync(from: string, to: string)
+	sync( from: string, to: string );
 }
 
-declare const exp: CopyDir
+declare const exp: CopyDir;
 
-export default exp
-export = exp
+export default exp;
+export = exp;

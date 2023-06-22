@@ -14,7 +14,11 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
-import { getEnvironmentPath, resolveImportPath, exec } from '../lib/dev-environment/dev-environment-core';
+import {
+	getEnvironmentPath,
+	resolveImportPath,
+	exec,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { validate as validateSQL } from '../lib/validations/sql';
@@ -36,10 +40,15 @@ export class DevEnvImportSQLCommand {
 		await validateDependencies( lando, this.slug, silent );
 
 		const { searchReplace, inPlace } = this.options;
-		const resolvedPath = await resolveImportPath( this.slug, this.fileName, searchReplace, inPlace );
+		const resolvedPath = await resolveImportPath(
+			this.slug,
+			this.fileName,
+			searchReplace,
+			inPlace
+		);
 
 		if ( ! this.options.skipValidate ) {
-			if ( ! await isEnvUp( lando, getEnvironmentPath( this.slug ) ) ) {
+			if ( ! ( await isEnvUp( lando, getEnvironmentPath( this.slug ) ) ) ) {
 				throw new UserError( 'Environment needs to be started first' );
 			}
 
@@ -82,9 +91,19 @@ export class DevEnvImportSQLCommand {
 
 		try {
 			await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-			const doIndex = await promptForBoolean( 'Do you want to index data in Elasticsearch (used by Enterprise Search)?', true );
+			const doIndex = await promptForBoolean(
+				'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
+				true
+			);
 			if ( doIndex ) {
-				await exec( lando, this.slug, [ 'wp', 'vip-search', 'index', '--setup', '--network-wide', '--skip-confirm' ] );
+				await exec( lando, this.slug, [
+					'wp',
+					'vip-search',
+					'index',
+					'--setup',
+					'--network-wide',
+					'--skip-confirm',
+				] );
 			}
 		} catch ( err ) {
 			// Exception means they don't have vip-search enabled.

@@ -8,7 +8,9 @@ export function isAlias( alias: string ): boolean {
 
 export function parseEnvAlias( alias: string ) {
 	if ( ! isAlias( alias ) ) {
-		throw new Error( 'Invalid environment alias. Aliases are in the format of @app-name or @app-name.environment-name' );
+		throw new Error(
+			'Invalid environment alias. Aliases are in the format of @app-name or @app-name.environment-name'
+		);
 	}
 
 	// Remove the '@'

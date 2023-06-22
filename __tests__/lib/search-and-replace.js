@@ -31,11 +31,7 @@ if ( 'win32' === process.platform ) {
 	searchReplaceBinaryFilename += '.exe';
 }
 
-const binary = path.resolve(
-	fixtureDir,
-	'search-replace-binaries',
-	searchReplaceBinaryFilename
-);
+const binary = path.resolve( fixtureDir, 'search-replace-binaries', searchReplaceBinaryFilename );
 
 // Mock console.log()
 jest.spyOn( global.console, 'log' );
@@ -107,12 +103,11 @@ describe( 'lib/search-and-replace', () => {
 			binary
 		);
 
-		expect( replaceSpy ).toHaveBeenCalledWith( expect.any( Object ), [
-			'ohai',
-			'ohHey',
-			'purty',
-			'pretty',
-		], expect.anything() );
+		expect( replaceSpy ).toHaveBeenCalledWith(
+			expect.any( Object ),
+			[ 'ohai', 'ohHey', 'purty', 'pretty' ],
+			expect.anything()
+		);
 
 		replaceSpy.mockClear();
 	} );

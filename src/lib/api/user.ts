@@ -28,10 +28,12 @@ const QUERY_CURRENT_USER = gql`
 	}
 `;
 
-export async function getCurrentUserInfo(): Promise<User> {
+export async function getCurrentUserInfo(): Promise< User > {
 	const api = await API();
 
-	const response = await api.query<IsVipQuery, IsVipQueryVariables>( { query: QUERY_CURRENT_USER } );
+	const response = await api.query< IsVipQuery, IsVipQueryVariables >( {
+		query: QUERY_CURRENT_USER,
+	} );
 	const { me } = response.data;
 	if ( ! me ) {
 		throw new Error( 'The API did not return any information about the user.' );

@@ -31,7 +31,13 @@ import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../constants/dev-environment';
-import { generateVSCodeWorkspace, getAllEnvironmentNames, getVSCodeWorkspacePath, getVersionList, readEnvironmentData } from './dev-environment-core';
+import {
+	generateVSCodeWorkspace,
+	getAllEnvironmentNames,
+	getVSCodeWorkspacePath,
+	getVersionList,
+	readEnvironmentData,
+} from './dev-environment-core';
 
 import type {
 	AppInfo,
@@ -77,11 +83,23 @@ const componentDemoNames = {
 };
 
 // Forward declaration to avoid no-use-before-define
-declare function promptForComponent( component: 'wordpress', allowLocal: false, defaultObject: ComponentConfig | null ): Promise<WordPressConfig>;
+declare function promptForComponent(
+	component: 'wordpress',
+	allowLocal: false,
+	defaultObject: ComponentConfig | null
+): Promise< WordPressConfig >;
 // eslint-disable-next-line no-redeclare
-declare function promptForComponent( component: string, allowLocal: boolean, defaultObject: WordPressConfig | null ): Promise<ComponentConfig>;
+declare function promptForComponent(
+	component: string,
+	allowLocal: boolean,
+	defaultObject: WordPressConfig | null
+): Promise< ComponentConfig >;
 
-export async function handleCLIException( exception: Error, trackKey?: string, trackBaseInfo: any = {} ) {
+export async function handleCLIException(
+	exception: Error,
+	trackKey?: string,
+	trackBaseInfo: any = {}
+) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
 		const createCommand = chalk.bold( DEV_ENVIRONMENT_FULL_COMMAND + ' create' );
@@ -103,21 +121,31 @@ export async function handleCLIException( exception: Error, trackKey?: string, t
 				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
 				await trackEvent( trackKey, errorTrackingInfo );
 			} catch ( trackException ) {
-				console.warn( errorPrefix, `Failed to record track event ${ trackKey }`, trackException.message );
+				console.warn(
+					errorPrefix,
+					`Failed to record track event ${ trackKey }`,
+					trackException.message
+				);
 			}
 		}
 
 		if ( ! process.env.DEBUG ) {
-			console.error( `\nPlease re-run the command with "--debug ${ chalk.bold( '@automattic/vip:bin:dev-environment' ) }" appended to it and provide the stack trace on the support ticket.` );
+			console.error(
+				`\nPlease re-run the command with "--debug ${ chalk.bold(
+					'@automattic/vip:bin:dev-environment'
+				) }" appended to it and provide the stack trace on the support ticket.`
+			);
 			console.error( chalk.bold( '\nExample:\n' ) );
-			console.error( 'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n' );
+			console.error(
+				'vip dev-env <command> <arguments> --debug @automattic/vip:bin:dev-environment \n'
+			);
 		}
 
 		debug( exception );
 	}
 }
 
-const verifyDNSResolution = async ( slug: string ): Promise<void> => {
+const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	const expectedIP = '127.0.0.1';
 	const testDomain = `${ slug }.vipdev.lndo.site`;
 	const advice = `Please add following line to hosts file on your system:\n${ expectedIP } ${ testDomain }`;
@@ -132,7 +160,9 @@ const verifyDNSResolution = async ( slug: string ): Promise<void> => {
 	}
 
 	if ( address.address !== expectedIP ) {
-		throw new UserError( `DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }. ${ advice }` );
+		throw new UserError(
+			`DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }. ${ advice }`
+		);
 	}
 };
 
@@ -192,7 +222,7 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 	debug( 'Validation checks completed in %d ms', duration );
 };
 
-export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise<string> {
+export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise< string > {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -213,7 +243,11 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 
 	if ( configurationFileOptions.slug ) {
 		const slug = configurationFileOptions.slug;
-		console.log( `Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray( CONFIGURATION_FILE_NAME ) }\n` );
+		console.log(
+			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
+				CONFIGURATION_FILE_NAME
+			) }\n`
+		);
 
 		return slug;
 	}
@@ -223,15 +257,21 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 		return envs[ 0 ];
 	}
 	if ( envs.length > 1 && typeof options.slug !== 'string' ) {
-		const msg = `More than one environment found: ${ chalk.blue.bold( envs.join( ', ' ) ) }. Please re-run command with the --slug parameter for the targeted environment.`;
+		const msg = `More than one environment found: ${ chalk.blue.bold(
+			envs.join( ', ' )
+		) }. Please re-run command with the --slug parameter for the targeted environment.`;
 		throw new UserError( msg );
 	}
 
 	return DEFAULT_SLUG; // Fall back to the default slug if we don't have any, e.g. during the env creation purpose
 }
 
-export function getEnvironmentStartCommand( slug: string, configurationFileOptions: ConfigurationFileOptions ): string {
-	const isUsingConfigurationFileSlug = Object.keys( configurationFileOptions ).length > 0 && configurationFileOptions.slug === slug;
+export function getEnvironmentStartCommand(
+	slug: string,
+	configurationFileOptions: ConfigurationFileOptions
+): string {
+	const isUsingConfigurationFileSlug =
+		Object.keys( configurationFileOptions ).length > 0 && configurationFileOptions.slug === slug;
 
 	if ( ! slug || isUsingConfigurationFileSlug ) {
 		return `${ DEV_ENVIRONMENT_FULL_COMMAND } start`;
@@ -246,7 +286,10 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
-export function processComponentOptionInput( passedParam: string, allowLocal: boolean ): ComponentConfig {
+export function processComponentOptionInput(
+	passedParam: string,
+	allowLocal: boolean
+): ComponentConfig {
 	// cast to string
 	const param = passedParam + '';
 	// This is a bit of a naive check
@@ -282,25 +325,46 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
  * @return {any} instance data
  */
 // eslint-disable-next-line complexity
-export async function promptForArguments( preselectedOptions: InstanceOptions, defaultOptions: InstanceOptions, suppressPrompts: boolean = false ): Promise<InstanceData> {
+export async function promptForArguments(
+	preselectedOptions: InstanceOptions,
+	defaultOptions: InstanceOptions,
+	suppressPrompts: boolean = false
+): Promise< InstanceData > {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	if ( suppressPrompts ) {
-		preselectedOptions = { ...( defaultOptions: Object ), ...( preselectedOptions: Object ) };
+		preselectedOptions = { ...(defaultOptions: Object), ...(preselectedOptions: Object) };
 	} else {
 		console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 	}
 
 	let multisiteText = 'Multisite';
 	if ( defaultOptions.title ) {
-		multisiteText += ` (${ defaultOptions.title } ${ defaultOptions.multisite ? 'IS' : 'is NOT' } multisite)`;
+		multisiteText += ` (${ defaultOptions.title } ${
+			defaultOptions.multisite ? 'IS' : 'is NOT'
+		} multisite)`;
 	}
 
 	const instanceData: InstanceData = {
-		wpTitle: preselectedOptions.title || await promptForText( 'WordPress site title', defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title ),
-		multisite: resolveMultisite( preselectedOptions.multisite ?? await promptForMultisite( multisiteText, defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite ) ),
+		wpTitle:
+			preselectedOptions.title ||
+			( await promptForText(
+				'WordPress site title',
+				defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title
+			) ),
+		multisite: resolveMultisite(
+			preselectedOptions.multisite ??
+				( await promptForMultisite(
+					multisiteText,
+					defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite
+				) )
+		),
 		elasticsearch: false,
-		php: preselectedOptions.php ? resolvePhpVersion( preselectedOptions.php ) : await promptForPhpVersion( resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion ) ),
+		php: preselectedOptions.php
+			? resolvePhpVersion( preselectedOptions.php )
+			: await promptForPhpVersion(
+					resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion )
+			  ),
 		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
 		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
 		wordpress: {
@@ -353,7 +417,10 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	if ( 'elasticsearch' in preselectedOptions ) {
 		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
-		instanceData.elasticsearch = await promptForBoolean( 'Enable Elasticsearch (needed by Enterprise Search)?', !! defaultOptions.elasticsearch );
+		instanceData.elasticsearch = await promptForBoolean(
+			'Enable Elasticsearch (needed by Enterprise Search)?',
+			!! defaultOptions.elasticsearch
+		);
 	}
 
 	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit', 'photon' ] ) {
@@ -362,7 +429,10 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 				instanceData[ service ] = preselectedOptions[ service ];
 			} else {
 				// eslint-disable-next-line no-await-in-loop
-				instanceData[ service ] = await promptForBoolean( `Enable ${ promptLabels[ service ] || service }`, ( ( defaultOptions[ service ]: any ): boolean ) );
+				instanceData[ service ] = await promptForBoolean(
+					`Enable ${ promptLabels[ service ] || service }`,
+					((defaultOptions[ service ]: any): boolean)
+				);
 			}
 		}
 	}
@@ -371,17 +441,30 @@ export async function promptForArguments( preselectedOptions: InstanceOptions, d
 	return instanceData;
 }
 
-async function processComponent( component: string, preselectedValue: string, defaultValue: string, suppressPrompts: boolean = false ) {
-	debug( `processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }` );
+async function processComponent(
+	component: string,
+	preselectedValue: string,
+	defaultValue: string,
+	suppressPrompts: boolean = false
+) {
+	debug(
+		`processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }`
+	);
 	let result = null;
 
 	const allowLocal = component !== 'wordpress';
-	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, allowLocal ) : null;
+	const defaultObject = defaultValue
+		? processComponentOptionInput( defaultValue, allowLocal )
+		: null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
 
 		if ( allowLocal && suppressPrompts === false ) {
-			console.log( `${ chalk.green( '✓' ) } Path to your local ${ componentDisplayNames[ component ] }: ${ preselectedValue }` );
+			console.log(
+				`${ chalk.green( '✓' ) } Path to your local ${
+					componentDisplayNames[ component ]
+				}: ${ preselectedValue }`
+			);
 		}
 	} else {
 		result = await promptForComponent( component, allowLocal, defaultObject );
@@ -419,7 +502,15 @@ function validateLocalPath( component: string, providedPath: string ) {
 	}
 
 	if ( component === 'appCode' ) {
-		const files = [ 'languages', 'plugins', 'themes', 'private', 'images', 'client-mu-plugins', 'vip-config' ];
+		const files = [
+			'languages',
+			'plugins',
+			'themes',
+			'private',
+			'images',
+			'client-mu-plugins',
+			'vip-config',
+		];
 
 		const missingFiles = [];
 		for ( const file of files ) {
@@ -430,7 +521,9 @@ function validateLocalPath( component: string, providedPath: string ) {
 		}
 		if ( missingFiles.length > 0 ) {
 			// eslint-disable-next-line max-len
-			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join( ', ' ) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
+			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
+				', '
+			) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
 			return {
 				result: false,
 				message,
@@ -445,7 +538,8 @@ function validateLocalPath( component: string, providedPath: string ) {
 }
 
 function isNonEmptyDirectory( directoryPath: string ) {
-	const isDirectory = directoryPath && fs.existsSync( directoryPath ) && fs.lstatSync( directoryPath ).isDirectory();
+	const isDirectory =
+		directoryPath && fs.existsSync( directoryPath ) && fs.lstatSync( directoryPath ).isDirectory();
 	const isEmpty = isDirectory ? fs.readdirSync( directoryPath ).length === 0 : true;
 
 	return ! isEmpty && isDirectory;
@@ -458,7 +552,7 @@ export function resolvePath( input: string ): string {
 	return path.resolve( resolvedPath );
 }
 
-export async function promptForText( message: string, initial: string ): Promise<string> {
+export async function promptForText( message: string, initial: string ): Promise< string > {
 	let result = { input: initial };
 	if ( isStdinTTY ) {
 		const nonEmptyValidator = ( value: ?string ) => {
@@ -480,7 +574,10 @@ export async function promptForText( message: string, initial: string ): Promise
 	return ( result?.input || '' ).trim();
 }
 
-export async function promptForMultisite( message: string, initial: string | boolean ): Promise<string | boolean> {
+export async function promptForMultisite(
+	message: string,
+	initial: string | boolean
+): Promise< string | boolean > {
 	let result = { input: initial };
 
 	if ( isStdinTTY ) {
@@ -508,7 +605,7 @@ export async function promptForMultisite( message: string, initial: string | boo
 	return processStringOrBooleanOption( input );
 }
 
-export function promptForBoolean( message: string, initial: boolean ): Promise<boolean> {
+export function promptForBoolean( message: string, initial: boolean ): Promise< boolean > {
 	if ( isStdinTTY ) {
 		const confirm = new Confirm( {
 			message,
@@ -560,7 +657,7 @@ export function resolvePhpVersion( version: string ): string {
 	return result;
 }
 
-export async function promptForPhpVersion( initialValue: string ): Promise<string> {
+export async function promptForPhpVersion( initialValue: string ): Promise< string > {
 	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
 
 	let answer = initialValue;
@@ -568,8 +665,8 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		let initial = images.findIndex( version => version === initialValue );
-		if (initial === -1) {
-			choices.push(initialValue);
+		if ( initial === -1 ) {
+			choices.push( initialValue );
 			initial = choices.length - 1;
 		}
 
@@ -586,7 +683,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise<strin
 }
 
 // eslint-disable-next-line no-redeclare
-export async function promptForComponent( component: string, allowLocal: boolean, defaultObject: ComponentConfig | null ): Promise<ComponentConfig | WordPressConfig> {
+export async function promptForComponent(
+	component: string,
+	allowLocal: boolean,
+	defaultObject: ComponentConfig | null
+): Promise< ComponentConfig | WordPressConfig > {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const componentDemoName = componentDemoNames[ component ] || component;
@@ -629,7 +730,10 @@ export async function promptForComponent( component: string, allowLocal: boolean
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
-		const directoryPath = await promptForText( `${ messagePrefix }What is a path to your local ${ componentDisplayName }`, defaultObject?.dir || '' );
+		const directoryPath = await promptForText(
+			`${ messagePrefix }What is a path to your local ${ componentDisplayName }`,
+			defaultObject?.dir || ''
+		);
 		return {
 			mode: modeResult,
 			dir: directoryPath,
@@ -651,10 +755,10 @@ export async function promptForComponent( component: string, allowLocal: boolean
 			option = await selectTag.run();
 		}
 
-		return ( {
+		return ({
 			mode: 'image',
 			tag: option,
-		}: WordPressConfig );
+		}: WordPressConfig);
 	}
 
 	// image
@@ -669,7 +773,7 @@ export function processBooleanOption( value: string ): boolean {
 		return false;
 	}
 
-	return ! ( FALSE_OPTIONS.includes( value.toLowerCase?.() ) );
+	return ! FALSE_OPTIONS.includes( value.toLowerCase?.() );
 }
 
 const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ];
@@ -699,45 +803,83 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
 	return command
 		.option( 'wordpress', 'Use a specific WordPress version', undefined, processVersionOption )
 		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
-		.option( 'app-code', 'Use the application code from a local directory or use "demo" for VIP skeleton code' )
-		.option( 'phpmyadmin', 'Enable PHPMyAdmin component. By default it is disabled', undefined, processBooleanOption )
+		.option(
+			'app-code',
+			'Use the application code from a local directory or use "demo" for VIP skeleton code'
+		)
+		.option(
+			'phpmyadmin',
+			'Enable PHPMyAdmin component. By default it is disabled',
+			undefined,
+			processBooleanOption
+		)
 		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
-		.option( 'xdebug_config', 'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable' )
-		.option( 'elasticsearch', 'Enable Elasticsearch (needed by Enterprise Search)', undefined, processBooleanOption )
-		.option( [ 'r', 'media-redirect-domain' ], 'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.' )
+		.option(
+			'xdebug_config',
+			'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable'
+		)
+		.option(
+			'elasticsearch',
+			'Enable Elasticsearch (needed by Enterprise Search)',
+			undefined,
+			processBooleanOption
+		)
+		.option(
+			[ 'r', 'media-redirect-domain' ],
+			'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.'
+		)
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
-		.option( [ 'G', 'mailhog' ], 'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)', undefined, processBooleanOption )
-		.option( [ 'A', 'mailpit' ], 'Enable Mailpit. By default it is disabled', undefined, processBooleanOption )
-		.option( [ 'H', 'photon' ], 'Enable Photon. By default it is disabled', undefined, processBooleanOption );
+		.option(
+			[ 'G', 'mailhog' ],
+			'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)',
+			undefined,
+			processBooleanOption
+		)
+		.option(
+			[ 'A', 'mailpit' ],
+			'Enable Mailpit. By default it is disabled',
+			undefined,
+			processBooleanOption
+		)
+		.option(
+			[ 'H', 'photon' ],
+			'Enable Photon. By default it is disabled',
+			undefined,
+			processBooleanOption
+		);
 }
 
 /**
  * Provides the list of tag choices for selection
  */
-export async function getTagChoices(): Promise<{ name: string, message: string, value: string }[]> {
+export async function getTagChoices(): Promise<
+	{ name: string, message: string, value: string }[]
+> {
 	let versions = await getVersionList();
 	if ( versions.length < 1 ) {
-		versions = [ {
-			ref: '6.1.1',
-			tag: '6.1',
-			cacheable: true,
-			locked: true,
-			prerelease: false,
-		},
-		{
-			ref: '6.0.3',
-			tag: '6.0',
-			cacheable: true,
-			locked: true,
-			prerelease: false,
-		},
-		{
-			ref: '5.9.5',
-			tag: '5.9',
-			cacheable: true,
-			locked: true,
-			prerelease: false,
-		} ];
+		versions = [
+			{
+				ref: '6.1.1',
+				tag: '6.1',
+				cacheable: true,
+				locked: true,
+				prerelease: false,
+			},
+			{
+				ref: '6.0.3',
+				tag: '6.0',
+				cacheable: true,
+				locked: true,
+				prerelease: false,
+			},
+			{
+				ref: '5.9.5',
+				tag: '5.9',
+				cacheable: true,
+				locked: true,
+				prerelease: false,
+			},
+		];
 	}
 
 	return versions.map( version => {
@@ -766,7 +908,9 @@ export function getEnvTrackingInfo( slug: string ): any {
 		for ( const key of Object.keys( envData ) ) {
 			// track doesnt like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
-			const value = ( ( DEV_ENVIRONMENT_COMPONENTS.includes( key ) ? JSON.stringify( envData[ key ] ) : envData[ key ]: any ): string );
+			const value = ((( DEV_ENVIRONMENT_COMPONENTS.includes( key )
+				? JSON.stringify( envData[ key ] )
+				: envData[ key ] ): any): string);
 
 			result[ snakeCasedKey ] = value;
 		}
@@ -782,7 +926,7 @@ export function getEnvTrackingInfo( slug: string ): any {
 }
 
 export interface PostStartOptions {
-	openVSCode: boolean
+	openVSCode: boolean;
 }
 
 export async function postStart( slug: string, options: PostStartOptions ) {
@@ -824,7 +968,11 @@ const getVSCodeExecutable = () => {
 
 export function handleDeprecatedOptions( opts: any ): void {
 	if ( opts.mailhog ) {
-		console.warn( chalk.yellow( 'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.' ) );
+		console.warn(
+			chalk.yellow(
+				'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.'
+			)
+		);
 		if ( opts.mailpit === undefined ) {
 			opts.mailpit = opts.mailhog;
 		}

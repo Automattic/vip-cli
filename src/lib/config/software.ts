@@ -87,16 +87,16 @@ const updateSoftwareMutation = gql`
 			}
 		) {
 			php {
-			...Software
+				...Software
 			}
 			wordpress {
-			...Software
+				...Software
 			}
 			muplugins {
-			...Software
+				...Software
 			}
 			nodejs {
-			...Software
+				...Software
 			}
 		}
 	}
@@ -105,9 +105,9 @@ const updateSoftwareMutation = gql`
 
 const updateJobQuery = gql`
 	query UpdateJob($appId: Int!, $envId: Int!) {
-		app(id: $appId ) {
+		app(id: $appId) {
 			environments(id: $envId) {
-				jobs (types:["upgrade_php", "upgrade_wordpress", "upgrade_muplugins", "upgrade_nodejs"]) {
+				jobs(types: ["upgrade_php", "upgrade_wordpress", "upgrade_muplugins", "upgrade_nodejs"]) {
 					type
 					completedAt
 					createdAt
@@ -123,7 +123,8 @@ const updateJobQuery = gql`
 				}
 			}
 		}
-	}`;
+	}
+`;
 
 const COMPONENT_NAMES = {
 	wordpress: 'WordPress',
@@ -146,7 +147,7 @@ interface SoftwareSetting {
 	slug: string;
 }
 
-type SoftwareSettings = Record<ComponentName, SoftwareSetting>;
+type SoftwareSettings = Record< ComponentName, SoftwareSetting >;
 
 interface Option {
 	deprecated: boolean;
@@ -222,7 +223,10 @@ const _optionsForVersion = ( softwareSettings: SoftwareSetting ): VersionChoice[
 	} );
 };
 
-const _processComponent = ( appTypeId: number, userProvidedComponent?: ComponentName ): Promise<ComponentName> => {
+const _processComponent = (
+	appTypeId: number,
+	userProvidedComponent?: ComponentName
+): Promise< ComponentName > => {
 	const validComponents: ComponentName[] = [];
 	if ( isAppWordPress( appTypeId ) ) {
 		validComponents.push( 'wordpress', 'php', 'muplugins' );
@@ -232,7 +236,11 @@ const _processComponent = ( appTypeId: number, userProvidedComponent?: Component
 
 	if ( userProvidedComponent ) {
 		if ( ! validComponents.includes( userProvidedComponent ) ) {
-			throw new UserError( `Component ${ userProvidedComponent } is not supported. Use one of: ${ validComponents.join( ',' ) }` );
+			throw new UserError(
+				`Component ${ userProvidedComponent } is not supported. Use one of: ${ validComponents.join(
+					','
+				) }`
+			);
 		}
 
 		return Promise.resolve( userProvidedComponent );
@@ -250,23 +258,31 @@ const _processComponent = ( appTypeId: number, userProvidedComponent?: Component
 		message: COMPONENT_NAMES[ item ],
 		value: item,
 	} ) );
-	
+
 	const select = new Select( {
 		message: 'Component to update',
 		choices,
 	} );
 	return select.run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
-	} ) as Promise<ComponentName>;
+	} ) as Promise< ComponentName >;
 };
 
-const _processComponentVersion = ( softwareSettings: SoftwareSettings, component: ComponentName, userProvidedVersion?: string ): Promise<string> => {
+const _processComponentVersion = (
+	softwareSettings: SoftwareSettings,
+	component: ComponentName,
+	userProvidedVersion?: string
+): Promise< string > => {
 	const versionChoices = _optionsForVersion( softwareSettings[ component ] );
 
 	if ( userProvidedVersion ) {
 		const validValues = versionChoices.map( item => item.value );
 		if ( ! validValues.includes( userProvidedVersion ) ) {
-			throw new UserError( `Version ${ userProvidedVersion } is not supported for ${ COMPONENT_NAMES[ component ] }. Use one of: ${ validValues.join( ',' ) }` );
+			throw new UserError(
+				`Version ${ userProvidedVersion } is not supported for ${
+					COMPONENT_NAMES[ component ]
+				}. Use one of: ${ validValues.join( ',' ) }`
+			);
 		}
 
 		return Promise.resolve( userProvidedVersion );
@@ -278,7 +294,7 @@ const _processComponentVersion = ( softwareSettings: SoftwareSettings, component
 	} );
 	return versionSelect.run().catch( () => {
 		throw new UserError( 'Command cancelled by user.' );
-	} ) ;
+	} );
 };
 
 interface UpdateData {
@@ -292,16 +308,25 @@ export interface UpdatePromptOptions {
 	force?: boolean;
 }
 
-export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOptions, softwareSettings: SoftwareSettings ): Promise<UpdateData> => {
+export const promptForUpdate = async (
+	appTypeId: number,
+	opts: UpdatePromptOptions,
+	softwareSettings: SoftwareSettings
+): Promise< UpdateData > => {
 	const component = await _processComponent( appTypeId, opts.component );
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
 	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-	const confirm: boolean = opts.force || await new Confirm( { // NOSONAR
-		message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
-	} ).run().catch( () => {
-		throw new UserError( 'Command cancelled by user.' );
-	} );
+	const confirm: boolean =
+		opts.force ||
+		( await new Confirm( {
+			// NOSONAR
+			message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
+		} )
+			.run()
+			.catch( () => {
+				throw new UserError( 'Command cancelled by user.' );
+			} ) );
 
 	if ( confirm ) {
 		return {
@@ -314,10 +339,10 @@ export const promptForUpdate = async ( appTypeId: number, opts: UpdatePromptOpti
 };
 
 interface TrigerUpdateOptions {
-	appId: number,
-	envId: number,
-	component: string,
-	version: string,
+	appId: number;
+	envId: number;
+	component: string;
+	version: string;
 }
 
 export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
@@ -327,18 +352,24 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
-const _getLatestJob = async ( appId: number, envId: number ): Promise<JobInterface | null> => {
+const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterface | null > => {
 	const api = await API();
-	const result = await api.query<Query, UpdateJobQueryVariables>( { query: updateJobQuery, variables: { appId, envId }, fetchPolicy: 'network-only' } );
-	const jobs = result.data.app?.environments?.[0]?.jobs ?? [];
+	const result = await api.query< Query, UpdateJobQueryVariables >( {
+		query: updateJobQuery,
+		variables: { appId, envId },
+		fetchPolicy: 'network-only',
+	} );
+	const jobs = result.data.app?.environments?.[ 0 ]?.jobs ?? [];
 
 	if ( jobs.length ) {
-		return jobs.reduce( ( prev, current ) => ( ( prev?.createdAt || '' ) > ( current?.createdAt || '' ) ) ? prev : current );
+		return jobs.reduce( ( prev, current ) =>
+			( prev?.createdAt || '' ) > ( current?.createdAt || '' ) ? prev : current
+		);
 	}
 	return null;
 };
 
-const _getCompletedJob = async ( appId: number, envId: number ): Promise<JobInterface | null> => {
+const _getCompletedJob = async ( appId: number, envId: number ): Promise< JobInterface | null > => {
 	const latestJob = await _getLatestJob( appId, envId );
 	debug( 'Latest job result:', latestJob );
 
@@ -362,7 +393,7 @@ interface UpdateResultError {
 
 type UpdateResult = UpdateResultSuccess | UpdateResultError;
 
-export const getUpdateResult = async ( appId: number, envId: number ): Promise<UpdateResult> => {
+export const getUpdateResult = async ( appId: number, envId: number ): Promise< UpdateResult > => {
 	debug( 'Getting update result', { appId, envId } );
 
 	const completedJob = await _getCompletedJob( appId, envId );
@@ -389,7 +420,11 @@ interface FormatSoftwareSettingsResult {
 	available_versions?: string | string[];
 }
 
-export const formatSoftwareSettings = ( softwareSetting: SoftwareSetting, includes: string[], format: string ): FormatSoftwareSettingsResult => {
+export const formatSoftwareSettings = (
+	softwareSetting: SoftwareSetting,
+	includes: string[],
+	format: string
+): FormatSoftwareSettingsResult => {
 	let version = softwareSetting.current.version;
 	if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
 		version += ' (managed updates)';

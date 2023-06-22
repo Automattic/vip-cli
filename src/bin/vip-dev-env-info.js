@@ -15,8 +15,16 @@ import debugLib from 'debug';
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { printEnvironmentInfo, printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-core';
-import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	printEnvironmentInfo,
+	printAllEnvironmentsInfo,
+} from '../lib/dev-environment/dev-environment-core';
+import {
+	getEnvTrackingInfo,
+	getEnvironmentName,
+	handleCLIException,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 

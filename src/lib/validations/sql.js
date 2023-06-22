@@ -40,7 +40,7 @@ export type CheckResult = {
 	recomendation?: string,
 	falsePositive?: boolean,
 	warning?: boolean,
-}
+};
 
 export type CheckType = {
 	excerpt: string,
@@ -49,7 +49,7 @@ export type CheckType = {
 	message: string,
 	outputFormatter: Function,
 	recommendation: string,
-	results: Array<CheckResult>,
+	results: Array< CheckResult >,
 };
 
 export type Checks = {
@@ -61,14 +61,14 @@ export type Checks = {
 	siteHomeUrl: CheckType,
 };
 
-type Record<T, V> = {
-	[T]: V
-}
+type Record< T, V > = {
+	[T]: V,
+};
 
 interface ValidationOptions {
-	isImport: boolean,
-	skipChecks: string[],
-	extraCheckParams: Record<string, any>,
+	isImport: boolean;
+	skipChecks: string[];
+	extraCheckParams: Record< string, any >;
 }
 
 const generalCheckFormatter = ( check: CheckType ) => {
@@ -172,7 +172,7 @@ function checkTablePrefixes( results: CheckResult[], errors, infos ) {
 	const wpMultisiteTables = [];
 	results.forEach( result => {
 		const tableName = result.text || '';
-		if ( RegExp(/^wp_(\d+_)/).exec(tableName) ) {
+		if ( RegExp( /^wp_(\d+_)/ ).exec( tableName ) ) {
 			wpMultisiteTables.push( tableName );
 		} else if ( tableName.startsWith( 'wp_' ) ) {
 			wpTables.push( tableName );
@@ -271,7 +271,8 @@ const checks: Checks = {
 		results: [],
 		message: 'ALTER TABLE statement',
 		excerpt: "'ALTER TABLE' should not be present (case-insensitive)",
-		recommendation: 'Remove these lines and define table structure in the CREATE TABLE statement instead',
+		recommendation:
+			'Remove these lines and define table structure in the CREATE TABLE statement instead',
 	},
 	uniqueChecks: {
 		matcher: /^SET UNIQUE_CHECKS\s*=\s*0/i,
@@ -311,7 +312,7 @@ const checks: Checks = {
 		results: [],
 		message: 'Siteurl/home options not pointing to lando domain',
 		excerpt: 'Siteurl/home options not pointing to lando domain',
-		recommendation: 'Use search-replace to change environment\'s domain',
+		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
 		matcher: / ENGINE=(?!(InnoDB))/i,
@@ -327,7 +328,7 @@ const checks: Checks = {
 };
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
-function findDuplicates( arr: Array<any>, where: Set<any> ) {
+function findDuplicates( arr: Array< any >, where: Set< any > ) {
 	const filtered = arr.filter( item => {
 		if ( where.has( item ) ) {
 			where.delete( item );
@@ -349,8 +350,9 @@ const postValidation = async ( options: ValidationOptions ) => {
 	}
 
 	const errorSummary = {};
-	const checkEntries: any = Object.entries( checks )
-		.filter( ( [ type ] ) => ! options.skipChecks.includes( type ) );
+	const checkEntries: any = Object.entries( checks ).filter(
+		( [ type ] ) => ! options.skipChecks.includes( type )
+	);
 
 	const formattedWarnings = [];
 	let formattedErrors = [];
@@ -382,7 +384,9 @@ const postValidation = async ( options: ValidationOptions ) => {
 
 		const errorObject = {
 			error: formatError( 'Duplicate table names were found: ' + duplicates.join( ',' ) ),
-			recommendation: formatRecommendation( 'Ensure that there are no duplicate tables in your SQL dump' ),
+			recommendation: formatRecommendation(
+				'Ensure that there are no duplicate tables in your SQL dump'
+			),
 		};
 		formattedErrors = formattedErrors.concat( errorObject );
 	}
@@ -420,7 +424,9 @@ const postValidation = async ( options: ValidationOptions ) => {
 			errorOutput.push( '' );
 		} );
 
-		errorOutput.push( chalk.bold.red( `SQL validation failed due to ${ problemsFound } error(s)` ) );
+		errorOutput.push(
+			chalk.bold.red( `SQL validation failed due to ${ problemsFound } error(s)` )
+		);
 
 		if ( options.isImport ) {
 			throw new Error( errorOutput.join( '\n' ) );
@@ -456,14 +462,19 @@ const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
 	extraCheckParams: {},
 };
 
-const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
+const perLineValidations = (
+	line: string,
+	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
+) => {
 	if ( options.isImport && lineNum % 500 === 0 ) {
 		log( `Reading line ${ lineNum } ` );
 	}
 
 	checkForTableName( line );
 
-	const checkKeys = Object.keys( checks ).filter( checkItem => ! options.skipChecks.includes( checkItem ) );
+	const checkKeys = Object.keys( checks ).filter(
+		checkItem => ! options.skipChecks.includes( checkItem )
+	);
 	for ( const checkKey of checkKeys ) {
 		const check: CheckType = checks[ checkKey ];
 		const results = line.match( check.matcher );
@@ -476,7 +487,10 @@ const perLineValidations = ( line: string, options: ValidationOptions = DEFAULT_
 	lineNum += 1;
 };
 
-const postLineExecutionProcessing = async ( { isImport, skipChecks }: PostLineExecutionProcessingParams ) => {
+const postLineExecutionProcessing = async ( {
+	isImport,
+	skipChecks,
+}: PostLineExecutionProcessingParams ) => {
 	await postValidation( {
 		isImport: isImport || false,
 		skipChecks: skipChecks || DEV_ENV_SPECIFIC_CHECKS,
@@ -490,7 +504,10 @@ export const staticSqlValidations = {
 };
 
 // For standalone SQL validations
-export const validate = async ( filename: string, options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS ) => {
+export const validate = async (
+	filename: string,
+	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
+) => {
 	const readInterface = await getReadInterface( filename );
 	options.isImport = false;
 	readInterface.on( 'line', line => {
@@ -501,5 +518,8 @@ export const validate = async ( filename: string, options: ValidationOptions = D
 	await new Promise( resolve => readInterface.on( 'close', resolve ) );
 	readInterface.close();
 
-	await postLineExecutionProcessing( { isImport: options.isImport, skipChecks: options.skipChecks } );
+	await postLineExecutionProcessing( {
+		isImport: options.isImport,
+		skipChecks: options.skipChecks,
+	} );
 };

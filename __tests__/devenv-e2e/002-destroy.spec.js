@@ -14,7 +14,13 @@ import nock from 'nock';
  */
 import { CliTest } from './helpers/cli-test';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import {
+	checkEnvExists,
+	createAndStartEnvironment,
+	destroyEnvironment,
+	getProjectSlug,
+	prepareEnvironment,
+} from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvDestroy } from './helpers/commands';
 import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
@@ -47,9 +53,11 @@ describe( 'vip dev-env destroy', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env } );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], {
+			env,
+		} );
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+		expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
@@ -58,7 +66,11 @@ describe( 'vip dev-env destroy', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -69,7 +81,11 @@ describe( 'vip dev-env destroy', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -84,11 +100,19 @@ describe( 'vip dev-env destroy', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug, '--soft' ], { env }, true );
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug, '--soft' ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).not.toContain( 'Environment files deleted successfully' );
 		expect( result.stdout ).toContain( 'Environment destroyed' );

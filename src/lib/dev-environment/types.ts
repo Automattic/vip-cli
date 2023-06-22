@@ -15,7 +15,7 @@ export interface InstanceOptions {
 	mailpit?: boolean;
 	photon?: boolean;
 
-	[index: string]: unknown;
+	[ index: string ]: unknown;
 }
 
 export type AppInfo = {
@@ -31,14 +31,14 @@ export type AppInfo = {
 		php: string;
 		wordpress: string;
 	};
-}
+};
 
 export type ComponentConfig = {
 	mode: 'local' | 'image';
 	dir?: string;
 	image?: string;
 	tag?: string;
-}
+};
 
 export type WordPressConfig = {
 	mode: 'image';
@@ -52,7 +52,7 @@ export type EnvironmentNameOptions = {
 	app: string;
 	env: string;
 	allowAppEnv?: boolean;
-}
+};
 
 export type ConfigurationFileOptions = {
 	version?: string;
@@ -71,10 +71,10 @@ export type ConfigurationFileOptions = {
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
 	photon?: boolean;
-}
+};
 
 export interface InstanceData {
-	[index: string]: unknown;
+	[ index: string ]: unknown;
 	siteSlug: string;
 	wpTitle: string;
 	multisite: boolean | 'subdomain' | 'subdirectory';

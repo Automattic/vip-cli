@@ -13,7 +13,7 @@ import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
-interface Step extends Record<string, string> {
+interface Step extends Record< string, string > {
 	id: string;
 	name: string;
 }
@@ -29,8 +29,8 @@ export class ProgressTracker {
 	printInterval: NodeJS.Timer | undefined;
 
 	// Track the state of each step
-	stepsFromCaller: Map<string, Step>;
-	stepsFromServer: Map<string, Step>;
+	stepsFromCaller: Map< string, Step >;
+	stepsFromServer: Map< string, Step >;
 
 	// Spinnerz go brrrr
 	runningSprite: RunningSprite;
@@ -51,15 +51,15 @@ export class ProgressTracker {
 		this.suffix = '';
 	}
 
-	getSteps(): Map<string, Step> {
+	getSteps(): Map< string, Step > {
 		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
 	}
 
-	mapSteps( steps: Step[] ): Map<string, Step> {
+	mapSteps( steps: Step[] ): Map< string, Step > {
 		return steps.reduce( ( map, { id, name, status } ) => {
 			map.set( id, { id, name, status: status || 'pending' } );
 			return map;
-		}, new Map<string, Step>() );
+		}, new Map< string, Step >() );
 	}
 
 	setUploadPercentage( percentage: string ) {

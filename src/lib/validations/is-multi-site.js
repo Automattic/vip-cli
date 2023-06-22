@@ -17,7 +17,7 @@ import * as exit from '../../lib/cli/exit';
 
 const isMultiSite = new WeakMap();
 
-export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Promise<boolean> {
+export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Promise< boolean > {
 	// if we've already been through this, avoid doing it again within the same process
 	if ( isMultiSite.has( arguments ) && 'boolean' === typeof isMultiSite.get( arguments ) ) {
 		return Boolean( isMultiSite.get( arguments ) );

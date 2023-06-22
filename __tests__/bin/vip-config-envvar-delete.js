@@ -71,16 +71,31 @@ describe( 'vip config envvar delete', () => {
 	} );
 } );
 
-const mockConfirm: JestMockFn<[string], Promise<boolean>> = ( ( confirm: any ): JestMockFn<[string], Promise<boolean>> );
-const mockValidateNameWithMessage: JestMockFn<[string], boolean> = ( ( validateNameWithMessage: any ): JestMockFn<[string], boolean> );
-const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = ( ( promptForValue: any ): JestMockFn<[string, string], Promise<string>> );
-const mockDeleteEnvVar: JestMockFn<[number, number, string], Promise<void>> = ( ( deleteEnvVar: any ): JestMockFn<[number, number, string], Promise<void>> );
-const mockTrackEvent: JestMockFn<[], Promise<Response>> = ( ( trackEvent: any ): JestMockFn<[], Promise<Response>> );
+const mockConfirm: JestMockFn< [ string ], Promise< boolean > > = ((confirm: any): JestMockFn<
+	[ string ],
+	Promise< boolean >
+>);
+const mockValidateNameWithMessage: JestMockFn< [ string ], boolean > =
+	((validateNameWithMessage: any): JestMockFn< [ string ], boolean >);
+const mockPromptForValue: JestMockFn<
+	[ string, string ],
+	Promise< string >
+> = ((promptForValue: any): JestMockFn< [ string, string ], Promise< string > >);
+const mockDeleteEnvVar: JestMockFn<
+	[ number, number, string ],
+	Promise< void >
+> = ((deleteEnvVar: any): JestMockFn< [ number, number, string ], Promise< void > >);
+const mockTrackEvent: JestMockFn< [], Promise< Response > > = ((trackEvent: any): JestMockFn<
+	[],
+	Promise< Response >
+>);
 
 describe( 'deleteEnvVarCommand', () => {
 	let args;
 	let opts;
-	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip @mysite.develop config envvar delete' ) } );
+	const eventPayload = expect.objectContaining( {
+		command: expect.stringContaining( 'vip @mysite.develop config envvar delete' ),
+	} );
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];
 
@@ -121,7 +136,9 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully deleted environment variable' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'Successfully deleted environment variable' )
+		);
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -138,7 +155,9 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( promptForValue ).not.toHaveBeenCalled();
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name );
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully deleted environment variable' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'Successfully deleted environment variable' )
+		);
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -186,7 +205,7 @@ describe( 'deleteEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
-		mockDeleteEnvVar.mockImplementation( () => Promise.reject<void>( thrownError ) );
+		mockDeleteEnvVar.mockImplementation( () => Promise.reject< void >( thrownError ) );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 

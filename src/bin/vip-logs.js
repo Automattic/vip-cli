@@ -24,7 +24,7 @@ const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
-export async function getLogs( arg: string[], opt ): Promise<void> {
+export async function getLogs( arg: string[], opt ): Promise< void > {
 	validateInputs( opt.type, opt.limit, opt.format );
 
 	const trackingParams = getBaseTrackingParams( opt );
@@ -57,7 +57,7 @@ export async function getLogs( arg: string[], opt ): Promise<void> {
 	printLogs( logs.nodes, opt.format );
 }
 
-export async function followLogs( opt ): Promise<void> {
+export async function followLogs( opt ): Promise< void > {
 	let after = null;
 	let isFirstRequest = true;
 	// How many times have we polled?
@@ -99,7 +99,9 @@ export async function followLogs( opt ): Promise<void> {
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
 			delay += DEFAULT_POLLING_DELAY_IN_SECONDS;
 			delay = Math.min( delay, MAX_POLLING_DELAY_IN_SECONDS );
-			console.error( `${ chalk.red( 'Error:' ) } Failed to fetch logs. Trying again in ${ delay } seconds.` );
+			console.error(
+				`${ chalk.red( 'Error:' ) } Failed to fetch logs. Trying again in ${ delay } seconds.`
+			);
 		}
 
 		if ( logs ) {
@@ -111,7 +113,10 @@ export async function followLogs( opt ): Promise<void> {
 			isFirstRequest = false;
 
 			// Keep a sane lower limit of MIN_POLLING_DELAY_IN_SECONDS just in case something goes wrong in the server-side
-			delay = Math.max( ( logs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS ), MIN_POLLING_DELAY_IN_SECONDS );
+			delay = Math.max(
+				logs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS,
+				MIN_POLLING_DELAY_IN_SECONDS
+			);
 		}
 
 		// eslint-disable-next-line no-await-in-loop
@@ -156,15 +161,21 @@ function printLogs( logs, format ) {
 
 export function validateInputs( type: string, limit: number, format: string ): void {
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
-		exit.withError( `Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.` );
+		exit.withError(
+			`Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.`
+		);
 	}
 
 	if ( ! ALLOWED_FORMATS.includes( format ) ) {
-		exit.withError( `Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.` );
+		exit.withError(
+			`Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.`
+		);
 	}
 
 	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > logsLib.LIMIT_MAX ) {
-		exit.withError( `Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ logsLib.LIMIT_MAX }.` );
+		exit.withError(
+			`Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ logsLib.LIMIT_MAX }.`
+		);
 	}
 }
 

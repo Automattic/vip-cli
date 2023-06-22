@@ -21,8 +21,10 @@ import UserError from '../lib/user-error';
 // Command examples
 const examples = [
 	{
-		usage: 'vip @mysite.develop config software get wordpress --include available_versions --format json',
-		description: 'Read current software settings for WordPress in JSON format including available versions',
+		usage:
+			'vip @mysite.develop config software get wordpress --include available_versions --format json',
+		description:
+			'Read current software settings for WordPress in JSON format including available versions',
 	},
 	{
 		usage: 'vip @mysite.develop config software get',
@@ -40,8 +42,13 @@ command( {
 	wildcardCommand: true,
 	format: true,
 	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
-} ).option( 'include', `Extra information to be included. Valid values: ${ VALID_INCLUDES.join( ',' ) }` )
-	.examples( examples ).argv( process.argv, async ( arg: string[], opt ) => {
+} )
+	.option(
+		'include',
+		`Extra information to be included. Valid values: ${ VALID_INCLUDES.join( ',' ) }`
+	)
+	.examples( examples )
+	.argv( process.argv, async ( arg: string[], opt ) => {
 		const trackingInfo = {
 			environment_id: opt.env?.id,
 			args: JSON.stringify( arg ),
@@ -55,7 +62,9 @@ command( {
 			} else {
 				include = [ opt.include ];
 			}
-			const invalidIncludes = include.filter( ( includeKey: any ) => ! VALID_INCLUDES.includes( includeKey ) );
+			const invalidIncludes = include.filter(
+				( includeKey: any ) => ! VALID_INCLUDES.includes( includeKey )
+			);
 			if ( invalidIncludes.length > 0 ) {
 				throw new UserError( `Invalid include value(s): ${ invalidIncludes.join( ',' ) }` );
 			}
@@ -70,7 +79,9 @@ command( {
 		if ( arg.length > 0 ) {
 			const component = arg[ 0 ];
 			if ( ! softwareSettings[ component ] ) {
-				throw new UserError( `Software settings for ${ component } are not supported for this environment.` );
+				throw new UserError(
+					`Software settings for ${ component } are not supported for this environment.`
+				);
 			}
 			chosenSettings = [ softwareSettings[ component ] ];
 		} else {
