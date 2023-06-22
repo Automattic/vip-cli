@@ -1,9 +1,4 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import debugLib from 'debug';
@@ -22,7 +17,7 @@ import { v4 as uuid } from 'uuid';
 /**
  * Internal dependencies
  */
-import { type LandoLogsOptions, landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild, landoLogs } from './dev-environment-lando';
+import { landoDestroy, landoInfo, landoExec, landoStart, landoStop, landoRebuild, landoLogs } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
 import { handleCLIException, printTable, promptForComponent, resolvePath } from './dev-environment-cli';
 import app from '../api/app';
@@ -55,17 +50,21 @@ const instanceDataFileName = 'instance_data.json';
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
 
-type StartEnvironmentOptions = {
-	skipRebuild: boolean,
-	skipWpVersionsCheck: boolean
-};
+interface StartEnvironmentOptions {
+	skipRebuild: boolean;
+	skipWpVersionsCheck: boolean;
+}
 
-type WordPressTag = {
+interface WordPressTag {
 	ref: string;
 	tag: string;
 	cacheable: boolean;
 	locked: boolean;
 	prerelease: boolean;
+}
+
+function xdgDataDirectory(): string {
+	return xdgBasedir.data?.length ? xdgBasedir.data : os.tmpdir();
 }
 
 export async function startEnvironment( lando: Lando, slug: string, options: StartEnvironmentOptions ): Promise<void> {
@@ -156,14 +155,15 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		...( instanceData ),
 	};
 
-	if ( instanceData.mediaRedirectDomain && ! instanceData.mediaRedirectDomain.match( /^http/ ) ) {
+	if ( instanceData.mediaRedirectDomain && ! /^http/.exec( instanceData.mediaRedirectDomain) ) {
 		// We need to make sure the redirect is an absolute path
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	newInstanceData.elasticsearch = instanceData.elasticsearch || false;
+	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+	newInstanceData.elasticsearch = instanceData.elasticsearch || false; // NOSONAR
 
-	newInstanceData.php = (instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ]) as string;
+	newInstanceData.php = (instanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[0] ]);
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
@@ -258,12 +258,12 @@ export async function printAllEnvironmentsInfo( lando: Lando, options: PrintOpti
 
 function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): string {
 	if ( component.mode === 'local' ) {
-		return component.dir || '';
+		return component.dir ?? '';
 	}
-	return component.tag || '[demo-image]';
+	return component.tag ?? '[demo-image]';
 }
 
-export async function showLogs( lando: Lando, slug: string, options: Record<string, string> = {} ): Promise<void|undefined> {
+export async function showLogs( lando: Lando, slug: string, options: Record<string, string> = {} ): Promise<unknown> {
 	debug( 'Will display logs command on env', slug, 'with options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -277,7 +277,7 @@ export async function showLogs( lando: Lando, slug: string, options: Record<stri
 		}
 	}
 
-	return landoLogs( lando, instancePath, ( options ) );
+	return landoLogs( lando, instancePath, options );
 }
 
 export async function printEnvironmentInfo( lando: Lando, slug: string, options: PrintOptions ): Promise<void> {
@@ -314,7 +314,7 @@ export async function printEnvironmentInfo( lando: Lando, slug: string, options:
 	printTable( appInfo );
 }
 
-export function exec( lando: Lando, slug: string, args: string[], options: Record<string, string> = {} ): Promise<undefined|void> {
+export function exec( lando: Lando, slug: string, args: string[], options: Record<string, string> = {} ): Promise<unknown> {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -390,9 +390,9 @@ export function readEnvironmentData( slug: string ): InstanceData {
  *
  * @param {string}       slug Env slug
  * @param {InstanceData} data instance data
- * @return {Promise} Promise
+ * @return {Promise<void>} Promise
  */
-export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<void|undefined> {
+export function writeEnvironmentData( slug: string, data: InstanceData ): Promise<void> {
 	debug( 'Will try to write instance data for environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
@@ -425,7 +425,7 @@ async function prepareLandoEnv( instanceData: InstanceData, instancePath: string
 }
 
 export function getAllEnvironmentNames(): string[] {
-	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	const mainEnvironmentPath = xdgDataDirectory();
 
 	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
 
@@ -449,7 +449,7 @@ export function getEnvironmentPath( name: string ): string {
 		throw new Error( 'Name was not provided' );
 	}
 
-	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	const mainEnvironmentPath = xdgDataDirectory();
 
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
 }
@@ -492,7 +492,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 		appData.repository = queryResult.repository?.htmlUrl;
 
 		// FIXME: This is casted as AppEnvironment[] but pedantically, Parker's schema made it so that the array may contain nullable. Code-wise though, that doesn't actually happen.
-		const environments = (queryResult.environments || []) as AppEnvironment[];
+		const environments = (queryResult.environments ?? []) as AppEnvironment[];
 		let envData;
 		if ( envType ) {
 			envData = environments.find( candidateEnv => candidateEnv.type === envType );
@@ -516,9 +516,9 @@ export async function getApplicationInformation( appId: number, envType: string 
 				branch: envData.branch,
 				type: envData.type,
 				isMultisite: envData.isMultisite,
-				primaryDomain: envData.primaryDomain?.name || '',
-				php: envData.softwareSettings?.php?.current?.version || '',
-				wordpress: envData.softwareSettings?.wordpress?.current?.version || '',
+				primaryDomain: envData.primaryDomain?.name ?? '',
+				php: envData.softwareSettings?.php?.current.version ?? '',
+				wordpress: envData.softwareSettings?.wordpress?.current.version ?? '',
 			};
 		}
 	}
@@ -526,7 +526,7 @@ export async function getApplicationInformation( appId: number, envType: string 
 	return appData;
 }
 
-export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[], inPlace: boolean ): Promise<string> {
+export async function resolveImportPath( slug: string, fileName: string, searchReplace: string | string[] | null, inPlace: boolean ): Promise<string> {
 	debug( `Will try to resolve path - ${ fileName }` );
 	let resolvedPath = resolvePath( fileName );
 
@@ -541,7 +541,7 @@ export async function resolveImportPath( slug: string, fileName: string, searchR
 	}
 
 	// Run Search and Replace if the --search-replace flag was provided
-	if ( searchReplace && searchReplace.length ) {
+	if ( searchReplace?.length ) {
 		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
 			isImport: true,
 			output: true,
@@ -571,7 +571,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	}
 
 	const files = fs.readdirSync( resolvedPath );
-	if ( files.indexOf( uploadPathString ) > -1 ) {
+	if ( files.includes( uploadPathString ) ) {
 		const confirm = await prompt( {
 			type: 'confirm',
 			name: 'continue',
@@ -679,7 +679,7 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 
 		// Write new data and stage for rebuild
 		// FIXME: version?.tag is possibly null. Should we throw if we can't find a version somehow?
-		envData.wordpress.tag = version?.tag || '';
+		envData.wordpress.tag = version?.tag ?? '';
 		envData.wordpress.ref = version?.ref;
 
 		await updateEnvironment( envData );
@@ -687,9 +687,10 @@ async function updateWordPressImage( slug: string ): Promise<boolean> {
 		return true;
 	}
 	if ( confirm.upgrade === "no (don't ask anymore)" ) {
+		const updateCommand = `vip dev-env update --slug=${ slug }`;
 		envData.wordpress.doNotUpgrade = true;
 		console.log( "We won't ask about upgrading this environment anymore." );
-		console.log( 'To manually upgrade please run:' + `${ chalk.yellow( `vip dev-env update --slug=${ slug }` ) }` );
+		console.log( `To manually upgrade please run: ${ chalk.yellow( updateCommand ) }` );
 		await updateEnvironment( envData );
 	}
 
@@ -716,8 +717,7 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise<b
 		const { mtime: expire } = await fs.promises.stat( cacheFile );
 		expire.setSeconds( expire.getSeconds() + ttl );
 
-		// FIXME: There's no tests for isVersionListExpired so we have this type nightmare for now
-		return ( +new Date > (expire as unknown as number) );
+		return ( +new Date > +expire );
 	} catch ( err ) {
 		return true;
 	}
@@ -728,7 +728,7 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise<b
  */
 export async function getVersionList(): Promise<WordPressTag[]> {
 	let res;
-	const mainEnvironmentPath = xdgBasedir.data || os.tmpdir();
+	const mainEnvironmentPath = xdgDataDirectory();
 	const cacheFilePath = path.join( mainEnvironmentPath, 'vip' );
 	const cacheFile = path.join( cacheFilePath, DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 	// Handle from cache
@@ -739,7 +739,7 @@ export async function getVersionList(): Promise<WordPressTag[]> {
 		}
 
 		// If the cache does not exist or has expired, refresh it
-		if ( await isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL as number ) ) {
+		if ( await isVersionListExpired( cacheFile, DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL ) ) {
 			res = await fetchVersionList();
 			await fs.promises.writeFile( cacheFile, JSON.stringify( res ) );
 		}
@@ -780,10 +780,10 @@ export function generateVSCodeWorkspace( slug: string ) {
 	const pathMappings = generatePathMappings( location, instanceData );
 	const folders = [ { path: location } ];
 
-	if ( instanceData.muPlugins?.dir ) {
+	if ( instanceData.muPlugins.dir ) {
 		folders.push( { path: instanceData.muPlugins.dir } );
 	}
-	if ( instanceData.appCode?.dir ) {
+	if ( instanceData.appCode.dir ) {
 		folders.push( { path: instanceData.appCode.dir } );
 	}
 
@@ -811,10 +811,10 @@ export function generateVSCodeWorkspace( slug: string ) {
 const generatePathMappings = ( location: string, instanceData: InstanceData ) => {
 	const pathMappings: Record<string, string> = {};
 
-	if ( instanceData.muPlugins?.dir ) {
+	if ( instanceData.muPlugins.dir ) {
 		pathMappings[ '/wp/wp-content/mu-plugins' ] = instanceData.muPlugins.dir;
 	}
-	if ( instanceData.appCode?.dir ) {
+	if ( instanceData.appCode.dir ) {
 		pathMappings[ '/wp/wp-content/client-mu-plugins' ] = path.resolve( instanceData.appCode.dir, 'client-mu-plugins' );
 		pathMappings[ '/wp/wp-content/images' ] = path.resolve( instanceData.appCode.dir, 'images' );
 		pathMappings[ '/wp/wp-content/languages' ] = path.resolve( instanceData.appCode.dir, 'languages' );
