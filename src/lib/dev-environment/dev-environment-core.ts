@@ -444,7 +444,7 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	return instanceData;
 }
 
-/**9
+/**
  * Writes the instance data.
  *
  * @param {string}       slug Env slug
@@ -551,7 +551,7 @@ export async function getApplicationInformation(
 
 	const appData = {} as AppInfo;
 
-	if ( queryResult ) {
+	if ( queryResult.id ) {
 		appData.id = queryResult.id;
 		appData.name = queryResult.name;
 		appData.repository = queryResult.repository?.htmlUrl;

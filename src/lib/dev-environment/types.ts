@@ -18,7 +18,7 @@ export interface InstanceOptions {
 	[ index: string ]: unknown;
 }
 
-export type AppInfo = {
+export interface AppInfo {
 	id?: number | null;
 	name?: string | null;
 	repository?: string | null;
@@ -31,30 +31,30 @@ export type AppInfo = {
 		php: string;
 		wordpress: string;
 	};
-};
+}
 
-export type ComponentConfig = {
+export interface ComponentConfig {
 	mode: 'local' | 'image';
 	dir?: string;
 	image?: string;
 	tag?: string;
-};
+}
 
-export type WordPressConfig = {
+export interface WordPressConfig {
 	mode: 'image';
 	tag: string;
 	ref?: string;
 	doNotUpgrade?: boolean;
-};
+}
 
-export type EnvironmentNameOptions = {
+export interface EnvironmentNameOptions {
 	slug: string;
 	app: string;
 	env: string;
 	allowAppEnv?: boolean;
-};
+}
 
-export type ConfigurationFileOptions = {
+export interface ConfigurationFileOptions {
 	version?: string;
 	slug?: string;
 	title?: string;
@@ -71,7 +71,7 @@ export type ConfigurationFileOptions = {
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
 	photon?: boolean;
-};
+}
 
 export interface InstanceData {
 	[ index: string ]: unknown;
