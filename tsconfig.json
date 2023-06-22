@@ -28,10 +28,11 @@
     "config",
     "__tests__",
     "__fixtures__",
-    "noImplictAnyImportBypass.d.ts"
+    "noImplictAnyImportBypass.d.ts",
+    // built-in globals like `console` doesn't work properly with the TypeScript language server without the following line
+    "./node_modules/@types/node/globals.d.ts",
   ],
   "exclude": [
-    "node_modules",
     "**/*.js"
   ]
 }
