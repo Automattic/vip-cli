@@ -89,6 +89,7 @@ describe( 'vip dev-env update', () => {
 			photon: expectedPhoton,
 		} );
 
+		// prettier-ignore
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
@@ -98,6 +99,7 @@ describe( 'vip dev-env update', () => {
 			'-A', `${ ! expectedMailpit }`,
 			'-H', `${ ! expectedPhoton }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -118,11 +120,13 @@ describe( 'vip dev-env update', () => {
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
+		// prettier-ignore
 		let result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvCreate,
 			'--slug', slug,
 			'--multisite', `${ expectedMultiSite }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -132,11 +136,13 @@ describe( 'vip dev-env update', () => {
 			multisite: expectedMultiSite,
 		} );
 
+		// prettier-ignore
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
 			'--multisite', `${ ! expectedMultiSite }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -169,11 +175,13 @@ describe( 'vip dev-env update', () => {
 
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
+		// prettier-ignore
 		const result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
 			'--mailpit', 'true',
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 
 		const dataAfter = readEnvironmentData( slug );

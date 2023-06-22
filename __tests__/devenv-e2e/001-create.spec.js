@@ -111,6 +111,7 @@ describe( 'vip dev-env create', () => {
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
+		// prettier-ignore
 		const result = await cliTest.spawn( [
 			process.argv[ 0 ],
 			vipDevEnvCreate,
@@ -127,6 +128,7 @@ describe( 'vip dev-env create', () => {
 			'-A', `${ expectedMailpit }`,
 			'-H', `${ expectedPhoton }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
