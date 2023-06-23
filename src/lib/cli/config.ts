@@ -4,10 +4,10 @@
 import debugLib from 'debug';
 
 interface Config {
-	'tracksUserType': string;
-	'tracksAnonUserType': string;
-	'tracksEventPrefix': string;
-	'environment': string;
+	tracksUserType: string;
+	tracksAnonUserType: string;
+	tracksEventPrefix: string;
+	environment: string;
 }
 
 const debug = debugLib( '@automattic/vip:lib:cli:config' );

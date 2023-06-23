@@ -4,7 +4,11 @@
 import path from 'node:path';
 import { homedir, platform } from 'node:os';
 import { promises, readFileSync } from 'node:fs';
-import { getDockerSocket, getEngineConfig, splitca } from '../../../src/lib/dev-environment/docker-utils';
+import {
+	getDockerSocket,
+	getEngineConfig,
+	splitca,
+} from '../../../src/lib/dev-environment/docker-utils';
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
 describe( 'splitca', () => {
@@ -38,20 +42,17 @@ describe( 'splitca', () => {
 
 	describe( 'empty file', () => {
 		it( 'should throw a bad file error', () =>
-			expect( () => splitca( emptyFile ) ).rejects.toThrow()
-		);
+			expect( () => splitca( emptyFile ) ).rejects.toThrow() );
 	} );
 
 	describe( 'directory instead of file', () => {
 		it( 'should throw a bad file error', () =>
-			expect( () => splitca( unreadableFile ) ).rejects.toThrow()
-		);
+			expect( () => splitca( unreadableFile ) ).rejects.toThrow() );
 	} );
 
 	describe( 'garbage file', () => {
 		it( 'should throw a bad file error', () =>
-			expect( () => splitca( garbageFile ) ).rejects.toThrow()
-		);
+			expect( () => splitca( garbageFile ) ).rejects.toThrow() );
 	} );
 } );
 
@@ -143,13 +144,18 @@ describe( 'getEngineConfig', () => {
 	it.each( [
 		[ '/var/run/docker.sock', {}, { socketPath: '/var/run/docker.sock', protocol: 'http' } ],
 		[ 'tcp://127.0.0.1:2376', {}, { host: '127.0.0.1', port: '2376', protocol: 'https' } ],
-		[ '/var/run/docker.sock', { DOCKER_CLIENT_TIMEOUT: '100' }, { socketPath: '/var/run/docker.sock', protocol: 'http', timeout: 100 } ],
+		[
+			'/var/run/docker.sock',
+			{ DOCKER_CLIENT_TIMEOUT: '100' },
+			{ socketPath: '/var/run/docker.sock', protocol: 'http', timeout: 100 },
+		],
 	] )( 'For %s and %j return %j', ( socket, environment, expected ) => {
 		process.env = environment;
-		return expect( getEngineConfig( socket ) ).resolves.toEqual( expect.objectContaining( expected ) );
+		return expect( getEngineConfig( socket ) ).resolves.toEqual(
+			expect.objectContaining( expected )
+		);
 	} );
 
 	it( 'should throw an error for bad host specification', () =>
-		expect( getEngineConfig( 'tcp://' ) ).rejects.toThrow()
-	);
+		expect( getEngineConfig( 'tcp://' ) ).rejects.toThrow() );
 } );

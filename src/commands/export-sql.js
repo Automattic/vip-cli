@@ -14,7 +14,10 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-import API, { disableGlobalGraphQLErrorHandling, enableGlobalGraphQLErrorHandling } from '../lib/api';
+import API, {
+	disableGlobalGraphQLErrorHandling,
+	enableGlobalGraphQLErrorHandling,
+} from '../lib/api';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
@@ -24,7 +27,7 @@ import { BackupDBCommand } from './backup-db';
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
 const BACKUP_AND_JOB_STATUS_QUERY = gql`
-	query AppBackupAndJobStatus( $appId: Int!, $envId: Int! ) {
+	query AppBackupAndJobStatus($appId: Int!, $envId: Int!) {
 		app(id: $appId) {
 			id
 			environments(id: $envId) {
@@ -265,7 +268,9 @@ export class ExportSQLCommand {
 				response.on( 'data', chunk => {
 					current += chunk.length;
 					this.progressTracker.setProgress(
-						`- ${ ( ( 100 * current ) / total ).toFixed( 2 ) }% (${ formatBytes( current ) }/${ formatBytes( total ) })`
+						`- ${ ( ( 100 * current ) / total ).toFixed( 2 ) }% (${ formatBytes(
+							current
+						) }/${ formatBytes( total ) })`
 					);
 				} );
 			} );
@@ -322,7 +327,7 @@ export class ExportSQLCommand {
 				await this.track( 'error', {
 					error_type: 'cannot_write_to_path',
 					error_message: `Cannot write to the specified path: ${ err?.message }`,
-					stack: err?.stack
+					stack: err?.stack,
 				} );
 				exit.withError( `Cannot write to the specified path: ${ err?.message }` );
 			}
@@ -346,7 +351,9 @@ export class ExportSQLCommand {
 		}
 
 		if ( await this.getExportJob() ) {
-			console.log( `Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }` );
+			console.log(
+				`Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }`
+			);
 		} else {
 			console.log( `Exporting database backup with timestamp ${ latestBackup.createdAt }` );
 
@@ -355,14 +362,22 @@ export class ExportSQLCommand {
 			} catch ( err ) {
 				// Todo: match error code instead of message substring
 				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
-					await this.track( 'error', { error_type: 'job_already_running', error_message: err?.message, stack: err?.stack } );
+					await this.track( 'error', {
+						error_type: 'job_already_running',
+						error_message: err?.message,
+						stack: err?.stack,
+					} );
 					exit.withError(
 						'There is an export job already running for this environment: ' +
-						`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
-						'Currently, we allow only one export job at a time, per site. Please try again later.'
+							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
+							'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
 				} else {
-					await this.track( 'error', { error_type: 'create_export_job', error_message: err?.message, stack: err?.stack })
+					await this.track( 'error', {
+						error_type: 'create_export_job',
+						error_message: err?.message,
+						stack: err?.stack,
+					} );
 				}
 				exit.withError( `Error creating export job: ${ err?.message }` );
 			}
@@ -371,10 +386,18 @@ export class ExportSQLCommand {
 		this.progressTracker.stepRunning( this.steps.PREPARE );
 		this.progressTracker.startPrinting();
 
-		await pollUntil( this.getExportJob.bind( this ), EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isPrepared.bind( this ) );
+		await pollUntil(
+			this.getExportJob.bind( this ),
+			EXPORT_SQL_PROGRESS_POLL_INTERVAL,
+			this.isPrepared.bind( this )
+		);
 		this.progressTracker.stepSuccess( this.steps.PREPARE );
 
-		await pollUntil( this.getExportJob.bind( this ), EXPORT_SQL_PROGRESS_POLL_INTERVAL, this.isCreated.bind( this ) );
+		await pollUntil(
+			this.getExportJob.bind( this ),
+			EXPORT_SQL_PROGRESS_POLL_INTERVAL,
+			this.isCreated.bind( this )
+		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
@@ -392,7 +415,7 @@ export class ExportSQLCommand {
 			await this.track( 'error', {
 				error_type: 'download_failed',
 				error_message: err?.message,
-				stack: err?.stack
+				stack: err?.stack,
 			} );
 			exit.withError( `Error downloading exported file: ${ err?.message }` );
 		}

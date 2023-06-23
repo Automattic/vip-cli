@@ -17,7 +17,12 @@ import { getReadInterface } from '../../../src/lib/validations/line-by-line';
 describe( 'utils', () => {
 	describe( 'getMultilineStatement', () => {
 		it( 'should return each occurance of a statement as an array of its lines', async () => {
-			const sqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'multiline-statements.sql' );
+			const sqlDumpPath = path.join(
+				process.cwd(),
+				'__fixtures__',
+				'validations',
+				'multiline-statements.sql'
+			);
 			const readInterface = await getReadInterface( sqlDumpPath );
 
 			const getStatementsByLine = getMultilineStatement( /INSERT INTO wp_blogs/s );
@@ -39,7 +44,12 @@ describe( 'utils', () => {
 		} );
 
 		it( 'should accurately capture the statement', async () => {
-			const sqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'multiline-statements.sql' );
+			const sqlDumpPath = path.join(
+				process.cwd(),
+				'__fixtures__',
+				'validations',
+				'multiline-statements.sql'
+			);
 			const readInterface = await getReadInterface( sqlDumpPath );
 
 			const getStatementsByLine = getMultilineStatement( /INSERT INTO `wp_site`/s );
@@ -50,7 +60,10 @@ describe( 'utils', () => {
 			} );
 
 			await once( readInterface, 'close' );
-			expect( statements[ 0 ].join( '' ).replace( /\s/g, '' ) ).toBe( "INSERTINTO`wp_site`(`id`,`domain`,`path`)VALUES(1,'www.example.com','/');" );
+
+			expect( statements[ 0 ].join( '' ).replace( /\s/g, '' ) ).toBe(
+				"INSERTINTO`wp_site`(`id`,`domain`,`path`)VALUES(1,'www.example.com','/');"
+			);
 		} );
 	} );
 } );

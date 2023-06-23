@@ -145,7 +145,7 @@ export class DevEnvSyncSQLCommand {
 			this.searchReplaceMap[ url ] = this.landoDomain;
 		}
 
-		const networkSites = this.env.wpSitesSDS.nodes
+		const networkSites = this.env.wpSitesSDS.nodes;
 		if ( ! networkSites ) return;
 
 		for ( const site of networkSites ) {
@@ -189,7 +189,7 @@ export class DevEnvSyncSQLCommand {
 			await this.track( 'error', {
 				error_type: 'export_sql_backup',
 				error_message: err?.message,
-				stack: err?.stack
+				stack: err?.stack,
 			} );
 			exit.withError( `Error exporting SQL backup: ${ err?.message }` );
 		}
@@ -202,7 +202,7 @@ export class DevEnvSyncSQLCommand {
 			await this.track( 'error', {
 				error_type: 'archive_extraction',
 				error_message: err?.message,
-				stack: err?.stack
+				stack: err?.stack,
 			} );
 			exit.withError( `Error extracting the SQL export: ${ err.message }` );
 		}
@@ -214,7 +214,7 @@ export class DevEnvSyncSQLCommand {
 			await this.track( 'error', {
 				error_type: 'extract_site_urls',
 				error_message: err?.message,
-				stack: err?.stack
+				stack: err?.stack,
 			} );
 			exit.withError( `Error extracting site URLs: ${ err?.message }` );
 		}
@@ -224,7 +224,7 @@ export class DevEnvSyncSQLCommand {
 
 		try {
 			console.log( 'Running the following search-replace operations on the SQL file:' );
-			for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap )  ) {
+			for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
 				console.log( `  ${ domain } -> ${ landoDomain }` );
 			}
 
@@ -234,7 +234,7 @@ export class DevEnvSyncSQLCommand {
 			await this.track( 'error', {
 				error_type: 'search_replace',
 				error_message: err?.message,
-				stack: err?.stack
+				stack: err?.stack,
 			} );
 			exit.withError( `Error replacing domains: ${ err?.message }` );
 		}
@@ -247,7 +247,7 @@ export class DevEnvSyncSQLCommand {
 			await this.track( 'error', {
 				error_type: 'import_sql_file',
 				error_message: err?.message,
-				stack: err?.stack
+				stack: err?.stack,
 			} );
 			exit.withError( `Error importing SQL file: ${ err?.message }` );
 		}

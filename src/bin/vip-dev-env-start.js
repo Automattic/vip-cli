@@ -19,7 +19,13 @@ import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException, postStart } from '../lib/dev-environment/dev-environment-cli';
+import {
+	getEnvTrackingInfo,
+	validateDependencies,
+	getEnvironmentName,
+	handleCLIException,
+	postStart,
+} from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -37,8 +43,11 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'skip-rebuild', 'Only start stopped services' )
-	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip propting for wordpress update if non latest' )
-	.option( 'vscode', 'Open environment workspace in VSCode' )
+	.option(
+		[ 'w', 'skip-wp-versions-check' ],
+		'Skip prompt to update WordPress version if not on latest'
+	)
+	.option( 'vscode', 'Generate a Visual Studio Code Workspace file and open it' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
@@ -64,7 +73,9 @@ command()
 				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
 					if ( error ) {
 						debug( error );
-						console.log( `${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.` );
+						console.log(
+							`${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.`
+						);
 					} else {
 						debug( stdout );
 						console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );

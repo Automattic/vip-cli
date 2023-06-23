@@ -1,7 +1,11 @@
 /**
  * Internal dependencies
  */
-import { isImportingBlockedBySync, isSupportedApp, SUPPORTED_DB_FILE_IMPORT_SITE_TYPES } from '../../src/lib/site-import/db-file-import';
+import {
+	isImportingBlockedBySync,
+	isSupportedApp,
+	SUPPORTED_DB_FILE_IMPORT_SITE_TYPES,
+} from '../../src/lib/site-import/db-file-import';
 
 describe( 'site import tests', () => {
 	describe( 'db-file-import', () => {
@@ -13,11 +17,15 @@ describe( 'site import tests', () => {
 
 		describe( 'isImportingBlockedBySync', () => {
 			it( 'should return false for not_syncing status', () => {
-				expect( isImportingBlockedBySync( { syncProgress: { status: 'not_syncing' } } ) ).toBe( false );
+				expect( isImportingBlockedBySync( { syncProgress: { status: 'not_syncing' } } ) ).toBe(
+					false
+				);
 			} );
 
 			it( 'should return true for some other status', () => {
-				expect( isImportingBlockedBySync( { syncProgress: { status: 'gibberish' } } ) ).toBe( true );
+				expect( isImportingBlockedBySync( { syncProgress: { status: 'gibberish' } } ) ).toBe(
+					true
+				);
 			} );
 
 			it( 'should return true for missing status', () => {

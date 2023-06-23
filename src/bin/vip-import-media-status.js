@@ -40,7 +40,11 @@ command( {
 	envContext: true,
 	requiredArgs: 0,
 } )
-	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
+	.option(
+		'exportFileErrorsToJson',
+		'Export any file errors encountered to a JSON file instead of a plain text file',
+		false
+	)
 	.argv( process.argv, async ( arg: string[], { app, env, exportFileErrorsToJson } ) => {
 		const { id: envId, appId } = env;
 		const track = trackEventWithEnv.bind( null, appId, envId );

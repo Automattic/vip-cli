@@ -1,12 +1,12 @@
 language: node_js
 sudo: required
 node_js:
-    - 'lts/*'
-    - '8.9.0'
-    - '10'
+  - 'lts/*'
+  - '8.9.0'
+  - '10'
 
 os:
-    - windows
+  - windows
 
 script:
-    - npm test
+  - npm test

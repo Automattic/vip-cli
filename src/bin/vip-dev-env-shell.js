@@ -15,7 +15,12 @@ import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { getEnvTrackingInfo, validateDependencies, getEnvironmentName, handleCLIException } from '../lib/dev-environment/dev-environment-cli';
+import {
+	getEnvTrackingInfo,
+	validateDependencies,
+	getEnvironmentName,
+	handleCLIException,
+} from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -51,14 +56,17 @@ const examples = [
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -S database -- ls -lha`,
-		description: 'Runs `ls -lha` command in the shell of the database service in the dev environment',
+		description:
+			'Runs `ls -lha` command in the shell of the database service in the dev environment',
 	},
 ];
 
 function getCommand( args: string[] ): string[] {
 	const splitterIdx = process.argv.findIndex( argument => '--' === argument );
 	if ( args.length > 0 && splitterIdx === -1 ) {
-		throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
+		throw new Error(
+			'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)'
+		);
 	}
 
 	let cmd: string[] = [];

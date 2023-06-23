@@ -8,38 +8,46 @@ import { Parser } from 'json2csv';
 import Table from 'cli-table';
 
 export interface Tuple {
-	key: string,
-	value: string,
+	key: string;
+	value: string;
 }
 
-type Stringable = string | {
-    toString: () => string;
-};
+type Stringable =
+	| string
+	| {
+			toString: () => string;
+	  };
 
 export function formatData( data: Tuple[], format: 'keyValue' ): string;
-export function formatData( data: Record<string, Stringable>[], format: 'table' ): string;
-export function formatData( data: Record<string, unknown>[], format: 'ids' | 'json' | 'csv' ): string;
-export function formatData( data: Record<string, unknown>[] | Tuple[], format: 'keyValue' | 'ids' | 'json' | 'csv' | 'table' ): string {
+export function formatData( data: Record< string, Stringable >[], format: 'table' ): string;
+export function formatData(
+	data: Record< string, unknown >[],
+	format: 'ids' | 'json' | 'csv'
+): string;
+export function formatData(
+	data: Record< string, unknown >[] | Tuple[],
+	format: 'keyValue' | 'ids' | 'json' | 'csv' | 'table'
+): string {
 	if ( ! data.length ) {
 		return '';
 	}
 
 	switch ( format ) {
 		case 'ids':
-			return ids( data as Record<string, unknown>[] );
+			return ids( data as Record< string, unknown >[] );
 
 		case 'json':
 			return JSON.stringify( data, null, '\t' );
 
 		case 'csv':
-			return csv( data as Record<string, unknown>[] );
+			return csv( data as Record< string, unknown >[] );
 
 		case 'keyValue':
 			return keyValue( data as Tuple[] );
 
 		case 'table':
 		default:
-			return table( data as Record<string, Stringable>[] );
+			return table( data as Record< string, Stringable >[] );
 	}
 }
 
@@ -51,7 +59,7 @@ export function formatEnvironment( environment: string ): string {
 	return chalk.blueBright( environment.toLowerCase() );
 }
 
-function ids( data: Record<string, unknown>[] ): string {
+function ids( data: Record< string, unknown >[] ): string {
 	const fields = Object.keys( data[ 0 ] ).map( key => key.toLowerCase() );
 	if ( 0 > fields.indexOf( 'id' ) ) {
 		return 'No ID field found';
@@ -61,7 +69,7 @@ function ids( data: Record<string, unknown>[] ): string {
 	return id.join( ' ' );
 }
 
-function csv( data: Record<string, unknown>[] ): string {
+function csv( data: Record< string, unknown >[] ): string {
 	const fields = Object.keys( data[ 0 ] );
 
 	const parser = new Parser( { fields: formatFields( fields ) } );
@@ -69,7 +77,7 @@ function csv( data: Record<string, unknown>[] ): string {
 	return parser.parse( data );
 }
 
-export function table( data: Record<string, Stringable>[] ): string {
+export function table( data: Record< string, Stringable >[] ): string {
 	const fields = Object.keys( data[ 0 ] );
 	const dataTable = new Table( {
 		head: formatFields( fields ),
@@ -106,7 +114,9 @@ export function keyValue( values: Tuple[] ): string {
 	for ( const { key, value } of values ) {
 		let formattedValue: string;
 
-		switch ( key.toLowerCase() ) { // NOSONAR
+		switch (
+			key.toLowerCase() // NOSONAR
+		) {
 			case 'environment':
 				formattedValue = formatEnvironment( value );
 				break;
@@ -201,7 +211,10 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 }
 
 // Format Search and Replace values to output
-export function formatSearchReplaceValues<T = unknown>( values: string | string[], message: ( from: string, to: string ) => T ): T[] {
+export function formatSearchReplaceValues< T = unknown >(
+	values: string | string[],
+	message: ( from: string, to: string ) => T
+): T[] {
 	// Convert single pair S-R values to arrays
 	const searchReplaceValues = typeof values === 'string' ? [ values ] : values;
 
@@ -224,5 +237,7 @@ export const formatBytes = ( bytes: number, decimals = 2 ): string => {
 	const sizes = [ 'bytes', 'KB', 'MB', 'GB', 'TB' ];
 	const idx = Math.floor( Math.log( bytes ) / Math.log( bytesMultiplier ) );
 
-	return `${ parseFloat( ( bytes / Math.pow( bytesMultiplier, idx ) ).toFixed( dm ) ) } ${ sizes[ idx ] }`;
+	return `${ parseFloat( ( bytes / Math.pow( bytesMultiplier, idx ) ).toFixed( dm ) ) } ${
+		sizes[ idx ]
+	}`;
 };

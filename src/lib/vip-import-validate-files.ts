@@ -7,43 +7,60 @@ import path from 'path';
 
 // Accepted media file extensions
 export const acceptedExtensions: string[] = [
-	'jpg', 'jpeg', 'jpe',
+	'jpg',
+	'jpeg',
+	'jpe',
 	'gif',
 	'png',
 	'bmp',
 	'svg',
-	'tiff', 'tif',
+	'tiff',
+	'tif',
 	'ico',
 	'asf',
 	'asx',
-	'wmv', 'wmx', 'wm',
+	'wmv',
+	'wmx',
+	'wm',
 	'avi',
 	'divx',
 	'mov',
 	'qt',
-	'mpeg', 'mpg', 'mpe', 'mp4', 'm4v',
+	'mpeg',
+	'mpg',
+	'mpe',
+	'mp4',
+	'm4v',
 	'ogv',
 	'webm',
 	'mkv',
-	'3gp', '3gpp', '3g2', '3gp2',
+	'3gp',
+	'3gpp',
+	'3g2',
+	'3gp2',
 	'txt',
 	'asc',
-	'c', 'cc', 'h',
+	'c',
+	'cc',
+	'h',
 	'srt',
-	'csv', 'tsv',
+	'csv',
+	'tsv',
 	'ics',
 	'rtx',
 	'css',
 	'vtt',
 	'dfxp',
 	'mp3',
-	'm4a', 'm4b',
+	'm4a',
+	'm4b',
 	'ra',
 	'ram',
 	'wav',
 	'ogg',
 	'oga',
-	'mid', 'midi',
+	'mid',
+	'midi',
 	'wma',
 	'wax',
 	'mka',
@@ -58,18 +75,50 @@ export const acceptedExtensions: string[] = [
 	'pps',
 	'ppt',
 	'wri',
-	'xla', 'xls', 'xlt', 'xlw',
-	'mdb', 'mpp',
-	'docx', 'docm', 'dotx', 'dotm',
-	'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam',
-	'pptx', 'pptm', 'ppsx', 'ppsm', 'potx', 'potm', 'ppam',
-	'sldx', 'sldm',
-	'onetoc', ' onetoc2', 'onetmp', 'onepkg', 'oxps',
+	'xla',
+	'xls',
+	'xlt',
+	'xlw',
+	'mdb',
+	'mpp',
+	'docx',
+	'docm',
+	'dotx',
+	'dotm',
+	'xlsx',
+	'xlsm',
+	'xlsb',
+	'xltx',
+	'xltm',
+	'xlam',
+	'pptx',
+	'pptm',
+	'ppsx',
+	'ppsm',
+	'potx',
+	'potm',
+	'ppam',
+	'sldx',
+	'sldm',
+	'onetoc',
+	' onetoc2',
+	'onetmp',
+	'onepkg',
+	'oxps',
 	'xps',
-	'odt', 'odp', 'ods', 'odg', 'odc', 'odb', 'odf',
+	'odt',
+	'odp',
+	'ods',
+	'odg',
+	'odc',
+	'odb',
+	'odf',
 	'webp',
-	'wp', 'wpd',
-	'key', 'numbers', 'pages',
+	'wp',
+	'wpd',
+	'key',
+	'numbers',
+	'pages',
 ];
 
 /**
@@ -80,7 +129,40 @@ export const acceptedExtensions: string[] = [
 
 // Accepted characters in filenames
 // eslint-disable-next-line max-len
-const acceptedCharacters = [ 'Non-English characters', '(', ')', '[', ']', '~', '&', '#', '%', '=', '’', `'`, '×', '@', '`', '?', '*', '!', '"', '\\', '<', '>', ':', ';', ',', '/', '$', '|', '`', '{', '}', 'spaces' ];
+const acceptedCharacters = [
+	'Non-English characters',
+	'(',
+	')',
+	'[',
+	']',
+	'~',
+	'&',
+	'#',
+	'%',
+	'=',
+	'’',
+	`'`,
+	'×',
+	'@',
+	'`',
+	'?',
+	'*',
+	'!',
+	'"',
+	'\\',
+	'<',
+	'>',
+	':',
+	';',
+	',',
+	'/',
+	'$',
+	'|',
+	'`',
+	'{',
+	'}',
+	'spaces',
+];
 const acceptedCharactersSet = new Set( acceptedCharacters ); // Prevent duplicates with a Set
 
 // Prohibited characters in filenames
@@ -96,13 +178,17 @@ const prohibitedCharactersSet = new Set( prohibitedCharacters );
 // Recommend the WordPress year/month file structure for media files
 const recommendedFileStructure = (): void => {
 	console.log(
-		chalk.underline( 'We recommend the WordPress default folder structure for your media files: \n\n' ) +
-		chalk.underline( 'Single sites:' ) +
-		chalk.yellow( '`uploads/year/month/image.png`\n' ) +
-		' e.g.-' + chalk.yellow( '`uploads/2020/06/image.png`\n' ) +
-		chalk.underline( 'Multisites:' ) +
-		chalk.cyan( '`uploads/sites/siteID/year/month/image.png`\n' ) +
-		' e.g.-' + chalk.cyan( '`uploads/sites/5/2020/06/images.png`\n' )
+		chalk.underline(
+			'We recommend the WordPress default folder structure for your media files: \n\n'
+		) +
+			chalk.underline( 'Single sites:' ) +
+			chalk.yellow( '`uploads/year/month/image.png`\n' ) +
+			' e.g.-' +
+			chalk.yellow( '`uploads/2020/06/image.png`\n' ) +
+			chalk.underline( 'Multisites:' ) +
+			chalk.cyan( '`uploads/sites/siteID/year/month/image.png`\n' ) +
+			' e.g.-' +
+			chalk.cyan( '`uploads/sites/5/2020/06/images.png`\n' )
 	);
 	console.log( '------------------------------------------------------------' );
 	console.log();
@@ -111,8 +197,7 @@ const recommendedFileStructure = (): void => {
 // Recommend accepted file types
 const recommendAcceptableFileTypes = (): void => {
 	console.log(
-		'Accepted file types: \n\n' +
-		chalk.magenta( `${ acceptedExtensions.join(', ') }` )
+		'Accepted file types: \n\n' + chalk.magenta( `${ acceptedExtensions.join( ', ' ) }` )
 	);
 	console.log();
 };
@@ -124,9 +209,11 @@ const recommendAcceptableFileNames = (): void => {
 
 	console.log(
 		'The following characters are allowed in file names:\n' +
-		chalk.green( `All special characters, including: ${ allowedCharacters }\n\n` ) +
-		'The following characters are prohibited in file names:\n' +
-		chalk.red( `Encoded or alternate whitespace, such as ${ notAllowedCharacters }, are converted to proper spaces\n` )
+			chalk.green( `All special characters, including: ${ allowedCharacters }\n\n` ) +
+			'The following characters are prohibited in file names:\n' +
+			chalk.red(
+				`Encoded or alternate whitespace, such as ${ notAllowedCharacters }, are converted to proper spaces\n`
+			)
 	);
 };
 
@@ -144,14 +231,16 @@ const recommendAcceptableFileNames = (): void => {
  * @param {string} directory Root directory, or the given (current) directory
  */
 const files: string[] = [];
-const folderStructureObj: Record<string, boolean> = {};
+const folderStructureObj: Record< string, boolean > = {};
 
 interface FindNestedDirectoriesResult {
 	files: string[];
-	folderStructureObj: Record<string, boolean>;
+	folderStructureObj: Record< string, boolean >;
 }
 
-export const findNestedDirectories = ( directory: string ): FindNestedDirectoriesResult | undefined => {
+export const findNestedDirectories = (
+	directory: string
+): FindNestedDirectoriesResult | undefined => {
 	let nestedDirectories: string[];
 
 	try {
@@ -159,7 +248,7 @@ export const findNestedDirectories = ( directory: string ): FindNestedDirectorie
 		nestedDirectories = fs.readdirSync( directory );
 
 		// Filter out hidden files such as .DS_Store
-		nestedDirectories = nestedDirectories.filter( file => ! ( /(^|\/)\.[^/.]/g ).test( file ) );
+		nestedDirectories = nestedDirectories.filter( file => ! /(^|\/)\.[^/.]/g.test( file ) );
 
 		nestedDirectories.forEach( dir => {
 			// Concatenate the file path of the parent directory with the nested directory
@@ -179,7 +268,12 @@ export const findNestedDirectories = ( directory: string ): FindNestedDirectorie
 			}
 		} );
 	} catch ( error ) {
-		console.error( chalk.red( '✕' ), ` Error: Cannot read nested directory: ${ directory }. Reason: ${ ( error as Error ).message }` );
+		console.error(
+			chalk.red( '✕' ),
+			` Error: Cannot read nested directory: ${ directory }. Reason: ${
+				( error as Error ).message
+			}`
+		);
 		return;
 	}
 
@@ -208,7 +302,10 @@ interface IndexPositionsMultiSite extends IndexPositionsSingleSite {
  */
 function getIndexPositionOfFolders( folderPath: string, sites?: false ): IndexPositionsSingleSite;
 function getIndexPositionOfFolders( folderPath: string, sites?: true ): IndexPositionsMultiSite;
-function getIndexPositionOfFolders( folderPath: string, sites = false ): IndexPositionsSingleSite | IndexPositionsMultiSite {
+function getIndexPositionOfFolders(
+	folderPath: string,
+	sites = false
+): IndexPositionsSingleSite | IndexPositionsMultiSite {
 	let sitesIndex: number | undefined;
 	let siteIDIndex: number | undefined;
 	let yearIndex: number | undefined;
@@ -309,11 +406,7 @@ const singleSiteValidation = ( folderPath: string ): string | null => {
 	console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
 
 	// Use destructuring to retrieve the index position of each folder
-	const {
-		uploadsIndex,
-		yearIndex,
-		monthIndex,
-	} = getIndexPositionOfFolders( folderPath );
+	const { uploadsIndex, yearIndex, monthIndex } = getIndexPositionOfFolders( folderPath );
 
 	/**
 	 * Logging
@@ -325,7 +418,12 @@ const singleSiteValidation = ( folderPath: string ): string | null => {
 		console.log( '✅ File structure: Uploads directory exists' );
 	} else {
 		console.log();
-		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Media files should reside in an',
+			chalk.magenta( '`uploads`' ),
+			'directory'
+		);
 		errors++;
 	}
 
@@ -333,7 +431,12 @@ const singleSiteValidation = ( folderPath: string ): string | null => {
 	if ( yearIndex && yearIndex === 1 ) {
 		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY`' ), 'directories' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Structure your WordPress media files into',
+			chalk.magenta( '`uploads/YYYY`' ),
+			'directories'
+		);
 		errors++;
 	}
 
@@ -342,7 +445,12 @@ const singleSiteValidation = ( folderPath: string ): string | null => {
 		console.log( '✅ File structure: Month directory exists (format: MM)' );
 		console.log();
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/YYYY/MM`' ), 'directories' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Structure your WordPress media files into',
+			chalk.magenta( '`uploads/YYYY/MM`' ),
+			'directories'
+		);
 		console.log();
 		errors++;
 	}
@@ -374,13 +482,8 @@ const multiSiteValidation = ( folderPath: string ): string | null => {
 	console.log( chalk.bold( 'Folder:' ), chalk.cyan( `${ folderPath }` ) );
 
 	// Use destructuring to retrieve the index position of each folder
-	const {
-		uploadsIndex,
-		sitesIndex,
-		siteIDIndex,
-		yearIndex,
-		monthIndex,
-	} = getIndexPositionOfFolders( folderPath, true );
+	const { uploadsIndex, sitesIndex, siteIDIndex, yearIndex, monthIndex } =
+		getIndexPositionOfFolders( folderPath, true );
 
 	/**
 	 * Logging
@@ -392,7 +495,12 @@ const multiSiteValidation = ( folderPath: string ): string | null => {
 		console.log( '✅ File structure: Uploads directory exists' );
 	} else {
 		console.log();
-		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`uploads`' ), 'directory' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Media files should reside in an',
+			chalk.magenta( '`uploads`' ),
+			'directory'
+		);
 		errors++;
 	}
 
@@ -401,7 +509,12 @@ const multiSiteValidation = ( folderPath: string ): string | null => {
 		console.log( '✅ File structure: Sites directory exists' );
 	} else {
 		console.log();
-		console.log( chalk.yellow( '✕' ), 'Recommended: Media files should reside in an', chalk.magenta( '`sites`' ), 'directory' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Media files should reside in an',
+			chalk.magenta( '`sites`' ),
+			'directory'
+		);
 		errors++;
 	}
 
@@ -409,7 +522,12 @@ const multiSiteValidation = ( folderPath: string ): string | null => {
 	if ( siteIDIndex && siteIDIndex === 2 ) {
 		console.log( '✅ File structure: Site ID directory exists' );
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>`' ), 'directories' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Structure your WordPress media files into',
+			chalk.magenta( '`uploads/sites/<siteID>`' ),
+			'directories'
+		);
 		errors++;
 	}
 
@@ -417,7 +535,12 @@ const multiSiteValidation = ( folderPath: string ): string | null => {
 	if ( yearIndex && yearIndex === 3 ) {
 		console.log( '✅ File structure: Year directory exists (format: YYYY)' );
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY`' ), 'directories' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Structure your WordPress media files into',
+			chalk.magenta( '`uploads/sites/<siteID>/YYYY`' ),
+			'directories'
+		);
 		errors++;
 	}
 
@@ -426,7 +549,12 @@ const multiSiteValidation = ( folderPath: string ): string | null => {
 		console.log( '✅ File structure: Month directory exists (format: MM)' );
 		console.log();
 	} else {
-		console.log( chalk.yellow( '✕' ), 'Recommended: Structure your WordPress media files into', chalk.magenta( '`uploads/sites/<siteID>/YYYY/MM`' ), 'directories' );
+		console.log(
+			chalk.yellow( '✕' ),
+			'Recommended: Structure your WordPress media files into',
+			chalk.magenta( '`uploads/sites/<siteID>/YYYY/MM`' ),
+			'directories'
+		);
 		console.log();
 		errors++;
 	}
@@ -516,6 +644,7 @@ export const isFileSanitized = ( file: string ): boolean => {
  * @return {Array} Returns an array of the matching regex characters
  */
 const identifyIntermediateImage = ( filename: string ): RegExpMatchArray | null => {
+	// eslint-disable-next-line security/detect-unsafe-regex
 	const regex = /([_-])?(\d+x\d+)(@\d+\w)?(\.\w{3,4})$/;
 	return filename.match( regex ); // NOSONAR
 };
@@ -560,7 +689,11 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 // Log errors for files with invalid file extensions and recommend accepted file types
 export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ): void => {
 	invalidFiles.forEach( file => {
-		console.error( chalk.red( '✕' ), 'File extensions: Invalid file type for file: ', chalk.cyan( `${ file }` ) );
+		console.error(
+			chalk.red( '✕' ),
+			'File extensions: Invalid file type for file: ',
+			chalk.cyan( `${ file }` )
+		);
 	} );
 
 	console.log();
@@ -572,7 +705,11 @@ export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ): void => 
 // Log errors for files with invalid filenames and show a list of accepted/prohibited chars
 export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ): void => {
 	invalidFiles.forEach( file => {
-		console.error( chalk.red( '✕' ), 'Character validation: Invalid filename for file: ', chalk.cyan( `${ file }` ) );
+		console.error(
+			chalk.red( '✕' ),
+			'Character validation: Invalid filename for file: ',
+			chalk.cyan( `${ file }` )
+		);
 	} );
 
 	console.log();
@@ -582,13 +719,15 @@ export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ): void => 
 };
 
 // Log errors for intermediate image file duplicates
-export const logErrorsForIntermediateImages = ( obj: Record<string, string> ): void => {
+export const logErrorsForIntermediateImages = ( obj: Record< string, string > ): void => {
 	for ( const original in obj ) {
 		console.error(
 			chalk.red( '✕' ),
 			'Intermediate images: Duplicate files found:\n' +
-			'Original file: ' + chalk.blue( `${ original }\n` ) +
-			'Intermediate images: ' + chalk.cyan( `${ obj[ original ] }\n` ),
+				'Original file: ' +
+				chalk.blue( `${ original }\n` ) +
+				'Intermediate images: ' +
+				chalk.cyan( `${ obj[ original ] }\n` )
 		);
 	}
 	console.log( '------------------------------------------------------------' );
@@ -613,27 +752,59 @@ export const summaryLogs = ( {
 }: SummaryLogsParams ) => {
 	const messages: string[] = [];
 	if ( folderErrorsLength > 0 ) {
-		messages.push( chalk.bgYellow( ' RECOMMENDED ' ) + chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) + `${ totalFolders } folders total` );
+		messages.push(
+			chalk.bgYellow( ' RECOMMENDED ' ) +
+				chalk.bold.yellow( ` ${ folderErrorsLength } folders, ` ) +
+				`${ totalFolders } folders total`
+		);
 	} else {
-		messages.push( chalk.bgGreen( '    PASS     ' ) + chalk.bold.green( ` ${ totalFolders } folders, ` ) + `${ totalFolders } folders total` );
+		messages.push(
+			chalk.bgGreen( '    PASS     ' ) +
+				chalk.bold.green( ` ${ totalFolders } folders, ` ) +
+				`${ totalFolders } folders total`
+		);
 	}
 
 	if ( intImagesErrorsLength > 0 ) {
-		messages.push( chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total` );
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red( ` ${ intImagesErrorsLength } intermediate images` ) +
+				`, ${ totalFiles } files total`
+		);
 	} else {
-		messages.push( chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ intImagesErrorsLength } intermediate images` ) + `, ${ totalFiles } files total` );
+		messages.push(
+			chalk.white.bgGreen( '    PASS     ' ) +
+				chalk.green( ` ${ intImagesErrorsLength } intermediate images` ) +
+				`, ${ totalFiles } files total`
+		);
 	}
 
 	if ( fileTypeErrorsLength > 0 ) {
-		messages.push( chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total` );
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red( ` ${ fileTypeErrorsLength } invalid file extensions` ) +
+				`, ${ totalFiles } files total`
+		);
 	} else {
-		messages.push( chalk.white.bgGreen( '    PASS     ' ) + chalk.green( ` ${ fileTypeErrorsLength } invalid file extensions` ) + `, ${ totalFiles } files total` );
+		messages.push(
+			chalk.white.bgGreen( '    PASS     ' ) +
+				chalk.green( ` ${ fileTypeErrorsLength } invalid file extensions` ) +
+				`, ${ totalFiles } files total`
+		);
 	}
 
 	if ( filenameErrorsLength ) {
-		messages.push( chalk.white.bgRed( '   ERROR     ' ) + chalk.red( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total` );
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red( ` ${ filenameErrorsLength } invalid filenames` ) +
+				`, ${ totalFiles } files total`
+		);
 	} else {
-		messages.push( chalk.bgGreen( '    PASS     ' ) + chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) + `, ${ totalFiles } files total` );
+		messages.push(
+			chalk.bgGreen( '    PASS     ' ) +
+				chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) +
+				`, ${ totalFiles } files total`
+		);
 	}
 
 	console.log( `\n${ messages.join( '\n' ) }\n` );

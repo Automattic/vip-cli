@@ -14,7 +14,11 @@
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvTrackingInfo, handleCLIException, getEnvironmentName } from '../lib/dev-environment/dev-environment-cli';
+import {
+	getEnvTrackingInfo,
+	handleCLIException,
+	getEnvironmentName,
+} from '../lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
 
@@ -29,11 +33,13 @@ const examples = [
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --search-replace="testsite.com,test-site.go-vip.net"`,
-		description: 'Import the contents of a WordPress database from an SQL file and replace the occurrences of `testsite.com` with `test-site.go-vip.net`',
+		description:
+			'Import the contents of a WordPress database from an SQL file and replace the occurrences of `testsite.com` with `test-site.go-vip.net`',
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql wordpress.sql --search-replace="testsite.com,test-site.go-vip.net" --in-place`,
-		description: 'Import the contents of a WordPress database from an SQL file and replace the occurrences of `testsite.com` with `test-site.go-vip.net` in place (modifies the original SQL file)',
+		description:
+			'Import the contents of a WordPress database from an SQL file and replace the occurrences of `testsite.com` with `test-site.go-vip.net` in place (modifies the original SQL file)',
 	},
 ];
 

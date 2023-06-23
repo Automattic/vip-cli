@@ -102,7 +102,10 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			cmd.slug = 'test-slug';
 
 			await cmd.runSearchReplace();
-			expect( replace ).toHaveBeenCalledWith( mockReadStream, [ 'test.go-vip.com', 'test-slug.vipdev.lndo.site' ] );
+			expect( replace ).toHaveBeenCalledWith( mockReadStream, [
+				'test.go-vip.com',
+				'test-slug.vipdev.lndo.site',
+			] );
 		} );
 	} );
 

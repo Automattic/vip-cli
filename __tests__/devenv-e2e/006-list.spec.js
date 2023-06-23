@@ -13,12 +13,20 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, createAndStartEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import {
+	checkEnvExists,
+	createAndStartEnvironment,
+	getProjectSlug,
+	prepareEnvironment,
+} from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvList } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 
 jest.setTimeout( 60 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
+
+// Allow (validated) unsafe regexp in tests.
+/* eslint-disable security/detect-non-literal-regexp */
 
 describe( 'vip dev-env list', () => {
 	/** @type {CliTest} */
@@ -58,12 +66,20 @@ describe( 'vip dev-env list', () => {
 		expect( await checkEnvExists( slug1 ) ).toBe( false );
 		expect( await checkEnvExists( slug2 ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug1 ], { env }, true );
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug1 ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug1 }` );
 		expect( await checkEnvExists( slug1 ) ).toBe( true );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug2 ], { env }, true );
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug2 ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug2 }` );
 		expect( await checkEnvExists( slug2 ) ).toBe( true );
@@ -81,7 +97,11 @@ describe( 'vip dev-env list', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
 		expect( await checkEnvExists( slug ) ).toBe( true );
@@ -97,7 +117,9 @@ describe( 'vip dev-env list', () => {
 
 		// Lando sends everything to stdout :-(
 		expect( result2.stdout ).toContain( 'could not find app in this dir' );
-		expect( result2.stderr ).toContain( 'There was an error initializing Lando, trying to recover' );
+		expect( result2.stderr ).toContain(
+			'There was an error initializing Lando, trying to recover'
+		);
 		expect( result2.stderr ).toContain( 'Recovery successful, trying to initialize again' );
 		expect( result2.stderr ).not.toContain( 'Backed up' );
 	} );
@@ -106,7 +128,11 @@ describe( 'vip dev-env list', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
 		expect( await checkEnvExists( slug ) ).toBe( true );
@@ -124,7 +150,9 @@ describe( 'vip dev-env list', () => {
 
 		// Lando sends everything to stdout :-(
 		expect( result2.stdout ).toContain( 'composer is not a supported service type' );
-		expect( result2.stderr ).toContain( 'There was an error initializing Lando, trying to recover' );
+		expect( result2.stderr ).toContain(
+			'There was an error initializing Lando, trying to recover'
+		);
 		expect( result2.stderr ).toContain( 'Recovery successful, trying to initialize again' );
 		expect( result2.stderr ).toContain( 'Backed up' );
 	} );

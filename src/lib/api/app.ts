@@ -9,30 +9,33 @@ import gql from 'graphql-tag';
 import API from '../../lib/api';
 import { App, Exact, Scalars } from '../../graphqlTypes';
 
-type AppQueryVariables = Exact<{
-	name: Scalars['String']['input']
-}>;
+type AppQueryVariables = Exact< {
+	name: Scalars[ 'String' ][ 'input' ];
+} >;
 
 interface AppQueryResult {
 	apps?: {
 		edges?: App[];
-	}
+	};
 }
 
-type AppByIdQueryVariables = Exact<{
-	id: Scalars['Int']['input']
-}>;
+type AppByIdQueryVariables = Exact< {
+	id: Scalars[ 'Int' ][ 'input' ];
+} >;
 
 interface AppByIdQueryResult {
 	app?: App;
 }
 
-export default async function( app: string | number, fields: string = 'id,name', fragments: string = '' ): Promise<Partial<App>> {
+export default async function (
+	app: string | number,
+	fields: string = 'id,name',
+	fragments: string = ''
+): Promise< Partial< App > > {
 	const api = await API();
 	if ( isNaN( +app ) ) {
-		const res = await api
-			.query<AppQueryResult, AppQueryVariables>( {
-				query: gql`query App( $name: String ) {
+		const res = await api.query< AppQueryResult, AppQueryVariables >( {
+			query: gql`query App( $name: String ) {
 					apps( first: 1, name: $name ) {
 						total,
 						nextCursor,
@@ -42,10 +45,10 @@ export default async function( app: string | number, fields: string = 'id,name',
 					}
 				}
 				${ fragments || '' }`,
-				variables: {
-					name: app as string,
-				},
-			} );
+			variables: {
+				name: app as string,
+			},
+		} );
 
 		if ( ! res.data.apps?.edges?.length ) {
 			return {};
@@ -58,18 +61,17 @@ export default async function( app: string | number, fields: string = 'id,name',
 		app = parseInt( app, 10 );
 	}
 
-	const res = await api
-		.query<AppByIdQueryResult, AppByIdQueryVariables>( {
-			query: gql`query App( $id: Int ) {
+	const res = await api.query< AppByIdQueryResult, AppByIdQueryVariables >( {
+		query: gql`query App( $id: Int ) {
 				app( id: $id ){
 					${ fields }
 				}
 			}
 			${ fragments || '' }`,
-			variables: {
-				id: app,
-			},
-		} );
+		variables: {
+			id: app,
+		},
+	} );
 
 	if ( ! res.data.app ) {
 		return {};

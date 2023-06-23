@@ -59,7 +59,9 @@ describe( 'getEnvVarCommand', () => {
 			type: 'develop',
 		},
 	};
-	const eventPayload = expect.objectContaining( { command: 'vip @mysite.develop config envvar get HELLO' } );
+	const eventPayload = expect.objectContaining( {
+		command: 'vip @mysite.develop config envvar get HELLO',
+	} );
 	const executeEvent = [ 'envvar_get_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_get_command_success', eventPayload ];
 
@@ -82,7 +84,9 @@ describe( 'getEnvVarCommand', () => {
 
 		await expect( () => getEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'The environment variable "HELLO" does not exist' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'The environment variable "HELLO" does not exist' )
+		);
 		expect( process.exit ).toHaveBeenCalled();
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
@@ -97,4 +101,3 @@ describe( 'getEnvVarCommand', () => {
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, queryErrorEvent ] );
 	} );
 } );
-

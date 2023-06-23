@@ -19,8 +19,8 @@ const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );
 // Mock console.log()
 let output;
 global.console = {
-	log: message => output += message + '\n',
-	error: message => output += message + '\n',
+	log: message => ( output += message + '\n' ),
+	error: message => ( output += message + '\n' ),
 };
 jest.spyOn( global.console, 'log' );
 
@@ -35,7 +35,12 @@ describe( 'lib/validations/sql', () => {
 		beforeAll( async () => {
 			try {
 				output = '';
-				const badSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dump.sql' );
+				const badSqlDumpPath = path.join(
+					process.cwd(),
+					'__fixtures__',
+					'validations',
+					'bad-sql-dump.sql'
+				);
 				// const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
 				await validate( badSqlDumpPath );
 			} catch ( err ) {
@@ -68,7 +73,9 @@ describe( 'lib/validations/sql', () => {
 			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
 		} );
 		it( 'use statement should be ok', () => {
-			expect( output ).not.toContain( '\'USE <DATABASE_NAME>\' should not be present (case-insensitive)' );
+			expect( output ).not.toContain(
+				"'USE <DATABASE_NAME>' should not be present (case-insensitive)"
+			);
 		} );
 		it( 'instances of ALTER TABLE statements', () => {
 			expect( output ).toContain( 'ALTER TABLE statement on line(s) 36' );
@@ -81,7 +88,12 @@ describe( 'lib/validations/sql', () => {
 		beforeAll( async () => {
 			try {
 				output = '';
-				const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
+				const duplicateCreateTableSqlDumpPath = path.join(
+					process.cwd(),
+					'__fixtures__',
+					'validations',
+					'bad-sql-duplicate-tables.sql'
+				);
 				await validate( duplicateCreateTableSqlDumpPath );
 			} catch ( err ) {
 				debug( 'Error:', err.toString() );
@@ -96,7 +108,12 @@ describe( 'lib/validations/sql', () => {
 		beforeAll( async () => {
 			try {
 				output = '';
-				const sqlFileDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dev-env.sql' );
+				const sqlFileDumpPath = path.join(
+					process.cwd(),
+					'__fixtures__',
+					'validations',
+					'bad-sql-dev-env.sql'
+				);
 				await validate( sqlFileDumpPath, {
 					isImport: false,
 					skipChecks: [],
@@ -112,7 +129,9 @@ describe( 'lib/validations/sql', () => {
 		} );
 		it( 'not correct siteUrl', () => {
 			expect( output ).toContain( 'Siteurl/home options not pointing to lando domain' );
-			expect( output ).toContain( 'Use \'--search-replace="super-empoyees.com,test.domain"\' switch to replace the domain' );
+			expect( output ).toContain(
+				'Use \'--search-replace="super-empoyees.com,test.domain"\' switch to replace the domain'
+			);
 		} );
 	} );
 } );

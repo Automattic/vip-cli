@@ -49,24 +49,31 @@ export default class Tracks implements AnalyticsClient {
 		};
 	}
 
-	async trackEvent( name: string, eventProps: Record<string, unknown> = {} ): Promise<Response | false> {
+	async trackEvent(
+		name: string,
+		eventProps: Record< string, unknown > = {}
+	): Promise< Response | false > {
 		if ( ! name.startsWith( this.eventPrefix ) ) {
 			name = this.eventPrefix + name;
 		}
 
 		if ( ! validEventOrPropNamePattern.test( name ) ) {
-			debug( `Error: Invalid event name detected: ${ name } -- this event will be rejected during ETL` );
+			debug(
+				`Error: Invalid event name detected: ${ name } -- this event will be rejected during ETL`
+			);
 		}
 
 		Object.keys( eventProps ).forEach( propName => {
 			if ( ! validEventOrPropNamePattern.test( propName ) ) {
-				debug( `Error: Invalid prop name detected: ${ propName } -- this event will be rejected during ETL` );
+				debug(
+					`Error: Invalid prop name detected: ${ propName } -- this event will be rejected during ETL`
+				);
 			}
 		} );
 
-		eventProps.is_vip = await checkIfUserIsVip();	// Add `is_vip` flag to every Tracks event recorded
+		eventProps.is_vip = await checkIfUserIsVip(); // Add `is_vip` flag to every Tracks event recorded
 
-		const event: Record<string, unknown> = {
+		const event: Record< string, unknown > = {
 			_en: name,
 			...eventProps,
 		};
@@ -109,7 +116,7 @@ export default class Tracks implements AnalyticsClient {
 		return false;
 	}
 
-	send( extraParams: Record<string, unknown> ): Promise<Response> {
+	send( extraParams: Record< string, unknown > ): Promise< Response > {
 		const params = { ...this.baseParams, ...extraParams };
 
 		const method = 'POST';

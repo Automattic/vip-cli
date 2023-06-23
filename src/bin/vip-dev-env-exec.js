@@ -10,7 +10,12 @@
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	getEnvTrackingInfo,
+	getEnvironmentName,
+	handleCLIException,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
@@ -33,7 +38,12 @@ const examples = [
 
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'force', 'Disabling validations before task execution', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option(
+		'force',
+		'Disabling validations before task execution',
+		undefined,
+		value => 'false' !== value?.toLowerCase?.()
+	)
 	.option( 'quiet', 'Suppress output', undefined, value => 'false' !== value?.toLowerCase?.() )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
@@ -49,7 +59,9 @@ command( { wildcardCommand: true } )
 			const argSplitterIx = process.argv.findIndex( argument => '--' === argument );
 			const argSplitterFound = argSplitterIx > -1;
 			if ( unmatchedArgs.length > 0 && ! argSplitterFound ) {
-				throw new Error( 'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)' );
+				throw new Error(
+					'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)'
+				);
 			}
 
 			let arg: string[] = [];
