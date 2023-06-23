@@ -62,7 +62,7 @@ command( {
 	module: 'dev-env-sync-sql',
 } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option( 'force', 'Disable validations before task execution', undefined, processBooleanOption )
+	.option( 'force', 'Disabling validations before running sync', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], opt ) => {
 		const { app, env } = opt;

@@ -40,7 +40,7 @@ const examples = [
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'force', 'Disabling validations before task execution', undefined, processBooleanOption )
-	.option( 'quiet', 'Suppress output', undefined, processBooleanOption )
+	.option( 'quiet', 'Suppressing output', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt );
