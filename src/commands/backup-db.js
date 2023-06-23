@@ -141,7 +141,8 @@ export class BackupDBCommand {
 
 	async loadBackupJob() {
 		this.job = await getBackupJob( this.app.id, this.env.id );
-		this.backupName = this.job?.metadata.find( meta => meta.name === 'backupName' )?.value || 'Unknown';
+		this.backupName =
+			this.job?.metadata.find( meta => meta.name === 'backupName' )?.value || 'Unknown';
 		this.jobStatus = this.job?.progress?.status;
 
 		if ( this.job?.completedAt ) {
@@ -156,9 +157,11 @@ export class BackupDBCommand {
 	async run( silent = false ) {
 		this.silent = silent;
 
-		const readMoreMessage = '\nLearn more about the database backup limitations here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
+		const readMoreMessage =
+			'\nLearn more about the database backup limitations here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
 		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
-		noticeMessage += 'A new database backup will be created only if no recent backup is available, created by our automated system or manually by a user.';
+		noticeMessage +=
+			'A new database backup will be created only if no recent backup is available, created by our automated system or manually by a user.';
 		noticeMessage += readMoreMessage;
 		this.log( noticeMessage );
 
