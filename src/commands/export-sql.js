@@ -204,7 +204,7 @@ export class ExportSQLCommand {
 		this.outputFile = typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
 		this.generateBackup = options.generateBackup || false;
 		this.progressTracker = new ProgressTracker( [
-			{ id: this.steps.PREPARE, name: 'Preparing' },
+			{ id: this.steps.PREPARE, name: 'Preparing for backup copy creation' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },

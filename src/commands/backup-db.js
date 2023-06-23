@@ -111,7 +111,7 @@ export class BackupDBCommand {
 		this.app = app;
 		this.env = env;
 		this.progressTracker = new ProgressTracker( [
-			{ id: this.steps.PREPARE, name: 'Preparing' },
+			{ id: this.steps.PREPARE, name: 'Preparing for backup generation' },
 			{ id: this.steps.GENERATE, name: 'Generating backup' },
 		] );
 		this.track = trackerFn;
@@ -153,9 +153,9 @@ export class BackupDBCommand {
 	async run( silent = false ) {
 		this.silent = silent;
 
-		const readMoreMessage = '\nRead more about the limitations around database backups & exports here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
+		const readMoreMessage = '\nLearn more about the database backup limitations here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
 		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
-		noticeMessage += 'A fresh database backup will be generated only if there hasn\'t one already been created recently, either by our automated system or by a user on your site';
+		noticeMessage += 'A new database backup will be created only if no recent backup is available, created by our automated system or manually by a user.';
 		noticeMessage += readMoreMessage;
 		this.log( noticeMessage );
 
@@ -179,9 +179,9 @@ export class BackupDBCommand {
 						stack: err?.stack,
 					} );
 					let errMessage = err.message.replace( 'Database backups limit reached', 
-						'New database backup generation failed because there was already one created recently, either by our automated system or by a user on your site' );
-					errMessage = errMessage.replace( 'Retry after', '\nTo create a new backup, you can wait until:' );
-					errMessage += `\n\nYou can also export the latest backup using the ${ chalk.green( 'vip @app.env export sql' ) } command`;
+						'Unable to create a new database backup as a recent backup already exists. This backup was created by our automated system or a user.' );
+					errMessage = errMessage.replace( 'Retry after', '\nThe next possible backup attempt can be made on:' );
+					errMessage += `\n\nYou can export the (existing) latest database backup with the command: ${ chalk.green( 'vip @app.env export sql' ) }`;
 					errMessage += readMoreMessage;
 					exit.withError( errMessage );
 				}
