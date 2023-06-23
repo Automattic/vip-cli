@@ -11,7 +11,7 @@ const config = {
 	testBeforePublish: false,
 };
 
-const releaseTag = process.env['npm_config_tag'] ?? 'latest';
+const releaseTag = process.env.npm_config_tag ?? 'latest';
 
 ( async () => {
 	try {
