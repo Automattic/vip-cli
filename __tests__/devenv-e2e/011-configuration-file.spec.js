@@ -12,7 +12,12 @@ import xdgBaseDir from 'xdg-basedir';
  */
 import { CliTest } from './helpers/cli-test';
 import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getProjectSlug, prepareEnvironment, writeConfigurationFile } from './helpers/utils';
+import {
+	checkEnvExists,
+	getProjectSlug,
+	prepareEnvironment,
+	writeConfigurationFile,
+} from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvUpdate } from './helpers/commands';
 
 jest.setTimeout( 30 * 1000 );
@@ -54,9 +59,15 @@ describe( 'vip dev-env configuration file', () => {
 			env,
 			cwd: tmpWorkingDirectoryPath,
 		};
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], spawnOptions, false );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			false
+		);
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Configuration file .vip-dev-env.yml is available but couldn\'t be loaded' );
+		expect( result.stderr ).toContain(
+			"Configuration file .vip-dev-env.yml is available but couldn't be loaded"
+		);
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
 
@@ -72,9 +83,15 @@ describe( 'vip dev-env configuration file', () => {
 			env,
 			cwd: tmpWorkingDirectoryPath,
 		};
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], spawnOptions, false );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			false
+		);
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Configuration file .vip-dev-env.yml is available but couldn\'t be loaded' );
+		expect( result.stderr ).toContain(
+			"Configuration file .vip-dev-env.yml is available but couldn't be loaded"
+		);
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
 
@@ -92,7 +109,11 @@ describe( 'vip dev-env configuration file', () => {
 			cwd: tmpWorkingDirectoryPath,
 		};
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], spawnOptions, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `Using environment ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );
@@ -135,7 +156,11 @@ describe( 'vip dev-env configuration file', () => {
 			cwd: tmpWorkingDirectoryPath,
 		};
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], spawnOptions, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `Using environment ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );

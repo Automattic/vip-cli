@@ -1,6 +1,5 @@
-
 declare class Lando {
-	constructor(options?: {});
+	constructor( options?: {} );
 	BOOTSTRAP_LEVELS: {
 		config: number;
 		tasks: number;
@@ -59,7 +58,7 @@ declare class Lando {
 	 * // Bootstrap lando at default level and then exit
 	 * lando.bootstrap().then(() => process.exit(0))l
 	 */
-	bootstrap(level?: string): Promise<this>;
+	bootstrap( level?: string ): Promise< this >;
 	_bootstrap: any;
 	/**
 	 * Gets a fully instantiated App instance.
@@ -74,8 +73,7 @@ declare class Lando {
 	 * @example
 	 * const app = lando.getApp('/path/to/my/app')
 	 */
-	getApp(startFrom?: string, warn?: boolean): import("./app");
+	getApp( startFrom?: string, warn?: boolean ): import('./app');
 }
-
 
 export = Lando;

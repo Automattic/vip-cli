@@ -28,7 +28,7 @@ const examples = [
 	},
 ];
 
-export async function getEnvVarCommand( arg: string[], opt ): Promise<void> {
+export async function getEnvVarCommand( arg: string[], opt ): Promise< void > {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 
@@ -40,15 +40,19 @@ export async function getEnvVarCommand( arg: string[], opt ): Promise<void> {
 		variable_name: name,
 	};
 
-	debug( `Request: Get environment variable ${ JSON.stringify( name ) } for ${ getEnvContext( opt.app, opt.env ) }` );
+	debug(
+		`Request: Get environment variable ${ JSON.stringify( name ) } for ${ getEnvContext(
+			opt.app,
+			opt.env
+		) }`
+	);
 	await trackEvent( 'envvar_get_command_execute', trackingParams );
 
-	const envvar = await getEnvVar( opt.app.id, opt.env.id, name )
-		.catch( async err => {
-			await trackEvent( 'envvar_get_query_error', { ...trackingParams, error: err.message } );
+	const envvar = await getEnvVar( opt.app.id, opt.env.id, name ).catch( async err => {
+		await trackEvent( 'envvar_get_query_error', { ...trackingParams, error: err.message } );
 
-			throw err;
-		} );
+		throw err;
+	} );
 
 	await trackEvent( 'envvar_get_command_success', trackingParams );
 
@@ -70,4 +74,3 @@ command( {
 } )
 	.examples( examples )
 	.argv( process.argv, getEnvVarCommand );
-

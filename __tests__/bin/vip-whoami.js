@@ -44,7 +44,7 @@ describe( 'whoamiCommand()', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable indent */
-`- Howdy VIP User!
+			`- Howdy VIP User!
 - Your user ID is 4`
 			/* eslint-enable indent */
 		);
@@ -54,8 +54,16 @@ describe( 'whoamiCommand()', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'whoami_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'whoami_command_success', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'whoami_command_execute',
+			trackingParams
+		);
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			2,
+			'whoami_command_success',
+			trackingParams
+		);
 	} );
 
 	it( 'should display the current user information (for VIP Staff)', async () => {
@@ -72,7 +80,7 @@ describe( 'whoamiCommand()', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable indent */
-`- Howdy VIP User!
+			`- Howdy VIP User!
 - Your user ID is 4
 - Your account has VIP Staff permissions`
 			/* eslint-enable indent */
@@ -83,8 +91,16 @@ describe( 'whoamiCommand()', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'whoami_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'whoami_command_success', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'whoami_command_execute',
+			trackingParams
+		);
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			2,
+			'whoami_command_success',
+			trackingParams
+		);
 	} );
 
 	it( 'should handle error on when whoami request fails', async () => {
@@ -97,18 +113,23 @@ describe( 'whoamiCommand()', () => {
 		await expect( promise ).rejects.toBe( 'EXIT WHOAMI WITH ERROR' );
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to fetch information about the currently logged-in user error: Something went wrong :(' );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Failed to fetch information about the currently logged-in user error: Something went wrong :('
+		);
 
 		const trackingParams = {
 			command: 'vip whoami',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'whoami_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'whoami_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'whoami_command_error', {
 			...trackingParams,
 			error: 'Something went wrong :(',
 		} );
 	} );
 } );
-

@@ -28,16 +28,23 @@ export default class Analytics {
 		this.clients = clients;
 	}
 
-	async trackEvent( name: string, props: Record<string, unknown> = {} ): Promise<(Response | false)[]> {
+	async trackEvent(
+		name: string,
+		props: Record< string, unknown > = {}
+	): Promise< ( Response | false )[] > {
 		if ( process.env.DO_NOT_TRACK ) {
 			debug( `trackEvent() for ${ name } => skipping per DO_NOT_TRACK variable` );
 			return [];
 		}
 
-		return Promise.all( this.clients.map( client => client.trackEvent( name, {
-			// eslint-disable-next-line camelcase
-			...client_info,
-			...props,
-		} ) ) );
+		return Promise.all(
+			this.clients.map( client =>
+				client.trackEvent( name, {
+					// eslint-disable-next-line camelcase
+					...client_info,
+					...props,
+				} )
+			)
+		);
 	}
 }

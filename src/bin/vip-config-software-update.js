@@ -15,7 +15,13 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from '../lib/cli/command';
-import { appQuery, appQueryFragments, getUpdateResult, promptForUpdate, triggerUpdate } from '../lib/config/software';
+import {
+	appQuery,
+	appQueryFragments,
+	getUpdateResult,
+	promptForUpdate,
+	triggerUpdate,
+} from '../lib/config/software';
 import { ProgressTracker } from '../lib/cli/progress';
 import UserError from '../lib/user-error';
 import { trackEvent } from '../lib/tracker';
@@ -75,7 +81,9 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 		updateData = await promptForUpdate( app.typeId, updateOptions, softwareSettings );
 
 		const hasProcessJob = updateData.component !== 'nodejs';
-		const steps = hasProcessJob ? UPDATE_SOFTWARE_PROGRESS_STEPS : [ UPDATE_SOFTWARE_PROGRESS_STEPS[ 0 ] ];
+		const steps = hasProcessJob
+			? UPDATE_SOFTWARE_PROGRESS_STEPS
+			: [ UPDATE_SOFTWARE_PROGRESS_STEPS[ 0 ] ];
 		const progressTracker = new ProgressTracker( steps );
 
 		progressTracker.startPrinting();
@@ -106,16 +114,25 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 			progressTracker.print();
 			progressTracker.stopPrinting();
 			const deploymentsLink = `https://dashboard.wpvip.com/apps/${ app.id }/${ env.uniqueLabel }/deploys`;
-			const message = ` A new build of the application code has been initiated and will be deployed using Node.js v${ updateData.version } when the build is successful\n` +
+			const message =
+				` A new build of the application code has been initiated and will be deployed using Node.js v${ updateData.version } when the build is successful\n` +
 				`View the deployments page in VIP Dashboard for progress updates. - ${ deploymentsLink }`;
 			console.log( chalk.green( '✓' ) + message );
 		}
 		await trackEvent( 'config_software_update_success', { ...baseTrackingInfo, ...updateData } );
 	} catch ( error ) {
 		if ( error instanceof UserError ) {
-			await trackEvent( 'config_software_update_success', { ...baseTrackingInfo, ...updateData, user_error: error?.message } );
+			await trackEvent( 'config_software_update_success', {
+				...baseTrackingInfo,
+				...updateData,
+				user_error: error?.message,
+			} );
 		} else {
-			await trackEvent( 'config_software_update_error', { ...baseTrackingInfo, ...updateData, error: error?.message } );
+			await trackEvent( 'config_software_update_error', {
+				...baseTrackingInfo,
+				...updateData,
+				error: error?.message,
+			} );
 		}
 		throw error;
 	}

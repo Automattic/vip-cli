@@ -7,7 +7,8 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	phpVersion: '8.0',
 };
 
-export const DEV_ENVIRONMENT_PROMPT_INTRO = 'This is a wizard to help you set up your local dev environment.\n\n' +
+export const DEV_ENVIRONMENT_PROMPT_INTRO =
+	'This is a wizard to help you set up your local dev environment.\n\n' +
 	'Sensible default values were pre-selected for convenience. ' +
 	'You may also choose to create multiple environments with different settings using the --slug option.\n\n';
 export const DEV_ENVIRONMENT_NOT_FOUND = 'Environment not found.';
@@ -16,13 +17,14 @@ export const DEV_ENVIRONMENT_COMPONENTS = [ 'wordpress', 'muPlugins', 'appCode' 
 
 export const DEV_ENVIRONMENT_RAW_GITHUB_HOST = 'raw.githubusercontent.com';
 
-export const DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI = '/Automattic/vip-container-images/master/wordpress/versions.json';
+export const DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI =
+	'/Automattic/vip-container-images/master/wordpress/versions.json';
 
 export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'wordpress-versions.json';
 
 export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 86400; // once per day
 
-export const DEV_ENVIRONMENT_PHP_VERSIONS: Record<string, string> = {
+export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, string > = {
 	'8.0': 'ghcr.io/automattic/vip-container-images/php-fpm:8.0',
 	8.2: 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
 	8.1: 'ghcr.io/automattic/vip-container-images/php-fpm:8.1',

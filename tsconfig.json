@@ -14,10 +14,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "*": [
-        "./types/*",
-        "./node_modules/*"
-      ]
+      "*": [ "./types/*", "./node_modules/*" ]
     },
     // It's worth enabling this, I promise!
     "noImplicitAny": true
@@ -30,9 +27,7 @@
     "__fixtures__",
     "noImplictAnyImportBypass.d.ts",
     // built-in globals like `console` doesn't work properly with the TypeScript language server without the following line
-    "./node_modules/@types/node/globals.d.ts",
+    "./node_modules/@types/node/globals.d.ts"
   ],
-  "exclude": [
-    "**/*.js"
-  ]
+  "exclude": [ "**/*.js" ]
 }

@@ -18,7 +18,7 @@ export default class Insecure implements Keychain {
 		this.configstore = new Configstore( this.file );
 	}
 
-	getPassword( service: string ): Promise<string | null> {
+	getPassword( service: string ): Promise< string | null > {
 		try {
 			const value: unknown = this.configstore.get( service );
 			if ( null === value || undefined === value ) {
@@ -32,7 +32,7 @@ export default class Insecure implements Keychain {
 		}
 	}
 
-	setPassword( service: string, password: string ): Promise<boolean> {
+	setPassword( service: string, password: string ): Promise< boolean > {
 		try {
 			this.configstore.set( service, password );
 			return Promise.resolve( true );
@@ -41,7 +41,7 @@ export default class Insecure implements Keychain {
 		}
 	}
 
-	deletePassword( service: string ): Promise<boolean> {
+	deletePassword( service: string ): Promise< boolean > {
 		try {
 			this.configstore.delete( service );
 			return Promise.resolve( true );

@@ -27,7 +27,7 @@ import {
 const examples = [
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } sync sql @my-test.develop --slug=my_site`,
-		description: 'Syncs with the `my-test` site\'s `develop` environment database into `my_site`',
+		description: "Syncs with the `my-test` site's `develop` environment database into `my_site`",
 	},
 ];
 
@@ -67,13 +67,18 @@ command( {
 	.argv( process.argv, async ( arg: string[], opt ) => {
 		const { app, env } = opt;
 		const slug = await getEnvironmentName( opt );
-		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', { app: app.id, env: env.uniqueLabel, slug, multisite: env.isMultisite } );
+		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
+			app: app.id,
+			env: env.uniqueLabel,
+			slug,
+			multisite: env.isMultisite,
+		} );
 		await trackerFn( 'execute' );
 
 		const lando = await bootstrapLando();
 		const envPath = getEnvironmentPath( slug );
 
-		if ( ! await isEnvUp( lando, envPath ) && ! opt.force ) {
+		if ( ! ( await isEnvUp( lando, envPath ) ) && ! opt.force ) {
 			await trackerFn( 'env_not_running_error', { errorMessage: 'Environment was not running' } );
 			throw new UserError( 'Environment needs to be started first' );
 		}

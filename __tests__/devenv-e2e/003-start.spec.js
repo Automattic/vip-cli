@@ -13,7 +13,13 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import {
+	checkEnvExists,
+	createAndStartEnvironment,
+	destroyEnvironment,
+	getProjectSlug,
+	prepareEnvironment,
+} from './helpers/utils';
 import { vipDevEnvStart } from './helpers/commands';
 import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 
@@ -54,9 +60,12 @@ describe( 'vip dev-env start', () => {
 		slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ], { env } );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ],
+			{ env }
+		);
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+		expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
@@ -78,7 +87,11 @@ describe( 'vip dev-env start', () => {
 		];
 
 		expectedServices.forEach( service =>
-			expect( containersAfterStart.find( container => container.Labels[ 'com.docker.compose.service' ] === service ) ).not.toBeUndefined()
+			expect(
+				containersAfterStart.find(
+					container => container.Labels[ 'com.docker.compose.service' ] === service
+				)
+			).not.toBeUndefined()
 		);
 
 		await destroyEnvironment( cliTest, slug, env );

@@ -50,10 +50,7 @@ command( {
 	requiredArgs: 0,
 	usage: 'vip export sql',
 } )
-	.option(
-		'output',
-		'Specify the location where you want to save the export file',
-	)
+	.option( 'output', 'Specify the location where you want to save the export file' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, output } ) => {
 		const trackerFn = makeCommandTracker( 'export_sql', { app: app.id, env: env.uniqueLabel } );
