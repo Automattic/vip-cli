@@ -13,7 +13,13 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import {
+	checkEnvExists,
+	createAndStartEnvironment,
+	destroyEnvironment,
+	getProjectSlug,
+	prepareEnvironment,
+} from './helpers/utils';
 import { vipDevEnvShell } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
@@ -47,9 +53,11 @@ describe( 'vip dev-env shell', () => {
 			const slug = getProjectSlug();
 			expect( await checkEnvExists( slug ) ).toBe( false );
 
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvShell, '--slug', slug ], { env } );
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvShell, '--slug', slug ], {
+				env,
+			} );
 			expect( result.rc ).toBeGreaterThan( 0 );
-			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+			expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 
 			return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 		} );
@@ -77,19 +85,31 @@ describe( 'vip dev-env shell', () => {
 		} );
 
 		it( 'should spawn a shell as www-data', async () => {
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvShell, '--slug', slug, '--', 'whoami' ], { env }, true );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvShell, '--slug', slug, '--', 'whoami' ],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toContain( 'www-data' );
 		} );
 
 		it( 'should support spawning a root shell', async () => {
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvShell, '--slug', slug, '--root', '--', 'whoami' ], { env }, true );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvShell, '--slug', slug, '--root', '--', 'whoami' ],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toContain( 'root' );
 		} );
 
 		it( 'should not fail in non-interactive mode', async () => {
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvShell, '--slug', slug ], { env, stdio: [ 'ignore', 'pipe', 'pipe' ] }, true );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvShell, '--slug', slug ],
+				{ env, stdio: [ 'ignore', 'pipe', 'pipe' ] },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toBe( '' );
 			expect( result.stderr ).toBe( '' );

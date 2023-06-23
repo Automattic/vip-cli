@@ -38,8 +38,8 @@ const appQuery = `
 `;
 
 const START_IMPORT_MUTATION = gql`
-	mutation StartMediaImport( $input: AppEnvironmentStartMediaImportInput ) {
-		startMediaImport( input: $input ) {
+	mutation StartMediaImport($input: AppEnvironmentStartMediaImportInput) {
+		startMediaImport(input: $input) {
 			applicationId
 			environmentId
 			mediaImportStatus {
@@ -57,8 +57,7 @@ const debug = debugLib( 'vip:vip-import-media' );
 const examples = [
 	{
 		usage: 'vip import media @mysite.production https://<path_to_publicly_accessible_archive>',
-		description:
-			'Start a media import with the contents of the archive file in the URL',
+		description: 'Start a media import with the contents of the archive file in the URL',
 	},
 	// `media status` subcommand
 	{
@@ -69,8 +68,7 @@ const examples = [
 	// `media abort` subcommand
 	{
 		usage: 'vip import media abort @mysite.production',
-		description:
-			'Abort an ongoing import',
+		description: 'Abort an ongoing import',
 	},
 ];
 
@@ -91,8 +89,12 @@ command( {
 	module: 'import-media',
 	requiredArgs: 1,
 	requireConfirm: `
-${ chalk.red.bold( 'NOTE: If the provided archive\'s directory structure contains an `uploads/` directory,' ) }
-${ chalk.red.bold( 'only the files present inside that directory will be imported and the rest will be ignored.' ) }
+${ chalk.red.bold(
+	"NOTE: If the provided archive's directory structure contains an `uploads/` directory,"
+) }
+${ chalk.red.bold(
+	'only the files present inside that directory will be imported and the rest will be ignored.'
+) }
 ${ chalk.red.bold( 'If no `uploads/` directory is found, all files will be imported, as is.' ) }
 
 Are you sure you want to import the contents of the url?
@@ -100,19 +102,26 @@ Are you sure you want to import the contents of the url?
 } )
 	.command( 'status', 'Check the status of the latest Media Import' )
 	.command( 'abort', 'Abort the Media Import running for your App' )
-	.option( 'exportFileErrorsToJson', 'Export any file errors encountered to a JSON file instead of a plain text file', false )
+	.option(
+		'exportFileErrorsToJson',
+		'Export any file errors encountered to a JSON file instead of a plain text file',
+		false
+	)
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
 	.argv( process.argv, async ( args: string[], opts ) => {
-		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } = opts;
+		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } =
+			opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
-			console.log( chalk.red( `
+			console.log(
+				chalk.red( `
 Error: 
 	Invalid URL provided: ${ url }
-	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import` ) );
+	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import` )
+			);
 			return;
 		}
 
@@ -135,19 +144,18 @@ Importing Media into your App...
 		console.log( `to: ${ env.primaryDomain.name } (${ formatEnvironment( env.type ) })` );
 
 		try {
-			await api
-				.mutate( {
-					mutation: START_IMPORT_MUTATION,
-					variables: {
-						input: {
-							applicationId: app.id,
-							environmentId: env.id,
-							archiveUrl: url,
-							overwriteExistingFiles,
-							importIntermediateImages,
-						},
+			await api.mutate( {
+				mutation: START_IMPORT_MUTATION,
+				variables: {
+					input: {
+						applicationId: app.id,
+						environmentId: env.id,
+						archiveUrl: url,
+						overwriteExistingFiles,
+						importIntermediateImages,
 					},
-				} );
+				},
+			} );
 
 			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
 		} catch ( error ) {

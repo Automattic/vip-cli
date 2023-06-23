@@ -24,8 +24,9 @@ const examples = [
 	// `search-replace` flag
 	{
 		usage: 'vip search-replace <file.sql> --search-replace="from,to"',
-		description: 'Replace instances of <from> with <to> in the provided <file.sql>\n' +
-		'       * Ensure there are no spaces between your search-replace parameters',
+		description:
+			'Replace instances of <from> with <to> in the provided <file.sql>\n' +
+			'       * Ensure there are no spaces between your search-replace parameters',
 	},
 	// `in-place` flag
 	{
@@ -35,8 +36,9 @@ const examples = [
 	// `output` flag
 	{
 		usage: 'vip search-replace <file.sql> --search-replace="from,to" --output="<output.sql>"',
-		description: 'Search and Replace to the specified output <output.sql> file\n' +
-		'       * Has no effect when the `in-place` flag is used',
+		description:
+			'Search and Replace to the specified output <output.sql> file\n' +
+			'       * Has no effect when the `in-place` flag is used',
 	},
 ];
 
@@ -59,7 +61,9 @@ command( {
 		}
 
 		if ( ! searchReplace || ! searchReplace.length ) {
-			exit.withError( 'You must provide a pair of strings (separated by comma) such as original,replacement' );
+			exit.withError(
+				'You must provide a pair of strings (separated by comma) such as original,replacement'
+			);
 		}
 
 		const isImport = false;

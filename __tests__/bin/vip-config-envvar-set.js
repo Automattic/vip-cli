@@ -71,12 +71,28 @@ jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-const mockConfirm: JestMockFn<[string], Promise<boolean>> = ( ( confirm: any ): JestMockFn<[string], Promise<boolean>> );
-const mockValidateNameWithMessage: JestMockFn<[string], boolean> = ( ( validateNameWithMessage: any ): JestMockFn<[string], boolean> );
-const mockPromptForValue: JestMockFn<[string, string], Promise<string>> = ( ( promptForValue: any ): JestMockFn<[string, string], Promise<string>> );
-const mockSetEnvVar: JestMockFn<[number, number, string, string], Promise<void>> = ( ( setEnvVar: any ): JestMockFn<[number, number, string, string], Promise<void>> );
-const mockTrackEvent: JestMockFn<[], Promise<Response>> = ( ( trackEvent: any ): JestMockFn<[], Promise<Response>> );
-const mockReadVariableFromFile: JestMockFn<[any], Promise<string>> = ( ( readVariableFromFile: any ): JestMockFn<[any], Promise<string>> );
+const mockConfirm: JestMockFn< [ string ], Promise< boolean > > = ((confirm: any): JestMockFn<
+	[ string ],
+	Promise< boolean >
+>);
+const mockValidateNameWithMessage: JestMockFn< [ string ], boolean > =
+	((validateNameWithMessage: any): JestMockFn< [ string ], boolean >);
+const mockPromptForValue: JestMockFn<
+	[ string, string ],
+	Promise< string >
+> = ((promptForValue: any): JestMockFn< [ string, string ], Promise< string > >);
+const mockSetEnvVar: JestMockFn<
+	[ number, number, string, string ],
+	Promise< void >
+> = ((setEnvVar: any): JestMockFn< [ number, number, string, string ], Promise< void > >);
+const mockTrackEvent: JestMockFn< [], Promise< Response > > = ((trackEvent: any): JestMockFn<
+	[],
+	Promise< Response >
+>);
+const mockReadVariableFromFile: JestMockFn<
+	[ any ],
+	Promise< string >
+> = ((readVariableFromFile: any): JestMockFn< [ any ], Promise< string > >);
 
 describe( 'vip config envvar set', () => {
 	it( 'registers as a command', () => {
@@ -87,7 +103,9 @@ describe( 'vip config envvar set', () => {
 describe( 'setEnvVarCommand', () => {
 	let args;
 	let opts;
-	const eventPayload = expect.objectContaining( { command: expect.stringContaining( 'vip @mysite.develop config envvar set' ) } );
+	const eventPayload = expect.objectContaining( {
+		command: expect.stringContaining( 'vip @mysite.develop config envvar set' ),
+	} );
 	const executeEvent = [ 'envvar_set_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_set_command_success', eventPayload ];
 
@@ -132,7 +150,9 @@ describe( 'setEnvVarCommand', () => {
 		expect( readVariableFromFile ).not.toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully set environment variable' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'Successfully set environment variable' )
+		);
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -151,7 +171,9 @@ describe( 'setEnvVarCommand', () => {
 		expect( promptForValue ).not.toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully set environment variable' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'Successfully set environment variable' )
+		);
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -170,7 +192,9 @@ describe( 'setEnvVarCommand', () => {
 		expect( readVariableFromFile ).not.toHaveBeenCalled();
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Successfully set environment variable' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'Successfully set environment variable' )
+		);
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -221,7 +245,7 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
-		mockSetEnvVar.mockImplementation( () => Promise.reject<void>( thrownError ) );
+		mockSetEnvVar.mockImplementation( () => Promise.reject< void >( thrownError ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 

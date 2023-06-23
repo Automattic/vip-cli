@@ -29,7 +29,9 @@ describe( 'lib/vip-import-validate-files', () => {
 
 			expect( console.log ).toHaveBeenCalled();
 			expect( console.log.mock.calls[ 0 ][ 0 ] ).toEqual( expect.stringContaining( 'Folder:' ) );
-			expect( console.log.mock.calls[ 0 ][ 1 ] ).toEqual( expect.stringContaining( 'uploads/2020/06' ) );
+			expect( console.log.mock.calls[ 0 ][ 1 ] ).toEqual(
+				expect.stringContaining( 'uploads/2020/06' )
+			);
 		} );
 		it( 'should log recommendations for a non-recommended folder structure', async () => {
 			const path = 'folder/structure/not-recommended';

@@ -27,7 +27,9 @@ export async function whoamiCommand() {
 		const error = err instanceof Error ? err : new Error( 'Unknown error' );
 		await trackEvent( 'whoami_command_error', { ...trackingParams, error: error.message } );
 
-		exit.withError( `Failed to fetch information about the currently logged-in user error: ${ error.message }` );
+		exit.withError(
+			`Failed to fetch information about the currently logged-in user error: ${ error.message }`
+		);
 	}
 
 	await trackEvent( 'whoami_command_success', trackingParams );

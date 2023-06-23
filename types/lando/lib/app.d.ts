@@ -1,6 +1,6 @@
 export = App;
 declare class App {
-	constructor(name: any, config: any, lando?: {});
+	constructor( name: any, config: any, lando?: {} );
 	/**
 	 * The apps name
 	 *
@@ -96,8 +96,8 @@ declare class App {
 	tasks: any[];
 	warnings: any[];
 	id: any;
-	add(data: any, front?: boolean): void;
-	addWarning(message: any, error?: any): void;
+	add( data: any, front?: boolean ): void;
+	addWarning( message: any, error?: any ): void;
 	/**
 	 * Hard removes all app services, volumes, networks, etc.
 	 *
@@ -116,7 +116,7 @@ declare class App {
 	 * @fires post_destroy
 	 * @return {Promise} A Promise
 	 */
-	destroy(): Promise<void>;
+	destroy(): Promise< void >;
 	/**
 	 * Initializes the app
 	 *
@@ -130,7 +130,7 @@ declare class App {
 	 * @fires ready
 	 * @return {Promise} A Promise.
 	 */
-	init(): Promise<void>;
+	init(): Promise< void >;
 	composeData: any[];
 	envFiles: any;
 	services: any;
@@ -155,7 +155,7 @@ declare class App {
 	 * @fires post_start
 	 * @return {Promise} A Promise.
 	 */
-	rebuild(): Promise<void>;
+	rebuild(): Promise< void >;
 	reset(): void;
 	/**
 	 * Stops and then starts an app.
@@ -171,7 +171,7 @@ declare class App {
 	 * @param {Object} app - A fully instantiated app object
 	 * @return {Promise} A Promise.
 	 */
-	restart(): Promise<void>;
+	restart(): Promise< void >;
 	/**
 	 * Starts an app.
 	 *
@@ -184,7 +184,7 @@ declare class App {
 	 * @return {Promise} A Promise.
 	 *
 	 */
-	start(): Promise<void>;
+	start(): Promise< void >;
 	/**
 	 * Stops an app.
 	 *
@@ -196,7 +196,7 @@ declare class App {
 	 * @fires post_stop
 	 * @return {Promise} A Promise.
 	 */
-	stop(): Promise<void>;
+	stop(): Promise< void >;
 	/**
 	 * Soft removes the apps services but maintains persistent data like app volumes.
 	 *
@@ -210,7 +210,7 @@ declare class App {
 	 * @param {Boolean} purge - A fully instantiated app object
 	 * @return {Promise} A Promise.
 	 */
-	uninstall(purge?: boolean): Promise<void>;
-	getServiceContainerId(service: any): string;
-	getServiceFromContainerId(id: any): any;
+	uninstall( purge?: boolean ): Promise< void >;
+	getServiceContainerId( service: any ): string;
+	getServiceFromContainerId( id: any ): any;
 }

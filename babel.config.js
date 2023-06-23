@@ -2,10 +2,10 @@ module.exports = {
 	presets: [
 		'@babel/preset-flow',
 		[
-			"@babel/preset-typescript",
+			'@babel/preset-typescript',
 			{
-				"allowDeclareFields": true
-			}
+				allowDeclareFields: true,
+			},
 		],
 		[
 			'@babel/preset-env',
@@ -21,16 +21,12 @@ module.exports = {
 		[
 			'module-resolver',
 			{
-				root: [
-					'./src',
-				],
+				root: [ './src' ],
 				alias: {
 					root: './',
 				},
 			},
 		],
 	],
-	ignore: [
-		"**/*.d.ts"
-	]
+	ignore: [ '**/*.d.ts' ],
 };

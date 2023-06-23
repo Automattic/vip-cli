@@ -5,7 +5,7 @@ import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
 import http from '../lib/api/http';
 
-export default async (): Promise<void> => {
+export default async (): Promise< void > => {
 	await http( '/logout', { method: 'post' } );
 
 	await Token.purge();

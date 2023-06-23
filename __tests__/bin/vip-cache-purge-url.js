@@ -71,8 +71,16 @@ describe( 'cachePurgeCommand()', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_url_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_success', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'cache_purge_url_command_execute',
+			trackingParams
+		);
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			2,
+			'cache_purge_url_command_success',
+			trackingParams
+		);
 		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 
@@ -95,11 +103,20 @@ describe( 'cachePurgeCommand()', () => {
 		};
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to purge URL(s) from page cache: Domain domain.go-vip.net is not assigned to this environment' );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Failed to purge URL(s) from page cache: Domain domain.go-vip.net is not assigned to this environment'
+		);
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_url_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_error', { ...trackingParams, error: 'Domain domain.go-vip.net is not assigned to this environment' } );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'cache_purge_url_command_execute',
+			trackingParams
+		);
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_error', {
+			...trackingParams,
+			error: 'Domain domain.go-vip.net is not assigned to this environment',
+		} );
 		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 
@@ -121,8 +138,15 @@ describe( 'cachePurgeCommand()', () => {
 		expect( exit.withError ).toHaveBeenCalledWith( 'Please supply at least one URL.' );
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'cache_purge_url_command_execute', trackingParams );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_error', { ...trackingParams, error: 'No URL provided' } );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'cache_purge_url_command_execute',
+			trackingParams
+		);
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'cache_purge_url_command_error', {
+			...trackingParams,
+			error: 'No URL provided',
+		} );
 		expect( readFromFile ).not.toHaveBeenCalled();
 	} );
 } );

@@ -15,7 +15,7 @@ describe( 'token tests (insecure)', () => {
 	const keychain = new Insecure( account );
 
 	it( 'should correctly set token', async () => {
-		await keychain.setPassword( account, password )
+		await keychain.setPassword( account, password );
 		const passwd = keychain.getPassword( account );
 		return expect( passwd ).resolves.toBe( password );
 	} );
@@ -23,8 +23,8 @@ describe( 'token tests (insecure)', () => {
 	it( 'should correctly set multiple tokens', async () => {
 		const expected = [ 'password1', 'password2' ];
 		await Promise.all( [
-			keychain.setPassword( 'first', expected[0] ),
-			keychain.setPassword( 'second', expected[1] ),
+			keychain.setPassword( 'first', expected[ 0 ] ),
+			keychain.setPassword( 'second', expected[ 1 ] ),
 		] );
 
 		const promise = Promise.all( [
@@ -36,7 +36,7 @@ describe( 'token tests (insecure)', () => {
 	} );
 
 	it( 'should correctly delete token', async () => {
-		await keychain.setPassword( account, password )
+		await keychain.setPassword( account, password );
 		await keychain.deletePassword( account );
 
 		const passwd = keychain.getPassword( account );
@@ -48,7 +48,7 @@ describe( 'token tests (insecure)', () => {
 
 		await Promise.all( [
 			keychain.setPassword( 'first', 'password1' ),
-			keychain.setPassword( 'second', expected[1] ),
+			keychain.setPassword( 'second', expected[ 1 ] ),
 		] );
 
 		await keychain.deletePassword( 'first' );

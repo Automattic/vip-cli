@@ -29,7 +29,7 @@ const examples = [
 	},
 ];
 
-export async function listEnvVarsCommand( arg: string[], opt ): Promise<void> {
+export async function listEnvVarsCommand( arg: string[], opt ): Promise< void > {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,
@@ -41,12 +41,11 @@ export async function listEnvVarsCommand( arg: string[], opt ): Promise<void> {
 	debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
 	await trackEvent( 'envvar_list_command_execute', trackingParams );
 
-	const envvars = await listEnvVars( opt.app.id, opt.env.id )
-		.catch( async err => {
-			await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
+	const envvars = await listEnvVars( opt.app.id, opt.env.id ).catch( async err => {
+		await trackEvent( 'envvar_list_query_error', { ...trackingParams, error: err.message } );
 
-			throw err;
-		} );
+		throw err;
+	} );
 
 	await trackEvent( 'envvar_list_command_success', trackingParams );
 
