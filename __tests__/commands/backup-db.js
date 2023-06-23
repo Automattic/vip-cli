@@ -60,7 +60,7 @@ API.mockImplementation( () => {
 } );
 
 describe( 'commands/BackupDBCommand', () => {
-	beforeEach(() => {});
+	beforeEach( () => {} );
 
 	describe( '.loadBackupJob', () => {
 		const app = { id: 123, name: 'test-app' };

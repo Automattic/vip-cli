@@ -166,9 +166,9 @@ export class BackupDBCommand {
 
 		if ( this.job?.inProgressLock ) {
 			this.log( 'Database backup already in progress...' );
-		}	else {
+		} else {
 			try {
-				this.log( 'Creating a new database backup...')
+				this.log( 'Creating a new database backup...' );
 				this.progressTracker.stepRunning( this.steps.PREPARE );
 				this.progressTracker.startPrinting();
 				await createBackupJob( this.app.id, this.env.id );
@@ -181,10 +181,17 @@ export class BackupDBCommand {
 						error_message: `Couldn't create a new database backup job: ${ err?.message }`,
 						stack: err?.stack,
 					} );
-					let errMessage = err.message.replace( 'Database backups limit reached', 
-						'Unable to create a new database backup as a recent backup already exists. This backup was created by our automated system or a user.' );
-					errMessage = errMessage.replace( 'Retry after', '\nThe next possible backup attempt can be made on:' );
-					errMessage += `\n\nYou can export the (existing) latest database backup with the command: ${ chalk.green( 'vip @app.env export sql' ) }`;
+					let errMessage = err.message.replace(
+						'Database backups limit reached',
+						'Unable to create a new database backup as a recent backup already exists. This backup was created by our automated system or a user.'
+					);
+					errMessage = errMessage.replace(
+						'Retry after',
+						'\nThe next possible backup attempt can be made on:'
+					);
+					errMessage += `\n\nYou can export the (existing) latest database backup with the command: ${ chalk.green(
+						'vip @app.env export sql'
+					) }`;
 					errMessage += readMoreMessage;
 					exit.withError( errMessage );
 				}

@@ -356,7 +356,9 @@ export class ExportSQLCommand {
 			}
 		} else {
 			console.log(
-				`${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${ latestBackup.createdAt }`
+				`${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${
+					latestBackup.createdAt
+				}`
 			);
 		}
 

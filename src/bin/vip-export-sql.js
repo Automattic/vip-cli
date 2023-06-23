@@ -50,8 +50,8 @@ command( {
 	requiredArgs: 0,
 	usage: 'vip export sql',
 } )
-	.option('output', 'Specify the location where you want to save the export file')
-	.option('generate-backup', 'Generate a new backup instead of using the available ones')
+	.option( 'output', 'Specify the location where you want to save the export file' )
+	.option( 'generate-backup', 'Generate a new backup instead of using the available ones' )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, output, generateBackup } ) => {
 		const trackerFn = makeCommandTracker( 'export_sql', { app: app.id, env: env.uniqueLabel } );
