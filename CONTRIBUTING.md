@@ -142,7 +142,8 @@ Sometimes, we want to release a version we can test before releasing it to the p
 
 In order to do that, please follow this:
 
-1. Go to the branch from where you want to publish your test release, for example: `git checkout my-test-branch` .
+1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
+1. Commit your changes to `trunk`
 1. Run `npm publish --tag next` (When `--tag` is specified, we bypass the usual branch protection that doesn't allow you to publish form a brunch other than `trunk`).
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
