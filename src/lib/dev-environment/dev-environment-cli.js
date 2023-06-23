@@ -949,7 +949,7 @@ const launchVSCode = ( slug: string ) => {
 	if ( vsCodeExecutable ) {
 		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
 	} else {
-		console.log( `VS Code not detected in expected path. VS Code Workspace file location:\n${ workspacePath }` );
+		console.log( `VS Code was not detected in the expected path. VS Code Workspace file location:\n${ workspacePath }` );
 	}
 };
 
