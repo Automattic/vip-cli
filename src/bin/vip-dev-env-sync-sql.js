@@ -20,9 +20,9 @@ import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { makeCommandTracker } from '../lib/tracker';
 import {
-  getEnvironmentName,
-  processBooleanOption,
-} from "../lib/dev-environment/dev-environment-cli";
+	getEnvironmentName,
+	processBooleanOption,
+} from '../lib/dev-environment/dev-environment-cli';
 
 const examples = [
 	{

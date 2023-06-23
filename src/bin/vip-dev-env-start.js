@@ -43,7 +43,10 @@ const examples = [
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'skip-rebuild', 'Only start stopped services' )
-	.option( [ 'w', 'skip-wp-versions-check' ], 'Skip prompt to update WordPress version if not on latest' )
+	.option(
+		[ 'w', 'skip-wp-versions-check' ],
+		'Skip prompt to update WordPress version if not on latest'
+	)
 	.option( 'vscode', 'Generate a Visual Studio Code Workspace file and open it' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
