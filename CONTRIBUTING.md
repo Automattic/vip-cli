@@ -93,7 +93,7 @@ Changelogs allow customers to keep up with all the changes happening across our 
 
 ### Pre-publish Checks
 
-We use [`publish-please`](https://github.com/inikulin/publish-please) for some pre-publish confidence checks to avoid common mistakes.
+We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trunk/hellpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
 
 Further checks can be added to this flow as needed.
 
@@ -130,7 +130,7 @@ Then, let's publish:
 1. Push the tag to GitHub (`git push --tags`)
 1. Push the trunk branch `git push`
 1. Make sure you're part of the Automattic organization in npm
-1. Publish the release to npm (`npm run publish-please --access public`) the script will do some extra checks (npm version, branch, etc) to ensure everything is correct. If all looks good, proceed.
+1. Publish the release to npm (`npm publish --access public`) the script will do some extra checks (node version, branch, etc) to ensure everything is correct. If all looks good, the new version will be published and you can proceed.
 1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
 1. Push `trunk` changes (mostly the version bump) to `develop` (`git checkout develop && git merge trunk` )
 
@@ -142,11 +142,8 @@ Sometimes, we want to release a version we can test before releasing it to the p
 
 In order to do that, please follow this:
 
-1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
-2. Go to publish-please's config in `.publishrc`
-3. Change the `publishTag` to `next` and `gitTag` to `false` (publish-please will expect the latest commit to have a git tag, but we don't want it in this case)
-4. Commit your changes to `trunk`
-5. Run `npm run publish-please`
+1. Go to the branch from where you want to publish your test release, for example: `git checkout my-test-branch` .
+1. Run `npm publish --tag next` (When `--tag` is specified, we bypass the usual branch protection that doesn't allow you to publish form a brunch other than `trunk`).
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 
