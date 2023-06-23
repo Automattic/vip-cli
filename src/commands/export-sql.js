@@ -198,10 +198,11 @@ export class ExportSQLCommand {
 	 * @param {object}   options 		The optional parameters
 	 * @param {Function} trackerFn  The progress tracker function
 	 */
-	constructor( app, env, options = {}, trackerFn = () => {} ) {
+	constructor(app, env, options = {}, trackerFn = () => {}) {
 		this.app = app;
 		this.env = env;
-		this.outputFile = typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
+		this.outputFile =
+			typeof options.outputFile === 'string' ? getAbsolutePath(options.outputFile) : null;
 		this.generateBackup = options.generateBackup || false;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup copy creation' },
@@ -341,13 +342,22 @@ export class ExportSQLCommand {
 
 		if ( ! this.generateBackup ) {
 			if ( ! latestBackup ) {
-				await this.track( 'error', { error_type: 'no_backup_found', error_message: 'No backup found for the site' } );
+				await this.track('error', {
+					error_type: 'no_backup_found',
+					error_message: 'No backup found for the site',
+				});
 				exit.withError( `No backup found for site ${ this.app.name }` );
 			} else {
-				console.log( `${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${ latestBackup.createdAt }` );
+				console.log(
+					`${getGlyphForStatus('success')} Latest backup found with timestamp ${
+						latestBackup.createdAt
+					}`
+				);
 			}
 		} else {
-			console.log( `${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${ latestBackup.createdAt }` );
+			console.log(
+				`${getGlyphForStatus('success')} Backup created with timestamp ${latestBackup.createdAt}`
+			);
 		}
 
 		if ( await this.getExportJob() ) {

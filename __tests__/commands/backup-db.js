@@ -36,64 +36,62 @@ const mockApp = {
 };
 
 const queryMock = jest.fn();
-queryMock.mockResolvedValue( {
+queryMock.mockResolvedValue({
 	data: {
 		app: mockApp,
 	},
-} );
+});
 
 const mutationMock = jest.fn();
-mutationMock.mockResolvedValue( {
+mutationMock.mockResolvedValue({
 	data: {
 		triggerDatabaseBackup: {
 			success: true,
 		},
 	},
-} );
+});
 
-jest.mock( '../../src/lib/api', () => jest.fn() );
-API.mockImplementation( () => {
+jest.mock('../../src/lib/api', () => jest.fn());
+API.mockImplementation(() => {
 	return {
 		query: queryMock,
 		mutate: mutationMock,
 	};
-} );
+});
 
+describe('commands/BackupDBCommand', () => {
+	beforeEach(() => {});
 
-describe( 'commands/BackupDBCommand', () => {
-	beforeEach( () => {
-	} );
-
-	describe( '.loadBackupJob', () => {
+	describe('.loadBackupJob', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const cmd = new BackupDBCommand( app, env );
-		const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
+		const cmd = new BackupDBCommand(app, env);
+		const loadBackupJobSpy = jest.spyOn(cmd, 'loadBackupJob');
 
-		it( 'should return the latest backup job', async () => {
+		it('should return the latest backup job', async () => {
 			const job = await cmd.loadBackupJob();
-			expect( job ).toEqual( mockApp.environments[ 0 ].jobs[ 0 ] );
-			expect( loadBackupJobSpy ).toHaveBeenCalled();
-			expect( cmd.backupName ).toEqual( 'test-backup' );
-		} );
-	} );
+			expect(job).toEqual(mockApp.environments[0].jobs[0]);
+			expect(loadBackupJobSpy).toHaveBeenCalled();
+			expect(cmd.backupName).toEqual('test-backup');
+		});
+	});
 
-	describe( '.run', () => {
+	describe('.run', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const cmd = new BackupDBCommand( app, env );
-		const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
-		const logSpy = jest.spyOn( cmd, 'log' );
+		const cmd = new BackupDBCommand(app, env);
+		const loadBackupJobSpy = jest.spyOn(cmd, 'loadBackupJob');
+		const logSpy = jest.spyOn(cmd, 'log');
 
-		it( 'should check if a backup is already running', async () => {
-			loadBackupJobSpy.mockImplementationOnce( () => {
+		it('should check if a backup is already running', async () => {
+			loadBackupJobSpy.mockImplementationOnce(() => {
 				cmd.job = { inProgressLock: true };
 				cmd.backupName = 'test-backup';
 				return cmd.job;
-			} );
+			});
 
 			await cmd.run();
-			expect( logSpy ).toHaveBeenNthCalledWith( 2, 'Database backup already in progress...' );
-		} );
-	} );
-} );
+			expect(logSpy).toHaveBeenNthCalledWith(2, 'Database backup already in progress...');
+		});
+	});
+});
