@@ -56,14 +56,14 @@ export const DB_BACKUP_JOB_STATUS_QUERY = gql`
 	}
 `;
 
-async function getBackupJob(appId, envId) {
+async function getBackupJob( appId, envId ) {
 	const api = await API();
 
-	const response = await api.query({
+	const response = await api.query( {
 		query: DB_BACKUP_JOB_STATUS_QUERY,
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
-	});
+	} );
 
 	const {
 		data: {
@@ -71,17 +71,17 @@ async function getBackupJob(appId, envId) {
 		},
 	} = response;
 
-	const job = environments[0].jobs[0];
+	const job = environments[ 0 ].jobs[ 0 ];
 
 	return job || null;
 }
 
-async function createBackupJob(appId, envId) {
+async function createBackupJob( appId, envId ) {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
 	const api = await API();
-	await api.mutate({
+	await api.mutate( {
 		mutation: CREATE_DB_BACKUP_JOB_MUTATION,
 		variables: {
 			input: {
@@ -89,7 +89,7 @@ async function createBackupJob(appId, envId) {
 				environmentId: envId,
 			},
 		},
-	});
+	} );
 
 	// Re-enable global error handling
 	enableGlobalGraphQLErrorHandling();
@@ -110,23 +110,23 @@ export class BackupDBCommand {
 	};
 	track;
 
-	constructor(app, env, trackerFn = () => {}) {
+	constructor( app, env, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
-		this.progressTracker = new ProgressTracker([
+		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup generation' },
 			{ id: this.steps.GENERATE, name: 'Generating backup' },
-		]);
+		] );
 		this.track = trackerFn;
 	}
 
-	log(msg) {
-		if (this.silent) return;
-		console.log(msg);
+	log( msg ) {
+		if ( this.silent ) return;
+		console.log( msg );
 	}
 
-	isDone(job) {
-		return !job.inProgressLock;
+	isDone( job ) {
+		return ! job.inProgressLock;
 	}
 
 	/**
@@ -140,13 +140,12 @@ export class BackupDBCommand {
 	}
 
 	async loadBackupJob() {
-		this.job = await getBackupJob(this.app.id, this.env.id);
-		this.backupName =
-			this.job?.metadata.find(meta => meta.name === 'backupName')?.value || 'Unknown';
+		this.job = await getBackupJob( this.app.id, this.env.id );
+		this.backupName = this.job?.metadata.find( meta => meta.name === 'backupName' )?.value || 'Unknown';
 		this.jobStatus = this.job?.progress?.status;
 
-		if (this.job?.completedAt) {
-			this.jobAge = (new Date() - new Date(this.job.completedAt)) / 1000 / 60;
+		if ( this.job?.completedAt ) {
+			this.jobAge = ( new Date() - new Date( this.job.completedAt ) ) / 1000 / 60;
 		} else {
 			this.jobAge = undefined;
 		}
@@ -154,89 +153,80 @@ export class BackupDBCommand {
 		return this.job;
 	}
 
-	async run(silent = false) {
+	async run( silent = false ) {
 		this.silent = silent;
 
-		const readMoreMessage =
-			'\nLearn more about the database backup limitations here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
-		let noticeMessage = `\n${chalk.yellow('NOTICE: ')}`;
-		noticeMessage +=
-			'A new database backup will be created only if no recent backup is available, created by our automated system or manually by a user.';
+		const readMoreMessage = '\nLearn more about the database backup limitations here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
+		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
+		noticeMessage += 'A new database backup will be created only if no recent backup is available, created by our automated system or manually by a user.';
 		noticeMessage += readMoreMessage;
-		this.log(noticeMessage);
+		this.log( noticeMessage );
 
 		await this.loadBackupJob();
 
-		if (this.job?.inProgressLock) {
-			this.log('Database backup already in progress...');
-		} else {
+		if ( this.job?.inProgressLock ) {
+			this.log( 'Database backup already in progress...' );
+		}	else {
 			try {
-				this.log('Creating a new database backup...');
-				this.progressTracker.stepRunning(this.steps.PREPARE);
+				this.log( 'Creating a new database backup...')
+				this.progressTracker.stepRunning( this.steps.PREPARE );
 				this.progressTracker.startPrinting();
-				await createBackupJob(this.app.id, this.env.id);
-			} catch (err) {
-				this.progressTracker.stepFailed(this.steps.PREPARE);
+				await createBackupJob( this.app.id, this.env.id );
+			} catch ( err ) {
+				this.progressTracker.stepFailed( this.steps.PREPARE );
 				this.stopProgressTracker();
-				if (err.message?.includes('Database backups limit reached')) {
-					await this.track('error', {
+				if ( err.message?.includes( 'Database backups limit reached' ) ) {
+					await this.track( 'error', {
 						error_type: 'rate_limit_exceeded',
-						error_message: `Couldn't create a new database backup job: ${err?.message}`,
+						error_message: `Couldn't create a new database backup job: ${ err?.message }`,
 						stack: err?.stack,
-					});
-					let errMessage = err.message.replace(
-						'Database backups limit reached',
-						'Unable to create a new database backup as a recent backup already exists. This backup was created by our automated system or a user.'
-					);
-					errMessage = errMessage.replace(
-						'Retry after',
-						'\nThe next possible backup attempt can be made on:'
-					);
-					errMessage += `\n\nYou can export the (existing) latest database backup with the command: ${chalk.green(
-						'vip @app.env export sql'
-					)}`;
+					} );
+					let errMessage = err.message.replace( 'Database backups limit reached', 
+						'Unable to create a new database backup as a recent backup already exists. This backup was created by our automated system or a user.' );
+					errMessage = errMessage.replace( 'Retry after', '\nThe next possible backup attempt can be made on:' );
+					errMessage += `\n\nYou can export the (existing) latest database backup with the command: ${ chalk.green( 'vip @app.env export sql' ) }`;
 					errMessage += readMoreMessage;
-					exit.withError(errMessage);
+					exit.withError( errMessage );
 				}
-				await this.track('error', {
+				await this.track( 'error', {
 					error_type: 'db_backup_job_creation_failed',
-					error_message: `Database Backup job creation failed: ${err?.message}`,
+					error_message: `Database Backup job creation failed: ${ err?.message }`,
 					stack: err?.stack,
-				});
-				exit.withError(`Couldn't create a new database backup job: ${err?.message}`);
+				} );
+				exit.withError( `Couldn't create a new database backup job: ${ err?.message }` );
 			}
 		}
 
-		this.progressTracker.stepSuccess(this.steps.PREPARE);
+		this.progressTracker.stepSuccess( this.steps.PREPARE );
 
-		this.progressTracker.stepRunning(this.steps.GENERATE);
+		this.progressTracker.stepRunning( this.steps.GENERATE );
 
 		try {
 			await pollUntil(
-				this.loadBackupJob.bind(this),
+				this.loadBackupJob.bind( this ),
 				DB_BACKUP_PROGRESS_POLL_INTERVAL,
-				this.isDone.bind(this)
+				this.isDone.bind( this )
 			);
-		} catch (err) {
-			this.progressTracker.stepFailed(this.steps.GENERATE);
+		} catch ( err ) {
+			this.progressTracker.stepFailed( this.steps.GENERATE );
 			this.stopProgressTracker();
-			await this.track('error', {
+			await this.track( 'error', {
 				error_type: 'db_backup_job_failed',
-				error_message: `Database Backup job failed: ${err?.message}`,
+				error_message: `Database Backup job failed: ${ err?.message }`,
 				stack: err?.stack,
-			});
-			exit.withError(`Failed to create new database backup: ${err?.message}`);
+			} );
+			exit.withError( `Failed to create new database backup: ${ err?.message }` );
 		}
 
-		this.progressTracker.stepSuccess(this.steps.GENERATE);
+		this.progressTracker.stepSuccess( this.steps.GENERATE );
 		this.stopProgressTracker();
 
 		await this.loadBackupJob();
 
-		if (this.jobStatus !== 'success') {
-			exit.withError('Failed to create a new database backup');
+		if ( this.jobStatus !== 'success' ) {
+			exit.withError( 'Failed to create a new database backup' );
 		} else {
-			this.log(`New database backup created at ${this.backupName}`);
+			this.log( `New database backup created at ${ this.backupName }` );
 		}
 	}
 }
