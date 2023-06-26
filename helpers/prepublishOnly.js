@@ -8,7 +8,7 @@ const config = {
 	gitAllowDirty: true,
 	gitEnforceBranch: 'trunk',
 	nodeEnforceVersion: packageJSON.engines.node,
-	testBeforePublish: false,
+	testBeforePublish: true,
 };
 
 const releaseTag = process.env.npm_config_tag ?? 'latest';
