@@ -1,21 +1,19 @@
-// @flow
-// @format
-
 /**
  * External dependencies
  */
+import { tmpdir } from 'node:os';
+import { mkdir, rename } from 'node:fs/promises';
+import { lookup } from 'node:dns/promises';
+import path from 'node:path';
 import debugLib from 'debug';
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
-import Lando from 'lando/lib/lando';
+import Lando, { LandoConfig } from 'lando/lib/lando';
 import { buildConfig } from 'lando/lib/bootstrap';
-import landoUtils from 'lando/plugins/lando-core/lib/utils';
+import landoUtils, { AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
 import App from 'lando/lib/app';
-import dns from 'dns';
 import xdgBasedir from 'xdg-basedir';
+import type { NetworkInspectInfo } from 'dockerode';
 
 /**
  * Internal dependencies
@@ -36,14 +34,10 @@ import UserError from '../user-error';
 const DEBUG_KEY = '@automattic/vip:bin:dev-environment';
 const debug = debugLib( DEBUG_KEY );
 
-type Record< T, V > = {
-	[T]: V,
-};
-
 /**
- * @return {Promise<object>} Lando configuration
+ * @return {Promise<LandoConfig>} Lando configuration
  */
-async function getLandoConfig() {
+async function getLandoConfig(): Promise< LandoConfig > {
 	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
 	const landoPath = path.join( nodeModulesPath, 'lando' );
 	const atLandoPath = path.join( nodeModulesPath, '@lando' );
@@ -61,12 +55,13 @@ async function getLandoConfig() {
 		logLevelConsole = 'warn';
 	}
 
-	const vipDir = path.join( xdgBasedir.data || os.tmpdir(), 'vip' );
+	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+	const vipDir = path.join( xdgBasedir.data || tmpdir(), 'vip' ); // NOSONAR
 	const landoDir = path.join( vipDir, 'lando' );
 	const fakeHomeDir = path.join( landoDir, 'home' );
 
 	try {
-		await fs.promises.mkdir( fakeHomeDir, { recursive: true } );
+		await mkdir( fakeHomeDir, { recursive: true } );
 	} catch ( err ) {
 		// Ignore
 	}
@@ -96,7 +91,7 @@ async function getLandoConfig() {
 	return buildConfig( config );
 }
 
-const appMap: Map< string, App > = new Map();
+const appMap = new Map< string, App >();
 
 async function regenerateLandofile( instancePath: string ): Promise< void > {
 	const landoFile = path.join( instancePath, '.lando.yml' );
@@ -104,7 +99,7 @@ async function regenerateLandofile( instancePath: string ): Promise< void > {
 	try {
 		const now = new Date().toISOString().replace( /[^\d]/g, '' ).slice( 0, -3 );
 		const backup = `${ landoFile }.${ now }`;
-		await fs.promises.rename( landoFile, backup );
+		await rename( landoFile, backup );
 		console.warn( chalk.yellow( 'Backed up %s to %s' ), landoFile, backup );
 	} catch ( err ) {
 		// Rename failed - possibly the file does not exist. Silently ignoring.
@@ -116,7 +111,7 @@ async function regenerateLandofile( instancePath: string ): Promise< void > {
 	await updateEnvironment( currentInstanceData );
 }
 
-async function landoRecovery( lando: Lando, instancePath: string, error: Error ): Promise< App > {
+async function landoRecovery( lando: Lando, instancePath: string, error: unknown ): Promise< App > {
 	debug( 'Error initializing Lando app', error );
 	console.warn( chalk.yellow( 'There was an error initializing Lando, trying to recover...' ) );
 	try {
@@ -127,6 +122,7 @@ async function landoRecovery( lando: Lando, instancePath: string, error: Error )
 				'Recovery failed, aborting.'
 			) } Please recreate the environment or contact support.`
 		);
+
 		throw err;
 	}
 
@@ -149,7 +145,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 	const started = new Date();
 	try {
 		if ( appMap.has( instancePath ) ) {
-			return Promise.resolve( appMap.get( instancePath ) );
+			return Promise.resolve( appMap.get( instancePath )! );
 		}
 
 		if ( ! ( await doesEnvironmentExist( instancePath ) ) ) {
@@ -188,14 +184,14 @@ export async function bootstrapLando(): Promise< Lando > {
 
 			let registryResolvable = false;
 			try {
-				registryResolvable = ( await dns.promises.lookup( 'ghcr.io' ) ).address || false;
+				registryResolvable = ( await lookup( 'ghcr.io' ) ).address.length > 0 || false;
 				debug( 'Registry ghcr.io is resolvable' );
 			} catch ( err ) {
 				debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
 				registryResolvable = false;
 			}
 
-			const pull = registryResolvable && ( instanceData.pullAfter || 0 ) < Date.now();
+			const pull = registryResolvable && ( instanceData.pullAfter ?? 0 ) < Date.now();
 			if (
 				Array.isArray( data.opts.pullable ) &&
 				Array.isArray( data.opts.local ) &&
@@ -236,9 +232,9 @@ export async function landoStart( lando: Lando, instancePath: string ): Promise<
 }
 
 export interface LandoLogsOptions {
-	follow: boolean;
-	service: string;
-	timestamps: boolean;
+	follow?: boolean;
+	service?: string;
+	timestamps?: boolean;
 }
 
 export async function landoLogs( lando: Lando, instancePath: string, options: LandoLogsOptions ) {
@@ -249,7 +245,7 @@ export async function landoLogs( lando: Lando, instancePath: string, options: La
 		const app = await getLandoApplication( lando, instancePath );
 		const logTask = lando.tasks.find( task => task.command === 'logs' );
 
-		await logTask.run( {
+		await logTask?.run( {
 			follow: options.follow,
 			service: options.service,
 			timestamps: options.timestamps,
@@ -278,15 +274,14 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 	}
 }
 
-/**
- * @return {Promise<import('dockerode').NetworkInspectInfo | null>}
- */
-async function getBridgeNetwork( lando: Lando ) {
-	const networkName = lando.config.networkBridge || 'lando_bridge_network';
+async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | null > {
+	const networkName = lando.config.networkBridge ?? 'lando_bridge_network';
 	try {
-		return await lando.engine.getNetwork( networkName ).inspect();
+		return ( await lando.engine
+			.getNetwork( networkName )
+			.inspect() ) as Promise< NetworkInspectInfo | null >;
 	} catch ( err ) {
-		debug( 'Error getting network %s: %s', networkName, err.message );
+		debug( 'Error getting network %s: %s', networkName, ( err as Error ).message );
 		return null;
 	}
 }
@@ -294,11 +289,11 @@ async function getBridgeNetwork( lando: Lando ) {
 async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 	const network = await getBridgeNetwork( lando );
 	if ( network?.Containers && ! Object.keys( network.Containers ).length ) {
-		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer );
+		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer! );
 		try {
 			await proxy.remove( { force: true } );
 		} catch ( err ) {
-			debug( 'Error removing proxy container: %s', err.message );
+			debug( 'Error removing proxy container: %s', ( err as Error ).message );
 		}
 	}
 }
@@ -336,29 +331,37 @@ interface LandoInfoOptions {
 	autologinKey?: string;
 }
 
+interface LandoInfoResult extends AppInfo {
+	slug: string;
+	status: string;
+	'Login URL'?: string;
+	'Default username'?: string;
+	'Default password'?: string;
+	'Health warnings'?: string;
+	Documentation: string;
+}
+
 export async function landoInfo(
 	lando: Lando,
 	instancePath: string,
 	options: LandoInfoOptions = {}
-): Promise< Record< string, any > > {
+): Promise< LandoInfoResult > {
 	const started = new Date();
 	try {
 		const app = await getLandoApplication( lando, instancePath );
 
-		let appInfo = landoUtils.startTable( app );
+		const info = landoUtils.startTable( app );
 
 		const reachableServices = app.info.filter( service => service.urls.length );
-		reachableServices.forEach(
-			service => ( appInfo[ `${ service.service } urls` ] = service.urls )
-		);
+		reachableServices.forEach( service => ( info[ `${ service.service } urls` ] = service.urls ) );
 
 		const health = await checkEnvHealth( lando, instancePath );
-		const frontEndUrl = app.info.find( service => 'nginx' === service.service )?.urls[ 0 ];
+		const frontEndUrl = app.info.find( service => 'nginx' === service.service )?.urls[ 0 ] ?? '';
 
 		const extraService = await getExtraServicesConnections( lando, app );
-		appInfo = {
-			slug: appInfo.name.replace( /^vipdev/, '' ),
-			...appInfo,
+		const appInfo: Partial< LandoInfoResult > = {
+			slug: info.name.replace( /^vipdev/, '' ),
+			...info,
 			...extraService,
 		};
 
@@ -400,7 +403,7 @@ export async function landoInfo(
 		appInfo.Documentation =
 			'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
 
-		return appInfo;
+		return appInfo as LandoInfoResult;
 	} finally {
 		const duration = new Date().getTime() - started.getTime();
 		debug( 'landoInfo() took %d ms', duration );
@@ -436,23 +439,24 @@ async function getExtraServicesConnections(
 	const allServices = await lando.engine.list( { project: app.project } );
 
 	for ( const service of allServices ) {
-		const displayConfiguration =
-			extraServiceDisplayConfiguration.find( conf => conf.name === service.service ) || {};
+		const displayConfiguration = extraServiceDisplayConfiguration.find(
+			conf => conf.name === service.service
+		);
 
-		if ( displayConfiguration.skip ) {
+		if ( ! displayConfiguration || displayConfiguration.skip ) {
 			continue;
 		}
 
 		// eslint-disable-next-line no-await-in-loop
-		const containerScan = service?.id ? await lando.engine.docker.scan( service?.id ) : null;
-		if ( containerScan?.NetworkSettings?.Ports ) {
+		const containerScan = service.id ? await lando.engine.docker.scan( service.id ) : null;
+		if ( containerScan?.NetworkSettings.Ports ) {
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
 				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
-				.filter( externalMapping => externalMapping?.length );
+				.filter( externalMapping => externalMapping.length );
 
-			if ( mappings?.length ) {
+			if ( mappings.length ) {
 				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
-				const label = displayConfiguration.label || service.service;
+				const label = displayConfiguration.label ?? service.service;
 				const value =
 					( displayConfiguration.protocol ? `${ displayConfiguration.protocol }://` : '' ) +
 					`${ host }:${ port }`;
@@ -468,12 +472,6 @@ export async function checkEnvHealth(
 	lando: Lando,
 	instancePath: string
 ): Promise< Record< string, boolean > > {
-	type ScanResult = {
-		url: string,
-		status: boolean,
-		color: 'green' | 'yellow' | 'red',
-	};
-
 	const urls: Record< string, string > = {};
 
 	const now = new Date();
@@ -487,7 +485,7 @@ export async function checkEnvHealth(
 			} );
 		} );
 
-	const scanResults: ScanResult[] = await app.scanUrls( Object.keys( urls ), { max: 1 } );
+	const scanResults = await app.scanUrls( Object.keys( urls ), { max: 1 } );
 	const result: Record< string, boolean > = {};
 
 	scanResults.forEach( scanResult => {
@@ -508,7 +506,7 @@ export async function isEnvUp( lando: Lando, instancePath: string ): Promise< bo
 	const webUrls = reachableServices
 		.map( service => service.urls )
 		.flat()
-		.filter( url => ! url.match( /^https?:\/\/(localhost|127\.0\.0\.1):/ ) );
+		.filter( url => ! /^https?:\/\/(localhost|127\.0\.0\.1):/.exec( url ) );
 
 	const scanResult = await app.scanUrls( webUrls, { max: 1 } );
 	const duration = new Date().getTime() - now.getTime();
@@ -516,7 +514,8 @@ export async function isEnvUp( lando: Lando, instancePath: string ): Promise< bo
 
 	// If all the URLs are reachable then the app is considered 'up'
 	return (
-		scanResult.length && scanResult.filter( result => result.status ).length === scanResult.length
+		scanResult.length > 0 &&
+		scanResult.filter( result => result.status ).length === scanResult.length
 	);
 }
 
@@ -524,12 +523,12 @@ export async function landoExec(
 	lando: Lando,
 	instancePath: string,
 	toolName: string,
-	args: Array< string >,
-	options: any
+	args: string[],
+	options: Record< string, unknown >
 ) {
 	const app = await getLandoApplication( lando, instancePath );
 
-	const tool = app.config.tooling[ toolName ];
+	const tool = app.config.tooling![ toolName ] as Record< string, unknown > | undefined;
 	if ( ! tool ) {
 		throw new UserError( `${ toolName } is not a known lando task` );
 	}
@@ -585,7 +584,7 @@ export async function landoShell(
 	}
 
 	debug( 'Running command "%o" in service "%s" as user "%s"', command, service, user );
-	await shellTask.run( {
+	await shellTask?.run( {
 		command,
 		service,
 		user,
@@ -605,8 +604,7 @@ async function removeDevToolsVolumes( lando: Lando, app: App ) {
 	debug( 'Attempting to removing dev-tools volumes' );
 
 	const scanResult = await lando.engine.docker.listVolumes();
-	const devToolsVolumeNames = ( scanResult?.Volumes || [] )
-		.map( volume => volume.Name )
+	const devToolsVolumeNames = scanResult.Volumes.map( volume => volume.Name )
 		// eslint-disable-next-line security/detect-non-literal-regexp
 		.filter( volumeName => new RegExp( `${ app.project }.*devtools` ).test( volumeName ) );
 
@@ -620,18 +618,10 @@ async function removeDevToolsVolumes( lando: Lando, app: App ) {
 
 /**
  * Remove volume
- *
- * @param {Lando}  lando
- * @param {string} volumeName
  */
-async function removeVolume( lando: Lando, volumeName: string ) {
+async function removeVolume( lando: Lando, volumeName: string ): Promise< void > {
 	debug( `Removing devtools volume ${ volumeName }` );
-	const devToolsVolume = await lando.engine.docker.getVolume( volumeName );
-	if ( ! devToolsVolume ) {
-		debug( `Volume ${ volumeName } not found` );
-		return;
-	}
-
+	const devToolsVolume = lando.engine.docker.getVolume( volumeName );
 	try {
 		await devToolsVolume.remove();
 		debug( `${ volumeName } volume removed` );
@@ -646,12 +636,10 @@ async function removeVolume( lando: Lando, volumeName: string ) {
  * to start due to missing network.
  *
  * This function tries to detect such scenario and remove the orphant. So that regular flow
- * can safelly add a network and a new proxy container.
- *
- * @param {Object} lando Bootstrapped Lando object
+ * can safely add a network and a new proxy container.
  */
 async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
-	const proxyContainerName = lando.config.proxyContainer;
+	const proxyContainerName = lando.config.proxyContainer!;
 
 	const docker = lando.engine.docker;
 	const containers = await docker.listContainers( { all: true } );
@@ -663,24 +651,24 @@ async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
 		return;
 	}
 
-	const proxyContainer = await docker.getContainer( proxyContainerName );
+	const proxyContainer = docker.getContainer( proxyContainerName );
 	const status = await proxyContainer.inspect();
-	if ( status?.State?.Running ) {
+	if ( status.State.Running ) {
 		return;
 	}
 
 	await proxyContainer.remove();
 }
 
-export async function validateDockerInstalled( lando: Lando ): Promise< void > {
+export function validateDockerInstalled( lando: Lando ): void {
 	lando.log.verbose( 'docker-engine exists: %s', lando.engine.dockerInstalled );
-	if ( lando.engine.dockerInstalled === false ) {
+	if ( ! lando.engine.dockerInstalled ) {
 		throw Error(
 			'docker could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
 		);
 	}
 	lando.log.verbose( 'docker-compose exists: %s', lando.engine.composeInstalled );
-	if ( lando.engine.composeInstalled === false ) {
+	if ( ! lando.engine.composeInstalled ) {
 		throw Error(
 			'docker-compose could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/'
 		);

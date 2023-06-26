@@ -184,7 +184,7 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 	}
 
 	try {
-		await validateDockerInstalled( lando );
+		validateDockerInstalled( lando );
 	} catch ( exception ) {
 		throw new UserError( exception.message );
 	}

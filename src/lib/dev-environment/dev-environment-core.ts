@@ -25,6 +25,7 @@ import {
 	landoStop,
 	landoRebuild,
 	landoLogs,
+	LandoLogsOptions,
 } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
 import {
@@ -306,7 +307,7 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 export async function showLogs(
 	lando: Lando,
 	slug: string,
-	options: Record< string, string > = {}
+	options: LandoLogsOptions = {}
 ): Promise< unknown > {
 	debug( 'Will display logs command on env', slug, 'with options', options );
 
@@ -315,10 +316,12 @@ export async function showLogs(
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	if ( options.service ) {
-		const appInfo: { services: string } = await landoInfo( lando, instancePath, false );
+		const appInfo = await landoInfo( lando, instancePath );
 		if ( ! appInfo.services.includes( options.service ) ) {
 			throw new UserError(
-				`Service '${ options.service }' not found. Please choose from one: ${ appInfo.services }`
+				`Service '${
+					options.service
+				}' not found. Please choose from one: ${ appInfo.services.toString() }`
 			);
 		}
 	}
