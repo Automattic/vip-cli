@@ -30,3 +30,5 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, string > = {
 	8.1: 'ghcr.io/automattic/vip-container-images/php-fpm:8.1',
 	7.4: 'ghcr.io/automattic/vip-container-images/php-fpm:7.4',
 };
+
+export const DEV_ENVIRONMENT_VERSION = '2.0.0';

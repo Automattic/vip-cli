@@ -93,4 +93,5 @@ export interface InstanceData {
 	photon: boolean;
 	pullAfter?: number;
 	autologinKey?: string;
+	version?: string;
 }

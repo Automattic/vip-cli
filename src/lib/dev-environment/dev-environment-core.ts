@@ -13,6 +13,7 @@ import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
 import type Lando from 'lando';
 import { v4 as uuid } from 'uuid';
+import semver from 'semver';
 
 /**
  * Internal dependencies
@@ -41,6 +42,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
+	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
 import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './types';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
@@ -108,8 +110,9 @@ export async function startEnvironment(
 
 	let updated = false;
 	if ( ! options.skipWpVersionsCheck ) {
-		updated = await updateWordPressImage( slug );
+		updated = await maybeUpdateWordPressImage( slug );
 	}
+	updated = updated || ( await maybeUpdateVersion( slug ) );
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( lando, instancePath );
@@ -229,6 +232,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	// newInstanceData
 	newInstanceData.autologinKey = uuid();
+	newInstanceData.version = DEV_ENVIRONMENT_VERSION;
 
 	return newInstanceData;
 }
@@ -676,7 +680,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
  * @param {string} slug slug
  * @return {boolean} boolean
  */
-async function updateWordPressImage( slug: string ): Promise< boolean > {
+async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 	const versions = await getVersionList();
 	if ( ! versions.length ) {
 		return false;
@@ -774,6 +778,22 @@ async function updateWordPressImage( slug: string ): Promise< boolean > {
 		console.log( "We won't ask about upgrading this environment anymore." );
 		console.log( `To manually upgrade please run: ${ chalk.yellow( updateCommand ) }` );
 		await updateEnvironment( envData );
+	}
+
+	return false;
+}
+
+async function maybeUpdateVersion( slug: string ): Promise< boolean > {
+	const envData = readEnvironmentData( slug );
+	const currentVersion = envData.version;
+
+	console.log( 'Current local environment version is: ' + chalk.yellow( currentVersion ) );
+	if ( ! currentVersion || semver.lt( currentVersion, DEV_ENVIRONMENT_VERSION ) ) {
+		await updateEnvironment( envData );
+		console.log(
+			'Local environment version updated to: ' + chalk.green( DEV_ENVIRONMENT_VERSION )
+		);
+		return true;
 	}
 
 	return false;
