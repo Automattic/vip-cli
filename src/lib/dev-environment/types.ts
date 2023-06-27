@@ -71,6 +71,8 @@ export interface ConfigurationFileOptions {
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
 	photon?: boolean;
+
+	[ index: string ]: unknown;
 }
 
 export interface InstanceData {
