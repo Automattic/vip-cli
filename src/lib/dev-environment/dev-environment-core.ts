@@ -68,6 +68,7 @@ const nginxFileTemplatePath = path.join(
 	'dev-env.nginx.template.conf.ejs'
 );
 const landoFileName = '.lando.yml';
+const landoBackupFileName = '.lando.backup.yml';
 const nginxFileName = 'extra.conf';
 const instanceDataFileName = 'instance_data.json';
 
@@ -472,12 +473,19 @@ async function prepareLandoEnv(
 	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
+	const landoBackupFileTargetPath = path.join( instancePath, landoBackupFileName );
 	const nginxFolderPath = path.join( instancePath, nginxPathString );
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
+
+	const landoFileExists = await fs.promises.stat( landoFileTargetPath ).catch( () => false );
+	if ( landoFileExists ) {
+		await fs.promises.copyFile( landoFileTargetPath, landoBackupFileTargetPath );
+		console.log( `Backup of ${ landoFileName } was created in ${ landoBackupFileTargetPath }` );
+	}
 
 	await Promise.all( [
 		fs.promises.writeFile( landoFileTargetPath, landoFile ),
