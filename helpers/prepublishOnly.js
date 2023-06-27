@@ -6,10 +6,12 @@ const packageJSON = require( '../package.json' );
 
 const config = {
 	gitAllowDirty: true,
-	gitBranch: 'trunk',
+	gitEnforceBranch: 'trunk',
 	nodeEnforceVersion: packageJSON.engines.node,
 	testBeforePublish: true,
 };
+
+const releaseTag = process.env.npm_config_tag ?? 'latest';
 
 ( async () => {
 	try {
@@ -21,12 +23,12 @@ const config = {
 			}
 		}
 
-		if ( config.gitBranch ) {
+		if ( config.gitEnforceBranch && releaseTag !== 'next' ) {
 			const currentBranch = await execAsync( 'git branch --show-current' );
 
-			if ( currentBranch.trim() !== config.gitBranch ) {
+			if ( currentBranch.trim() !== config.gitEnforceBranch ) {
 				return bail(
-					`Git branch is not ${ config.gitBranch }. Please switch to ${ config.gitBranch } before publishing.`
+					`Git branch is not ${ config.gitEnforceBranch }. Please switch to ${ config.gitEnforceBranch } before publishing.`
 				);
 			}
 		}
