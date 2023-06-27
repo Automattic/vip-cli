@@ -157,12 +157,11 @@ export class BackupDBCommand {
 	async run( silent = false ) {
 		this.silent = silent;
 
-		const readMoreMessage =
-			'\nLearn more about the database backup limitations here: https://docs.wpvip.com/technical-references/vip-dashboard/backups/ \n';
 		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
 		noticeMessage +=
-			'A new database backup will be created only if no recent backup is available, created by our automated system or manually by a user.';
-		noticeMessage += readMoreMessage;
+			'A new database backup will be generated for this environment, only if a recent backup does not already exist. ';
+		noticeMessage +=
+			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations \n';
 		this.log( noticeMessage );
 
 		await this.loadBackupJob();
@@ -186,16 +185,17 @@ export class BackupDBCommand {
 					} );
 					let errMessage = err.message.replace(
 						'Database backups limit reached',
-						'Unable to create a new database backup as a recent backup already exists. This backup was created by our automated system or a user.'
+						'A new database backup was not generated because a recently generated backup already exists.'
 					);
 					errMessage = errMessage.replace(
 						'Retry after',
-						'\nThe next possible backup attempt can be made on:'
+						'\nIf you would like to run the same command, you can retry on or after:'
 					);
-					errMessage += `\n\nYou can export the (existing) latest database backup with the command: ${ chalk.green(
+					errMessage += `\nAlternatively, you can export the latest existing database backup by running: ${ chalk.green(
 						'vip @app.env export sql'
-					) }`;
-					errMessage += readMoreMessage;
+					) }, right away.`;
+					errMessage +=
+						'\nLearn more about limitations around generating database backups: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations \n';
 					exit.withError( errMessage );
 				}
 				await this.track( 'error', {
