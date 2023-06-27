@@ -12,12 +12,12 @@ import { setTimeout } from 'timers/promises';
  */
 import command from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
-import * as logsLib from '../lib/app-slowlogs/app-slowlogs';
+import * as slowlogsLib from '../lib/app-slowlogs/app-slowlogs';
 import * as exit from '../lib/cli/exit';
 import { formatData } from '../lib/cli/format';
 
 const LIMIT_MIN = 1;
-const LIMIT_MAX = 5000;
+const LIMIT_MAX = 500;
 const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
@@ -32,7 +32,7 @@ export async function getSlowlogs( arg: string[], opt ): Promise<void> {
 
 	let slowlogs;
 	try {
-		slowlogs = await logsLib.getRecentSlowlogs( opt.app.id, opt.env.id, opt.limit );
+		slowlogs = await slowlogsLib.getRecentSlowlogs( opt.app.id, opt.env.id, opt.limit );
 	} catch ( error ) {
 		await trackEvent( 'slowlogs_command_error', { ...trackingParams, error: error.message } );
 
@@ -75,7 +75,7 @@ export async function followLogs( opt ): Promise<void> {
 		let slowlogs;
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			slowlogs = await logsLib.getRecentSlowlogs( opt.app.id, opt.env.id, limit, after );
+			slowlogs = await slowlogsLib.getRecentSlowlogs( opt.app.id, opt.env.id, limit, after );
 
 			// eslint-disable-next-line no-await-in-loop
 			await trackEvent( 'slowlogs_command_follow_success', {
@@ -139,7 +139,7 @@ function printSlowlogs( slowlogs, format ) {
 		const rows = [];
 		for ( const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } of slowlogs ) {
 			rows.push( `${ timestamp } | ${ query }` );
-			rows.push( `Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri } ` );
+			rows.push( `Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri }` );
 			output = rows.join( '\n' );
 		}
 	} else {
@@ -154,8 +154,8 @@ export function validateInputs( limit: number, format: string ): void {
 		exit.withError( `Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.` );
 	}
 
-	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > logsLib.LIMIT_MAX ) {
-		exit.withError( `Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ logsLib.LIMIT_MAX }.` );
+	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > slowlogsLib.LIMIT_MAX ) {
+		exit.withError( `Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ slowlogsLib.LIMIT_MAX }.` );
 	}
 }
 
