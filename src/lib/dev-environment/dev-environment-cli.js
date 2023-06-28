@@ -939,17 +939,19 @@ const launchVSCode = ( slug: string ) => {
 	const workspacePath = getVSCodeWorkspacePath( slug );
 
 	if ( fs.existsSync( workspacePath ) ) {
-		console.log( 'VSCode workspace already exists, skipping creation.' );
+		console.log( 'VS Code workspace already exists, skipping creation.' );
 	} else {
 		generateVSCodeWorkspace( slug );
-		console.log( 'VSCode workspace generated' );
+		console.log( 'VS Code workspace generated' );
 	}
 
 	const vsCodeExecutable = getVSCodeExecutable();
 	if ( vsCodeExecutable ) {
 		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
 	} else {
-		console.log( `VSCode not detected in path, please open ${ workspacePath } with VSCode` );
+		console.log(
+			`VS Code was not detected in the expected path. VS Code Workspace file location:\n${ workspacePath }`
+		);
 	}
 };
 

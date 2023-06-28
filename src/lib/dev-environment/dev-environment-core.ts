@@ -858,7 +858,7 @@ export async function getVersionList(): Promise< WordPressTag[] > {
  * @return {string} Workspace path
  */
 export function generateVSCodeWorkspace( slug: string ) {
-	debug( 'Generating VSCode Workspace' );
+	debug( 'Generating VS Code Workspace' );
 	const location = getEnvironmentPath( slug );
 	const workspacePath = getVSCodeWorkspacePath( slug );
 	const instanceData = readEnvironmentData( slug );
