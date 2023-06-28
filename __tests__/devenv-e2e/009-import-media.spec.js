@@ -40,20 +40,31 @@ describe( 'vip dev-env import media', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ], { env } );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ],
+			{ env }
+		);
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+		expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 	} );
 
 	it( 'should copy files if environment exists', async () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ], { env }, true );
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 
 		const uploadsPath = path.join( getEnvironmentPath( slug ), 'uploads' );

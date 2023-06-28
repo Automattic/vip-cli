@@ -29,7 +29,7 @@ const examples = [
 	},
 ];
 
-export async function getAllEnvVarsCommand( arg: string[], opt ): Promise<void> {
+export async function getAllEnvVarsCommand( arg: string[], opt ): Promise< void > {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,
@@ -41,12 +41,11 @@ export async function getAllEnvVarsCommand( arg: string[], opt ): Promise<void> 
 	debug( `Request: Get all environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
 	await trackEvent( 'envvar_get_all_command_execute', trackingParams );
 
-	const envvars = await getEnvVars( opt.app.id, opt.env.id )
-		.catch( async err => {
-			await trackEvent( 'envvar_get_all_query_error', { ...trackingParams, error: err.message } );
+	const envvars = await getEnvVars( opt.app.id, opt.env.id ).catch( async err => {
+		await trackEvent( 'envvar_get_all_query_error', { ...trackingParams, error: err.message } );
 
-			throw err;
-		} );
+		throw err;
+	} );
 
 	await trackEvent( 'envvar_get_all_command_success', trackingParams );
 
@@ -63,7 +62,10 @@ export async function getAllEnvVarsCommand( arg: string[], opt ): Promise<void> 
 		key = 'id';
 	}
 
-	const envvarsObject = envvars.map( ( { name: envvarName, value } ) => ( { [ key ]: envvarName, value } ) );
+	const envvarsObject = envvars.map( ( { name: envvarName, value } ) => ( {
+		[ key ]: envvarName,
+		value,
+	} ) );
 
 	console.log( formatData( envvarsObject, opt.format ) );
 }
@@ -77,4 +79,3 @@ command( {
 } )
 	.examples( examples )
 	.argv( process.argv, getAllEnvVarsCommand );
-

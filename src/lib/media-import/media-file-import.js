@@ -12,7 +12,7 @@ export const MEDIA_IMPORT_FILE_SIZE_LIMIT = 30 * GB_IN_BYTES;
 
 export interface AppForMediaImport {
 	id: Number;
-	environments: Array<any>;
+	environments: Array< any >;
 	name: string;
 	organization: Object;
 	type: string;

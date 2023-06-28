@@ -19,6 +19,9 @@ import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 30 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
+// Allow (validated) unsafe regexp in tests.
+/* eslint-disable security/detect-non-literal-regexp */
+
 describe( 'vip dev-env info', () => {
 	/** @type {CliTest} */
 	let cliTest;
@@ -47,25 +50,34 @@ describe( 'vip dev-env info', () => {
 
 	it( 'should fail on a non-existing environment', async () => {
 		const slug = getProjectSlug();
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvInfo, '--slug', slug ], { env } );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvInfo, '--slug', slug ], {
+			env,
+		} );
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+		expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 	} );
 
 	it( 'should display the info', async () => {
 		const slug = getProjectSlug();
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
 		expect( result.stderr ).toBe( '' );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvInfo, '--slug', slug ], { env }, true );
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvInfo, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toMatch( new RegExp( `SLUG\\s+${ slug }` ) );
 		expect( result.stdout ).toMatch( /STATUS\s+DOWN/ );
-		[ 'LOCATION', 'SERVICES' ]
-			.forEach( str => expect( result.stdout ).toContain( str ) );
+		[ 'LOCATION', 'SERVICES' ].forEach( str => expect( result.stdout ).toContain( str ) );
 	} );
 
 	describe( 'for started environments', () => {

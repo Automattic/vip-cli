@@ -1,6 +1,5 @@
 name: Run VIP-cli tests
-on:
-  pull_request
+on: pull_request
 
 env:
   NODE_OPTIONS: --unhandled-rejections=warn

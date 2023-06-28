@@ -30,7 +30,7 @@ if ( config && config.environment !== 'production' ) {
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
-const runCmd = async function() {
+const runCmd = async function () {
 	const cmd = command();
 	cmd
 		.command( 'logout', 'Logout from your current session', async () => {
@@ -55,30 +55,30 @@ const runCmd = async function() {
 	cmd.argv( process.argv );
 };
 
-function doesArgvHaveAtLeastOneParam( argv: Array<any>, params: Array<any> ): boolean {
+function doesArgvHaveAtLeastOneParam( argv: Array< any >, params: Array< any > ): boolean {
 	return argv.some( arg => params.includes( arg ) );
 }
 
-const rootCmd = async function() {
+const rootCmd = async function () {
 	let token = await Token.get();
 
 	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
 	const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
 	const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
 	const isLoginCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'login' ] );
-	const isDevEnvCommandWithoutEnv = doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) && ! containsAppEnvArgument( process.argv );
+	const isDevEnvCommandWithoutEnv =
+		doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
+		! containsAppEnvArgument( process.argv );
 
 	debug( 'Argv:', process.argv );
 
 	if (
 		! isLoginCommand &&
-		(
-			isLogoutCommand ||
+		( isLogoutCommand ||
 			isHelpCommand ||
 			isVersionCommand ||
 			isDevEnvCommandWithoutEnv ||
-			token?.valid()
-		)
+			token?.valid() )
 	) {
 		await runCmd();
 	} else {

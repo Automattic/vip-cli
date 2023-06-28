@@ -45,7 +45,10 @@ export function getReadAndWriteStreams( {
 	let outputFileName;
 
 	if ( inPlace ) {
-		const midputFileName = path.join( makeTempDir( 'vip-search-replace' ), path.basename( fileName ) );
+		const midputFileName = path.join(
+			makeTempDir( 'vip-search-replace' ),
+			path.basename( fileName )
+		);
 		fs.copyFileSync( fileName, midputFileName );
 
 		debug( `Copied input file to ${ midputFileName }` );
@@ -81,7 +84,10 @@ export function getReadAndWriteStreams( {
 			}
 			break;
 		default: {
-			const tmpOutFile = path.join( makeTempDir( 'vip-search-replace' ), path.basename( fileName ) );
+			const tmpOutFile = path.join(
+				makeTempDir( 'vip-search-replace' ),
+				path.basename( fileName )
+			);
 			writeStream = fs.createWriteStream( tmpOutFile );
 			outputFileName = tmpOutFile;
 
@@ -100,15 +106,15 @@ export function getReadAndWriteStreams( {
 }
 
 export interface SearchReplaceOptions {
-	isImport: boolean,
-	inPlace: boolean,
-	output: boolean | string | Writable,
+	isImport: boolean;
+	inPlace: boolean;
+	output: boolean | string | Writable;
 }
 
 export interface SearchReplaceOutput {
-	inputFileName: string,
-	outputFileName?: string,
-	usingStdOut: boolean,
+	inputFileName: string;
+	outputFileName?: string;
+	usingStdOut: boolean;
 }
 
 export const searchAndReplace = async (
@@ -116,7 +122,7 @@ export const searchAndReplace = async (
 	pairs: string[] | string,
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
-): Promise<SearchReplaceOutput> => {
+): Promise< SearchReplaceOutput > => {
 	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
 
 	const startTime = process.hrtime();
@@ -169,7 +175,11 @@ export const searchAndReplace = async (
 	try {
 		await pipeline( replacedStream, writeStream );
 	} catch ( error ) {
-		console.log( red( "Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions." ) );
+		console.log(
+			red(
+				"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
+			)
+		);
 		throw error;
 	}
 

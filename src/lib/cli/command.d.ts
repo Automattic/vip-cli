@@ -1,4 +1,4 @@
-import chalk = require( "chalk" );
+import chalk = require('chalk');
 
 interface CommandOptions {
 	appContext: boolean;
@@ -15,39 +15,39 @@ interface CommandOptions {
 	skipConfirmPrompt?: boolean;
 }
 
-export default function _default( opts: Partial<CommandOptions> ): Args;
+export default function _default( opts: Partial< CommandOptions > ): Args;
 
 interface Example {
 	usage: string;
 	description: string;
 }
 
-type OptionInitFunction = (value: unknown) => unknown;
+type OptionInitFunction = ( value: unknown ) => unknown;
 
 interface MriOptions {
 	args?: string[];
-	alias?: Record<string, string | string[]>;
+	alias?: Record< string, string | string[] >;
 	boolean?: string | string[];
-	default?: Record<string, unknown>;
+	default?: Record< string, unknown >;
 	string?: string | string[];
-	unknown?: ((param: string) => boolean);
+	unknown?: ( param: string ) => boolean;
 }
 
 interface MinimistOptions {
 	string?: string | string[];
 	boolean?: boolean | string | string[];
-	alias?: Record<string, string | string[]>;
-	default?: Record<string, unknown>;
+	alias?: Record< string, string | string[] >;
+	default?: Record< string, unknown >;
 	stopEarly?: boolean;
-	"--"?: boolean;
-	unknown?: (param: string) => boolean;
+	'--'?: boolean;
+	unknown?: ( param: string ) => boolean;
 }
 
 interface ConfigurationOptions {
 	help?: boolean;
 	name?: string;
 	version?: boolean;
-	usageFilter?: (output: unknown) => unknown
+	usageFilter?: ( output: unknown ) => unknown;
 	value?: string;
 	mri?: MriOptions;
 	minimist?: MinimistOptions;
@@ -56,7 +56,7 @@ interface ConfigurationOptions {
 }
 
 interface Option {
-	name: string | [string, string];
+	name: string | [ string, string ];
 	description: string;
 	init?: OptionInitFunction;
 	defaultValue?: unknown;
@@ -65,45 +65,55 @@ interface Option {
 interface Command {
 	usage: string;
 	description: string;
-	init: Function|false;
+	init: Function | false;
 }
 
 declare class Args {
 	details: {
 		options: unknown[];
 		commands: Command[];
-		examples: Example[]
-	}
+		examples: Example[];
+	};
 
 	sub: string[];
 
-	config: Required<ConfigurationOptions>;
+	config: Required< ConfigurationOptions >;
 
 	printMainColor: typeof chalk;
 	printSubColor: typeof Chalk;
 
 	constructor();
 
-	option(name: string | [string, string], description: string, defaultValue?: unknown, init?: OptionInitFunction): Args;
-	options(list: Option[]): Args;
-	command(name: string, description: string, init?: (name: string, sub: string[], options: ConfigurationOptions) => void, aliases?: string[]): Args;
-	example(usage: string, description: string): Args;
-	examples(list: Example[]): Args;
-	parse(argv: string[], options?: ConfigurationOptions): Record<string, unknown>;
+	option(
+		name: string | [ string, string ],
+		description: string,
+		defaultValue?: unknown,
+		init?: OptionInitFunction
+	): Args;
+	options( list: Option[] ): Args;
+	command(
+		name: string,
+		description: string,
+		init?: ( name: string, sub: string[], options: ConfigurationOptions ) => void,
+		aliases?: string[]
+	): Args;
+	example( usage: string, description: string ): Args;
+	examples( list: Example[] ): Args;
+	parse( argv: string[], options?: ConfigurationOptions ): Record< string, unknown >;
 	showHelp(): void;
 	showVersion(): void;
 
-	argv: (argv: string[], cb: unknown) => Promise<unknown>;
+	argv: ( argv: string[], cb: unknown ) => Promise< unknown >;
 
 	// utils.js
-	handleType(value: unknown): [string, ((v: unknown) => unknown)?];
-	readOption(option: unknown): Record<string, unknown>;
-	getOptions(definedSubcommand: unknown): Record<string, unknown>;
+	handleType( value: unknown ): [ string, ( ( v: unknown ) => unknown )? ];
+	readOption( option: unknown ): Record< string, unknown >;
+	getOptions( definedSubcommand: unknown ): Record< string, unknown >;
 	generateExamples(): string[];
-	generateDetails(kind: string): string[];
-	runCommand(details, options): void;
+	generateDetails( kind: string ): string[];
+	runCommand( details, options ): void;
 	checkHelp(): void;
 	checkVersion(): void;
-	isDefined(name: string, list: string): boolean;
-	optionWasProvided(name: string): boolean;
+	isDefined( name: string, list: string ): boolean;
+	optionWasProvided( name: string ): boolean;
 }

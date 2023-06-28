@@ -95,7 +95,6 @@ describe( 'utils/cli/envAlias', () => {
 				app: '2',
 				env: 'env.instance',
 			},
-
 		] )( 'should parse out the app and env from an alias', input => {
 			const parsed = parseEnvAlias( input.alias );
 
@@ -106,45 +105,23 @@ describe( 'utils/cli/envAlias', () => {
 	describe( 'parseEnvAliasFromArgv()', () => {
 		it.each( [
 			{
-				argv: [
-					'/usr/local/bin/node',
-					'/path/to/script.js',
-				],
+				argv: [ '/usr/local/bin/node', '/path/to/script.js' ],
 				expected: {
-					argv: [
-						'/usr/local/bin/node',
-						'/path/to/script.js',
-					],
+					argv: [ '/usr/local/bin/node', '/path/to/script.js' ],
 				},
 			},
 			{
-				argv: [
-					'/usr/local/bin/node',
-					'/path/to/script.js',
-					'@app.env',
-				],
+				argv: [ '/usr/local/bin/node', '/path/to/script.js', '@app.env' ],
 				expected: {
-					argv: [
-						'/usr/local/bin/node',
-						'/path/to/script.js',
-					],
+					argv: [ '/usr/local/bin/node', '/path/to/script.js' ],
 					app: 'app',
 					env: 'env',
 				},
 			},
 			{
-				argv: [
-					'/usr/local/bin/node',
-					'/path/to/script.js',
-					'@app.env',
-					'command',
-				],
+				argv: [ '/usr/local/bin/node', '/path/to/script.js', '@app.env', 'command' ],
 				expected: {
-					argv: [
-						'/usr/local/bin/node',
-						'/path/to/script.js',
-						'command',
-					],
+					argv: [ '/usr/local/bin/node', '/path/to/script.js', 'command' ],
 					app: 'app',
 					env: 'env',
 				},
@@ -158,12 +135,7 @@ describe( 'utils/cli/envAlias', () => {
 					'--somearg=value',
 				],
 				expected: {
-					argv: [
-						'/usr/local/bin/node',
-						'/path/to/script.js',
-						'command',
-						'--somearg=value',
-					],
+					argv: [ '/usr/local/bin/node', '/path/to/script.js', 'command', '--somearg=value' ],
 					app: 'app',
 					env: 'env',
 				},
@@ -178,13 +150,7 @@ describe( 'utils/cli/envAlias', () => {
 					'@not-an-alias',
 				],
 				expected: {
-					argv: [
-						'/usr/local/bin/node',
-						'/path/to/script.js',
-						'command',
-						'--',
-						'@not-an-alias',
-					],
+					argv: [ '/usr/local/bin/node', '/path/to/script.js', 'command', '--', '@not-an-alias' ],
 					app: 'app',
 					env: 'env',
 				},

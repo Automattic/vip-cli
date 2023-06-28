@@ -26,7 +26,7 @@ export default class Pendo implements AnalyticsClient {
 	private eventPrefix: string;
 	private userAgent: string;
 	private userId: string;
-	private context: Env & Record<string, unknown> & { userId?: string };
+	private context: Env & Record< string, unknown > & { userId?: string };
 
 	static readonly ENDPOINT = '/pendo';
 
@@ -37,7 +37,10 @@ export default class Pendo implements AnalyticsClient {
 		this.context = { ...options.env };
 	}
 
-	async trackEvent( eventName: string, eventProps: Record<string, unknown> = {} ): Promise<Response | false> {
+	async trackEvent(
+		eventName: string,
+		eventProps: Record< string, unknown > = {}
+	): Promise< Response | false > {
 		if ( ! eventName.startsWith( this.eventPrefix ) ) {
 			eventName = this.eventPrefix + eventName;
 		}
@@ -60,7 +63,7 @@ export default class Pendo implements AnalyticsClient {
 		}
 	}
 
-	async send( eventName: string, eventProps: Record<string, unknown> ): Promise<Response> {
+	async send( eventName: string, eventProps: Record< string, unknown > ): Promise< Response > {
 		const body = {
 			context: this.context,
 			event: eventName,

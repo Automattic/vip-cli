@@ -46,7 +46,12 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 		variable_name: name,
 	};
 
-	debug( `Request: Set environment variable ${ JSON.stringify( name ) } for ${ getEnvContext( opt.app, opt.env ) }` );
+	debug(
+		`Request: Set environment variable ${ JSON.stringify( name ) } for ${ getEnvContext(
+			opt.app,
+			opt.env
+		) }`
+	);
 	await trackEvent( 'envvar_set_command_execute', trackingParams );
 
 	if ( ! validateNameWithMessage( name ) ) {
@@ -56,8 +61,10 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 
 	if ( NEW_RELIC_ENVVAR_KEY === name ) {
 		await trackEvent( 'envvar_set_newrelic_key', trackingParams );
-		console.log( chalk.bold.red( 'Setting the New Relic key is not permitted.' ),
-			'If you want to set your own New Relic key, please contact our support team through the usual channels.' );
+		console.log(
+			chalk.bold.red( 'Setting the New Relic key is not permitted.' ),
+			'If you want to set your own New Relic key, please contact our support team through the usual channels.'
+		);
 		process.exit( 1 );
 	}
 
@@ -67,11 +74,10 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 	} else {
 		console.log( `For multiline input, use the ${ chalk.bold( '--from-file' ) } option.` );
 		console.log();
-		value = await promptForValue( `Enter the value for ${ name }:` )
-			.catch( async () => {
-				await trackEvent( 'envvar_set_user_cancelled_input', trackingParams );
-				cancel();
-			} );
+		value = await promptForValue( `Enter the value for ${ name }:` ).catch( async () => {
+			await trackEvent( 'envvar_set_user_cancelled_input', trackingParams );
+			cancel();
+		} );
 	}
 
 	if ( ! opt.skipConfirmation ) {
@@ -83,25 +89,28 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 			console.log();
 		}
 
-		if ( ! await confirm( `Please ${ chalk.bold( 'confirm' ) } the input value above (y/N)` ) ) {
+		if (
+			! ( await confirm( `Please ${ chalk.bold( 'confirm' ) } the input value above (y/N)` ) )
+		) {
 			await trackEvent( 'envvar_set_user_cancelled_confirmation', trackingParams );
 			cancel();
 		}
 	}
 
-	await setEnvVar( opt.app.id, opt.env.id, name, value )
-		.catch( async err => {
-			await trackEvent( 'envvar_set_mutation_error', { ...trackingParams, error: err.message } );
+	await setEnvVar( opt.app.id, opt.env.id, name, value ).catch( async err => {
+		await trackEvent( 'envvar_set_mutation_error', { ...trackingParams, error: err.message } );
 
-			throw err;
-		} );
+		throw err;
+	} );
 
 	await trackEvent( 'envvar_set_command_success', trackingParams );
 	console.log( chalk.green( `Successfully set environment variable ${ JSON.stringify( name ) }` ) );
 
 	if ( ! opt.skipConfirmation ) {
-		console.log( chalk.bgYellow( chalk.bold( 'Important:' ) ),
-			'Updates to environment variables will not be available until the application’s next deploy.' );
+		console.log(
+			chalk.bgYellow( chalk.bold( 'Important:' ) ),
+			'Updates to environment variables will not be available until the application’s next deploy.'
+		);
 	}
 }
 

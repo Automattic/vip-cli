@@ -4,13 +4,9 @@ const path = require( 'node:path' );
 const config = {
 	verbose: true,
 	slowTestThreshold: 30,
-	testRegex: [
-		'\\.(test|spec)\\.js$',
-	],
+	testRegex: [ '\\.(test|spec)\\.js$' ],
 	rootDir: path.join( __dirname, '..', '..', '..' ),
-	roots: [
-		'<rootDir>/__tests__/devenv-e2e',
-	],
+	roots: [ '<rootDir>/__tests__/devenv-e2e' ],
 	reporters: [ 'default', 'github-actions' ],
 	testTimeout: 120000,
 	maxWorkers: process.env.CI ? 1 : 2,

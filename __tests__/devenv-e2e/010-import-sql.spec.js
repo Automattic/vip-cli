@@ -13,7 +13,13 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import {
+	checkEnvExists,
+	createAndStartEnvironment,
+	destroyEnvironment,
+	getProjectSlug,
+	prepareEnvironment,
+} from './helpers/utils';
 import { vipDevEnvExec, vipDevEnvImportSQL } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
@@ -48,9 +54,12 @@ describe( 'vip dev-env import sql', () => {
 			expect( await checkEnvExists( slug ) ).toBe( false );
 
 			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/empty.sql' );
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ], { env } );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ],
+				{ env }
+			);
 			expect( result.rc ).toBeGreaterThan( 0 );
-			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+			expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 
 			return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 		} );
@@ -79,7 +88,10 @@ describe( 'vip dev-env import sql', () => {
 
 		it( 'should fail if the file fails validation', async () => {
 			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/fail-validation.sql' );
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ], { env } );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
+				{ env }
+			);
 			expect( result.rc ).toBeGreaterThan( 0 );
 			expect( result.stderr ).toContain( 'SQL Error: DROP TABLE was not found' );
 			expect( result.stderr ).toContain( 'SQL Error: CREATE TABLE was not found' );
@@ -87,18 +99,52 @@ describe( 'vip dev-env import sql', () => {
 
 		it( 'should allow to bypass validation', async () => {
 			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/fail-validation.sql' );
-			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ], { env }, true );
+			let result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toContain( 'Success: Database imported' );
 			expect( result.stdout ).toContain( 'Success: The cache was flushed' );
 
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'e2etest' ], { env }, true );
+			result = await cliTest.spawn(
+				[
+					process.argv[ 0 ],
+					vipDevEnvExec,
+					'--slug',
+					slug,
+					'--quiet',
+					'--',
+					'wp',
+					'option',
+					'get',
+					'e2etest',
+				],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout.trim() ).toBe( '200' );
 		} );
 
 		it( 'should correctly perform replace', async () => {
-			let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'db', 'export', '-' ], { env }, true );
+			let result = await cliTest.spawn(
+				[
+					process.argv[ 0 ],
+					vipDevEnvExec,
+					'--slug',
+					slug,
+					'--quiet',
+					'--',
+					'wp',
+					'db',
+					'export',
+					'-',
+				],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 
 			const dumpFileName = path.join( tmpPath, 'dump.sql' );
@@ -106,18 +152,40 @@ describe( 'vip dev-env import sql', () => {
 
 			const expectedHomeValue = 'http://test.vipdev.lndo.site';
 
-			result = await cliTest.spawn( [
-				process.argv[ 0 ], vipDevEnvImportSQL,
-				'--slug', slug,
-				dumpFileName,
-				'-r', `http://${ slug }.vipdev.lndo.site,${ expectedHomeValue }`,
-			], { env }, true );
+			result = await cliTest.spawn(
+				[
+					process.argv[ 0 ],
+					vipDevEnvImportSQL,
+					'--slug',
+					slug,
+					dumpFileName,
+					'-r',
+					`http://${ slug }.vipdev.lndo.site,${ expectedHomeValue }`,
+				],
+				{ env },
+				true
+			);
 
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toContain( 'Success: Database imported' );
 			expect( result.stdout ).toContain( 'Success: The cache was flushed' );
 
-			result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', 'option', 'get', 'home' ], { env }, true );
+			result = await cliTest.spawn(
+				[
+					process.argv[ 0 ],
+					vipDevEnvExec,
+					'--slug',
+					slug,
+					'--quiet',
+					'--',
+					'wp',
+					'option',
+					'get',
+					'home',
+				],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout.trim() ).toBe( expectedHomeValue );
 		} );

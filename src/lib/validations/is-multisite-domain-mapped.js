@@ -27,7 +27,10 @@ export const getPrimaryDomainFromSQL = ( statements: string[] ): string => {
 	}
 
 	const SQL_WP_SITE_DOMAINS_REGEX = /\(1,'(.*?)'/s;
-	const matches = statements[ 0 ]?.join( '' ).replace( /\s/g, '' ).match( SQL_WP_SITE_DOMAINS_REGEX );
+	const matches = statements[ 0 ]
+		?.join( '' )
+		.replace( /\s/g, '' )
+		.match( SQL_WP_SITE_DOMAINS_REGEX );
 	return matches ? matches[ 1 ] : '';
 };
 
@@ -38,7 +41,10 @@ export const getPrimaryDomainFromSQL = ( statements: string[] ): string => {
  * @param {(string | Array)} searchReplace The search-replace pairs
  * @return {string} The processed domain
  */
-export const maybeSearchReplacePrimaryDomain = function( domain: string, searchReplace?: string | string[] ): string {
+export const maybeSearchReplacePrimaryDomain = function (
+	domain: string,
+	searchReplace?: string | string[]
+): string {
 	if ( searchReplace ) {
 		const pairs = Array.isArray( searchReplace ) ? searchReplace : [ searchReplace ];
 		const domainReplacements = pairs.map( pair => pair.split( ',' ) );
@@ -55,7 +61,10 @@ export const maybeSearchReplacePrimaryDomain = function( domain: string, searchR
  * @param {(string | Array)} searchReplace The search-replace pairs
  * @return {string} The replaced domain, or the domain as found in the SQL dump
  */
-export const getPrimaryDomain = function( statements: string[], searchReplace?: string | string[] ) {
+export const getPrimaryDomain = function (
+	statements: string[],
+	searchReplace?: string | string[]
+) {
 	const domainFromSQL = getPrimaryDomainFromSQL( statements );
 	return maybeSearchReplacePrimaryDomain( domainFromSQL, searchReplace );
 };
@@ -71,8 +80,8 @@ export const getPrimaryDomain = function( statements: string[], searchReplace?: 
 export async function isMultisitePrimaryDomainMapped(
 	appId: number,
 	envId: number,
-	primaryDomain: string,
-): Promise<boolean> {
+	primaryDomain: string
+): Promise< boolean > {
 	const track = trackEventWithEnv.bind( null, appId, envId );
 	const api = await API();
 	let res;
