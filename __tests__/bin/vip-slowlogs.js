@@ -59,8 +59,22 @@ describe( 'getSlowlogs', () => {
 		slowlogsLib.getRecentSlowlogs.mockImplementation( async () => ( {
 			nextCursor: null,
 			nodes: [
-				{ timestamp: '2021-11-05T20:18:36.234041811Z', query: 'SELECT * FROM wp_posts', rowsSent: 1, rowsExamined: 1, queryTime: 0.1, requestUri: 'dashboard.wpvip.com' },
-				{ timestamp: '2021-11-09T20:47:07.301221112Z', query: 'SELECT * FROM wp_posts', rowsSent: 1, rowsExamined: 1, queryTime: 0.1, requestUri: 'dashboard.wpvip.com' },
+				{
+					timestamp: '2021-11-05T20:18:36.234041811Z',
+					query: 'SELECT * FROM wp_posts',
+					rowsSent: 1,
+					rowsExamined: 1,
+					queryTime: 0.1,
+					requestUri: 'dashboard.wpvip.com',
+				},
+				{
+					timestamp: '2021-11-09T20:47:07.301221112Z',
+					query: 'SELECT * FROM wp_posts',
+					rowsSent: 1,
+					rowsExamined: 1,
+					queryTime: 0.1,
+					requestUri: 'dashboard.wpvip.com',
+				},
 			],
 		} ) );
 
@@ -85,7 +99,11 @@ describe( 'getSlowlogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'slowlogs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'slowlogs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'slowlogs_command_success', {
 			...trackingParams,
 			total: 2,
@@ -98,8 +116,22 @@ describe( 'getSlowlogs', () => {
 		slowlogsLib.getRecentSlowlogs.mockImplementation( async () => ( {
 			nextCursor: null,
 			nodes: [
-				{ timestamp: '2021-11-05T20:18:36.234041811Z', query: 'SELECT * FROM wp_posts', rowsSent: 1, rowsExamined: 1, queryTime: 0.1, requestUri: 'dashboard.wpvip.com' },
-				{ timestamp: '2021-11-09T20:47:07.301221112Z', query: 'SELECT * FROM wp_posts', rowsSent: 1, rowsExamined: 1, queryTime: 0.1, requestUri: 'dashboard.wpvip.com' },
+				{
+					timestamp: '2021-11-05T20:18:36.234041811Z',
+					query: 'SELECT * FROM wp_posts',
+					rowsSent: 1,
+					rowsExamined: 1,
+					queryTime: 0.1,
+					requestUri: 'dashboard.wpvip.com',
+				},
+				{
+					timestamp: '2021-11-09T20:47:07.301221112Z',
+					query: 'SELECT * FROM wp_posts',
+					rowsSent: 1,
+					rowsExamined: 1,
+					queryTime: 0.1,
+					requestUri: 'dashboard.wpvip.com',
+				},
 			],
 		} ) );
 
@@ -108,7 +140,7 @@ describe( 'getSlowlogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable indent */
-`[
+			`[
 	{
 		"timestamp": "2021-11-05T20:18:36.234041811Z",
 		"rowsSent": 1,
@@ -140,7 +172,11 @@ describe( 'getSlowlogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'slowlogs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'slowlogs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'slowlogs_command_success', {
 			...trackingParams,
 			total: 2,
@@ -153,8 +189,22 @@ describe( 'getSlowlogs', () => {
 		slowlogsLib.getRecentSlowlogs.mockImplementation( async () => ( {
 			nextCursor: null,
 			nodes: [
-				{ timestamp: '2021-11-05T20:18:36.234041811Z', rowsSent: 1, rowsExamined: 1, queryTime: 0.1, requestUri: 'dashboard.wpvip.com', query: 'SELECT * FROM wp_posts' },
-				{ timestamp: '2021-11-09T20:47:07.301221112Z', rowsSent: 1, rowsExamined: 1, queryTime: 0.1, requestUri: 'dashboard.wpvip.com', query: 'SELECT * FROM wp_posts' },
+				{
+					timestamp: '2021-11-05T20:18:36.234041811Z',
+					rowsSent: 1,
+					rowsExamined: 1,
+					queryTime: 0.1,
+					requestUri: 'dashboard.wpvip.com',
+					query: 'SELECT * FROM wp_posts',
+				},
+				{
+					timestamp: '2021-11-09T20:47:07.301221112Z',
+					rowsSent: 1,
+					rowsExamined: 1,
+					queryTime: 0.1,
+					requestUri: 'dashboard.wpvip.com',
+					query: 'SELECT * FROM wp_posts',
+				},
 			],
 		} ) );
 
@@ -163,7 +213,7 @@ describe( 'getSlowlogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable max-len */
-			`"timestamp","rows sent","rows examined","query time","request uri","query"${os.EOL}"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"${os.EOL}"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
+			`"timestamp","rows sent","rows examined","query time","request uri","query"${ os.EOL }"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"${ os.EOL }"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
 			/* eslint-enable max-len */
 		);
 
@@ -178,7 +228,11 @@ describe( 'getSlowlogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'slowlogs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'slowlogs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'slowlogs_command_success', {
 			...trackingParams,
 			total: 2,
@@ -186,7 +240,10 @@ describe( 'getSlowlogs', () => {
 	} );
 
 	it( 'should show a message if no slowlogs were found', async () => {
-		slowlogsLib.getRecentSlowlogs.mockImplementation( async () => ( { nextCursor: null, nodes: [] } ) ); // empty logs
+		slowlogsLib.getRecentSlowlogs.mockImplementation( async () => ( {
+			nextCursor: null,
+			nodes: [],
+		} ) ); // empty logs
 
 		await getSlowlogs( [], opts );
 
@@ -206,7 +263,11 @@ describe( 'getSlowlogs', () => {
 			format: 'text',
 		};
 
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'slowlogs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'slowlogs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'slowlogs_command_success', {
 			...trackingParams,
 			total: 0,
@@ -242,7 +303,11 @@ describe( 'getSlowlogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'slowlogs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'slowlogs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'slowlogs_command_error', {
 			...trackingParams,
 			error: 'My intentional Error',
@@ -257,7 +322,9 @@ describe( 'getSlowlogs', () => {
 		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Invalid format: jso. The supported formats are: csv, json, text.' );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Invalid format: jso. The supported formats are: csv, json, text.'
+		);
 
 		expect( slowlogsLib.getRecentSlowlogs ).not.toHaveBeenCalled();
 
@@ -266,27 +333,25 @@ describe( 'getSlowlogs', () => {
 		expect( tracker.trackEvent ).not.toHaveBeenCalled();
 	} );
 
-	it.each( [
-		'abc',
-		-1,
-		0,
-		12.4,
-		5001,
-	] )( 'should exit with error if "limit" is invalid (%p)', async limit => {
-		opts.limit = limit;
+	it.each( [ 'abc', -1, 0, 12.4, 5001 ] )(
+		'should exit with error if "limit" is invalid (%p)',
+		async limit => {
+			opts.limit = limit;
 
-		const promise = getSlowlogs( [], opts );
+			const promise = getSlowlogs( [], opts );
 
-		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
+			await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
-		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( `Invalid limit: ${ limit }. It should be a number between 1 and 5000.` );
+			expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+			expect( exit.withError ).toHaveBeenCalledWith(
+				`Invalid limit: ${ limit }. It should be a number between 1 and 5000.`
+			);
 
-		expect( slowlogsLib.getRecentSlowlogs ).not.toHaveBeenCalled();
+			expect( slowlogsLib.getRecentSlowlogs ).not.toHaveBeenCalled();
 
-		expect( console.log ).not.toHaveBeenCalled();
+			expect( console.log ).not.toHaveBeenCalled();
 
-		expect( tracker.trackEvent ).not.toHaveBeenCalled();
-	} );
+			expect( tracker.trackEvent ).not.toHaveBeenCalled();
+		}
+	);
 } );
-

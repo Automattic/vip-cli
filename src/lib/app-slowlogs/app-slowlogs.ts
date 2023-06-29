@@ -15,11 +15,11 @@ import { Query } from '../../graphqlTypes';
 export const LIMIT_MAX = 5000;
 
 const QUERY_ENVIRONMENT_SLOWLOGS = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $limit: Int, $after: String ) {
-		app( id: $appId ) {
-			environments( id: $envId ) {
+	query GetAppLogs($appId: Int, $envId: Int, $limit: Int, $after: String) {
+		app(id: $appId) {
+			environments(id: $envId) {
 				id
-				slowlogs( limit: $limit, after: $after ) {
+				slowlogs(limit: $limit, after: $after) {
 					nodes {
 						timestamp
 						rowsSent
@@ -37,15 +37,27 @@ const QUERY_ENVIRONMENT_SLOWLOGS = gql`
 `;
 
 interface GetRecentSlowlogsResponse {
-	nodes: { timestamp: string, rowsSent: string, rowsExamined: string, queryTime: string, requestUri: string, query: string }[],
-	nextCursor: string,
-	pollingDelaySeconds: number,
+	nodes: {
+		timestamp: string;
+		rowsSent: string;
+		rowsExamined: string;
+		queryTime: string;
+		requestUri: string;
+		query: string;
+	}[];
+	nextCursor: string;
+	pollingDelaySeconds: number;
 }
 
-export async function getRecentSlowlogs( appId: number, envId: number, limit: number, after?: string ): Promise<GetRecentSlowlogsResponse> {
+export async function getRecentSlowlogs(
+	appId: number,
+	envId: number,
+	limit: number,
+	after?: string
+): Promise< GetRecentSlowlogsResponse > {
 	const api = await API( { exitOnError: false } );
 
-	const response = await api.query<Query, GetAppSlowlogsQueryVariables>( {
+	const response = await api.query< Query, GetAppSlowlogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_SLOWLOGS,
 		variables: {
 			appId,

@@ -23,7 +23,7 @@ const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
-export async function getSlowlogs( arg: string[], opt ): Promise<void> {
+export async function getSlowlogs( arg: string[], opt ): Promise< void > {
 	validateInputs( opt.limit, opt.format );
 
 	const trackingParams = getBaseTrackingParams( opt );
@@ -52,7 +52,7 @@ export async function getSlowlogs( arg: string[], opt ): Promise<void> {
 	printSlowlogs( slowlogs.nodes, opt.format );
 }
 
-export async function followLogs( opt ): Promise<void> {
+export async function followLogs( opt ): Promise< void > {
 	let after = null;
 	let isFirstRequest = true;
 	// How many times have we polled?
@@ -84,7 +84,10 @@ export async function followLogs( opt ): Promise<void> {
 			} );
 		} catch ( error ) {
 			// eslint-disable-next-line no-await-in-loop
-			await trackEvent( 'slowlogs_command_follow_error', { ...trackingParams, error: error.message } );
+			await trackEvent( 'slowlogs_command_follow_error', {
+				...trackingParams,
+				error: error.message,
+			} );
 
 			// If the first request fails we don't want to retry (it's probably not recoverable)
 			if ( isFirstRequest ) {
@@ -94,7 +97,9 @@ export async function followLogs( opt ): Promise<void> {
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
 			delay += DEFAULT_POLLING_DELAY_IN_SECONDS;
 			delay = Math.min( delay, MAX_POLLING_DELAY_IN_SECONDS );
-			console.error( `${ chalk.red( 'Error:' ) } Failed to fetch slowlogs. Trying again in ${ delay } seconds.` );
+			console.error(
+				`${ chalk.red( 'Error:' ) } Failed to fetch slowlogs. Trying again in ${ delay } seconds.`
+			);
 		}
 
 		if ( slowlogs ) {
@@ -106,7 +111,10 @@ export async function followLogs( opt ): Promise<void> {
 			isFirstRequest = false;
 
 			// Keep a sane lower limit of MIN_POLLING_DELAY_IN_SECONDS just in case something goes wrong in the server-side
-			delay = Math.max( ( slowlogs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS ), MIN_POLLING_DELAY_IN_SECONDS );
+			delay = Math.max(
+				slowlogs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS,
+				MIN_POLLING_DELAY_IN_SECONDS
+			);
 		}
 
 		// eslint-disable-next-line no-await-in-loop
@@ -129,7 +137,7 @@ function getBaseTrackingParams( opt ) {
 function printSlowlogs( slowlogs, format ) {
 	// Strip out __typename
 	slowlogs = slowlogs.map( log => {
-    const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } = log;
+		const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } = log;
 
 		return { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query };
 	} );
@@ -139,7 +147,9 @@ function printSlowlogs( slowlogs, format ) {
 		const rows = [];
 		for ( const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } of slowlogs ) {
 			rows.push( `${ timestamp } | ${ query }` );
-			rows.push( `Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri }` );
+			rows.push(
+				`Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri }`
+			);
 			output = rows.join( '\n' );
 		}
 	} else {
@@ -151,11 +161,15 @@ function printSlowlogs( slowlogs, format ) {
 
 export function validateInputs( limit: number, format: string ): void {
 	if ( ! ALLOWED_FORMATS.includes( format ) ) {
-		exit.withError( `Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.` );
+		exit.withError(
+			`Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.`
+		);
 	}
 
 	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > slowlogsLib.LIMIT_MAX ) {
-		exit.withError( `Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ slowlogsLib.LIMIT_MAX }.` );
+		exit.withError(
+			`Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ slowlogsLib.LIMIT_MAX }.`
+		);
 	}
 }
 
@@ -184,7 +198,7 @@ command( {
 	.option( 'format', 'Output the log lines in CSV or JSON format', 'text' )
 	.examples( [
 		{
-      description: 'Get the most recent app slowlogs',
+			description: 'Get the most recent app slowlogs',
 			usage: 'vip @mysite.production slowlogs',
 		},
 		{
@@ -193,7 +207,8 @@ command( {
 		},
 		{
 			usage: 'vip @mysite.production slowlogs --limit 100 --format csv',
-			description: 'Get the most recent 100 slowlog entries formatted as comma-separated values (CSV)',
+			description:
+				'Get the most recent 100 slowlog entries formatted as comma-separated values (CSV)',
 		},
 		{
 			usage: 'vip @mysite.production slowlogs --limit 100 --format json',
