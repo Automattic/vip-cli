@@ -22,6 +22,7 @@ import {
 	setIsTTY,
 	processVersionOption,
 	resolvePhpVersion,
+	promptForWordPress,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
@@ -353,6 +354,12 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 			expect( result ).toStrictEqual( input.expected );
 		} );
+	} );
+
+	describe( 'promptForWordPress', () => {
+		beforeEach( () => {
+			selectRunMock.mockReset();
+		} );
 
 		it.each( [
 			{
@@ -362,14 +369,15 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					tag: testReleaseWP,
 				},
 			},
-		] )( 'should return correct component for wordpress %p', async input => {
+		] )( 'should return correct component for wordpress %p', input => {
 			selectRunMock.mockResolvedValueOnce( input.tag );
 
-			const result = await promptForComponent( 'wordpress', false );
+			const result = promptForWordPress();
 
-			expect( result ).toStrictEqual( input.expected );
+			return expect( result ).resolves.toStrictEqual( input.expected );
 		} );
 	} );
+
 	describe( 'promptForArguments', () => {
 		it.each( [
 			{
@@ -520,6 +528,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					multisite: true,
 					wordpress: testReleaseWP,
 					mariadb: 'maria_a',
 				},
@@ -528,6 +537,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			{
 				preselected: {
 					title: 'a',
+					multisite: false,
 					wordpress: testReleaseWP,
 				},
 				default: {

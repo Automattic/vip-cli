@@ -609,10 +609,11 @@ export async function promptForMultisite(
 		input: string;
 	}
 
-	let result: Answer | StringAnswer = { input: initial };
+	// `undefined` is used here only because our tests need overhauling
+	let result: Answer | StringAnswer | undefined = { input: initial };
 
 	if ( isStdinTTY ) {
-		result = await prompt< StringAnswer >( {
+		result = await prompt< StringAnswer | undefined >( {
 			type: 'input',
 			name: 'input',
 			message,
@@ -620,7 +621,7 @@ export async function promptForMultisite(
 		} );
 	}
 
-	let input = ( result.input || initial ).toString().trim();
+	let input = ( result?.input ?? initial ).toString().trim();
 	const allowedOptions = [
 		...FALSE_OPTIONS,
 		...TRUE_OPTIONS,
@@ -657,7 +658,7 @@ function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirector
 	const isMultisiteOption = (
 		val: unknown
 	): val is ( typeof multisiteOptions )[ number ] | boolean =>
-		( typeof val === 'string' && ! ( multisiteOptions as readonly string[] ).includes( val ) ) ||
+		( typeof val === 'string' && ( multisiteOptions as readonly string[] ).includes( val ) ) ||
 		typeof val === 'boolean';
 
 	return isMultisiteOption( value ) ? value : DEV_ENVIRONMENT_DEFAULTS.multisite;
