@@ -159,7 +159,7 @@ export class BackupDBCommand {
 
 		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
 		noticeMessage +=
-			'A new database backup will be generated for this environment, only if a recent backup does not already exist. ';
+			'If a recent database backup does not exist, a new one will be generated for this environment. ';
 		noticeMessage +=
 			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations \n';
 		this.log( noticeMessage );
