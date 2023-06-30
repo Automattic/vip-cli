@@ -663,7 +663,7 @@ async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
 export function validateDockerInstalled( lando: Lando ): void {
 	lando.log.verbose( 'docker-engine exists: %s', lando.engine.dockerInstalled );
 	if ( ! lando.engine.dockerInstalled ) {
-		throw Error(
+		throw new UserError(
 			'docker could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
 		);
 	}
@@ -681,7 +681,7 @@ export async function validateDockerAccess( lando: Lando ): Promise< void > {
 	try {
 		await docker.info();
 	} catch ( error ) {
-		throw Error(
+		throw new UserError(
 			'Failed to connect to Docker. Please verify that Docker engine (service) is running and follow the troubleshooting instructions for your platform.'
 		);
 	}

@@ -13,7 +13,7 @@ import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
-interface Step extends Record< string, string > {
+export interface Step extends Record< string, string > {
 	id: string;
 	name: string;
 }

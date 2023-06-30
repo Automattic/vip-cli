@@ -98,5 +98,5 @@ command()
 			process.exitCode = 1;
 		}
 
-		await postStart( slug, { openVSCode: !! opt.vscode } );
+		postStart( slug, { openVSCode: !! opt.vscode } );
 	} );

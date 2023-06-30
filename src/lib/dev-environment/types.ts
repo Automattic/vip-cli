@@ -1,6 +1,8 @@
+export type MultisiteKind = 'subdomain' | 'subdirectory';
+
 export interface InstanceOptions {
 	title?: string;
-	multisite?: boolean | 'subdomain' | 'subdirectory';
+	multisite?: boolean | MultisiteKind;
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;

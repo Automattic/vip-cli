@@ -1,26 +1,22 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
+import { existsSync, lstatSync, readdirSync } from 'node:fs';
+import path from 'path';
+import { homedir } from 'node:os';
+import { lookup } from 'node:dns/promises';
 import chalk from 'chalk';
 import formatters from 'lando/lib/formatters';
 import { prompt, Confirm, Select } from 'enquirer';
 import debugLib from 'debug';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import dns from 'dns';
 import { spawn } from 'child_process';
 import { which } from 'shelljs';
+import Lando from 'lando';
 
 /**
  * Internal dependencies
  */
-import { ProgressTracker } from '../../lib/cli/progress';
+import { ProgressTracker, Step } from '../../lib/cli/progress';
 import { trackEvent } from '../tracker';
 
 import {
@@ -30,6 +26,7 @@ import {
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
+	DEV_ENVIRONMENT_COMPONENTS_WITH_WP,
 } from '../constants/dev-environment';
 import {
 	generateVSCodeWorkspace,
@@ -50,11 +47,11 @@ import type {
 } from './types';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
-import typeof Command from '../../lib/cli/command';
 import {
 	CONFIGURATION_FILE_NAME,
 	getConfigurationFileOptions,
 } from './dev-environment-configuration-file';
+import { Args } from '../cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -71,34 +68,24 @@ export function setIsTTY( val: boolean ): void {
 	isStdinTTY = val;
 }
 
-const componentDisplayNames = {
+const componentDisplayNames: Record<
+	( typeof DEV_ENVIRONMENT_COMPONENTS_WITH_WP )[ number ],
+	string
+> = {
 	wordpress: 'WordPress',
 	muPlugins: 'vip-go-mu-plugins',
 	appCode: 'application code',
-};
+} as const;
 
-const componentDemoNames = {
+const componentDemoNames: Record< ( typeof DEV_ENVIRONMENT_COMPONENTS )[ number ], string > = {
 	muPlugins: 'vip-go-mu-plugins',
 	appCode: 'vip-go-skeleton',
-};
-
-// Forward declaration to avoid no-use-before-define
-declare function promptForComponent(
-	component: 'wordpress',
-	allowLocal: false,
-	defaultObject: ComponentConfig | null
-): Promise< WordPressConfig >;
-// eslint-disable-next-line no-redeclare
-declare function promptForComponent(
-	component: string,
-	allowLocal: boolean,
-	defaultObject: WordPressConfig | null
-): Promise< ComponentConfig >;
+} as const;
 
 export async function handleCLIException(
 	exception: Error,
 	trackKey?: string,
-	trackBaseInfo: any = {}
+	trackBaseInfo: Record< string, unknown > = {}
 ) {
 	const errorPrefix = chalk.red( 'Error:' );
 	if ( DEV_ENVIRONMENT_NOT_FOUND === exception.message ) {
@@ -117,16 +104,9 @@ export async function handleCLIException(
 		console.error( errorPrefix, message );
 
 		if ( trackKey ) {
-			try {
-				const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
-				await trackEvent( trackKey, errorTrackingInfo );
-			} catch ( trackException ) {
-				console.warn(
-					errorPrefix,
-					`Failed to record track event ${ trackKey }`,
-					trackException.message
-				);
-			}
+			const errorTrackingInfo = { ...trackBaseInfo, failure: message, stack: exception.stack };
+			// trackEvent does not throw
+			await trackEvent( trackKey, errorTrackingInfo );
 		}
 
 		if ( ! process.env.DEBUG ) {
@@ -153,7 +133,7 @@ const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	debug( `Verifying DNS resolution for ${ testDomain }` );
 	let address;
 	try {
-		address = await dns.promises.lookup( testDomain, 4 );
+		address = await lookup( testDomain, 4 );
 		debug( `Got DNS response ${ address.address }` );
 	} catch ( error ) {
 		throw new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }` );
@@ -166,7 +146,7 @@ const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	}
 };
 
-const VALIDATION_STEPS = [
+const VALIDATION_STEPS: Step[] = [
 	{ id: 'docker', name: 'Check for Docker installation' },
 	{ id: 'compose', name: 'Check for docker-compose installation' },
 	{ id: 'access', name: 'Check Docker connectivity' },
@@ -183,11 +163,7 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 		progressTracker.stepRunning( 'docker' );
 	}
 
-	try {
-		validateDockerInstalled( lando );
-	} catch ( exception ) {
-		throw new UserError( exception.message );
-	}
+	validateDockerInstalled( lando );
 
 	if ( ! quiet ) {
 		progressTracker.stepSuccess( 'docker' );
@@ -195,11 +171,7 @@ export const validateDependencies = async ( lando: Lando, slug: string, quiet?: 
 		progressTracker.print();
 	}
 
-	try {
-		await validateDockerAccess( lando );
-	} catch ( exception ) {
-		throw new UserError( exception.message );
-	}
+	await validateDockerAccess( lando );
 
 	if ( ! quiet ) {
 		progressTracker.stepSuccess( 'access' );
@@ -286,10 +258,28 @@ export function printTable( data: Object ) {
 	console.log( formattedData );
 }
 
+interface LocalComponent {
+	mode: 'local';
+	dir: string;
+}
+
+interface ImageComponent {
+	mode: 'image';
+	tag: string;
+}
+
+export function processComponentOptionInput(
+	passedParam: string,
+	allowLocal: false
+): ImageComponent;
+export function processComponentOptionInput(
+	passedParam: string,
+	allowLocal: true
+): LocalComponent | ImageComponent;
 export function processComponentOptionInput(
 	passedParam: string,
 	allowLocal: boolean
-): ComponentConfig {
+): LocalComponent | ImageComponent {
 	// cast to string
 	const param = passedParam + '';
 	// This is a bit of a naive check
@@ -308,11 +298,12 @@ export function processComponentOptionInput(
 
 export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	return {
-		title: appInfo.environment?.name || appInfo.name || '',
-		multisite: !! appInfo?.environment?.isMultisite,
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
+		multisite: !! appInfo.environment?.isMultisite,
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
-		php: appInfo.environment?.php || '',
-		wordpress: appInfo.environment?.wordpress || '',
+		php: appInfo.environment?.php ?? '',
+		wordpress: appInfo.environment?.wordpress ?? '',
 	};
 }
 
@@ -333,7 +324,7 @@ export async function promptForArguments(
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	if ( suppressPrompts ) {
-		preselectedOptions = { ...(defaultOptions: Object), ...(preselectedOptions: Object) };
+		preselectedOptions = { ...defaultOptions, ...preselectedOptions };
 	} else {
 		console.log( DEV_ENVIRONMENT_PROMPT_INTRO );
 	}
@@ -347,26 +338,26 @@ export async function promptForArguments(
 
 	const instanceData: InstanceData = {
 		wpTitle:
-			preselectedOptions.title ||
+			preselectedOptions.title ??
 			( await promptForText(
 				'WordPress site title',
-				defaultOptions.title || DEV_ENVIRONMENT_DEFAULTS.title
+				defaultOptions.title ?? DEV_ENVIRONMENT_DEFAULTS.title
 			) ),
 		multisite: resolveMultisite(
 			preselectedOptions.multisite ??
 				( await promptForMultisite(
 					multisiteText,
-					defaultOptions.multisite || DEV_ENVIRONMENT_DEFAULTS.multisite
+					defaultOptions.multisite ?? DEV_ENVIRONMENT_DEFAULTS.multisite
 				) )
 		),
 		elasticsearch: false,
 		php: preselectedOptions.php
 			? resolvePhpVersion( preselectedOptions.php )
 			: await promptForPhpVersion(
-					resolvePhpVersion( defaultOptions.php || DEV_ENVIRONMENT_DEFAULTS.phpVersion )
+					resolvePhpVersion( defaultOptions.php ?? DEV_ENVIRONMENT_DEFAULTS.phpVersion )
 			  ),
-		mariadb: preselectedOptions.mariadb || defaultOptions.mariadb,
-		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain || '',
+		mariadb: preselectedOptions.mariadb ?? defaultOptions.mariadb,
+		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain ?? '',
 		wordpress: {
 			mode: 'image',
 			tag: '',
@@ -396,9 +387,14 @@ export async function promptForArguments(
 		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
 		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
 		if ( setMediaRedirectDomain ) {
-			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain ?? '';
+			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain;
 		}
 	}
+
+	instanceData.wordpress = await processWordPress(
+		( preselectedOptions.wordpress ?? '' ).toString(),
+		( defaultOptions.wordpress ?? '' ).toString()
+	);
 
 	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
 		const option = ( preselectedOptions[ component ] ?? '' ).toString();
@@ -406,14 +402,10 @@ export async function promptForArguments(
 
 		// eslint-disable-next-line no-await-in-loop
 		const result = await processComponent( component, option, defaultValue, suppressPrompts );
-		if ( null === result ) {
-			throw new Error( 'processComponent() returned null' );
-		}
-
 		instanceData[ component ] = result;
 	}
 
-	debug( `Processing elasticsearch with preselected "${ preselectedOptions.elasticsearch }"` );
+	debug( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
 	if ( 'elasticsearch' in preselectedOptions ) {
 		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
 	} else {
@@ -423,15 +415,17 @@ export async function promptForArguments(
 		);
 	}
 
-	for ( const service of [ 'phpmyadmin', 'xdebug', 'mailpit', 'photon' ] ) {
+	const services = [ 'phpmyadmin', 'xdebug', 'mailpit', 'photon' ] as const;
+	for ( const service of services ) {
 		if ( service in instanceData ) {
-			if ( service in preselectedOptions ) {
-				instanceData[ service ] = preselectedOptions[ service ];
+			const preselected = preselectedOptions[ service ];
+			if ( preselected !== undefined ) {
+				instanceData[ service ] = preselected;
 			} else {
 				// eslint-disable-next-line no-await-in-loop
 				instanceData[ service ] = await promptForBoolean(
 					`Enable ${ promptLabels[ service ] || service }`,
-					((defaultOptions[ service ]: any): boolean)
+					!! defaultOptions[ service ]
 				);
 			}
 		}
@@ -441,25 +435,48 @@ export async function promptForArguments(
 	return instanceData;
 }
 
+async function processWordPress(
+	preselectedValue: string,
+	defaultValue: string
+): Promise< WordPressConfig > {
+	debug(
+		`processing 'WordPress', with preselected/default - ${ preselectedValue }/${ defaultValue }`
+	);
+
+	let result: WordPressConfig;
+	const allowLocal = false;
+	const defaultObject = defaultValue
+		? processComponentOptionInput( defaultValue, allowLocal )
+		: null;
+	if ( preselectedValue ) {
+		result = processComponentOptionInput( preselectedValue, allowLocal );
+	} else {
+		result = await promptForWordPress( defaultObject );
+	}
+
+	debug( result );
+	return result;
+}
+
 async function processComponent(
-	component: string,
+	component: keyof typeof componentDemoNames,
 	preselectedValue: string,
 	defaultValue: string,
 	suppressPrompts: boolean = false
-) {
+): Promise< ComponentConfig > {
 	debug(
 		`processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }`
 	);
-	let result = null;
+	let result: ComponentConfig;
 
-	const allowLocal = component !== 'wordpress';
+	const allowLocal = true;
 	const defaultObject = defaultValue
 		? processComponentOptionInput( defaultValue, allowLocal )
 		: null;
 	if ( preselectedValue ) {
 		result = processComponentOptionInput( preselectedValue, allowLocal );
 
-		if ( allowLocal && suppressPrompts === false ) {
+		if ( ! suppressPrompts ) {
 			console.log(
 				`${ chalk.green( '✓' ) } Path to your local ${
 					componentDisplayNames[ component ]
@@ -472,8 +489,8 @@ async function processComponent(
 
 	debug( result );
 
-	while ( 'local' === result?.mode ) {
-		const resolvedPath = resolvePath( result.dir || '' );
+	while ( 'local' === result.mode ) {
+		const resolvedPath = resolvePath( result.dir ?? '' );
 		result.dir = resolvedPath;
 
 		const { result: isPathValid, message } = validateLocalPath( component, resolvedPath );
@@ -515,7 +532,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 		const missingFiles = [];
 		for ( const file of files ) {
 			const filePath = path.resolve( providedPath, file );
-			if ( ! fs.existsSync( filePath ) ) {
+			if ( ! existsSync( filePath ) ) {
 				missingFiles.push( file );
 			}
 		}
@@ -539,30 +556,34 @@ function validateLocalPath( component: string, providedPath: string ) {
 
 function isNonEmptyDirectory( directoryPath: string ) {
 	const isDirectory =
-		directoryPath && fs.existsSync( directoryPath ) && fs.lstatSync( directoryPath ).isDirectory();
-	const isEmpty = isDirectory ? fs.readdirSync( directoryPath ).length === 0 : true;
+		directoryPath && existsSync( directoryPath ) && lstatSync( directoryPath ).isDirectory();
+	const isEmpty = isDirectory ? readdirSync( directoryPath ).length === 0 : true;
 
 	return ! isEmpty && isDirectory;
 }
 
 export function resolvePath( input: string ): string {
 	// Resolve does not do ~ reliably
-	const resolvedPath = input.replace( /^~/, os.homedir() );
+	const resolvedPath = input.replace( /^~/, homedir() );
 	// And resolve to handle relative paths
 	return path.resolve( resolvedPath );
 }
 
 export async function promptForText( message: string, initial: string ): Promise< string > {
-	let result = { input: initial };
+	interface PromptResult {
+		input: string;
+	}
+
+	let result: PromptResult = { input: initial };
 	if ( isStdinTTY ) {
-		const nonEmptyValidator = ( value: ?string ) => {
+		const nonEmptyValidator = ( value: string ) => {
 			if ( ( value || '' ).trim() ) {
 				return true;
 			}
 			return 'value needs to be provided';
 		};
 
-		result = await prompt( {
+		result = await prompt< PromptResult >( {
 			type: 'input',
 			name: 'input',
 			message,
@@ -571,17 +592,27 @@ export async function promptForText( message: string, initial: string ): Promise
 		} );
 	}
 
-	return ( result?.input || '' ).trim();
+	return ( result.input || '' ).trim();
 }
+
+const multisiteOptions = [ 'subdomain', 'subdirectory' ] as const;
 
 export async function promptForMultisite(
 	message: string,
 	initial: string | boolean
 ): Promise< string | boolean > {
-	let result = { input: initial };
+	interface Answer {
+		input: string | boolean;
+	}
+
+	interface StringAnswer {
+		input: string;
+	}
+
+	let result: Answer | StringAnswer = { input: initial };
 
 	if ( isStdinTTY ) {
-		result = await prompt( {
+		result = await prompt< StringAnswer >( {
 			type: 'input',
 			name: 'input',
 			message,
@@ -589,11 +620,15 @@ export async function promptForMultisite(
 		} );
 	}
 
-	let input = ( result?.input || initial.toString() ).trim();
-	const multisiteOptions = [ 'subdomain', 'subdirectory' ];
-	const allowedOptions = [ ...FALSE_OPTIONS, ...TRUE_OPTIONS, ...multisiteOptions, 'none' ];
+	let input = ( result.input || initial ).toString().trim();
+	const allowedOptions = [
+		...FALSE_OPTIONS,
+		...TRUE_OPTIONS,
+		...multisiteOptions,
+		'none',
+	] as const;
 
-	if ( ! allowedOptions.includes( input ) && isStdinTTY ) {
+	if ( ! ( allowedOptions as readonly string[] ).includes( input ) && isStdinTTY ) {
 		const select = new Select( {
 			message: `Please choose a valid option for multisite:`,
 			choices: [ ...multisiteOptions, 'false' ],
@@ -609,7 +644,7 @@ export function promptForBoolean( message: string, initial: boolean ): Promise< 
 	if ( isStdinTTY ) {
 		const confirm = new Confirm( {
 			message,
-			initial,
+			initial: initial.toString(),
 		} );
 
 		return confirm.run();
@@ -618,13 +653,14 @@ export function promptForBoolean( message: string, initial: boolean ): Promise< 
 	return Promise.resolve( initial );
 }
 
-function resolveMultisite( value: string | boolean ): string | boolean {
-	const allowedValues = [ 'subdomain', 'subdirectory' ];
-	if ( typeof value === 'string' && ! allowedValues.includes( value ) ) {
-		return DEV_ENVIRONMENT_DEFAULTS.multisite;
-	}
+function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirectory' | boolean {
+	const isMultisiteOption = (
+		val: unknown
+	): val is ( typeof multisiteOptions )[ number ] | boolean =>
+		( typeof val === 'string' && ! ( multisiteOptions as readonly string[] ).includes( val ) ) ||
+		typeof val === 'boolean';
 
-	return value;
+	return isMultisiteOption( value ) ? value : DEV_ENVIRONMENT_DEFAULTS.multisite;
 }
 
 export function resolvePhpVersion( version: string ): string {
@@ -636,11 +672,11 @@ export function resolvePhpVersion( version: string ): string {
 
 	let result: string;
 	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
-		const images: string[] = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ) as string[];
 		const image = images.find( value => value === version );
 		if ( image ) {
 			result = image;
-		} else if ( version.indexOf( '/' ) !== -1 ) {
+		} else if ( version.includes( '/' ) ) {
 			// Assuming this is a Docker image
 			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
 			// and then called `vip dev-env update` again. The custom image won't match our images
@@ -650,7 +686,7 @@ export function resolvePhpVersion( version: string ): string {
 			result = images[ 0 ];
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ]!;
 	}
 
 	debug( 'Resolved PHP image: %j', result );
@@ -682,15 +718,42 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 	return resolvePhpVersion( answer );
 }
 
-// eslint-disable-next-line no-redeclare
+export async function promptForWordPress(
+	defaultObject: WordPressConfig | null
+): Promise< WordPressConfig > {
+	debug( `Prompting for wordpress with default:`, defaultObject );
+	const componentDisplayName = componentDisplayNames.wordpress;
+
+	const messagePrefix = `${ componentDisplayName } - `;
+
+	// image with selection
+	const tagChoices = await getTagChoices();
+	let option = defaultObject?.tag ?? tagChoices[ 0 ].value;
+	if ( isStdinTTY ) {
+		const message = `${ messagePrefix }Which version would you like`;
+		const selectTag = new Select( {
+			message,
+			choices: tagChoices,
+			initial: option,
+		} );
+
+		option = await selectTag.run();
+	}
+
+	return {
+		mode: 'image',
+		tag: option,
+	};
+}
+
 export async function promptForComponent(
-	component: string,
+	component: ( typeof DEV_ENVIRONMENT_COMPONENTS )[ number ],
 	allowLocal: boolean,
 	defaultObject: ComponentConfig | null
-): Promise< ComponentConfig | WordPressConfig > {
+): Promise< ComponentConfig > {
 	debug( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
-	const componentDemoName = componentDemoNames[ component ] || component;
+	const componentDemoName = componentDemoNames[ component ];
 	const modChoices = [];
 
 	if ( allowLocal ) {
@@ -704,7 +767,7 @@ export async function promptForComponent(
 		value: 'image',
 	} );
 
-	let initialMode = 'image';
+	let initialMode: 'image' | 'local' = 'image';
 	if ( 'appCode' === component && isStdinTTY ) {
 		initialMode = 'local';
 	}
@@ -723,7 +786,7 @@ export async function promptForComponent(
 			initial: initialModeIndex,
 		} );
 
-		modeResult = await select.run();
+		modeResult = ( await select.run() ) as typeof modeResult;
 	}
 
 	debug( modeResult );
@@ -732,33 +795,12 @@ export async function promptForComponent(
 	if ( 'local' === modeResult ) {
 		const directoryPath = await promptForText(
 			`${ messagePrefix }What is a path to your local ${ componentDisplayName }`,
-			defaultObject?.dir || ''
+			defaultObject?.dir ?? ''
 		);
 		return {
 			mode: modeResult,
 			dir: directoryPath,
 		};
-	}
-
-	// image with selection
-	if ( component === 'wordpress' ) {
-		const tagChoices = await getTagChoices();
-		let option = defaultObject?.tag || tagChoices[ 0 ].value;
-		if ( isStdinTTY ) {
-			const message = `${ messagePrefix }Which version would you like`;
-			const selectTag = new Select( {
-				message,
-				choices: tagChoices,
-				initial: option,
-			} );
-
-			option = await selectTag.run();
-		}
-
-		return ({
-			mode: 'image',
-			tag: option,
-		}: WordPressConfig);
 	}
 
 	// image
@@ -767,38 +809,48 @@ export async function promptForComponent(
 	};
 }
 
-const FALSE_OPTIONS = [ 'false', 'no', 'n', '0' ];
-export function processBooleanOption( value: string ): boolean {
+const FALSE_OPTIONS = [ 'false', 'no', 'n', '0' ] as const;
+const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ] as const;
+
+export function processBooleanOption( value: unknown ): boolean {
 	if ( ! value ) {
 		return false;
 	}
 
-	return ! FALSE_OPTIONS.includes( value.toLowerCase?.() );
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	return ! ( FALSE_OPTIONS as readonly string[] ).includes( value.toString().toLowerCase() ); // NOSONAR
 }
 
-const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ];
 export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
-	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+	if ( typeof value === 'boolean' ) {
+		return value;
+	}
+
+	if ( ! value || ( FALSE_OPTIONS as readonly string[] ).includes( value.toLowerCase() ) ) {
 		return false;
 	}
 
-	if ( TRUE_OPTIONS.includes( value.toLowerCase?.() ) ) {
+	if ( ( TRUE_OPTIONS as readonly string[] ).includes( value.toLowerCase() ) ) {
 		return true;
 	}
 
 	return value;
 }
 
-export function processVersionOption( value: string ): string {
-	if ( ! isNaN( value ) && value % 1 === 0 ) {
-		// If it's an Integer passed in, let's ensure that it has a decimal in it to match the version tags e.g. 6 => 6.0
-		return parseFloat( value ).toFixed( 1 );
+declare function isNaN( value: unknown ): boolean;
+declare function parseFloat( value: unknown ): number;
+
+export function processVersionOption( value: unknown ): string {
+	if ( typeof value === 'string' || typeof value === 'number' ) {
+		if ( ! isNaN( value ) && +value % 1 === 0 ) {
+			return parseFloat( value ).toFixed( 1 );
+		}
 	}
 
-	return value + '';
+	return value?.toString() ?? '';
 }
 
-export function addDevEnvConfigurationOptions( command: Command ): any {
+export function addDevEnvConfigurationOptions( command: Args ): Args {
 	// We leave the third parameter to undefined on some because the defaults are handled in preProcessInstanceData()
 	return command
 		.option( 'wordpress', 'Use a specific WordPress version', undefined, processVersionOption )
@@ -853,7 +905,7 @@ export function addDevEnvConfigurationOptions( command: Command ): any {
  * Provides the list of tag choices for selection
  */
 export async function getTagChoices(): Promise<
-	{ name: string, message: string, value: string }[]
+	{ name: string; message: string; value: string }[]
 > {
 	let versions = await getVersionList();
 	if ( versions.length < 1 ) {
@@ -901,21 +953,21 @@ export async function getTagChoices(): Promise<
 	} );
 }
 
-export function getEnvTrackingInfo( slug: string ): any {
+export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	try {
 		const envData = readEnvironmentData( slug );
-		const result: { [string]: string } = { slug };
+		const result: Record< string, unknown > = { slug };
 		for ( const key of Object.keys( envData ) ) {
-			// track doesnt like camelCase
+			// track doesn't like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
-			const value = ((( DEV_ENVIRONMENT_COMPONENTS.includes( key )
+			const value = ( DEV_ENVIRONMENT_COMPONENTS_WITH_WP as readonly string[] ).includes( key )
 				? JSON.stringify( envData[ key ] )
-				: envData[ key ] ): any): string);
+				: envData[ key ];
 
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = result.php?.replace( /.*:/, '' );
+		result.php = ( result.php as string ).replace( /.*:/, '' );
 
 		return result;
 	} catch ( err ) {
@@ -929,7 +981,7 @@ export interface PostStartOptions {
 	openVSCode: boolean;
 }
 
-export async function postStart( slug: string, options: PostStartOptions ) {
+export function postStart( slug: string, options: PostStartOptions ): void {
 	if ( options.openVSCode ) {
 		launchVSCode( slug );
 	}
@@ -938,7 +990,7 @@ export async function postStart( slug: string, options: PostStartOptions ) {
 const launchVSCode = ( slug: string ) => {
 	const workspacePath = getVSCodeWorkspacePath( slug );
 
-	if ( fs.existsSync( workspacePath ) ) {
+	if ( existsSync( workspacePath ) ) {
 		console.log( 'VS Code workspace already exists, skipping creation.' );
 	} else {
 		generateVSCodeWorkspace( slug );
@@ -968,7 +1020,7 @@ const getVSCodeExecutable = () => {
 	return null;
 };
 
-export function handleDeprecatedOptions( opts: any ): void {
+export function handleDeprecatedOptions( opts: Record< string, unknown > ): void {
 	if ( opts.mailhog ) {
 		console.warn(
 			chalk.yellow(
