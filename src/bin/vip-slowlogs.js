@@ -142,21 +142,21 @@ function printSlowlogs( slowlogs, format ) {
 		return { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query };
 	} );
 
-	let output = '';
-	if ( format && 'text' === format ) {
-		const rows = [];
-		for ( const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } of slowlogs ) {
-			rows.push( `${ timestamp } | ${ query }` );
-			rows.push(
-				`Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri }`
-			);
-			output = rows.join( '\n' );
-		}
-	} else {
-		output = formatData( slowlogs, format );
-	}
+	// let output = '';
+	// if ( format && 'text' === format ) {
+	// 	const rows = [];
+	// 	for ( const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } of slowlogs ) {
+	// 		rows.push( `${ timestamp } | ${ query }` );
+	// 		rows.push(
+	// 			`Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri }`
+	// 		);
+	// 		output = rows.join( '\n' );
+	// 	}
+	// } else {
+	// 	output = formatData( slowlogs, format );
+	// }
 
-	console.log( output );
+	console.log( formatData( slowlogs, format ) );
 }
 
 export function validateInputs( limit: number, format: string ): void {
@@ -192,6 +192,7 @@ command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
+	format: true,
 	module: 'slowlogs',
 } )
 	.option( 'limit', 'The maximum number of log lines', 500 )

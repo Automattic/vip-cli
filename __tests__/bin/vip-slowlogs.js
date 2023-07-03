@@ -85,7 +85,13 @@ describe( 'getSlowlogs', () => {
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			'2021-11-05T20:18:36.234041811Z | SELECT * FROM wp_posts\nRows Sent: 1 | Rows Examined: 1 | Query Time: 0.1 | Request URI: dashboard.wpvip.com\n2021-11-09T20:47:07.301221112Z | SELECT * FROM wp_posts\nRows Sent: 1 | Rows Examined: 1 | Query Time: 0.1 | Request URI: dashboard.wpvip.com'
+			'┌────────────────────────────────┬───────────┬───────────────┬────────────┬─────────────────────┬────────────────────────┐\n' +
+				'│ timestamp                      │ rows sent │ rows examined │ query time │ request uri         │ query                  │\n' +
+				'├────────────────────────────────┼───────────┼───────────────┼────────────┼─────────────────────┼────────────────────────┤\n' +
+				'│ 2021-11-05T20:18:36.234041811Z │ 1         │ 1             │ 0.1        │ dashboard.wpvip.com │ SELECT * FROM wp_posts │\n' +
+				'├────────────────────────────────┼───────────┼───────────────┼────────────┼─────────────────────┼────────────────────────┤\n' +
+				'│ 2021-11-09T20:47:07.301221112Z │ 1         │ 1             │ 0.1        │ dashboard.wpvip.com │ SELECT * FROM wp_posts │\n' +
+				'└────────────────────────────────┴───────────┴───────────────┴────────────┴─────────────────────┴────────────────────────┘'
 		);
 
 		const trackingParams = {
