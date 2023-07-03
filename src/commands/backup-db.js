@@ -170,7 +170,7 @@ export class BackupDBCommand {
 			this.log( 'Database backup already in progress...' );
 		} else {
 			try {
-				this.log( 'Creating a new database backup...' );
+				this.log( 'Generating a new database backup...' );
 				this.progressTracker.stepRunning( this.steps.PREPARE );
 				this.progressTracker.startPrinting();
 				await createBackupJob( this.app.id, this.env.id );
@@ -236,7 +236,7 @@ export class BackupDBCommand {
 		if ( this.jobStatus !== 'success' ) {
 			exit.withError( 'Failed to create a new database backup' );
 		} else {
-			this.log( `New database backup created at ${ this.backupName }` );
+			this.log( 'New database backup created' );
 		}
 	}
 }
