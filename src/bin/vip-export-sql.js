@@ -57,7 +57,11 @@ command( {
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env, output, generateBackup } ) => {
-		const trackerFn = makeCommandTracker( 'export_sql', { app: app.id, env: env.uniqueLabel } );
+		const trackerFn = makeCommandTracker( 'export_sql', {
+			app: app.id,
+			env: env.uniqueLabel,
+			generate_backup: generateBackup,
+		} );
 		await trackerFn( 'execute' );
 
 		const exportCommand = new ExportSQLCommand(
