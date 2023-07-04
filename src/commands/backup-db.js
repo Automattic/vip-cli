@@ -161,7 +161,7 @@ export class BackupDBCommand {
 		noticeMessage +=
 			'If a recent database backup does not exist, a new one will be generated for this environment. ';
 		noticeMessage +=
-			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations \n';
+			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#2-download-a-full-database-backup \n';
 		this.log( noticeMessage );
 
 		await this.loadBackupJob();
