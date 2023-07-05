@@ -162,6 +162,21 @@ Then, repeat for any additional versions that we need to patch.
 
 ### go-search-replace binaries
 
-Some unit tests require some go-search-replace executable binary files to run. Binaries files for several OS architectures can be downloaded from https://github.com/Automattic/go-search-replace/releases/
+Some unit tests require some go-search-replace executable binary files to run. Binaries files for
+several OS architectures can be downloaded
+from https://github.com/Automattic/go-search-replace/releases/
 
-If, for some reason, you need to compile these binaries yourself, please follow instructions at https://github.com/Automattic/go-search-replace
+If, for some reason, you need to compile these binaries yourself, please follow instructions
+at https://github.com/Automattic/go-search-replace
+
+### Generating the types
+
+If you're an employee of Automattic, you can follow these steps to regenerate the GraphQL types
+used.
+
+1. Ensure that you're using `nvm` or an equivalent node package manager
+2. Get a hold of `schema.gql` and paste it in project root - this is the schema of the endpoint that
+   we communicate with.
+3. Run `npm run typescript:codegen:install-dependencies` - this will install the codegen
+   dependencies without updating `package.json`
+4. Run `npm run typescript:codegen:generate` - this will regenerate the types
