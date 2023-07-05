@@ -1,11 +1,11 @@
 ---
-name: prepare npm release
+name: prepare npm release (v2)
 on:
   workflow_dispatch:
     inputs:
       # This is copied from npm-publish/action.yml
       npm-version-type:
-        description: 'The npm version type we are publishing.'
+        description: 'The npm version type we want to publish.'
         required: true
         type: choice
         default: 'patch'
