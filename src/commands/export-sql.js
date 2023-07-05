@@ -182,7 +182,6 @@ export class ExportSQLCommand {
 	outputFile;
 	generateBackup;
 	steps = {
-		GENERATE: 'generate',
 		PREPARE: 'prepare',
 		CREATE: 'create',
 		DOWNLOAD_LINK: 'downloadLink',
