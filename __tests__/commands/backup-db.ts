@@ -55,7 +55,7 @@ const mutationMock = jest.fn( async () => {
 	} );
 } );
 
-jest.mock( '../../src/lib/api', () => jest.fn() );
+jest.mock( '../../src/lib/api' );
 jest.mocked( API ).mockImplementation( () => {
 	return Promise.resolve( {
 		query: queryMock,
