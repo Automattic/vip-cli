@@ -13,7 +13,7 @@ import * as exit from '../../lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
 export interface PerLineValidationObject {
-	execute: Function;
+	execute: ( line: string ) => unknown;
 	postLineExecutionProcessing?: ( params: PostLineExecutionProcessingParams ) => Promise< unknown >;
 }
 
