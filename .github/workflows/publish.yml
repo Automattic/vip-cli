@@ -19,7 +19,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     steps:
-      - uses: Automattic/vip-actions/npm-prepare-release@branch-test2
+      - uses: Automattic/vip-actions/npm-prepare-release@update/branch-protection-compatibility
         with:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
