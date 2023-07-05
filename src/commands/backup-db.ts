@@ -34,7 +34,7 @@ export const CREATE_DB_BACKUP_JOB_MUTATION = gql`
 
 // TODO: Replace this with the codegen
 interface Job {
-	inProgressLock: string;
+	inProgressLock: boolean;
 	metadata: { name: string; value: string }[];
 	progress?: { status: string };
 	completedAt: string;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
 /**
  * External dependencies
  */
@@ -7,6 +8,7 @@
  */
 import { BackupDBCommand } from '../../src/commands/backup-db';
 import API from '../../src/lib/api';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const mockApp = {
 	id: 123,
@@ -35,36 +37,38 @@ const mockApp = {
 	],
 };
 
-const queryMock = jest.fn();
-queryMock.mockResolvedValue( {
-	data: {
-		app: mockApp,
-	},
+const queryMock = jest.fn( () => {
+	return Promise.resolve( {
+		data: {
+			app: mockApp,
+		},
+	} );
 } );
 
-const mutationMock = jest.fn();
-mutationMock.mockResolvedValue( {
-	data: {
-		triggerDatabaseBackup: {
-			success: true,
+const mutationMock = jest.fn( async () => {
+	return Promise.resolve( {
+		data: {
+			triggerDatabaseBackup: {
+				success: true,
+			},
 		},
-	},
+	} );
 } );
 
 jest.mock( '../../src/lib/api', () => jest.fn() );
-API.mockImplementation( () => {
-	return {
+jest.mocked( API ).mockImplementation( () => {
+	return Promise.resolve( {
 		query: queryMock,
 		mutate: mutationMock,
-	};
+	} as any );
 } );
 
 describe( 'commands/BackupDBCommand', () => {
 	beforeEach( () => {} );
 
 	describe( '.loadBackupJob', () => {
-		const app = { id: 123, name: 'test-app' };
-		const env = { id: 456, name: 'test-env' };
+		const app = { id: 123 };
+		const env = { id: 456, jobs: [] };
 		const cmd = new BackupDBCommand( app, env );
 		const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
 
@@ -77,17 +81,17 @@ describe( 'commands/BackupDBCommand', () => {
 	} );
 
 	describe( '.run', () => {
-		const app = { id: 123, name: 'test-app' };
-		const env = { id: 456, name: 'test-env' };
+		const app = { id: 123 };
+		const env = { id: 456, jobs: [] };
 		const cmd = new BackupDBCommand( app, env );
 		const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
 		const logSpy = jest.spyOn( cmd, 'log' );
 
 		it( 'should check if a backup is already running', async () => {
 			loadBackupJobSpy.mockImplementationOnce( () => {
-				cmd.job = { inProgressLock: true };
+				cmd.job = { inProgressLock: true } as any;
 				cmd.backupName = 'test-backup';
-				return cmd.job;
+				return Promise.resolve( cmd.job as any );
 			} );
 
 			await cmd.run();
