@@ -1,5 +1,5 @@
 ---
-name: prepare npm release (v2)
+name: npm publish
 on:
   workflow_dispatch:
     inputs:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   publish:
-    name: Prepare npm release (v2)
+    name: Publish to npm
     runs-on: ubuntu-latest
     steps:
       - uses: Automattic/vip-actions/npm-prepare-release@update/branch-protection-compatibility
