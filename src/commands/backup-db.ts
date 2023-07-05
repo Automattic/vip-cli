@@ -167,10 +167,10 @@ export class BackupDBCommand {
 	async loadBackupJob() {
 		this.job = await getBackupJob( this.app.id, this.env.id );
 		this.backupName =
-			this.job.metadata.find( meta => meta.name === 'backupName' )?.value ?? 'Unknown';
-		this.jobStatus = this.job.progress?.status;
+			this.job?.metadata.find( meta => meta.name === 'backupName' )?.value || 'Unknown';
+		this.jobStatus = this.job?.progress?.status;
 
-		if ( this.job.completedAt ) {
+		if ( this.job?.completedAt ) {
 			this.jobAge =
 				( new Date().getTime() - new Date( this.job.completedAt ).getTime() ) / 1000 / 60;
 		} else {
@@ -200,15 +200,15 @@ export class BackupDBCommand {
 				this.progressTracker.stepRunning( this.steps.PREPARE );
 				this.progressTracker.startPrinting();
 				await createBackupJob( this.app.id, this.env.id );
-			} catch ( stepErr ) {
-				const err = stepErr as Error;
+			} catch ( e ) {
+				const err = e as Error;
 				this.progressTracker.stepFailed( this.steps.PREPARE );
 				this.stopProgressTracker();
-				if ( err.message.includes( 'Database backups limit reached' ) ) {
+				if ( err.message?.includes( 'Database backups limit reached' ) ) {
 					await this.track( 'error', {
 						error_type: 'rate_limit_exceeded',
 						error_message: `Couldn't create a new database backup job: ${ err?.message }`,
-						stack: err.stack,
+						stack: err?.stack,
 					} );
 					let errMessage = err.message.replace(
 						'Database backups limit reached',
@@ -228,7 +228,7 @@ export class BackupDBCommand {
 				await this.track( 'error', {
 					error_type: 'db_backup_job_creation_failed',
 					error_message: `Database Backup job creation failed: ${ err?.message }`,
-					stack: err.stack,
+					stack: err?.stack,
 				} );
 				exit.withError( `Couldn't create a new database backup job: ${ err?.message }` );
 			}
