@@ -16,7 +16,8 @@ import { expect, jest } from '@jest/globals';
  * Internal dependencies
  */
 import app from '../../../src/lib/api/app';
-import { getEnvironmentPath,
+import {
+	getEnvironmentPath,
 	createEnvironment,
 	startEnvironment,
 	destroyEnvironment,
@@ -35,7 +36,8 @@ jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
-	const cleanup = () => fs.rmSync( path.join( os.tmpdir(), 'lando' ), { recursive: true, force: true } );
+	const cleanup = () =>
+		fs.rmSync( path.join( os.tmpdir(), 'lando' ), { recursive: true, force: true } );
 
 	beforeAll( cleanup );
 	afterAll( cleanup );
@@ -68,9 +70,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 
 			const promise = createEnvironment( { siteSlug: slug } );
 
-			return expect( promise ).rejects.toEqual(
-				new Error( 'Environment already exists.' )
-			);
+			return expect( promise ).rejects.toEqual( new Error( 'Environment already exists.' ) );
 		} );
 	} );
 	describe( 'startEnvironment', () => {
@@ -91,9 +91,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const lando = await bootstrapLando();
 			const promise = startEnvironment( lando, slug );
 
-			return expect( promise ).rejects.toEqual(
-				new Error( DEV_ENVIRONMENT_NOT_FOUND )
-			);
+			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
 		} );
 	} );
 	describe( 'destroyEnvironment', () => {
@@ -115,17 +113,13 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			const lando = await bootstrapLando();
 			const promise = destroyEnvironment( lando, slug );
 
-			return expect( promise ).rejects.toEqual(
-				new Error( DEV_ENVIRONMENT_NOT_FOUND )
-			);
+			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
 		} );
 	} );
 
 	describe( 'getEnvironmentPath', () => {
 		it( 'should throw for empty name', () => {
-			expect(
-				() => getEnvironmentPath( '' )
-			).toThrow( new Error( 'Name was not provided' ) );
+			expect( () => getEnvironmentPath( '' ) ).toThrow( new Error( 'Name was not provided' ) );
 		} );
 
 		it( 'should return correct location from xdg', () => {
@@ -150,7 +144,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 	} );
 	describe( 'getApplicationInformation', () => {
 		it.each( [
-			{ // base app info
+			{
+				// base app info
 				appId: 123,
 				envType: null,
 				response: {
@@ -166,7 +161,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					repository: 'www.nice.repo',
 				},
 			},
-			{ // takes the env if there is just one
+			{
+				// takes the env if there is just one
 				appId: 123,
 				envType: null,
 				response: {
@@ -199,7 +195,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					},
 				},
 			},
-			{ // Does NOT take an env if there is more than one
+			{
+				// Does NOT take an env if there is more than one
 				appId: 123,
 				envType: null,
 				response: {
@@ -223,7 +220,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					repository: 'www.nice.repo',
 				},
 			},
-			{ // picks env with correct type if type provided
+			{
+				// picks env with correct type if type provided
 				appId: 123,
 				envType: 'develop',
 				response: {
@@ -277,7 +275,8 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 					},
 				},
 			},
-			{ // Does not pick env with incorrect type if type provided (even if there is just one)
+			{
+				// Does not pick env with incorrect type if type provided (even if there is just one)
 				appId: 123,
 				envType: 'develop',
 				response: {
@@ -320,7 +319,9 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			expect( searchAndReplace ).not.toHaveBeenCalled();
 
 			await expect( promise ).rejects.toEqual(
-				new Error( 'The provided file undefined does not exist or it is not valid (see "--help" for examples)' )
+				new Error(
+					'The provided file undefined does not exist or it is not valid (see "--help" for examples)'
+				)
 			);
 		} );
 
@@ -389,19 +390,23 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		it( 'should throw an error when the file is not readable', () => {
 			jest.spyOn( fs, 'readFileSync' ).mockImplementation( () => {
 				throw new Error( 'EACCESS' );
-			});
+			} );
 
-			expect( () => readEnvironmentData( 'foo' ) ).toThrow( expect.objectContaining( {
-				message: expect.stringContaining( 'There was an error reading file' ),
-			} ) );
+			expect( () => readEnvironmentData( 'foo' ) ).toThrow(
+				expect.objectContaining( {
+					message: expect.stringContaining( 'There was an error reading file' ),
+				} )
+			);
 		} );
 
 		it( 'should throw when the file cannot be parsed', () => {
 			jest.spyOn( fs, 'readFileSync' ).mockReturnValueOnce( '{' );
 
-			expect( () => readEnvironmentData( 'foo' ) ).toThrow( expect.objectContaining( {
-				message: expect.stringContaining( 'There was an error parsing file' ),
-			} ) );
+			expect( () => readEnvironmentData( 'foo' ) ).toThrow(
+				expect.objectContaining( {
+					message: expect.stringContaining( 'There was an error parsing file' ),
+				} )
+			);
 		} );
 	} );
 } );

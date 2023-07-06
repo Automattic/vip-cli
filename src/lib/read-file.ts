@@ -10,7 +10,7 @@ import { readFile } from 'node:fs/promises';
  */
 import * as exit from '../lib/cli/exit';
 
-export async function readFromFile( path: string ): Promise<string> {
+export async function readFromFile( path: string ): Promise< string > {
 	try {
 		const data = await readFile( path, 'utf-8' );
 		return data.trim();

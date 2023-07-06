@@ -6,6 +6,7 @@
  * External dependencies
  */
 import path from 'path';
+import { once } from 'node:events';
 
 /**
  * Internal dependencies
@@ -16,7 +17,12 @@ import { getReadInterface } from '../../../src/lib/validations/line-by-line';
 describe( 'utils', () => {
 	describe( 'getMultilineStatement', () => {
 		it( 'should return each occurance of a statement as an array of its lines', async () => {
-			const sqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'multiline-statements.sql' );
+			const sqlDumpPath = path.join(
+				process.cwd(),
+				'__fixtures__',
+				'validations',
+				'multiline-statements.sql'
+			);
 			const readInterface = await getReadInterface( sqlDumpPath );
 
 			const getStatementsByLine = getMultilineStatement( /INSERT INTO wp_blogs/s );
@@ -26,7 +32,7 @@ describe( 'utils', () => {
 				statements = getStatementsByLine( line );
 			} );
 
-			await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
+			await once( readInterface, 'close' );
 
 			// expecting the correct number of matching statements
 			expect( statements ).toHaveLength( 4 );
@@ -38,7 +44,12 @@ describe( 'utils', () => {
 		} );
 
 		it( 'should accurately capture the statement', async () => {
-			const sqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'multiline-statements.sql' );
+			const sqlDumpPath = path.join(
+				process.cwd(),
+				'__fixtures__',
+				'validations',
+				'multiline-statements.sql'
+			);
 			const readInterface = await getReadInterface( sqlDumpPath );
 
 			const getStatementsByLine = getMultilineStatement( /INSERT INTO `wp_site`/s );
@@ -48,8 +59,11 @@ describe( 'utils', () => {
 				statements = getStatementsByLine( line );
 			} );
 
-			await new Promise( resolveBlock => readInterface.on( 'close', resolveBlock ) );
-			expect( statements[ 0 ].join( '' ).replace( /\s/g, '' ) ).toBe( "INSERTINTO`wp_site`(`id`,`domain`,`path`)VALUES(1,'www.example.com','/');" );
+			await once( readInterface, 'close' );
+
+			expect( statements[ 0 ].join( '' ).replace( /\s/g, '' ) ).toBe(
+				"INSERTINTO`wp_site`(`id`,`domain`,`path`)VALUES(1,'www.example.com','/');"
+			);
 		} );
 	} );
 } );

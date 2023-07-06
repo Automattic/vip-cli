@@ -22,7 +22,8 @@ const examples = [
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads`,
-		description: 'Import contents of the given WP uploads folder file into the media library of the default dev environment',
+		description:
+			'Import contents of the given WP uploads folder file into the media library of the default dev environment',
 	},
 ];
 
@@ -31,6 +32,9 @@ command( {
 } )
 	.examples( examples )
 	.command( 'sql', 'Import SQL to your dev-env database from a file' )
-	.command( 'media', 'Import media files to the dev environment of your application from a compressed web archive. ' +
-		'This command will copy the contents of a folder to the `uploads` folder of the target dev environment.' )
+	.command(
+		'media',
+		'Import media files to the dev environment of your application from a compressed web archive. ' +
+			'This command will copy the contents of a folder to the `uploads` folder of the target dev environment.'
+	)
 	.argv( process.argv );

@@ -26,31 +26,31 @@ const ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
 const TWO_MINUTES_IN_MILLISECONDS = 2 * ONE_MINUTE_IN_MILLISECONDS;
 
 const IMPORT_MEDIA_PROGRESS_QUERY = gql`
-	query App( $appId: Int, $envId: Int ) {
-		app( id: $appId ) {
-			environments( id: $envId ) {
-			id
-			name
-			type
-			repo
-			mediaImportStatus {
-				importId
-				siteId
-				status
-				filesTotal
-				filesProcessed
-				failureDetails {
-					previousStatus
-					globalErrors
-					fileErrors {
+	query App($appId: Int, $envId: Int) {
+		app(id: $appId) {
+			environments(id: $envId) {
+				id
+				name
+				type
+				repo
+				mediaImportStatus {
+					importId
+					siteId
+					status
+					filesTotal
+					filesProcessed
+					failureDetails {
+						previousStatus
+						globalErrors
+						fileErrors {
 							fileName
 							errors
+						}
 					}
 				}
 			}
 		}
 	}
-}
 `;
 
 export type MediaImportCheckStatusInput = {
@@ -120,8 +120,10 @@ function buildErrorMessage( importFailed ) {
 	}
 
 	message += chalk.red( importFailed.error ? importFailed.error : importFailed );
-	message += '\n\nPlease check the status of your Import using `vip import media status @mysite.production`';
-	message += '\n\nIf this error persists and you are not sure on how to fix, please contact support\n';
+	message +=
+		'\n\nPlease check the status of your Import using `vip import media status @mysite.production`';
+	message +=
+		'\n\nIf this error persists and you are not sure on how to fix, please contact support\n';
 	return message;
 }
 
@@ -180,7 +182,9 @@ export async function mediaImportCheckStatus( {
 				statusMessage = `${ capitalize( overallStatus ) } ${ sprite }`;
 		}
 
-		const maybeExitPrompt = [ 'COMPLETED', 'ABORTED', 'FAILED' ].includes( overallStatus ) ? '' : exitPrompt;
+		const maybeExitPrompt = [ 'COMPLETED', 'ABORTED', 'FAILED' ].includes( overallStatus )
+			? ''
+			: exitPrompt;
 
 		const suffix = `
 =============================================================
@@ -208,20 +212,18 @@ ${ maybeExitPrompt }
 				try {
 					mediaImportStatus = await getStatus( api, app.id, env.id );
 					if ( ! mediaImportStatus ) {
-						return reject(
-							{
-								error: 'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
-							} );
+						return reject( {
+							error:
+								'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
+						} );
 					}
 				} catch ( error ) {
 					return reject( { error } );
 				}
 
-				const {
-					status,
-				} = mediaImportStatus;
+				const { status } = mediaImportStatus;
 
-				const failedMediaImport = ( 'FAILED' === status );
+				const failedMediaImport = 'FAILED' === status;
 
 				if ( failedMediaImport ) {
 					progressTracker.setStatus( mediaImportStatus );
@@ -240,10 +242,11 @@ ${ maybeExitPrompt }
 				overallStatus = status;
 
 				// after two minutes, we'll start decreasing the pollInterval
-				pollIntervalDecreasing = pollIntervalDecreasing || startDate < ( Date.now() - TWO_MINUTES_IN_MILLISECONDS );
+				pollIntervalDecreasing =
+					pollIntervalDecreasing || startDate < Date.now() - TWO_MINUTES_IN_MILLISECONDS;
 
 				// decrease poll interval by a second, every minute
-				if ( pollIntervalDecreasing && startDate < ( Date.now() - ONE_MINUTE_IN_MILLISECONDS ) ) {
+				if ( pollIntervalDecreasing && startDate < Date.now() - ONE_MINUTE_IN_MILLISECONDS ) {
 					pollInterval = pollInterval + IMPORT_MEDIA_PROGRESS_POLL_INTERVAL;
 					startDate = Date.now();
 				}
@@ -268,17 +271,27 @@ ${ maybeExitPrompt }
 
 		const fileErrors = results.failureDetails?.fileErrors;
 		if ( !! fileErrors && fileErrors.length > 0 ) {
-			progressTracker.suffix += `${ chalk.yellow( `⚠️  ${ fileErrors.length } file error(s) have been extracted` ) }`;
-			if ( ( results.filesTotal - results.filesProcessed ) !== fileErrors.length ) {
-				progressTracker.suffix += `. ${ chalk.italic.yellow( 'File-errors report size threshold reached.' ) }`;
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  ${ fileErrors.length } file error(s) have been extracted`
+			) }`;
+			if ( results.filesTotal - results.filesProcessed !== fileErrors.length ) {
+				progressTracker.suffix += `. ${ chalk.italic.yellow(
+					'File-errors report size threshold reached.'
+				) }`;
 			}
 			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
-			const errorsFile = `media-import-${ app.name }-${ Date.now() }${ exportFileErrorsToJson ? '.json' : '.txt' }`;
+			const errorsFile = `media-import-${ app.name }-${ Date.now() }${
+				exportFileErrorsToJson ? '.json' : '.txt'
+			}`;
 			try {
 				await fsp.writeFile( errorsFile, formattedData );
-				progressTracker.suffix += `\n\n${ chalk.yellow( `All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }` ) }\n\n`;
+				progressTracker.suffix += `\n\n${ chalk.yellow(
+					`All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }`
+				) }\n\n`;
 			} catch ( writeFileErr ) {
-				progressTracker.suffix += `\n\n${ chalk.red( `Could not export errors to file\n${ writeFileErr }` ) }\n\n`;
+				progressTracker.suffix += `\n\n${ chalk.red(
+					`Could not export errors to file\n${ writeFileErr }`
+				) }\n\n`;
 			}
 		}
 

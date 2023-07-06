@@ -18,8 +18,7 @@ describe( 'lib/analytics/tracks', () => {
 	} = url.parse( Tracks.ENDPOINT );
 
 	const buildNock = () => {
-		return nock( `${ endpointProtocol }//${ endpointHost }` )
-			.post( endpointPath );
+		return nock( `${ endpointProtocol }//${ endpointHost }` ).post( endpointPath );
 	};
 
 	afterEach( nock.cleanAll );
@@ -47,16 +46,16 @@ describe( 'lib/analytics/tracks', () => {
 
 			const params = { extra: 'param' };
 
-			const expectedBody = 'commonProps%5B_ui%5D=123' +
+			const expectedBody =
+				'commonProps%5B_ui%5D=123' +
 				'&commonProps%5B_ut%5D=vip' +
 				'&commonProps%5B_via_ua%5D=vip-cli' +
 				'&extra=param';
 
 			buildNock()
 				// No arrow function because we need `this`
-				.reply( 200, function( uri, requestBody ) {
-					expect( this.req.headers[ 'user-agent' ] )
-						.toEqual( [ 'vip-cli' ] ); // The header value is returned as an array
+				.reply( 200, function ( uri, requestBody ) {
+					expect( this.req.headers[ 'user-agent' ] ).toEqual( [ 'vip-cli' ] ); // The header value is returned as an array
 
 					expect( requestBody ).toEqual( expectedBody );
 				} );
@@ -77,14 +76,14 @@ describe( 'lib/analytics/tracks', () => {
 
 			checkIfUserIsVipSpy.mockResolvedValue( true );
 
-			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=prefix_clickButton' +
+			const expectedBodyMatch =
+				'events%5B0%5D%5B_en%5D=prefix_clickButton' +
 				'&events%5B0%5D%5BbuttonName%5D=deploy' +
 				'&events%5B0%5D%5Bis_vip%5D=true';
 
-			buildNock()
-				.reply( 200, ( uri, requestBody ) => {
-					expect( requestBody ).toContain( expectedBodyMatch );
-				} );
+			buildNock().reply( 200, ( uri, requestBody ) => {
+				expect( requestBody ).toContain( expectedBodyMatch );
+			} );
 
 			return tracksClient.trackEvent( eventName, eventDetails );
 		} );
@@ -96,10 +95,9 @@ describe( 'lib/analytics/tracks', () => {
 
 			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=existingprefix_clickButton';
 
-			buildNock()
-				.reply( 200, ( uri, requestBody ) => {
-					expect( requestBody ).toContain( expectedBodyMatch );
-				} );
+			buildNock().reply( 200, ( uri, requestBody ) => {
+				expect( requestBody ).toContain( expectedBodyMatch );
+			} );
 
 			return tracksClient.trackEvent( eventName, {} );
 		} );

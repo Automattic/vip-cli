@@ -36,7 +36,11 @@ export const siteTypeValidations = {
 			isMultiSiteSqlDump = true;
 		}
 	},
-	postLineExecutionProcessing: async ( { appId, envId, searchReplace }: PostLineExecutionProcessingParams ) => {
+	postLineExecutionProcessing: async ( {
+		appId,
+		envId,
+		searchReplace,
+	}: PostLineExecutionProcessingParams ) => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -74,7 +78,11 @@ export const siteTypeValidations = {
 		// Check if primary domain is mapped only if it exists
 		// Also saves on a call to Parker by checking ahead
 		if ( primaryDomainExists ) {
-			const isPrimaryDomainMapped = ( await isMultisitePrimaryDomainMapped( appId, envId, primaryDomainFromSQL ) );
+			const isPrimaryDomainMapped = await isMultisitePrimaryDomainMapped(
+				appId,
+				envId,
+				primaryDomainFromSQL
+			);
 
 			// If site is multisite AND the primary domain is exists AND the primary is unmapped
 			// then throw an error
@@ -83,9 +91,10 @@ export const siteTypeValidations = {
 					error_type: 'multisite-import-where-primary-domain-unmapped',
 				} );
 				throw new Error(
-					'This import would set the network\'s main site domain to ' + primaryDomainFromSQL +
-					', however this domain is not mapped to the target environment. Please replace this domain in your ' +
-					'import file, or map it to the environment.'
+					"This import would set the network's main site domain to " +
+						primaryDomainFromSQL +
+						', however this domain is not mapped to the target environment. Please replace this domain in your ' +
+						'import file, or map it to the environment.'
 				);
 			}
 		}

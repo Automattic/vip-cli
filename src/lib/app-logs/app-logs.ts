@@ -15,11 +15,17 @@ import { Query } from '../../graphqlTypes';
 export const LIMIT_MAX = 5000;
 
 const QUERY_ENVIRONMENT_LOGS = gql`
-	query GetAppLogs( $appId: Int, $envId: Int, $type: AppEnvironmentLogType, $limit: Int, $after: String ) {
-		app( id: $appId ) {
-			environments( id: $envId ) {
+	query GetAppLogs(
+		$appId: Int
+		$envId: Int
+		$type: AppEnvironmentLogType
+		$limit: Int
+		$after: String
+	) {
+		app(id: $appId) {
+			environments(id: $envId) {
 				id
-				logs( type: $type, limit: $limit, after: $after ) {
+				logs(type: $type, limit: $limit, after: $after) {
 					nodes {
 						timestamp
 						message
@@ -33,15 +39,21 @@ const QUERY_ENVIRONMENT_LOGS = gql`
 `;
 
 interface GetRecentLogsResponse {
-	nodes: { timestamp: string, message: string }[],
-	nextCursor: string,
-	pollingDelaySeconds: number,
+	nodes: { timestamp: string; message: string }[];
+	nextCursor: string;
+	pollingDelaySeconds: number;
 }
 
-export async function getRecentLogs( appId: number, envId: number, type: string, limit: number, after?: string ): Promise<GetRecentLogsResponse> {
+export async function getRecentLogs(
+	appId: number,
+	envId: number,
+	type: string,
+	limit: number,
+	after?: string
+): Promise< GetRecentLogsResponse > {
 	const api = await API( { exitOnError: false } );
 
-	const response = await api.query<Query, GetAppLogsQueryVariables>( {
+	const response = await api.query< Query, GetAppLogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_LOGS,
 		variables: {
 			appId,
