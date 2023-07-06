@@ -4,10 +4,14 @@ import { CodegenConfig } from '@graphql-codegen/cli';
 const config: CodegenConfig = {
 	schema: './schema.gql',
 	ignoreNoDocuments: true, // for better experience with the watcher
-	hooks: { afterAllFileWrite: [ 'prettier --write' ] },
+	// the following line doesn't seem to work
+	// hooks: { afterAllFileWrite: [ 'npx prettier --write' ] },
 	generates: {
 		'./src/graphqlTypes.d.ts': {
 			plugins: [ 'typescript' ],
+			config: {
+				enumsAsTypes: true,
+			},
 		},
 		'./src/': {
 			documents: [ 'src/**/*.js', 'src/**/*.ts' ],
