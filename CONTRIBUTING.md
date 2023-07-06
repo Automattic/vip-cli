@@ -97,25 +97,22 @@ We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trun
 
 Further checks can be added to this flow as needed.
 
-### Pre-publish Tasks
-
-As part of the publish flow, we run the `prepareConfig:publish` task on `prepack`. This copies over "production" config values to your working copy to make sure the release includes those instead of development values.
-
-We use `prepack` because:
-
-- `prepareConfig:local` runs on `npm build` and we want to make sure those values are overriden.
-- This is the latest npm event that we can run on before publishing. (Note: we tried `prepublishOnly` but files added during that step [don't get included in the build](https://github.com/Automattic/vip/commit/c7dabe1b0f73ec9e6e8c05ccff0c41281e4cd5e8)).
-
 ### New Releases
 
 Prepare the release by making sure that:
 
 1. All relevant PRs have been merged.
 1. The release has been tested across macOS, Windows, and Linux.
-1. The [changelog](https://github.com/Automattic/vip/blob/trunk/CHANGELOG.md) has been updated on `trunk`.
-1. All tests pass and your working directory is clean (we have pre-publish checks to catch this, just-in-case).
+1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
+   just-in-case).
+1. Make sure not to merge anymore changes into `develop` while all the release steps below are in
+   progress.
 
 #### Changelog Generator Hint:
+
+In the first step, you'll need to generate a changelog.
+
+Run the following and copy the output somewhere.
 
 ```
 export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
@@ -124,15 +121,28 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 Then, let's publish:
 
-1. Make sure trunk branch is up to date `git pull`
+1. Create a pull request that adds the next version's changelog into `develop`. Use the Changelog
+   Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
+   format matches.
+1. Create a pull request that merges `develop` to `trunk`.
+1. Merge it after approval.
+1. Make sure trunk branch is up-to-date `git pull`.
+1. Make sure to clean all of your repositories of extra files. Run a dangerous, destructive
+   command `git clean -xfd` to do so.
+1. Run `npm install`.
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
 1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
 1. Push the trunk branch `git push`
 1. Make sure you're part of the Automattic organization in npm
-1. Publish the release to npm (`npm publish --access public`) the script will do some extra checks (node version, branch, etc) to ensure everything is correct. If all looks good, the new version will be published and you can proceed.
-1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
-1. Push `trunk` changes (mostly the version bump) to `develop` (`git checkout develop && git merge trunk` )
+1. Publish the release to npm (`npm publish --access public`) the script will do some extra checks (
+   node version, branch, etc) to ensure everything is correct. If all looks good, the new version
+   will be published and you can proceed.
+1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description
+   of the changes and publish (this can just copy the details from the changelog).
+1. Push `trunk` changes (mostly the version bump)
+   to `develop` (`git checkout develop && git merge trunk` ). There's no need to use a pull request
+   to do so.
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
