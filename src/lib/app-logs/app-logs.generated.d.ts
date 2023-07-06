@@ -9,22 +9,22 @@ export type GetAppLogsQueryVariables = Types.Exact<{
 }>;
 
 export type GetAppLogsQuery = {
-	__typename?: 'Query';
+	__typename?: 'Query',
 	app?: {
-		__typename?: 'App';
+		__typename?: 'App',
 		environments?: Array<{
-			__typename?: 'AppEnvironment';
-			id?: number | null;
+			__typename?: 'AppEnvironment',
+			id?: number | null,
 			logs?: {
-				__typename?: 'AppEnvironmentLogsList';
-				nextCursor?: string | null;
-				pollingDelaySeconds: number;
+				__typename?: 'AppEnvironmentLogsList',
+				nextCursor?: string | null,
+				pollingDelaySeconds: number,
 				nodes?: Array<{
-					__typename?: 'AppEnvironmentLog';
-					timestamp?: string | null;
-					message?: string | null;
-				} | null> | null;
-			} | null;
-		} | null> | null;
-	} | null;
+					__typename?: 'AppEnvironmentLog',
+					timestamp?: string | null,
+					message?: string | null
+				} | null> | null
+			} | null
+		} | null> | null
+	} | null
 };

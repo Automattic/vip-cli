@@ -6,18 +6,18 @@ export type GetEnvironmentVariablesQueryVariables = Types.Exact<{
 }>;
 
 export type GetEnvironmentVariablesQuery = {
-	__typename?: 'Query';
+	__typename?: 'Query',
 	app?: {
-		__typename?: 'App';
-		id?: number | null;
+		__typename?: 'App',
+		id?: number | null,
 		environments?: Array<{
-			__typename?: 'AppEnvironment';
-			id?: number | null;
+			__typename?: 'AppEnvironment',
+			id?: number | null,
 			environmentVariables?: {
-				__typename?: 'EnvironmentVariablesList';
-				total?: any | null;
-				nodes?: Array<{ __typename?: 'EnvironmentVariable'; name: string } | null> | null;
-			} | null;
-		} | null> | null;
-	} | null;
+				__typename?: 'EnvironmentVariablesList',
+				total?: any | null,
+				nodes?: Array<{ __typename?: 'EnvironmentVariable', name: string } | null> | null
+			} | null
+		} | null> | null
+	} | null
 };
