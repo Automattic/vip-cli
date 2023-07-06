@@ -23,4 +23,4 @@ jobs:
         with:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
-          GH_TOKEN: "test"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
