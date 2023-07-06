@@ -147,8 +147,6 @@ In order to do that, please follow this:
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 
-_PS: The above steps will only change your local `trunk`. The remote `trunk` will remain unaffected, and you can reset your local trunk afterwards with `git reset --hard origin/trunk`._
-
 ### Patching Old Releases
 
 There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `trunk` branch.
