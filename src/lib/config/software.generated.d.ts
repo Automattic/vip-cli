@@ -1,19 +1,198 @@
-import * as Types from '../../../graphqlTypes';
+import * as Types from '../../graphqlTypes';
+
+export type SoftwareFragment = {
+	__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+	name: string;
+	slug: string;
+	pinned: boolean;
+	current: {
+		__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+		version: string;
+		default: boolean;
+		deprecated: boolean;
+		unstable: boolean;
+		compatible: boolean;
+		latestRelease: string;
+		private: boolean;
+	};
+	options: Array<{
+		__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+		version: string;
+		default: boolean;
+		deprecated: boolean;
+		unstable: boolean;
+		compatible: boolean;
+		latestRelease: string;
+		private: boolean;
+	}>;
+};
 
 export type UpdateSoftwareSettingsMutationVariables = Types.Exact<{
-  appId: Types.Scalars['Int']['input'];
-  envId: Types.Scalars['Int']['input'];
-  component: Types.Scalars['String']['input'];
-  version: Types.Scalars['String']['input'];
+	appId: Types.Scalars['Int']['input'];
+	envId: Types.Scalars['Int']['input'];
+	component: Types.Scalars['String']['input'];
+	version: Types.Scalars['String']['input'];
 }>;
 
-
-export type UpdateSoftwareSettingsMutation = { __typename?: 'Mutation', updateSoftwareSettings?: { __typename?: 'AppEnvironmentSoftwareSettings', php?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null, wordpress?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null, muplugins?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null, nodejs?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null } | null };
+export type UpdateSoftwareSettingsMutation = {
+	__typename?: 'Mutation';
+	updateSoftwareSettings?: {
+		__typename?: 'AppEnvironmentSoftwareSettings';
+		php?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array<{
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			}>;
+		} | null;
+		wordpress?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array<{
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			}>;
+		} | null;
+		muplugins?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array<{
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			}>;
+		} | null;
+		nodejs?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array<{
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			}>;
+		} | null;
+	} | null;
+};
 
 export type UpdateJobQueryVariables = Types.Exact<{
-  appId: Types.Scalars['Int']['input'];
-  envId: Types.Scalars['Int']['input'];
+	appId: Types.Scalars['Int']['input'];
+	envId: Types.Scalars['Int']['input'];
 }>;
 
-
-export type UpdateJobQuery = { __typename?: 'Query', app?: { __typename?: 'App', environments?: Array<{ __typename?: 'AppEnvironment', jobs?: Array<{ __typename?: 'Job', type?: string | null, completedAt?: string | null, createdAt?: string | null, inProgressLock?: boolean | null, progress?: { __typename?: 'JobProgress', status?: string | null, steps?: Array<{ __typename?: 'JobProgressStep', step?: string | null, name?: string | null, status?: string | null } | null> | null } | null } | { __typename?: 'PrimaryDomainSwitchJob', type?: string | null, completedAt?: string | null, createdAt?: string | null, inProgressLock?: boolean | null, progress?: { __typename?: 'JobProgress', status?: string | null, steps?: Array<{ __typename?: 'JobProgressStep', step?: string | null, name?: string | null, status?: string | null } | null> | null } | null } | null> | null } | null> | null } | null };
+export type UpdateJobQuery = {
+	__typename?: 'Query';
+	app?: {
+		__typename?: 'App';
+		environments?: Array<{
+			__typename?: 'AppEnvironment';
+			jobs?: Array<
+				| {
+				__typename?: 'Job';
+				type?: string | null;
+				completedAt?: string | null;
+				createdAt?: string | null;
+				inProgressLock?: boolean | null;
+				progress?: {
+					__typename?: 'JobProgress';
+					status?: string | null;
+					steps?: Array<{
+						__typename?: 'JobProgressStep';
+						step?: string | null;
+						name?: string | null;
+						status?: string | null;
+					} | null> | null;
+				} | null;
+			}
+				| {
+				__typename?: 'PrimaryDomainSwitchJob';
+				type?: string | null;
+				completedAt?: string | null;
+				createdAt?: string | null;
+				inProgressLock?: boolean | null;
+				progress?: {
+					__typename?: 'JobProgress';
+					status?: string | null;
+					steps?: Array<{
+						__typename?: 'JobProgressStep';
+						step?: string | null;
+						name?: string | null;
+						status?: string | null;
+					} | null> | null;
+				} | null;
+			}
+				| null
+			> | null;
+		} | null> | null;
+	} | null;
+};
