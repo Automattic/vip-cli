@@ -10,7 +10,7 @@ import gql from 'graphql-tag';
  */
 import API from '../../lib/api';
 import { GetAppLogsQueryVariables } from './app-logs.generated';
-import { Query } from '../../graphqlTypes';
+import { AppEnvironmentLogType, Query } from '../../graphqlTypes';
 
 export const LIMIT_MAX = 5000;
 
@@ -47,7 +47,7 @@ interface GetRecentLogsResponse {
 export async function getRecentLogs(
 	appId: number,
 	envId: number,
-	type: string,
+	type: AppEnvironmentLogType,
 	limit: number,
 	after?: string
 ): Promise< GetRecentLogsResponse > {

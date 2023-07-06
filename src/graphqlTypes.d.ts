@@ -1,13 +1,17 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type Exact<T extends { [ key: string ]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type MakeEmpty<T extends {
+  [ key: string ]: unknown
+}, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> =
+  T
+  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string | number; output: string; }
+  ID: { input: string; output: string; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
@@ -333,6 +337,8 @@ export type AppEnvironmentWpSitesSdsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   launchStatus?: InputMaybe<WpSiteLaunchStatus>;
   matching?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Mutation request input to abort a Media Import */
@@ -700,6 +706,7 @@ export type AppEnvironmentImportStatus = {
 };
 
 export enum AppEnvironmentJobType {
+  DbBackup = 'db_backup',
   DbBackupCopy = 'db_backup_copy',
   SetPrimaryDomain = 'set_primary_domain',
   SqlImport = 'sql_import',
@@ -1043,6 +1050,16 @@ export type AppEnvironmentSyncStep = {
   name?: Maybe<Scalars['String']['output']>;
   status?: Maybe<Scalars['String']['output']>;
   step?: Maybe<Scalars['String']['output']>;
+};
+
+export type AppEnvironmentTriggerDbBackupInput = {
+  environmentId?: InputMaybe<Scalars['Int']['input']>;
+  id?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AppEnvironmentTriggerDbBackupPayload = {
+  __typename?: 'AppEnvironmentTriggerDBBackupPayload';
+  success?: Maybe<Scalars['Boolean']['output']>;
 };
 
 /** Variables for the Run WP-CLI Command mutation */
@@ -1847,6 +1864,34 @@ export type GitRepository = {
   platform?: Maybe<Scalars['String']['output']>;
 };
 
+export type IdentityProvider = Model & {
+  __typename?: 'IdentityProvider';
+  active?: Maybe<Scalars['Boolean']['output']>;
+  certificate?: Maybe<Scalars['String']['output']>;
+  certificateExpiryDate?: Maybe<Scalars['String']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  entryPoint?: Maybe<Scalars['String']['output']>;
+  firstSuccessfulLogin?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['Int']['output']>;
+  issuer?: Maybe<Scalars['String']['output']>;
+  organizationId?: Maybe<Scalars['Int']['output']>;
+  provider?: Maybe<Scalars['String']['output']>;
+  secondaryCertificate?: Maybe<Scalars['String']['output']>;
+  secondaryCertificateExpiryDate?: Maybe<Scalars['String']['output']>;
+  signingCertificateExpiryDate?: Maybe<Scalars['String']['output']>;
+  signingCertificatePublicKey?: Maybe<Scalars['String']['output']>;
+  slug?: Maybe<Scalars['String']['output']>;
+  updatedAt?: Maybe<Scalars['String']['output']>;
+};
+
+export type IdentityProviderList = ModelList & {
+  __typename?: 'IdentityProviderList';
+  nextCursor?: Maybe<Scalars['String']['output']>;
+  nodes?: Maybe<Array<Maybe<IdentityProvider>>>;
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
 export type Invitation = Model & {
   __typename?: 'Invitation';
   acceptedAt?: Maybe<Scalars['String']['output']>;
@@ -2021,6 +2066,7 @@ export type Mutation = {
   deleteLogShippingConfig?: Maybe<AppEnvironmentLogShippingPayload>;
   deleteNotificationRecipient?: Maybe<DeleteNotificationRecipientPayload>;
   deleteNotificationSubscription?: Maybe<DeleteNotificationSubscriptionPayload>;
+  deleteOrganizationAuthDomain?: Maybe<OrganizationAuthDomainDeletePayload>;
   disableBackupShipping?: Maybe<AppEnvironmentBackupShippingPayload>;
   disableFeature?: Maybe<AppFeaturePayload>;
   disableLogShipping?: Maybe<AppEnvironmentLogShippingPayload>;
@@ -2044,6 +2090,8 @@ export type Mutation = {
   resendInvitation?: Maybe<ResendInvitationPayload>;
   /** Rollback */
   rollback?: Maybe<RollbackPayload>;
+  /** Organization Auth Domains */
+  saveOrganizationAuthDomain?: Maybe<OrganizationAuthDomainPayload>;
   sendTestNotification?: Maybe<SendTestNotificationPayload>;
   setUserApplicationRoles?: Maybe<SetUserApplicationRolesPayload>;
   setUserOrganizationRole?: Maybe<UpdateUserOrganizationRolePayload>;
@@ -2057,6 +2105,7 @@ export type Mutation = {
   switchEnvironmentPrimaryDomain?: Maybe<AppEnvironmentPrimaryDomainSwitchPayload>;
   syncEnvironment?: Maybe<AppEnvironmentSyncPayload>;
   toggleVIPStatus?: Maybe<ToggleUserVipStatusPayload>;
+  triggerDatabaseBackup?: Maybe<AppEnvironmentTriggerDbBackupPayload>;
   /** Execute a WP-CLI command on an environment */
   triggerWPCLICommandOnAppEnvironment?: Maybe<AppEnvironmentTriggerWpcliCommandPayload>;
   updateBackupShippingConfig?: Maybe<AppEnvironmentBackupShippingPayload>;
@@ -2215,6 +2264,11 @@ export type MutationDeleteNotificationSubscriptionArgs = {
 };
 
 
+export type MutationDeleteOrganizationAuthDomainArgs = {
+  input?: InputMaybe<OrganizationAuthDomainDeleteInput>;
+};
+
+
 export type MutationDisableBackupShippingArgs = {
   input?: InputMaybe<AppEnvironmentBackupShippingInput>;
 };
@@ -2300,6 +2354,11 @@ export type MutationRollbackArgs = {
 };
 
 
+export type MutationSaveOrganizationAuthDomainArgs = {
+  input?: InputMaybe<OrganizationAuthDomainCreateInput>;
+};
+
+
 export type MutationSendTestNotificationArgs = {
   input?: InputMaybe<SendTestNotificationInput>;
 };
@@ -2347,6 +2406,11 @@ export type MutationSyncEnvironmentArgs = {
 
 export type MutationToggleVipStatusArgs = {
   input?: InputMaybe<ToggleUserVipStatusInput>;
+};
+
+
+export type MutationTriggerDatabaseBackupArgs = {
+  input?: InputMaybe<AppEnvironmentTriggerDbBackupInput>;
 };
 
 
@@ -2490,10 +2554,13 @@ export enum OrgRoleId {
 export type Organization = Model & {
   __typename?: 'Organization';
   apps?: Maybe<AppList>;
+  authDomains?: Maybe<OrganizationAuthDomainList>;
   contacts?: Maybe<OrganizationContacts>;
   events?: Maybe<AuditEventList>;
   id?: Maybe<Scalars['Int']['output']>;
+  identityProviders?: Maybe<IdentityProviderList>;
   invitations?: Maybe<InvitationList>;
+  letsEncryptDisallowed?: Maybe<Scalars['Boolean']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   notificationRecipients?: Maybe<NotificationRecipientList>;
   pageviews?: Maybe<Pageviews>;
@@ -2505,7 +2572,6 @@ export type Organization = Model & {
   users?: Maybe<UserList>;
 };
 
-
 export type OrganizationAppsArgs = {
   active?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2513,6 +2579,9 @@ export type OrganizationAppsArgs = {
   matching?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type OrganizationAuthDomainsArgs = {
+  domain?: InputMaybe<Scalars['String']['input']>;
+};
 
 export type OrganizationEventsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2520,6 +2589,9 @@ export type OrganizationEventsArgs = {
   order?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type OrganizationIdentityProvidersArgs = {
+  id?: InputMaybe<Scalars['Int']['input']>;
+};
 
 export type OrganizationInvitationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2528,22 +2600,56 @@ export type OrganizationInvitationsArgs = {
   status?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type OrganizationNotificationRecipientsArgs = {
   appId?: InputMaybe<Scalars['Int']['input']>;
 };
 
-
 export type OrganizationPermissionsArgs = {
   permissions?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
-
 
 export type OrganizationUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   id?: InputMaybe<Scalars['Int']['input']>;
   isVIP?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type OrganizationAuthDomain = Model & {
+  __typename?: 'OrganizationAuthDomain';
+  active?: Maybe<Scalars['Boolean']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  domain?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['Int']['output']>;
+  organizationId?: Maybe<Scalars['Int']['output']>;
+};
+
+export type OrganizationAuthDomainCreateInput = {
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  domain?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['Int']['input']>;
+  organizationId?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type OrganizationAuthDomainDeleteInput = {
+  id?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type OrganizationAuthDomainDeletePayload = {
+  __typename?: 'OrganizationAuthDomainDeletePayload';
+  deleted?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type OrganizationAuthDomainList = ModelList & {
+  __typename?: 'OrganizationAuthDomainList';
+  nextCursor?: Maybe<Scalars['String']['output']>;
+  nodes?: Maybe<Array<Maybe<OrganizationAuthDomain>>>;
+  total?: Maybe<Scalars['Int']['output']>;
+};
+
+export type OrganizationAuthDomainPayload = {
+  __typename?: 'OrganizationAuthDomainPayload';
+  authDomain?: Maybe<OrganizationAuthDomain>;
 };
 
 export type OrganizationContacts = {
@@ -2636,11 +2742,9 @@ export type Query = {
   users?: Maybe<UserList>;
 };
 
-
 export type QueryAppArgs = {
   id?: InputMaybe<Scalars['Int']['input']>;
 };
-
 
 export type QueryAppsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2650,24 +2754,20 @@ export type QueryAppsArgs = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type QueryCertificateArgs = {
   certificateId?: InputMaybe<Scalars['Int']['input']>;
   clientId?: InputMaybe<Scalars['Int']['input']>;
 };
-
 
 export type QueryDbBackupCopiesArgs = {
   environmentId?: InputMaybe<Scalars['Int']['input']>;
   fileNames?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
-
 export type QueryDomainArgs = {
   id?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
-
 
 export type QueryDomainsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2675,11 +2775,9 @@ export type QueryDomainsArgs = {
   wildcards?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
-
 export type QueryOrganizationArgs = {
   id?: InputMaybe<Scalars['Int']['input']>;
 };
-
 
 export type QueryOrganizationsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2689,17 +2787,14 @@ export type QueryOrganizationsArgs = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type QueryRepoArgs = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
-
 
 export type QueryUserArgs = {
   githubUsername?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['Int']['input']>;
 };
-
 
 export type QueryUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2935,7 +3030,6 @@ export type User = Model & {
   tokens?: Maybe<Array<Maybe<Token>>>;
   wpcomUsername?: Maybe<Scalars['String']['output']>;
 };
-
 
 export type UserApplicationRolesArgs = {
   appId?: InputMaybe<Scalars['Int']['input']>;
