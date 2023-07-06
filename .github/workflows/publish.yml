@@ -5,7 +5,7 @@ on:
     inputs:
       # This is copied from npm-publish/action.yml
       npm-version-type:
-        description: 'The npm version type we want to publish.'
+        description: 'The npm version type we are publishing.'
         required: true
         type: choice
         default: 'patch'
