@@ -1,6 +1,4 @@
-*.generated.d.ts
 /CHANGELOG.md
 /__fixtures__/
 /dist/
 /flow-typed/
-/src/graphqlTypes.d.ts

@@ -55,7 +55,7 @@
   },
   "scripts": {
     "typescript:codegen:install-dependencies": "npm install --no-save @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/near-operation-file-preset @graphql-codegen/typescript-operations",
-    "typescript:codegen:generate": "npx graphql-codegen",
+    "typescript:codegen:generate": "graphql-codegen",
     "test": "npm run lint && npm run flow && npm run check-types && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
     "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
     "clean": "rimraf dist",

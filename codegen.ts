@@ -8,6 +8,9 @@ const config: CodegenConfig = {
 	generates: {
 		'./src/graphqlTypes.d.ts': {
 			plugins: [ 'typescript' ],
+			config: {
+				enumsAsTypes: true,
+			},
 		},
 		'./src/': {
 			documents: [ 'src/**/*.js', 'src/**/*.ts' ],
