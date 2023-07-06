@@ -3,7 +3,12 @@
 /**
  * External dependencies
  */
-import { ApolloClient, HttpLink, InMemoryCache, type NormalizedCacheObject } from '@apollo/client/core';
+import {
+	ApolloClient,
+	HttpLink,
+	InMemoryCache,
+	type NormalizedCacheObject,
+} from '@apollo/client/core';
 import { ApolloLink } from '@apollo/client/link/core';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
@@ -20,7 +25,7 @@ import http from './api/http';
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
 // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-export const API_HOST = ( process.env.API_HOST || PRODUCTION_API_HOST ); // NOSONAR
+export const API_HOST = process.env.API_HOST || PRODUCTION_API_HOST; // NOSONAR
 export const API_URL = `${ API_HOST }/graphql`;
 
 let globalGraphQLErrorHandlingEnabled = true;
@@ -33,7 +38,9 @@ export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
-export default async function API( { exitOnError = true } = {} ): Promise<ApolloClient<NormalizedCacheObject>> {
+export default async function API( { exitOnError = true } = {} ): Promise<
+	ApolloClient< NormalizedCacheObject >
+> {
 	const authToken = await Token.get();
 	const headers = {
 		'User-Agent': env.userAgent,
@@ -60,7 +67,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		}
 	} );
 
-	const withToken = setContext( async () : Promise<{ token: Token }> => {
+	const withToken = setContext( async (): Promise< { token: Token } > => {
 		const token = await Token.get();
 
 		return { token };
@@ -90,7 +97,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<Apollo
 		},
 	} );
 
-	return new ApolloClient<NormalizedCacheObject>( {
+	return new ApolloClient< NormalizedCacheObject >( {
 		link: ApolloLink.from( [ withToken, errorLink, authLink, httpLink ] ),
 		cache: new InMemoryCache( {
 			typePolicies: {

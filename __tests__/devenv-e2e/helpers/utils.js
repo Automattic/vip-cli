@@ -9,7 +9,10 @@ import { dump } from 'js-yaml';
 /**
  * Internal dependencies
  */
-import { doesEnvironmentExist, getEnvironmentPath } from '../../../src/lib/dev-environment/dev-environment-core';
+import {
+	doesEnvironmentExist,
+	getEnvironmentPath,
+} from '../../../src/lib/dev-environment/dev-environment-core';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 
 let id = 0;
@@ -61,12 +64,20 @@ export function checkEnvExists( slug ) {
  * @param {string[]}                     options Environment creation options
  */
 export async function createAndStartEnvironment( cliTest, slug, env, options = [] ) {
-	let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ].concat( options ), { env }, true );
+	let result = await cliTest.spawn(
+		[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ].concat( options ),
+		{ env },
+		true
+	);
 	expect( result.rc ).toBe( 0 );
 	expect( result.stdout ).toContain( `vip dev-env start --slug ${ slug }` );
 	expect( await checkEnvExists( slug ) ).toBe( true );
 
-	result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ], { env }, true );
+	result = await cliTest.spawn(
+		[ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ],
+		{ env },
+		true
+	);
 	expect( result.rc ).toBe( 0 );
 	expect( result.stdout ).toMatch( /STATUS\s+UP/u );
 }
@@ -77,7 +88,11 @@ export async function createAndStartEnvironment( cliTest, slug, env, options = [
  * @param {NodeJS.ProcessEnv}            env     Environment
  */
 export async function destroyEnvironment( cliTest, slug, env ) {
-	const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ], { env }, true );
+	const result = await cliTest.spawn(
+		[ process.argv[ 0 ], vipDevEnvDestroy, '--slug', slug ],
+		{ env },
+		true
+	);
 	expect( result.rc ).toBe( 0 );
 	expect( result.stdout ).toContain( 'Environment files deleted successfully' );
 	expect( result.stdout ).toContain( 'Environment destroyed' );
@@ -90,5 +105,9 @@ export async function destroyEnvironment( cliTest, slug, env ) {
  */
 export async function writeConfigurationFile( workingDirectoryPath, configuration ) {
 	const configurationLines = dump( configuration );
-	await writeFile( path.join( workingDirectoryPath, '.vip-dev-env.yml' ), configurationLines, 'utf8' );
+	await writeFile(
+		path.join( workingDirectoryPath, '.vip-dev-env.yml' ),
+		configurationLines,
+		'utf8'
+	);
 }

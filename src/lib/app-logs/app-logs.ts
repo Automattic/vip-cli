@@ -50,10 +50,10 @@ export async function getRecentLogs(
 	type: AppEnvironmentLogType,
 	limit: number,
 	after?: string
-): Promise<GetRecentLogsResponse> {
-	const api = await API({ exitOnError: false });
+): Promise< GetRecentLogsResponse > {
+	const api = await API( { exitOnError: false } );
 
-	const response = await api.query<Query, GetAppLogsQueryVariables>({
+	const response = await api.query< Query, GetAppLogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_LOGS,
 		variables: {
 			appId,
@@ -62,12 +62,12 @@ export async function getRecentLogs(
 			limit,
 			after,
 		},
-	});
+	} );
 
-	const logs = response.data.app?.environments?.[0]?.logs;
+	const logs = response.data.app?.environments?.[ 0 ]?.logs;
 
-	if (!logs?.nodes) {
-		throw new Error('Unable to query logs');
+	if ( ! logs?.nodes ) {
+		throw new Error( 'Unable to query logs' );
 	}
 
 	return logs as GetRecentLogsResponse;

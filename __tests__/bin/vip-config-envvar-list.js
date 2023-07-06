@@ -65,7 +65,9 @@ describe( 'listEnvVarsCommand', () => {
 		},
 		format: 'csv',
 	};
-	const eventPayload = expect.objectContaining( { command: 'vip @mysite.develop config envvar list' } );
+	const eventPayload = expect.objectContaining( {
+		command: 'vip @mysite.develop config envvar list',
+	} );
 	const executeEvent = [ 'envvar_list_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_list_command_success', eventPayload ];
 
@@ -88,7 +90,9 @@ describe( 'listEnvVarsCommand', () => {
 
 		await expect( () => listEnvVarsCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'There are no environment variables' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'There are no environment variables' )
+		);
 		expect( process.exit ).toHaveBeenCalled();
 		expect( formatData ).not.toHaveBeenCalled();
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );

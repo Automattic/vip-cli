@@ -45,7 +45,7 @@ let _opts = {};
 let alreadyConfirmedDebugAttachment = false;
 
 // eslint-disable-next-line complexity
-args.argv = async function( argv, cb ): Promise<any> {
+args.argv = async function ( argv, cb ): Promise< any > {
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',
@@ -69,7 +69,12 @@ args.argv = async function( argv, cb ): Promise<any> {
 	//   Usage: vip command subcommand <arg1> <arg2> [options]
 	const name = _opts.usage || null;
 
-	const options = this.parse( parsedAlias.argv, { help: false, name, version: false, debug: false } );
+	const options = this.parse( parsedAlias.argv, {
+		help: false,
+		name,
+		version: false,
+		debug: false,
+	} );
 
 	if ( options.h || options.help ) {
 		this.showHelp();
@@ -85,7 +90,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// If we have both an --app/--env and an alias, we need to give a warning
 	if ( parsedAlias.app && ( options.app || options.env ) ) {
-		exit.withError( 'Please only use an environment alias, or the --app and --env parameters, but not both' );
+		exit.withError(
+			'Please only use an environment alias, or the --app and --env parameters, but not both'
+		);
 	}
 
 	// If there is an alias, use it to populate the app/env options
@@ -142,8 +149,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// Show help if subcommand is invalid
 	const subCommands = this.details.commands.map( cmd => cmd.usage );
-	if ( ! _opts.wildcardCommand && this.sub[ _opts.requiredArgs ] &&
-		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] ) ) {
+	if (
+		! _opts.wildcardCommand &&
+		this.sub[ _opts.requiredArgs ] &&
+		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] )
+	) {
 		const subcommand = this.sub.join( ' ' );
 
 		await trackEvent( 'command_validation_error', {
@@ -163,10 +173,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 			await trackEvent( 'command_appcontext_list_fetch' );
 
 			try {
-				res = await api
-					.query( {
-						// $FlowFixMe: gql template is not supported by flow
-						query: gql`query Apps( $first: Int, $after: String ) {
+				res = await api.query( {
+					// $FlowFixMe: gql template is not supported by flow
+					query: gql`query Apps( $first: Int, $after: String ) {
 							apps( first: $first, after: $after ) {
 								total
 								nextCursor
@@ -176,11 +185,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 							}
 						}
 						${ _opts.appQueryFragments || '' }`,
-						variables: {
-							first: 100,
-							after: null, // TODO make dynamic?
-						},
-					} );
+					variables: {
+						first: 100,
+						after: null, // TODO make dynamic?
+					},
+				} );
 			} catch ( err ) {
 				const message = err.toString();
 				await trackEvent( 'command_appcontext_list_fetch_error', {
@@ -190,11 +199,13 @@ args.argv = async function( argv, cb ): Promise<any> {
 				exit.withError( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 			}
 
-			if ( ! res ||
+			if (
+				! res ||
 				! res.data ||
 				! res.data.apps ||
 				! res.data.apps.edges ||
-				! res.data.apps.edges.length ) {
+				! res.data.apps.edges.length
+			) {
 				await trackEvent( 'command_appcontext_list_fetch_error', {
 					error: 'No apps found',
 				} );
@@ -261,7 +272,9 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		if ( _opts.childEnvContext ) {
-			options.app.environments = options.app.environments.filter( cur => cur.id !== options.app.id );
+			options.app.environments = options.app.environments.filter(
+				cur => cur.id !== options.app.id
+			);
 		}
 	}
 
@@ -282,7 +295,11 @@ args.argv = async function( argv, cb ): Promise<any> {
 					error: `Invalid child environment (${ options.env }) specified`,
 				} );
 
-				exit.withError( `Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright( options.app.name ) } does not exist` );
+				exit.withError(
+					`Environment ${ chalk.blueBright( options.env ) } for app ${ chalk.blueBright(
+						options.app.name
+					) } does not exist`
+				);
 			}
 
 			options.env = env;
@@ -293,11 +310,17 @@ args.argv = async function( argv, cb ): Promise<any> {
 				error: 'No child environments found',
 			} );
 
-			exit.withError( `Could not find any non-production environments for ${ chalk.blueBright( options.app.name ) }.` );
+			exit.withError(
+				`Could not find any non-production environments for ${ chalk.blueBright(
+					options.app.name
+				) }.`
+			);
 		} else if ( options.app.environments.length === 1 ) {
 			options.env = options.app.environments[ 0 ];
 		} else if ( options.app.environments.length > 1 ) {
-			const environmentNames = options.app.environments.map( envObject => getEnvIdentifier( envObject ) );
+			const environmentNames = options.app.environments.map( envObject =>
+				getEnvIdentifier( envObject )
+			);
 
 			let envSelection;
 			try {
@@ -316,14 +339,18 @@ args.argv = async function( argv, cb ): Promise<any> {
 			}
 
 			// Get full environment info after user selection
-			envSelection.env = options.app.environments.find( envObject => getEnvIdentifier( envObject ) === envSelection.env );
+			envSelection.env = options.app.environments.find(
+				envObject => getEnvIdentifier( envObject ) === envSelection.env
+			);
 
 			if ( ! envSelection || ! envSelection.env || ! envSelection.env.id ) {
 				await trackEvent( 'command_childcontext_list_select_error', {
 					error: 'Invalid environment selected',
 				} );
 
-				exit.withError( `Environment ${ chalk.blueBright( getEnvIdentifier( envSelection.env ) ) } does not exist` );
+				exit.withError(
+					`Environment ${ chalk.blueBright( getEnvIdentifier( envSelection.env ) ) } does not exist`
+				);
 			}
 
 			await trackEvent( 'command_childcontext_list_select_success' );
@@ -334,7 +361,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info: Array<Tuple> = [];
+		const info: Array< Tuple > = [];
 
 		if ( options.app ) {
 			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
@@ -346,7 +373,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 		}
 
 		let message = 'Are you sure?';
-		if ( 'string' === typeof ( _opts.requireConfirm ) ) {
+		if ( 'string' === typeof _opts.requireConfirm ) {
 			message = _opts.requireConfirm;
 		}
 
@@ -396,7 +423,10 @@ args.argv = async function( argv, cb ): Promise<any> {
 					const searchReplaceValues = formatSearchReplaceValues( searchReplace, assignSRValues );
 
 					// Format data into a user-friendly table
-					info.push( { key: 'Replacements', value: '\n' + formatData( searchReplaceValues, 'table' ) } );
+					info.push( {
+						key: 'Replacements',
+						value: '\n' + formatData( searchReplaceValues, 'table' ),
+					} );
 				}
 
 				break;
@@ -428,18 +458,32 @@ args.argv = async function( argv, cb ): Promise<any> {
 			case 'import-media':
 				info.push( { key: 'Archive URL', value: chalk.blue.underline( this.sub ) } );
 
-				options.overwriteExistingFiles = Object.prototype.hasOwnProperty.call( options, 'overwriteExistingFiles' ) &&
-					!! options.overwriteExistingFiles && ! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
-				info.push( { key: 'Overwrite any existing files', value: options.overwriteExistingFiles ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
+				options.overwriteExistingFiles =
+					Object.prototype.hasOwnProperty.call( options, 'overwriteExistingFiles' ) &&
+					!! options.overwriteExistingFiles &&
+					! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
+				info.push( {
+					key: 'Overwrite any existing files',
+					value: options.overwriteExistingFiles ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+				} );
 
-				options.importIntermediateImages = Object.prototype.hasOwnProperty.call( options, 'importIntermediateImages' ) &&
-					!! options.importIntermediateImages && ! [ 'false', 'no' ].includes( options.importIntermediateImages );
-				info.push( { key: 'Import intermediate image files', value: options.importIntermediateImages ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
+				options.importIntermediateImages =
+					Object.prototype.hasOwnProperty.call( options, 'importIntermediateImages' ) &&
+					!! options.importIntermediateImages &&
+					! [ 'false', 'no' ].includes( options.importIntermediateImages );
+				info.push( {
+					key: 'Import intermediate image files',
+					value: options.importIntermediateImages ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+				} );
 
-				options.exportFileErrorsToJson = Object.prototype.hasOwnProperty.call( options, 'exportFileErrorsToJson' ) &&
-					!! options.exportFileErrorsToJson && ! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
-				info.push( { key: 'Export any file errors encountered to a JSON file instead of a plain text file',
-					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No` } );
+				options.exportFileErrorsToJson =
+					Object.prototype.hasOwnProperty.call( options, 'exportFileErrorsToJson' ) &&
+					!! options.exportFileErrorsToJson &&
+					! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
+				info.push( {
+					key: 'Export any file errors encountered to a JSON file instead of a plain text file',
+					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+				} );
 				break;
 			default:
 		}
@@ -491,7 +535,7 @@ args.argv = async function( argv, cb ): Promise<any> {
 
 function validateOpts( opts: any ): Error {
 	if ( opts.app ) {
-		if ( typeof ( opts.app ) !== 'string' && typeof ( opts.app ) !== 'number' ) {
+		if ( typeof opts.app !== 'string' && typeof opts.app !== 'number' ) {
 			return new Error( 'Invalid --app' );
 		}
 
@@ -501,7 +545,7 @@ function validateOpts( opts: any ): Error {
 	}
 
 	if ( opts.env ) {
-		if ( typeof ( opts.env ) !== 'string' && typeof ( opts.env ) !== 'number' ) {
+		if ( typeof opts.env !== 'string' && typeof opts.env !== 'number' ) {
 			return new Error( 'Invalid --env' );
 		}
 
@@ -511,17 +555,20 @@ function validateOpts( opts: any ): Error {
 	}
 }
 
-export default function( opts: any ): args {
-	_opts = Object.assign( {
-		appContext: false,
-		appQuery: 'id,name',
-		childEnvContext: false,
-		envContext: false,
-		format: false,
-		requireConfirm: false,
-		requiredArgs: 0,
-		wildcardCommand: false,
-	}, opts );
+export default function ( opts: any ): args {
+	_opts = Object.assign(
+		{
+			appContext: false,
+			appQuery: 'id,name',
+			childEnvContext: false,
+			envContext: false,
+			format: false,
+			requireConfirm: false,
+			requiredArgs: 0,
+			wildcardCommand: false,
+		},
+		opts
+	);
 
 	if ( _opts.appContext || _opts.requireConfirm ) {
 		args.option( 'app', 'Specify the app' );
@@ -562,5 +609,10 @@ export function getEnvIdentifier( env ) {
 export function containsAppEnvArgument( argv ) {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	return !! ( parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' ) );
+	return !! (
+		parsedAlias.app ||
+		parsedAlias.env ||
+		argv.includes( '--app' ) ||
+		argv.includes( '--env' )
+	);
 }

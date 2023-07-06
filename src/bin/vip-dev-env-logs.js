@@ -14,7 +14,12 @@ import debugLib from 'debug';
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { showLogs } from '../lib/dev-environment/dev-environment-core';
-import { getEnvTrackingInfo, getEnvironmentName, handleCLIException, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	getEnvTrackingInfo,
+	getEnvironmentName,
+	handleCLIException,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
@@ -27,18 +32,23 @@ const examples = [
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site --service=elasticsearch`,
-		description: 'Return logs from the "elasticsearch" service from a local dev environment named "my_site"',
+		description:
+			'Return logs from the "elasticsearch" service from a local dev environment named "my_site"',
 	},
 	{
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site --service=elasticsearch -f`,
-		description: 'Follow logs from the "elasticsearch" service from a local dev environment named "my_site"',
+		description:
+			'Follow logs from the "elasticsearch" service from a local dev environment named "my_site"',
 	},
 ];
 
 command()
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( [ 'f', 'follow' ], 'Follow logs for a specific service in local dev environment' )
-	.option( 'service', 'Show logs for a specific service in local dev environment. Defaults to all if none passed in.' )
+	.option(
+		'service',
+		'Show logs for a specific service in local dev environment. Defaults to all if none passed in.'
+	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

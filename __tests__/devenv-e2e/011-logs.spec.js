@@ -13,7 +13,13 @@ import nock from 'nock';
  * Internal dependencies
  */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, createAndStartEnvironment, destroyEnvironment, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import {
+	checkEnvExists,
+	createAndStartEnvironment,
+	destroyEnvironment,
+	getProjectSlug,
+	prepareEnvironment,
+} from './helpers/utils';
 import { vipDevEnvLogs } from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 
@@ -45,9 +51,11 @@ describe( 'vip dev-env logs', () => {
 			const slug = getProjectSlug();
 			expect( await checkEnvExists( slug ) ).toBe( false );
 
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug ], { env } );
+			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug ], {
+				env,
+			} );
 			expect( result.rc ).toBeGreaterThan( 0 );
-			expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+			expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 
 			return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 		} );
@@ -75,21 +83,34 @@ describe( 'vip dev-env logs', () => {
 		} );
 
 		it( 'should display all the logs', async () => {
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug ], { env }, true );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug ],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toMatch( /database_1/ );
 			expect( result.stdout ).toMatch( /STARTING UP/ );
 		} );
 
 		it( 'should fail on unknown services', async () => {
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug, '--service', 'foobar' ], { env } );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug, '--service', 'foobar' ],
+				{ env }
+			);
 			expect( result.rc ).toBeGreaterThan( 0 );
 			console.log( result.stderr );
-			expect( result.stderr ).toContain( "Error:  Service 'foobar' not found. Please choose from one: devtools, nginx, php, database, memcached, wordpress, vip-mu-plugins, demo-app-code" );
+			expect( result.stderr ).toContain(
+				"Error:  Service 'foobar' not found. Please choose from one: devtools, nginx, php, database, memcached, wordpress, vip-mu-plugins, demo-app-code"
+			);
 		} );
 
 		it( 'should display logs for a selected service', async () => {
-			const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug, '--service', 'php' ], { env }, true );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvLogs, '--slug', slug, '--service', 'php' ],
+				{ env },
+				true
+			);
 			expect( result.rc ).toBe( 0 );
 			expect( result.stdout ).toMatch( /php_1/ );
 		} );

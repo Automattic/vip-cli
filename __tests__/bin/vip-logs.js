@@ -87,7 +87,11 @@ describe( 'getLogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'logs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
 			total: 2,
@@ -110,7 +114,7 @@ describe( 'getLogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable indent */
-`[
+			`[
 	{
 		"timestamp": "2021-11-05T20:18:36.234041811Z",
 		"message": "My container message 1"
@@ -135,7 +139,11 @@ describe( 'getLogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'logs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
 			total: 2,
@@ -149,7 +157,10 @@ describe( 'getLogs', () => {
 			nextCursor: null,
 			nodes: [
 				{ timestamp: '2021-11-05T20:18:36.234041811Z', message: 'My container message 1' },
-				{ timestamp: '2021-11-09T20:47:07.301221112Z', message: `My container message 2 has "double quotes", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs` },
+				{
+					timestamp: '2021-11-09T20:47:07.301221112Z',
+					message: `My container message 2 has "double quotes", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs`,
+				},
 			],
 		} ) );
 
@@ -174,7 +185,11 @@ describe( 'getLogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'logs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
 			total: 2,
@@ -203,7 +218,11 @@ describe( 'getLogs', () => {
 			format: 'text',
 		};
 
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'logs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_success', {
 			...trackingParams,
 			total: 0,
@@ -240,7 +259,11 @@ describe( 'getLogs', () => {
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
-		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'logs_command_execute', trackingParams );
+		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
+			1,
+			'logs_command_execute',
+			trackingParams
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 2, 'logs_command_error', {
 			...trackingParams,
 			error: 'My intentional Error',
@@ -255,7 +278,9 @@ describe( 'getLogs', () => {
 		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Invalid type: my-type. The supported types are: app, batch.' );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Invalid type: my-type. The supported types are: app, batch.'
+		);
 
 		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
 
@@ -272,7 +297,9 @@ describe( 'getLogs', () => {
 		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( 'Invalid format: jso. The supported formats are: csv, json, text.' );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Invalid format: jso. The supported formats are: csv, json, text.'
+		);
 
 		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
 
@@ -281,27 +308,25 @@ describe( 'getLogs', () => {
 		expect( tracker.trackEvent ).not.toHaveBeenCalled();
 	} );
 
-	it.each( [
-		'abc',
-		-1,
-		0,
-		12.4,
-		5001,
-	] )( 'should exit with error if "limit" is invalid (%p)', async limit => {
-		opts.limit = limit;
+	it.each( [ 'abc', -1, 0, 12.4, 5001 ] )(
+		'should exit with error if "limit" is invalid (%p)',
+		async limit => {
+			opts.limit = limit;
 
-		const promise = getLogs( [], opts );
+			const promise = getLogs( [], opts );
 
-		await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
+			await expect( promise ).rejects.toBe( 'EXIT WITH ERROR' );
 
-		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
-		expect( exit.withError ).toHaveBeenCalledWith( `Invalid limit: ${ limit }. It should be a number between 1 and 5000.` );
+			expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+			expect( exit.withError ).toHaveBeenCalledWith(
+				`Invalid limit: ${ limit }. It should be a number between 1 and 5000.`
+			);
 
-		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
+			expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
 
-		expect( console.log ).not.toHaveBeenCalled();
+			expect( console.log ).not.toHaveBeenCalled();
 
-		expect( tracker.trackEvent ).not.toHaveBeenCalled();
-	} );
+			expect( tracker.trackEvent ).not.toHaveBeenCalled();
+		}
+	);
 } );
-

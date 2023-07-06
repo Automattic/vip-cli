@@ -47,7 +47,10 @@ export async function cachePurgeCommand( urls = [], opt = {} ): void {
 	}
 
 	if ( ! urls.length ) {
-		await trackEvent( 'cache_purge_url_command_error', { ...trackingParams, error: 'No URL provided' } );
+		await trackEvent( 'cache_purge_url_command_error', {
+			...trackingParams,
+			error: 'No URL provided',
+		} );
 
 		exit.withError( 'Please supply at least one URL.' );
 	}
