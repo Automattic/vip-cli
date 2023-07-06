@@ -19,3 +19,5 @@ coverage
 .vscode
 .idea
 *.iml
+
+schema.gql
