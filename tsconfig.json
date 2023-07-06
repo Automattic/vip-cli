@@ -16,7 +16,11 @@
     "paths": {
       "*": [
         "./types/*",
-        "./node_modules/*"
+        "./node_modules/*",
+        "./node_modules/@types/*",
+        // needed because the noImplicitAnyImportBypass overrides the node import too
+        "./node_modules/@types/node/*",
+        "./noImplicitAnyImportBypass.d.ts"
       ]
     },
     // It's worth enabling this, I promise!
