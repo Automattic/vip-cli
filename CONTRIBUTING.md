@@ -175,9 +175,8 @@ at https://github.com/Automattic/go-search-replace
 If you're an employee of Automattic, you can follow these steps to regenerate the GraphQL types
 used.
 
-1. Ensure that you're using `nvm` or an equivalent node package manager
-2. Get a hold of `schema.gql` and paste it in project root - this is the schema of the endpoint that
+1. Get a hold of `schema.gql` and paste it in project root - this is the schema of the endpoint that
    we communicate with.
-3. Run `npm run typescript:codegen:install-dependencies` - this will install the codegen
+2. Run `npm run typescript:codegen:install-dependencies` - this will install the codegen
    dependencies without updating `package.json`
-4. Run `npm run typescript:codegen:generate` - this will regenerate the types
+3. Run `npm run typescript:codegen:generate` - this will regenerate the types
