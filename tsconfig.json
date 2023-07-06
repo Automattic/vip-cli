@@ -32,11 +32,10 @@
     "config",
     "__tests__",
     "__fixtures__",
-    "noImplictAnyImportBypass.d.ts",
-    "codegen.ts"
+    "noImplicitAnyImportBypass.d.ts"
   ],
   "exclude": [
-    "node_modules",
-    "**/*.js"
+    "**/*.js",
+    "codegen.ts"
   ]
 }
