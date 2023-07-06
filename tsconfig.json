@@ -28,7 +28,8 @@
     "config",
     "__tests__",
     "__fixtures__",
-    "noImplictAnyImportBypass.d.ts"
+    "noImplictAnyImportBypass.d.ts",
+    "codegen.ts"
   ],
   "exclude": [
     "node_modules",
