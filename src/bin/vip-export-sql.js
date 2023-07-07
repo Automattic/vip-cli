@@ -51,12 +51,25 @@ command( {
 	usage: 'vip export sql',
 } )
 	.option( 'output', 'Specify the location where you want to save the export file' )
+	.option(
+		'generate-backup',
+		'Exports a freshly created database backup instead of using the latest existing one'
+	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], { app, env, output } ) => {
-		const trackerFn = makeCommandTracker( 'export_sql', { app: app.id, env: env.uniqueLabel } );
+	.argv( process.argv, async ( arg: string[], { app, env, output, generateBackup } ) => {
+		const trackerFn = makeCommandTracker( 'export_sql', {
+			app: app.id,
+			env: env.uniqueLabel,
+			generate_backup: generateBackup,
+		} );
 		await trackerFn( 'execute' );
 
-		const exportCommand = new ExportSQLCommand( app, env, output, trackerFn );
+		const exportCommand = new ExportSQLCommand(
+			app,
+			env,
+			{ outputFile: output, generateBackup },
+			trackerFn
+		);
 		await exportCommand.run();
 		await trackerFn( 'success' );
 	} );
