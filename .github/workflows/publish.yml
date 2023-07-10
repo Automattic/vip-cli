@@ -18,8 +18,11 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write    
     steps:
-      - uses: Automattic/vip-actions/npm-prepare-release@update/branch-protection-compatibility
+      - uses: Automattic/vip-actions/npm-prepare-release@update/branch-protection-compatibility3
         with:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
