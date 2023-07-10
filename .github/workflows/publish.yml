@@ -21,8 +21,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write    
-      actions: write
-      issues: write
     steps:
       - uses: Automattic/vip-actions/npm-prepare-release@update/branch-protection-compatibility
         with:
