@@ -22,7 +22,7 @@ jobs:
       contents: write
       pull-requests: write    
     steps:
-      - uses: Automattic/vip-actions/npm-prepare-release@npm-publish-branch-protection-compatibility
+      - uses: Automattic/vip-actions/npm-prepare-release@update/npm-publish-branch-protection-compatibility
         with:
           npm-version-type: ${{ inputs.npm-version-type }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
