@@ -26,3 +26,4 @@ jobs:
         with:
           npm-version-type: ${{ inputs.npm-version-type }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_ASSIGNEE: ${{ github.actor }}
