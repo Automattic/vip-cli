@@ -21,6 +21,8 @@ import * as exit from '../lib/cli/exit';
 import { pollUntil } from '../lib/utils';
 import { ProgressTracker } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
+import { GraphQLFormattedError } from 'graphql';
+import { RateLimitExceededError } from '../lib/types/graphql/rate-limit-exceeded-error';
 
 const DB_BACKUP_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -201,28 +203,26 @@ export class BackupDBCommand {
 				this.progressTracker.startPrinting();
 				await createBackupJob( this.app.id, this.env.id );
 			} catch ( e ) {
-				const err = e as Error;
+				const err = e as Error & {
+					graphQLErrors?: GraphQLFormattedError[];
+				};
+				const graphQLError = err.graphQLErrors?.[ 0 ] as RateLimitExceededError | undefined;
 				this.progressTracker.stepFailed( this.steps.PREPARE );
 				this.stopProgressTracker();
-				if ( err.message?.includes( 'Database backups limit reached' ) ) {
+				if ( graphQLError?.extensions?.errorHttpCode === 429 ) {
+					const retryAfter = graphQLError.extensions.retryAfter;
 					await this.track( 'error', {
 						error_type: 'rate_limit_exceeded',
 						error_message: `Couldn't create a new database backup job: ${ err?.message }`,
 						stack: err?.stack,
 					} );
-					let errMessage = err.message.replace(
-						'Database backups limit reached',
-						'A new database backup was not generated because a recently generated backup already exists.'
-					);
-					errMessage = errMessage.replace(
-						'Retry after',
-						'\nIf you would like to run the same command, you can retry on or after:'
-					);
-					errMessage += `\nAlternatively, you can export the latest existing database backup by running: ${ chalk.green(
+					const errMessage = `A new database backup was not generated because a recently generated backup already exists.
+If you would like to run the same command, you can retry on or after: ${ retryAfter }
+Alternatively, you can export the latest existing database backup by running: ${ chalk.green(
 						'vip @app.env export sql'
-					) }, right away.`;
-					errMessage +=
-						'\nLearn more about limitations around generating database backups: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations \n';
+					) }, right away.
+Learn more about limitations around generating database backups: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations
+					`;
 					exit.withError( errMessage );
 				}
 				await this.track( 'error', {
