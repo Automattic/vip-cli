@@ -11,6 +11,7 @@ import gql from 'graphql-tag';
 import API from '../../lib/api';
 import { GetAppSlowlogsQueryVariables } from './app-slowlogs.generated';
 import { Query } from '../../graphqlTypes';
+import { GetRecentSlowlogsResponse } from './types';
 
 export const LIMIT_MAX = 5000;
 
@@ -36,18 +37,18 @@ const QUERY_ENVIRONMENT_SLOWLOGS = gql`
 	}
 `;
 
-interface GetRecentSlowlogsResponse {
-	nodes: {
-		timestamp: string;
-		rowsSent: string;
-		rowsExamined: string;
-		queryTime: string;
-		requestUri: string;
-		query: string;
-	}[];
-	nextCursor: string;
-	pollingDelaySeconds: number;
-}
+// export interface GetRecentSlowlogsResponse {
+// 	nodes: {
+// 		timestamp: string;
+// 		rowsSent: string;
+// 		rowsExamined: string;
+// 		queryTime: string;
+// 		requestUri: string;
+// 		query: string;
+// 	}[];
+// 	nextCursor: string;
+// 	pollingDelaySeconds: number;
+// }
 
 export async function getRecentSlowlogs(
 	appId: number,

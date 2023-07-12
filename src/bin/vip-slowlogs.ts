@@ -15,6 +15,14 @@ import { trackEvent } from '../lib/tracker';
 import * as slowlogsLib from '../lib/app-slowlogs/app-slowlogs';
 import * as exit from '../lib/cli/exit';
 import { formatData } from '../lib/cli/format';
+import {
+	BaseTrackingParams,
+	DefaultOptions,
+	GetBaseTrackingParamsOptions,
+	GetSlowLogsOptions,
+	Slowlog,
+	SlowlogFormats,
+} from '../lib/app-slowlogs/types';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 500;
@@ -23,7 +31,7 @@ const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
-export async function getSlowlogs( arg: string[], opt ): Promise< void > {
+export async function getSlowlogs( arg: string[], opt: GetSlowLogsOptions ): Promise< void > {
 	validateInputs( opt.limit, opt.format );
 
 	const trackingParams = getBaseTrackingParams( opt );
@@ -33,10 +41,11 @@ export async function getSlowlogs( arg: string[], opt ): Promise< void > {
 	let slowlogs;
 	try {
 		slowlogs = await slowlogsLib.getRecentSlowlogs( opt.app.id, opt.env.id, opt.limit );
-	} catch ( error ) {
-		await trackEvent( 'slowlogs_command_error', { ...trackingParams, error: error.message } );
+	} catch ( error: unknown ) {
+		const err = error as Error;
+		await trackEvent( 'slowlogs_command_error', { ...trackingParams, error: err.message } );
 
-		return exit.withError( error.message );
+		return exit.withError( err.message );
 	}
 
 	await trackEvent( 'slowlogs_command_success', {
@@ -52,7 +61,12 @@ export async function getSlowlogs( arg: string[], opt ): Promise< void > {
 	printSlowlogs( slowlogs.nodes, opt.format );
 }
 
-export async function followLogs( opt ): Promise< void > {
+interface FollowLogsOptions extends DefaultOptions {
+	limit: number;
+	format: SlowlogFormats;
+}
+
+export async function followLogs( opt: FollowLogsOptions ): Promise< void > {
 	let after = null;
 	let isFirstRequest = true;
 	// How many times have we polled?
@@ -80,13 +94,14 @@ export async function followLogs( opt ): Promise< void > {
 			// eslint-disable-next-line no-await-in-loop
 			await trackEvent( 'slowlogs_command_follow_success', {
 				...trackingParams,
-				total: slowlogs?.nodes.length,
+				total: slowlogs.nodes.length,
 			} );
-		} catch ( error ) {
+		} catch ( error: unknown ) {
+			const err = error as Error;
 			// eslint-disable-next-line no-await-in-loop
 			await trackEvent( 'slowlogs_command_follow_error', {
 				...trackingParams,
-				error: error.message,
+				error: err.message,
 			} );
 
 			// If the first request fails we don't want to retry (it's probably not recoverable)
@@ -103,16 +118,16 @@ export async function followLogs( opt ): Promise< void > {
 		}
 
 		if ( slowlogs ) {
-			if ( slowlogs?.nodes.length ) {
+			if ( slowlogs.nodes.length ) {
 				printSlowlogs( slowlogs.nodes, opt.format );
 			}
 
-			after = slowlogs?.nextCursor;
+			after = slowlogs.nextCursor;
 			isFirstRequest = false;
 
 			// Keep a sane lower limit of MIN_POLLING_DELAY_IN_SECONDS just in case something goes wrong in the server-side
 			delay = Math.max(
-				slowlogs?.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS,
+				slowlogs.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS,
 				MIN_POLLING_DELAY_IN_SECONDS
 			);
 		}
@@ -122,19 +137,19 @@ export async function followLogs( opt ): Promise< void > {
 	}
 }
 
-function getBaseTrackingParams( opt ) {
+function getBaseTrackingParams( opt: GetBaseTrackingParamsOptions ): BaseTrackingParams {
 	return {
 		command: 'vip slowlogs',
 		org_id: opt.app.organization.id,
 		app_id: opt.app.id,
 		env_id: opt.env.id,
 		limit: opt.limit,
-		follow: opt.follow || false,
+		follow: opt.follow ?? false,
 		format: opt.format,
 	};
 }
 
-function printSlowlogs( slowlogs, format ) {
+function printSlowlogs( slowlogs: Slowlog[], format: SlowlogFormats ): void {
 	// Strip out __typename
 	slowlogs = slowlogs.map( log => {
 		const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } = log;
@@ -142,24 +157,10 @@ function printSlowlogs( slowlogs, format ) {
 		return { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query };
 	} );
 
-	// let output = '';
-	// if ( format && 'text' === format ) {
-	// 	const rows = [];
-	// 	for ( const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } of slowlogs ) {
-	// 		rows.push( `${ timestamp } | ${ query }` );
-	// 		rows.push(
-	// 			`Rows Sent: ${ rowsSent } | Rows Examined: ${ rowsExamined } | Query Time: ${ queryTime } | Request URI: ${ requestUri }`
-	// 		);
-	// 		output = rows.join( '\n' );
-	// 	}
-	// } else {
-	// 	output = formatData( slowlogs, format );
-	// }
-
 	console.log( formatData( slowlogs, format ) );
 }
 
-export function validateInputs( limit: number, format: string ): void {
+export function validateInputs( limit: number, format: SlowlogFormats ): void {
 	if ( ! ALLOWED_FORMATS.includes( format ) ) {
 		exit.withError(
 			`Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.`
@@ -188,7 +189,7 @@ export const appQuery = `
 	}
 `;
 
-command( {
+void command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
