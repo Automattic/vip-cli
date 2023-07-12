@@ -162,7 +162,7 @@
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
-    "semver": "7.5.3",
+    "semver": "7.5.4",
     "shelljs": "^0.8.5",
     "single-line-log": "1.1.2",
     "socket.io-client": "^4.5.3",
