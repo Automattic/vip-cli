@@ -28,8 +28,6 @@ import { App, AppEnvironment, Job } from '../graphqlTypes';
 
 const DB_BACKUP_PROGRESS_POLL_INTERVAL = 1000;
 
-// type Job = AppBackupJobStatusQuery['app']
-
 export const CREATE_DB_BACKUP_JOB_MUTATION = gql`
 	mutation TriggerDatabaseBackup($input: AppEnvironmentTriggerDBBackupInput) {
 		triggerDatabaseBackup(input: $input) {
