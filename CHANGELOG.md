@@ -1,5 +1,10 @@
 ## Changelog
 
+### 2.32.1
+
+- #1445 chore(deps): update vulnerable dependencies to fix ReDoS in semver
+- #1444 chore(deps): update Lando
+
 ### 2.32.0
 
 - #1411 feature(export): Add ability to generate a new backup when exporting SQL
