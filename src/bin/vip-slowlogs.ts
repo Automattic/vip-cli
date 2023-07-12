@@ -77,7 +77,7 @@ export async function followLogs( opt: FollowLogsOptions ): Promise< void > {
 	// Set an initial default delay
 	let delay = DEFAULT_POLLING_DELAY_IN_SECONDS;
 
-	// eslint-disable-next-line no-constant-condition
+	// eslint-disable-next-line no-constant-condition, @typescript-eslint/no-unnecessary-condition
 	while ( true ) {
 		const limit = isFirstRequest ? opt.limit : LIMIT_MAX;
 

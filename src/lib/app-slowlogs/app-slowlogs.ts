@@ -37,24 +37,11 @@ const QUERY_ENVIRONMENT_SLOWLOGS = gql`
 	}
 `;
 
-// export interface GetRecentSlowlogsResponse {
-// 	nodes: {
-// 		timestamp: string;
-// 		rowsSent: string;
-// 		rowsExamined: string;
-// 		queryTime: string;
-// 		requestUri: string;
-// 		query: string;
-// 	}[];
-// 	nextCursor: string;
-// 	pollingDelaySeconds: number;
-// }
-
 export async function getRecentSlowlogs(
 	appId: number,
 	envId: number,
 	limit: number,
-	after?: string
+	after?: string | null
 ): Promise< GetRecentSlowlogsResponse > {
 	const api = await API( { exitOnError: false } );
 
