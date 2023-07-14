@@ -1,5 +1,13 @@
 ## Changelog
 
+### 2.32.2
+
+- #1443	On-demand Database Backup: Use a less error-prone way of detecting if we're rate limited
+- #1434	Add more clarifying steps for making a release
+- #1435	Remove enums from GraphQL codegen and make sure that prettier actually runs
+- #1433	Redeploy codegen for GraphQL queries
+- #1432	Revert "Add codegen for GraphQL queries (#1429)"
+
 ### 2.32.1
 
 - #1445 chore(deps): update vulnerable dependencies to fix ReDoS in semver
