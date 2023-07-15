@@ -4,8 +4,8 @@
  * @param {RegExp} statementRegex A RegExp pattern representing the start of the statement to capture
  * @return {Function} A function which processes individual lines to capture the matching statements
  */
-export function getMultilineStatement( statementRegex: RegExp ): ( line: string ) => string[][] {
-	const matchingStatements: string[][] = [];
+export function getMultilineStatement( statementRegex ) {
+	const matchingStatements = [];
 	let isCapturing = false;
 	let index = 0;
 
@@ -15,9 +15,9 @@ export function getMultilineStatement( statementRegex: RegExp ): ( line: string 
 	 * @param {string} line A line from the file stream
 	 * @return {Array} An array of matching statements where each statement is presented as an array of lines
 	 */
-	return ( line: string ): string[][] => {
+	return line => {
 		const shouldStartCapture = statementRegex.test( line );
-		const shouldEndCapture = ( shouldStartCapture || isCapturing ) && line.endsWith( ';' );
+		const shouldEndCapture = ( shouldStartCapture || isCapturing ) && /;$/.test( line );
 		if ( shouldStartCapture ) {
 			isCapturing = true;
 			matchingStatements[ index ] = [];

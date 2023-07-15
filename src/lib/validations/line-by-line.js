@@ -1,9 +1,13 @@
 /**
+ * @flow
+ * @format
+ */
+
+/**
  * External dependencies
  */
-import { type Interface, createInterface } from 'node:readline';
-import { createReadStream } from 'node:fs';
-import { open } from 'node:fs/promises';
+import readline from 'readline';
+import fs from 'fs';
 import debugLib from 'debug';
 
 /**
@@ -12,33 +16,34 @@ import debugLib from 'debug';
 import * as exit from '../../lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
-export interface PerLineValidationObject {
-	execute: ( line: string ) => unknown;
-	postLineExecutionProcessing?: ( params: PostLineExecutionProcessingParams ) => Promise< unknown >;
-}
+export type PerLineValidationObject = {
+	execute: Function,
+	postLineExecutionProcessing?: Function,
+};
 
-export interface PostLineExecutionProcessingParams {
-	appId?: number;
-	envId?: number;
-	fileName?: string;
-	isImport?: boolean;
-	skipChecks?: string[];
-	searchReplace?: string | string[];
-}
+export type PostLineExecutionProcessingParams = {
+	appId?: number,
+	envId?: number,
+	fileName?: string,
+	isImport?: boolean,
+	skipChecks?: string[],
+	searchReplace?: string | string[],
+};
 
-export async function getReadInterface( filename: string ): Promise< Interface > {
+export async function getReadInterface( filename: string ) {
 	let fd;
 	try {
-		fd = await open( filename );
+		fd = await fs.promises.open( filename );
 	} catch ( err ) {
 		exit.withError(
 			'The file at the provided path is either missing or not readable. Please check the input and try again.'
 		);
 	}
 
-	return createInterface( {
-		input: createReadStream( '', { fd } ),
-		output: undefined,
+	return readline.createInterface( {
+		input: fs.createReadStream( '', { fd } ),
+		output: null,
+		console: false,
 	} );
 }
 
@@ -46,7 +51,7 @@ export async function fileLineValidations(
 	appId: number,
 	envId: number,
 	fileName: string,
-	validations: PerLineValidationObject[],
+	validations: Array< PerLineValidationObject >,
 	searchReplace: string | string[]
 ) {
 	const isImport = true;
@@ -60,7 +65,7 @@ export async function fileLineValidations(
 		} );
 	} );
 
-	readInterface.on( 'error', ( err: Error ) => {
+	readInterface.on( 'error', err => {
 		throw new Error( ` Error validating input file: ${ err.toString() }` );
 	} );
 
@@ -69,7 +74,7 @@ export async function fileLineValidations(
 	readInterface.close();
 
 	return Promise.all(
-		validations.map( ( validation: PerLineValidationObject ) => {
+		validations.map( async validation => {
 			if (
 				Object.prototype.hasOwnProperty.call( validation, 'postLineExecutionProcessing' ) &&
 				typeof validation.postLineExecutionProcessing === 'function'
@@ -82,8 +87,6 @@ export async function fileLineValidations(
 					searchReplace,
 				} );
 			}
-
-			return Promise.resolve();
 		} )
 	);
 }
