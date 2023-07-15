@@ -1,4 +1,9 @@
 /**
+ * @flow
+ * @format
+ */
+
+/**
  * External dependencies
  */
 import gql from 'graphql-tag';
@@ -9,10 +14,6 @@ import gql from 'graphql-tag';
 import API from '../../lib/api';
 import { trackEventWithEnv } from '../../lib/tracker';
 import * as exit from '../../lib/cli/exit';
-import {
-	AppMappedDomainsQuery,
-	AppMappedDomainsQueryVariables,
-} from './is-multisite-domain-mapped.generated';
 
 /**
  * Extracts the domain for site with ID 1 from an INSERT INTO `wp_site` SQL statement
@@ -20,7 +21,7 @@ import {
  * @param {Array} statements An array of SQL statements
  * @return {string} The domain
  */
-export const getPrimaryDomainFromSQL = ( statements: string[][] ): string => {
+export const getPrimaryDomainFromSQL = ( statements: string[] ): string => {
 	if ( ! statements.length ) {
 		return '';
 	}
@@ -61,7 +62,7 @@ export const maybeSearchReplacePrimaryDomain = function (
  * @return {string} The replaced domain, or the domain as found in the SQL dump
  */
 export const getPrimaryDomain = function (
-	statements: string[][],
+	statements: string[],
 	searchReplace?: string | string[]
 ) {
 	const domainFromSQL = getPrimaryDomainFromSQL( statements );
@@ -85,7 +86,7 @@ export async function isMultisitePrimaryDomainMapped(
 	const api = await API();
 	let res;
 	try {
-		res = await api.query< AppMappedDomainsQuery, AppMappedDomainsQueryVariables >( {
+		res = await api.query( {
 			query: gql`
 				query AppMappedDomains($appId: Int, $envId: Int) {
 					app(id: $appId) {
@@ -114,18 +115,18 @@ export async function isMultisitePrimaryDomainMapped(
 			error_type: 'GraphQL-MappedDomain-Check-failed',
 			gql_err: GraphQlError,
 		} );
-		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		exit.withError( `StartImport call failed: ${ GraphQlError }` );
 	}
-	if ( ! Array.isArray( res.data.app?.environments ) ) {
+	if ( ! Array.isArray( res?.data?.app?.environments ) ) {
 		return false;
 	}
 
-	const environments = res.data.app!.environments;
+	const environments = res.data.app.environments;
 	if ( ! environments.length ) {
 		return false;
 	}
 
-	const mappedDomains = environments[ 0 ]?.domains?.nodes?.map( domain => domain?.name ) ?? [];
+	const mappedDomains = environments[ 0 ]?.domains?.nodes?.map( domain => domain.name );
+
 	return mappedDomains.includes( primaryDomain );
 }
