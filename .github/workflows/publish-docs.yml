@@ -1,14 +1,13 @@
 name: Publish docs
 
 on:
-  push
-  workflow_dispatch
-
+  push:
+  workflow_dispatch:
 
 # on:
 #   release:
 #     types: [published]
-#   workflow_dispatch
+#   workflow_dispatch:
 
 jobs:
   publish-docs:
