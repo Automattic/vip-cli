@@ -111,18 +111,21 @@ const parseOutput = output => {
 };
 
 const processCommand = async subcommands => {
-	console.error( 'Processing', subcommands.join( ' ' ), '...' );
+	const fullCommand = subcommands.join( ' ' );
+	console.error( 'Processing', fullCommand, '...' );
 
 	const output = await runCommand( subcommands.concat( [ '--help' ] ) );
 	const parsedOutput = parseOutput( output );
 
 	const commandCount = parsedOutput.commands?.length || 0;
-	const commandPromises = [];
+	const commandOutputs = [];
 	for ( let commandIx = 0; commandIx < commandCount; commandIx++ ) {
 		const element = parsedOutput.commands[ commandIx ];
-		commandPromises.push( processCommand( subcommands.concat( [ element.command ] ) ) );
+		// otherwise the parallel run will randomly fail on too many requests
+		// eslint-disable-next-line no-await-in-loop
+		commandOutputs.push( await processCommand( subcommands.concat( [ element.command ] ) ) );
 	}
-	const commandOutputs = await Promise.all( commandPromises );
+	console.error( `Processed ${ fullCommand } -> ${ commandOutputs.length } subcommands` );
 	for ( let commandIx = 0; commandIx < commandCount; commandIx++ ) {
 		const element = parsedOutput.commands[ commandIx ];
 		const commandOutput = commandOutputs[ commandIx ];
@@ -134,11 +137,24 @@ const processCommand = async subcommands => {
 	return parsedOutput;
 };
 
-( async () => {
-	const version = await runCommand( [ '--version' ] );
+const main = async () => {
+	try {
+		const version = await runCommand( [ '--version' ] );
 
-	const result = await processCommand( [] );
-	result.version = version;
+		console.error( 'triggering command processing...' );
+		const result = await processCommand( [] );
+		console.error( 'command processing done' );
+		result.version = version;
 
-	console.log( JSON.stringify( result, null, 2 ) );
-} )();
+		console.log( JSON.stringify( result, null, 2 ) );
+
+		// We need to make sure the output is flushed before the process exits.
+		console.error( 'Waiting for output to flush...' );
+		await new Promise( resolve => setTimeout( resolve, 2000 ) );
+		console.error( 'Flushed' );
+	} catch ( e ) {
+		console.error( 'Error', e );
+	}
+};
+
+main();

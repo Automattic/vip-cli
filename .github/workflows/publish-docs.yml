@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - run: npm i -g @automattic/vip
-      - run: node ./helpers/generate-docs.js > /tmp/docs.json && cat /tmp/docs.json
+      - run: node ./helpers/generate-docs.js > /tmp/docs.json
       - name: Print docs.json
         run: cat /tmp/docs.json
       - name: Send docs to docs site
