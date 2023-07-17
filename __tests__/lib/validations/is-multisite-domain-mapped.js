@@ -22,11 +22,7 @@ import { API_URL } from '../../../src/lib/api';
 
 describe( 'is-multisite-domain-mapped', () => {
 	const capturedStatement = [
-		[
-			'INSERT INTO `wp_site` (`id`, `domain`, `path`)',
-			'VALUES',
-			"\t(1,'www.example.com','/');",
-		],
+		[ 'INSERT INTO `wp_site` (`id`, `domain`, `path`)', 'VALUES', "\t(1,'www.example.com','/');" ],
 	];
 
 	const statementNotFound = [];
@@ -46,19 +42,28 @@ describe( 'is-multisite-domain-mapped', () => {
 	describe( 'maybeSearchReplacePrimaryDomain', () => {
 		it( 'should replace the domain if there are matching replacements', () => {
 			const domain = getPrimaryDomainFromSQL( capturedStatement );
-			const replacedDomain = maybeSearchReplacePrimaryDomain( domain, 'www.example.com,www.newdomain.com' );
+			const replacedDomain = maybeSearchReplacePrimaryDomain(
+				domain,
+				'www.example.com,www.newdomain.com'
+			);
 			expect( replacedDomain ).toEqual( 'www.newdomain.com' );
 		} );
 
 		it( 'should handle multiple replacements', () => {
 			const domain = getPrimaryDomainFromSQL( capturedStatement );
-			const replacedDomain = maybeSearchReplacePrimaryDomain( domain, [ 'example.com,newdomain.com', 'www.example.com,www.newdomain.com' ] );
+			const replacedDomain = maybeSearchReplacePrimaryDomain( domain, [
+				'example.com,newdomain.com',
+				'www.example.com,www.newdomain.com',
+			] );
 			expect( replacedDomain ).toEqual( 'www.newdomain.com' );
 		} );
 
 		it( 'should return return the original domain if no matching replacements', () => {
 			const domain = getPrimaryDomainFromSQL( capturedStatement );
-			const replacedDomain = maybeSearchReplacePrimaryDomain( domain, 'example.com,www.newdomain.com' );
+			const replacedDomain = maybeSearchReplacePrimaryDomain(
+				domain,
+				'example.com,www.newdomain.com'
+			);
 			expect( replacedDomain ).toEqual( domain );
 		} );
 	} );
@@ -82,29 +87,27 @@ describe( 'is-multisite-domain-mapped', () => {
 
 	describe( 'isMultisitePrimaryDomainMapped', () => {
 		beforeEach( () => {
-			const {
-				protocol,
-				host,
-				path,
-			} = url.parse( API_URL );
+			const { protocol, host, path } = url.parse( API_URL );
 
-			nock( `${ protocol }//${ host }` ).post( path ).reply( 200, {
-				data: {
-					app: {
-						environments: [
-							{
-								domains: {
-									nodes: [
-										{
-											name: 'www.example.com',
-										},
-									],
+			nock( `${ protocol }//${ host }` )
+				.post( path )
+				.reply( 200, {
+					data: {
+						app: {
+							environments: [
+								{
+									domains: {
+										nodes: [
+											{
+												name: 'www.example.com',
+											},
+										],
+									},
 								},
-							},
-						],
+							],
+						},
 					},
-				},
-			} );
+				} );
 		} );
 
 		afterEach( nock.cleanAll );

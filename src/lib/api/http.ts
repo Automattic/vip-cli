@@ -14,9 +14,9 @@ import { API_HOST } from '../../lib/api';
 
 const debug = debugLib( '@automattic/vip:http' );
 
-type FetchOptions = Omit<RequestInit, 'body'> & {
-	body?: BodyInit | Record<string, unknown>;
-}
+type FetchOptions = Omit< RequestInit, 'body' > & {
+	body?: BodyInit | Record< string, unknown >;
+};
 
 /**
  * Call the Public API with an arbitrary path (e.g. to connect to REST endpoints).
@@ -28,7 +28,7 @@ type FetchOptions = Omit<RequestInit, 'body'> & {
  * @param {Object} options options to pass to `fetch`
  * @return {Promise} Return value of the `fetch` call
  */
-export default async ( path: string, options: FetchOptions = {} ): Promise<Response> => {
+export default async ( path: string, options: FetchOptions = {} ): Promise< Response > => {
 	let url = path;
 
 	// For convenience, we support just passing in the path to this function...
@@ -52,6 +52,7 @@ export default async ( path: string, options: FetchOptions = {} ): Promise<Respo
 			'Content-Type': 'application/json',
 			...( options.headers ?? {} ),
 		},
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
 	} );
 };

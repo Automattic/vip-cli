@@ -65,7 +65,9 @@ describe( 'getAllEnvVarsCommand', () => {
 		},
 		format: 'csv',
 	};
-	const eventPayload = expect.objectContaining( { command: 'vip @mysite.develop config envvar get-all' } );
+	const eventPayload = expect.objectContaining( {
+		command: 'vip @mysite.develop config envvar get-all',
+	} );
 	const executeEvent = [ 'envvar_get_all_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_get_all_command_success', eventPayload ];
 
@@ -88,7 +90,9 @@ describe( 'getAllEnvVarsCommand', () => {
 
 		await expect( () => getAllEnvVarsCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'There are no environment variables' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'There are no environment variables' )
+		);
 		expect( process.exit ).toHaveBeenCalled();
 		expect( formatData ).not.toHaveBeenCalled();
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
@@ -105,4 +109,3 @@ describe( 'getAllEnvVarsCommand', () => {
 		expect( trackEvent.mock.calls ).toEqual( [ executeEvent, queryErrorEvent ] );
 	} );
 } );
-

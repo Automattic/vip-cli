@@ -16,7 +16,11 @@ import chalk from 'chalk';
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND, DEV_ENVIRONMENT_NOT_FOUND, DEV_ENVIRONMENT_PHP_VERSIONS } from '../lib/constants/dev-environment';
+import {
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_PHP_VERSIONS,
+} from '../lib/constants/dev-environment';
 import {
 	addDevEnvConfigurationOptions,
 	getEnvTrackingInfo,
@@ -27,7 +31,12 @@ import {
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import type { InstanceOptions } from '../lib/dev-environment/types';
-import { doesEnvironmentExist, getEnvironmentPath, readEnvironmentData, updateEnvironment } from '../lib/dev-environment/dev-environment-core';
+import {
+	doesEnvironmentExist,
+	getEnvironmentPath,
+	readEnvironmentData,
+	updateEnvironment,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import {
 	getConfigurationFileOptions,
@@ -76,7 +85,10 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		const configurationFileOptions = await getConfigurationFileOptions();
 		const thereAreOptionsFromConfigFile = Object.keys( configurationFileOptions ).length > 0;
-		const finalPreselectedOptions = mergeConfigurationFileOptions( preselectedOptions, configurationFileOptions );
+		const finalPreselectedOptions = mergeConfigurationFileOptions(
+			preselectedOptions,
+			configurationFileOptions
+		);
 
 		const defaultOptions: InstanceOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
@@ -88,6 +100,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
 			mailpit: currentInstanceData.mailpit ?? currentInstanceData.mailhog,
+			photon: currentInstanceData.photon,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,
 			title: '',
@@ -98,18 +111,30 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
 
 		const suppressPrompts = providedOptions.length > 0 || thereAreOptionsFromConfigFile;
-		const instanceData = await promptForArguments( finalPreselectedOptions, defaultOptions, suppressPrompts );
+		const instanceData = await promptForArguments(
+			finalPreselectedOptions,
+			defaultOptions,
+			suppressPrompts
+		);
 		instanceData.siteSlug = slug;
 
 		await updateEnvironment( instanceData );
 
-		const message = '\n' + chalk.green( '✓' ) + ' environment updated. Restart environment for changes to take an affect.';
+		const message =
+			'\n' +
+			chalk.green( '✓' ) +
+			' environment updated. Restart environment for changes to take an affect.';
 		console.log( message );
 		await trackEvent( 'dev_env_update_command_success', trackingInfo );
 	} catch ( error ) {
 		if ( 'ENOENT' === error.code ) {
-			const message = 'Environment was created before update was supported.\n\nTo update environment please destroy it and create a new one.';
-			await handleCLIException( new Error( message ), 'dev_env_update_command_error', trackingInfo );
+			const message =
+				'Environment was created before update was supported.\n\nTo update environment please destroy it and create a new one.';
+			await handleCLIException(
+				new Error( message ),
+				'dev_env_update_command_error',
+				trackingInfo
+			);
 		} else {
 			await handleCLIException( error, 'dev_env_update_command_error', trackingInfo );
 		}

@@ -28,10 +28,7 @@ describe( 'lib/analytics', () => {
 			const stubClient1Spy = jest.spyOn( stubClient1, 'trackEvent' );
 			const stubClient2 = new AnalyticsClientStub();
 			const stubClient2Spy = jest.spyOn( stubClient2, 'trackEvent' );
-			const analytics = new Analytics( [
-				stubClient1,
-				stubClient2,
-			] );
+			const analytics = new Analytics( [ stubClient1, stubClient2 ] );
 
 			const result = analytics.trackEvent( 'test_event', {} );
 
@@ -45,9 +42,7 @@ describe( 'lib/analytics', () => {
 
 			const stubClient = new AnalyticsClientStub();
 			const stubClientSpy = jest.spyOn( stubClient, 'trackEvent' );
-			const analytics = new Analytics( [
-				stubClient,
-			] );
+			const analytics = new Analytics( [ stubClient ] );
 
 			const result = analytics.trackEvent( 'test_event', {} );
 

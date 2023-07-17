@@ -39,9 +39,11 @@ describe( 'vip dev-env update', () => {
 	it( 'should fail if the environment does not exist', async () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate, '--slug', slug ], { env } );
+		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate, '--slug', slug ], {
+			env,
+		} );
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( 'Error: Environment doesn\'t exist.' );
+		expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
 		expect( await checkEnvExists( slug ) ).toBe( false );
 	} );
 
@@ -49,13 +51,21 @@ describe( 'vip dev-env update', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
 		const dataBefore = readEnvironmentData( slug );
 
-		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate, '--slug', slug ], { env }, true );
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvUpdate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 
 		const dataAfter = readEnvironmentData( slug );
@@ -71,10 +81,15 @@ describe( 'vip dev-env update', () => {
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailpit = false;
+		const expectedPhoton = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -85,8 +100,10 @@ describe( 'vip dev-env update', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 
+		// prettier-ignore
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
@@ -94,7 +111,9 @@ describe( 'vip dev-env update', () => {
 			'-p', `${ ! expectedPhpMyAdmin }`,
 			'-x', `${ ! expectedXDebug }`,
 			'-A', `${ ! expectedMailpit }`,
+			'-H', `${ ! expectedPhoton }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -105,6 +124,7 @@ describe( 'vip dev-env update', () => {
 			phpmyadmin: ! expectedPhpMyAdmin,
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
+			photon: ! expectedPhoton,
 		} );
 	} );
 
@@ -114,11 +134,13 @@ describe( 'vip dev-env update', () => {
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
+		// prettier-ignore
 		let result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvCreate,
 			'--slug', slug,
 			'--multisite', `${ expectedMultiSite }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -128,11 +150,13 @@ describe( 'vip dev-env update', () => {
 			multisite: expectedMultiSite,
 		} );
 
+		// prettier-ignore
 		result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
 			'--multisite', `${ ! expectedMultiSite }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -158,18 +182,17 @@ describe( 'vip dev-env update', () => {
 			path.join( basePath, '.lando.yml' ),
 		];
 
-		await Promise.all( [
-			copyFile( src[ 0 ], dst[ 0 ] ),
-			copyFile( src[ 1 ], dst[ 1 ] ),
-		] );
+		await Promise.all( [ copyFile( src[ 0 ], dst[ 0 ] ), copyFile( src[ 1 ], dst[ 1 ] ) ] );
 
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
+		// prettier-ignore
 		const result = await cliTest.spawn( [
 			process.argv[ 0 ], vipDevEnvUpdate,
 			'--slug', slug,
 			'--mailpit', 'true',
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 
 		const dataAfter = readEnvironmentData( slug );

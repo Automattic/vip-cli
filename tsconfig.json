@@ -16,7 +16,11 @@
     "paths": {
       "*": [
         "./types/*",
-        "./node_modules/*"
+        "./node_modules/*",
+        "./node_modules/@types/*",
+        // needed because the noImplicitAnyImportBypass overrides the node import too
+        "./node_modules/@types/node/*",
+        "./noImplicitAnyImportBypass.d.ts"
       ]
     },
     // It's worth enabling this, I promise!
@@ -28,10 +32,10 @@
     "config",
     "__tests__",
     "__fixtures__",
-    "noImplictAnyImportBypass.d.ts"
+    "noImplicitAnyImportBypass.d.ts"
   ],
   "exclude": [
-    "node_modules",
-    "**/*.js"
+    "**/*.js",
+    "codegen.ts"
   ]
 }

@@ -29,7 +29,11 @@ import { prompt } from 'enquirer';
 import command from '../lib/cli/command';
 import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
 import * as exit from '../lib/cli/exit';
-import { default as API, enableGlobalGraphQLErrorHandling, disableGlobalGraphQLErrorHandling } from '../lib/api';
+import {
+	default as API,
+	enableGlobalGraphQLErrorHandling,
+	disableGlobalGraphQLErrorHandling,
+} from '../lib/api';
 import { trackEvent } from '../lib/tracker';
 
 const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];
@@ -80,19 +84,20 @@ async function getBuildConfiguration( application, environment ) {
 	disableGlobalGraphQLErrorHandling();
 
 	const buildConfigQuery = gql`
-	query BuildConfig( $appId: Int, $envId: Int ) {
-        app(id: $appId) {
-            environments(id: $envId) {
-                id,
-                buildConfiguration {
-					buildType
-					nodeBuildDockerEnv,
-					nodeJSVersion,
-					npmToken,
-                }
-            }
-        }
-	}`;
+		query BuildConfig($appId: Int, $envId: Int) {
+			app(id: $appId) {
+				environments(id: $envId) {
+					id
+					buildConfiguration {
+						buildType
+						nodeBuildDockerEnv
+						nodeJSVersion
+						npmToken
+					}
+				}
+			}
+		}
+	`;
 
 	try {
 		const result = await api.query( {
@@ -109,12 +114,25 @@ async function getBuildConfiguration( application, environment ) {
 
 		return result.data.app.environments[ 0 ].buildConfiguration;
 	} catch ( error ) {
-		if ( error.graphQLErrors && error.graphQLErrors.find( gqlError => gqlError.message === 'Unauthorized' ) ) {
-			console.log( `${ chalk.red( 'Error:' ) } You don't have the required permissions to run validations for this environment.\n` +
-				`You must be either be an admin of the ${ chalk.bold.underline( application.organization.name ) } organization, or, alternatively,\n` +
-				`a guest of that organization and an admin of the ${ chalk.bold.underline( application.name ) } application.\n\n` +
-				'You can read more about organization and application roles on our documentation:\n' +
-				chalk.underline( 'https://docs.wpvip.com/technical-references/enterprise-authentication/' ) );
+		if (
+			error.graphQLErrors &&
+			error.graphQLErrors.find( gqlError => gqlError.message === 'Unauthorized' )
+		) {
+			console.log(
+				`${ chalk.red(
+					'Error:'
+				) } You don't have the required permissions to run validations for this environment.\n` +
+					`You must be either be an admin of the ${ chalk.bold.underline(
+						application.organization.name
+					) } organization, or, alternatively,\n` +
+					`a guest of that organization and an admin of the ${ chalk.bold.underline(
+						application.name
+					) } application.\n\n` +
+					'You can read more about organization and application roles on our documentation:\n' +
+					chalk.underline(
+						'https://docs.wpvip.com/technical-references/enterprise-authentication/'
+					)
+			);
 
 			await trackEvent( 'validate_preflight_command_error', {
 				env_id: environment.id,
@@ -146,7 +164,7 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	await trackEvent( 'validate_preflight_command_execute', baseTrackingParams );
 
 	logToConsole( '  /\\  /\\__ _ _ __ _ __ ___   ___  _ __ (_) __ _ ' );
-	logToConsole( ' / /_/ / _` | \'__| \'_ ` _ \\ / _ \\| \'_ \\| |/ _` |' );
+	logToConsole( " / /_/ / _` | '__| '_ ` _ \\ / _ \\| '_ \\| |/ _` |" );
 	logToConsole( '/ __  / (_| | |  | | | | | | (_) | | | | | (_| |' );
 	logToConsole( '\\/ /_/ \\__,_|_|  |_| |_| |_|\\___/|_| |_|_|\\__,_|' );
 	logToConsole( 'VIP Harmonia - Application testing made easy\n' );
@@ -181,6 +199,7 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	const packageJSONfile = path.resolve( opt.path, 'package.json' );
 	let packageJSON;
 	try {
+		// eslint-disable-next-line security/detect-non-literal-require
 		packageJSON = require( packageJSONfile );
 		siteOptions.setPackageJSON( packageJSON );
 	} catch ( error ) {
@@ -189,7 +208,9 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 			error: 'missing-package-json',
 		} );
 
-		return exit.withError( `Could not find a 'package.json' in the current folder (${ opt.path }).` );
+		return exit.withError(
+			`Could not find a 'package.json' in the current folder (${ opt.path }).`
+		);
 	}
 
 	const customEnvVars = {};
@@ -262,17 +283,25 @@ function setupEvents( harmonia: Harmonia ) {
 				logToConsole( `   ✅  ${ chalk.bgGreen( ' Test passed with no errors. ' ) }` );
 				break;
 			case TestResultType.Failed:
-				logToConsole( `   ❌  ${ chalk.bgRed( ` Test failed with ${ result.getErrors().length } errors. ` ) }` );
+				logToConsole(
+					`   ❌  ${ chalk.bgRed( ` Test failed with ${ result.getErrors().length } errors. ` ) }`
+				);
 				break;
 			case TestResultType.PartialSuccess:
 				logToConsole( `   ✅  ${ chalk.bgYellow( ' Test partially succeeded. ' ) }` );
 				break;
 			case TestResultType.Aborted:
-				logToConsole( `   ❌  ${ chalk.bgRedBright.underline( ' Test aborted! ' ) } - There was a critical error that makes`,
-					'the application incompatible with the VIP Platform.' );
+				logToConsole(
+					`   ❌  ${ chalk.bgRedBright.underline(
+						' Test aborted! '
+					) } - There was a critical error that makes`,
+					'the application incompatible with the VIP Platform.'
+				);
 				break;
 			case TestResultType.Skipped:
-				logToConsole( `  ${ chalk.bgGrey.bold( ' Skipped ' ) }\t${ result.getLastNotice().message }` );
+				logToConsole(
+					`  ${ chalk.bgGrey.bold( ' Skipped ' ) }\t${ result.getLastNotice().message }`
+				);
 		}
 		logToConsole();
 	} );
@@ -337,7 +366,9 @@ function setupEvents( harmonia: Harmonia ) {
 }
 
 function runHarmonia( harmonia ) {
-	harmonia.run().then( async ( results: TestResult[] ) => await handleResults( harmonia, results ) );
+	harmonia
+		.run()
+		.then( async ( results: TestResult[] ) => await handleResults( harmonia, results ) );
 }
 
 async function handleResults( harmonia, results: TestResult[] ) {
@@ -366,51 +397,92 @@ async function handleResults( harmonia, results: TestResult[] ) {
 	// Print the results
 	logToConsole( '\n' + chalk.bgGray( '        HARMONIA RESULTS        \n' ) );
 	if ( resultCounter[ TestResultType.Skipped ] ) {
-		logToConsole( ` ${ chalk.bold.bgGrey( ' SKIPPED ' ) } - ${ chalk.bold( resultCounter[ TestResultType.Skipped ] ) } tests` );
+		logToConsole(
+			` ${ chalk.bold.bgGrey( ' SKIPPED ' ) } - ${ chalk.bold(
+				resultCounter[ TestResultType.Skipped ]
+			) } tests`
+		);
 	}
 	if ( resultCounter[ TestResultType.Success ] ) {
-		logToConsole( ` ${ chalk.bold.bgGreen( ' PASSED ' ) } - ${ chalk.bold( resultCounter[ TestResultType.Success ] ) } tests` );
+		logToConsole(
+			` ${ chalk.bold.bgGreen( ' PASSED ' ) } - ${ chalk.bold(
+				resultCounter[ TestResultType.Success ]
+			) } tests`
+		);
 	}
 	if ( resultCounter[ TestResultType.PartialSuccess ] ) {
-		logToConsole( ` ${ chalk.bold.bgYellow( ' PARTIAL SUCCESS ' ) } - ${ chalk.bold( resultCounter[ TestResultType.PartialSuccess ] ) } tests` );
+		logToConsole(
+			` ${ chalk.bold.bgYellow( ' PARTIAL SUCCESS ' ) } - ${ chalk.bold(
+				resultCounter[ TestResultType.PartialSuccess ]
+			) } tests`
+		);
 	}
 	if ( resultCounter[ TestResultType.Failed ] ) {
-		logToConsole( ` ${ chalk.bold.bgRed( ' FAILED ' ) } - ${ chalk.bold( resultCounter[ TestResultType.Failed ] ) } tests` );
+		logToConsole(
+			` ${ chalk.bold.bgRed( ' FAILED ' ) } - ${ chalk.bold(
+				resultCounter[ TestResultType.Failed ]
+			) } tests`
+		);
 	}
 	if ( resultCounter[ TestResultType.Aborted ] ) {
-		logToConsole( ` ${ chalk.bold.bgRedBright( ' ABORTED ' ) } - ${ chalk.bold( resultCounter[ TestResultType.Aborted ] ) } tests` );
+		logToConsole(
+			` ${ chalk.bold.bgRedBright( ' ABORTED ' ) } - ${ chalk.bold(
+				resultCounter[ TestResultType.Aborted ]
+			) } tests`
+		);
 	}
 
 	logToConsole();
-	logToConsole( ` > Total of ${ chalk.bold( results.length - testSuiteResults.length ) } tests have been executed.` );
+	logToConsole(
+		` > Total of ${ chalk.bold(
+			results.length - testSuiteResults.length
+		) } tests have been executed.`
+	);
 	logToConsole();
 
 	// If there is a Aborted test result
 	if ( resultCounter[ TestResultType.Aborted ] ) {
-		logToConsole( `${ chalk.bold.bgRedBright( '  NOT PASS  ' ) } There was a critical failure that makes the application ` +
-			'incompatible with VIP Go. Please review the results and re-run the tests.' );
+		logToConsole(
+			`${ chalk.bold.bgRedBright(
+				'  NOT PASS  '
+			) } There was a critical failure that makes the application ` +
+				'incompatible with VIP Go. Please review the results and re-run the tests.'
+		);
 		process.exit( 1 );
 	}
 
 	// If there is only a partial success, but no failures
-	if ( resultCounter[ TestResultType.PartialSuccess ] && ! resultCounter[ TestResultType.Failed ] ) {
-		logToConsole( `${ chalk.bold.bgYellow( '  PASS  ' ) } The application has passed the required tests, but it does not follow all the recommendations.` );
+	if (
+		resultCounter[ TestResultType.PartialSuccess ] &&
+		! resultCounter[ TestResultType.Failed ]
+	) {
+		logToConsole(
+			`${ chalk.bold.bgYellow(
+				'  PASS  '
+			) } The application has passed the required tests, but it does not follow all the recommendations.`
+		);
 		logToConsole( 'Please review the results.' );
 		process.exit( 0 );
 	}
 
 	// If there is a failure
 	if ( resultCounter[ TestResultType.Failed ] ) {
-		logToConsole( `${ chalk.bold.bgRed( '  NOT PASS  ' ) } The application has failed some tests, and will very likely have problems in a production ` +
-			'environment. Please review all the errors found in the results.' );
+		logToConsole(
+			`${ chalk.bold.bgRed(
+				'  NOT PASS  '
+			) } The application has failed some tests, and will very likely have problems in a production ` +
+				'environment. Please review all the errors found in the results.'
+		);
 		process.exit( 1 );
 	}
 
-	logToConsole( `${ chalk.bold.bgGreen( '  PASS  ' ) } Congratulations. The application passes all the tests.` );
+	logToConsole(
+		`${ chalk.bold.bgGreen( '  PASS  ' ) } Congratulations. The application passes all the tests.`
+	);
 	process.exit( 0 );
 }
 
-async function validateArgs( opt ): Promise<{}> {
+async function validateArgs( opt ): Promise< {} > {
 	const args = {};
 
 	// Verbose
@@ -479,7 +551,7 @@ async function validateArgs( opt ): Promise<{}> {
  */
 function sanitizeArgsForTracking( args: {} ): {} {
 	const protectedKeys = [ 'npmToken', 'nodeBuildDockerEnv' ];
-	const sanitizedArgs = { };
+	const sanitizedArgs = {};
 
 	Object.entries( args ).forEach( ( [ key, value ] ) => {
 		if ( protectedKeys.includes( key ) ) {
@@ -507,27 +579,44 @@ if ( parsedAlias.app ) {
 		appContext: true,
 	};
 } else {
-	logToConsole( chalk.bold.yellow( 'Warning: ' ) +
-		'The preflight tests are running without a provided application and/or environment.\n' +
-		'Some app-dependent configurations, such as environment variables, might not defined.' );
+	logToConsole(
+		chalk.bold.yellow( 'Warning: ' ) +
+			'The preflight tests are running without a provided application and/or environment.\n' +
+			'Some app-dependent configurations, such as environment variables, might not defined.'
+	);
 }
 
 command( commandOpts )
-	.option( 'verbose', 'Increase logging level to include app build and server boot up messages', false )
-	.option( 'node-version', 'Select a specific target Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR' )
-	.option( 'wait', 'Configure the time to wait in ms for the app to boot up. Do not change unless you have issues', 3000 )
-	.option( [ 'p', 'port' ], 'Configure the port to use for the app (defaults to a random port between 3001 and 3999)' )
+	.option(
+		'verbose',
+		'Increase logging level to include app build and server boot up messages',
+		false
+	)
+	.option(
+		'node-version',
+		'Select a specific target Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR'
+	)
+	.option(
+		'wait',
+		'Configure the time to wait in ms for the app to boot up. Do not change unless you have issues',
+		3000
+	)
+	.option(
+		[ 'p', 'port' ],
+		'Configure the port to use for the app (defaults to a random port between 3001 and 3999)'
+	)
 	.option( 'json', 'Output the results as JSON', false )
 	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
 			usage: 'vip @mysite.production validate preflight',
-			description: 'Runs the preflight tests to validate if your application is ready to be deployed to VIP Go',
+			description:
+				'Runs the preflight tests to validate if your application is ready to be deployed to VIP Go',
 		},
 		{
 			usage: 'vip @mysite.production validate preflight --json > results.json',
-			description: 'Runs the preflight tests, but output the results in JSON format, and redirect the output to a file',
+			description:
+				'Runs the preflight tests, but output the results in JSON format, and redirect the output to a file',
 		},
 	] )
 	.argv( process.argv, vipValidatePreflightCommand );
-

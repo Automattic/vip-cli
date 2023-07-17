@@ -15,7 +15,7 @@ export function cancel(): void {
 	process.exit();
 }
 
-export function confirm( message: string ): Promise<boolean> {
+export function confirm( message: string ): Promise< boolean > {
 	return new Confirm( { message } ).run().catch( () => false );
 }
 
@@ -24,12 +24,12 @@ interface Answer {
 	str?: string;
 }
 
-export async function promptForValue( message: string, mustMatch?: string ): Promise<string> {
-	const { str } = await prompt<Answer>( {
+export async function promptForValue( message: string, mustMatch?: string ): Promise< string > {
+	const { str } = await prompt< Answer >( {
 		message,
 		name: 'str',
 		type: 'input',
-		validate: (input: string) => {
+		validate: ( input: string ) => {
 			if ( mustMatch && input !== mustMatch ) {
 				return `Please type ${ mustMatch } to proceed or ESC to cancel`;
 			}

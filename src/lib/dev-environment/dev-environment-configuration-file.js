@@ -16,20 +16,18 @@ import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
  * Internal dependencies
  */
 import * as exit from '../cli/exit';
-import type {
-	ConfigurationFileOptions,
-	InstanceOptions,
-} from './types';
+import type { ConfigurationFileOptions, InstanceOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
 
-export async function getConfigurationFileOptions(): Promise<ConfigurationFileOptions> {
+export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
 	let configurationFileContents = '';
 
-	const fileExists = await fs.promises.access( configurationFilePath, fs.R_OK )
+	const fileExists = await fs.promises
+		.access( configurationFilePath, fs.R_OK )
 		.then( () => true )
 		.catch( () => false );
 
@@ -49,42 +47,54 @@ export async function getConfigurationFileOptions(): Promise<ConfigurationFileOp
 			schema: FAILSAFE_SCHEMA,
 		} );
 	} catch ( err ) {
-		const messageToShow = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } could not be loaded:\n` +
+		const messageToShow =
+			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } could not be loaded:\n` +
 			err.toString();
 		exit.withError( messageToShow );
 	}
 
-	const configuration = await sanitizeConfiguration( configurationFromFile )
-		.catch( async ( { message } ) => {
+	const configuration = await sanitizeConfiguration( configurationFromFile ).catch(
+		async ( { message } ) => {
 			exit.withError( message );
 			return {};
-		} );
+		}
+	);
 
 	debug( 'Sanitized configuration from file:', configuration );
 	return configuration;
 }
 
-async function sanitizeConfiguration( configuration: Object ): Promise<ConfigurationFileOptions> {
-	const genericConfigurationError = `Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is available but ` +
-		`couldn't be loaded. Ensure there is a ${ chalk.cyan( 'configuration-version' ) } and ${ chalk.cyan( 'slug' ) } ` +
+async function sanitizeConfiguration( configuration: Object ): Promise< ConfigurationFileOptions > {
+	const genericConfigurationError =
+		`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is available but ` +
+		`couldn't be loaded. Ensure there is a ${ chalk.cyan(
+			'configuration-version'
+		) } and ${ chalk.cyan( 'slug' ) } ` +
 		`configured. For example:\n\n${ chalk.grey( getConfigurationFileExample() ) }`;
 
 	if ( Array.isArray( configuration ) || typeof configuration !== 'object' ) {
 		throw new Error( genericConfigurationError );
 	}
 
-	if ( configuration[ 'configuration-version' ] === undefined || configuration.slug === undefined ) {
+	if (
+		configuration[ 'configuration-version' ] === undefined ||
+		configuration.slug === undefined
+	) {
 		throw new Error( genericConfigurationError );
 	}
 
-	const validVersions = getAllConfigurationFileVersions().map( version => chalk.cyan( version ) ).join( ', ' );
+	const validVersions = getAllConfigurationFileVersions()
+		.map( version => chalk.cyan( version ) )
+		.join( ', ' );
 
 	if ( ! isValidConfigurationFileVersion( configuration[ 'configuration-version' ] ) ) {
 		throw new Error(
 			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid ` +
-			`${ chalk.cyan( 'configuration-version' ) } key. Update to a supported version. For example:\n\n` +
-			chalk.grey( getConfigurationFileExample() ) +
-			`\nSupported configuration versions: ${ validVersions }.\n`
+				`${ chalk.cyan(
+					'configuration-version'
+				) } key. Update to a supported version. For example:\n\n` +
+				chalk.grey( getConfigurationFileExample() ) +
+				`\nSupported configuration versions: ${ validVersions }.\n`
 		);
 	}
 
@@ -109,15 +119,21 @@ async function sanitizeConfiguration( configuration: Object ): Promise<Configura
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ],
+		photon: stringToBooleanIfDefined( configuration.photon ),
 	};
 
 	// Remove undefined values
-	Object.keys( sanitizedConfiguration ).forEach( key => sanitizedConfiguration[ key ] === undefined && delete sanitizedConfiguration[ key ] );
+	Object.keys( sanitizedConfiguration ).forEach(
+		key => sanitizedConfiguration[ key ] === undefined && delete sanitizedConfiguration[ key ]
+	);
 
 	return sanitizedConfiguration;
 }
 
-export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptions, configurationFileOptions: ConfigurationFileOptions ): InstanceOptions {
+export function mergeConfigurationFileOptions(
+	preselectedOptions: InstanceOptions,
+	configurationFileOptions: ConfigurationFileOptions
+): InstanceOptions {
 	// configurationFileOptions holds different parameters than present in
 	// preselectedOptions like "slug", and friendly-named parameters (e.g.
 	// 'app-code' vs 'appCode'). Selectively merge configurationFileOptions
@@ -135,6 +151,7 @@ export function mergeConfigurationFileOptions( preselectedOptions: InstanceOptio
 		xdebugConfig: configurationFileOptions[ 'xdebug-config' ],
 		mailpit: configurationFileOptions.mailpit ?? configurationFileOptions.mailhog,
 		mediaRedirectDomain: configurationFileOptions[ 'media-redirect-domain' ],
+		photon: configurationFileOptions.photon,
 	};
 
 	const mergedOptions: InstanceOptions = {};
@@ -168,9 +185,7 @@ export function printConfigurationFile( configurationOptions: ConfigurationFileO
 	console.log( settingLines.join( '\n' ) + '\n' );
 }
 
-const CONFIGURATION_FILE_VERSIONS = [
-	'0.preview-unstable',
-];
+const CONFIGURATION_FILE_VERSIONS = [ '0.preview-unstable' ];
 
 function getAllConfigurationFileVersions(): string[] {
 	return CONFIGURATION_FILE_VERSIONS;

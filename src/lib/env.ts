@@ -26,7 +26,7 @@ export interface Env {
 	app: AppInfo;
 	os: OSInfo;
 	node: NodeInfo;
-	userAgent: string
+	userAgent: string;
 }
 
 const app: AppInfo = {
@@ -47,7 +47,7 @@ const env: Env = {
 	app,
 	os,
 	node,
-	userAgent: `vip-cli/${ app.version } (node/${ node.version }; ${ os.name }/${ os.version }; +https://wpvip.com)`
+	userAgent: `vip-cli/${ app.version } (node/${ node.version }; ${ os.name }/${ os.version }; +https://wpvip.com)`,
 };
 
 export default env;

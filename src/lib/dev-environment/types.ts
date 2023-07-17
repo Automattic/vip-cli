@@ -1,4 +1,3 @@
-// @flow
 export interface InstanceOptions {
 	title?: string;
 	multisite?: boolean | 'subdomain' | 'subdirectory';
@@ -14,47 +13,48 @@ export interface InstanceOptions {
 	xdebugConfig?: string;
 	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
+	photon?: boolean;
 
-	[index: string]: string | boolean;
+	[ index: string ]: unknown;
 }
 
-export type AppInfo = {
-	id?: number;
-	name?: string;
-	repository?: string;
+export interface AppInfo {
+	id?: number | null;
+	name?: string | null;
+	repository?: string | null;
 	environment?: {
-		name: string;
-		type: string;
-		branch: string;
-		isMultisite: boolean;
+		name?: string | null;
+		type?: string | null;
+		branch?: string | null;
+		isMultisite?: boolean | null;
 		primaryDomain: string;
 		php: string;
 		wordpress: string;
 	};
 }
 
-export type ComponentConfig = {
+export interface ComponentConfig {
 	mode: 'local' | 'image';
 	dir?: string;
 	image?: string;
 	tag?: string;
 }
 
-export type WordPressConfig = {
+export interface WordPressConfig {
 	mode: 'image';
 	tag: string;
 	ref?: string;
 	doNotUpgrade?: boolean;
-};
+}
 
-export type EnvironmentNameOptions = {
+export interface EnvironmentNameOptions {
 	slug: string;
 	app: string;
 	env: string;
 	allowAppEnv?: boolean;
 }
 
-export type ConfigurationFileOptions = {
+export interface ConfigurationFileOptions {
 	version?: string;
 	slug?: string;
 	title?: string;
@@ -70,9 +70,11 @@ export type ConfigurationFileOptions = {
 	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
+	photon?: boolean;
 }
 
 export interface InstanceData {
+	[ index: string ]: unknown;
 	siteSlug: string;
 	wpTitle: string;
 	multisite: boolean | 'subdomain' | 'subdirectory';
@@ -88,8 +90,7 @@ export interface InstanceData {
 	elasticsearch?: string | boolean;
 	mailhog?: boolean; // Legacy
 	mailpit: boolean;
+	photon: boolean;
 	pullAfter?: number;
 	autologinKey?: string;
-
-	[index: string]: WordPressConfig | ComponentConfig | string | boolean;
 }

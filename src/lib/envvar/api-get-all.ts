@@ -7,21 +7,17 @@ import gql from 'graphql-tag';
  * Internal dependencies
  */
 import API from '../../lib/api';
-import { GetEnvironmentVariablesWithValuesQuery, GetEnvironmentVariablesWithValuesQueryVariables } from './api-get-all.generated';
+import {
+	GetEnvironmentVariablesWithValuesQuery,
+	GetEnvironmentVariablesWithValuesQueryVariables,
+} from './api-get-all.generated';
 import { EnvironmentVariable } from '../../graphqlTypes';
 
 const query = gql`
-	query GetEnvironmentVariablesWithValues(
-		$appId: Int!
-		$envId: Int!
-	) {
-		app(
-			id: $appId
-		) {
+	query GetEnvironmentVariablesWithValues($appId: Int!, $envId: Int!) {
+		app(id: $appId) {
 			id
-			environments(
-				id: $envId
-			) {
+			environments(id: $envId) {
 				id
 				environmentVariables {
 					total
@@ -35,7 +31,10 @@ const query = gql`
 	}
 `;
 
-export default async function getEnvVars( appId: number, envId: number ): Promise<EnvironmentVariable[] | null> {
+export default async function getEnvVars(
+	appId: number,
+	envId: number
+): Promise< EnvironmentVariable[] | null > {
 	const api = await API();
 
 	const variables = {
@@ -43,7 +42,15 @@ export default async function getEnvVars( appId: number, envId: number ): Promis
 		envId,
 	};
 
-	const { data } = await api.query<GetEnvironmentVariablesWithValuesQuery, GetEnvironmentVariablesWithValuesQueryVariables>( { query, variables } );
+	const { data } = await api.query<
+		GetEnvironmentVariablesWithValuesQuery,
+		GetEnvironmentVariablesWithValuesQueryVariables
+	>( { query, variables } );
 
-	return ( data.app?.environments?.[ 0 ]?.environmentVariables?.nodes as EnvironmentVariable[] | null | undefined) ?? null;
+	return (
+		( data.app?.environments?.[ 0 ]?.environmentVariables?.nodes as
+			| EnvironmentVariable[]
+			| null
+			| undefined ) ?? null
+	);
 }

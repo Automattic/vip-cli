@@ -1,5 +1,69 @@
 ## Changelog
 
+### 2.32.2
+
+- #1443	On-demand Database Backup: Use a less error-prone way of detecting if we're rate limited
+- #1434	Add more clarifying steps for making a release
+- #1435	Remove enums from GraphQL codegen and make sure that prettier actually runs
+- #1433	Redeploy codegen for GraphQL queries
+- #1432	Revert "Add codegen for GraphQL queries (#1429)"
+
+### 2.32.1
+
+- #1445 chore(deps): update vulnerable dependencies to fix ReDoS in semver
+- #1444 chore(deps): update Lando
+
+### 2.32.0
+
+- #1411 feature(export): Add ability to generate a new backup when exporting SQL
+- #1427 Remove unnecessary comment
+- #1426 chore: fix CVE-2023-26115 by updating word-wrap to 1.2.6
+- #1424 feat(dev-env): Update wording around dev-env start --vscode
+- #1419 [PIE-3548] Updates CONTRIBUTING.md with the new flow without publish-please
+- #1423 chore(deps): update socket.io-client from 4.6.2 to 4.7.0
+- #1422 chore(dev-deps): update flow-bin from 0.209.0 to 0.210.0
+- #1417 chore(dev-deps): Update eslint from 8.42.0 to 8.43.0
+- #1418 chore(deps): Update semver from 7.5.2 to 7.5.3
+- #1415 [PIE-3548] Removes `publish-please` and replaces it with simple custom script
+- #1416 [dev-env] Reword dev-env VS Code integration messages
+- #1413 [dev-env] Command options text fixes
+- #1412 Update eslint-plugin-wpvip to 0.5.8, Prettier updates
+- #1396 Migrate dev-environment-core to TypeScript
+- #1410 chore(dev-deps): Update flow-bin to 0.209.0
+- #1409 chore(deps): Update semver to 7.5.2
+- #1408 chore(dev-deps): Update rimraf to 5.0.1
+- #1407 chore(dev-deps): Update flow-bin from 0.206.0 to 0.208.0
+- #1406 chore(deps): Replace keytar with @postman/node-keytar
+- #1405 chore(deps): Update socket.io-client from 4.6.1 to 4.6.2
+- #1404 chore(dev-deps): Update TypeScript-related packages
+- #1403 chore(dev-deps): Update ESLint-related packages update/eslint
+- #1402 chore(dev-deps): Update Babel-related packages to 7.22.5
+
+### 2.31.0
+
+- #1397 feature(dev-env): Add ability to sync multisites
+- #1399 chore(dev-deps): Remove stub type definitions
+- #1394 FORNO-1609: Combine all error events into one error event
+- #1345 feat(dev-env): Add Photon
+- #1398 Fix coverage generation
+- #1395 Add types for the other ways of using enquirer
+- #1388 Typescript: refactor `vip-whoami`
+- #1393	refactor: Convert `lib/{app-logs,envvar}` to TypeScript
+- #1392	refactor: Convert `lib/config` to TypeScript
+- #1391	refactor: Convert lib to TypeScript
+- #1390	chore(deps): Update @automattic/vip-search-replace to 1.1.1
+- #1389	Replace 'site' by 'environment' in error msg
+- #1385	refactor: Convert lib/api to TypeScript
+- #1387	chore(deps): Update @automattic/vip-search-replace to 1.1.0
+- #1386	fix: Fix `getAbsolutePath()` and convert `utils.js` to TypeScript
+- #1383	fix(dev-env): Pull uniqueLabel field from backend
+- #1382	test: Reduce noise from tests
+- #1384	fix: Add return type to parseEnvAliasFromArgv()
+- #1381	refactor: Convert lib/cli and dependencies to TypeScript
+- #1377	chore: Configure linting for TS files
+- #1380	chore(dev-deps): Remove jest-environment-jsdom
+- #1378	refactor: Convert analytics and dependencies to TypeScript
+
 ### 2.30.0
 
 - #1264	feature(dev-env): Add dev-env-sync-sql command

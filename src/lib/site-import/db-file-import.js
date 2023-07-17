@@ -13,7 +13,7 @@ export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 5 * GB_IN_BYTES;
 
 export interface AppForImport {
 	id: number;
-	environments: Array<any>;
+	environments: Array< any >;
 	name: string;
 	organization: Object;
 	type: string;

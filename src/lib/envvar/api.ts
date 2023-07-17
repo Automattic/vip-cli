@@ -16,13 +16,7 @@ import listEnvVars from './api-list';
 import setEnvVar from './api-set';
 
 // Reexport for convenience
-export {
-	deleteEnvVar,
-	getEnvVar,
-	getEnvVars,
-	listEnvVars,
-	setEnvVar,
-};
+export { deleteEnvVar, getEnvVar, getEnvVars, listEnvVars, setEnvVar };
 
 // The subquery for environments lets users choose any environment, including production.
 export const appQuery = `
@@ -44,7 +38,10 @@ export const appQuery = `
 `;
 
 export function validateName( name: string ): boolean {
-	const sanitizedName = name.trim().toUpperCase().replace( /[^A-Z0-9_]/g, '' );
+	const sanitizedName = name
+		.trim()
+		.toUpperCase()
+		.replace( /[^A-Z0-9_]/g, '' );
 	return name === sanitizedName && /^[A-Z]/.test( sanitizedName );
 }
 

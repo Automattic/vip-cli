@@ -9,8 +9,8 @@ import { access, readFile, stat } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';
 import path from 'node:path';
 
-type Record<T, V> = {
-	[T]: V
+type Record< T, V > = {
+	[T]: V,
 };
 
 /**
@@ -19,7 +19,7 @@ type Record<T, V> = {
  * @param {string} filepath Path to the file
  * @return {string[]} Array of certificates
  */
-export async function splitca( filepath: string ): Promise<string[]> {
+export async function splitca( filepath: string ): Promise< string[] > {
 	const ca: string[] = [];
 	const data = await readFile( filepath, 'utf-8' );
 	if ( data.indexOf( '-END CERTIFICATE-' ) < 0 || data.indexOf( '-BEGIN CERTIFICATE-' ) < 0 ) {
@@ -41,7 +41,7 @@ export async function splitca( filepath: string ): Promise<string[]> {
 	return ca;
 }
 
-async function canReadWrite( what: string ): Promise<boolean> {
+async function canReadWrite( what: string ): Promise< boolean > {
 	try {
 		// eslint-disable-next-line no-bitwise
 		await access( what, constants.R_OK | constants.W_OK );
@@ -51,7 +51,7 @@ async function canReadWrite( what: string ): Promise<boolean> {
 	}
 }
 
-export async function getDockerSocket(): Promise<string | null> {
+export async function getDockerSocket(): Promise< string | null > {
 	if ( platform() !== 'win32' ) {
 		const possibleSocket = process.env.DOCKER_HOST ?? '';
 		// If `DOCKER_HOST` is set and not empty, and if it does not point to a unix socket, return - not much that we can do here.
@@ -74,7 +74,7 @@ export async function getDockerSocket(): Promise<string | null> {
 		for ( const socketPath of paths ) {
 			try {
 				const stats = await stat( socketPath );
-				if ( stats.isSocket() && await canReadWrite( socketPath ) ) {
+				if ( stats.isSocket() && ( await canReadWrite( socketPath ) ) ) {
 					process.env.DOCKER_HOST = `unix://${ socketPath }`;
 					return socketPath;
 				}
@@ -87,8 +87,8 @@ export async function getDockerSocket(): Promise<string | null> {
 	return null;
 }
 
-export async function getEngineConfig( dockerHost: string ): Promise<Record<string, any>> {
-	const opts: Record<string, any> = {};
+export async function getEngineConfig( dockerHost: string ): Promise< Record< string, any > > {
+	const opts: Record< string, any > = {};
 	if ( dockerHost.startsWith( 'tcp://' ) ) {
 		const split = /(?:tcp:\/\/)?(.*?):(\d+)/g.exec( dockerHost );
 		if ( split && split.length === 3 ) {

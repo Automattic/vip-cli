@@ -1,2 +1,5 @@
 *.generated.d.ts
-src/graphqlTypes.d.ts
+/dist/
+/flow-typed/
+/src/graphqlTypes.d.ts
+codegen.ts

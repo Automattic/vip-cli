@@ -40,7 +40,11 @@ describe( 'vip dev-env create', () => {
 		const expectedSlug = getProjectSlug();
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ], { env }, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', expectedSlug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `vip dev-env start --slug ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );
@@ -52,11 +56,17 @@ describe( 'vip dev-env create', () => {
 		const slug = getProjectSlug();
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result1 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result1 = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result1.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
-		const result2 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env } );
+		const result2 = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], {
+			env,
+		} );
 		expect( result2.rc ).toBeGreaterThan( 0 );
 		expect( result2.stderr ).toContain( 'Error:  Environment already exists' );
 		return expect( checkEnvExists( slug ) ).resolves.toBe( true );
@@ -70,10 +80,15 @@ describe( 'vip dev-env create', () => {
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
 		const expectedMailpit = false;
+		const expectedPhoton = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
-		const result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ], { env }, true );
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', slug ],
+			{ env },
+			true
+		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -92,6 +107,7 @@ describe( 'vip dev-env create', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 	} );
 
@@ -105,9 +121,11 @@ describe( 'vip dev-env create', () => {
 		const expectedPhpMyAdmin = true;
 		const expectedXDebug = true;
 		const expectedMailpit = true;
+		const expectedPhoton = true;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
+		// prettier-ignore
 		const result = await cliTest.spawn( [
 			process.argv[ 0 ],
 			vipDevEnvCreate,
@@ -122,7 +140,9 @@ describe( 'vip dev-env create', () => {
 			'-p', `${ expectedPhpMyAdmin }`,
 			'-x', `${ expectedXDebug }`,
 			'-A', `${ expectedMailpit }`,
+			'-H', `${ expectedPhoton }`,
 		], { env }, true );
+
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
 
@@ -141,6 +161,7 @@ describe( 'vip dev-env create', () => {
 			phpmyadmin: expectedPhpMyAdmin,
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
+			photon: expectedPhoton,
 		} );
 	} );
 } );
