@@ -138,23 +138,14 @@ const processCommand = async subcommands => {
 };
 
 const main = async () => {
-	try {
-		const version = await runCommand( [ '--version' ] );
+	const version = await runCommand( [ '--version' ] );
 
-		console.error( 'triggering command processing...' );
-		const result = await processCommand( [] );
-		console.error( 'command processing done' );
-		result.version = version;
+	console.error( 'triggering command processing...' );
+	const result = await processCommand( [] );
+	console.error( 'command processing done' );
+	result.version = version;
 
-		console.log( JSON.stringify( result, null, 2 ) );
-
-		// We need to make sure the output is flushed before the process exits.
-		console.error( 'Waiting for output to flush...' );
-		await new Promise( resolve => setTimeout( resolve, 2000 ) );
-		console.error( 'Flushed' );
-	} catch ( e ) {
-		console.error( 'Error', e );
-	}
+	console.log( JSON.stringify( result, null, 2 ) );
 };
 
 main();
