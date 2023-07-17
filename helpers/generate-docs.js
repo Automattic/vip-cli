@@ -1,5 +1,4 @@
 const { spawn } = require( 'child_process' );
-const path = require( 'path' );
 const { once } = require( 'events' );
 
 async function runCommand( subcommands ) {
@@ -138,7 +137,7 @@ const processCommand = async subcommands => {
 ( async () => {
 	const version = await runCommand( [ '--version' ] );
 
-	const result = await processCommand( [ ] );
+	const result = await processCommand( [] );
 	result.version = version;
 
 	console.log( JSON.stringify( result, null, 2 ) );
