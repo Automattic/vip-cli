@@ -1,9 +1,4 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import debugLib from 'debug';
@@ -24,11 +19,11 @@ import type { PostLineExecutionProcessingParams } from '../../lib/validations/li
 const debug = debugLib( 'vip:vip-import-sql' );
 
 let isMultiSiteSqlDump = false;
-let wpSiteInsertStatement;
+let wpSiteInsertStatement: string[][];
 const getWpSiteInsertStatement = getMultilineStatement( /INSERT INTO `wp_site`/s );
 
 export const siteTypeValidations = {
-	execute: ( line: string ) => {
+	execute: ( line: string ): void => {
 		const lineIsMultiSite = sqlDumpLineIsMultiSite( line );
 		wpSiteInsertStatement = getWpSiteInsertStatement( line );
 
@@ -40,11 +35,11 @@ export const siteTypeValidations = {
 		appId,
 		envId,
 		searchReplace,
-	}: PostLineExecutionProcessingParams ) => {
-		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
-		const track = trackEventWithEnv.bind( null, appId, envId );
+	}: PostLineExecutionProcessingParams ): Promise< void > => {
+		const isMultiSite = await isMultiSiteInSiteMeta( appId ?? 0, envId ?? 0 );
+		const track = trackEventWithEnv.bind( null, appId!, envId! );
 
-		debug( `\nAppId: ${ appId } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
+		debug( `\nAppId: ${ appId! } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
 		debug(
 			`The SQL dump provided is ${
 				isMultiSiteSqlDump ? 'from a multisite.' : 'not from a multisite'
@@ -79,8 +74,8 @@ export const siteTypeValidations = {
 		// Also saves on a call to Parker by checking ahead
 		if ( primaryDomainExists ) {
 			const isPrimaryDomainMapped = await isMultisitePrimaryDomainMapped(
-				appId,
-				envId,
+				appId ?? 0,
+				envId ?? 0,
 				primaryDomainFromSQL
 			);
 
