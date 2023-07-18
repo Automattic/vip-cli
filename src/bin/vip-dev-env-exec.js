@@ -14,6 +14,7 @@ import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
+	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
@@ -38,13 +39,8 @@ const examples = [
 
 command( { wildcardCommand: true } )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.option(
-		'force',
-		'Disabling validations before task execution',
-		undefined,
-		value => 'false' !== value?.toLowerCase?.()
-	)
-	.option( 'quiet', 'Suppress output', undefined, value => 'false' !== value?.toLowerCase?.() )
+	.option( 'force', 'Disable validations before task execution', undefined, processBooleanOption )
+	.option( 'quiet', 'Suppress output', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt );
