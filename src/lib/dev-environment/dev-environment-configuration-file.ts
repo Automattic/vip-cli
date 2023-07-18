@@ -1,14 +1,9 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
+import { access, constants, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import debugLib from 'debug';
-import fs from 'fs';
-import path from 'path';
 import chalk from 'chalk';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 
@@ -26,45 +21,44 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
 	let configurationFileContents = '';
 
-	const fileExists = await fs.promises
-		.access( configurationFilePath, fs.R_OK )
+	const fileExists = await access( configurationFilePath, constants.R_OK )
 		.then( () => true )
 		.catch( () => false );
 
 	if ( fileExists ) {
 		debug( 'Reading configuration file from:', configurationFilePath );
-		configurationFileContents = await fs.promises.readFile( configurationFilePath, 'utf8' );
+		configurationFileContents = await readFile( configurationFilePath, 'utf8' );
 	} else {
 		return {};
 	}
 
-	let configurationFromFile = {};
+	let configurationFromFile: Record< string, unknown > = {};
 
 	try {
 		configurationFromFile = yaml.load( configurationFileContents, {
 			// Only allow strings, arrays, and objects to be parsed from configuration file
 			// This causes number-looking values like `php: 8.1` to be parsed directly into strings
 			schema: FAILSAFE_SCHEMA,
-		} );
+		} ) as Record< string, unknown >;
 	} catch ( err ) {
 		const messageToShow =
 			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } could not be loaded:\n` +
-			err.toString();
+			( err as Error ).toString();
 		exit.withError( messageToShow );
 	}
 
-	const configuration = await sanitizeConfiguration( configurationFromFile ).catch(
-		async ( { message } ) => {
-			exit.withError( message );
-			return {};
-		}
-	);
-
-	debug( 'Sanitized configuration from file:', configuration );
-	return configuration;
+	try {
+		const configuration = sanitizeConfiguration( configurationFromFile );
+		debug( 'Sanitized configuration from file:', configuration );
+		return configuration;
+	} catch ( err ) {
+		exit.withError( err instanceof Error ? err : new Error( 'Unknown error' ) );
+	}
 }
 
-async function sanitizeConfiguration( configuration: Object ): Promise< ConfigurationFileOptions > {
+function sanitizeConfiguration(
+	configuration: Record< string, unknown >
+): ConfigurationFileOptions {
 	const genericConfigurationError =
 		`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is available but ` +
 		`couldn't be loaded. Ensure there is a ${ chalk.cyan(
@@ -76,18 +70,21 @@ async function sanitizeConfiguration( configuration: Object ): Promise< Configur
 		throw new Error( genericConfigurationError );
 	}
 
+	const version: unknown = configuration[ 'configuration-version' ];
+
 	if (
-		configuration[ 'configuration-version' ] === undefined ||
-		configuration.slug === undefined
+		( typeof version !== 'string' && typeof version !== 'number' ) ||
+		configuration.slug === undefined ||
+		configuration.slug === null
 	) {
 		throw new Error( genericConfigurationError );
 	}
 
 	const validVersions = getAllConfigurationFileVersions()
-		.map( version => chalk.cyan( version ) )
+		.map( ver => chalk.cyan( ver ) )
 		.join( ', ' );
 
-	if ( ! isValidConfigurationFileVersion( configuration[ 'configuration-version' ] ) ) {
+	if ( ! isValidConfigurationFileVersion( version.toString() ) ) {
 		throw new Error(
 			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid ` +
 				`${ chalk.cyan(
@@ -98,32 +95,34 @@ async function sanitizeConfiguration( configuration: Object ): Promise< Configur
 		);
 	}
 
-	const stringToBooleanIfDefined = ( value: any ) => {
-		if ( value === undefined || ! [ 'true', 'false' ].includes( value ) ) {
+	const stringToBooleanIfDefined = ( value: unknown ) => {
+		if ( typeof value !== 'string' || ! [ 'true', 'false' ].includes( value ) ) {
 			return undefined;
 		}
 		return value === 'true';
 	};
 
-	const sanitizedConfiguration = {
-		'configuration-version': configuration[ 'configuration-version' ],
-		slug: configuration.slug,
-		title: configuration.title,
+	const sanitizedConfiguration: ConfigurationFileOptions = {
+		version: version.toString(),
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		slug: configuration.slug.toString(), // NOSONAR
+		title: configuration.title?.toString(),
 		multisite: stringToBooleanIfDefined( configuration.multisite ),
-		php: configuration.php,
-		wordpress: configuration.wordpress,
-		'mu-plugins': configuration[ 'mu-plugins' ],
-		'app-code': configuration[ 'app-code' ],
+		php: configuration.php?.toString(),
+		wordpress: configuration.wordpress?.toString(),
+		'mu-plugins': configuration[ 'mu-plugins' ]?.toString(),
+		'app-code': configuration[ 'app-code' ]?.toString(),
 		elasticsearch: stringToBooleanIfDefined( configuration.elasticsearch ),
 		phpmyadmin: stringToBooleanIfDefined( configuration.phpmyadmin ),
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
-		'media-redirect-domain': configuration[ 'media-redirect-domain' ],
+		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
 	};
 
 	// Remove undefined values
 	Object.keys( sanitizedConfiguration ).forEach(
+		// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 		key => sanitizedConfiguration[ key ] === undefined && delete sanitizedConfiguration[ key ]
 	);
 

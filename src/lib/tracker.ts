@@ -90,10 +90,12 @@ export function trackEventWithEnv(
 	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
 }
 
+export type CommandTracker = ( type: string, data?: Record< string, unknown > ) => Promise< void >;
+
 export function makeCommandTracker(
 	command: string,
 	trackingInfo: Record< string, unknown > = {}
-): ( type: string, data?: Record< string, unknown > ) => Promise< void > {
+): CommandTracker {
 	const trackerFn = async ( type: string, data: Record< string, unknown > = {} ) => {
 		await trackEvent( `${ command }_command_${ type }`, { ...trackingInfo, ...data } );
 	};
