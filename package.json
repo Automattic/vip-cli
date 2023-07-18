@@ -54,6 +54,8 @@
     "vip-wp": "dist/bin/vip-wp.js"
   },
   "scripts": {
+    "typescript:codegen:install-dependencies": "npm install --no-save @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/near-operation-file-preset @graphql-codegen/typescript-operations",
+    "typescript:codegen:generate": "graphql-codegen",
     "test": "npm run lint && npm run flow && npm run check-types && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
     "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
     "clean": "rimraf dist",
@@ -160,7 +162,7 @@
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
-    "semver": "7.5.3",
+    "semver": "7.5.4",
     "shelljs": "^0.8.5",
     "single-line-log": "1.1.2",
     "socket.io-client": "^4.5.3",

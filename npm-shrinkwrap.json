@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "2.32.1",
+  "version": "2.32.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "2.32.1",
+      "version": "2.32.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -33,7 +33,7 @@
         "node-fetch": "^2.6.1",
         "opn": "5.5.0",
         "proxy-from-env": "^1.1.0",
-        "semver": "7.5.3",
+        "semver": "7.5.4",
         "shelljs": "^0.8.5",
         "single-line-log": "1.1.2",
         "socket.io-client": "^4.5.3",
@@ -11778,9 +11778,9 @@
       "integrity": "sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw=="
     },
     "node_modules/semver": {
-      "version": "7.5.3",
-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.5.3.tgz",
-      "integrity": "sha512-QBlUtyVk/5EeHbi7X0fw6liDZc7BBmEaSYn01fMU1OUYbf6GPsbTtd8WmnqbI20SeycoHSeiybkE/q1Q+qlThQ==",
+      "version": "7.5.4",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.5.4.tgz",
+      "integrity": "sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==",
       "dependencies": {
         "lru-cache": "^6.0.0"
       },
@@ -22176,9 +22176,9 @@
       "integrity": "sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw=="
     },
     "semver": {
-      "version": "7.5.3",
-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.5.3.tgz",
-      "integrity": "sha512-QBlUtyVk/5EeHbi7X0fw6liDZc7BBmEaSYn01fMU1OUYbf6GPsbTtd8WmnqbI20SeycoHSeiybkE/q1Q+qlThQ==",
+      "version": "7.5.4",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.5.4.tgz",
+      "integrity": "sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA==",
       "requires": {
         "lru-cache": "^6.0.0"
       },

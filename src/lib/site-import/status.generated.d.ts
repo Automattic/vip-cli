@@ -1,47 +1,32 @@
 import * as Types from '../../graphqlTypes';
 
-export type UpdateSoftwareSettingsMutationVariables = Types.Exact< {
-	appId: Types.Scalars[ 'Int' ][ 'input' ];
-	envId: Types.Scalars[ 'Int' ][ 'input' ];
-	component: Types.Scalars[ 'String' ][ 'input' ];
-	version: Types.Scalars[ 'String' ][ 'input' ];
+export type AppQueryVariables = Types.Exact< {
+	appId?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
+	envId?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
 } >;
 
-export type UpdateSoftwareSettingsMutation = {
-	__typename?: 'Mutation';
-	updateSoftwareSettings?: {
-		__typename?: 'AppEnvironmentSoftwareSettings';
-		php?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-		wordpress?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-		muplugins?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-		nodejs?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-	} | null;
-};
-
-export type UpdateJobQueryVariables = Types.Exact< {
-	appId: Types.Scalars[ 'Int' ][ 'input' ];
-	envId: Types.Scalars[ 'Int' ][ 'input' ];
-} >;
-
-export type UpdateJobQuery = {
+export type AppQuery = {
 	__typename?: 'Query';
 	app?: {
 		__typename?: 'App';
 		environments?: Array< {
 			__typename?: 'AppEnvironment';
+			id?: number | null;
+			isK8sResident?: boolean | null;
+			launched?: boolean | null;
 			jobs?: Array<
 				| {
 						__typename?: 'Job';
+						id?: number | null;
 						type?: string | null;
 						completedAt?: string | null;
 						createdAt?: string | null;
-						inProgressLock?: boolean | null;
 						progress?: {
 							__typename?: 'JobProgress';
 							status?: string | null;
 							steps?: Array< {
 								__typename?: 'JobProgressStep';
-								step?: string | null;
+								id?: string | null;
 								name?: string | null;
 								status?: string | null;
 							} | null > | null;
@@ -49,16 +34,16 @@ export type UpdateJobQuery = {
 				  }
 				| {
 						__typename?: 'PrimaryDomainSwitchJob';
+						id?: number | null;
 						type?: string | null;
 						completedAt?: string | null;
 						createdAt?: string | null;
-						inProgressLock?: boolean | null;
 						progress?: {
 							__typename?: 'JobProgress';
 							status?: string | null;
 							steps?: Array< {
 								__typename?: 'JobProgressStep';
-								step?: string | null;
+								id?: string | null;
 								name?: string | null;
 								status?: string | null;
 							} | null > | null;
@@ -66,6 +51,24 @@ export type UpdateJobQuery = {
 				  }
 				| null
 			> | null;
+			importStatus?: {
+				__typename?: 'AppEnvironmentImportStatus';
+				dbOperationInProgress?: boolean | null;
+				importInProgress?: boolean | null;
+				progress?: {
+					__typename?: 'AppEnvironmentStatusProgress';
+					started_at?: number | null;
+					finished_at?: number | null;
+					steps?: Array< {
+						__typename?: 'AppEnvironmentStatusProgressStep';
+						name?: string | null;
+						started_at?: number | null;
+						finished_at?: number | null;
+						result?: string | null;
+						output?: Array< string | null > | null;
+					} | null > | null;
+				} | null;
+			} | null;
 		} | null > | null;
 	} | null;
 };

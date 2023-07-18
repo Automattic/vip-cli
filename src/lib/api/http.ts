@@ -52,6 +52,7 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 			'Content-Type': 'application/json',
 			...( options.headers ?? {} ),
 		},
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
 	} );
 };
