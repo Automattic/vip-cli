@@ -1,6 +1,8 @@
+export type MultisiteKind = 'subdomain' | 'subdirectory';
+
 export interface InstanceOptions {
 	title?: string;
-	multisite?: boolean | 'subdomain' | 'subdirectory';
+	multisite?: boolean | MultisiteKind;
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
@@ -71,6 +73,8 @@ export interface ConfigurationFileOptions {
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
 	photon?: boolean;
+
+	[ index: string ]: unknown;
 }
 
 export interface InstanceData {
