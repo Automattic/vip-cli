@@ -11,7 +11,7 @@ import { buildConfig } from 'lando/lib/bootstrap';
 import landoUtils, { AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import chalk from 'chalk';
-import App from 'lando/lib/app';
+import App, { type ScanResult } from 'lando/lib/app';
 import xdgBasedir from 'xdg-basedir';
 import type { NetworkInspectInfo } from 'dockerode';
 
@@ -485,9 +485,18 @@ export async function checkEnvHealth(
 			} );
 		} );
 
-	const scanResults = await app.scanUrls( Object.keys( urls ), { max: 1 } );
-	const result: Record< string, boolean > = {};
+	const urlsToScan = Object.keys( urls );
+	let scanResults: ScanResult[] = [];
+	if ( Array.isArray( app.urls ) ) {
+		scanResults = app.urls;
+		app.urls.forEach( entry => urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 ) );
+	}
 
+	if ( urlsToScan.length ) {
+		scanResults = scanResults.concat( await app.scanUrls( urlsToScan, { max: 1 } ) );
+	}
+
+	const result: Record< string, boolean > = {};
 	scanResults.forEach( scanResult => {
 		result[ urls[ scanResult.url ] ] = scanResult.status;
 	} );
