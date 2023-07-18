@@ -105,7 +105,7 @@
         "@babel/preset-typescript": "7.22.5",
         "@jest/globals": "^29.5.0",
         "@jest/test-sequencer": "^29.5.0",
-        "@tsconfig/node16": "^1.0.4",
+        "@tsconfig/node16": "^16.1.0",
         "@types/args": "5.0.0",
         "@types/cli-table": "0.3.1",
         "@types/configstore": "5.0.1",
@@ -3512,9 +3512,9 @@
       }
     },
     "node_modules/@tsconfig/node16": {
-      "version": "1.0.4",
-      "resolved": "https://registry.npmjs.org/@tsconfig/node16/-/node16-1.0.4.tgz",
-      "integrity": "sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==",
+      "version": "16.1.0",
+      "resolved": "https://registry.npmjs.org/@tsconfig/node16/-/node16-16.1.0.tgz",
+      "integrity": "sha512-cfwhqrdZEKS+Iqu1OPDwmKsOV/eo7q4sPhWzOXc1rU77nnPFV3+77yPg8uKQ2e8eir6mERCvrKnd+EGa4qo4bQ==",
       "dev": true
     },
     "node_modules/@types/args": {
@@ -16021,9 +16021,9 @@
       }
     },
     "@tsconfig/node16": {
-      "version": "1.0.4",
-      "resolved": "https://registry.npmjs.org/@tsconfig/node16/-/node16-1.0.4.tgz",
-      "integrity": "sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==",
+      "version": "16.1.0",
+      "resolved": "https://registry.npmjs.org/@tsconfig/node16/-/node16-16.1.0.tgz",
+      "integrity": "sha512-cfwhqrdZEKS+Iqu1OPDwmKsOV/eo7q4sPhWzOXc1rU77nnPFV3+77yPg8uKQ2e8eir6mERCvrKnd+EGa4qo4bQ==",
       "dev": true
     },
     "@types/args": {
