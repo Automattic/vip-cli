@@ -22,6 +22,7 @@ import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
+import { BackupDBCommand } from './backup-db';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -179,6 +180,7 @@ export class ExportSQLCommand {
 	downloadLink;
 	progressTracker;
 	outputFile;
+	generateBackup;
 	steps = {
 		PREPARE: 'prepare',
 		CREATE: 'create',
@@ -192,15 +194,17 @@ export class ExportSQLCommand {
 	 *
 	 * @param {any}      app        The application object
 	 * @param {any}      env        The environment object
-	 * @param {string}   outputFile The output file path
+	 * @param {object}   options 		The optional parameters
 	 * @param {Function} trackerFn  The progress tracker function
 	 */
-	constructor( app, env, outputFile, trackerFn = () => {} ) {
+	constructor( app, env, options = {}, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
-		this.outputFile = typeof outputFile === 'string' ? getAbsolutePath( outputFile ) : null;
+		this.outputFile =
+			typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
+		this.generateBackup = options.generateBackup || false;
 		this.progressTracker = new ProgressTracker( [
-			{ id: this.steps.PREPARE, name: 'Preparing' },
+			{ id: this.steps.PREPARE, name: 'Preparing for backup download' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
@@ -305,6 +309,11 @@ export class ExportSQLCommand {
 		this.progressTracker.stopPrinting();
 	}
 
+	async runBackupJob() {
+		const cmd = new BackupDBCommand( this.app, this.env );
+		await cmd.run( false );
+	}
+
 	/**
 	 * Sequentially runs the steps of the export workflow
 	 *
@@ -324,18 +333,29 @@ export class ExportSQLCommand {
 			}
 		}
 
-		console.log( `Fetching the latest backup for ${ this.app.name }` );
+		if ( this.generateBackup ) {
+			await this.runBackupJob();
+		}
+
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
-		if ( ! latestBackup ) {
-			await this.track( 'error', {
-				error_type: 'no_backup_found',
-				error_message: 'No backup found for the site',
-			} );
-			exit.withError( `No backup found for site ${ this.app.name }` );
+		if ( ! this.generateBackup ) {
+			if ( ! latestBackup ) {
+				await this.track( 'error', {
+					error_type: 'no_backup_found',
+					error_message: 'No backup found for the site',
+				} );
+				exit.withError( `No backup found for site ${ this.app.name }` );
+			} else {
+				console.log(
+					`${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${
+						latestBackup.createdAt
+					}`
+				);
+			}
 		} else {
 			console.log(
-				`${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${
+				`${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${
 					latestBackup.createdAt
 				}`
 			);
@@ -346,9 +366,7 @@ export class ExportSQLCommand {
 				`Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }`
 			);
 		} else {
-			console.log(
-				`Creating a new export for the backup with timestamp ${ latestBackup.createdAt }`
-			);
+			console.log( `Exporting database backup with timestamp ${ latestBackup.createdAt }` );
 
 			try {
 				await createExportJob( this.app.id, this.env.id, latestBackup.id );

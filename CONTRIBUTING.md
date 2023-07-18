@@ -93,18 +93,9 @@ Changelogs allow customers to keep up with all the changes happening across our 
 
 ### Pre-publish Checks
 
-We use [`publish-please`](https://github.com/inikulin/publish-please) for some pre-publish confidence checks to avoid common mistakes.
+We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trunk/hellpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
 
 Further checks can be added to this flow as needed.
-
-### Pre-publish Tasks
-
-As part of the publish flow, we run the `prepareConfig:publish` task on `prepack`. This copies over "production" config values to your working copy to make sure the release includes those instead of development values.
-
-We use `prepack` because:
-
-- `prepareConfig:local` runs on `npm build` and we want to make sure those values are overriden.
-- This is the latest npm event that we can run on before publishing. (Note: we tried `prepublishOnly` but files added during that step [don't get included in the build](https://github.com/Automattic/vip/commit/c7dabe1b0f73ec9e6e8c05ccff0c41281e4cd5e8)).
 
 ### New Releases
 
@@ -112,10 +103,16 @@ Prepare the release by making sure that:
 
 1. All relevant PRs have been merged.
 1. The release has been tested across macOS, Windows, and Linux.
-1. The [changelog](https://github.com/Automattic/vip/blob/trunk/CHANGELOG.md) has been updated on `trunk`.
-1. All tests pass and your working directory is clean (we have pre-publish checks to catch this, just-in-case).
+1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
+   just-in-case).
+1. Make sure not to merge anymore changes into `develop` while all the release steps below are in
+   progress.
 
 #### Changelog Generator Hint:
+
+In the first step, you'll need to generate a changelog.
+
+Run the following and copy the output somewhere.
 
 ```
 export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
@@ -124,15 +121,28 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 Then, let's publish:
 
-1. Make sure trunk branch is up to date `git pull`
+1. Create a pull request that adds the next version's changelog into `develop`. Use the Changelog
+   Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
+   format matches.
+1. Create a pull request that merges `develop` to `trunk`.
+1. Merge it after approval.
+1. Make sure trunk branch is up-to-date `git pull`.
+1. Make sure to clean all of your repositories of extra files. Run a dangerous, destructive
+   command `git clean -xfd` to do so.
+1. Run `npm install`.
 1. Set the version (via `npm version minor` or `npm version major` or `npm version patch`)
 1. For most regular releases, this will be `npm version minor`.
 1. Push the tag to GitHub (`git push --tags`)
 1. Push the trunk branch `git push`
 1. Make sure you're part of the Automattic organization in npm
-1. Publish the release to npm (`npm run publish-please --access public`) the script will do some extra checks (npm version, branch, etc) to ensure everything is correct. If all looks good, proceed.
-1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description of the changes and publish (this can just copy the details from the changelog).
-1. Push `trunk` changes (mostly the version bump) to `develop` (`git checkout develop && git merge trunk` )
+1. Publish the release to npm (`npm publish --access public`) the script will do some extra checks (
+   node version, branch, etc) to ensure everything is correct. If all looks good, the new version
+   will be published and you can proceed.
+1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description
+   of the changes and publish (this can just copy the details from the changelog).
+1. Push `trunk` changes (mostly the version bump)
+   to `develop` (`git checkout develop && git merge trunk` ). There's no need to use a pull request
+   to do so.
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
@@ -143,14 +153,9 @@ Sometimes, we want to release a version we can test before releasing it to the p
 In order to do that, please follow this:
 
 1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
-2. Go to publish-please's config in `.publishrc`
-3. Change the `publishTag` to `next` and `gitTag` to `false` (publish-please will expect the latest commit to have a git tag, but we don't want it in this case)
-4. Commit your changes to `trunk`
-5. Run `npm run publish-please`
+1. Run `npm publish --tag next` (When `--tag` is specified, we bypass the usual branch protection that doesn't allow you to publish form a brunch other than `trunk`).
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
-
-_PS: The above steps will only change your local `trunk`. The remote `trunk` will remain unaffected, and you can reset your local trunk afterwards with `git reset --hard origin/trunk`._
 
 ### Patching Old Releases
 
@@ -166,6 +171,20 @@ Then, repeat for any additional versions that we need to patch.
 
 ### go-search-replace binaries
 
-Some unit tests require some go-search-replace executable binary files to run. Binaries files for several OS architectures can be downloaded from https://github.com/Automattic/go-search-replace/releases/
+Some unit tests require some go-search-replace executable binary files to run. Binaries files for
+several OS architectures can be downloaded
+from https://github.com/Automattic/go-search-replace/releases/
 
-If, for some reason, you need to compile these binaries yourself, please follow instructions at https://github.com/Automattic/go-search-replace
+If, for some reason, you need to compile these binaries yourself, please follow instructions
+at https://github.com/Automattic/go-search-replace
+
+### Generating the types
+
+If you're an employee of Automattic, you can follow these steps to regenerate the GraphQL types
+used.
+
+1. Get a hold of `schema.gql` and paste it in project root - this is the schema of the endpoint that
+   we communicate with.
+2. Run `npm run typescript:codegen:install-dependencies` - this will install the codegen
+   dependencies without updating `package.json`
+3. Run `npm run typescript:codegen:generate` - this will regenerate the types

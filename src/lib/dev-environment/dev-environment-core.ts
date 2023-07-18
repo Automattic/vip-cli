@@ -26,12 +26,13 @@ import {
 	landoStop,
 	landoRebuild,
 	landoLogs,
+	LandoLogsOptions,
 } from './dev-environment-lando';
 import { searchAndReplace } from '../search-and-replace';
 import {
 	handleCLIException,
 	printTable,
-	promptForComponent,
+	promptForWordPress,
 	resolvePath,
 } from './dev-environment-cli';
 import app from '../api/app';
@@ -195,7 +196,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	newInstanceData.php =
 		instanceData.php ||
-		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ];
+		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ]!;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
@@ -311,7 +312,7 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 export async function showLogs(
 	lando: Lando,
 	slug: string,
-	options: Record< string, string > = {}
+	options: LandoLogsOptions = {}
 ): Promise< unknown > {
 	debug( 'Will display logs command on env', slug, 'with options', options );
 
@@ -320,10 +321,12 @@ export async function showLogs(
 	debug( 'Instance path for', slug, 'is:', instancePath );
 
 	if ( options.service ) {
-		const appInfo: { services: string } = await landoInfo( lando, instancePath, false );
+		const appInfo = await landoInfo( lando, instancePath );
 		if ( ! appInfo.services.includes( options.service ) ) {
 			throw new UserError(
-				`Service '${ options.service }' not found. Please choose from one: ${ appInfo.services }`
+				`Service '${
+					options.service
+				}' not found. Please choose from one: ${ appInfo.services.toString() }`
 			);
 		}
 	}
@@ -766,7 +769,7 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
-		const choice: WordPressConfig = await promptForComponent( 'wordpress', false, null );
+		const choice: WordPressConfig = await promptForWordPress( null );
 		const version: WordPressTag | undefined = versions.find(
 			( { tag } ) => tag.trim() === choice.tag.trim()
 		);

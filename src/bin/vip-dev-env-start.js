@@ -38,6 +38,11 @@ const examples = [
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } start`,
 		description: 'Starts a local dev environment',
 	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } start --vscode`,
+		description:
+			'Start a local environment and generate a Workspace file for developing in Visual Studio Code',
+	},
 ];
 
 command()
@@ -47,7 +52,7 @@ command()
 		[ 'w', 'skip-wp-versions-check' ],
 		'Skip prompt to update WordPress version if not on latest'
 	)
-	.option( 'vscode', 'Generate a Visual Studio Code Workspace file and open it' )
+	.option( 'vscode', 'Generate a Visual Studio Code Workspace file' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
@@ -93,5 +98,5 @@ command()
 			process.exitCode = 1;
 		}
 
-		await postStart( slug, { openVSCode: !! opt.vscode } );
+		postStart( slug, { openVSCode: !! opt.vscode } );
 	} );
