@@ -468,7 +468,8 @@ async function getExtraServicesConnections(
 		if ( containerScan?.NetworkSettings.Ports ) {
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
 				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
-				.filter( externalMapping => externalMapping.length );
+				// eslint-disable-next-line
+				.filter( externalMapping => externalMapping?.length );
 
 			if ( mappings.length ) {
 				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
