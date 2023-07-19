@@ -88,6 +88,7 @@
         "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
         "vip-logs": "dist/bin/vip-logs.js",
         "vip-search-replace": "dist/bin/vip-search-replace.js",
+        "vip-slowlogs": "dist/bin/vip-slowlogs.js",
         "vip-sync": "dist/bin/vip-sync.js",
         "vip-validate": "dist/bin/vip-validate.js",
         "vip-validate-preflight": "dist/bin/vip-validate-preflight.js",

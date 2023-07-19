@@ -46,6 +46,7 @@ const runCmd = async function () {
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'logs', 'Get logs from your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
+		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'whoami', 'Display details about the currently logged-in user' )
 		.command( 'validate', 'Validate your VIP application and environment' )
