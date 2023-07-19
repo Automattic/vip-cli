@@ -466,10 +466,11 @@ async function getExtraServicesConnections(
 		// eslint-disable-next-line no-await-in-loop
 		const containerScan = service.id ? await lando.engine.docker.scan( service.id ) : null;
 		if ( containerScan?.NetworkSettings.Ports ) {
+			type ExternalMapping = ( typeof containerScan.NetworkSettings.Ports )[ number ];
+
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
 				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
-				// eslint-disable-next-line
-				.filter( externalMapping => externalMapping?.length );
+				.filter( ( externalMapping: ExternalMapping | undefined ) => externalMapping?.length );
 
 			if ( mappings.length ) {
 				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
