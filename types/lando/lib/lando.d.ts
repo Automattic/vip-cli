@@ -4,6 +4,11 @@ type PluginDirEntry = string | {
     namespace: string;
 };
 
+export interface LandoService extends Record<string, unknown> {
+    initOnly?: boolean;
+    scanner?: boolean;
+}
+
 export interface LandoConfig extends Record<string, unknown> {
     composeBin: string;
     disablePlugins: string[];
@@ -35,6 +40,7 @@ export interface LandoConfig extends Record<string, unknown> {
     networkBridge?: string;
 
     tooling?: Record<string, Record<string, unknown>>;
+    services?: Record<string, LandoService>;
 }
 
 export interface LandoTask {

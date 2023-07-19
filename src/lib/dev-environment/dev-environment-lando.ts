@@ -93,6 +93,25 @@ async function getLandoConfig(): Promise< LandoConfig > {
 
 const appMap = new Map< string, App >();
 
+async function initLandoApplication( lando: Lando, instancePath: string ): Promise< App > {
+	const app = lando.getApp( instancePath );
+
+	app.events.on( 'post-init', 1, () => {
+		const initOnly: string[] = [];
+		Object.keys( app.config.services! ).forEach( serviceName => {
+			if ( app.config.services![ serviceName ].initOnly ) {
+				initOnly.push( serviceName );
+				app.config.services![ serviceName ].scanner = false;
+			}
+		} );
+
+		app.services = app.services.filter( service => ! initOnly.includes( service ) );
+	} );
+
+	await app.init();
+	return app;
+}
+
 async function regenerateLandofile( instancePath: string ): Promise< void > {
 	const landoFile = path.join( instancePath, '.lando.yml' );
 
@@ -128,9 +147,7 @@ async function landoRecovery( lando: Lando, instancePath: string, error: unknown
 
 	console.error( chalk.green( 'Recovery successful, trying to initialize again...' ) );
 	try {
-		const app = lando.getApp( instancePath );
-		await app.init();
-		return app;
+		return await initLandoApplication( lando, instancePath );
 	} catch ( initError ) {
 		console.error(
 			`${ chalk.bold.red(
@@ -155,8 +172,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 		let app;
 
 		try {
-			app = lando.getApp( instancePath );
-			await app.init();
+			app = await initLandoApplication( lando, instancePath );
 		} catch ( error ) {
 			app = await landoRecovery( lando, instancePath, error );
 		}
@@ -450,9 +466,11 @@ async function getExtraServicesConnections(
 		// eslint-disable-next-line no-await-in-loop
 		const containerScan = service.id ? await lando.engine.docker.scan( service.id ) : null;
 		if ( containerScan?.NetworkSettings.Ports ) {
+			type ExternalMapping = ( typeof containerScan.NetworkSettings.Ports )[ number ];
+
 			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
 				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
-				.filter( externalMapping => externalMapping.length );
+				.filter( ( externalMapping: ExternalMapping | undefined ) => externalMapping?.length );
 
 			if ( mappings.length ) {
 				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];

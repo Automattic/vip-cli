@@ -150,7 +150,7 @@ declare class App {
 	init(): Promise< void >;
 	composeData: any[];
 	envFiles: any;
-	services: any;
+	services: string[];
 	compose: any;
 	initialized: boolean;
 	/**
