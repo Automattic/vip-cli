@@ -425,6 +425,8 @@ export async function detectCompressedMimeType( fileName: string ): Promise< str
 	const { buffer } = await file.read( Buffer.alloc( 4 ), 0, 4, 0 );
 	const fileHeader = buffer.toString( 'hex' );
 
+	await file.close();
+
 	if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
 		return 'application/zip';
 	}
