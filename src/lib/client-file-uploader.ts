@@ -7,7 +7,7 @@ import { constants, createReadStream, createWriteStream, type ReadStream } from 
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import os from 'os';
 import path from 'path';
-import fetch, { HeaderInit, RequestInit } from 'node-fetch';
+import fetch, { HeaderInit, RequestInit, Response } from 'node-fetch';
 import chalk from 'chalk';
 import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
@@ -15,6 +15,7 @@ import { pipeline } from 'node:stream/promises';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import debugLib from 'debug';
+import fetchRetry from 'fetch-retry';
 
 /**
  * Internal dependencies
@@ -23,11 +24,14 @@ import http from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
 
 // Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
-const fetchWithRetry = require( 'fetch-retry' )( fetch, {
-	// Set default retry options
-	retries: 5,
-	retryDelay: 1000,
-} );
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promise< Response > =
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+	require( 'fetch-retry' )( fetch, {
+		// Set default retry options
+		retries: 5,
+		retryDelay: 1000,
+	} );
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -91,7 +95,7 @@ export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
 	} catch ( err ) {
 		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
 	} finally {
-		await src.close();
+		src.close();
 	}
 };
 
