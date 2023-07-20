@@ -1,17 +1,11 @@
 /* eslint-disable no-await-in-loop */
-// @flow
-
 /**
  * External dependencies
  */
 import { constants } from 'node:fs';
 import { access, readFile, stat } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';
-import path from 'node:path';
-
-type Record< T, V > = {
-	[T]: V,
-};
+import { join } from 'node:path';
 
 /**
  * Reads a Certificate Authority file and returns it as an array of certificates
@@ -22,7 +16,7 @@ type Record< T, V > = {
 export async function splitca( filepath: string ): Promise< string[] > {
 	const ca: string[] = [];
 	const data = await readFile( filepath, 'utf-8' );
-	if ( data.indexOf( '-END CERTIFICATE-' ) < 0 || data.indexOf( '-BEGIN CERTIFICATE-' ) < 0 ) {
+	if ( ! data.includes( '-END CERTIFICATE-' ) || ! data.includes( '-BEGIN CERTIFICATE-' ) ) {
 		throw new Error( "File does not contain 'BEGIN CERTIFICATE' or 'END CERTIFICATE'" );
 	}
 
@@ -31,7 +25,7 @@ export async function splitca( filepath: string ): Promise< string[] > {
 	for ( const line of chain ) {
 		if ( line ) {
 			cert.push( line );
-			if ( line.match( /-END CERTIFICATE-/ ) ) {
+			if ( /-END CERTIFICATE-/.exec( line ) ) {
 				ca.push( cert.join( '\n' ) );
 				cert = [];
 			}
@@ -55,7 +49,7 @@ export async function getDockerSocket(): Promise< string | null > {
 	if ( platform() !== 'win32' ) {
 		const possibleSocket = process.env.DOCKER_HOST ?? '';
 		// If `DOCKER_HOST` is set and not empty, and if it does not point to a unix socket, return - not much that we can do here.
-		if ( possibleSocket && ! /^unix:\/\//.test( possibleSocket ) ) {
+		if ( possibleSocket && ! possibleSocket.startsWith( 'unix://' ) ) {
 			return possibleSocket;
 		}
 
@@ -69,7 +63,7 @@ export async function getDockerSocket(): Promise< string | null > {
 		// Try the default location
 		paths.push( '/var/run/docker.sock' );
 		// Try an alternative location
-		paths.push( path.join( homedir(), '.docker', 'run', 'docker.sock' ) );
+		paths.push( join( homedir(), '.docker', 'run', 'docker.sock' ) );
 
 		for ( const socketPath of paths ) {
 			try {
@@ -87,8 +81,8 @@ export async function getDockerSocket(): Promise< string | null > {
 	return null;
 }
 
-export async function getEngineConfig( dockerHost: string ): Promise< Record< string, any > > {
-	const opts: Record< string, any > = {};
+export async function getEngineConfig( dockerHost: string ): Promise< Record< string, unknown > > {
+	const opts: Record< string, unknown > = {};
 	if ( dockerHost.startsWith( 'tcp://' ) ) {
 		const split = /(?:tcp:\/\/)?(.*?):(\d+)/g.exec( dockerHost );
 		if ( split && split.length === 3 ) {
@@ -110,9 +104,9 @@ export async function getEngineConfig( dockerHost: string ): Promise< Record< st
 	const certPath = process.env.DOCKER_CERT_PATH;
 	if ( certPath ) {
 		const [ ca, cert, key ] = await Promise.all( [
-			splitca( path.join( certPath, 'ca.pem' ) ),
-			readFile( path.join( certPath, 'cert.pem' ), 'utf-8' ),
-			readFile( path.join( certPath, 'key.pem' ), 'utf-8' ),
+			splitca( join( certPath, 'ca.pem' ) ),
+			readFile( join( certPath, 'cert.pem' ), 'utf-8' ),
+			readFile( join( certPath, 'key.pem' ), 'utf-8' ),
 		] );
 
 		opts.ca = ca;

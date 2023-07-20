@@ -316,7 +316,7 @@ declare namespace Enquirer {
 		} & SelectQuestionOptionsBase;
 		export type SelectQuestionOptionsBase = {
 			choices: SelectQuestion.Choice[];
-		} & types.QuestionBase &
+		} & Omit<types.QuestionBase, 'initial'> &
 			types.Initializer< string | number, string > &
 			types.Formatter< string, string >;
 
