@@ -52,7 +52,8 @@
     "vip-validate": "dist/bin/vip-validate.js",
     "vip-validate-preflight": "dist/bin/vip-validate-preflight.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
-    "vip-wp": "dist/bin/vip-wp.js"
+    "vip-wp": "dist/bin/vip-wp.js",
+    "vip-logout": "dist/bin/vip-logout.js"
   },
   "scripts": {
     "typescript:codegen:install-dependencies": "npm install --no-save @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/near-operation-file-preset @graphql-codegen/typescript-operations",
