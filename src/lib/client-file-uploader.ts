@@ -22,6 +22,13 @@ import debugLib from 'debug';
 import http from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
 
+// Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
+const fetchWithRetry = require( 'fetch-retry' )( fetch, {
+	// Set default retry options
+	retries: 5,
+	retryDelay: 1000,
+} );
+
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
 // Files smaller than COMPRESS_THRESHOLD will not be compressed before upload
@@ -255,7 +262,7 @@ async function uploadUsingPutObject( {
 		}
 	} );
 
-	const response = await fetch( presignedRequest.url, {
+	const response = await fetchWithRetry( presignedRequest.url, {
 		...fetchOptions,
 		body: fileContent ? fileContent : createReadStream( fileName ).pipe( progressPassThrough ),
 	} );
@@ -314,7 +321,7 @@ async function uploadUsingMultipart( {
 		action: 'CreateMultipartUpload',
 	} );
 
-	const multipartUploadResponse = await fetch(
+	const multipartUploadResponse = await fetchWithRetry(
 		presignedCreateMultipartUpload.url,
 		presignedCreateMultipartUpload.options
 	);
@@ -592,7 +599,7 @@ async function uploadPart( {
 
 		fetchOptions.body = createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
 
-		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
+		const fetchResponse = await fetchWithRetry( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
 			const responseHeaders = fetchResponse.headers.raw();
 			const [ etag ] = responseHeaders.etag;
@@ -662,7 +669,7 @@ async function completeMultipartUpload( {
 		etagResults,
 	} );
 
-	const completeMultipartUploadResponse = await fetch(
+	const completeMultipartUploadResponse = await fetchWithRetry(
 		completeMultipartUploadRequestData.url,
 		completeMultipartUploadRequestData.options
 	);
