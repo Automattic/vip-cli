@@ -90,6 +90,8 @@ export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
 		return dst.digest().toString( 'hex' );
 	} catch ( err ) {
 		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
+	} finally {
+		await src.close();
 	}
 };
 
