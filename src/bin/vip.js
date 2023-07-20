@@ -16,7 +16,6 @@ import config from '../lib/cli/config';
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import Token from '../lib/token';
 import { trackEvent, aliasUser } from '../lib/tracker';
-import logout from '../lib/logout';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
