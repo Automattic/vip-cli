@@ -33,11 +33,7 @@ const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 const runCmd = async function () {
 	const cmd = command();
 	cmd
-		.command( 'logout', 'Logout from your current session', async () => {
-			await logout();
-
-			console.log( 'You are successfully logged out.' );
-		} )
+		.command( 'logout', 'Logout from your current session' )
 		.command( 'app', 'List and modify your VIP applications' )
 		.command( 'cache', 'Manage page cache for your VIP applications' )
 		.command( 'config', 'Set configuration for your VIP applications' )
