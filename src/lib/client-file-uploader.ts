@@ -29,7 +29,9 @@ const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promis
 	require( 'fetch-retry' )( fetch, {
 		// Set default retry options
 		retries: 5,
-		retryDelay: 1000,
+		retryDelay: ( attempt: number, error: Error, response: Response ) => {
+			return Math.pow( 2, attempt ) * 500; // 500, 1000, 2000
+		},
 	} );
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
