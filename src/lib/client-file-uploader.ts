@@ -7,7 +7,7 @@ import { constants, createReadStream, createWriteStream, type ReadStream } from 
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import os from 'os';
 import path from 'path';
-import fetch, { HeaderInit, RequestInit, Response } from 'node-fetch';
+import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import chalk from 'chalk';
 import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
@@ -15,7 +15,6 @@ import { pipeline } from 'node:stream/promises';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import debugLib from 'debug';
-import fetchRetry from 'fetch-retry';
 
 /**
  * Internal dependencies
