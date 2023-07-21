@@ -348,6 +348,7 @@ const checks: Checks = {
 			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
+
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
 function findDuplicates< T >( arr: T[], where: Set< T > ) {
