@@ -7,7 +7,7 @@ import { constants, createReadStream, createWriteStream, type ReadStream } from 
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import os from 'os';
 import path from 'path';
-import fetch, { HeaderInit, RequestInit } from 'node-fetch';
+import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import chalk from 'chalk';
 import { createGunzip, createGzip } from 'zlib';
 import { createHash } from 'crypto';
@@ -21,6 +21,18 @@ import debugLib from 'debug';
  */
 import http from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
+
+// Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promise< Response > =
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+	require( 'fetch-retry' )( fetch, {
+		// Set default retry options
+		retries: 3,
+		retryDelay: ( attempt: number, error: Error, response: Response ) => {
+			return Math.pow( 2, attempt ) * 1000; // 1000, 2000, 4000
+		},
+	} );
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -83,6 +95,8 @@ export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
 		return dst.digest().toString( 'hex' );
 	} catch ( err ) {
 		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
+	} finally {
+		src.close();
 	}
 };
 
@@ -255,7 +269,7 @@ async function uploadUsingPutObject( {
 		}
 	} );
 
-	const response = await fetch( presignedRequest.url, {
+	const response = await fetchWithRetry( presignedRequest.url, {
 		...fetchOptions,
 		body: fileContent ? fileContent : createReadStream( fileName ).pipe( progressPassThrough ),
 	} );
@@ -314,7 +328,7 @@ async function uploadUsingMultipart( {
 		action: 'CreateMultipartUpload',
 	} );
 
-	const multipartUploadResponse = await fetch(
+	const multipartUploadResponse = await fetchWithRetry(
 		presignedCreateMultipartUpload.url,
 		presignedCreateMultipartUpload.options
 	);
@@ -417,6 +431,8 @@ export async function detectCompressedMimeType( fileName: string ): Promise< str
 	const file = await open( fileName, 'r' );
 	const { buffer } = await file.read( Buffer.alloc( 4 ), 0, 4, 0 );
 	const fileHeader = buffer.toString( 'hex' );
+
+	await file.close();
 
 	if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
 		return 'application/zip';
@@ -592,7 +608,7 @@ async function uploadPart( {
 
 		fetchOptions.body = createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
 
-		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
+		const fetchResponse = await fetchWithRetry( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
 			const responseHeaders = fetchResponse.headers.raw();
 			const [ etag ] = responseHeaders.etag;
@@ -662,7 +678,7 @@ async function completeMultipartUpload( {
 		etagResults,
 	} );
 
-	const completeMultipartUploadResponse = await fetch(
+	const completeMultipartUploadResponse = await fetchWithRetry(
 		completeMultipartUploadRequestData.url,
 		completeMultipartUploadRequestData.options
 	);
