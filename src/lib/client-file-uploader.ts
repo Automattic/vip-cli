@@ -28,9 +28,9 @@ const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promis
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 	require( 'fetch-retry' )( fetch, {
 		// Set default retry options
-		retries: 5,
+		retries: 3,
 		retryDelay: ( attempt: number, error: Error, response: Response ) => {
-			return Math.pow( 2, attempt ) * 500; // 500, 1000, 2000
+			return Math.pow( 2, attempt ) * 1000; // 1000, 2000, 4000
 		},
 	} );
 
