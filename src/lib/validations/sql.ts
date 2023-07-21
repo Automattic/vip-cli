@@ -337,7 +337,7 @@ const checks: Checks = {
 		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
-		matcher: / ENGINE=(?!(InnoDB))/i,
+		matcher: / ENGINE\s?=(?!(\s?InnoDB))/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
