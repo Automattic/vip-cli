@@ -15,6 +15,7 @@
         "@automattic/vip-search-replace": "^1.1.1",
         "args": "5.0.3",
         "chalk": "4.1.2",
+        "check-disk-space": "3.4.0",
         "cli-columns": "^4.0.0",
         "cli-table": "github:automattic/cli-table#7b14232",
         "configstore": "5.0.1",
@@ -5120,6 +5121,14 @@
       "version": "0.7.0",
       "resolved": "https://registry.npmjs.org/chardet/-/chardet-0.7.0.tgz",
       "integrity": "sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA=="
+    },
+    "node_modules/check-disk-space": {
+      "version": "3.4.0",
+      "resolved": "https://registry.npmjs.org/check-disk-space/-/check-disk-space-3.4.0.tgz",
+      "integrity": "sha512-drVkSqfwA+TvuEhFipiR1OC9boEGZL5RrWvVsOthdcvQNXyCCuKkEiTOTXZ7qxSf/GLwq4GvzfrQD/Wz325hgw==",
+      "engines": {
+        "node": ">=16"
+      }
     },
     "node_modules/check-node-version": {
       "version": "4.2.1",
@@ -17245,6 +17254,11 @@
       "version": "0.7.0",
       "resolved": "https://registry.npmjs.org/chardet/-/chardet-0.7.0.tgz",
       "integrity": "sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA=="
+    },
+    "check-disk-space": {
+      "version": "3.4.0",
+      "resolved": "https://registry.npmjs.org/check-disk-space/-/check-disk-space-3.4.0.tgz",
+      "integrity": "sha512-drVkSqfwA+TvuEhFipiR1OC9boEGZL5RrWvVsOthdcvQNXyCCuKkEiTOTXZ7qxSf/GLwq4GvzfrQD/Wz325hgw=="
     },
     "check-node-version": {
       "version": "4.2.1",
