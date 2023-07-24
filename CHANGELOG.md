@@ -1,5 +1,22 @@
 ## Changelog
 
+### 2.32.3
+
+- #1456 Fix DB engine validation regex
+- #1455 Fix SQL import command
+- #1454 chore(deps): update lando to 5efb9eb
+- #1453 Refactor logout
+- #1425 Add Slowlogs command
+- #1341 feat(dev-env): Add a concept of init-only containers
+- #1344 fix(dev-env): Do not run URL scan unless really need to
+- #1414 [dev-env] Tweak error handling dev-env sync
+- #1452 chore(dev-deps): update TypeScript-related packages
+- #1420 feat(dev-env): Adds automigration logic to dev-env
+- #1451 chore(dev-deps): update testing tools
+- #1448 chore(dev-deps): update babel packages to 7.22.9
+- #1421 refactor: Convert dev-environment to TypeScript
+- #1450 refactor: convert `validations` to TS
+
 ### 2.32.2
 
 - #1443 On-demand Database Backup: Use a less error-prone way of detecting if we're rate limited
