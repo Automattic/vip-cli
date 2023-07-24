@@ -22,7 +22,8 @@ class StorageAvailability {
 	}
 
 	bytesToHuman( bytes: number ) {
-		return ( bytes / ( 1024 * 1024 * 1024 ) ).toFixed( 2 );
+		const sizeInGiB = ( bytes / ( 1024 * 1024 * 1024 ) ).toFixed( 2 );
+		return `${ sizeInGiB } GiB`;
 	}
 
 	async getStorageAvailableInVipPath() {
