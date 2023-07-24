@@ -210,6 +210,7 @@ export class ExportSQLCommand {
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup download' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
+			{ id: this.steps.CONFIRM_ENOUGH_STORAGE, name: "Checking if there's enough storage" },
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
@@ -423,8 +424,12 @@ export class ExportSQLCommand {
 			this.isCreated.bind( this )
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
+		this.progressTracker.print();
+		this.progressTracker.stopPrinting();
 
 		const storageConfirmed = await this.confirmEnoughStorage( await this.getExportJob() );
+
+		this.progressTracker.startPrinting();
 
 		if ( storageConfirmed ) {
 			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
