@@ -1,9 +1,4 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import chalk from 'chalk';
@@ -14,13 +9,14 @@ import { stdout as log } from 'single-line-log';
  */
 import * as exit from '../../lib/cli/exit';
 import { trackEvent } from '../../lib/tracker';
-import { getReadInterface } from '../../lib/validations/line-by-line';
-// eslint-disable-next-line no-duplicate-imports
-import type { PostLineExecutionProcessingParams } from '../../lib/validations/line-by-line';
+import {
+	type PostLineExecutionProcessingParams,
+	getReadInterface,
+} from '../../lib/validations/line-by-line';
 
 let problemsFound = 0;
 let lineNum = 1;
-const tableNames = [];
+const tableNames: string[] = [];
 
 function formatError( message: string ): string {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
@@ -34,46 +30,65 @@ function formatRecommendation( message: string ): string {
 	return `${ chalk.yellow( 'Recommendation:' ) } ${ message }`;
 }
 
-export type CheckResult = {
-	lineNumber?: number,
-	text?: string,
-	recomendation?: string,
-	falsePositive?: boolean,
-	warning?: boolean,
-};
+export interface CheckResult {
+	lineNumber?: number;
+	text?: string;
+	recomendation?: string;
+	falsePositive?: boolean;
+	warning?: boolean;
+}
 
-export type CheckType = {
-	excerpt: string,
-	matchHandler: ( lineNumber: number, result: any, extraParam: any ) => CheckResult,
-	matcher: RegExp | string,
-	message: string,
-	outputFormatter: Function,
-	recommendation: string,
-	results: Array< CheckResult >,
-};
+export interface CheckType {
+	excerpt: string;
+	matchHandler: ( lineNumber: number, result: string[], extraParam: string ) => CheckResult;
+	matcher: RegExp | string;
+	message: string;
+	outputFormatter: ( check: CheckType, type: string, isImport: boolean ) => ValidationResult;
+	recommendation: string;
+	results: CheckResult[];
+}
 
-export type Checks = {
-	trigger: CheckType,
-	dropDB: CheckType,
-	alterUser: CheckType,
-	dropTable: CheckType,
-	createTable: CheckType,
-	siteHomeUrl: CheckType,
-};
+export interface Checks {
+	binaryLogging: CheckType;
+	trigger: CheckType;
+	dropDB: CheckType;
+	useStatement: CheckType;
+	alterUser: CheckType;
+	dropTable: CheckType;
+	createTable: CheckType;
+	alterTable: CheckType;
+	uniqueChecks: CheckType;
+	siteHomeUrl: CheckType;
+	siteHomeUrlLando: CheckType;
+	engineInnoDB: CheckType;
 
-type Record< T, V > = {
-	[T]: V,
-};
+	[ key: string ]: CheckType;
+}
 
 interface ValidationOptions {
 	isImport: boolean;
 	skipChecks: string[];
-	extraCheckParams: Record< string, any >;
+	extraCheckParams: Record< string, string >;
 }
 
-const generalCheckFormatter = ( check: CheckType ) => {
-	const errors = [];
-	const infos = [];
+interface ValidationError {
+	error: string;
+	recommendation?: string;
+}
+
+interface ValidationWarning {
+	warning: string;
+	recommendation?: string;
+}
+
+interface ValidationResult {
+	errors: ( ValidationError | ValidationWarning )[];
+	infos: string[];
+}
+
+const generalCheckFormatter = ( check: CheckType ): ValidationResult => {
+	const errors: ( ValidationError | ValidationWarning )[] = [];
+	const infos: string[] = [];
 
 	const validProblems = check.results.filter( result => ! result.falsePositive );
 	if ( validProblems.length > 0 ) {
@@ -82,16 +97,16 @@ const generalCheckFormatter = ( check: CheckType ) => {
 		}
 
 		for ( const problem of validProblems ) {
-			const text = `${ problem.text || check.message } on line ${ problem.lineNumber || '' }.`;
+			const text = `${ problem.text ?? check.message } on line ${ problem.lineNumber ?? '' }.`;
 			if ( problem.warning ) {
 				errors.push( {
 					warning: formatWarning( text ),
-					recommendation: formatRecommendation( problem.recomendation || check.recommendation ),
+					recommendation: formatRecommendation( problem.recomendation ?? check.recommendation ),
 				} );
 			} else {
 				errors.push( {
 					error: formatError( text ),
-					recommendation: formatRecommendation( problem.recomendation || check.recommendation ),
+					recommendation: formatRecommendation( problem.recomendation ?? check.recommendation ),
 				} );
 			}
 		}
@@ -105,9 +120,9 @@ const generalCheckFormatter = ( check: CheckType ) => {
 	};
 };
 
-const lineNumberCheckFormatter = ( check: CheckType ) => {
-	const errors = [];
-	const infos = [];
+const lineNumberCheckFormatter = ( check: CheckType ): ValidationResult => {
+	const errors: ValidationError[] = [];
+	const infos: string[] = [];
 
 	if ( check.results.length > 0 ) {
 		problemsFound += 1;
@@ -126,8 +141,12 @@ const lineNumberCheckFormatter = ( check: CheckType ) => {
 	};
 };
 
-const requiredCheckFormatter = ( check: CheckType, type, isImport ) => {
-	const errors = [];
+const requiredCheckFormatter = (
+	check: CheckType,
+	type: string,
+	isImport: boolean
+): ValidationResult => {
+	const errors: ValidationError[] = [];
 	const infos = [];
 
 	if ( check.results.length > 0 ) {
@@ -153,11 +172,13 @@ const requiredCheckFormatter = ( check: CheckType, type, isImport ) => {
 	};
 };
 
-const infoCheckFormatter = ( check: CheckType ) => {
-	const infos = [];
+const infoCheckFormatter = ( check: CheckType ): ValidationResult => {
+	const infos: string[] = [];
 
 	check.results.forEach( item => {
-		infos.push( item.text );
+		if ( item.text ) {
+			infos.push( item.text );
+		}
 	} );
 
 	return {
@@ -166,13 +187,13 @@ const infoCheckFormatter = ( check: CheckType ) => {
 	};
 };
 
-function checkTablePrefixes( results: CheckResult[], errors, infos ) {
-	const wpTables = [];
-	const notWPTables = [];
-	const wpMultisiteTables = [];
+function checkTablePrefixes( results: CheckResult[], errors: ValidationError[], infos: string[] ) {
+	const wpTables: string[] = [];
+	const notWPTables: string[] = [];
+	const wpMultisiteTables: string[] = [];
 	results.forEach( result => {
-		const tableName = result.text || '';
-		if ( RegExp( /^wp_(\d+_)/ ).exec( tableName ) ) {
+		const tableName = result.text ?? '';
+		if ( /^wp_(\d+_)/.exec( tableName ) ) {
 			wpMultisiteTables.push( tableName );
 		} else if ( tableName.startsWith( 'wp_' ) ) {
 			wpTables.push( tableName );
@@ -316,7 +337,7 @@ const checks: Checks = {
 		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
-		matcher: / ENGINE=(?!(InnoDB))/i,
+		matcher: /\sENGINE\s?=(?!(\s?InnoDB))/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
@@ -327,9 +348,10 @@ const checks: Checks = {
 			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
+
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
-function findDuplicates( arr: Array< any >, where: Set< any > ) {
+function findDuplicates< T >( arr: T[], where: Set< T > ) {
 	const filtered = arr.filter( item => {
 		if ( where.has( item ) ) {
 			where.delete( item );
@@ -342,7 +364,7 @@ function findDuplicates( arr: Array< any >, where: Set< any > ) {
 	return [ ...new Set( filtered ) ];
 }
 
-const postValidation = async ( options: ValidationOptions ) => {
+const postValidation = async ( options: ValidationOptions ): Promise< void > => {
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: options.isImport } );
 
 	if ( ! options.isImport ) {
@@ -350,20 +372,20 @@ const postValidation = async ( options: ValidationOptions ) => {
 		console.log( '\n' );
 	}
 
-	const errorSummary = {};
-	const checkEntries: any = Object.entries( checks ).filter(
+	const errorSummary: Record< string, number > = {};
+	const checkEntries = Object.entries( checks ).filter(
 		( [ type ] ) => ! options.skipChecks.includes( type )
 	);
 
 	const formattedWarnings = [];
 	let formattedErrors = [];
-	let formattedInfos = [];
+	let formattedInfos: string[] = [];
 
-	for ( const [ type, check ]: [ string, CheckType ] of checkEntries ) {
+	for ( const [ type, check ] of checkEntries ) {
 		const formattedOutput = check.outputFormatter( check, type, options.isImport );
 
 		for ( const error of formattedOutput.errors ) {
-			if ( error.warning ) {
+			if ( 'warning' in error ) {
 				formattedWarnings.push( error );
 			} else {
 				formattedErrors.push( error );
@@ -393,7 +415,7 @@ const postValidation = async ( options: ValidationOptions ) => {
 	}
 
 	if ( formattedWarnings.length ) {
-		const warningOutput = [];
+		const warningOutput: string[] = [];
 		formattedWarnings.forEach( warning => {
 			warningOutput.push( warning.warning );
 
@@ -413,8 +435,7 @@ const postValidation = async ( options: ValidationOptions ) => {
 			error: errorSummary,
 		} );
 
-		const errorOutput = [];
-
+		const errorOutput: string[] = [];
 		formattedErrors.forEach( error => {
 			errorOutput.push( error.error );
 
@@ -448,8 +469,8 @@ export const getTableNames = () => {
 	return tableNames;
 };
 
-const checkForTableName = line => {
-	const matches = line.match( /(?<=^CREATE\sTABLE\s)`?(?:(wp_[\d+_]?\w+))`?/ );
+const checkForTableName = ( line: string ): void => {
+	const matches = /(?<=^CREATE\sTABLE\s)`?(?:(wp_[\d+_]?\w+))`?/.exec( line );
 	if ( matches ) {
 		const tableName = matches[ 1 ];
 		// we should only have one match if we have any since we're looking at the start of the string
@@ -478,7 +499,7 @@ const perLineValidations = (
 	);
 	for ( const checkKey of checkKeys ) {
 		const check: CheckType = checks[ checkKey ];
-		const results = line.match( check.matcher );
+		const results = line.match( check.matcher ); // NOSONAR
 		const extraCheckParams = options.extraCheckParams[ checkKey ];
 		if ( results ) {
 			check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
@@ -491,10 +512,10 @@ const perLineValidations = (
 const postLineExecutionProcessing = async ( {
 	isImport,
 	skipChecks,
-}: PostLineExecutionProcessingParams ) => {
+}: PostLineExecutionProcessingParams ): Promise< void > => {
 	await postValidation( {
-		isImport: isImport || false,
-		skipChecks: skipChecks || DEV_ENV_SPECIFIC_CHECKS,
+		isImport: isImport ?? false,
+		skipChecks: skipChecks ?? DEV_ENV_SPECIFIC_CHECKS,
 		extraCheckParams: {},
 	} );
 };
@@ -508,7 +529,7 @@ export const staticSqlValidations = {
 export const validate = async (
 	filename: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
-) => {
+): Promise< void > => {
 	const readInterface = await getReadInterface( filename );
 	options.isImport = false;
 	readInterface.on( 'line', line => {

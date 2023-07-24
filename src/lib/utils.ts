@@ -23,10 +23,10 @@ const debug = debugLib( '@automattic/vip:lib:utils' );
  * @return {Promise}          A promise which resolves when the polling is done
  * @throws {Error}            If the fn throws an error
  */
-export async function pollUntil(
-	fn: () => unknown,
+export async function pollUntil< T >(
+	fn: () => Promise< T >,
 	interval: number,
-	isDone: ( v: unknown ) => boolean
+	isDone: ( v: T ) => boolean
 ): Promise< void > {
 	let done = false;
 	while ( ! done ) {

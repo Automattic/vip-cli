@@ -17,7 +17,7 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/dev-tools:0.9
-      command: sleep infinity
+      command: exit 0
       volumes:
         - devtools:/dev-tools
         - scripts:/scripts
@@ -28,6 +28,7 @@ services:
     volumes:
       devtools: {}
       scripts:
+    initOnly: true
 
   nginx:
     type: compose
@@ -154,6 +155,7 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
+#      command: /usr/local/bin/entrypoint.sh
       command: sh -c "rsync -a --chown=www-data:www-data /wp/ /shared/; sleep infinity"
       volumes:
         - ./wordpress:/shared
@@ -162,6 +164,10 @@ services:
           target: /scripts
           volume:
             nocopy: true
+#      environment:
+#        LANDO_NO_SCRIPTS: 1
+#        LANDO_NEEDS_EXEC: 1
+#    initOnly: true
 
 <% if ( muPlugins.mode == 'image' ) { %>
   vip-mu-plugins:
@@ -181,6 +187,7 @@ services:
         LANDO_NEEDS_EXEC: 1
     volumes:
       mu-plugins: {}
+    initOnly: true
 <% } %>
 
 <% if ( appCode.mode == 'image' ) { %>
@@ -188,7 +195,7 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/skeleton:latest
-      command: sleep infinity
+      command: exit 0
       volumes:
         - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
         - clientcode_images:/clientcode/images
@@ -205,6 +212,7 @@ services:
       clientcode_private: {}
       clientcode_themes: {}
       clientcode_vipconfig: {}
+    initOnly: true
 <% } %>
 
 <% if ( mailpit ) { %>

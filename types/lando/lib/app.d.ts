@@ -1,4 +1,20 @@
+import { LandoConfig } from "./lando";
+
 export = App;
+
+export interface ServiceInfo {
+	service: string;
+	urls: string[];
+	type: string;
+	healthy: boolean;
+}
+
+export interface ScanResult {
+	url: string;
+	status: boolean;
+	color: 'green' | 'yellow' | 'red';
+}
+
 declare class App {
 	constructor( name: any, config: any, lando?: {} );
 	/**
@@ -7,8 +23,8 @@ declare class App {
 	 * @since 3.0.0
 	 * @alias app.name
 	 */
-	name: any;
-	project: any;
+	name: string;
+	project: string;
 	_config: any;
 	_dir: string;
 	_lando: {};
@@ -54,15 +70,16 @@ declare class App {
 	engine: any;
 	metrics: any;
 	Promise: any;
-	events: any;
-	scanUrls: any;
+	events: import("lando/lib/events");
+	urls: ScanResult[] | undefined;
+	scanUrls: (urls: string[], options?: { max?: number, waitCodes?: number[] }) => Promise<ScanResult[]>;
 	/**
 	 * The apps configuration
 	 *
 	 * @since 3.0.0
 	 * @alias app.config
 	 */
-	config: any;
+	config: LandoConfig;
 	configFiles: any;
 	configHash: any;
 	ComposeService: any;
@@ -73,9 +90,9 @@ declare class App {
 	 * @since 3.0.0
 	 * @alias app.info
 	 */
-	info: any[];
+	info: ServiceInfo[];
 	labels: any;
-	opts: {};
+	opts: Record<string, any>;
 	plugins: any;
 	metaCache: string;
 	meta: any;
@@ -133,7 +150,7 @@ declare class App {
 	init(): Promise< void >;
 	composeData: any[];
 	envFiles: any;
-	services: any;
+	services: string[];
 	compose: any;
 	initialized: boolean;
 	/**

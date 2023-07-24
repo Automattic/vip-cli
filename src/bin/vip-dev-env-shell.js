@@ -26,14 +26,10 @@ import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environme
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 const userMap = {
-	devtools: 'www-data',
 	nginx: 'www-data',
 	php: 'www-data',
 	database: 'mysql',
 	memcached: 'memcache',
-	wordpress: 'www-data',
-	'vip-mu-plugins': 'www-data',
-	'demo-app-code': 'www-data',
 	elasticsearch: 'elasticsearch',
 	phpmyadmin: 'www-data',
 	mailhog: 'mailhog',

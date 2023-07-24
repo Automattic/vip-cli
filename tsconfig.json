@@ -14,10 +14,19 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "*": [ "./types/*", "./node_modules/*" ]
+      "*": [
+        "./types/*",
+        "./node_modules/*",
+        "./node_modules/@types/*",
+        // needed because the noImplicitAnyImportBypass overrides the node import too
+        "./node_modules/@types/node/*",
+        "./noImplicitAnyImportBypass.d.ts"
+      ]
     },
     // It's worth enabling this, I promise!
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    // We have to use this because we're using Babel
+    "moduleResolution": "node"
   },
   "include": [
     "src",
@@ -25,9 +34,10 @@
     "config",
     "__tests__",
     "__fixtures__",
-    "noImplictAnyImportBypass.d.ts",
-    // built-in globals like `console` doesn't work properly with the TypeScript language server without the following line
-    "./node_modules/@types/node/globals.d.ts"
+    "noImplicitAnyImportBypass.d.ts"
   ],
-  "exclude": [ "**/*.js" ]
+  "exclude": [
+    "**/*.js",
+    "codegen.ts"
+  ]
 }

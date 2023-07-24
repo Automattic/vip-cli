@@ -19,6 +19,10 @@ import UserError from '../lib/user-error';
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { makeCommandTracker } from '../lib/tracker';
+import {
+	getEnvironmentName,
+	processBooleanOption,
+} from '../lib/dev-environment/dev-environment-cli';
 
 const examples = [
 	{
@@ -58,8 +62,11 @@ command( {
 	module: 'dev-env-sync-sql',
 } )
 	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'force', 'Disable validations before running sync', undefined, processBooleanOption )
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], { app, env, slug } ) => {
+	.argv( process.argv, async ( arg: string[], opt ) => {
+		const { app, env } = opt;
+		const slug = await getEnvironmentName( opt );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
 			app: app.id,
 			env: env.uniqueLabel,
@@ -71,7 +78,7 @@ command( {
 		const lando = await bootstrapLando();
 		const envPath = getEnvironmentPath( slug );
 
-		if ( ! ( await isEnvUp( lando, envPath ) ) ) {
+		if ( ! ( await isEnvUp( lando, envPath ) ) && ! opt.force ) {
 			await trackerFn( 'env_not_running_error', { errorMessage: 'Environment was not running' } );
 			throw new UserError( 'Environment needs to be started first' );
 		}
