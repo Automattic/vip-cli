@@ -24,7 +24,9 @@
       ]
     },
     // It's worth enabling this, I promise!
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    // We have to use this because we're using Babel
+    "moduleResolution": "node"
   },
   "include": [
     "src",

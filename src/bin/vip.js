@@ -16,7 +16,6 @@ import config from '../lib/cli/config';
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import Token from '../lib/token';
 import { trackEvent, aliasUser } from '../lib/tracker';
-import logout from '../lib/logout';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -33,11 +32,7 @@ const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 const runCmd = async function () {
 	const cmd = command();
 	cmd
-		.command( 'logout', 'Logout from your current session', async () => {
-			await logout();
-
-			console.log( 'You are successfully logged out.' );
-		} )
+		.command( 'logout', 'Logout from your current session' )
 		.command( 'app', 'List and modify your VIP applications' )
 		.command( 'cache', 'Manage page cache for your VIP applications' )
 		.command( 'config', 'Set configuration for your VIP applications' )
@@ -46,6 +41,7 @@ const runCmd = async function () {
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'logs', 'Get logs from your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
+		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'whoami', 'Display details about the currently logged-in user' )
 		.command( 'validate', 'Validate your VIP application and environment' )
