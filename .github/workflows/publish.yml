@@ -1,5 +1,5 @@
 ---
-name: npm publish
+name: Prepare a new npm release
 on:
   workflow_dispatch:
     inputs:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Prepare a new npm release
     runs-on: ubuntu-latest
     permissions:
       contents: write
