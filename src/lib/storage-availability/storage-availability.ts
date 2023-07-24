@@ -7,7 +7,7 @@ import checkDiskSpace from 'check-disk-space';
 import { Confirm, Select } from 'enquirer';
 import { Job } from '../../graphqlTypes';
 
-class StorageAvailability {
+export class StorageAvailability {
 	archiveSize: number;
 
 	constructor( archiveSize: number ) {
@@ -49,7 +49,7 @@ class StorageAvailability {
 	}
 
 	getSqlSize() {
-		// We'll use an estimation for this.
+		// We estimated that it'd be about 3.5x the archive size.
 		return this.archiveSize * 3.5;
 	}
 

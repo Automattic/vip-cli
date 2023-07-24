@@ -23,6 +23,7 @@ import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
 import { BackupDBCommand } from './backup-db';
+import { StorageAvailability } from '../lib/storage-availability/storage-availability';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -181,10 +182,12 @@ export class ExportSQLCommand {
 	progressTracker;
 	outputFile;
 	generateBackup;
+	confirmEnoughStorageHook;
 	steps = {
 		PREPARE: 'prepare',
 		CREATE: 'create',
 		DOWNLOAD_LINK: 'downloadLink',
+		CONFIRM_ENOUGH_STORAGE: 'confirmEnoughStorage',
 		DOWNLOAD: 'download',
 	};
 	track;
@@ -202,6 +205,7 @@ export class ExportSQLCommand {
 		this.env = env;
 		this.outputFile =
 			typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
+		this.confirmEnoughStorageHook = options.confirmEnoughStorageHook;
 		this.generateBackup = options.generateBackup || false;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup download' },
@@ -314,6 +318,15 @@ export class ExportSQLCommand {
 		await cmd.run( false );
 	}
 
+	async confirmEnoughStorage( job ) {
+		if ( this.confirmEnoughStorageHook ) {
+			return await this.confirmEnoughStorageHook( job );
+		}
+
+		const storageAvailability = StorageAvailability.createFromDbCopyJob( job );
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
+	}
+
 	/**
 	 * Sequentially runs the steps of the export workflow
 	 *
@@ -410,6 +423,16 @@ export class ExportSQLCommand {
 			this.isCreated.bind( this )
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
+
+		const storageConfirmed = await this.confirmEnoughStorage( await this.getExportJob() );
+
+		if ( storageConfirmed ) {
+			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
+		} else {
+			this.progressTracker.stepFailed( this.steps.CONFIRM_ENOUGH_STORAGE );
+			this.stopProgressTracker();
+			return;
+		}
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );

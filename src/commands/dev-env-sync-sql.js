@@ -24,6 +24,7 @@ import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 import * as exit from '../lib/cli/exit';
 import { DevEnvImportSQLCommand } from './dev-env-import-sql';
+import { StorageAvailability } from '../lib/storage-availability/storage-availability';
 
 /**
  * Finds the site home url from the SQL line
@@ -103,6 +104,11 @@ export class DevEnvSyncSQLCommand {
 		return `${ this.tmpDir }/sql-export.sql.gz`;
 	}
 
+	async confirmEnoughStorage( job ) {
+		const storageAvailability = StorageAvailability.createFromDbCopyJob( job );
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport();
+	}
+
 	/**
 	 * Runs the SQL export command to generate the SQL export from
 	 * the latest backup
@@ -113,7 +119,7 @@ export class DevEnvSyncSQLCommand {
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
-			{ outputFile: this.gzFile },
+			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
 			this.track
 		);
 		await exportCommand.run();
