@@ -5,12 +5,22 @@ import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import checkDiskSpace from 'check-disk-space';
 import { Confirm, Select } from 'enquirer';
+import { Job } from '../../graphqlTypes';
 
 class StorageAvailability {
 	archiveSize: number;
 
 	constructor( archiveSize: number ) {
 		this.archiveSize = archiveSize;
+	}
+
+	static createFromDbCopyJob( job: Job ) {
+		const bytesWrittenMeta = job.metadata?.find( meta => meta?.name === 'bytesWritten' );
+		if ( ! bytesWrittenMeta?.value ) {
+			throw new Error( 'Meta not found' );
+		}
+
+		return new StorageAvailability( Number( bytesWrittenMeta.value ) );
 	}
 
 	getDockerStorageAvailable() {
