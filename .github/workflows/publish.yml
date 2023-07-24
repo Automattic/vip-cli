@@ -1,0 +1,16 @@
+---
+name: Publish to npm (if applicable)
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    if: contains( github.event.pull_request.labels.*.name, '[ Type ] NPM version update' ) && startsWith( github.head_ref, 'release/') && github.event.pull_request.merged == true
+    steps:
+      - uses: Automattic/vip-actions/npm-publish@v0.1.2
+        with:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
