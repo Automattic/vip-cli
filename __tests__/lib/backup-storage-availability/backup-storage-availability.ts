@@ -59,24 +59,24 @@ describe( 'backup-storage-availability', () => {
 
 	describe( 'validateAndPromptDiskSpaceWarningForDevEnvBackupImport', () => {
 		it.each( [
-			{ dockerSpace: oneGiBInBytes * 10, vipSpace: oneGiBInBytes },
-			{ dockerSpace: oneGiBInBytes, vipSpace: oneGiBInBytes * 10 },
-			{ dockerSpace: oneGiBInBytes * 4, vipSpace: oneGiBInBytes * 10 },
-			{ dockerSpace: oneGiBInBytes * 10, vipSpace: oneGiBInBytes * 5 },
+			{ dockerSpace: 10, vipSpace: 1 },
+			{ dockerSpace: 1, vipSpace: 10 },
+			{ dockerSpace: 4, vipSpace: 10 },
+			{ dockerSpace: 10, vipSpace: 5 },
 		] )(
-			"should show a prompt if there's not enough space available - dockerSpace: $dockerSpace , vipSpace: $vipSpace",
+			"should show a prompt if there's not enough space available - dockerSpace: $dockerSpace GiB, vipSpace: $vipSpace GiB",
 			async ( { dockerSpace, vipSpace } ) => {
 				// backup size is 1 GiB
 				const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
 				jest
 					.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
 					.mockImplementation( () => {
-						return Promise.resolve( Math.round( vipSpace ) );
+						return Promise.resolve( Math.round( vipSpace * oneGiBInBytes ) );
 					} );
 				jest
 					.spyOn( backupStorageAvailability, 'getDockerStorageAvailable' )
 					.mockImplementation( () => {
-						return Math.round( dockerSpace );
+						return Math.round( dockerSpace * oneGiBInBytes );
 					} );
 
 				await expect(
