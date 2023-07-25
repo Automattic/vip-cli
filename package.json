@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.32.2",
+  "version": "2.32.3",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -52,7 +52,8 @@
     "vip-validate": "dist/bin/vip-validate.js",
     "vip-validate-preflight": "dist/bin/vip-validate-preflight.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
-    "vip-wp": "dist/bin/vip-wp.js"
+    "vip-wp": "dist/bin/vip-wp.js",
+    "vip-logout": "dist/bin/vip-logout.js"
   },
   "scripts": {
     "typescript:codegen:install-dependencies": "npm install --no-save @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/near-operation-file-preset @graphql-codegen/typescript-operations",
@@ -152,6 +153,7 @@
     "debug": "4.3.4",
     "ejs": "^3.1.8",
     "enquirer": "2.3.6",
+    "fetch-retry": "^5.0.6",
     "graphql": "15.5.1",
     "graphql-tag": "2.12.5",
     "https-proxy-agent": "^5.0.1",
@@ -159,7 +161,7 @@
     "js-yaml": "^4.1.0",
     "json2csv": "5.0.7",
     "jwt-decode": "3.1.2",
-    "lando": "github:automattic/lando-cli.git#6ef1fc2",
+    "lando": "github:automattic/lando-cli.git#5efb9eb",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",

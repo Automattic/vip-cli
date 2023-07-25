@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "2.32.2",
+  "version": "2.32.3",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "2.32.2",
+      "version": "2.32.3",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -22,6 +22,7 @@
         "debug": "4.3.4",
         "ejs": "^3.1.8",
         "enquirer": "2.3.6",
+        "fetch-retry": "^5.0.6",
         "graphql": "15.5.1",
         "graphql-tag": "2.12.5",
         "https-proxy-agent": "^5.0.1",
@@ -29,7 +30,7 @@
         "js-yaml": "^4.1.0",
         "json2csv": "5.0.7",
         "jwt-decode": "3.1.2",
-        "lando": "github:automattic/lando-cli.git#6ef1fc2",
+        "lando": "github:automattic/lando-cli.git#5efb9eb",
         "node-fetch": "^2.6.1",
         "opn": "5.5.0",
         "proxy-from-env": "^1.1.0",
@@ -86,6 +87,7 @@
         "vip-import-sql-status": "dist/bin/vip-import-sql-status.js",
         "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
         "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
+        "vip-logout": "dist/bin/vip-logout.js",
         "vip-logs": "dist/bin/vip-logs.js",
         "vip-search-replace": "dist/bin/vip-search-replace.js",
         "vip-slowlogs": "dist/bin/vip-slowlogs.js",
@@ -7252,6 +7254,11 @@
         "bser": "2.1.1"
       }
     },
+    "node_modules/fetch-retry": {
+      "version": "5.0.6",
+      "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-5.0.6.tgz",
+      "integrity": "sha512-3yurQZ2hD9VISAhJJP9bpYFNQrHHBXE2JxxjY5aLEcDi46RmAzJE2OC9FAde0yis5ElW0jTTzs0zfg/Cca4XqQ=="
+    },
     "node_modules/figlet": {
       "version": "1.5.2",
       "resolved": "https://registry.npmjs.org/figlet/-/figlet-1.5.2.tgz",
@@ -9923,7 +9930,7 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#6ef1fc2ae18d39732f8774e402c6d2daf2ff56d3",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#5efb9eb6492c9353ca436b37249b758759d800aa",
       "license": "GPL-3.0",
       "dependencies": {
         "@lando/compose": "^0.5.0",
@@ -18832,6 +18839,11 @@
         "bser": "2.1.1"
       }
     },
+    "fetch-retry": {
+      "version": "5.0.6",
+      "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-5.0.6.tgz",
+      "integrity": "sha512-3yurQZ2hD9VISAhJJP9bpYFNQrHHBXE2JxxjY5aLEcDi46RmAzJE2OC9FAde0yis5ElW0jTTzs0zfg/Cca4XqQ=="
+    },
     "figlet": {
       "version": "1.5.2",
       "resolved": "https://registry.npmjs.org/figlet/-/figlet-1.5.2.tgz",
@@ -20767,8 +20779,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#6ef1fc2ae18d39732f8774e402c6d2daf2ff56d3",
-      "from": "lando@github:automattic/lando-cli.git#6ef1fc2",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#5efb9eb6492c9353ca436b37249b758759d800aa",
+      "from": "lando@github:automattic/lando-cli.git#5efb9eb",
       "requires": {
         "@lando/compose": "^0.5.0",
         "@lando/mailhog": "^0.5.0",
