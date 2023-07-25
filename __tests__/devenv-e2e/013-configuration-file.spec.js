@@ -121,11 +121,10 @@ describe( 'vip dev-env configuration file', () => {
 		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
 	} );
 
-	it( 'should create a new environment under parent directories', async () => {
+	it( 'should create a new environment using grandparent directory configuration', async () => {
 		const workingDirectoryPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-working-' ) );
-		const workingDirectoryChildPath1 = path.join( workingDirectoryPath, 'child-folder1' );
-		const workingDirectoryChildPath2 = path.join( workingDirectoryChildPath1, 'child-folder2' );
-		await mkdir( workingDirectoryChildPath2, { recursive: true } );
+		const workingDirectoryGrandchild = path.join( workingDirectoryPath, 'child', 'grand-child' );
+		await mkdir( workingDirectoryGrandchild, { recursive: true } );
 
 		const expectedSlug = getProjectSlug();
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
@@ -139,7 +138,7 @@ describe( 'vip dev-env configuration file', () => {
 		// Spawn in a directory two folders below the configuration file
 		const spawnOptions = {
 			env,
-			cwd: workingDirectoryChildPath2,
+			cwd: workingDirectoryGrandchild,
 		};
 
 		const result = await cliTest.spawn(
