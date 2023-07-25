@@ -1,5 +1,4 @@
 import { exec } from 'shelljs';
-import fs from 'fs';
 import path from 'path';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
