@@ -4,9 +4,7 @@ import { Confirm } from 'enquirer';
 
 const confirmRunSpy = jest.spyOn( Confirm.prototype, 'run' );
 
-confirmRunSpy.mockImplementation( () => {
-	return Promise.resolve( true );
-} );
+confirmRunSpy.mockResolvedValue( true );
 
 const oneGiBInBytes = 1024 * 1024 * 1024;
 
@@ -25,9 +23,7 @@ describe( 'backup-storage-availability', () => {
 			);
 			// let's test with 0.5 GiB of available space.
 
-			getStorageAvailableInVipPathSpy.mockImplementation( () => {
-				return Promise.resolve( Math.round( oneGiBInBytes * 0.5 ) );
-			} );
+			getStorageAvailableInVipPathSpy.mockResolvedValue( Math.round( oneGiBInBytes * 0.5 ) );
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport()
@@ -45,9 +41,7 @@ describe( 'backup-storage-availability', () => {
 			);
 			// let's test with 1.1 GiB of available space.
 
-			getStorageAvailableInVipPathSpy.mockImplementation( () => {
-				return Promise.resolve( Math.round( oneGiBInBytes * 1.1 ) );
-			} );
+			getStorageAvailableInVipPathSpy.mockResolvedValue( Math.round( oneGiBInBytes * 1.1 ) );
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport()
@@ -70,14 +64,10 @@ describe( 'backup-storage-availability', () => {
 				const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
 				jest
 					.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
-					.mockImplementation( () => {
-						return Promise.resolve( Math.round( vipSpace * oneGiBInBytes ) );
-					} );
+					.mockResolvedValue( Math.round( vipSpace * oneGiBInBytes ) );
 				jest
 					.spyOn( backupStorageAvailability, 'getDockerStorageAvailable' )
-					.mockImplementation( () => {
-						return Math.round( dockerSpace * oneGiBInBytes );
-					} );
+					.mockReturnValue( Math.round( dockerSpace * oneGiBInBytes ) );
 
 				await expect(
 					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
@@ -92,14 +82,10 @@ describe( 'backup-storage-availability', () => {
 			const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
 			jest
 				.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
-				.mockImplementation( async () => {
-					return Promise.resolve( Math.round( oneGiBInBytes * 10 ) );
-				} );
+				.mockResolvedValue( Math.round( oneGiBInBytes * 10 ) );
 			jest
 				.spyOn( backupStorageAvailability, 'getDockerStorageAvailable' )
-				.mockImplementation( () => {
-					return Math.round( oneGiBInBytes * 10 );
-				} );
+				.mockReturnValue( Math.round( oneGiBInBytes * 10 ) );
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
