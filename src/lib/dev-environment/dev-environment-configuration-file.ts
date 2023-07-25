@@ -18,19 +18,14 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 export const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
 
 export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
-	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
-	let configurationFileContents = '';
+	const configurationFilePath = await findConfigurationFilePath();
 
-	const fileExists = await access( configurationFilePath, constants.R_OK )
-		.then( () => true )
-		.catch( () => false );
-
-	if ( fileExists ) {
-		debug( 'Reading configuration file from:', configurationFilePath );
-		configurationFileContents = await readFile( configurationFilePath, 'utf8' );
-	} else {
+	if ( configurationFilePath === false ) {
 		return {};
 	}
+
+	debug( 'Reading configuration file from:', configurationFilePath );
+	const configurationFileContents = await readFile( configurationFilePath, 'utf8' );
 
 	let configurationFromFile: Record< string, unknown > = {};
 
@@ -49,6 +44,8 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 
 	try {
 		const configuration = sanitizeConfiguration( configurationFromFile );
+		configuration[ 'configuration-path' ] = configurationFilePath;
+
 		debug( 'Sanitized configuration from file:', configuration );
 		return configuration;
 	} catch ( err ) {
@@ -182,6 +179,35 @@ export function printConfigurationFile( configurationOptions: ConfigurationFileO
 	}
 
 	console.log( settingLines.join( '\n' ) + '\n' );
+}
+
+async function findConfigurationFilePath(): Promise< string | false > {
+	let currentPath = process.cwd();
+	const rootPath = path.parse( currentPath ).root;
+
+	let depth = 0;
+	const maxDepth = 32;
+	const pathPromises = [];
+
+	while ( currentPath !== rootPath && depth < maxDepth ) {
+		const configurationFilePath = path.join( currentPath, CONFIGURATION_FILE_NAME );
+
+		pathPromises.push(
+			access( configurationFilePath, constants.R_OK ).then( () => configurationFilePath )
+		);
+
+		// Move up one directory
+		currentPath = path.dirname( currentPath );
+
+		// Use depth as a sanity check to avoid an infitite loop
+		depth++;
+	}
+
+	return Promise.any( pathPromises )
+		.then( configurationFilePath => {
+			return configurationFilePath;
+		} )
+		.catch( () => false );
 }
 
 const CONFIGURATION_FILE_VERSIONS = [ '0.preview-unstable' ];

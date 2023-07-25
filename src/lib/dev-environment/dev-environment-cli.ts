@@ -217,7 +217,7 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 		const slug = configurationFileOptions.slug;
 		console.log(
 			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
-				CONFIGURATION_FILE_NAME
+				configurationFileOptions[ 'configuration-path' ]
 			) }\n`
 		);
 
@@ -673,7 +673,7 @@ export function resolvePhpVersion( version: string ): string {
 
 	let result: string;
 	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
-		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ) as string[];
+		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value === version );
 		if ( image ) {
 			result = image;

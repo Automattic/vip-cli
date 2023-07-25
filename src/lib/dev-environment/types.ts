@@ -74,6 +74,8 @@ export interface ConfigurationFileOptions {
 	'media-redirect-domain'?: string;
 	photon?: boolean;
 
+	'configuration-path'?: string;
+
 	[ index: string ]: unknown;
 }
 
