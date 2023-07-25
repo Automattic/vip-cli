@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
@@ -107,6 +107,39 @@ describe( 'vip dev-env configuration file', () => {
 		const spawnOptions = {
 			env,
 			cwd: tmpWorkingDirectoryPath,
+		};
+
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `Using environment ${ expectedSlug }` );
+		expect( result.stderr ).toBe( '' );
+
+		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
+	} );
+
+	it( 'should create a new environment under parent directories', async () => {
+		const workingDirectoryPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-working-' ) );
+		const workingDirectoryChildPath1 = path.join( workingDirectoryPath, 'child-folder1' );
+		const workingDirectoryChildPath2 = path.join( workingDirectoryChildPath1, 'child-folder2' );
+		await mkdir( workingDirectoryChildPath2, { recursive: true } );
+
+		const expectedSlug = getProjectSlug();
+		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
+
+		// Write configuration file in top working directory
+		await writeConfigurationFile( workingDirectoryPath, {
+			'configuration-version': '0.preview-unstable',
+			slug: expectedSlug,
+		} );
+
+		// Spawn in a directory two folders below the configuration file
+		const spawnOptions = {
+			env,
+			cwd: workingDirectoryChildPath2,
 		};
 
 		const result = await cliTest.spawn(
