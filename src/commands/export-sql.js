@@ -23,7 +23,7 @@ import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
 import { BackupDBCommand } from './backup-db';
-import { StorageAvailability } from '../lib/storage-availability/storage-availability';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -324,7 +324,7 @@ export class ExportSQLCommand {
 			return await this.confirmEnoughStorageHook( job );
 		}
 
-		const storageAvailability = StorageAvailability.createFromDbCopyJob( job );
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
 		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
 	}
 

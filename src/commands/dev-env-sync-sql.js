@@ -24,7 +24,7 @@ import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 import * as exit from '../lib/cli/exit';
 import { DevEnvImportSQLCommand } from './dev-env-import-sql';
-import { StorageAvailability } from '../lib/storage-availability/storage-availability';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 
 /**
  * Finds the site home url from the SQL line
@@ -105,7 +105,7 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	async confirmEnoughStorage( job ) {
-		const storageAvailability = StorageAvailability.createFromDbCopyJob( job );
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
 		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport();
 	}
 

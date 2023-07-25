@@ -4,26 +4,28 @@ import path from 'path';
 import xdgBasedir from 'xdg-basedir';
 import os from 'os';
 import checkDiskSpace from 'check-disk-space';
-import { Confirm, Select } from 'enquirer';
+import { Confirm } from 'enquirer';
 import { Job } from '../../graphqlTypes';
 
-export class StorageAvailability {
+const oneGiBInBytes = 1024 * 1024 * 1024;
+
+export class BackupStorageAvailability {
 	archiveSize: number;
 
 	constructor( archiveSize: number ) {
 		this.archiveSize = archiveSize;
 	}
 
-	static createFromDbCopyJob( job: Job ) {
+	static createFromDbCopyJob( job: Job ): BackupStorageAvailability {
 		const bytesWrittenMeta = job.metadata?.find( meta => meta?.name === 'bytesWritten' );
 		if ( ! bytesWrittenMeta?.value ) {
 			throw new Error( 'Meta not found' );
 		}
 
-		return new StorageAvailability( Number( bytesWrittenMeta.value ) );
+		return new BackupStorageAvailability( Number( bytesWrittenMeta.value ) );
 	}
 
-	getDockerStorageAvailable() {
+	getDockerStorageAvailable(): number {
 		const bytesLeft = exec( 'docker run --rm -it alpine df' )
 			.exec( 'grep -i /dev/vda1 -m 1' )
 			.replace( /\s+/g, ' ' )[ 3 ];
@@ -43,38 +45,37 @@ export class StorageAvailability {
 		return diskSpace.free;
 	}
 
-	getReserveSpace() {
-		// Reserve 1 GB of space
-		return 1024 * 1024 * 1024;
+	getReserveSpace(): number {
+		return oneGiBInBytes;
 	}
 
-	getSqlSize() {
+	getSqlSize(): number {
 		// We estimated that it'd be about 3.5x the archive size.
 		return this.archiveSize * 3.5;
 	}
 
-	getArchiveSize() {
+	getArchiveSize(): number {
 		return this.archiveSize;
 	}
 
-	getStorageRequiredInMainMachine() {
+	getStorageRequiredInMainMachine(): number {
 		return this.getArchiveSize() + this.getSqlSize() + this.getReserveSpace();
 	}
 
-	getStorageRequiredInDockerMachine() {
+	getStorageRequiredInDockerMachine(): number {
 		return this.getSqlSize() + this.getReserveSpace();
 	}
 
-	async isStorageAvailableInMainMachine() {
+	async isStorageAvailableInMainMachine(): Promise< boolean > {
 		return ( await this.getStorageAvailableInVipPath() ) > this.getStorageRequiredInMainMachine();
 	}
 
-	isStorageAvailableInDockerMachine() {
+	isStorageAvailableInDockerMachine(): boolean {
 		return this.getDockerStorageAvailable() > this.getStorageRequiredInDockerMachine();
 	}
 
 	// eslint-disable-next-line id-length
-	async validateAndPromptDiskSpaceWarningForBackupImport() {
+	async validateAndPromptDiskSpaceWarningForBackupImport(): Promise< boolean > {
 		const isStorageAvailable =
 			( await this.getStorageAvailableInVipPath() ) > this.getArchiveSize();
 		if ( ! isStorageAvailable ) {
@@ -87,10 +88,12 @@ export class StorageAvailability {
 
 			return await confirmPrompt.run();
 		}
+
+		return true;
 	}
 
 	// eslint-disable-next-line id-length
-	async validateAndPromptDiskSpaceWarningForDevEnvBackupImport() {
+	async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< boolean > {
 		if ( ! ( await this.isStorageAvailableInMainMachine() ) ) {
 			const storageRequired = this.getStorageRequiredInMainMachine();
 			const confirmPrompt = new Confirm( {
@@ -112,5 +115,7 @@ export class StorageAvailability {
 
 			return await confirmPrompt.run();
 		}
+
+		return true;
 	}
 }
