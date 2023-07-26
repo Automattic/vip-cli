@@ -25,13 +25,13 @@ export class BackupStorageAvailability {
 	}
 
 	getDockerStorageAvailable(): number {
-		const bytesLeft = exec( `docker run --rm alpine df`, { silent: true } )
+		const kiBLeft = exec( `docker run --rm alpine df -k`, { silent: true } )
 			.grep( /\/dev\/vda1/ )
 			.head( { '-n': 1 } )
 			.replace( /\s+/g, ' ' )
 			.split( ' ' )[ 3 ];
 
-		return Number( bytesLeft );
+		return Number( kiBLeft ) * 1024;
 	}
 
 	bytesToHuman( bytes: number ) {
