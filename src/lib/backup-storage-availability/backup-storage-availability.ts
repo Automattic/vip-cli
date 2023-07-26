@@ -35,8 +35,8 @@ export class BackupStorageAvailability {
 	}
 
 	bytesToHuman( bytes: number ) {
-		const sizeInGiB = ( bytes / ( 1024 * 1024 * 1024 ) ).toFixed( 2 );
-		return `${ sizeInGiB } GiB`;
+		const sizeInGB = ( bytes / ( 1000 * 1000 * 1000 ) ).toFixed( 2 );
+		return `${ sizeInGB } GB`;
 	}
 
 	async getStorageAvailableInVipPath() {
