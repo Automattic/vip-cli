@@ -25,9 +25,11 @@ export class BackupStorageAvailability {
 	}
 
 	getDockerStorageAvailable(): number {
-		const bytesLeft = exec( 'docker run --rm -it alpine df' )
-			.exec( 'grep -i /dev/vda1 -m 1' )
-			.replace( /\s+/g, ' ' )[ 3 ];
+		const bytesLeft = exec( `docker run --rm alpine df`, { silent: true } )
+			.grep( /\/dev\/vda1/ )
+			.head( { '-n': 1 } )
+			.replace( /\s+/g, ' ' )
+			.split( ' ' )[ 3 ];
 
 		return Number( bytesLeft );
 	}
