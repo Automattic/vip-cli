@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import chalk from 'chalk';
@@ -75,9 +70,14 @@ command()
 			if ( process.platform === 'win32' ) {
 				debug( 'Windows platform detected. Applying Docker patch...' );
 
-				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
+				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout, stderr ) => {
 					if ( error ) {
-						debug( error );
+						debug(
+							'Error applying Windows Docker patch: %j\nStdout:\n%s\nStderr:\n%s',
+							error,
+							stdout,
+							stderr
+						);
 						console.log(
 							`${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.`
 						);
