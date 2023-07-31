@@ -108,10 +108,16 @@ export class BackupStorageAvailability {
 
 		if ( ! ( await this.isStorageAvailableInMainMachine() ) ) {
 			const storageRequired = this.getStorageRequiredInMainMachine();
+			const storageAvailableInVipPath = this.bytesToHuman(
+				await this.getStorageAvailableInVipPath()
+			);
+
 			const confirmPrompt = new Confirm( {
 				message: `We recommend that you have at least ${ this.bytesToHuman(
 					storageRequired
-				) } of free space in your machine to import this database backup. Do you still want to continue with importing the database backup?`,
+				) } of free space in your machine to import this database backup. We estimate that you currently have ${ storageAvailableInVipPath } of space in your machine.
+Do you still want to continue with importing the database backup?
+`,
 			} );
 
 			storageAvailableInMainMachinePrompted = await confirmPrompt.run();
@@ -124,10 +130,14 @@ export class BackupStorageAvailability {
 		try {
 			if ( ! this.isStorageAvailableInDockerMachine() ) {
 				const storageRequired = this.getStorageRequiredInDockerMachine();
+				const storageAvailableInDockerMachine = this.bytesToHuman(
+					this.getDockerStorageAvailable()
+				);
 				const confirmPrompt = new Confirm( {
 					message: `We recommend that you have at least ${ this.bytesToHuman(
 						storageRequired
-					) } of free space in your Docker machine to import this database backup. Do you still want to continue with importing the database backup?`,
+					) } of free space in your Docker machine to import this database backup. We estimate that you currently have ${ storageAvailableInDockerMachine } of space in your machine.
+Do you still want to continue with importing the database backup?`,
 				} );
 
 				return await confirmPrompt.run();
