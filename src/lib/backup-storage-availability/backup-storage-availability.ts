@@ -26,12 +26,16 @@ export class BackupStorageAvailability {
 		return new BackupStorageAvailability( Number( bytesWrittenMeta.value ) );
 	}
 
-	getDockerStorageAvailable(): number {
-		const kiBLeft: string | undefined = exec( `docker run --rm alpine df -k`, { silent: true } )
+	getDockerStorageKiBLeft(): string | undefined {
+		return exec( `docker run --rm alpine df -k`, { silent: true } )
 			.grep( /\/dev\/vda1/ )
 			.head( { '-n': 1 } )
 			.replace( /\s+/g, ' ' )
 			.split( ' ' )[ 3 ];
+	}
+
+	getDockerStorageAvailable(): number {
+		const kiBLeft = this.getDockerStorageKiBLeft();
 
 		if ( ! kiBLeft || Number.isNaN( Number( kiBLeft ) ) ) {
 			throw new DockerMachineNotFoundError();
