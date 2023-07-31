@@ -127,6 +127,7 @@ export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
 gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
 ```
 
+
 #### Publishing via GitHub Actions (preferred)
 
 This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
@@ -138,6 +139,10 @@ This is the preferred method for pushing out the latest release. The workflow ru
 1. Wait for a pull request to appear. The pull request will update the version number and shall be assigned to you.
 1. When ready, merge the pull request. This will lead to a new version to be [published on npmjs.com](https://www.npmjs.com/package/@automattic/vip).
 1. Another pull request will be created to bump to a development version, also assigned to you. Merge it to finish the process.
+
+#### Note on NPM token
+
+Publishing via the GitHub Action requires that the `NPM_TOKEN` be set correctly in GitHub Actions secrets. This should be an npm token generated for a bot user on [the npm @automattic org](https://www.npmjs.com/settings/automattic) that has publish access to this repo.
 
 #### Publishing locally
 
