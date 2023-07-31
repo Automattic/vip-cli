@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { writeFile } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { expect } from '@jest/globals';
 import { dump } from 'js-yaml';
@@ -109,5 +109,27 @@ export async function writeConfigurationFile( workingDirectoryPath, configuratio
 		path.join( workingDirectoryPath, '.vip-dev-env.yml' ),
 		configurationLines,
 		'utf8'
+	);
+}
+
+/**
+ * Add required appCode directories for environment mapping.
+ *
+ * @param {string} workingDirectoryPath Path that represents the root of a VIP application
+ */
+export async function makeRequiredAppCodeDirectories( workingDirectoryPath ) {
+	// Add folders to root project so that 'appCode' option verifies
+	const appCodeDirectories = [
+		'languages',
+		'plugins',
+		'themes',
+		'private',
+		'images',
+		'client-mu-plugins',
+		'vip-config',
+	];
+
+	return Promise.all(
+		appCodeDirectories.map( dir => mkdir( path.join( workingDirectoryPath, dir ) ) )
 	);
 }

@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { mkdtemp, mkdir, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
@@ -17,6 +17,7 @@ import {
 	getProjectSlug,
 	prepareEnvironment,
 	writeConfigurationFile,
+	makeRequiredAppCodeDirectories,
 } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvUpdate } from './helpers/commands';
 
@@ -151,6 +152,53 @@ describe( 'vip dev-env configuration file', () => {
 		expect( result.stderr ).toBe( '' );
 
 		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
+	} );
+
+	it( 'should create a new environment using parent directory configuration with relative paths', async () => {
+		// Verify that relative paths are resolved correctly when used in a configuration file in a parent directory
+		const workingDirectoryPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-working-' ) );
+		const workingDirectoryGrandchild = path.join( workingDirectoryPath, 'child', 'grand-child' );
+		await mkdir( workingDirectoryGrandchild, { recursive: true } );
+
+		const expectedSlug = getProjectSlug();
+		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
+
+		// Write configuration file in top working directory
+		await writeConfigurationFile( workingDirectoryPath, {
+			'configuration-version': '0.preview-unstable',
+			slug: expectedSlug,
+			'app-code': './',
+		} );
+
+		await makeRequiredAppCodeDirectories( workingDirectoryPath );
+
+		// Spawn in grandchild directory
+		const spawnOptions = {
+			env,
+			cwd: workingDirectoryGrandchild,
+		};
+
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `Using environment ${ expectedSlug }` );
+		expect( result.stderr ).toBe( '' );
+		await expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
+
+		// Verify that the app-code directory is pointing to a path relative to the configuration file,
+		// not the CLI working directory
+		const environmentData = readEnvironmentData( expectedSlug );
+		const localPathResolved = await realpath( workingDirectoryPath );
+
+		expect( environmentData ).toMatchObject( {
+			appCode: expect.objectContaining( {
+				mode: 'local',
+				dir: localPathResolved,
+			} ),
+		} );
 	} );
 
 	it( 'should create a new environment with full configuration from file', async () => {
