@@ -217,7 +217,7 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 		const slug = configurationFileOptions.slug;
 		console.log(
 			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
-				configurationFileOptions[ 'configuration-path' ]
+				configurationFileOptions.meta[ 'configuration-path' ]
 			) }\n`
 		);
 

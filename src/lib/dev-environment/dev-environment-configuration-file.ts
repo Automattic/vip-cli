@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { access, constants, readFile } from 'node:fs/promises';
+import { access, constants, readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import debugLib from 'debug';
 import chalk from 'chalk';
@@ -43,8 +43,10 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 	}
 
 	try {
-		const configuration = sanitizeConfiguration( configurationFromFile );
-		configuration[ 'configuration-path' ] = configurationFilePath;
+		let configuration = sanitizeConfiguration( configurationFromFile );
+		configuration = adjustRelativePaths( configuration, configurationFilePath );
+
+		configuration.meta[ 'configuration-path' ] = configurationFilePath;
 
 		debug( 'Sanitized configuration from file:', configuration );
 		return configuration;
@@ -115,6 +117,7 @@ function sanitizeConfiguration(
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
+		meta: {},
 	};
 
 	// Remove undefined values
@@ -124,6 +127,22 @@ function sanitizeConfiguration(
 	);
 
 	return sanitizedConfiguration;
+}
+
+function adjustRelativePaths(
+	configuration: ConfigurationFileOptions,
+	configurationFilePath: string
+): ConfigurationFileOptions {
+	const configurationDirectory = path.resolve( path.dirname( configurationFilePath ) );
+	const configurationKeysWithRelativePaths = [ 'app-code', 'mu-plugins' ];
+
+	configurationKeysWithRelativePaths.forEach( key => {
+		if ( configuration[ key ] && configuration[ key ] !== 'image' ) {
+			configuration[ key ] = path.join( configurationDirectory, configuration[ key ] );
+		}
+	} );
+
+	return configuration;
 }
 
 export function mergeConfigurationFileOptions(
@@ -171,10 +190,17 @@ export function printConfigurationFile( configurationOptions: ConfigurationFileO
 		return;
 	}
 
+	// Ignore meta key for configuration path
+	const ignoreKeys = [ 'meta' ];
+
 	// Customized formatter because Lando's printTable() automatically uppercases keys
 	// which may be confusing for YAML configuration
 	const settingLines = [];
 	for ( const [ key, value ] of Object.entries( configurationOptions ) ) {
+		if ( ignoreKeys.includes( key ) ) {
+			continue;
+		}
+
 		settingLines.push( `${ chalk.cyan( key ) }: ${ String( value ) }` );
 	}
 
@@ -228,8 +254,8 @@ function getConfigurationFileExample(): string {
 	return `configuration-version: ${ getLatestConfigurationFileVersion() }
 slug: dev-site
 php: 8.0
-wordpress: 6.0
-app-code: ./site-code
+wordpress: 6.2
+app-code: ../
 mu-plugins: image
 multisite: false
 phpmyadmin: true
