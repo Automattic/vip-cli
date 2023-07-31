@@ -129,19 +129,25 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 #### Publishing via GitHub Actions (preferred)
 
-To publish via GitHub Actions follow these steps:
+This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
 
+1. Initiate the [release process here](https://github.com/Automattic/vip-cli/actions/workflows/npm-prepare-release.yml).
+1. On the right-hand side, select "Run Workflow".
+1. Pick your preferred version bump.
+1. Click `Run Workflow`.
+1. Wait for a pull request to appear. The pull request will update the version number and shall be assigned to you.
+1. When ready, merge the pull request. This will lead to a new version to be [published on npmjs.com](https://www.npmjs.com/package/@automattic/vip).
+1. Another pull request will be created to bump to a development version, also assigned to you. Merge it to finish the process.
 
 #### Publishing locally
 
 To publish locally, follow these steps:
 
-1. Create a pull request that adds the next version's changelog into `develop`. Use the Changelog
+1. Create a pull request that adds the next version's changelog into `trunk`. Use the Changelog
    Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
-   format matches.
-1. Create a pull request that merges `develop` to `trunk`.
+   format matches. 
 1. Merge it after approval.
-1. Make sure trunk branch is up-to-date `git pull`.
+1. Make sure `trunk` branch is up-to-date `git pull`.
 1. Make sure to clean all of your repositories of extra files. Run a dangerous, destructive
    command `git clean -xfd` to do so.
 1. Run `npm install`.
