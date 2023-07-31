@@ -76,15 +76,15 @@ New libraries should generally support both CLI and web contexts, though some ca
 
 Our release flow for VIP CLI follows this pattern:
 
-**_feature branch -> develop branch -> trunk branch -> NPM release_**
+**_feature branch -> trunk branch -> NPM release_**
 
 - For feature branches, please follow A8C branch naming conventions (e.g.- `add/data-sync-command`, `fix/subsite-launch-command`, etc.)
 - Include a Changelog for all npm version releases, including any minor or major versions
 - This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
-- Merge changes from your feature branch to the `develop` branch
-- If you are ready to release your changes publicly, merge your changes from the `develop` branch to the `trunk` branch. All changes that are not ready to be public should be feature flagged or stay in the `develop` branch to avoid conflicts when releasing urgent fixes (not recommended).
+- Merge changes from your feature branch to the `trunk` branch when they are ready to be published publicly.
 - Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
 
+If you need to publish a security release, see [details below](#patching-old-releases).
 ### Changelogs
 
 Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
