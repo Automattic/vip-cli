@@ -247,7 +247,8 @@ export const formatBytes = (
 };
 
 /**
- * Format bytes in powers of 1000
+ * Format bytes in powers of 1000, based on the size
+ * This is how it's displayed on Macs
  */
 export const formatMetricBytes = ( bytes: number, decimals = 2 ): string => {
 	return formatBytes( bytes, decimals, 1000 );
