@@ -129,7 +129,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		const importSpy = jest.spyOn( syncCommand, 'runImport' );
 
 		beforeAll( () => {
-			exportSpy.mockResolvedValue();
+			exportSpy.mockResolvedValue( true );
 			searchReplaceSpy.mockResolvedValue();
 			importSpy.mockResolvedValue();
 		} );
