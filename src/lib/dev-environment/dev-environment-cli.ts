@@ -56,6 +56,7 @@ import { Args } from '../cli/command';
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const DEFAULT_SLUG = 'vip-local';
+export const CONFIGURATION_FOLDER = '.wpvip';
 
 let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
 

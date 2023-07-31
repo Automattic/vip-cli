@@ -14,6 +14,8 @@ import {
 	getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
+import { CONFIGURATION_FOLDER } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { CONFIGURATION_FILE_NAME } from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 
 let id = 0;
 
@@ -104,9 +106,12 @@ export async function destroyEnvironment( cliTest, slug, env ) {
  * @param {Object} configuration        Configuration file values
  */
 export async function writeConfigurationFile( workingDirectoryPath, configuration ) {
+	const configurationDirectoryPath = path.join( workingDirectoryPath, CONFIGURATION_FOLDER );
+	await mkdir( configurationDirectoryPath, { recursive: true } );
+
 	const configurationLines = dump( configuration );
 	await writeFile(
-		path.join( workingDirectoryPath, '.vip-dev-env.yml' ),
+		path.join( configurationDirectoryPath, CONFIGURATION_FILE_NAME ),
 		configurationLines,
 		'utf8'
 	);

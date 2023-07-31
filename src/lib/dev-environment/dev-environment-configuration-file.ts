@@ -10,12 +10,13 @@ import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 /**
  * Internal dependencies
  */
+import { CONFIGURATION_FOLDER } from './dev-environment-cli';
 import * as exit from '../cli/exit';
-import type { ConfigurationFileOptions, InstanceOptions } from './types';
+import type { ConfigurationFileMeta, ConfigurationFileOptions, InstanceOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-export const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
+export const CONFIGURATION_FILE_NAME = 'vip-dev-env.yml';
 
 export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
 	const configurationFilePath = await findConfigurationFilePath();
@@ -37,16 +38,14 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 		} ) as Record< string, unknown >;
 	} catch ( err ) {
 		const messageToShow =
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } could not be loaded:\n` +
+			`Configuration file ${ chalk.grey( configurationFilePath ) } could not be loaded:\n` +
 			( err as Error ).toString();
 		exit.withError( messageToShow );
 	}
 
 	try {
-		let configuration = sanitizeConfiguration( configurationFromFile );
+		let configuration = sanitizeConfiguration( configurationFromFile, configurationFilePath );
 		configuration = adjustRelativePaths( configuration, configurationFilePath );
-
-		configuration.meta[ 'configuration-path' ] = configurationFilePath;
 
 		debug( 'Sanitized configuration from file:', configuration );
 		return configuration;
@@ -56,10 +55,11 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 }
 
 function sanitizeConfiguration(
-	configuration: Record< string, unknown >
+	configuration: Record< string, unknown >,
+	configurationFilePath: string
 ): ConfigurationFileOptions {
 	const genericConfigurationError =
-		`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is available but ` +
+		`Configuration file ${ chalk.grey( configurationFilePath ) } is available but ` +
 		`couldn't be loaded. Ensure there is a ${ chalk.cyan(
 			'configuration-version'
 		) } and ${ chalk.cyan( 'slug' ) } ` +
@@ -85,7 +85,7 @@ function sanitizeConfiguration(
 
 	if ( ! isValidConfigurationFileVersion( version.toString() ) ) {
 		throw new Error(
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid ` +
+			`Configuration file ${ chalk.grey( configurationFilePath ) } has an invalid ` +
 				`${ chalk.cyan(
 					'configuration-version'
 				) } key. Update to a supported version. For example:\n\n` +
@@ -99,6 +99,10 @@ function sanitizeConfiguration(
 			return undefined;
 		}
 		return value === 'true';
+	};
+
+	const configurationMeta: ConfigurationFileMeta = {
+		'configuration-path': configurationFilePath,
 	};
 
 	const sanitizedConfiguration: ConfigurationFileOptions = {
@@ -117,7 +121,7 @@ function sanitizeConfiguration(
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
-		meta: {},
+		meta: configurationMeta,
 	};
 
 	// Remove undefined values
@@ -212,11 +216,15 @@ async function findConfigurationFilePath(): Promise< string | false > {
 	const rootPath = path.parse( currentPath ).root;
 
 	let depth = 0;
-	const maxDepth = 32;
+	const maxDepth = 64;
 	const pathPromises = [];
 
 	while ( currentPath !== rootPath && depth < maxDepth ) {
-		const configurationFilePath = path.join( currentPath, CONFIGURATION_FILE_NAME );
+		const configurationFilePath = path.join(
+			currentPath,
+			CONFIGURATION_FOLDER,
+			CONFIGURATION_FILE_NAME
+		);
 
 		pathPromises.push(
 			access( configurationFilePath, constants.R_OK ).then( () => configurationFilePath )

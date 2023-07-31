@@ -66,8 +66,8 @@ describe( 'vip dev-env configuration file', () => {
 			false
 		);
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain(
-			"Configuration file .vip-dev-env.yml is available but couldn't be loaded"
+		expect( result.stderr ).toMatch(
+			/Configuration file .+\/\.wpvip\/vip-dev-env\.yml is available but couldn't be loaded/
 		);
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
@@ -90,8 +90,8 @@ describe( 'vip dev-env configuration file', () => {
 			false
 		);
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain(
-			"Configuration file .vip-dev-env.yml is available but couldn't be loaded"
+		expect( result.stderr ).toMatch(
+			/Configuration file .+\/\.wpvip\/vip-dev-env\.yml is available but couldn't be loaded/
 		);
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
@@ -167,7 +167,7 @@ describe( 'vip dev-env configuration file', () => {
 		await writeConfigurationFile( workingDirectoryPath, {
 			'configuration-version': '0.preview-unstable',
 			slug: expectedSlug,
-			'app-code': './',
+			'app-code': '../',
 		} );
 
 		await makeRequiredAppCodeDirectories( workingDirectoryPath );
@@ -183,6 +183,7 @@ describe( 'vip dev-env configuration file', () => {
 			spawnOptions,
 			true
 		);
+
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `Using environment ${ expectedSlug }` );
 		expect( result.stderr ).toBe( '' );
