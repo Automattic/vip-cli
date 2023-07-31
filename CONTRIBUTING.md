@@ -97,6 +97,12 @@ We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trun
 
 Further checks can be added to this flow as needed.
 
+### Versioning Guidelines
+
+- `patch`: for non-breaking changes/bugfixes and small updates.
+- `minor`: for some new features, bug fixes, and other non-breaking changes.
+- `major`: for breaking changes.
+
 ### New Releases
 
 Prepare the release by making sure that:
@@ -107,6 +113,8 @@ Prepare the release by making sure that:
    just-in-case).
 1. Make sure not to merge anymore changes into `develop` while all the release steps below are in
    progress.
+
+You can release either using GitHub Actions or locally.
 
 #### Changelog Generator Hint:
 
@@ -119,7 +127,14 @@ export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
 gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
 ```
 
-Then, let's publish:
+#### Publishing via GitHub Actions (preferred)
+
+To publish via GitHub Actions follow these steps:
+
+
+#### Publishing locally
+
+To publish locally, follow these steps:
 
 1. Create a pull request that adds the next version's changelog into `develop`. Use the Changelog
    Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
