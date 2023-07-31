@@ -5,6 +5,8 @@ import os from 'os';
 import checkDiskSpace from 'check-disk-space';
 import { Confirm } from 'enquirer';
 import { Job } from '../../graphqlTypes';
+import { formatMetricBytes } from '../cli/format';
+import { DockerMachineNotFoundError } from './docker-machine-not-found-error';
 
 const oneGiBInBytes = 1024 * 1024 * 1024;
 
@@ -25,18 +27,21 @@ export class BackupStorageAvailability {
 	}
 
 	getDockerStorageAvailable(): number {
-		const kiBLeft = exec( `docker run --rm alpine df -k`, { silent: true } )
+		const kiBLeft: string | undefined = exec( `docker run --rm alpine df -k`, { silent: true } )
 			.grep( /\/dev\/vda1/ )
 			.head( { '-n': 1 } )
 			.replace( /\s+/g, ' ' )
 			.split( ' ' )[ 3 ];
 
+		if ( ! kiBLeft || Number.isNaN( Number( kiBLeft ) ) ) {
+			throw new DockerMachineNotFoundError();
+		}
+
 		return Number( kiBLeft ) * 1024;
 	}
 
 	bytesToHuman( bytes: number ) {
-		const sizeInGB = ( bytes / ( 1000 * 1000 * 1000 ) ).toFixed( 2 );
-		return `${ sizeInGB } GB`;
+		return formatMetricBytes( bytes );
 	}
 
 	async getStorageAvailableInVipPath() {
@@ -95,6 +100,8 @@ export class BackupStorageAvailability {
 
 	// eslint-disable-next-line id-length
 	async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< boolean > {
+		let storageAvailableInMainMachinePrompted = false;
+
 		if ( ! ( await this.isStorageAvailableInMainMachine() ) ) {
 			const storageRequired = this.getStorageRequiredInMainMachine();
 			const confirmPrompt = new Confirm( {
@@ -103,18 +110,31 @@ export class BackupStorageAvailability {
 				) } of free space in your machine to import this database backup. Do you still want to continue with importing the database backup?`,
 			} );
 
-			return await confirmPrompt.run();
+			storageAvailableInMainMachinePrompted = await confirmPrompt.run();
+
+			if ( ! storageAvailableInMainMachinePrompted ) {
+				return false;
+			}
 		}
 
-		if ( ! this.isStorageAvailableInDockerMachine() ) {
-			const storageRequired = this.getStorageRequiredInDockerMachine();
-			const confirmPrompt = new Confirm( {
-				message: `We recommend that you have at least ${ this.bytesToHuman(
-					storageRequired
-				) } of free space in your Docker machine to import this database backup. Do you still want to continue with importing the database backup?`,
-			} );
+		try {
+			if ( ! this.isStorageAvailableInDockerMachine() ) {
+				const storageRequired = this.getStorageRequiredInDockerMachine();
+				const confirmPrompt = new Confirm( {
+					message: `We recommend that you have at least ${ this.bytesToHuman(
+						storageRequired
+					) } of free space in your Docker machine to import this database backup. Do you still want to continue with importing the database backup?`,
+				} );
 
-			return await confirmPrompt.run();
+				return await confirmPrompt.run();
+			}
+		} catch ( error ) {
+			if ( error instanceof DockerMachineNotFoundError ) {
+				// skip storage available check
+				return true;
+			}
+
+			throw error;
 		}
 
 		return true;
