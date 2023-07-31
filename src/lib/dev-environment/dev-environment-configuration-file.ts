@@ -187,30 +187,6 @@ export function mergeConfigurationFileOptions(
 	return mergedOptions;
 }
 
-export function printConfigurationFile( configurationOptions: ConfigurationFileOptions ) {
-	const isConfigurationFileEmpty = Object.keys( configurationOptions ).length === 0;
-
-	if ( isConfigurationFileEmpty ) {
-		return;
-	}
-
-	// Ignore meta key for configuration path
-	const ignoreKeys = [ 'meta' ];
-
-	// Customized formatter because Lando's printTable() automatically uppercases keys
-	// which may be confusing for YAML configuration
-	const settingLines = [];
-	for ( const [ key, value ] of Object.entries( configurationOptions ) ) {
-		if ( ignoreKeys.includes( key ) ) {
-			continue;
-		}
-
-		settingLines.push( `${ chalk.cyan( key ) }: ${ String( value ) }` );
-	}
-
-	console.log( settingLines.join( '\n' ) + '\n' );
-}
-
 async function findConfigurationFilePath(): Promise< string | false > {
 	let currentPath = process.cwd();
 	const rootPath = path.parse( currentPath ).root;
@@ -244,7 +220,7 @@ async function findConfigurationFilePath(): Promise< string | false > {
 		.catch( () => false );
 }
 
-const CONFIGURATION_FILE_VERSIONS = [ '0.preview-unstable' ];
+const CONFIGURATION_FILE_VERSIONS = [ '1' ];
 
 function getAllConfigurationFileVersions(): string[] {
 	return CONFIGURATION_FILE_VERSIONS;
@@ -261,13 +237,16 @@ function isValidConfigurationFileVersion( version: string ): boolean {
 function getConfigurationFileExample(): string {
 	return `configuration-version: ${ getLatestConfigurationFileVersion() }
 slug: dev-site
+title: Dev Site
 php: 8.0
 wordpress: 6.2
 app-code: ../
 mu-plugins: image
 multisite: false
-phpmyadmin: true
-elasticsearch: true
-xdebug: true
+phpmyadmin: false
+elasticsearch: false
+xdebug: false
+mailpit: false
+photon: false
 `;
 }

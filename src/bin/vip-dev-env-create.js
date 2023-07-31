@@ -42,7 +42,6 @@ import {
 } from '../lib/constants/dev-environment';
 import {
 	getConfigurationFileOptions,
-	printConfigurationFile,
 	mergeConfigurationFileOptions,
 } from '../lib/dev-environment/dev-environment-configuration-file';
 import type { InstanceOptions } from '../lib/dev-environment/types';
@@ -149,8 +148,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	let suppressPrompts = false;
 
 	if ( Object.keys( configurationFileOptions ).length > 0 ) {
-		console.log( '\nUsing configuration from file.' );
-		printConfigurationFile( configurationFileOptions );
+		// Merge configuration from file
 		preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
 		suppressPrompts = true;
 	}
