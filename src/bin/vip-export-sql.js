@@ -70,6 +70,9 @@ command( {
 			{ outputFile: output, generateBackup },
 			trackerFn
 		);
-		await exportCommand.run();
+		const didCommandRun = await exportCommand.run();
+		if ( ! didCommandRun ) {
+			console.log( 'Command cancelled by user.' );
+		}
 		await trackerFn( 'success' );
 	} );

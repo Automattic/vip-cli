@@ -113,7 +113,7 @@ export class DevEnvSyncSQLCommand {
 	 * Runs the SQL export command to generate the SQL export from
 	 * the latest backup
 	 *
-	 * @return {Promise<void>} Promise that resolves when the export is complete
+	 * @return {Promise<boolean>} Promise that resolves to true when the export is complete. It will resolve to false if the user cancels the run during prompts
 	 */
 	async generateExport() {
 		const exportCommand = new ExportSQLCommand(
@@ -122,7 +122,7 @@ export class DevEnvSyncSQLCommand {
 			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
 			this.track
 		);
-		await exportCommand.run();
+		return await exportCommand.run();
 	}
 
 	/**
@@ -188,11 +188,14 @@ export class DevEnvSyncSQLCommand {
 	 * Sequentially runs the commands to export, search-replace, and import the SQL file
 	 * to the local environment
 	 *
-	 * @return {Promise<void>} Promise that resolves when the commands are complete
+	 * @return {Promise<void>} Promise that resolves to true when the commands are complete. It will return false if the user did not continue during validation prompts.
 	 */
 	async run() {
 		try {
-			await this.generateExport();
+			const didExportRun = await this.generateExport();
+			if ( ! didExportRun ) {
+				return false;
+			}
 		} catch ( err ) {
 			// this.generateExport probably catches all exceptions, track the event and runs exit.withError() but if things go really wrong
 			// and we have no tracking data, we would at least have it logged here.
@@ -254,6 +257,7 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Importing the SQL file...' );
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
+			return true;
 		} catch ( err ) {
 			await this.track( 'error', {
 				error_type: 'import_sql_file',

@@ -86,6 +86,9 @@ command( {
 		const cmd = new DevEnvSyncSQLCommand( app, env, slug, trackerFn );
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?
-		await cmd.run();
+		const didCommandRun = await cmd.run();
+		if ( ! didCommandRun ) {
+			console.log( 'Command canceled by user.' );
+		}
 		await trackerFn( 'success' );
 	} );
