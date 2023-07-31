@@ -77,7 +77,7 @@ describe( 'vip dev-env configuration file', () => {
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
 		await writeConfigurationFile( tmpWorkingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 		} );
 
 		const spawnOptions = {
@@ -101,7 +101,7 @@ describe( 'vip dev-env configuration file', () => {
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
 		await writeConfigurationFile( tmpWorkingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 			slug: expectedSlug,
 		} );
 
@@ -132,7 +132,7 @@ describe( 'vip dev-env configuration file', () => {
 
 		// Write configuration file in top working directory
 		await writeConfigurationFile( workingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 			slug: expectedSlug,
 		} );
 
@@ -165,7 +165,7 @@ describe( 'vip dev-env configuration file', () => {
 
 		// Write configuration file in top working directory
 		await writeConfigurationFile( workingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 			slug: expectedSlug,
 			'app-code': '../',
 		} );
@@ -217,7 +217,7 @@ describe( 'vip dev-env configuration file', () => {
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
 		await writeConfigurationFile( tmpWorkingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 			slug: expectedSlug,
 			title: expectedTitle,
 			multisite: expectedMultisite,
@@ -279,7 +279,7 @@ describe( 'vip dev-env configuration file', () => {
 
 		// Setup initial environment
 		await writeConfigurationFile( tmpWorkingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 			slug,
 			elasticsearch: expectedElasticsearch,
 			phpmyadmin: expectedPhpMyAdmin,
@@ -309,7 +309,7 @@ describe( 'vip dev-env configuration file', () => {
 
 		// Update environment from changed configuration file
 		await writeConfigurationFile( tmpWorkingDirectoryPath, {
-			'configuration-version': '0.preview-unstable',
+			'configuration-version': '1',
 			slug,
 			elasticsearch: ! expectedElasticsearch,
 			phpmyadmin: ! expectedPhpMyAdmin,
