@@ -1,5 +1,10 @@
 ## Changelog
 
+### 2.32.4
+
+- #1470 Rename prepare-release.yml to npm-prepare-release.yml
+- #1469 fix compatibility issue
+
 ### 2.32.3
 
 - #1456 Fix DB engine validation regex

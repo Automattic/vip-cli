@@ -72,19 +72,39 @@ For help, see: https://nodejs.org/en/docs/inspector
 
 New libraries should generally support both CLI and web contexts, though some cases that won't make sense (e.g. formatting for CLI output). Ensuring the libraries are useful everywhere will allow us to offer consistent experiences regardless of the interface.
 
+### go-search-replace binaries
+
+Some unit tests require some go-search-replace executable binary files to run. Binaries files for
+several OS architectures can be downloaded
+from https://github.com/Automattic/go-search-replace/releases/
+
+If, for some reason, you need to compile these binaries yourself, please follow instructions
+at https://github.com/Automattic/go-search-replace
+
+### Generating the types
+
+If you're an employee of Automattic, you can follow these steps to regenerate the GraphQL types
+used.
+
+1. Get a hold of `schema.gql` and paste it in project root - this is the schema of the endpoint that
+   we communicate with.
+2. Run `npm run typescript:codegen:install-dependencies` - this will install the codegen
+   dependencies without updating `package.json`
+3. Run `npm run typescript:codegen:generate` - this will regenerate the types
+
 ## Release & Deployment Process
 
 Our release flow for VIP CLI follows this pattern:
 
-**_feature branch -> develop branch -> trunk branch -> NPM release_**
+**_feature branch -> trunk branch -> NPM release_**
 
 - For feature branches, please follow A8C branch naming conventions (e.g.- `add/data-sync-command`, `fix/subsite-launch-command`, etc.)
 - Include a Changelog for all npm version releases, including any minor or major versions
 - This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
-- Merge changes from your feature branch to the `develop` branch
-- If you are ready to release your changes publicly, merge your changes from the `develop` branch to the `trunk` branch. All changes that are not ready to be public should be feature flagged or stay in the `develop` branch to avoid conflicts when releasing urgent fixes (not recommended).
+- Merge changes from your feature branch to the `trunk` branch when they are ready to be published publicly.
 - Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
 
+If you need to publish a security release, see [details below](#patching-old-releases).
 ### Changelogs
 
 Changelogs allow customers to keep up with all the changes happening across our VIP Platform. Changelogs for VIP CLI are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/), along with the repository’s `README.md`.
@@ -97,6 +117,12 @@ We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trun
 
 Further checks can be added to this flow as needed.
 
+### Versioning Guidelines
+
+- `patch`: for non-breaking changes/bugfixes and small updates.
+- `minor`: for some new features, bug fixes, and other non-breaking changes.
+- `major`: for breaking changes.
+
 ### New Releases
 
 Prepare the release by making sure that:
@@ -107,6 +133,8 @@ Prepare the release by making sure that:
    just-in-case).
 1. Make sure not to merge anymore changes into `develop` while all the release steps below are in
    progress.
+
+You can release either using GitHub Actions or locally.
 
 #### Changelog Generator Hint:
 
@@ -119,14 +147,32 @@ export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
 gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
 ```
 
-Then, let's publish:
 
-1. Create a pull request that adds the next version's changelog into `develop`. Use the Changelog
+#### Publishing via GitHub Actions (preferred)
+
+This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
+
+1. Initiate the [release process here](https://github.com/Automattic/vip-cli/actions/workflows/npm-prepare-release.yml).
+1. On the right-hand side, select "Run Workflow".
+1. Pick your preferred version bump.
+1. Click `Run Workflow`.
+1. Wait for a pull request to appear. The pull request will update the version number and shall be assigned to you.
+1. When ready, merge the pull request. This will lead to a new version to be [published on npmjs.com](https://www.npmjs.com/package/@automattic/vip).
+1. Another pull request will be created to bump to a development version, also assigned to you. Merge it to finish the process.
+
+#### Note on NPM token
+
+Publishing via the GitHub Action requires that the `NPM_TOKEN` be set correctly in GitHub Actions secrets. This should be an npm token generated for a bot user on [the npm @automattic org](https://www.npmjs.com/settings/automattic) that has publish access to this repo.
+
+#### Publishing locally
+
+To publish locally, follow these steps:
+
+1. Create a pull request that adds the next version's changelog into `trunk`. Use the Changelog
    Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
-   format matches.
-1. Create a pull request that merges `develop` to `trunk`.
+   format matches. 
 1. Merge it after approval.
-1. Make sure trunk branch is up-to-date `git pull`.
+1. Make sure `trunk` branch is up-to-date `git pull`.
 1. Make sure to clean all of your repositories of extra files. Run a dangerous, destructive
    command `git clean -xfd` to do so.
 1. Run `npm install`.
@@ -168,23 +214,3 @@ For these cases:
 1. Follow the release steps outlined above (as a `patch` release).
 
 Then, repeat for any additional versions that we need to patch.
-
-### go-search-replace binaries
-
-Some unit tests require some go-search-replace executable binary files to run. Binaries files for
-several OS architectures can be downloaded
-from https://github.com/Automattic/go-search-replace/releases/
-
-If, for some reason, you need to compile these binaries yourself, please follow instructions
-at https://github.com/Automattic/go-search-replace
-
-### Generating the types
-
-If you're an employee of Automattic, you can follow these steps to regenerate the GraphQL types
-used.
-
-1. Get a hold of `schema.gql` and paste it in project root - this is the schema of the endpoint that
-   we communicate with.
-2. Run `npm run typescript:codegen:install-dependencies` - this will install the codegen
-   dependencies without updating `package.json`
-3. Run `npm run typescript:codegen:generate` - this will regenerate the types
