@@ -185,6 +185,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			);
 			getConfigurationFileOptionsMock.mockReturnValue( {
 				slug: 'config-file-slug',
+				meta: {},
 			} );
 		} );
 
