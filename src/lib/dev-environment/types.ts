@@ -79,7 +79,7 @@ export interface ConfigurationFileOptions {
 }
 
 export interface ConfigurationFileMeta {
-	'configuration-path'?: string;
+	'configuration-path': string;
 }
 
 export interface InstanceData {

@@ -139,13 +139,17 @@ function adjustRelativePaths(
 	configurationFilePath: string
 ): ConfigurationFileOptions {
 	const configurationDirectory = path.resolve( path.dirname( configurationFilePath ) );
-	const configurationKeysWithRelativePaths = [ 'app-code', 'mu-plugins' ];
 
-	configurationKeysWithRelativePaths.forEach( key => {
-		if ( configuration[ key ] && configuration[ key ] !== 'image' ) {
-			configuration[ key ] = path.join( configurationDirectory, configuration[ key ] );
-		}
-	} );
+	if ( configuration[ 'app-code' ] && configuration[ 'app-code' ] !== 'image' ) {
+		configuration[ 'app-code' ] = path.join( configurationDirectory, configuration[ 'app-code' ] );
+	}
+
+	if ( configuration[ 'mu-plugins' ] && configuration[ 'mu-plugins' ] !== 'image' ) {
+		configuration[ 'mu-plugins' ] = path.join(
+			configurationDirectory,
+			configuration[ 'mu-plugins' ]
+		);
+	}
 
 	return configuration;
 }

@@ -214,7 +214,7 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 
 	const configurationFileOptions = await getConfigurationFileOptions();
 
-	if ( configurationFileOptions.slug ) {
+	if ( configurationFileOptions.slug && configurationFileOptions.meta ) {
 		const slug = configurationFileOptions.slug;
 		console.log(
 			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
