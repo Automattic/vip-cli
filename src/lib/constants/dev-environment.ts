@@ -28,7 +28,7 @@ export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'wordpress-versions.json';
 
 export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 86400; // once per day
 
-export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, string | undefined > = {
+export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, string > = {
 	'8.0': 'ghcr.io/automattic/vip-container-images/php-fpm:8.0',
 	8.2: 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
 	8.1: 'ghcr.io/automattic/vip-container-images/php-fpm:8.1',
