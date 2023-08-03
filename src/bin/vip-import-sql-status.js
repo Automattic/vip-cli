@@ -27,6 +27,7 @@ environments{
 	id
 	appId
 	type
+	name
 	isK8sResident
 	primaryDomain {
 		id
