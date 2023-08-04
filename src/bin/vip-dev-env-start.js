@@ -72,6 +72,8 @@ command()
 			skipWpVersionsCheck: !! opt.skipWpVersionsCheck,
 		};
 		try {
+			/*
+			// Temporarily disabled
 			if ( process.platform === 'win32' ) {
 				debug( 'Windows platform detected. Applying Docker patch...' );
 
@@ -87,6 +89,7 @@ command()
 					}
 				} );
 			}
+			*/
 
 			await startEnvironment( lando, slug, options );
 
