@@ -503,7 +503,7 @@ export async function checkEnvHealth(
 			} );
 		} );
 
-	const urlsToScan = Object.keys( urls );
+	const urlsToScan = Object.keys( urls ).filter( url => ! url.includes( '*' ) );
 	let scanResults: ScanResult[] = [];
 	if ( Array.isArray( app.urls ) ) {
 		scanResults = app.urls;
