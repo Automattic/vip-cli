@@ -72,25 +72,6 @@ command()
 			skipWpVersionsCheck: !! opt.skipWpVersionsCheck,
 		};
 		try {
-			/*
-			// Temporarily disabled
-			if ( process.platform === 'win32' ) {
-				debug( 'Windows platform detected. Applying Docker patch...' );
-
-				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
-					if ( error ) {
-						debug( error );
-						console.log(
-							`${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.`
-						);
-					} else {
-						debug( stdout );
-						console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
-					}
-				} );
-			}
-			*/
-
 			await startEnvironment( lando, slug, options );
 
 			const processingTime = Math.ceil( ( new Date() - startProcessing ) / 1000 ); // in seconds
