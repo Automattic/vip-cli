@@ -50,6 +50,8 @@
         "vip": "dist/bin/vip.js",
         "vip-app": "dist/bin/vip-app.js",
         "vip-app-list": "dist/bin/vip-app-list.js",
+        "vip-backup": "dist/bin/vip-backup.js",
+        "vip-backup-db": "dist/bin/vip-backup-db.js",
         "vip-cache": "dist/bin/vip-cache.js",
         "vip-cache-purge-url": "dist/bin/vip-cache-purge-url.js",
         "vip-config": "dist/bin/vip-config.js",

@@ -112,14 +112,14 @@ export class BackupDBCommand {
 	track: CommandTracker;
 	private progressTracker: ProgressTracker;
 
-	constructor( app: App, env: AppEnvironment, trackerFn = async () => {} ) {
+	constructor( app: App, env: AppEnvironment, trackerFn: CommandTracker = async () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup generation' },
 			{ id: this.steps.GENERATE, name: 'Generating backup' },
 		] );
-		this.track = trackerFn as CommandTracker;
+		this.track = trackerFn;
 	}
 
 	log( msg: string ) {
