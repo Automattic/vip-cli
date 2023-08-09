@@ -8,9 +8,7 @@
 /**
  * External dependencies
  */
-import chalk from 'chalk';
 import debugLib from 'debug';
-import { exec } from 'child_process';
 
 /**
  * Internal dependencies
@@ -29,9 +27,6 @@ import {
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
-
-// PowerShell command for Windows Docker patch
-const dockerWindowsPathCmd = 'wsl -d docker-desktop bash -c "sysctl -w vm.max_map_count=262144"';
 
 const examples = [
 	{
