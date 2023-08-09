@@ -4,6 +4,9 @@ const originalWrite = process.stdout.write;
 /**
  * Hooks into stdout so that we could see the output.
  *
+ * This code has not been ported to modern standards as it's
+ * not a trivial task to do so
+ *
  * Based on https://gist.github.com/pguillory/729616
  *
  */
