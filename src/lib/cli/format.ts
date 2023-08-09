@@ -254,3 +254,37 @@ export const formatBytes = (
 export const formatMetricBytes = ( bytes: number, decimals = 2 ): string => {
 	return formatBytes( bytes, decimals, 1000 );
 };
+
+/*
+ * Get the duration between two dates
+ *
+ * @param {Date} from The start date
+ * @param {Date} to  The end date
+ * @returns {string} The duration between the two dates
+ */
+export function formatDuration( from: Date, to: Date ): string {
+	const millisecondsPerSecond = 1000;
+	const millisecondsPerMinute = 60 * millisecondsPerSecond;
+	const millisecondsPerHour = 60 * millisecondsPerMinute;
+	const millisecondsPerDay = 24 * millisecondsPerHour;
+
+	const duration = Math.abs( from.getTime() - to.getTime() );
+
+	const days = Math.floor( duration / millisecondsPerDay );
+	const hours = Math.floor( ( duration % millisecondsPerDay ) / millisecondsPerHour );
+	const minutes = Math.floor( ( duration % millisecondsPerHour ) / millisecondsPerMinute );
+
+	let durationString = '';
+
+	if ( days > 0 ) {
+		durationString += `${ days } day${ days > 1 ? 's' : '' } `;
+	}
+	if ( hours > 0 ) {
+		durationString += `${ hours } hour${ hours > 1 ? 's' : '' } `;
+	}
+	if ( minutes > 0 ) {
+		durationString += `${ minutes } minute${ minutes > 1 ? 's' : '' } `;
+	}
+
+	return durationString.trim();
+}

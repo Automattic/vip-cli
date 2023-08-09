@@ -25,6 +25,7 @@ import { GraphQLFormattedError } from 'graphql';
 import { RateLimitExceededError } from '../lib/types/graphql/rate-limit-exceeded-error';
 import { AppBackupJobStatusQuery } from './backup-db.generated';
 import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { formatDuration } from '../lib/cli/format';
 
 const DB_BACKUP_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -187,7 +188,10 @@ export class BackupDBCommand {
 						stack: error.stack,
 					} );
 					const errMessage = `A new database backup was not generated because a recently generated backup already exists.
-If you would like to run the same command, you can retry on or after: ${ retryAfter }
+If you would like to run the same command, you can retry on or after ${ formatDuration(
+						new Date(),
+						new Date( retryAfter )
+					) }
 Alternatively, you can export the latest existing database backup by running: ${ chalk.green(
 						'vip @app.env export sql'
 					) }, right away.
