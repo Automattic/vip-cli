@@ -10,6 +10,7 @@ import gql from 'graphql-tag';
 import fs from 'fs';
 import https from 'https';
 import path from 'path';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -316,6 +317,14 @@ export class ExportSQLCommand {
 
 	async runBackupJob() {
 		const cmd = new BackupDBCommand( this.app, this.env );
+
+		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
+		noticeMessage +=
+			'If a recent database backup does not exist, a new one will be generated for this environment. ';
+		noticeMessage +=
+			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#2-download-a-full-database-backup \n';
+		this.log( noticeMessage );
+
 		await cmd.run( false );
 	}
 
