@@ -190,6 +190,8 @@ export class ProgressTracker {
 					return;
 				}
 
+				// this is so that we leave some room for the progress tracker to refresh
+				// without this, any prompt, or any text in between will get overwritten by the progress tracker
 				let linesToSkip = '';
 
 				for ( let iteration = 0; iteration < this.stepsFromCaller.size; iteration++ ) {
