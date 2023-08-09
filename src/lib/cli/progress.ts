@@ -9,6 +9,7 @@ import { stdout as singleLogLine } from 'single-line-log';
  * Internal dependencies
  */
 import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
+import { hookIntoStdout } from '../stdout';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
@@ -175,13 +176,24 @@ export class ProgressTracker {
 	}
 
 	async handleContinuePrompt< PromptReturn >(
-		prompt: () => Promise< PromptReturn >,
-		linesToClear: number
+		prompt: () => Promise< PromptReturn >
 	): Promise< PromptReturn > {
 		this.print();
 		this.stopPrinting();
 
+		let promptOutput = '';
+
+		const stdoutHook = ( data: string ) => {
+			promptOutput += data;
+
+			return true;
+		};
+
+		const unhook = hookIntoStdout( stdoutHook );
+
 		const returnValue = await prompt();
+		unhook();
+		const linesToClear = promptOutput.match( /\n/g )?.length ?? 0;
 
 		let hasPrintedOnce = false;
 
