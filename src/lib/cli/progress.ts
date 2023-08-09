@@ -174,6 +174,39 @@ export class ProgressTracker {
 		}
 	}
 
+	async handleContinuePrompt< PromptReturn >(
+		prompt: () => Promise< PromptReturn >,
+		linesToClear: number
+	): Promise< PromptReturn > {
+		this.print();
+		this.stopPrinting();
+
+		const returnValue = await prompt();
+
+		let hasPrintedOnce = false;
+
+		const printingStartedPromise = new Promise< void >( resolve => {
+			this.startPrinting( () => {
+				if ( hasPrintedOnce ) {
+					return;
+				}
+
+				for ( let iteration = 0; iteration < linesToClear; iteration++ ) {
+					process.stdout.clearLine( 0 );
+					process.stdout.moveCursor( 0, -1 );
+				}
+
+				hasPrintedOnce = true;
+
+				resolve();
+			} );
+		} );
+
+		await printingStartedPromise;
+
+		return returnValue;
+	}
+
 	print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;

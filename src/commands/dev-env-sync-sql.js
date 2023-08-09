@@ -112,8 +112,6 @@ export class DevEnvSyncSQLCommand {
 	/**
 	 * Runs the SQL export command to generate the SQL export from
 	 * the latest backup
-	 *
-	 * @return {Promise<boolean>} Promise that resolves to true when the export is complete. It will resolve to false if the user cancels the run during prompts
 	 */
 	async generateExport() {
 		const exportCommand = new ExportSQLCommand(
@@ -122,7 +120,7 @@ export class DevEnvSyncSQLCommand {
 			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
 			this.track
 		);
-		return await exportCommand.run();
+		await exportCommand.run();
 	}
 
 	/**
@@ -192,10 +190,7 @@ export class DevEnvSyncSQLCommand {
 	 */
 	async run() {
 		try {
-			const didExportRun = await this.generateExport();
-			if ( ! didExportRun ) {
-				return false;
-			}
+			await this.generateExport();
 		} catch ( err ) {
 			// this.generateExport probably catches all exceptions, track the event and runs exit.withError() but if things go really wrong
 			// and we have no tracking data, we would at least have it logged here.

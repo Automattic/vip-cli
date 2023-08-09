@@ -331,7 +331,6 @@ export class ExportSQLCommand {
 	/**
 	 * Sequentially runs the steps of the export workflow
 	 *
-	 * @return {Promise<boolean>} A promise which resolve to true of the export run. It will resolve to false if the user cancels the run during prompts
 	 */
 	async run() {
 		if ( this.outputFile ) {
@@ -424,19 +423,17 @@ export class ExportSQLCommand {
 			this.isCreated.bind( this )
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
-		this.progressTracker.print();
-		this.progressTracker.stopPrinting();
 
-		const storageConfirmed = await this.confirmEnoughStorage( await this.getExportJob() );
-
-		this.progressTracker.startPrinting();
+		const storageConfirmed = await this.progressTracker.handleContinuePrompt( async () => {
+			return await this.confirmEnoughStorage( await this.getExportJob() );
+		}, 3 );
 
 		if ( storageConfirmed ) {
 			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
 		} else {
 			this.progressTracker.stepFailed( this.steps.CONFIRM_ENOUGH_STORAGE );
 			this.stopProgressTracker();
-			return false;
+			exit.withError( 'Command canceled by user.' );
 		}
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
@@ -448,7 +445,6 @@ export class ExportSQLCommand {
 			this.progressTracker.stepSuccess( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
 			console.log( `File saved to ${ filepath }` );
-			return true;
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
