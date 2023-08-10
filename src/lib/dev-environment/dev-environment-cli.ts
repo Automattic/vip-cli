@@ -16,7 +16,7 @@ import Lando from 'lando';
 /**
  * Internal dependencies
  */
-import { ProgressTracker, Step } from '../../lib/cli/progress';
+import { ProgressTracker, Step, StepConstructorParam } from '../../lib/cli/progress';
 import { trackEvent } from '../tracker';
 
 import {
@@ -146,7 +146,7 @@ const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	}
 };
 
-const VALIDATION_STEPS: Step[] = [
+const VALIDATION_STEPS: StepConstructorParam[] = [
 	{ id: 'docker', name: 'Check for Docker installation' },
 	{ id: 'compose', name: 'Check for docker-compose installation' },
 	{ id: 'access', name: 'Check Docker connectivity' },

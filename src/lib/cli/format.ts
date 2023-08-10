@@ -6,6 +6,7 @@
 import chalk from 'chalk';
 import { Parser } from 'json2csv';
 import Table from 'cli-table';
+import { StepStatus } from './progress';
 
 export interface Tuple {
 	key: string;
@@ -191,7 +192,7 @@ export class RunningSprite {
 	}
 }
 
-export function getGlyphForStatus( status: string, runningSprite: RunningSprite ): string {
+export function getGlyphForStatus( status: StepStatus, runningSprite: RunningSprite ): string {
 	switch ( status ) {
 		case 'pending':
 			return '○';
