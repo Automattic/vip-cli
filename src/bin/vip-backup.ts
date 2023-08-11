@@ -13,7 +13,7 @@ import { trackEvent } from '../lib/tracker';
 void command( { usage: 'vip backup' } )
 	.command( 'db', 'Trigger a new backup for your database' )
 	.example(
-		'vip backup sql @mysite.develop',
+		'vip backup db @mysite.develop',
 		'Trigger a new backup for your database of the @mysite.develop environment'
 	)
 	.argv( process.argv, async () => {
