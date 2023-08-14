@@ -191,20 +191,24 @@ describe( 'commands/ExportSQLCommand', () => {
 		const exportCommand = new ExportSQLCommand( app, env );
 		const downloadSpy = jest.spyOn( exportCommand, 'downloadExportedFile' );
 		const stepSuccessSpy = jest.spyOn( exportCommand.progressTracker, 'stepSuccess' );
+		const confirmEnoughStorageSpy = jest.spyOn( exportCommand, 'confirmEnoughStorage' );
 
 		beforeAll( () => {
+			confirmEnoughStorageSpy.mockResolvedValue( true );
 			downloadSpy.mockResolvedValue( 'test-backup.sql.gz' );
 		} );
 
 		afterAll( () => {
 			downloadSpy.mockRestore();
 			stepSuccessSpy.mockRestore();
+			confirmEnoughStorageSpy.mockRestore();
 		} );
 
 		it( 'should sequentially run all the steps', async () => {
 			await exportCommand.run();
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
+			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink' );
 			expect( downloadSpy ).toHaveBeenCalledWith( 'https://test-backup.sql.gz' );
 		} );
