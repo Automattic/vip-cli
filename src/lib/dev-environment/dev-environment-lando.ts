@@ -454,12 +454,18 @@ async function getExtraServicesConnections(
 	const extraServices: Record< string, string > = {};
 	const allServices = await lando.engine.list( { project: app.project } );
 
-	for ( const service of allServices ) {
-		const displayConfiguration = extraServiceDisplayConfiguration.find(
-			conf => conf.name === service.service
-		);
+	const defaultDisplayConfiguration = {
+		skip: false,
+		label: null,
+		protocol: null,
+	};
 
-		if ( ! displayConfiguration || displayConfiguration.skip ) {
+	for ( const service of allServices ) {
+		const displayConfiguration =
+			extraServiceDisplayConfiguration.find( conf => conf.name === service.service ) ??
+			defaultDisplayConfiguration;
+
+		if ( displayConfiguration.skip ) {
 			continue;
 		}
 
