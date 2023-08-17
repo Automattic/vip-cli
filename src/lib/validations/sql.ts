@@ -9,6 +9,7 @@ import { stdout as log } from 'single-line-log';
  */
 import * as exit from '../../lib/cli/exit';
 import { trackEvent } from '../../lib/tracker';
+import { getFileMeta } from '../../lib/client-file-uploader';
 import {
 	type PostLineExecutionProcessingParams,
 	getReadInterface,
@@ -530,6 +531,16 @@ export const validate = async (
 	filename: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
 ): Promise< void > => {
+	const fileMeta = await getFileMeta( filename );
+
+	if ( fileMeta.isCompressed ) {
+		exit.withError(
+			chalk.bold.red(
+				'Compressed files cannot be validated. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
+			)
+		);
+	}
+
 	const readInterface = await getReadInterface( filename );
 	options.isImport = false;
 	readInterface.on( 'line', line => {
