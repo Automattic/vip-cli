@@ -17,6 +17,7 @@ import {
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { validate as validateSQL } from '../lib/validations/sql';
+import { getFileMeta } from '../lib/client-file-uploader';
 
 export class DevEnvImportSQLCommand {
 	fileName;
@@ -31,6 +32,14 @@ export class DevEnvImportSQLCommand {
 	}
 
 	async run( silent = false ) {
+		const fileMeta = await getFileMeta( this.fileName );
+
+		if ( fileMeta.isCompressed ) {
+			throw new UserError(
+				'Compressed files cannot be imported. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
+			);
+		}
+
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, this.slug, silent );
 
