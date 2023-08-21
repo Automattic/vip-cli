@@ -1,11 +1,13 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * Internal dependencies
  */
+import {
+	AppEnvironment,
+	AppEnvironmentSyncProgress,
+	Domain,
+	Maybe,
+	Organization,
+} from '../../graphqlTypes';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 
 export const SQL_IMPORT_FILE_SIZE_LIMIT = 100 * GB_IN_BYTES;
@@ -13,23 +15,24 @@ export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 5 * GB_IN_BYTES;
 
 export interface AppForImport {
 	id: number;
-	environments: Array< any >;
+	environments: Maybe< Maybe< AppEnvironment >[] >;
 	name: string;
-	organization: Object;
+	organization: Maybe< Organization >;
 	type: string;
 }
 
-export type ImportStatusType = {
-	dbOperationInProgress: boolean,
-	importInProgress: boolean,
-};
+export interface ImportStatusType {
+	dbOperationInProgress: boolean;
+	importInProgress: boolean;
+}
+
 export interface EnvForImport {
 	id: number;
 	appId: number;
 	name: string;
 	type: string;
-	primaryDomain: Object;
-	syncProgress: Object;
+	primaryDomain: Domain;
+	syncProgress: AppEnvironmentSyncProgress;
 	importStatus: ImportStatusType;
 	launched: boolean;
 }
