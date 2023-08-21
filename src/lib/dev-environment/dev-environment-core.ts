@@ -814,10 +814,12 @@ async function maybeUpdateVersion( slug: string ): Promise< boolean > {
 /**
  * Makes a web call to raw.githubusercontent.com
  */
-export function fetchVersionList(): Promise<WordPressTag[]> {
-	const url = `https://${DEV_ENVIRONMENT_RAW_GITHUB_HOST}${DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI}`;
-	const proxyAgent = createProxyAgent(url);
-	return fetch( url, { agent: proxyAgent ?? undefined } ).then( res => res.json() as unknown as WordPressTag[] );
+export function fetchVersionList(): Promise< WordPressTag[] > {
+	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
+	const proxyAgent = createProxyAgent( url );
+	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
+		res => res.json() as unknown as WordPressTag[]
+	);
 }
 
 /**
