@@ -1,13 +1,13 @@
 /**
  * External dependencies
  */
+import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
 import debugLib from 'debug';
 import xdgBasedir from 'xdg-basedir';
 import fetch from 'node-fetch';
-import os from 'os';
-import fs from 'fs';
 import ejs from 'ejs';
-import path from 'path';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
@@ -49,6 +49,7 @@ import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import UserError from '../user-error';
 import { AppEnvironment } from '../../graphqlTypes';
+import { createProxyAgent } from '../http/proxy-agent';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -815,7 +816,10 @@ async function maybeUpdateVersion( slug: string ): Promise< boolean > {
  */
 export function fetchVersionList(): Promise< WordPressTag[] > {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	return fetch( url ).then( res => res.json() as unknown as WordPressTag[] );
+	const proxyAgent = createProxyAgent( url );
+	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
+		res => res.json() as unknown as WordPressTag[]
+	);
 }
 
 /**
