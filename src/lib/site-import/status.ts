@@ -119,7 +119,6 @@ interface ImportFailedError {
 	commandOutput: string[] | null;
 	error: string;
 	stepName: string;
-	errorText: string;
 	launched: boolean;
 }
 
@@ -385,8 +384,6 @@ ${ maybeExitPrompt }
 						commandOutput: failedImportStep.output,
 						error: 'Import step failed',
 						stepName: failedImportStep.name,
-						// FIXME: Initially it was failedImportStep.error, but AppEnvironmentStatusProgressStep does not have this field
-						errorText: failedImportStep.result,
 						launched,
 					} as ImportFailedError );
 				}
