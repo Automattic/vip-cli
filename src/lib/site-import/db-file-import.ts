@@ -2,6 +2,7 @@
  * Internal dependencies
  */
 import {
+	App,
 	AppEnvironment,
 	AppEnvironmentSyncProgress,
 	Domain,
@@ -37,7 +38,7 @@ export interface EnvForImport {
 	launched: boolean;
 }
 
-export function currentUserCanImportForApp( app: AppForImport ): boolean {
+export function currentUserCanImportForApp( app: App | AppForImport ): boolean {
 	// TODO: implement
 	return !! app;
 }

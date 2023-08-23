@@ -22,10 +22,10 @@ import {
 	AppEnvironmentImportStatus,
 	AppEnvironmentStatusProgressStep,
 	Job,
-	JobProgressStep,
 	Maybe,
 	PrimaryDomainSwitchJob,
 } from '../../graphqlTypes';
+import { AppForImport } from './db-file-import';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -73,7 +73,7 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 `;
 
 export interface ImportSqlCheckStatusInput {
-	app: App;
+	app: App | AppForImport;
 	env: AppEnvironment;
 	progressTracker: ProgressTracker;
 }
