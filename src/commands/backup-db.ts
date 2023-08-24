@@ -188,7 +188,7 @@ export class BackupDBCommand {
 						stack: error.stack,
 					} );
 					const errMessage = `A new database backup was not generated because a recently generated backup already exists.
-If you would like to run the same command, you can retry on or after ${ formatDuration(
+If you would like to run the same command, you can retry in ${ formatDuration(
 						new Date(),
 						new Date( retryAfter )
 					) }
