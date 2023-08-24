@@ -64,14 +64,23 @@ describe( 'utils/cli/format', () => {
 					new Date( '2020-01-01T00:00:00.000Z' ),
 					new Date( '2020-01-01T00:20:01.000Z' )
 				)
-			).toStrictEqual( '20 minutes' );
+			).toStrictEqual( '20 minutes 1 second' );
 
 			expect(
 				formatDuration(
 					new Date( '2020-01-01T00:00:00.000Z' ),
 					new Date( '2020-04-01T07:04:02.000Z' )
 				)
-			).toStrictEqual( '91 days 7 hours 4 minutes' );
+			).toStrictEqual( '91 days 7 hours 4 minutes 2 seconds' );
+		} );
+
+		it( 'should address appropriately if from > to', () => {
+			expect(
+				formatDuration(
+					new Date( '2020-02-01T00:00:00.000Z' ),
+					new Date( '2019-12-31T23:59:59.000Z' )
+				)
+			).toStrictEqual( '0 second' );
 		} );
 	} );
 } );

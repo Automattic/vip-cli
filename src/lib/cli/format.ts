@@ -268,12 +268,13 @@ export function formatDuration( from: Date, to: Date ): string {
 	const millisecondsPerHour = 60 * millisecondsPerMinute;
 	const millisecondsPerDay = 24 * millisecondsPerHour;
 
-	let duration = Math.abs( from.getTime() - to.getTime() );
-	if ( duration < 0 ) duration = 0;
+	const duration = to.getTime() - from.getTime();
+	if ( duration < 0 ) return '0 second';
 
 	const days = Math.floor( duration / millisecondsPerDay );
 	const hours = Math.floor( ( duration % millisecondsPerDay ) / millisecondsPerHour );
 	const minutes = Math.floor( ( duration % millisecondsPerHour ) / millisecondsPerMinute );
+	const seconds = Math.floor( ( duration % millisecondsPerMinute ) / millisecondsPerSecond );
 
 	let durationString = '';
 
@@ -285,6 +286,10 @@ export function formatDuration( from: Date, to: Date ): string {
 	}
 	if ( minutes > 0 ) {
 		durationString += `${ minutes } minute${ minutes > 1 ? 's' : '' } `;
+	}
+
+	if ( seconds > 0 ) {
+		durationString += `${ seconds } second${ seconds > 1 ? 's' : '' }`;
 	}
 
 	return durationString.trim();
