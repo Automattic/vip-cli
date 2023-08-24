@@ -269,7 +269,7 @@ export function formatDuration( from: Date, to: Date ): string {
 	const millisecondsPerDay = 24 * millisecondsPerHour;
 
 	const duration = to.getTime() - from.getTime();
-	if ( duration < 0 ) return '0 second';
+	if ( duration < 1000 ) return '0 second';
 
 	const days = Math.floor( duration / millisecondsPerDay );
 	const hours = Math.floor( ( duration % millisecondsPerDay ) / millisecondsPerHour );
