@@ -105,7 +105,7 @@ async function getStatus(
 		return {};
 	}
 
-	const importJob = jobs?.[ 0 ] ?? {};
+	const [ importJob ] = jobs ?? [];
 
 	return {
 		importStatus,
@@ -118,7 +118,7 @@ interface ImportFailedError {
 	inImportProgress: boolean;
 	commandOutput: string[] | null;
 	error: string;
-	stepName: string;
+	stepName: 'import_preflights' | 'importing_db' | 'validating_db' | string;
 	launched: boolean;
 }
 
