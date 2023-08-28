@@ -67,7 +67,7 @@ export class MediaImportProgressTracker {
 			singleLogLine.clear();
 		}
 
-		const statusIcon = getGlyphForStatus( this.status.status, this.runningSprite );
+		const statusIcon = getGlyphForStatus( this.status.status ?? '', this.runningSprite );
 		let logs;
 		if ( this.status.filesProcessed && this.status.filesTotal ) {
 			const progressPercentage = Math.floor(
