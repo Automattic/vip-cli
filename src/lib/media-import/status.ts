@@ -1,25 +1,32 @@
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
-import { promises as fsp } from 'fs';
-import * as path from 'path';
 
 /**
  * Internal dependencies
  */
 import API from '../../lib/api';
-import { currentUserCanImportForApp } from '../../lib/media-import/media-file-import';
+import {
+	AppForMediaImport,
+	currentUserCanImportForApp,
+} from '../../lib/media-import/media-file-import';
 import { MediaImportProgressTracker } from '../../lib/media-import/progress';
 import { capitalize, formatEnvironment, formatData } from '../../lib/cli/format';
 
 import { RunningSprite } from '../cli/format';
+import { AppQuery, AppQueryVariables } from './status.generated';
+import {
+	App,
+	AppEnvironment,
+	AppEnvironmentMediaImportStatus,
+	AppEnvironmentMediaImportStatusFailureDetailsFileErrors,
+	Maybe,
+} from '../../graphqlTypes';
 
 const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
 const ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
@@ -53,31 +60,33 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 	}
 `;
 
-export type MediaImportCheckStatusInput = {
-	app: Object,
-	env: Object,
-	progressTracker: MediaImportProgressTracker,
-};
+export interface MediaImportCheckStatusInput {
+	app: App | AppForMediaImport;
+	env: AppEnvironment;
+	progressTracker: MediaImportProgressTracker;
+	exportFileErrorsToJson: boolean;
+}
 
-async function getStatus( api, appId, envId ) {
-	const response = await api.query( {
+async function getStatus(
+	api: ApolloClient< NormalizedCacheObject >,
+	appId: number,
+	envId: number
+): Promise< AppEnvironmentMediaImportStatus | null > {
+	const response = await api.query< AppQuery, AppQueryVariables >( {
 		query: IMPORT_MEDIA_PROGRESS_QUERY,
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
 
-	const {
-		data: {
-			app: { environments },
-		},
-	} = response;
+	const environments = response.data.app?.environments;
+
 	if ( ! environments?.length ) {
 		throw new Error( 'Unable to determine import status from environment' );
 	}
 	const [ environment ] = environments;
-	const { mediaImportStatus } = environment;
+	const { mediaImportStatus } = environment ?? {};
 
-	return mediaImportStatus;
+	return mediaImportStatus ?? null;
 }
 
 export function getGlyphForStatus( status: string, runningSprite: RunningSprite ) {
@@ -103,7 +112,11 @@ export function getGlyphForStatus( status: string, runningSprite: RunningSprite 
 	}
 }
 
-function buildErrorMessage( importFailed ) {
+interface ImportFailedError extends Partial< AppEnvironmentMediaImportStatus > {
+	error: string;
+}
+
+function buildErrorMessage( importFailed: ImportFailedError ) {
 	let message = '';
 
 	if ( 'FAILED' === importFailed.status ) {
@@ -112,7 +125,7 @@ function buildErrorMessage( importFailed ) {
 			message += `${ chalk.red( 'Import failed at status: ' ) }`;
 			message += `${ chalk.redBright.bold( globalFailureDetails.previousStatus ) }\n`;
 			message += chalk.red( 'Errors:' );
-			globalFailureDetails.globalErrors.forEach( value => {
+			globalFailureDetails.globalErrors?.forEach( value => {
 				message += `\n\t- ${ chalk.redBright.bold( value ) }`;
 			} );
 			return message;
@@ -127,12 +140,15 @@ function buildErrorMessage( importFailed ) {
 	return message;
 }
 
-function buildFileErrors( fileErrors, exportFileErrorsToJson ) {
+function buildFileErrors(
+	fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[],
+	exportFileErrorsToJson: boolean
+): string {
 	if ( exportFileErrorsToJson ) {
 		const fileErrorsToExport = fileErrors.map( fileError => {
 			return {
-				fileName: fileError.fileName,
-				errors: fileError.errors,
+				fileName: fileError?.fileName,
+				errors: fileError?.errors,
 			};
 		} );
 		return formatData( fileErrorsToExport, 'json' );
@@ -140,8 +156,10 @@ function buildFileErrors( fileErrors, exportFileErrorsToJson ) {
 
 	let errorString = '';
 	for ( const fileError of fileErrors ) {
-		errorString += `File Name: ${ fileError.fileName }`;
-		errorString += `\n\nErrors:\n\t- ${ fileError.errors }\n\n\n\n`;
+		errorString += `File Name: ${ fileError?.fileName ?? 'N/A' }`;
+		errorString += `\n\nErrors:\n\t- ${
+			fileError?.errors?.join( ', ' ) ?? 'unknown error'
+		}\n\n\n\n`;
 	}
 	return errorString;
 }
@@ -189,7 +207,7 @@ export async function mediaImportCheckStatus( {
 		const suffix = `
 =============================================================
 Status: ${ statusMessage }
-App: ${ app.name } (${ formatEnvironment( env.type ) })
+App: ${ app.name ?? 'N/A' } (${ formatEnvironment( env.type ?? 'N/A' ) })
 =============================================================
 ${ maybeExitPrompt }
 `;
@@ -203,25 +221,26 @@ ${ maybeExitPrompt }
 
 	progressTracker.startPrinting( setSuffixAndPrint );
 
-	const getResults = () =>
+	const getResults = (): Promise< AppEnvironmentMediaImportStatus > =>
+		// eslint-disable-next-line @typescript-eslint/no-shadow
 		new Promise( ( resolve, reject ) => {
 			let startDate = Date.now();
 			let pollIntervalDecreasing = false;
 			const checkStatus = async ( pollInterval: number ) => {
-				let mediaImportStatus;
+				let mediaImportStatus: AppEnvironmentMediaImportStatus | null = null;
 				try {
-					mediaImportStatus = await getStatus( api, app.id, env.id );
+					mediaImportStatus = await getStatus( api, app.id ?? -1, env.id ?? -1 );
 					if ( ! mediaImportStatus ) {
 						return reject( {
 							error:
 								'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
-						} );
+						} as ImportFailedError );
 					}
 				} catch ( error ) {
-					return reject( { error } );
+					return reject( { error: ( error as Error ).message } as ImportFailedError );
 				}
 
-				const { status } = mediaImportStatus;
+				const status = mediaImportStatus.status ?? 'unknown';
 
 				const failedMediaImport = 'FAILED' === status;
 
@@ -262,7 +281,7 @@ ${ maybeExitPrompt }
 
 	try {
 		const results = await getResults();
-		overallStatus = results?.status || 'unknown';
+		overallStatus = results.status ?? 'unknown';
 
 		progressTracker.stopPrinting();
 
@@ -274,23 +293,23 @@ ${ maybeExitPrompt }
 			progressTracker.suffix += `${ chalk.yellow(
 				`⚠️  ${ fileErrors.length } file error(s) have been extracted`
 			) }`;
-			if ( results.filesTotal - results.filesProcessed !== fileErrors.length ) {
+			if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
 				progressTracker.suffix += `. ${ chalk.italic.yellow(
 					'File-errors report size threshold reached.'
 				) }`;
 			}
 			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
-			const errorsFile = `media-import-${ app.name }-${ Date.now() }${
+			const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
 				exportFileErrorsToJson ? '.json' : '.txt'
 			}`;
 			try {
-				await fsp.writeFile( errorsFile, formattedData );
+				await writeFile( errorsFile, formattedData );
 				progressTracker.suffix += `\n\n${ chalk.yellow(
-					`All errors have been exported to ${ chalk.bold( path.resolve( errorsFile ) ) }`
+					`All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
 				) }\n\n`;
 			} catch ( writeFileErr ) {
 				progressTracker.suffix += `\n\n${ chalk.red(
-					`Could not export errors to file\n${ writeFileErr }`
+					`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
 				) }\n\n`;
 			}
 		}
@@ -302,7 +321,7 @@ ${ maybeExitPrompt }
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
 		progressTracker.print();
-		progressTracker.suffix += `\n${ buildErrorMessage( importFailed ) }`;
+		progressTracker.suffix += `\n${ buildErrorMessage( importFailed as ImportFailedError ) }`;
 		progressTracker.print( { clearAfter: true } );
 		process.exit( 1 );
 	}
