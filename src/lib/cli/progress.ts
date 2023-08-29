@@ -13,7 +13,7 @@ import os from 'os';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 
-export enum StepStatus {
+export const enum StepStatus {
 	PENDING = 'pending',
 	RUNNING = 'running',
 	SUCCESS = 'success',
@@ -33,7 +33,7 @@ export interface Step {
 
 export type StepConstructorParam = Omit< Step, 'status' > & { status?: StepStatus };
 
-interface StepFromServer {
+export interface StepFromServer {
 	name: string;
 	status: StepStatus;
 }

@@ -1,8 +1,4 @@
-/**
- * @flow
- * @format
- */
-
+/* eslint-disable complexity */
 /**
  * External dependencies
  */
@@ -15,9 +11,21 @@ import debugLib from 'debug';
  */
 import API from '../../lib/api';
 import { currentUserCanImportForApp } from '../../lib/site-import/db-file-import';
-import { ProgressTracker } from '../../lib/cli/progress';
+import { ProgressTracker, StepFromServer, StepStatus } from '../../lib/cli/progress';
 import * as exit from '../../lib/cli/exit';
 import { capitalize, formatEnvironment, getGlyphForStatus } from '../../lib/cli/format';
+import { AppQuery, AppQueryVariables } from './status.generated';
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import {
+	App,
+	AppEnvironment,
+	AppEnvironmentImportStatus,
+	AppEnvironmentStatusProgressStep,
+	Job,
+	Maybe,
+	PrimaryDomainSwitchJob,
+} from '../../graphqlTypes';
+import { AppForImport } from './db-file-import';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -64,34 +72,40 @@ const IMPORT_SQL_PROGRESS_QUERY = gql`
 	}
 `;
 
-export type ImportSqlCheckStatusInput = {
-	app: Object,
-	env: Object,
-	progressTracker: ProgressTracker,
-};
+export interface ImportSqlCheckStatusInput {
+	app: App | AppForImport;
+	env: AppEnvironment;
+	progressTracker: ProgressTracker;
+}
 
-async function getStatus( api, appId, envId ) {
-	const response = await api.query( {
+interface GetStatusResponse {
+	importStatus?: AppEnvironmentImportStatus | null;
+	importJob?: Job | PrimaryDomainSwitchJob | null;
+	launched?: boolean | null;
+}
+
+async function getStatus(
+	api: ApolloClient< NormalizedCacheObject >,
+	appId: number,
+	envId: number
+): Promise< GetStatusResponse > {
+	const response = await api.query< AppQuery, AppQueryVariables >( {
 		query: IMPORT_SQL_PROGRESS_QUERY,
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
-	const {
-		data: {
-			app: { environments },
-		},
-	} = response;
-	if ( ! environments?.length ) {
+	const environments = response.data.app?.environments ?? [];
+	if ( ! environments.length ) {
 		throw new Error( 'Unable to determine import status from environment' );
 	}
-	const [ environment ] = environments;
+	const environment = environments[ 0 ] ?? {};
 	const { importStatus, jobs, launched } = environment;
 
 	if ( ! environment.isK8sResident && ! jobs?.length ) {
 		return {};
 	}
 
-	const [ importJob ] = jobs;
+	const [ importJob ] = jobs ?? [];
 
 	return {
 		importStatus,
@@ -100,7 +114,15 @@ async function getStatus( api, appId, envId ) {
 	};
 }
 
-function getErrorMessage( importFailed, launched = false ) {
+interface ImportFailedError {
+	inImportProgress: boolean;
+	commandOutput: string[] | null;
+	error: string;
+	stepName: 'import_preflights' | 'importing_db' | 'validating_db' | string;
+	launched: boolean;
+}
+
+function getErrorMessage( importFailed: ImportFailedError, launched = false ): string {
 	debug( { importFailed } );
 
 	const rollbackMessage = launched
@@ -130,7 +152,7 @@ This error occurred during the mysql batch script processing of your SQL file.
 
 ${ rollbackMessage }`;
 				if ( importFailed.commandOutput ) {
-					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
+					const commandOutput = ( [] as string[] ).concat( importFailed.commandOutput ).join( ';' );
 					message += `
 Please inspect your input file and make the appropriate corrections before trying again.
 The server said:
@@ -147,7 +169,7 @@ The server said:
 ${ rollbackMessage }
 `;
 				if ( importFailed.commandOutput ) {
-					const commandOutput = [].concat( importFailed.commandOutput ).join( ';' );
+					const commandOutput = ( [] as string[] ).concat( importFailed.commandOutput ).join( ';' );
 					message += `
 Please inspect your input file and make the appropriate corrections before trying again.
 The server said:
@@ -180,9 +202,9 @@ export async function importSqlCheckStatus( {
 			'The currently authenticated account does not have permission to view SQL import status.'
 		);
 	}
-	let createdAt;
-	let completedAt;
-	let overallStatus = 'Checking...';
+	let createdAt: Maybe< string > | undefined;
+	let completedAt: Maybe< string > | undefined;
+	let overallStatus: string | StepStatus = 'Checking...';
 
 	const setProgressTrackerSuffix = () => {
 		const sprite = getGlyphForStatus( overallStatus, progressTracker.runningSprite );
@@ -198,7 +220,9 @@ export async function importSqlCheckStatus( {
 		let statusMessage;
 		switch ( overallStatus ) {
 			case 'success':
-				statusMessage = `Success ${ sprite } imported data should be visible on your site ${ env.primaryDomain.name }.`;
+				statusMessage = `Success ${ sprite } imported data should be visible on your site ${
+					env.primaryDomain?.name ?? 'N/A'
+				}.`;
 				break;
 			case 'running':
 				if ( progressTracker.allStepsSucceeded() ) {
@@ -221,7 +245,7 @@ SQL Import Completed: ${ formattedCompletedAt }`;
 		const suffix = `
 =============================================================
 Status: ${ statusMessage }
-Site: ${ app.name } (${ formatEnvironment( env.type ) })${ maybeTimestamps }
+Site: ${ app.name ?? 'N/A' } (${ formatEnvironment( env.type ?? 'N/A' ) })${ maybeTimestamps }
 =============================================================
 ${ maybeExitPrompt }
 `;
@@ -235,12 +259,12 @@ ${ maybeExitPrompt }
 
 	progressTracker.startPrinting( setSuffixAndPrint );
 
-	const getResults = () =>
+	const getResults = (): Promise< string | Job | PrimaryDomainSwitchJob > =>
 		new Promise( ( resolve, reject ) => {
-			const checkStatus = async () => {
+			const checkStatus = async (): Promise< unknown > => {
 				let status;
 				try {
-					status = await getStatus( api, app.id, env.id );
+					status = await getStatus( api, app.id ?? -1, env.id ?? -1 );
 				} catch ( error ) {
 					return reject( { error } );
 				}
@@ -254,17 +278,21 @@ ${ maybeExitPrompt }
 					// Until then we need to create the importJob from the status object.
 					if ( ! importJob ) {
 						importJob = {};
-						const statusSteps = importStatus?.progress?.steps;
+						const statusSteps = importStatus?.progress?.steps as
+							| AppEnvironmentStatusProgressStep[]
+							| undefined;
 
 						// if the progress meta isn't filled out yet, wait until it is.
 						if ( ! statusSteps ) {
-							return setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL ); // NOSONAR
+							return setTimeout( () => {
+								void checkStatus();
+							}, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 						}
 
 						jobSteps = statusSteps.map( step => {
 							return {
 								id: step.name,
-								name: capitalize( step.name.replace( /_/g, ' ' ) ),
+								name: capitalize( step.name?.replace( /_/g, ' ' ) ),
 								status: step.result,
 							};
 						} );
@@ -276,9 +304,10 @@ ${ maybeExitPrompt }
 							jobStatus = 'error';
 						} else if ( statusSteps.every( ( { result } ) => result === 'success' ) ) {
 							jobStatus = 'success';
-							importJob.completedAt = new Date(
-								Math.max( ...statusSteps.map( step => step.finished_at ), 0 ) * 1000
-							).toUTCString();
+							const timestamps = statusSteps
+								.map( step => step.finished_at )
+								.filter( Boolean ) as number[];
+							importJob.completedAt = new Date( Math.max( ...timestamps, 0 ) * 1000 ).toUTCString();
 						}
 
 						if ( importStatus?.progress?.started_at ) {
@@ -302,7 +331,7 @@ ${ maybeExitPrompt }
 					dbOperationInProgress,
 					importInProgress,
 					progress: importStepProgress,
-				} = importStatus;
+				} = importStatus ?? {};
 
 				debug( {
 					jobStatus,
@@ -315,18 +344,22 @@ ${ maybeExitPrompt }
 
 				let jobCreationTime;
 				try {
-					jobCreationTime = new Date( createdAt ).getTime();
+					jobCreationTime = new Date( createdAt ?? '' ).getTime();
 				} catch ( err ) {
 					debug( 'Unable to parse createdAt to a Date' );
 				}
 
 				let failedImportStep;
 
-				if ( jobCreationTime && importStepProgress?.started_at * 1000 >= jobCreationTime ) {
+				if (
+					jobCreationTime &&
+					( importStepProgress?.started_at ?? 0 ) * 1000 >= jobCreationTime
+				) {
 					// The contents of the `import_progress` meta are pertinent to the most recent import job
-					failedImportStep = importStepProgress.steps.find(
+					failedImportStep = importStepProgress?.steps?.find(
 						step =>
-							step?.result === 'failed' && 1000 * step?.started_at > new Date( createdAt ).getTime()
+							step?.result === 'failed' &&
+							1000 * ( step.started_at ?? 0 ) > new Date( createdAt ?? '' ).getTime()
 					);
 				}
 
@@ -337,12 +370,12 @@ ${ maybeExitPrompt }
 				if ( failedImportStep ) {
 					// The server marks the step as a success as per the host action, demote it to 'failed'
 					const _jobSteps = [ ...jobSteps ];
-					const failedJobStepIndex = _jobSteps.findIndex( ( { id } ) => id === 'import' );
+					const failedJobStepIndex = _jobSteps.findIndex( step => step?.id === 'import' );
 					_jobSteps[ failedJobStepIndex ] = {
 						..._jobSteps[ failedJobStepIndex ],
 						status: 'failed',
 					};
-					progressTracker.setStepsFromServer( _jobSteps );
+					progressTracker.setStepsFromServer( _jobSteps as unknown as StepFromServer[] );
 					overallStatus = 'failed';
 					setSuffixAndPrint();
 
@@ -351,12 +384,11 @@ ${ maybeExitPrompt }
 						commandOutput: failedImportStep.output,
 						error: 'Import step failed',
 						stepName: failedImportStep.name,
-						errorText: failedImportStep.error,
 						launched,
-					} );
+					} as ImportFailedError );
 				}
 
-				progressTracker.setStepsFromServer( jobSteps );
+				progressTracker.setStepsFromServer( jobSteps as unknown as StepFromServer[] );
 
 				setSuffixAndPrint();
 
@@ -370,7 +402,9 @@ ${ maybeExitPrompt }
 
 				overallStatus = 'running';
 
-				setTimeout( checkStatus, IMPORT_SQL_PROGRESS_POLL_INTERVAL ); // NOSONAR
+				setTimeout( () => {
+					void checkStatus();
+				}, IMPORT_SQL_PROGRESS_POLL_INTERVAL );
 			};
 
 			// Kick off the check
@@ -382,7 +416,7 @@ ${ maybeExitPrompt }
 		if ( typeof results === 'string' ) {
 			overallStatus = results;
 		} else {
-			overallStatus = results?.progress?.status || 'unknown';
+			overallStatus = results.progress?.status ?? 'unknown';
 			// This shouldn't be 'unknown'...what should we do here?
 		}
 
@@ -398,7 +432,12 @@ ${ maybeExitPrompt }
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
 		progressTracker.print( { clearAfter: true } );
-		exit.withError( getErrorMessage( importFailed, importFailed.launched ) );
+		exit.withError(
+			getErrorMessage(
+				importFailed as ImportFailedError,
+				( importFailed as ImportFailedError ).launched
+			)
+		);
 	}
 }
 
