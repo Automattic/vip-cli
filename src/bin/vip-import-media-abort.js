@@ -31,6 +31,7 @@ const appQuery = `
 		id
 		appId
 		type
+		name
 		primaryDomain {
 			id
 			name

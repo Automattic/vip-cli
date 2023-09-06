@@ -25,6 +25,7 @@ import { GraphQLFormattedError } from 'graphql';
 import { RateLimitExceededError } from '../lib/types/graphql/rate-limit-exceeded-error';
 import { AppBackupJobStatusQuery } from './backup-db.generated';
 import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { formatDuration } from '../lib/cli/format';
 
 const DB_BACKUP_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -112,14 +113,14 @@ export class BackupDBCommand {
 	track: CommandTracker;
 	private progressTracker: ProgressTracker;
 
-	constructor( app: App, env: AppEnvironment, trackerFn = async () => {} ) {
+	constructor( app: App, env: AppEnvironment, trackerFn: CommandTracker = async () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup generation' },
 			{ id: this.steps.GENERATE, name: 'Generating backup' },
 		] );
-		this.track = trackerFn as CommandTracker;
+		this.track = trackerFn;
 	}
 
 	log( msg: string ) {
@@ -162,13 +163,6 @@ export class BackupDBCommand {
 	async run( silent = false ) {
 		this.silent = silent;
 
-		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
-		noticeMessage +=
-			'If a recent database backup does not exist, a new one will be generated for this environment. ';
-		noticeMessage +=
-			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#2-download-a-full-database-backup \n';
-		this.log( noticeMessage );
-
 		await this.loadBackupJob();
 
 		if ( this.job?.inProgressLock ) {
@@ -194,7 +188,10 @@ export class BackupDBCommand {
 						stack: error.stack,
 					} );
 					const errMessage = `A new database backup was not generated because a recently generated backup already exists.
-If you would like to run the same command, you can retry on or after: ${ retryAfter }
+If you would like to run the same command, you can retry in ${ formatDuration(
+						new Date(),
+						new Date( retryAfter )
+					) }
 Alternatively, you can export the latest existing database backup by running: ${ chalk.green(
 						'vip @app.env export sql'
 					) }, right away.

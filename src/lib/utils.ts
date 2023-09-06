@@ -52,8 +52,14 @@ export function makeTempDir( prefix = 'vip-cli' ): string {
 	debug( `Created a directory to hold temporary files: ${ tempDir }` );
 
 	process.on( 'exit', () => {
-		fs.rmSync( tempDir, { recursive: true, force: true } );
-		debug( `Removed temporary directory: ${ tempDir }` );
+		try {
+			fs.rmSync( tempDir, { recursive: true, force: true, maxRetries: 10 } );
+			debug( `Removed temporary directory: ${ tempDir }` );
+		} catch ( err ) {
+			console.warn(
+				`Failed to remove temporary directory ${ tempDir } (${ ( err as Error ).message })`
+			);
+		}
 	} );
 
 	return tempDir;

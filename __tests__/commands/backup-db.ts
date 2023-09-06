@@ -95,7 +95,7 @@ describe( 'commands/BackupDBCommand', () => {
 			} );
 
 			await cmd.run();
-			expect( logSpy ).toHaveBeenNthCalledWith( 2, 'Database backup already in progress...' );
+			expect( logSpy ).toHaveBeenCalledWith( 'Database backup already in progress...' );
 		} );
 	} );
 } );

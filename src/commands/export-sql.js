@@ -10,6 +10,7 @@ import gql from 'graphql-tag';
 import fs from 'fs';
 import https from 'https';
 import path from 'path';
+import chalk from 'chalk';
 
 /**
  * Internal dependencies
@@ -23,6 +24,7 @@ import { ProgressTracker } from '../lib/cli/progress';
 import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
 import { BackupDBCommand } from './backup-db';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -181,10 +183,12 @@ export class ExportSQLCommand {
 	progressTracker;
 	outputFile;
 	generateBackup;
+	confirmEnoughStorageHook;
 	steps = {
 		PREPARE: 'prepare',
 		CREATE: 'create',
 		DOWNLOAD_LINK: 'downloadLink',
+		CONFIRM_ENOUGH_STORAGE: 'confirmEnoughStorage',
 		DOWNLOAD: 'download',
 	};
 	track;
@@ -202,10 +206,12 @@ export class ExportSQLCommand {
 		this.env = env;
 		this.outputFile =
 			typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
+		this.confirmEnoughStorageHook = options.confirmEnoughStorageHook;
 		this.generateBackup = options.generateBackup || false;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup download' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
+			{ id: this.steps.CONFIRM_ENOUGH_STORAGE, name: "Checking if there's enough storage" },
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
@@ -311,13 +317,29 @@ export class ExportSQLCommand {
 
 	async runBackupJob() {
 		const cmd = new BackupDBCommand( this.app, this.env );
+
+		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
+		noticeMessage +=
+			'If a recent database backup does not exist, a new one will be generated for this environment. ';
+		noticeMessage +=
+			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#2-download-a-full-database-backup \n';
+		this.log( noticeMessage );
+
 		await cmd.run( false );
+	}
+
+	async confirmEnoughStorage( job ) {
+		if ( this.confirmEnoughStorageHook ) {
+			return await this.confirmEnoughStorageHook( job );
+		}
+
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
 	}
 
 	/**
 	 * Sequentially runs the steps of the export workflow
 	 *
-	 * @return {Promise} A promise which resolves to void
 	 */
 	async run() {
 		if ( this.outputFile ) {
@@ -410,6 +432,18 @@ export class ExportSQLCommand {
 			this.isCreated.bind( this )
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
+
+		const storageConfirmed = await this.progressTracker.handleContinuePrompt( async () => {
+			return await this.confirmEnoughStorage( await this.getExportJob() );
+		}, 3 );
+
+		if ( storageConfirmed ) {
+			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
+		} else {
+			this.progressTracker.stepFailed( this.steps.CONFIRM_ENOUGH_STORAGE );
+			this.stopProgressTracker();
+			exit.withError( 'Command canceled by user.' );
+		}
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );

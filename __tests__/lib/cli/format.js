@@ -5,7 +5,7 @@
 /**
  * Internal dependencies
  */
-import { formatBytes, requoteArgs } from '../../../src/lib/cli/format';
+import { formatBytes, formatDuration, requoteArgs } from '../../../src/lib/cli/format';
 
 describe( 'utils/cli/format', () => {
 	describe( 'requoteArgs', () => {
@@ -54,6 +54,33 @@ describe( 'utils/cli/format', () => {
 			expect( formatBytes( 1024 ) ).toStrictEqual( '1 KB' );
 			expect( formatBytes( 1000000 ) ).toStrictEqual( '976.56 KB' );
 			expect( formatBytes( 10004008 ) ).toStrictEqual( '9.54 MB' );
+		} );
+	} );
+
+	describe( 'formatDuration', () => {
+		it( 'should format duration', () => {
+			expect(
+				formatDuration(
+					new Date( '2020-01-01T00:00:00.000Z' ),
+					new Date( '2020-01-01T00:20:01.000Z' )
+				)
+			).toStrictEqual( '20 minutes 1 second' );
+
+			expect(
+				formatDuration(
+					new Date( '2020-01-01T00:00:00.000Z' ),
+					new Date( '2020-04-01T07:04:02.000Z' )
+				)
+			).toStrictEqual( '91 days 7 hours 4 minutes 2 seconds' );
+		} );
+
+		it( 'should address appropriately if from > to', () => {
+			expect(
+				formatDuration(
+					new Date( '2020-02-01T00:00:00.000Z' ),
+					new Date( '2019-12-31T23:59:59.000Z' )
+				)
+			).toStrictEqual( '0 second' );
 		} );
 	} );
 } );

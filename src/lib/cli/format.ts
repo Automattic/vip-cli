@@ -6,6 +6,7 @@
 import chalk from 'chalk';
 import { Parser } from 'json2csv';
 import Table from 'cli-table';
+import { StepStatus } from './progress';
 
 export interface Tuple {
 	key: string;
@@ -191,7 +192,10 @@ export class RunningSprite {
 	}
 }
 
-export function getGlyphForStatus( status: string, runningSprite: RunningSprite ): string {
+export function getGlyphForStatus(
+	status: StepStatus | string,
+	runningSprite: RunningSprite
+): string {
 	switch ( status ) {
 		case 'pending':
 			return '○';
@@ -227,17 +231,69 @@ export function formatSearchReplaceValues< T = unknown >(
 }
 
 // Format bytes into kilobytes, megabytes, etc based on the size
-export const formatBytes = ( bytes: number, decimals = 2 ): string => {
+// for historical reasons, this uses KB instead of KiB, MB instead of MiB and so on.
+export const formatBytes = (
+	bytes: number,
+	decimals = 2,
+	bytesMultiplier = 1024,
+	sizes = [ 'bytes', 'KB', 'MB', 'GB', 'TB' ]
+): string => {
 	if ( 0 === bytes ) {
 		return '0 Bytes';
 	}
 
-	const bytesMultiplier = 1024;
 	const dm = decimals < 0 ? 0 : decimals;
-	const sizes = [ 'bytes', 'KB', 'MB', 'GB', 'TB' ];
 	const idx = Math.floor( Math.log( bytes ) / Math.log( bytesMultiplier ) );
 
 	return `${ parseFloat( ( bytes / Math.pow( bytesMultiplier, idx ) ).toFixed( dm ) ) } ${
 		sizes[ idx ]
 	}`;
 };
+
+/**
+ * Format bytes in powers of 1000, based on the size
+ * This is how it's displayed on Macs
+ */
+export const formatMetricBytes = ( bytes: number, decimals = 2 ): string => {
+	return formatBytes( bytes, decimals, 1000 );
+};
+
+/*
+ * Get the duration between two dates
+ *
+ * @param {Date} from The start date
+ * @param {Date} to  The end date
+ * @returns {string} The duration between the two dates
+ */
+export function formatDuration( from: Date, to: Date ): string {
+	const millisecondsPerSecond = 1000;
+	const millisecondsPerMinute = 60 * millisecondsPerSecond;
+	const millisecondsPerHour = 60 * millisecondsPerMinute;
+	const millisecondsPerDay = 24 * millisecondsPerHour;
+
+	const duration = to.getTime() - from.getTime();
+	if ( duration < 1000 ) return '0 second';
+
+	const days = Math.floor( duration / millisecondsPerDay );
+	const hours = Math.floor( ( duration % millisecondsPerDay ) / millisecondsPerHour );
+	const minutes = Math.floor( ( duration % millisecondsPerHour ) / millisecondsPerMinute );
+	const seconds = Math.floor( ( duration % millisecondsPerMinute ) / millisecondsPerSecond );
+
+	let durationString = '';
+
+	if ( days > 0 ) {
+		durationString += `${ days } day${ days > 1 ? 's' : '' } `;
+	}
+	if ( hours > 0 ) {
+		durationString += `${ hours } hour${ hours > 1 ? 's' : '' } `;
+	}
+	if ( minutes > 0 ) {
+		durationString += `${ minutes } minute${ minutes > 1 ? 's' : '' } `;
+	}
+
+	if ( seconds > 0 ) {
+		durationString += `${ seconds } second${ seconds > 1 ? 's' : '' }`;
+	}
+
+	return durationString.trim();
+}
