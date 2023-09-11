@@ -17,6 +17,8 @@ interface CommandOptions {
 
 export default function _default( opts: Partial< CommandOptions > ): Args;
 
+export function getEnvIdentifier( env: string ): string;
+
 interface Example {
 	usage: string;
 	description: string;

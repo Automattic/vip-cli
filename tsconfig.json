@@ -1,11 +1,6 @@
 {
+  "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
-    "lib": ["es2021"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-
     // Target latest version of ECMAScript.
     "target": "esnext",
     // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
@@ -21,24 +16,19 @@
     "paths": {
       "*": [
         "./types/*",
-        "./node_modules/*",
-        "./node_modules/@types/*",
         // needed because the noImplicitAnyImportBypass overrides the node import too
-        "./node_modules/@types/node/*",
-        "./noImplicitAnyImportBypass.d.ts"
+        "./node_modules/@types/node/*"
       ]
     },
     // It's worth enabling this, I promise!
     "noImplicitAny": true,
-    "moduleResolution": "Node10"
   },
   "include": [
     "src",
     "helpers",
     "config",
     "__tests__",
-    "__fixtures__",
-    "noImplicitAnyImportBypass.d.ts"
+    "__fixtures__"
   ],
   "exclude": [
     "**/*.js",
