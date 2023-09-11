@@ -15,11 +15,13 @@ const debug = debugLib( '@automattic/vip:lib:cli:config' );
 let configFromFile: Config;
 try {
 	// Get `local` config first; this will only exist in dev as it's npmignore-d.
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
 	configFromFile = require( '../../../config/config.local.json' ) as Config;
 
 	debug( 'Loaded config data from config.local.json' );
 } catch {
 	// Fall back to `publish` config file.
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
 	configFromFile = require( '../../../config/config.publish.json' ) as Config;
 
 	debug( 'Loaded config data from config.publish.json' );

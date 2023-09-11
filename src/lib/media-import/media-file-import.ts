@@ -19,4 +19,4 @@ export function currentUserCanImportForApp( app: AppForMediaImport ): boolean {
 export const SUPPORTED_MEDIA_FILE_IMPORT_SITE_TYPES = [ 'WordPress' ];
 
 export const isSupportedApp = ( { type }: AppForMediaImport ) =>
-	SUPPORTED_MEDIA_FILE_IMPORT_SITE_TYPES.includes( type! );
+	SUPPORTED_MEDIA_FILE_IMPORT_SITE_TYPES.includes( type as string );

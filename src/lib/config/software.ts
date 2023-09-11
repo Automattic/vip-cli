@@ -318,9 +318,8 @@ export const promptForUpdate = async (
 
 	const confirm: boolean =
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-		opts.force ||
+		opts.force || // NOSONAR
 		( await new Confirm( {
-			// NOSONAR
 			message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
 		} )
 			.run()
@@ -406,7 +405,9 @@ export const getUpdateResult = async ( appId: number, envId: number ): Promise< 
 	}
 
 	const failedStep = completedJob.progress?.steps?.find( step => step?.status === 'failed' );
-	const error = failedStep ? `Failed during step: ${ failedStep.name! }` : 'Software update failed';
+	const error = failedStep
+		? `Failed during step: ${ failedStep.name as string }`
+		: 'Software update failed';
 	return {
 		ok: false,
 		errorMessage: error,
