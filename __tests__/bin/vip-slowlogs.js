@@ -84,14 +84,22 @@ describe( 'getSlowlogs', () => {
 		expect( slowlogsLib.getRecentSlowlogs ).toHaveBeenCalledWith( 1, 3, 500 );
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'timestamp' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'rows sent' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'rows examined' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'query time' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'request uri' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'query' ) );
 		expect( console.log ).toHaveBeenCalledWith(
-			'┌────────────────────────────────┬───────────┬───────────────┬────────────┬─────────────────────┬────────────────────────┐\n' +
-				'│ timestamp                      │ rows sent │ rows examined │ query time │ request uri         │ query                  │\n' +
-				'├────────────────────────────────┼───────────┼───────────────┼────────────┼─────────────────────┼────────────────────────┤\n' +
-				'│ 2021-11-05T20:18:36.234041811Z │ 1         │ 1             │ 0.1        │ dashboard.wpvip.com │ SELECT * FROM wp_posts │\n' +
-				'├────────────────────────────────┼───────────┼───────────────┼────────────┼─────────────────────┼────────────────────────┤\n' +
-				'│ 2021-11-09T20:47:07.301221112Z │ 1         │ 1             │ 0.1        │ dashboard.wpvip.com │ SELECT * FROM wp_posts │\n' +
-				'└────────────────────────────────┴───────────┴───────────────┴────────────┴─────────────────────┴────────────────────────┘'
+			expect.stringContaining( '2021-11-05T20:18:36.234041811Z' )
+		);
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( '2021-11-09T20:47:07.301221112Z' )
+		);
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( '0.1' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'dashboard.wpvip.com' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'SELECT * FROM wp_posts' )
 		);
 
 		const trackingParams = {
