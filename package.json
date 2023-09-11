@@ -103,7 +103,7 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@automattic/eslint-plugin-wpvip": "0.5.8",
+    "@automattic/eslint-plugin-wpvip": "0.6.0",
     "@babel/cli": "7.22.10",
     "@babel/core": "7.22.10",
     "@babel/eslint-parser": "7.22.10",
@@ -141,7 +141,7 @@
     "nock": "13.3.2",
     "prettier": "npm:wp-prettier@2.8.5",
     "rimraf": "5.0.1",
-    "typescript": "^5.1.3"
+    "typescript": "5.2.2"
   },
   "dependencies": {
     "@apollo/client": "3.3.6",
