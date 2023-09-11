@@ -1,6 +1,11 @@
 {
-  "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
+    "lib": ["es2021"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
     // Target latest version of ECMAScript.
     "target": "esnext",
     // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
@@ -25,8 +30,7 @@
     },
     // It's worth enabling this, I promise!
     "noImplicitAny": true,
-    // We have to use this because we're using Babel
-    "moduleResolution": "node"
+    "moduleResolution": "Node10"
   },
   "include": [
     "src",
