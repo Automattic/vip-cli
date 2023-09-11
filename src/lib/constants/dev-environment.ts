@@ -47,7 +47,10 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.0',
 		label: '8.0 (EOL soon)',
 	},
-	7.4: { image: 'ghcr.io/automattic/vip-container-images/php-fpm:7.4', label: '7.4 (EOL; not supported)' },
+	7.4: {
+		image: 'ghcr.io/automattic/vip-container-images/php-fpm:7.4',
+		label: '7.4 (EOL; not supported)',
+	},
 } as const;
 
 export const DEV_ENVIRONMENT_VERSION = '2.0.0';
