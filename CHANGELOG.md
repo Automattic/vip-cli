@@ -1,5 +1,34 @@
 ## Changelog
 
+### 2.34.0
+
+- #1503 chore(dev-deps): update nock to 13.3.3
+- #1502 chore(dev-deps): update flow-bin to 0.216.1
+- #1501 chore(deps): update jest-related packages
+- #1500 chore(dev-deps): update babel-related packages
+- #1498 ci: run tests and checks in parallel
+- #1462 Fixed Slowlogs local unit test
+- #1488 fix: do not abort if a temporary directory cannot be removed on exit
+- #1495 refactor: convert `media-import` to TypeScript
+- #1492 refactor: convert `site-import` directory to TypeScript
+
+### 2.33.0
+
+- #1475 Updating CONTRIBUTING.md with new publishing procedure
+- #1477 Fetch environment name from server to fix environment selector label
+- #1479 chore(dev-deps): update jest-related packages to 29.6.2
+- #1480 chore(deps): update node-fetch to 2.6.12
+- #1481 chore(deps): update socket.io-client to 4.7.2
+- #1482 chore(deps): update enquirer to 2.4.1
+- #1478 Fix False UP status for multisite dev-envs
+- #1483 Disable Windows patch
+- #1458 Add warning confirmation when there's not enough space on disk. by
+- #1487 fix(dev-env): display ports exposed by services
+- #1490 fix: CLI not respecting proxy settings when creating local dev environment by
+- #1491 chore(dev-deps): update eslint from 8.43.0 to 8.47.0
+- #1486 chore(dev-deps): update babel-related packages
+- #1484 feat(backup): Add vip backup db command
+
 ### 2.32.4
 
 - #1470 Rename prepare-release.yml to npm-prepare-release.yml
