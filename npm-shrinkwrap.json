@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "2.34.0",
+  "version": "2.33.1-dev.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "2.34.0",
+      "version": "2.33.1-dev.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -11699,9 +11699,9 @@
       }
     },
     "node_modules/rimraf/node_modules/glob": {
-      "version": "10.3.3",
-      "resolved": "https://registry.npmjs.org/glob/-/glob-10.3.3.tgz",
-      "integrity": "sha512-92vPiMb/iqpmEgsOoIDvTjc50wf9CCCvMzsi6W0JLPeUKE8TWP1a73PgqSrqy7iAZxaSD1YdzU7QZR5LF51MJw==",
+      "version": "10.3.4",
+      "resolved": "https://registry.npmjs.org/glob/-/glob-10.3.4.tgz",
+      "integrity": "sha512-6LFElP3A+i/Q8XQKEvZjkEWEOTgAIALR9AO2rwT8bgPhDd1anmqDJDZ6lLddI4ehxxxR1S5RIqKe1uapMQfYaQ==",
       "dev": true,
       "dependencies": {
         "foreground-child": "^3.1.0",
@@ -22154,9 +22154,9 @@
       },
       "dependencies": {
         "glob": {
-          "version": "10.3.3",
-          "resolved": "https://registry.npmjs.org/glob/-/glob-10.3.3.tgz",
-          "integrity": "sha512-92vPiMb/iqpmEgsOoIDvTjc50wf9CCCvMzsi6W0JLPeUKE8TWP1a73PgqSrqy7iAZxaSD1YdzU7QZR5LF51MJw==",
+          "version": "10.3.4",
+          "resolved": "https://registry.npmjs.org/glob/-/glob-10.3.4.tgz",
+          "integrity": "sha512-6LFElP3A+i/Q8XQKEvZjkEWEOTgAIALR9AO2rwT8bgPhDd1anmqDJDZ6lLddI4ehxxxR1S5RIqKe1uapMQfYaQ==",
           "dev": true,
           "requires": {
             "foreground-child": "^3.1.0",
