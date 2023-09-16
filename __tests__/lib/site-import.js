@@ -1,20 +1,10 @@
 /**
  * Internal dependencies
  */
-import {
-	isImportingBlockedBySync,
-	isSupportedApp,
-	SUPPORTED_DB_FILE_IMPORT_SITE_TYPES,
-} from '../../src/lib/site-import/db-file-import';
+import { isImportingBlockedBySync, isSupportedApp } from '../../src/lib/site-import/db-file-import';
 
 describe( 'site import tests', () => {
 	describe( 'db-file-import', () => {
-		describe( 'constants', () => {
-			it( 'should contain the correct list of supported app types', () => {
-				expect( SUPPORTED_DB_FILE_IMPORT_SITE_TYPES ).toEqual( [ 'WordPress' ] );
-			} );
-		} );
-
 		describe( 'isImportingBlockedBySync', () => {
 			it( 'should return false for not_syncing status', () => {
 				expect( isImportingBlockedBySync( { syncProgress: { status: 'not_syncing' } } ) ).toBe(
@@ -34,12 +24,18 @@ describe( 'site import tests', () => {
 		} );
 
 		describe( 'isSupportedApp', () => {
-			it( 'should return true for type: WordPress', () => {
-				expect( isSupportedApp( { type: 'WordPress' } ) ).toBe( true );
+			it( 'should return true for site types with a database', () => {
+				expect( isSupportedApp( { typeId: 2 } ) ).toBe( true );
+				expect( isSupportedApp( { typeId: 5 } ) ).toBe( true );
+				expect( isSupportedApp( { typeId: 6 } ) ).toBe( true );
+				expect( isSupportedApp( { typeId: 8 } ) ).toBe( true );
 			} );
 
-			it( 'should return false for type: node', () => {
-				expect( isSupportedApp( { type: 'node' } ) ).toBe( false );
+			it( 'should return false for site types without a database', () => {
+				expect( isSupportedApp( { typeId: 3 } ) ).toBe( false );
+				expect( isSupportedApp( { typeId: 4 } ) ).toBe( false );
+				expect( isSupportedApp( { typeId: 7 } ) ).toBe( false );
+				expect( isSupportedApp( { typeId: 3 } ) ).toBe( false );
 			} );
 
 			it( 'should return false for no type', () => {

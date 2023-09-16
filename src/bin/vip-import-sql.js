@@ -54,6 +54,7 @@ const appQuery = `
 	id,
 	name,
 	type,
+	typeId
 	organization { id, name },
 	environments{
 		id
