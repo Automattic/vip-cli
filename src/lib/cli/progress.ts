@@ -81,7 +81,7 @@ export class ProgressTracker {
 
 	mapSteps( steps: StepConstructorParam[] ): Map< string, Step > {
 		return steps.reduce( ( map, { id, name, status } ) => {
-			map.set( id, { id, name, status: status || StepStatus.PENDING } );
+			map.set( id, { id, name, status: status ?? StepStatus.PENDING } );
 			return map;
 		}, new Map< string, Step >() );
 	}

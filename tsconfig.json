@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
     "lib": ["es2021"],
+    "module": "node16",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node16",
 
     // Target latest version of ECMAScript.
     "target": "esnext",
@@ -21,24 +23,18 @@
     "paths": {
       "*": [
         "./types/*",
-        "./node_modules/*",
-        "./node_modules/@types/*",
-        // needed because the noImplicitAnyImportBypass overrides the node import too
-        "./node_modules/@types/node/*",
-        "./noImplicitAnyImportBypass.d.ts"
+        "./node_modules/@types/node/*"
       ]
     },
     // It's worth enabling this, I promise!
-    "noImplicitAny": true,
-    "moduleResolution": "Node10"
+    "noImplicitAny": true
   },
   "include": [
     "src",
     "helpers",
     "config",
     "__tests__",
-    "__fixtures__",
-    "noImplicitAnyImportBypass.d.ts"
+    "__fixtures__"
   ],
   "exclude": [
     "**/*.js",
