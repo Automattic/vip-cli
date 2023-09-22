@@ -25,7 +25,7 @@
         "enquirer": "2.4.1",
         "fetch-retry": "^5.0.6",
         "graphql": "15.5.1",
-        "graphql-tag": "2.12.5",
+        "graphql-tag": "2.12.6",
         "https-proxy-agent": "^5.0.1",
         "ini": "2.0.0",
         "js-yaml": "^4.1.0",
@@ -3385,17 +3385,6 @@
         "node": ">=14.0.0"
       }
     },
-    "node_modules/@lando/compose/node_modules/js-yaml": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-      "dependencies": {
-        "argparse": "^2.0.1"
-      },
-      "bin": {
-        "js-yaml": "bin/js-yaml.js"
-      }
-    },
     "node_modules/@lando/mailhog": {
       "version": "0.5.0",
       "resolved": "https://registry.npmjs.org/@lando/mailhog/-/mailhog-0.5.0.tgz",
@@ -3407,17 +3396,6 @@
       },
       "engines": {
         "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@lando/mailhog/node_modules/js-yaml": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-      "dependencies": {
-        "argparse": "^2.0.1"
-      },
-      "bin": {
-        "js-yaml": "bin/js-yaml.js"
       }
     },
     "node_modules/@lando/phpmyadmin": {
@@ -3432,17 +3410,6 @@
       },
       "engines": {
         "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/js-yaml": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-      "dependencies": {
-        "argparse": "^2.0.1"
-      },
-      "bin": {
-        "js-yaml": "bin/js-yaml.js"
       }
     },
     "node_modules/@nicolo-ribaudo/chokidar-2": {
@@ -8016,9 +7983,9 @@
       }
     },
     "node_modules/graphql-tag": {
-      "version": "2.12.5",
-      "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.12.5.tgz",
-      "integrity": "sha512-5xNhP4063d16Pz3HBtKprutsPrmHZi5IdUGOWRxA2B6VF7BIRGOHZ5WQvDmJXZuPcBg7rYwaFxvQYjqkSdR3TQ==",
+      "version": "2.12.6",
+      "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.12.6.tgz",
+      "integrity": "sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==",
       "dependencies": {
         "tslib": "^2.1.0"
       },
@@ -8026,7 +7993,7 @@
         "node": ">=10"
       },
       "peerDependencies": {
-        "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0"
+        "graphql": "^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0"
       }
     },
     "node_modules/graphql-tag/node_modules/tslib": {
@@ -15909,16 +15876,6 @@
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "js-yaml": {
-          "version": "4.1.0",
-          "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-          "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-          "requires": {
-            "argparse": "^2.0.1"
-          }
-        }
       }
     },
     "@lando/mailhog": {
@@ -15929,16 +15886,6 @@
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "js-yaml": {
-          "version": "4.1.0",
-          "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-          "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-          "requires": {
-            "argparse": "^2.0.1"
-          }
-        }
       }
     },
     "@lando/phpmyadmin": {
@@ -15950,16 +15897,6 @@
         "lodash": "^4.17.21",
         "semver": "^7.3.2",
         "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "js-yaml": {
-          "version": "4.1.0",
-          "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-          "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-          "requires": {
-            "argparse": "^2.0.1"
-          }
-        }
       }
     },
     "@nicolo-ribaudo/chokidar-2": {
@@ -19405,9 +19342,9 @@
       "integrity": "sha512-FeTRX67T3LoE3LWAxxOlW2K3Bz+rMYAC18rRguK4wgXaTZMiJwSUwDmPFo3UadAKbzirKIg5Qy+sNJXbpPRnQw=="
     },
     "graphql-tag": {
-      "version": "2.12.5",
-      "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.12.5.tgz",
-      "integrity": "sha512-5xNhP4063d16Pz3HBtKprutsPrmHZi5IdUGOWRxA2B6VF7BIRGOHZ5WQvDmJXZuPcBg7rYwaFxvQYjqkSdR3TQ==",
+      "version": "2.12.6",
+      "resolved": "https://registry.npmjs.org/graphql-tag/-/graphql-tag-2.12.6.tgz",
+      "integrity": "sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==",
       "requires": {
         "tslib": "^2.1.0"
       },
