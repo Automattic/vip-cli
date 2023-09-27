@@ -3823,9 +3823,9 @@
       }
     },
     "node_modules/@types/proxy-from-env": {
-      "version": "1.0.1",
-      "resolved": "https://registry.npmjs.org/@types/proxy-from-env/-/proxy-from-env-1.0.1.tgz",
-      "integrity": "sha512-luG++TFHyS61eKcfkR1CVV6a1GMNXDjtqEQIIfaSHax75xp0HU3SlezjOi1yqubJwrG8e9DeW59n6wTblIDwFg==",
+      "version": "1.0.2",
+      "resolved": "https://registry.npmjs.org/@types/proxy-from-env/-/proxy-from-env-1.0.2.tgz",
+      "integrity": "sha512-69oo0n4YzfxciixHK4c7AgEc4QDYQ4NVIWb/LpgqKqf3bpDqqxyEDTBvGDKQvO7PGO6bnsq932qZtJosAf66ow==",
       "dev": true,
       "dependencies": {
         "@types/node": "*"
@@ -16197,9 +16197,9 @@
       }
     },
     "@types/proxy-from-env": {
-      "version": "1.0.1",
-      "resolved": "https://registry.npmjs.org/@types/proxy-from-env/-/proxy-from-env-1.0.1.tgz",
-      "integrity": "sha512-luG++TFHyS61eKcfkR1CVV6a1GMNXDjtqEQIIfaSHax75xp0HU3SlezjOi1yqubJwrG8e9DeW59n6wTblIDwFg==",
+      "version": "1.0.2",
+      "resolved": "https://registry.npmjs.org/@types/proxy-from-env/-/proxy-from-env-1.0.2.tgz",
+      "integrity": "sha512-69oo0n4YzfxciixHK4c7AgEc4QDYQ4NVIWb/LpgqKqf3bpDqqxyEDTBvGDKQvO7PGO6bnsq932qZtJosAf66ow==",
       "dev": true,
       "requires": {
         "@types/node": "*"
