@@ -19,7 +19,7 @@ jest.spyOn( global.console, 'log' );
 const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 const ERROR_CODE = 1;
 
-describe( 'lib/cli/exit', () => {
+describe( '../../src/lib/cli/exit', () => {
 	beforeAll( async () => {
 		output = '';
 		mockExit.mockClear();

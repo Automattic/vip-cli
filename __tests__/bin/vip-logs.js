@@ -13,7 +13,7 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
 } );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,

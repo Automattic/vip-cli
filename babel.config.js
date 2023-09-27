@@ -15,17 +15,5 @@ module.exports = {
 			},
 		],
 	],
-	plugins: [
-		'@babel/plugin-transform-modules-commonjs',
-		[
-			'module-resolver',
-			{
-				root: [ './src' ],
-				alias: {
-					root: './',
-				},
-			},
-		],
-	],
 	ignore: [ '**/*.d.ts' ],
 };
