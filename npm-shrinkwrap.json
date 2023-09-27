@@ -3384,17 +3384,6 @@
         "node": ">=14.0.0"
       }
     },
-    "node_modules/@lando/compose/node_modules/js-yaml": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-      "dependencies": {
-        "argparse": "^2.0.1"
-      },
-      "bin": {
-        "js-yaml": "bin/js-yaml.js"
-      }
-    },
     "node_modules/@lando/mailhog": {
       "version": "0.5.0",
       "resolved": "https://registry.npmjs.org/@lando/mailhog/-/mailhog-0.5.0.tgz",
@@ -3406,17 +3395,6 @@
       },
       "engines": {
         "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@lando/mailhog/node_modules/js-yaml": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-      "dependencies": {
-        "argparse": "^2.0.1"
-      },
-      "bin": {
-        "js-yaml": "bin/js-yaml.js"
       }
     },
     "node_modules/@lando/phpmyadmin": {
@@ -3431,17 +3409,6 @@
       },
       "engines": {
         "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/js-yaml": {
-      "version": "4.1.0",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-      "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-      "dependencies": {
-        "argparse": "^2.0.1"
-      },
-      "bin": {
-        "js-yaml": "bin/js-yaml.js"
       }
     },
     "node_modules/@nicolo-ribaudo/chokidar-2": {
@@ -3832,9 +3799,9 @@
       }
     },
     "node_modules/@types/semver": {
-      "version": "7.5.2",
-      "resolved": "https://registry.npmjs.org/@types/semver/-/semver-7.5.2.tgz",
-      "integrity": "sha512-7aqorHYgdNO4DM36stTiGO3DvKoex9TQRwsJU6vMaFGyqpBA1MNZkz+PG3gaNUPpTAOYhT1WR7M1JyA3fbS9Cw==",
+      "version": "7.5.3",
+      "resolved": "https://registry.npmjs.org/@types/semver/-/semver-7.5.3.tgz",
+      "integrity": "sha512-OxepLK9EuNEIPxWNME+C6WwbRAOOI2o2BaQEGzz5Lu2e4Z5eDnEo+/aVEDMIXywoJitJ7xWd641wrGLZdtwRyw==",
       "dev": true
     },
     "node_modules/@types/shelljs": {
@@ -15800,16 +15767,6 @@
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "js-yaml": {
-          "version": "4.1.0",
-          "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-          "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-          "requires": {
-            "argparse": "^2.0.1"
-          }
-        }
       }
     },
     "@lando/mailhog": {
@@ -15820,16 +15777,6 @@
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "js-yaml": {
-          "version": "4.1.0",
-          "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-          "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-          "requires": {
-            "argparse": "^2.0.1"
-          }
-        }
       }
     },
     "@lando/phpmyadmin": {
@@ -15841,16 +15788,6 @@
         "lodash": "^4.17.21",
         "semver": "^7.3.2",
         "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "js-yaml": {
-          "version": "4.1.0",
-          "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-          "integrity": "sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==",
-          "requires": {
-            "argparse": "^2.0.1"
-          }
-        }
       }
     },
     "@nicolo-ribaudo/chokidar-2": {
@@ -16206,9 +16143,9 @@
       }
     },
     "@types/semver": {
-      "version": "7.5.2",
-      "resolved": "https://registry.npmjs.org/@types/semver/-/semver-7.5.2.tgz",
-      "integrity": "sha512-7aqorHYgdNO4DM36stTiGO3DvKoex9TQRwsJU6vMaFGyqpBA1MNZkz+PG3gaNUPpTAOYhT1WR7M1JyA3fbS9Cw==",
+      "version": "7.5.3",
+      "resolved": "https://registry.npmjs.org/@types/semver/-/semver-7.5.3.tgz",
+      "integrity": "sha512-OxepLK9EuNEIPxWNME+C6WwbRAOOI2o2BaQEGzz5Lu2e4Z5eDnEo+/aVEDMIXywoJitJ7xWd641wrGLZdtwRyw==",
       "dev": true
     },
     "@types/shelljs": {
