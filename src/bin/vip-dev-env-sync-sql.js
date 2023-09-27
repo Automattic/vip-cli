@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -64,7 +59,7 @@ command( {
 	.option( 'slug', 'Custom name of the dev environment' )
 	.option( 'force', 'Disable validations before running sync', undefined, processBooleanOption )
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opt ) => {
+	.argv( process.argv, async ( arg, opt ) => {
 		const { app, env } = opt;
 		const slug = await getEnvironmentName( opt );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {

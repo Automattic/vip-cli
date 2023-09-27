@@ -1,23 +1,16 @@
-// @flow
-
 /**
  * External dependencies
  */
 import { describe, expect, it, jest } from '@jest/globals';
-import type { Response } from 'node-fetch';
 
 /**
  * Internal dependencies
  */
 import { setEnvVarCommand } from '../../src/bin/vip-config-envvar-set';
 import command from '../../src/lib/cli/command';
-// $FlowExpectedError[cannot-resolve-module]
 import { setEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
-// $FlowExpectedError[cannot-resolve-module]
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
-// $FlowExpectedError[cannot-resolve-module]
 import { readVariableFromFile } from '../../src/lib/envvar/read-file';
-// $FlowExpectedError[cannot-resolve-module]
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -27,14 +20,8 @@ function mockExit() {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
-interface CommandMockType {
-	argv: () => CommandMockType;
-	examples: () => CommandMockType;
-	option: () => CommandMockType;
-}
-
 jest.mock( 'lib/cli/command', () => {
-	const commandMock: CommandMockType = {
+	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
 		option: () => commandMock,
@@ -71,28 +58,12 @@ jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-const mockConfirm: JestMockFn< [ string ], Promise< boolean > > = ((confirm: any): JestMockFn<
-	[ string ],
-	Promise< boolean >
->);
-const mockValidateNameWithMessage: JestMockFn< [ string ], boolean > =
-	((validateNameWithMessage: any): JestMockFn< [ string ], boolean >);
-const mockPromptForValue: JestMockFn<
-	[ string, string ],
-	Promise< string >
-> = ((promptForValue: any): JestMockFn< [ string, string ], Promise< string > >);
-const mockSetEnvVar: JestMockFn<
-	[ number, number, string, string ],
-	Promise< void >
-> = ((setEnvVar: any): JestMockFn< [ number, number, string, string ], Promise< void > >);
-const mockTrackEvent: JestMockFn< [], Promise< Response > > = ((trackEvent: any): JestMockFn<
-	[],
-	Promise< Response >
->);
-const mockReadVariableFromFile: JestMockFn<
-	[ any ],
-	Promise< string >
-> = ((readVariableFromFile: any): JestMockFn< [ any ], Promise< string > >);
+const mockConfirm = confirm;
+const mockValidateNameWithMessage = validateNameWithMessage;
+const mockPromptForValue = promptForValue;
+const mockSetEnvVar = setEnvVar;
+const mockTrackEvent = trackEvent;
+const mockReadVariableFromFile = readVariableFromFile;
 
 describe( 'vip config envvar set', () => {
 	it( 'registers as a command', () => {
@@ -109,7 +80,12 @@ describe( 'setEnvVarCommand', () => {
 	const executeEvent = [ 'envvar_set_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_set_command_success', eventPayload ];
 
-	function setFixtures( name: string, fromFile: string = '', skipConfirmation: string = '' ) {
+	/**
+	 * @param {string} name
+	 * @param {string} fromFile
+	 * @param {string} skipConfirmation
+	 */
+	function setFixtures( name, fromFile = '', skipConfirmation = '' ) {
 		args = [ name ];
 		opts = {
 			app: {
@@ -245,7 +221,7 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
-		mockSetEnvVar.mockImplementation( () => Promise.reject< void >( thrownError ) );
+		mockSetEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 

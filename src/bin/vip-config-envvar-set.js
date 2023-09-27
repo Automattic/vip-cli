@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import chalk from 'chalk';
@@ -32,7 +27,7 @@ const examples = [
 	},
 ];
 
-export async function setEnvVarCommand( arg: string[], opt ) {
+export async function setEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 

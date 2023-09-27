@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import debugLib from 'debug';
@@ -30,7 +25,6 @@ import {
 	promptForArguments,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import type { InstanceOptions } from '../lib/dev-environment/types';
 import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
@@ -77,7 +71,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Read instance data', currentInstanceData );
 
-		const preselectedOptions: InstanceOptions = {
+		/** @type {InstanceOptions} */
+		const preselectedOptions = {
 			title: currentInstanceData.wpTitle,
 			multisite: currentInstanceData.multisite,
 			...opt,
@@ -90,7 +85,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			configurationFileOptions
 		);
 
-		const defaultOptions: InstanceOptions = {
+		/** @type {InstanceOptions} */
+		const defaultOptions = {
 			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag || 'trunk',

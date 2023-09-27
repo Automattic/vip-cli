@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * External dependencies
  */
@@ -15,7 +13,7 @@ import updateNotifier from 'update-notifier';
 import { confirm } from './prompt';
 import API from '../../lib/api';
 import app from '../../lib/api/app';
-import { formatData, formatSearchReplaceValues, type Tuple } from './format';
+import { formatData, formatSearchReplaceValues } from './format';
 import pkg from '../../../package.json';
 import { trackEvent } from '../../lib/tracker';
 import { parseEnvAliasFromArgv } from './envAlias';
@@ -45,7 +43,7 @@ let _opts = {};
 let alreadyConfirmedDebugAttachment = false;
 
 // eslint-disable-next-line complexity
-args.argv = async function ( argv, cb ): Promise< any > {
+args.argv = async function ( argv, cb ) {
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',
@@ -361,7 +359,8 @@ args.argv = async function ( argv, cb ): Promise< any > {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info: Array< Tuple > = [];
+		/** @type {Tuple[]} */
+		const info = [];
 
 		if ( options.app ) {
 			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
@@ -533,7 +532,10 @@ args.argv = async function ( argv, cb ): Promise< any > {
 	return options;
 };
 
-function validateOpts( opts: any ): Error {
+/**
+ * @returns {Error|undefined}
+ */
+function validateOpts( opts ) {
 	if ( opts.app ) {
 		if ( typeof opts.app !== 'string' && typeof opts.app !== 'number' ) {
 			return new Error( 'Invalid --app' );
@@ -555,7 +557,10 @@ function validateOpts( opts: any ): Error {
 	}
 }
 
-export default function ( opts: any ): args {
+/**
+ * @returns {args}
+ */
+export default function ( opts ) {
 	_opts = Object.assign(
 		{
 			appContext: false,

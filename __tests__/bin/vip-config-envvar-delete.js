@@ -1,10 +1,7 @@
-// @flow
-
 /**
  * External dependencies
  */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import type { Response } from 'node-fetch';
 
 /**
  * Internal dependencies
@@ -25,14 +22,8 @@ function mockExit() {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
-interface CommandMockType {
-	argv: () => CommandMockType;
-	examples: () => CommandMockType;
-	option: () => CommandMockType;
-}
-
 jest.mock( 'lib/cli/command', () => {
-	const commandMock: CommandMockType = {
+	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
 		option: () => commandMock,
@@ -71,24 +62,11 @@ describe( 'vip config envvar delete', () => {
 	} );
 } );
 
-const mockConfirm: JestMockFn< [ string ], Promise< boolean > > = ((confirm: any): JestMockFn<
-	[ string ],
-	Promise< boolean >
->);
-const mockValidateNameWithMessage: JestMockFn< [ string ], boolean > =
-	((validateNameWithMessage: any): JestMockFn< [ string ], boolean >);
-const mockPromptForValue: JestMockFn<
-	[ string, string ],
-	Promise< string >
-> = ((promptForValue: any): JestMockFn< [ string, string ], Promise< string > >);
-const mockDeleteEnvVar: JestMockFn<
-	[ number, number, string ],
-	Promise< void >
-> = ((deleteEnvVar: any): JestMockFn< [ number, number, string ], Promise< void > >);
-const mockTrackEvent: JestMockFn< [], Promise< Response > > = ((trackEvent: any): JestMockFn<
-	[],
-	Promise< Response >
->);
+const mockConfirm = confirm;
+const mockValidateNameWithMessage = validateNameWithMessage;
+const mockPromptForValue = promptForValue;
+const mockDeleteEnvVar = deleteEnvVar;
+const mockTrackEvent = trackEvent;
 
 describe( 'deleteEnvVarCommand', () => {
 	let args;
@@ -99,7 +77,7 @@ describe( 'deleteEnvVarCommand', () => {
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];
 
-	function setFixtures( name: string, skipConfirmation: string = '' ) {
+	function setFixtures( name, skipConfirmation = '' ) {
 		args = [ name ];
 		opts = {
 			app: {
@@ -205,7 +183,7 @@ describe( 'deleteEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
-		mockDeleteEnvVar.mockImplementation( () => Promise.reject< void >( thrownError ) );
+		mockDeleteEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 

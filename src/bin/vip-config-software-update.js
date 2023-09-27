@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import chalk from 'chalk';
@@ -51,7 +46,7 @@ const cmd = command( {
 	},
 ] );
 cmd.option( 'yes', 'Auto-confirm update' );
-cmd.argv( process.argv, async ( arg: string[], opt ) => {
+cmd.argv( process.argv, async ( arg, opt ) => {
 	const { app, env } = opt;
 	const { softwareSettings } = env;
 
@@ -67,7 +62,8 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 			throw new UserError( 'Software settings are not supported for this environment.' );
 		}
 
-		const updateOptions: UpdatePromptOptions = {
+		/** @type {UpdatePromptOptions} */
+		const updateOptions = {
 			force: !! opt.yes,
 		};
 
