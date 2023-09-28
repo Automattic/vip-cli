@@ -1,5 +1,21 @@
 ## Changelog
 
+### 2.35.0
+
+- #1506 Allow imports for all sites with databases by @chriszarate in https://github.com/Automattic/vip-cli/pull/1507
+- #1497 fix: remove import bypass for TypeScript by @sjinks in https://github.com/Automattic/vip-cli/pull/1497
+- #1496 fix(dev-env): update certificate Common Name by @sjinks in https://github.com/Automattic/vip-cli/pull/1496
+- #1513 refactor: use `semver` instead of `check-node-version` by @sjinks in https://github.com/Automattic/vip-cli/pull/1513
+- #1514 chore(dev-deps): update TypeScript type definitions by @sjinks in https://github.com/Automattic/vip-cli/pull/1514
+- #1508 chore(dev-deps): update jest-related packages to 29.7.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1508
+- #1509 chore(dev-deps): update eslint from 8.47.0 to 8.49.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1509
+- #1510 chore(deps): update uuid from 9.0.0 to 9.0.1 by @sjinks in https://github.com/Automattic/vip-cli/pull/1510
+- #1512 chore(deps): update node-fetch from 2.6.12 to 2.7.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1512
+- #1511 chore(deps): update graphql-tag from 2.12.5 to 2.12.6 by @sjinks in https://github.com/Automattic/vip-cli/pull/1511
+- #1517 chore(dev-deps): update rimraf from 5.0.1 to 5.0.5 by @sjinks in https://github.com/Automattic/vip-cli/pull/1517
+- #1516 chore(dev-deps): update eslint from 8.49.0 to 8.50.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1516
+- #1499 chore(dev-deps): update @automattic/eslint-plugin-wpvip to 0.6.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1499
+
 ### 2.34.0
 
 - #1503 chore(dev-deps): update nock to 13.3.3
