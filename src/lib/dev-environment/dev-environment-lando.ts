@@ -563,7 +563,7 @@ export async function landoExec(
 ) {
 	const app = await getLandoApplication( lando, instancePath );
 
-	const tool = ( app.config.tooling as Record< string, Record< string, unknown > > )[ toolName ] as
+	const tool = ( app.config.tooling as Record< string, unknown > )[ toolName ] as
 		| Record< string, unknown >
 		| undefined;
 	if ( ! tool ) {
