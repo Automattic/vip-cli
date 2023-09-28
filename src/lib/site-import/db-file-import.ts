@@ -26,7 +26,7 @@ export function currentUserCanImportForApp( app: App | AppForImport ): boolean {
 }
 
 export const isSupportedApp = ( { typeId }: AppForImport ) =>
-	DATABASE_APPLICATION_TYPE_IDS.includes( typeId! );
+	DATABASE_APPLICATION_TYPE_IDS.includes( typeId as number );
 
 export const SYNC_STATUS_NOT_SYNCING = 'not_syncing';
 

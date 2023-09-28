@@ -16,9 +16,7 @@ import {
 	currentUserCanImportForApp,
 } from '../../lib/media-import/media-file-import';
 import { MediaImportProgressTracker } from '../../lib/media-import/progress';
-import { capitalize, formatEnvironment, formatData } from '../../lib/cli/format';
-
-import { RunningSprite } from '../cli/format';
+import { capitalize, formatEnvironment, formatData, RunningSprite } from '../../lib/cli/format';
 import { AppQuery, AppQueryVariables } from './status.generated';
 import {
 	App,
