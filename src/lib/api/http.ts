@@ -15,6 +15,7 @@ import { API_HOST } from '../../lib/api';
 const debug = debugLib( '@automattic/vip:http' );
 
 type FetchOptions = Omit< RequestInit, 'body' > & {
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 	body?: BodyInit | Record< string, unknown >;
 };
 

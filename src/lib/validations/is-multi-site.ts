@@ -10,6 +10,7 @@ import API from '../../lib/api';
 import { trackEventWithEnv } from '../../lib/tracker';
 import * as exit from '../../lib/cli/exit';
 import { AppMultiSiteCheckQuery, AppMultiSiteCheckQueryVariables } from './is-multi-site.generated';
+import { App, AppEnvironment } from '../../graphqlTypes';
 
 const isMultiSite = new WeakMap< Record< string, number >, boolean >();
 
@@ -62,13 +63,13 @@ export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Pro
 	}
 
 	if ( Array.isArray( res.data.app?.environments ) ) {
-		const environments = res.data.app!.environments;
-		if ( ! environments.length ) {
+		const environments = ( res.data.app as App ).environments;
+		if ( ! environments?.length ) {
 			isMultiSite.set( args, false );
 			return false;
 		}
 		// we asked for one result with one appId and one envId, so...
-		const thisEnv = environments[ 0 ]!;
+		const thisEnv = environments[ 0 ] as AppEnvironment;
 		if ( thisEnv.isMultisite || thisEnv.isSubdirectoryMultisite ) {
 			isMultiSite.set( args, true );
 			return true;

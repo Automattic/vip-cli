@@ -1,5 +1,50 @@
 ## Changelog
 
+### 2.35.0
+
+- #1506 Allow imports for all sites with databases by @chriszarate in https://github.com/Automattic/vip-cli/pull/1507
+- #1497 fix: remove import bypass for TypeScript by @sjinks in https://github.com/Automattic/vip-cli/pull/1497
+- #1496 fix(dev-env): update certificate Common Name by @sjinks in https://github.com/Automattic/vip-cli/pull/1496
+- #1513 refactor: use `semver` instead of `check-node-version` by @sjinks in https://github.com/Automattic/vip-cli/pull/1513
+- #1514 chore(dev-deps): update TypeScript type definitions by @sjinks in https://github.com/Automattic/vip-cli/pull/1514
+- #1508 chore(dev-deps): update jest-related packages to 29.7.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1508
+- #1509 chore(dev-deps): update eslint from 8.47.0 to 8.49.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1509
+- #1510 chore(deps): update uuid from 9.0.0 to 9.0.1 by @sjinks in https://github.com/Automattic/vip-cli/pull/1510
+- #1512 chore(deps): update node-fetch from 2.6.12 to 2.7.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1512
+- #1511 chore(deps): update graphql-tag from 2.12.5 to 2.12.6 by @sjinks in https://github.com/Automattic/vip-cli/pull/1511
+- #1517 chore(dev-deps): update rimraf from 5.0.1 to 5.0.5 by @sjinks in https://github.com/Automattic/vip-cli/pull/1517
+- #1516 chore(dev-deps): update eslint from 8.49.0 to 8.50.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1516
+- #1499 chore(dev-deps): update @automattic/eslint-plugin-wpvip to 0.6.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1499
+
+### 2.34.0
+
+- #1503 chore(dev-deps): update nock to 13.3.3
+- #1502 chore(dev-deps): update flow-bin to 0.216.1
+- #1501 chore(deps): update jest-related packages
+- #1500 chore(dev-deps): update babel-related packages
+- #1498 ci: run tests and checks in parallel
+- #1462 Fixed Slowlogs local unit test
+- #1488 fix: do not abort if a temporary directory cannot be removed on exit
+- #1495 refactor: convert `media-import` to TypeScript
+- #1492 refactor: convert `site-import` directory to TypeScript
+
+### 2.33.0
+
+- #1475 Updating CONTRIBUTING.md with new publishing procedure
+- #1477 Fetch environment name from server to fix environment selector label
+- #1479 chore(dev-deps): update jest-related packages to 29.6.2
+- #1480 chore(deps): update node-fetch to 2.6.12
+- #1481 chore(deps): update socket.io-client to 4.7.2
+- #1482 chore(deps): update enquirer to 2.4.1
+- #1478 Fix False UP status for multisite dev-envs
+- #1483 Disable Windows patch
+- #1458 Add warning confirmation when there's not enough space on disk. by
+- #1487 fix(dev-env): display ports exposed by services
+- #1490 fix: CLI not respecting proxy settings when creating local dev environment by
+- #1491 chore(dev-deps): update eslint from 8.43.0 to 8.47.0
+- #1486 chore(dev-deps): update babel-related packages
+- #1484 feat(backup): Add vip backup db command
+
 ### 2.32.4
 
 - #1470 Rename prepare-release.yml to npm-prepare-release.yml

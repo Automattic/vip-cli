@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -15,7 +10,7 @@
 import command from '../lib/cli/command';
 
 import { makeCommandTracker } from '../lib/tracker';
-import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { App, AppEnvironment } from '../graphqlTypes';
 import { BackupDBCommand } from '../commands/backup-db';
 
 const examples = [

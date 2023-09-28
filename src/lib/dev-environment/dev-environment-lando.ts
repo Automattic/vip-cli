@@ -84,7 +84,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,
 		home: fakeHomeDir,
-		domain: 'lndo.site',
+		domain: 'vipdev.lndo.site',
 		version: 'unknown',
 	};
 
@@ -98,10 +98,12 @@ async function initLandoApplication( lando: Lando, instancePath: string ): Promi
 
 	app.events.on( 'post-init', 1, () => {
 		const initOnly: string[] = [];
-		Object.keys( app.config.services! ).forEach( serviceName => {
-			if ( app.config.services![ serviceName ].initOnly ) {
+		const services = app.config.services as Record< string, Lando.LandoService >;
+		Object.keys( services ).forEach( serviceName => {
+			if ( services[ serviceName ].initOnly ) {
 				initOnly.push( serviceName );
-				app.config.services![ serviceName ].scanner = false;
+				( app.config.services as Record< string, Lando.LandoService > )[ serviceName ].scanner =
+					false;
 			}
 		} );
 
@@ -162,7 +164,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 	const started = new Date();
 	try {
 		if ( appMap.has( instancePath ) ) {
-			return Promise.resolve( appMap.get( instancePath )! );
+			return Promise.resolve( appMap.get( instancePath ) as App );
 		}
 
 		if ( ! ( await doesEnvironmentExist( instancePath ) ) ) {
@@ -305,7 +307,7 @@ async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | n
 async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 	const network = await getBridgeNetwork( lando );
 	if ( network?.Containers && ! Object.keys( network.Containers ).length ) {
-		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer! );
+		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer as string );
 		try {
 			await proxy.remove( { force: true } );
 		} catch ( err ) {
@@ -561,7 +563,9 @@ export async function landoExec(
 ) {
 	const app = await getLandoApplication( lando, instancePath );
 
-	const tool = app.config.tooling![ toolName ] as Record< string, unknown > | undefined;
+	const tool = ( app.config.tooling as Record< string, unknown > )[ toolName ] as
+		| Record< string, unknown >
+		| undefined;
 	if ( ! tool ) {
 		throw new UserError( `${ toolName } is not a known lando task` );
 	}
@@ -672,7 +676,7 @@ async function removeVolume( lando: Lando, volumeName: string ): Promise< void >
  * can safely add a network and a new proxy container.
  */
 async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
-	const proxyContainerName = lando.config.proxyContainer!;
+	const proxyContainerName = lando.config.proxyContainer as string;
 
 	const docker = lando.engine.docker;
 	const containers = await docker.listContainers( { all: true } );

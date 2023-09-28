@@ -10,7 +10,6 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import API from '../../lib/api';
-import { currentUserCanImportForApp } from '../../lib/site-import/db-file-import';
 import { ProgressTracker, StepFromServer, StepStatus } from '../../lib/cli/progress';
 import * as exit from '../../lib/cli/exit';
 import { capitalize, formatEnvironment, getGlyphForStatus } from '../../lib/cli/format';
@@ -25,7 +24,7 @@ import {
 	Maybe,
 	PrimaryDomainSwitchJob,
 } from '../../graphqlTypes';
-import { AppForImport } from './db-file-import';
+import { AppForImport, currentUserCanImportForApp } from './db-file-import';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 
@@ -118,7 +117,8 @@ interface ImportFailedError {
 	inImportProgress: boolean;
 	commandOutput: string[] | null;
 	error: string;
-	stepName: 'import_preflights' | 'importing_db' | 'validating_db' | string;
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+	stepName: 'import_preflights' | 'importing_db' | 'validating_db' | string; // NOSONAR
 	launched: boolean;
 }
 

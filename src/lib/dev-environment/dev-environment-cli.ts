@@ -16,7 +16,7 @@ import Lando from 'lando';
 /**
  * Internal dependencies
  */
-import { ProgressTracker, Step, StepConstructorParam } from '../../lib/cli/progress';
+import { ProgressTracker, StepConstructorParam } from '../../lib/cli/progress';
 import { trackEvent } from '../tracker';
 
 import {
@@ -253,7 +253,7 @@ export function getEnvironmentStartCommand(
 	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ slug }`;
 }
 
-export function printTable( data: Object ) {
+export function printTable( data: Record< string, unknown > ) {
 	const formattedData = formatters.formatData( data, { format: 'table' }, { border: false } );
 
 	console.log( formattedData );
@@ -688,7 +688,7 @@ export function resolvePhpVersion( version: string ): string {
 			result = images[ 0 ];
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ]!;
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ] as string;
 	}
 
 	debug( 'Resolved PHP image: %j', result );

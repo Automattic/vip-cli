@@ -70,7 +70,7 @@ export default class Pendo implements AnalyticsClient {
 			properties: eventProps,
 			timestamp: Date.now(),
 			type: 'track',
-			visitorId: `${ this.context.userId! }`,
+			visitorId: `${ this.context.userId as string }`,
 		};
 
 		debug( 'send()', body );

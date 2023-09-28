@@ -25,11 +25,11 @@ import { MB_IN_BYTES } from '../lib/constants/file-size';
 // Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promise< Response > =
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
 	require( 'fetch-retry' )( fetch, {
 		// Set default retry options
 		retries: 3,
-		retryDelay: ( attempt: number, error: Error, response: Response ) => {
+		retryDelay: ( attempt: number ) => {
 			return Math.pow( 2, attempt ) * 1000; // 1000, 2000, 4000
 		},
 	} );
@@ -69,7 +69,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'ListParts'
 		| 'PutObject'
 		| 'UploadPart';
-	etagResults?: Object[];
+	etagResults?: Record< string, unknown >[];
 	appId: number;
 	envId: number;
 	basename: string;
@@ -84,7 +84,7 @@ interface UploadArguments {
 	app: WithId;
 	env: WithId;
 	fileMeta: FileMeta;
-	progressCallback?: Function;
+	progressCallback?: ( percentage: string ) => unknown;
 }
 
 export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
@@ -215,7 +215,7 @@ interface UploadUsingArguments {
 	app: WithId;
 	env: WithId;
 	fileMeta: FileMeta;
-	progressCallback?: Function;
+	progressCallback?: ( percentage: string ) => unknown;
 }
 
 interface PresignedRequest {
@@ -271,7 +271,7 @@ async function uploadUsingPutObject( {
 
 	const response = await fetchWithRetry( presignedRequest.url, {
 		...fetchOptions,
-		body: fileContent ? fileContent : createReadStream( fileName ).pipe( progressPassThrough ),
+		body: fileContent ?? createReadStream( fileName ).pipe( progressPassThrough ),
 	} );
 
 	if ( response.status === 200 ) {
@@ -480,7 +480,7 @@ interface UploadPartsArgs {
 	fileMeta: FileMeta;
 	uploadId: string;
 	parts: Part[];
-	progressCallback?: Function;
+	progressCallback?: ( percentage: string ) => unknown;
 }
 
 export async function uploadParts( {
@@ -641,7 +641,7 @@ export interface CompleteMultipartUploadArgs {
 	env: WithId;
 	basename: string;
 	uploadId: string;
-	etagResults: Object[];
+	etagResults: Record< string, unknown >[];
 }
 
 /**

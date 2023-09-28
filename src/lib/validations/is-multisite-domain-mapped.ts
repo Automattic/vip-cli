@@ -13,6 +13,7 @@ import {
 	AppMappedDomainsQuery,
 	AppMappedDomainsQueryVariables,
 } from './is-multisite-domain-mapped.generated';
+import { App } from '../../graphqlTypes';
 
 /**
  * Extracts the domain for site with ID 1 from an INSERT INTO `wp_site` SQL statement
@@ -121,8 +122,8 @@ export async function isMultisitePrimaryDomainMapped(
 		return false;
 	}
 
-	const environments = res.data.app!.environments;
-	if ( ! environments.length ) {
+	const environments = ( res.data.app as App ).environments;
+	if ( ! environments?.length ) {
 		return false;
 	}
 

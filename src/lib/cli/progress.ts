@@ -1,15 +1,13 @@
-// @format
-
 /**
  * External dependencies
  */
+import { EOL } from 'node:os';
 import { stdout as singleLogLine } from 'single-line-log';
 
 /**
  * Internal dependencies
  */
 import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
-import os from 'os';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
 
@@ -81,7 +79,7 @@ export class ProgressTracker {
 
 	mapSteps( steps: StepConstructorParam[] ): Map< string, Step > {
 		return steps.reduce( ( map, { id, name, status } ) => {
-			map.set( id, { id, name, status: status || StepStatus.PENDING } );
+			map.set( id, { id, name, status: status ?? StepStatus.PENDING } );
 			return map;
 		}, new Map< string, Step >() );
 	}
@@ -110,8 +108,10 @@ export class ProgressTracker {
 			status,
 		} ) );
 
-		if ( ! steps.some( ( { status } ) => status === 'running' ) ) {
-			const firstPendingStepIndex = steps.findIndex( ( { status } ) => status === 'pending' );
+		if ( ! steps.some( ( { status } ) => status === StepStatus.RUNNING ) ) {
+			const firstPendingStepIndex = steps.findIndex(
+				( { status } ) => status === StepStatus.PENDING
+			);
 
 			if ( firstPendingStepIndex !== -1 ) {
 				// "Promote" the first "pending" to "running"
@@ -127,7 +127,7 @@ export class ProgressTracker {
 			return undefined;
 		}
 		const steps = [ ...this.getSteps().values() ];
-		return steps.find( ( { status } ) => status === 'pending' );
+		return steps.find( ( { status } ) => status === StepStatus.PENDING );
 	}
 
 	getCurrentStep(): Step | undefined {
@@ -136,7 +136,7 @@ export class ProgressTracker {
 		}
 
 		const steps = [ ...this.getSteps().values() ];
-		return steps.find( ( { status } ) => status === 'running' );
+		return steps.find( ( { status } ) => status === StepStatus.RUNNING );
 	}
 
 	stepRunning( stepId: string ): void {
@@ -161,7 +161,7 @@ export class ProgressTracker {
 	}
 
 	allStepsSucceeded(): boolean {
-		return [ ...this.getSteps().values() ].every( ( { status } ) => status === 'success' );
+		return [ ...this.getSteps().values() ].every( ( { status } ) => status === StepStatus.SUCCESS );
 	}
 
 	setStatusForStepId( stepId: string, status: StepStatus ) {
@@ -175,7 +175,7 @@ export class ProgressTracker {
 			throw new Error( `Step name ${ stepId } is already completed.` );
 		}
 
-		if ( status === 'failed' ) {
+		if ( status === StepStatus.FAILED ) {
 			this.hasFailure = true;
 		}
 
@@ -221,7 +221,7 @@ export class ProgressTracker {
 				let linesToSkip = '';
 
 				for ( let iteration = 0; iteration < this.stepsFromCaller.size; iteration++ ) {
-					linesToSkip += os.EOL;
+					linesToSkip += EOL;
 				}
 
 				process.stdout.write( linesToSkip );
@@ -252,7 +252,7 @@ export class ProgressTracker {
 				const statusIcon = getGlyphForStatus( status, this.runningSprite );
 				let suffix = '';
 				if ( id === 'upload' ) {
-					if ( status === 'running' && percentage ) {
+					if ( status === StepStatus.RUNNING && percentage ) {
 						suffix = percentage;
 					}
 				} else if ( progress ) {

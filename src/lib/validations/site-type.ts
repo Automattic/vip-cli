@@ -37,9 +37,11 @@ export const siteTypeValidations = {
 		searchReplace,
 	}: PostLineExecutionProcessingParams ): Promise< void > => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId ?? 0, envId ?? 0 );
-		const track = trackEventWithEnv.bind( null, appId!, envId! );
+		const track = trackEventWithEnv.bind( null, appId as number, envId as number );
 
-		debug( `\nAppId: ${ appId! } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
+		debug(
+			`\nAppId: ${ appId as number } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }`
+		);
 		debug(
 			`The SQL dump provided is ${
 				isMultiSiteSqlDump ? 'from a multisite.' : 'not from a multisite'
