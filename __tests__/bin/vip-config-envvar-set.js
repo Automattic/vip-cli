@@ -113,7 +113,6 @@ describe( 'setEnvVarCommand', () => {
 
 	it( 'validates the name, prompts for confirmation, sets the variable, and prints success', async () => {
 		const name = 'TEST_VARIABLE';
-		// $FlowIgnore[method-unbinding] No idea how to fix this
 		const value = 'test value';
 
 		setFixtures( name );
@@ -203,7 +202,6 @@ describe( 'setEnvVarCommand', () => {
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
-		// $FlowIgnore[method-unbinding] No idea how to fix this
 		expect( process.exit ).toHaveBeenCalledWith( 1 );
 
 		expect( promptForValue ).not.toHaveBeenCalled();

@@ -164,7 +164,6 @@ describe( 'deleteEnvVarCommand', () => {
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
-		// $FlowIgnore[method-unbinding] No idea how to fix this
 		expect( process.exit ).toHaveBeenCalledWith( 1 );
 
 		expect( promptForValue ).not.toHaveBeenCalled();
