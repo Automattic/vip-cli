@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-// @flow
-// @format
-
 /**
  * External dependencies
  */
@@ -57,7 +54,11 @@ const examples = [
 	},
 ];
 
-function getCommand( args: string[] ): string[] {
+/**
+ * @param {string[]} args
+ * @return {string[]}
+ */
+function getCommand( args ) {
 	const splitterIdx = process.argv.findIndex( argument => '--' === argument );
 	if ( args.length > 0 && splitterIdx === -1 ) {
 		throw new Error(
@@ -65,7 +66,8 @@ function getCommand( args: string[] ): string[] {
 		);
 	}
 
-	let cmd: string[] = [];
+	/** @type {string[]} */
+	let cmd = [];
 	if ( splitterIdx !== -1 && splitterIdx + 1 < process.argv.length ) {
 		cmd = process.argv.slice( splitterIdx + 1 );
 	}

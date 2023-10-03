@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import { trackEventWithEnv } from '../lib/tracker';
@@ -46,7 +41,7 @@ command( {
 		'Export any file errors encountered to a JSON file instead of a plain text file',
 		false
 	)
-	.argv( process.argv, async ( arg: string[], { app, env, exportFileErrorsToJson } ) => {
+	.argv( process.argv, async ( arg, { app, env, exportFileErrorsToJson } ) => {
 		const { id: envId, appId } = env;
 		const track = trackEventWithEnv.bind( null, appId, envId );
 

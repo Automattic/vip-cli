@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -48,7 +43,7 @@ command( {
 		`Extra information to be included. Valid values: ${ VALID_INCLUDES.join( ',' ) }`
 	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opt ) => {
+	.argv( process.argv, async ( arg, opt ) => {
 		const trackingInfo = {
 			environment_id: opt.env?.id,
 			args: JSON.stringify( arg ),
@@ -63,7 +58,7 @@ command( {
 				include = [ opt.include ];
 			}
 			const invalidIncludes = include.filter(
-				( includeKey: any ) => ! VALID_INCLUDES.includes( includeKey )
+				includeKey => ! VALID_INCLUDES.includes( includeKey )
 			);
 			if ( invalidIncludes.length > 0 ) {
 				throw new UserError( `Invalid include value(s): ${ invalidIncludes.join( ',' ) }` );

@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import { trackEventWithEnv } from '../lib/tracker';
@@ -41,7 +36,7 @@ command( {
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
-} ).argv( process.argv, async ( arg: string[], { app, env } ) => {
+} ).argv( process.argv, async ( arg, { app, env } ) => {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 

@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import debugLib from 'debug';
@@ -45,7 +40,6 @@ import {
 	printConfigurationFile,
 	mergeConfigurationFileOptions,
 } from '../lib/dev-environment/dev-environment-configuration-file';
-import type { InstanceOptions } from '../lib/dev-environment/types';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -131,7 +125,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions: InstanceOptions = {};
+	/** @type {InstanceOptions} */
+	let defaultOptions = {};
 
 	try {
 		if ( opt.app ) {

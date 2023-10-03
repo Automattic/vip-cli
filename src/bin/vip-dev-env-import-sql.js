@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -51,7 +46,7 @@ command( {
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'skip-validate', 'Do not perform file validation.' )
 	.examples( examples )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ fileName ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );
 		const cmd = new DevEnvImportSQLCommand( fileName, opt, slug );

@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -40,7 +35,7 @@ command( {
 } )
 	.examples( examples )
 	.option( 'slug', 'Custom name of the dev environment' )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ filePath ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );
 

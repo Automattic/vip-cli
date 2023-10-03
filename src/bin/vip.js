@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @flow
 
 /**
  * External dependencies
@@ -51,7 +50,12 @@ const runCmd = async function () {
 	cmd.argv( process.argv );
 };
 
-function doesArgvHaveAtLeastOneParam( argv: Array< any >, params: Array< any > ): boolean {
+/**
+ * @param {any[]} argv
+ * @param {any[]} params
+ * @returns {boolean}
+ */
+function doesArgvHaveAtLeastOneParam( argv, params ) {
 	return argv.some( arg => params.includes( arg ) );
 }
 

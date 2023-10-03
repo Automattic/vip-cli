@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -29,7 +24,7 @@ const examples = [
 	},
 ];
 
-export async function cachePurgeCommand( urls = [], opt = {} ): void {
+export async function cachePurgeCommand( urls = [], opt = {} ) {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: 'vip cache purge-url',
