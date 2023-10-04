@@ -761,8 +761,8 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 	const confirm = await prompt( {
 		type: 'select',
 		name: 'upgrade',
-		message: 'Would You like to change the WordPress version? ',
-		choices: [ 'yes', 'no', "no (don't ask anymore)" ],
+		message: 'Would you like to updgrade WordPress? ',
+		choices: [ 'no', "no (don't ask anymore)", 'yes' ],
 	} );
 
 	// If the user takes the new WP version path
