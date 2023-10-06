@@ -18,6 +18,7 @@ const appQuery = `
 id,
 name,
 type,
+typeId,
 environments{
 	id
 	appId
