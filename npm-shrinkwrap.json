@@ -94,6 +94,7 @@
         "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
         "vip-logout": "dist/bin/vip-logout.js",
         "vip-logs": "dist/bin/vip-logs.js",
+        "vip-phpmyadmin": "dist/bin/vip-phpmyadmin.js",
         "vip-search-replace": "dist/bin/vip-search-replace.js",
         "vip-slowlogs": "dist/bin/vip-slowlogs.js",
         "vip-sync": "dist/bin/vip-sync.js",
