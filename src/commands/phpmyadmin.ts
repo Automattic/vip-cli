@@ -75,8 +75,7 @@ export class PhpMyAdminCommand {
 		this.log( 'Generating PhpMyAdmin URL...' );
 		const url = await generatePhpMyAdminAccess( this.env.id );
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		opn( url, { wait: false } );
+		void opn( url, { wait: false } );
 
 		this.log( 'Switch to your default browser.' );
 	}
