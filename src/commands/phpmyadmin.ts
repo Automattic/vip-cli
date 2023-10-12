@@ -15,6 +15,7 @@ import API, {
 import * as exit from '../lib/cli/exit';
 import { CommandTracker } from '../lib/tracker';
 import { App, AppEnvironment } from '../graphqlTypes';
+import { GraphQLFormattedError } from 'graphql';
 
 export const GENERATE_PHP_MY_ADMIN_URL_MUTATION = gql`
 	mutation GeneratePhpMyAdminAccess($input: GeneratePhpMyAdminAccessInput) {
@@ -69,14 +70,27 @@ export class PhpMyAdminCommand {
 		this.silent = silent;
 
 		if ( ! this.env.id ) {
-			exit.withError( 'Please specify an environment' );
+			exit.withError( 'No environment was specified' );
 		}
 
 		this.log( 'Generating PhpMyAdmin URL...' );
-		const url = await generatePhpMyAdminAccess( this.env.id );
+
+		let url;
+		try {
+			url = await generatePhpMyAdminAccess( this.env.id );
+		} catch ( err ) {
+			const error = err as Error & {
+				graphQLErrors?: GraphQLFormattedError[];
+			};
+			void this.track( 'error', {
+				error_type: 'generate_pma_url',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( 'Failed to generate PhpMyAdmin URL' );
+		}
 
 		void opn( url, { wait: false } );
-
-		this.log( 'Switch to your default browser.' );
+		this.log( 'PhpMyAdmin is opened in your default browser.' );
 	}
 }
