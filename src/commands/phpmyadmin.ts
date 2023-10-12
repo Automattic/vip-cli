@@ -87,7 +87,7 @@ export class PhpMyAdminCommand {
 				error_message: error.message,
 				stack: error.stack,
 			} );
-			exit.withError( 'Failed to generate PhpMyAdmin URL' );
+			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
 		}
 
 		void opn( url, { wait: false } );
