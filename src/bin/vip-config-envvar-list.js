@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import chalk from 'chalk';
@@ -29,7 +24,12 @@ const examples = [
 	},
 ];
 
-export async function listEnvVarsCommand( arg: string[], opt ): Promise< void > {
+/**
+ * @param {string[]} arg
+ * @param {object} opt
+ * @return {Promise<void>}
+ */
+export async function listEnvVarsCommand( arg, opt ) {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,

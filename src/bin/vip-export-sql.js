@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 
@@ -56,7 +51,7 @@ command( {
 		'Exports a freshly created database backup instead of using the latest existing one'
 	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], { app, env, output, generateBackup } ) => {
+	.argv( process.argv, async ( arg, { app, env, output, generateBackup } ) => {
 		const trackerFn = makeCommandTracker( 'export_sql', {
 			app: app.id,
 			env: env.uniqueLabel,

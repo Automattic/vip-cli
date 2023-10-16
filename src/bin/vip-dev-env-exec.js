@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * Internal dependencies
  */
 import { trackEvent } from '../lib/tracker';
@@ -60,7 +55,8 @@ command( { wildcardCommand: true } )
 				);
 			}
 
-			let arg: string[] = [];
+			/** @type {string[]} */
+			let arg = [];
 			if ( argSplitterFound && argSplitterIx + 1 < process.argv.length ) {
 				arg = process.argv.slice( argSplitterIx + 1 );
 			}

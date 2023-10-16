@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import gql from 'graphql-tag';
@@ -23,8 +18,6 @@ import {
 	isSupportedApp,
 	SQL_IMPORT_FILE_SIZE_LIMIT,
 	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
-	type AppForImport,
-	type EnvForImport,
 } from '../lib/site-import/db-file-import';
 import { importSqlCheckStatus } from '../lib/site-import/status';
 import {
@@ -44,11 +37,6 @@ import { fileLineValidations } from '../lib/validations/line-by-line';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
-
-export type WPSiteListType = {
-	id: string,
-	homeUrl: string,
-};
 
 const appQuery = `
 	id,
@@ -99,7 +87,12 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'queue_import', name: 'Queueing Import' },
 ];
 
-export async function gates( app: AppForImport, env: EnvForImport, fileName: string ) {
+/**
+ * @param {AppForImport} app
+ * @param {EnvForImport} env
+ * @param {string} fileName
+ */
+export async function gates( app, env, fileName ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -223,12 +216,7 @@ const examples = [
 	},
 ];
 
-const promptToContinue = async ( {
-	launched,
-	formattedEnvironment,
-	track,
-	domain,
-} ): Promise< void > => {
+const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
 	console.log();
 	const promptToMatch = domain.toUpperCase();
 	const promptResponse = await prompt( {
@@ -247,21 +235,16 @@ const promptToContinue = async ( {
 	}
 };
 
-export type validateAndGetTableNamesInputType = {
-	skipValidate: boolean,
-	appId: number,
-	envId: number,
-	fileNameToUpload: string,
-	searchReplace?: string | array,
-};
-
+/**
+ * @returns {Promise<string[]>}
+ */
 export async function validateAndGetTableNames( {
 	skipValidate,
 	appId,
 	envId,
 	fileNameToUpload,
 	searchReplace,
-}: validateAndGetTableNamesInputType ): Promise< Array< string > > {
+} ) {
 	const validations = [ staticSqlValidations, siteTypeValidations ];
 	if ( skipValidate ) {
 		console.log( 'Skipping SQL file validation.' );
@@ -408,7 +391,7 @@ void command( {
 		'process.stdout'
 	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opts ) => {
+	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
 		let { skipValidate, searchReplace } = opts;
 		const { id: envId, appId } = env;

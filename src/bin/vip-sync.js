@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @flow
 
 /**
  * External dependencies
@@ -37,7 +36,6 @@ command( {
 
 	try {
 		await api.mutate( {
-			// $FlowFixMe: gql template is not supported by flow
 			mutation: gql`
 				mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput) {
 					syncEnvironment(input: $input) {
@@ -119,7 +117,6 @@ command( {
 			// The rest of the iterations are just for moving the spinner
 			api
 				.query( {
-					// $FlowFixMe: gql template is not supported by flow
 					query: gql`
 						query App($id: Int, $sync: Int) {
 							app(id: $id) {

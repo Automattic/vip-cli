@@ -113,7 +113,7 @@ Changelogs allow customers to keep up with all the changes happening across our 
 
 ### Pre-publish Checks
 
-We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trunk/hellpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
+We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trunk/helpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
 
 Further checks can be added to this flow as needed.
 

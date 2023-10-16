@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import gql from 'graphql-tag';
@@ -65,7 +60,7 @@ ${ chalk.red.bold(
 ) }
 ${ chalk.red.bold( 'Are you sure you want to abort this Media Import?' ) }
 `,
-} ).argv( process.argv, async ( arg: string[], { app, env } ) => {
+} ).argv( process.argv, async ( arg, { app, env } ) => {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 

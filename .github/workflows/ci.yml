@@ -24,8 +24,7 @@ jobs:
       matrix:
         config:
           - { name: Lint, tool: lint }
-          - { name: Flow, tool: flow }
-          - { name: type checker, tool: check-types }
+          - { name: Type Checker, tool: check-types }
     steps:
       - name: Check out the source code
         uses: actions/checkout@v3

@@ -8,12 +8,7 @@
   "overrides": [
     {
       "files": [ "*.js" ],
-      "parser": "@babel/eslint-parser",
-      "plugins": [ "flowtype" ],
-      "extends": [ "plugin:flowtype/recommended" ],
-      "rules": {
-        "flowtype/generic-spacing": 0
-      }
+      "parser": "@babel/eslint-parser"
     }
   ]
 }

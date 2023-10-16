@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 
 /**
- * @flow
- * @format
- */
-
-/**
  * External dependencies
  */
 import chalk from 'chalk';
@@ -29,7 +24,12 @@ const examples = [
 	},
 ];
 
-export async function deleteEnvVarCommand( arg: string[], opt ) {
+/**
+ * @param {string[]} arg
+ * @param {object} opt
+ * @return {Promise<void>}
+ */
+export async function deleteEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 

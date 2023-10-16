@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @flow
 
 /**
  * External dependencies
@@ -21,7 +20,6 @@ command( { format: true } ).argv( process.argv, async () => {
 	let response;
 	try {
 		response = await api.query( {
-			// $FlowFixMe: gql template is not supported by flow
 			query: gql`
 				query Apps($first: Int, $after: String) {
 					apps(first: $first, after: $after) {

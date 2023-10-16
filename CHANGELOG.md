@@ -1,5 +1,11 @@
 ## Changelog
 
+### 2.35.1
+
+- #1523	SQL Import Status: Ensure we pull site type ID from server for validation
+- #1515	refactor: remove flow
+- #1521	Fix link in CONTRIBUTING.md
+
 ### 2.35.0
 
 - #1506 Allow imports for all sites with databases by @chriszarate in https://github.com/Automattic/vip-cli/pull/1507
