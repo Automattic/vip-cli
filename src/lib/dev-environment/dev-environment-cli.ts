@@ -47,10 +47,7 @@ import type {
 } from './types';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import UserError from '../user-error';
-import {
-	CONFIGURATION_FILE_NAME,
-	getConfigurationFileOptions,
-} from './dev-environment-configuration-file';
+import { getConfigurationFileOptions } from './dev-environment-configuration-file';
 import { Args } from '../cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -688,7 +685,7 @@ export function resolvePhpVersion( version: string ): string {
 			result = images[ 0 ];
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ] as string;
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ]!;
 	}
 
 	debug( 'Resolved PHP image: %j', result );

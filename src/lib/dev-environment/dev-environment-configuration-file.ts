@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { access, readFile, realpath } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { constants } from 'fs';
 import path from 'node:path';
 import debugLib from 'debug';
