@@ -761,7 +761,7 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 	const confirm = await prompt( {
 		type: 'select',
 		name: 'upgrade',
-		message: 'Would you like to updgrade WordPress? ',
+		message: 'Would you like to upgrade WordPress? ',
 		choices: [ 'no', "no (don't ask anymore)", 'yes' ],
 	} );
 
