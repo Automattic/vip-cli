@@ -17,7 +17,9 @@ import {
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { validate as validateSQL } from '../lib/validations/sql';
-import { getFileMeta } from '../lib/client-file-uploader';
+import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
+import { makeTempDir } from '../lib/utils';
+import * as exit from '../lib/cli/exit';
 
 export class DevEnvImportSQLCommand {
 	fileName;
@@ -29,15 +31,25 @@ export class DevEnvImportSQLCommand {
 		this.fileName = fileName;
 		this.options = options;
 		this.slug = slug;
+		this.tmpDir = makeTempDir();
+	}
+
+	get sqlFile() {
+		return `${ this.tmpDir }/sql-import.sql`;
 	}
 
 	async run( silent = false ) {
 		const fileMeta = await getFileMeta( this.fileName );
 
 		if ( fileMeta.isCompressed ) {
-			throw new UserError(
-				'Compressed files cannot be imported. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
-			);
+			try {
+				console.log( `Extracting the compressed file ${ this.fileName }...` );
+				await unzipFile( this.fileName, this.sqlFile );
+				console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
+				this.fileName = this.sqlFile;
+			} catch ( err ) {
+				exit.withError( `Error extracting the SQL file: ${ err.message }` );
+			}
 		}
 
 		const lando = await bootstrapLando();
