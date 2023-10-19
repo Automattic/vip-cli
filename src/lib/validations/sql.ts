@@ -3,6 +3,7 @@
  */
 import chalk from 'chalk';
 import { stdout as log } from 'single-line-log';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -86,6 +87,17 @@ interface ValidationResult {
 	errors: ( ValidationError | ValidationWarning )[];
 	infos: string[];
 }
+
+/**
+ * Check if a file has a valid extension
+ *
+ * @param {string} fileName The file extension
+ * @returns {boolean} True if the extension is valid
+ */
+export const isValidExtension = ( fileName: string ): boolean => {
+	const ext = path.extname( fileName ).toLowerCase();
+	return [ '.sql', '.gz' ].includes( ext );
+};
 
 const generalCheckFormatter = ( check: CheckType ): ValidationResult => {
 	const errors: ( ValidationError | ValidationWarning )[] = [];

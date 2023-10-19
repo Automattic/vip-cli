@@ -16,7 +16,7 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
-import { validate as validateSQL } from '../lib/validations/sql';
+import { validate as validateSQL, isValidExtension } from '../lib/validations/sql';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import { makeTempDir } from '../lib/utils';
 import * as exit from '../lib/cli/exit';
@@ -40,6 +40,10 @@ export class DevEnvImportSQLCommand {
 
 	async run( silent = false ) {
 		const fileMeta = await getFileMeta( this.fileName );
+
+		if ( ! isValidExtension( this.fileName ) ) {
+			exit.withError( 'File must have an extension of .gz or .sql.' );
+		}
 
 		if ( fileMeta.isCompressed ) {
 			try {

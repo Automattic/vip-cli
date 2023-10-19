@@ -28,7 +28,7 @@ import {
 	uploadImportSqlFileToS3,
 } from '../lib/client-file-uploader';
 import { trackEventWithEnv } from '../lib/tracker';
-import { staticSqlValidations, getTableNames } from '../lib/validations/sql';
+import { staticSqlValidations, getTableNames, isValidExtension } from '../lib/validations/sql';
 import { siteTypeValidations } from '../lib/validations/site-type';
 import { searchAndReplace } from '../lib/search-and-replace';
 import API from '../lib/api';
@@ -95,6 +95,11 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 export async function gates( app, env, fileName ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
+
+	if ( ! isValidExtension( fileName ) ) {
+		await track( 'import_sql_command_error', { error_type: 'invalid-extension' } );
+		exit.withError( 'File must have an extension of .gz or .sql.' );
+	}
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
