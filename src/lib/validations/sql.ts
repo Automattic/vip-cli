@@ -560,9 +560,7 @@ export const validate = async (
 
 	if ( fileMeta.isCompressed ) {
 		exit.withError(
-			chalk.bold.red(
-				'Compressed files cannot be validated. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
-			)
+			'Compressed files cannot be validated. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
 		);
 	}
 
