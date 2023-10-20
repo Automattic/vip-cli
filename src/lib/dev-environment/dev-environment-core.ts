@@ -762,7 +762,7 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 		type: 'select',
 		name: 'upgrade',
 		message: 'Would you like to upgrade WordPress? ',
-		choices: [ 'no', "no (don't ask anymore)", 'yes' ],
+		choices: [ 'no', 'yes', "no (don't ask anymore)" ],
 	} );
 
 	// If the user takes the new WP version path
