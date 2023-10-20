@@ -28,7 +28,12 @@ import {
 	uploadImportSqlFileToS3,
 } from '../lib/client-file-uploader';
 import { trackEventWithEnv } from '../lib/tracker';
-import { staticSqlValidations, getTableNames, isValidExtension } from '../lib/validations/sql';
+import {
+	staticSqlValidations,
+	getTableNames,
+	isValidExtension,
+	validateFilename,
+} from '../lib/validations/sql';
 import { siteTypeValidations } from '../lib/validations/site-type';
 import { searchAndReplace } from '../lib/search-and-replace';
 import API from '../lib/api';
@@ -90,11 +95,20 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 /**
  * @param {AppForImport} app
  * @param {EnvForImport} env
- * @param {string} fileName
+ * @param {FileMeta} fileMeta
  */
-export async function gates( app, env, fileName ) {
+export async function gates( app, env, fileMeta ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
+	const { fileName, basename } = fileMeta;
+
+	try {
+		// Extract base file name and exit if it contains unsafe character
+		validateFilename( basename );
+	} catch ( error ) {
+		await track( 'import_sql_command_error', { error_type: 'invalid-filename' } );
+		exit.withError( error );
+	}
 
 	if ( ! isValidExtension( fileName ) ) {
 		await track( 'import_sql_command_error', { error_type: 'invalid-extension' } );
@@ -269,17 +283,6 @@ If you are confident the file does not contain unsupported statements, you can r
 	return getTableNames();
 }
 
-function validateFilename( filename ) {
-	const re = /^[a-z0-9\-_.]+$/i;
-
-	// Exits if filename contains anything outside a-z A-Z - _ .
-	if ( ! re.test( filename ) ) {
-		exit.withError(
-			'Error: The characters used in the name of a file for import are limited to [0-9,a-z,A-Z,-,_,.]'
-		);
-	}
-}
-
 const displayPlaybook = ( {
 	launched,
 	tableNames,
@@ -423,15 +426,12 @@ void command( {
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
-		await gates( app, env, fileName );
+		await gates( app, env, fileMeta );
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
-
-		// Extract base file name and exit if it contains unsafe character
-		validateFilename( fileMeta.basename );
 
 		let fileNameToUpload = fileName;
 

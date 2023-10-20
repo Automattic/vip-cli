@@ -53,7 +53,7 @@ interface WithId {
 	id: number;
 }
 
-interface FileMeta {
+export interface FileMeta {
 	basename: string;
 	fileContent?: string | Buffer | ReadStream;
 	fileName: string;

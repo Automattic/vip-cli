@@ -91,13 +91,26 @@ interface ValidationResult {
 /**
  * Check if a file has a valid extension
  *
- * @param {string} fileName The file extension
+ * @param {string} filename The file extension
  * @returns {boolean} True if the extension is valid
  */
-export const isValidExtension = ( fileName: string ): boolean => {
-	const ext = path.extname( fileName ).toLowerCase();
-	return [ '.sql', '.gz' ].includes( ext );
+export const validateImportFileExtension = ( filename: string ): void => {
+	const ext = path.extname( filename ).toLowerCase();
+	if ( ! [ '.sql', '.gz' ].includes( ext ) ) {
+		exit.withError( 'Invalid file extension. Please provide a .sql or .gz file.' );
+	}
 };
+
+export function validateFilename( filename: string ) {
+	const re = /^[a-z0-9\-_.]+$/i;
+
+	// Exits if filename contains anything outside a-z A-Z - _ .
+	if ( ! re.test( filename ) ) {
+		exit.withError(
+			'Error: The characters used in the name of a file for import are limited to [0-9,a-z,A-Z,-,_,.]'
+		);
+	}
+}
 
 const generalCheckFormatter = ( check: CheckType ): ValidationResult => {
 	const errors: ( ValidationError | ValidationWarning )[] = [];
