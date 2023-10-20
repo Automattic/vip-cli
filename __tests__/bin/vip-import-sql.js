@@ -60,7 +60,7 @@ describe( 'vip-import-sql', () => {
 		const opts = {
 			app: {
 				id: 1,
-				type: 'WordPress',
+				typeId: 2,
 				organization: {
 					id: 2,
 				},
