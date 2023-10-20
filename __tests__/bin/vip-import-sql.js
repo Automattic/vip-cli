@@ -80,23 +80,26 @@ describe( 'vip-import-sql', () => {
 		} );
 
 		it( 'fails if the import file has an invalid extension', async () => {
-			const compressedFilePath = path.join(
+			const invalidFilePath = path.join(
 				process.cwd(),
 				'__fixtures__',
 				'validations',
 				'empty.zip'
 			);
 
-			await gates( opts.app, opts.env, compressedFilePath );
-			expect( mockExit ).toHaveBeenCalledWith( 'File must have an extension of .gz or .sql.' );
+			const fileMeta = { fileName: invalidFilePath, basename: 'empty.zip' };
+			await gates( opts.app, opts.env, fileMeta );
+			expect( mockExit ).toHaveBeenCalledWith(
+				'Invalid file extension. Please provide a .sql or .gz file.'
+			);
 		} );
 
-		it.each( [ 'empty.sql.gz', 'bad-sql-dump.sql' ] )(
+		it.each( [ 'bad-sql-dump.sql.gz', 'bad-sql-dump.sql' ] )(
 			'passes if the import file has a valid extension',
-			async fileName => {
-				const validPath = path.join( process.cwd(), '__fixtures__', 'validations', fileName );
-
-				await gates( opts.app, opts.env, validPath );
+			async basename => {
+				const validFilePath = path.join( process.cwd(), '__fixtures__', 'validations', basename );
+				const fileMeta = { fileName: validFilePath, basename };
+				await gates( opts.app, opts.env, fileMeta );
 				expect( mockExit ).not.toHaveBeenCalled();
 			}
 		);

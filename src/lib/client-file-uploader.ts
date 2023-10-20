@@ -136,6 +136,7 @@ export const unzipFile = async (
 
 	const extractionInfo = extractFunctions[ mimeType ];
 
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if ( ! extractionInfo ) {
 		throw new Error( `unsupported file format: ${ mimeType }` );
 	}
