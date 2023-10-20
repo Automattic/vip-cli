@@ -31,31 +31,29 @@ export class DevEnvImportSQLCommand {
 		this.fileName = fileName;
 		this.options = options;
 		this.slug = slug;
-		this.tmpDir = makeTempDir();
-	}
-
-	get sqlFile() {
-		return `${ this.tmpDir }/sql-import.sql`;
 	}
 
 	async run( silent = false ) {
-		const fileMeta = await getFileMeta( this.fileName );
+		const lando = await bootstrapLando();
+		await validateDependencies( lando, this.slug, silent );
 
 		validateImportFileExtension( this.fileName );
 
+		// Check if file is compressed and if so, extract the
+		const fileMeta = await getFileMeta( this.fileName );
 		if ( fileMeta.isCompressed ) {
+			const tmpDir = makeTempDir();
+			const sqlFile = `${ tmpDir }/sql-import.sql`;
+
 			try {
 				console.log( `Extracting the compressed file ${ this.fileName }...` );
-				await unzipFile( this.fileName, this.sqlFile );
-				console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
-				this.fileName = this.sqlFile;
+				await unzipFile( this.fileName, sqlFile );
+				console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+				this.fileName = sqlFile;
 			} catch ( err ) {
 				exit.withError( `Error extracting the SQL file: ${ err.message }` );
 			}
 		}
-
-		const lando = await bootstrapLando();
-		await validateDependencies( lando, this.slug, silent );
 
 		const { searchReplace, inPlace } = this.options;
 		const resolvedPath = await resolveImportPath(
