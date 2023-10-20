@@ -31,7 +31,7 @@ import { trackEventWithEnv } from '../lib/tracker';
 import {
 	staticSqlValidations,
 	getTableNames,
-	isValidExtension,
+	validateImportFileExtension,
 	validateFilename,
 } from '../lib/validations/sql';
 import { siteTypeValidations } from '../lib/validations/site-type';
@@ -110,9 +110,11 @@ export async function gates( app, env, fileMeta ) {
 		exit.withError( error );
 	}
 
-	if ( ! isValidExtension( fileName ) ) {
+	try {
+		validateImportFileExtension( fileName );
+	} catch ( error ) {
 		await track( 'import_sql_command_error', { error_type: 'invalid-extension' } );
-		exit.withError( 'File must have an extension of .gz or .sql.' );
+		exit.withError( error );
 	}
 
 	if ( ! currentUserCanImportForApp( app ) ) {
