@@ -9,7 +9,7 @@ import os from 'os';
 import path from 'path';
 import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import chalk from 'chalk';
-import { createGunzip, createGzip } from 'zlib';
+import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 import { createHash } from 'crypto';
 import { pipeline } from 'node:stream/promises';
 import { PassThrough } from 'stream';
@@ -53,7 +53,7 @@ interface WithId {
 	id: number;
 }
 
-interface FileMeta {
+export interface FileMeta {
 	basename: string;
 	fileContent?: string | Buffer | ReadStream;
 	fileName: string;
@@ -123,9 +123,27 @@ export const unzipFile = async (
 	inputFilename: string,
 	outputFilename: string
 ): Promise< void > => {
+	const mimeType = await detectCompressedMimeType( inputFilename );
+
+	const extractFunctions: Record<
+		string,
+		{ extractor: ( options?: ZlibOptions | undefined ) => Gunzip }
+	> = {
+		'application/gzip': {
+			extractor: createGunzip,
+		},
+	};
+
+	const extractionInfo = extractFunctions[ mimeType ];
+
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+	if ( ! extractionInfo ) {
+		throw new Error( `unsupported file format: ${ mimeType }` );
+	}
+
 	const source = createReadStream( inputFilename );
 	const destination = createWriteStream( outputFilename );
-	await pipeline( source, createGunzip(), destination );
+	await pipeline( source, extractionInfo.extractor(), destination );
 };
 
 export async function getFileMeta( fileName: string ): Promise< FileMeta > {

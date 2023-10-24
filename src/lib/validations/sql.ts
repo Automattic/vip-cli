@@ -3,12 +3,14 @@
  */
 import chalk from 'chalk';
 import { stdout as log } from 'single-line-log';
+import path from 'path';
 
 /**
  * Internal dependencies
  */
 import * as exit from '../../lib/cli/exit';
 import { trackEvent } from '../../lib/tracker';
+import { getFileMeta } from '../../lib/client-file-uploader';
 import {
 	type PostLineExecutionProcessingParams,
 	getReadInterface,
@@ -84,6 +86,30 @@ interface ValidationWarning {
 interface ValidationResult {
 	errors: ( ValidationError | ValidationWarning )[];
 	infos: string[];
+}
+
+/**
+ * Check if a file has a valid extension
+ *
+ * @param {string} filename The file extension
+ * @returns {boolean} True if the extension is valid
+ */
+export const validateImportFileExtension = ( filename: string ): void => {
+	const ext = path.extname( filename ).toLowerCase();
+	if ( ! [ '.sql', '.gz' ].includes( ext ) ) {
+		exit.withError( 'Invalid file extension. Please provide a .sql or .gz file.' );
+	}
+};
+
+export function validateFilename( filename: string ) {
+	const re = /^[a-z0-9\-_.]+$/i;
+
+	// Exits if filename contains anything outside a-z A-Z - _ .
+	if ( ! re.test( filename ) ) {
+		exit.withError(
+			'Error: The characters used in the name of a file for import are limited to [0-9,a-z,A-Z,-,_,.]'
+		);
+	}
 }
 
 const generalCheckFormatter = ( check: CheckType ): ValidationResult => {
@@ -530,6 +556,14 @@ export const validate = async (
 	filename: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
 ): Promise< void > => {
+	const fileMeta = await getFileMeta( filename );
+
+	if ( fileMeta.isCompressed ) {
+		exit.withError(
+			'Compressed files cannot be validated. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
+		);
+	}
+
 	const readInterface = await getReadInterface( filename );
 	options.isImport = false;
 	readInterface.on( 'line', line => {

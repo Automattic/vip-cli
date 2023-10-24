@@ -134,4 +134,18 @@ describe( 'lib/validations/sql', () => {
 			);
 		} );
 	} );
+
+	describe( 'it fails when the import file is compressed', () => {
+		it( '.zip', async () => {
+			const compressedFilePath = path.join(
+				process.cwd(),
+				'__fixtures__',
+				'validations',
+				'empty.zip'
+			);
+
+			await validate( compressedFilePath );
+			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
+		} );
+	} );
 } );
