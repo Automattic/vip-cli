@@ -114,7 +114,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 			expect( cmd.searchReplaceMap ).toEqual( {
 				'test.go-vip.com': 'test-slug.vipdev.lndo.site',
-				'subsite.com': '2.subsite-com.test-slug.vipdev.lndo.site',
+				'subsite.com': '2-subsite-com.test-slug.vipdev.lndo.site',
 			} );
 		} );
 	} );
