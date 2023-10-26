@@ -163,6 +163,7 @@
     "semver": "7.5.4",
     "shelljs": "^0.8.5",
     "single-line-log": "1.1.2",
+    "slugify": "^1.6.6",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
     "socks-proxy-agent": "^5.0.1",

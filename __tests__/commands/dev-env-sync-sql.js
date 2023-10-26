@@ -71,6 +71,18 @@ jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 describe( 'commands/DevEnvSyncSQLCommand', () => {
 	const app = { id: 123, name: 'test-app' };
 	const env = { id: 456, name: 'test-env', wpSitesSDS: {} };
+	const msEnv = {
+		id: 456,
+		name: 'test-env',
+		wpSitesSDS: {
+			nodes: [
+				{
+					blogId: 2,
+					homeUrl: 'https://subsite.com',
+				},
+			],
+		},
+	};
 
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
@@ -92,6 +104,18 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			cmd.generateSearchReplaceMap();
 
 			expect( cmd.searchReplaceMap ).toEqual( { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' } );
+		} );
+
+		it( 'should return a map of search-replace values for multisite', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug' );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [ 'test.go-vip.com', 'subsite.com' ];
+			cmd.generateSearchReplaceMap();
+
+			expect( cmd.searchReplaceMap ).toEqual( {
+				'test.go-vip.com': 'test-slug.vipdev.lndo.site',
+				'subsite.com': '2.subsite-com.test-slug.vipdev.lndo.site',
+			} );
 		} );
 	} );
 

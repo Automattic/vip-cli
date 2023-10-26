@@ -7,6 +7,7 @@
 import fs from 'fs';
 import chalk from 'chalk';
 import urlLib from 'url';
+import slugify from 'slugify';
 import { replace } from '@automattic/vip-search-replace';
 
 /**
@@ -158,7 +159,10 @@ export class DevEnvSyncSQLCommand {
 			const url = site.homeUrl.replace( /https?:\/\//, '' );
 			if ( ! this.searchReplaceMap[ url ] ) continue;
 
-			this.searchReplaceMap[ url ] = `${ site.blogId }.${ this.landoDomain }`;
+			slugify.extend( { '.': '-' } );
+			this.searchReplaceMap[ url ] = `${ site.blogId }.${ slugify( url, {
+				lower: true,
+			} ) }.${ this.landoDomain }`;
 		}
 	}
 
