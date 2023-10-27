@@ -160,9 +160,9 @@ export class DevEnvSyncSQLCommand {
 			if ( ! this.searchReplaceMap[ url ] ) continue;
 
 			slugify.extend( { '.': '-' } );
-			this.searchReplaceMap[ url ] = `${ site.blogId }-${ slugify( url, {
+			this.searchReplaceMap[ url ] = `${ slugify( url, {
 				lower: true,
-			} ) }.${ this.landoDomain }`;
+			} ) }-${ site.blogId }.${ this.landoDomain }`;
 		}
 	}
 
