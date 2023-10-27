@@ -119,8 +119,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const message =
 			'\n' +
 			chalk.green( '✓' ) +
-			' environment updated. Please start environment again for changes to take effect: '
-			+ chalk.bold( `vip dev env --slug ${ slug } start` );
+			' environment updated. Please start environment again for changes to take effect: ' +
+			chalk.bold( `vip dev env --slug ${ slug } start` );
 		console.log( message );
 		await trackEvent( 'dev_env_update_command_success', trackingInfo );
 	} catch ( error ) {
