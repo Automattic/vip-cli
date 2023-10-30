@@ -158,8 +158,21 @@ export class DevEnvSyncSQLCommand {
 			const url = site.homeUrl.replace( /https?:\/\//, '' );
 			if ( ! this.searchReplaceMap[ url ] ) continue;
 
-			this.searchReplaceMap[ url ] = `${ site.blogId }.${ this.landoDomain }`;
+			this.searchReplaceMap[ url ] = `${ this.slugifyDomain( url ) }-${ site.blogId }.${
+				this.landoDomain
+			}`;
 		}
+	}
+
+	slugifyDomain( domain ) {
+		return String( domain )
+			.normalize( 'NFKD' ) // split accented characters into their base characters and diacritical marks
+			.replace( /[\u0300-\u036f]/g, '' ) // remove all the accents, which happen to be all in the \u03xx UNICODE block.
+			.trim() // trim leading or trailing whitespace
+			.toLowerCase() // convert to lowercase
+			.replace( /[^a-z0-9 .-]/g, '' ) // remove non-alphanumeric characters except for spaces, dots, and hyphens
+			.replace( /[.\s]+/g, '-' ) // replace dots and spaces with hyphens
+			.replace( /-+/g, '-' ); // remove consecutive hyphens
 	}
 
 	/**
