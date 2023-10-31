@@ -11,7 +11,10 @@ import chalk from 'chalk';
  */
 import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { destroyEnvironment, getAllEnvironmentNames } from '../lib/dev-environment/dev-environment-core';
+import {
+	destroyEnvironment,
+	getAllEnvironmentNames,
+} from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
@@ -34,35 +37,33 @@ command()
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const allEnvNames = getAllEnvironmentNames();
-        const trackingInfo = { all: true };
-        await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
+		const lando = await bootstrapLando();
+		const trackingInfo = { all: true };
+		await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
 
-        try {
-            for ( const envName of allEnvNames ) {
-                const slug = envName;
-                const lando = await bootstrapLando();
-                await validateDependencies( lando, slug );
-    
-                const trackingInfo = getEnvTrackingInfo( slug );
-                await trackEvent( 'dev_env_destroy_command_execute', trackingInfo );
-    
-                debug( 'Args: ', arg, 'Options: ', opt );
-    
-                try {
-                    const removeFiles = ! ( opt.soft || false );
-                    await destroyEnvironment( lando, slug, removeFiles );
-    
-                    const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
-                    console.log( message );
-                    await trackEvent( 'dev_env_destroy_command_success', trackingInfo );
-                } catch ( error ) {
-                    await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfo );
-                    process.exitCode = 1;
-                }
-            }
-        } catch ( error ) {
-            await handleCLIException( error, 'dev_env_purge_command_error', trackingInfo );
-            process.exitCode = 1;
-        }
-        
+		try {
+			for ( const envName of allEnvNames ) {
+				const slug = envName;
+				await validateDependencies( lando, slug );
+				const trackingInfoChild = getEnvTrackingInfo( slug );
+				await trackEvent( 'dev_env_destroy_command_execute', trackingInfoChild );
+
+				debug( 'Args: ', arg, 'Options: ', opt );
+
+				try {
+					const removeFiles = ! ( opt.soft || false );
+					await destroyEnvironment( lando, slug, removeFiles );
+
+					const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
+					console.log( message );
+					await trackEvent( 'dev_env_destroy_command_success', trackingInfoChild );
+				} catch ( error ) {
+					await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfoChild );
+					process.exitCode = 1;
+				}
+			}
+		} catch ( error ) {
+			await handleCLIException( error, 'dev_env_purge_command_error', trackingInfo );
+			process.exitCode = 1;
+		}
 	} );
