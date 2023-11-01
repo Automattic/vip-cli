@@ -280,8 +280,8 @@ ${ maybeExitPrompt }
 		setProgressTrackerSuffix();
 		progressTracker.print();
 
-		const fileErrors = results.failureDetails?.fileErrors;
-		if ( Boolean( fileErrors ) && fileErrors.length > 0 ) {
+		const fileErrors = results.failureDetails?.fileErrors ?? [];
+		if ( fileErrors.length > 0 ) {
 			progressTracker.suffix += `${ chalk.yellow(
 				`⚠️  ${ fileErrors.length } file error(s) have been extracted`
 			) }`;
