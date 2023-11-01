@@ -1,4 +1,4 @@
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import { v4 as uuid } from 'uuid';
 
 import { API_HOST, PRODUCTION_API_HOST } from './api';
