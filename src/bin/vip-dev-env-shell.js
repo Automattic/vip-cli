@@ -1,16 +1,8 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
@@ -18,7 +10,9 @@ import {
 	getEnvironmentName,
 	handleCLIException,
 } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -91,7 +85,7 @@ command( { wildcardCommand: true } )
 
 		debug( 'Args: ', args, 'Options: ', opt );
 
-		const isRoot = !! opt.root;
+		const isRoot = Boolean( opt.root );
 		const service = opt.service || 'php';
 		const user = isRoot ? 'root' : userMap[ service ] || 'www-data';
 		const cmd = getCommand( args );

@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import {
 	ExportSQLCommand,
 	CREATE_EXPORT_JOB_MUTATION,

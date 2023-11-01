@@ -1,23 +1,16 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
-import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
-import UserError from '../lib/user-error';
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
+import command from '../lib/cli/command';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { makeCommandTracker } from '../lib/tracker';
 import {
 	getEnvironmentName,
 	processBooleanOption,
 } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
+import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { makeCommandTracker } from '../lib/tracker';
+import UserError from '../lib/user-error';
 
 const examples = [
 	{

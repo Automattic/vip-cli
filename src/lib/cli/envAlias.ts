@@ -1,7 +1,3 @@
-/**
- * External dependencies
- */
-
 export function isAlias( alias: string ): boolean {
 	return /^@[A-Za-z0-9.-]+$/.test( alias );
 }

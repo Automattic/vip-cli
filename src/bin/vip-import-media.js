@@ -1,22 +1,16 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
+import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
 import API from '../lib/api';
+import command from '../lib/cli/command';
 // eslint-disable-next-line no-duplicate-imports
-import { trackEventWithEnv } from '../lib/tracker';
 import { formatEnvironment } from '../lib/cli/format';
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
+import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
 	id,

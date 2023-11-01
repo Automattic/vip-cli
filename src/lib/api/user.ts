@@ -1,16 +1,10 @@
 // @format
 
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';
 import { User } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 const QUERY_CURRENT_USER = gql`
 	query Me {

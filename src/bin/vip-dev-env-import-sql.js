@@ -1,21 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
+import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
 import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	handleCLIException,
 	getEnvironmentName,
 } from '../lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
+import { trackEvent } from '../lib/tracker';
 
 const examples = [
 	{

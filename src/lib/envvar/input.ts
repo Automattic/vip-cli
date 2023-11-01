@@ -1,14 +1,7 @@
 // @format
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { Confirm, prompt } from 'enquirer';
-
-/**
- * Internal dependencies
- */
 
 export function cancel(): void {
 	console.log( chalk.yellow( 'Command cancelled by user.' ) );

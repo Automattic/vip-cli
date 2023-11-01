@@ -1,19 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { setTimeout } from 'timers/promises';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
 import * as slowlogsLib from '../lib/app-slowlogs/app-slowlogs';
-import * as exit from '../lib/cli/exit';
-import { formatData } from '../lib/cli/format';
 import {
 	BaseTrackingParams,
 	DefaultOptions,
@@ -22,6 +12,10 @@ import {
 	Slowlog,
 	SlowlogFormats,
 } from '../lib/app-slowlogs/types';
+import command from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { formatData } from '../lib/cli/format';
+import { trackEvent } from '../lib/tracker';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 500;

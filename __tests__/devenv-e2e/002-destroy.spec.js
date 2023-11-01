@@ -1,19 +1,14 @@
-/**
- * External dependencies
- */
-import { access, mkdtemp, rm, unlink } from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
-import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
 import nock from 'nock';
+import { access, mkdtemp, rm, unlink } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import xdgBaseDir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import { CliTest } from './helpers/cli-test';
-import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
+import { vipDevEnvCreate, vipDevEnvDestroy } from './helpers/commands';
+import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
 import {
 	checkEnvExists,
 	createAndStartEnvironment,
@@ -21,8 +16,7 @@ import {
 	getProjectSlug,
 	prepareEnvironment,
 } from './helpers/utils';
-import { vipDevEnvCreate, vipDevEnvDestroy } from './helpers/commands';
-import { getContainersForProject, killProjectContainers } from './helpers/docker-utils';
+import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 
 jest.setTimeout( 600 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 

@@ -1,24 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import {
-	createEnvironment,
-	printEnvironmentInfo,
-	getApplicationInformation,
-	doesEnvironmentExist,
-	getEnvironmentPath,
-} from '../lib/dev-environment/dev-environment-core';
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_SUBCOMMAND,
+} from '../lib/constants/dev-environment';
 import {
 	DEFAULT_SLUG,
 	getEnvironmentName,
@@ -32,15 +22,19 @@ import {
 	handleDeprecatedOptions,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
-	DEV_ENVIRONMENT_FULL_COMMAND,
-	DEV_ENVIRONMENT_SUBCOMMAND,
-} from '../lib/constants/dev-environment';
-import {
 	getConfigurationFileOptions,
 	printConfigurationFile,
 	mergeConfigurationFileOptions,
 } from '../lib/dev-environment/dev-environment-configuration-file';
+import {
+	createEnvironment,
+	printEnvironmentInfo,
+	getApplicationInformation,
+	doesEnvironmentExist,
+	getEnvironmentPath,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

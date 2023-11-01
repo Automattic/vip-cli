@@ -1,24 +1,29 @@
-/**
- * External dependencies
- */
-import { existsSync, lstatSync, readdirSync } from 'node:fs';
-import path from 'path';
-import { homedir } from 'node:os';
-import { lookup } from 'node:dns/promises';
 import chalk from 'chalk';
-import formatters from 'lando/lib/formatters';
-import { prompt, Confirm, Select } from 'enquirer';
-import debugLib from 'debug';
 import { spawn } from 'child_process';
-import { which } from 'shelljs';
+import debugLib from 'debug';
+import { prompt, Confirm, Select } from 'enquirer';
 import Lando from 'lando';
+import formatters from 'lando/lib/formatters';
+import { lookup } from 'node:dns/promises';
+import { existsSync, lstatSync, readdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'path';
+import { which } from 'shelljs';
 
-/**
- * Internal dependencies
- */
+import {
+	CONFIGURATION_FILE_NAME,
+	getConfigurationFileOptions,
+} from './dev-environment-configuration-file';
+import {
+	generateVSCodeWorkspace,
+	getAllEnvironmentNames,
+	getVSCodeWorkspacePath,
+	getVersionList,
+	readEnvironmentData,
+} from './dev-environment-core';
+import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import { ProgressTracker, StepConstructorParam } from '../../lib/cli/progress';
-import { trackEvent } from '../tracker';
-
+import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
@@ -28,13 +33,8 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 	DEV_ENVIRONMENT_COMPONENTS_WITH_WP,
 } from '../constants/dev-environment';
-import {
-	generateVSCodeWorkspace,
-	getAllEnvironmentNames,
-	getVSCodeWorkspacePath,
-	getVersionList,
-	readEnvironmentData,
-} from './dev-environment-core';
+import { trackEvent } from '../tracker';
+import UserError from '../user-error';
 
 import type {
 	AppInfo,
@@ -45,13 +45,6 @@ import type {
 	WordPressConfig,
 	ConfigurationFileOptions,
 } from './types';
-import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
-import UserError from '../user-error';
-import {
-	CONFIGURATION_FILE_NAME,
-	getConfigurationFileOptions,
-} from './dev-environment-configuration-file';
-import { Args } from '../cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -281,7 +274,7 @@ export function processComponentOptionInput(
 	allowLocal: boolean
 ): LocalComponent | ImageComponent {
 	// cast to string
-	const param = passedParam + '';
+	const param = String( passedParam );
 	// This is a bit of a naive check
 	if ( allowLocal && /[\\/]/.test( param ) ) {
 		return {
@@ -300,7 +293,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	return {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
-		multisite: !! appInfo.environment?.isMultisite,
+		multisite: Boolean( appInfo.environment?.isMultisite ),
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
 		php: appInfo.environment?.php ?? '',
 		wordpress: appInfo.environment?.wordpress ?? '',
@@ -407,11 +400,11 @@ export async function promptForArguments(
 
 	debug( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
 	if ( 'elasticsearch' in preselectedOptions ) {
-		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
+		instanceData.elasticsearch = Boolean( preselectedOptions.elasticsearch );
 	} else {
 		instanceData.elasticsearch = await promptForBoolean(
 			'Enable Elasticsearch (needed by Enterprise Search)?',
-			!! defaultOptions.elasticsearch
+			Boolean( defaultOptions.elasticsearch )
 		);
 	}
 
@@ -425,7 +418,7 @@ export async function promptForArguments(
 				// eslint-disable-next-line no-await-in-loop
 				instanceData[ service ] = await promptForBoolean(
 					`Enable ${ promptLabels[ service ] || service }`,
-					!! defaultOptions[ service ]
+					Boolean( defaultOptions[ service ] )
 				);
 			}
 		}
@@ -843,7 +836,7 @@ declare function parseFloat( value: unknown ): number;
 
 export function processVersionOption( value: unknown ): string {
 	if ( typeof value === 'string' || typeof value === 'number' ) {
-		if ( ! isNaN( value ) && +value % 1 === 0 ) {
+		if ( ! isNaN( value ) && Number( value ) % 1 === 0 ) {
 			return parseFloat( value ).toFixed( 1 );
 		}
 	}

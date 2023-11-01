@@ -1,24 +1,18 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { showLogs } from '../lib/dev-environment/dev-environment-core';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { showLogs } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

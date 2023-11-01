@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { describe, it, expect } from '@jest/globals';
 
-/**
- * Internal dependencies
- */
 import { isAlias, parseEnvAlias, parseEnvAliasFromArgv } from '../../../src/lib/cli/envAlias';
 
 describe( 'utils/cli/envAlias', () => {

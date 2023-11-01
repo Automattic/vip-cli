@@ -1,14 +1,9 @@
 // @format
 
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
 import API from '../../lib/api';
+
 import type {
 	PurgePageCacheMutationMutation,
 	PurgePageCacheMutationMutationVariables,

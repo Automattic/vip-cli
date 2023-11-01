@@ -1,26 +1,19 @@
-/**
- * External dependencies
- */
-
 import chalk from 'chalk';
+import { GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
+import { AppBackupJobStatusQuery } from './backup-db.generated';
+import { App, AppEnvironment, Job } from '../graphqlTypes';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
 import * as exit from '../lib/cli/exit';
-import { pollUntil } from '../lib/utils';
+import { formatDuration } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
-import { GraphQLFormattedError } from 'graphql';
 import { RateLimitExceededError } from '../lib/types/graphql/rate-limit-exceeded-error';
-import { AppBackupJobStatusQuery } from './backup-db.generated';
-import { App, AppEnvironment, Job } from '../graphqlTypes';
-import { formatDuration } from '../lib/cli/format';
+import { pollUntil } from '../lib/utils';
 
 const DB_BACKUP_PROGRESS_POLL_INTERVAL = 1000;
 

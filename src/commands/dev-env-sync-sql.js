@@ -1,25 +1,17 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-import fs from 'fs';
-import chalk from 'chalk';
-import urlLib from 'url';
 import { replace } from '@automattic/vip-search-replace';
+import chalk from 'chalk';
+import fs from 'fs';
+import urlLib from 'url';
 
-/**
- * Internal dependencies
- */
-
-import { unzipFile } from '../lib/client-file-uploader';
+import { DevEnvImportSQLCommand } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
+import * as exit from '../lib/cli/exit';
+import { unzipFile } from '../lib/client-file-uploader';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
-import * as exit from '../lib/cli/exit';
-import { DevEnvImportSQLCommand } from './dev-env-import-sql';
-import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 
 /**
  * Finds the site home url from the SQL line

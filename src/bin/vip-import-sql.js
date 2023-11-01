@@ -1,25 +1,16 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
-import columns from 'cli-columns';
 import chalk from 'chalk';
+import columns from 'cli-columns';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
+import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
+import API from '../lib/api';
 import command from '../lib/cli/command';
-import {
-	currentUserCanImportForApp,
-	isSupportedApp,
-	SQL_IMPORT_FILE_SIZE_LIMIT,
-	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
-} from '../lib/site-import/db-file-import';
-import { importSqlCheckStatus } from '../lib/site-import/status';
+import * as exit from '../lib/cli/exit';
+import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
+import { ProgressTracker } from '../lib/cli/progress';
 import {
 	checkFileAccess,
 	getFileSize,
@@ -27,21 +18,24 @@ import {
 	isFile,
 	uploadImportSqlFileToS3,
 } from '../lib/client-file-uploader';
+import { searchAndReplace } from '../lib/search-and-replace';
+import {
+	currentUserCanImportForApp,
+	isSupportedApp,
+	SQL_IMPORT_FILE_SIZE_LIMIT,
+	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
+} from '../lib/site-import/db-file-import';
+import { importSqlCheckStatus } from '../lib/site-import/status';
 import { trackEventWithEnv } from '../lib/tracker';
+import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
+import { fileLineValidations } from '../lib/validations/line-by-line';
+import { siteTypeValidations } from '../lib/validations/site-type';
 import {
 	staticSqlValidations,
 	getTableNames,
 	validateImportFileExtension,
 	validateFilename,
 } from '../lib/validations/sql';
-import { siteTypeValidations } from '../lib/validations/site-type';
-import { searchAndReplace } from '../lib/search-and-replace';
-import API from '../lib/api';
-import * as exit from '../lib/cli/exit';
-import { fileLineValidations } from '../lib/validations/line-by-line';
-import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
-import { ProgressTracker } from '../lib/cli/progress';
-import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
 
 const appQuery = `
 	id,
@@ -158,7 +152,7 @@ export async function gates( app, env, fileMeta ) {
 		await track( 'import_sql_command_error', {
 			error_type: 'sqlfile-toobig',
 			file_size: fileSize,
-			launched: !! env?.launched,
+			launched: Boolean( env?.launched ),
 		} );
 		exit.withError(
 			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).` +

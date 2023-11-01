@@ -2,17 +2,11 @@
  * @format
  */
 
-/**
- * External dependencies
- */
-import path from 'path';
 import { once } from 'node:events';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
-import { getMultilineStatement } from '../../../src/lib/validations/utils';
 import { getReadInterface } from '../../../src/lib/validations/line-by-line';
+import { getMultilineStatement } from '../../../src/lib/validations/utils';
 
 describe( 'utils', () => {
 	describe( 'getMultilineStatement', () => {

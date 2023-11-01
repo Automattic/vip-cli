@@ -1,6 +1,3 @@
-/**
- * Internal dependencies
- */
 import { App, AppEnvironment } from '../../graphqlTypes';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { DATABASE_APPLICATION_TYPE_IDS } from '../../lib/constants/vipgo';
@@ -22,7 +19,7 @@ export type EnvForImport = Pick<
 
 export function currentUserCanImportForApp( app: App | AppForImport ): boolean {
 	// TODO: implement
-	return !! app;
+	return Boolean( app );
 }
 
 export const isSupportedApp = ( { typeId }: AppForImport ) =>

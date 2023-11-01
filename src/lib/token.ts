@@ -1,15 +1,8 @@
-/**
- * External dependencies
- */
 import jwtDecode from 'jwt-decode';
 import { v4 as uuid } from 'uuid';
 
-/**
- * Internal dependencies
- */
-import keychain from './keychain';
-
 import { API_HOST, PRODUCTION_API_HOST } from './api';
+import keychain from './keychain';
 
 interface Payload {
 	id?: number;

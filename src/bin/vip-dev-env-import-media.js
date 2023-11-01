@@ -1,21 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
 } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { trackEvent } from '../lib/tracker';
 
 const examples = [
 	{

@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
-import command, { getEnvIdentifier } from '../lib/cli/command';
 import app from '../lib/api/app';
+import command, { getEnvIdentifier } from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( { requiredArgs: 1, format: true } )

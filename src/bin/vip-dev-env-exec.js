@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
@@ -13,8 +10,8 @@ import {
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
 const examples = [

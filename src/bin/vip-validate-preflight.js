@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import {
 	Harmonia,
 	SiteConfig,
@@ -11,25 +8,21 @@ import {
 	TestResultType,
 	IssueType,
 } from '@automattic/vip-go-preflight-checks';
-
-import path from 'path';
-import gql from 'graphql-tag';
-import { readFileSync } from 'fs';
-import dotenv from 'ini';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
+import { readFileSync } from 'fs';
+import gql from 'graphql-tag';
+import dotenv from 'ini';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
-import * as exit from '../lib/cli/exit';
 import {
 	default as API,
 	enableGlobalGraphQLErrorHandling,
 	disableGlobalGraphQLErrorHandling,
 } from '../lib/api';
+import command from '../lib/cli/command';
+import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
+import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
 const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];

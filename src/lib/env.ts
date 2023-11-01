@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { platform, release } from 'node:os';
 
-/**
- * Internal dependencies
- */
 import pkg from '../../package.json';
 
 interface AppInfo {

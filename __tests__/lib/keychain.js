@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { randomBytes } from 'crypto';
 
-/**
- * Internal dependencies
- */
 import Insecure from '../../src/lib/keychain/insecure';
 
 const account = 'vip-cli-test';

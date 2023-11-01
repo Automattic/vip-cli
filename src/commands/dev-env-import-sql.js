@@ -1,13 +1,8 @@
-/**
- * External dependencies
- */
-
-import fs from 'fs';
 import chalk from 'chalk';
+import fs from 'fs';
 
-/**
- * Internal dependencies
- */
+import * as exit from '../lib/cli/exit';
+import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
@@ -16,10 +11,8 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
-import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
-import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import { makeTempDir } from '../lib/utils';
-import * as exit from '../lib/cli/exit';
+import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
 export class DevEnvImportSQLCommand {
 	fileName;

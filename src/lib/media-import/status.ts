@@ -1,22 +1,9 @@
-/**
- * External dependencies
- */
-import { writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
-import {
-	AppForMediaImport,
-	currentUserCanImportForApp,
-} from '../../lib/media-import/media-file-import';
-import { MediaImportProgressTracker } from '../../lib/media-import/progress';
-import { capitalize, formatEnvironment, formatData, RunningSprite } from '../../lib/cli/format';
 import { AppQuery, AppQueryVariables } from './status.generated';
 import {
 	App,
@@ -25,6 +12,13 @@ import {
 	AppEnvironmentMediaImportStatusFailureDetailsFileErrors,
 	Maybe,
 } from '../../graphqlTypes';
+import API from '../../lib/api';
+import { capitalize, formatEnvironment, formatData, RunningSprite } from '../../lib/cli/format';
+import {
+	AppForMediaImport,
+	currentUserCanImportForApp,
+} from '../../lib/media-import/media-file-import';
+import { MediaImportProgressTracker } from '../../lib/media-import/progress';
 
 const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
 const ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
@@ -287,7 +281,7 @@ ${ maybeExitPrompt }
 		progressTracker.print();
 
 		const fileErrors = results.failureDetails?.fileErrors;
-		if ( !! fileErrors && fileErrors.length > 0 ) {
+		if ( Boolean( fileErrors ) && fileErrors.length > 0 ) {
 			progressTracker.suffix += `${ chalk.yellow(
 				`⚠️  ${ fileErrors.length } file error(s) have been extracted`
 			) }`;

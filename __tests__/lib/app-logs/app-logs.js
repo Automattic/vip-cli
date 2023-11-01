@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
 import API from '../../../src/lib/api';
 import { getRecentLogs } from '../../../src/lib/app-logs/app-logs';
 

@@ -1,16 +1,10 @@
 // @format
 
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import { GetAppLogsQueryVariables } from './app-logs.generated';
 import { AppEnvironmentLogType, Query } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 export const LIMIT_MAX = 5000;
 

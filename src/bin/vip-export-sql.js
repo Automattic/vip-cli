@@ -1,14 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
 import { ExportSQLCommand } from '../commands/export-sql';
+import command from '../lib/cli/command';
 import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [

@@ -1,24 +1,18 @@
 // @format
 
-/**
- * External dependencies
- */
+import chalk from 'chalk';
+import { createHash } from 'crypto';
+import debugLib from 'debug';
 import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
+import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
 import os from 'os';
 import path from 'path';
-import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
-import chalk from 'chalk';
-import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
-import { createHash } from 'crypto';
-import { pipeline } from 'node:stream/promises';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
-import debugLib from 'debug';
+import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 
-/**
- * Internal dependencies
- */
 import http from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
 

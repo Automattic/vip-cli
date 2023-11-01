@@ -1,16 +1,10 @@
-/**
- * External dependencies
- */
 import chalk from 'chalk';
-import { stdout as log } from 'single-line-log';
 import path from 'path';
+import { stdout as log } from 'single-line-log';
 
-/**
- * Internal dependencies
- */
 import * as exit from '../../lib/cli/exit';
-import { trackEvent } from '../../lib/tracker';
 import { getFileMeta } from '../../lib/client-file-uploader';
+import { trackEvent } from '../../lib/tracker';
 import {
 	type PostLineExecutionProcessingParams,
 	getReadInterface,

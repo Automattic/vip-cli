@@ -1,17 +1,11 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import {
 	GetEnvironmentVariablesWithValuesQuery,
 	GetEnvironmentVariablesWithValuesQueryVariables,
 } from './api-get-all.generated';
 import { EnvironmentVariable } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 const query = gql`
 	query GetEnvironmentVariablesWithValues($appId: Int!, $envId: Int!) {

@@ -1,16 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
 import { appQuery, appQueryFragments, formatSoftwareSettings } from '../lib/config/software';
+import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
 // Command examples
@@ -89,7 +82,7 @@ command( {
 		}
 
 		const preFormatted = chosenSettings
-			.filter( softwareSetting => !! softwareSetting )
+			.filter( softwareSetting => Boolean( softwareSetting ) )
 			.map( softwareSetting => formatSoftwareSettings( softwareSetting, include, opt.format ) );
 
 		console.log( formatData( preFormatted, opt.format ) );

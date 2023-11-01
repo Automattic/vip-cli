@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { listEnvVarsCommand } from '../../src/bin/vip-config-envvar-list';
 import command from '../../src/lib/cli/command';
 import { formatData } from '../../src/lib/cli/format';

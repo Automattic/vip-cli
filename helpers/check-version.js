@@ -1,4 +1,5 @@
 const semver = require( 'semver' );
+
 const { name, engines } = require( '../package.json' );
 
 const version = engines.node;

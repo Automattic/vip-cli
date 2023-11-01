@@ -1,14 +1,9 @@
-/**
- * External dependencies
- */
-import type { Response } from 'node-fetch';
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import env from '../env';
+
 import type { AnalyticsClient } from './clients/client';
+import type { Response } from 'node-fetch';
 
 const debug = debugLib( '@automattic/vip:analytics' );
 

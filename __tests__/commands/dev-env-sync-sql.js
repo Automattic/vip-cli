@@ -1,17 +1,11 @@
-/**
- * External dependencies
- */
+import { replace } from '@automattic/vip-search-replace';
 import { describe, expect, jest } from '@jest/globals';
 import fs from 'fs';
-import { replace } from '@automattic/vip-search-replace';
 import { PassThrough } from 'stream';
 
-/**
- * Internal dependencies
- */
+import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { DevEnvSyncSQLCommand } from '../../src/commands/dev-env-sync-sql';
 import { ExportSQLCommand } from '../../src/commands/export-sql';
-import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { unzipFile } from '../../src/lib/client-file-uploader';
 import { getReadInterface } from '../../src/lib/validations/line-by-line';
 

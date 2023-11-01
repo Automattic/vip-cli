@@ -1,17 +1,11 @@
 // @format
 
-/**
- * External dependencies
- */
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { setTimeout } from 'node:timers/promises';
 import debugLib from 'debug';
+import fs from 'fs';
+import { setTimeout } from 'node:timers/promises';
+import os from 'os';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
 const debug = debugLib( '@automattic/vip:lib:utils' );
 
 /**

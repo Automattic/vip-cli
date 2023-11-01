@@ -1,17 +1,11 @@
 // @format
 
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import { GetAppSlowlogsQueryVariables } from './app-slowlogs.generated';
-import { Query } from '../../graphqlTypes';
 import { GetRecentSlowlogsResponse } from './types';
+import { Query } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 export const LIMIT_MAX = 5000;
 

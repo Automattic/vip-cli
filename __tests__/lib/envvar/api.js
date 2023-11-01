@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { validateName } from '../../../src/lib/envvar/api';
 
 describe( 'validateName', () => {

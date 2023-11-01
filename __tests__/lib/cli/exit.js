@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { withError } from '../../../src/lib/cli/exit';
 import env from '../../../src/lib/env';
 

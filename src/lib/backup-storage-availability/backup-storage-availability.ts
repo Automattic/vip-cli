@@ -1,12 +1,13 @@
-import { exec } from 'shelljs';
-import path from 'path';
-import xdgBasedir from 'xdg-basedir';
-import os from 'os';
 import checkDiskSpace from 'check-disk-space';
 import { Confirm } from 'enquirer';
+import os from 'os';
+import path from 'path';
+import { exec } from 'shelljs';
+import xdgBasedir from 'xdg-basedir';
+
+import { DockerMachineNotFoundError } from './docker-machine-not-found-error';
 import { Job } from '../../graphqlTypes';
 import { formatMetricBytes } from '../cli/format';
-import { DockerMachineNotFoundError } from './docker-machine-not-found-error';
 
 const oneGiBInBytes = 1024 * 1024 * 1024;
 

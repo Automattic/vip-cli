@@ -1,16 +1,10 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
-import { trackEventWithEnv } from '../../lib/tracker';
-import * as exit from '../../lib/cli/exit';
 import { AppMultiSiteCheckQuery, AppMultiSiteCheckQueryVariables } from './is-multi-site.generated';
 import { App, AppEnvironment } from '../../graphqlTypes';
+import API from '../../lib/api';
+import * as exit from '../../lib/cli/exit';
+import { trackEventWithEnv } from '../../lib/tracker';
 
 const isMultiSite = new WeakMap< Record< string, number >, boolean >();
 

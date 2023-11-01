@@ -1,17 +1,12 @@
-/**
- * External dependencies
- */
-import { access, readFile } from 'node:fs/promises';
-import { constants } from 'fs';
-import path from 'node:path';
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
+import { constants } from 'fs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
+import { access, readFile } from 'node:fs/promises';
+import path from 'node:path';
 
-/**
- * Internal dependencies
- */
 import * as exit from '../cli/exit';
+
 import type { ConfigurationFileOptions, InstanceOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
