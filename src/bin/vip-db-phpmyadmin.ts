@@ -15,8 +15,8 @@ import { PhpMyAdminCommand } from '../commands/phpmyadmin';
 
 const examples = [
 	{
-		usage: 'vip phpmyadmin @mysite.develop',
-		description: 'Open PhpMyAdmin for the @mysite.develop environment',
+		usage: 'vip db phpmyadmin @mysite.develop',
+		description: 'Open PhpMyAdmin console for the database of the @mysite.develop environment',
 	},
 ];
 
@@ -41,7 +41,7 @@ void command( {
 	envContext: true,
 	module: 'phpmyadmin',
 	requiredArgs: 0,
-	usage: 'vip phpmyadmin',
+	usage: 'vip db phpmyadmin',
 } )
 	.examples( examples )
 	.argv( process.argv, async ( arg: string[], { app, env }: { app: App; env: AppEnvironment } ) => {
