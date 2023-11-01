@@ -1,5 +1,3 @@
-// @format
-
 import { expect, jest } from '@jest/globals';
 import child from 'child_process';
 import enquirer from 'enquirer';

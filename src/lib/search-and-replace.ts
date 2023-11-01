@@ -1,5 +1,3 @@
-// @format
-
 import { replace } from '@automattic/vip-search-replace';
 import { red } from 'chalk';
 import debugLib from 'debug';

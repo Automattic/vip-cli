@@ -1,5 +1,3 @@
-// @format
-
 import chalk from 'chalk';
 import { Confirm, prompt } from 'enquirer';
 

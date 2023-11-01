@@ -1,5 +1,3 @@
-// @format
-
 import { debug } from '../../lib/envvar/logging';
 import { readFromFile } from '../read-file';
 

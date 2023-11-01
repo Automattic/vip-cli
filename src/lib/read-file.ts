@@ -1,5 +1,3 @@
-// @format
-
 import { readFile } from 'node:fs/promises';
 
 import * as exit from '../lib/cli/exit';

@@ -1,5 +1,3 @@
-// @format
-
 import gql from 'graphql-tag';
 
 import { GetAppSlowlogsQueryVariables } from './app-slowlogs.generated';

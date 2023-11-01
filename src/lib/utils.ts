@@ -1,5 +1,3 @@
-// @format
-
 import debugLib from 'debug';
 import fs from 'fs';
 import { setTimeout } from 'node:timers/promises';

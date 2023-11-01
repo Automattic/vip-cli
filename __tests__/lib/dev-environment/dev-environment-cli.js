@@ -1,5 +1,4 @@
 /* eslint-disable jest/no-conditional-expect */
-// @format
 
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';

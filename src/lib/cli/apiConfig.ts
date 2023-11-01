@@ -1,5 +1,3 @@
-// @format
-
 import * as exit from './exit';
 import * as featureFlags from '../../lib/api/feature-flags';
 import Token from '../../lib/token';

@@ -1,5 +1,3 @@
-// @format
-
 import { red, yellow } from 'chalk';
 
 import env from '../../lib/env';

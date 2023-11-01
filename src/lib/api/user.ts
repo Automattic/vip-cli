@@ -1,5 +1,3 @@
-// @format
-
 import gql from 'graphql-tag';
 
 import { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';

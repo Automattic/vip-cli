@@ -1,5 +1,3 @@
-// @format
-
 import gql from 'graphql-tag';
 
 import { GetAppLogsQueryVariables } from './app-logs.generated';
