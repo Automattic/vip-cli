@@ -102,7 +102,7 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@automattic/eslint-plugin-wpvip": "0.6.0",
+    "@automattic/eslint-plugin-wpvip": "0.8.0",
     "@babel/cli": "7.23.0",
     "@babel/core": "7.23.2",
     "@babel/preset-env": "7.23.2",
