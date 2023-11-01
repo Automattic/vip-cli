@@ -1,5 +1,4 @@
 import { replace } from '@automattic/vip-search-replace';
-import { describe, expect, jest } from '@jest/globals';
 import fs from 'fs';
 import { PassThrough } from 'stream';
 
