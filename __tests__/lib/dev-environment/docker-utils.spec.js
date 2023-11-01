@@ -1,15 +1,13 @@
-/**
- * External dependencies
- */
-import path from 'node:path';
-import { homedir, platform } from 'node:os';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { promises, readFileSync } from 'node:fs';
+import { homedir, platform } from 'node:os';
+import path from 'node:path';
+
 import {
 	getDockerSocket,
 	getEngineConfig,
 	splitca,
 } from '../../../src/lib/dev-environment/docker-utils';
-import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
 describe( 'splitca', () => {
 	const base = path.join( __dirname, '..', '..', '..', '__fixtures__', 'certs' );

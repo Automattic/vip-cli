@@ -1,19 +1,13 @@
-/**
- * External dependencies
- */
-import { writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { expect } from '@jest/globals';
 import { dump } from 'js-yaml';
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
-/**
- * Internal dependencies
- */
+import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
 
 let id = 0;
 
@@ -22,7 +16,7 @@ let id = 0;
  */
 export function getProjectSlug() {
 	++id;
-	const workerID = `${ +( process.env.JEST_WORKER_ID || '1' ) }`.padStart( 4, '0' );
+	const workerID = `${ Number( process.env.JEST_WORKER_ID || '1' ) }`.padStart( 4, '0' );
 	const envID = `${ id }`.padStart( 4, '0' );
 	return `dev-env-${ workerID }-${ envID }`;
 }

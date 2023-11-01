@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import path from 'path';
 
-/**
- * Internal dependencies
- */
 import { validateAndGetTableNames, gates } from '../../src/bin/vip-import-sql';
 import * as exit from '../../src/lib/cli/exit';
 

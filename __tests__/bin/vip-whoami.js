@@ -1,10 +1,7 @@
-/**
- * Internal dependencies
- */
-import * as tracker from '../../src/lib/tracker';
-import * as exit from '../../src/lib/cli/exit';
-import * as apiUserLib from '../../src/lib/api/user';
 import { whoamiCommand } from '../../src/bin/vip-whoami';
+import * as apiUserLib from '../../src/lib/api/user';
+import * as exit from '../../src/lib/cli/exit';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {

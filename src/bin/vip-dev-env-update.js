@@ -1,15 +1,8 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -26,16 +19,17 @@ import {
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
+	getConfigurationFileOptions,
+	mergeConfigurationFileOptions,
+} from '../lib/dev-environment/dev-environment-configuration-file';
+import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
 	readEnvironmentData,
 	updateEnvironment,
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
-import {
-	getConfigurationFileOptions,
-	mergeConfigurationFileOptions,
-} from '../lib/dev-environment/dev-environment-configuration-file';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

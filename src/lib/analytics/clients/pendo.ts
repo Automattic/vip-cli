@@ -1,15 +1,10 @@
-/**
- * External dependencies
- */
-import { Response } from 'node-fetch';
 import debugLib from 'debug';
+import { Response } from 'node-fetch';
 
-/**
- * Internal dependencies
- */
-import type { AnalyticsClient } from './client';
 import http from '../../../lib/api/http';
 import { type Env } from '../../env';
+
+import type { AnalyticsClient } from './client';
 
 const debug = debugLib( '@automattic/vip:analytics:clients:pendo' );
 

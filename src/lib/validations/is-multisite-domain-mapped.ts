@@ -1,19 +1,13 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
-import { trackEventWithEnv } from '../../lib/tracker';
-import * as exit from '../../lib/cli/exit';
 import {
 	AppMappedDomainsQuery,
 	AppMappedDomainsQueryVariables,
 } from './is-multisite-domain-mapped.generated';
 import { App } from '../../graphqlTypes';
+import API from '../../lib/api';
+import * as exit from '../../lib/cli/exit';
+import { trackEventWithEnv } from '../../lib/tracker';
 
 /**
  * Extracts the domain for site with ID 1 from an INSERT INTO `wp_site` SQL statement

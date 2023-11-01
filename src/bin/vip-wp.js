@@ -1,27 +1,21 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
+import debugLib from 'debug';
 import gql from 'graphql-tag';
+import readline from 'readline';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
-import readline from 'readline';
 import { Writable } from 'stream';
-import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
 import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatEnvironment, requoteArgs } from '../lib/cli/format';
 import { confirm } from '../lib/cli/prompt';
-import { trackEvent } from '../lib/tracker';
-import Token from '../lib/token';
 import { createProxyAgent } from '../lib/http/proxy-agent';
+import Token from '../lib/token';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:wp' );
 

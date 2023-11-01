@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { BackupStorageAvailability } from '../../../src/lib/backup-storage-availability/backup-storage-availability';
 import { Confirm } from 'enquirer';
+
+import { BackupStorageAvailability } from '../../../src/lib/backup-storage-availability/backup-storage-availability';
 
 const confirmRunSpy = jest.spyOn( Confirm.prototype, 'run' );
 

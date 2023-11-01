@@ -1,6 +1,3 @@
-/**
- * Internal dependencies
- */
 import { App } from '../../graphqlTypes';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 
@@ -13,7 +10,7 @@ export type AppForMediaImport = Pick<
 
 export function currentUserCanImportForApp( app: AppForMediaImport ): boolean {
 	// TODO: implement
-	return !! app;
+	return Boolean( app );
 }
 
 export const SUPPORTED_MEDIA_FILE_IMPORT_SITE_TYPES = [ 'WordPress' ];

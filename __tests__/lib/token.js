@@ -1,6 +1,3 @@
-/**
- * Internal dependencies
- */
 import Token, { SERVICE } from '../../src/lib/token';
 
 describe( 'token tests', () => {

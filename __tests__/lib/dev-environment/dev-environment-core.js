@@ -1,21 +1,15 @@
-// @format
-
-/**
- * External dependencies
- */
-import xdgBasedir from 'xdg-basedir';
-import fs from 'fs';
+import { expect, jest } from '@jest/globals';
+import child from 'child_process';
 import enquirer from 'enquirer';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import child from 'child_process';
 import { EventEmitter } from 'stream';
-import { expect, jest } from '@jest/globals';
+import xdgBasedir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import app from '../../../src/lib/api/app';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
+import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
 	createEnvironment,
@@ -25,10 +19,8 @@ import {
 	resolveImportPath,
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import { searchAndReplace } from '../../../src/lib/search-and-replace';
-import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
+import { searchAndReplace } from '../../../src/lib/search-and-replace';
 
 jest.mock( 'xdg-basedir', () => ( {} ) );
 jest.mock( '../../../src/lib/api/app' );

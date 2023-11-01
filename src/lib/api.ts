@@ -1,26 +1,18 @@
-// @format
-
-/**
- * External dependencies
- */
 import {
 	ApolloClient,
 	HttpLink,
 	InMemoryCache,
 	type NormalizedCacheObject,
 } from '@apollo/client/core';
-import { ApolloLink } from '@apollo/client/link/core';
 import { setContext } from '@apollo/client/link/context';
+import { ApolloLink } from '@apollo/client/link/core';
 import { onError } from '@apollo/client/link/error';
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
-import Token from './token';
-import env from './env';
-import { createProxyAgent } from '../lib/http/proxy-agent';
 import http from './api/http';
+import env from './env';
+import Token from './token';
+import { createProxyAgent } from '../lib/http/proxy-agent';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';

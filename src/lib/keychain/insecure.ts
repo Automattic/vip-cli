@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import Configstore from 'configstore';
 
-/**
- * Internal dependencies
- */
 import type { Keychain } from './keychain';
 
 export default class Insecure implements Keychain {

@@ -1,12 +1,6 @@
-/**
- * External dependencies
- */
-import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
-/**
- * Internal dependencies
- */
 // Reference for testing with env variables within a test: https://github.com/vuejs/vue-test-utils/issues/193
 
 describe( 'validate CreateProxyAgent', () => {

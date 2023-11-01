@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
 import API from '../lib/api';
+import command from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( { format: true } ).argv( process.argv, async () => {

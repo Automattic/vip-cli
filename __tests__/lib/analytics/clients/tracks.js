@@ -1,12 +1,6 @@
-/**
- * External dependencies
- */
 import nock from 'nock';
 import url from 'url';
 
-/**
- * Internal dependencies
- */
 import Tracks from '../../../../src/lib/analytics/clients/tracks';
 import * as apiConfig from '../../../../src/lib/cli/apiConfig';
 

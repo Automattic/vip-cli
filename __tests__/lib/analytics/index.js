@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
-/**
- * Internal dependencies
- */
 import Analytics from '../../../src/lib/analytics';
 
 class AnalyticsClientStub {

@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { appQuery, setEnvVar, validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
@@ -35,9 +29,9 @@ export async function setEnvVarCommand( arg, opt ) {
 		app_id: opt.app.id,
 		command: `${ baseUsage } ${ name }`,
 		env_id: opt.env.id,
-		from_file: !! opt.fromFile,
+		from_file: Boolean( opt.fromFile ),
 		org_id: opt.app.organization.id,
-		skip_confirm: !! opt.skipConfirmation,
+		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};
 

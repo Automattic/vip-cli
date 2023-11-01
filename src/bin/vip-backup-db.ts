@@ -1,17 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-
-import { makeCommandTracker } from '../lib/tracker';
-import { App, AppEnvironment } from '../graphqlTypes';
 import { BackupDBCommand } from '../commands/backup-db';
+import { App, AppEnvironment } from '../graphqlTypes';
+import command from '../lib/cli/command';
+import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{

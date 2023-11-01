@@ -1,20 +1,11 @@
 /* eslint-disable complexity */
-/**
- * External dependencies
- */
-import chalk from 'chalk';
-import gql from 'graphql-tag';
-import debugLib from 'debug';
-
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
-import { ProgressTracker, StepFromServer, StepStatus } from '../../lib/cli/progress';
-import * as exit from '../../lib/cli/exit';
-import { capitalize, formatEnvironment, getGlyphForStatus } from '../../lib/cli/format';
-import { AppQuery, AppQueryVariables } from './status.generated';
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import chalk from 'chalk';
+import debugLib from 'debug';
+import gql from 'graphql-tag';
+
+import { AppForImport, currentUserCanImportForApp } from './db-file-import';
+import { AppQuery, AppQueryVariables } from './status.generated';
 import {
 	App,
 	AppEnvironment,
@@ -24,7 +15,10 @@ import {
 	Maybe,
 	PrimaryDomainSwitchJob,
 } from '../../graphqlTypes';
-import { AppForImport, currentUserCanImportForApp } from './db-file-import';
+import API from '../../lib/api';
+import * as exit from '../../lib/cli/exit';
+import { capitalize, formatEnvironment, getGlyphForStatus } from '../../lib/cli/format';
+import { ProgressTracker, StepFromServer, StepStatus } from '../../lib/cli/progress';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 

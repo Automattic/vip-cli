@@ -1,19 +1,13 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { setTimeout } from 'timers/promises';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
 import * as logsLib from '../lib/app-logs/app-logs';
+import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatData } from '../lib/cli/format';
+import { trackEvent } from '../lib/tracker';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 5000;

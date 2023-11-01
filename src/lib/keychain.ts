@@ -1,12 +1,7 @@
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import Insecure from './keychain/insecure';
+
 import type { Keychain, KeychainConstructor } from './keychain/keychain';
 
 let exportValue: Keychain;

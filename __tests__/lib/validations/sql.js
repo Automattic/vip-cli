@@ -2,16 +2,10 @@
  * @format
  */
 
-/**
- * External dependencies
- */
-import path from 'path';
 import debugLib from 'debug';
 import fetch, { Response } from 'node-fetch';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
 import { validate } from '../../../src/lib/validations/sql';
 
 const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );

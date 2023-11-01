@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { prompt } from 'enquirer';
 
-/**
- * Internal dependencies
- */
 import { keyValue, type Tuple } from './format';
 
 interface Answer {

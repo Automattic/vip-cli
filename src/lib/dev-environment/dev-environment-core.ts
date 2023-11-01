@@ -1,23 +1,22 @@
-/**
- * External dependencies
- */
-import os from 'node:os';
-import fs from 'node:fs';
-import path from 'node:path';
-import debugLib from 'debug';
-import xdgBasedir from 'xdg-basedir';
-import fetch from 'node-fetch';
-import ejs from 'ejs';
 import chalk from 'chalk';
-import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
-import type Lando from 'lando';
-import { v4 as uuid } from 'uuid';
+import debugLib from 'debug';
+import ejs from 'ejs';
+import { prompt } from 'enquirer';
+import fetch from 'node-fetch';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import semver from 'semver';
+import { v4 as uuid } from 'uuid';
+import xdgBasedir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
+import {
+	handleCLIException,
+	printTable,
+	promptForWordPress,
+	resolvePath,
+} from './dev-environment-cli';
 import {
 	landoDestroy,
 	landoInfo,
@@ -28,14 +27,9 @@ import {
 	landoLogs,
 	LandoLogsOptions,
 } from './dev-environment-lando';
-import { searchAndReplace } from '../search-and-replace';
-import {
-	handleCLIException,
-	printTable,
-	promptForWordPress,
-	resolvePath,
-} from './dev-environment-cli';
+import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
+import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_RAW_GITHUB_HOST,
@@ -45,11 +39,12 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
-import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './types';
-import { appQueryFragments as softwareQueryFragment } from '../config/software';
-import UserError from '../user-error';
-import { AppEnvironment } from '../../graphqlTypes';
 import { createProxyAgent } from '../http/proxy-agent';
+import { searchAndReplace } from '../search-and-replace';
+import UserError from '../user-error';
+
+import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './types';
+import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -353,13 +348,13 @@ export async function printEnvironmentInfo(
 
 	const environmentData = readEnvironmentData( slug );
 	const appInfo = await landoInfo( lando, instancePath, {
-		suppressWarnings: !! options.suppressWarnings,
+		suppressWarnings: Boolean( options.suppressWarnings ),
 		autologinKey: environmentData.autologinKey,
 	} );
 
 	if ( options.extended ) {
 		appInfo.title = environmentData.wpTitle;
-		appInfo.multisite = !! environmentData.multisite;
+		appInfo.multisite = Boolean( environmentData.multisite );
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];
 		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
 		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
@@ -529,7 +524,7 @@ export function getEnvironmentPath( name: string ): string {
 
 	const mainEnvironmentPath = xdgDataDirectory();
 
-	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
+	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', String( name ) );
 }
 
 export async function getApplicationInformation(
@@ -834,7 +829,7 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise< 
 		const { mtime: expire } = await fs.promises.stat( cacheFile );
 		expire.setSeconds( expire.getSeconds() + ttl );
 
-		return +new Date() > +expire;
+		return Number( new Date() ) > Number( expire );
 	} catch ( err ) {
 		return true;
 	}

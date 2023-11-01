@@ -1,16 +1,8 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
@@ -19,7 +11,9 @@ import {
 	handleCLIException,
 	postStart,
 } from '../lib/dev-environment/dev-environment-cli';
+import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -52,14 +46,14 @@ command()
 		const startProcessing = new Date();
 
 		const trackingInfo = getEnvTrackingInfo( slug );
-		trackingInfo.vscode = !! opt.vscode;
+		trackingInfo.vscode = Boolean( opt.vscode );
 		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		const options = {
-			skipRebuild: !! opt.skipRebuild,
-			skipWpVersionsCheck: !! opt.skipWpVersionsCheck,
+			skipRebuild: Boolean( opt.skipRebuild ),
+			skipWpVersionsCheck: Boolean( opt.skipWpVersionsCheck ),
 		};
 		try {
 			await startEnvironment( lando, slug, options );
@@ -72,5 +66,5 @@ command()
 			process.exitCode = 1;
 		}
 
-		postStart( slug, { openVSCode: !! opt.vscode } );
+		postStart( slug, { openVSCode: Boolean( opt.vscode ) } );
 	} );

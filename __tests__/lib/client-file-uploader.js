@@ -2,12 +2,6 @@
  * @format
  */
 
-/**
- * External dependencies
- */
-/**
- * Internal dependencies
- */
 import { getFileMD5Hash, getFileMeta, getPartBoundaries } from '../../src/lib/client-file-uploader';
 
 describe( 'client-file-uploader', () => {

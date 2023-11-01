@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { describe, expect, it, jest } from '@jest/globals';
 
-/**
- * Internal dependencies
- */
 import { setEnvVarCommand } from '../../src/bin/vip-config-envvar-set';
 import command from '../../src/lib/cli/command';
 import { setEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';

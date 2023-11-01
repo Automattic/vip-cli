@@ -1,11 +1,7 @@
-// @format
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
-import { Parser } from 'json2csv';
 import Table from 'cli-table';
+import { Parser } from 'json2csv';
+
 import { StepStatus } from './progress';
 
 export interface Tuple {

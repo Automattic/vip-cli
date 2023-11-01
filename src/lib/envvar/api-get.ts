@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import getEnvVars from '../../lib/envvar/api-get-all';
+
 import type { EnvironmentVariable } from '../../graphqlTypes';
 
 export default async function getEnvVar(

@@ -1,32 +1,27 @@
-/**
- * External dependencies
- */
-import { tmpdir } from 'node:os';
-import { mkdir, rename } from 'node:fs/promises';
-import { lookup } from 'node:dns/promises';
-import path from 'node:path';
+import chalk from 'chalk';
 import debugLib from 'debug';
-import Lando, { LandoConfig } from 'lando/lib/lando';
+import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
+import Lando, { LandoConfig } from 'lando/lib/lando';
 import landoUtils, { AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
-import chalk from 'chalk';
-import App, { type ScanResult } from 'lando/lib/app';
+import { lookup } from 'node:dns/promises';
+import { mkdir, rename } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import xdgBasedir from 'xdg-basedir';
-import type { NetworkInspectInfo } from 'dockerode';
 
-/**
- * Internal dependencies
- */
 import {
 	doesEnvironmentExist,
 	readEnvironmentData,
 	updateEnvironment,
 	writeEnvironmentData,
 } from './dev-environment-core';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
+
+import type { NetworkInspectInfo } from 'dockerode';
 
 /**
  * This file will hold all the interactions with lando library

@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { formatBytes, formatDuration, requoteArgs } from '../../../src/lib/cli/format';
 
 describe( 'utils/cli/format', () => {

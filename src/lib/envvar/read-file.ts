@@ -1,12 +1,3 @@
-// @format
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { debug } from '../../lib/envvar/logging';
 import { readFromFile } from '../read-file';
 

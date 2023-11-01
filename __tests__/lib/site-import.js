@@ -1,6 +1,3 @@
-/**
- * Internal dependencies
- */
 import { isImportingBlockedBySync, isSupportedApp } from '../../src/lib/site-import/db-file-import';
 
 describe( 'site import tests', () => {

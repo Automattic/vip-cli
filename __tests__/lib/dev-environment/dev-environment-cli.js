@@ -1,17 +1,11 @@
 /* eslint-disable jest/no-conditional-expect */
-// @format
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
 import os from 'os';
 
-/**
- * Internal dependencies
- */
+import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvironmentStartCommand,
@@ -24,9 +18,8 @@ import {
 	resolvePhpVersion,
 	promptForWordPress,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
-import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
-import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
+import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 

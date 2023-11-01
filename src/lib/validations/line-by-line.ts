@@ -1,14 +1,8 @@
-/**
- * External dependencies
- */
-import { type Interface, createInterface } from 'node:readline';
+import debugLib from 'debug';
 import { createReadStream } from 'node:fs';
 import { open } from 'node:fs/promises';
-import debugLib from 'debug';
+import { type Interface, createInterface } from 'node:readline';
 
-/**
- * Internal dependencies
- */
 import * as exit from '../../lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
