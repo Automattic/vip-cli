@@ -44,18 +44,22 @@ command()
 		try {
 			for ( const envName of allEnvNames ) {
 				const slug = envName;
+				// eslint-disable-next-line no-await-in-loop
 				await validateDependencies( lando, slug );
 				const trackingInfoChild = getEnvTrackingInfo( slug );
+				// eslint-disable-next-line no-await-in-loop
 				await trackEvent( 'dev_env_destroy_command_execute', trackingInfoChild );
 
 				debug( 'Args: ', arg, 'Options: ', opt );
 
 				try {
 					const removeFiles = ! ( opt.soft || false );
+					// eslint-disable-next-line no-await-in-loop
 					await destroyEnvironment( lando, slug, removeFiles );
 
 					const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 					console.log( message );
+					// eslint-disable-next-line no-await-in-loop
 					await trackEvent( 'dev_env_destroy_command_success', trackingInfoChild );
 				} catch ( error ) {
 					await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfoChild );
