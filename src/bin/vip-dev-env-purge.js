@@ -3,25 +3,25 @@
 /**
  * External dependencies
  */
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
 
 /**
  * Internal dependencies
  */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import {
-	destroyEnvironment,
-	getAllEnvironmentNames,
-} from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	handleCLIException,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
+import {
+	destroyEnvironment,
+	getAllEnvironmentNames,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -62,6 +62,7 @@ command()
 					// eslint-disable-next-line no-await-in-loop
 					await trackEvent( 'dev_env_destroy_command_success', trackingInfoChild );
 				} catch ( error ) {
+					// eslint-disable-next-line no-await-in-loop
 					await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfoChild );
 					process.exitCode = 1;
 				}
