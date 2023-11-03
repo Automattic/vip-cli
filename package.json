@@ -156,7 +156,7 @@
     "js-yaml": "^4.1.0",
     "json2csv": "5.0.7",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli.git#5efb9eb",
+    "lando": "github:automattic/lando-cli.git#pull/42",
     "node-fetch": "^2.6.1",
     "opn": "5.5.0",
     "proxy-from-env": "^1.1.0",
