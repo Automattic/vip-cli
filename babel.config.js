@@ -9,8 +9,10 @@ module.exports = {
 		[
 			'@babel/preset-env',
 			{
+				loose: true,
+				exclude: [ '@babel/plugin-proposal-dynamic-import' ],
 				targets: {
-					node: '16', // Keep this in sync with package.json engines.node
+					node: '18', // Keep this in sync with package.json engines.node
 				},
 			},
 		],
