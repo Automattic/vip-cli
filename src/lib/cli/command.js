@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
-import updateNotifier from 'update-notifier';
 
 import { parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
@@ -105,8 +104,12 @@ args.argv = async function ( argv, cb ) {
 		return {};
 	}
 
-	// Check for updates every day
-	updateNotifier( { pkg, isGlobal: true, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
+	if ( process.env.NODE_ENV !== 'test' ) {
+		const { default: updateNotifier } = await import( 'update-notifier' );
+		updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify( {
+			isGlobal: true,
+		} );
+	}
 
 	// `help` and `version` are always defined as subcommands
 	const customCommands = this.details.commands.filter( command => {
