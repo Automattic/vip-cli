@@ -85,7 +85,9 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
 			wordpress: currentInstanceData.wordpress.tag || 'trunk',
 			elasticsearch: currentInstanceData.elasticsearch,
-			php: currentInstanceData.php || DEV_ENVIRONMENT_PHP_VERSIONS.default,
+			php:
+				currentInstanceData.php ||
+				DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image,
 			mariadb: currentInstanceData.mariadb,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,

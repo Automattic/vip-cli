@@ -584,10 +584,11 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 	describe( 'resolvePhpVersion', () => {
 		it.each( [
-			[ '7.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
-			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ] ],
-			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
-			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
+			[ '7.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ].image ],
+			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ].image ],
+			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ].image ],
+			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ].image ],
+			[ '8.3', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.3' ].image ],
 			[ 'image:php:8.0', 'image:php:8.0' ],
 			[
 				'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0',

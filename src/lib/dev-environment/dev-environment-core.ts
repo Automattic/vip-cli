@@ -192,7 +192,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	newInstanceData.php =
 		instanceData.php ||
-		( DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ] as string );
+		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
