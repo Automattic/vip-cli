@@ -1,6 +1,6 @@
+import { Parser } from '@json2csv/plainjs';
 import chalk from 'chalk';
 import Table from 'cli-table';
-import { Parser } from 'json2csv';
 
 import { StepStatus } from './progress';
 
