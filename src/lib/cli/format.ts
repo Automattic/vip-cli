@@ -1,6 +1,6 @@
 import { Parser } from '@json2csv/plainjs';
 import chalk from 'chalk';
-import Table from 'cli-table';
+import Table from 'cli-table3';
 
 import { StepStatus } from './progress';
 
@@ -79,7 +79,7 @@ export function table( data: Record< string, Stringable >[] ): string {
 	const dataTable = new Table( {
 		head: formatFields( fields ),
 		style: {
-			head: [ 'blueBright' ],
+			head: [ 'brightBlue' ],
 		},
 	} );
 
