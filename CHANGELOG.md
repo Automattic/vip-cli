@@ -1,5 +1,28 @@
 ## Changelog
 
+### 2.36.0
+
+- #1527 chore(dev-deps): remove @babel/plugin-transform-modules-commonjs and babel-plugin-module-resolver
+- #1531 chore(dev-deps): update nock from 13.3.3 to 13.3.4
+- #1530 chore(dev-deps): update TypeScript type definitions
+- #1529 chore(dev-deps): update eslint from 8.50.0 to 8.51.0
+- #1532 chore(dev-deps): update dockerode from 3.3.4 to 4.0.0
+- #1528 chore(dev-deps): update Babel-related stuff to 7.23
+- #1522 Change default response on WordPress upgrade prompt to 'no'
+- #1533 FORNO-1704: SQL Import - Improve handling of compressed files
+- #1536 CANTINA-957: Dev-env: Make message after update more clear
+- #1534 build: disable promise/no-multiple-resolved
+- #1535 FORNO-1677: Fix dev env network site domains
+- #1538 style: update @automattic/eslint-plugin-wpvip to 0.8.0 and apply style fixes
+- #1539 chore(dev-deps): update TypeScript type definitions
+- #1540 chore(deps): update jwt-decode from 3.1.2 to 4.0.0
+- #1541 chore(dev-deps): update nock from 13.3.4 to 13.3.7
+- #1542 chore: generate and verify provenance statements
+- #1544 chore(deps): update update-notifier to 7.0.0
+- #1485 feat(dev-env): add PHP 8.3 image
+- #1543 chore(deps): update lando
+- #1545 chore(deps): replace deprecated `json2csv` with `@json2csv/plainjs`
+
 ### 2.35.1
 
 - #1523	SQL Import Status: Ensure we pull site type ID from server for validation
