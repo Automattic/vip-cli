@@ -1,5 +1,3 @@
-import os from 'os';
-
 import { getSlowlogs } from '../../src/bin/vip-slowlogs';
 import * as slowlogsLib from '../../src/lib/app-slowlogs/app-slowlogs';
 import * as exit from '../../src/lib/cli/exit';
@@ -225,7 +223,7 @@ describe( 'getSlowlogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable max-len */
-			`"timestamp","rows sent","rows examined","query time","request uri","query"${ os.EOL }"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"${ os.EOL }"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
+			`"timestamp","rows sent","rows examined","query time","request uri","query"\n"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"\n"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
 			/* eslint-enable max-len */
 		);
 
