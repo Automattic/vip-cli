@@ -1,5 +1,9 @@
 ## Changelog
 
+### 2.36.1
+
+- #1550 chore(deps): replace cli-table with cli-table3
+
 ### 2.36.0
 
 - #1527 chore(dev-deps): remove @babel/plugin-transform-modules-commonjs and babel-plugin-module-resolver
