@@ -18,7 +18,6 @@ export class DevEnvImportSQLCommand {
 	fileName;
 	options;
 	slug;
-	trackingInfo;
 
 	constructor( fileName, options, slug ) {
 		this.fileName = fileName;

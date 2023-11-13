@@ -8,7 +8,7 @@ import {
 	handleCLIException,
 	getEnvironmentName,
 } from '../lib/dev-environment/dev-environment-cli';
-import { trackEvent } from '../lib/tracker';
+import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{
@@ -44,12 +44,15 @@ command( {
 		const slug = await getEnvironmentName( opt );
 		const cmd = new DevEnvImportSQLCommand( fileName, opt, slug );
 		const trackingInfo = getEnvTrackingInfo( cmd.slug );
+		const trackerFn = makeCommandTracker( 'dev_env_import_sql', trackingInfo );
+		await trackerFn( 'execute' );
 
 		try {
 			await cmd.run();
-			await trackEvent( 'dev_env_import_sql_command_success', trackingInfo );
+			await trackerFn( 'success' );
 		} catch ( error ) {
-			await handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );
+			await handleCLIException( error );
+			await trackerFn( 'error', { message: error.message, stack: error.stack } );
 			process.exitCode = 1;
 		}
 	} );
