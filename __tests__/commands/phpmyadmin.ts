@@ -2,15 +2,15 @@
 /**
  * External dependencies
  */
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import opn from 'opn';
 
 /**
  * Internal dependencies
  */
-import { CommandTracker } from '../../src/lib/tracker';
 import { PhpMyAdminCommand } from '../../src/commands/phpmyadmin';
 import API from '../../src/lib/api';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import opn from 'opn';
+import { CommandTracker } from '../../src/lib/tracker';
 
 const mutationMock = jest.fn( async () => {
 	return Promise.resolve( {

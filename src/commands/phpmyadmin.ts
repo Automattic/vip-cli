@@ -1,21 +1,20 @@
 /**
  * External dependencies
  */
-
+import { GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 import opn from 'opn';
 
 /**
  * Internal dependencies
  */
+import { App, AppEnvironment } from '../graphqlTypes';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
 import * as exit from '../lib/cli/exit';
 import { CommandTracker } from '../lib/tracker';
-import { App, AppEnvironment } from '../graphqlTypes';
-import { GraphQLFormattedError } from 'graphql';
 
 export const GENERATE_PHP_MY_ADMIN_URL_MUTATION = gql`
 	mutation GeneratePhpMyAdminAccess($input: GeneratePhpMyAdminAccessInput) {
@@ -90,6 +89,7 @@ export class PhpMyAdminCommand {
 			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		void opn( url, { wait: false } );
 		this.log( 'PhpMyAdmin is opened in your default browser.' );
 	}
