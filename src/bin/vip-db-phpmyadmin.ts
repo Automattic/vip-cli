@@ -7,11 +7,10 @@
 /**
  * Internal dependencies
  */
-import command from '../lib/cli/command';
-
-import { makeCommandTracker } from '../lib/tracker';
-import { App, AppEnvironment } from '../graphqlTypes';
 import { PhpMyAdminCommand } from '../commands/phpmyadmin';
+import { App, AppEnvironment } from '../graphqlTypes';
+import command from '../lib/cli/command';
+import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{
