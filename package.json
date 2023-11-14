@@ -41,7 +41,6 @@
     "vip-dev-env-purge": "dist/bin/vip-dev-env-purge.js",
     "vip-export": "dist/bin/vip-export.js",
     "vip-export-sql": "dist/bin/vip-export-sql.js",
-    "vip-phpmyadmin": "dist/bin/vip-phpmyadmin.js",
     "vip-dev-env-sync": "dist/bin/vip-dev-env-sync.js",
     "vip-dev-env-sync-sql": "dist/bin/vip-dev-env-sync-sql.js",
     "vip-import": "dist/bin/vip-import.js",
