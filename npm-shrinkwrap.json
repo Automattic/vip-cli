@@ -64,6 +64,8 @@
         "vip-config-software": "dist/bin/vip-config-software.js",
         "vip-config-software-get": "dist/bin/vip-config-software-get.js",
         "vip-config-software-update": "dist/bin/vip-config-software-update.js",
+        "vip-db": "dist/bin/vip-db.js",
+        "vip-db-phpmyadmin": "dist/bin/vip-db-phpmyadmin.js",
         "vip-dev-env": "dist/bin/vip-dev-env.js",
         "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
         "vip-dev-env-destroy": "dist/bin/vip-dev-env-destroy.js",
@@ -92,7 +94,6 @@
         "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
         "vip-logout": "dist/bin/vip-logout.js",
         "vip-logs": "dist/bin/vip-logs.js",
-        "vip-phpmyadmin": "dist/bin/vip-phpmyadmin.js",
         "vip-search-replace": "dist/bin/vip-search-replace.js",
         "vip-slowlogs": "dist/bin/vip-slowlogs.js",
         "vip-sync": "dist/bin/vip-sync.js",
@@ -413,8 +414,16 @@
       "version": "1.1.1",
       "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.1.tgz",
       "integrity": "sha512-4soBqoMrjnXGNm54DwtVYVpI36KXo828prM17vs+2hRgjThVKv2atcCZj4FC88tKgnQzf14JccQZ1G1QR3eaZA==",
-      "cpu": [ "ia32", "x64", "arm64" ],
-      "os": [ "darwin", "linux", "win32" ],
+      "cpu": [
+        "ia32",
+        "x64",
+        "arm64"
+      ],
+      "os": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
       "dependencies": {
         "debug": "^4.2.0",
         "follow-redirects": "^1.13.0"
@@ -3158,7 +3167,9 @@
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/@lando/compose/-/compose-1.0.0.tgz",
       "integrity": "sha512-n7EelwK+1T22ueYiOWpniBo5508QJtGsXHENIdnew9e30T33GRUbXCeK7at+dv8CvpqgKsw76lD2Antna9b/Zg==",
-      "bundleDependencies": [ "lodash" ],
+      "bundleDependencies": [
+        "lodash"
+      ],
       "dependencies": {
         "lodash": "^4.17.21"
       },
@@ -3175,7 +3186,9 @@
       "version": "0.8.0",
       "resolved": "https://registry.npmjs.org/@lando/mailhog/-/mailhog-0.8.0.tgz",
       "integrity": "sha512-BLa/3l1z+6eW865nnGStV0KeG7rF0H5TT6uAIaYh9kOn8vS1UqKUifVsW5tpl54C6goYH+HqGH45aQzeM5Xxgw==",
-      "bundleDependencies": [ "lodash" ],
+      "bundleDependencies": [
+        "lodash"
+      ],
       "dependencies": {
         "lodash": "^4.17.21"
       },
@@ -3554,15 +3567,6 @@
       "dependencies": {
         "@types/node": "*",
         "form-data": "^4.0.0"
-      }
-    },
-    "node_modules/@types/opn": {
-      "version": "5.1.0",
-      "resolved": "https://registry.npmjs.org/@types/opn/-/opn-5.1.0.tgz",
-      "integrity": "sha512-TNPrB7Y1xl06zDI0aGyqkgxjhIev3oJ+cdqlZ52MTAHauWpEL/gIUdHebIfRHFZk9IqSBpE2ci1DT48iZH81yg==",
-      "dev": true,
-      "dependencies": {
-        "@types/node": "*"
       }
     },
     "node_modules/@types/proxy-from-env": {
@@ -7383,7 +7387,9 @@
       "dev": true,
       "hasInstallScript": true,
       "optional": true,
-      "os": [ "darwin" ],
+      "os": [
+        "darwin"
+      ],
       "engines": {
         "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
       }
@@ -12752,7 +12758,10 @@
       "version": "9.0.1",
       "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
       "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==",
-      "funding": [ "https://github.com/sponsors/broofa", "https://github.com/sponsors/ctavan" ],
+      "funding": [
+        "https://github.com/sponsors/broofa",
+        "https://github.com/sponsors/ctavan"
+      ],
       "bin": {
         "uuid": "dist/bin/uuid"
       }
@@ -15943,15 +15952,6 @@
       "requires": {
         "@types/node": "*",
         "form-data": "^4.0.0"
-      }
-    },
-    "@types/opn": {
-      "version": "5.1.0",
-      "resolved": "https://registry.npmjs.org/@types/opn/-/opn-5.1.0.tgz",
-      "integrity": "sha512-TNPrB7Y1xl06zDI0aGyqkgxjhIev3oJ+cdqlZ52MTAHauWpEL/gIUdHebIfRHFZk9IqSBpE2ci1DT48iZH81yg==",
-      "dev": true,
-      "requires": {
-        "@types/node": "*"
       }
     },
     "@types/proxy-from-env": {
