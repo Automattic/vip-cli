@@ -177,9 +177,9 @@ void command( {
 
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
-		await track( 'deploy_app_command_execute' );
+		// await track( 'deploy_app_command_execute' );
 
-		await gates( app, env, fileMeta );
+		// await gates( app, env, fileMeta );
 
 		// Log summary of deploy details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
