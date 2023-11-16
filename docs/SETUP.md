@@ -13,9 +13,27 @@
 
 ### For end-users
 
-TODO: Describe
+## Getting started
 
+First, install the package:
 
+```bash
+npm install -g @automattic/vip
+```
+
+The above command may fail in Linux if you do not have `make` and `g++` installed. In that case, install them first:
+
+```bash
+sudo apt install make g++
+```
+
+Then, launch the command and follow the prompts:
+
+```bash
+vip
+```
+
+If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
 
 ### Before installing
 
