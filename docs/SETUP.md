@@ -78,63 +78,35 @@ The software runs as standalone CLI and relies on environmental variables for co
 To start the software locally, run:
 
 ```bash
-TODO
+vip
 ```
 
-TODO: Instructions for re-starting the application in case of changes.
-
-#### Errors while running
-
-TODO: Note any potential issues with start up here and solutions to them.
+If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
 
 ### Analytics
 
 By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
 
-
 ### Local application
 
 #### Configuring access token
 
-Install the software locally and configure the token:
-
-```bash
-...
-```
+Install the software locally, run and follow the instructions to configure the access token.
 
 ### Environmental variables
 
-Environmental variables are configured in the repository.
-
-TODO: Update and adjust the following sections.
-
 #### Configuring environmental variables
 
-Configuring environmental variables in production and locally takes place in the repository via the [docker-compose.yml file](https://github.com/Automattic/vip-cli/blob/trunk/docker-compose.yml) under the `environment` key.
-
-```YAML
-  environment:
-    API_URL: http://localhost:4000
-    DB_NAME: api
-    DB_PASS:
-    ...
-    NEW_ENV_VAR: 'value'
-```
-
-#### Adding/editing
-
-To add/edit a new environmental variable, you can use any editor. Some variable values require special encoding (see below). Be careful not to violate the YML syntax.
+Environmental variables are configured in the shell. Use normal shell commands to set them.
 
 #### List of environmental variables
 
 This application uses environmental variables for vital configuration information. Find a partial list below.
 
+TODO:
+
 - `A`: Used to ...
 - `B`: Used to ...
-
-#### Overriding locally
-
-You can override any environmental variables locally by adding/editing keys/values in the [.env](https://github.com/Automattic/vip-cli/blob/trunk/.env) file. Be mindful **not** to commit any changes intended for production here.
 
 ## Updating dependencies
 
@@ -148,12 +120,9 @@ To upgrade Node, follow these steps:
 
 1. Update [.nvmrc](https://github.com/Automattic/vip-cli/blob/trunk/.nvmrc) to the new version and open a pull request.
 1. Address any test failures.
-1. [Update the Node.js version](https://docs.wpvip.com/technical-references/software-management/#h-node-js) of the staging environment and test.
-1. Update the Node.js version of the production environment.
+1. Update the Node.js version locally and test before merging into the repository.
 
 Upgrading Node should be considered high-risk.
-
-**Node:** Because we deploy new Node versions one container at a time, the API needs to work on the currently deployed Node version as well as the next Node version simultaneously.
 
 ### Before merging
 
@@ -172,4 +141,4 @@ For higher risk dependencies, the routes/utilities using the dependency [will ha
 
 ### After merging
 
-You should monitor the application after deploying, as noted in [RELEASING.md](RELEASING.md#monitoring-post-release).
+No special considerations.
