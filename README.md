@@ -2,28 +2,6 @@
 
 VIP-CLI is a tool for interacting with and managing your VIP applications.
 
-## Getting started
-
-First, install the package:
-
-```
-npm install -g @automattic/vip
-```
-
-The above command may fail in linux if you do not have `make` and `g++` installed. In that case, install them first:
-
-```
-sudo apt install make g++
-```
-
-Then, launch the command and follow the prompts:
-
-```
-vip
-```
-
-If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
-
 ## Contributing
 
 For help with contributing to this project, including instructions for local development, please see [CONTRIBUTING](CONTRIBUTING.md) and [SECURITY](SECURITY.md).
