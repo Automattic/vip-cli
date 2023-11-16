@@ -2,10 +2,6 @@
 
 VIP-CLI is a tool for interacting with and managing your VIP applications.
 
-## Analytics
-
-By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
-
 ## Further documentation
 
 - [SETUP.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/SETUP.md) for installation and setup instructions, basic usage and environmental variables.
