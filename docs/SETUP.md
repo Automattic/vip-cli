@@ -11,9 +11,7 @@
 
 ## Installation & setup instructions
 
-### For end-users
-
-## Getting started
+### Installation for end-users
 
 First, install the package:
 
@@ -35,7 +33,7 @@ vip
 
 If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
 
-### Before installing
+### Installation for developers
 
 The section below is intended for developers.
 
