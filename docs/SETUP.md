@@ -43,11 +43,9 @@ The section below is intended for developers.
 
 We recommend to use a version manager like [nvm](https://github.com/nvm-sh/nvm) or [nodenv](https://github.com/nodenv/nodenv) to automatically configure the version of Node required by this software package. The [.nvmrc](https://github.com/Automattic/vip-cli/blob/trunk/.nvmrc) file gives these tools the necessary hints for what version to use.
 
-#### Install and setup ...
+#### Install and setup of API
 
-TODO: Does this software rely on other software? Link to setup instructions for that.
-
-To be able to function, [??](https://github.com/Automattic/???) (???), has to be [installed, set up and running](https://github.com/Automattic/???/tree/trunk/docs/SETUP.md) before this package is started. Please ensure to complete this step before attempting to install and run the package.
+This software relies on https://api.wpvip.com. You may need to have a local instance of that set up for development. Follow internal instructions in that case.
 
 ### Fetching & installing
 
