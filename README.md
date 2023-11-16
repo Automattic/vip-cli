@@ -1,4 +1,6 @@
-VIP-CLI is your tool for interacting with and managing your VIP applications.
+# VIP-CLI
+
+VIP-CLI is a tool for interacting with and managing your VIP applications.
 
 ## Getting started
 
