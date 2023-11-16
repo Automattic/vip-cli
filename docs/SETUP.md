@@ -87,17 +87,20 @@ TODO: Instructions for re-starting the application in case of changes.
 
 TODO: Note any potential issues with start up here and solutions to them.
 
+### Analytics
+
+By default, we record information about the usage of this tool using an in-house analytics sytem. If you would prefer to opt-out of this data collection, you can do so via the `DO_NOT_TRACK` environment variable. You may either export it in your shell configuration or specify it on the command line (e.g. `DO_NOT_TRACK=1 vip app list`).
+
+
 ### Local application
 
-#### Generating token (locally)
+#### Configuring access token
 
-To generate a token that can be used for development, [start the software locally](#starting-up-locally), and then locally run:
+Install the software locally and configure the token:
 
 ```bash
 ...
 ```
-
-For information on testing individual API endpoints using tokens, see [TESTING.md](TESTING.md).
 
 ### Environmental variables
 
