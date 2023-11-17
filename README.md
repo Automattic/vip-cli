@@ -1,6 +1,6 @@
 # VIP-CLI
 
-VIP-CLI is a tool for interacting with and managing your VIP applications.
+VIP-CLI is a tool for interacting with and managing your [WordPress VIP applications](https://wpvip.com/).
 
 ## Further documentation
 
@@ -12,11 +12,7 @@ VIP-CLI is a tool for interacting with and managing your VIP applications.
 - [RELEASING.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/RELEASING.md) for details on deploying a new release.
 - [SECURITY.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/SECURITY.md) for information if you found a security issue.
 
-## Health, logs and monitoring
-
-- [WPVIP API](docs/ARCHITECTURE.md#communicating-with-wpvip-api) is required by the CLI.
-
-## Links to historical documents
+## Further information
 
 - In the [WordPress VIP Lobby](https://lobby.vip.wordpress.com/) we announce updates to the [CLI](https://lobby.vip.wordpress.com/?s=vip-cli) and [API](https://lobby.vip.wordpress.com/?s=vip%20go%20api).
 - The [WordPress VIP Documentation](https://docs.wpvip.com/) has information on the [CLI](https://docs.wpvip.com/technical-references/vip-cli/).
