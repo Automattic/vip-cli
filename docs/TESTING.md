@@ -61,3 +61,7 @@ VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip app
 
 VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get home
 ```
+
+## Final testing before releasing
+
+TODO: How should final testing before releasing be done?
