@@ -4,11 +4,6 @@ Thanks for contributing to the VIP-CLI. There are some guidelines to ensure we h
 
 ## Developing
 
-### Node version
-
-To develop use the minimum supported node version. You can take a look in the `package.json` `engines` configuration
-or, if you use tools like `nvm` you can run `nvm use` to ensure you're running the right one.
-
 ### Using debugger
 
 Who doesn't like a good console.log for debugging?
