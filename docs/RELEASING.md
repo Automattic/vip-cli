@@ -65,8 +65,6 @@ Prepare the release by making sure that:
 1. The release has been tested across macOS, Windows, and Linux.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
    just-in-case).
-1. Make sure not to merge anymore changes into `develop` while all the release steps below are in
-   progress.
 
 You can release either using GitHub Actions or locally.
 
