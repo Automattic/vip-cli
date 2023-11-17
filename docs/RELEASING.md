@@ -53,7 +53,7 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 ### Pre-publish Checks
 
-We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trunk/helpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
+We use a custom pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
 
 Further checks can be added to this flow as needed.
 
@@ -114,7 +114,7 @@ To publish locally, follow these steps:
 1. Publish the release to npm (`npm publish --access public`) the script will do some extra checks (
    node version, branch, etc) to ensure everything is correct. If all looks good, the new version
    will be published and you can proceed.
-1. Edit [the release on GitHub](https://github.com/Automattic/vip/releases) to include a description
+1. Edit [the release on GitHub](https://github.com/Automattic/vip-cli/releases) to include a description
    of the changes and publish (this can just copy the details from the changelog).
 1. Push `trunk` changes (mostly the version bump)
    to `develop` (`git checkout develop && git merge trunk` ). There's no need to use a pull request
