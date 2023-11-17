@@ -4,8 +4,6 @@
 
 ## Preparing for release
 
-TODO: Update and adjust this checklist.
-
 A few steps should be completed before releasing:
 
 1. Please note the publishing method (see [below](#releasing-a-new-version)).
@@ -16,9 +14,9 @@ A few steps should be completed before releasing:
 
    b. The feature branch follows A8C branch naming conventions, e.g.: `add/health-query`, `fix/subsite-mutation`, etc.
 
-   c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
+   c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc. as this is a public repository.
 
-   d. You have included changelog. Include a changelog by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to as well.
+   d. You have included changelog entries. Include a changelog by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to as well.
 
 1. Once you've created your pull request, ensure that:
 
@@ -38,7 +36,7 @@ A few steps should be completed before releasing:
 
 1. Merge your pull request.
 
-1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version). Follow internal guidelines on releasing.
+1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version).
   
 If you need to publish a security release, see [details below](#patching-old-releases).
 
@@ -75,6 +73,10 @@ You can release either using GitHub Actions or locally.
 ### Publishing via GitHub Actions (preferred)
 
 This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
+
+Please keep in mind internal guidelines before releasing.
+
+To release, follow these steps:
 
 1. Initiate the [release process here](https://github.com/Automattic/vip-cli/actions/workflows/npm-prepare-release.yml).
 1. On the right-hand side, select "Run Workflow".
