@@ -95,7 +95,9 @@ To release, follow these steps:
 
 Publishing via the GitHub Action requires that the `NPM_TOKEN` be set correctly in GitHub Actions secrets. This should be an npm token generated for a bot user on [the npm @automattic org](https://www.npmjs.com/settings/automattic) that has publish access to this repo.
 
-### Publishing locally
+### Alternative methods of releasing
+
+#### Publishing locally
 
 To publish locally, follow these steps:
 
@@ -123,7 +125,7 @@ To publish locally, follow these steps:
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
-### Test Releases
+#### Test Releases
 
 Sometimes, we want to release a version we can test before releasing it to the public. In order to that, we need to release it under a tag other than `latest`, usually `next`. By default, `npm` install from the `latest` tag, so if `@next` isn't specified explicitely in the installation command like `npm install @automattic/vip@next`, a user will not get this version.
 
@@ -134,7 +136,7 @@ In order to do that, please follow this:
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 
-### Patching Old Releases
+#### Patching Old Releases
 
 There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `trunk` branch.
 
