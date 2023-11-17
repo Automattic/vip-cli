@@ -16,7 +16,7 @@ Follow these steps for new pull requests:
 
    c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc. as this is a public repository.
 
-   d. You have included changelog entries. Include a changelog by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to as well.
+   d. You have included changelog entry by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. 
 
 1. Once you've created your pull request, ensure that:
 
@@ -41,6 +41,8 @@ A few steps should be completed before releasing:
 
 1. Verify that all relevant pull requests are merged.
 
+1. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to.
+   
 1. Please note the publishing method (see [below](#releasing-a-new-version)).
 
 1. Determine strategy to [respond to problems post-deployment](#in-case-of-problems).
