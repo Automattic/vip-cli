@@ -94,7 +94,7 @@ This is the preferred method for pushing out the latest release. The workflow ru
 
 Publishing via the GitHub Action requires that the `NPM_TOKEN` be set correctly in GitHub Actions secrets. This should be an npm token generated for a bot user on [the npm @automattic org](https://www.npmjs.com/settings/automattic) that has publish access to this repo.
 
-#### Publishing locally
+### Publishing locally
 
 To publish locally, follow these steps:
 
@@ -144,3 +144,7 @@ For these cases:
 1. Follow the release steps outlined above (as a `patch` release).
 
 Then, repeat for any additional versions that we need to patch.
+
+## In case of problems
+
+TODO: How to revert to a good state in case of problems?
