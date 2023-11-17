@@ -1,0 +1,61 @@
+# Architecture
+
+## Basic functionality
+
+This is a CLI for interacting with and managing your [WordPress VIP applications](https://docs.wpvip.com/technical-references/vip-cli/). Data is inputted and outputted via terminal to the [API offered by WordPress VIP](#communicating-with-wpvip-api) and to/from local filesystem.
+
+For configuration, a few [environmental variables](SETUP.md#environmental-variables) are used and some [configuration files](SETUP.md#configuration-files) as well. No database is required.
+
+### Scalability
+
+No specific considerations.
+
+### Communicating with WPVIP API
+
+The CLI communicates primarily with https://api.wpvip.com. An authentication token is required to access the API which the CLI will ask for when executed. Tokens can be retrieved from the [VIP Dashboard](https://dashboard.wpvip.com/).
+
+## Languages & coding standard
+
+Both JavaScript and TypeScript are used to implement the software. **TypeScript should be used for new code.**
+
+We require that the WPVIP defined coding style to be used, defined in [.eslintrc.json](https://github.com/Automattic/vip-cli/blob/trunk/.eslintrc.json).
+
+## Code structure
+
+The code is structured in the following way:
+
+- [.github](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/.github) — configuration and templates for GitHub.
+- [\_\_fixtures\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__fixtures__) — fixtures for testing package.
+- [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) — testing package.
+- [config](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/config) — configuration files.
+- [docs](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/docs) — documentation package.
+- [types](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/types) - for TypeScript.
+- [helpers](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/helpers) - helper scripts.
+- [src](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/src) - main source code.
+
+## API interfaces
+
+No APIs are offered.
+
+### GraphQL interfaces
+
+No APIs are offered.
+
+## Feature flags
+
+TODO: Do we apply feature flags in this code? Describe how it works.
+
+## Database
+
+No database is needed.
+
+## Dependency services
+
+VIP-CLI communicates with a few services via APIs:
+
+- [WPVIP API](#communicating-with-wpvip-api).
+- https://public-api.wordpress.com/rest – for analytics (can be [disabled](SETUP.md#analytics)).
+
+## Alerting
+
+There are no alerts.
