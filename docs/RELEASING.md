@@ -39,7 +39,7 @@ Follow these steps for new pull requests:
 
 A few steps should be completed before releasing:
 
-1. Verify that all relevant pull requests are merged.
+1. Verify that [all relevant pull requests](https://github.com/Automattic/vip-cli/pulls) are merged.
 
 1. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to.
    
