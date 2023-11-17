@@ -9,20 +9,6 @@ Thanks for contributing to the VIP-CLI. There are some guidelines to ensure we h
 To develop use the minimum supported node version. You can take a look in the `package.json` `engines` configuration
 or, if you use tools like `nvm` you can run `nvm use` to ensure you're running the right one.
 
-### Local Dev
-
-To test against a local instance of Parker, you can use the `API_HOST` env var. You'll also want to nullify the `VIP_PROXY` env var as well.
-
-Examples:
-
-```
-VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip
-
-VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip app
-
-VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get home
-```
-
 ### Using debugger
 
 Who doesn't like a good console.log for debugging?
