@@ -2,7 +2,7 @@
 
 ## Using debugger
 
-A debugger can easily be used to help pinpointing issues with the code.
+A debugger can easily be used to help pinpointing issues with the code. Follow these steps.
 
 1. First, make sure to run the `npm run build:watch`, this will generate source maps
 2. Run the command you want via `node --inspect`, like so: `node --inspect ./dist/bin/vip-dev-env-import-sql.js`
