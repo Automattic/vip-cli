@@ -2,9 +2,9 @@
 
 Please familiarize yourself with the [SETUP.md](SETUP.md) file before releasing.
 
-## Preparing for release
+## New pull requests
 
-A few steps should be completed before releasing:
+Follow these steps for new pull requests:
 
 1. Please note the publishing method (see [below](#releasing-a-new-version)).
 
@@ -30,11 +30,27 @@ A few steps should be completed before releasing:
 
 1. Have your pull request reviewed by a colleague and approved — especially if it is a large change or a complex addition.
 
-1. Determine strategy to [respond to problems post-deployment](#in-case-of-problems).
-
 1. Verify that your pull request passes all automated tests.
 
 1. Merge your pull request.
+
+
+## Preparing for release
+
+A few steps should be completed before releasing:
+
+1. Verify that all relevant pull requests are merged.
+
+1. Please note the publishing method (see [below](#releasing-a-new-version)).
+
+1. Determine strategy to [respond to problems post-deployment](#in-case-of-problems).
+
+1. The release has been tested across macOS, Windows, and Linux.
+   
+1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
+   just-in-case).
+   
+1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
 1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version).
   
@@ -50,16 +66,6 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 ```
 
 ## Releasing a new version
-
-### New Releases
-
-Prepare the release by making sure that:
-
-1. All relevant pull requests have been merged.
-1. The release has been tested across macOS, Windows, and Linux.
-1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
-   just-in-case).
-1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
 You can release either using GitHub Actions or locally.
 
