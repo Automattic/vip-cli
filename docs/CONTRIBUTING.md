@@ -2,12 +2,6 @@
 
 Thanks for contributing to the VIP-CLI. There are some guidelines to ensure we have consistency across the CLI and web interfaces.
 
-## Coding Standards
-
-The VIP-CLI uses [`eslint-config-wpvip`](https://github.com/Automattic/eslint-config-wpvip) for coding standards.
-
-Tests are powered by [Jest](https://jestjs.io).
-
 ## Developing
 
 ### Node version
