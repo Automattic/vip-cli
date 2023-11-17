@@ -51,12 +51,6 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 ## Releasing a new version
 
-### Pre-publish Checks
-
-We use a custom pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
-
-Further checks can be added to this flow as needed.
-
 ### New Releases
 
 Prepare the release by making sure that:
@@ -65,6 +59,7 @@ Prepare the release by making sure that:
 1. The release has been tested across macOS, Windows, and Linux.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
    just-in-case).
+1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
 You can release either using GitHub Actions or locally.
 
