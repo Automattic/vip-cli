@@ -1,6 +1,6 @@
 # Releasing
 
-[SETUP.md](SETUP.md#production-application) details the hosting method and provides detail regarding how the software is set up in production. Please familiarize yourself with this file before releasing.
+[SETUP.md](SETUP.md#production-application) provides detail regarding setup and releasing. Please familiarize yourself with this file before releasing.
 
 ## Preparing for release
 
