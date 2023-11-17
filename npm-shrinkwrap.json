@@ -111,7 +111,7 @@
         "@types/args": "^5.0.3",
         "@types/cli-table": "^0.3.4",
         "@types/configstore": "5.0.1",
-        "@types/debug": "^4.1.11",
+        "@types/debug": "^4.1.12",
         "@types/dockerode": "^3.3.23",
         "@types/ejs": "^3.1.5",
         "@types/jest": "^29.5.8",
@@ -121,7 +121,7 @@
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.8.15",
         "@types/single-line-log": "1.1.2",
-        "@types/update-notifier": "6.0.7",
+        "@types/update-notifier": "^6.0.8",
         "@types/uuid": "^9.0.7",
         "@types/xml2js": "^0.4.14",
         "dockerode": "^4.0.0",
@@ -3388,9 +3388,9 @@
       "dev": true
     },
     "node_modules/@types/debug": {
-      "version": "4.1.11",
-      "resolved": "https://registry.npmjs.org/@types/debug/-/debug-4.1.11.tgz",
-      "integrity": "sha512-R2qflTjHDs4CL6D/6TkqBeIHr54WzZfIxN729xvCNlYIVp2LknlnCro5Yo3frNaX2E5gO9pZ3/QAPVdGmu+q9w==",
+      "version": "4.1.12",
+      "resolved": "https://registry.npmjs.org/@types/debug/-/debug-4.1.12.tgz",
+      "integrity": "sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==",
       "dev": true,
       "dependencies": {
         "@types/ms": "*"
@@ -3578,13 +3578,13 @@
       "integrity": "sha512-+/DsiV4CxXl6ZWefwHZDXSe1Slitz21tom38qPCaG0DYCS1NnDPIQDTKcmQ/tvK/edJUKkmuIDBJbmKDiB0r/g=="
     },
     "node_modules/@types/update-notifier": {
-      "version": "6.0.7",
-      "resolved": "https://registry.npmjs.org/@types/update-notifier/-/update-notifier-6.0.7.tgz",
-      "integrity": "sha512-nJuO9aZYKVzOEsjkmcLl86YqnJghl3MOukTObamkdKUvWz608gvNpG6U3E7rqnkxeVq4/KjbX+URe+FA5SFU7A==",
+      "version": "6.0.8",
+      "resolved": "https://registry.npmjs.org/@types/update-notifier/-/update-notifier-6.0.8.tgz",
+      "integrity": "sha512-IlDFnfSVfYQD+cKIg63DEXn3RFmd7W1iYtKQsJodcHK9R1yr8aKbKaPKfBxzPpcHCq2DU8zUq4PIPmy19Thjfg==",
       "dev": true,
       "dependencies": {
         "@types/configstore": "*",
-        "boxen": "^7.0.0"
+        "boxen": "^7.1.1"
       }
     },
     "node_modules/@types/uuid": {
@@ -15725,9 +15725,9 @@
       "dev": true
     },
     "@types/debug": {
-      "version": "4.1.11",
-      "resolved": "https://registry.npmjs.org/@types/debug/-/debug-4.1.11.tgz",
-      "integrity": "sha512-R2qflTjHDs4CL6D/6TkqBeIHr54WzZfIxN729xvCNlYIVp2LknlnCro5Yo3frNaX2E5gO9pZ3/QAPVdGmu+q9w==",
+      "version": "4.1.12",
+      "resolved": "https://registry.npmjs.org/@types/debug/-/debug-4.1.12.tgz",
+      "integrity": "sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==",
       "dev": true,
       "requires": {
         "@types/ms": "*"
@@ -15917,13 +15917,13 @@
       "integrity": "sha512-+/DsiV4CxXl6ZWefwHZDXSe1Slitz21tom38qPCaG0DYCS1NnDPIQDTKcmQ/tvK/edJUKkmuIDBJbmKDiB0r/g=="
     },
     "@types/update-notifier": {
-      "version": "6.0.7",
-      "resolved": "https://registry.npmjs.org/@types/update-notifier/-/update-notifier-6.0.7.tgz",
-      "integrity": "sha512-nJuO9aZYKVzOEsjkmcLl86YqnJghl3MOukTObamkdKUvWz608gvNpG6U3E7rqnkxeVq4/KjbX+URe+FA5SFU7A==",
+      "version": "6.0.8",
+      "resolved": "https://registry.npmjs.org/@types/update-notifier/-/update-notifier-6.0.8.tgz",
+      "integrity": "sha512-IlDFnfSVfYQD+cKIg63DEXn3RFmd7W1iYtKQsJodcHK9R1yr8aKbKaPKfBxzPpcHCq2DU8zUq4PIPmy19Thjfg==",
       "dev": true,
       "requires": {
         "@types/configstore": "*",
-        "boxen": "^7.0.0"
+        "boxen": "^7.1.1"
       }
     },
     "@types/uuid": {
