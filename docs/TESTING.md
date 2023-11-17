@@ -22,9 +22,9 @@ TODO: Update this section as needed.
 
 We use the [dependaban action](https://github.com/Automattic/vip-actions/tree/trunk/dependaban) from [Automattic/vip-actions](https://github.com/Automattic/vip-actions/) to verify that no dependencies have install scripts.
 
-### Unit and E2E tests
+### Unit tests
 
-Unit and E2E tests in [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) are run. They are powered by [Jest](https://facebook.github.io/jest/) and report any failures, along with test coverage.
+Unit tests in [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) are run. They are powered by [Jest](https://facebook.github.io/jest/) and report any failures, along with test coverage.
 
 #### Adding new unit tests
 
@@ -33,6 +33,10 @@ Tests should be written for any major features or security sensitive functionali
 ### TODO: Other checks?
 
 TODO: Document other types of checks in a similar fashion to the above.
+
+- E2E
+- CodeQL
+- Windows tests
 
 ## Manual testing
 
