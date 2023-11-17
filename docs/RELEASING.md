@@ -119,9 +119,6 @@ To publish locally, follow these steps:
    will be published and you can proceed.
 1. Edit [the release on GitHub](https://github.com/Automattic/vip-cli/releases) to include a description
    of the changes and publish (this can just copy the details from the changelog).
-1. Push `trunk` changes (mostly the version bump)
-   to `develop` (`git checkout develop && git merge trunk` ). There's no need to use a pull request
-   to do so.
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
