@@ -1,6 +1,6 @@
 # Releasing
 
-[SETUP.md](SETUP.md#production-application) provides detail regarding setup and releasing. Please familiarize yourself with this file before releasing.
+Please familiarize yourself with the [SETUP.md](SETUP.md) file before releasing.
 
 ## Preparing for release
 
