@@ -24,14 +24,14 @@ We require that the WPVIP defined coding style to be used, defined in [.eslintrc
 
 The code is structured in the following way:
 
-- [.github](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/.github) — configuration and templates for GitHub.
-- [\_\_fixtures\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__fixtures__) — fixtures for testing package.
-- [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) — testing package.
-- [config](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/config) — configuration files.
-- [docs](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/docs) — documentation package.
-- [types](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/types) - for TypeScript.
-- [helpers](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/helpers) - helper scripts.
-- [src](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/src) - main source code.
+- [.github](https://github.com/Automattic/vip-cli/tree/trunk/.github) — configuration and templates for GitHub.
+- [\_\_fixtures\_\_](https://github.com/Automattic/vip-cli/tree/trunk/__fixtures__) — fixtures for testing package.
+- [\_\_tests\_\_](https://github.com/Automattic/vip-cli/tree/trunk/__tests__) — testing package.
+- [config](https://github.com/Automattic/vip-cli/tree/trunk/config) — configuration files.
+- [docs](https://github.com/Automattic/vip-cli/tree/trunk/docs) — documentation package.
+- [types](https://github.com/Automattic/vip-cli/tree/trunk/types) - for TypeScript.
+- [helpers](https://github.com/Automattic/vip-cli/tree/trunk/helpers) - helper scripts.
+- [src](https://github.com/Automattic/vip-cli/tree/trunk/src) - main source code.
 
 ## API interfaces
 
