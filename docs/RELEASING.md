@@ -1,20 +1,48 @@
 # Releasing
 
-## Release & Deployment Process
+[SETUP.md](SETUP.md#production-application) details the hosting method and provides detail regarding how the software is set up in production. Please familiarize yourself with this file before releasing.
 
-Our release flow for VIP CLI follows this pattern:
+## Preparing for release
 
-**_feature branch -> trunk branch -> NPM release_**
+TODO: Update and adjust this checklist.
 
-- For feature branches, please follow A8C branch naming conventions (e.g.- `add/data-sync-command`, `fix/subsite-launch-command`, etc.)
-- Include a Changelog entry for all npm version releases, including any minor or major versions. [Changelogs](https://wpvipchangelog.wordpress.com/) allow customers to keep up with all the changes happening across our VIP Platform. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be amended to as well.
-- This is a public repository. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
-- Merge changes from your feature branch to the `trunk` branch when they are ready to be published publicly.
-- Finally, release your changes as a new minor or major NPM version. Ping in the #vip-platform channel to notify folks of a new release, but please feel free to release your changes without any blockers from the team. Any team member that is part of the Automattic NPM organization can release a new version; if you aren't a member, generic credentials are available in the Secret Store.
+A few steps should be completed before releasing:
 
+1. Please note the publishing method (see [below](#releasing-a-new-version)).
+
+1. Ensure when you create your pull request that:
+
+   a. It merges to `trunk`. The release flow for VIP-CLI follows this pattern: **_feature branch -> `trunk` branch_**
+
+   b. The feature branch follows A8C branch naming conventions, e.g.: `add/health-query`, `fix/subsite-mutation`, etc.
+
+	c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
+
+   d. You have included changelog. Include a changelog by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be amended to as well.
+
+1. Once you've created your pull request, ensure that:
+
+   a. You have added [all the automated tests required](TESTING.md#automated-testing).
+
+   b. You have completed [manual testing of your change](TESTING.md#manual-testing).
+
+   c. You have completed [final testing before deployment](TESTING.md#final-testing-before-releasing).
+
+1. If updating a dependency (NPM package or Node), follow the [guidelines on updating dependencies](SETUP.md#updating-dependencies).
+
+1. Have your pull request reviewed by a colleague and approved — especially if it is a large change or a complex addition.
+
+1. Determine strategy to [respond to problems post-deployment](#in-case-of-problems).
+
+1. Verify that your pull request passes all automated tests.
+
+1. Merge your pull request.
+
+1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version). Follow internal guidelines on releasing.
+  
 If you need to publish a security release, see [details below](#patching-old-releases).
 
-## Releasing / Publishing
+## Releasing a new version
 
 ### Pre-publish Checks
 
@@ -32,7 +60,7 @@ Further checks can be added to this flow as needed.
 
 Prepare the release by making sure that:
 
-1. All relevant PRs have been merged.
+1. All relevant pull requests have been merged.
 1. The release has been tested across macOS, Windows, and Linux.
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
    just-in-case).
@@ -51,7 +79,6 @@ Run the following and copy the output somewhere.
 export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
 gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
 ```
-
 
 #### Publishing via GitHub Actions (preferred)
 
