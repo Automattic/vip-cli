@@ -14,12 +14,9 @@ VIP-CLI is a tool for interacting with and managing your VIP applications.
 
 ## Health, logs and monitoring
 
-TODO: Update links, as applicable. Remove and add items as applicable. Aim to provide all the links one needs to have in order to understand the project, navigate health and logs, and places of deployment.
-
-
+- [WPVIP API](docs/ARCHITECTURE.md#communicating-with-wpvip-api) is required by the CLI.
 
 ## Links to historical documents
 
-TODO: Add any Project Threads, discussion threads, or other historical documents so others can understand the context of this project.
-
-- [Initial discussion ...](https://???.wordpress.com/2025/??/??)
+- In the [WordPress VIP Lobby](https://lobby.vip.wordpress.com/) we announce updates to the [CLI](https://lobby.vip.wordpress.com/?s=vip-cli) and [API](https://lobby.vip.wordpress.com/?s=vip%20go%20api).
+- The [WordPress VIP Documentation](https://docs.wpvip.com/) has information on the [CLI](https://docs.wpvip.com/technical-references/vip-cli/).
