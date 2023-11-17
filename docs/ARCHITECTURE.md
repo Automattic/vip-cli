@@ -58,6 +58,8 @@ VIP-CLI communicates with a few services via APIs:
 
 ## Development 
 
+Here are guidelines to ensure we have consistency across the CLI and web interfaces.
+
 ### Adding commands
 
 - New command names should use the singular form (e.g. site vs sites).
