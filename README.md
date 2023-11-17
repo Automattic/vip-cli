@@ -16,3 +16,5 @@ VIP-CLI is a tool for interacting with and managing your [WordPress VIP applicat
 
 - In the [WordPress VIP Lobby](https://lobby.vip.wordpress.com/) we announce updates to the [CLI](https://lobby.vip.wordpress.com/?s=vip-cli) and [API](https://lobby.vip.wordpress.com/?s=vip%20go%20api).
 - The [WordPress VIP Documentation](https://docs.wpvip.com/) has information on the [CLI](https://docs.wpvip.com/technical-references/vip-cli/).
+- [Changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) for VIP-CLI is available.
+- [VIP Cloud Changelog](https://wpvipchangelog.wordpress.com/) logs changes to the [CLI](https://wpvipchangelog.wordpress.com/?s=cli) and other aspects of the platform.
