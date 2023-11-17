@@ -101,11 +101,13 @@ Publishing via the GitHub Action requires that the `NPM_TOKEN` be set correctly 
 
 To publish locally, follow these steps:
 
+<summary><details>
+
 1. Create a pull request that adds the next version's changelog into `trunk`. Use the Changelog
    Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
    format matches. 
 1. Merge it after approval.
-1. Make sure `trunk` branch is up-to-date `git pull`.
+1. Make sure `trunk` branch is up-to-date: `git pull`.
 1. Make sure to clean all of your repositories of extra files. Run a dangerous, destructive
    command `git clean -xfd` to do so.
 1. Run `npm install`.
@@ -122,20 +124,28 @@ To publish locally, follow these steps:
 
 Once released, it's worth running `npm i -g @automattic/vip` to install / upgrade the released version to make sure everything looks good.
 
+</details></summary>
+
 #### Test Releases
 
 Sometimes, we want to release a version we can test before releasing it to the public. In order to that, we need to release it under a tag other than `latest`, usually `next`. By default, `npm` install from the `latest` tag, so if `@next` isn't specified explicitely in the installation command like `npm install @automattic/vip@next`, a user will not get this version.
 
 In order to do that, please follow this:
 
+<summary><details>
+
 1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
 1. Run `npm publish --tag next` (When `--tag` is specified, we bypass the usual branch protection that doesn't allow you to publish form a brunch other than `trunk`).
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 
+</details></summary>
+
 #### Patching Old Releases
 
 There may be times when we need to push out a critical fix to the most recent release (or several past releases) such as for patching security issues or major bugs. This can be complicated by the fact that we may have some larger changes already merged into the `trunk` branch.
+
+<summary><details>
 
 For these cases:
 
@@ -144,6 +154,8 @@ For these cases:
 1. Follow the release steps outlined above (as a `patch` release).
 
 Then, repeat for any additional versions that we need to patch.
+
+</details></summary>
 
 ## In case of problems
 
