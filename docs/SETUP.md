@@ -45,7 +45,7 @@ We recommend to use a version manager like [nvm](https://github.com/nvm-sh/nvm) 
 
 #### Install and setup of API
 
-This software relies on an [API offered by WPVIP](ARCHITECTURE.md#communicating-with-wpvip-api). You may need to have a local instance of that set up for [local testing](TESTING.md#local-development). Follow internal instructions to set it up locally.
+This software relies on an [API offered by WPVIP](ARCHITECTURE.md#communicating-with-wpvip-api). You may need to have a local instance of that set up for [local testing](TESTING.md#local-testing). Follow internal instructions to set it up locally.
 
 ### Fetching & installing
 
