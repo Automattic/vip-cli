@@ -16,9 +16,9 @@ A few steps should be completed before releasing:
 
    b. The feature branch follows A8C branch naming conventions, e.g.: `add/health-query`, `fix/subsite-mutation`, etc.
 
-	c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
+   c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc.
 
-   d. You have included changelog. Include a changelog by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be amended to as well.
+   d. You have included changelog. Include a changelog by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. The [changelog](https://github.com/Automattic/vip-cli/blob/trunk/CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to as well.
 
 1. Once you've created your pull request, ensure that:
 
@@ -42,6 +42,15 @@ A few steps should be completed before releasing:
   
 If you need to publish a security release, see [details below](#patching-old-releases).
 
+### Changelog generation
+
+Run the following to generate a changelog entry for CHANGELOG.md:
+
+```bash
+export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
+gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
+```
+
 ## Releasing a new version
 
 ### Pre-publish Checks
@@ -49,12 +58,6 @@ If you need to publish a security release, see [details below](#patching-old-rel
 We use a custom pre-publish [script](https://github.com/Automattic/vip/blob/trunk/helpers/prepublishOnly.js) that performs some confidence checks to avoid common mistakes.
 
 Further checks can be added to this flow as needed.
-
-### Versioning Guidelines
-
-- `patch`: for non-breaking changes/bugfixes and small updates.
-- `minor`: for some new features, bug fixes, and other non-breaking changes.
-- `major`: for breaking changes.
 
 ### New Releases
 
@@ -69,18 +72,7 @@ Prepare the release by making sure that:
 
 You can release either using GitHub Actions or locally.
 
-#### Changelog Generator Hint:
-
-In the first step, you'll need to generate a changelog.
-
-Run the following and copy the output somewhere.
-
-```
-export LAST_RELEASE_DATE=2021-08-25T13:40:00+02
-gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | sed -e 's/\s\+\S\+\tMERGED.*$//' -e 's/^/- #/'
-```
-
-#### Publishing via GitHub Actions (preferred)
+### Publishing via GitHub Actions (preferred)
 
 This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
 
@@ -91,6 +83,12 @@ This is the preferred method for pushing out the latest release. The workflow ru
 1. Wait for a pull request to appear. The pull request will update the version number and shall be assigned to you.
 1. When ready, merge the pull request. This will lead to a new version to be [published on npmjs.com](https://www.npmjs.com/package/@automattic/vip).
 1. Another pull request will be created to bump to a development version, also assigned to you. Merge it to finish the process.
+
+#### Versioning Guidelines
+
+- `patch`: for non-breaking changes/bugfixes and small updates.
+- `minor`: for some new features, bug fixes, and other non-breaking changes.
+- `major`: for breaking changes.
 
 #### Note on NPM token
 
