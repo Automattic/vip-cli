@@ -41,7 +41,7 @@ We recommend to use a version manager like [nvm](https://github.com/nvm-sh/nvm) 
 
 This software relies on an [API offered by WPVIP](ARCHITECTURE.md#communicating-with-wpvip-api). You may need to have a local instance of that set up for [local testing](TESTING.md#local-testing). Follow internal instructions to set it up locally.
 
-### Fetching & installing
+#### Fetching & installing
 
 This will fetch the package and install all dependencies:
 
@@ -50,7 +50,7 @@ git clone git@github.com:Automattic/vip-cli.git && \
 cd vip-cli && npm install
 ```
 
-### Building
+#### Building
 
 This will build all TypeScript files so they can be executed:
 
