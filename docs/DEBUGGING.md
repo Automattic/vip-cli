@@ -28,6 +28,6 @@ For help, see: https://nodejs.org/en/docs/inspector
 ```
 
 5. Set your breakpoints, add debug code, and hit the play button.
-6. Confirm that you attached the debugger to continue command execution
-7. Squash them bugs 🐛🔨.
+6. Confirm that you attached the debugger to continue command execution.
+7. Resolve the problem.
 8. [Optional but recommended] Pay it forward and implement a similar approach to other internal/external tooling.
