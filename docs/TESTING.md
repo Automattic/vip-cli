@@ -24,20 +24,24 @@ We use the [dependaban action](https://github.com/Automattic/vip-actions/tree/tr
 
 ### Unit tests
 
-Unit tests in [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) are run. They are powered by [Jest](https://facebook.github.io/jest/) and report any failures, along with test coverage.
+Unit tests in [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) are [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/ci.yml). They are powered by [Jest](https://facebook.github.io/jest/) and report any failures, along with test coverage.
 
 #### Adding new unit tests
 
 Tests should be written for any major features or security sensitive functionality, as a minimum. Writing tests for new or updated [utility functions](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/???) is recommended.
 
-### TODO: Other checks?
+### E2E tests
 
-TODO: Document other types of checks in a similar fashion to the above.
+E2E test are [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/devenv-e2e.yml). They can be found at [\_\_tests\_\_/devenv-e2e](https://github.com/Automattic/vip-cli/tree/trunk/__tests__/devenv-e2e).
 
-- E2E
-- CodeQL
-- Windows tests
+### Windows tests
 
+We run the above unit and E2E tests [on Windows as well](https://github.com/Automattic/vip-cli/blob/trunk/.github./workflows/tests.yml).
+
+### CodeQL analysis
+
+CodeQL analysis is [started automatically](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/codeql-analysis.yml).
+  
 ## Manual testing
 
 ### Running unit tests locally
