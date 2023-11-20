@@ -16,7 +16,7 @@ Follow these steps for new pull requests:
 
    c. The pull request code and description contain no sensitive information. Please do not include any internal links in PRs, changelogs, testing instructions, etc. as this is a public repository.
 
-   d. You have included changelog entry by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow. 
+   d. You have included changelog entry by adding a `## Changelog Description` section to the GitHub pull request description. All changelogs are posted to the [VIP Cloud Changelog P2](https://wpvipchangelog.wordpress.com/) which customers can view and follow.
 
 1. Once you've created your pull request, ensure that:
 
