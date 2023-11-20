@@ -97,16 +97,17 @@ This application uses environmental variables for vital configuration informatio
 
 TODO: Update description of the variables.
 
-- `VIP_PROXY`:
+- `API_HOST`: HTTP endpoint to use rather than the default. [For internal VIP use](TESTING.md#local-testing).
 - `DEBUG API_HOST`:
 - `DOCKER_CERT_PATH`:
 - `DOCKER_CLIENT_TIMEOUT`:
 - `DOCKER_HOST`:
 - `DOCKER_TLS_VERIFY`:
-- `DO_NOT_TRACK`:
+- `DO_NOT_TRACK`: [To disable tracking](SETUP.md#analytics).
 - `SOCKS_PROXY`:
 - `HTTP_PROXY`:
-- `NO_PROXY`:
+- `NO_PROXY`: 
+- `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
 - `VIP_USE_SYSTEM_PROXY`:
 
 ### Configuration files
