@@ -122,7 +122,7 @@
     "@types/semver": "^7.5.4",
     "@types/shelljs": "^0.8.14",
     "@types/single-line-log": "1.1.1",
-    "@types/update-notifier": "5.1.0",
+    "@types/update-notifier": "6.0.8",
     "@types/uuid": "^9.0.6",
     "@types/xml2js": "^0.4.13",
     "dockerode": "^4.0.0",
