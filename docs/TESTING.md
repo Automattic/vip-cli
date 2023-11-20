@@ -16,8 +16,6 @@ We run the following checks:
 
 ### Dependency checks
 
-TODO: Update this section as needed.
-
 We use the [dependaban action](https://github.com/Automattic/vip-actions/tree/trunk/dependaban) from [Automattic/vip-actions](https://github.com/Automattic/vip-actions/) to verify that no dependencies have install scripts.
 
 ### Unit tests
