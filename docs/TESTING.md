@@ -37,7 +37,7 @@ We run the above unit and E2E tests [on Windows as well](https://github.com/Auto
 ### CodeQL analysis
 
 CodeQL analysis is [started automatically](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/codeql-analysis.yml).
- 
+
 ## Manual testing
 
 ### Running unit tests locally
