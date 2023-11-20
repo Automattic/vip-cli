@@ -106,7 +106,7 @@ TODO: Update description of the variables.
 - `DO_NOT_TRACK`: [To disable tracking](SETUP.md#analytics).
 - `SOCKS_PROXY`:
 - `HTTP_PROXY`:
-- `NO_PROXY`: 
+- `NO_PROXY`:
 - `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
 - `VIP_USE_SYSTEM_PROXY`:
 
@@ -125,7 +125,7 @@ Dependencies generally should be updated by merging [pull requests from dependab
 To upgrade Node, follow these steps:
 
 1. Update [.nvmrc](https://github.com/Automattic/vip-cli/blob/trunk/.nvmrc) to the new version and open a pull request.
-2. Use the same pull request to update `engines.node` in [package.json](https://github.com/Automattic/vip-cli/blob/trunk/package.json).
+1. Use the same pull request to update `engines.node` in [package.json](https://github.com/Automattic/vip-cli/blob/trunk/package.json).
 1. Address any test failures.
 1. Update the Node.js version locally and test before merging into the repository.
 
