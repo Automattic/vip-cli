@@ -34,7 +34,6 @@ Follow these steps for new pull requests:
 
 1. Merge your pull request.
 
-
 ## Preparing for release
 
 A few steps should be completed before releasing:
