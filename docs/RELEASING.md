@@ -47,7 +47,7 @@ A few steps should be completed before releasing:
 1. Determine strategy to [respond to problems post-deployment](#in-case-of-problems).
 
 1. The release has been tested across macOS, Windows, and Linux.
-   
+
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
    just-in-case).
 
