@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write    
+      pull-requests: write
     steps:
       - name: Check out the source code
         uses: actions/checkout@v3
