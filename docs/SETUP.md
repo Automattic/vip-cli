@@ -100,6 +100,10 @@ TODO:
 - `A`: Used to ...
 - `B`: Used to ...
 
+### Configuration files
+
+TODO: List main configuration files and their purpose. How to update.
+
 ## Updating dependencies
 
 ### NPM packages
