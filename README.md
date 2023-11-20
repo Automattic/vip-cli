@@ -10,7 +10,7 @@ VIP-CLI is a tool for interacting with and managing your [WordPress VIP applicat
 - [DEBUGGING.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/DEBUGGING.md) for information on how to debug the software.
 - [TESTING.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/TESTING.md) for details on testing the software and individual tasks.
 - [RELEASING.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/RELEASING.md) for details on deploying a new release.
-- [SECURITY.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/SECURITY.md) for information if you found a security issue.
+- [SECURITY.md](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/docs/SECURITY.md) for information if you **found a security issue**.
 
 ## Further information
 
