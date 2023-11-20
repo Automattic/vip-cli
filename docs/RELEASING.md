@@ -41,7 +41,7 @@ A few steps should be completed before releasing:
 1. Verify that [all relevant pull requests](https://github.com/Automattic/vip-cli/pulls) are merged.
 
 1. The [changelog](CHANGELOG.md) file in the repository should be [amended](#changelog-generation) to.
-   
+
 1. Please note the publishing method (see [below](#releasing-a-new-version)).
 
 1. Determine strategy to [respond to problems post-deployment](#in-case-of-problems).
@@ -50,11 +50,11 @@ A few steps should be completed before releasing:
    
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
    just-in-case).
-   
+
 1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
 1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version).
-  
+
 If you need to publish a security release, see [details below](#patching-old-releases).
 
 ### Changelog generation
@@ -106,7 +106,7 @@ To publish locally, follow these steps:
 
 1. Create a pull request that adds the next version's changelog into `trunk`. Use the Changelog
    Generate Hint above to generate the changelog, and refer to previous releases to ensure that your
-   format matches. 
+   format matches.
 1. Merge it after approval.
 1. Make sure `trunk` branch is up-to-date: `git pull`.
 1. Make sure to clean all of your repositories of extra files. Run a dangerous, destructive
