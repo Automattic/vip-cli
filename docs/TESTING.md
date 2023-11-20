@@ -8,8 +8,6 @@ A [few actions](https://github.com/Automattic/vip-service-boilerplate/blob/trunk
 
 ### Linting
 
-TODO: Update this section as needed.
-
 We run the following checks:
 
 - linting
