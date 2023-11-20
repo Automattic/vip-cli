@@ -4,7 +4,7 @@
 
 This is a CLI for interacting with and managing your [WordPress VIP applications](https://docs.wpvip.com/technical-references/vip-cli/). Data is inputted and outputted via terminal to the [API offered by WordPress VIP](#communicating-with-wpvip-api) and to/from local filesystem.
 
-For configuration, a few [environmental variables](SETUP.md#environmental-variables) are used and some [configuration files](SETUP.md#configuration-files) as well. No database is required.
+For configuration, a few [environmental variables](SETUP.md#environmental-variables) are used and some [configuration files](SETUP.md#configuration-files) as well. No [database](#database) is required.
 
 ### Scalability
 
