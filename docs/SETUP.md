@@ -121,7 +121,7 @@ Upgrading Node should be considered high-risk.
 Consider removing the dependency, if it is an NPM package. Can the functionality needed from the dependency be implemented directly into `vip-cli` or our own common libraries? If not, evaluate the following:
 
 1. If the dependency is one of the [development dependencies](https://github.com/Automattic/vip-cli/blob/trunk/package.json) (`devDependencies`), and/or only used by one of those, the likelihood of customer-impacting failure is low.
-1. Is the package used in the [deployment pipeline](RELEASING.md#deployments-to-production)? If it is, evaluate if any failure is likely to be silent. If that seems not to be the case, the risk of customer-impacting failure is low.
+1. Is the package used in the [release process](RELEASING.md#releasing-a-new-version)? If it is, evaluate if any failure is likely to be silent. If that seems not to be the case, the risk of customer-impacting failure is low.
 
 #### Low risk dependencies
 
