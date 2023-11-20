@@ -41,7 +41,7 @@ We recommend to use a version manager like [nvm](https://github.com/nvm-sh/nvm) 
 
 This software relies on an [API offered by WPVIP](ARCHITECTURE.md#communicating-with-wpvip-api). You may need to have a local instance of that set up for [local testing](TESTING.md#local-testing). Follow internal instructions to set it up locally.
 
-### Fetching & installing
+#### Fetching & installing
 
 This will fetch the package and install all dependencies:
 
@@ -50,7 +50,7 @@ git clone git@github.com:Automattic/vip-cli.git && \
 cd vip-cli && npm install
 ```
 
-### Building
+#### Building
 
 This will build all TypeScript files so they can be executed:
 
@@ -121,7 +121,7 @@ Upgrading Node should be considered high-risk.
 Consider removing the dependency, if it is an NPM package. Can the functionality needed from the dependency be implemented directly into `vip-cli` or our own common libraries? If not, evaluate the following:
 
 1. If the dependency is one of the [development dependencies](https://github.com/Automattic/vip-cli/blob/trunk/package.json) (`devDependencies`), and/or only used by one of those, the likelihood of customer-impacting failure is low.
-1. Is the package used in the [deployment pipeline](RELEASING.md#deployments-to-production)? If it is, evaluate if any failure is likely to be silent. If that seems not to be the case, the risk of customer-impacting failure is low.
+1. Is the package used in the [release process](RELEASING.md#releasing-a-new-version)? If it is, evaluate if any failure is likely to be silent. If that seems not to be the case, the risk of customer-impacting failure is low.
 
 #### Low risk dependencies
 
