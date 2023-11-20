@@ -56,7 +56,7 @@ VIP-CLI communicates with a few services via APIs:
 - [WPVIP API](#communicating-with-wpvip-api).
 - https://public-api.wordpress.com/rest – for analytics (can be [disabled](SETUP.md#analytics)).
 
-## Development 
+## Development
 
 Here are guidelines to ensure we have consistency across the CLI and web interfaces.
 
