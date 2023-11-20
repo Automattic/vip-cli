@@ -104,7 +104,7 @@ TODO:
 
 ### NPM packages
 
-Dependencies generally should be updated by merging [pull requests from dependabot](https://github.com/Automattic/vip-cli/pulls/app%2Fdependabot). However, great care should be taken before merging as updating dependencies can cause fatal errors with the `vip-cli` application, or make it unstable or misbehave. There can also be effects to the deployment process. This can happen silently.
+Dependencies generally should be updated by merging [pull requests from dependabot](https://github.com/Automattic/vip-cli/pulls/app%2Fdependabot). However, great care should be taken before merging as updating dependencies can cause fatal errors with the `vip-cli` application, or make it unstable or misbehave. There can also be effects to the release process. This can happen silently.
 
 ### Upgrading Node Version
 
