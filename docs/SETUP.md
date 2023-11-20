@@ -95,10 +95,19 @@ Environmental variables are configured in the shell. Use normal shell commands t
 
 This application uses environmental variables for vital configuration information. Find a partial list below.
 
-TODO:
+TODO: Update description of the variables.
 
-- `A`: Used to ...
-- `B`: Used to ...
+- `VIP_PROXY`:
+- `DEBUG API_HOST`:
+- `DOCKER_CERT_PATH`:
+- `DOCKER_CLIENT_TIMEOUT`:
+- `DOCKER_HOST`:
+- `DOCKER_TLS_VERIFY`:
+- `DO_NOT_TRACK`:
+- `SOCKS_PROXY`:
+- `HTTP_PROXY`:
+- `NO_PROXY`:
+- `VIP_USE_SYSTEM_PROXY`:
 
 ### Configuration files
 
