@@ -16,6 +16,19 @@ Should include any special considerations, decisions, and links to relevant GitH
 
 Please don't include internal or private links :)
 
+## Pull request checklist
+
+- [ ] Update [SETUP.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/SETUP.md#list-of-environmental-variables) with any new environmental variables.
+- [ ] Update [the documentation](https://github.com/Automattic/vip-cli/blob/trunk/docs).
+- [ ] [Manually test](https://github.com/Automattic/vip-cli/blob/trunk/docs/TESTING.md#manual-testing) the relevant changes.
+- [ ] Follow the [pull request checklist](https://github.com/Automattic/vip-cli/blob/trunk/docs/RELEASING.md#new-pull-requests)
+- [ ] Add/update [automated tests](https://github.com/Automattic/vip-cli/blob/trunk/docs/TESTING.md#automated-testing) as needed.
+
+## New release checklist
+
+- [ ] [Automated tests](https://github.com/Automattic/vip-cli/blob/trunk/docs/TESTING.md#automated-testing) pass.
+- [ ] The [Preparing for release checklist](https://github.com/Automattic/vip-cli/blob/trunk/docs/RELEASING.md#preparing-for-release) is completed.
+
 ## Steps to Test
 
 Outline the steps to test and verify the PR here.
