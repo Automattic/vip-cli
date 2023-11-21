@@ -17,4 +17,5 @@ module.exports = {
 		'security/detect-non-literal-fs-filename': 0,
 		'promise/no-multiple-resolved': 0,
 	},
+	root: true,
 };
