@@ -24,8 +24,6 @@ Follow these steps for new pull requests:
 
    b. You have completed [manual testing of your change](TESTING.md#manual-testing).
 
-   c. You have completed [final testing before deployment](TESTING.md#final-testing-before-releasing).
-
 1. If updating a dependency (NPM package or Node), follow the [guidelines on updating dependencies](SETUP.md#updating-dependencies).
 
 1. Have your pull request reviewed by a colleague and approved — especially if it is a large change or a complex addition.
@@ -50,6 +48,8 @@ A few steps should be completed before releasing:
 
 1. All tests pass and your working directory is clean (we have pre-publish checks to catch this,
    just-in-case).
+
+1. You have completed [final testing before deployment](TESTING.md#final-testing-before-releasing).
 
 1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
