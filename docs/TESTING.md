@@ -32,7 +32,7 @@ E2E test are [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/work
 
 ### Windows tests
 
-We run the above unit and E2E tests [on Windows as well](https://github.com/Automattic/vip-cli/blob/trunk/.github./workflows/windows_tests.yml).
+We run the above unit and E2E tests [on Windows as well](https://github.com/Automattic/vip-cli/blob/trunk/.github./workflows/windows-tests.yml).
 
 ### CodeQL analysis
 
