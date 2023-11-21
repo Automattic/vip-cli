@@ -4,7 +4,7 @@ Testing is an integral part of creating new features and maintaining the softwar
 
 ## Automated testing
 
-A [few actions](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/.github/workflows/) are automatically run via Github Actions when a pull request is created or updated.
+A [few actions](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/) are automatically run via Github Actions when a pull request is created or updated.
 
 ### Linting
 
@@ -20,11 +20,11 @@ We use the [dependaban action](https://github.com/Automattic/vip-actions/tree/tr
 
 ### Unit tests
 
-Unit tests in [\_\_tests\_\_](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/__tests__) are [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/ci.yml). They are powered by [Jest](https://facebook.github.io/jest/) and report any failures, along with test coverage.
+Unit tests in [\_\_tests\_\_](https://github.com/Automattic/vip-cli/tree/trunk/__tests__) are [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/ci.yml). They are powered by [Jest](https://facebook.github.io/jest/) and report any failures, along with test coverage.
 
 #### Adding new unit tests
 
-Tests should be written for any major features or security sensitive functionality, as a minimum. Writing tests for new or updated [utility functions](https://github.com/Automattic/vip-service-boilerplate/tree/trunk/???) is recommended.
+Tests should be written for any major features or security sensitive functionality, as a minimum. Writing tests for new or updated [utility functions](https://github.com/Automattic/vip-cli/tree/trunk/???) is recommended.
 
 ### E2E tests
 
