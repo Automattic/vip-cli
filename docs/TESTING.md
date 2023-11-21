@@ -24,7 +24,7 @@ Unit tests in [\_\_tests\_\_](https://github.com/Automattic/vip-cli/tree/trunk/_
 
 #### Adding new unit tests
 
-Tests should be written for any major features or security sensitive functionality, as a minimum. Writing tests for new or updated [utility functions](https://github.com/Automattic/vip-cli/tree/trunk/???) is recommended.
+Tests should be written for any major features or security sensitive functionality, as a minimum. Writing tests for new or updated [utility functions](https://github.com/Automattic/vip-cli/blob/trunk/src/lib/utils.ts) is recommended.
 
 ### E2E tests
 
