@@ -18,7 +18,7 @@ The CLI communicates primarily with https://api.wpvip.com. An authentication tok
 
 Both JavaScript and TypeScript are used to implement the software. **TypeScript should be used for new code.**
 
-We require that the WPVIP defined coding style to be used, defined in [.eslintrc.json](https://github.com/Automattic/vip-cli/blob/trunk/.eslintrc.json).
+We require that the WPVIP defined coding style to be used, defined in [.eslintrc.js](https://github.com/Automattic/vip-cli/blob/trunk/.eslintrc.js).
 
 ## Code structure
 
