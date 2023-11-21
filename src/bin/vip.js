@@ -107,9 +107,9 @@ const rootCmd = async function () {
 			return;
 		}
 
-		const { default: opn } = await import( 'open' );
+		const { default: open } = await import( 'open' );
 
-		opn( tokenURL, { wait: false } );
+		open( tokenURL, { wait: false } );
 
 		await trackEvent( 'login_command_browser_opened' );
 
