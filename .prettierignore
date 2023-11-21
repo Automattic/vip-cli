@@ -2,3 +2,5 @@
 /__fixtures__/
 /dist/
 /flow-typed/
+/npm-shrinkwrap.json
+/CONTRIBUTING.md
