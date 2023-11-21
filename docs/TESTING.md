@@ -4,7 +4,7 @@ Testing is an integral part of creating new features and maintaining the softwar
 
 ## Automated testing
 
-A [few actions](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/.github/workflows/ci.yml) are automatically run via Github Actions when a pull request is created or updated.
+A [few actions](https://github.com/Automattic/vip-service-boilerplate/blob/trunk/.github/workflows/) are automatically run via Github Actions when a pull request is created or updated.
 
 ### Linting
 
