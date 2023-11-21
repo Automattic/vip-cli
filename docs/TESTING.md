@@ -16,7 +16,7 @@ We [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/ci.y
 
 ### Dependency checks
 
-We use the [dependaban action](https://github.com/Automattic/vip-actions/tree/trunk/dependaban) from [Automattic/vip-actions](https://github.com/Automattic/vip-actions/) to verify that no dependencies have install scripts.
+We [use](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/ci.yml) the [dependaban action](https://github.com/Automattic/vip-actions/tree/trunk/dependaban) from [Automattic/vip-actions](https://github.com/Automattic/vip-actions/) to verify that no dependencies have install scripts.
 
 ### Unit tests
 
