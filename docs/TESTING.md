@@ -8,7 +8,7 @@ A [few actions](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflo
 
 ### Linting
 
-We run the following checks:
+We [run](https://github.com/Automattic/vip-cli/blob/trunk/.github/workflows/ci.yml) the following checks:
 
 - linting
 - format checking
