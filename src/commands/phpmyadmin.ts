@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import chalk from 'chalk';
 import { GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 import opn from 'opn';
@@ -72,6 +73,9 @@ export class PhpMyAdminCommand {
 			exit.withError( 'No environment was specified' );
 		}
 
+		const message =
+			'Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+		console.log( chalk.yellow( message ) );
 		this.log( 'Generating PhpMyAdmin URL...' );
 
 		let url;
