@@ -74,8 +74,7 @@ command()
 		const removeFiles = ! ( opt.soft || false );
 
 		try {
-			for ( const envName of allEnvNames ) {
-				const slug = envName;
+			for ( const slug of allEnvNames ) {
 
 				try {
 					// eslint-disable-next-line no-await-in-loop
