@@ -5,7 +5,7 @@ module.exports = {
 		'plugin:@automattic/wpvip/recommended',
 		'plugin:@automattic/wpvip/cli',
 		'plugin:@automattic/wpvip/weak-testing',
-		'plugin:@automattic/wpvip/weak-typescript',
+		'plugin:@automattic/wpvip/typescript',
 	],
 	rules: {
 		camelcase: 'warn',
