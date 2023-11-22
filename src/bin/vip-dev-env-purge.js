@@ -64,10 +64,7 @@ command()
 		}
 
 		const trackingInfo = { all: true };
-		// eslint-disable-next-line no-await-in-loop
 		await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
-
-		// eslint-disable-next-line no-await-in-loop
 		await validateDependencies( lando, '' );
 		const removeFiles = ! ( opt.soft || false );
 
@@ -86,7 +83,6 @@ command()
 					process.exitCode = 1;
 				}
 			}
-			// eslint-disable-next-line no-await-in-loop
 			await trackEvent( 'dev_env_purge_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_purge_command_error', trackingInfo );
