@@ -391,7 +391,7 @@ export class ExportSQLCommand {
 					} );
 					exit.withError(
 						'There is an export job already running for this environment: ' +
-							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
+							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/database/backups\n` +
 							'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
 				} else {
