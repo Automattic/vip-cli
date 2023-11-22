@@ -11,7 +11,6 @@ module.exports = {
 		camelcase: 'warn',
 		'jest/no-mocks-import': 'warn',
 		'no-await-in-loop': 'warn',
-		'no-unused-vars': 'warn',
 		'no-console': 0,
 		'security/detect-object-injection': 0,
 		'security/detect-non-literal-fs-filename': 0,
