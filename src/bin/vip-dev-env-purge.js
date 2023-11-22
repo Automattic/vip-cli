@@ -42,6 +42,8 @@ command()
 	.option( 'force', 'Removes prompt that verifies if user wants to destroy all environments' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		debug( 'Args: ', arg, 'Options: ', opt );
+
 		const allEnvNames = getAllEnvironmentNames();
 		const lando = await bootstrapLando();
 		const trackingInfo = { all: true };
@@ -63,32 +65,32 @@ command()
 			}
 		}
 
+		const trackingInfoChild = getEnvTrackingInfo( slug );
+		// eslint-disable-next-line no-await-in-loop
+		await trackEvent( 'dev_env_purge_command_execute', trackingInfoChild );
+
+		// eslint-disable-next-line no-await-in-loop
+		await validateDependencies( lando, '' );
+		const removeFiles = ! ( opt.soft || false );
+
 		try {
 			for ( const envName of allEnvNames ) {
 				const slug = envName;
-				// eslint-disable-next-line no-await-in-loop
-				await validateDependencies( lando, slug );
-				const trackingInfoChild = getEnvTrackingInfo( slug );
-				// eslint-disable-next-line no-await-in-loop
-				await trackEvent( 'dev_env_destroy_command_execute', trackingInfoChild );
-
-				debug( 'Args: ', arg, 'Options: ', opt );
 
 				try {
-					const removeFiles = ! ( opt.soft || false );
 					// eslint-disable-next-line no-await-in-loop
 					await destroyEnvironment( lando, slug, removeFiles );
 
 					const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 					console.log( message );
-					// eslint-disable-next-line no-await-in-loop
-					await trackEvent( 'dev_env_destroy_command_success', trackingInfoChild );
 				} catch ( error ) {
 					// eslint-disable-next-line no-await-in-loop
-					await handleCLIException( error, 'dev_env_destroy_command_error', trackingInfoChild );
+					await handleCLIException( error, 'dev_env_purge_command_error', trackingInfoChild );
 					process.exitCode = 1;
 				}
 			}
+			// eslint-disable-next-line no-await-in-loop
+			await trackEvent( 'dev_env_purge_command_success', trackingInfoChild );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_purge_command_error', trackingInfo );
 			process.exitCode = 1;
