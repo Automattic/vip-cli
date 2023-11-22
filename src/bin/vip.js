@@ -3,7 +3,6 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import opn from 'opn';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
@@ -108,7 +107,9 @@ const rootCmd = async function () {
 			return;
 		}
 
-		opn( tokenURL, { wait: false } );
+		const { default: open } = await import( 'open' );
+
+		open( tokenURL, { wait: false } );
 
 		await trackEvent( 'login_command_browser_opened' );
 
