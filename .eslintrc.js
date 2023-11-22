@@ -15,6 +15,7 @@ module.exports = {
 		'security/detect-object-injection': 0,
 		'security/detect-non-literal-fs-filename': 0,
 		'promise/no-multiple-resolved': 0,
+		'@typescript-eslint/no-unused-vars': 'warn',
 	},
 	root: true,
 };
