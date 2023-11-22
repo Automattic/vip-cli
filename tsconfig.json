@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["es2021"],
+    "lib": [ "es2021" ],
     "module": "node16",
     "strict": true,
     "esModuleInterop": true,
@@ -21,23 +21,11 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "*": [
-        "./types/*",
-        "./node_modules/@types/node/*"
-      ]
+      "*": [ "./types/*", "./node_modules/@types/node/*" ]
     },
     // It's worth enabling this, I promise!
     "noImplicitAny": true
   },
-  "include": [
-    "src",
-    "helpers",
-    "config",
-    "__tests__",
-    "__fixtures__"
-  ],
-  "exclude": [
-    "**/*.js",
-    "codegen.ts"
-  ]
+  "include": [ "src", "helpers", "config", "__tests__", "__fixtures__" ],
+  "exclude": [ "**/*.js", "codegen.ts" ]
 }
