@@ -46,8 +46,6 @@ command()
 
 		const allEnvNames = getAllEnvironmentNames();
 		const lando = await bootstrapLando();
-		const trackingInfo = { all: true };
-		await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
 
 		if ( allEnvNames.length === 0 ) {
 			console.log( 'No environments to purge!' );
@@ -65,9 +63,9 @@ command()
 			}
 		}
 
-		const trackingInfoChild = getEnvTrackingInfo( slug );
+		const trackingInfo = { all: true };
 		// eslint-disable-next-line no-await-in-loop
-		await trackEvent( 'dev_env_purge_command_execute', trackingInfoChild );
+		await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
 
 		// eslint-disable-next-line no-await-in-loop
 		await validateDependencies( lando, '' );
@@ -75,7 +73,6 @@ command()
 
 		try {
 			for ( const slug of allEnvNames ) {
-
 				try {
 					// eslint-disable-next-line no-await-in-loop
 					await destroyEnvironment( lando, slug, removeFiles );
@@ -83,13 +80,14 @@ command()
 					const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
 					console.log( message );
 				} catch ( error ) {
+					const trackingInfoChild = getEnvTrackingInfo( slug );
 					// eslint-disable-next-line no-await-in-loop
 					await handleCLIException( error, 'dev_env_purge_command_error', trackingInfoChild );
 					process.exitCode = 1;
 				}
 			}
 			// eslint-disable-next-line no-await-in-loop
-			await trackEvent( 'dev_env_purge_command_success', trackingInfoChild );
+			await trackEvent( 'dev_env_purge_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_purge_command_error', trackingInfo );
 			process.exitCode = 1;
