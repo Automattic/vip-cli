@@ -15,6 +15,7 @@ import {
 	getEnvTrackingInfo,
 	handleCLIException,
 	validateDependencies,
+	promptForBoolean,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	destroyEnvironment,
@@ -30,16 +31,37 @@ const examples = [
 		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } purge`,
 		description: 'Destroys all local dev environments',
 	},
+	{
+		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } purge --force`,
+		description: 'Destroys all local dev environments without prompting',
+	},
 ];
 
 command()
 	.option( 'soft', 'Keep config files needed to start an environment intact' )
+	.option( 'force', 'Removes prompt that verifies if user wants to destroy all environments' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const allEnvNames = getAllEnvironmentNames();
 		const lando = await bootstrapLando();
 		const trackingInfo = { all: true };
 		await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
+
+		if ( allEnvNames.length === 0 ) {
+			console.log( 'No environments to purge!' );
+			return;
+		}
+
+		if ( ! opt.force ) {
+			const purge = await promptForBoolean(
+				'Are you sure you want to purge ALL existing dev environments?',
+				true
+			);
+
+			if ( ! purge ) {
+				return;
+			}
+		}
 
 		try {
 			for ( const envName of allEnvNames ) {

@@ -35,6 +35,7 @@
     "vip-dev-env-start": "dist/bin/vip-dev-env-start.js",
     "vip-dev-env-stop": "dist/bin/vip-dev-env-stop.js",
     "vip-dev-env-logs": "dist/bin/vip-dev-env-logs.js",
+    "vip-dev-env-purge": "dist/bin/vip-dev-env-purge.js",
     "vip-export": "dist/bin/vip-export.js",
     "vip-export-sql": "dist/bin/vip-export-sql.js",
     "vip-dev-env-sync": "dist/bin/vip-dev-env-sync.js",
