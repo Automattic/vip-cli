@@ -24,6 +24,7 @@ jobs:
       matrix:
         config:
           - { name: Lint, tool: lint }
+          - { name: Check formatting, tool: 'format:check' }
           - { name: Type Checker, tool: check-types }
           - { name: Check formatting, tool: 'format:check' }
     steps:
@@ -42,6 +43,12 @@ jobs:
 
       - name: Run ${{ matrix.config.tool }}
         run: npm run '${{ matrix.config.tool }}'
+
+  dependaban:
+    name: Dependaban
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Automattic/vip-actions/dependaban@trunk
 
   audit:
     name: Verify signatures and provenance statements
