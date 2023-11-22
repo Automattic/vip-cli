@@ -105,7 +105,7 @@
     "@automattic/eslint-plugin-wpvip": "0.8.0",
     "@babel/cli": "7.23.0",
     "@babel/core": "7.23.2",
-    "@babel/preset-env": "7.23.2",
+    "@babel/preset-env": "7.23.3",
     "@babel/preset-typescript": "7.23.2",
     "@jest/globals": "^29.7.0",
     "@jest/test-sequencer": "^29.7.0",
