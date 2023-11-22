@@ -26,6 +26,7 @@ jobs:
           - { name: Lint, tool: lint }
           - { name: Check formatting, tool: 'format:check' }
           - { name: Type Checker, tool: check-types }
+          - { name: Check formatting, tool: 'format:check' }
     steps:
       - name: Check out the source code
         uses: actions/checkout@v3
