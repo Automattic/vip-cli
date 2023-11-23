@@ -17,6 +17,21 @@ updates:
       - 'dependencies'
     # Allow up to 15 open pull requests at the same time
     open-pull-requests-limit: 15
+    groups:
+      testing:
+        patterns:
+          - "@jest/*"
+          - "jest"
+          - "@types/jest"
+      babel:
+        patterns:
+          - "@babel/*"
+      typings:
+        update-types:
+          - patch
+          - minor
+        patterns:
+          - "types/*"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: 'github-actions' # See documentation for possible values
