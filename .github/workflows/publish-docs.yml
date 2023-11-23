@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: npm i -g @automattic/vip
       - run: node ./helpers/generate-docs.js > /tmp/docs.json
       - name: Print docs.json
