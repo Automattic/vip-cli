@@ -20,18 +20,18 @@ updates:
     groups:
       testing:
         patterns:
-          - "@jest/*"
-          - "jest"
-          - "@types/jest"
+          - '@jest/*'
+          - 'jest'
+          - '@types/jest'
       babel:
         patterns:
-          - "@babel/*"
+          - '@babel/*'
       typings:
         update-types:
           - patch
           - minor
         patterns:
-          - "types/*"
+          - 'types/*'
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: 'github-actions' # See documentation for possible values
