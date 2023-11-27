@@ -28,7 +28,7 @@
         "graphql": "15.5.1",
         "graphql-tag": "2.12.6",
         "https-proxy-agent": "^5.0.1",
-        "ini": "2.0.0",
+        "ini": "4.1.1",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
         "lando": "github:automattic/lando-cli.git#ba488a4",
@@ -7801,6 +7801,14 @@
         "url": "https://github.com/sponsors/sindresorhus"
       }
     },
+    "node_modules/global-dirs/node_modules/ini": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/ini/-/ini-2.0.0.tgz",
+      "integrity": "sha512-7PnF4oN3CvZF23ADhA5wRaYEQpJ8qygSkbtTXWBeXWXmEVRXK+1ITciHWwHhsjv1TmW0MgacIv6hEi5pX5NQdA==",
+      "engines": {
+        "node": ">=10"
+      }
+    },
     "node_modules/globals": {
       "version": "11.12.0",
       "resolved": "https://registry.npmjs.org/globals/-/globals-11.12.0.tgz",
@@ -8203,11 +8211,11 @@
       "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
     },
     "node_modules/ini": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/ini/-/ini-2.0.0.tgz",
-      "integrity": "sha512-7PnF4oN3CvZF23ADhA5wRaYEQpJ8qygSkbtTXWBeXWXmEVRXK+1ITciHWwHhsjv1TmW0MgacIv6hEi5pX5NQdA==",
+      "version": "4.1.1",
+      "resolved": "https://registry.npmjs.org/ini/-/ini-4.1.1.tgz",
+      "integrity": "sha512-QQnnxNyfvmHFIsj7gkPcYymR8Jdw/o7mp5ZFihxn6h8Ci6fh3Dx4E1gPjpQEpIuPo9XVNY/ZUwh4BPMjGyL01g==",
       "engines": {
-        "node": ">=10"
+        "node": "^14.17.0 || ^16.13.0 || >=18.0.0"
       }
     },
     "node_modules/inquirer": {
@@ -19449,6 +19457,13 @@
       "integrity": "sha512-v8ho2DS5RiCjftj1nD9NmnfaOzTdud7RRnVd9kFNOjqZbISlx5DQ+OrTkywgd0dIt7oFCvKetZSHoHcP3sDdiA==",
       "requires": {
         "ini": "2.0.0"
+      },
+      "dependencies": {
+        "ini": {
+          "version": "2.0.0",
+          "resolved": "https://registry.npmjs.org/ini/-/ini-2.0.0.tgz",
+          "integrity": "sha512-7PnF4oN3CvZF23ADhA5wRaYEQpJ8qygSkbtTXWBeXWXmEVRXK+1ITciHWwHhsjv1TmW0MgacIv6hEi5pX5NQdA=="
+        }
       }
     },
     "globals": {
@@ -19731,9 +19746,9 @@
       "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
     },
     "ini": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/ini/-/ini-2.0.0.tgz",
-      "integrity": "sha512-7PnF4oN3CvZF23ADhA5wRaYEQpJ8qygSkbtTXWBeXWXmEVRXK+1ITciHWwHhsjv1TmW0MgacIv6hEi5pX5NQdA=="
+      "version": "4.1.1",
+      "resolved": "https://registry.npmjs.org/ini/-/ini-4.1.1.tgz",
+      "integrity": "sha512-QQnnxNyfvmHFIsj7gkPcYymR8Jdw/o7mp5ZFihxn6h8Ci6fh3Dx4E1gPjpQEpIuPo9XVNY/ZUwh4BPMjGyL01g=="
     },
     "inquirer": {
       "version": "6.5.2",
