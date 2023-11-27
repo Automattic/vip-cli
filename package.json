@@ -152,7 +152,7 @@
     "fetch-retry": "^5.0.6",
     "graphql": "15.5.1",
     "graphql-tag": "2.12.6",
-    "https-proxy-agent": "^5.0.1",
+    "https-proxy-agent": "^7.0.2",
     "ini": "4.1.1",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
