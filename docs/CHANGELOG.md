@@ -1,5 +1,29 @@
 ## Changelog
 
+### 2.36.2
+
+- #1558 fix(dev-env): Fix typo on suggested start command after updating env
+- #1557 fix(dev-env): Fix an issue where dev-env-import-sql command execute event was not being tracked
+- #1554 chore(dev-deps): update testing tools
+- #1556 chore(dev-deps): update eslint from 8.52.0 to 8.54.0
+- #1555 chore(deps): replace the deprecated `opn` with `open`
+- #1553 chore(dev-deps): update TypeScript and typings
+- #1578 build(deps-dev): bump @types/semver from 7.5.4 to 7.5.6
+- #1577 Updating ESLint config
+- #1559 Restructure and refine documentation + add missing tests
+- #1591 Fix database backup URL in error message
+- #1537 Add vip dev-env purge command logic
+- #1590 build(deps): bump actions/setup-node from 3 to 4
+- #1589 build(deps): bump actions/checkout from 3 to 4
+- #1592 chore: group dependencies that should be updated together
+- #1594 build(deps-dev): bump the babel group with 4 updates
+- #1593 build(deps-dev): bump the testing group with 1 update
+- #1595 build(deps-dev): bump typescript from 5.2.2 to 5.3.2
+- #1596 build(deps): bump @automattic/vip-go-preflight-checks from 2.0.16 to 2.0.17
+- #1580 build(deps): bump ini from 2.0.0 to 4.1.1
+- #1598 build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.8.0 to 0.9.0
+- #1597 chore(deps): update Lando
+
 ### 2.36.1
 
 - #1550 chore(deps): replace cli-table with cli-table3
