@@ -31,7 +31,7 @@
         "ini": "4.1.1",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli.git#ba488a4",
+        "lando": "github:automattic/lando-cli.git#b0a4382",
         "node-fetch": "^2.6.1",
         "open": "^9.1.0",
         "proxy-from-env": "^1.1.0",
@@ -4567,8 +4567,7 @@
     "node_modules/asynckit": {
       "version": "0.4.0",
       "resolved": "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz",
-      "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==",
-      "dev": true
+      "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q=="
     },
     "node_modules/available-typed-arrays": {
       "version": "1.0.5",
@@ -4592,11 +4591,13 @@
       }
     },
     "node_modules/axios": {
-      "version": "0.21.4",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz",
-      "integrity": "sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==",
+      "version": "1.6.2",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.6.2.tgz",
+      "integrity": "sha512-7i24Ri4pmDRfJTR7LDBhsOTtcm+9kjX5WiY1X3wIisx6G9So3pfMkEiU7emUBe46oceVImccTEM3k6C5dbVW8A==",
       "dependencies": {
-        "follow-redirects": "^1.14.0"
+        "follow-redirects": "^1.15.0",
+        "form-data": "^4.0.0",
+        "proxy-from-env": "^1.1.0"
       }
     },
     "node_modules/axobject-query": {
@@ -5566,7 +5567,6 @@
       "version": "1.0.8",
       "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
       "integrity": "sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==",
-      "dev": true,
       "dependencies": {
         "delayed-stream": "~1.0.0"
       },
@@ -5983,7 +5983,6 @@
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz",
       "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==",
-      "dev": true,
       "engines": {
         "node": ">=0.4.0"
       }
@@ -7565,7 +7564,6 @@
       "version": "4.0.0",
       "resolved": "https://registry.npmjs.org/form-data/-/form-data-4.0.0.tgz",
       "integrity": "sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==",
-      "dev": true,
       "dependencies": {
         "asynckit": "^0.4.0",
         "combined-stream": "^1.0.8",
@@ -10062,13 +10060,13 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#ba488a4a87b45e35cab83a7df30796a5f77261fd",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#b0a43825ca52af425ca6be8faf225b57de396f03",
       "license": "GPL-3.0",
       "dependencies": {
         "@lando/compose": "^1.0.0",
         "@lando/mailhog": "^0.8.0",
         "@lando/phpmyadmin": "^0.5.0",
-        "axios": "^0.21.4",
+        "axios": "^1.6.0",
         "bluebird": "^3.4.1",
         "clean-stacktrace": "^1.1.0",
         "cli-table3": "^0.5.1",
@@ -10459,7 +10457,6 @@
       "version": "1.52.0",
       "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz",
       "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==",
-      "dev": true,
       "engines": {
         "node": ">= 0.6"
       }
@@ -10468,7 +10465,6 @@
       "version": "2.1.35",
       "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz",
       "integrity": "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==",
-      "dev": true,
       "dependencies": {
         "mime-db": "1.52.0"
       },
@@ -17130,8 +17126,7 @@
     "asynckit": {
       "version": "0.4.0",
       "resolved": "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz",
-      "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==",
-      "dev": true
+      "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q=="
     },
     "available-typed-arrays": {
       "version": "1.0.5",
@@ -17146,11 +17141,13 @@
       "dev": true
     },
     "axios": {
-      "version": "0.21.4",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz",
-      "integrity": "sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==",
+      "version": "1.6.2",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.6.2.tgz",
+      "integrity": "sha512-7i24Ri4pmDRfJTR7LDBhsOTtcm+9kjX5WiY1X3wIisx6G9So3pfMkEiU7emUBe46oceVImccTEM3k6C5dbVW8A==",
       "requires": {
-        "follow-redirects": "^1.14.0"
+        "follow-redirects": "^1.15.0",
+        "form-data": "^4.0.0",
+        "proxy-from-env": "^1.1.0"
       }
     },
     "axobject-query": {
@@ -17830,7 +17827,6 @@
       "version": "1.0.8",
       "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
       "integrity": "sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==",
-      "dev": true,
       "requires": {
         "delayed-stream": "~1.0.0"
       }
@@ -18136,8 +18132,7 @@
     "delayed-stream": {
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz",
-      "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==",
-      "dev": true
+      "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ=="
     },
     "deprecation": {
       "version": "2.3.1",
@@ -19294,7 +19289,6 @@
       "version": "4.0.0",
       "resolved": "https://registry.npmjs.org/form-data/-/form-data-4.0.0.tgz",
       "integrity": "sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==",
-      "dev": true,
       "requires": {
         "asynckit": "^0.4.0",
         "combined-stream": "^1.0.8",
@@ -21075,13 +21069,13 @@
       "dev": true
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#ba488a4a87b45e35cab83a7df30796a5f77261fd",
-      "from": "lando@github:automattic/lando-cli.git#ba488a4",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#b0a43825ca52af425ca6be8faf225b57de396f03",
+      "from": "lando@github:automattic/lando-cli.git#b0a4382",
       "requires": {
         "@lando/compose": "^1.0.0",
         "@lando/mailhog": "^0.8.0",
         "@lando/phpmyadmin": "^0.5.0",
-        "axios": "^0.21.4",
+        "axios": "^1.6.0",
         "bluebird": "^3.4.1",
         "clean-stacktrace": "^1.1.0",
         "cli-table3": "^0.5.1",
@@ -21396,14 +21390,12 @@
     "mime-db": {
       "version": "1.52.0",
       "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz",
-      "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==",
-      "dev": true
+      "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg=="
     },
     "mime-types": {
       "version": "2.1.35",
       "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz",
       "integrity": "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==",
-      "dev": true,
       "requires": {
         "mime-db": "1.52.0"
       }

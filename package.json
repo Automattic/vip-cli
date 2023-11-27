@@ -156,7 +156,7 @@
     "ini": "4.1.1",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli.git#ba488a4",
+    "lando": "github:automattic/lando-cli.git#b0a4382",
     "node-fetch": "^2.6.1",
     "open": "^9.1.0",
     "proxy-from-env": "^1.1.0",
