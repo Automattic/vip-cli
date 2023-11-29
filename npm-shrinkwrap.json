@@ -3096,18 +3096,17 @@
       }
     },
     "node_modules/@json2csv/formatters": {
-      "version": "7.0.3",
-      "resolved": "https://registry.npmjs.org/@json2csv/formatters/-/formatters-7.0.3.tgz",
-      "integrity": "sha512-QLTpBNmNxGDAQNALkWwPdnyJ7IdXHQ0Motzog4fZOKK2ozpxckl6vwhWNBxbQs/25Zhp7bLS4J6ILu/hh0en6w=="
+      "version": "7.0.4",
+      "resolved": "https://registry.npmjs.org/@json2csv/formatters/-/formatters-7.0.4.tgz",
+      "integrity": "sha512-qdlLx0Pk/+BQnu6zreLgGrdLyUzLNVdsyCUU/+2aduHg4zemVo/e0iWjPk1sy/QZXXh+1RXBe+IiP9eDyj95qg=="
     },
     "node_modules/@json2csv/plainjs": {
-      "version": "7.0.3",
-      "resolved": "https://registry.npmjs.org/@json2csv/plainjs/-/plainjs-7.0.3.tgz",
-      "integrity": "sha512-AEpEdeSu8o64Sdf7Xoy7BM4MyfZToN7oxxleXJ6u7v3h0V0hKdNIw7i4kQ08wiIe7lcJBhS3JRyEPKX6k2AsjA==",
+      "version": "7.0.4",
+      "resolved": "https://registry.npmjs.org/@json2csv/plainjs/-/plainjs-7.0.4.tgz",
+      "integrity": "sha512-IHLyosebSdXMtVKusHHGqvp8mCpEkVk0Qvc0lAGcdAYdvO8lBvry8o665+CX78uPj/QZBhu+s0cOWyxanxlrQw==",
       "dependencies": {
-        "@json2csv/formatters": "^7.0.3",
-        "@streamparser/json": "^0.0.17",
-        "lodash.get": "^4.4.2"
+        "@json2csv/formatters": "^7.0.4",
+        "@streamparser/json": "^0.0.17"
       }
     },
     "node_modules/@lando/compose": {
@@ -10312,11 +10311,6 @@
       "integrity": "sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==",
       "dev": true
     },
-    "node_modules/lodash.get": {
-      "version": "4.4.2",
-      "resolved": "https://registry.npmjs.org/lodash.get/-/lodash.get-4.4.2.tgz",
-      "integrity": "sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk="
-    },
     "node_modules/lodash.includes": {
       "version": "4.3.0",
       "resolved": "https://registry.npmjs.org/lodash.includes/-/lodash.includes-4.3.0.tgz",
@@ -15962,18 +15956,17 @@
       }
     },
     "@json2csv/formatters": {
-      "version": "7.0.3",
-      "resolved": "https://registry.npmjs.org/@json2csv/formatters/-/formatters-7.0.3.tgz",
-      "integrity": "sha512-QLTpBNmNxGDAQNALkWwPdnyJ7IdXHQ0Motzog4fZOKK2ozpxckl6vwhWNBxbQs/25Zhp7bLS4J6ILu/hh0en6w=="
+      "version": "7.0.4",
+      "resolved": "https://registry.npmjs.org/@json2csv/formatters/-/formatters-7.0.4.tgz",
+      "integrity": "sha512-qdlLx0Pk/+BQnu6zreLgGrdLyUzLNVdsyCUU/+2aduHg4zemVo/e0iWjPk1sy/QZXXh+1RXBe+IiP9eDyj95qg=="
     },
     "@json2csv/plainjs": {
-      "version": "7.0.3",
-      "resolved": "https://registry.npmjs.org/@json2csv/plainjs/-/plainjs-7.0.3.tgz",
-      "integrity": "sha512-AEpEdeSu8o64Sdf7Xoy7BM4MyfZToN7oxxleXJ6u7v3h0V0hKdNIw7i4kQ08wiIe7lcJBhS3JRyEPKX6k2AsjA==",
+      "version": "7.0.4",
+      "resolved": "https://registry.npmjs.org/@json2csv/plainjs/-/plainjs-7.0.4.tgz",
+      "integrity": "sha512-IHLyosebSdXMtVKusHHGqvp8mCpEkVk0Qvc0lAGcdAYdvO8lBvry8o665+CX78uPj/QZBhu+s0cOWyxanxlrQw==",
       "requires": {
-        "@json2csv/formatters": "^7.0.3",
-        "@streamparser/json": "^0.0.17",
-        "lodash.get": "^4.4.2"
+        "@json2csv/formatters": "^7.0.4",
+        "@streamparser/json": "^0.0.17"
       }
     },
     "@lando/compose": {
@@ -21265,11 +21258,6 @@
       "resolved": "https://registry.npmjs.org/lodash.debounce/-/lodash.debounce-4.0.8.tgz",
       "integrity": "sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==",
       "dev": true
-    },
-    "lodash.get": {
-      "version": "4.4.2",
-      "resolved": "https://registry.npmjs.org/lodash.get/-/lodash.get-4.4.2.tgz",
-      "integrity": "sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk="
     },
     "lodash.includes": {
       "version": "4.3.0",
