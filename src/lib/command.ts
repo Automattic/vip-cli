@@ -4,7 +4,6 @@
  * @class BaseCommand
  */
 class BaseCommand {
-	protected name: string;
 	protected usage: any = {
 		description: 'Base command',
 		examples: [
