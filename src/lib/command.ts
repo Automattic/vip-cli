@@ -45,7 +45,7 @@ class BaseCommand {
 		return this.name;
 	}
 
-	protected getUsage(): any {
+	public getUsage(): any {
 		return this.usage;
 	}
 }
@@ -105,7 +105,7 @@ const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
 
 for ( const [ key, command ] of registry.getCommands() ) {
-	console.log( `${key}`, command.getUsage() );
+	console.log( `${ key }`, command.getUsage() );
 }
 
 registry.invokeCommand( 'example', 'arg1', 'arg2', { named: 'arg' } );
