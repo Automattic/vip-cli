@@ -40,7 +40,7 @@ class BaseCommand {
 		// Implement the command logic in the derived classes
 	}
 
-	protected getName(): string {
+	public getName(): string {
 		return this.name;
 	}
 
