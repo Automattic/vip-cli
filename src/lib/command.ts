@@ -1,10 +1,20 @@
+export interface CommandExample {
+	description: string;
+	usage: string;
+}
+
+export interface CommandUsage {
+	description: string;
+	examples: CommandExample[];
+}
+
 /**
  * Base Command from which every subcommand should inherit.
  *
  * @class BaseCommand
  */
-class BaseCommand {
-	protected usage: any = {
+export abstract class BaseCommand {
+	protected readonly usage: CommandUsage = {
 		description: 'Base command',
 		examples: [
 			{
@@ -20,31 +30,32 @@ class BaseCommand {
 
 	constructor( private readonly name: string ) {}
 
-	protected trackEvent( eventName: string, data: any ): void {
+	protected trackEvent( eventName: string, data: unknown[] ): void {
 		// Send tracking information to trackEvent
 	}
 
-	public run( ...args: any[] ): void {
+	public run( ...args: unknown[] ): void {
 		// Invoke the command and send tracking information
 		try {
 			this.trackEvent( `${ this.name }_execute`, args );
 			this.execute( ...args );
 			this.trackEvent( `${ this.name }_success`, args );
 		} catch ( error ) {
-			this.trackEvent( `${ this.name }_error`, { error } );
+			const err =
+				error instanceof Error ? error : new Error( error?.toString() ?? 'Unknown error' );
+
+			this.trackEvent( `${ this.name }_error`, [ err ] );
 			throw error;
 		}
 	}
 
-	protected execute( ...args: any[] ): void {
-		// Implement the command logic in the derived classes
-	}
+	protected abstract execute( ...args: unknown[] ): void;
 
 	public getName(): string {
 		return this.name;
 	}
 
-	public getUsage(): any {
+	public getUsage(): CommandUsage {
 		return this.usage;
 	}
 }
@@ -58,7 +69,7 @@ class BaseCommand {
  */
 class CommandRegistry {
 	private static instance: CommandRegistry;
-	private commands: Map< string, BaseCommand >;
+	private readonly commands: Map< string, BaseCommand >;
 
 	private constructor() {
 		this.commands = new Map< string, BaseCommand >();
@@ -75,7 +86,7 @@ class CommandRegistry {
 		this.commands.set( command.getName(), command );
 	}
 
-	public invokeCommand( commandName: string, ...args: any[] ): void {
+	public invokeCommand( commandName: string, ...args: unknown[] ): void {
 		const command = this.commands.get( commandName );
 		if ( command ) {
 			command.run( ...args );
@@ -94,11 +105,10 @@ class ExampleCommand extends BaseCommand {
 		super( 'example' );
 	}
 
-	protected execute( ...args: any[] ): void {
+	protected execute( ...args: unknown[] ): void {
 		console.log( this.getName(), args );
 	}
 }
-
 
 const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
