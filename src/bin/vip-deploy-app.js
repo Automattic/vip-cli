@@ -6,7 +6,11 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
+import fs from 'fs';
 import gql from 'graphql-tag';
+import { mkdtemp } from 'node:fs/promises';
+import os from 'os';
+import path from 'path';
 
 /**
  * Internal dependencies
@@ -167,6 +171,10 @@ void command( {
 		const [ fileName ] = arg;
 		const fileMeta = await getFileMeta( fileName );
 
+		if ( ! fs.existsSync( fileMeta.fileName ) ) {
+			throw new Error( `Unable to access file ${ fileMeta.fileName }` );
+		}
+
 		debug( 'Options: ', opts );
 		debug( 'Args: ', arg );
 
@@ -180,8 +188,6 @@ void command( {
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
-
-		const fileNameToUpload = fileName;
 
 		// PROMPT TO PROCEED WITH THE DEPLOY
 		await promptToContinue( {
@@ -236,7 +242,32 @@ Processing the file for deployment to your environment...
 			progressTracker.setUploadPercentage( percentage );
 		};
 
-		fileMeta.fileName = fileNameToUpload;
+		// Rename the file so it doesn't get overwritten
+		let tmpDir;
+		let newFileBasename;
+		let newFileName;
+		try {
+			tmpDir = await mkdtemp( path.join( os.tmpdir(), 'vip-manual-deploys' ) );
+
+			const datePrefix = new Date()
+				.toISOString()
+				// eslint-disable-next-line no-useless-escape
+				.replace( /[\-T:\.Z]/g, '' )
+				.slice( 0, 14 );
+			newFileBasename = `${ datePrefix }-${ fileMeta.basename }`;
+			debug(
+				`Renaming the file to ${ chalk.cyan( newFileBasename ) } from ${
+					fileMeta.basename
+				} prior to transfer...`
+			);
+			newFileName = `${ tmpDir }/${ newFileBasename }`;
+
+			fs.copyFileSync( fileMeta.fileName, newFileName );
+			fileMeta.fileName = newFileName;
+			fileMeta.basename = newFileBasename;
+		} catch ( err ) {
+			throw new Error( `Unable to copy file to temporary working directory: ${ err.message }` );
+		}
 
 		try {
 			const {
