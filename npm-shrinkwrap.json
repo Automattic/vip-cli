@@ -19,6 +19,7 @@
         "check-disk-space": "3.4.0",
         "cli-columns": "^4.0.0",
         "cli-table3": "^0.6.3",
+        "commander": "^11.1.0",
         "configstore": "5.0.1",
         "copy-dir": "0.4.0",
         "debug": "4.3.4",
@@ -404,6 +405,15 @@
       },
       "peerDependencies": {
         "@babel/core": "^7.0.0-0"
+      }
+    },
+    "node_modules/@babel/cli/node_modules/commander": {
+      "version": "4.1.1",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz",
+      "integrity": "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==",
+      "dev": true,
+      "engines": {
+        "node": ">= 6"
       }
     },
     "node_modules/@babel/cli/node_modules/convert-source-map": {
@@ -5632,12 +5642,11 @@
       }
     },
     "node_modules/commander": {
-      "version": "4.1.1",
-      "resolved": "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz",
-      "integrity": "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==",
-      "dev": true,
+      "version": "11.1.0",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-11.1.0.tgz",
+      "integrity": "sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==",
       "engines": {
-        "node": ">= 6"
+        "node": ">=16"
       }
     },
     "node_modules/comment-parser": {
@@ -14036,6 +14045,12 @@
         "slash": "^2.0.0"
       },
       "dependencies": {
+        "commander": {
+          "version": "4.1.1",
+          "resolved": "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz",
+          "integrity": "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==",
+          "dev": true
+        },
         "convert-source-map": {
           "version": "2.0.0",
           "resolved": "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz",
@@ -17876,10 +17891,9 @@
       }
     },
     "commander": {
-      "version": "4.1.1",
-      "resolved": "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz",
-      "integrity": "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==",
-      "dev": true
+      "version": "11.1.0",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-11.1.0.tgz",
+      "integrity": "sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ=="
     },
     "comment-parser": {
       "version": "1.4.0",

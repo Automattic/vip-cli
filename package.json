@@ -144,6 +144,7 @@
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
+    "commander": "^11.1.0",
     "configstore": "5.0.1",
     "copy-dir": "0.4.0",
     "debug": "4.3.4",

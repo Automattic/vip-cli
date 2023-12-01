@@ -1,3 +1,8 @@
+import { Command } from 'commander';
+
+import { BaseVIPCommand } from './base-command';
+import { CommandRegistry } from './command-registry';
+import { ExampleCommand } from '../commands/example-command';
 export interface CommandExample {
 	description: string;
 	usage: string;
@@ -8,113 +13,63 @@ export interface CommandUsage {
 	examples: CommandExample[];
 }
 
+export interface CommandOption {
+	name: string;
+	alias?: string;
+	description: string;
+	type: 'string' | 'number' | 'boolean';
+	required?: boolean;
+}
+
+export interface CommandArgument {
+	name: string;
+	description: string;
+	type: 'string' | 'number' | 'boolean';
+	required?: boolean;
+}
 /**
  * Base Command from which every subcommand should inherit.
  *
  * @class BaseCommand
  */
-export abstract class BaseCommand {
-	protected readonly usage: CommandUsage = {
-		description: 'Base command',
-		examples: [
-			{
-				description: 'Example 1',
-				usage: 'vip example arg1 arg2',
-			},
-			{
-				description: 'Example 2',
-				usage: 'vip example --named=arg1 --also=arg2',
-			},
-		],
-	};
 
-	constructor( private readonly name: string ) {}
 
-	protected trackEvent( eventName: string, data: unknown[] ): void {
-		// Send tracking information to trackEvent
+
+
+const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
+	const usage = command.getUsage();
+	const options = command.getOptions();
+	const name = command.getName();
+	const cmd = new Command( name ).description( usage.description );
+	for ( const option of options ) {
+		cmd.option( option.name, option.description );
 	}
 
-	public run( ...args: unknown[] ): void {
-		// Invoke the command and send tracking information
-		try {
-			this.trackEvent( `${ this.name }_execute`, args );
-			this.execute( ...args );
-			this.trackEvent( `${ this.name }_success`, args );
-		} catch ( error ) {
-			const err =
-				error instanceof Error ? error : new Error( error?.toString() ?? 'Unknown error' );
+	cmd.action( ( ...args ) => {
+		registry.invokeCommand( name, ...args );
+	} );
+	cmd.configureHelp( { showGlobalOptions: true } )
+	return cmd;
+};
 
-			this.trackEvent( `${ this.name }_error`, [ err ] );
-			throw error;
-		}
-	}
+const program = new Command();
 
-	protected abstract execute( ...args: unknown[] ): void;
+const baseVIPCommand = new BaseVIPCommand( 'vip' );
 
-	public getName(): string {
-		return this.name;
-	}
+program
+	.name( 'vip' )
+	.description( 'WPVIP CLI' )
+	.version( '3.0.0' )
+	.configureHelp( { showGlobalOptions: true } );
 
-	public getUsage(): CommandUsage {
-		return this.usage;
-	}
-}
-
-/**
- * The registry that stores/invokes all the commands.
- *
- * The main entry point will call it.
- *
- * @class CommandRegistry
- */
-class CommandRegistry {
-	private static instance: CommandRegistry;
-	private readonly commands: Map< string, BaseCommand >;
-
-	private constructor() {
-		this.commands = new Map< string, BaseCommand >();
-	}
-
-	public static getInstance(): CommandRegistry {
-		if ( ! CommandRegistry.instance ) {
-			CommandRegistry.instance = new CommandRegistry();
-		}
-		return CommandRegistry.instance;
-	}
-
-	public registerCommand( command: BaseCommand ): void {
-		this.commands.set( command.getName(), command );
-	}
-
-	public invokeCommand( commandName: string, ...args: unknown[] ): void {
-		const command = this.commands.get( commandName );
-		if ( command ) {
-			command.run( ...args );
-		} else {
-			throw new Error( `Command '${ commandName }' not found.` );
-		}
-	}
-
-	public getCommands(): Map< string, BaseCommand > {
-		return this.commands;
-	}
-}
-
-class ExampleCommand extends BaseCommand {
-	constructor() {
-		super( 'example' );
-	}
-
-	protected execute( ...args: unknown[] ): void {
-		console.log( this.getName(), args );
-	}
+for ( const option of baseVIPCommand.getOptions() ) {
+	program.option( option.name, option.description );
 }
 
 const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
 
 for ( const [ key, command ] of registry.getCommands() ) {
-	console.log( `${ key }`, command.getUsage() );
+	program.addCommand( makeVIPCommand( command ) );
 }
-
-registry.invokeCommand( 'example', 'arg1', 'arg2', { named: 'arg' } );
+program.parse( process.argv );
