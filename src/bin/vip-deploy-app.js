@@ -137,6 +137,10 @@ const examples = [
 		usage: 'vip deploy app @mysite.develop file.zip',
 		description: 'Deploy the given ZIP file to your site',
 	},
+	{
+		usage: 'vip deploy app @mysite.develop file.zip --message "This is a commit message"',
+		description: 'Deploy the given ZIP file to your site',
+	},
 ];
 
 const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
@@ -165,6 +169,7 @@ void command( {
 	requiredArgs: 1,
 } )
 	.examples( examples )
+	.option( 'message', 'Custom message for deploy' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
 		const { id: envId, appId } = env;
@@ -188,6 +193,7 @@ void command( {
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
+		const deployMessage = opts.message ?? '';
 
 		// PROMPT TO PROCEED WITH THE DEPLOY
 		await promptToContinue( {
@@ -286,6 +292,7 @@ Processing the file for deployment to your environment...
 				environmentId: env.id,
 				basename,
 				md5,
+				deployMessage,
 			};
 
 			debug( { basename, md5, result, startDeployVariables } );
