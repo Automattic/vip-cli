@@ -1,7 +1,10 @@
-import { CommandExample, CommandOption, CommandArgument, CommandUsage } from './types/commands';
 import { CommandRegistry } from './command-registry';
 
-export abstract class BaseVIPCommand {
+import type { CommandOption, CommandArgument, CommandUsage } from './types/commands';
+
+export class BaseVIPCommand {
+	protected name: string = 'vip';
+
 	protected readonly commandOptions: CommandOption[] = [
 		{
 			name: '--debug',
@@ -36,7 +39,7 @@ export abstract class BaseVIPCommand {
 
 	protected childCommands: BaseVIPCommand[] = [];
 
-	constructor( private readonly name: string ) {
+	public constructor() {
 		const registry = CommandRegistry.getInstance();
 		// registry.registerCommand( this );
 
@@ -64,7 +67,9 @@ export abstract class BaseVIPCommand {
 		}
 	}
 
-	protected abstract execute( ...args: unknown[] ): void;
+	protected execute( ..._args: unknown[] ): void {
+		// Do nothing
+	}
 
 	public getName(): string {
 		return this.name;

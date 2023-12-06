@@ -1,11 +1,13 @@
 import { BaseVIPCommand } from '../lib/base-command';
-import { CommandExample, CommandOption, CommandArgument, CommandUsage } from './types/commands';
 import { CommandRegistry } from '../lib/command-registry';
+
+import type { CommandOption, CommandUsage } from '../lib/types/commands';
 
 const registry = CommandRegistry.getInstance();
 
 export class ExampleCommand extends BaseVIPCommand {
 	protected readonly name: string = 'example';
+
 	protected readonly usage: CommandUsage = {
 		description: 'Example command',
 		examples: [
@@ -31,11 +33,7 @@ export class ExampleCommand extends BaseVIPCommand {
 
 	protected childCommands: BaseVIPCommand[] = [ new ExampleChildCommand() ];
 
-	constructor( name ) {
-		super( 'example' );
-	}
-
-	protected execute( opts, ...args: unknown[] ): void {
+	protected execute( opts: unknown[], ...args: unknown[] ): void {
 		console.log( 'parent', this.getName(), opts, args );
 	}
 }
@@ -56,13 +54,9 @@ export class ExampleChildCommand extends BaseVIPCommand {
 		],
 	};
 
-	protected execute( opts, ...args: unknown[] ): void {
+	protected execute( opts: unknown[], ...args: unknown[] ): void {
 		console.log( this.getName(), 'what' );
 	}
-	// constructor() {
-	// 	super( 'example child' );
-	// }
 }
-
 
 // registry.registerCommand( new ExampleCommand() );
