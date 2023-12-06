@@ -3,49 +3,39 @@ import { Command } from 'commander';
 import { BaseVIPCommand } from './base-command';
 import { CommandRegistry } from './command-registry';
 import { ExampleCommand } from '../commands/example-command';
-export interface CommandExample {
-	description: string;
-	usage: string;
-}
+import { CommandExample, CommandOption, CommandArgument, CommandUsage } from './types/commands';
 
-export interface CommandUsage {
-	description: string;
-	examples: CommandExample[];
-}
-
-export interface CommandOption {
-	name: string;
-	alias?: string;
-	description: string;
-	type: 'string' | 'number' | 'boolean';
-	required?: boolean;
-}
-
-export interface CommandArgument {
-	name: string;
-	description: string;
-	type: 'string' | 'number' | 'boolean';
-	required?: boolean;
-}
 /**
  * Base Command from which every subcommand should inherit.
  *
  * @class BaseCommand
  */
 
-
-
-
 const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
 	const usage = command.getUsage();
 	const options = command.getOptions();
 	const name = command.getName();
+	const commandArgs = command.getArguments();
 	const cmd = new Command( name ).description( usage.description );
+
+	for( const argument of commandArgs ) {
+		let name = argument.name;
+		if ( argument.required ) {
+			name = `<${ name }>`;
+		} else {
+			name = `[${ name }]`;
+		}
+
+		cmd.argument( name, argument.description );
+	}
+
 	for ( const option of options ) {
 		cmd.option( option.name, option.description );
 	}
 
+
 	cmd.action( ( ...args ) => {
+		console.log( name );
 		registry.invokeCommand( name, ...args );
 	} );
 	cmd.configureHelp( { showGlobalOptions: true } )
@@ -71,5 +61,9 @@ registry.registerCommand( new ExampleCommand() );
 
 for ( const [ key, command ] of registry.getCommands() ) {
 	program.addCommand( makeVIPCommand( command ) );
+	for ( const childCommand of command.getChildCommands() ) {
+		// const instance: BaseVIPCommand = new childCommand();
+		program.addCommand( makeVIPCommand( childCommand ) );
+	}
 }
 program.parse( process.argv );

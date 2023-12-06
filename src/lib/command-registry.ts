@@ -31,6 +31,7 @@ export class CommandRegistry {
 		if ( command ) {
 			command.run( ...args );
 		} else {
+			console.log( this.commands );
 			throw new Error( `Command '${ commandName }' not found.` );
 		}
 	}

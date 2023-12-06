@@ -1,3 +1,6 @@
+import { CommandExample, CommandOption, CommandArgument, CommandUsage } from './types/commands';
+import { CommandRegistry } from './command-registry';
+
 export abstract class BaseVIPCommand {
 	protected readonly commandOptions: CommandOption[] = [
 		{
@@ -5,6 +8,15 @@ export abstract class BaseVIPCommand {
 			alias: '-d',
 			description: 'Show debug',
 			type: 'boolean',
+		},
+	];
+
+	protected readonly commandArguments: CommandArgument[] = [
+		{
+			name: 'app',
+			description: 'Application id or slug',
+			type: 'string',
+			required: true,
 		},
 	];
 
@@ -22,7 +34,16 @@ export abstract class BaseVIPCommand {
 		],
 	};
 
-	constructor( private readonly name: string ) {}
+	protected childCommands: BaseVIPCommand[] = [];
+
+	constructor( private readonly name: string ) {
+		const registry = CommandRegistry.getInstance();
+		// registry.registerCommand( this );
+
+		this.childCommands.forEach( command => {
+			registry.registerCommand( command );
+		} );
+	}
 
 	protected trackEvent( eventName: string, data: unknown[] ): void {
 		// Send tracking information to trackEvent
@@ -53,7 +74,15 @@ export abstract class BaseVIPCommand {
 		return this.usage;
 	}
 
+	public getChildCommands(): BaseVIPCommand[] {
+		return this.childCommands;
+	}
+
 	public getOptions(): CommandOption[] {
 		return this.commandOptions;
+	}
+
+	public getArguments(): CommandArgument[] {
+		return this.commandArguments;
 	}
 }
