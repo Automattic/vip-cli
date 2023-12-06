@@ -30,8 +30,8 @@ export class ExampleCommand extends BaseVIPCommand {
 
 	protected childCommands: BaseVIPCommand[] = [ new ExampleChildCommand() ];
 
-	protected execute( opts: unknown[], ...args: unknown[] ): void {
-		console.log( 'parent', this.getName(), opts );
+	protected execute( opts: unknown[] ): void {
+		console.log( 'parent', this.getName() );
 	}
 }
 

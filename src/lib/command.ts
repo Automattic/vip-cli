@@ -4,6 +4,7 @@ import { BaseVIPCommand } from './base-command';
 import { CommandRegistry } from './command-registry';
 import { description, version } from '../../package.json';
 import { ExampleCommand } from '../commands/example-command';
+import { AppCommand } from '../commands/app';
 
 /**
  * Base Command from which every subcommand should inherit.
@@ -36,6 +37,7 @@ const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
 	cmd.action( async ( ...args: unknown[] ) => {
 		await registry.invokeCommand( name, ...args );
 	} );
+
 	cmd.configureHelp( { showGlobalOptions: true } );
 	return cmd;
 };
@@ -61,9 +63,8 @@ program
 
 const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
+registry.registerCommand( new AppCommand() );
 
 [ ...registry.getCommands().values() ].map( command => processCommand( program, command ) );
-
-console.log( registry.getCommands() );
 
 program.parse( process.argv );
