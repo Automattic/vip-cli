@@ -141,6 +141,10 @@ const examples = [
 		usage: 'vip deploy app @mysite.develop file.zip --message "This is a commit message"',
 		description: 'Deploy the given ZIP file to your site',
 	},
+	{
+		usage: 'vip deploy app @mysite.develop file.zip --force',
+		description: 'Deploy the given compressed file to your site without prompting',
+	},
 ];
 
 const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
@@ -170,6 +174,7 @@ void command( {
 } )
 	.examples( examples )
 	.option( 'message', 'Custom message for deploy' )
+	.option( 'force', 'Skip prompt' )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
 		const { id: envId, appId } = env;
@@ -194,14 +199,16 @@ void command( {
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 		const deployMessage = opts.message ?? '';
+		const forceDeploy = opts.force;
 
-		// PROMPT TO PROCEED WITH THE DEPLOY
-		await promptToContinue( {
-			launched,
-			formattedEnvironment,
-			track,
-			domain,
-		} );
+		if ( ! forceDeploy ) {
+			await promptToContinue( {
+				launched,
+				formattedEnvironment,
+				track,
+				domain,
+			} );
+		}
 
 		/**
 		 * =========== WARNING =============
