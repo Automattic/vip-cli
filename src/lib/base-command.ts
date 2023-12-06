@@ -1,18 +1,12 @@
 import { CommandRegistry } from './command-registry';
+import { trackEvent } from './tracker';
 
 import type { CommandOption, CommandArgument, CommandUsage } from './types/commands';
 
-export class BaseVIPCommand {
+export abstract class BaseVIPCommand {
 	protected name: string = 'vip';
 
-	protected readonly commandOptions: CommandOption[] = [
-		{
-			name: '--debug',
-			alias: '-d',
-			description: 'Show debug',
-			type: 'boolean',
-		},
-	];
+	protected readonly commandOptions: CommandOption[] = [];
 
 	protected readonly commandArguments: CommandArgument[] = [
 		{
@@ -48,28 +42,38 @@ export class BaseVIPCommand {
 		} );
 	}
 
-	protected trackEvent( eventName: string, data: unknown[] ): void {
-		// Send tracking information to trackEvent
+	protected getTrackingParams( _args: Record< string, unknown > ): Record< string, unknown > {
+		return {};
 	}
 
-	public run( ...args: unknown[] ): void {
+	protected shouldTrackFailure( _error: Error ): boolean {
+		return true;
+	}
+
+	public async run( ...args: unknown[] ): Promise< void > {
 		// Invoke the command and send tracking information
+		const trackingParams = this.getTrackingParams( { args } );
 		try {
-			this.trackEvent( `${ this.name }_execute`, args );
+			await trackEvent( `${ this.name }_execute`, trackingParams );
 			this.execute( ...args );
-			this.trackEvent( `${ this.name }_success`, args );
+			await trackEvent( `${ this.name }_success`, trackingParams );
 		} catch ( error ) {
 			const err =
 				error instanceof Error ? error : new Error( error?.toString() ?? 'Unknown error' );
 
-			this.trackEvent( `${ this.name }_error`, [ err ] );
+			if ( this.shouldTrackFailure( err ) ) {
+				await trackEvent( `${ this.name }_error`, {
+					...trackingParams,
+					failure: err.message,
+					stack: err.stack,
+				} );
+			}
+
 			throw error;
 		}
 	}
 
-	protected execute( ..._args: unknown[] ): void {
-		// Do nothing
-	}
+	protected abstract execute( ..._args: unknown[] ): void;
 
 	public getName(): string {
 		return this.name;

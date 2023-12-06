@@ -26,10 +26,10 @@ export class CommandRegistry {
 		this.commands.set( command.getName(), command );
 	}
 
-	public invokeCommand( commandName: string, ...args: unknown[] ): void {
+	public async invokeCommand( commandName: string, ...args: unknown[] ): Promise< void > {
 		const command = this.commands.get( commandName );
 		if ( command ) {
-			command.run( ...args );
+			await command.run( ...args );
 		} else {
 			console.log( this.commands );
 			throw new Error( `Command '${ commandName }' not found.` );

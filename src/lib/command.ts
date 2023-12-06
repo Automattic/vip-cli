@@ -2,6 +2,7 @@ import { Command } from 'commander';
 
 import { BaseVIPCommand } from './base-command';
 import { CommandRegistry } from './command-registry';
+import { description, version } from '../../package.json';
 import { ExampleCommand } from '../commands/example-command';
 
 /**
@@ -32,38 +33,31 @@ const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
 		cmd.option( option.name, option.description );
 	}
 
-	cmd.action( ( ...args: unknown[] ) => {
-		console.log( name );
-		registry.invokeCommand( name, ...args );
+	cmd.action( async ( ...args: unknown[] ) => {
+		await registry.invokeCommand( name, ...args );
 	} );
 	cmd.configureHelp( { showGlobalOptions: true } );
 	return cmd;
 };
 
-const program = new Command();
+const processCommand = ( parent: Command, command: BaseVIPCommand ): void => {
+	const cmd = makeVIPCommand( command );
+	command.getChildCommands().forEach( childCommand => processCommand( cmd, childCommand ) );
+	parent.addCommand( cmd );
+};
 
-const baseVIPCommand = new BaseVIPCommand();
+const program = new Command();
 
 program
 	.name( 'vip' )
-	.description( 'WPVIP CLI' )
-	.version( '3.0.0' )
-	.configureHelp( { showGlobalOptions: true } );
-
-for ( const option of baseVIPCommand.getOptions() ) {
-	program.option( option.name, option.description );
-}
+	.description( description )
+	.version( version )
+	.configureHelp( { showGlobalOptions: true } )
+	.option( '--debug, -d', 'Show debug' );
 
 const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
 
-for ( const [ key, command ] of registry.getCommands() ) {
-	const cmd = makeVIPCommand( command );
-	for ( const childCommand of command.getChildCommands() ) {
-		// const instance: BaseVIPCommand = new childCommand();
-		cmd.addCommand( makeVIPCommand( childCommand ) );
-	}
+[ ...registry.getCommands().values() ].map( command => processCommand( program, command ) );
 
-	program.addCommand( cmd );
-}
 program.parse( process.argv );

@@ -1,9 +1,6 @@
 import { BaseVIPCommand } from '../lib/base-command';
-import { CommandRegistry } from '../lib/command-registry';
 
 import type { CommandOption, CommandUsage } from '../lib/types/commands';
-
-const registry = CommandRegistry.getInstance();
 
 export class ExampleCommand extends BaseVIPCommand {
 	protected readonly name: string = 'example';
@@ -58,5 +55,3 @@ export class ExampleChildCommand extends BaseVIPCommand {
 		console.log( this.getName(), 'what' );
 	}
 }
-
-// registry.registerCommand( new ExampleCommand() );
