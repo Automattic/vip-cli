@@ -33,14 +33,7 @@ export abstract class BaseVIPCommand {
 
 	protected childCommands: BaseVIPCommand[] = [];
 
-	public constructor() {
-		const registry = CommandRegistry.getInstance();
-		// registry.registerCommand( this );
-
-		this.childCommands.forEach( command => {
-			registry.registerCommand( command );
-		} );
-	}
+	public constructor() {}
 
 	protected getTrackingParams( _args: Record< string, unknown > ): Record< string, unknown > {
 		return {};

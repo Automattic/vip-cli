@@ -31,7 +31,7 @@ export class ExampleCommand extends BaseVIPCommand {
 	protected childCommands: BaseVIPCommand[] = [ new ExampleChildCommand() ];
 
 	protected execute( opts: unknown[], ...args: unknown[] ): void {
-		console.log( 'parent', this.getName(), opts, args );
+		console.log( 'parent', this.getName(), opts );
 	}
 }
 
@@ -51,7 +51,30 @@ export class ExampleChildCommand extends BaseVIPCommand {
 		],
 	};
 
+	protected childCommands: BaseVIPCommand[] = [ new ExampleGrandChildCommand() ];
+
 	protected execute( opts: unknown[], ...args: unknown[] ): void {
-		console.log( this.getName(), 'what' );
+		console.log( this.getName() );
+	}
+}
+
+export class ExampleGrandChildCommand extends BaseVIPCommand {
+	protected readonly name: string = 'grandchild';
+	protected readonly usage: CommandUsage = {
+		description: 'Example grandchild command',
+		examples: [
+			{
+				description: 'Example 1',
+				usage: 'vip example child arg1 arg2',
+			},
+			{
+				description: 'Example 2',
+				usage: 'vip example child --named=arg1 --also=arg2',
+			},
+		],
+	};
+
+	protected execute( opts: unknown[], ...args: unknown[] ): void {
+		console.log( this.getName() );
 	}
 }

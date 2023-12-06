@@ -42,7 +42,11 @@ const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
 
 const processCommand = ( parent: Command, command: BaseVIPCommand ): void => {
 	const cmd = makeVIPCommand( command );
-	command.getChildCommands().forEach( childCommand => processCommand( cmd, childCommand ) );
+
+	command.getChildCommands().forEach( childCommand => {
+		registry.registerCommand( childCommand );
+		processCommand( cmd, childCommand );
+	} );
 	parent.addCommand( cmd );
 };
 
@@ -59,5 +63,7 @@ const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
 
 [ ...registry.getCommands().values() ].map( command => processCommand( program, command ) );
+
+console.log( registry.getCommands() );
 
 program.parse( process.argv );
