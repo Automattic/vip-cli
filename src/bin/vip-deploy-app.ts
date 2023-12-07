@@ -6,31 +6,25 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import fs from 'fs';
 import gql from 'graphql-tag';
-import { mkdtemp } from 'node:fs/promises';
-import os from 'os';
-import path from 'path';
 
 /**
  * Internal dependencies
  */
+import { App, AppEnvironment, AppEnvironmentDeployInput } from '../graphqlTypes';
 import API from '../lib/api';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatEnvironment, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import {
-	checkFileAccess,
-	getFileSize,
 	getFileMeta,
-	isFile,
 	uploadImportSqlFileToS3,
+	WithId,
+	UploadArguments,
 } from '../lib/client-file-uploader';
-import { GB_IN_BYTES } from '../lib/constants/file-size';
-import { currentUserCanDeployForApp, isSupportedApp } from '../lib/manual-deploy/manual-deploy';
+import { gates, renameFile } from '../lib/manual-deploy/manual-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
-import { validateDeployFileExt, validateFilename } from '../lib/validations/manual-deploy';
 
 const appQuery = `
 	id,
@@ -76,152 +70,70 @@ const DEPLOY_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'deploy', name: 'Deploying' },
 ];
 
-/**
- * @param {App} app
- * @param {Env} env
- * @param {FileMeta} fileMeta
- */
-export async function gates( app, env, fileMeta ) {
-	const { id: envId, appId } = env;
-	const track = trackEventWithEnv.bind( null, appId, envId );
-	const { fileName, basename } = fileMeta;
-
-	if ( ! fs.existsSync( fileName ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'invalid-file' } );
-		exit.withError( `Unable to access file ${ fileMeta.fileName }` );
-	}
-
-	try {
-		validateFilename( basename );
-	} catch ( error ) {
-		await track( 'deploy_app_command_error', { error_type: 'invalid-filename' } );
-		exit.withError( error );
-	}
-
-	try {
-		validateDeployFileExt( fileName );
-	} catch ( error ) {
-		await track( 'deploy_app_command_error', { error_type: 'invalid-extension' } );
-		exit.withError( error );
-	}
-
-	if ( ! currentUserCanDeployForApp( app ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'unauthorized' } );
-		exit.withError(
-			'The currently authenticated account does not have permission to deploy to an application.'
-		);
-	}
-
-	if ( ! isSupportedApp( app ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
-		exit.withError( 'The type of application you specified does not currently support deploys.' );
-	}
-
-	try {
-		await checkFileAccess( fileName );
-	} catch ( err ) {
-		await track( 'deploy_app_command_error', { error_type: 'appfile-unreadable' } );
-		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
-	}
-
-	if ( ! ( await isFile( fileName ) ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'appfile-notfile' } );
-		exit.withError( `Path '${ fileName }' is not a file.` );
-	}
-
-	const fileSize = await getFileSize( fileName );
-	if ( ! fileSize ) {
-		await track( 'deploy_app_command_error', { error_type: 'appfile-empty' } );
-		exit.withError( `File '${ fileName }' is empty.` );
-	}
-
-	const maxFileSize = 4 * GB_IN_BYTES;
-	if ( fileSize > maxFileSize ) {
-		await track( 'deploy_app_command_error', {
-			error_type: 'appfile-toobig',
-			file_size: fileSize,
-		} );
-		exit.withError(
-			`The deploy file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).`
-		);
-	}
+interface PromptToContinueParams {
+	launched: boolean;
+	formattedEnvironment: string;
+	track: ( eventName: string ) => Promise< false | unknown[] >;
+	domain: string;
 }
 
-const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
-	const promptToMatch = domain.toUpperCase();
+interface StartDeployVariables {
+	input: AppEnvironmentDeployInput;
+}
+
+/**
+ * Prompt the user to confirm the environment they are deploying to.
+ * @param {PromptToContinueParams} PromptToContinueParams
+ */
+export async function promptToContinue( params: PromptToContinueParams ) {
+	const promptToMatch = params.domain.toUpperCase();
 	const promptResponse = await prompt( {
 		type: 'input',
 		name: 'confirmedDomain',
-		message: `You are about to deploy to a ${
-			launched ? 'launched' : 'un-launched'
-		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
+		message: `You are about to deploy to a ${ params.launched ? 'launched' : 'un-launched' } ${
+			params.formattedEnvironment
+		} site ${ chalk.yellow( params.domain ) }.\nType '${ chalk.yellow(
 			promptToMatch
 		) }' (without the quotes) to continue:\n`,
 	} );
 
 	if ( promptResponse.confirmedDomain !== promptToMatch ) {
-		await track( 'deploy_app_unexpected_input' );
+		await params.track( 'deploy_app_unexpected_input' );
 		exit.withError( 'The input did not match the expected environment label. Deploy aborted.' );
 	}
-};
+}
 
-/**
- * Rename file so it doesn't get overwritten.
- * @param {FileMeta} fileMeta - The metadata of the file to be renamed.
- * @returns {FileMeta} The updated file metadata after renaming.
- */
-export async function renameFile( fileMeta ) {
-	const tmpDir = await mkdtemp( path.join( os.tmpdir(), 'vip-manual-deploys' ) );
+export async function deployAppCmd( arg: string[] = [], opts: Record< string, unknown > = {} ) {
+	const app = opts.app as App;
+	const env = opts.env as AppEnvironment;
 
-	const datePrefix = new Date()
-		.toISOString()
-		// eslint-disable-next-line no-useless-escape
-		.replace( /[\-T:\.Z]/g, '' )
-		.slice( 0, 14 );
-	const newFileBasename = `${ datePrefix }-${ fileMeta.basename }`;
-	debug(
-		`Renaming the file to ${ chalk.cyan( newFileBasename ) } from ${
-			fileMeta.basename
-		} prior to transfer...`
-	);
-	const newFileName = `${ tmpDir }/${ newFileBasename }`;
-
-	fs.copyFileSync( fileMeta.fileName, newFileName );
-	fileMeta.fileName = newFileName;
-	fileMeta.basename = newFileBasename;
-
-	return fileMeta;
-};
-
-export async function deployAppCmd( arg = [], opts = {} ) {
-	const { app, env } = opts;
-	const { id: envId, appId } = env;
 	const [ fileName ] = arg;
 	let fileMeta = await getFileMeta( fileName );
 
 	debug( 'Options: ', opts );
 	debug( 'Args: ', arg );
 
+	const appId = env.appId as number;
+	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
 	await gates( app, env, fileMeta );
 
 	await track( 'deploy_app_command_execute' );
 
-	// Log summary of deploy details
-	const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
-	const formattedEnvironment = formatEnvironment( opts.env.type );
-	const launched = opts.env.launched;
-	const deployMessage = opts.message ?? '';
+	const deployMessage = ( opts.message as string ) ?? '';
 	const forceDeploy = opts.force;
 
+	const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 	if ( ! forceDeploy ) {
-		await promptToContinue( {
-			launched,
-			formattedEnvironment,
+		const promptParams: PromptToContinueParams = {
+			launched: Boolean( env.launched ),
+			formattedEnvironment: formatEnvironment( env.type as string ),
 			track,
 			domain,
-		} );
+		};
+
+		await promptToContinue( promptParams );
 	}
 
 	/**
@@ -247,7 +159,7 @@ Processing the file for deployment to your environment...
 		}`;
 	};
 
-	const failWithError = failureError => {
+	const failWithError = ( failureError: Error | string ) => {
 		status = 'failed';
 		setProgressTrackerPrefixAndSuffix();
 		progressTracker.stopPrinting();
@@ -263,34 +175,39 @@ Processing the file for deployment to your environment...
 	// Call the Public API
 	const api = await API();
 
-	const startDeployVariables = {};
-
-	const progressCallback = percentage => {
+	const progressCallback = ( percentage: string ) => {
 		progressTracker.setUploadPercentage( percentage );
 	};
 
 	try {
 		fileMeta = await renameFile( fileMeta );
 	} catch ( err ) {
-		throw new Error( `Unable to copy file to temporary working directory: ${ err.message }` );
+		throw new Error(
+			`Unable to copy file to temporary working directory: ${ ( err as Error ).message }`
+		);
 	}
+
+	const appInput = { id: appId } as WithId;
+	const envInput = { id: envId } as WithId;
+	const uploadParams: UploadArguments = {
+		app: appInput,
+		env: envInput,
+		fileMeta,
+		progressCallback,
+	};
+	const startDeployVariables: StartDeployVariables = { input: {} };
 
 	try {
 		const {
 			fileMeta: { basename },
 			md5,
 			result,
-		} = await uploadImportSqlFileToS3( {
-			app,
-			env,
-			fileMeta,
-			progressCallback,
-		} );
+		} = await uploadImportSqlFileToS3( uploadParams );
 
 		startDeployVariables.input = {
 			id: app.id,
 			environmentId: env.id,
-			basename,
+			basename: fileMeta.basename,
 			md5,
 			deployMessage,
 		};
@@ -302,11 +219,11 @@ Processing the file for deployment to your environment...
 	} catch ( uploadError ) {
 		await track( 'deploy_app_command_error', {
 			error_type: 'upload_failed',
-			upload_error: uploadError.message,
+			upload_error: ( uploadError as Error ).message,
 		} );
 
 		progressTracker.stepFailed( 'upload' );
-		return failWithError( uploadError );
+		return failWithError( uploadError as Error );
 	}
 
 	// Start the deploy
@@ -322,11 +239,11 @@ Processing the file for deployment to your environment...
 
 		await track( 'deploy_app_command_error', {
 			error_type: 'StartDeploy-failed',
-			gql_err: gqlErr,
+			gql_err: gqlErr as Error,
 		} );
 
 		progressTracker.stepFailed( 'deploy' );
-		return failWithError( `StartDeploy call failed: ${ gqlErr }` );
+		return failWithError( `StartDeploy call failed: ${ ( gqlErr as Error ).message }` );
 	}
 
 	progressTracker.stepSuccess( 'deploy' );

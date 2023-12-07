@@ -660,6 +660,7 @@ export type AppEnvironmentDeployInput = {
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	md5?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	deployMessage?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type AppEnvironmentDeployPayload = {

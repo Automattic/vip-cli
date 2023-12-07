@@ -41,7 +41,7 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
 // TODO: Replace with a proper definitions once we convert lib/cli/command.js to TypeScript
-interface WithId {
+export interface WithId {
 	id: number;
 }
 
@@ -72,7 +72,7 @@ export interface GetSignedUploadRequestDataArgs {
 const getWorkingTempDir = (): Promise< string > =>
 	mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ) );
 
-interface UploadArguments {
+export interface UploadArguments {
 	app: WithId;
 	env: WithId;
 	fileMeta: FileMeta;
