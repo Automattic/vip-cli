@@ -11,10 +11,7 @@ import { WORDPRESS_SITE_TYPE_IDS } from '../../lib/constants/vipgo';
 import { trackEventWithEnv } from '../../lib/tracker';
 import { validateDeployFileExt, validateFilename } from '../../lib/validations/manual-deploy';
 
-export function currentUserCanDeployForApp( app: App ): boolean {
-	// TODO: implement
-	return Boolean( app );
-}
+const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 
 export function isSupportedApp( app: App ): boolean {
 	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
@@ -48,13 +45,6 @@ export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta )
 		exit.withError( error as Error );
 	}
 
-	if ( ! currentUserCanDeployForApp( app ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'unauthorized' } );
-		exit.withError(
-			'The currently authenticated account does not have permission to deploy to an application.'
-		);
-	}
-
 	if ( ! isSupportedApp( app ) ) {
 		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
 		exit.withError( 'The type of application you specified does not currently support deploys.' );
@@ -78,14 +68,13 @@ export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta )
 		exit.withError( `File '${ fileName }' is empty.` );
 	}
 
-	const maxFileSize = 4 * GB_IN_BYTES;
-	if ( fileSize > maxFileSize ) {
+	if ( fileSize > DEPLOY_MAX_FILE_SIZE ) {
 		await track( 'deploy_app_command_error', {
 			error_type: 'appfile-toobig',
 			file_size: fileSize,
 		} );
 		exit.withError(
-			`The deploy file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).`
+			`The deploy file size (${ fileSize } bytes) exceeds the limit (${ DEPLOY_MAX_FILE_SIZE } bytes).`
 		);
 	}
 }
