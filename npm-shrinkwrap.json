@@ -31,7 +31,7 @@
         "ini": "4.1.1",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli.git#b0a4382",
+        "lando": "github:automattic/lando-cli.git#25fcd83",
         "node-fetch": "^2.6.1",
         "open": "^9.1.0",
         "proxy-from-env": "^1.1.0",
@@ -10059,12 +10059,12 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#b0a43825ca52af425ca6be8faf225b57de396f03",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#25fcd83dc343eac09a1e698f829bfcdfd109f50e",
       "license": "GPL-3.0",
       "dependencies": {
-        "@lando/compose": "^1.0.0",
-        "@lando/mailhog": "^0.8.0",
-        "@lando/phpmyadmin": "^0.5.0",
+        "@lando/compose": "1.0.0",
+        "@lando/mailhog": "0.8.0",
+        "@lando/phpmyadmin": "0.5.0",
         "axios": "^1.6.0",
         "bluebird": "^3.4.1",
         "clean-stacktrace": "^1.1.0",
@@ -21062,12 +21062,12 @@
       "dev": true
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#b0a43825ca52af425ca6be8faf225b57de396f03",
-      "from": "lando@github:automattic/lando-cli.git#b0a4382",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#25fcd83dc343eac09a1e698f829bfcdfd109f50e",
+      "from": "lando@github:automattic/lando-cli.git#25fcd83",
       "requires": {
-        "@lando/compose": "^1.0.0",
-        "@lando/mailhog": "^0.8.0",
-        "@lando/phpmyadmin": "^0.5.0",
+        "@lando/compose": "1.0.0",
+        "@lando/mailhog": "0.8.0",
+        "@lando/phpmyadmin": "0.5.0",
         "axios": "^1.6.0",
         "bluebird": "^3.4.1",
         "clean-stacktrace": "^1.1.0",
