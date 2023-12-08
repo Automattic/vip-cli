@@ -5,6 +5,8 @@ import { CommandRegistry } from './command-registry';
 import { description, version } from '../../package.json';
 import { ExampleCommand } from '../commands/example-command';
 import { AppCommand } from '../commands/app';
+import { parse } from 'args';
+import { parseEnvAliasFromArgv } from './cli/envAlias';
 
 /**
  * Base Command from which every subcommand should inherit.
@@ -34,6 +36,8 @@ const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
 		cmd.option( option.name, option.description );
 	}
 
+	cmd.option( '-d, --debug [component]', 'Show debug' ).option( '--inspect', 'Attach a debugger' );
+
 	cmd.action( async ( ...args: unknown[] ) => {
 		await registry.invokeCommand( name, ...args );
 	} );
@@ -58,8 +62,7 @@ program
 	.name( 'vip' )
 	.description( description )
 	.version( version )
-	.configureHelp( { showGlobalOptions: true } )
-	.option( '--debug, -d', 'Show debug' );
+	.configureHelp( { showGlobalOptions: true } );
 
 const registry = CommandRegistry.getInstance();
 registry.registerCommand( new ExampleCommand() );
@@ -67,4 +70,9 @@ registry.registerCommand( new AppCommand() );
 
 [ ...registry.getCommands().values() ].map( command => processCommand( program, command ) );
 
-program.parse( process.argv );
+let { argv, ...appAlias } = parseEnvAliasFromArgv( process.argv );
+
+// very very stupid
+argv.push( `@${ Object.values( appAlias ).filter( e => e ).join( '.' ) }` );
+
+program.parse( argv, appAlias );

@@ -26,7 +26,7 @@ export class AppCommand extends BaseVIPCommand {
 		],
 	};
 
-	protected readonly commandOptions: CommandOption[] = [];
+	// protected readonly commandOptions: CommandOption[] = [];
 
 	protected childCommands: BaseVIPCommand[] = [];
 
