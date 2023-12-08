@@ -1,5 +1,18 @@
 ## Changelog
 
+### 2.36.3
+
+- build(deps): bump @json2csv/plainjs from 7.0.3 to 7.0.4
+- build(deps-dev): bump nock from 13.3.8 to 13.4.0
+- build(deps-dev): bump the babel group with 2 updates
+- build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.9.0 to 0.9.1
+- fix(dev-env): `/lando-entrypoint.sh: exec: line 83: exit: not found`
+- build(deps-dev): bump eslint from 8.54.0 to 8.55.0
+- build(deps-dev): bump typescript from 5.3.2 to 5.3.3
+- build(deps-dev): bump the testing group with 1 update
+- chore(deps): update lando to 25fcd83
+- build(deps): bump Automattic/vip-actions from 0.1.2 to 0.2.0
+
 ### 2.36.2
 
 - #1558 fix(dev-env): Fix typo on suggested start command after updating env
