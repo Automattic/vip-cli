@@ -38,6 +38,7 @@ command( {
 	.option( [ 'r', 'search-replace' ], 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'skip-validate', 'Do not perform file validation.' )
+	.option( 'quiet', 'Suppress prompts.' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ fileName ] = unmatchedArgs;

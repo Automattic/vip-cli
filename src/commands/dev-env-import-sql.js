@@ -25,9 +25,9 @@ export class DevEnvImportSQLCommand {
 		this.slug = slug;
 	}
 
-	async run( silent = false ) {
+	async run() {
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, this.slug, silent );
+		await validateDependencies( lando, this.slug, this.options.quiet );
 
 		validateImportFileExtension( this.fileName );
 
@@ -38,9 +38,16 @@ export class DevEnvImportSQLCommand {
 			const sqlFile = `${ tmpDir }/sql-import.sql`;
 
 			try {
-				console.log( `Extracting the compressed file ${ this.fileName }...` );
+				if ( ! this.options.quiet ) {
+					console.log( `Extracting the compressed file ${ this.fileName }...` );
+				}
+
 				await unzipFile( this.fileName, sqlFile );
-				console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+
+				if ( ! this.options.quiet ) {
+					console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+				}
+
 				this.fileName = sqlFile;
 			} catch ( err ) {
 				exit.withError( `Error extracting the SQL file: ${ err.message }` );
@@ -83,7 +90,7 @@ export class DevEnvImportSQLCommand {
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
 
-			if ( ! silent ) {
+			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
 			}
 		} finally {
@@ -99,10 +106,13 @@ export class DevEnvImportSQLCommand {
 
 		try {
 			await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-			const doIndex = await promptForBoolean(
-				'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
-				true
-			);
+			const doIndex =
+				this.options.quiet || ! process.stdin.isTTY
+					? true
+					: await promptForBoolean(
+							'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
+							true
+					  );
 			if ( doIndex ) {
 				await exec( lando, this.slug, [
 					'wp',
