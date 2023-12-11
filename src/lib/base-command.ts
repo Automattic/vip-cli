@@ -73,6 +73,14 @@ export abstract class BaseVIPCommand {
 		return true;
 	}
 
+	/**
+	 * Authentication routine.
+	 * This will prompt the user to authenticate with their VIP account.
+	 *
+	 * @protected
+	 * @returns {Promise< void >}
+	 * @memberof BaseVIPCommand
+	 */
 	protected async authenticate(): Promise< void > {
 		/**
 		 * @param {any[]} argv
@@ -203,6 +211,14 @@ export abstract class BaseVIPCommand {
 
 	// args length can vary based the number of arguments and options the command defines, the command itsrlf is always the last argument
 	// Can some of this logic be moved out to a hook?
+
+	/**
+	 * This is a wrapper method that performs common routines before and after executing the command
+	 *
+	 * @param {...unknown[]} args
+	 * @returns {Promise< void >}
+	 * @memberof BaseVIPCommand
+	 */
 	public async run( ...args: unknown[] ): Promise< void > {
 		if ( this.needsAuth ) {
 			try {
