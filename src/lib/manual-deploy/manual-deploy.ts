@@ -21,7 +21,7 @@ export function isSupportedApp( app: App ): boolean {
  * @param {FileMeta} fileMeta
  */
 export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta ) {
-	const { fileName, basename } = fileMeta;
+	const { fileName, basename, isCompressed } = fileMeta;
 	const appId = env.appId as number;
 	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
@@ -29,6 +29,11 @@ export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta )
 	if ( ! fs.existsSync( fileName ) ) {
 		await track( 'deploy_app_command_error', { error_type: 'invalid-file' } );
 		exit.withError( `Unable to access file ${ fileMeta.fileName }` );
+	}
+
+	if ( ! isCompressed ) {
+		await track( 'deploy_app_command_error', { error_type: 'uncompressed-file' } );
+		exit.withError( `Please compress file ${ fileMeta.fileName } before uploading.` );
 	}
 
 	try {
