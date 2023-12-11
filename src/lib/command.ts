@@ -72,7 +72,9 @@ registry.registerCommand( new AppCommand() );
 
 let { argv, ...appAlias } = parseEnvAliasFromArgv( process.argv );
 
-// very very stupid
-argv.push( `@${ Object.values( appAlias ).filter( e => e ).join( '.' ) }` );
-
+let appAliasString = Object.values( appAlias ).filter( e => e ).join( '.' );
+if ( appAliasString ) {
+	argv.push( `@${ appAliasString }` );
+}
+console.log(appAlias);
 program.parse( argv, appAlias );

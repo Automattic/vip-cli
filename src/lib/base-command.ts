@@ -3,17 +3,25 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
+import { Command } from 'commander';
 
-import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
 import { CommandRegistry } from './command-registry';
-import { trackEvent } from './tracker';
+import config from './cli/config';
+import Token from './token';
+import { parseEnvAliasFromArgv } from './cli/envAlias';
+import { trackEvent, aliasUser } from './tracker';
 
 import type { CommandOption, CommandArgument, CommandUsage } from './types/commands';
-import { Command } from 'commander';
+
+// Needs to go inside the command
+const debug = debugLib( '@automattic/vip:bin:vip' );
+// Config
+const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
 export abstract class BaseVIPCommand {
 	protected name: string = 'vip';
 	protected isDebugConfirmed: boolean = false;
+	protected needsAuth: boolean = true;
 
 	protected readonly commandOptions: CommandOption[] = [
 		{
@@ -65,9 +73,145 @@ export abstract class BaseVIPCommand {
 		return true;
 	}
 
+	protected async authenticate(): Promise< void > {
+		/**
+		 * @param {any[]} argv
+		 * @param {any[]} params
+		 * @returns {boolean}
+		 */
+		function doesArgvHaveAtLeastOneParam( argv, params ) {
+			return argv.some( arg => params.includes( arg ) );
+		}
+
+		let token = await Token.get();
+
+		const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
+		const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
+		const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
+		const isLoginCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'login' ] );
+		const isDevEnvCommandWithoutEnv =
+			doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
+			! containsAppEnvArgument( process.argv );
+
+		debug( 'Argv:', process.argv );
+
+		if (
+			! isLoginCommand &&
+			( isLogoutCommand ||
+				isHelpCommand ||
+				isVersionCommand ||
+				isDevEnvCommandWithoutEnv ||
+				token?.valid() )
+		) {
+			return;
+		}
+
+		console.log();
+		console.log( '   _    __ ________         ________    ____' );
+		console.log( '  | |  / //  _/ __        / ____/ /   /  _/' );
+		console.log( '  | | / / / // /_/ /______/ /   / /    / /  ' );
+		console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
+		console.log( '  |___//___/_/           ____/_____/___/   ' );
+		console.log();
+
+		console.log(
+			'  VIP-CLI is your tool for interacting with and managing your VIP applications.'
+		);
+		console.log();
+
+		console.log(
+			'  Authenticate your installation of VIP-CLI with your Personal Access Token. This URL will be opened in your web browser automatically so that you can retrieve your token: ' +
+				tokenURL
+		);
+		console.log();
+
+		await trackEvent( 'login_command_execute' );
+
+		const answer = await prompt( {
+			type: 'confirm',
+			name: 'continue',
+			message: 'Ready to authenticate?',
+		} );
+
+		if ( ! answer.continue ) {
+			await trackEvent( 'login_command_browser_cancelled' );
+
+			return;
+		}
+
+		const { default: open } = await import( 'open' );
+
+		await open( tokenURL, { wait: false } );
+
+		await trackEvent( 'login_command_browser_opened' );
+
+		const { token: tokenInput } = await prompt( {
+			type: 'password',
+			name: 'token',
+			message: 'Access Token:',
+		} );
+
+		try {
+			token = new Token( tokenInput );
+		} catch ( err ) {
+			console.log( 'The token provided is malformed. Please check the token and try again.' );
+
+			await trackEvent( 'login_command_token_submit_error', { error: err.message } );
+
+			return;
+		}
+
+		if ( token.expired() ) {
+			console.log( 'The token provided is expired. Please log in again to refresh the token.' );
+
+			await trackEvent( 'login_command_token_submit_error', { error: 'expired' } );
+
+			return;
+		}
+
+		if ( ! token.valid() ) {
+			console.log( 'The provided token is not valid. Please log in again to refresh the token.' );
+
+			await trackEvent( 'login_command_token_submit_error', { error: 'invalid' } );
+
+			return;
+		}
+
+		try {
+			await Token.set( token.raw );
+		} catch ( err ) {
+			await trackEvent( 'login_command_token_submit_error', {
+				error: err.message,
+			} );
+
+			throw err;
+		}
+
+		// De-anonymize user for tracking
+		await aliasUser( token.id );
+
+		await trackEvent( 'login_command_token_submit_success' );
+
+		if ( isLoginCommand ) {
+			console.log( 'You are now logged in - see `vip -h` for a list of available commands.' );
+
+			process.exit();
+		}
+
+		return;
+	}
+
 	// args length can vary based the number of arguments and options the command defines, the command itsrlf is always the last argument
 	// Can some of this logic be moved out to a hook?
 	public async run( ...args: unknown[] ): Promise< void > {
+		if ( this.needsAuth ) {
+			try {
+				await this.authenticate();
+			} catch ( error ) {
+				console.log( error );
+			}
+		}
+
 		let ret;
 		// Invoke the command and send tracking information
 		const trackingParams = this.getTrackingParams( { args } );

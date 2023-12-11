@@ -31,6 +31,7 @@ export class AppCommand extends BaseVIPCommand {
 	protected childCommands: BaseVIPCommand[] = [];
 
 	protected async execute( ...arg: unknown[] ): void {
+		console.log(arg[0]);
 		let res;
 		try {
 			res = await app(
@@ -80,8 +81,10 @@ export class AppCommand extends BaseVIPCommand {
 			return clonedEnv;
 		} );
 
-		console.log( formatData( header, 'keyValue' ) );
+		return { header, data: clonedResponse.environments };
 
-		console.log( formatData( clonedResponse.environments, "table" ) );
+		// console.log( formatData( header, 'keyValue' ) );
+
+		// console.log( formatData( clonedResponse.environments, "table" ) );
 	}
 }
