@@ -23,7 +23,7 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { gates, renameFile } from '../lib/manual-deploy/manual-deploy';
+import { gates } from '../lib/manual-deploy/manual-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
@@ -108,7 +108,8 @@ export async function deployAppCmd( arg: string[] = [], opts: Record< string, un
 	const env = opts.env as AppEnvironment;
 
 	const [ fileName ] = arg;
-	let fileMeta = await getFileMeta( fileName );
+	const fileMeta = await getFileMeta( fileName );
+	const inputBasename = fileMeta.basename;
 
 	debug( 'Options: ', opts );
 	debug( 'Args: ', arg );
@@ -120,6 +121,14 @@ export async function deployAppCmd( arg: string[] = [], opts: Record< string, un
 	await gates( app, env, fileMeta );
 
 	await track( 'deploy_app_command_execute' );
+
+	// Upload file as different name to avoid overwriting existing same named files
+	const datePrefix = new Date()
+		.toISOString()
+		// eslint-disable-next-line no-useless-escape
+		.replace( /[\-T:\.Z]/g, '' )
+		.slice( 0, 14 );
+	fileMeta.basename = `${ datePrefix }-${ fileMeta.basename }`;
 
 	const deployMessage = ( opts.message as string ) ?? '';
 	const forceDeploy = opts.force;
@@ -178,14 +187,6 @@ Processing the file for deployment to your environment...
 	const progressCallback = ( percentage: string ) => {
 		progressTracker.setUploadPercentage( percentage );
 	};
-
-	try {
-		fileMeta = await renameFile( fileMeta );
-	} catch ( err ) {
-		throw new Error(
-			`Unable to copy file to temporary working directory: ${ ( err as Error ).message }`
-		);
-	}
 
 	const appInput = { id: appId } as WithId;
 	const envInput = { id: envId } as WithId;
@@ -248,7 +249,17 @@ Processing the file for deployment to your environment...
 
 	progressTracker.stepSuccess( 'deploy' );
 	progressTracker.stopPrinting();
-	console.log( `\nSuccessfully deployed ${ fileName } to ${ domain }. All set!` );
+
+	const deploymentsUrl = `https://dashboard.wpvip.com/apps/${ appId }/${ env.type }/code/deployments`;
+	console.log(
+		`\n✅ ${ chalk.bold(
+			chalk.underline( chalk.magenta( inputBasename ) )
+		) } has been sent for deployment to ${ chalk.bold(
+			chalk.blue( domain )
+		) }. \nTo check deployment status, go to ${ chalk.bold(
+			'VIP Dashboard'
+		) }: ${ deploymentsUrl }`
+	);
 }
 
 // Command examples for the `vip deploy app` help prompt

@@ -1,7 +1,4 @@
 import fs from 'fs';
-import { mkdtemp } from 'node:fs/promises';
-import os from 'os';
-import path from 'path';
 
 import { App, AppEnvironment } from '../../graphqlTypes';
 import * as exit from '../../lib/cli/exit';
@@ -82,27 +79,4 @@ export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta )
 			`The deploy file size (${ fileSize } bytes) exceeds the limit (${ DEPLOY_MAX_FILE_SIZE } bytes).`
 		);
 	}
-}
-
-/**
- * Rename file so it doesn't get overwritten.
- * @param {FileMeta} fileMeta - The metadata of the file to be renamed.
- * @returns {FileMeta} The updated file metadata after renaming.
- */
-export async function renameFile( fileMeta: FileMeta ) {
-	const tmpDir = await mkdtemp( path.join( os.tmpdir(), 'vip-manual-deploys' ) );
-
-	const datePrefix = new Date()
-		.toISOString()
-		// eslint-disable-next-line no-useless-escape
-		.replace( /[\-T:\.Z]/g, '' )
-		.slice( 0, 14 );
-	const newFileBasename = `${ datePrefix }-${ fileMeta.basename }`;
-	const newFileName = `${ tmpDir }/${ newFileBasename }`;
-
-	fs.copyFileSync( fileMeta.fileName, newFileName );
-	fileMeta.fileName = newFileName;
-	fileMeta.basename = newFileBasename;
-
-	return fileMeta;
 }

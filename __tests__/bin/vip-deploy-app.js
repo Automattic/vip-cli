@@ -1,7 +1,7 @@
 import { deployAppCmd } from '../../src/bin/vip-deploy-app';
 import * as exit from '../../src/lib/cli/exit';
 import { uploadImportSqlFileToS3 } from '../../src/lib/client-file-uploader';
-import { gates, renameFile, promptToContinue } from '../../src/lib/manual-deploy/manual-deploy';
+import { gates, promptToContinue } from '../../src/lib/manual-deploy/manual-deploy';
 import { validateDeployFileExt, validateFilename } from '../../src/lib/validations/manual-deploy';
 
 jest.mock( '../../src/lib/client-file-uploader', () => ( {
@@ -88,8 +88,6 @@ describe( 'vip-deploy-app', () => {
 			expect( gates ).toHaveBeenCalledTimes( 1 );
 
 			expect( promptToContinue ).not.toHaveBeenCalled();
-
-			expect( renameFile ).toHaveBeenCalledTimes( 1 );
 
 			expect( uploadImportSqlFileToS3 ).toHaveBeenCalledTimes( 1 );
 		} );
