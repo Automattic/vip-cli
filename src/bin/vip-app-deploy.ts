@@ -63,7 +63,7 @@ const START_DEPLOY_MUTATION = gql`
 	}
 `;
 
-const debug = debugLib( '@automattic/vip:bin:vip-deploy-app' );
+const debug = debugLib( '@automattic/vip:bin:vip-app-deploy' );
 
 const DEPLOY_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'upload', name: 'Uploading file' },
@@ -103,7 +103,7 @@ export async function promptToContinue( params: PromptToContinueParams ) {
 	}
 }
 
-export async function deployAppCmd( arg: string[] = [], opts: Record< string, unknown > = {} ) {
+export async function appDeployCmd( arg: string[] = [], opts: Record< string, unknown > = {} ) {
 	const app = opts.app as App;
 	const env = opts.env as AppEnvironment;
 
@@ -266,15 +266,15 @@ Processing the file for deployment to your environment...
 const examples = [
 	// `app` subcommand
 	{
-		usage: 'vip deploy app @mysite.develop file.zip',
+		usage: 'vip app @mysite.develop deploy file.zip',
 		description: 'Deploy the given compressed file to your site',
 	},
 	{
-		usage: 'vip deploy app @mysite.develop file.zip --message "This is a deploy message"',
+		usage: 'vip app @mysite.develop deploy file.zip --message "This is a deploy message"',
 		description: 'Deploy the given compressed file to your site',
 	},
 	{
-		usage: 'vip deploy app @mysite.develop file.zip --force',
+		usage: 'vip app @mysite.develop deploy file.zip --force',
 		description: 'Deploy the given compressed file to your site without prompting',
 	},
 ];
@@ -288,4 +288,4 @@ void command( {
 	.examples( examples )
 	.option( 'message', 'Custom message for deploy' )
 	.option( 'force', 'Skip prompt' )
-	.argv( process.argv, deployAppCmd );
+	.argv( process.argv, appDeployCmd );

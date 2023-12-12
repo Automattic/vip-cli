@@ -1,4 +1,4 @@
-import { deployAppCmd } from '../../src/bin/vip-deploy-app';
+import { appDeployCmd } from '../../src/bin/vip-app-deploy';
 import * as exit from '../../src/lib/cli/exit';
 import { uploadImportSqlFileToS3 } from '../../src/lib/client-file-uploader';
 import { gates, promptToContinue } from '../../src/lib/manual-deploy/manual-deploy';
@@ -46,7 +46,7 @@ const opts = {
 	force: true,
 };
 
-describe( 'vip-deploy-app', () => {
+describe( 'vip-app-deploy', () => {
 	describe( 'validations', () => {
 		beforeEach( async () => {
 			exitSpy.mockClear();
@@ -81,9 +81,9 @@ describe( 'vip-deploy-app', () => {
 		);
 	} );
 
-	describe( 'deployAppCmd', () => {
+	describe( 'appDeployCmd', () => {
 		it( 'should call expected functions', async () => {
-			await deployAppCmd( args, opts );
+			await appDeployCmd( args, opts );
 
 			expect( gates ).toHaveBeenCalledTimes( 1 );
 
