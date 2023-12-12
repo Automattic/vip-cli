@@ -14,7 +14,7 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@v0.2.0
+      - uses: Automattic/vip-actions/npm-publish@v0.3.0
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
