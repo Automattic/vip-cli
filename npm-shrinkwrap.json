@@ -359,9 +359,9 @@
       }
     },
     "node_modules/@automattic/vip-search-replace": {
-      "version": "1.1.1",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.1.tgz",
-      "integrity": "sha512-4soBqoMrjnXGNm54DwtVYVpI36KXo828prM17vs+2hRgjThVKv2atcCZj4FC88tKgnQzf14JccQZ1G1QR3eaZA==",
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.2.tgz",
+      "integrity": "sha512-7gEp8lm8RitIoOW2v/SbmiRhAAosfqHYt+cmPnZzZAPQdQD/SNYUCcQ1iMcQuiKYBFJ00V7U7VUM2IEXB25xdQ==",
       "cpu": [
         "ia32",
         "x64",
@@ -14005,9 +14005,9 @@
       }
     },
     "@automattic/vip-search-replace": {
-      "version": "1.1.1",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.1.tgz",
-      "integrity": "sha512-4soBqoMrjnXGNm54DwtVYVpI36KXo828prM17vs+2hRgjThVKv2atcCZj4FC88tKgnQzf14JccQZ1G1QR3eaZA==",
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-1.1.2.tgz",
+      "integrity": "sha512-7gEp8lm8RitIoOW2v/SbmiRhAAosfqHYt+cmPnZzZAPQdQD/SNYUCcQ1iMcQuiKYBFJ00V7U7VUM2IEXB25xdQ==",
       "requires": {
         "debug": "^4.2.0",
         "follow-redirects": "^1.13.0"
