@@ -2,7 +2,7 @@
  * @format
  */
 
-import { getFileMD5Hash, getFileMeta, getPartBoundaries } from '../../src/lib/client-file-uploader';
+import { getFileHash, getFileMeta, getPartBoundaries } from '../../src/lib/client-file-uploader';
 
 describe( 'client-file-uploader', () => {
 	describe( 'getFileMeta()', () => {
@@ -27,16 +27,16 @@ describe( 'client-file-uploader', () => {
 		} );
 	} );
 
-	describe( 'getFileMD5Hash()', () => {
+	describe( 'getFileHash()', () => {
 		it( 'should get hash from a 67mb sql file', async () => {
 			const fileName = '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql';
-			const md5 = await getFileMD5Hash( fileName );
+			const md5 = await getFileHash( fileName );
 			expect( md5 ).toBe( '6a051288a7848e3fb3571af220fc455a' );
 		} );
 
 		it( 'should get hash from a 5+mb text file', async () => {
 			const fileName = '__fixtures__/client-file-uploader/numerical-test-file-5.24mb.txt';
-			const md5 = await getFileMD5Hash( fileName );
+			const md5 = await getFileHash( fileName );
 			expect( md5 ).toBe( '6f18fdff4f9f9926989e0816741aa2ba' );
 		} );
 	} );

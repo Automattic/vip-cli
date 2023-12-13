@@ -659,7 +659,7 @@ export type AppEnvironmentDeployInput = {
 	basename?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	md5?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	checksum?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	deployMessage?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 

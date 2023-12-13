@@ -195,13 +195,14 @@ Processing the file for deployment to your environment...
 		env: envInput,
 		fileMeta,
 		progressCallback,
+		hashType: 'sha256',
 	};
 	const startDeployVariables: StartDeployVariables = { input: {} };
 
 	try {
 		const {
 			fileMeta: { basename },
-			md5,
+			checksum,
 			result,
 		} = await uploadImportSqlFileToS3( uploadParams );
 
@@ -209,11 +210,11 @@ Processing the file for deployment to your environment...
 			id: app.id,
 			environmentId: env.id,
 			basename: fileMeta.basename,
-			md5,
+			checksum,
 			deployMessage,
 		};
 
-		debug( { basename, md5, result, startDeployVariables } );
+		debug( { basename, checksum, result, startDeployVariables } );
 		debug( 'Upload complete. Initiating the deploy.' );
 		progressTracker.stepSuccess( 'upload' );
 		await track( 'deploy_app_upload_complete' );

@@ -77,11 +77,15 @@ export interface UploadArguments {
 	env: WithId;
 	fileMeta: FileMeta;
 	progressCallback?: ( percentage: string ) => unknown;
+	hashType?: 'md5' | 'sha256';
 }
 
-export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
+export const getFileHash = async (
+	fileName: string,
+	hashType: 'md5' | 'sha256' = 'md5'
+): Promise< string > => {
 	const src = createReadStream( fileName );
-	const dst = createHash( 'md5' );
+	const dst = createHash( hashType );
 	try {
 		await pipeline( src, dst );
 		return dst.digest().toString( 'hex' );
@@ -162,6 +166,7 @@ export async function uploadImportSqlFileToS3( {
 	env,
 	fileMeta,
 	progressCallback,
+	hashType = 'md5',
 }: UploadArguments ) {
 	let tmpDir;
 	try {
@@ -205,9 +210,9 @@ export async function uploadImportSqlFileToS3( {
 		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
-	debug( 'Calculating file md5 checksum...' );
-	const md5 = await getFileMD5Hash( fileMeta.fileName );
-	debug( `Calculated file md5 checksum: ${ md5 }\n` );
+	debug( `Calculating file ${ hashType } checksum...` );
+	const checksum = await getFileHash( fileMeta.fileName, hashType );
+	debug( `Calculated file ${ hashType } checksum: ${ checksum }\n` );
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
@@ -216,7 +221,7 @@ export async function uploadImportSqlFileToS3( {
 
 	return {
 		fileMeta,
-		md5,
+		checksum,
 		result,
 	};
 }
