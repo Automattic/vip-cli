@@ -67,7 +67,7 @@ const debug = debugLib( '@automattic/vip:bin:vip-app-deploy' );
 
 const DEPLOY_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'upload', name: 'Uploading file' },
-	{ id: 'deploy', name: 'Deploying' },
+	{ id: 'deploy', name: 'Triggering Deployment' },
 ];
 
 interface PromptToContinueParams {
@@ -163,9 +163,10 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 =============================================================
 Processing the file for deployment to your environment...
 `;
-		progressTracker.suffix = `\n${ getGlyphForStatus( status, progressTracker.runningSprite ) } ${
-			status === 'running' ? 'Loading remaining steps...' : ''
-		}`;
+		progressTracker.suffix = `\n${ getGlyphForStatus(
+			status,
+			progressTracker.runningSprite
+		) } Running...`;
 	};
 
 	const failWithError = ( failureError: Error | string ) => {
@@ -228,6 +229,8 @@ Processing the file for deployment to your environment...
 		return failWithError( uploadError as Error );
 	}
 
+	progressTracker.stepRunning( 'deploy' );
+
 	// Start the deploy
 	try {
 		const startDeployResults = await api.mutate( {
@@ -250,6 +253,9 @@ Processing the file for deployment to your environment...
 
 	progressTracker.stepSuccess( 'deploy' );
 	progressTracker.stopPrinting();
+
+	progressTracker.suffix = '';
+	progressTracker.print( { clearAfter: true } );
 
 	const deploymentsUrl = `https://dashboard.wpvip.com/apps/${ appId }/${ env.type }/code/deployments`;
 	console.log(
