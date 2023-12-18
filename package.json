@@ -7,6 +7,7 @@
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-app-deploy": "dist/bin/vip-app-deploy.js",
     "vip-backup": "dist/bin/vip-backup.js",
     "vip-backup-db": "dist/bin/vip-backup-db.js",
     "vip-cache": "dist/bin/vip-cache.js",
