@@ -67,7 +67,7 @@ const debug = debugLib( '@automattic/vip:bin:vip-app-deploy' );
 
 const DEPLOY_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'upload', name: 'Uploading file' },
-	{ id: 'deploy', name: 'Triggering Deployment' },
+	{ id: 'deploy', name: 'Triggering deployment' },
 ];
 
 interface PromptToContinueParams {
