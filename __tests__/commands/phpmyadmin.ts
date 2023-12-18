@@ -3,7 +3,6 @@
  * External dependencies
  */
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import opn from 'opn';
 
 /**
  * Internal dependencies
@@ -23,7 +22,6 @@ const mutationMock = jest.fn( async () => {
 } );
 
 jest.mock( '../../src/lib/api' );
-jest.mock( 'opn' );
 jest.mocked( API ).mockImplementation( () => {
 	return Promise.resolve( {
 		mutate: mutationMock,
@@ -38,6 +36,11 @@ describe( 'commands/PhpMyAdminCommand', () => {
 		const env = { id: 456, jobs: [] };
 		const tracker = jest.fn() as CommandTracker;
 		const cmd = new PhpMyAdminCommand( app, env, tracker );
+		const openUrl = jest.spyOn( cmd, 'openUrl' );
+
+		beforeEach( () => {
+			openUrl.mockReset();
+		} );
 
 		it( 'should generate a URL by calling the right mutation', async () => {
 			await cmd.run();
@@ -50,9 +53,10 @@ describe( 'commands/PhpMyAdminCommand', () => {
 				},
 			} );
 		} );
+
 		it( 'should open the generated URL in browser', async () => {
 			await cmd.run();
-			expect( opn ).toHaveBeenCalledWith( 'http://test-url.com', { wait: false } );
+			expect( openUrl ).toHaveBeenCalledWith( 'http://test-url.com' );
 		} );
 	} );
 } );

@@ -4,7 +4,6 @@
 import chalk from 'chalk';
 import { GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
-import opn from 'opn';
 
 /**
  * Internal dependencies
@@ -66,6 +65,11 @@ export class PhpMyAdminCommand {
 		console.log( msg );
 	}
 
+	async openUrl( url: string ) {
+		const { default: open } = await import( 'open' );
+		void open( url, { wait: false } );
+	}
+
 	async run( silent = false ) {
 		this.silent = silent;
 
@@ -92,9 +96,7 @@ export class PhpMyAdminCommand {
 			} );
 			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
 		}
-
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		void opn( url, { wait: false } );
+		void this.openUrl( url );
 		this.log( 'PhpMyAdmin is opened in your default browser.' );
 	}
 }
