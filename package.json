@@ -159,7 +159,7 @@
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli.git#25fcd83",
     "node-fetch": "^2.6.1",
-    "open": "^9.1.0",
+    "open": "^10.0.0",
     "proxy-from-env": "^1.1.0",
     "semver": "7.5.4",
     "shelljs": "^0.8.5",
