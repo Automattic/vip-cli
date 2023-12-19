@@ -25,7 +25,7 @@
         "ejs": "^3.1.8",
         "enquirer": "2.4.1",
         "fetch-retry": "^5.0.6",
-        "graphql": "15.5.1",
+        "graphql": "16.8.1",
         "graphql-tag": "2.12.6",
         "https-proxy-agent": "^5.0.1",
         "ini": "4.1.1",
@@ -49,6 +49,7 @@
       "bin": {
         "vip": "dist/bin/vip.js",
         "vip-app": "dist/bin/vip-app.js",
+        "vip-app-deploy": "dist/bin/vip-app-deploy.js",
         "vip-app-list": "dist/bin/vip-app-list.js",
         "vip-backup": "dist/bin/vip-backup.js",
         "vip-backup-db": "dist/bin/vip-backup-db.js",
@@ -7908,11 +7909,11 @@
       "dev": true
     },
     "node_modules/graphql": {
-      "version": "15.5.1",
-      "resolved": "https://registry.npmjs.org/graphql/-/graphql-15.5.1.tgz",
-      "integrity": "sha512-FeTRX67T3LoE3LWAxxOlW2K3Bz+rMYAC18rRguK4wgXaTZMiJwSUwDmPFo3UadAKbzirKIg5Qy+sNJXbpPRnQw==",
+      "version": "16.8.1",
+      "resolved": "https://registry.npmjs.org/graphql/-/graphql-16.8.1.tgz",
+      "integrity": "sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw==",
       "engines": {
-        "node": ">= 10.x"
+        "node": "^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0"
       }
     },
     "node_modules/graphql-tag": {
@@ -19531,9 +19532,9 @@
       "dev": true
     },
     "graphql": {
-      "version": "15.5.1",
-      "resolved": "https://registry.npmjs.org/graphql/-/graphql-15.5.1.tgz",
-      "integrity": "sha512-FeTRX67T3LoE3LWAxxOlW2K3Bz+rMYAC18rRguK4wgXaTZMiJwSUwDmPFo3UadAKbzirKIg5Qy+sNJXbpPRnQw=="
+      "version": "16.8.1",
+      "resolved": "https://registry.npmjs.org/graphql/-/graphql-16.8.1.tgz",
+      "integrity": "sha512-59LZHPdGZVh695Ud9lRzPBVTtlX9ZCV150Er2W43ro37wVof0ctenSaskPPjN7lVTIN8mSZt8PHUNKZuNQUuxw=="
     },
     "graphql-tag": {
       "version": "2.12.6",
