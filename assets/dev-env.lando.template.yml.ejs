@@ -35,7 +35,7 @@ services:
     ssl: true
     sslExpose: false
     services:
-      image: ghcr.io/automattic/vip-container-images/nginx:1.23.3
+      image: ghcr.io/automattic/vip-container-images/nginx:latest
       command: nginx -g "daemon off;"
       environment:
         LANDO_NO_SCRIPTS: 1

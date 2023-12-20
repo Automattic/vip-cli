@@ -45,4 +45,4 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
 	},
 } as const;
 
-export const DEV_ENVIRONMENT_VERSION = '2.0.1';
+export const DEV_ENVIRONMENT_VERSION = '2.0.2';
