@@ -3,7 +3,11 @@ import fs from 'fs';
 
 import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
-import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	processBooleanOption,
+	promptForBoolean,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
 	resolveImportPath,
@@ -104,27 +108,32 @@ export class DevEnvImportSQLCommand {
 		const cacheArg = [ 'wp', 'cache', 'flush' ];
 		await exec( lando, this.slug, cacheArg );
 
-		try {
-			await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-			const doIndex =
-				this.options.quiet || ! process.stdin.isTTY
-					? true
-					: await promptForBoolean(
-							'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
-							true
-					  );
-			if ( doIndex ) {
-				await exec( lando, this.slug, [
-					'wp',
-					'vip-search',
-					'index',
-					'--setup',
-					'--network-wide',
-					'--skip-confirm',
-				] );
+		if (
+			undefined === this.options.skipReindex ||
+			! processBooleanOption( this.options.skipReindex )
+		) {
+			try {
+				await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
+				const doIndex =
+					this.options.quiet || undefined !== this.options.skipReindex || ! process.stdin.isTTY
+						? true
+						: await promptForBoolean(
+								'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
+								true
+						  );
+				if ( doIndex ) {
+					await exec( lando, this.slug, [
+						'wp',
+						'vip-search',
+						'index',
+						'--setup',
+						'--network-wide',
+						'--skip-confirm',
+					] );
+				}
+			} catch {
+				// Exception means they don't have vip-search enabled.
 			}
-		} catch ( err ) {
-			// Exception means they don't have vip-search enabled.
 		}
 
 		const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
