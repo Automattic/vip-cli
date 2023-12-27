@@ -39,7 +39,7 @@ command( {
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'skip-validate', 'Do not perform file validation' )
 	.option( [ 'k', 'skip-reindex' ], 'Do not reindex data in Elasticsearch after import' )
-	.option( 'quiet', 'Suppress prompts' )
+	.option( 'quiet', 'Suppress prompts and informational messages' )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ fileName ] = unmatchedArgs;
