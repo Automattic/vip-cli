@@ -134,7 +134,8 @@ export function keyValue( values: Tuple[] ): string {
 export function requoteArgs( args: string[] ): string[] {
 	return args.map( arg => {
 		if ( arg.includes( '--' ) && arg.includes( '=' ) && arg.includes( ' ' ) ) {
-			return arg.replace( /^--([^=]*)=(.*)$/, '--$1="$2"' );
+			const quote = arg.includes( '"' ) ? "'" : '"';
+			return arg.replace( /^--([^=]*)=(.*)$/, `--$1=${ quote }$2${ quote }` );
 		}
 
 		if ( arg.includes( ' ' ) && ! isJsonObject( arg ) ) {
