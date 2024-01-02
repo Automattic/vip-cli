@@ -327,7 +327,7 @@ const checks: Checks = {
 	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
-		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
+		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] + ' ' + results[ 2 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
 		message: 'Siteurl/home matches',
