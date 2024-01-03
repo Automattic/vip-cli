@@ -97,7 +97,7 @@ export async function promptToContinue( params: PromptToContinueParams ) {
 		) }' (without the quotes) to continue:\n`,
 	} );
 
-	if ( promptResponse.confirmedDomain !== promptToMatch ) {
+	if ( ( promptResponse.confirmedDomain as string ).toUpperCase() !== promptToMatch ) {
 		await params.track( 'deploy_app_unexpected_input' );
 		exit.withError( 'The input did not match the expected environment label. Deploy aborted.' );
 	}

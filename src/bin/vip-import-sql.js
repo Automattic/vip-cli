@@ -231,7 +231,7 @@ const examples = [
 	},
 ];
 
-const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
+export const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
 	console.log();
 	const promptToMatch = domain.toUpperCase();
 	const promptResponse = await prompt( {
@@ -244,7 +244,7 @@ const promptToContinue = async ( { launched, formattedEnvironment, track, domain
 		) }' (without the quotes) to continue:\n`,
 	} );
 
-	if ( promptResponse.confirmedDomain !== promptToMatch ) {
+	if ( promptResponse.confirmedDomain.toUpperCase() !== promptToMatch ) {
 		await track( 'import_sql_unexpected_tables' );
 		exit.withError( 'The input did not match the expected environment label. Import aborted.' );
 	}
