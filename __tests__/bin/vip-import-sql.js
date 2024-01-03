@@ -161,7 +161,7 @@ describe( 'vip-import-sql', () => {
 			} );
 
 			expect( promptMock ).toHaveBeenCalled();
-			expect( mockExitWithError ).not.toHaveBeenCalledWith( expect.any( String ) );
+			expect( mockExitWithError ).toHaveBeenCalledWith( expect.any( String ) );
 
 			promptMock.mockRestore();
 		} );
