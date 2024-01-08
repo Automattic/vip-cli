@@ -5,7 +5,6 @@ import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import {
 	processBooleanOption,
-	promptForBoolean,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
@@ -80,7 +79,9 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash' ];
+		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
+			this.options.quiet ? '--silent' : []
+		);
 		const origIsTTY = process.stdin.isTTY;
 
 		try {
@@ -105,7 +106,7 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush' ];
+		const cacheArg = [ 'wp', 'cache', 'flush' ].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, cacheArg );
 
 		if (
@@ -114,29 +115,25 @@ export class DevEnvImportSQLCommand {
 		) {
 			try {
 				await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-				const doIndex =
-					this.options.quiet || undefined !== this.options.skipReindex || ! process.stdin.isTTY
-						? true
-						: await promptForBoolean(
-								'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
-								true
-						  );
-				if ( doIndex ) {
-					await exec( lando, this.slug, [
-						'wp',
-						'vip-search',
-						'index',
-						'--setup',
-						'--network-wide',
-						'--skip-confirm',
-					] );
-				}
+				await exec( lando, this.slug, [
+					'wp',
+					'vip-search',
+					'index',
+					'--setup',
+					'--network-wide',
+					'--skip-confirm',
+				] );
 			} catch {
 				// Exception means they don't have vip-search enabled.
 			}
 		}
 
-		const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
+		const addUserArg = [
+			'wp',
+			'dev-env-add-admin',
+			'--username=vipgo',
+			'--password=password',
+		].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, addUserArg );
 	}
 }
