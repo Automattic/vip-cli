@@ -20,7 +20,7 @@ function uncaughtError( err ) {
 		return;
 	}
 	if ( err instanceof UserError ) {
-		exit.withError( err.message );
+		exit.withError( err );
 	}
 
 	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );

@@ -90,7 +90,9 @@ export const getFileHash = async (
 		await pipeline( src, dst );
 		return dst.digest().toString( 'hex' );
 	} catch ( err ) {
-		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
+		throw new Error( `could not generate file hash: ${ ( err as Error ).message }`, {
+			cause: err,
+		} );
 	} finally {
 		src.close();
 	}
@@ -104,7 +106,7 @@ const gzipFile = async ( uncompressedFileName: string, compressedFileName: strin
 			createWriteStream( compressedFileName )
 		);
 	} catch ( err ) {
-		throw new Error( `could not compress file: ${ ( err as Error ).message }` );
+		throw new Error( `could not compress file: ${ ( err as Error ).message }`, { cause: err } );
 	}
 };
 
@@ -173,7 +175,8 @@ export async function uploadImportSqlFileToS3( {
 		tmpDir = await getWorkingTempDir();
 	} catch ( err ) {
 		throw new Error(
-			`Unable to create temporary working directory: ${ ( err as Error ).message }`
+			`Unable to create temporary working directory: ${ ( err as Error ).message }`,
+			{ cause: err }
 		);
 	}
 
@@ -305,7 +308,9 @@ async function uploadUsingPutObject( {
 	try {
 		parsedResponse = ( await parser.parseStringPromise( result ) ) as UploadErrorResponse;
 	} catch ( err ) {
-		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }` );
+		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }`, {
+			cause: err,
+		} );
 	}
 
 	const { Code, Message } = parsedResponse.Error;

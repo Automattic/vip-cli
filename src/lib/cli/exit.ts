@@ -1,4 +1,5 @@
 import { red, yellow } from 'chalk';
+import debug from 'debug';
 
 import env from '../../lib/env';
 
@@ -13,6 +14,10 @@ export function withError( message: Error | string ): never {
 			env.os.name
 		} ${ env.os.version }`
 	);
+
+	if ( debug.names.length > 0 && message instanceof Error ) {
+		console.error( yellow( 'Debug: ' ), message );
+	}
 
 	process.exit( 1 );
 }
