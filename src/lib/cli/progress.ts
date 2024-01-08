@@ -33,7 +33,7 @@ export interface StepFromServer {
 export class ProgressTracker {
 	hasFailure: boolean;
 	hasPrinted: boolean;
-	printInterval: NodeJS.Timer | undefined;
+	printInterval: NodeJS.Timeout | undefined;
 
 	// Track the state of each step
 	stepsFromCaller: Map< string, Step >;
