@@ -4,7 +4,8 @@ import debug from 'debug';
 import env from '../../lib/env';
 
 export function withError( message: Error | string ): never {
-	console.error( `${ red( 'Error: ' ) } ${ message.toString().replace( /^Error:\s*/, '' ) }` );
+	const msg = message instanceof Error ? message.message : message;
+	console.error( `${ red( 'Error: ' ) } ${ msg.replace( /^Error:\s*/, '' ) }` );
 
 	// Debug ouput is printed below error output both for information
 	// hierarchy and to make it more likely that the user copies it to their
