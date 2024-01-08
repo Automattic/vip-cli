@@ -5,9 +5,10 @@ import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import * as exit from '../cli/exit';
-import type { ConfigurationFileMeta, ConfigurationFileOptions, InstanceOptions } from './types';
 import { CONFIGURATION_FOLDER } from './dev-environment-cli';
+import * as exit from '../cli/exit';
+
+import type { ConfigurationFileMeta, ConfigurationFileOptions, InstanceOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

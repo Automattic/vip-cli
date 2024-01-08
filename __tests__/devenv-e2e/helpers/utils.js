@@ -4,12 +4,12 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
+import { CONFIGURATION_FOLDER } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { CONFIGURATION_FILE_NAME } from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import { CONFIGURATION_FOLDER } from '../../../src/lib/dev-environment/dev-environment-cli';
-import { CONFIGURATION_FILE_NAME } from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 
 let id = 0;
 
