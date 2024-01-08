@@ -13,7 +13,7 @@ export function withError( message: Error | string ): never {
 	console.log(
 		`${ yellow( 'Debug: ' ) } VIP-CLI v${ env.app.version }, Node ${ env.node.version }, ${
 			env.os.name
-		} ${ env.os.version }`
+		} ${ env.os.version } ${ env.os.arch }`
 	);
 
 	if ( debug.names.length > 0 && message instanceof Error ) {
