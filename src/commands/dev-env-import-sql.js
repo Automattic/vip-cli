@@ -90,7 +90,7 @@ export class DevEnvImportSQLCommand {
 			process.stdin.isTTY = origIsTTY;
 		}
 
-		if ( searchReplace && searchReplace.length && ! inPlace ) {
+		if ( searchReplace?.length && ! inPlace ) {
 			fs.unlinkSync( resolvedPath );
 		}
 
