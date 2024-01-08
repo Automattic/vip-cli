@@ -1,13 +1,5 @@
-// @format
-
-/**
- * External dependencies
- */
 import { readFile } from 'node:fs/promises';
 
-/**
- * Internal dependencies
- */
 import * as exit from '../lib/cli/exit';
 
 export async function readFromFile( path: string ): Promise< string > {

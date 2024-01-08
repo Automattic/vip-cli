@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
-/**
- * Internal dependencies
- */
 import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
 import command from '../../src/lib/cli/command';
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
@@ -19,7 +13,7 @@ function mockExit() {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,

@@ -1,7 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/**
- * External dependencies
- */
 import { constants } from 'node:fs';
 import { access, readFile, stat } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';

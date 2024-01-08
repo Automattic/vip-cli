@@ -1,12 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import logout from '../lib/logout';
 

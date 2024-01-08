@@ -1,6 +1,3 @@
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
 interface Config {

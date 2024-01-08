@@ -1,16 +1,7 @@
-// @format
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../../lib/tracker';
 import * as exit from './exit';
 import * as featureFlags from '../../lib/api/feature-flags';
 import Token from '../../lib/token';
+import { trackEvent } from '../../lib/tracker';
 
 export async function checkFeatureEnabled(
 	featureName: string,
@@ -55,7 +46,7 @@ export async function checkIfUserIsVip() {
 	if ( token.valid() ) {
 		const res = await featureFlags.get();
 
-		return !! res?.data.me?.isVIP;
+		return Boolean( res?.data.me?.isVIP );
 	}
 
 	return false;

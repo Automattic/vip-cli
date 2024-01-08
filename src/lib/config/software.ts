@@ -1,19 +1,13 @@
-/**
- * External dependencies
- */
-import { setTimeout } from 'node:timers/promises';
+import debugLib from 'debug';
 import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
-import debugLib from 'debug';
+import { setTimeout } from 'node:timers/promises';
 
-/**
- * Internal dependencies
- */
-import { isAppNodejs, isAppWordPress } from '../app';
-import API from '../api';
-import UserError from '../user-error';
 import { UpdateJobQueryVariables } from './software.generated';
 import { JobInterface, Query } from '../../graphqlTypes';
+import API from '../api';
+import { isAppNodejs, isAppWordPress } from '../app';
+import UserError from '../user-error';
 
 const UPDATE_PROGRESS_POLL_INTERVAL = 5;
 const debug = debugLib( '@automattic/vip:bin:config-software' );

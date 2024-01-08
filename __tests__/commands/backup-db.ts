@@ -1,14 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
-/**
- * External dependencies
- */
 
-/**
- * Internal dependencies
- */
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { BackupDBCommand } from '../../src/commands/backup-db';
 import API from '../../src/lib/api';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const mockApp = {
 	id: 123,

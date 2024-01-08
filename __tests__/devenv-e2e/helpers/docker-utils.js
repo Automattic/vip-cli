@@ -1,8 +1,5 @@
 /* eslint-disable id-length */
 
-/**
- * External dependencies
- */
 import { dockerComposify } from 'lando/lib/utils';
 
 /**

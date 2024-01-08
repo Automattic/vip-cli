@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
+import { ProgressTracker } from '../lib/cli/progress';
 import {
 	appQuery,
 	appQueryFragments,
@@ -17,9 +12,8 @@ import {
 	promptForUpdate,
 	triggerUpdate,
 } from '../lib/config/software';
-import { ProgressTracker } from '../lib/cli/progress';
-import UserError from '../lib/user-error';
 import { trackEvent } from '../lib/tracker';
+import UserError from '../lib/user-error';
 
 const debug = debugLib( '@automattic/vip:bin:config-software' );
 
@@ -64,7 +58,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		/** @type {UpdatePromptOptions} */
 		const updateOptions = {
-			force: !! opt.yes,
+			force: Boolean( opt.yes ),
 		};
 
 		if ( arg.length > 0 ) {

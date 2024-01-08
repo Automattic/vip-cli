@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import keytar from '@postman/node-keytar';
 
-/**
- * Internal dependencies
- */
 import type { Keychain } from './keychain';
 
 export default class Secure implements Keychain {

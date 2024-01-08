@@ -2,16 +2,10 @@
  * @format
  */
 
-/**
- * External dependencies
- */
 import { describe, it, expect, jest } from '@jest/globals';
 
-/**
- * Internal dependencies
- */
-import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../../../src/lib/cli/apiConfig';
 import * as featureFlags from '../../../src/lib/api/feature-flags';
+import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../../../src/lib/cli/apiConfig';
 import Token from '../../../src/lib/token';
 
 jest.mock( '../../../src/lib/tracker' );

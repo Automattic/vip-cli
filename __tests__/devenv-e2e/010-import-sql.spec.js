@@ -1,18 +1,14 @@
-/**
- * External dependencies
- */
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
-import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
 import nock from 'nock';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import xdgBaseDir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import { CliTest } from './helpers/cli-test';
+import { vipDevEnvExec, vipDevEnvImportSQL } from './helpers/commands';
+import { killProjectContainers } from './helpers/docker-utils';
 import {
 	checkEnvExists,
 	createAndStartEnvironment,
@@ -20,8 +16,6 @@ import {
 	getProjectSlug,
 	prepareEnvironment,
 } from './helpers/utils';
-import { vipDevEnvExec, vipDevEnvImportSQL } from './helpers/commands';
-import { killProjectContainers } from './helpers/docker-utils';
 
 jest.setTimeout( 600 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
@@ -86,47 +80,52 @@ describe( 'vip dev-env import sql', () => {
 			}
 		} );
 
-		it( 'should fail if the file fails validation', async () => {
-			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/fail-validation.sql' );
-			const result = await cliTest.spawn(
-				[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
-				{ env }
-			);
-			expect( result.rc ).toBeGreaterThan( 0 );
-			expect( result.stderr ).toContain( 'SQL Error: DROP TABLE was not found' );
-			expect( result.stderr ).toContain( 'SQL Error: CREATE TABLE was not found' );
-		} );
+		it.each( [ 'fail-validation.sql.gz', 'fail-validation.sql' ] )(
+			'should fail if the file fails validation',
+			async baseName => {
+				const file = path.join( __dirname, `../../__fixtures__/dev-env-e2e/${ baseName }` );
+				const result = await cliTest.spawn(
+					[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
+					{ env }
+				);
+				expect( result.rc ).toBeGreaterThan( 0 );
+				expect( result.stderr ).toContain( 'SQL Error: DROP TABLE was not found' );
+				expect( result.stderr ).toContain( 'SQL Error: CREATE TABLE was not found' );
+			}
+		);
 
-		it( 'should allow to bypass validation', async () => {
-			const file = path.join( __dirname, '../../__fixtures__/dev-env-e2e/fail-validation.sql' );
-			let result = await cliTest.spawn(
-				[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ],
-				{ env },
-				true
-			);
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( 'Success: Database imported' );
-			expect( result.stdout ).toContain( 'Success: The cache was flushed' );
-
-			result = await cliTest.spawn(
-				[
-					process.argv[ 0 ],
-					vipDevEnvExec,
-					'--slug',
-					slug,
-					'--quiet',
-					'--',
-					'wp',
-					'option',
-					'get',
-					'e2etest',
-				],
-				{ env },
-				true
-			);
-			expect( result.rc ).toBe( 0 );
-			expect( result.stdout.trim() ).toBe( '200' );
-		} );
+		it.each( [ 'fail-validation.sql.gz', 'fail-validation.sql' ] )(
+			'should allow to bypass validation',
+			async baseName => {
+				const file = path.join( __dirname, `../../__fixtures__/dev-env-e2e/${ baseName }` );
+				let result = await cliTest.spawn(
+					[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file, '--skip-validate' ],
+					{ env },
+					true
+				);
+				expect( result.rc ).toBe( 0 );
+				expect( result.stdout ).toContain( 'Success: Database imported' );
+				expect( result.stdout ).toContain( 'Success: The cache was flushed' );
+				result = await cliTest.spawn(
+					[
+						process.argv[ 0 ],
+						vipDevEnvExec,
+						'--slug',
+						slug,
+						'--quiet',
+						'--',
+						'wp',
+						'option',
+						'get',
+						'e2etest',
+					],
+					{ env },
+					true
+				);
+				expect( result.rc ).toBe( 0 );
+				expect( result.stdout.trim() ).toBe( '200' );
+			}
+		);
 
 		it( 'should correctly perform replace', async () => {
 			let result = await cliTest.spawn(

@@ -1,11 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-
 describe( 'utils/cli/config', () => {
 	beforeEach( () => {
 		jest.resetModules();

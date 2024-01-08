@@ -1,24 +1,26 @@
-/**
- * External dependencies
- */
-import { existsSync, lstatSync, readdirSync } from 'node:fs';
-import path from 'path';
-import { homedir } from 'node:os';
-import { lookup } from 'node:dns/promises';
 import chalk from 'chalk';
-import formatters from 'lando/lib/formatters';
-import { prompt, Confirm, Select } from 'enquirer';
-import debugLib from 'debug';
 import { spawn } from 'child_process';
-import { which } from 'shelljs';
+import debugLib from 'debug';
+import { prompt, Confirm, Select } from 'enquirer';
 import Lando from 'lando';
+import formatters from 'lando/lib/formatters';
+import { lookup } from 'node:dns/promises';
+import { existsSync, lstatSync, readdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'path';
+import { which } from 'shelljs';
 
-/**
- * Internal dependencies
- */
+import { getConfigurationFileOptions } from './dev-environment-configuration-file';
+import {
+	generateVSCodeWorkspace,
+	getAllEnvironmentNames,
+	getVSCodeWorkspacePath,
+	getVersionList,
+	readEnvironmentData,
+} from './dev-environment-core';
+import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
 import { ProgressTracker, StepConstructorParam } from '../../lib/cli/progress';
-import { trackEvent } from '../tracker';
-
+import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
@@ -28,13 +30,8 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 	DEV_ENVIRONMENT_COMPONENTS_WITH_WP,
 } from '../constants/dev-environment';
-import {
-	generateVSCodeWorkspace,
-	getAllEnvironmentNames,
-	getVSCodeWorkspacePath,
-	getVersionList,
-	readEnvironmentData,
-} from './dev-environment-core';
+import { trackEvent } from '../tracker';
+import UserError from '../user-error';
 
 import type {
 	AppInfo,
@@ -45,10 +42,6 @@ import type {
 	WordPressConfig,
 	ConfigurationFileOptions,
 } from './types';
-import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
-import UserError from '../user-error';
-import { getConfigurationFileOptions } from './dev-environment-configuration-file';
-import { Args } from '../cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -279,7 +272,7 @@ export function processComponentOptionInput(
 	allowLocal: boolean
 ): LocalComponent | ImageComponent {
 	// cast to string
-	const param = passedParam + '';
+	const param = String( passedParam );
 	// This is a bit of a naive check
 	if ( allowLocal && /[\\/]/.test( param ) ) {
 		return {
@@ -298,7 +291,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	return {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
-		multisite: !! appInfo.environment?.isMultisite,
+		multisite: Boolean( appInfo.environment?.isMultisite ),
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
 		php: appInfo.environment?.php ?? '',
 		wordpress: appInfo.environment?.wordpress ?? '',
@@ -405,11 +398,11 @@ export async function promptForArguments(
 
 	debug( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
 	if ( 'elasticsearch' in preselectedOptions ) {
-		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
+		instanceData.elasticsearch = Boolean( preselectedOptions.elasticsearch );
 	} else {
 		instanceData.elasticsearch = await promptForBoolean(
 			'Enable Elasticsearch (needed by Enterprise Search)?',
-			!! defaultOptions.elasticsearch
+			Boolean( defaultOptions.elasticsearch )
 		);
 	}
 
@@ -423,7 +416,7 @@ export async function promptForArguments(
 				// eslint-disable-next-line no-await-in-loop
 				instanceData[ service ] = await promptForBoolean(
 					`Enable ${ promptLabels[ service ] || service }`,
-					!! defaultOptions[ service ]
+					Boolean( defaultOptions[ service ] )
 				);
 			}
 		}
@@ -670,11 +663,11 @@ export function resolvePhpVersion( version: string ): string {
 	}
 
 	let result: string;
-	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
+	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		const image = images.find( value => value === version );
+		const image = images.find( value => value.image === version );
 		if ( image ) {
-			result = image;
+			result = image.image;
 		} else if ( version.includes( '/' ) ) {
 			// Assuming this is a Docker image
 			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
@@ -682,10 +675,10 @@ export function resolvePhpVersion( version: string ): string {
 			// but we still want to use it.
 			result = version;
 		} else {
-			result = images[ 0 ];
+			result = images[ 0 ].image;
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ]!;
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
 	}
 
 	debug( 'Resolved PHP image: %j', result );
@@ -697,11 +690,15 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 
 	let answer = initialValue;
 	if ( isStdinTTY ) {
-		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const choices = [];
+		Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).forEach( version => {
+			const phpImage = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
+			choices.push( { message: phpImage.label, value: version } );
+		} );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		let initial = images.findIndex( version => version === initialValue );
+		let initial = images.findIndex( version => version.image === initialValue );
 		if ( initial === -1 ) {
-			choices.push( initialValue );
+			choices.push( { message: initialValue, value: initialValue } );
 			initial = choices.length - 1;
 		}
 
@@ -841,7 +838,7 @@ declare function parseFloat( value: unknown ): number;
 
 export function processVersionOption( value: unknown ): string {
 	if ( typeof value === 'string' || typeof value === 'number' ) {
-		if ( ! isNaN( value ) && +value % 1 === 0 ) {
+		if ( ! isNaN( value ) && Number( value ) % 1 === 0 ) {
 			return parseFloat( value ).toFixed( 1 );
 		}
 	}

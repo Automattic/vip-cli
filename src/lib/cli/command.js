@@ -1,24 +1,17 @@
-/**
- * External dependencies
- */
 import args from 'args';
-import { prompt } from 'enquirer';
 import chalk from 'chalk';
+import debugLib from 'debug';
+import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
-import updateNotifier from 'update-notifier';
 
-/**
- * Internal dependencies
- */
-import { confirm } from './prompt';
-import API from '../../lib/api';
-import app from '../../lib/api/app';
-import { formatData, formatSearchReplaceValues } from './format';
-import pkg from '../../../package.json';
-import { trackEvent } from '../../lib/tracker';
 import { parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
-import debugLib from 'debug';
+import { formatData, formatSearchReplaceValues } from './format';
+import { confirm } from './prompt';
+import pkg from '../../../package.json';
+import API from '../../lib/api';
+import app from '../../lib/api/app';
+import { trackEvent } from '../../lib/tracker';
 import UserError from '../user-error';
 
 function uncaughtError( err ) {
@@ -111,8 +104,12 @@ args.argv = async function ( argv, cb ) {
 		return {};
 	}
 
-	// Check for updates every day
-	updateNotifier( { pkg, isGlobal: true, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
+	if ( process.env.NODE_ENV !== 'test' ) {
+		const { default: updateNotifier } = await import( 'update-notifier' );
+		updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify( {
+			isGlobal: true,
+		} );
+	}
 
 	// `help` and `version` are always defined as subcommands
 	const customCommands = this.details.commands.filter( command => {
@@ -128,7 +125,7 @@ args.argv = async function ( argv, cb ) {
 	} );
 
 	// Show help if no args passed
-	if ( !! customCommands.length && ! this.sub.length ) {
+	if ( Boolean( customCommands.length ) && ! this.sub.length ) {
 		await trackEvent( 'command_help_view' );
 
 		this.showHelp();
@@ -398,7 +395,7 @@ args.argv = async function ( argv, cb ) {
 
 				options.skipValidate =
 					Object.prototype.hasOwnProperty.call( options, 'skipValidate' ) &&
-					!! options.skipValidate &&
+					Boolean( options.skipValidate ) &&
 					! [ 'false', 'no' ].includes( options.skipValidate );
 
 				if ( options.skipValidate ) {
@@ -458,7 +455,7 @@ args.argv = async function ( argv, cb ) {
 
 				options.overwriteExistingFiles =
 					Object.prototype.hasOwnProperty.call( options, 'overwriteExistingFiles' ) &&
-					!! options.overwriteExistingFiles &&
+					Boolean( options.overwriteExistingFiles ) &&
 					! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
 				info.push( {
 					key: 'Overwrite any existing files',
@@ -467,7 +464,7 @@ args.argv = async function ( argv, cb ) {
 
 				options.importIntermediateImages =
 					Object.prototype.hasOwnProperty.call( options, 'importIntermediateImages' ) &&
-					!! options.importIntermediateImages &&
+					Boolean( options.importIntermediateImages ) &&
 					! [ 'false', 'no' ].includes( options.importIntermediateImages );
 				info.push( {
 					key: 'Import intermediate image files',
@@ -476,7 +473,7 @@ args.argv = async function ( argv, cb ) {
 
 				options.exportFileErrorsToJson =
 					Object.prototype.hasOwnProperty.call( options, 'exportFileErrorsToJson' ) &&
-					!! options.exportFileErrorsToJson &&
+					Boolean( options.exportFileErrorsToJson ) &&
 					! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
 				info.push( {
 					key: 'Export any file errors encountered to a JSON file instead of a plain text file',
@@ -613,10 +610,7 @@ export function getEnvIdentifier( env ) {
 export function containsAppEnvArgument( argv ) {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	return !! (
-		parsedAlias.app ||
-		parsedAlias.env ||
-		argv.includes( '--app' ) ||
-		argv.includes( '--env' )
+	return Boolean(
+		parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' )
 	);
 }

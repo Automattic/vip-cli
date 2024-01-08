@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
 import { appQuery, getEnvVars } from '../lib/envvar/api';

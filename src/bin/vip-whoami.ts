@@ -1,17 +1,10 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { getCurrentUserInfo } from '../lib/api/user';
 import { User } from '../graphqlTypes';
+import { getCurrentUserInfo } from '../lib/api/user';
 import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
 import * as exit from '../lib/cli/exit';
+import { trackEvent } from '../lib/tracker';
 
 export async function whoamiCommand() {
 	const trackingParams: { command: string } = {

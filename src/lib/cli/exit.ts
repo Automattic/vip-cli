@@ -1,13 +1,5 @@
-// @format
-
-/**
- * External dependencies
- */
 import { red, yellow } from 'chalk';
 
-/**
- * Internal dependencies
- */
 import env from '../../lib/env';
 
 export function withError( message: Error | string ): never {

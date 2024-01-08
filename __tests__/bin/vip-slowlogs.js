@@ -1,11 +1,7 @@
-/**
- * Internal dependencies
- */
-import os from 'os';
-import * as tracker from '../../src/lib/tracker';
+import { getSlowlogs } from '../../src/bin/vip-slowlogs';
 import * as slowlogsLib from '../../src/lib/app-slowlogs/app-slowlogs';
 import * as exit from '../../src/lib/cli/exit';
-import { getSlowlogs } from '../../src/bin/vip-slowlogs';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
@@ -13,7 +9,7 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
 } );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
@@ -227,7 +223,7 @@ describe( 'getSlowlogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable max-len */
-			`"timestamp","rows sent","rows examined","query time","request uri","query"${ os.EOL }"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"${ os.EOL }"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
+			`"timestamp","rows sent","rows examined","query time","request uri","query"\n"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"\n"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
 			/* eslint-enable max-len */
 		);
 

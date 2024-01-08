@@ -1,12 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 
 command( {
@@ -27,4 +20,5 @@ command( {
 	.command( 'shell', 'Spawns a shell in a dev environment' )
 	.command( 'logs', 'View logs from a local WordPress environment' )
 	.command( 'sync', 'Pull data from production to local development environment' )
+	.command( 'purge', 'Destroy all existing environments' )
 	.argv( process.argv );

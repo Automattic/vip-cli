@@ -1,25 +1,16 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
-import columns from 'cli-columns';
 import chalk from 'chalk';
+import columns from 'cli-columns';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
+import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
+import API from '../lib/api';
 import command from '../lib/cli/command';
-import {
-	currentUserCanImportForApp,
-	isSupportedApp,
-	SQL_IMPORT_FILE_SIZE_LIMIT,
-	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
-} from '../lib/site-import/db-file-import';
-import { importSqlCheckStatus } from '../lib/site-import/status';
+import * as exit from '../lib/cli/exit';
+import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
+import { ProgressTracker } from '../lib/cli/progress';
 import {
 	checkFileAccess,
 	getFileSize,
@@ -27,16 +18,24 @@ import {
 	isFile,
 	uploadImportSqlFileToS3,
 } from '../lib/client-file-uploader';
-import { trackEventWithEnv } from '../lib/tracker';
-import { staticSqlValidations, getTableNames } from '../lib/validations/sql';
-import { siteTypeValidations } from '../lib/validations/site-type';
 import { searchAndReplace } from '../lib/search-and-replace';
-import API from '../lib/api';
-import * as exit from '../lib/cli/exit';
-import { fileLineValidations } from '../lib/validations/line-by-line';
-import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
-import { ProgressTracker } from '../lib/cli/progress';
+import {
+	currentUserCanImportForApp,
+	isSupportedApp,
+	SQL_IMPORT_FILE_SIZE_LIMIT,
+	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
+} from '../lib/site-import/db-file-import';
+import { importSqlCheckStatus } from '../lib/site-import/status';
+import { trackEventWithEnv } from '../lib/tracker';
 import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
+import { fileLineValidations } from '../lib/validations/line-by-line';
+import { siteTypeValidations } from '../lib/validations/site-type';
+import {
+	staticSqlValidations,
+	getTableNames,
+	validateImportFileExtension,
+	validateFilename,
+} from '../lib/validations/sql';
 
 const appQuery = `
 	id,
@@ -90,11 +89,27 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
 /**
  * @param {AppForImport} app
  * @param {EnvForImport} env
- * @param {string} fileName
+ * @param {FileMeta} fileMeta
  */
-export async function gates( app, env, fileName ) {
+export async function gates( app, env, fileMeta ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
+	const { fileName, basename } = fileMeta;
+
+	try {
+		// Extract base file name and exit if it contains unsafe character
+		validateFilename( basename );
+	} catch ( error ) {
+		await track( 'import_sql_command_error', { error_type: 'invalid-filename' } );
+		exit.withError( error );
+	}
+
+	try {
+		validateImportFileExtension( fileName );
+	} catch ( error ) {
+		await track( 'import_sql_command_error', { error_type: 'invalid-extension' } );
+		exit.withError( error );
+	}
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
@@ -137,7 +152,7 @@ export async function gates( app, env, fileName ) {
 		await track( 'import_sql_command_error', {
 			error_type: 'sqlfile-toobig',
 			file_size: fileSize,
-			launched: !! env?.launched,
+			launched: Boolean( env?.launched ),
 		} );
 		exit.withError(
 			`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).` +
@@ -262,17 +277,6 @@ If you are confident the file does not contain unsupported statements, you can r
 	}
 	// this can only be called after static validation of the SQL file
 	return getTableNames();
-}
-
-function validateFilename( filename ) {
-	const re = /^[a-z0-9\-_.]+$/i;
-
-	// Exits if filename contains anything outside a-z A-Z - _ .
-	if ( ! re.test( filename ) ) {
-		exit.withError(
-			'Error: The characters used in the name of a file for import are limited to [0-9,a-z,A-Z,-,_,.]'
-		);
-	}
 }
 
 const displayPlaybook = ( {
@@ -418,15 +422,12 @@ void command( {
 		await track( 'import_sql_command_execute' );
 
 		// // halt operation of the import based on some rules
-		await gates( app, env, fileName );
+		await gates( app, env, fileMeta );
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
-
-		// Extract base file name and exit if it contains unsafe character
-		validateFilename( fileMeta.basename );
 
 		let fileNameToUpload = fileName;
 
@@ -535,7 +536,7 @@ Processing the SQL import for your environment...
 		try {
 			const {
 				fileMeta: { basename },
-				md5,
+				checksum: md5,
 				result,
 			} = await uploadImportSqlFileToS3( {
 				app,

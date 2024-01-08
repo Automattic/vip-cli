@@ -1,6 +1,3 @@
-/**
- * External dependencies
- */
 import { spawn } from 'child_process';
 
 /**
@@ -29,11 +26,11 @@ export class CliTest {
 			child.stderr.setEncoding( 'utf8' );
 
 			child.stdout.on( 'data', data => {
-				stdout += '' + data;
+				stdout += String( data );
 			} );
 
 			child.stderr.on( 'data', data => {
-				stderr += '' + data;
+				stderr += String( data );
 			} );
 
 			child.on( 'exit', code => {

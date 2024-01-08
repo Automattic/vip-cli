@@ -1,18 +1,11 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-import opn from 'opn';
-import { prompt } from 'enquirer';
 import chalk from 'chalk';
 import debugLib from 'debug';
+import { prompt } from 'enquirer';
 
-/**
- * Internal dependencies
- */
-import config from '../lib/cli/config';
 import command, { containsAppEnvArgument } from '../lib/cli/command';
+import config from '../lib/cli/config';
 import Token from '../lib/token';
 import { trackEvent, aliasUser } from '../lib/tracker';
 
@@ -114,7 +107,9 @@ const rootCmd = async function () {
 			return;
 		}
 
-		opn( tokenURL, { wait: false } );
+		const { default: open } = await import( 'open' );
+
+		open( tokenURL, { wait: false } );
 
 		await trackEvent( 'login_command_browser_opened' );
 

@@ -1,19 +1,14 @@
-/**
- * External dependencies
- */
-import type { Response } from 'node-fetch';
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import Analytics from './analytics/index';
-import type { AnalyticsClient } from './analytics/clients/client';
-import Tracks from './analytics/clients/tracks';
 import Pendo from './analytics/clients/pendo';
-import Token from '../lib/token';
-import config from '../lib/cli/config';
+import Tracks from './analytics/clients/tracks';
+import Analytics from './analytics/index';
 import env from './env';
+import config from '../lib/cli/config';
+import Token from '../lib/token';
+
+import type { AnalyticsClient } from './analytics/clients/client';
+import type { Response } from 'node-fetch';
 
 const debug = debugLib( '@automattic/vip:analytics' );
 

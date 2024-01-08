@@ -1,25 +1,19 @@
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
+import chalk from 'chalk';
 import fs from 'fs';
+import gql from 'graphql-tag';
 import https from 'https';
 import path from 'path';
-import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
+import { BackupDBCommand } from './backup-db';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
+import * as exit from '../lib/cli/exit';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
-import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
-import { BackupDBCommand } from './backup-db';
-import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -397,7 +391,7 @@ export class ExportSQLCommand {
 					} );
 					exit.withError(
 						'There is an export job already running for this environment: ' +
-							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
+							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/database/backups\n` +
 							'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
 				} else {

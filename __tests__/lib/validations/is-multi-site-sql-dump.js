@@ -2,13 +2,6 @@
  * @format
  */
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { sqlDumpLineIsMultiSite } from '../../../src/lib/validations/is-multi-site-sql-dump';
 
 describe( 'is-multi-site-sql-dump', () => {

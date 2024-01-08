@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { containsAppEnvArgument } from '../../../src/lib/cli/command';
 
 describe( 'utils/cli/command', () => {

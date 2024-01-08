@@ -1,11 +1,9 @@
-/**
- * Internal dependencies
- */
 import os from 'os';
-import * as tracker from '../../src/lib/tracker';
+
+import { getLogs } from '../../src/bin/vip-logs';
 import * as logsLib from '../../src/lib/app-logs/app-logs';
 import * as exit from '../../src/lib/cli/exit';
-import { getLogs } from '../../src/bin/vip-logs';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
@@ -13,7 +11,7 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
 } );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
@@ -169,7 +167,7 @@ describe( 'getLogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable max-len */
-			`"timestamp","message"${ os.EOL }"2021-11-05T20:18:36.234041811Z","My container message 1"${ os.EOL }"2021-11-09T20:47:07.301221112Z","My container message 2 has ""double quotes"", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs"`
+			`"timestamp","message"\n"2021-11-05T20:18:36.234041811Z","My container message 1"\n"2021-11-09T20:47:07.301221112Z","My container message 2 has ""double quotes"", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs"`
 			/* eslint-enable max-len */
 		);
 

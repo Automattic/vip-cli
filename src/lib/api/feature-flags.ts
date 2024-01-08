@@ -1,13 +1,8 @@
-/**
- * External dependencies
- */
+import { ApolloClient, ApolloQueryResult, NormalizedCacheObject } from '@apollo/client';
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
 import API from '../../lib/api';
-import { ApolloClient, ApolloQueryResult, NormalizedCacheObject } from '@apollo/client';
+
 import type { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';
 
 let api: ApolloClient< NormalizedCacheObject >;

@@ -24,13 +24,15 @@ jobs:
       matrix:
         config:
           - { name: Lint, tool: lint }
+          - { name: Check formatting, tool: 'format:check' }
           - { name: Type Checker, tool: check-types }
+          - { name: Check formatting, tool: 'format:check' }
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: npm
@@ -41,6 +43,32 @@ jobs:
 
       - name: Run ${{ matrix.config.tool }}
         run: npm run '${{ matrix.config.tool }}'
+
+  dependaban:
+    name: Dependaban
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Automattic/vip-actions/dependaban@trunk
+
+  audit:
+    name: Verify signatures and provenance statements
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: npm-shrinkwrap.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run audit
+        run: npm audit signatures
 
   test:
     name: Run tests
@@ -54,10 +82,10 @@ jobs:
           - current
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm

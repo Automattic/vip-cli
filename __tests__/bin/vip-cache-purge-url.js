@@ -1,11 +1,8 @@
-/**
- * Internal dependencies
- */
-import * as tracker from '../../src/lib/tracker';
-import * as exit from '../../src/lib/cli/exit';
-import * as purgeCacheLib from '../../src/lib/api/cache-purge';
 import { cachePurgeCommand } from '../../src/bin/vip-cache-purge-url';
+import * as purgeCacheLib from '../../src/lib/api/cache-purge';
+import * as exit from '../../src/lib/cli/exit';
 import { readFromFile } from '../../src/lib/read-file';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {

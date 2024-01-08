@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 import { stdout } from 'single-line-log';
 
-/**
- * Internal dependencies
- */
 import API from '../lib/api';
 import app from '../lib/api/app';
 import command from '../lib/cli/command';

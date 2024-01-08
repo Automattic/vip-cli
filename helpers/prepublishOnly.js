@@ -1,6 +1,7 @@
-const { minVersion, satisfies, valid } = require( 'semver' );
 const { exec } = require( 'node:child_process' );
 const { EOL } = require( 'node:os' );
+const { minVersion, satisfies, valid } = require( 'semver' );
+
 const packageJSON = require( '../package.json' );
 
 const config = {

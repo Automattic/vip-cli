@@ -1,15 +1,10 @@
-/**
- * External dependencies
- */
+import debugLib from 'debug';
 import fetch, { type Response } from 'node-fetch';
 import querystring from 'querystring';
-import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import type { AnalyticsClient } from './client';
 import { checkIfUserIsVip } from '../../cli/apiConfig';
+
+import type { AnalyticsClient } from './client';
 import type { Env } from '../../env';
 
 const debug = debugLib( '@automattic/vip:analytics:clients:tracks' );

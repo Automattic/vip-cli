@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
@@ -38,7 +32,7 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		command: `${ baseUsage } ${ name }`,
 		env_id: opt.env.id,
 		org_id: opt.app.organization.id,
-		skip_confirm: !! opt.skipConfirmation,
+		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};
 

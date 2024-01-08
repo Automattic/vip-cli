@@ -1,13 +1,7 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import { App, Exact, Scalars } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 type AppQueryVariables = Exact< {
 	name: Scalars[ 'String' ][ 'input' ];
@@ -33,7 +27,7 @@ export default async function (
 	fragments: string = ''
 ): Promise< Partial< App > > {
 	const api = await API();
-	if ( isNaN( +app ) ) {
+	if ( isNaN( Number( app ) ) ) {
 		const res = await api.query< AppQueryResult, AppQueryVariables >( {
 			query: gql`query App( $name: String ) {
 					apps( first: 1, name: $name ) {

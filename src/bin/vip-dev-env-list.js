@@ -1,21 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-core';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	handleCLIException,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const examples = [
 	{

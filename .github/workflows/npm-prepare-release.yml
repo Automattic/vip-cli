@@ -20,13 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write    
+      pull-requests: write
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run npm-prepare-release
-        uses: Automattic/vip-actions/npm-prepare-release@v0.1.2
+        uses: Automattic/vip-actions/npm-prepare-release@v0.3.0
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
+          conventional-commits: 'true'

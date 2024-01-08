@@ -1,13 +1,8 @@
-/**
- * External dependencies
- */
-
-import fs from 'fs';
 import chalk from 'chalk';
+import fs from 'fs';
 
-/**
- * Internal dependencies
- */
+import * as exit from '../lib/cli/exit';
+import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
@@ -16,13 +11,13 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
-import { validate as validateSQL } from '../lib/validations/sql';
+import { makeTempDir } from '../lib/utils';
+import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
 export class DevEnvImportSQLCommand {
 	fileName;
 	options;
 	slug;
-	trackingInfo;
 
 	constructor( fileName, options, slug ) {
 		this.fileName = fileName;
@@ -33,6 +28,24 @@ export class DevEnvImportSQLCommand {
 	async run( silent = false ) {
 		const lando = await bootstrapLando();
 		await validateDependencies( lando, this.slug, silent );
+
+		validateImportFileExtension( this.fileName );
+
+		// Check if file is compressed and if so, extract the
+		const fileMeta = await getFileMeta( this.fileName );
+		if ( fileMeta.isCompressed ) {
+			const tmpDir = makeTempDir();
+			const sqlFile = `${ tmpDir }/sql-import.sql`;
+
+			try {
+				console.log( `Extracting the compressed file ${ this.fileName }...` );
+				await unzipFile( this.fileName, sqlFile );
+				console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+				this.fileName = sqlFile;
+			} catch ( err ) {
+				exit.withError( `Error extracting the SQL file: ${ err.message }` );
+			}
+		}
 
 		const { searchReplace, inPlace } = this.options;
 		const resolvedPath = await resolveImportPath(
