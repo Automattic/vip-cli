@@ -90,7 +90,7 @@ export const getFileHash = async (
 		await pipeline( src, dst );
 		return dst.digest().toString( 'hex' );
 	} catch ( err ) {
-		throw new Error( `could not generate file hash: ${ ( err as Error ).message }`, {
+		throw new Error( `Could not generate file hash: ${ ( err as Error ).message }`, {
 			cause: err,
 		} );
 	} finally {
@@ -106,7 +106,7 @@ const gzipFile = async ( uncompressedFileName: string, compressedFileName: strin
 			createWriteStream( compressedFileName )
 		);
 	} catch ( err ) {
-		throw new Error( `could not compress file: ${ ( err as Error ).message }`, { cause: err } );
+		throw new Error( `Could not compress file: ${ ( err as Error ).message }`, { cause: err } );
 	}
 };
 

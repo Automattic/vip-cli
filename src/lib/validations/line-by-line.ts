@@ -55,7 +55,7 @@ export async function fileLineValidations(
 	} );
 
 	readInterface.on( 'error', ( err: Error ) => {
-		throw new Error( ` Error validating input file: ${ err.toString() }`, { cause: err } );
+		throw new Error( `Error validating input file: ${ err.toString() }`, { cause: err } );
 	} );
 
 	// Block until the processing completes
