@@ -1,12 +1,13 @@
 {
   "name": "@automattic/vip",
-  "version": "2.36.3-dev.0",
+  "version": "2.36.4-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
     "vip": "dist/bin/vip.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
+    "vip-app-deploy": "dist/bin/vip-app-deploy.js",
     "vip-backup": "dist/bin/vip-backup.js",
     "vip-backup-db": "dist/bin/vip-backup-db.js",
     "vip-cache": "dist/bin/vip-cache.js",
@@ -103,10 +104,10 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@automattic/eslint-plugin-wpvip": "0.9.0",
+    "@automattic/eslint-plugin-wpvip": "0.9.1",
     "@babel/cli": "7.23.4",
-    "@babel/core": "7.23.3",
-    "@babel/preset-env": "7.23.3",
+    "@babel/core": "7.23.7",
+    "@babel/preset-env": "7.23.8",
     "@babel/preset-typescript": "7.23.3",
     "@jest/globals": "^29.7.0",
     "@jest/test-sequencer": "^29.7.0",
@@ -118,6 +119,7 @@
     "@types/ejs": "^3.1.5",
     "@types/jest": "^29.5.8",
     "@types/js-yaml": "^4.0.9",
+    "@types/node": "^18.19.5",
     "@types/node-fetch": "^2.6.9",
     "@types/proxy-from-env": "^1.0.4",
     "@types/semver": "^7.5.5",
@@ -129,7 +131,7 @@
     "dockerode": "^4.0.0",
     "eslint": "^8.35.0",
     "jest": "^29.7.0",
-    "nock": "13.3.8",
+    "nock": "13.4.0",
     "prettier": "npm:wp-prettier@2.8.5",
     "rimraf": "5.0.5",
     "ts-node": "^10.9.1",
@@ -158,9 +160,9 @@
     "ini": "4.1.1",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli.git#b0a4382",
+    "lando": "github:automattic/lando-cli.git#25fcd83",
     "node-fetch": "^2.6.1",
-    "open": "^9.1.0",
+    "open": "^10.0.0",
     "proxy-from-env": "^1.1.0",
     "semver": "7.5.4",
     "shelljs": "^0.8.5",
@@ -188,7 +190,6 @@
     }
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   }
 }

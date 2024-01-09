@@ -14,7 +14,7 @@ type MediaImportStatus = Pick<
 export class MediaImportProgressTracker {
 	hasFailure: boolean;
 	hasPrinted: boolean;
-	printInterval: NodeJS.Timer | undefined;
+	printInterval: NodeJS.Timeout | undefined;
 	status: MediaImportStatus;
 
 	// Spinnerz go brrrr

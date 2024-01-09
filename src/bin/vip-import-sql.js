@@ -536,7 +536,7 @@ Processing the SQL import for your environment...
 		try {
 			const {
 				fileMeta: { basename },
-				md5,
+				checksum: md5,
 				result,
 			} = await uploadImportSqlFileToS3( {
 				app,

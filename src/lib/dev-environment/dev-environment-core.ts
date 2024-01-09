@@ -408,7 +408,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	} catch ( error: unknown ) {
 		const err = error as Error;
 		throw new UserError(
-			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`
+			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`,
+			{ cause: error }
 		);
 	}
 
@@ -417,7 +418,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	} catch ( error: unknown ) {
 		const err = error as Error;
 		throw new UserError(
-			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`
+			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`,
+			{ cause: error }
 		);
 	}
 

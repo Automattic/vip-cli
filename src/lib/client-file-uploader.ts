@@ -41,7 +41,7 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
 // TODO: Replace with a proper definitions once we convert lib/cli/command.js to TypeScript
-interface WithId {
+export interface WithId {
 	id: number;
 }
 
@@ -72,21 +72,27 @@ export interface GetSignedUploadRequestDataArgs {
 const getWorkingTempDir = (): Promise< string > =>
 	mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ) );
 
-interface UploadArguments {
+export interface UploadArguments {
 	app: WithId;
 	env: WithId;
 	fileMeta: FileMeta;
 	progressCallback?: ( percentage: string ) => unknown;
+	hashType?: 'md5' | 'sha256';
 }
 
-export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
+export const getFileHash = async (
+	fileName: string,
+	hashType: 'md5' | 'sha256' = 'md5'
+): Promise< string > => {
 	const src = createReadStream( fileName );
-	const dst = createHash( 'md5' );
+	const dst = createHash( hashType );
 	try {
 		await pipeline( src, dst );
 		return dst.digest().toString( 'hex' );
 	} catch ( err ) {
-		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
+		throw new Error( `Could not generate file hash: ${ ( err as Error ).message }`, {
+			cause: err,
+		} );
 	} finally {
 		src.close();
 	}
@@ -100,7 +106,7 @@ const gzipFile = async ( uncompressedFileName: string, compressedFileName: strin
 			createWriteStream( compressedFileName )
 		);
 	} catch ( err ) {
-		throw new Error( `could not compress file: ${ ( err as Error ).message }` );
+		throw new Error( `Could not compress file: ${ ( err as Error ).message }`, { cause: err } );
 	}
 };
 
@@ -162,13 +168,15 @@ export async function uploadImportSqlFileToS3( {
 	env,
 	fileMeta,
 	progressCallback,
+	hashType = 'md5',
 }: UploadArguments ) {
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
 	} catch ( err ) {
 		throw new Error(
-			`Unable to create temporary working directory: ${ ( err as Error ).message }`
+			`Unable to create temporary working directory: ${ ( err as Error ).message }`,
+			{ cause: err }
 		);
 	}
 
@@ -205,9 +213,9 @@ export async function uploadImportSqlFileToS3( {
 		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
-	debug( 'Calculating file md5 checksum...' );
-	const md5 = await getFileMD5Hash( fileMeta.fileName );
-	debug( `Calculated file md5 checksum: ${ md5 }\n` );
+	debug( `Calculating file ${ hashType } checksum...` );
+	const checksum = await getFileHash( fileMeta.fileName, hashType );
+	debug( `Calculated file ${ hashType } checksum: ${ checksum }\n` );
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
@@ -216,7 +224,7 @@ export async function uploadImportSqlFileToS3( {
 
 	return {
 		fileMeta,
-		md5,
+		checksum,
 		result,
 	};
 }
@@ -300,7 +308,9 @@ async function uploadUsingPutObject( {
 	try {
 		parsedResponse = ( await parser.parseStringPromise( result ) ) as UploadErrorResponse;
 	} catch ( err ) {
-		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }` );
+		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }`, {
+			cause: err,
+		} );
 	}
 
 	const { Code, Message } = parsedResponse.Error;
