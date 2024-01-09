@@ -127,7 +127,9 @@ const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 		address = await lookup( testDomain, 4 );
 		debug( `Got DNS response ${ address.address }` );
 	} catch ( error ) {
-		throw new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }` );
+		throw new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }`, {
+			cause: error,
+		} );
 	}
 
 	if ( address.address !== expectedIP ) {

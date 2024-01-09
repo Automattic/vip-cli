@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [ "es2021" ],
+    "lib": [ "ES2022" ],
     "module": "node16",
     "strict": true,
     "esModuleInterop": true,
@@ -9,7 +9,7 @@
     "moduleResolution": "node16",
 
     // Target latest version of ECMAScript.
-    "target": "esnext",
+    "target": "ES2022",
     // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
     "allowJs": false,
     // Don't emit; allow Babel to transform files.
