@@ -967,7 +967,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = ( result.php as string ).replace( /.*:/, '' );
+		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
 
 		return result;
 	} catch ( err ) {
