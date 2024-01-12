@@ -492,7 +492,9 @@ args.argv = async function ( argv, cb ) {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
 			if ( res.header ) {
-				console.log( formatData( res.header, 'keyValue' ) );
+				if ( options.format !== 'json' ) {
+					console.log( formatData( res.header, 'keyValue' ) );
+				}
 				res = res.data;
 			}
 
