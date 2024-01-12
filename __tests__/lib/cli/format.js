@@ -33,7 +33,7 @@ describe( 'utils/cli/format', () => {
 			},
 			{
 				input: [ '{"json":broken json with spaces}' ],
-				expected: [ '"{"json":broken json with spaces}"' ],
+				expected: [ '"{\\"json\\":broken json with spaces}"' ],
 			},
 			{
 				input: [ '--foo=\'bar1 "bar2" "bar3"\'' ],
