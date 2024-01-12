@@ -36,12 +36,12 @@ describe( 'utils/cli/format', () => {
 				expected: [ '"{\\"json\\":broken json with spaces}"' ],
 			},
 			{
-				input: [ '--foo=\'bar1 "bar2" "bar3"\'' ],
-				expected: [ '--foo=\'bar1 "bar2" "bar3"\'' ],
+				input: [ '--foo=bar1 "bar2" "bar3"' ],
+				expected: [ '--foo="bar1 \\"bar2\\" \\"bar3\\""' ],
 			},
 			{
-				input: [ '--foo', '\'bar1 "bar2" "bar3"\'' ],
-				expected: [ '--foo', '\'bar1 "bar2" "bar3"\'' ],
+				input: [ '--foo', 'bar1 "bar2" "bar3"' ],
+				expected: [ '--foo', '"bar1 \\"bar2\\" \\"bar3\\""' ],
 			},
 		] )( 'should requote args when needed - %o', ( { input, expected } ) => {
 			const result = requoteArgs( input );
