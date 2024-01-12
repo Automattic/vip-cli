@@ -177,9 +177,10 @@ export class DevEnvSyncSQLCommand {
 		const importOptions = {
 			inPlace: true,
 			skipValidate: true,
+			quiet: true,
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
-		await importCommand.run( true );
+		await importCommand.run();
 	}
 
 	/**

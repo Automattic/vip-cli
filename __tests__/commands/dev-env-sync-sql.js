@@ -134,7 +134,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
 			await cmd.runImport();
 
-			expect( mockImport ).toHaveBeenCalledWith( true );
+			expect( mockImport ).toHaveBeenCalled();
 		} );
 	} );
 

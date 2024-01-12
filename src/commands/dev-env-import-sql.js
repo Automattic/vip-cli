@@ -3,7 +3,10 @@ import fs from 'fs';
 
 import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
-import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import {
+	processBooleanOption,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
 	resolveImportPath,
@@ -25,9 +28,9 @@ export class DevEnvImportSQLCommand {
 		this.slug = slug;
 	}
 
-	async run( silent = false ) {
+	async run() {
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, this.slug, silent );
+		await validateDependencies( lando, this.slug, this.options.quiet );
 
 		validateImportFileExtension( this.fileName );
 
@@ -38,9 +41,16 @@ export class DevEnvImportSQLCommand {
 			const sqlFile = `${ tmpDir }/sql-import.sql`;
 
 			try {
-				console.log( `Extracting the compressed file ${ this.fileName }...` );
+				if ( ! this.options.quiet ) {
+					console.log( `Extracting the compressed file ${ this.fileName }...` );
+				}
+
 				await unzipFile( this.fileName, sqlFile );
-				console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+
+				if ( ! this.options.quiet ) {
+					console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+				}
+
 				this.fileName = sqlFile;
 			} catch ( err ) {
 				exit.withError( `Error extracting the SQL file: ${ err.message }` );
@@ -69,7 +79,9 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash' ];
+		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
+			this.options.quiet ? '--silent' : []
+		);
 		const origIsTTY = process.stdin.isTTY;
 
 		try {
@@ -83,7 +95,7 @@ export class DevEnvImportSQLCommand {
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
 
-			if ( ! silent ) {
+			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
 			}
 		} finally {
@@ -94,16 +106,15 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush' ];
+		const cacheArg = [ 'wp', 'cache', 'flush' ].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, cacheArg );
 
-		try {
-			await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-			const doIndex = await promptForBoolean(
-				'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
-				true
-			);
-			if ( doIndex ) {
+		if (
+			undefined === this.options.skipReindex ||
+			! processBooleanOption( this.options.skipReindex )
+		) {
+			try {
+				await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
 				await exec( lando, this.slug, [
 					'wp',
 					'vip-search',
@@ -112,12 +123,17 @@ export class DevEnvImportSQLCommand {
 					'--network-wide',
 					'--skip-confirm',
 				] );
+			} catch {
+				// Exception means they don't have vip-search enabled.
 			}
-		} catch ( err ) {
-			// Exception means they don't have vip-search enabled.
 		}
 
-		const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
+		const addUserArg = [
+			'wp',
+			'dev-env-add-admin',
+			'--username=vipgo',
+			'--password=password',
+		].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, addUserArg );
 	}
 }
