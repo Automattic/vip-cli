@@ -31,7 +31,7 @@ export function validateFilename( filename: string ) {
 	// Exits if filename contains anything outside a-z A-Z - _ .
 	if ( ! re.test( filename ) ) {
 		exit.withError(
-			'Error: The characters used in the name of a file for manual deploys are limited to [0-9,a-z,A-Z,-,_,.]'
+			'Error: The characters used in the name of a file for custom deploys are limited to [0-9,a-z,A-Z,-,_,.]'
 		);
 	}
 }

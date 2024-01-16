@@ -1,8 +1,8 @@
 import { appDeployCmd } from '../../src/bin/vip-app-deploy';
 import * as exit from '../../src/lib/cli/exit';
 import { uploadImportSqlFileToS3 } from '../../src/lib/client-file-uploader';
-import { gates, promptToContinue } from '../../src/lib/manual-deploy/manual-deploy';
-import { validateDeployFileExt, validateFilename } from '../../src/lib/validations/manual-deploy';
+import { gates, promptToContinue } from '../../src/lib/custom-deploy/custom-deploy';
+import { validateDeployFileExt, validateFilename } from '../../src/lib/validations/custom-deploy';
 
 jest.mock( '../../src/lib/client-file-uploader', () => ( {
 	...jest.requireActual( '../../src/lib/client-file-uploader' ),
@@ -12,7 +12,7 @@ jest.mock( '../../src/lib/client-file-uploader', () => ( {
 	uploadImportSqlFileToS3: jest.fn(),
 } ) );
 
-jest.mock( '../../src/lib/manual-deploy/manual-deploy', () => ( {
+jest.mock( '../../src/lib/custom-deploy/custom-deploy', () => ( {
 	gates: jest.fn(),
 	renameFile: jest.fn(),
 	promptToContinue: jest.fn().mockResolvedValue( true ),
@@ -57,7 +57,7 @@ describe( 'vip-app-deploy', () => {
 			async basename => {
 				validateFilename( basename );
 				expect( exitSpy ).toHaveBeenCalledWith(
-					'Error: The characters used in the name of a file for manual deploys are limited to [0-9,a-z,A-Z,-,_,.]'
+					'Error: The characters used in the name of a file for custom deploys are limited to [0-9,a-z,A-Z,-,_,.]'
 				);
 			}
 		);
