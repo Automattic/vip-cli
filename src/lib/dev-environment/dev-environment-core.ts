@@ -5,7 +5,6 @@ import ejs from 'ejs';
 import { prompt } from 'enquirer';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -86,7 +85,13 @@ interface WordPressTag {
 }
 
 function xdgDataDirectory(): string {
-	return xdgBasedir.data?.length ? xdgBasedir.data : os.tmpdir();
+	if ( xdgBasedir.data ) {
+		return xdgBasedir.data;
+	}
+
+	// This should not happen. If it does, this means that the system was unable to find user's home directory.
+	// If so, this does not leave us many options as to where to store the data.
+	throw new Error( 'Unable to determine data directory.' );
 }
 
 export async function startEnvironment(
