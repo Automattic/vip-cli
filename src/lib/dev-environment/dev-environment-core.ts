@@ -482,10 +482,14 @@ async function prepareLandoEnv(
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
 
-	const landoFileExists = await fs.promises.stat( landoFileTargetPath ).catch( () => false );
-	if ( landoFileExists ) {
-		await fs.promises.copyFile( landoFileTargetPath, landoBackupFileTargetPath );
+	try {
+		await fs.promises.rename( landoFileTargetPath, landoBackupFileTargetPath );
 		console.log( `Backup of ${ landoFileName } was created in ${ landoBackupFileTargetPath }` );
+	} catch ( err ) {
+		// If the file doesn't exist, that's fine. Otherwise, throw the error.
+		if ( 'ENOENT' !== ( err as NodeJS.ErrnoException ).code ) {
+			throw err;
+		}
 	}
 
 	await Promise.all( [
