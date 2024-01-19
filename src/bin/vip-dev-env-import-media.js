@@ -6,6 +6,7 @@ import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 import { trackEvent } from '../lib/tracker';
@@ -27,7 +28,7 @@ command( {
 	requiredArgs: 1,
 } )
 	.examples( examples )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ filePath ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );

@@ -10,6 +10,7 @@ import {
 	getEnvironmentName,
 	handleCLIException,
 	postStart,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -30,7 +31,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'skip-rebuild', 'Only start stopped services' )
 	.option(
 		[ 'w', 'skip-wp-versions-check' ],

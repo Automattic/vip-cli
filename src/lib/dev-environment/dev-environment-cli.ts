@@ -837,6 +837,11 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 	return value;
 }
 
+export function processSlug( value: unknown ): string {
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	return ( value ?? '' ).toString().toLowerCase();
+}
+
 declare function isNaN( value: unknown ): boolean;
 declare function parseFloat( value: unknown ): number;
 
