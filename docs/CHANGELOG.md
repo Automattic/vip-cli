@@ -1,5 +1,49 @@
 ## Changelog
 
+### 2.37.0
+
+- build(deps-dev): bump the babel group with 2 updates
+- build(deps): bump @automattic/vip-search-replace from 1.1.1 to 1.1.2
+- build(deps): bump Automattic/vip-actions from 0.2.0 to 0.3.0
+- build(deps): bump github/codeql-action from 2 to 3
+- BYOR: Add `vip app deploy`
+- build(deps-dev): bump eslint from 8.55.0 to 8.56.0
+- Dev-env: Remove 8.0 & 7.4 from available PHP versions
+- build(deps): bump open from 9.1.0 to 10.0.0
+- fix(dev-env): use the latest nginx image
+- build(deps-dev): bump dockerode from 4.0.0 to 4.0.1
+- build(deps): bump open from 10.0.0 to 10.0.1
+- build(deps-dev): bump dockerode from 4.0.1 to 4.0.2
+- build(deps): bump open from 10.0.1 to 10.0.2
+- fix(validate-sql): Display matched site-urls
+- build(deps): bump socket.io-client from 4.7.2 to 4.7.3
+- build(deps-dev): bump the babel group with 2 updates
+- build(deps): bump open from 10.0.2 to 10.0.3
+- feat: show detailed error information in debug mode
+- build(deps-dev): bump the babel group with 1 update
+- fix: issues found by SonarCloud
+- build(deps-dev): bump @types/node from 18.19.5 to 18.19.6
+- chore(deps): fix CVE-2023-26159 in follow-redirects
+- build(deps): bump Automattic/vip-actions from 0.3.0 to 0.5.0
+- build(deps): bump @automattic/vip-search-replace from 1.1.2 to 1.1.3
+- fix: Properly propagate quotes
+- fix(--format=json): Do not print header if specified format is json
+- feat(dev-env): add quiet mode for "import sql"
+- build(deps): bump socket.io-client from 4.7.3 to 4.7.4
+- fix: regex vulnerable to super-linear runtime
+- ci: add CodeQL workflow
+- ci: remove outdated CodeQL workflow
+- BYOR: Change manual-deploy to custom-deploy
+- build(deps-dev): bump @types/node from 18.19.6 to 18.19.8
+- build(deps-dev): bump nock from 13.4.0 to 13.5.0
+- fix(dev-env): CWE-367 in `prepareLandoEnv()`
+- fix(dev-env): CWE-367 in `getConfigurationFileOptions()`
+- fix(dev-env): CWE-377, CWE-378 originating from `xdgDataDirectory()`
+- build(deps): bump Automattic/vip-actions from 0.5.0 to 0.6.0
+
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.36.3...v2.37.0
+
 ### 2.36.3
 
 - build(deps): bump @json2csv/plainjs from 7.0.3 to 7.0.4
