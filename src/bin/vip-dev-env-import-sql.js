@@ -7,6 +7,7 @@ import {
 	getEnvTrackingInfo,
 	handleCLIException,
 	getEnvironmentName,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import { makeCommandTracker } from '../lib/tracker';
 
@@ -34,7 +35,7 @@ const examples = [
 command( {
 	requiredArgs: 1,
 } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( [ 'r', 'search-replace' ], 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
 	.option( 'skip-validate', 'Do not perform file validation' )

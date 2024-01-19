@@ -7,6 +7,7 @@ import {
 	getEnvironmentName,
 	handleCLIException,
 	processBooleanOption,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
@@ -30,7 +31,7 @@ const examples = [
 ];
 
 command( { wildcardCommand: true } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'force', 'Disable validations before task execution', undefined, processBooleanOption )
 	.option( 'quiet', 'Suppress output', undefined, processBooleanOption )
 	.examples( examples )
