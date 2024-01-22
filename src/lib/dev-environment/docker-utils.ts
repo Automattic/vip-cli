@@ -81,7 +81,7 @@ export async function getDockerSocket(): Promise< string | null > {
 export async function getEngineConfig( dockerHost: string ): Promise< Record< string, unknown > > {
 	const opts: Record< string, unknown > = {};
 	if ( dockerHost.startsWith( 'tcp://' ) ) {
-		const split = /(?:tcp:\/\/)?(.*?):(\d+)/g.exec( dockerHost );
+		const split = /^(?:tcp:\/\/)([^:]+):(\d+)/g.exec( dockerHost );
 		if ( split && split.length === 3 ) {
 			opts.host = split[ 1 ];
 			opts.port = split[ 2 ];

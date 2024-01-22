@@ -193,13 +193,7 @@ args.argv = async function ( argv, cb ) {
 				exit.withError( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 			}
 
-			if (
-				! res ||
-				! res.data ||
-				! res.data.apps ||
-				! res.data.apps.edges ||
-				! res.data.apps.edges.length
-			) {
+			if ( ! res.data?.apps?.edges?.length ) {
 				await trackEvent( 'command_appcontext_list_fetch_error', {
 					error: 'No apps found',
 				} );
@@ -229,7 +223,7 @@ args.argv = async function ( argv, cb ) {
 			// Copy all app information
 			appSelection.app = res.data.apps.edges.find( cur => cur.name === appSelection.app );
 
-			if ( ! appSelection || ! appSelection.app || ! appSelection.app.id ) {
+			if ( ! appSelection.app?.id ) {
 				await trackEvent( 'command_appcontext_list_select_error', {
 					error: 'Invalid app selected',
 				} );
@@ -239,7 +233,7 @@ args.argv = async function ( argv, cb ) {
 
 			await trackEvent( 'command_appcontext_list_select_success' );
 
-			options.app = Object.assign( {}, appSelection.app );
+			options.app = { ...appSelection.app };
 		} else {
 			let appLookup;
 			try {
@@ -252,7 +246,7 @@ args.argv = async function ( argv, cb ) {
 				exit.withError( `App ${ chalk.blueBright( options.app ) } does not exist` );
 			}
 
-			if ( ! appLookup || ! appLookup.id ) {
+			if ( ! appLookup?.id ) {
 				await trackEvent( 'command_appcontext_param_error', {
 					error: 'Invalid app specified',
 				} );
@@ -262,7 +256,7 @@ args.argv = async function ( argv, cb ) {
 
 			await trackEvent( 'command_appcontext_param_select' );
 
-			options.app = Object.assign( {}, appLookup );
+			options.app = { ...appLookup };
 		}
 
 		if ( _opts.childEnvContext ) {
@@ -297,7 +291,7 @@ args.argv = async function ( argv, cb ) {
 			}
 
 			options.env = env;
-		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
+		} else if ( ! options.app?.environments?.length ) {
 			console.log( 'To set up a new development environment, please contact VIP Support.' );
 
 			await trackEvent( 'command_childcontext_fetch_error', {
@@ -337,7 +331,7 @@ args.argv = async function ( argv, cb ) {
 				envObject => getEnvIdentifier( envObject ) === envSelection.env
 			);
 
-			if ( ! envSelection || ! envSelection.env || ! envSelection.env.id ) {
+			if ( ! envSelection.env?.id ) {
 				await trackEvent( 'command_childcontext_list_select_error', {
 					error: 'Invalid environment selected',
 				} );
@@ -375,13 +369,13 @@ args.argv = async function ( argv, cb ) {
 		switch ( _opts.module ) {
 			case 'import-sql': {
 				const site = options.env;
-				if ( site && site.primaryDomain ) {
+				if ( site?.primaryDomain ) {
 					const primaryDomainName = site.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
 
 				// Site launched details
-				const haveLaunchedField = Object.prototype.hasOwnProperty.call( site, 'launched' );
+				const haveLaunchedField = Object.hasOwn( site, 'launched' );
 
 				if ( haveLaunchedField ) {
 					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
@@ -394,7 +388,7 @@ args.argv = async function ( argv, cb ) {
 				}
 
 				options.skipValidate =
-					Object.prototype.hasOwnProperty.call( options, 'skipValidate' ) &&
+					Object.hasOwn( options, 'skipValidate' ) &&
 					Boolean( options.skipValidate ) &&
 					! [ 'false', 'no' ].includes( options.skipValidate );
 
@@ -454,7 +448,7 @@ args.argv = async function ( argv, cb ) {
 				info.push( { key: 'Archive URL', value: chalk.blue.underline( this.sub ) } );
 
 				options.overwriteExistingFiles =
-					Object.prototype.hasOwnProperty.call( options, 'overwriteExistingFiles' ) &&
+					Object.hasOwn( options, 'overwriteExistingFiles' ) &&
 					Boolean( options.overwriteExistingFiles ) &&
 					! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
 				info.push( {
@@ -463,7 +457,7 @@ args.argv = async function ( argv, cb ) {
 				} );
 
 				options.importIntermediateImages =
-					Object.prototype.hasOwnProperty.call( options, 'importIntermediateImages' ) &&
+					Object.hasOwn( options, 'importIntermediateImages' ) &&
 					Boolean( options.importIntermediateImages ) &&
 					! [ 'false', 'no' ].includes( options.importIntermediateImages );
 				info.push( {
@@ -472,7 +466,7 @@ args.argv = async function ( argv, cb ) {
 				} );
 
 				options.exportFileErrorsToJson =
-					Object.prototype.hasOwnProperty.call( options, 'exportFileErrorsToJson' ) &&
+					Object.hasOwn( options, 'exportFileErrorsToJson' ) &&
 					Boolean( options.exportFileErrorsToJson ) &&
 					! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
 				info.push( {
@@ -498,12 +492,14 @@ args.argv = async function ( argv, cb ) {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
 			if ( res.header ) {
-				console.log( formatData( res.header, 'keyValue' ) );
+				if ( options.format !== 'json' ) {
+					console.log( formatData( res.header, 'keyValue' ) );
+				}
 				res = res.data;
 			}
 
 			res = res.map( row => {
-				const out = Object.assign( {}, row );
+				const out = { ...row };
 
 				if ( out.__typename ) {
 					// Apollo injects __typename
@@ -557,19 +553,17 @@ function validateOpts( opts ) {
  * @returns {args}
  */
 export default function ( opts ) {
-	_opts = Object.assign(
-		{
-			appContext: false,
-			appQuery: 'id,name',
-			childEnvContext: false,
-			envContext: false,
-			format: false,
-			requireConfirm: false,
-			requiredArgs: 0,
-			wildcardCommand: false,
-		},
-		opts
-	);
+	_opts = {
+		appContext: false,
+		appQuery: 'id,name',
+		childEnvContext: false,
+		envContext: false,
+		format: false,
+		requireConfirm: false,
+		requiredArgs: 0,
+		wildcardCommand: false,
+		...opts,
+	};
 
 	if ( _opts.appContext || _opts.requireConfirm ) {
 		args.option( 'app', 'Specify the app' );

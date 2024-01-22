@@ -20,6 +20,7 @@ import {
 	validateDependencies,
 	processStringOrBooleanOption,
 	handleDeprecatedOptions,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -68,7 +69,7 @@ const examples = [
 ];
 
 const cmd = command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'title', 'Title for the WordPress site' )
 	.option( 'multisite', 'Enable multisite install', undefined, processStringOrBooleanOption );
 

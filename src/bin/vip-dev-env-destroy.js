@@ -9,6 +9,7 @@ import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { destroyEnvironment } from '../lib/dev-environment/dev-environment-core';
@@ -29,7 +30,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'soft', 'Keep config files needed to start an environment intact' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

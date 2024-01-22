@@ -1,8 +1,7 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
-import { constants } from 'fs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
-import { access, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { CONFIGURATION_FOLDER } from './dev-environment-cli';
@@ -21,8 +20,18 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 		return {};
 	}
 
-	debug( 'Reading configuration file from:', configurationFilePath );
-	const configurationFileContents = await readFile( configurationFilePath, 'utf8' );
+	let configurationFileContents;
+
+	try {
+		configurationFileContents = await readFile( configurationFilePath, 'utf8' );
+		debug( 'Read configuration file from %s', configurationFilePath );
+	} catch ( err ) {
+		if ( ( err as NodeJS.ErrnoException ).code === 'ENOENT' ) {
+			return {};
+		}
+
+		throw err;
+	}
 
 	let configurationFromFile: Record< string, unknown > = {};
 

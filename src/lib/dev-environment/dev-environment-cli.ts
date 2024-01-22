@@ -835,6 +835,11 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 	return value;
 }
 
+export function processSlug( value: unknown ): string {
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	return ( value ?? '' ).toString().toLowerCase();
+}
+
 declare function isNaN( value: unknown ): boolean;
 declare function parseFloat( value: unknown ): number;
 
@@ -965,7 +970,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = ( result.php as string ).replace( /.*:/, '' );
+		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
 
 		return result;
 	} catch ( err ) {
