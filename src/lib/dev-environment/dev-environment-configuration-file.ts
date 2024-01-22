@@ -14,43 +14,32 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 export const CONFIGURATION_FILE_NAME = 'vip-dev-env.yml';
 
 export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
-	const configurationFilePath = await findConfigurationFilePath();
+	const configurationFile = await findConfigurationFile();
 
-	if ( configurationFilePath === false ) {
+	if ( configurationFile === false ) {
 		return {};
 	}
 
-	let configurationFileContents;
-
-	try {
-		configurationFileContents = await readFile( configurationFilePath, 'utf8' );
-		debug( 'Read configuration file from %s', configurationFilePath );
-	} catch ( err ) {
-		if ( ( err as NodeJS.ErrnoException ).code === 'ENOENT' ) {
-			return {};
-		}
-
-		throw err;
-	}
+	const { configurationPath, configurationContents } = configurationFile;
 
 	let configurationFromFile: Record< string, unknown > = {};
 
 	try {
-		configurationFromFile = yaml.load( configurationFileContents, {
+		configurationFromFile = yaml.load( configurationContents, {
 			// Only allow strings, arrays, and objects to be parsed from configuration file
 			// This causes number-looking values like `php: 8.1` to be parsed directly into strings
 			schema: FAILSAFE_SCHEMA,
 		} ) as Record< string, unknown >;
 	} catch ( err ) {
 		const messageToShow =
-			`Configuration file ${ chalk.grey( configurationFilePath ) } could not be loaded:\n` +
+			`Configuration file ${ chalk.grey( configurationPath ) } could not be loaded:\n` +
 			( err as Error ).toString();
 		exit.withError( messageToShow );
 	}
 
 	try {
-		let configuration = sanitizeConfiguration( configurationFromFile, configurationFilePath );
-		configuration = adjustRelativePaths( configuration, configurationFilePath );
+		let configuration = sanitizeConfiguration( configurationFromFile, configurationPath );
+		configuration = adjustRelativePaths( configuration, configurationPath );
 
 		debug( 'Sanitized configuration from file:', configuration );
 		return configuration;
@@ -196,7 +185,9 @@ export function mergeConfigurationFileOptions(
 	return mergedOptions;
 }
 
-async function findConfigurationFilePath(): Promise< string | false > {
+async function findConfigurationFile(): Promise<
+	{ configurationPath: string; configurationContents: string } | false
+> {
 	let currentPath = process.cwd();
 	const rootPath = path.parse( currentPath ).root;
 
@@ -205,14 +196,17 @@ async function findConfigurationFilePath(): Promise< string | false > {
 	const pathPromises = [];
 
 	while ( currentPath !== rootPath && depth < maxDepth ) {
-		const configurationFilePath = path.join(
+		const configurationPath = path.join(
 			currentPath,
 			CONFIGURATION_FOLDER,
 			CONFIGURATION_FILE_NAME
 		);
 
 		pathPromises.push(
-			access( configurationFilePath, constants.R_OK ).then( () => configurationFilePath )
+			readFile( configurationPath, 'utf8' ).then( configurationContents => ( {
+				configurationPath,
+				configurationContents,
+			} ) )
 		);
 
 		// Move up one directory
@@ -222,11 +216,7 @@ async function findConfigurationFilePath(): Promise< string | false > {
 		depth++;
 	}
 
-	return Promise.any( pathPromises )
-		.then( configurationFilePath => {
-			return configurationFilePath;
-		} )
-		.catch( () => false );
+	return Promise.any( pathPromises ).catch( () => false );
 }
 
 const CONFIGURATION_FILE_VERSIONS = [ '1' ];
