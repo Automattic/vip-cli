@@ -1,8 +1,14 @@
 /**
  * External dependencies
  */
+import {
+	ApolloClient,
+	ApolloQueryResult,
+	FetchResult,
+	NormalizedCacheObject,
+} from '@apollo/client';
 import chalk from 'chalk';
-import { GraphQLFormattedError } from 'graphql';
+import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 
 /**
@@ -18,7 +24,7 @@ import { ProgressTracker } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
 import { pollUntil } from '../lib/utils';
 
-export const GENERATE_PHP_MY_ADMIN_URL_MUTATION = gql`
+export const GENERATE_PHP_MY_ADMIN_URL_MUTATION: DocumentNode = gql`
 	mutation GeneratePhpMyAdminAccess($input: GeneratePhpMyAdminAccessInput) {
 		generatePHPMyAdminAccess(input: $input) {
 			expiresAt
@@ -27,7 +33,7 @@ export const GENERATE_PHP_MY_ADMIN_URL_MUTATION = gql`
 	}
 `;
 
-export const GET_PHP_MY_ADMIN_STATUS_QUERY = gql`
+export const GET_PHP_MY_ADMIN_STATUS_QUERY: DocumentNode = gql`
 	query PhpMyAdminStatus($appId: Int!, $envId: Int!) {
 		app(id: $appId) {
 			environments(id: $envId) {
@@ -39,7 +45,7 @@ export const GET_PHP_MY_ADMIN_STATUS_QUERY = gql`
 	}
 `;
 
-export const ENABLE_PHP_MY_ADMIN_MUTATION = gql`
+export const ENABLE_PHP_MY_ADMIN_MUTATION: DocumentNode = gql`
 	mutation EnablePhpMyAdmin($input: EnablePhpMyAdminInput) {
 		enablePHPMyAdmin(input: $input) {
 			success
@@ -51,8 +57,9 @@ async function generatePhpMyAdminAccess( envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
-	const resp = await api.mutate( {
+	const api: ApolloClient< NormalizedCacheObject > = await API();
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const resp: FetchResult< any, Record< string, any >, Record< string, any > > = await api.mutate( {
 		mutation: GENERATE_PHP_MY_ADMIN_URL_MUTATION,
 		variables: {
 			input: {
@@ -68,12 +75,13 @@ async function generatePhpMyAdminAccess( envId: number ): Promise< string > {
 	return resp?.data?.generatePHPMyAdminAccess?.url as string;
 }
 
-async function enablePhpMyAdmin( envId: number ): Promise< string > {
+async function enable( envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
-	const resp = await api.mutate( {
+	const api: ApolloClient< NormalizedCacheObject > = await API();
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const resp: FetchResult< any, Record< string, any >, Record< string, any > > = await api.mutate( {
 		mutation: ENABLE_PHP_MY_ADMIN_MUTATION,
 		variables: {
 			input: {
@@ -93,9 +101,10 @@ async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< str
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
+	const api: ApolloClient< NormalizedCacheObject > = await API();
 
-	const resp = await api.query( {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const resp: ApolloQueryResult< any > = await api.query( {
 		query: GET_PHP_MY_ADMIN_STATUS_QUERY,
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
@@ -129,24 +138,24 @@ export class PhpMyAdminCommand {
 		] );
 	}
 
-	log( msg: string ) {
+	log( msg: string ): void {
 		if ( this.silent ) {
 			return;
 		}
 		console.log( msg );
 	}
 
-	stopProgressTracker() {
+	stopProgressTracker(): void {
 		this.progressTracker.print();
 		this.progressTracker.stopPrinting();
 	}
 
-	async openUrl( url: string ) {
+	async openUrl( url: string ): Promise< void > {
 		const { default: open } = await import( 'open' );
 		void open( url, { wait: false } );
 	}
 
-	async getStatus() {
+	async getStatus(): Promise< string > {
 		try {
 			return await getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
 		} catch ( err ) {
@@ -156,10 +165,10 @@ export class PhpMyAdminCommand {
 		}
 	}
 
-	async enablePhpMyAdmin() {
+	async enablePhpMyAdmin(): Promise< void > {
 		const status = await this.getStatus();
 		if ( ! [ 'running', 'enabled' ].includes( status ) ) {
-			await enablePhpMyAdmin( this.env.id as number );
+			await enable( this.env.id as number );
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
 
 			// Additional 30s for LB routing to be updated
@@ -167,7 +176,7 @@ export class PhpMyAdminCommand {
 		}
 	}
 
-	async run( silent = false ) {
+	async run( silent = false ): Promise< void > {
 		this.silent = silent;
 
 		if ( ! this.app.id ) {
