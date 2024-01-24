@@ -75,7 +75,7 @@ async function generatePhpMyAdminAccess( envId: number ): Promise< string > {
 	return resp?.data?.generatePHPMyAdminAccess?.url as string;
 }
 
-async function enable( envId: number ): Promise< string > {
+async function enablePhpMyAdmin( envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
@@ -165,10 +165,10 @@ export class PhpMyAdminCommand {
 		}
 	}
 
-	async enablePhpMyAdmin(): Promise< void > {
+	async maybeEnablePhpMyAdmin(): Promise< void > {
 		const status = await this.getStatus();
 		if ( ! [ 'running', 'enabled' ].includes( status ) ) {
-			await enable( this.env.id as number );
+			await enablePhpMyAdmin( this.env.id as number );
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
 
 			// Additional 30s for LB routing to be updated
@@ -194,7 +194,7 @@ export class PhpMyAdminCommand {
 		this.progressTracker.startPrinting();
 		try {
 			this.progressTracker.stepRunning( this.steps.ENABLE );
-			await this.enablePhpMyAdmin();
+			await this.maybeEnablePhpMyAdmin();
 			this.progressTracker.stepSuccess( this.steps.ENABLE );
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.ENABLE );
