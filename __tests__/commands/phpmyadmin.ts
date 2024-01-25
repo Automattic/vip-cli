@@ -11,7 +11,7 @@ import { PhpMyAdminCommand } from '../../src/commands/phpmyadmin';
 import API from '../../src/lib/api';
 import { CommandTracker } from '../../src/lib/tracker';
 
-const mutationMock = jest.fn( async () => {
+const generatePMAAccessMutationMock = jest.fn( async () => {
 	return Promise.resolve( {
 		data: {
 			generatePHPMyAdminAccess: {
@@ -21,10 +21,37 @@ const mutationMock = jest.fn( async () => {
 	} );
 } );
 
+const enablePMAMutationMock = jest.fn( async () => {
+	return Promise.resolve( {
+		data: {
+			enablePHPMyAdmin: {
+				success: true,
+			},
+		},
+	} );
+} );
+
+const pmaEnabledQueryMockTrue = jest.fn( async () => {
+	return Promise.resolve( {
+		data: {
+			app: {
+				environments: [
+					{
+						phpMyAdminStatus: {
+							status: 'enabled',
+						},
+					},
+				],
+			},
+		},
+	} );
+} );
+
 jest.mock( '../../src/lib/api' );
 jest.mocked( API ).mockImplementation( () => {
 	return Promise.resolve( {
-		mutate: mutationMock,
+		mutate: generatePMAAccessMutationMock,
+		query: pmaEnabledQueryMockTrue,
 	} as any );
 } );
 
@@ -42,9 +69,18 @@ describe( 'commands/PhpMyAdminCommand', () => {
 			openUrl.mockReset();
 		} );
 
-		it( 'should generate a URL by calling the right mutation', async () => {
+		it( 'should open the generated URL in browser', async () => {
 			await cmd.run();
-			expect( mutationMock ).toHaveBeenCalledWith( {
+			expect( pmaEnabledQueryMockTrue ).toHaveBeenCalledWith( {
+				query: expect.anything(),
+				variables: {
+					appId: 123,
+					envId: 456,
+				},
+				fetchPolicy: 'network-only',
+			} );
+			expect( enablePMAMutationMock ).not.toHaveBeenCalled();
+			expect( generatePMAAccessMutationMock ).toHaveBeenCalledWith( {
 				mutation: expect.anything(),
 				variables: {
 					input: {
@@ -52,10 +88,6 @@ describe( 'commands/PhpMyAdminCommand', () => {
 					},
 				},
 			} );
-		} );
-
-		it( 'should open the generated URL in browser', async () => {
-			await cmd.run();
 			expect( openUrl ).toHaveBeenCalledWith( 'http://test-url.com' );
 		} );
 	} );
