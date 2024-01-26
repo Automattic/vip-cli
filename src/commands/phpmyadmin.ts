@@ -206,6 +206,7 @@ export class PhpMyAdminCommand {
 				error_message: error.message,
 				stack: error.stack,
 			} );
+			this.stopProgressTracker();
 			exit.withError( 'Failed to enable PhpMyAdmin' );
 		}
 
@@ -224,6 +225,7 @@ export class PhpMyAdminCommand {
 				error_message: error.message,
 				stack: error.stack,
 			} );
+			this.stopProgressTracker();
 			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
 		}
 
