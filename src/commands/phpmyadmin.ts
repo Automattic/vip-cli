@@ -133,7 +133,7 @@ export class PhpMyAdminCommand {
 		this.env = env;
 		this.track = trackerFn;
 		this.progressTracker = new ProgressTracker( [
-			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this site' },
+			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
 		] );
 	}
@@ -168,11 +168,23 @@ export class PhpMyAdminCommand {
 	async maybeEnablePhpMyAdmin(): Promise< void > {
 		const status = await this.getStatus();
 		if ( ! [ 'running', 'enabled' ].includes( status ) ) {
-			await enablePhpMyAdmin( this.env.id as number );
-			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
-
-			// Additional 30s for LB routing to be updated
-			await new Promise( resolve => setTimeout( resolve, 30000 ) );
+			try {
+				await enablePhpMyAdmin( this.env.id as number );
+				await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
+				// Additional 30s for LB routing to be updated
+				await new Promise( resolve => setTimeout( resolve, 30000 ) );
+			} catch ( err ) {
+				this.progressTracker.stepFailed( this.steps.ENABLE );
+				const error = err as Error & {
+					graphQLErrors?: GraphQLFormattedError[];
+				};
+				void this.track( 'error', {
+					error_type: 'enable_pma',
+					error_message: error.message,
+					stack: error.stack,
+				} );
+				exit.withError( 'Failed to enable PhpMyAdmin' );
+			}
 		}
 	}
 
