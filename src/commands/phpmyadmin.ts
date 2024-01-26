@@ -133,7 +133,7 @@ export class PhpMyAdminCommand {
 		this.env = env;
 		this.track = trackerFn;
 		this.progressTracker = new ProgressTracker( [
-			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this site' },
+			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
 		] );
 	}
@@ -198,6 +198,15 @@ export class PhpMyAdminCommand {
 			this.progressTracker.stepSuccess( this.steps.ENABLE );
 		} catch ( err ) {
 			this.progressTracker.stepFailed( this.steps.ENABLE );
+			const error = err as Error & {
+				graphQLErrors?: GraphQLFormattedError[];
+			};
+			void this.track( 'error', {
+				error_type: 'enable_pma',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			this.stopProgressTracker();
 			exit.withError( 'Failed to enable PhpMyAdmin' );
 		}
 
@@ -216,6 +225,7 @@ export class PhpMyAdminCommand {
 				error_message: error.message,
 				stack: error.stack,
 			} );
+			this.stopProgressTracker();
 			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
 		}
 
