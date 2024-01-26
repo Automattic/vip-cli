@@ -170,6 +170,7 @@ export class PhpMyAdminCommand {
 		if ( ! [ 'running', 'enabled' ].includes( status ) ) {
 			await enablePhpMyAdmin( this.env.id as number );
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
+
 			// Additional 30s for LB routing to be updated
 			await new Promise( resolve => setTimeout( resolve, 30000 ) );
 		}
