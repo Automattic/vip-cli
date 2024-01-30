@@ -156,13 +156,7 @@ export class PhpMyAdminCommand {
 	}
 
 	async getStatus(): Promise< string > {
-		try {
-			return await getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
-		} catch ( err ) {
-			exit.withError(
-				'Failed to get PhpMyAdmin status. Please try again. If the problem persists, please contact support.'
-			);
-		}
+		return await getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
 	}
 
 	async maybeEnablePhpMyAdmin(): Promise< void > {
@@ -207,7 +201,9 @@ export class PhpMyAdminCommand {
 				stack: error.stack,
 			} );
 			this.stopProgressTracker();
-			exit.withError( 'Failed to enable PhpMyAdmin' );
+			exit.withError(
+				'Failed to enable PhpMyAdmin. Please try again. If the problem persists, please contact support.'
+			);
 		}
 
 		let url;
