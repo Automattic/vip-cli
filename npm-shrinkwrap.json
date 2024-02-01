@@ -65,6 +65,8 @@
         "vip-config-software": "dist/bin/vip-config-software.js",
         "vip-config-software-get": "dist/bin/vip-config-software-get.js",
         "vip-config-software-update": "dist/bin/vip-config-software-update.js",
+        "vip-db": "dist/bin/vip-db.js",
+        "vip-db-phpmyadmin": "dist/bin/vip-db-phpmyadmin.js",
         "vip-dev-env": "dist/bin/vip-dev-env.js",
         "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
         "vip-dev-env-destroy": "dist/bin/vip-dev-env-destroy.js",
