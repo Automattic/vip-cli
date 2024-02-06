@@ -422,9 +422,16 @@ export class ExportSQLCommand {
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
-		const storageConfirmed = await this.progressTracker.handleContinuePrompt( async () => {
-			return await this.confirmEnoughStorage( await this.getExportJob() );
-		}, 3 );
+		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
+			async setPromptShown => {
+				const status = await this.confirmEnoughStorage( await this.getExportJob() );
+				if ( status.isPromptShown ) {
+					setPromptShown();
+				}
+
+				return status.continue;
+			}
+		);
 
 		if ( storageConfirmed ) {
 			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );

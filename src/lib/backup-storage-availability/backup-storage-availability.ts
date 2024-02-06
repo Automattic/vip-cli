@@ -11,6 +11,11 @@ import { formatMetricBytes } from '../cli/format';
 
 const oneGiBInBytes = 1024 * 1024 * 1024;
 
+export interface PromptStatus {
+	continue: boolean;
+	isPromptShown: boolean;
+}
+
 export class BackupStorageAvailability {
 	archiveSize: number;
 
@@ -86,7 +91,7 @@ export class BackupStorageAvailability {
 	}
 
 	// eslint-disable-next-line id-length
-	async validateAndPromptDiskSpaceWarningForBackupImport(): Promise< boolean > {
+	async validateAndPromptDiskSpaceWarningForBackupImport(): Promise< PromptStatus > {
 		const isStorageAvailable =
 			( await this.getStorageAvailableInVipPath() ) > this.getArchiveSize();
 		if ( ! isStorageAvailable ) {
@@ -97,15 +102,24 @@ export class BackupStorageAvailability {
 				) } of free space in your machine to download this database backup. Do you still want to continue with downloading the database backup?`,
 			} );
 
-			return await confirmPrompt.run();
+			return {
+				continue: await confirmPrompt.run(),
+				isPromptShown: true,
+			};
 		}
 
-		return true;
+		return {
+			continue: true,
+			isPromptShown: false,
+		};
 	}
 
 	// eslint-disable-next-line id-length
-	async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< boolean > {
+	async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< PromptStatus > {
 		let storageAvailableInMainMachinePrompted = false;
+
+		// there's two prompts, so as long as one prompt is shown, we need to set isPromptShown
+		let isPromptShown = false;
 
 		if ( ! ( await this.isStorageAvailableInMainMachine() ) ) {
 			const storageRequired = this.getStorageRequiredInMainMachine();
@@ -121,10 +135,15 @@ Do you still want to continue with importing the database backup?
 `,
 			} );
 
+			isPromptShown = true;
+
 			storageAvailableInMainMachinePrompted = await confirmPrompt.run();
 
 			if ( ! storageAvailableInMainMachinePrompted ) {
-				return false;
+				return {
+					continue: false,
+					isPromptShown,
+				};
 			}
 		}
 
@@ -141,17 +160,28 @@ Do you still want to continue with importing the database backup?
 Do you still want to continue with importing the database backup?`,
 				} );
 
-				return await confirmPrompt.run();
+				isPromptShown = true;
+
+				return {
+					continue: await confirmPrompt.run(),
+					isPromptShown,
+				};
 			}
 		} catch ( error ) {
 			if ( error instanceof DockerMachineNotFoundError ) {
 				// skip storage available check
-				return true;
+				return {
+					continue: true,
+					isPromptShown,
+				};
 			}
 
 			throw error;
 		}
 
-		return true;
+		return {
+			continue: true,
+			isPromptShown,
+		};
 	}
 }
