@@ -12,7 +12,7 @@ env:
 
 jobs:
   test:
-    name: Run E2E Tests, shard ${{ matrix.shard }}
+    name: Run E2E Tests on ${{ matrix.os }}, shard ${{ matrix.shard }}
     strategy:
       fail-fast: false
       matrix:
@@ -20,7 +20,10 @@ jobs:
           - 1
           - 2
           - 3
-    runs-on: ubuntu-latest
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,13 +38,51 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Pack and install
-        run: npm pack && npm i -g *.tgz
+      - name: Pack and install (Linux/Mac)
+        run: |
+          npm pack > filename.txt
+          npm i -g "$(cat filename.txt)"
+        if: ${{ !startsWith(matrix.os, 'windows') }}
+
+      - name: Pack and install (Windows)
+        run: |
+          npm pack > filename.txt
+          npm i -g "$(Get-Content -Raw filename.txt)"
+        shell: pwsh
+        if: startsWith(matrix.os, 'windows')
+
+      - name: Install Docker CE
+        uses: crazy-max/ghaction-setup-docker@v3
+        if: startsWith(matrix.os, 'macos')
+
+      - name: Set Docker socket
+        run: |
+          echo "DOCKER_HOST=$(docker context inspect --format json | jq -r .[].Endpoints.docker.Host)" >> "${GITHUB_ENV}"
+        if: startsWith(matrix.os, 'macos')
+
+      - name: Fake docker-compose for Linux/Mac
+        run: |
+          if ! command -v docker-compose; then
+            echo -e '#!/bin/sh\n\nexec docker compose $@' | sudo tee /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            mkdir -p $HOME/.docker/cli-plugins
+            wget -q https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-darwin-x86_64 -O $HOME/.docker/cli-plugins/docker-compose
+            chmod +x $HOME/.docker/cli-plugins/docker-compose
+          fi
+        if: ${{ !startsWith(matrix.os, 'windows') }}
+
+      - name: Fake docker-compose for Windows
+        run: |
+          if not exist "%ProgramFiles%\Docker\docker-compose.exe" (
+            echo docker compose %%* > %ProgramFiles%\Docker\docker-compose.bat
+          )
+        shell: cmd
+        if: startsWith(matrix.os, 'windows')
 
       - name: Preload Docker images
         run: |
-          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true --photon true && \
-          vip dev-env start -w && \
+          vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true --photon true
+          vip dev-env start -w
           vip dev-env destroy
 
       - name: Run tests
