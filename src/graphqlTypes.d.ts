@@ -655,7 +655,7 @@ export type AppEnvironmentIcon = {
 	width?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
-export type AppEnvironmentDeployInput = {
+export type AppEnvironmentCustomDeployInput = {
 	basename?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -663,8 +663,8 @@ export type AppEnvironmentDeployInput = {
 	deployMessage?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-export type AppEnvironmentDeployPayload = {
-	__typename?: 'AppEnvironmentDeployPayload';
+export type AppEnvironmentCustomDeployPayload = {
+	__typename?: 'AppEnvironmentCustomDeployPayload';
 	app?: Maybe< App >;
 	message?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
@@ -2101,7 +2101,7 @@ export type Mutation = {
 	updateWPSiteLaunchStatus?: Maybe< WpSiteLaunchStatusPayload >;
 	validateLogShippingConfig?: Maybe< AppEnvironmentLogShippingValidationPayload >;
 	/** BYOR */
-	startDeploy?: Maybe< AppEnvironmentDeployPayload >;
+	startCustomDeploy?: Maybe< AppEnvironmentCustomDeployPayload >;
 };
 
 export type MutationAbortMediaImportArgs = {
@@ -2308,8 +2308,8 @@ export type MutationStartImportArgs = {
 	input?: InputMaybe< AppEnvironmentImportInput >;
 };
 
-export type MutationStartDeployArgs = {
-	input?: InputMaybe< AppEnvironmentDeployInput >;
+export type MutationStartCustomDeployArgs = {
+	input?: InputMaybe< AppEnvironmentCustomDeployInput >;
 };
 
 export type MutationStartMediaExportArgs = {
