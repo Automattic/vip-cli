@@ -6,7 +6,7 @@ import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { WORDPRESS_SITE_TYPE_IDS } from '../../lib/constants/vipgo';
 import { trackEventWithEnv } from '../../lib/tracker';
-import { validateDeployFileExt, validateFilename } from '../../lib/validations/manual-deploy';
+import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 

@@ -15,6 +15,7 @@ import {
 	getEnvironmentName,
 	handleCLIException,
 	handleDeprecatedOptions,
+	processSlug,
 	promptForArguments,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
@@ -39,7 +40,12 @@ const examples = [
 		description: 'Retriggers setup wizard in order to change environment configuration',
 	},
 ];
-const cmd = command().option( 'slug', 'Custom name of the dev environment' );
+const cmd = command().option(
+	'slug',
+	'Custom name of the dev environment',
+	undefined,
+	processSlug
+);
 
 addDevEnvConfigurationOptions( cmd );
 

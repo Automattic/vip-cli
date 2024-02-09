@@ -20,10 +20,10 @@ import {
 	validateDependencies,
 	processStringOrBooleanOption,
 	handleDeprecatedOptions,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
-	printConfigurationFile,
 	mergeConfigurationFileOptions,
 } from '../lib/dev-environment/dev-environment-configuration-file';
 import {
@@ -69,7 +69,7 @@ const examples = [
 ];
 
 const cmd = command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'title', 'Title for the WordPress site' )
 	.option( 'multisite', 'Enable multisite install', undefined, processStringOrBooleanOption );
 
@@ -138,8 +138,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	let suppressPrompts = false;
 
 	if ( Object.keys( configurationFileOptions ).length > 0 ) {
-		console.log( '\nUsing configuration from file.' );
-		printConfigurationFile( configurationFileOptions );
+		// Merge configuration from file
 		preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
 		suppressPrompts = true;
 	}

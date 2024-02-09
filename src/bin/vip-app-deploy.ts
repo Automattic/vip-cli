@@ -11,7 +11,7 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import { App, AppEnvironment, AppEnvironmentDeployInput } from '../graphqlTypes';
+import { App, AppEnvironment, AppEnvironmentCustomDeployInput } from '../graphqlTypes';
 import API from '../lib/api';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -23,7 +23,7 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { gates } from '../lib/manual-deploy/manual-deploy';
+import { gates } from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
@@ -51,8 +51,8 @@ const appQuery = `
 `;
 
 const START_DEPLOY_MUTATION = gql`
-	mutation StartDeploy($input: AppEnvironmentDeployInput) {
-		startDeploy(input: $input) {
+	mutation StartCustomDeploy($input: AppEnvironmentCustomDeployInput) {
+		startCustomDeploy(input: $input) {
 			app {
 				id
 				name
@@ -77,8 +77,8 @@ interface PromptToContinueParams {
 	domain: string;
 }
 
-interface StartDeployVariables {
-	input: AppEnvironmentDeployInput;
+interface StartCustomDeployVariables {
+	input: AppEnvironmentCustomDeployInput;
 }
 
 /**
@@ -198,7 +198,7 @@ Processing the file for deployment to your environment...
 		progressCallback,
 		hashType: 'sha256',
 	};
-	const startDeployVariables: StartDeployVariables = { input: {} };
+	const startDeployVariables: StartCustomDeployVariables = { input: {} };
 
 	try {
 		const {

@@ -10,10 +10,7 @@ import { homedir } from 'node:os';
 import path from 'path';
 import { which } from 'shelljs';
 
-import {
-	CONFIGURATION_FILE_NAME,
-	getConfigurationFileOptions,
-} from './dev-environment-configuration-file';
+import { getConfigurationFileOptions } from './dev-environment-configuration-file';
 import {
 	generateVSCodeWorkspace,
 	getAllEnvironmentNames,
@@ -49,6 +46,7 @@ import type {
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const DEFAULT_SLUG = 'vip-local';
+export const CONFIGURATION_FOLDER = '.wpvip';
 
 let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
 
@@ -208,11 +206,11 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 
 	const configurationFileOptions = await getConfigurationFileOptions();
 
-	if ( configurationFileOptions.slug ) {
+	if ( configurationFileOptions.slug && configurationFileOptions.meta ) {
 		const slug = configurationFileOptions.slug;
 		console.log(
 			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
-				CONFIGURATION_FILE_NAME
+				configurationFileOptions.meta[ 'configuration-path' ]
 			) }\n`
 		);
 
@@ -837,6 +835,11 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 	return value;
 }
 
+export function processSlug( value: unknown ): string {
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	return ( value ?? '' ).toString().toLowerCase();
+}
+
 declare function isNaN( value: unknown ): boolean;
 declare function parseFloat( value: unknown ): number;
 
@@ -967,7 +970,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = ( result.php as string ).replace( /.*:/, '' );
+		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
 
 		return result;
 	} catch ( err ) {

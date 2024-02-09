@@ -107,7 +107,7 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 	} );
 };
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cancelCommand = async guid => {
 	const api = await API();
 	return api.mutate( {

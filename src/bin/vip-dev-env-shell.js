@@ -9,6 +9,7 @@ import {
 	validateDependencies,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environment-lando';
@@ -70,7 +71,7 @@ function getCommand( args ) {
 }
 
 command( { wildcardCommand: true } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'root', 'Spawn a root shell' )
 	.option( 'service', 'Spawn a shell in a specific service (php if omitted)' )
 	.examples( examples )

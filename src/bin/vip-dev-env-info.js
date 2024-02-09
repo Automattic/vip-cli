@@ -8,6 +8,7 @@ import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
@@ -31,7 +32,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'all', 'Show Info for all local dev environments' )
 	.option( 'extended', 'Show extended information about the dev environment' )
 	.examples( examples )

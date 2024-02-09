@@ -187,7 +187,7 @@ describe( 'commands/ExportSQLCommand', () => {
 		const confirmEnoughStorageSpy = jest.spyOn( exportCommand, 'confirmEnoughStorage' );
 
 		beforeAll( () => {
-			confirmEnoughStorageSpy.mockResolvedValue( true );
+			confirmEnoughStorageSpy.mockResolvedValue( { continue: true, isPromptShown: false } );
 			downloadSpy.mockResolvedValue( 'test-backup.sql.gz' );
 		} );
 
