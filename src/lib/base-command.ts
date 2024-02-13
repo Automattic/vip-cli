@@ -1,14 +1,7 @@
-import args from 'args';
-import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import gql from 'graphql-tag';
-import { Command } from 'commander';
 
-import { CommandRegistry } from './command-registry';
-import config from './cli/config';
 import Token from './token';
-import { parseEnvAliasFromArgv } from './cli/envAlias';
 import { trackEvent, aliasUser } from './tracker';
 
 import type { CommandOption, CommandArgument, CommandUsage } from './types/commands';
@@ -205,8 +198,6 @@ export abstract class BaseVIPCommand {
 
 			process.exit();
 		}
-
-		return;
 	}
 
 	// args length can vary based the number of arguments and options the command defines, the command itsrlf is always the last argument
@@ -233,7 +224,7 @@ export abstract class BaseVIPCommand {
 		const trackingParams = this.getTrackingParams( { args } );
 		// console.log( args );
 		// let [ _args, opts, command ] = args;
-		let command = args[ args.length - 1 ];
+		const command = args[ args.length - 1 ];
 		console.log( command.opts() );
 
 		if ( command.opts()?.inspect && ! this.isDebugConfirmed ) {

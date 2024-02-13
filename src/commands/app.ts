@@ -1,13 +1,11 @@
 import chalk from 'chalk';
 
 import app from '../lib/api/app';
-
-import { trackEvent } from '../lib/tracker';
 import { BaseVIPCommand } from '../lib/base-command';
 import { getEnvIdentifier } from '../lib/cli/command';
-import { formatData, formatSearchReplaceValues } from '../lib/cli/format';
+import { trackEvent } from '../lib/tracker';
 
-import type { CommandOption, CommandUsage } from '../lib/types/commands';
+import type { CommandUsage } from '../lib/types/commands';
 
 export class AppCommand extends BaseVIPCommand {
 	protected readonly name: string = 'app';
@@ -31,7 +29,7 @@ export class AppCommand extends BaseVIPCommand {
 	protected childCommands: BaseVIPCommand[] = [];
 
 	protected async execute( ...arg: unknown[] ): void {
-		console.log(arg[0]);
+		console.log( arg[ 0 ] );
 		let res;
 		try {
 			res = await app(

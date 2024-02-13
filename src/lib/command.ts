@@ -1,12 +1,11 @@
 import { Command } from 'commander';
 
 import { BaseVIPCommand } from './base-command';
+import { parseEnvAliasFromArgv } from './cli/envAlias';
 import { CommandRegistry } from './command-registry';
 import { description, version } from '../../package.json';
-import { ExampleCommand } from '../commands/example-command';
 import { AppCommand } from '../commands/app';
-import { parse } from 'args';
-import { parseEnvAliasFromArgv } from './cli/envAlias';
+import { ExampleCommand } from '../commands/example-command';
 
 /**
  * Base Command from which every subcommand should inherit.
@@ -56,6 +55,40 @@ const processCommand = ( parent: Command, command: BaseVIPCommand ): void => {
 	parent.addCommand( cmd );
 };
 
+/**
+ * @param {string[]} args
+ * @param {Command} command
+ * @returns {string[]}
+ */
+function sortArguments( args, command ) {
+	const subcommands = command.commands.map( cmd => cmd.name() );
+	if ( subcommands.length ) {
+		const saved = [];
+		while ( args.length ) {
+			const arg = /** @type {string} */ args.shift();
+			if ( arg === '--' ) {
+				return [ ...saved, arg, ...args ];
+			}
+
+			if ( subcommands.includes( arg ) ) {
+				return [
+					arg,
+					...sortArguments(
+						[ ...saved, ...args ],
+						/** @type {Command} */ command.commands.find( cmd => cmd.name() === arg )
+					),
+				];
+			}
+
+			saved.push( arg );
+		}
+
+		return [ ...saved ];
+	}
+
+	return args;
+}
+
 const program = new Command();
 
 program
@@ -70,11 +103,18 @@ registry.registerCommand( new AppCommand() );
 
 [ ...registry.getCommands().values() ].map( command => processCommand( program, command ) );
 
-let { argv, ...appAlias } = parseEnvAliasFromArgv( process.argv );
+const { argv, ...appAlias } = parseEnvAliasFromArgv( process.argv );
 
-let appAliasString = Object.values( appAlias ).filter( e => e ).join( '.' );
-if ( appAliasString ) {
-	argv.push( `@${ appAliasString }` );
-}
-console.log(appAlias);
-program.parse( argv, appAlias );
+// let appAliasString = Object.values( appAlias ).filter( e => e ).join( '.' );
+// if ( appAliasString ) {
+// 	argv.push( `@${ appAliasString }` );
+// }
+// console.log(appAlias);
+console.log( argv, sortArguments( process.argv.slice( 2 ), program ), { appAlias }, [
+	...argv.slice( 0, 2 ),
+	...sortArguments( process.argv.slice( 2 ), program ),
+] );
+// program.parse( sortArguments(process.argv, program ), { appAlias } );
+program.parse( [ ...argv.slice( 0, 2 ), ...sortArguments( process.argv.slice( 2 ), program ) ], {
+	appAlias,
+} );
