@@ -35,7 +35,10 @@ const makeVIPCommand = ( command: BaseVIPCommand ): Command => {
 		cmd.option( option.name, option.description );
 	}
 
-	cmd.option( '-d, --debug [component]', 'Show debug' ).option( '--inspect', 'Attach a debugger' );
+	cmd
+		.option( '-d, --debug [component]', 'Show debug' )
+		.option( '--inspect', 'Attach a debugger' )
+		.option( '--format [json|table|csv|ids]', 'Output format' );
 
 	cmd.action( async ( ...args: unknown[] ) => {
 		await registry.invokeCommand( name, ...args );

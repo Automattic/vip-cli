@@ -1,11 +1,11 @@
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
 
+import { formatData } from './cli/format';
 import Token from './token';
 import { trackEvent, aliasUser } from './tracker';
 
 import type { CommandOption, CommandArgument, CommandUsage } from './types/commands';
-
 // Needs to go inside the command
 const debug = debugLib( '@automattic/vip:bin:vip' );
 // Config
@@ -219,15 +219,16 @@ export abstract class BaseVIPCommand {
 			}
 		}
 
-		let ret;
+		let res;
 		// Invoke the command and send tracking information
 		const trackingParams = this.getTrackingParams( { args } );
 		// console.log( args );
 		// let [ _args, opts, command ] = args;
 		const command = args[ args.length - 1 ];
-		console.log( command.opts() );
+		const _opts = command.opts();
+		// console.log( command.opts() );
 
-		if ( command.opts()?.inspect && ! this.isDebugConfirmed ) {
+		if ( _opts?.inspect && ! this.isDebugConfirmed ) {
 			await prompt( {
 				type: 'confirm',
 				name: 'confirm',
@@ -238,7 +239,36 @@ export abstract class BaseVIPCommand {
 
 		try {
 			await trackEvent( `${ this.name }_execute`, trackingParams );
-			ret = await this.execute( ...args );
+			res = await this.execute( ...args );
+
+			if ( _opts.format && res ) {
+				if ( res.header ) {
+					if ( _opts.format !== 'json' ) {
+						console.log( formatData( res.header, 'keyValue' ) );
+					}
+					res = res.data;
+				}
+
+				res = res.map( row => {
+					const out = { ...row };
+					if ( out.__typename ) {
+						// Apollo injects __typename
+						delete out.__typename;
+					}
+
+					return out;
+				} );
+
+				await trackEvent( 'command_output', {
+					format: _opts.format,
+				} );
+
+				const formattedOut = formatData( res, _opts.format );
+
+				console.log( formattedOut );
+
+				return {};
+			}
 			await trackEvent( `${ this.name }_success`, trackingParams );
 		} catch ( error ) {
 			const err =
