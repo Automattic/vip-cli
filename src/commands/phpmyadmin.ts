@@ -201,6 +201,13 @@ export class PhpMyAdminCommand {
 				stack: error.stack,
 			} );
 			this.stopProgressTracker();
+
+			if ( error.graphQLErrors?.find( e => e.message === 'Unauthorized' ) ) {
+				exit.withError(
+					'You do not have sufficient permission to access phpMyAdmin for this environment.'
+				);
+			}
+
 			exit.withError(
 				'Failed to enable PhpMyAdmin. Please try again. If the problem persists, please contact support.'
 			);
