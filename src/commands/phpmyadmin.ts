@@ -202,7 +202,7 @@ export class PhpMyAdminCommand {
 			} );
 			this.stopProgressTracker();
 
-			if ( error.graphQLErrors?.find( e => e.message === 'Unauthorized' ) ) {
+			if ( error.graphQLErrors?.find( gqlError => gqlError.message === 'Unauthorized' ) ) {
 				exit.withError(
 					'You do not have sufficient permission to access phpMyAdmin for this environment.'
 				);
