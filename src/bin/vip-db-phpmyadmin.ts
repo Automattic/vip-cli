@@ -24,6 +24,7 @@ const appQuery = `
 	environments{
 		id
 		appId
+		name
 		type
 		uniqueLabel
 	}
