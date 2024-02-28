@@ -1,5 +1,55 @@
 ## Changelog
 
+### 2.38.2
+
+* New develop release: 2.38.2-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1697
+* build(deps-dev): bump nock from 13.5.1 to 13.5.3 by @dependabot in https://github.com/Automattic/vip-cli/pull/1701
+* build(deps-dev): bump @types/node from 18.19.15 to 18.19.17 by @dependabot in https://github.com/Automattic/vip-cli/pull/1699
+* style: fix issues found by ESLint by @sjinks in https://github.com/Automattic/vip-cli/pull/1702
+* build(deps-dev): bump eslint from 8.56.0 to 8.57.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1707
+* build(deps): bump open from 10.0.3 to 10.0.4 by @dependabot in https://github.com/Automattic/vip-cli/pull/1705
+* build(deps-dev): bump @types/semver from 7.5.7 to 7.5.8 by @dependabot in https://github.com/Automattic/vip-cli/pull/1706
+* build(deps-dev): bump @types/dockerode from 3.3.23 to 3.3.24 by @dependabot in https://github.com/Automattic/vip-cli/pull/1704
+* build(deps-dev): bump @types/node from 18.19.17 to 18.19.18 by @dependabot in https://github.com/Automattic/vip-cli/pull/1703
+* Add environment name to PHPMyAdmin AppQuery by @chriszarate in https://github.com/Automattic/vip-cli/pull/1711
+* New package release: v2.38.2 by @github-actions in https://github.com/Automattic/vip-cli/pull/1712
+
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.1...2.38.2
+
+### 2.38.1
+
+* New develop release: 2.38.1-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1678
+* build(deps-dev): bump @types/node from 18.19.9 to 18.19.14 by @dependabot in https://github.com/Automattic/vip-cli/pull/1680
+* build(deps-dev): bump the testing group with 1 update by @dependabot in https://github.com/Automattic/vip-cli/pull/1679
+* build(deps-dev): bump @types/uuid from 9.0.7 to 9.0.8 by @dependabot in https://github.com/Automattic/vip-cli/pull/1670
+* build(deps-dev): bump nock from 13.5.0 to 13.5.1 by @dependabot in https://github.com/Automattic/vip-cli/pull/1671
+* build(deps-dev): bump the babel group with 3 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1668
+* build(deps): bump semver from 7.5.4 to 7.6.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1684
+* BYOR: Update to use renamed CustomDeploy mutation by @rebeccahum in https://github.com/Automattic/vip-cli/pull/1687
+* Fix prompt handling causing duplicate messages to be shown for export sql and dev-env sync by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1682
+* Support default OrbStack Docker socket path by @chriszarate in https://github.com/Automattic/vip-cli/pull/1686
+* Update publish docs request parameters by @seanlanglands in https://github.com/Automattic/vip-cli/pull/1688
+* build(deps-dev): bump @types/semver from 7.5.6 to 7.5.7 by @dependabot in https://github.com/Automattic/vip-cli/pull/1692
+* build(deps): bump @json2csv/plainjs from 7.0.5 to 7.0.6 by @dependabot in https://github.com/Automattic/vip-cli/pull/1691
+* build(deps-dev): bump @types/node from 18.19.14 to 18.19.15 by @dependabot in https://github.com/Automattic/vip-cli/pull/1690
+* chores (phpmyadmin): Add insufficient-permission message by @aswasif007 in https://github.com/Automattic/vip-cli/pull/1694
+* New package release: v2.38.1 by @github-actions in https://github.com/Automattic/vip-cli/pull/1696
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.0...2.38.1
+
+### 2.38.0
+
+* New develop release: 2.37.1-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1663
+* fix(dev-env): always lowercase environment slug by @sjinks in https://github.com/Automattic/vip-cli/pull/1659
+* Use vip dev-env configuration file from parent directories by @alecgeatches in https://github.com/Automattic/vip-cli/pull/1468
+* build(deps): bump @json2csv/plainjs from 7.0.4 to 7.0.5 by @dependabot in https://github.com/Automattic/vip-cli/pull/1664
+* build(deps-dev): bump @types/node from 18.19.8 to 18.19.9 by @dependabot in https://github.com/Automattic/vip-cli/pull/1666
+* feat(phpmyadmin): Add `vip  db phpmyadmin` command by @aswasif007 in https://github.com/Automattic/vip-cli/pull/1526
+* New package release: v2.38.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1677
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.37.0...2.38.0
+
 ### 2.37.0
 
 - build(deps-dev): bump the babel group with 2 updates
