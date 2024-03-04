@@ -30,9 +30,14 @@ export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
-export default async function API( { exitOnError = true } = {} ): Promise<
-	ApolloClient< NormalizedCacheObject >
-> {
+export default async function API( {
+	exitOnError = true,
+	customAuthToken,
+}: {
+	exitOnError?: boolean;
+	customAuthToken?: string;
+} = {} ): Promise< ApolloClient< NormalizedCacheObject > > {
+	console.log( customAuthToken );
 	const authToken = await Token.get();
 	const headers = {
 		'User-Agent': env.userAgent,
@@ -59,8 +64,8 @@ export default async function API( { exitOnError = true } = {} ): Promise<
 		}
 	} );
 
-	const withToken = setContext( async (): Promise< { token: Token } > => {
-		const token = await Token.get();
+	const withToken = setContext( async (): Promise< { token: Token | { raw: string } } > => {
+		const token = customAuthToken ? { raw: customAuthToken } : await Token.get();
 
 		return { token };
 	} );

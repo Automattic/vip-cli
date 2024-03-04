@@ -1,7 +1,9 @@
 import fs from 'fs';
+import gql from 'graphql-tag';
 
 import { App, AppEnvironment } from '../../graphqlTypes';
 import * as exit from '../../lib/cli/exit';
+import API from '../../lib/api';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { WORDPRESS_SITE_TYPE_IDS } from '../../lib/constants/vipgo';
@@ -9,9 +11,33 @@ import { trackEventWithEnv } from '../../lib/tracker';
 import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
+const VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION = gql`
+	mutation ValidateCustomDeployAccess {
+		validateCustomDeployAccess {
+			success
+		}
+	}
+`;
 
 export function isSupportedApp( app: App ): boolean {
 	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
+}
+
+export async function validateDeployKey( customDeployKey: string ): Promise<void> {
+	if ( customDeployKey.length === 0 ) {
+		exit.withError( 'Invalid input for environment variable: CUSTOM_DEPLOY_KEY' );
+	}
+
+	const api = await API( { customAuthToken: customDeployKey } );
+	return;
+	try {
+		const result = await api.mutate( {
+			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
+		} );
+		console.log( await result );
+	} catch ( error ) {
+		exit.withError( 'Unauthorized: CUSTOM_DEPLOY_KEY does not exist or is incorrect' );
+	}
 }
 
 /**
