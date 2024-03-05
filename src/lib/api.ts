@@ -30,6 +30,7 @@ export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export default async function API( {
 	exitOnError = true,
 	customAuthToken,
