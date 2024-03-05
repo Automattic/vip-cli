@@ -20,7 +20,7 @@ export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Pro
 		return ret;
 	}
 
-	const api = await API();
+	const api = API();
 	let res;
 	try {
 		res = await api.query< AppMultiSiteCheckQuery, AppMultiSiteCheckQueryVariables >( {

@@ -195,7 +195,7 @@ Processing the file for deployment to your environment...
 	progressTracker.stepRunning( 'upload' );
 
 	// Call the Public API
-	const api = await API();
+	const api = API();
 
 	const progressCallback = ( percentage: string ) => {
 		progressTracker.setUploadPercentage( percentage );

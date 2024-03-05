@@ -21,7 +21,7 @@ const QUERY_CURRENT_USER = gql`
 `;
 
 export async function getCurrentUserInfo(): Promise< User > {
-	const api = await API();
+	const api = API();
 
 	const response = await api.query< IsVipQuery, IsVipQueryVariables >( {
 		query: QUERY_CURRENT_USER,

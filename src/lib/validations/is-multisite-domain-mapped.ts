@@ -77,7 +77,7 @@ export async function isMultisitePrimaryDomainMapped(
 	primaryDomain: string
 ): Promise< boolean > {
 	const track = trackEventWithEnv.bind( null, appId, envId );
-	const api = await API();
+	const api = API();
 	let res;
 	try {
 		res = await api.query< AppMappedDomainsQuery, AppMappedDomainsQueryVariables >( {

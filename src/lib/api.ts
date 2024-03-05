@@ -30,14 +30,13 @@ export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
-// eslint-disable-next-line @typescript-eslint/require-await
-export default async function API( {
+export default function API( {
 	exitOnError = true,
 	customAuthToken,
 }: {
 	exitOnError?: boolean;
 	customAuthToken?: string;
-} = {} ): Promise< ApolloClient< NormalizedCacheObject > > {
+} = {} ): ApolloClient< NormalizedCacheObject > {
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
 		if ( networkError && 'statusCode' in networkError && networkError.statusCode === 401 ) {
 			console.error(

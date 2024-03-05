@@ -26,7 +26,7 @@ export default async function (
 	fields: string = 'id,name',
 	fragments: string = ''
 ): Promise< Partial< App > > {
-	const api = await API();
+	const api = API();
 	if ( isNaN( Number( app ) ) ) {
 		const res = await api.query< AppQueryResult, AppQueryVariables >( {
 			query: gql`query App( $name: String ) {

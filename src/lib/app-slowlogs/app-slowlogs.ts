@@ -35,7 +35,7 @@ export async function getRecentSlowlogs(
 	limit: number,
 	after?: string | null
 ): Promise< GetRecentSlowlogsResponse > {
-	const api = await API( { exitOnError: false } );
+	const api = API( { exitOnError: false } );
 
 	const response = await api.query< Query, GetAppSlowlogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_SLOWLOGS,

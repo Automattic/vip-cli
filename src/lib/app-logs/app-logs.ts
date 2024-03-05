@@ -43,7 +43,7 @@ export async function getRecentLogs(
 	limit: number,
 	after?: string
 ): Promise< GetRecentLogsResponse > {
-	const api = await API( { exitOnError: false } );
+	const api = API( { exitOnError: false } );
 
 	const response = await api.query< Query, GetAppLogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_LOGS,

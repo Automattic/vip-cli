@@ -64,7 +64,7 @@ ${ chalk.red.bold( 'Are you sure you want to abort this Media Import?' ) }
 			'The type of application you specified does not currently support Media imports.'
 		);
 	}
-	const api = await API();
+	const api = API();
 
 	await track( 'import_media_abort_execute' );
 

@@ -30,7 +30,7 @@ export async function validateCustomDeployKey( envId: number ): Promise< void > 
 	}
 `;
 
-	const api = await API( { customAuthToken: CUSTOM_DEPLOY_KEY } );
+	const api = API( { customAuthToken: CUSTOM_DEPLOY_KEY } );
 	try {
 		await api.mutate( { mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION } );
 	} catch ( error ) {

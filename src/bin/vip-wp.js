@@ -84,7 +84,7 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 };
 
 const getTokenForCommand = async ( appId, envId, command ) => {
-	const api = await API();
+	const api = API();
 
 	return api.mutate( {
 		mutation: gql`
@@ -109,7 +109,7 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cancelCommand = async guid => {
-	const api = await API();
+	const api = API();
 	return api.mutate( {
 		mutation: gql`
 			mutation cancelWPCLICommand($input: CancelWPCLICommandInput) {

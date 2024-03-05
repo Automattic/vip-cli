@@ -163,7 +163,7 @@ args.argv = async function ( argv, cb ) {
 	if ( _opts.appContext ) {
 		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
-			const api = await API();
+			const api = API();
 
 			await trackEvent( 'command_appcontext_list_fetch' );
 
