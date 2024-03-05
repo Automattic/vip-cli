@@ -48,12 +48,13 @@ const pmaEnabledQueryMockTrue = jest.fn( async () => {
 } );
 
 jest.mock( '../../src/lib/api' );
-jest.mocked( API ).mockImplementation( () => {
-	return Promise.resolve( {
-		mutate: generatePMAAccessMutationMock,
-		query: pmaEnabledQueryMockTrue,
-	} as any );
-} );
+jest.mocked( API ).mockImplementation(
+	() =>
+		( {
+			mutate: generatePMAAccessMutationMock,
+			query: pmaEnabledQueryMockTrue,
+		} as any )
+);
 
 describe( 'commands/PhpMyAdminCommand', () => {
 	beforeEach( () => {} );

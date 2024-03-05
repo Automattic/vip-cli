@@ -5,12 +5,7 @@ import API from '../../lib/api';
 
 import type { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';
 
-let api: ApolloClient< NormalizedCacheObject >;
-
-// If Token.get() fails, we may have an unhandled rejection
-void API().then( client => {
-	api = client;
-} );
+const api: ApolloClient< NormalizedCacheObject > = API();
 
 const isVipQuery = gql`
 	query isVIP {
