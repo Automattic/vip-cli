@@ -57,20 +57,19 @@ export default function API( {
 		}
 	} );
 
-	const withToken = setContext( async (): Promise< { token: Token | { raw: string } } > => {
-		const token = customAuthToken ? { raw: customAuthToken } : await Token.get();
+	const withToken = setContext( async (): Promise< { token: string } > => {
+		const token = customAuthToken ?? ( await Token.get() ).raw;
 
 		return { token };
 	} );
 
 	const authLink = new ApolloLink( ( operation, forward ) => {
 		const ctx = operation.getContext();
-		const token = ctx.token as Token;
 
 		operation.setContext( {
 			headers: {
 				'User-Agent': env.userAgent,
-				Authorization: `Bearer ${ token.raw }`,
+				Authorization: `Bearer ${ ctx.token }`,
 			},
 		} );
 
