@@ -30,8 +30,6 @@ import {
 } from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
-const CUSTOM_DEPLOY_KEY = process.env.CUSTOM_DEPLOY_KEY || '';
-
 const appQuery = `
 	id,
 	name,
@@ -129,10 +127,8 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 		exit.withError( 'The type of application you specified does not currently support deploys.' );
 	}
 
-	if ( CUSTOM_DEPLOY_KEY ) {
-		debug( 'Validating custom deploy key...' );
-		await validateCustomDeployKey( CUSTOM_DEPLOY_KEY, envId );
-	}
+	debug( 'Validating custom deploy key if present...' );
+	await validateCustomDeployKey( envId );
 
 	await validateFile( app, env, fileMeta );
 

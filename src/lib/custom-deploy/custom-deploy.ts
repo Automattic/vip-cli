@@ -11,16 +11,14 @@ import { trackEventWithEnv } from '../../lib/tracker';
 import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
+const CUSTOM_DEPLOY_KEY = process.env.CUSTOM_DEPLOY_KEY;
 
 export function isSupportedApp( app: App ): boolean {
 	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
 }
 
-export async function validateCustomDeployKey(
-	customDeployKey: string,
-	envId: number
-): Promise< void > {
-	if ( customDeployKey.length === 0 ) {
+export async function validateCustomDeployKey( envId: number ): Promise< void > {
+	if ( CUSTOM_DEPLOY_KEY === '' ) {
 		exit.withError( 'Valid custom deploy key is required.' );
 	}
 
@@ -32,7 +30,7 @@ export async function validateCustomDeployKey(
 	}
 `;
 
-	const api = await API( { customAuthToken: customDeployKey } );
+	const api = await API( { customAuthToken: CUSTOM_DEPLOY_KEY } );
 	try {
 		await api.mutate( { mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION } );
 	} catch ( error ) {

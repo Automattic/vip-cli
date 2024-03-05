@@ -5,6 +5,7 @@ import {
 	validateFile,
 	promptToContinue,
 	isSupportedApp,
+	validateCustomDeployKey,
 } from '../../src/lib/custom-deploy/custom-deploy';
 import { validateDeployFileExt, validateFilename } from '../../src/lib/validations/custom-deploy';
 
@@ -21,6 +22,7 @@ jest.mock( '../../src/lib/custom-deploy/custom-deploy', () => ( {
 	renameFile: jest.fn(),
 	promptToContinue: jest.fn().mockResolvedValue( true ),
 	isSupportedApp: jest.fn().mockResolvedValue( true ),
+	validateCustomDeployKey: jest.fn(),
 } ) );
 
 jest.mock( '../../src/lib/cli/command', () => {
@@ -91,6 +93,8 @@ describe( 'vip-app-deploy', () => {
 			await appDeployCmd( args, opts );
 
 			expect( isSupportedApp ).toHaveBeenCalledTimes( 1 );
+
+			expect( validateCustomDeployKey ).toHaveBeenCalledTimes( 1 );
 
 			expect( validateFile ).toHaveBeenCalledTimes( 1 );
 
