@@ -45,7 +45,7 @@ export async function validateCustomDeployKey(
 /**
  * @param {FileMeta} fileMeta
  */
-export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta ) {
+export async function validateFile( app: App, env: AppEnvironment, fileMeta: FileMeta ) {
 	const { fileName, basename, isCompressed } = fileMeta;
 	const appId = env.appId as number;
 	const envId = env.id as number;
@@ -73,11 +73,6 @@ export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta )
 	} catch ( error ) {
 		await track( 'deploy_app_command_error', { error_type: 'invalid-extension' } );
 		exit.withError( error as Error );
-	}
-
-	if ( ! isSupportedApp( app ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
-		exit.withError( 'The type of application you specified does not currently support deploys.' );
 	}
 
 	try {

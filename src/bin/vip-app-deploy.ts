@@ -23,7 +23,11 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { validateCustomDeployKey, gates } from '../lib/custom-deploy/custom-deploy';
+import {
+	isSupportedApp,
+	validateCustomDeployKey,
+	validateFile,
+} from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const CUSTOM_DEPLOY_KEY = process.env.CUSTOM_DEPLOY_KEY || '';
@@ -120,12 +124,17 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
+	if ( ! isSupportedApp( app ) ) {
+		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
+		exit.withError( 'The type of application you specified does not currently support deploys.' );
+	}
+
 	if ( CUSTOM_DEPLOY_KEY ) {
 		debug( 'Validating custom deploy key...' );
 		await validateCustomDeployKey( CUSTOM_DEPLOY_KEY, envId );
 	}
 
-	await gates( app, env, fileMeta );
+	await validateFile( app, env, fileMeta );
 
 	await track( 'deploy_app_command_execute' );
 
