@@ -18,7 +18,7 @@ export function isSupportedApp( app: App ): boolean {
 }
 
 export async function validateCustomDeployKey( envId: number ): Promise< void > {
-	if ( CUSTOM_DEPLOY_KEY === '' ) {
+	if ( ! CUSTOM_DEPLOY_KEY ) {
 		exit.withError( 'Valid custom deploy key is required.' );
 	}
 
