@@ -23,8 +23,10 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { gates } from '../lib/custom-deploy/custom-deploy';
+import { validateCustomDeployKey, gates } from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
+
+const CUSTOM_DEPLOY_KEY = process.env.CUSTOM_DEPLOY_KEY || '';
 
 const appQuery = `
 	id,
@@ -117,6 +119,11 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	const appId = env.appId as number;
 	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
+
+	if ( CUSTOM_DEPLOY_KEY ) {
+		debug( 'Validating custom deploy key...' );
+		await validateCustomDeployKey( CUSTOM_DEPLOY_KEY, envId );
+	}
 
 	await gates( app, env, fileMeta );
 

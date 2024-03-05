@@ -1,6 +1,8 @@
 import fs from 'fs';
+import gql from 'graphql-tag';
 
 import { App, AppEnvironment } from '../../graphqlTypes';
+import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
@@ -12,6 +14,32 @@ const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 
 export function isSupportedApp( app: App ): boolean {
 	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
+}
+
+export async function validateCustomDeployKey(
+	customDeployKey: string,
+	envId: number
+): Promise< void > {
+	if ( customDeployKey.length === 0 ) {
+		exit.withError( 'Valid custom deploy key is required.' );
+	}
+
+	const VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION = gql`
+	mutation ValidateCustomDeployAccess {
+		validateCustomDeployAccess( input: { environmentIds: ${ envId } } ) {
+			success
+		}
+	}
+`;
+
+	const api = await API( { customAuthToken: customDeployKey } );
+	try {
+		await api.mutate( { mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION } );
+	} catch ( error ) {
+		exit.withError(
+			`Unauthorized: Invalid or non-existent custom deploy key for environment ${ envId }.`
+		);
+	}
 }
 
 /**

@@ -30,15 +30,13 @@ export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
-export default async function API( { exitOnError = true } = {} ): Promise<
-	ApolloClient< NormalizedCacheObject >
-> {
-	const authToken = await Token.get();
-	const headers = {
-		'User-Agent': env.userAgent,
-		Authorization: `Bearer ${ authToken.raw }`,
-	};
-
+export default async function API( {
+	exitOnError = true,
+	customAuthToken,
+}: {
+	exitOnError?: boolean;
+	customAuthToken?: string;
+} = {} ): Promise< ApolloClient< NormalizedCacheObject > > {
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
 		if ( networkError && 'statusCode' in networkError && networkError.statusCode === 401 ) {
 			console.error(
@@ -59,8 +57,8 @@ export default async function API( { exitOnError = true } = {} ): Promise<
 		}
 	} );
 
-	const withToken = setContext( async (): Promise< { token: Token } > => {
-		const token = await Token.get();
+	const withToken = setContext( async (): Promise< { token: Token | { raw: string } } > => {
+		const token = customAuthToken ? { raw: customAuthToken } : await Token.get();
 
 		return { token };
 	} );
@@ -71,6 +69,7 @@ export default async function API( { exitOnError = true } = {} ): Promise<
 
 		operation.setContext( {
 			headers: {
+				'User-Agent': env.userAgent,
 				Authorization: `Bearer ${ token.raw }`,
 			},
 		} );
@@ -82,7 +81,6 @@ export default async function API( { exitOnError = true } = {} ): Promise<
 
 	const httpLink = new HttpLink( {
 		uri: API_URL,
-		headers,
 		fetch: http,
 		fetchOptions: {
 			agent: proxyAgent,
