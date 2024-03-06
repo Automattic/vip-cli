@@ -23,7 +23,11 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { gates } from '../lib/custom-deploy/custom-deploy';
+import {
+	isSupportedApp,
+	validateCustomDeployKey,
+	validateFile,
+} from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
@@ -118,7 +122,15 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
-	await gates( app, env, fileMeta );
+	if ( ! isSupportedApp( app ) ) {
+		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
+		exit.withError( 'The type of application you specified does not currently support deploys.' );
+	}
+
+	debug( 'Validating custom deploy key if present...' );
+	await validateCustomDeployKey( envId );
+
+	await validateFile( app, env, fileMeta );
 
 	await track( 'deploy_app_command_execute' );
 
@@ -183,7 +195,7 @@ Processing the file for deployment to your environment...
 	progressTracker.stepRunning( 'upload' );
 
 	// Call the Public API
-	const api = await API();
+	const api = API();
 
 	const progressCallback = ( percentage: string ) => {
 		progressTracker.setUploadPercentage( percentage );

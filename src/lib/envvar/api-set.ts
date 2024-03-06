@@ -29,7 +29,7 @@ export default async function setEnvVar(
 	name: string,
 	value: string
 ): Promise< FetchResult< AddEnvironmentVariableMutation > > {
-	const api = await API();
+	const api = API();
 
 	const variables = {
 		appId,

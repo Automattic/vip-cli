@@ -57,7 +57,7 @@ async function generatePhpMyAdminAccess( envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api: ApolloClient< NormalizedCacheObject > = await API();
+	const api: ApolloClient< NormalizedCacheObject > = API();
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const resp: FetchResult< any, Record< string, any >, Record< string, any > > = await api.mutate( {
 		mutation: GENERATE_PHP_MY_ADMIN_URL_MUTATION,
@@ -79,7 +79,7 @@ async function enablePhpMyAdmin( envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api: ApolloClient< NormalizedCacheObject > = await API();
+	const api: ApolloClient< NormalizedCacheObject > = API();
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const resp: FetchResult< any, Record< string, any >, Record< string, any > > = await api.mutate( {
 		mutation: ENABLE_PHP_MY_ADMIN_MUTATION,
@@ -101,7 +101,7 @@ async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< str
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api: ApolloClient< NormalizedCacheObject > = await API();
+	const api: ApolloClient< NormalizedCacheObject > = API();
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const resp: ApolloQueryResult< any > = await api.query( {

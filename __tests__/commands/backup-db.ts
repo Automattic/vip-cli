@@ -51,12 +51,13 @@ const mutationMock = jest.fn( async () => {
 } );
 
 jest.mock( '../../src/lib/api' );
-jest.mocked( API ).mockImplementation( () => {
-	return Promise.resolve( {
-		query: queryMock,
-		mutate: mutationMock,
-	} as any );
-} );
+jest.mocked( API ).mockImplementation(
+	() =>
+		( {
+			query: queryMock,
+			mutate: mutationMock,
+		} as any )
+);
 
 describe( 'commands/BackupDBCommand', () => {
 	beforeEach( () => {} );

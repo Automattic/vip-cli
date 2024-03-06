@@ -1,3 +1,5 @@
+import { DocumentNode } from '@apollo/client';
+import { QueryOptions } from '@apollo/client/core/watchQueryOptions';
 import gql from 'graphql-tag';
 
 import { App, Exact, Scalars } from '../../graphqlTypes';
@@ -21,12 +23,24 @@ interface AppByIdQueryResult {
 	app?: App;
 }
 
+interface AppQueryOptions extends QueryOptions {
+	query: DocumentNode;
+	variables: {
+		id: number;
+	};
+	context?: {
+		headers: {
+			Authorization: string;
+		};
+	};
+}
+
 export default async function (
 	app: string | number,
 	fields: string = 'id,name',
 	fragments: string = ''
 ): Promise< Partial< App > > {
-	const api = await API();
+	const api = API();
 	if ( isNaN( Number( app ) ) ) {
 		const res = await api.query< AppQueryResult, AppQueryVariables >( {
 			query: gql`query App( $name: String ) {
@@ -55,7 +69,7 @@ export default async function (
 		app = parseInt( app, 10 );
 	}
 
-	const res = await api.query< AppByIdQueryResult, AppByIdQueryVariables >( {
+	const appQuery: AppQueryOptions = {
 		query: gql`query App( $id: Int ) {
 				app( id: $id ){
 					${ fields }
@@ -65,7 +79,18 @@ export default async function (
 		variables: {
 			id: app,
 		},
-	} );
+	};
+
+	const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
+	if ( customDeployToken ) {
+		appQuery.context = {
+			headers: {
+				Authorization: `Bearer ${ customDeployToken }`,
+			},
+		};
+	}
+
+	const res = await api.query< AppByIdQueryResult, AppByIdQueryVariables >( appQuery );
 
 	if ( ! res.data.app ) {
 		return {};

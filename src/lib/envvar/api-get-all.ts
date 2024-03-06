@@ -29,7 +29,7 @@ export default async function getEnvVars(
 	appId: number,
 	envId: number
 ): Promise< EnvironmentVariable[] | null > {
-	const api = await API();
+	const api = API();
 
 	const variables = {
 		appId,
