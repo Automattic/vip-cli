@@ -32,10 +32,8 @@ export function enableGlobalGraphQLErrorHandling(): void {
 
 export default function API( {
 	exitOnError = true,
-	customAuthToken,
 }: {
 	exitOnError?: boolean;
-	customAuthToken?: string;
 } = {} ): ApolloClient< NormalizedCacheObject > {
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
 		if ( networkError && 'statusCode' in networkError && networkError.statusCode === 401 ) {
@@ -58,7 +56,7 @@ export default function API( {
 	} );
 
 	const withToken = setContext( async (): Promise< { token: string } > => {
-		const token = customAuthToken ?? ( await Token.get() ).raw;
+		const token = ( await Token.get() ).raw;
 
 		return { token };
 	} );
@@ -66,12 +64,13 @@ export default function API( {
 	const authLink = new ApolloLink( ( operation, forward ) => {
 		const ctx = operation.getContext();
 
-		operation.setContext( {
-			headers: {
-				'User-Agent': env.userAgent,
-				Authorization: `Bearer ${ ctx.token }`,
-			},
-		} );
+		const headers = {
+			'User-Agent': env.userAgent,
+			Authorization: `Bearer ${ ctx.token }`,
+			...ctx.headers,
+		} as Record< string, string >;
+
+		operation.setContext( { headers } );
 
 		return forward( operation );
 	} );

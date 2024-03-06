@@ -30,9 +30,16 @@ export async function validateCustomDeployKey( envId: number ): Promise< void > 
 	}
 `;
 
-	const api = API( { customAuthToken: WPVIP_DEPLOY_TOKEN } );
+	const api = API();
 	try {
-		await api.mutate( { mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION } );
+		await api.mutate( {
+			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
+			context: {
+				headers: {
+					Authorization: `Bearer ${ WPVIP_DEPLOY_TOKEN }`,
+				},
+			},
+		} );
 	} catch ( error ) {
 		exit.withError(
 			`Unauthorized: Invalid or non-existent custom deploy key for environment ${ envId }.`
