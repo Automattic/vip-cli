@@ -109,7 +109,7 @@ TODO: Update description of the variables.
 - `NO_PROXY`:
 - `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
 - `VIP_USE_SYSTEM_PROXY`:
-- `CUSTOM_DEPLOY_KEY`: For use with `vip app deploy` on sites that have custom deploys enabled.
+- `WPVIP_DEPLOY_TOKEN`: For use with `vip app deploy` on sites that have custom deploys enabled.
 
 ### Configuration files
 
