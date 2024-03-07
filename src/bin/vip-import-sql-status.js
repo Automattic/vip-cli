@@ -49,5 +49,10 @@ command( {
 Checking the SQL import status for your environment...
 `;
 
-	await importSqlCheckStatus( { app, env, progressTracker } );
+	await importSqlCheckStatus( {
+		app,
+		env,
+		progressTracker,
+		shouldReturnMissingJobImmediately: true,
+	} );
 } );

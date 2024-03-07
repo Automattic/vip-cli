@@ -69,6 +69,7 @@ export interface ImportSqlCheckStatusInput {
 	app: App | AppForImport;
 	env: AppEnvironment;
 	progressTracker: ProgressTracker;
+	shouldReturnMissingJobImmediately: boolean;
 }
 
 interface GetStatusResponse {
@@ -184,6 +185,7 @@ export async function importSqlCheckStatus( {
 	app,
 	env,
 	progressTracker,
+	shouldReturnMissingJobImmediately = false, // we want to return fast only if we're checking the status via `vip import job status`
 }: ImportSqlCheckStatusInput ) {
 	// Stop printing so we can pass our callback
 	progressTracker.stopPrinting();
@@ -199,7 +201,6 @@ export async function importSqlCheckStatus( {
 	let createdAt: Maybe< string > | undefined;
 	let completedAt: Maybe< string > | undefined;
 	let overallStatus: string | StepStatus = 'Checking...';
-
 	const setProgressTrackerSuffix = () => {
 		const sprite = getGlyphForStatus( overallStatus, progressTracker.runningSprite );
 		const formattedCreatedAt = createdAt
@@ -263,11 +264,14 @@ ${ maybeExitPrompt }
 					return reject( { error } );
 				}
 				const { importStatus, launched } = status;
+				// we want the "vip import job status" command to fail fast if we have no import job.
+				const isMissingImportJobAndShouldReturnFast =
+					! status.importJob && shouldReturnMissingJobImmediately;
 				let { importJob } = status;
 
 				let jobStatus;
 				let jobSteps = [];
-				if ( env.isK8sResident ) {
+				if ( env.isK8sResident && ! isMissingImportJobAndShouldReturnFast ) {
 					// in the future the API may provide this in k8s jobs so account for that.
 					// Until then we need to create the importJob from the status object.
 					if ( ! importJob ) {
@@ -275,7 +279,6 @@ ${ maybeExitPrompt }
 						const statusSteps = importStatus?.progress?.steps as
 							| AppEnvironmentStatusProgressStep[]
 							| undefined;
-
 						// if the progress meta isn't filled out yet, wait until it is.
 						if ( ! statusSteps ) {
 							return setTimeout( () => {
