@@ -70,7 +70,7 @@ function logToConsole( ...messages ) {
 }
 
 async function getBuildConfiguration( application, environment ) {
-	const api = await API();
+	const api = API();
 
 	// Disable the global GraphQL error handling, so we can catch Unauthorized errors and recommend next steps.
 	disableGlobalGraphQLErrorHandling();

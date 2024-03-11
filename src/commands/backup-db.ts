@@ -51,7 +51,7 @@ export const DB_BACKUP_JOB_STATUS_QUERY = gql`
 `;
 
 async function getBackupJob( appId: number, envId: number ) {
-	const api = await API();
+	const api = API();
 
 	const response = await api.query< AppBackupJobStatusQuery >( {
 		query: DB_BACKUP_JOB_STATUS_QUERY,
@@ -70,7 +70,7 @@ async function createBackupJob( appId: number, envId: number ) {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
+	const api = API();
 	await api.mutate( {
 		mutation: CREATE_DB_BACKUP_JOB_MUTATION,
 		variables: {

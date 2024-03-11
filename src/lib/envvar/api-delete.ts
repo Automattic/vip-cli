@@ -28,7 +28,7 @@ export default async function deleteEnvVar(
 	envId: number,
 	name: string
 ): Promise< FetchResult< DeleteEnvironmentVariableMutation > > {
-	const api = await API();
+	const api = API();
 
 	const variables = {
 		appId,

@@ -191,7 +191,7 @@ export async function importSqlCheckStatus( {
 	progressTracker.stopPrinting();
 
 	// NO `console.log` in this function (until results are final)! It will break the progress printing.
-	const api = await API();
+	const api = API();
 
 	if ( ! currentUserCanImportForApp( app ) ) {
 		throw new Error(

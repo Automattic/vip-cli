@@ -30,15 +30,11 @@ export function enableGlobalGraphQLErrorHandling(): void {
 	globalGraphQLErrorHandlingEnabled = true;
 }
 
-export default async function API( { exitOnError = true } = {} ): Promise<
-	ApolloClient< NormalizedCacheObject >
-> {
-	const authToken = await Token.get();
-	const headers = {
-		'User-Agent': env.userAgent,
-		Authorization: `Bearer ${ authToken.raw }`,
-	};
-
+export default function API( {
+	exitOnError = true,
+}: {
+	exitOnError?: boolean;
+} = {} ): ApolloClient< NormalizedCacheObject > {
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
 		if ( networkError && 'statusCode' in networkError && networkError.statusCode === 401 ) {
 			console.error(
@@ -59,21 +55,22 @@ export default async function API( { exitOnError = true } = {} ): Promise<
 		}
 	} );
 
-	const withToken = setContext( async (): Promise< { token: Token } > => {
-		const token = await Token.get();
+	const withToken = setContext( async (): Promise< { token: string } > => {
+		const token = ( await Token.get() ).raw;
 
 		return { token };
 	} );
 
 	const authLink = new ApolloLink( ( operation, forward ) => {
 		const ctx = operation.getContext();
-		const token = ctx.token as Token;
 
-		operation.setContext( {
-			headers: {
-				Authorization: `Bearer ${ token.raw }`,
-			},
-		} );
+		const headers = {
+			'User-Agent': env.userAgent,
+			Authorization: `Bearer ${ ctx.token }`,
+			...ctx.headers,
+		} as Record< string, string >;
+
+		operation.setContext( { headers } );
 
 		return forward( operation );
 	} );
@@ -82,7 +79,6 @@ export default async function API( { exitOnError = true } = {} ): Promise<
 
 	const httpLink = new HttpLink( {
 		uri: API_URL,
-		headers,
 		fetch: http,
 		fetchOptions: {
 			agent: proxyAgent,
