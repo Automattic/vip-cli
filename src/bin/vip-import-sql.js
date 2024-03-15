@@ -236,16 +236,16 @@ export const promptToContinue = async ( {
 	formattedEnvironment,
 	track,
 	domain,
+	isMultiSite,
 	tableNames,
 } ) => {
 	console.log();
 	const promptToMatch = domain.toUpperCase();
+	const source = ! isMultiSite && tableNames?.length ? 'the above tables' : 'the above file';
 	const promptResponse = await prompt( {
 		type: 'input',
 		name: 'confirmedDomain',
-		message: `You are about to import ${
-			tableNames && Array.isArray( tableNames ) && tableNames.length ? 'above tables' : ''
-		} into a ${
+		message: `You are about to import ${ source } into a ${
 			launched ? 'launched' : 'un-launched'
 		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
 			promptToMatch
@@ -467,6 +467,7 @@ void command( {
 			formattedEnvironment,
 			track,
 			domain,
+			isMultiSite,
 			tableNames,
 		} );
 
