@@ -1,9 +1,11 @@
 import { expect } from '@jest/globals';
 import { dump } from 'js-yaml';
-import { writeFile } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import { vipDevEnvCreate, vipDevEnvDestroy, vipDevEnvStart } from './commands';
+import { CONFIGURATION_FOLDER } from '../../../src/lib/dev-environment/dev-environment-cli';
+import { CONFIGURATION_FILE_NAME } from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
@@ -98,10 +100,35 @@ export async function destroyEnvironment( cliTest, slug, env ) {
  * @param {Object} configuration        Configuration file values
  */
 export async function writeConfigurationFile( workingDirectoryPath, configuration ) {
+	const configurationDirectoryPath = path.join( workingDirectoryPath, CONFIGURATION_FOLDER );
+	await mkdir( configurationDirectoryPath, { recursive: true } );
+
 	const configurationLines = dump( configuration );
 	await writeFile(
-		path.join( workingDirectoryPath, '.vip-dev-env.yml' ),
+		path.join( configurationDirectoryPath, CONFIGURATION_FILE_NAME ),
 		configurationLines,
 		'utf8'
+	);
+}
+
+/**
+ * Add required appCode directories for environment mapping.
+ *
+ * @param {string} workingDirectoryPath Path that represents the root of a VIP application
+ */
+export async function makeRequiredAppCodeDirectories( workingDirectoryPath ) {
+	// Add folders to root project so that 'appCode' option verifies
+	const appCodeDirectories = [
+		'languages',
+		'plugins',
+		'themes',
+		'private',
+		'images',
+		'client-mu-plugins',
+		'vip-config',
+	];
+
+	return Promise.all(
+		appCodeDirectories.map( dir => mkdir( path.join( workingDirectoryPath, dir ) ) )
 	);
 }

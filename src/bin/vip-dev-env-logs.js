@@ -8,6 +8,7 @@ import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { showLogs } from '../lib/dev-environment/dev-environment-core';
@@ -34,7 +35,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( [ 'f', 'follow' ], 'Follow logs for a specific service in local dev environment' )
 	.option(
 		'service',

@@ -1,50 +1,46 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
-import { constants } from 'fs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
-import { access, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { CONFIGURATION_FOLDER } from './dev-environment-cli';
 import * as exit from '../cli/exit';
 
-import type { ConfigurationFileOptions, InstanceOptions } from './types';
+import type { ConfigurationFileMeta, ConfigurationFileOptions, InstanceOptions } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-export const CONFIGURATION_FILE_NAME = '.vip-dev-env.yml';
+export const CONFIGURATION_FILE_NAME = 'vip-dev-env.yml';
 
 export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
-	const configurationFilePath = path.join( process.cwd(), CONFIGURATION_FILE_NAME );
-	let configurationFileContents = '';
+	const configurationFile = await findConfigurationFile();
 
-	const fileExists = await access( configurationFilePath, constants.R_OK )
-		.then( () => true )
-		.catch( () => false );
-
-	if ( fileExists ) {
-		debug( 'Reading configuration file from:', configurationFilePath );
-		configurationFileContents = await readFile( configurationFilePath, 'utf8' );
-	} else {
+	if ( configurationFile === false ) {
 		return {};
 	}
+
+	const { configurationPath, configurationContents } = configurationFile;
 
 	let configurationFromFile: Record< string, unknown > = {};
 
 	try {
-		configurationFromFile = yaml.load( configurationFileContents, {
+		configurationFromFile = yaml.load( configurationContents, {
 			// Only allow strings, arrays, and objects to be parsed from configuration file
 			// This causes number-looking values like `php: 8.1` to be parsed directly into strings
 			schema: FAILSAFE_SCHEMA,
 		} ) as Record< string, unknown >;
 	} catch ( err ) {
 		const messageToShow =
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } could not be loaded:\n` +
+			`Configuration file ${ chalk.grey( configurationPath ) } could not be loaded:\n` +
 			( err as Error ).toString();
 		exit.withError( messageToShow );
 	}
 
 	try {
-		const configuration = sanitizeConfiguration( configurationFromFile );
+		let configuration = sanitizeConfiguration( configurationFromFile, configurationPath );
+		configuration = adjustRelativePaths( configuration, configurationPath );
+
 		debug( 'Sanitized configuration from file:', configuration );
 		return configuration;
 	} catch ( err ) {
@@ -53,10 +49,11 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 }
 
 function sanitizeConfiguration(
-	configuration: Record< string, unknown >
+	configuration: Record< string, unknown >,
+	configurationFilePath: string
 ): ConfigurationFileOptions {
 	const genericConfigurationError =
-		`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } is available but ` +
+		`Configuration file ${ chalk.grey( configurationFilePath ) } is available but ` +
 		`couldn't be loaded. Ensure there is a ${ chalk.cyan(
 			'configuration-version'
 		) } and ${ chalk.cyan( 'slug' ) } ` +
@@ -82,7 +79,7 @@ function sanitizeConfiguration(
 
 	if ( ! isValidConfigurationFileVersion( version.toString() ) ) {
 		throw new Error(
-			`Configuration file ${ chalk.grey( CONFIGURATION_FILE_NAME ) } has an invalid ` +
+			`Configuration file ${ chalk.grey( configurationFilePath ) } has an invalid ` +
 				`${ chalk.cyan(
 					'configuration-version'
 				) } key. Update to a supported version. For example:\n\n` +
@@ -96,6 +93,10 @@ function sanitizeConfiguration(
 			return undefined;
 		}
 		return value === 'true';
+	};
+
+	const configurationMeta: ConfigurationFileMeta = {
+		'configuration-path': configurationFilePath,
 	};
 
 	const sanitizedConfiguration: ConfigurationFileOptions = {
@@ -114,6 +115,7 @@ function sanitizeConfiguration(
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
+		meta: configurationMeta,
 	};
 
 	// Remove undefined values
@@ -123,6 +125,26 @@ function sanitizeConfiguration(
 	);
 
 	return sanitizedConfiguration;
+}
+
+function adjustRelativePaths(
+	configuration: ConfigurationFileOptions,
+	configurationFilePath: string
+): ConfigurationFileOptions {
+	const configurationDirectory = path.resolve( path.dirname( configurationFilePath ) );
+
+	if ( configuration[ 'app-code' ] && configuration[ 'app-code' ] !== 'image' ) {
+		configuration[ 'app-code' ] = path.join( configurationDirectory, configuration[ 'app-code' ] );
+	}
+
+	if ( configuration[ 'mu-plugins' ] && configuration[ 'mu-plugins' ] !== 'image' ) {
+		configuration[ 'mu-plugins' ] = path.join(
+			configurationDirectory,
+			configuration[ 'mu-plugins' ]
+		);
+	}
+
+	return configuration;
 }
 
 export function mergeConfigurationFileOptions(
@@ -163,24 +185,41 @@ export function mergeConfigurationFileOptions(
 	return mergedOptions;
 }
 
-export function printConfigurationFile( configurationOptions: ConfigurationFileOptions ) {
-	const isConfigurationFileEmpty = Object.keys( configurationOptions ).length === 0;
+async function findConfigurationFile(): Promise<
+	{ configurationPath: string; configurationContents: string } | false
+> {
+	let currentPath = process.cwd();
+	const rootPath = path.parse( currentPath ).root;
 
-	if ( isConfigurationFileEmpty ) {
-		return;
+	let depth = 0;
+	const maxDepth = 64;
+	const pathPromises = [];
+
+	while ( currentPath !== rootPath && depth < maxDepth ) {
+		const configurationPath = path.join(
+			currentPath,
+			CONFIGURATION_FOLDER,
+			CONFIGURATION_FILE_NAME
+		);
+
+		pathPromises.push(
+			readFile( configurationPath, 'utf8' ).then( configurationContents => ( {
+				configurationPath,
+				configurationContents,
+			} ) )
+		);
+
+		// Move up one directory
+		currentPath = path.dirname( currentPath );
+
+		// Use depth as a sanity check to avoid an infitite loop
+		depth++;
 	}
 
-	// Customized formatter because Lando's printTable() automatically uppercases keys
-	// which may be confusing for YAML configuration
-	const settingLines = [];
-	for ( const [ key, value ] of Object.entries( configurationOptions ) ) {
-		settingLines.push( `${ chalk.cyan( key ) }: ${ String( value ) }` );
-	}
-
-	console.log( settingLines.join( '\n' ) + '\n' );
+	return Promise.any( pathPromises ).catch( () => false );
 }
 
-const CONFIGURATION_FILE_VERSIONS = [ '0.preview-unstable' ];
+const CONFIGURATION_FILE_VERSIONS = [ '1' ];
 
 function getAllConfigurationFileVersions(): string[] {
 	return CONFIGURATION_FILE_VERSIONS;
@@ -197,13 +236,16 @@ function isValidConfigurationFileVersion( version: string ): boolean {
 function getConfigurationFileExample(): string {
 	return `configuration-version: ${ getLatestConfigurationFileVersion() }
 slug: dev-site
+title: Dev Site
 php: 8.0
-wordpress: 6.0
-app-code: ./site-code
+wordpress: 6.2
+app-code: ../
 mu-plugins: image
 multisite: false
-phpmyadmin: true
-elasticsearch: true
-xdebug: true
+phpmyadmin: false
+elasticsearch: false
+xdebug: false
+mailpit: false
+photon: false
 `;
 }

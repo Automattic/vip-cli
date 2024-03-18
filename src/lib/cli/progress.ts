@@ -33,7 +33,7 @@ export interface StepFromServer {
 export class ProgressTracker {
 	hasFailure: boolean;
 	hasPrinted: boolean;
-	printInterval: NodeJS.Timer | undefined;
+	printInterval: NodeJS.Timeout | undefined;
 
 	// Track the state of each step
 	stepsFromCaller: Map< string, Step >;
@@ -193,15 +193,24 @@ export class ProgressTracker {
 	}
 
 	async handleContinuePrompt< PromptReturn >(
-		prompt: () => Promise< PromptReturn >
+		prompt: ( setPromptShown: () => void ) => Promise< PromptReturn >
 	): Promise< PromptReturn > {
 		this.print();
 		this.stopPrinting();
 
-		const returnValue = await prompt();
-		this.displayFromStep = [ ...this.getSteps().values() ].findIndex(
-			step => step.status === StepStatus.RUNNING
-		);
+		let isPromptShown = false;
+
+		const setPromptShown = () => {
+			isPromptShown = true;
+		};
+
+		const returnValue = await prompt( setPromptShown );
+
+		if ( isPromptShown ) {
+			this.displayFromStep = [ ...this.getSteps().values() ].findIndex(
+				step => step.status === StepStatus.RUNNING
+			);
+		}
 		let hasPrintedOnce = false;
 
 		const printingStartedPromise = new Promise< void >( resolve => {
@@ -218,7 +227,9 @@ export class ProgressTracker {
 					linesToSkip += EOL;
 				}
 
-				process.stdout.write( linesToSkip );
+				if ( isPromptShown ) {
+					process.stdout.write( linesToSkip );
+				}
 
 				hasPrintedOnce = true;
 

@@ -23,7 +23,7 @@ command( {
 	module: 'sync',
 	requireConfirm: 'Are you sure you want to sync from production?',
 } ).argv( process.argv, async ( arg, opts ) => {
-	const api = await API();
+	const api = API();
 	let syncing = false;
 
 	await trackEvent( 'sync_command_execute' );

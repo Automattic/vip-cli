@@ -83,7 +83,7 @@ export const CREATE_EXPORT_JOB_MUTATION = gql`
  * @return {Promise} A promise which resolves to the latest backup and job status
  */
 async function fetchLatestBackupAndJobStatus( appId, envId ) {
-	const api = await API();
+	const api = API();
 
 	const response = await api.query( {
 		query: BACKUP_AND_JOB_STATUS_QUERY,
@@ -112,7 +112,7 @@ async function fetchLatestBackupAndJobStatus( appId, envId ) {
  * @return {Promise} A promise which resolves to the download link
  */
 async function generateDownloadLink( appId, envId, backupId ) {
-	const api = await API();
+	const api = API();
 	const response = await api.mutate( {
 		mutation: GENERATE_DOWNLOAD_LINK_MUTATION,
 		variables: {
@@ -146,7 +146,7 @@ async function createExportJob( appId, envId, backupId ) {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
+	const api = API();
 	await api.mutate( {
 		mutation: CREATE_EXPORT_JOB_MUTATION,
 		variables: {
@@ -422,9 +422,16 @@ export class ExportSQLCommand {
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
-		const storageConfirmed = await this.progressTracker.handleContinuePrompt( async () => {
-			return await this.confirmEnoughStorage( await this.getExportJob() );
-		}, 3 );
+		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
+			async setPromptShown => {
+				const status = await this.confirmEnoughStorage( await this.getExportJob() );
+				if ( status.isPromptShown ) {
+					setPromptShown();
+				}
+
+				return status.continue;
+			}
+		);
 
 		if ( storageConfirmed ) {
 			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );

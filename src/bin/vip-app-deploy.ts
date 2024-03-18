@@ -11,7 +11,7 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import { App, AppEnvironment, AppEnvironmentDeployInput } from '../graphqlTypes';
+import { App, AppEnvironment, AppEnvironmentCustomDeployInput } from '../graphqlTypes';
 import API from '../lib/api';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -23,7 +23,11 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { gates } from '../lib/manual-deploy/manual-deploy';
+import {
+	isSupportedApp,
+	validateCustomDeployKey,
+	validateFile,
+} from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
@@ -51,8 +55,8 @@ const appQuery = `
 `;
 
 const START_DEPLOY_MUTATION = gql`
-	mutation StartDeploy($input: AppEnvironmentDeployInput) {
-		startDeploy(input: $input) {
+	mutation StartCustomDeploy($input: AppEnvironmentCustomDeployInput) {
+		startCustomDeploy(input: $input) {
 			app {
 				id
 				name
@@ -77,8 +81,8 @@ interface PromptToContinueParams {
 	domain: string;
 }
 
-interface StartDeployVariables {
-	input: AppEnvironmentDeployInput;
+interface StartCustomDeployVariables {
+	input: AppEnvironmentCustomDeployInput;
 }
 
 /**
@@ -118,7 +122,15 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
-	await gates( app, env, fileMeta );
+	if ( ! isSupportedApp( app ) ) {
+		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
+		exit.withError( 'The type of application you specified does not currently support deploys.' );
+	}
+
+	debug( 'Validating custom deploy key if present...' );
+	await validateCustomDeployKey( envId );
+
+	await validateFile( app, env, fileMeta );
 
 	await track( 'deploy_app_command_execute' );
 
@@ -183,7 +195,7 @@ Processing the file for deployment to your environment...
 	progressTracker.stepRunning( 'upload' );
 
 	// Call the Public API
-	const api = await API();
+	const api = API();
 
 	const progressCallback = ( percentage: string ) => {
 		progressTracker.setUploadPercentage( percentage );
@@ -198,7 +210,7 @@ Processing the file for deployment to your environment...
 		progressCallback,
 		hashType: 'sha256',
 	};
-	const startDeployVariables: StartDeployVariables = { input: {} };
+	const startDeployVariables: StartCustomDeployVariables = { input: {} };
 
 	try {
 		const {

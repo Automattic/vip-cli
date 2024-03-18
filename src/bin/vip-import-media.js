@@ -115,7 +115,7 @@ Error:
 		}
 
 		const track = trackEventWithEnv.bind( null, app.id, env.id );
-		const api = await API();
+		const api = API();
 
 		debug( 'Options: ', opts );
 		debug( 'Args:', args );

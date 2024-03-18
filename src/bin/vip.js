@@ -20,6 +20,7 @@ if ( config && config.environment !== 'production' ) {
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
+const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
 
 const runCmd = async function () {
 	const cmd = command();
@@ -35,6 +36,7 @@ const runCmd = async function () {
 		.command( 'logs', 'Get logs from your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
+		.command( 'db', 'Run operations on your VIP application database' )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'whoami', 'Display details about the currently logged-in user' )
 		.command( 'validate', 'Validate your VIP application and environment' )
@@ -62,6 +64,8 @@ const rootCmd = async function () {
 	const isDevEnvCommandWithoutEnv =
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
 		! containsAppEnvArgument( process.argv );
+	const isCustomDeployCmdWithKey =
+		doesArgvHaveAtLeastOneParam( process.argv, [ 'deploy' ] ) && Boolean( customDeployToken );
 
 	debug( 'Argv:', process.argv );
 
@@ -71,7 +75,8 @@ const rootCmd = async function () {
 			isHelpCommand ||
 			isVersionCommand ||
 			isDevEnvCommandWithoutEnv ||
-			token?.valid() )
+			token?.valid() ||
+			isCustomDeployCmdWithKey )
 	) {
 		await runCmd();
 	} else {

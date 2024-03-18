@@ -1,8 +1,9 @@
 name: Publish docs
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*.*.*'
   workflow_dispatch:
 
 jobs:
@@ -19,8 +20,8 @@ jobs:
         env:
           DOCS_SECRET_TOKEN: ${{ secrets.DOCS_SECRET_TOKEN }}
         run: |
-          curl -X POST -v \
+          curl -X PUT -v \
             -H "Authorization: Bearer $DOCS_SECRET_TOKEN" \
             -H "Content-Type: application/json" \
             --data "@/tmp/docs.json" \
-            https://develop-docs.wpvip.com/wp-json/vip/v1/vip-cli
+            https://docs.wpvip.com/wp-json/cli-command-reference/v1/ingest/vip-cli

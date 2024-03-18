@@ -1,23 +1,56 @@
 import fs from 'fs';
+import gql from 'graphql-tag';
 
 import { App, AppEnvironment } from '../../graphqlTypes';
+import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { WORDPRESS_SITE_TYPE_IDS } from '../../lib/constants/vipgo';
 import { trackEventWithEnv } from '../../lib/tracker';
-import { validateDeployFileExt, validateFilename } from '../../lib/validations/manual-deploy';
+import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
+const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
 
 export function isSupportedApp( app: App ): boolean {
 	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
 }
 
+export async function validateCustomDeployKey( envId: number ): Promise< void > {
+	if ( ! WPVIP_DEPLOY_TOKEN ) {
+		exit.withError( 'Valid custom deploy key is required.' );
+	}
+
+	const VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION = gql`
+	mutation ValidateCustomDeployAccess {
+		validateCustomDeployAccess( input: { environmentIds: ${ envId } } ) {
+			success
+		}
+	}
+`;
+
+	const api = API();
+	try {
+		await api.mutate( {
+			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
+			context: {
+				headers: {
+					Authorization: `Bearer ${ WPVIP_DEPLOY_TOKEN }`,
+				},
+			},
+		} );
+	} catch ( error ) {
+		exit.withError(
+			`Unauthorized: Invalid or non-existent custom deploy key for environment ${ envId }.`
+		);
+	}
+}
+
 /**
  * @param {FileMeta} fileMeta
  */
-export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta ) {
+export async function validateFile( app: App, env: AppEnvironment, fileMeta: FileMeta ) {
 	const { fileName, basename, isCompressed } = fileMeta;
 	const appId = env.appId as number;
 	const envId = env.id as number;
@@ -45,11 +78,6 @@ export async function gates( app: App, env: AppEnvironment, fileMeta: FileMeta )
 	} catch ( error ) {
 		await track( 'deploy_app_command_error', { error_type: 'invalid-extension' } );
 		exit.withError( error as Error );
-	}
-
-	if ( ! isSupportedApp( app ) ) {
-		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
-		exit.withError( 'The type of application you specified does not currently support deploys.' );
 	}
 
 	try {

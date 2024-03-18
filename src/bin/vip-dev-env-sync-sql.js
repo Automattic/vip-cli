@@ -6,6 +6,7 @@ import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	processBooleanOption,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
@@ -49,7 +50,7 @@ command( {
 	requiredArgs: 0,
 	module: 'dev-env-sync-sql',
 } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'force', 'Disable validations before running sync', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

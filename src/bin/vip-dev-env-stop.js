@@ -9,6 +9,7 @@ import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { stopEnvironment } from '../lib/dev-environment/dev-environment-core';
@@ -25,7 +26,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

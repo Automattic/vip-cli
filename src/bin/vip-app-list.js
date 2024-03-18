@@ -7,7 +7,7 @@ import command from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( { format: true } ).argv( process.argv, async () => {
-	const api = await API();
+	const api = API();
 
 	await trackEvent( 'app_list_command_execute' );
 

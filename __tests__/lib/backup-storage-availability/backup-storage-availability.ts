@@ -28,7 +28,7 @@ describe( 'backup-storage-availability', () => {
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport()
-			).resolves.toBe( true );
+			).resolves.toStrictEqual( { continue: true, isPromptShown: true } );
 
 			expect( confirmRunSpy ).toHaveBeenCalled();
 		} );
@@ -46,7 +46,7 @@ describe( 'backup-storage-availability', () => {
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport()
-			).resolves.toBe( true );
+			).resolves.toStrictEqual( { continue: true, isPromptShown: false } );
 
 			expect( confirmRunSpy ).not.toHaveBeenCalled();
 		} );
@@ -73,7 +73,7 @@ describe( 'backup-storage-availability', () => {
 
 				await expect(
 					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
-				).resolves.toBe( true );
+				).resolves.toStrictEqual( { continue: true, isPromptShown: true } );
 
 				expect( confirmRunSpy ).toHaveBeenCalledTimes( timesPrompted );
 			}
@@ -92,7 +92,7 @@ describe( 'backup-storage-availability', () => {
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
-			).resolves.toBe( false );
+			).resolves.toStrictEqual( { continue: false, isPromptShown: true } );
 
 			expect( confirmRunSpy ).toHaveBeenCalledTimes( 1 );
 		} );
@@ -114,7 +114,7 @@ describe( 'backup-storage-availability', () => {
 
 				await expect(
 					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
-				).resolves.toBe( true );
+				).resolves.toStrictEqual( { continue: true, isPromptShown: Boolean( timesPrompted ) } );
 
 				expect( confirmRunSpy ).toHaveBeenCalledTimes( timesPrompted );
 			}
@@ -132,7 +132,7 @@ describe( 'backup-storage-availability', () => {
 
 			await expect(
 				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
-			).resolves.toBe( true );
+			).resolves.toStrictEqual( { continue: true, isPromptShown: false } );
 
 			expect( confirmRunSpy ).not.toHaveBeenCalled();
 		} );

@@ -340,13 +340,13 @@ interface TrigerUpdateOptions {
 
 export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	debug( 'Triggering update', variables );
-	const api = await API();
+	const api = API();
 
 	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
 const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterface | null > => {
-	const api = await API();
+	const api = API();
 	const result = await api.query< Query, UpdateJobQueryVariables >( {
 		query: updateJobQuery,
 		variables: { appId, envId },

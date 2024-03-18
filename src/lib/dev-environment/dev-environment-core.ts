@@ -5,7 +5,6 @@ import ejs from 'ejs';
 import { prompt } from 'enquirer';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -86,7 +85,13 @@ interface WordPressTag {
 }
 
 function xdgDataDirectory(): string {
-	return xdgBasedir.data?.length ? xdgBasedir.data : os.tmpdir();
+	if ( xdgBasedir.data ) {
+		return xdgBasedir.data;
+	}
+
+	// This should not happen. If it does, this means that the system was unable to find user's home directory.
+	// If so, this does not leave us many options as to where to store the data.
+	throw new Error( 'Unable to determine data directory.' );
 }
 
 export async function startEnvironment(
@@ -408,7 +413,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	} catch ( error: unknown ) {
 		const err = error as Error;
 		throw new UserError(
-			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`
+			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`,
+			{ cause: error }
 		);
 	}
 
@@ -417,7 +423,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	} catch ( error: unknown ) {
 		const err = error as Error;
 		throw new UserError(
-			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`
+			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`,
+			{ cause: error }
 		);
 	}
 
@@ -480,10 +487,14 @@ async function prepareLandoEnv(
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
 
-	const landoFileExists = await fs.promises.stat( landoFileTargetPath ).catch( () => false );
-	if ( landoFileExists ) {
-		await fs.promises.copyFile( landoFileTargetPath, landoBackupFileTargetPath );
+	try {
+		await fs.promises.rename( landoFileTargetPath, landoBackupFileTargetPath );
 		console.log( `Backup of ${ landoFileName } was created in ${ landoBackupFileTargetPath }` );
+	} catch ( err ) {
+		// If the file doesn't exist, that's fine. Otherwise, throw the error.
+		if ( 'ENOENT' !== ( err as NodeJS.ErrnoException ).code ) {
+			throw err;
+		}
 	}
 
 	await Promise.all( [
