@@ -153,7 +153,7 @@
     "debug": "4.3.4",
     "ejs": "^3.1.8",
     "enquirer": "2.4.1",
-    "fetch-retry": "^5.0.6",
+    "fetch-retry": "^6.0.0",
     "graphql": "15.5.1",
     "graphql-tag": "2.12.6",
     "https-proxy-agent": "^5.0.1",
