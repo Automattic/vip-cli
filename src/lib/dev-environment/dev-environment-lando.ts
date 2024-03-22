@@ -713,6 +713,7 @@ export async function validateDockerAccess( lando: Lando ): Promise< void > {
 	try {
 		await docker.info();
 	} catch ( error ) {
+		console.error( error );
 		throw new UserError(
 			'Failed to connect to Docker. Please verify that Docker engine (service) is running and follow the troubleshooting instructions for your platform.'
 		);
