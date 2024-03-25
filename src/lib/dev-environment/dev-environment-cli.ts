@@ -533,7 +533,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 			// eslint-disable-next-line max-len
 			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
 				', '
-			) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
+			) }. Learn more: https://docs.wpvip.com/wordpress-skeleton/`;
 			return {
 				result: false,
 				message,

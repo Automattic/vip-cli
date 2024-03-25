@@ -183,7 +183,7 @@ If you would like to run the same command, you can retry in ${ formatDuration(
 Alternatively, you can export the latest existing database backup by running: ${ chalk.green(
 						'vip @app.env export sql'
 					) }, right away.
-Learn more about limitations around generating database backups: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations
+Learn more about limitations around generating database backups: https://docs.wpvip.com/databases/backups/limitations/
 					`;
 					exit.withError( errMessage );
 				}
