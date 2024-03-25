@@ -8,12 +8,12 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop export sql',
 		description:
-			'Download a copy of the most recent database backup for an environment as an archived SQL file to the current local directory.',
+			'Download an archived copy of the most recent database backup for an environment to the current local directory.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --output=~/Desktop/export.sql.gz',
 		description:
-			'Download the archived SQL file to a specific local directory with a custom file name.',
+			'Download an archived copy of the most recent database backup for an environment to a specific file path.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --generate-backup',
