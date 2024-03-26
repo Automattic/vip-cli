@@ -231,13 +231,21 @@ const examples = [
 	},
 ];
 
-export const promptToContinue = async ( { launched, formattedEnvironment, track, domain } ) => {
+export const promptToContinue = async ( {
+	launched,
+	formattedEnvironment,
+	track,
+	domain,
+	tableNames,
+} ) => {
 	console.log();
 	const promptToMatch = domain.toUpperCase();
 	const promptResponse = await prompt( {
 		type: 'input',
 		name: 'confirmedDomain',
-		message: `You are about to import into a ${
+		message: `You are about to import ${
+			tableNames && Array.isArray( tableNames ) && tableNames.length ? 'above tables' : ''
+		} into a ${
 			launched ? 'launched' : 'un-launched'
 		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
 			promptToMatch
@@ -459,6 +467,7 @@ void command( {
 			formattedEnvironment,
 			track,
 			domain,
+			tableNames,
 		} );
 
 		/**
