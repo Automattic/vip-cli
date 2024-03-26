@@ -237,7 +237,7 @@ export const promptToContinue = async ( { launched, formattedEnvironment, track,
 	const promptResponse = await prompt( {
 		type: 'input',
 		name: 'confirmedDomain',
-		message: `You are about to import the above tables into a ${
+		message: `You are about to import into a ${
 			launched ? 'launched' : 'un-launched'
 		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
 			promptToMatch
