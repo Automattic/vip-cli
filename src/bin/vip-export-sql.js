@@ -6,12 +6,19 @@ import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{
-		usage: 'vip export sql @mysite.develop',
-		description: 'Export SQL file from your site and save it to the current directory',
+		usage: 'vip @example-app.develop export sql',
+		description:
+			'Download an archived copy of the most recent database backup for an environment to the current local directory.',
 	},
 	{
-		usage: 'vip export sql @mysite.develop --output=~/Desktop/export.sql.gz',
-		description: 'The output file can be specified with the --output flag',
+		usage: 'vip @example-app.develop export sql --output=~/Desktop/export.sql.gz',
+		description:
+			'Download an archived copy of the most recent database backup for an environment to a specific file path.',
+	},
+	{
+		usage: 'vip @example-app.develop export sql --generate-backup',
+		description:
+			'Generate a fresh database backup for an environment and download a copy of that backup.',
 	},
 ];
 
@@ -38,11 +45,11 @@ command( {
 	requiredArgs: 0,
 	usage: 'vip export sql',
 } )
-	.option( 'output', 'Specify the location where you want to save the export file' )
 	.option(
-		'generate-backup',
-		'Exports a freshly created database backup instead of using the latest existing one'
+		'output',
+		'Download the file to a specific local directory path with a custom file name.'
 	)
+	.option( 'generate-backup', 'Generate a fresh database backup and export a copy of that backup.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, { app, env, output, generateBackup } ) => {
 		const trackerFn = makeCommandTracker( 'export_sql', {
