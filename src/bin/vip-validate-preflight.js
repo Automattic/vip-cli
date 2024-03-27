@@ -121,9 +121,7 @@ async function getBuildConfiguration( application, environment ) {
 						application.name
 					) } application.\n\n` +
 					'You can read more about organization and application roles on our documentation:\n' +
-					chalk.underline(
-						'https://docs.wpvip.com/technical-references/enterprise-authentication/'
-					)
+					chalk.underline( 'https://docs.wpvip.com/manage-user-access/vip-dashboard/' )
 			);
 
 			await trackEvent( 'validate_preflight_command_error', {
