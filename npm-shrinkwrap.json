@@ -24,7 +24,7 @@
         "debug": "4.3.4",
         "ejs": "^3.1.8",
         "enquirer": "2.4.1",
-        "fetch-retry": "^5.0.6",
+        "fetch-retry": "^6.0.0",
         "graphql": "15.5.1",
         "graphql-tag": "2.12.6",
         "https-proxy-agent": "^5.0.1",
@@ -7275,9 +7275,9 @@
       }
     },
     "node_modules/fetch-retry": {
-      "version": "5.0.6",
-      "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-5.0.6.tgz",
-      "integrity": "sha512-3yurQZ2hD9VISAhJJP9bpYFNQrHHBXE2JxxjY5aLEcDi46RmAzJE2OC9FAde0yis5ElW0jTTzs0zfg/Cca4XqQ=="
+      "version": "6.0.0",
+      "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-6.0.0.tgz",
+      "integrity": "sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag=="
     },
     "node_modules/figlet": {
       "version": "1.5.2",
@@ -18844,9 +18844,9 @@
       }
     },
     "fetch-retry": {
-      "version": "5.0.6",
-      "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-5.0.6.tgz",
-      "integrity": "sha512-3yurQZ2hD9VISAhJJP9bpYFNQrHHBXE2JxxjY5aLEcDi46RmAzJE2OC9FAde0yis5ElW0jTTzs0zfg/Cca4XqQ=="
+      "version": "6.0.0",
+      "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-6.0.0.tgz",
+      "integrity": "sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag=="
     },
     "figlet": {
       "version": "1.5.2",
