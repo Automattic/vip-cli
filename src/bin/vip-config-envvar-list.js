@@ -8,13 +8,14 @@ import { appQuery, listEnvVars } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const usage = 'vip @mysite.develop config envvar list';
+const usage = 'vip config envvar list';
+const exampleUsage = 'vip @example-app.develop config envvar list';
 
 // Command examples
 const examples = [
 	{
-		usage,
-		description: 'Lists all environment variables (names only)',
+		usage: exampleUsage,
+		description: 'List the name of all environment variables in an application environment.',
 	},
 ];
 
