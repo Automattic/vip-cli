@@ -25,7 +25,7 @@ Then, launch the command and follow the prompts:
 vip
 ```
 
-If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
+If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/vip-cli/).
 
 ### Installation for developers
 
@@ -73,7 +73,7 @@ To start the software locally, run:
 vip
 ```
 
-If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/technical-references/vip-cli/).
+If you need more information, check out our [VIP-CLI documentation](https://docs.wpvip.com/vip-cli/).
 
 ### Analytics
 

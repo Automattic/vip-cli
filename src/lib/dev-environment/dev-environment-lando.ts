@@ -413,8 +413,7 @@ export async function landoInfo(
 		}
 
 		// Add documentation link
-		appInfo.Documentation =
-			'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
+		appInfo.Documentation = 'https://docs.wpvip.com/vip-local-development-environment/';
 
 		return appInfo as LandoInfoResult;
 	} finally {
