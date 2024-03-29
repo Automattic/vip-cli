@@ -9,7 +9,7 @@ const exampleUsage = 'vip @example-app.develop config envvar';
 const examples = [
 	{
 		usage: `${ exampleUsage } delete MY_VARIABLE`,
-		description: 'Delete the environment variable "MY_VARIABLE" from the application environment.',
+		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
 	},
 	{
 		usage: `${ exampleUsage } get-all`,

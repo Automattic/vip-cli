@@ -15,7 +15,7 @@ const exampleUsage = 'vip @example-app.develop config envvar list';
 const examples = [
 	{
 		usage: exampleUsage,
-		description: 'List the name of all environment variables in an application environment.',
+		description: 'List the names of all environment variables on an environment.',
 	},
 ];
 
