@@ -14,22 +14,28 @@ const exampleUsageNode = 'vip @example-node-app.develop config software get';
 const examples = [
 	{
 		usage: exampleUsage,
-		description: 'Retrieve the current software configuration for all supported components.',
+		description:
+			'Retrieve a list of the current versions of all environment software in the default table format.',
 	},
 	{
-		usage: `${ exampleUsage } wordpress --include available_versions`,
+		usage: `${ exampleUsage } --format=csv`,
 		description:
-			'Retrieve the current software configuration for WordPress including available versions in the default table display.',
+			'Retrieve a list of the current versions of all environment software in CSV format.',
 	},
 	{
-		usage: `${ exampleUsageNode } nodejs --include available_versions --format json`,
+		usage: `${ exampleUsage } wordpress --include=available_versions`,
 		description:
-			'Retrieve the current software configuration for Node.js including available versions in JSON format.',
+			'Retrieve the current version of WordPress for a WordPress environment and a list of available versions in the default table format.',
 	},
 	{
-		usage: `${ exampleUsage } php --include available_versions`,
+		usage: `${ exampleUsage } php --include=available_versions`,
 		description:
-			'Retrieve the current software configuration for PHP including available versions in the default table display.',
+			'Retrieve the current version of PHP for a WordPress environment and a list of available versions in the default table format.',
+	},
+	{
+		usage: `${ exampleUsageNode } nodejs --include=available_versions --format=json`,
+		description:
+			'Retrieve the current version of Node.js for a Node.js environment and a list of available versions in JSON format.',
 	},
 ];
 
@@ -46,7 +52,7 @@ command( {
 } )
 	.option(
 		'include',
-		`Additional data to be included. Supported values: ${ VALID_INCLUDES.join( ',' ) }`
+		`Retrieve additional data of a specific type. Supported values: ${ VALID_INCLUDES.join( ',' ) }`
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

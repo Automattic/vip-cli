@@ -29,20 +29,20 @@ const exampleUsageNode = 'vip @example-node-app.develop config software update';
 const examples = [
 	{
 		usage: `${ exampleUsage } wordpress 6.4`,
-		description: 'Update WordPress application environment to 6.4.x.',
+		description: 'Update the version of WordPress on a WordPress environment to 6.4.x.',
 	},
 	{
 		usage: `${ exampleUsage } wordpress managed_latest`,
 		description:
-			'Update WordPress application environment to the latest major version of WordPress and automatically update when VIP makes the next version available.',
+			'Update a WordPress environment to the latest major version of WordPress, and automatically update WordPress to the next major version on a continual basis.',
 	},
 	{
 		usage: `${ exampleUsage } php 8.3`,
-		description: 'Update WordPress application environment to PHP version 8.3.x.',
+		description: 'Update the version of PHP on a WordPress environment to 8.3.x.',
 	},
 	{
 		usage: `${ exampleUsageNode } nodejs 18`,
-		description: 'Update Node.js application environment to 18.x.',
+		description: 'Update the version of Node.js on a Node.js environment to 18.x.',
 	},
 ];
 

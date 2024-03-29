@@ -17,15 +17,16 @@ const examples = [
 	},
 	{
 		usage: `${ exampleUsage } get MY_VARIABLE`,
-		description: 'Get the value of the environment variable "MY_VARIABLE".',
+		description: 'Retrieve the value of the environment variable "MY_VARIABLE".',
 	},
 	{
 		usage: `${ exampleUsage } list`,
-		description: 'List the name of all environment variables.',
+		description: 'List the names of all environment variables.',
 	},
 	{
 		usage: `${ exampleUsage } set MY_VARIABLE`,
-		description: 'Set the environment variable "MY_VARIABLE" with a prompts for a value.',
+		description:
+			'Add or update the environment variable "MY_VARIABLE" and assign its value at the prompt.',
 	},
 ];
 
@@ -35,7 +36,7 @@ command( {
 } )
 	.command( 'delete', 'Delete an environment variable.' )
 	.command( 'get', 'Retrieve the value of an environment variable.' )
-	.command( 'get-all', 'Retrieve the values of all environment variables.' )
+	.command( 'get-all', 'Retrieve the name and value of all environment variables.' )
 	.command( 'list', 'List the names of all environment variables.' )
 	.command( 'set', 'Add or update an environment variable.' )
 	.examples( examples )

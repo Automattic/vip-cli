@@ -18,15 +18,15 @@ const examples = [
 		description: 'Retrieve a list of all environment variables in the default table format.',
 	},
 	{
-		usage: `${ exampleUsage } --format csv`,
-		description: 'Retrieve a list of all environment variables in a csv format.',
+		usage: `${ exampleUsage } --format=csv`,
+		description: 'Retrieve a list of all environment variables in CSV format.',
 	},
 	{
-		usage: `${ exampleUsage } --format ids`,
-		description: 'Retrieve a list of all environment variables names as a space separated list.',
+		usage: `${ exampleUsage } --format=ids`,
+		description: 'Retrieve a list of all environment variable names as a space separated list.',
 	},
 	{
-		usage: `${ exampleUsage } --format keyValue`,
+		usage: `${ exampleUsage } --format=keyValue`,
 		description: 'Retrieve a list of all environment variables as a key value list.',
 	},
 ];

@@ -18,12 +18,13 @@ const NEW_RELIC_ENVVAR_KEY = 'NEW_RELIC_LICENSE_KEY';
 const examples = [
 	{
 		usage: `${ exampleUsage } MY_VARIABLE`,
-		description: 'Set the environment variable "MY_VARIABLE" with a prompts for a value.',
+		description:
+			'Add or update the environment variable "MY_VARIABLE" and assign its value at the prompt.',
 	},
 	{
 		usage: `${ exampleUsage } MULTILINE_ENV_VAR --from-file=envvar-value.txt`,
 		description:
-			'Set a multiline environment variable "MULTILINE_ENV_VAR" with the contents from local file envvar-value.txt.',
+			'Add or update the environment variable "MULTILINE_ENV_VAR" and assign the multiline contents of local file envvar-value.txt as its value.',
 	},
 ];
 

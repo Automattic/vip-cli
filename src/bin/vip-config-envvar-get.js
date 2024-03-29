@@ -14,7 +14,7 @@ const exampleUsage = 'vip @example-app.develop config envvar get';
 const examples = [
 	{
 		usage: `${ exampleUsage } MY_VARIABLE`,
-		description: 'Get the value of the environment variable "MY_VARIABLE".',
+		description: 'Retrieve the value of the environment variable "MY_VARIABLE".',
 	},
 ];
 
