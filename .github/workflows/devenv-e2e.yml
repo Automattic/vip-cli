@@ -38,6 +38,9 @@ jobs:
       - name: Pack and install
         run: npm pack && npm i -g *.tgz
 
+      - name: Install docker-compose
+        run: sudo curl -SL https://github.com/docker/compose/releases/download/v2.26.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose && sudo chmod 0755 /usr/local/bin/docker-compose
+
       - name: Preload Docker images
         run: |
           vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true --photon true && \

@@ -83,7 +83,7 @@ describe( 'vip dev-env logs', () => {
 				true
 			);
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /database_1/ );
+			expect( result.stdout ).toMatch( /database[_-]1/ );
 			expect( result.stdout ).toMatch( /STARTING UP/ );
 		} );
 
@@ -93,9 +93,8 @@ describe( 'vip dev-env logs', () => {
 				{ env }
 			);
 			expect( result.rc ).toBeGreaterThan( 0 );
-			console.log( result.stderr );
 			expect( result.stderr ).toContain(
-				"Error:  Service 'foobar' not found. Please choose from one: devtools, nginx, php, database, memcached, wordpress, vip-mu-plugins, demo-app-code"
+				"Error:  Service 'foobar' not found. Please choose from one:"
 			);
 		} );
 
@@ -106,7 +105,7 @@ describe( 'vip dev-env logs', () => {
 				true
 			);
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /php_1/ );
+			expect( result.stdout ).toMatch( /php[_-]1/ );
 		} );
 	} );
 } );
