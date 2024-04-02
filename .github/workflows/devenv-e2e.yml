@@ -38,6 +38,9 @@ jobs:
       - name: Pack and install
         run: npm pack && npm i -g *.tgz
 
+      - name: Install docker-compose
+        run: sudo apt-get update && sudo apt-get install -y docker-compose-v2
+
       - name: Preload Docker images
         run: |
           vip dev-env create --app-code image --php 8.0 --mu-plugins image -e false -p true --mailpit true --photon true && \
