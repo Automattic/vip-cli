@@ -36,7 +36,7 @@ command( {
 } )
 	.command( 'delete', 'Delete an environment variable.' )
 	.command( 'get', 'Retrieve the value of an environment variable.' )
-	.command( 'get-all', 'Retrieve the name and value of all environment variables.' )
+	.command( 'get-all', 'Retrieve the names and values of all environment variables.' )
 	.command( 'list', 'List the names of all environment variables.' )
 	.command( 'set', 'Add or update an environment variable.' )
 	.examples( examples )

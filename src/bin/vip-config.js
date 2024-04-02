@@ -13,7 +13,7 @@ const examples = [
 	},
 	{
 		usage: `${ exampleUsage } envvar list`,
-		description: 'List the names of all environment variables on an environment.',
+		description: 'List the names of all environment variables on the environment.',
 	},
 ];
 
