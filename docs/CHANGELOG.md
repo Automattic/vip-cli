@@ -1,5 +1,43 @@
 ## Changelog
 
+### 2.39.0
+
+* Updated Docs URLs to current permalinks by @yolih in https://github.com/Automattic/vip-cli/pull/1742
+* Updated the export command group according to VIP-CLI style guide by @yolih in https://github.com/Automattic/vip-cli/pull/1741
+* build(deps-dev): bump @types/node from 18.19.26 to 18.19.28 by @dependabot in https://github.com/Automattic/vip-cli/pull/1747
+* ci: add dependency review workflow by @sjinks in https://github.com/Automattic/vip-cli/pull/1750
+* test: fix E2E tests for composer v2 by @sjinks in https://github.com/Automattic/vip-cli/pull/1752
+* ci: install docker-compose by @sjinks in https://github.com/Automattic/vip-cli/pull/1751
+* build(deps): bump cli-table3 from 0.6.3 to 0.6.4 by @dependabot in https://github.com/Automattic/vip-cli/pull/1739
+* Make "importSQLCheckStatus" return immediately when called from the `vip import sql status` command and no import is running by @andrea-sdl in https://github.com/Automattic/vip-cli/pull/1722
+* fix(dev-env): regression: stop proxy when there are no running envs by @sjinks in https://github.com/Automattic/vip-cli/pull/1738
+* Fixes text so that it doesn't reference "the above tables" when tables are not displayed by @brunobasto in https://github.com/Automattic/vip-cli/pull/1731
+* build(deps): bump fetch-retry from 5.0.6 to 6.0.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1730
+* build(deps): bump ini from 4.1.1 to 4.1.2 by @dependabot in https://github.com/Automattic/vip-cli/pull/1717
+* chore(deps): update lando by @sjinks in https://github.com/Automattic/vip-cli/pull/1753
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.3...2.39.0
+
+### 2.38.3
+
+* Fix triggering publish docs workflow on tag push by @seanlanglands in https://github.com/Automattic/vip-cli/pull/1716
+* build(deps-dev): bump nock from 13.5.3 to 13.5.4 by @dependabot in https://github.com/Automattic/vip-cli/pull/1708
+* build(deps-dev): bump @types/node from 18.19.18 to 18.19.21 by @dependabot in https://github.com/Automattic/vip-cli/pull/1715
+* build(deps-dev): bump the babel group with 2 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1709
+* vip app deploy - Allow passing in a deploy key with env variable by @rebeccahum in https://github.com/Automattic/vip-cli/pull/1718
+* build(deps-dev): bump typescript from 5.3.3 to 5.4.2 by @dependabot in https://github.com/Automattic/vip-cli/pull/1721
+* build(deps-dev): bump @types/node from 18.19.21 to 18.19.22 by @dependabot in https://github.com/Automattic/vip-cli/pull/1720
+* build(deps-dev): bump @types/dockerode from 3.3.24 to 3.3.26 by @dependabot in https://github.com/Automattic/vip-cli/pull/1724
+* build(deps): bump open from 10.0.4 to 10.1.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1725
+* Allows user to continue even when the answer doesn't match the expected letter casing by @brunobasto in https://github.com/Automattic/vip-cli/pull/1632
+* build(deps-dev): bump the babel group with 4 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1734
+* build(deps-dev): bump @types/node from 18.19.22 to 18.19.26 by @dependabot in https://github.com/Automattic/vip-cli/pull/1733
+* build(deps-dev): bump typescript from 5.4.2 to 5.4.3 by @dependabot in https://github.com/Automattic/vip-cli/pull/1735
+* build(deps): bump socket.io-client from 4.7.4 to 4.7.5 by @dependabot in https://github.com/Automattic/vip-cli/pull/1729
+* Update SQL import prompt message by @iamchughmayank in https://github.com/Automattic/vip-cli/pull/1743
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.2...2.38.3
+
 ### 2.38.2
 
 * New develop release: 2.38.2-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1697
