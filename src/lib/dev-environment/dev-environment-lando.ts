@@ -301,7 +301,7 @@ async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | n
 
 async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 	const network = await getBridgeNetwork( lando );
-	if ( network?.Containers && ! Object.keys( network.Containers ).length ) {
+	if ( network?.Containers && Object.keys( network.Containers ).length === 1 ) {
 		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer as string );
 		try {
 			await proxy.remove( { force: true } );
