@@ -19,7 +19,6 @@ import {
 	readEnvironmentData,
 } from './dev-environment-core';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
-import { ProgressTracker, StepConstructorParam } from '../../lib/cli/progress';
 import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -139,48 +138,14 @@ const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	}
 };
 
-const VALIDATION_STEPS: StepConstructorParam[] = [
-	{ id: 'docker', name: 'Check for Docker installation' },
-	{ id: 'compose', name: 'Check for docker-compose installation' },
-	{ id: 'access', name: 'Check Docker connectivity' },
-	{ id: 'dns', name: 'Check DNS resolution' },
-];
-
-export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+export const validateDependencies = async ( lando: Lando, slug: string ) => {
 	const now = new Date();
-	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
-	const progressTracker = new ProgressTracker( steps );
-	if ( ! quiet ) {
-		console.log( 'Running validation steps...' );
-		progressTracker.startPrinting();
-		progressTracker.stepRunning( 'docker' );
-	}
 
 	validateDockerInstalled( lando );
-
-	if ( ! quiet ) {
-		progressTracker.stepSuccess( 'docker' );
-		progressTracker.stepSuccess( 'compose' );
-		progressTracker.print();
-	}
-
 	await validateDockerAccess( lando );
-
-	if ( ! quiet ) {
-		progressTracker.stepSuccess( 'access' );
-		progressTracker.print();
-	}
 
 	if ( slug ) {
 		await verifyDNSResolution( slug );
-		if ( ! quiet ) {
-			progressTracker.stepSuccess( 'dns' );
-			progressTracker.print();
-		}
-	}
-
-	if ( ! quiet ) {
-		progressTracker.stopPrinting();
 	}
 
 	const duration = new Date().getTime() - now.getTime();
