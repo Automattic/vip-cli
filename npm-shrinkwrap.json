@@ -3737,13 +3737,14 @@
       }
     },
     "node_modules/@types/dockerode": {
-      "version": "3.3.26",
-      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.26.tgz",
-      "integrity": "sha512-/K+I9bGhRO2SvyIHisGeOsy/ypxnWLz8+Rde9S2tNNEKa3r91e0XMYIEq2D+kb7srm7xrmpAR0CDKfXoZOr4OA==",
+      "version": "3.3.28",
+      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.28.tgz",
+      "integrity": "sha512-RjY96chW88t2QvSebCsec+mQYo3/nyOr+/tVcE+0ynlOg2m/i9wPE52DhptzF75QDlhv2uDYVPqKfHKeGTn6Fg==",
       "dev": true,
       "dependencies": {
         "@types/docker-modem": "*",
-        "@types/node": "*"
+        "@types/node": "*",
+        "@types/ssh2": "*"
       }
     },
     "node_modules/@types/ejs": {
@@ -16157,13 +16158,14 @@
       }
     },
     "@types/dockerode": {
-      "version": "3.3.26",
-      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.26.tgz",
-      "integrity": "sha512-/K+I9bGhRO2SvyIHisGeOsy/ypxnWLz8+Rde9S2tNNEKa3r91e0XMYIEq2D+kb7srm7xrmpAR0CDKfXoZOr4OA==",
+      "version": "3.3.28",
+      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.28.tgz",
+      "integrity": "sha512-RjY96chW88t2QvSebCsec+mQYo3/nyOr+/tVcE+0ynlOg2m/i9wPE52DhptzF75QDlhv2uDYVPqKfHKeGTn6Fg==",
       "dev": true,
       "requires": {
         "@types/docker-modem": "*",
-        "@types/node": "*"
+        "@types/node": "*",
+        "@types/ssh2": "*"
       }
     },
     "@types/ejs": {
