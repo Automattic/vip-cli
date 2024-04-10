@@ -8,12 +8,12 @@ const exampleUsage = 'vip @example-app.develop config';
 // Command examples
 const examples = [
 	{
-		usage: `${ exampleUsage } software get`,
-		description: 'Retrieve the current versions of all environment software.',
-	},
-	{
 		usage: `${ exampleUsage } envvar list`,
 		description: 'List the names of all environment variables on the environment.',
+	},
+	{
+		usage: `${ exampleUsage } software get`,
+		description: 'Retrieve the current versions of all environment software.',
 	},
 ];
 

@@ -12,12 +12,12 @@ const examples = [
 		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
 	},
 	{
-		usage: `${ exampleUsage } get-all`,
-		description: 'Retrieve a list of all environment variables in the default table format.',
-	},
-	{
 		usage: `${ exampleUsage } get MY_VARIABLE`,
 		description: 'Retrieve the value of the environment variable "MY_VARIABLE".',
+	},
+	{
+		usage: `${ exampleUsage } get-all`,
+		description: 'Retrieve a list of all environment variables in the default table format.',
 	},
 	{
 		usage: `${ exampleUsage } list`,
