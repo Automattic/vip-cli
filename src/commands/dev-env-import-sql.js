@@ -30,7 +30,7 @@ export class DevEnvImportSQLCommand {
 
 	async run() {
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, this.slug, this.options.quiet );
+		await validateDependencies( lando, this.slug );
 
 		validateImportFileExtension( this.fileName );
 
