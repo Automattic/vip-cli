@@ -312,7 +312,7 @@ export class ExportSQLCommand {
 			'If a recent database backup does not exist, a new one will be generated for this environment. ';
 		noticeMessage +=
 			'Learn more about this: https://docs.wpvip.com/databases/backups/download-a-full-database-backup/ \n';
-		this.log( noticeMessage );
+		console.log( noticeMessage );
 
 		await cmd.run( false );
 	}
