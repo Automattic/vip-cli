@@ -1,5 +1,10 @@
 ## Changelog
 
+### 2.39.1
+
+- Fix a crash due to an undefined function when running `export sql` with the `--generate-backup` flag by @noahtallen in https://github.com/Automattic/vip-cli/pull/1769
+- refactor(dev-env): reduce noise from preflight checks by @sjinks in https://github.com/Automattic/vip-cli/pull/1758
+
 ### 2.39.0
 
 * Updated Docs URLs to current permalinks by @yolih in https://github.com/Automattic/vip-cli/pull/1742
