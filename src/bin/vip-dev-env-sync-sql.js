@@ -54,8 +54,8 @@ command( {
 	.option( 'force', 'Disable validations before running sync', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const { app, env } = opt;
-		const slug = await getEnvironmentName( opt );
+		const { app, env, ...optRest } = opt;
+		const slug = await getEnvironmentName( optRest );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
 			app: app.id,
 			env: env.uniqueLabel,
