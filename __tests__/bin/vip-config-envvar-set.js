@@ -69,7 +69,7 @@ describe( 'setEnvVarCommand', () => {
 	let args;
 	let opts;
 	const eventPayload = expect.objectContaining( {
-		command: expect.stringContaining( 'vip @mysite.develop config envvar set' ),
+		command: expect.stringContaining( 'vip config envvar set' ),
 	} );
 	const executeEvent = [ 'envvar_set_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_set_command_success', eventPayload ];

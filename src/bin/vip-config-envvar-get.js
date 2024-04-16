@@ -7,13 +7,14 @@ import { appQuery, getEnvVar } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const baseUsage = 'vip @mysite.develop config envvar get';
+const baseUsage = 'vip config envvar get';
+const exampleUsage = 'vip @example-app.develop config envvar get';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ baseUsage } MY_VARIABLE`,
-		description: 'Get the value of the environment variable "MY_VARIABLE"',
+		usage: `${ exampleUsage } MY_VARIABLE`,
+		description: 'Retrieve the value of the environment variable "MY_VARIABLE".',
 	},
 ];
 
