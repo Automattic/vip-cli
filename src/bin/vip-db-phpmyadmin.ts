@@ -15,7 +15,7 @@ import { makeCommandTracker } from '../lib/tracker';
 const examples = [
 	{
 		usage: 'vip @example-app.develop db phpmyadmin',
-		description: "Access a read-only phpMyAdmin console for the environment's database.",
+		description: "Generate access a read-only phpMyAdmin web interface for the environment's database.",
 	},
 ];
 
