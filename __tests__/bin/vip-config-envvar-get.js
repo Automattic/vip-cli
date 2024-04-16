@@ -53,7 +53,7 @@ describe( 'getEnvVarCommand', () => {
 		},
 	};
 	const eventPayload = expect.objectContaining( {
-		command: 'vip @mysite.develop config envvar get HELLO',
+		command: 'vip config envvar get HELLO',
 	} );
 	const executeEvent = [ 'envvar_get_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_get_command_success', eventPayload ];

@@ -17,6 +17,7 @@ describe( 'utils/cli/envAlias', () => {
 			'@1',
 			'@1.env',
 			'@2.MixedCaseEnv',
+			'@xxx.production_test',
 		] )( 'should identify valid aliases - %p', alias => {
 			expect( isAlias( alias ) ).toBe( true );
 		} );

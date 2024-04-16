@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "2.39.1-dev.0",
+  "version": "2.39.3-dev.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "2.39.1-dev.0",
+      "version": "2.39.3-dev.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -6067,9 +6067,9 @@
       }
     },
     "node_modules/ejs": {
-      "version": "3.1.9",
-      "resolved": "https://registry.npmjs.org/ejs/-/ejs-3.1.9.tgz",
-      "integrity": "sha512-rC+QVNMJWv+MtPgkt0y+0rVEIdbtxVADApW9JXrUVlzHetgcyczP/E7DJmWJ4fJCZF2cPcBk0laWO9ZHMG3DmQ==",
+      "version": "3.1.10",
+      "resolved": "https://registry.npmjs.org/ejs/-/ejs-3.1.10.tgz",
+      "integrity": "sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==",
       "dependencies": {
         "jake": "^10.8.5"
       },
@@ -12663,9 +12663,9 @@
       }
     },
     "node_modules/typescript": {
-      "version": "5.4.4",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.4.4.tgz",
-      "integrity": "sha512-dGE2Vv8cpVvw28v8HCPqyb08EzbBURxDpuhJvTrusShUfGnhHBafDsLdS1EhhxyL6BJQE+2cT3dDPAv+MQ6oLw==",
+      "version": "5.4.5",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz",
+      "integrity": "sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==",
       "dev": true,
       "bin": {
         "tsc": "bin/tsc",
@@ -17887,9 +17887,9 @@
       }
     },
     "ejs": {
-      "version": "3.1.9",
-      "resolved": "https://registry.npmjs.org/ejs/-/ejs-3.1.9.tgz",
-      "integrity": "sha512-rC+QVNMJWv+MtPgkt0y+0rVEIdbtxVADApW9JXrUVlzHetgcyczP/E7DJmWJ4fJCZF2cPcBk0laWO9ZHMG3DmQ==",
+      "version": "3.1.10",
+      "resolved": "https://registry.npmjs.org/ejs/-/ejs-3.1.10.tgz",
+      "integrity": "sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==",
       "requires": {
         "jake": "^10.8.5"
       }
@@ -22684,9 +22684,9 @@
       }
     },
     "typescript": {
-      "version": "5.4.4",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.4.4.tgz",
-      "integrity": "sha512-dGE2Vv8cpVvw28v8HCPqyb08EzbBURxDpuhJvTrusShUfGnhHBafDsLdS1EhhxyL6BJQE+2cT3dDPAv+MQ6oLw==",
+      "version": "5.4.5",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz",
+      "integrity": "sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==",
       "dev": true
     },
     "typical": {

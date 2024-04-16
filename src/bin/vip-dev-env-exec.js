@@ -38,7 +38,7 @@ command( { wildcardCommand: true } )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug, opt.quiet );
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );
