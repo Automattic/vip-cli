@@ -38,7 +38,7 @@ const runCmd = async function () {
 		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
 		.command( 'db', 'Run operations on your VIP application database' )
 		.command( 'sync', 'Sync production to a development environment' )
-		.command( 'whoami', 'Display details about the currently logged-in user' )
+		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'validate', 'Validate your VIP application and environment' )
 		.command( 'wp', 'Run WP CLI commands against an environment' );
 

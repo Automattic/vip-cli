@@ -6,6 +6,9 @@ import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
+const baseUsage = 'vip whoami';
+const exampleUsage = 'vip @example-app.develop whoami';
+
 export async function whoamiCommand() {
 	const trackingParams: { command: string } = {
 		command: 'vip whoami',
@@ -39,11 +42,11 @@ export async function whoamiCommand() {
 	console.log( output.join( '\n' ) );
 }
 
-void command( { usage: 'vip whoami' } )
+void command( { usage: baseUsage } )
 	.examples( [
 		{
-			usage: 'vip whoami',
-			description: 'Display details about the currently logged-in user.',
+			usage: exampleUsage,
+			description: 'Retrieve details about the current authenticated VIP-CLI user.',
 		},
 	] )
 	.argv( process.argv, whoamiCommand );
