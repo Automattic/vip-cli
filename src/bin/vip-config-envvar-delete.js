@@ -8,13 +8,14 @@ import { cancel, confirm, promptForValue } from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const baseUsage = 'vip @mysite.develop config envvar delete';
+const baseUsage = 'vip config envvar delete';
+const exampleUsage = 'vip @example-app.develop config envvar delete';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ baseUsage } MY_VARIABLE`,
-		description: 'Permanently deletes the environment variable "MY_VARIABLE"',
+		usage: `${ exampleUsage } MY_VARIABLE`,
+		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
 	},
 ];
 

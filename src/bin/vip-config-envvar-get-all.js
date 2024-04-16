@@ -8,13 +8,26 @@ import { appQuery, getEnvVars } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const usage = 'vip @mysite.develop config envvar get-all';
+const exampleUsage = 'vip @example-app.develop config envvar get-all';
+const usage = 'vip config envvar get-all';
 
 // Command examples
 const examples = [
 	{
-		usage,
-		description: 'Get the values of all environment variables',
+		usage: exampleUsage,
+		description: 'Retrieve a list of all environment variables in the default table format.',
+	},
+	{
+		usage: `${ exampleUsage } --format=csv`,
+		description: 'Retrieve a list of all environment variables in CSV format.',
+	},
+	{
+		usage: `${ exampleUsage } --format=ids`,
+		description: 'Retrieve a list of all environment variable names as a space separated list.',
+	},
+	{
+		usage: `${ exampleUsage } --format=keyValue`,
+		description: 'Retrieve a list of all environment variables as a key value list.',
 	},
 ];
 

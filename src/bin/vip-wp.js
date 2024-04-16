@@ -107,27 +107,6 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 	} );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const cancelCommand = async guid => {
-	const api = API();
-	return api.mutate( {
-		mutation: gql`
-			mutation cancelWPCLICommand($input: CancelWPCLICommandInput) {
-				cancelWPCLICommand(input: $input) {
-					command {
-						id
-					}
-				}
-			}
-		`,
-		variables: {
-			input: {
-				guid,
-			},
-		},
-	} );
-};
-
 const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 0 } ) => {
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();

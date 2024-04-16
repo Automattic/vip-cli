@@ -19,7 +19,6 @@ import {
 	readEnvironmentData,
 } from './dev-environment-core';
 import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
-import { ProgressTracker, StepConstructorParam } from '../../lib/cli/progress';
 import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -119,68 +118,42 @@ export async function handleCLIException(
 const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	const expectedIP = '127.0.0.1';
 	const testDomain = `${ slug }.vipdev.lndo.site`;
-	const advice = `Please add following line to hosts file on your system:\n${ expectedIP } ${ testDomain }`;
+	const advice = `Please add following line to hosts file on your system:\n\n${ expectedIP } ${ testDomain }\n\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n`;
 
 	debug( `Verifying DNS resolution for ${ testDomain }` );
-	let address;
 	try {
-		address = await lookup( testDomain, 4 );
-		debug( `Got DNS response ${ address.address }` );
-	} catch ( error ) {
-		throw new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }`, {
-			cause: error,
-		} );
-	}
+		let address;
+		try {
+			address = await lookup( testDomain, 4 );
+			debug( `Got DNS response ${ address.address }` );
+		} catch ( error ) {
+			throw new UserError( `DNS resolution for ${ testDomain } failed.`, {
+				cause: error,
+			} );
+		}
 
-	if ( address.address !== expectedIP ) {
-		throw new UserError(
-			`DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }. ${ advice }`
-		);
+		if ( address.address !== expectedIP ) {
+			throw new UserError(
+				`DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }.`
+			);
+		}
+	} catch ( error ) {
+		if ( error instanceof UserError ) {
+			console.warn( chalk.yellow.bold( 'Warning:' ), `${ error.message }\n\n${ advice }` );
+		} else {
+			throw error;
+		}
 	}
 };
 
-const VALIDATION_STEPS: StepConstructorParam[] = [
-	{ id: 'docker', name: 'Check for Docker installation' },
-	{ id: 'compose', name: 'Check for docker-compose installation' },
-	{ id: 'access', name: 'Check Docker connectivity' },
-	{ id: 'dns', name: 'Check DNS resolution' },
-];
-
-export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+export const validateDependencies = async ( lando: Lando, slug: string ) => {
 	const now = new Date();
-	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
-	const progressTracker = new ProgressTracker( steps );
-	if ( ! quiet ) {
-		console.log( 'Running validation steps...' );
-		progressTracker.startPrinting();
-		progressTracker.stepRunning( 'docker' );
-	}
 
 	validateDockerInstalled( lando );
-
-	if ( ! quiet ) {
-		progressTracker.stepSuccess( 'docker' );
-		progressTracker.stepSuccess( 'compose' );
-		progressTracker.print();
-	}
-
 	await validateDockerAccess( lando );
-
-	if ( ! quiet ) {
-		progressTracker.stepSuccess( 'access' );
-		progressTracker.print();
-	}
 
 	if ( slug ) {
 		await verifyDNSResolution( slug );
-		if ( ! quiet ) {
-			progressTracker.stepSuccess( 'dns' );
-			progressTracker.print();
-		}
-	}
-
-	if ( ! quiet ) {
-		progressTracker.stopPrinting();
 	}
 
 	const duration = new Date().getTime() - now.getTime();
