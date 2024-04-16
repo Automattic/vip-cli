@@ -35,7 +35,7 @@ const runCmd = async function () {
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'logs', 'Get logs from your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
-		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
+		.command( 'slowlogs', 'Retrieve MySQL slow query logs from an environment.' )
 		.command( 'db', "Access an environment's database." )
 		.command( 'sync', 'Sync production to a development environment' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )

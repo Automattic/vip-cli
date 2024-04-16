@@ -24,6 +24,9 @@ const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
+const exampleUsage = 'vip @example-app.develop slowlogs';
+const baseUsage = 'vip slowlogs';
+
 export async function getSlowlogs( arg: string[], opt: GetSlowLogsOptions ): Promise< void > {
 	validateInputs( opt.limit, opt.format );
 
@@ -188,26 +191,30 @@ void command( {
 	envContext: true,
 	format: false,
 	module: 'slowlogs',
+	usage: baseUsage,
 } )
 	.option( 'limit', 'The maximum number of log lines', 500 )
 	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.examples( [
 		{
-			description: 'Get the most recent app slowlogs',
-			usage: 'vip @mysite.production slowlogs',
-		},
-		{
-			usage: 'vip @mysite.production slowlogs --limit 100',
-			description: 'Get the most recent 100 slowlog entries',
-		},
-		{
-			usage: 'vip @mysite.production slowlogs --limit 100 --format csv',
 			description:
-				'Get the most recent 100 slowlog entries formatted as comma-separated values (CSV)',
+				'Retrieve up to 500 of the most recent entries from the MySQL slow query logs in the default text format.',
+			usage: exampleUsage,
 		},
 		{
-			usage: 'vip @mysite.production slowlogs --limit 100 --format json',
-			description: 'Get the most recent 100 slowlog entries formatted as JSON',
+			description:
+				'Retrieve the 100 most recent entries from the MySQL slow query logs in the default text format.',
+			usage: `${ exampleUsage } --limit=100`,
+		},
+		{
+			description:
+				'Retrieve the 100 most recent entries from the MySQL slow query logs in CSV format.',
+			usage: `${ exampleUsage } --limit=100 --format=csv`,
+		},
+		{
+			description:
+				'Retrieve the 100 most recent entries from the MySQL slow query logs in JSON format.',
+			usage: `${ exampleUsage } --limit=100 --format=json`,
 		},
 	] )
 	.argv( process.argv, getSlowlogs );
