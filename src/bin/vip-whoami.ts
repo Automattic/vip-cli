@@ -7,7 +7,6 @@ import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
 const baseUsage = 'vip whoami';
-const exampleUsage = 'vip @example-app.develop whoami';
 
 export async function whoamiCommand() {
 	const trackingParams: { command: string } = {
@@ -45,7 +44,7 @@ export async function whoamiCommand() {
 void command( { usage: baseUsage } )
 	.examples( [
 		{
-			usage: exampleUsage,
+			usage: baseUsage + '\n' + '    - Howdy user@example.com!\n' + '    - Your user ID is 1234\n',
 			description: 'Retrieve details about the current authenticated VIP-CLI user.',
 		},
 	] )
