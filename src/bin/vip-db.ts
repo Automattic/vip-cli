@@ -17,7 +17,7 @@ void command( { usage: 'vip db' } )
 	)
 	.example(
 		'vip @example-app.develop db phpmyadmin',
-		"Generate access a read-only phpMyAdmin web interface for the environment's database."
+		"Generate access to a read-only phpMyAdmin web interface for the environment's database."
 	)
 	.argv( process.argv, async () => {
 		await trackEvent( 'vip_db_command_execute' );

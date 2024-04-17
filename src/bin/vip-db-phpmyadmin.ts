@@ -16,7 +16,7 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop db phpmyadmin',
 		description:
-			"Generate access a read-only phpMyAdmin web interface for the environment's database.",
+			"Generate access to a read-only phpMyAdmin web interface for the environment's database.",
 	},
 ];
 
