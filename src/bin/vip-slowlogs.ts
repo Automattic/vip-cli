@@ -198,22 +198,22 @@ void command( {
 	.examples( [
 		{
 			description:
-				'Retrieve up to 500 of the most recent entries from the MySQL slow query logs in the default text format.',
+				'Retrieve up to 500 of the most recent entries from the MySQL slow query logs in the default table format.',
 			usage: exampleUsage,
 		},
 		{
 			description:
-				'Retrieve the 100 most recent entries from the MySQL slow query logs in the default text format.',
-			usage: `${ exampleUsage } --limit=100`,
+				'Retrieve up to 50 of the most recent entries from the MySQL slow query logs in the default table format.',
+			usage: `${ exampleUsage } --limit=50`,
 		},
 		{
 			description:
-				'Retrieve the 100 most recent entries from the MySQL slow query logs in CSV format.',
+				'Retrieve up to 100 of the most recent entries from the MySQL slow query logs in CSV format.',
 			usage: `${ exampleUsage } --limit=100 --format=csv`,
 		},
 		{
 			description:
-				'Retrieve the 100 most recent entries from the MySQL slow query logs in JSON format.',
+				'Retrieve up to 100 of the most recent entries from the MySQL slow query logs in JSON format.',
 			usage: `${ exampleUsage } --limit=100 --format=json`,
 		},
 	] )
