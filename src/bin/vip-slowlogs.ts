@@ -193,17 +193,17 @@ void command( {
 	module: 'slowlogs',
 	usage: baseUsage,
 } )
-	.option( 'limit', 'The maximum number of log lines', 500 )
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
+	.option( 'limit', 'The maximum number of log entries', 500 )
+	.option( 'format', 'Output the log entries in CSV or JSON format', 'table' )
 	.examples( [
 		{
 			description:
-				'Retrieve up to 500 of the most recent entries from the MySQL slow query logs in the default table format.',
+				'Retrieve up to 500 of the most recent entries from the MySQL slow query logs in the default format.',
 			usage: exampleUsage,
 		},
 		{
 			description:
-				'Retrieve up to 50 of the most recent entries from the MySQL slow query logs in the default table format.',
+				'Retrieve up to 50 of the most recent entries from the MySQL slow query logs in the default format.',
 			usage: `${ exampleUsage } --limit=50`,
 		},
 		{
