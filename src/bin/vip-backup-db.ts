@@ -13,7 +13,7 @@ const examples = [
 			'      ✓ Preparing for backup generation\n' +
 			'      ✓ Generating backup\n' +
 			'      New database backup created',
-		description: 'Generate a new database backup for an environment.',
+		description: 'Generate a new database backup of an environment.',
 	},
 ];
 
