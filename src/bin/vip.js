@@ -27,7 +27,7 @@ const runCmd = async function () {
 	cmd
 		.command( 'logout', 'Logout from your current session' )
 		.command( 'app', 'List and modify your VIP applications' )
-		.command( 'backup', 'Generate a backup for VIP applications' )
+		.command( 'backup', 'Generate a backup of an environment.' )
 		.command( 'cache', 'Manage page cache for your VIP applications' )
 		.command( 'config', 'Manage environment configurations.' )
 		.command( 'dev-env', 'Use local dev-environment' )

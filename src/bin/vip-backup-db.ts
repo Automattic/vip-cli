@@ -7,8 +7,13 @@ import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{
-		usage: 'vip backup db @mysite.develop',
-		description: 'Trigger a new backup for your database of the @mysite.develop environment',
+		usage:
+			'vip @example-app.develop backup db\n' +
+			'      Generating a new database backup...\n' +
+			'      ✓ Preparing for backup generation\n' +
+			'      ✓ Generating backup\n' +
+			'      New database backup created',
+		description: 'Generate a new database backup of an environment.',
 	},
 ];
 
