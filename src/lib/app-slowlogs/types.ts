@@ -19,7 +19,7 @@ type Stringable =
 
 export interface GetSlowLogsOptions extends DefaultOptions {
 	limit: number;
-	format: 'ids' | 'json' | 'csv';
+	format: 'table' | 'json' | 'csv';
 }
 
 export interface GetRecentSlowlogsResponse {
