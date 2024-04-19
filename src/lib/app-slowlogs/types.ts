@@ -11,9 +11,11 @@ export interface DefaultOptions {
 	};
 }
 
-export type SlowlogFormats = 'json' | 'csv' | 'table';
+export type SlowlogFormats =  'json' | 'csv' | 'table';
 
-type Stringable = string | { toString: () => string };
+type Stringable =
+	| string
+	| { toString: () => string; };
 
 export interface GetSlowLogsOptions extends DefaultOptions {
 	limit: number;
@@ -32,7 +34,7 @@ export interface GetBaseTrackingParamsOptions extends DefaultOptions {
 	follow?: boolean;
 }
 
-export interface BaseTrackingParams extends Record<string, unknown> {
+export interface BaseTrackingParams extends Record< string, unknown > {
 	command: string;
 	org_id: number;
 	app_id: number;
@@ -42,7 +44,7 @@ export interface BaseTrackingParams extends Record<string, unknown> {
 	format: string;
 }
 
-export interface Slowlog extends Record<string, Stringable> {
+export interface Slowlog extends Record< string, Stringable > {
 	timestamp: string;
 	rowsSent: string;
 	rowsExamined: string;
