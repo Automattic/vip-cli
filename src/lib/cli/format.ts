@@ -9,11 +9,7 @@ export interface Tuple {
 	value: string;
 }
 
-type Stringable =
-	| string
-	| {
-			toString: () => string;
-	  };
+type Stringable = string | { toString: () => string; };
 
 export type OutputFormat = 'keyValue' | 'ids' | 'json' | 'csv' | 'table';
 
