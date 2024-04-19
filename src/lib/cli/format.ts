@@ -22,10 +22,7 @@ export function formatData(
 	data: Record< string, unknown >[],
 	format: 'ids' | 'json' | 'csv'
 ): string;
-export function formatData(
-	data: Record< string, Stringable >[],
-	format: OutputFormat
-): string;
+export function formatData( data: Record< string, Stringable >[], format: OutputFormat ): string;
 export function formatData(
 	data: Record< string, unknown >[] | Tuple[],
 	format: OutputFormat
