@@ -3,3 +3,4 @@
 /flow-typed/
 /src/graphqlTypes.d.ts
 codegen.ts
+.vscode/*

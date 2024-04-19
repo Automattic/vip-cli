@@ -19,39 +19,39 @@ import { trackEvent } from '../lib/tracker';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 500;
-const ALLOWED_FORMATS: OutputFormat[] = [ 'csv', 'json', 'table' ];
+const ALLOWED_FORMATS: OutputFormat[] = ['csv', 'json', 'table'];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
-export async function getSlowlogs( arg: string[], opt: GetSlowLogsOptions ): Promise< void > {
-	validateInputs( opt.limit, opt.format );
+export async function getSlowlogs(arg: string[], opt: GetSlowLogsOptions): Promise<void> {
+	validateInputs(opt.limit, opt.format);
 
-	const trackingParams = getBaseTrackingParams( opt );
+	const trackingParams = getBaseTrackingParams(opt);
 
-	await trackEvent( 'slowlogs_command_execute', trackingParams );
+	await trackEvent('slowlogs_command_execute', trackingParams);
 
 	let slowlogs;
 	try {
-		slowlogs = await slowlogsLib.getRecentSlowlogs( opt.app.id, opt.env.id, opt.limit );
-	} catch ( error: unknown ) {
+		slowlogs = await slowlogsLib.getRecentSlowlogs(opt.app.id, opt.env.id, opt.limit);
+	} catch (error: unknown) {
 		const err = error as Error;
-		await trackEvent( 'slowlogs_command_error', { ...trackingParams, error: err.message } );
+		await trackEvent('slowlogs_command_error', { ...trackingParams, error: err.message });
 
-		return exit.withError( err.message );
+		return exit.withError(err.message);
 	}
 
-	await trackEvent( 'slowlogs_command_success', {
+	await trackEvent('slowlogs_command_success', {
 		...trackingParams,
 		total: slowlogs.nodes.length,
-	} );
+	});
 
-	if ( ! slowlogs.nodes.length ) {
-		console.error( 'No logs found' );
+	if (!slowlogs.nodes.length) {
+		console.error('No logs found');
 		return;
 	}
 
-	printSlowlogs( slowlogs.nodes, opt.format );
+	printSlowlogs(slowlogs.nodes, opt.format);
 }
 
 interface FollowLogsOptions extends DefaultOptions {
@@ -59,19 +59,19 @@ interface FollowLogsOptions extends DefaultOptions {
 	format: SlowlogFormats;
 }
 
-export async function followLogs( opt: FollowLogsOptions ): Promise< void > {
+export async function followLogs(opt: FollowLogsOptions): Promise<void> {
 	let after = null;
 	let isFirstRequest = true;
 	// How many times have we polled?
 	let requestNumber = 0;
 
-	const trackingParams = getBaseTrackingParams( opt );
+	const trackingParams = getBaseTrackingParams(opt);
 
 	// Set an initial default delay
 	let delay = DEFAULT_POLLING_DELAY_IN_SECONDS;
 
 	// eslint-disable-next-line no-constant-condition, @typescript-eslint/no-unnecessary-condition
-	while ( true ) {
+	while (true) {
 		const limit = isFirstRequest ? opt.limit : LIMIT_MAX;
 
 		requestNumber++;
@@ -82,37 +82,37 @@ export async function followLogs( opt: FollowLogsOptions ): Promise< void > {
 		let slowlogs;
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			slowlogs = await slowlogsLib.getRecentSlowlogs( opt.app.id, opt.env.id, limit, after );
+			slowlogs = await slowlogsLib.getRecentSlowlogs(opt.app.id, opt.env.id, limit, after);
 
 			// eslint-disable-next-line no-await-in-loop
-			await trackEvent( 'slowlogs_command_follow_success', {
+			await trackEvent('slowlogs_command_follow_success', {
 				...trackingParams,
 				total: slowlogs.nodes.length,
-			} );
-		} catch ( error: unknown ) {
+			});
+		} catch (error: unknown) {
 			const err = error as Error;
 			// eslint-disable-next-line no-await-in-loop
-			await trackEvent( 'slowlogs_command_follow_error', {
+			await trackEvent('slowlogs_command_follow_error', {
 				...trackingParams,
 				error: err.message,
-			} );
+			});
 
 			// If the first request fails we don't want to retry (it's probably not recoverable)
-			if ( isFirstRequest ) {
-				console.error( `${ chalk.red( 'Error:' ) } Failed to fetch slowlogs.` );
+			if (isFirstRequest) {
+				console.error(`${chalk.red('Error:')} Failed to fetch slowlogs.`);
 				break;
 			}
 			// Increase the delay on errors to avoid overloading the server, up to a max of 5 minutes
 			delay += DEFAULT_POLLING_DELAY_IN_SECONDS;
-			delay = Math.min( delay, MAX_POLLING_DELAY_IN_SECONDS );
+			delay = Math.min(delay, MAX_POLLING_DELAY_IN_SECONDS);
 			console.error(
-				`${ chalk.red( 'Error:' ) } Failed to fetch slowlogs. Trying again in ${ delay } seconds.`
+				`${chalk.red('Error:')} Failed to fetch slowlogs. Trying again in ${delay} seconds.`
 			);
 		}
 
-		if ( slowlogs ) {
-			if ( slowlogs.nodes.length ) {
-				printSlowlogs( slowlogs.nodes, opt.format );
+		if (slowlogs) {
+			if (slowlogs.nodes.length) {
+				printSlowlogs(slowlogs.nodes, opt.format);
 			}
 
 			after = slowlogs.nextCursor;
@@ -126,11 +126,11 @@ export async function followLogs( opt: FollowLogsOptions ): Promise< void > {
 		}
 
 		// eslint-disable-next-line no-await-in-loop
-		await setTimeout( delay * 1000 );
+		await setTimeout(delay * 1000);
 	}
 }
 
-function getBaseTrackingParams( opt: GetBaseTrackingParamsOptions ): BaseTrackingParams {
+function getBaseTrackingParams(opt: GetBaseTrackingParamsOptions): BaseTrackingParams {
 	return {
 		command: 'vip slowlogs',
 		org_id: opt.app.organization.id,
@@ -142,27 +142,27 @@ function getBaseTrackingParams( opt: GetBaseTrackingParamsOptions ): BaseTrackin
 	};
 }
 
-function printSlowlogs( slowlogs: Slowlog[], format: SlowlogFormats ): void {
+function printSlowlogs(slowlogs: Slowlog[], format: SlowlogFormats): void {
 	// Strip out __typename
-	slowlogs = slowlogs.map( log => {
+	slowlogs = slowlogs.map(log => {
 		const { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query } = log;
 
 		return { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query };
-	} );
+	});
 
-	console.log( formatData( slowlogs, format as OutputFormat ) );
+	console.log(formatData(slowlogs, format as OutputFormat));
 }
 
-export function validateInputs( limit: number, format: SlowlogFormats ): void {
-	if ( ! ALLOWED_FORMATS.includes( format ) ) {
+export function validateInputs(limit: number, format: SlowlogFormats): void {
+	if (!ALLOWED_FORMATS.includes(format)) {
 		exit.withError(
-			`Invalid format: ${ format }. The supported formats are: ${ ALLOWED_FORMATS.join( ', ' ) }.`
+			`Invalid format: ${format}. The supported formats are: ${ALLOWED_FORMATS.join(', ')}.`
 		);
 	}
 
-	if ( ! Number.isInteger( limit ) || limit < LIMIT_MIN || limit > slowlogsLib.LIMIT_MAX ) {
+	if (!Number.isInteger(limit) || limit < LIMIT_MIN || limit > slowlogsLib.LIMIT_MAX) {
 		exit.withError(
-			`Invalid limit: ${ limit }. It should be a number between ${ LIMIT_MIN } and ${ slowlogsLib.LIMIT_MAX }.`
+			`Invalid limit: ${limit}. It should be a number between ${LIMIT_MIN} and ${slowlogsLib.LIMIT_MAX}.`
 		);
 	}
 }
@@ -182,16 +182,16 @@ export const appQuery = `
 	}
 `;
 
-void command( {
+void command({
 	appContext: true,
 	appQuery,
 	envContext: true,
 	format: false,
 	module: 'slowlogs',
-} )
-	.option( 'limit', 'The maximum number of log lines', 500 )
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
-	.examples( [
+})
+	.option('limit', 'The maximum number of log lines', 500)
+	.option('format', 'Output the log lines in CSV or JSON format', 'table')
+	.examples([
 		{
 			description: 'Get the most recent app slowlogs',
 			usage: 'vip @mysite.production slowlogs',
@@ -209,5 +209,5 @@ void command( {
 			usage: 'vip @mysite.production slowlogs --limit 100 --format json',
 			description: 'Get the most recent 100 slowlog entries formatted as JSON',
 		},
-	] )
-	.argv( process.argv, getSlowlogs );
+	])
+	.argv(process.argv, getSlowlogs);

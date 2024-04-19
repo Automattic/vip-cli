@@ -2,3 +2,4 @@
 /__fixtures__/
 /dist/
 /npm-shrinkwrap.json
+/.vscode/
