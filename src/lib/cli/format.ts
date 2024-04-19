@@ -15,15 +15,20 @@ type Stringable =
 			toString: () => string;
 	  };
 
+export type OutputFormat = 'keyValue' | 'ids' | 'json' | 'csv' | 'table';
+
 export function formatData( data: Tuple[], format: 'keyValue' ): string;
-export function formatData( data: Record< string, Stringable >[], format: 'table' ): string;
 export function formatData(
 	data: Record< string, unknown >[],
 	format: 'ids' | 'json' | 'csv'
 ): string;
 export function formatData(
+	data: Record< string, Stringable >[],
+	format: OutputFormat
+): string;
+export function formatData(
 	data: Record< string, unknown >[] | Tuple[],
-	format: 'keyValue' | 'ids' | 'json' | 'csv' | 'table'
+	format: OutputFormat
 ): string {
 	if ( ! data.length ) {
 		return '';

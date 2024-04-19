@@ -11,13 +11,11 @@ export interface DefaultOptions {
 	};
 }
 
-export type SlowlogFormats = 'ids' | 'json' | 'csv';
+export type SlowlogFormats =  'json' | 'csv' | 'table';
 
 type Stringable =
 	| string
-	| {
-			toString: () => string;
-	  };
+	| { toString: () => string; };
 
 export interface GetSlowLogsOptions extends DefaultOptions {
 	limit: number;
