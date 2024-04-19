@@ -69,7 +69,14 @@ function ids( data: Record< string, unknown >[] ): string {
 function csv( data: Record< string, unknown >[] ): string {
 	const fields = Object.keys( data[ 0 ] );
 
-	const parser = new Parser( { fields: formatFields( fields ) } );
+	const parser = new Parser( {
+		formatters: {
+			header: ( value: string ) => {
+				return value.split( /(?=[A-Z])/ ).join( ' ' ).toLowerCase()
+			}
+		},
+		fields, 
+	} );
 
 	return parser.parse( data );
 }
