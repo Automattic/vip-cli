@@ -150,7 +150,7 @@ function printSlowlogs( slowlogs: Slowlog[], format: SlowlogFormats ): void {
 		return { timestamp, rowsSent, rowsExamined, queryTime, requestUri, query };
 	} );
 
-	console.log( formatData( slowlogs, format as OutputFormat ) );
+	console.log( formatData( slowlogs, format ) );
 }
 
 export function validateInputs( limit: number, format: SlowlogFormats ): void {
