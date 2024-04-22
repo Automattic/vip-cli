@@ -213,7 +213,7 @@ describe( 'getLogs', () => {
 			type: 'app',
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
