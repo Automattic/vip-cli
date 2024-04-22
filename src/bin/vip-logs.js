@@ -12,7 +12,7 @@ import { trackEvent } from '../lib/tracker';
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 5000;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
-const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
+const ALLOWED_FORMATS = [ 'csv', 'json', 'table' ];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
@@ -142,7 +142,7 @@ function printLogs( logs, format ) {
 	} );
 
 	let output = '';
-	if ( format && 'text' === format ) {
+	if ( format && 'table' === format ) {
 		const rows = [];
 		for ( const { timestamp, message } of logs ) {
 			rows.push( `${ timestamp } ${ message }` );
@@ -204,7 +204,7 @@ command( {
 	.option( 'type', 'The type of logs to be returned: "app" or "batch"', 'app' )
 	.option( 'limit', 'The maximum number of log lines', 500 )
 	.option( 'follow', 'Keep fetching new logs as they are generated' )
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'text' )
+	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.examples( [
 		{
 			usage: 'vip @mysite.production logs',
