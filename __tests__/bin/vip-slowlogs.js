@@ -45,7 +45,7 @@ describe( 'getSlowlogs', () => {
 				isK8sResident: true,
 			},
 			limit: 500,
-			format: 'text',
+			format: 'table',
 		};
 	} );
 
@@ -105,7 +105,7 @@ describe( 'getSlowlogs', () => {
 			env_id: 3,
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
@@ -270,7 +270,7 @@ describe( 'getSlowlogs', () => {
 			env_id: 3,
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
@@ -309,7 +309,7 @@ describe( 'getSlowlogs', () => {
 			env_id: 3,
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
