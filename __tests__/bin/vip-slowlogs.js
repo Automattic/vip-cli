@@ -333,7 +333,7 @@ describe( 'getSlowlogs', () => {
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith(
-			'Invalid format: jso. The supported formats are: csv, json, text.'
+			'Invalid format: jso. The supported formats are: csv, json, table.'
 		);
 
 		expect( slowlogsLib.getRecentSlowlogs ).not.toHaveBeenCalled();
