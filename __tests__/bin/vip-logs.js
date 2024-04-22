@@ -48,7 +48,7 @@ describe( 'getLogs', () => {
 			},
 			type: 'app',
 			limit: 500,
-			format: 'text',
+			format: 'table',
 		};
 	} );
 
@@ -81,7 +81,7 @@ describe( 'getLogs', () => {
 			type: 'app',
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
@@ -213,7 +213,7 @@ describe( 'getLogs', () => {
 			type: 'app',
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
@@ -253,7 +253,7 @@ describe( 'getLogs', () => {
 			type: 'app',
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
@@ -296,7 +296,7 @@ describe( 'getLogs', () => {
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith(
-			'Invalid format: jso. The supported formats are: csv, json, text.'
+			'Invalid format: jso. The supported formats are: csv, json, table.'
 		);
 
 		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
