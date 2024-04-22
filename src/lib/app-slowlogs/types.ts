@@ -13,9 +13,7 @@ export interface DefaultOptions {
 
 export type SlowlogFormats = 'json' | 'csv' | 'table';
 
-type Stringable =
-	| string
-	| { toString: () => string };
+type Stringable = string | { toString: () => string };
 
 export interface GetSlowLogsOptions extends DefaultOptions {
 	limit: number;
