@@ -70,10 +70,10 @@ function csv( data: Record< string, unknown >[] ): string {
 	const parser = new Parser( {
 		formatters: {
 			header: ( value: string ) => {
-				return value
+				return `"${ value
 					.split( /(?=[A-Z])/ )
 					.join( ' ' )
-					.toLowerCase();
+					.toLowerCase() }"`;
 			},
 		},
 		fields,

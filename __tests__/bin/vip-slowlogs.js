@@ -223,7 +223,7 @@ describe( 'getSlowlogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable max-len */
-			`"timestamp","rows sent","rows examined","query time","request uri","query"\n"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"\n"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
+			`"timestamp","rows sent","rows examined","query time","request uri","query"\n"2021-11-05T20:18:36.234041811Z",1,1,0.1,"dashboard.wpvip.com","SELECT * FROM wp_posts"\n"2021-11-09T20:47:07.301221112Z",1,1,0.1,"dashboard.wpvip.com","SELECT * FROM wp_posts"`
 			/* eslint-enable max-len */
 		);
 
