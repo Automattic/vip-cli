@@ -70,10 +70,13 @@ function csv( data: Record< string, unknown >[] ): string {
 	const parser = new Parser( {
 		formatters: {
 			header: ( value: string ) => {
-				return value.split( /(?=[A-Z])/ ).join( ' ' ).toLowerCase()
-			}
+				return value
+					.split( /(?=[A-Z])/ )
+					.join( ' ' )
+					.toLowerCase();
+			},
 		},
-		fields, 
+		fields,
 	} );
 
 	return parser.parse( data );
