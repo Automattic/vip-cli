@@ -16,7 +16,7 @@
 * build(deps-dev): bump typescript from 5.4.4 to 5.4.5
 * build(deps): bump ejs from 3.1.9 to 3.1.10
 * fix: remove unused `cancelCommand`
-* fix(dev-env): argument parsing for `vip dev-env sync sql`9
+* fix(dev-env): argument parsing for `vip dev-env sync sql`
 * fix: underscore is allowed in environment name
 * chore: remove unused files
 * fix: superfluous trailing arguments
