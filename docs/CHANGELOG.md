@@ -1,5 +1,16 @@
 ## Changelog
 
+### 2.39.3
+
+* Update/docs pt vip config
+* Updates to descriptions and examples for vip db
+* Updates to descriptions and examples for vip backup
+* Fix duplicate format option on slowlogs command
+* Fix issue with missing CSV output values
+* chore(deps): update `tar` to fix CVE-2024-28863
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.2...2.39.3
+
 ### 2.39.2
 
 * build(deps-dev): bump typescript from 5.4.4 to 5.4.5
