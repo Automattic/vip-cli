@@ -86,7 +86,7 @@ const parseOutput = output => {
 		}
 		if ( currentSection === SECTION_EXAMPLES ) {
 			let description = '';
-			while ( ! lines[ lineIx ].trim().startsWith( '$' ) ) {
+			while ( lines[ lineIx ] && ! lines[ lineIx ].trim().startsWith( '$' ) ) {
 				const descriptionLine = lines[ lineIx ].trim();
 				if ( description ) {
 					description += '\n';
