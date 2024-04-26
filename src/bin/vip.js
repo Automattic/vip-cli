@@ -25,7 +25,7 @@ const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
 const runCmd = async function () {
 	const cmd = command();
 	cmd
-		.command( 'logout', 'Logout from your current session' )
+		.command( 'logout', 'Log out the current authenticated VIP-CLI user.' )
 		.command( 'app', 'List and modify your VIP applications' )
 		.command( 'backup', 'Generate a backup of an environment.' )
 		.command( 'cache', 'Manage page cache for your VIP applications' )

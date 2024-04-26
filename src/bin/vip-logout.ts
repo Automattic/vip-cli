@@ -7,7 +7,7 @@ void command( { usage: 'vip logout' } )
 	.examples( [
 		{
 			usage: 'vip logout',
-			description: 'Logs out current user.',
+			description: 'Log out the current authenticated VIP-CLI user.',
 		},
 	] )
 	.argv( process.argv, async () => {
