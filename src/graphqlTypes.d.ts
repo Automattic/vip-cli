@@ -793,6 +793,8 @@ export type AppEnvironmentMediaImportStatus = {
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	/** The actual status of the Media Import */
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** URL for the failure details */
+	failureDetailsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 /** Response payload for executing a status change action on a Media Import */
