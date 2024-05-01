@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { getCurrentUserInfo } from '../lib/api/user';
 import { User } from '../graphqlTypes';
+import { getCurrentUserInfo } from '../lib/api/user';
 import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
 import * as exit from '../lib/cli/exit';
+import { trackEvent } from '../lib/tracker';
+
+const baseUsage = 'vip whoami';
 
 export async function whoamiCommand() {
 	const trackingParams: { command: string } = {
@@ -46,11 +41,11 @@ export async function whoamiCommand() {
 	console.log( output.join( '\n' ) );
 }
 
-void command( { usage: 'vip whoami' } )
+void command( { usage: baseUsage } )
 	.examples( [
 		{
-			usage: 'vip whoami',
-			description: 'Display details about the currently logged-in user.',
+			usage: baseUsage + '\n' + '    - Howdy user@example.com!\n' + '    - Your user ID is 1234\n',
+			description: 'Retrieve details about the current authenticated VIP-CLI user.',
 		},
 	] )
 	.argv( process.argv, whoamiCommand );

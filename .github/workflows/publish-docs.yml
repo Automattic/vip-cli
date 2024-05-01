@@ -1,8 +1,9 @@
 name: Publish docs
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*.*.*'
   workflow_dispatch:
 
 jobs:
@@ -10,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: npm i -g @automattic/vip
       - run: node ./helpers/generate-docs.js > /tmp/docs.json
       - name: Print docs.json
@@ -19,8 +20,8 @@ jobs:
         env:
           DOCS_SECRET_TOKEN: ${{ secrets.DOCS_SECRET_TOKEN }}
         run: |
-          curl -X POST -v \
+          curl -X PUT -v \
             -H "Authorization: Bearer $DOCS_SECRET_TOKEN" \
             -H "Content-Type: application/json" \
             --data "@/tmp/docs.json" \
-            https://develop-docs.wpvip.com/wp-json/vip/v1/vip-cli
+            https://docs.wpvip.com/wp-json/cli-command-reference/v1/ingest/vip-cli

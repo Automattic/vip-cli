@@ -1,19 +1,11 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
-import opn from 'opn';
-import { prompt } from 'enquirer';
 import chalk from 'chalk';
 import debugLib from 'debug';
+import { prompt } from 'enquirer';
 
-/**
- * Internal dependencies
- */
-import config from '../lib/cli/config';
 import command, { containsAppEnvArgument } from '../lib/cli/command';
+import config from '../lib/cli/config';
 import Token from '../lib/token';
 import { trackEvent, aliasUser } from '../lib/tracker';
 
@@ -28,29 +20,37 @@ if ( config && config.environment !== 'production' ) {
 
 // Config
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
+const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
 
 const runCmd = async function () {
 	const cmd = command();
 	cmd
-		.command( 'logout', 'Logout from your current session' )
+		.command( 'logout', 'Log out the current authenticated VIP-CLI user.' )
 		.command( 'app', 'List and modify your VIP applications' )
+		.command( 'backup', 'Generate a backup of an environment.' )
 		.command( 'cache', 'Manage page cache for your VIP applications' )
-		.command( 'config', 'Set configuration for your VIP applications' )
+		.command( 'config', 'Manage environment configurations.' )
 		.command( 'dev-env', 'Use local dev-environment' )
-		.command( 'export', 'Export data from your VIP application' )
+		.command( 'export', 'Export a copy of data associated with an environment.' )
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'logs', 'Get logs from your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
+		.command( 'db', "Access an environment's database." )
 		.command( 'sync', 'Sync production to a development environment' )
-		.command( 'whoami', 'Display details about the currently logged-in user' )
+		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'validate', 'Validate your VIP application and environment' )
 		.command( 'wp', 'Run WP CLI commands against an environment' );
 
 	cmd.argv( process.argv );
 };
 
-function doesArgvHaveAtLeastOneParam( argv: Array< any >, params: Array< any > ): boolean {
+/**
+ * @param {any[]} argv
+ * @param {any[]} params
+ * @returns {boolean}
+ */
+function doesArgvHaveAtLeastOneParam( argv, params ) {
 	return argv.some( arg => params.includes( arg ) );
 }
 
@@ -64,6 +64,8 @@ const rootCmd = async function () {
 	const isDevEnvCommandWithoutEnv =
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
 		! containsAppEnvArgument( process.argv );
+	const isCustomDeployCmdWithKey =
+		doesArgvHaveAtLeastOneParam( process.argv, [ 'deploy' ] ) && Boolean( customDeployToken );
 
 	debug( 'Argv:', process.argv );
 
@@ -73,7 +75,8 @@ const rootCmd = async function () {
 			isHelpCommand ||
 			isVersionCommand ||
 			isDevEnvCommandWithoutEnv ||
-			token?.valid() )
+			token?.valid() ||
+			isCustomDeployCmdWithKey )
 	) {
 		await runCmd();
 	} else {
@@ -109,7 +112,9 @@ const rootCmd = async function () {
 			return;
 		}
 
-		opn( tokenURL, { wait: false } );
+		const { default: open } = await import( 'open' );
+
+		open( tokenURL, { wait: false } );
 
 		await trackEvent( 'login_command_browser_opened' );
 

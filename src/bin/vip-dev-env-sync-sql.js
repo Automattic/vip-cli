@@ -1,28 +1,17 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
-import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
-import UserError from '../lib/user-error';
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
+import command from '../lib/cli/command';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { makeCommandTracker } from '../lib/tracker';
 import {
 	getEnvironmentName,
 	processBooleanOption,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
+import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { makeCommandTracker } from '../lib/tracker';
+import UserError from '../lib/user-error';
 
 const examples = [
 	{
@@ -61,12 +50,12 @@ command( {
 	requiredArgs: 0,
 	module: 'dev-env-sync-sql',
 } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'force', 'Disable validations before running sync', undefined, processBooleanOption )
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opt ) => {
-		const { app, env } = opt;
-		const slug = await getEnvironmentName( opt );
+	.argv( process.argv, async ( arg, opt ) => {
+		const { app, env, ...optRest } = opt;
+		const slug = await getEnvironmentName( optRest );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
 			app: app.id,
 			env: env.uniqueLabel,
@@ -86,6 +75,9 @@ command( {
 		const cmd = new DevEnvSyncSQLCommand( app, env, slug, trackerFn );
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?
-		await cmd.run();
+		const didCommandRun = await cmd.run();
+		if ( ! didCommandRun ) {
+			console.log( 'Command canceled by user.' );
+		}
 		await trackerFn( 'success' );
 	} );

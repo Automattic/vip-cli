@@ -1,26 +1,15 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
+import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
 import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	handleCLIException,
 	getEnvironmentName,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
-import { DevEnvImportSQLCommand } from '../commands/dev-env-import-sql';
+import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
 	{
@@ -46,22 +35,27 @@ const examples = [
 command( {
 	requiredArgs: 1,
 } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( [ 'r', 'search-replace' ], 'Perform Search and Replace on the specified SQL file' )
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
-	.option( 'skip-validate', 'Do not perform file validation.' )
+	.option( 'skip-validate', 'Do not perform file validation' )
+	.option( [ 'k', 'skip-reindex' ], 'Do not reindex data in Elasticsearch after import' )
+	.option( 'quiet', 'Suppress prompts and informational messages' )
 	.examples( examples )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ fileName ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );
 		const cmd = new DevEnvImportSQLCommand( fileName, opt, slug );
 		const trackingInfo = getEnvTrackingInfo( cmd.slug );
+		const trackerFn = makeCommandTracker( 'dev_env_import_sql', trackingInfo );
+		await trackerFn( 'execute' );
 
 		try {
 			await cmd.run();
-			await trackEvent( 'dev_env_import_sql_command_success', trackingInfo );
+			await trackerFn( 'success' );
 		} catch ( error ) {
-			await handleCLIException( error, 'dev_env_import_sql_command_error', trackingInfo );
+			await handleCLIException( error );
+			await trackerFn( 'error', { message: error.message, stack: error.stack } );
 			process.exitCode = 1;
 		}
 	} );

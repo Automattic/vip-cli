@@ -1,19 +1,13 @@
-/**
- * External dependencies
- */
-import { mkdtemp, rm } from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
+import { mkdtemp, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import xdgBaseDir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import { CliTest } from './helpers/cli-test';
-import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate } from './helpers/commands';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
+import { readEnvironmentData } from '../../src/lib/dev-environment/dev-environment-core';
 
 jest.setTimeout( 30 * 1000 );
 
@@ -75,7 +69,7 @@ describe( 'vip dev-env create', () => {
 	it( 'should use sane defaults', async () => {
 		const slug = getProjectSlug();
 		const expectedMultisite = false;
-		const expectedPhpVersion = '8.0';
+		const expectedPhpVersion = '8.2';
 		const expectedElasticsearch = false;
 		const expectedPhpMyAdmin = false;
 		const expectedXDebug = false;
@@ -115,7 +109,7 @@ describe( 'vip dev-env create', () => {
 		const slug = getProjectSlug();
 		const expectedTitle = 'Test';
 		const expectedMultisite = true;
-		const expectedPhpVersion = '8.0';
+		const expectedPhpVersion = '8.2';
 		const expectedWordPressVersion = '6.1';
 		const expectedElasticsearch = true;
 		const expectedPhpMyAdmin = true;

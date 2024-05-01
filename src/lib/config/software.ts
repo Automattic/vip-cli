@@ -1,19 +1,13 @@
-/**
- * External dependencies
- */
-import { setTimeout } from 'node:timers/promises';
+import debugLib from 'debug';
 import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
-import debugLib from 'debug';
+import { setTimeout } from 'node:timers/promises';
 
-/**
- * Internal dependencies
- */
-import { isAppNodejs, isAppWordPress } from '../app';
-import API from '../api';
-import UserError from '../user-error';
 import { UpdateJobQueryVariables } from './software.generated';
 import { JobInterface, Query } from '../../graphqlTypes';
+import API from '../api';
+import { isAppNodejs, isAppWordPress } from '../app';
+import UserError from '../user-error';
 
 const UPDATE_PROGRESS_POLL_INTERVAL = 5;
 const debug = debugLib( '@automattic/vip:bin:config-software' );
@@ -318,9 +312,8 @@ export const promptForUpdate = async (
 
 	const confirm: boolean =
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-		opts.force ||
+		opts.force || // NOSONAR
 		( await new Confirm( {
-			// NOSONAR
 			message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
 		} )
 			.run()
@@ -347,13 +340,13 @@ interface TrigerUpdateOptions {
 
 export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	debug( 'Triggering update', variables );
-	const api = await API();
+	const api = API();
 
 	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
 const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterface | null > => {
-	const api = await API();
+	const api = API();
 	const result = await api.query< Query, UpdateJobQueryVariables >( {
 		query: updateJobQuery,
 		variables: { appId, envId },
@@ -406,7 +399,9 @@ export const getUpdateResult = async ( appId: number, envId: number ): Promise< 
 	}
 
 	const failedStep = completedJob.progress?.steps?.find( step => step?.status === 'failed' );
-	const error = failedStep ? `Failed during step: ${ failedStep.name! }` : 'Software update failed';
+	const error = failedStep
+		? `Failed during step: ${ failedStep.name as string }`
+		: 'Software update failed';
 	return {
 		ok: false,
 		errorMessage: error,

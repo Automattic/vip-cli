@@ -2,16 +2,10 @@
  * @format
  */
 
-/**
- * External dependencies
- */
-import path from 'path';
 import debugLib from 'debug';
 import fetch, { Response } from 'node-fetch';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
 import { validate } from '../../../src/lib/validations/sql';
 
 const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );
@@ -132,6 +126,20 @@ describe( 'lib/validations/sql', () => {
 			expect( output ).toContain(
 				'Use \'--search-replace="super-empoyees.com,test.domain"\' switch to replace the domain'
 			);
+		} );
+	} );
+
+	describe( 'it fails when the import file is compressed', () => {
+		it( '.zip', async () => {
+			const compressedFilePath = path.join(
+				process.cwd(),
+				'__fixtures__',
+				'validations',
+				'empty.zip'
+			);
+
+			await validate( compressedFilePath );
+			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
 		} );
 	} );
 } );

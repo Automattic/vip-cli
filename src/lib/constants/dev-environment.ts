@@ -28,11 +28,21 @@ export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'wordpress-versions.json';
 
 export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 86400; // once per day
 
-export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, string | undefined > = {
-	'8.0': 'ghcr.io/automattic/vip-container-images/php-fpm:8.0',
-	8.2: 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
-	8.1: 'ghcr.io/automattic/vip-container-images/php-fpm:8.1',
-	7.4: 'ghcr.io/automattic/vip-container-images/php-fpm:7.4',
+interface PhpImage {
+	image: string;
+	label: string;
+}
+
+export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
+	8.2: {
+		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
+		label: '8.2 (recommended)',
+	},
+	8.1: { image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.1', label: '8.1' },
+	8.3: {
+		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.3',
+		label: '8.3',
+	},
 } as const;
 
 export const DEV_ENVIRONMENT_VERSION = '2.0.3';

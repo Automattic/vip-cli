@@ -1,17 +1,11 @@
 /* eslint-disable jest/no-conditional-expect */
-// @format
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
 import os from 'os';
 
-/**
- * Internal dependencies
- */
+import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvironmentStartCommand,
@@ -24,9 +18,8 @@ import {
 	resolvePhpVersion,
 	promptForWordPress,
 } from '../../../src/lib/dev-environment/dev-environment-cli';
-import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
-import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
+import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
@@ -185,6 +178,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			);
 			getConfigurationFileOptionsMock.mockReturnValue( {
 				slug: 'config-file-slug',
+				meta: {},
 			} );
 		} );
 
@@ -591,10 +585,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 	describe( 'resolvePhpVersion', () => {
 		it.each( [
-			[ '7.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '7.4' ] ],
-			[ '8.0', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.0' ] ],
-			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ] ],
-			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ] ],
+			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ].image ],
+			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ].image ],
+			[ '8.3', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.3' ].image ],
 			[ 'image:php:8.0', 'image:php:8.0' ],
 			[
 				'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0',

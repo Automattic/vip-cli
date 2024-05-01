@@ -1,20 +1,10 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
+import { ProgressTracker } from '../lib/cli/progress';
 import {
 	appQuery,
 	appQueryFragments,
@@ -22,9 +12,8 @@ import {
 	promptForUpdate,
 	triggerUpdate,
 } from '../lib/config/software';
-import { ProgressTracker } from '../lib/cli/progress';
-import UserError from '../lib/user-error';
 import { trackEvent } from '../lib/tracker';
+import UserError from '../lib/user-error';
 
 const debug = debugLib( '@automattic/vip:bin:config-software' );
 
@@ -33,25 +22,40 @@ const UPDATE_SOFTWARE_PROGRESS_STEPS = [
 	{ id: 'process', name: 'Process software update' },
 ];
 
+const usage = 'vip config software update <wordpress|php|nodejs|muplugins> <version>';
+const exampleUsage = 'vip @example-app.develop config software update';
+const exampleUsageNode = 'vip @example-node-app.develop config software update';
+
+const examples = [
+	{
+		usage: `${ exampleUsage } wordpress 6.4`,
+		description: 'Update the version of WordPress on a WordPress environment to 6.4.x.',
+	},
+	{
+		usage: `${ exampleUsage } wordpress managed_latest`,
+		description:
+			'Update a WordPress environment to the latest major version of WordPress, and automatically update WordPress to the next major version on a continual basis.',
+	},
+	{
+		usage: `${ exampleUsage } php 8.3`,
+		description: 'Update the version of PHP on a WordPress environment to 8.3.x.',
+	},
+	{
+		usage: `${ exampleUsageNode } nodejs 18`,
+		description: 'Update the version of Node.js on a Node.js environment to 18.x.',
+	},
+];
+
 const cmd = command( {
 	appContext: true,
 	appQuery,
 	appQueryFragments,
 	envContext: true,
 	wildcardCommand: true,
-	usage: 'vip @mysite.develop config software update <wordpress|php|nodejs|muplugins> <version>',
-} ).examples( [
-	{
-		usage: 'vip @mysite.develop config software update wordpress 6.0',
-		description: 'Update WordPress to 6.0.x',
-	},
-	{
-		usage: 'vip @mysite.develop config software update nodejs 16',
-		description: 'Update Node.js to v16',
-	},
-] );
+	usage,
+} ).examples( examples );
 cmd.option( 'yes', 'Auto-confirm update' );
-cmd.argv( process.argv, async ( arg: string[], opt ) => {
+cmd.argv( process.argv, async ( arg, opt ) => {
 	const { app, env } = opt;
 	const { softwareSettings } = env;
 
@@ -67,8 +71,9 @@ cmd.argv( process.argv, async ( arg: string[], opt ) => {
 			throw new UserError( 'Software settings are not supported for this environment.' );
 		}
 
-		const updateOptions: UpdatePromptOptions = {
-			force: !! opt.yes,
+		/** @type {UpdatePromptOptions} */
+		const updateOptions = {
+			force: Boolean( opt.yes ),
 		};
 
 		if ( arg.length > 0 ) {

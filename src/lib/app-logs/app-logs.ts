@@ -1,16 +1,8 @@
-// @format
-
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import { GetAppLogsQueryVariables } from './app-logs.generated';
 import { AppEnvironmentLogType, Query } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 export const LIMIT_MAX = 5000;
 
@@ -51,7 +43,7 @@ export async function getRecentLogs(
 	limit: number,
 	after?: string
 ): Promise< GetRecentLogsResponse > {
-	const api = await API( { exitOnError: false } );
+	const api = API( { exitOnError: false } );
 
 	const response = await api.query< Query, GetAppLogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_LOGS,

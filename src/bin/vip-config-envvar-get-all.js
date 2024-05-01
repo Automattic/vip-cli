@@ -1,35 +1,42 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
 import { appQuery, getEnvVars } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const usage = 'vip @mysite.develop config envvar get-all';
+const exampleUsage = 'vip @example-app.develop config envvar get-all';
+const usage = 'vip config envvar get-all';
 
 // Command examples
 const examples = [
 	{
-		usage,
-		description: 'Get the values of all environment variables',
+		usage: exampleUsage,
+		description: 'Retrieve a list of all environment variables in the default table format.',
+	},
+	{
+		usage: `${ exampleUsage } --format=csv`,
+		description: 'Retrieve a list of all environment variables in CSV format.',
+	},
+	{
+		usage: `${ exampleUsage } --format=ids`,
+		description: 'Retrieve a list of all environment variable names as a space separated list.',
+	},
+	{
+		usage: `${ exampleUsage } --format=keyValue`,
+		description: 'Retrieve a list of all environment variables as a key value list.',
 	},
 ];
 
-export async function getAllEnvVarsCommand( arg: string[], opt ): Promise< void > {
+/**
+ * @param {string[]} arg
+ * @param {object} opt
+ * @return {Promise<void>}
+ */
+export async function getAllEnvVarsCommand( arg, opt ) {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,

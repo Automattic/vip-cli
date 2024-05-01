@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
-import { platform, release } from 'node:os';
+import { arch, platform, release } from 'node:os';
 
-/**
- * Internal dependencies
- */
 import pkg from '../../package.json';
 
 interface AppInfo {
@@ -16,6 +10,7 @@ interface AppInfo {
 interface OSInfo {
 	name: string;
 	version: string;
+	arch: string;
 }
 
 interface NodeInfo {
@@ -37,6 +32,7 @@ const app: AppInfo = {
 const os: OSInfo = {
 	name: platform(),
 	version: release(),
+	arch: arch(),
 };
 
 const node: NodeInfo = {

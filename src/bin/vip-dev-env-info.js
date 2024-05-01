@@ -1,32 +1,22 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import {
-	printEnvironmentInfo,
-	printAllEnvironmentsInfo,
-} from '../lib/dev-environment/dev-environment-core';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import {
+	printEnvironmentInfo,
+	printAllEnvironmentsInfo,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -42,7 +32,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'all', 'Show Info for all local dev environments' )
 	.option( 'extended', 'Show extended information about the dev environment' )
 	.examples( examples )
@@ -59,7 +49,7 @@ command()
 
 		try {
 			const options = {
-				extended: !! opt.extended,
+				extended: Boolean( opt.extended ),
 				suppressWarnings: true,
 			};
 			if ( opt.all ) {

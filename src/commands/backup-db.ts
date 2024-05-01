@@ -1,30 +1,19 @@
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
 import chalk from 'chalk';
+import { GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
+import { AppBackupJobStatusQuery } from './backup-db.generated';
+import { App, AppEnvironment, Job } from '../graphqlTypes';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
 import * as exit from '../lib/cli/exit';
-import { pollUntil } from '../lib/utils';
+import { formatDuration } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
-import { GraphQLFormattedError } from 'graphql';
 import { RateLimitExceededError } from '../lib/types/graphql/rate-limit-exceeded-error';
-import { AppBackupJobStatusQuery } from './backup-db.generated';
-import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { pollUntil } from '../lib/utils';
 
 const DB_BACKUP_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -62,7 +51,7 @@ export const DB_BACKUP_JOB_STATUS_QUERY = gql`
 `;
 
 async function getBackupJob( appId: number, envId: number ) {
-	const api = await API();
+	const api = API();
 
 	const response = await api.query< AppBackupJobStatusQuery >( {
 		query: DB_BACKUP_JOB_STATUS_QUERY,
@@ -81,7 +70,7 @@ async function createBackupJob( appId: number, envId: number ) {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
+	const api = API();
 	await api.mutate( {
 		mutation: CREATE_DB_BACKUP_JOB_MUTATION,
 		variables: {
@@ -112,14 +101,14 @@ export class BackupDBCommand {
 	track: CommandTracker;
 	private progressTracker: ProgressTracker;
 
-	constructor( app: App, env: AppEnvironment, trackerFn = async () => {} ) {
+	constructor( app: App, env: AppEnvironment, trackerFn: CommandTracker = async () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup generation' },
 			{ id: this.steps.GENERATE, name: 'Generating backup' },
 		] );
-		this.track = trackerFn as CommandTracker;
+		this.track = trackerFn;
 	}
 
 	log( msg: string ) {
@@ -162,13 +151,6 @@ export class BackupDBCommand {
 	async run( silent = false ) {
 		this.silent = silent;
 
-		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
-		noticeMessage +=
-			'If a recent database backup does not exist, a new one will be generated for this environment. ';
-		noticeMessage +=
-			'Learn more about this: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#2-download-a-full-database-backup \n';
-		this.log( noticeMessage );
-
 		await this.loadBackupJob();
 
 		if ( this.job?.inProgressLock ) {
@@ -194,11 +176,14 @@ export class BackupDBCommand {
 						stack: error.stack,
 					} );
 					const errMessage = `A new database backup was not generated because a recently generated backup already exists.
-If you would like to run the same command, you can retry on or after: ${ retryAfter }
+If you would like to run the same command, you can retry in ${ formatDuration(
+						new Date(),
+						new Date( retryAfter )
+					) }
 Alternatively, you can export the latest existing database backup by running: ${ chalk.green(
 						'vip @app.env export sql'
 					) }, right away.
-Learn more about limitations around generating database backups: https://docs.wpvip.com/technical-references/vip-dashboard/backups/#0-limitations
+Learn more about limitations around generating database backups: https://docs.wpvip.com/databases/backups/limitations/
 					`;
 					exit.withError( errMessage );
 				}

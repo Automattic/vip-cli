@@ -2,21 +2,15 @@
  * @format
  */
 
-/**
- * External dependencies
- */
-import fs from 'fs';
-import path from 'path';
-import fetch, { Response } from 'node-fetch';
 import searchReplaceLib from '@automattic/vip-search-replace';
+import fs from 'fs';
+import fetch, { Response } from 'node-fetch';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
+import * as prompt from '../../src/lib/cli/prompt';
 import { searchAndReplace } from '../../src/lib/search-and-replace';
 // Import prompt as a module since that's how we implement it in lib/search-and-replace.js,
 // as opposed to importing prompt.confirm on its own
-import * as prompt from '../../src/lib/cli/prompt';
 
 global.console = { log: jest.fn(), error: jest.fn() };
 

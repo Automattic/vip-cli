@@ -1,20 +1,15 @@
-/**
- * External dependencies
- */
-import fetch, { type BodyInit, type Response, type RequestInit } from 'node-fetch';
 import debugLib from 'debug';
+import fetch, { type BodyInit, type Response, type RequestInit } from 'node-fetch';
 
-/**
- * Internal dependencies
- */
-import Token from '../../lib/token';
+import { API_HOST } from '../../lib/api';
 import env from '../../lib/env';
 import { createProxyAgent } from '../../lib/http/proxy-agent';
-import { API_HOST } from '../../lib/api';
+import Token from '../../lib/token';
 
 const debug = debugLib( '@automattic/vip:http' );
 
 type FetchOptions = Omit< RequestInit, 'body' > & {
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 	body?: BodyInit | Record< string, unknown >;
 };
 

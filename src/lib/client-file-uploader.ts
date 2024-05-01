@@ -1,26 +1,30 @@
-// @format
-
-/**
- * External dependencies
- */
+import chalk from 'chalk';
+import { createHash } from 'crypto';
+import debugLib from 'debug';
 import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
+import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
 import os from 'os';
 import path from 'path';
-import fetch, { HeaderInit, RequestInit } from 'node-fetch';
-import chalk from 'chalk';
-import { createGunzip, createGzip } from 'zlib';
-import { createHash } from 'crypto';
-import { pipeline } from 'node:stream/promises';
 import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
-import debugLib from 'debug';
+import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 
-/**
- * Internal dependencies
- */
 import http from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
+
+// Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promise< Response > =
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
+	require( 'fetch-retry' )( fetch, {
+		// Set default retry options
+		retries: 3,
+		retryDelay: ( attempt: number ) => {
+			return Math.pow( 2, attempt ) * 1000; // 1000, 2000, 4000
+		},
+	} );
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -37,11 +41,11 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
 // TODO: Replace with a proper definitions once we convert lib/cli/command.js to TypeScript
-interface WithId {
+export interface WithId {
 	id: number;
 }
 
-interface FileMeta {
+export interface FileMeta {
 	basename: string;
 	fileContent?: string | Buffer | ReadStream;
 	fileName: string;
@@ -57,7 +61,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'ListParts'
 		| 'PutObject'
 		| 'UploadPart';
-	etagResults?: Object[];
+	etagResults?: Record< string, unknown >[];
 	appId: number;
 	envId: number;
 	basename: string;
@@ -68,21 +72,29 @@ export interface GetSignedUploadRequestDataArgs {
 const getWorkingTempDir = (): Promise< string > =>
 	mkdtemp( path.join( os.tmpdir(), 'vip-client-file-uploader' ) );
 
-interface UploadArguments {
+export interface UploadArguments {
 	app: WithId;
 	env: WithId;
 	fileMeta: FileMeta;
-	progressCallback?: Function;
+	progressCallback?: ( percentage: string ) => unknown;
+	hashType?: 'md5' | 'sha256';
 }
 
-export const getFileMD5Hash = async ( fileName: string ): Promise< string > => {
+export const getFileHash = async (
+	fileName: string,
+	hashType: 'md5' | 'sha256' = 'md5'
+): Promise< string > => {
 	const src = createReadStream( fileName );
-	const dst = createHash( 'md5' );
+	const dst = createHash( hashType );
 	try {
 		await pipeline( src, dst );
 		return dst.digest().toString( 'hex' );
 	} catch ( err ) {
-		throw new Error( `could not generate file hash: ${ ( err as Error ).message }` );
+		throw new Error( `Could not generate file hash: ${ ( err as Error ).message }`, {
+			cause: err,
+		} );
+	} finally {
+		src.close();
 	}
 };
 
@@ -94,7 +106,7 @@ const gzipFile = async ( uncompressedFileName: string, compressedFileName: strin
 			createWriteStream( compressedFileName )
 		);
 	} catch ( err ) {
-		throw new Error( `could not compress file: ${ ( err as Error ).message }` );
+		throw new Error( `Could not compress file: ${ ( err as Error ).message }`, { cause: err } );
 	}
 };
 
@@ -109,9 +121,27 @@ export const unzipFile = async (
 	inputFilename: string,
 	outputFilename: string
 ): Promise< void > => {
+	const mimeType = await detectCompressedMimeType( inputFilename );
+
+	const extractFunctions: Record<
+		string,
+		{ extractor: ( options?: ZlibOptions | undefined ) => Gunzip }
+	> = {
+		'application/gzip': {
+			extractor: createGunzip,
+		},
+	};
+
+	const extractionInfo = extractFunctions[ mimeType ];
+
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+	if ( ! extractionInfo ) {
+		throw new Error( `unsupported file format: ${ mimeType }` );
+	}
+
 	const source = createReadStream( inputFilename );
 	const destination = createWriteStream( outputFilename );
-	await pipeline( source, createGunzip(), destination );
+	await pipeline( source, extractionInfo.extractor(), destination );
 };
 
 export async function getFileMeta( fileName: string ): Promise< FileMeta > {
@@ -138,13 +168,15 @@ export async function uploadImportSqlFileToS3( {
 	env,
 	fileMeta,
 	progressCallback,
+	hashType = 'md5',
 }: UploadArguments ) {
 	let tmpDir;
 	try {
 		tmpDir = await getWorkingTempDir();
 	} catch ( err ) {
 		throw new Error(
-			`Unable to create temporary working directory: ${ ( err as Error ).message }`
+			`Unable to create temporary working directory: ${ ( err as Error ).message }`,
+			{ cause: err }
 		);
 	}
 
@@ -181,9 +213,9 @@ export async function uploadImportSqlFileToS3( {
 		debug( `** Compression resulted in a ${ calculation } smaller file 📦 **\n` );
 	}
 
-	debug( 'Calculating file md5 checksum...' );
-	const md5 = await getFileMD5Hash( fileMeta.fileName );
-	debug( `Calculated file md5 checksum: ${ md5 }\n` );
+	debug( `Calculating file ${ hashType } checksum...` );
+	const checksum = await getFileHash( fileMeta.fileName, hashType );
+	debug( `Calculated file ${ hashType } checksum: ${ checksum }\n` );
 
 	const result =
 		fileMeta.fileSize < MULTIPART_THRESHOLD
@@ -192,7 +224,7 @@ export async function uploadImportSqlFileToS3( {
 
 	return {
 		fileMeta,
-		md5,
+		checksum,
 		result,
 	};
 }
@@ -201,7 +233,7 @@ interface UploadUsingArguments {
 	app: WithId;
 	env: WithId;
 	fileMeta: FileMeta;
-	progressCallback?: Function;
+	progressCallback?: ( percentage: string ) => unknown;
 }
 
 interface PresignedRequest {
@@ -255,9 +287,9 @@ async function uploadUsingPutObject( {
 		}
 	} );
 
-	const response = await fetch( presignedRequest.url, {
+	const response = await fetchWithRetry( presignedRequest.url, {
 		...fetchOptions,
-		body: fileContent ? fileContent : createReadStream( fileName ).pipe( progressPassThrough ),
+		body: fileContent ?? createReadStream( fileName ).pipe( progressPassThrough ),
 	} );
 
 	if ( response.status === 200 ) {
@@ -276,7 +308,9 @@ async function uploadUsingPutObject( {
 	try {
 		parsedResponse = ( await parser.parseStringPromise( result ) ) as UploadErrorResponse;
 	} catch ( err ) {
-		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }` );
+		throw new Error( `Invalid response from cloud service. ${ ( err as Error ).message }`, {
+			cause: err,
+		} );
 	}
 
 	const { Code, Message } = parsedResponse.Error;
@@ -314,7 +348,7 @@ async function uploadUsingMultipart( {
 		action: 'CreateMultipartUpload',
 	} );
 
-	const multipartUploadResponse = await fetch(
+	const multipartUploadResponse = await fetchWithRetry(
 		presignedCreateMultipartUpload.url,
 		presignedCreateMultipartUpload.options
 	);
@@ -418,6 +452,8 @@ export async function detectCompressedMimeType( fileName: string ): Promise< str
 	const { buffer } = await file.read( Buffer.alloc( 4 ), 0, 4, 0 );
 	const fileHeader = buffer.toString( 'hex' );
 
+	await file.close();
+
 	if ( ZIP_MAGIC_NUMBER === fileHeader.slice( 0, ZIP_MAGIC_NUMBER.length ) ) {
 		return 'application/zip';
 	}
@@ -464,7 +500,7 @@ interface UploadPartsArgs {
 	fileMeta: FileMeta;
 	uploadId: string;
 	parts: Part[];
-	progressCallback?: Function;
+	progressCallback?: ( percentage: string ) => unknown;
 }
 
 export async function uploadParts( {
@@ -592,7 +628,7 @@ async function uploadPart( {
 
 		fetchOptions.body = createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
 
-		const fetchResponse = await fetch( partUploadRequestData.url, fetchOptions );
+		const fetchResponse = await fetchWithRetry( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
 			const responseHeaders = fetchResponse.headers.raw();
 			const [ etag ] = responseHeaders.etag;
@@ -625,7 +661,7 @@ export interface CompleteMultipartUploadArgs {
 	env: WithId;
 	basename: string;
 	uploadId: string;
-	etagResults: Object[];
+	etagResults: Record< string, unknown >[];
 }
 
 /**
@@ -662,7 +698,7 @@ async function completeMultipartUpload( {
 		etagResults,
 	} );
 
-	const completeMultipartUploadResponse = await fetch(
+	const completeMultipartUploadResponse = await fetchWithRetry(
 		completeMultipartUploadRequestData.url,
 		completeMultipartUploadRequestData.options
 	);

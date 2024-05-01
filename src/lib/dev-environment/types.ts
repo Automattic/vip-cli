@@ -74,7 +74,12 @@ export interface ConfigurationFileOptions {
 	'media-redirect-domain'?: string;
 	photon?: boolean;
 
+	meta?: ConfigurationFileMeta;
 	[ index: string ]: unknown;
+}
+
+export interface ConfigurationFileMeta {
+	'configuration-path': string;
 }
 
 export interface InstanceData {

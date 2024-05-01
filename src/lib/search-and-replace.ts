@@ -1,24 +1,17 @@
-// @format
-
-/**
- * External dependencies
- */
-import fs from 'fs';
-import path from 'path';
+import { replace } from '@automattic/vip-search-replace';
 import { red } from 'chalk';
 import debugLib from 'debug';
-import type { Readable, Writable } from 'node:stream';
+import fs from 'fs';
 import { pipeline } from 'node:stream/promises';
-import { replace } from '@automattic/vip-search-replace';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
+import { makeTempDir } from './utils';
+import * as exit from '../lib/cli/exit';
 import { confirm } from '../lib/cli/prompt';
 import { getFileSize } from '../lib/client-file-uploader';
-import * as exit from '../lib/cli/exit';
-import { makeTempDir } from './utils';
+import { trackEvent } from '../lib/tracker';
+
+import type { Readable, Writable } from 'node:stream';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 

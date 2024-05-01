@@ -1,12 +1,7 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
 import API from '../../lib/api';
+
 import type {
 	GetEnvironmentVariablesQuery,
 	GetEnvironmentVariablesQueryVariables,
@@ -31,7 +26,7 @@ const query = gql`
 
 // List the names (but not values) of environment variables.
 export default async function listEnvVars( appId: number, envId: number ): Promise< string[] > {
-	const api = await API();
+	const api = API();
 
 	const variables = {
 		appId,

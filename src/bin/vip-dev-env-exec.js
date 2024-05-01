@@ -1,25 +1,18 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
 	processBooleanOption,
+	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
 const examples = [
@@ -38,14 +31,14 @@ const examples = [
 ];
 
 command( { wildcardCommand: true } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'force', 'Disable validations before task execution', undefined, processBooleanOption )
 	.option( 'quiet', 'Suppress output', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug, opt.quiet );
+		await validateDependencies( lando, slug );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );
@@ -60,7 +53,8 @@ command( { wildcardCommand: true } )
 				);
 			}
 
-			let arg: string[] = [];
+			/** @type {string[]} */
+			let arg = [];
 			if ( argSplitterFound && argSplitterIx + 1 < process.argv.length ) {
 				arg = process.argv.slice( argSplitterIx + 1 );
 			}

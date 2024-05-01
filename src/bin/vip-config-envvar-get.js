@@ -1,34 +1,29 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { appQuery, getEnvVar } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const baseUsage = 'vip @mysite.develop config envvar get';
+const baseUsage = 'vip config envvar get';
+const exampleUsage = 'vip @example-app.develop config envvar get';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ baseUsage } MY_VARIABLE`,
-		description: 'Get the value of the environment variable "MY_VARIABLE"',
+		usage: `${ exampleUsage } MY_VARIABLE`,
+		description: 'Retrieve the value of the environment variable "MY_VARIABLE".',
 	},
 ];
 
-export async function getEnvVarCommand( arg: string[], opt ): Promise< void > {
+/**
+ * @param {string[]} arg
+ * @param {object} opt
+ * @return {Promise<void>}
+ */
+export async function getEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 

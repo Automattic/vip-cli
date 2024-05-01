@@ -1,32 +1,22 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import { trackEventWithEnv } from '../lib/tracker';
+import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
-
-/**
- * Internal dependencies
- */
+import { ProgressTracker } from '../lib/cli/progress';
 import { isSupportedApp } from '../lib/site-import/db-file-import';
 import { importSqlCheckStatus } from '../lib/site-import/status';
-import command from '../lib/cli/command';
-import { ProgressTracker } from '../lib/cli/progress';
+import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
 id,
 name,
 type,
+typeId,
 environments{
 	id
 	appId
 	type
+	name
 	isK8sResident
 	primaryDomain {
 		id
@@ -40,7 +30,7 @@ command( {
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
-} ).argv( process.argv, async ( arg: string[], { app, env } ) => {
+} ).argv( process.argv, async ( arg, { app, env } ) => {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -59,5 +49,10 @@ command( {
 Checking the SQL import status for your environment...
 `;
 
-	await importSqlCheckStatus( { app, env, progressTracker } );
+	await importSqlCheckStatus( {
+		app,
+		env,
+		progressTracker,
+		shouldReturnMissingJobImmediately: true,
+	} );
 } );

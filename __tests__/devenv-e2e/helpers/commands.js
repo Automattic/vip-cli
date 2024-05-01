@@ -1,6 +1,3 @@
-/**
- * External dependencies
- */
 import { join, resolve } from 'node:path';
 
 const vipPath = resolve( __dirname, '../../../dist/bin' );

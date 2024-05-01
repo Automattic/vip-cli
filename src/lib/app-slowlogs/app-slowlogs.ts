@@ -1,17 +1,9 @@
-// @format
-
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import { GetAppSlowlogsQueryVariables } from './app-slowlogs.generated';
-import { Query } from '../../graphqlTypes';
 import { GetRecentSlowlogsResponse } from './types';
+import { Query } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 export const LIMIT_MAX = 5000;
 
@@ -43,7 +35,7 @@ export async function getRecentSlowlogs(
 	limit: number,
 	after?: string | null
 ): Promise< GetRecentSlowlogsResponse > {
-	const api = await API( { exitOnError: false } );
+	const api = API( { exitOnError: false } );
 
 	const response = await api.query< Query, GetAppSlowlogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_SLOWLOGS,

@@ -23,10 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
           cache: npm
@@ -37,6 +37,12 @@ jobs:
 
       - name: Pack and install
         run: npm pack && npm i -g *.tgz
+
+      - name: Install docker-compose
+        run: |
+          REPO="docker/compose"
+          LATEST_RELEASE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" --silent "https://api.github.com/repos/${REPO}/releases/latest" | jq -r .tag_name)
+          sudo curl -L "https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose && sudo chmod 0755 /usr/local/bin/docker-compose
 
       - name: Preload Docker images
         run: |

@@ -1,4 +1,4 @@
-import { LandoConfig } from "./lando";
+import { LandoConfig } from './lando';
 
 export = App;
 
@@ -70,9 +70,12 @@ declare class App {
 	engine: any;
 	metrics: any;
 	Promise: any;
-	events: import("lando/lib/events");
+	events: import('lando/lib/events');
 	urls: ScanResult[] | undefined;
-	scanUrls: (urls: string[], options?: { max?: number, waitCodes?: number[] }) => Promise<ScanResult[]>;
+	scanUrls: (
+		urls: string[],
+		options?: { max?: number; waitCodes?: number[] }
+	) => Promise< ScanResult[] >;
 	/**
 	 * The apps configuration
 	 *
@@ -92,7 +95,7 @@ declare class App {
 	 */
 	info: ServiceInfo[];
 	labels: any;
-	opts: Record<string, any>;
+	opts: Record< string, any >;
 	plugins: any;
 	metaCache: string;
 	meta: any;

@@ -1,11 +1,5 @@
-/**
- * External dependencies
- */
 import { describe, it, expect } from '@jest/globals';
 
-/**
- * Internal dependencies
- */
 import { isAlias, parseEnvAlias, parseEnvAliasFromArgv } from '../../../src/lib/cli/envAlias';
 
 describe( 'utils/cli/envAlias', () => {
@@ -23,6 +17,7 @@ describe( 'utils/cli/envAlias', () => {
 			'@1',
 			'@1.env',
 			'@2.MixedCaseEnv',
+			'@xxx.production_test',
 		] )( 'should identify valid aliases - %p', alias => {
 			expect( isAlias( alias ) ).toBe( true );
 		} );

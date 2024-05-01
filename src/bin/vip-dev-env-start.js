@@ -1,23 +1,8 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import chalk from 'chalk';
 import debugLib from 'debug';
-import { exec } from 'child_process';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
@@ -25,13 +10,13 @@ import {
 	getEnvironmentName,
 	handleCLIException,
 	postStart,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
+import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
-
-// PowerShell command for Windows Docker patch
-const dockerWindowsPathCmd = 'wsl -d docker-desktop bash -c "sysctl -w vm.max_map_count=262144"';
 
 const examples = [
 	{
@@ -46,7 +31,7 @@ const examples = [
 ];
 
 command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'skip-rebuild', 'Only start stopped services' )
 	.option(
 		[ 'w', 'skip-wp-versions-check' ],
@@ -62,32 +47,16 @@ command()
 		const startProcessing = new Date();
 
 		const trackingInfo = getEnvTrackingInfo( slug );
-		trackingInfo.vscode = !! opt.vscode;
+		trackingInfo.vscode = Boolean( opt.vscode );
 		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		const options = {
-			skipRebuild: !! opt.skipRebuild,
-			skipWpVersionsCheck: !! opt.skipWpVersionsCheck,
+			skipRebuild: Boolean( opt.skipRebuild ),
+			skipWpVersionsCheck: Boolean( opt.skipWpVersionsCheck ),
 		};
 		try {
-			if ( process.platform === 'win32' ) {
-				debug( 'Windows platform detected. Applying Docker patch...' );
-
-				exec( dockerWindowsPathCmd, { shell: 'powershell.exe' }, ( error, stdout ) => {
-					if ( error ) {
-						debug( error );
-						console.log(
-							`${ chalk.red( '✕' ) } There was an error while applying the Windows Docker patch.`
-						);
-					} else {
-						debug( stdout );
-						console.log( `${ chalk.green( '✓' ) } Docker patch for Windows applied.` );
-					}
-				} );
-			}
-
 			await startEnvironment( lando, slug, options );
 
 			const processingTime = Math.ceil( ( new Date() - startProcessing ) / 1000 ); // in seconds
@@ -98,5 +67,5 @@ command()
 			process.exitCode = 1;
 		}
 
-		postStart( slug, { openVSCode: !! opt.vscode } );
+		postStart( slug, { openVSCode: Boolean( opt.vscode ) } );
 	} );

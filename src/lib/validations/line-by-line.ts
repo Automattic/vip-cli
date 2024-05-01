@@ -1,14 +1,8 @@
-/**
- * External dependencies
- */
-import { type Interface, createInterface } from 'node:readline';
+import debugLib from 'debug';
 import { createReadStream } from 'node:fs';
 import { open } from 'node:fs/promises';
-import debugLib from 'debug';
+import { type Interface, createInterface } from 'node:readline';
 
-/**
- * Internal dependencies
- */
 import * as exit from '../../lib/cli/exit';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
@@ -61,7 +55,7 @@ export async function fileLineValidations(
 	} );
 
 	readInterface.on( 'error', ( err: Error ) => {
-		throw new Error( ` Error validating input file: ${ err.toString() }` );
+		throw new Error( `Error validating input file: ${ err.toString() }`, { cause: err } );
 	} );
 
 	// Block until the processing completes

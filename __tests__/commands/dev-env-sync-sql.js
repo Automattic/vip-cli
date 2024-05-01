@@ -1,17 +1,10 @@
-/**
- * External dependencies
- */
-import { describe, expect, jest } from '@jest/globals';
-import fs from 'fs';
 import { replace } from '@automattic/vip-search-replace';
+import fs from 'fs';
 import { PassThrough } from 'stream';
 
-/**
- * Internal dependencies
- */
+import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { DevEnvSyncSQLCommand } from '../../src/commands/dev-env-sync-sql';
 import { ExportSQLCommand } from '../../src/commands/export-sql';
-import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { unzipFile } from '../../src/lib/client-file-uploader';
 import { getReadInterface } from '../../src/lib/validations/line-by-line';
 
@@ -71,6 +64,18 @@ jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 describe( 'commands/DevEnvSyncSQLCommand', () => {
 	const app = { id: 123, name: 'test-app' };
 	const env = { id: 456, name: 'test-env', wpSitesSDS: {} };
+	const msEnv = {
+		id: 456,
+		name: 'test-env',
+		wpSitesSDS: {
+			nodes: [
+				{
+					blogId: 2,
+					homeUrl: 'https://subsite.com',
+				},
+			],
+		},
+	};
 
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
@@ -92,6 +97,18 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			cmd.generateSearchReplaceMap();
 
 			expect( cmd.searchReplaceMap ).toEqual( { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' } );
+		} );
+
+		it( 'should return a map of search-replace values for multisite', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug' );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [ 'test.go-vip.com', 'subsite.com' ];
+			cmd.generateSearchReplaceMap();
+
+			expect( cmd.searchReplaceMap ).toEqual( {
+				'test.go-vip.com': 'test-slug.vipdev.lndo.site',
+				'subsite.com': 'subsite-com-2.test-slug.vipdev.lndo.site',
+			} );
 		} );
 	} );
 
@@ -117,7 +134,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
 			await cmd.runImport();
 
-			expect( mockImport ).toHaveBeenCalledWith( true );
+			expect( mockImport ).toHaveBeenCalled();
 		} );
 	} );
 
@@ -129,7 +146,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		const importSpy = jest.spyOn( syncCommand, 'runImport' );
 
 		beforeAll( () => {
-			exportSpy.mockResolvedValue();
+			exportSpy.mockResolvedValue( true );
 			searchReplaceSpy.mockResolvedValue();
 			importSpy.mockResolvedValue();
 		} );

@@ -1,21 +1,9 @@
-// @flow
-
-/**
- * External dependencies
- */
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import type { Response } from 'node-fetch';
 
-/**
- * Internal dependencies
- */
 import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
 import command from '../../src/lib/cli/command';
-// $FlowExpectedError[cannot-resolve-module]
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
-// $FlowExpectedError[cannot-resolve-module]
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
-// $FlowExpectedError[cannot-resolve-module]
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -25,14 +13,8 @@ function mockExit() {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
-interface CommandMockType {
-	argv: () => CommandMockType;
-	examples: () => CommandMockType;
-	option: () => CommandMockType;
-}
-
-jest.mock( 'lib/cli/command', () => {
-	const commandMock: CommandMockType = {
+jest.mock( '../../src/lib/cli/command', () => {
+	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
 		option: () => commandMock,
@@ -71,35 +53,22 @@ describe( 'vip config envvar delete', () => {
 	} );
 } );
 
-const mockConfirm: JestMockFn< [ string ], Promise< boolean > > = ((confirm: any): JestMockFn<
-	[ string ],
-	Promise< boolean >
->);
-const mockValidateNameWithMessage: JestMockFn< [ string ], boolean > =
-	((validateNameWithMessage: any): JestMockFn< [ string ], boolean >);
-const mockPromptForValue: JestMockFn<
-	[ string, string ],
-	Promise< string >
-> = ((promptForValue: any): JestMockFn< [ string, string ], Promise< string > >);
-const mockDeleteEnvVar: JestMockFn<
-	[ number, number, string ],
-	Promise< void >
-> = ((deleteEnvVar: any): JestMockFn< [ number, number, string ], Promise< void > >);
-const mockTrackEvent: JestMockFn< [], Promise< Response > > = ((trackEvent: any): JestMockFn<
-	[],
-	Promise< Response >
->);
+const mockConfirm = confirm;
+const mockValidateNameWithMessage = validateNameWithMessage;
+const mockPromptForValue = promptForValue;
+const mockDeleteEnvVar = deleteEnvVar;
+const mockTrackEvent = trackEvent;
 
 describe( 'deleteEnvVarCommand', () => {
 	let args;
 	let opts;
 	const eventPayload = expect.objectContaining( {
-		command: expect.stringContaining( 'vip @mysite.develop config envvar delete' ),
+		command: expect.stringContaining( 'vip config envvar delete' ),
 	} );
 	const executeEvent = [ 'envvar_delete_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_delete_command_success', eventPayload ];
 
-	function setFixtures( name: string, skipConfirmation: string = '' ) {
+	function setFixtures( name, skipConfirmation = '' ) {
 		args = [ name ];
 		opts = {
 			app: {
@@ -189,7 +158,6 @@ describe( 'deleteEnvVarCommand', () => {
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
-		// $FlowIgnore[method-unbinding] No idea how to fix this
 		expect( process.exit ).toHaveBeenCalledWith( 1 );
 
 		expect( promptForValue ).not.toHaveBeenCalled();
@@ -205,7 +173,7 @@ describe( 'deleteEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
-		mockDeleteEnvVar.mockImplementation( () => Promise.reject< void >( thrownError ) );
+		mockDeleteEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
 

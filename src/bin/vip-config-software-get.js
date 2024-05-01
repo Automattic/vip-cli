@@ -1,34 +1,41 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
 import { appQuery, appQueryFragments, formatSoftwareSettings } from '../lib/config/software';
+import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
+
+const usage = 'vip config software get <wordpress|php|nodejs|muplugins>';
+const exampleUsage = 'vip @example-app.develop config software get';
+const exampleUsageNode = 'vip @example-node-app.develop config software get';
 
 // Command examples
 const examples = [
 	{
-		usage:
-			'vip @mysite.develop config software get wordpress --include available_versions --format json',
+		usage: exampleUsage,
 		description:
-			'Read current software settings for WordPress in JSON format including available versions',
+			'Retrieve a list of the current versions of all environment software in the default table format.',
 	},
 	{
-		usage: 'vip @mysite.develop config software get',
-		description: 'Read current software settings for all components',
+		usage: `${ exampleUsage } --format=csv`,
+		description:
+			'Retrieve a list of the current versions of all environment software in CSV format.',
+	},
+	{
+		usage: `${ exampleUsage } wordpress --include=available_versions`,
+		description:
+			'Retrieve the current version of WordPress for a WordPress environment and a list of available versions in the default table format.',
+	},
+	{
+		usage: `${ exampleUsage } php --include=available_versions`,
+		description:
+			'Retrieve the current version of PHP for a WordPress environment and a list of available versions in the default table format.',
+	},
+	{
+		usage: `${ exampleUsageNode } nodejs --include=available_versions --format=json`,
+		description:
+			'Retrieve the current version of Node.js for a Node.js environment and a list of available versions in JSON format.',
 	},
 ];
 
@@ -41,14 +48,14 @@ command( {
 	envContext: true,
 	wildcardCommand: true,
 	format: true,
-	usage: 'vip @mysite.develop config software get <wordpress|php|nodejs|muplugins>',
+	usage,
 } )
 	.option(
 		'include',
-		`Extra information to be included. Valid values: ${ VALID_INCLUDES.join( ',' ) }`
+		`Retrieve additional data of a specific type. Supported values: ${ VALID_INCLUDES.join( ',' ) }`
 	)
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], opt ) => {
+	.argv( process.argv, async ( arg, opt ) => {
 		const trackingInfo = {
 			environment_id: opt.env?.id,
 			args: JSON.stringify( arg ),
@@ -63,7 +70,7 @@ command( {
 				include = [ opt.include ];
 			}
 			const invalidIncludes = include.filter(
-				( includeKey: any ) => ! VALID_INCLUDES.includes( includeKey )
+				includeKey => ! VALID_INCLUDES.includes( includeKey )
 			);
 			if ( invalidIncludes.length > 0 ) {
 				throw new UserError( `Invalid include value(s): ${ invalidIncludes.join( ',' ) }` );
@@ -94,7 +101,7 @@ command( {
 		}
 
 		const preFormatted = chosenSettings
-			.filter( softwareSetting => !! softwareSetting )
+			.filter( softwareSetting => Boolean( softwareSetting ) )
 			.map( softwareSetting => formatSoftwareSettings( softwareSetting, include, opt.format ) );
 
 		console.log( formatData( preFormatted, opt.format ) );

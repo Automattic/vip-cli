@@ -1,5 +1,302 @@
 ## Changelog
 
+### 2.39.3
+
+* Update/docs pt vip config
+* Updates to descriptions and examples for vip db
+* Updates to descriptions and examples for vip backup
+* Fix duplicate format option on slowlogs command
+* Fix issue with missing CSV output values
+* chore(deps): update `tar` to fix CVE-2024-28863
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.2...2.39.3
+
+### 2.39.2
+
+* build(deps-dev): bump typescript from 5.4.4 to 5.4.5
+* build(deps): bump ejs from 3.1.9 to 3.1.10
+* fix: remove unused `cancelCommand`
+* fix(dev-env): argument parsing for `vip dev-env sync sql`
+* fix: underscore is allowed in environment name
+* chore: remove unused files
+* fix: superfluous trailing arguments
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.1...2.39.2
+
+### 2.39.1
+
+- Fix a crash due to an undefined function when running `export sql` with the `--generate-backup` flag by @noahtallen in https://github.com/Automattic/vip-cli/pull/1769
+- refactor(dev-env): reduce noise from preflight checks by @sjinks in https://github.com/Automattic/vip-cli/pull/1758
+
+### 2.39.0
+
+* Updated Docs URLs to current permalinks by @yolih in https://github.com/Automattic/vip-cli/pull/1742
+* Updated the export command group according to VIP-CLI style guide by @yolih in https://github.com/Automattic/vip-cli/pull/1741
+* build(deps-dev): bump @types/node from 18.19.26 to 18.19.28 by @dependabot in https://github.com/Automattic/vip-cli/pull/1747
+* ci: add dependency review workflow by @sjinks in https://github.com/Automattic/vip-cli/pull/1750
+* test: fix E2E tests for composer v2 by @sjinks in https://github.com/Automattic/vip-cli/pull/1752
+* ci: install docker-compose by @sjinks in https://github.com/Automattic/vip-cli/pull/1751
+* build(deps): bump cli-table3 from 0.6.3 to 0.6.4 by @dependabot in https://github.com/Automattic/vip-cli/pull/1739
+* Make "importSQLCheckStatus" return immediately when called from the `vip import sql status` command and no import is running by @andrea-sdl in https://github.com/Automattic/vip-cli/pull/1722
+* fix(dev-env): regression: stop proxy when there are no running envs by @sjinks in https://github.com/Automattic/vip-cli/pull/1738
+* Fixes text so that it doesn't reference "the above tables" when tables are not displayed by @brunobasto in https://github.com/Automattic/vip-cli/pull/1731
+* build(deps): bump fetch-retry from 5.0.6 to 6.0.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1730
+* build(deps): bump ini from 4.1.1 to 4.1.2 by @dependabot in https://github.com/Automattic/vip-cli/pull/1717
+* chore(deps): update lando by @sjinks in https://github.com/Automattic/vip-cli/pull/1753
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.3...2.39.0
+
+### 2.38.3
+
+* Fix triggering publish docs workflow on tag push by @seanlanglands in https://github.com/Automattic/vip-cli/pull/1716
+* build(deps-dev): bump nock from 13.5.3 to 13.5.4 by @dependabot in https://github.com/Automattic/vip-cli/pull/1708
+* build(deps-dev): bump @types/node from 18.19.18 to 18.19.21 by @dependabot in https://github.com/Automattic/vip-cli/pull/1715
+* build(deps-dev): bump the babel group with 2 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1709
+* vip app deploy - Allow passing in a deploy key with env variable by @rebeccahum in https://github.com/Automattic/vip-cli/pull/1718
+* build(deps-dev): bump typescript from 5.3.3 to 5.4.2 by @dependabot in https://github.com/Automattic/vip-cli/pull/1721
+* build(deps-dev): bump @types/node from 18.19.21 to 18.19.22 by @dependabot in https://github.com/Automattic/vip-cli/pull/1720
+* build(deps-dev): bump @types/dockerode from 3.3.24 to 3.3.26 by @dependabot in https://github.com/Automattic/vip-cli/pull/1724
+* build(deps): bump open from 10.0.4 to 10.1.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1725
+* Allows user to continue even when the answer doesn't match the expected letter casing by @brunobasto in https://github.com/Automattic/vip-cli/pull/1632
+* build(deps-dev): bump the babel group with 4 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1734
+* build(deps-dev): bump @types/node from 18.19.22 to 18.19.26 by @dependabot in https://github.com/Automattic/vip-cli/pull/1733
+* build(deps-dev): bump typescript from 5.4.2 to 5.4.3 by @dependabot in https://github.com/Automattic/vip-cli/pull/1735
+* build(deps): bump socket.io-client from 4.7.4 to 4.7.5 by @dependabot in https://github.com/Automattic/vip-cli/pull/1729
+* Update SQL import prompt message by @iamchughmayank in https://github.com/Automattic/vip-cli/pull/1743
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.2...2.38.3
+
+### 2.38.2
+
+* New develop release: 2.38.2-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1697
+* build(deps-dev): bump nock from 13.5.1 to 13.5.3 by @dependabot in https://github.com/Automattic/vip-cli/pull/1701
+* build(deps-dev): bump @types/node from 18.19.15 to 18.19.17 by @dependabot in https://github.com/Automattic/vip-cli/pull/1699
+* style: fix issues found by ESLint by @sjinks in https://github.com/Automattic/vip-cli/pull/1702
+* build(deps-dev): bump eslint from 8.56.0 to 8.57.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1707
+* build(deps): bump open from 10.0.3 to 10.0.4 by @dependabot in https://github.com/Automattic/vip-cli/pull/1705
+* build(deps-dev): bump @types/semver from 7.5.7 to 7.5.8 by @dependabot in https://github.com/Automattic/vip-cli/pull/1706
+* build(deps-dev): bump @types/dockerode from 3.3.23 to 3.3.24 by @dependabot in https://github.com/Automattic/vip-cli/pull/1704
+* build(deps-dev): bump @types/node from 18.19.17 to 18.19.18 by @dependabot in https://github.com/Automattic/vip-cli/pull/1703
+* Add environment name to PHPMyAdmin AppQuery by @chriszarate in https://github.com/Automattic/vip-cli/pull/1711
+* New package release: v2.38.2 by @github-actions in https://github.com/Automattic/vip-cli/pull/1712
+
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.1...2.38.2
+
+### 2.38.1
+
+* New develop release: 2.38.1-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1678
+* build(deps-dev): bump @types/node from 18.19.9 to 18.19.14 by @dependabot in https://github.com/Automattic/vip-cli/pull/1680
+* build(deps-dev): bump the testing group with 1 update by @dependabot in https://github.com/Automattic/vip-cli/pull/1679
+* build(deps-dev): bump @types/uuid from 9.0.7 to 9.0.8 by @dependabot in https://github.com/Automattic/vip-cli/pull/1670
+* build(deps-dev): bump nock from 13.5.0 to 13.5.1 by @dependabot in https://github.com/Automattic/vip-cli/pull/1671
+* build(deps-dev): bump the babel group with 3 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1668
+* build(deps): bump semver from 7.5.4 to 7.6.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1684
+* BYOR: Update to use renamed CustomDeploy mutation by @rebeccahum in https://github.com/Automattic/vip-cli/pull/1687
+* Fix prompt handling causing duplicate messages to be shown for export sql and dev-env sync by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1682
+* Support default OrbStack Docker socket path by @chriszarate in https://github.com/Automattic/vip-cli/pull/1686
+* Update publish docs request parameters by @seanlanglands in https://github.com/Automattic/vip-cli/pull/1688
+* build(deps-dev): bump @types/semver from 7.5.6 to 7.5.7 by @dependabot in https://github.com/Automattic/vip-cli/pull/1692
+* build(deps): bump @json2csv/plainjs from 7.0.5 to 7.0.6 by @dependabot in https://github.com/Automattic/vip-cli/pull/1691
+* build(deps-dev): bump @types/node from 18.19.14 to 18.19.15 by @dependabot in https://github.com/Automattic/vip-cli/pull/1690
+* chores (phpmyadmin): Add insufficient-permission message by @aswasif007 in https://github.com/Automattic/vip-cli/pull/1694
+* New package release: v2.38.1 by @github-actions in https://github.com/Automattic/vip-cli/pull/1696
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.38.0...2.38.1
+
+### 2.38.0
+
+* New develop release: 2.37.1-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1663
+* fix(dev-env): always lowercase environment slug by @sjinks in https://github.com/Automattic/vip-cli/pull/1659
+* Use vip dev-env configuration file from parent directories by @alecgeatches in https://github.com/Automattic/vip-cli/pull/1468
+* build(deps): bump @json2csv/plainjs from 7.0.4 to 7.0.5 by @dependabot in https://github.com/Automattic/vip-cli/pull/1664
+* build(deps-dev): bump @types/node from 18.19.8 to 18.19.9 by @dependabot in https://github.com/Automattic/vip-cli/pull/1666
+* feat(phpmyadmin): Add `vip  db phpmyadmin` command by @aswasif007 in https://github.com/Automattic/vip-cli/pull/1526
+* New package release: v2.38.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1677
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.37.0...2.38.0
+
+### 2.37.0
+
+- build(deps-dev): bump the babel group with 2 updates
+- build(deps): bump @automattic/vip-search-replace from 1.1.1 to 1.1.2
+- build(deps): bump Automattic/vip-actions from 0.2.0 to 0.3.0
+- build(deps): bump github/codeql-action from 2 to 3
+- BYOR: Add `vip app deploy`
+- build(deps-dev): bump eslint from 8.55.0 to 8.56.0
+- Dev-env: Remove 8.0 & 7.4 from available PHP versions
+- build(deps): bump open from 9.1.0 to 10.0.0
+- fix(dev-env): use the latest nginx image
+- build(deps-dev): bump dockerode from 4.0.0 to 4.0.1
+- build(deps): bump open from 10.0.0 to 10.0.1
+- build(deps-dev): bump dockerode from 4.0.1 to 4.0.2
+- build(deps): bump open from 10.0.1 to 10.0.2
+- fix(validate-sql): Display matched site-urls
+- build(deps): bump socket.io-client from 4.7.2 to 4.7.3
+- build(deps-dev): bump the babel group with 2 updates
+- build(deps): bump open from 10.0.2 to 10.0.3
+- feat: show detailed error information in debug mode
+- build(deps-dev): bump the babel group with 1 update
+- fix: issues found by SonarCloud
+- build(deps-dev): bump @types/node from 18.19.5 to 18.19.6
+- chore(deps): fix CVE-2023-26159 in follow-redirects
+- build(deps): bump Automattic/vip-actions from 0.3.0 to 0.5.0
+- build(deps): bump @automattic/vip-search-replace from 1.1.2 to 1.1.3
+- fix: Properly propagate quotes
+- fix(--format=json): Do not print header if specified format is json
+- feat(dev-env): add quiet mode for "import sql"
+- build(deps): bump socket.io-client from 4.7.3 to 4.7.4
+- fix: regex vulnerable to super-linear runtime
+- ci: add CodeQL workflow
+- ci: remove outdated CodeQL workflow
+- BYOR: Change manual-deploy to custom-deploy
+- build(deps-dev): bump @types/node from 18.19.6 to 18.19.8
+- build(deps-dev): bump nock from 13.4.0 to 13.5.0
+- fix(dev-env): CWE-367 in `prepareLandoEnv()`
+- fix(dev-env): CWE-367 in `getConfigurationFileOptions()`
+- fix(dev-env): CWE-377, CWE-378 originating from `xdgDataDirectory()`
+- build(deps): bump Automattic/vip-actions from 0.5.0 to 0.6.0
+
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.36.3...v2.37.0
+
+### 2.36.3
+
+- build(deps): bump @json2csv/plainjs from 7.0.3 to 7.0.4
+- build(deps-dev): bump nock from 13.3.8 to 13.4.0
+- build(deps-dev): bump the babel group with 2 updates
+- build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.9.0 to 0.9.1
+- fix(dev-env): `/lando-entrypoint.sh: exec: line 83: exit: not found`
+- build(deps-dev): bump eslint from 8.54.0 to 8.55.0
+- build(deps-dev): bump typescript from 5.3.2 to 5.3.3
+- build(deps-dev): bump the testing group with 1 update
+- chore(deps): update lando to 25fcd83
+- build(deps): bump Automattic/vip-actions from 0.1.2 to 0.2.0
+
+### 2.36.2
+
+- #1558 fix(dev-env): Fix typo on suggested start command after updating env
+- #1557 fix(dev-env): Fix an issue where dev-env-import-sql command execute event was not being tracked
+- #1554 chore(dev-deps): update testing tools
+- #1556 chore(dev-deps): update eslint from 8.52.0 to 8.54.0
+- #1555 chore(deps): replace the deprecated `opn` with `open`
+- #1553 chore(dev-deps): update TypeScript and typings
+- #1578 build(deps-dev): bump @types/semver from 7.5.4 to 7.5.6
+- #1577 Updating ESLint config
+- #1559 Restructure and refine documentation + add missing tests
+- #1591 Fix database backup URL in error message
+- #1537 Add vip dev-env purge command logic
+- #1590 build(deps): bump actions/setup-node from 3 to 4
+- #1589 build(deps): bump actions/checkout from 3 to 4
+- #1592 chore: group dependencies that should be updated together
+- #1594 build(deps-dev): bump the babel group with 4 updates
+- #1593 build(deps-dev): bump the testing group with 1 update
+- #1595 build(deps-dev): bump typescript from 5.2.2 to 5.3.2
+- #1596 build(deps): bump @automattic/vip-go-preflight-checks from 2.0.16 to 2.0.17
+- #1580 build(deps): bump ini from 2.0.0 to 4.1.1
+- #1598 build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.8.0 to 0.9.0
+- #1597 chore(deps): update Lando
+
+### 2.36.1
+
+- #1550 chore(deps): replace cli-table with cli-table3
+
+### 2.36.0
+
+- #1527 chore(dev-deps): remove @babel/plugin-transform-modules-commonjs and babel-plugin-module-resolver
+- #1531 chore(dev-deps): update nock from 13.3.3 to 13.3.4
+- #1530 chore(dev-deps): update TypeScript type definitions
+- #1529 chore(dev-deps): update eslint from 8.50.0 to 8.51.0
+- #1532 chore(dev-deps): update dockerode from 3.3.4 to 4.0.0
+- #1528 chore(dev-deps): update Babel-related stuff to 7.23
+- #1522 Change default response on WordPress upgrade prompt to 'no'
+- #1533 FORNO-1704: SQL Import - Improve handling of compressed files
+- #1536 CANTINA-957: Dev-env: Make message after update more clear
+- #1534 build: disable promise/no-multiple-resolved
+- #1535 FORNO-1677: Fix dev env network site domains
+- #1538 style: update @automattic/eslint-plugin-wpvip to 0.8.0 and apply style fixes
+- #1539 chore(dev-deps): update TypeScript type definitions
+- #1540 chore(deps): update jwt-decode from 3.1.2 to 4.0.0
+- #1541 chore(dev-deps): update nock from 13.3.4 to 13.3.7
+- #1542 chore: generate and verify provenance statements
+- #1544 chore(deps): update update-notifier to 7.0.0
+- #1485 feat(dev-env): add PHP 8.3 image
+- #1543 chore(deps): update lando
+- #1545 chore(deps): replace deprecated `json2csv` with `@json2csv/plainjs`
+
+### 2.35.1
+
+- #1523	SQL Import Status: Ensure we pull site type ID from server for validation
+- #1515	refactor: remove flow
+- #1521	Fix link in CONTRIBUTING.md
+
+### 2.35.0
+
+- #1506 Allow imports for all sites with databases by @chriszarate in https://github.com/Automattic/vip-cli/pull/1507
+- #1497 fix: remove import bypass for TypeScript by @sjinks in https://github.com/Automattic/vip-cli/pull/1497
+- #1496 fix(dev-env): update certificate Common Name by @sjinks in https://github.com/Automattic/vip-cli/pull/1496
+- #1513 refactor: use `semver` instead of `check-node-version` by @sjinks in https://github.com/Automattic/vip-cli/pull/1513
+- #1514 chore(dev-deps): update TypeScript type definitions by @sjinks in https://github.com/Automattic/vip-cli/pull/1514
+- #1508 chore(dev-deps): update jest-related packages to 29.7.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1508
+- #1509 chore(dev-deps): update eslint from 8.47.0 to 8.49.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1509
+- #1510 chore(deps): update uuid from 9.0.0 to 9.0.1 by @sjinks in https://github.com/Automattic/vip-cli/pull/1510
+- #1512 chore(deps): update node-fetch from 2.6.12 to 2.7.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1512
+- #1511 chore(deps): update graphql-tag from 2.12.5 to 2.12.6 by @sjinks in https://github.com/Automattic/vip-cli/pull/1511
+- #1517 chore(dev-deps): update rimraf from 5.0.1 to 5.0.5 by @sjinks in https://github.com/Automattic/vip-cli/pull/1517
+- #1516 chore(dev-deps): update eslint from 8.49.0 to 8.50.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1516
+- #1499 chore(dev-deps): update @automattic/eslint-plugin-wpvip to 0.6.0 by @sjinks in https://github.com/Automattic/vip-cli/pull/1499
+
+### 2.34.0
+
+- #1503 chore(dev-deps): update nock to 13.3.3
+- #1502 chore(dev-deps): update flow-bin to 0.216.1
+- #1501 chore(deps): update jest-related packages
+- #1500 chore(dev-deps): update babel-related packages
+- #1498 ci: run tests and checks in parallel
+- #1462 Fixed Slowlogs local unit test
+- #1488 fix: do not abort if a temporary directory cannot be removed on exit
+- #1495 refactor: convert `media-import` to TypeScript
+- #1492 refactor: convert `site-import` directory to TypeScript
+
+### 2.33.0
+
+- #1475 Updating CONTRIBUTING.md with new publishing procedure
+- #1477 Fetch environment name from server to fix environment selector label
+- #1479 chore(dev-deps): update jest-related packages to 29.6.2
+- #1480 chore(deps): update node-fetch to 2.6.12
+- #1481 chore(deps): update socket.io-client to 4.7.2
+- #1482 chore(deps): update enquirer to 2.4.1
+- #1478 Fix False UP status for multisite dev-envs
+- #1483 Disable Windows patch
+- #1458 Add warning confirmation when there's not enough space on disk. by
+- #1487 fix(dev-env): display ports exposed by services
+- #1490 fix: CLI not respecting proxy settings when creating local dev environment by
+- #1491 chore(dev-deps): update eslint from 8.43.0 to 8.47.0
+- #1486 chore(dev-deps): update babel-related packages
+- #1484 feat(backup): Add vip backup db command
+
+### 2.32.4
+
+- #1470 Rename prepare-release.yml to npm-prepare-release.yml
+- #1469 fix compatibility issue
+
+### 2.32.3
+
+- #1456 Fix DB engine validation regex
+- #1455 Fix SQL import command
+- #1454 chore(deps): update lando to 5efb9eb
+- #1453 Refactor logout
+- #1425 Add Slowlogs command
+- #1341 feat(dev-env): Add a concept of init-only containers
+- #1344 fix(dev-env): Do not run URL scan unless really need to
+- #1414 [dev-env] Tweak error handling dev-env sync
+- #1452 chore(dev-deps): update TypeScript-related packages
+- #1420 feat(dev-env): Adds automigration logic to dev-env
+- #1451 chore(dev-deps): update testing tools
+- #1448 chore(dev-deps): update babel packages to 7.22.9
+- #1421 refactor: Convert dev-environment to TypeScript
+- #1450 refactor: convert `validations` to TS
+
 ### 2.32.2
 
 - #1443 On-demand Database Backup: Use a less error-prone way of detecting if we're rate limited

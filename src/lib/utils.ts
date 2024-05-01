@@ -1,17 +1,9 @@
-// @format
-
-/**
- * External dependencies
- */
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { setTimeout } from 'node:timers/promises';
 import debugLib from 'debug';
+import fs from 'fs';
+import { setTimeout } from 'node:timers/promises';
+import os from 'os';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
 const debug = debugLib( '@automattic/vip:lib:utils' );
 
 /**
@@ -52,8 +44,14 @@ export function makeTempDir( prefix = 'vip-cli' ): string {
 	debug( `Created a directory to hold temporary files: ${ tempDir }` );
 
 	process.on( 'exit', () => {
-		fs.rmSync( tempDir, { recursive: true, force: true } );
-		debug( `Removed temporary directory: ${ tempDir }` );
+		try {
+			fs.rmSync( tempDir, { recursive: true, force: true, maxRetries: 10 } );
+			debug( `Removed temporary directory: ${ tempDir }` );
+		} catch ( err ) {
+			console.warn(
+				`Failed to remove temporary directory ${ tempDir } (${ ( err as Error ).message })`
+			);
+		}
 	} );
 
 	return tempDir;

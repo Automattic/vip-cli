@@ -1,12 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import logout from '../lib/logout';
 
@@ -14,7 +7,7 @@ void command( { usage: 'vip logout' } )
 	.examples( [
 		{
 			usage: 'vip logout',
-			description: 'Logs out current user.',
+			description: 'Log out the current authenticated VIP-CLI user.',
 		},
 	] )
 	.argv( process.argv, async () => {

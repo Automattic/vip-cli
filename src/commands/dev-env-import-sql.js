@@ -1,19 +1,12 @@
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-import fs from 'fs';
 import chalk from 'chalk';
+import fs from 'fs';
 
-/**
- * Internal dependencies
- */
-import { promptForBoolean, validateDependencies } from '../lib/dev-environment/dev-environment-cli';
+import * as exit from '../lib/cli/exit';
+import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
+import {
+	processBooleanOption,
+	validateDependencies,
+} from '../lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
 	resolveImportPath,
@@ -21,13 +14,13 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
-import { validate as validateSQL } from '../lib/validations/sql';
+import { makeTempDir } from '../lib/utils';
+import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
 export class DevEnvImportSQLCommand {
 	fileName;
 	options;
 	slug;
-	trackingInfo;
 
 	constructor( fileName, options, slug ) {
 		this.fileName = fileName;
@@ -35,9 +28,34 @@ export class DevEnvImportSQLCommand {
 		this.slug = slug;
 	}
 
-	async run( silent = false ) {
+	async run() {
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, this.slug, silent );
+		await validateDependencies( lando, this.slug );
+
+		validateImportFileExtension( this.fileName );
+
+		// Check if file is compressed and if so, extract the
+		const fileMeta = await getFileMeta( this.fileName );
+		if ( fileMeta.isCompressed ) {
+			const tmpDir = makeTempDir();
+			const sqlFile = `${ tmpDir }/sql-import.sql`;
+
+			try {
+				if ( ! this.options.quiet ) {
+					console.log( `Extracting the compressed file ${ this.fileName }...` );
+				}
+
+				await unzipFile( this.fileName, sqlFile );
+
+				if ( ! this.options.quiet ) {
+					console.log( `${ chalk.green( '✓' ) } Extracted to ${ sqlFile }` );
+				}
+
+				this.fileName = sqlFile;
+			} catch ( err ) {
+				exit.withError( `Error extracting the SQL file: ${ err.message }` );
+			}
+		}
 
 		const { searchReplace, inPlace } = this.options;
 		const resolvedPath = await resolveImportPath(
@@ -61,7 +79,9 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash' ];
+		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
+			this.options.quiet ? '--silent' : []
+		);
 		const origIsTTY = process.stdin.isTTY;
 
 		try {
@@ -75,27 +95,26 @@ export class DevEnvImportSQLCommand {
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
 
-			if ( ! silent ) {
+			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
 			}
 		} finally {
 			process.stdin.isTTY = origIsTTY;
 		}
 
-		if ( searchReplace && searchReplace.length && ! inPlace ) {
+		if ( searchReplace?.length && ! inPlace ) {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush' ];
+		const cacheArg = [ 'wp', 'cache', 'flush' ].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, cacheArg );
 
-		try {
-			await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-			const doIndex = await promptForBoolean(
-				'Do you want to index data in Elasticsearch (used by Enterprise Search)?',
-				true
-			);
-			if ( doIndex ) {
+		if (
+			undefined === this.options.skipReindex ||
+			! processBooleanOption( this.options.skipReindex )
+		) {
+			try {
+				await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
 				await exec( lando, this.slug, [
 					'wp',
 					'vip-search',
@@ -104,12 +123,17 @@ export class DevEnvImportSQLCommand {
 					'--network-wide',
 					'--skip-confirm',
 				] );
+			} catch {
+				// Exception means they don't have vip-search enabled.
 			}
-		} catch ( err ) {
-			// Exception means they don't have vip-search enabled.
 		}
 
-		const addUserArg = [ 'wp', 'dev-env-add-admin', '--username=vipgo', '--password=password' ];
+		const addUserArg = [
+			'wp',
+			'dev-env-add-admin',
+			'--username=vipgo',
+			'--password=password',
+		].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, addUserArg );
 	}
 }

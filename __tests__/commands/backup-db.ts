@@ -1,14 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
-/**
- * External dependencies
- */
 
-/**
- * Internal dependencies
- */
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import { BackupDBCommand } from '../../src/commands/backup-db';
 import API from '../../src/lib/api';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const mockApp = {
 	id: 123,
@@ -56,12 +51,13 @@ const mutationMock = jest.fn( async () => {
 } );
 
 jest.mock( '../../src/lib/api' );
-jest.mocked( API ).mockImplementation( () => {
-	return Promise.resolve( {
-		query: queryMock,
-		mutate: mutationMock,
-	} as any );
-} );
+jest.mocked( API ).mockImplementation(
+	() =>
+		( {
+			query: queryMock,
+			mutate: mutationMock,
+		} as any )
+);
 
 describe( 'commands/BackupDBCommand', () => {
 	beforeEach( () => {} );
@@ -95,7 +91,7 @@ describe( 'commands/BackupDBCommand', () => {
 			} );
 
 			await cmd.run();
-			expect( logSpy ).toHaveBeenNthCalledWith( 2, 'Database backup already in progress...' );
+			expect( logSpy ).toHaveBeenCalledWith( 'Database backup already in progress...' );
 		} );
 	} );
 } );

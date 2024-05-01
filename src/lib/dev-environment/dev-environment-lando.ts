@@ -1,32 +1,27 @@
-/**
- * External dependencies
- */
-import { tmpdir } from 'node:os';
-import { mkdir, rename } from 'node:fs/promises';
-import { lookup } from 'node:dns/promises';
-import path from 'node:path';
+import chalk from 'chalk';
 import debugLib from 'debug';
-import Lando, { LandoConfig } from 'lando/lib/lando';
+import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
+import Lando, { LandoConfig } from 'lando/lib/lando';
 import landoUtils, { AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
-import chalk from 'chalk';
-import App, { type ScanResult } from 'lando/lib/app';
+import { lookup } from 'node:dns/promises';
+import { mkdir, rename } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import xdgBasedir from 'xdg-basedir';
-import type { NetworkInspectInfo } from 'dockerode';
 
-/**
- * Internal dependencies
- */
 import {
 	doesEnvironmentExist,
 	readEnvironmentData,
 	updateEnvironment,
 	writeEnvironmentData,
 } from './dev-environment-core';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
+
+import type { NetworkInspectInfo } from 'dockerode';
 
 /**
  * This file will hold all the interactions with lando library
@@ -84,7 +79,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,
 		home: fakeHomeDir,
-		domain: 'lndo.site',
+		domain: 'vipdev.lndo.site',
 		version: 'unknown',
 	};
 
@@ -98,10 +93,12 @@ async function initLandoApplication( lando: Lando, instancePath: string ): Promi
 
 	app.events.on( 'post-init', 1, () => {
 		const initOnly: string[] = [];
-		Object.keys( app.config.services! ).forEach( serviceName => {
-			if ( app.config.services![ serviceName ].initOnly ) {
+		const services = app.config.services as Record< string, Lando.LandoService >;
+		Object.keys( services ).forEach( serviceName => {
+			if ( services[ serviceName ].initOnly ) {
 				initOnly.push( serviceName );
-				app.config.services![ serviceName ].scanner = false;
+				( app.config.services as Record< string, Lando.LandoService > )[ serviceName ].scanner =
+					false;
 			}
 		} );
 
@@ -162,7 +159,7 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 	const started = new Date();
 	try {
 		if ( appMap.has( instancePath ) ) {
-			return Promise.resolve( appMap.get( instancePath )! );
+			return Promise.resolve( appMap.get( instancePath ) as App );
 		}
 
 		if ( ! ( await doesEnvironmentExist( instancePath ) ) ) {
@@ -304,8 +301,8 @@ async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | n
 
 async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 	const network = await getBridgeNetwork( lando );
-	if ( network?.Containers && ! Object.keys( network.Containers ).length ) {
-		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer! );
+	if ( network?.Containers && Object.keys( network.Containers ).length === 1 ) {
+		const proxy = lando.engine.docker.getContainer( lando.config.proxyContainer as string );
 		try {
 			await proxy.remove( { force: true } );
 		} catch ( err ) {
@@ -416,8 +413,7 @@ export async function landoInfo(
 		}
 
 		// Add documentation link
-		appInfo.Documentation =
-			'https://docs.wpvip.com/technical-references/vip-local-development-environment/';
+		appInfo.Documentation = 'https://docs.wpvip.com/vip-local-development-environment/';
 
 		return appInfo as LandoInfoResult;
 	} finally {
@@ -454,12 +450,18 @@ async function getExtraServicesConnections(
 	const extraServices: Record< string, string > = {};
 	const allServices = await lando.engine.list( { project: app.project } );
 
-	for ( const service of allServices ) {
-		const displayConfiguration = extraServiceDisplayConfiguration.find(
-			conf => conf.name === service.service
-		);
+	const defaultDisplayConfiguration = {
+		skip: false,
+		label: null,
+		protocol: null,
+	};
 
-		if ( ! displayConfiguration || displayConfiguration.skip ) {
+	for ( const service of allServices ) {
+		const displayConfiguration =
+			extraServiceDisplayConfiguration.find( conf => conf.name === service.service ) ??
+			defaultDisplayConfiguration;
+
+		if ( displayConfiguration.skip ) {
 			continue;
 		}
 
@@ -503,7 +505,7 @@ export async function checkEnvHealth(
 			} );
 		} );
 
-	const urlsToScan = Object.keys( urls );
+	const urlsToScan = Object.keys( urls ).filter( url => ! url.includes( '*' ) );
 	let scanResults: ScanResult[] = [];
 	if ( Array.isArray( app.urls ) ) {
 		scanResults = app.urls;
@@ -555,7 +557,9 @@ export async function landoExec(
 ) {
 	const app = await getLandoApplication( lando, instancePath );
 
-	const tool = app.config.tooling![ toolName ] as Record< string, unknown > | undefined;
+	const tool = ( app.config.tooling as Record< string, unknown > )[ toolName ] as
+		| Record< string, unknown >
+		| undefined;
 	if ( ! tool ) {
 		throw new UserError( `${ toolName } is not a known lando task` );
 	}
@@ -666,7 +670,7 @@ async function removeVolume( lando: Lando, volumeName: string ): Promise< void >
  * can safely add a network and a new proxy container.
  */
 async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
-	const proxyContainerName = lando.config.proxyContainer!;
+	const proxyContainerName = lando.config.proxyContainer as string;
 
 	const docker = lando.engine.docker;
 	const containers = await docker.listContainers( { all: true } );

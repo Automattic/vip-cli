@@ -1,17 +1,11 @@
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import API from '../../lib/api';
 import {
 	GetEnvironmentVariablesWithValuesQuery,
 	GetEnvironmentVariablesWithValuesQueryVariables,
 } from './api-get-all.generated';
 import { EnvironmentVariable } from '../../graphqlTypes';
+import API from '../../lib/api';
 
 const query = gql`
 	query GetEnvironmentVariablesWithValues($appId: Int!, $envId: Int!) {
@@ -35,7 +29,7 @@ export default async function getEnvVars(
 	appId: number,
 	envId: number
 ): Promise< EnvironmentVariable[] | null > {
-	const api = await API();
+	const api = API();
 
 	const variables = {
 		appId,

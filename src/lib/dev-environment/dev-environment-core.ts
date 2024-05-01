@@ -1,23 +1,21 @@
-/**
- * External dependencies
- */
-import debugLib from 'debug';
-import xdgBasedir from 'xdg-basedir';
-import fetch from 'node-fetch';
-import os from 'os';
-import fs from 'fs';
-import ejs from 'ejs';
-import path from 'path';
 import chalk from 'chalk';
-import { prompt } from 'enquirer';
 import copydir from 'copy-dir';
-import type Lando from 'lando';
-import { v4 as uuid } from 'uuid';
+import debugLib from 'debug';
+import ejs from 'ejs';
+import { prompt } from 'enquirer';
+import fetch from 'node-fetch';
+import fs from 'node:fs';
+import path from 'node:path';
 import semver from 'semver';
+import { v4 as uuid } from 'uuid';
+import xdgBasedir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
+import {
+	handleCLIException,
+	printTable,
+	promptForWordPress,
+	resolvePath,
+} from './dev-environment-cli';
 import {
 	landoDestroy,
 	landoInfo,
@@ -28,14 +26,9 @@ import {
 	landoLogs,
 	LandoLogsOptions,
 } from './dev-environment-lando';
-import { searchAndReplace } from '../search-and-replace';
-import {
-	handleCLIException,
-	printTable,
-	promptForWordPress,
-	resolvePath,
-} from './dev-environment-cli';
+import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
+import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import {
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_RAW_GITHUB_HOST,
@@ -45,10 +38,12 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
-import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './types';
-import { appQueryFragments as softwareQueryFragment } from '../config/software';
+import { createProxyAgent } from '../http/proxy-agent';
+import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
-import { AppEnvironment } from '../../graphqlTypes';
+
+import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './types';
+import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -90,7 +85,13 @@ interface WordPressTag {
 }
 
 function xdgDataDirectory(): string {
-	return xdgBasedir.data?.length ? xdgBasedir.data : os.tmpdir();
+	if ( xdgBasedir.data ) {
+		return xdgBasedir.data;
+	}
+
+	// This should not happen. If it does, this means that the system was unable to find user's home directory.
+	// If so, this does not leave us many options as to where to store the data.
+	throw new Error( 'Unable to determine data directory.' );
 }
 
 export async function startEnvironment(
@@ -196,7 +197,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	newInstanceData.php =
 		instanceData.php ||
-		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ]!;
+		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image;
 	if ( newInstanceData.php.startsWith( 'image:' ) ) {
 		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
 	}
@@ -352,13 +353,13 @@ export async function printEnvironmentInfo(
 
 	const environmentData = readEnvironmentData( slug );
 	const appInfo = await landoInfo( lando, instancePath, {
-		suppressWarnings: !! options.suppressWarnings,
+		suppressWarnings: Boolean( options.suppressWarnings ),
 		autologinKey: environmentData.autologinKey,
 	} );
 
 	if ( options.extended ) {
 		appInfo.title = environmentData.wpTitle;
-		appInfo.multisite = !! environmentData.multisite;
+		appInfo.multisite = Boolean( environmentData.multisite );
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];
 		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
 		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
@@ -412,7 +413,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	} catch ( error: unknown ) {
 		const err = error as Error;
 		throw new UserError(
-			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`
+			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`,
+			{ cause: error }
 		);
 	}
 
@@ -421,7 +423,8 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	} catch ( error: unknown ) {
 		const err = error as Error;
 		throw new UserError(
-			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`
+			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`,
+			{ cause: error }
 		);
 	}
 
@@ -484,10 +487,14 @@ async function prepareLandoEnv(
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
 
-	const landoFileExists = await fs.promises.stat( landoFileTargetPath ).catch( () => false );
-	if ( landoFileExists ) {
-		await fs.promises.copyFile( landoFileTargetPath, landoBackupFileTargetPath );
+	try {
+		await fs.promises.rename( landoFileTargetPath, landoBackupFileTargetPath );
 		console.log( `Backup of ${ landoFileName } was created in ${ landoBackupFileTargetPath }` );
+	} catch ( err ) {
+		// If the file doesn't exist, that's fine. Otherwise, throw the error.
+		if ( 'ENOENT' !== ( err as NodeJS.ErrnoException ).code ) {
+			throw err;
+		}
 	}
 
 	await Promise.all( [
@@ -528,7 +535,7 @@ export function getEnvironmentPath( name: string ): string {
 
 	const mainEnvironmentPath = xdgDataDirectory();
 
-	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', name + '' );
+	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', String( name ) );
 }
 
 export async function getApplicationInformation(
@@ -760,8 +767,8 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 	const confirm = await prompt( {
 		type: 'select',
 		name: 'upgrade',
-		message: 'Would You like to change the WordPress version? ',
-		choices: [ 'yes', 'no', "no (don't ask anymore)" ],
+		message: 'Would you like to upgrade WordPress? ',
+		choices: [ 'no', 'yes', "no (don't ask anymore)" ],
 	} );
 
 	// If the user takes the new WP version path
@@ -815,7 +822,10 @@ async function maybeUpdateVersion( slug: string ): Promise< boolean > {
  */
 export function fetchVersionList(): Promise< WordPressTag[] > {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	return fetch( url ).then( res => res.json() as unknown as WordPressTag[] );
+	const proxyAgent = createProxyAgent( url );
+	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
+		res => res.json() as unknown as WordPressTag[]
+	);
 }
 
 /**
@@ -830,7 +840,7 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise< 
 		const { mtime: expire } = await fs.promises.stat( cacheFile );
 		expire.setSeconds( expire.getSeconds() + ttl );
 
-		return +new Date() > +expire;
+		return Number( new Date() ) > Number( expire );
 	} catch ( err ) {
 		return true;
 	}

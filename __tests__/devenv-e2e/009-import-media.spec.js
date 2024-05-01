@@ -1,18 +1,12 @@
-/**
- * External dependencies
- */
-import { mkdtemp, rm, stat } from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 import { describe, expect, it, jest } from '@jest/globals';
+import { mkdtemp, rm, stat } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import xdgBaseDir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import { CliTest } from './helpers/cli-test';
-import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { vipDevEnvCreate, vipDevEnvImportMedia } from './helpers/commands';
+import { checkEnvExists, getProjectSlug, prepareEnvironment } from './helpers/utils';
 import { getEnvironmentPath } from '../../src/lib/dev-environment/dev-environment-core';
 
 jest.setTimeout( 30 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );

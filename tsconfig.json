@@ -1,8 +1,15 @@
 {
-  "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
+    "lib": [ "ES2022" ],
+    "module": "node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node16",
+
     // Target latest version of ECMAScript.
-    "target": "esnext",
+    "target": "ES2022",
     // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
     "allowJs": false,
     // Don't emit; allow Babel to transform files.
@@ -14,30 +21,11 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "*": [
-        "./types/*",
-        "./node_modules/*",
-        "./node_modules/@types/*",
-        // needed because the noImplicitAnyImportBypass overrides the node import too
-        "./node_modules/@types/node/*",
-        "./noImplicitAnyImportBypass.d.ts"
-      ]
+      "*": [ "./types/*", "./node_modules/@types/node/*" ]
     },
     // It's worth enabling this, I promise!
-    "noImplicitAny": true,
-    // We have to use this because we're using Babel
-    "moduleResolution": "node"
+    "noImplicitAny": true
   },
-  "include": [
-    "src",
-    "helpers",
-    "config",
-    "__tests__",
-    "__fixtures__",
-    "noImplicitAnyImportBypass.d.ts"
-  ],
-  "exclude": [
-    "**/*.js",
-    "codegen.ts"
-  ]
+  "include": [ "src", "helpers", "config", "__tests__", "__fixtures__" ],
+  "exclude": [ "**/*.js", "codegen.ts" ]
 }

@@ -1,29 +1,17 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-import fs from 'fs';
-import chalk from 'chalk';
-import urlLib from 'url';
 import { replace } from '@automattic/vip-search-replace';
+import chalk from 'chalk';
+import fs from 'fs';
+import urlLib from 'url';
 
-/**
- * Internal dependencies
- */
-
-import { unzipFile } from '../lib/client-file-uploader';
+import { DevEnvImportSQLCommand } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
+import * as exit from '../lib/cli/exit';
+import { unzipFile } from '../lib/client-file-uploader';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
-import * as exit from '../lib/cli/exit';
-import { DevEnvImportSQLCommand } from './dev-env-import-sql';
 
 /**
  * Finds the site home url from the SQL line
@@ -103,17 +91,20 @@ export class DevEnvSyncSQLCommand {
 		return `${ this.tmpDir }/sql-export.sql.gz`;
 	}
 
+	async confirmEnoughStorage( job ) {
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport();
+	}
+
 	/**
 	 * Runs the SQL export command to generate the SQL export from
 	 * the latest backup
-	 *
-	 * @return {Promise<void>} Promise that resolves when the export is complete
 	 */
 	async generateExport() {
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
-			{ outputFile: this.gzFile },
+			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
 			this.track
 		);
 		await exportCommand.run();
@@ -159,8 +150,21 @@ export class DevEnvSyncSQLCommand {
 			const url = site.homeUrl.replace( /https?:\/\//, '' );
 			if ( ! this.searchReplaceMap[ url ] ) continue;
 
-			this.searchReplaceMap[ url ] = `${ site.blogId }.${ this.landoDomain }`;
+			this.searchReplaceMap[ url ] = `${ this.slugifyDomain( url ) }-${ site.blogId }.${
+				this.landoDomain
+			}`;
 		}
+	}
+
+	slugifyDomain( domain ) {
+		return String( domain )
+			.normalize( 'NFKD' ) // split accented characters into their base characters and diacritical marks
+			.replace( /[\u0300-\u036f]/g, '' ) // remove all the accents, which happen to be all in the \u03xx UNICODE block.
+			.trim() // trim leading or trailing whitespace
+			.toLowerCase() // convert to lowercase
+			.replace( /[^a-z0-9 .-]/g, '' ) // remove non-alphanumeric characters except for spaces, dots, and hyphens
+			.replace( /[.\s]+/g, '-' ) // replace dots and spaces with hyphens
+			.replace( /-+/g, '-' ); // remove consecutive hyphens
 	}
 
 	/**
@@ -173,16 +177,17 @@ export class DevEnvSyncSQLCommand {
 		const importOptions = {
 			inPlace: true,
 			skipValidate: true,
+			quiet: true,
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
-		await importCommand.run( true );
+		await importCommand.run();
 	}
 
 	/**
 	 * Sequentially runs the commands to export, search-replace, and import the SQL file
 	 * to the local environment
 	 *
-	 * @return {Promise<void>} Promise that resolves when the commands are complete
+	 * @return {Promise<void>} Promise that resolves to true when the commands are complete. It will return false if the user did not continue during validation prompts.
 	 */
 	async run() {
 		try {
@@ -248,6 +253,7 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Importing the SQL file...' );
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
+			return true;
 		} catch ( err ) {
 			await this.track( 'error', {
 				error_type: 'import_sql_file',

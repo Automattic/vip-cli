@@ -1,28 +1,19 @@
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
+import chalk from 'chalk';
 import fs from 'fs';
+import gql from 'graphql-tag';
 import https from 'https';
 import path from 'path';
 
-/**
- * Internal dependencies
- */
+import { BackupDBCommand } from './backup-db';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
+import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
+import * as exit from '../lib/cli/exit';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
-import * as exit from '../lib/cli/exit';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
-import { BackupDBCommand } from './backup-db';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -92,7 +83,7 @@ export const CREATE_EXPORT_JOB_MUTATION = gql`
  * @return {Promise} A promise which resolves to the latest backup and job status
  */
 async function fetchLatestBackupAndJobStatus( appId, envId ) {
-	const api = await API();
+	const api = API();
 
 	const response = await api.query( {
 		query: BACKUP_AND_JOB_STATUS_QUERY,
@@ -121,7 +112,7 @@ async function fetchLatestBackupAndJobStatus( appId, envId ) {
  * @return {Promise} A promise which resolves to the download link
  */
 async function generateDownloadLink( appId, envId, backupId ) {
-	const api = await API();
+	const api = API();
 	const response = await api.mutate( {
 		mutation: GENERATE_DOWNLOAD_LINK_MUTATION,
 		variables: {
@@ -155,7 +146,7 @@ async function createExportJob( appId, envId, backupId ) {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api = await API();
+	const api = API();
 	await api.mutate( {
 		mutation: CREATE_EXPORT_JOB_MUTATION,
 		variables: {
@@ -181,10 +172,12 @@ export class ExportSQLCommand {
 	progressTracker;
 	outputFile;
 	generateBackup;
+	confirmEnoughStorageHook;
 	steps = {
 		PREPARE: 'prepare',
 		CREATE: 'create',
 		DOWNLOAD_LINK: 'downloadLink',
+		CONFIRM_ENOUGH_STORAGE: 'confirmEnoughStorage',
 		DOWNLOAD: 'download',
 	};
 	track;
@@ -202,10 +195,12 @@ export class ExportSQLCommand {
 		this.env = env;
 		this.outputFile =
 			typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
+		this.confirmEnoughStorageHook = options.confirmEnoughStorageHook;
 		this.generateBackup = options.generateBackup || false;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup download' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
+			{ id: this.steps.CONFIRM_ENOUGH_STORAGE, name: "Checking if there's enough storage" },
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
@@ -311,13 +306,29 @@ export class ExportSQLCommand {
 
 	async runBackupJob() {
 		const cmd = new BackupDBCommand( this.app, this.env );
+
+		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
+		noticeMessage +=
+			'If a recent database backup does not exist, a new one will be generated for this environment. ';
+		noticeMessage +=
+			'Learn more about this: https://docs.wpvip.com/databases/backups/download-a-full-database-backup/ \n';
+		console.log( noticeMessage );
+
 		await cmd.run( false );
+	}
+
+	async confirmEnoughStorage( job ) {
+		if ( this.confirmEnoughStorageHook ) {
+			return await this.confirmEnoughStorageHook( job );
+		}
+
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
 	}
 
 	/**
 	 * Sequentially runs the steps of the export workflow
 	 *
-	 * @return {Promise} A promise which resolves to void
 	 */
 	async run() {
 		if ( this.outputFile ) {
@@ -380,7 +391,7 @@ export class ExportSQLCommand {
 					} );
 					exit.withError(
 						'There is an export job already running for this environment: ' +
-							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/data/database/backups\n` +
+							`https://dashboard.wpvip.com/apps/${ this.app.id }/${ this.env.uniqueLabel }/database/backups\n` +
 							'Currently, we allow only one export job at a time, per site. Please try again later.'
 					);
 				} else {
@@ -410,6 +421,25 @@ export class ExportSQLCommand {
 			this.isCreated.bind( this )
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
+
+		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
+			async setPromptShown => {
+				const status = await this.confirmEnoughStorage( await this.getExportJob() );
+				if ( status.isPromptShown ) {
+					setPromptShown();
+				}
+
+				return status.continue;
+			}
+		);
+
+		if ( storageConfirmed ) {
+			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
+		} else {
+			this.progressTracker.stepFailed( this.steps.CONFIRM_ENOUGH_STORAGE );
+			this.stopProgressTracker();
+			exit.withError( 'Command canceled by user.' );
+		}
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );

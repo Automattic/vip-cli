@@ -1,39 +1,28 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
 import {
 	Harmonia,
 	SiteConfig,
 	EnvironmentVariables,
-	TestSuite,
 	TestSuiteResult,
-	Test,
-	TestResult,
 	TestResultType,
 	IssueType,
 } from '@automattic/vip-go-preflight-checks';
-
-import path from 'path';
-import gql from 'graphql-tag';
-import { readFileSync } from 'fs';
-import dotenv from 'ini';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
+import { readFileSync } from 'fs';
+import gql from 'graphql-tag';
+import dotenv from 'ini';
+import path from 'path';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
-import * as exit from '../lib/cli/exit';
 import {
 	default as API,
 	enableGlobalGraphQLErrorHandling,
 	disableGlobalGraphQLErrorHandling,
 } from '../lib/api';
+import command from '../lib/cli/command';
+import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
+import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
 const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];
@@ -65,7 +54,10 @@ let outputJson = false;
 
 let harmoniaArgs = [];
 
-function logToConsole( ...messages: string[] ) {
+/**
+ * @param {string[]} messages
+ */
+function logToConsole( ...messages ) {
 	if ( suppressOutput ) {
 		return;
 	}
@@ -78,7 +70,7 @@ function logToConsole( ...messages: string[] ) {
 }
 
 async function getBuildConfiguration( application, environment ) {
-	const api = await API();
+	const api = API();
 
 	// Disable the global GraphQL error handling, so we can catch Unauthorized errors and recommend next steps.
 	disableGlobalGraphQLErrorHandling();
@@ -129,9 +121,7 @@ async function getBuildConfiguration( application, environment ) {
 						application.name
 					) } application.\n\n` +
 					'You can read more about organization and application roles on our documentation:\n' +
-					chalk.underline(
-						'https://docs.wpvip.com/technical-references/enterprise-authentication/'
-					)
+					chalk.underline( 'https://docs.wpvip.com/manage-user-access/vip-dashboard/' )
 			);
 
 			await trackEvent( 'validate_preflight_command_error', {
@@ -148,7 +138,10 @@ async function getBuildConfiguration( application, environment ) {
 	}
 }
 
-export async function vipValidatePreflightCommand( arg: string[], opt ) {
+/**
+ * @param {string} argv
+ */
+export async function vipValidatePreflightCommand( arg, opt ) {
 	harmoniaArgs = await validateArgs( opt );
 
 	const appId = opt.env?.appId ?? 0;
@@ -233,7 +226,7 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	}
 
 	// Get from .env, if exists
-	let dotenvOptions: object = {};
+	let dotenvOptions = {};
 	try {
 		const dotenvPath = path.resolve( opt.path, '.env' );
 		const dotenvContent = readFileSync( dotenvPath );
@@ -260,24 +253,27 @@ export async function vipValidatePreflightCommand( arg: string[], opt ) {
 	runHarmonia( harmonia );
 }
 
-function setupEvents( harmonia: Harmonia ) {
+/**
+ * @param {Harmonia} harmonia
+ */
+function setupEvents( harmonia ) {
 	// Register some events handlers
 	harmonia.on( 'ready', () => {
 		logToConsole( 'Harmonia is ready! ' );
 	} );
 
 	// Register the event handlers to output some information during the execution
-	harmonia.on( 'beforeTestSuite', ( suite: TestSuite ) => {
+	harmonia.on( 'beforeTestSuite', suite => {
 		const description = suite.description ? `- ${ chalk.italic( suite.description ) }` : '';
 		logToConsole( ` >> Running test suite ${ chalk.bold( suite.name ) } ${ description } ` );
 		logToConsole();
 	} );
 
-	harmonia.on( 'beforeTest', ( test: Test ) => {
+	harmonia.on( 'beforeTest', test => {
 		logToConsole( `  [ ${ chalk.bold( test.name ) } ] - ${ test.description }` );
 	} );
 
-	harmonia.on( 'afterTest', ( test: Test, result: TestResult ) => {
+	harmonia.on( 'afterTest', ( test, result ) => {
 		switch ( result.getType() ) {
 			case TestResultType.Success:
 				logToConsole( `   ✅  ${ chalk.bgGreen( ' Test passed with no errors. ' ) }` );
@@ -306,7 +302,7 @@ function setupEvents( harmonia: Harmonia ) {
 		logToConsole();
 	} );
 
-	harmonia.on( 'afterTestSuite', ( test: TestSuite, result: TestSuiteResult ) => {
+	harmonia.on( 'afterTestSuite', ( test, result ) => {
 		// Create a badge
 		let badge;
 		switch ( result.getType() ) {
@@ -328,7 +324,7 @@ function setupEvents( harmonia: Harmonia ) {
 		logToConsole();
 	} );
 
-	harmonia.on( 'issue', ( issue: Issue ) => {
+	harmonia.on( 'issue', issue => {
 		let issueTypeString = issue.getTypeString();
 		switch ( issue.type ) {
 			case IssueType.Blocker:
@@ -366,12 +362,10 @@ function setupEvents( harmonia: Harmonia ) {
 }
 
 function runHarmonia( harmonia ) {
-	harmonia
-		.run()
-		.then( async ( results: TestResult[] ) => await handleResults( harmonia, results ) );
+	harmonia.run().then( async results => await handleResults( harmonia, results ) );
 }
 
-async function handleResults( harmonia, results: TestResult[] ) {
+async function handleResults( harmonia, results ) {
 	// Calculate the results
 	const resultCounter = harmonia.countResults( false );
 	const testSuiteResults = results.filter( result => result instanceof TestSuiteResult );
@@ -482,7 +476,7 @@ async function handleResults( harmonia, results: TestResult[] ) {
 	process.exit( 0 );
 }
 
-async function validateArgs( opt ): Promise< {} > {
+async function validateArgs( opt ) {
 	const args = {};
 
 	// Verbose
@@ -549,7 +543,7 @@ async function validateArgs( opt ): Promise< {} > {
  * @param {Object} args The arguments passed to the command.
  * @return {Object} Copy of the arguments without sensitive information.
  */
-function sanitizeArgsForTracking( args: {} ): {} {
+function sanitizeArgsForTracking( args ) {
 	const protectedKeys = [ 'npmToken', 'nodeBuildDockerEnv' ];
 	const sanitizedArgs = {};
 

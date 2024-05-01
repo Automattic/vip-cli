@@ -1,16 +1,9 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 import { stdout } from 'single-line-log';
 
-/**
- * Internal dependencies
- */
 import API from '../lib/api';
 import app from '../lib/api/app';
 import command from '../lib/cli/command';
@@ -30,14 +23,13 @@ command( {
 	module: 'sync',
 	requireConfirm: 'Are you sure you want to sync from production?',
 } ).argv( process.argv, async ( arg, opts ) => {
-	const api = await API();
+	const api = API();
 	let syncing = false;
 
 	await trackEvent( 'sync_command_execute' );
 
 	try {
 		await api.mutate( {
-			// $FlowFixMe: gql template is not supported by flow
 			mutation: gql`
 				mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput) {
 					syncEnvironment(input: $input) {
@@ -119,7 +111,6 @@ command( {
 			// The rest of the iterations are just for moving the spinner
 			api
 				.query( {
-					// $FlowFixMe: gql template is not supported by flow
 					query: gql`
 						query App($id: Int, $sync: Int) {
 							app(id: $id) {

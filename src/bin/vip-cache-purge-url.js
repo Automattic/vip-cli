@@ -1,22 +1,10 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { appQuery, purgeCache } from '../lib/api/cache-purge';
 import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
-import { readFromFile } from '../lib/read-file';
 import * as exit from '../lib/cli/exit';
+import { readFromFile } from '../lib/read-file';
+import { trackEvent } from '../lib/tracker';
 
 const examples = [
 	{
@@ -29,12 +17,12 @@ const examples = [
 	},
 ];
 
-export async function cachePurgeCommand( urls = [], opt = {} ): void {
+export async function cachePurgeCommand( urls = [], opt = {} ) {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: 'vip cache purge-url',
 		env_id: opt.env.id,
-		from_file: !! opt.fromFile,
+		from_file: Boolean( opt.fromFile ),
 	};
 
 	await trackEvent( 'cache_purge_url_command_execute', trackingParams );

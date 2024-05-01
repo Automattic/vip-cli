@@ -1,20 +1,9 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { setTimeout } from 'timers/promises';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
 import * as slowlogsLib from '../lib/app-slowlogs/app-slowlogs';
-import * as exit from '../lib/cli/exit';
-import { formatData } from '../lib/cli/format';
 import {
 	BaseTrackingParams,
 	DefaultOptions,
@@ -23,10 +12,14 @@ import {
 	Slowlog,
 	SlowlogFormats,
 } from '../lib/app-slowlogs/types';
+import command from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { OutputFormat, formatData } from '../lib/cli/format';
+import { trackEvent } from '../lib/tracker';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 500;
-const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
+const ALLOWED_FORMATS: OutputFormat[] = [ 'csv', 'json', 'table' ];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
@@ -193,11 +186,11 @@ void command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
-	format: true,
+	format: false,
 	module: 'slowlogs',
 } )
 	.option( 'limit', 'The maximum number of log lines', 500 )
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'text' )
+	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.examples( [
 		{
 			description: 'Get the most recent app slowlogs',

@@ -1,19 +1,14 @@
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import { trackEventWithEnv } from '../../lib/tracker';
-import { sqlDumpLineIsMultiSite } from '../../lib/validations/is-multi-site-sql-dump';
 import { isMultiSiteInSiteMeta } from '../../lib/validations/is-multi-site';
+import { sqlDumpLineIsMultiSite } from '../../lib/validations/is-multi-site-sql-dump';
 import {
 	isMultisitePrimaryDomainMapped,
 	getPrimaryDomain,
 } from '../../lib/validations/is-multisite-domain-mapped';
 import { getMultilineStatement } from '../../lib/validations/utils';
+
 import type { PostLineExecutionProcessingParams } from '../../lib/validations/line-by-line';
 
 const debug = debugLib( 'vip:vip-import-sql' );
@@ -37,9 +32,11 @@ export const siteTypeValidations = {
 		searchReplace,
 	}: PostLineExecutionProcessingParams ): Promise< void > => {
 		const isMultiSite = await isMultiSiteInSiteMeta( appId ?? 0, envId ?? 0 );
-		const track = trackEventWithEnv.bind( null, appId!, envId! );
+		const track = trackEventWithEnv.bind( null, appId as number, envId as number );
 
-		debug( `\nAppId: ${ appId! } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }` );
+		debug(
+			`\nAppId: ${ appId as number } is ${ isMultiSite ? 'a multisite.' : 'not a multisite' }`
+		);
 		debug(
 			`The SQL dump provided is ${
 				isMultiSiteSqlDump ? 'from a multisite.' : 'not from a multisite'

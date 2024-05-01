@@ -1,24 +1,25 @@
-/**
- * External dependencies
- */
-import { existsSync, lstatSync, readdirSync } from 'node:fs';
-import path from 'path';
-import { homedir } from 'node:os';
-import { lookup } from 'node:dns/promises';
 import chalk from 'chalk';
-import formatters from 'lando/lib/formatters';
-import { prompt, Confirm, Select } from 'enquirer';
-import debugLib from 'debug';
 import { spawn } from 'child_process';
-import { which } from 'shelljs';
+import debugLib from 'debug';
+import { prompt, Confirm, Select } from 'enquirer';
 import Lando from 'lando';
+import formatters from 'lando/lib/formatters';
+import { lookup } from 'node:dns/promises';
+import { existsSync, lstatSync, readdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'path';
+import { which } from 'shelljs';
 
-/**
- * Internal dependencies
- */
-import { ProgressTracker, Step } from '../../lib/cli/progress';
-import { trackEvent } from '../tracker';
-
+import { getConfigurationFileOptions } from './dev-environment-configuration-file';
+import {
+	generateVSCodeWorkspace,
+	getAllEnvironmentNames,
+	getVSCodeWorkspacePath,
+	getVersionList,
+	readEnvironmentData,
+} from './dev-environment-core';
+import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
+import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
@@ -28,13 +29,8 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 	DEV_ENVIRONMENT_COMPONENTS_WITH_WP,
 } from '../constants/dev-environment';
-import {
-	generateVSCodeWorkspace,
-	getAllEnvironmentNames,
-	getVSCodeWorkspacePath,
-	getVersionList,
-	readEnvironmentData,
-} from './dev-environment-core';
+import { trackEvent } from '../tracker';
+import UserError from '../user-error';
 
 import type {
 	AppInfo,
@@ -45,17 +41,11 @@ import type {
 	WordPressConfig,
 	ConfigurationFileOptions,
 } from './types';
-import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
-import UserError from '../user-error';
-import {
-	CONFIGURATION_FILE_NAME,
-	getConfigurationFileOptions,
-} from './dev-environment-configuration-file';
-import { Args } from '../cli/command';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const DEFAULT_SLUG = 'vip-local';
+export const CONFIGURATION_FOLDER = '.wpvip';
 
 let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
 
@@ -128,66 +118,42 @@ export async function handleCLIException(
 const verifyDNSResolution = async ( slug: string ): Promise< void > => {
 	const expectedIP = '127.0.0.1';
 	const testDomain = `${ slug }.vipdev.lndo.site`;
-	const advice = `Please add following line to hosts file on your system:\n${ expectedIP } ${ testDomain }`;
+	const advice = `Please add following line to hosts file on your system:\n\n${ expectedIP } ${ testDomain }\n\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n`;
 
 	debug( `Verifying DNS resolution for ${ testDomain }` );
-	let address;
 	try {
-		address = await lookup( testDomain, 4 );
-		debug( `Got DNS response ${ address.address }` );
-	} catch ( error ) {
-		throw new UserError( `DNS resolution for ${ testDomain } failed. ${ advice }` );
-	}
+		let address;
+		try {
+			address = await lookup( testDomain, 4 );
+			debug( `Got DNS response ${ address.address }` );
+		} catch ( error ) {
+			throw new UserError( `DNS resolution for ${ testDomain } failed.`, {
+				cause: error,
+			} );
+		}
 
-	if ( address.address !== expectedIP ) {
-		throw new UserError(
-			`DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }. ${ advice }`
-		);
+		if ( address.address !== expectedIP ) {
+			throw new UserError(
+				`DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }.`
+			);
+		}
+	} catch ( error ) {
+		if ( error instanceof UserError ) {
+			console.warn( chalk.yellow.bold( 'Warning:' ), `${ error.message }\n\n${ advice }` );
+		} else {
+			throw error;
+		}
 	}
 };
 
-const VALIDATION_STEPS: Step[] = [
-	{ id: 'docker', name: 'Check for Docker installation' },
-	{ id: 'compose', name: 'Check for docker-compose installation' },
-	{ id: 'access', name: 'Check Docker connectivity' },
-	{ id: 'dns', name: 'Check DNS resolution' },
-];
-
-export const validateDependencies = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+export const validateDependencies = async ( lando: Lando, slug: string ) => {
 	const now = new Date();
-	const steps = slug ? VALIDATION_STEPS : VALIDATION_STEPS.filter( step => step.id !== 'dns' );
-	const progressTracker = new ProgressTracker( steps );
-	if ( ! quiet ) {
-		console.log( 'Running validation steps...' );
-		progressTracker.startPrinting();
-		progressTracker.stepRunning( 'docker' );
-	}
 
 	validateDockerInstalled( lando );
-
-	if ( ! quiet ) {
-		progressTracker.stepSuccess( 'docker' );
-		progressTracker.stepSuccess( 'compose' );
-		progressTracker.print();
-	}
-
 	await validateDockerAccess( lando );
-
-	if ( ! quiet ) {
-		progressTracker.stepSuccess( 'access' );
-		progressTracker.print();
-	}
 
 	if ( slug ) {
 		await verifyDNSResolution( slug );
-		if ( ! quiet ) {
-			progressTracker.stepSuccess( 'dns' );
-			progressTracker.print();
-		}
-	}
-
-	if ( ! quiet ) {
-		progressTracker.stopPrinting();
 	}
 
 	const duration = new Date().getTime() - now.getTime();
@@ -213,11 +179,11 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 
 	const configurationFileOptions = await getConfigurationFileOptions();
 
-	if ( configurationFileOptions.slug ) {
+	if ( configurationFileOptions.slug && configurationFileOptions.meta ) {
 		const slug = configurationFileOptions.slug;
 		console.log(
 			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
-				CONFIGURATION_FILE_NAME
+				configurationFileOptions.meta[ 'configuration-path' ]
 			) }\n`
 		);
 
@@ -252,7 +218,7 @@ export function getEnvironmentStartCommand(
 	return `${ DEV_ENVIRONMENT_FULL_COMMAND } start --slug ${ slug }`;
 }
 
-export function printTable( data: Object ) {
+export function printTable( data: Record< string, unknown > ) {
 	const formattedData = formatters.formatData( data, { format: 'table' }, { border: false } );
 
 	console.log( formattedData );
@@ -281,7 +247,7 @@ export function processComponentOptionInput(
 	allowLocal: boolean
 ): LocalComponent | ImageComponent {
 	// cast to string
-	const param = passedParam + '';
+	const param = String( passedParam );
 	// This is a bit of a naive check
 	if ( allowLocal && /[\\/]/.test( param ) ) {
 		return {
@@ -300,7 +266,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	return {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
-		multisite: !! appInfo.environment?.isMultisite,
+		multisite: Boolean( appInfo.environment?.isMultisite ),
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
 		php: appInfo.environment?.php ?? '',
 		wordpress: appInfo.environment?.wordpress ?? '',
@@ -407,11 +373,11 @@ export async function promptForArguments(
 
 	debug( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
 	if ( 'elasticsearch' in preselectedOptions ) {
-		instanceData.elasticsearch = !! preselectedOptions.elasticsearch;
+		instanceData.elasticsearch = Boolean( preselectedOptions.elasticsearch );
 	} else {
 		instanceData.elasticsearch = await promptForBoolean(
 			'Enable Elasticsearch (needed by Enterprise Search)?',
-			!! defaultOptions.elasticsearch
+			Boolean( defaultOptions.elasticsearch )
 		);
 	}
 
@@ -425,7 +391,7 @@ export async function promptForArguments(
 				// eslint-disable-next-line no-await-in-loop
 				instanceData[ service ] = await promptForBoolean(
 					`Enable ${ promptLabels[ service ] || service }`,
-					!! defaultOptions[ service ]
+					Boolean( defaultOptions[ service ] )
 				);
 			}
 		}
@@ -540,7 +506,7 @@ function validateLocalPath( component: string, providedPath: string ) {
 			// eslint-disable-next-line max-len
 			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
 				', '
-			) }. Learn more: https://docs.wpvip.com/technical-references/vip-codebase/#1-wordpress`;
+			) }. Learn more: https://docs.wpvip.com/wordpress-skeleton/`;
 			return {
 				result: false,
 				message,
@@ -672,11 +638,11 @@ export function resolvePhpVersion( version: string ): string {
 	}
 
 	let result: string;
-	if ( DEV_ENVIRONMENT_PHP_VERSIONS[ version ] === undefined ) {
-		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS ) as string[];
-		const image = images.find( value => value === version );
+	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
+		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const image = images.find( value => value.image === version );
 		if ( image ) {
-			result = image;
+			result = image.image;
 		} else if ( version.includes( '/' ) ) {
 			// Assuming this is a Docker image
 			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
@@ -684,10 +650,10 @@ export function resolvePhpVersion( version: string ): string {
 			// but we still want to use it.
 			result = version;
 		} else {
-			result = images[ 0 ];
+			result = images[ 0 ].image;
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ]!;
+		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
 	}
 
 	debug( 'Resolved PHP image: %j', result );
@@ -699,11 +665,15 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 
 	let answer = initialValue;
 	if ( isStdinTTY ) {
-		const choices = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS );
+		const choices = [];
+		Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).forEach( version => {
+			const phpImage = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
+			choices.push( { message: phpImage.label, value: version } );
+		} );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
-		let initial = images.findIndex( version => version === initialValue );
+		let initial = images.findIndex( version => version.image === initialValue );
 		if ( initial === -1 ) {
-			choices.push( initialValue );
+			choices.push( { message: initialValue, value: initialValue } );
 			initial = choices.length - 1;
 		}
 
@@ -838,12 +808,17 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 	return value;
 }
 
+export function processSlug( value: unknown ): string {
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	return ( value ?? '' ).toString().toLowerCase();
+}
+
 declare function isNaN( value: unknown ): boolean;
 declare function parseFloat( value: unknown ): number;
 
 export function processVersionOption( value: unknown ): string {
 	if ( typeof value === 'string' || typeof value === 'number' ) {
-		if ( ! isNaN( value ) && +value % 1 === 0 ) {
+		if ( ! isNaN( value ) && Number( value ) % 1 === 0 ) {
 			return parseFloat( value ).toFixed( 1 );
 		}
 	}
@@ -968,7 +943,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = ( result.php as string ).replace( /.*:/, '' );
+		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
 
 		return result;
 	} catch ( err ) {

@@ -1,15 +1,17 @@
-/**
- * External dependencies
- */
-import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
-/**
- * Internal dependencies
- */
+import { createProxyAgent } from '../../../src/lib/http/proxy-agent';
+
 // Reference for testing with env variables within a test: https://github.com/vuejs/vue-test-utils/issues/193
 
 describe( 'validate CreateProxyAgent', () => {
+	let env;
+
+	beforeAll( () => {
+		env = { ...process.env };
+	} );
+
 	beforeEach( () => {
 		// Clear all applicable environment variables before running test so each test starts "clean"
 		// using beforeEach instead of afterEach in case the client running tests has env variables set before the first test is run
@@ -23,6 +25,10 @@ describe( 'validate CreateProxyAgent', () => {
 		for ( const envVar of envVarsToClear ) {
 			delete process.env[ envVar ];
 		}
+	} );
+
+	afterAll( () => {
+		process.env = { ...env };
 	} );
 
 	// Tests checking for null results
@@ -96,11 +102,7 @@ describe( 'validate CreateProxyAgent', () => {
 			urlToHit: 'https://wpAPI.org/api',
 		},
 	] )( 'should return null with %o', async ( { envVars, urlToHit } ) => {
-		setEnvironmentVariabeles( envVars );
-		// We have to dynamically import the module so we can set environment variables above
-		// All tests must be async to support this dynamic import, otherwise the modified env variables are not picked up
-		const createProxyAgent = ( await import( '../../../src/lib/http/proxy-agent' ) )
-			.createProxyAgent;
+		setEnvironmentVariables( envVars );
 		const agent = createProxyAgent( urlToHit );
 		expect( agent ).toBeNull();
 	} );
@@ -173,9 +175,7 @@ describe( 'validate CreateProxyAgent', () => {
 			expectedClass: HttpsProxyAgent,
 		},
 	] )( 'should return proxy with %o', async ( { envVars, urlToHit, expectedClass } ) => {
-		setEnvironmentVariabeles( envVars );
-		const createProxyAgent = ( await import( '../../../src/lib/http/proxy-agent' ) )
-			.createProxyAgent;
+		setEnvironmentVariables( envVars );
 		const agent = createProxyAgent( urlToHit );
 		expect( agent ).not.toBeNull();
 		expect( agent ).toBeInstanceOf( expectedClass );
@@ -183,7 +183,7 @@ describe( 'validate CreateProxyAgent', () => {
 
 	// Helper function to set environment variables based on passed in object
 	// envVars of the form: [ { VAR: 'VALUE' }, { VAR1: 'VALUE1' }, ... ]
-	function setEnvironmentVariabeles( envVars ) {
+	function setEnvironmentVariables( envVars ) {
 		for ( const index in envVars ) {
 			for ( const key in envVars[ index ] ) {
 				process.env[ key ] = envVars[ index ][ key ];

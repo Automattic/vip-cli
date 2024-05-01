@@ -1,10 +1,3 @@
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import { listEnvVarsCommand } from '../../src/bin/vip-config-envvar-list';
 import command from '../../src/lib/cli/command';
 import { formatData } from '../../src/lib/cli/format';
@@ -18,7 +11,7 @@ function mockExit() {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
@@ -66,7 +59,7 @@ describe( 'listEnvVarsCommand', () => {
 		format: 'csv',
 	};
 	const eventPayload = expect.objectContaining( {
-		command: 'vip @mysite.develop config envvar list',
+		command: 'vip config envvar list',
 	} );
 	const executeEvent = [ 'envvar_list_command_execute', eventPayload ];
 	const successEvent = [ 'envvar_list_command_success', eventPayload ];

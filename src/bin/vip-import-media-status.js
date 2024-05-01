@@ -1,23 +1,11 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import { trackEventWithEnv } from '../lib/tracker';
-import * as exit from '../lib/cli/exit';
-
-/**
- * Internal dependencies
- */
-import { isSupportedApp } from '../lib/media-import/media-file-import';
 import command from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { isSupportedApp } from '../lib/media-import/media-file-import';
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
+import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
 	id,
@@ -27,6 +15,7 @@ const appQuery = `
 		id
 		appId
 		type
+		name
 		primaryDomain {
 			id
 			name
@@ -45,7 +34,7 @@ command( {
 		'Export any file errors encountered to a JSON file instead of a plain text file',
 		false
 	)
-	.argv( process.argv, async ( arg: string[], { app, env, exportFileErrorsToJson } ) => {
+	.argv( process.argv, async ( arg, { app, env, exportFileErrorsToJson } ) => {
 		const { id: envId, appId } = env;
 		const track = trackEventWithEnv.bind( null, appId, envId );
 

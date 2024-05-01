@@ -1,29 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import {
-	createEnvironment,
-	printEnvironmentInfo,
-	getApplicationInformation,
-	doesEnvironmentExist,
-	getEnvironmentPath,
-} from '../lib/dev-environment/dev-environment-core';
+	DEV_ENVIRONMENT_FULL_COMMAND,
+	DEV_ENVIRONMENT_SUBCOMMAND,
+} from '../lib/constants/dev-environment';
 import {
 	DEFAULT_SLUG,
 	getEnvironmentName,
@@ -35,18 +20,21 @@ import {
 	validateDependencies,
 	processStringOrBooleanOption,
 	handleDeprecatedOptions,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
-	DEV_ENVIRONMENT_FULL_COMMAND,
-	DEV_ENVIRONMENT_SUBCOMMAND,
-} from '../lib/constants/dev-environment';
-import {
 	getConfigurationFileOptions,
-	printConfigurationFile,
 	mergeConfigurationFileOptions,
 } from '../lib/dev-environment/dev-environment-configuration-file';
-import type { InstanceOptions } from '../lib/dev-environment/types';
+import {
+	createEnvironment,
+	printEnvironmentInfo,
+	getApplicationInformation,
+	doesEnvironmentExist,
+	getEnvironmentPath,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -81,7 +69,7 @@ const examples = [
 ];
 
 const cmd = command()
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'title', 'Title for the WordPress site' )
 	.option( 'multisite', 'Enable multisite install', undefined, processStringOrBooleanOption );
 
@@ -131,7 +119,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		exit.withError( messageToShow );
 	}
 
-	let defaultOptions: InstanceOptions = {};
+	/** @type {InstanceOptions} */
+	let defaultOptions = {};
 
 	try {
 		if ( opt.app ) {
@@ -149,8 +138,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	let suppressPrompts = false;
 
 	if ( Object.keys( configurationFileOptions ).length > 0 ) {
-		console.log( '\nUsing configuration from file.' );
-		printConfigurationFile( configurationFileOptions );
+		// Merge configuration from file
 		preselectedOptions = mergeConfigurationFileOptions( opt, configurationFileOptions );
 		suppressPrompts = true;
 	}

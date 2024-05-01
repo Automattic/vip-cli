@@ -1,13 +1,9 @@
-/**
- * External dependencies
- */
 import chalk from 'chalk';
+import path from 'path';
 import { stdout as log } from 'single-line-log';
 
-/**
- * Internal dependencies
- */
 import * as exit from '../../lib/cli/exit';
+import { getFileMeta } from '../../lib/client-file-uploader';
 import { trackEvent } from '../../lib/tracker';
 import {
 	type PostLineExecutionProcessingParams,
@@ -84,6 +80,30 @@ interface ValidationWarning {
 interface ValidationResult {
 	errors: ( ValidationError | ValidationWarning )[];
 	infos: string[];
+}
+
+/**
+ * Check if a file has a valid extension
+ *
+ * @param {string} filename The file extension
+ * @returns {boolean} True if the extension is valid
+ */
+export const validateImportFileExtension = ( filename: string ): void => {
+	const ext = path.extname( filename ).toLowerCase();
+	if ( ! [ '.sql', '.gz' ].includes( ext ) ) {
+		exit.withError( 'Invalid file extension. Please provide a .sql or .gz file.' );
+	}
+};
+
+export function validateFilename( filename: string ) {
+	const re = /^[a-z0-9\-_.]+$/i;
+
+	// Exits if filename contains anything outside a-z A-Z - _ .
+	if ( ! re.test( filename ) ) {
+		exit.withError(
+			'Error: The characters used in the name of a file for import are limited to [0-9,a-z,A-Z,-,_,.]'
+		);
+	}
 }
 
 const generalCheckFormatter = ( check: CheckType ): ValidationResult => {
@@ -307,7 +327,7 @@ const checks: Checks = {
 	},
 	siteHomeUrl: {
 		matcher: "'(siteurl|home)',\\s?'(.*?)'",
-		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] } ),
+		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] + ' ' + results[ 2 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
 		message: 'Siteurl/home matches',
@@ -337,7 +357,7 @@ const checks: Checks = {
 		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
-		matcher: / ENGINE=(?!(InnoDB))/i,
+		matcher: /\sENGINE\s?=(?!(\s?InnoDB))/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
@@ -348,6 +368,7 @@ const checks: Checks = {
 			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
 };
+
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
 
 function findDuplicates< T >( arr: T[], where: Set< T > ) {
@@ -529,6 +550,14 @@ export const validate = async (
 	filename: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
 ): Promise< void > => {
+	const fileMeta = await getFileMeta( filename );
+
+	if ( fileMeta.isCompressed ) {
+		exit.withError(
+			'Compressed files cannot be validated. Please extract the archive and re-run the command, providing the path to the extracted SQL file.'
+		);
+	}
+
 	const readInterface = await getReadInterface( filename );
 	options.isImport = false;
 	readInterface.on( 'line', line => {

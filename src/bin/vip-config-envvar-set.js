@@ -1,18 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { appQuery, setEnvVar, validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
@@ -20,19 +9,26 @@ import { debug, getEnvContext } from '../lib/envvar/logging';
 import { readVariableFromFile } from '../lib/envvar/read-file';
 import { trackEvent } from '../lib/tracker';
 
-const baseUsage = 'vip @mysite.develop config envvar set';
+const baseUsage = 'vip config envvar set';
+const exampleUsage = 'vip @example-app.develop config envvar set';
 
 const NEW_RELIC_ENVVAR_KEY = 'NEW_RELIC_LICENSE_KEY';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ baseUsage } MY_VARIABLE`,
-		description: 'Sets the environment variable "MY_VARIABLE" and prompts for its value',
+		usage: `${ exampleUsage } MY_VARIABLE`,
+		description:
+			'Add or update the environment variable "MY_VARIABLE" and assign its value at the prompt.',
+	},
+	{
+		usage: `${ exampleUsage } MULTILINE_ENV_VAR --from-file=envvar-value.txt`,
+		description:
+			'Add or update the environment variable "MULTILINE_ENV_VAR" and assign the multiline contents of local file envvar-value.txt as its value.',
 	},
 ];
 
-export async function setEnvVarCommand( arg: string[], opt ) {
+export async function setEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 
@@ -40,9 +36,9 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 		app_id: opt.app.id,
 		command: `${ baseUsage } ${ name }`,
 		env_id: opt.env.id,
-		from_file: !! opt.fromFile,
+		from_file: Boolean( opt.fromFile ),
 		org_id: opt.app.organization.id,
-		skip_confirm: !! opt.skipConfirmation,
+		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};
 
@@ -63,7 +59,7 @@ export async function setEnvVarCommand( arg: string[], opt ) {
 		await trackEvent( 'envvar_set_newrelic_key', trackingParams );
 		console.log(
 			chalk.bold.red( 'Setting the New Relic key is not permitted.' ),
-			'If you want to set your own New Relic key, please contact our support team through the usual channels.'
+			'If you want to set your own New Relic key, please contact WordPress VIP support.'
 		);
 		process.exit( 1 );
 	}

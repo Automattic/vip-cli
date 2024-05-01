@@ -1,35 +1,30 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
 import { appQuery, listEnvVars } from '../lib/envvar/api';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const usage = 'vip @mysite.develop config envvar list';
+const usage = 'vip config envvar list';
+const exampleUsage = 'vip @example-app.develop config envvar list';
 
 // Command examples
 const examples = [
 	{
-		usage,
-		description: 'Lists all environment variables (names only)',
+		usage: exampleUsage,
+		description: 'List the names of all environment variables on an environment.',
 	},
 ];
 
-export async function listEnvVarsCommand( arg: string[], opt ): Promise< void > {
+/**
+ * @param {string[]} arg
+ * @param {object} opt
+ * @return {Promise<void>}
+ */
+export async function listEnvVarsCommand( arg, opt ) {
 	const trackingParams = {
 		app_id: opt.app.id,
 		command: usage,

@@ -1,7 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/**
- * External dependencies
- */
 import { constants } from 'node:fs';
 import { access, readFile, stat } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';
@@ -62,8 +59,9 @@ export async function getDockerSocket(): Promise< string | null > {
 
 		// Try the default location
 		paths.push( '/var/run/docker.sock' );
-		// Try an alternative location
+		// Try alternative locations
 		paths.push( join( homedir(), '.docker', 'run', 'docker.sock' ) );
+		paths.push( join( homedir(), '.orbstack', 'run', 'docker.sock' ) );
 
 		for ( const socketPath of paths ) {
 			try {
@@ -84,7 +82,7 @@ export async function getDockerSocket(): Promise< string | null > {
 export async function getEngineConfig( dockerHost: string ): Promise< Record< string, unknown > > {
 	const opts: Record< string, unknown > = {};
 	if ( dockerHost.startsWith( 'tcp://' ) ) {
-		const split = /(?:tcp:\/\/)?(.*?):(\d+)/g.exec( dockerHost );
+		const split = /^(?:tcp:\/\/)([^:]+):(\d+)/g.exec( dockerHost );
 		if ( split && split.length === 3 ) {
 			opts.host = split[ 1 ];
 			opts.port = split[ 2 ];

@@ -1,14 +1,7 @@
-// @format
-
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
 import API from '../../lib/api';
+
 import type {
 	PurgePageCacheMutationMutation,
 	PurgePageCacheMutationMutationVariables,
@@ -44,7 +37,7 @@ export async function purgeCache(
 	envId: number,
 	urls: string[]
 ): Promise< PurgePageCachePayload | null > {
-	const api = await API();
+	const api = API();
 
 	const variables = {
 		appId,

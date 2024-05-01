@@ -1,35 +1,30 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const baseUsage = 'vip @mysite.develop config envvar delete';
+const baseUsage = 'vip config envvar delete';
+const exampleUsage = 'vip @example-app.develop config envvar delete';
 
 // Command examples
 const examples = [
 	{
-		usage: `${ baseUsage } MY_VARIABLE`,
-		description: 'Permanently deletes the environment variable "MY_VARIABLE"',
+		usage: `${ exampleUsage } MY_VARIABLE`,
+		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
 	},
 ];
 
-export async function deleteEnvVarCommand( arg: string[], opt ) {
+/**
+ * @param {string[]} arg
+ * @param {object} opt
+ * @return {Promise<void>}
+ */
+export async function deleteEnvVarCommand( arg, opt ) {
 	// Help the user by uppercasing input.
 	const name = arg[ 0 ].trim().toUpperCase();
 
@@ -38,7 +33,7 @@ export async function deleteEnvVarCommand( arg: string[], opt ) {
 		command: `${ baseUsage } ${ name }`,
 		env_id: opt.env.id,
 		org_id: opt.app.organization.id,
-		skip_confirm: !! opt.skipConfirmation,
+		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};
 

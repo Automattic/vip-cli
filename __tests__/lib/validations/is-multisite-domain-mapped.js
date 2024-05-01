@@ -2,23 +2,16 @@
  * @format
  */
 
-/**
- * External dependencies
- */
 import nock from 'nock';
 import url from 'url';
 
-/**
- * Internal dependencies
- */
+import { API_URL } from '../../../src/lib/api';
 import {
 	getPrimaryDomainFromSQL,
 	maybeSearchReplacePrimaryDomain,
 	getPrimaryDomain,
 	isMultisitePrimaryDomainMapped,
 } from '../../../src/lib/validations/is-multisite-domain-mapped';
-
-import { API_URL } from '../../../src/lib/api';
 
 describe( 'is-multisite-domain-mapped', () => {
 	const capturedStatement = [

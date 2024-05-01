@@ -1,27 +1,16 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
 import chalk from 'chalk';
+import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import { isSupportedApp } from '../lib/media-import/media-file-import';
-import command from '../lib/cli/command';
 import API from '../lib/api';
+import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import { isSupportedApp } from '../lib/media-import/media-file-import';
 // eslint-disable-next-line no-duplicate-imports
-import { trackEventWithEnv } from '../lib/tracker';
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
+import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
 	id,
@@ -31,6 +20,7 @@ const appQuery = `
 		id
 		appId
 		type
+		name
 		primaryDomain {
 			id
 			name
@@ -64,7 +54,7 @@ ${ chalk.red.bold(
 ) }
 ${ chalk.red.bold( 'Are you sure you want to abort this Media Import?' ) }
 `,
-} ).argv( process.argv, async ( arg: string[], { app, env } ) => {
+} ).argv( process.argv, async ( arg, { app, env } ) => {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -74,7 +64,7 @@ ${ chalk.red.bold( 'Are you sure you want to abort this Media Import?' ) }
 			'The type of application you specified does not currently support Media imports.'
 		);
 	}
-	const api = await API();
+	const api = API();
 
 	await track( 'import_media_abort_execute' );
 

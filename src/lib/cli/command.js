@@ -1,26 +1,17 @@
-// @flow
-
-/**
- * External dependencies
- */
 import args from 'args';
-import { prompt } from 'enquirer';
 import chalk from 'chalk';
+import debugLib from 'debug';
+import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
-import updateNotifier from 'update-notifier';
 
-/**
- * Internal dependencies
- */
-import { confirm } from './prompt';
-import API from '../../lib/api';
-import app from '../../lib/api/app';
-import { formatData, formatSearchReplaceValues, type Tuple } from './format';
-import pkg from '../../../package.json';
-import { trackEvent } from '../../lib/tracker';
 import { parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
-import debugLib from 'debug';
+import { formatData, formatSearchReplaceValues } from './format';
+import { confirm } from './prompt';
+import pkg from '../../../package.json';
+import API from '../../lib/api';
+import app from '../../lib/api/app';
+import { trackEvent } from '../../lib/tracker';
 import UserError from '../user-error';
 
 function uncaughtError( err ) {
@@ -29,7 +20,7 @@ function uncaughtError( err ) {
 		return;
 	}
 	if ( err instanceof UserError ) {
-		exit.withError( err.message );
+		exit.withError( err );
 	}
 
 	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );
@@ -45,7 +36,7 @@ let _opts = {};
 let alreadyConfirmedDebugAttachment = false;
 
 // eslint-disable-next-line complexity
-args.argv = async function ( argv, cb ): Promise< any > {
+args.argv = async function ( argv, cb ) {
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',
@@ -113,8 +104,12 @@ args.argv = async function ( argv, cb ): Promise< any > {
 		return {};
 	}
 
-	// Check for updates every day
-	updateNotifier( { pkg, isGlobal: true, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify();
+	if ( process.env.NODE_ENV !== 'test' ) {
+		const { default: updateNotifier } = await import( 'update-notifier' );
+		updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify( {
+			isGlobal: true,
+		} );
+	}
 
 	// `help` and `version` are always defined as subcommands
 	const customCommands = this.details.commands.filter( command => {
@@ -130,7 +125,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 	} );
 
 	// Show help if no args passed
-	if ( !! customCommands.length && ! this.sub.length ) {
+	if ( Boolean( customCommands.length ) && ! this.sub.length ) {
 		await trackEvent( 'command_help_view' );
 
 		this.showHelp();
@@ -168,13 +163,12 @@ args.argv = async function ( argv, cb ): Promise< any > {
 	if ( _opts.appContext ) {
 		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
-			const api = await API();
+			const api = API();
 
 			await trackEvent( 'command_appcontext_list_fetch' );
 
 			try {
 				res = await api.query( {
-					// $FlowFixMe: gql template is not supported by flow
 					query: gql`query Apps( $first: Int, $after: String ) {
 							apps( first: $first, after: $after ) {
 								total
@@ -199,13 +193,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				exit.withError( `Failed to get app (${ _opts.appQuery }) details: ${ message }` );
 			}
 
-			if (
-				! res ||
-				! res.data ||
-				! res.data.apps ||
-				! res.data.apps.edges ||
-				! res.data.apps.edges.length
-			) {
+			if ( ! res.data?.apps?.edges?.length ) {
 				await trackEvent( 'command_appcontext_list_fetch_error', {
 					error: 'No apps found',
 				} );
@@ -235,7 +223,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 			// Copy all app information
 			appSelection.app = res.data.apps.edges.find( cur => cur.name === appSelection.app );
 
-			if ( ! appSelection || ! appSelection.app || ! appSelection.app.id ) {
+			if ( ! appSelection.app?.id ) {
 				await trackEvent( 'command_appcontext_list_select_error', {
 					error: 'Invalid app selected',
 				} );
@@ -245,7 +233,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 
 			await trackEvent( 'command_appcontext_list_select_success' );
 
-			options.app = Object.assign( {}, appSelection.app );
+			options.app = { ...appSelection.app };
 		} else {
 			let appLookup;
 			try {
@@ -258,7 +246,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				exit.withError( `App ${ chalk.blueBright( options.app ) } does not exist` );
 			}
 
-			if ( ! appLookup || ! appLookup.id ) {
+			if ( ! appLookup?.id ) {
 				await trackEvent( 'command_appcontext_param_error', {
 					error: 'Invalid app specified',
 				} );
@@ -268,7 +256,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 
 			await trackEvent( 'command_appcontext_param_select' );
 
-			options.app = Object.assign( {}, appLookup );
+			options.app = { ...appLookup };
 		}
 
 		if ( _opts.childEnvContext ) {
@@ -303,7 +291,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 			}
 
 			options.env = env;
-		} else if ( ! options.app || ! options.app.environments || ! options.app.environments.length ) {
+		} else if ( ! options.app?.environments?.length ) {
 			console.log( 'To set up a new development environment, please contact VIP Support.' );
 
 			await trackEvent( 'command_childcontext_fetch_error', {
@@ -343,7 +331,7 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				envObject => getEnvIdentifier( envObject ) === envSelection.env
 			);
 
-			if ( ! envSelection || ! envSelection.env || ! envSelection.env.id ) {
+			if ( ! envSelection.env?.id ) {
 				await trackEvent( 'command_childcontext_list_select_error', {
 					error: 'Invalid environment selected',
 				} );
@@ -361,7 +349,8 @@ args.argv = async function ( argv, cb ): Promise< any > {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
-		const info: Array< Tuple > = [];
+		/** @type {Tuple[]} */
+		const info = [];
 
 		if ( options.app ) {
 			info.push( { key: 'App', value: `${ options.app.name } (id: ${ options.app.id })` } );
@@ -380,13 +369,13 @@ args.argv = async function ( argv, cb ): Promise< any > {
 		switch ( _opts.module ) {
 			case 'import-sql': {
 				const site = options.env;
-				if ( site && site.primaryDomain ) {
+				if ( site?.primaryDomain ) {
 					const primaryDomainName = site.primaryDomain.name;
 					info.push( { key: 'Primary Domain Name', value: primaryDomainName } );
 				}
 
 				// Site launched details
-				const haveLaunchedField = Object.prototype.hasOwnProperty.call( site, 'launched' );
+				const haveLaunchedField = Object.hasOwn( site, 'launched' );
 
 				if ( haveLaunchedField ) {
 					const launched = site.launched ? '✅ Yes' : `${ chalk.red( 'x' ) } No`;
@@ -399,8 +388,8 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				}
 
 				options.skipValidate =
-					Object.prototype.hasOwnProperty.call( options, 'skipValidate' ) &&
-					!! options.skipValidate &&
+					Object.hasOwn( options, 'skipValidate' ) &&
+					Boolean( options.skipValidate ) &&
 					! [ 'false', 'no' ].includes( options.skipValidate );
 
 				if ( options.skipValidate ) {
@@ -459,8 +448,8 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				info.push( { key: 'Archive URL', value: chalk.blue.underline( this.sub ) } );
 
 				options.overwriteExistingFiles =
-					Object.prototype.hasOwnProperty.call( options, 'overwriteExistingFiles' ) &&
-					!! options.overwriteExistingFiles &&
+					Object.hasOwn( options, 'overwriteExistingFiles' ) &&
+					Boolean( options.overwriteExistingFiles ) &&
 					! [ 'false', 'no' ].includes( options.overwriteExistingFiles );
 				info.push( {
 					key: 'Overwrite any existing files',
@@ -468,8 +457,8 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				} );
 
 				options.importIntermediateImages =
-					Object.prototype.hasOwnProperty.call( options, 'importIntermediateImages' ) &&
-					!! options.importIntermediateImages &&
+					Object.hasOwn( options, 'importIntermediateImages' ) &&
+					Boolean( options.importIntermediateImages ) &&
 					! [ 'false', 'no' ].includes( options.importIntermediateImages );
 				info.push( {
 					key: 'Import intermediate image files',
@@ -477,8 +466,8 @@ args.argv = async function ( argv, cb ): Promise< any > {
 				} );
 
 				options.exportFileErrorsToJson =
-					Object.prototype.hasOwnProperty.call( options, 'exportFileErrorsToJson' ) &&
-					!! options.exportFileErrorsToJson &&
+					Object.hasOwn( options, 'exportFileErrorsToJson' ) &&
+					Boolean( options.exportFileErrorsToJson ) &&
 					! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
 				info.push( {
 					key: 'Export any file errors encountered to a JSON file instead of a plain text file',
@@ -503,12 +492,14 @@ args.argv = async function ( argv, cb ): Promise< any > {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
 			if ( res.header ) {
-				console.log( formatData( res.header, 'keyValue' ) );
+				if ( options.format !== 'json' ) {
+					console.log( formatData( res.header, 'keyValue' ) );
+				}
 				res = res.data;
 			}
 
 			res = res.map( row => {
-				const out = Object.assign( {}, row );
+				const out = { ...row };
 
 				if ( out.__typename ) {
 					// Apollo injects __typename
@@ -533,7 +524,10 @@ args.argv = async function ( argv, cb ): Promise< any > {
 	return options;
 };
 
-function validateOpts( opts: any ): Error {
+/**
+ * @returns {Error|undefined}
+ */
+function validateOpts( opts ) {
 	if ( opts.app ) {
 		if ( typeof opts.app !== 'string' && typeof opts.app !== 'number' ) {
 			return new Error( 'Invalid --app' );
@@ -555,20 +549,21 @@ function validateOpts( opts: any ): Error {
 	}
 }
 
-export default function ( opts: any ): args {
-	_opts = Object.assign(
-		{
-			appContext: false,
-			appQuery: 'id,name',
-			childEnvContext: false,
-			envContext: false,
-			format: false,
-			requireConfirm: false,
-			requiredArgs: 0,
-			wildcardCommand: false,
-		},
-		opts
-	);
+/**
+ * @returns {args}
+ */
+export default function ( opts ) {
+	_opts = {
+		appContext: false,
+		appQuery: 'id,name',
+		childEnvContext: false,
+		envContext: false,
+		format: false,
+		requireConfirm: false,
+		requiredArgs: 0,
+		wildcardCommand: false,
+		...opts,
+	};
 
 	if ( _opts.appContext || _opts.requireConfirm ) {
 		args.option( 'app', 'Specify the app' );
@@ -609,10 +604,7 @@ export function getEnvIdentifier( env ) {
 export function containsAppEnvArgument( argv ) {
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	return !! (
-		parsedAlias.app ||
-		parsedAlias.env ||
-		argv.includes( '--app' ) ||
-		argv.includes( '--env' )
+	return Boolean(
+		parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' )
 	);
 }

@@ -1,27 +1,19 @@
 #!/usr/bin/env node
 
-// @flow
-// @format
-
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
-import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	validateDependencies,
 	getEnvironmentName,
 	handleCLIException,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
+import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -57,7 +49,11 @@ const examples = [
 	},
 ];
 
-function getCommand( args: string[] ): string[] {
+/**
+ * @param {string[]} args
+ * @return {string[]}
+ */
+function getCommand( args ) {
 	const splitterIdx = process.argv.findIndex( argument => '--' === argument );
 	if ( args.length > 0 && splitterIdx === -1 ) {
 		throw new Error(
@@ -65,7 +61,8 @@ function getCommand( args: string[] ): string[] {
 		);
 	}
 
-	let cmd: string[] = [];
+	/** @type {string[]} */
+	let cmd = [];
 	if ( splitterIdx !== -1 && splitterIdx + 1 < process.argv.length ) {
 		cmd = process.argv.slice( splitterIdx + 1 );
 	}
@@ -74,7 +71,7 @@ function getCommand( args: string[] ): string[] {
 }
 
 command( { wildcardCommand: true } )
-	.option( 'slug', 'Custom name of the dev environment' )
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
 	.option( 'root', 'Spawn a root shell' )
 	.option( 'service', 'Spawn a shell in a specific service (php if omitted)' )
 	.examples( examples )
@@ -82,14 +79,14 @@ command( { wildcardCommand: true } )
 		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, '', true );
+		await validateDependencies( lando, '' );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_shell_command_execute', trackingInfo );
 
 		debug( 'Args: ', args, 'Options: ', opt );
 
-		const isRoot = !! opt.root;
+		const isRoot = Boolean( opt.root );
 		const service = opt.service || 'php';
 		const user = isRoot ? 'root' : userMap[ service ] || 'www-data';
 		const cmd = getCommand( args );

@@ -1,5 +1,5 @@
 ---
-name: npm publish
+name: Prepare a new npm release
 on:
   workflow_dispatch:
     inputs:
@@ -16,10 +16,18 @@ on:
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Prepare a new npm release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@v0.1.1
+      - name: Check out the source code
+        uses: actions/checkout@v4
+
+      - name: Run npm-prepare-release
+        uses: Automattic/vip-actions/npm-prepare-release@v0.6.0
         with:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
+          conventional-commits: 'true'

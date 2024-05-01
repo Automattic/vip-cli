@@ -1,26 +1,15 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
-import { trackEvent } from '../lib/tracker';
 import command from '../lib/cli/command';
+import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
+	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+import { trackEvent } from '../lib/tracker';
 
 const examples = [
 	{
@@ -39,8 +28,8 @@ command( {
 	requiredArgs: 1,
 } )
 	.examples( examples )
-	.option( 'slug', 'Custom name of the dev environment' )
-	.argv( process.argv, async ( unmatchedArgs: string[], opt ) => {
+	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
+	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ filePath ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );
 

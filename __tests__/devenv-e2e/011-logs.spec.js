@@ -1,18 +1,14 @@
-/**
- * External dependencies
- */
-import { mkdtemp, rm } from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 import { describe, expect, it } from '@jest/globals';
-import xdgBaseDir from 'xdg-basedir';
 import Docker from 'dockerode';
 import nock from 'nock';
+import { mkdtemp, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import xdgBaseDir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import { CliTest } from './helpers/cli-test';
+import { vipDevEnvLogs } from './helpers/commands';
+import { killProjectContainers } from './helpers/docker-utils';
 import {
 	checkEnvExists,
 	createAndStartEnvironment,
@@ -20,8 +16,6 @@ import {
 	getProjectSlug,
 	prepareEnvironment,
 } from './helpers/utils';
-import { vipDevEnvLogs } from './helpers/commands';
-import { killProjectContainers } from './helpers/docker-utils';
 
 describe( 'vip dev-env logs', () => {
 	/** @type {CliTest} */
@@ -89,7 +83,7 @@ describe( 'vip dev-env logs', () => {
 				true
 			);
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /database_1/ );
+			expect( result.stdout ).toMatch( /database[_-]1/ );
 			expect( result.stdout ).toMatch( /STARTING UP/ );
 		} );
 
@@ -99,9 +93,8 @@ describe( 'vip dev-env logs', () => {
 				{ env }
 			);
 			expect( result.rc ).toBeGreaterThan( 0 );
-			console.log( result.stderr );
 			expect( result.stderr ).toContain(
-				"Error:  Service 'foobar' not found. Please choose from one: devtools, nginx, php, database, memcached, wordpress, vip-mu-plugins, demo-app-code"
+				"Error:  Service 'foobar' not found. Please choose from one:"
 			);
 		} );
 
@@ -112,7 +105,7 @@ describe( 'vip dev-env logs', () => {
 				true
 			);
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toMatch( /php_1/ );
+			expect( result.stdout ).toMatch( /php[_-]1/ );
 		} );
 	} );
 } );

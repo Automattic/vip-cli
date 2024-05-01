@@ -1,13 +1,5 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
-
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { validate } from '../lib/validations/sql';

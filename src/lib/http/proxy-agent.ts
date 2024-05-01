@@ -1,17 +1,11 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/**
- * External dependencies
- */
-import type { Url } from 'url';
-import { SocksProxyAgent } from 'socks-proxy-agent';
+import debugLib from 'debug';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
-import debugLib from 'debug';
-const debug = debugLib( 'vip:proxy-agent' );
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
-/**
- * Internal dependencies
- */
+import type { Url } from 'url';
+const debug = debugLib( 'vip:proxy-agent' );
 
 // Note: This module requires the use of a special environment variable "VIP_USE_SYSTEM_PROXY"
 // The setting of it to any value allows this module to create a proxy agent based on proxy environment variables

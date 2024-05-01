@@ -1,27 +1,16 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
-import gql from 'graphql-tag';
-import debugLib from 'debug';
 import chalk from 'chalk';
+import debugLib from 'debug';
+import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
 import API from '../lib/api';
+import command from '../lib/cli/command';
 // eslint-disable-next-line no-duplicate-imports
-import { trackEventWithEnv } from '../lib/tracker';
 import { formatEnvironment } from '../lib/cli/format';
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
+import { trackEventWithEnv } from '../lib/tracker';
 
 const appQuery = `
 	id,
@@ -110,7 +99,7 @@ Are you sure you want to import the contents of the url?
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
-	.argv( process.argv, async ( args: string[], opts ) => {
+	.argv( process.argv, async ( args, opts ) => {
 		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } =
 			opts;
 		const [ url ] = args;
@@ -126,7 +115,7 @@ Error:
 		}
 
 		const track = trackEventWithEnv.bind( null, app.id, env.id );
-		const api = await API();
+		const api = API();
 
 		debug( 'Options: ', opts );
 		debug( 'Args:', args );

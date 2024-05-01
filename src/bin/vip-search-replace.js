@@ -1,18 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * @flow
- * @format
- */
-
-/**
- * External dependencies
- */
 import debugLib from 'debug';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { searchAndReplace } from '../lib/search-and-replace';

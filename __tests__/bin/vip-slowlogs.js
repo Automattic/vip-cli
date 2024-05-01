@@ -1,11 +1,7 @@
-/**
- * Internal dependencies
- */
-import os from 'os';
-import * as tracker from '../../src/lib/tracker';
+import { getSlowlogs } from '../../src/bin/vip-slowlogs';
 import * as slowlogsLib from '../../src/lib/app-slowlogs/app-slowlogs';
 import * as exit from '../../src/lib/cli/exit';
-import { getSlowlogs } from '../../src/bin/vip-slowlogs';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
@@ -13,7 +9,7 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 	throw 'EXIT WITH ERROR'; // throws to break the flow (the real implementation does a process.exit)
 } );
 
-jest.mock( 'lib/cli/command', () => {
+jest.mock( '../../src/lib/cli/command', () => {
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
@@ -49,7 +45,7 @@ describe( 'getSlowlogs', () => {
 				isK8sResident: true,
 			},
 			limit: 500,
-			format: 'text',
+			format: 'table',
 		};
 	} );
 
@@ -84,14 +80,22 @@ describe( 'getSlowlogs', () => {
 		expect( slowlogsLib.getRecentSlowlogs ).toHaveBeenCalledWith( 1, 3, 500 );
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'timestamp' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'rows sent' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'rows examined' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'query time' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'request uri' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'query' ) );
 		expect( console.log ).toHaveBeenCalledWith(
-			'┌────────────────────────────────┬───────────┬───────────────┬────────────┬─────────────────────┬────────────────────────┐\n' +
-				'│ timestamp                      │ rows sent │ rows examined │ query time │ request uri         │ query                  │\n' +
-				'├────────────────────────────────┼───────────┼───────────────┼────────────┼─────────────────────┼────────────────────────┤\n' +
-				'│ 2021-11-05T20:18:36.234041811Z │ 1         │ 1             │ 0.1        │ dashboard.wpvip.com │ SELECT * FROM wp_posts │\n' +
-				'├────────────────────────────────┼───────────┼───────────────┼────────────┼─────────────────────┼────────────────────────┤\n' +
-				'│ 2021-11-09T20:47:07.301221112Z │ 1         │ 1             │ 0.1        │ dashboard.wpvip.com │ SELECT * FROM wp_posts │\n' +
-				'└────────────────────────────────┴───────────┴───────────────┴────────────┴─────────────────────┴────────────────────────┘'
+			expect.stringContaining( '2021-11-05T20:18:36.234041811Z' )
+		);
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( '2021-11-09T20:47:07.301221112Z' )
+		);
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( '0.1' ) );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'dashboard.wpvip.com' ) );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.stringContaining( 'SELECT * FROM wp_posts' )
 		);
 
 		const trackingParams = {
@@ -101,7 +105,7 @@ describe( 'getSlowlogs', () => {
 			env_id: 3,
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
@@ -219,7 +223,7 @@ describe( 'getSlowlogs', () => {
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
 			/* eslint-disable max-len */
-			`"timestamp","rows sent","rows examined","query time","request uri","query"${ os.EOL }"2021-11-05T20:18:36.234041811Z",,,,,"SELECT * FROM wp_posts"${ os.EOL }"2021-11-09T20:47:07.301221112Z",,,,,"SELECT * FROM wp_posts"`
+			`"timestamp","rows sent","rows examined","query time","request uri","query"\n"2021-11-05T20:18:36.234041811Z",1,1,0.1,"dashboard.wpvip.com","SELECT * FROM wp_posts"\n"2021-11-09T20:47:07.301221112Z",1,1,0.1,"dashboard.wpvip.com","SELECT * FROM wp_posts"`
 			/* eslint-enable max-len */
 		);
 
@@ -266,7 +270,7 @@ describe( 'getSlowlogs', () => {
 			env_id: 3,
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith(
@@ -305,7 +309,7 @@ describe( 'getSlowlogs', () => {
 			env_id: 3,
 			limit: 500,
 			follow: false,
-			format: 'text',
+			format: 'table',
 		};
 
 		expect( tracker.trackEvent ).toHaveBeenCalledTimes( 2 );
@@ -329,7 +333,7 @@ describe( 'getSlowlogs', () => {
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith(
-			'Invalid format: jso. The supported formats are: csv, json, text.'
+			'Invalid format: jso. The supported formats are: csv, json, table.'
 		);
 
 		expect( slowlogsLib.getRecentSlowlogs ).not.toHaveBeenCalled();

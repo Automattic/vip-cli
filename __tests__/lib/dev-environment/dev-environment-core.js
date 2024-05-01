@@ -1,21 +1,15 @@
-// @format
-
-/**
- * External dependencies
- */
-import xdgBasedir from 'xdg-basedir';
-import fs from 'fs';
-import enquirer from 'enquirer';
-import os from 'os';
-import path from 'path';
-import child from 'child_process';
-import { EventEmitter } from 'stream';
 import { expect, jest } from '@jest/globals';
+import enquirer from 'enquirer';
+import child from 'node:child_process';
+import fs from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
+import path from 'node:path';
+import { EventEmitter } from 'node:stream';
+import xdgBasedir from 'xdg-basedir';
 
-/**
- * Internal dependencies
- */
 import app from '../../../src/lib/api/app';
+import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
+import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
 	createEnvironment,
@@ -25,19 +19,20 @@ import {
 	resolveImportPath,
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import { searchAndReplace } from '../../../src/lib/search-and-replace';
-import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
 import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
+import { searchAndReplace } from '../../../src/lib/search-and-replace';
 
-jest.mock( 'xdg-basedir', () => ( {} ) );
+jest.mock( 'xdg-basedir', () => ( {
+	data: require( 'node:os' ).tmpdir(),
+} ) );
+
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	const cleanup = () =>
-		fs.rmSync( path.join( os.tmpdir(), 'lando' ), { recursive: true, force: true } );
+		fs.rmSync( path.join( tmpdir(), 'lando' ), { recursive: true, force: true } );
 
 	beforeAll( cleanup );
 	afterAll( cleanup );
@@ -132,14 +127,17 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			expect( filePath ).toBe( expectedPath );
 		} );
 
-		it( 'should return tmp path if xdg is not available', () => {
-			xdgBasedir.data = '';
-			const name = 'foo';
-			const filePath = getEnvironmentPath( name );
-
-			const expectedPath = path.normalize( `${ os.tmpdir() }/vip/dev-environment/${ name }` );
-
-			expect( filePath ).toBe( expectedPath );
+		it( 'should throw if xdg is not available', () => {
+			const originalXDG = xdgBasedir.data;
+			try {
+				xdgBasedir.data = undefined;
+				const name = 'foo';
+				expect( () => getEnvironmentPath( name ) ).toThrow(
+					new Error( 'Unable to determine data directory.' )
+				);
+			} finally {
+				xdgBasedir.data = originalXDG;
+			}
 		} );
 	} );
 	describe( 'getApplicationInformation', () => {
@@ -329,7 +327,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'lstatSync' ).mockReturnValue( { isDirectory: () => false } );
 
-			const resolvedPath = `${ os.homedir() }/testfile.sql`;
+			const resolvedPath = `${ homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
 			const promise = resolveImportPath( 'foo', 'testfile.sql', null, false );
@@ -343,7 +341,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			searchAndReplace.mockReturnValue( {
 				outputFileName: 'testfile.sql',
 			} );
-			const resolvedPath = `${ os.homedir() }/testfile.sql`;
+			const resolvedPath = `${ homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
@@ -367,7 +365,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			searchAndReplace.mockReturnValue( {
 				outputFileName: 'testfile.sql',
 			} );
-			const resolvedPath = `${ os.homedir() }/testfile.sql`;
+			const resolvedPath = `${ homedir() }/testfile.sql`;
 			resolvePath.mockReturnValue( resolvedPath );
 			const searchReplace = 'testsite.com,testsite.net';
 

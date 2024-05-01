@@ -1,6 +1,5 @@
 module.exports = {
 	presets: [
-		'@babel/preset-flow',
 		[
 			'@babel/preset-typescript',
 			{
@@ -10,20 +9,10 @@ module.exports = {
 		[
 			'@babel/preset-env',
 			{
+				loose: true,
+				exclude: [ '@babel/plugin-proposal-dynamic-import' ],
 				targets: {
-					node: '16', // Keep this in sync with package.json engines.node
-				},
-			},
-		],
-	],
-	plugins: [
-		'@babel/plugin-transform-modules-commonjs',
-		[
-			'module-resolver',
-			{
-				root: [ './src' ],
-				alias: {
-					root: './',
+					node: '18', // Keep this in sync with package.json engines.node
 				},
 			},
 		],

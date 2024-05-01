@@ -1,30 +1,26 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 import { setTimeout } from 'timers/promises';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
-import { trackEvent } from '../lib/tracker';
 import * as logsLib from '../lib/app-logs/app-logs';
+import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatData } from '../lib/cli/format';
+import { trackEvent } from '../lib/tracker';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 5000;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
-const ALLOWED_FORMATS = [ 'csv', 'json', 'text' ];
+const ALLOWED_FORMATS = [ 'csv', 'json', 'table' ];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
 
-export async function getLogs( arg: string[], opt ): Promise< void > {
+/**
+ * @param {string[]} arg
+ */
+export async function getLogs( arg, opt ) {
 	validateInputs( opt.type, opt.limit, opt.format );
 
 	const trackingParams = getBaseTrackingParams( opt );
@@ -57,7 +53,7 @@ export async function getLogs( arg: string[], opt ): Promise< void > {
 	printLogs( logs.nodes, opt.format );
 }
 
-export async function followLogs( opt ): Promise< void > {
+export async function followLogs( opt ) {
 	let after = null;
 	let isFirstRequest = true;
 	// How many times have we polled?
@@ -146,7 +142,7 @@ function printLogs( logs, format ) {
 	} );
 
 	let output = '';
-	if ( format && 'text' === format ) {
+	if ( format && 'table' === format ) {
 		const rows = [];
 		for ( const { timestamp, message } of logs ) {
 			rows.push( `${ timestamp } ${ message }` );
@@ -159,7 +155,12 @@ function printLogs( logs, format ) {
 	console.log( output );
 }
 
-export function validateInputs( type: string, limit: number, format: string ): void {
+/**
+ * @param {string} type
+ * @param {number} limit
+ * @param {string} format
+ */
+export function validateInputs( type, limit, format ) {
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
 		exit.withError(
 			`Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.`
@@ -203,7 +204,7 @@ command( {
 	.option( 'type', 'The type of logs to be returned: "app" or "batch"', 'app' )
 	.option( 'limit', 'The maximum number of log lines', 500 )
 	.option( 'follow', 'Keep fetching new logs as they are generated' )
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'text' )
+	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.examples( [
 		{
 			usage: 'vip @mysite.production logs',

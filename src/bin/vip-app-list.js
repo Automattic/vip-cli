@@ -1,27 +1,19 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
 import gql from 'graphql-tag';
 
-/**
- * Internal dependencies
- */
-import command from '../lib/cli/command';
 import API from '../lib/api';
+import command from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( { format: true } ).argv( process.argv, async () => {
-	const api = await API();
+	const api = API();
 
 	await trackEvent( 'app_list_command_execute' );
 
 	let response;
 	try {
 		response = await api.query( {
-			// $FlowFixMe: gql template is not supported by flow
 			query: gql`
 				query Apps($first: Int, $after: String) {
 					apps(first: $first, after: $after) {

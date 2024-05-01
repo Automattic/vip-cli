@@ -1,23 +1,21 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
 import chalk from 'chalk';
 
-/**
- * Internal dependencies
- */
-import command, { getEnvIdentifier } from '../lib/cli/command';
 import app from '../lib/api/app';
+import command, { getEnvIdentifier } from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip app <app>', 'Pass an app name or ID to get details about that app' )
 	.example( 'vip app 123', 'Get details about the app with ID 123' )
 	.example( 'vip app vip-test', 'Get details about the app named vip-test' )
+	.example(
+		'vip app @mysite.develop deploy <file.zip>',
+		'Deploy the given compressed file to your site'
+	)
 	.command( 'list', 'List your VIP applications' )
+	.command( 'deploy', 'Deploy to your app from a file' )
 	.argv( process.argv, async arg => {
 		await trackEvent( 'app_command_execute' );
 

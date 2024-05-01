@@ -1,18 +1,12 @@
 #!/usr/bin/env node
-// @flow
 
-/**
- * External dependencies
- */
-import url from 'url';
-import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs';
+import path from 'path';
+import url from 'url';
 
-/**
- * Internal dependencies
- */
 import command from '../lib/cli/command';
+import { trackEvent } from '../lib/tracker';
 import {
 	acceptedExtensions,
 	findNestedDirectories,
@@ -24,7 +18,6 @@ import {
 	logErrorsForInvalidFilenames,
 	summaryLogs,
 } from '../lib/vip-import-validate-files';
-import { trackEvent } from '../lib/tracker';
 
 command( { requiredArgs: 1, format: true } )
 	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )

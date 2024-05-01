@@ -1,15 +1,10 @@
-/**
- * External dependencies
- */
-import { Response } from 'node-fetch';
 import debugLib from 'debug';
+import { Response } from 'node-fetch';
 
-/**
- * Internal dependencies
- */
-import type { AnalyticsClient } from './client';
 import http from '../../../lib/api/http';
 import { type Env } from '../../env';
+
+import type { AnalyticsClient } from './client';
 
 const debug = debugLib( '@automattic/vip:analytics:clients:pendo' );
 
@@ -70,7 +65,7 @@ export default class Pendo implements AnalyticsClient {
 			properties: eventProps,
 			timestamp: Date.now(),
 			type: 'track',
-			visitorId: `${ this.context.userId! }`,
+			visitorId: `${ this.context.userId as string }`,
 		};
 
 		debug( 'send()', body );

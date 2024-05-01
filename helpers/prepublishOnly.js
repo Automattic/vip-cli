@@ -1,14 +1,14 @@
-const util = require( 'node:util' );
-const check = util.promisify( require( 'check-node-version' ) );
 const { exec } = require( 'node:child_process' );
 const { EOL } = require( 'node:os' );
+const { minVersion, satisfies, valid } = require( 'semver' );
+
 const packageJSON = require( '../package.json' );
 
 const config = {
 	gitAllowDirty: true,
 	gitEnforceBranch: 'trunk',
 	nodeEnforceVersion: packageJSON.engines.node,
-	testBeforePublish: true,
+	testBeforePublish: process.env.CI !== 'true',
 };
 
 const releaseTag = process.env.npm_config_tag ?? 'latest';
@@ -34,11 +34,15 @@ const releaseTag = process.env.npm_config_tag ?? 'latest';
 		}
 
 		if ( config.nodeEnforceVersion ) {
-			const { isSatisfied, versions } = await check( { node: config.nodeEnforceVersion } );
+			const supported = packageJSON.engines.node;
+			const current = process.versions.node ?? process.version;
+			const isSatisfied = satisfies( current, supported );
 
 			if ( ! isSatisfied ) {
 				return bail(
-					`Node version ${ versions.node.version } is not supported. Please use Node version ${ config.nodeEnforceVersion } or higher.`
+					`Node version ${ valid( current ) } is not supported. Please use Node version ${ valid(
+						minVersion( supported )
+					) } or higher.`
 				);
 			}
 		}

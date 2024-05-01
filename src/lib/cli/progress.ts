@@ -1,32 +1,39 @@
-// @format
-
-/**
- * External dependencies
- */
+import { EOL } from 'node:os';
 import { stdout as singleLogLine } from 'single-line-log';
 
-/**
- * Internal dependencies
- */
 import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.
-const COMPLETED_STEP_SLUGS = [ 'success', 'skipped' ];
 
-export interface Step extends Record< string, string > {
-	id: string;
-	name: string;
+export const enum StepStatus {
+	PENDING = 'pending',
+	RUNNING = 'running',
+	SUCCESS = 'success',
+	FAILED = 'failed',
+	UNKNOWN = 'unknown',
+	SKIPPED = 'skipped',
 }
 
-interface StepFromServer {
+const COMPLETED_STEP_SLUGS = [ StepStatus.SUCCESS, StepStatus.SKIPPED ];
+
+export interface Step {
+	id: string;
 	name: string;
-	status: string;
+	status: StepStatus;
+	[ key: string ]: string;
+}
+
+export type StepConstructorParam = Omit< Step, 'status' > & { status?: StepStatus };
+
+export interface StepFromServer {
+	name: string;
+	status: StepStatus;
 }
 
 export class ProgressTracker {
 	hasFailure: boolean;
 	hasPrinted: boolean;
-	printInterval: NodeJS.Timer | undefined;
+	printInterval: NodeJS.Timeout | undefined;
 
 	// Track the state of each step
 	stepsFromCaller: Map< string, Step >;
@@ -41,7 +48,16 @@ export class ProgressTracker {
 	// This gets printed after the step status
 	suffix: string;
 
-	constructor( steps: Step[] ) {
+	/**
+	 * This determines from which step should we display the steps
+	 *
+	 * Useful when you want to display a prompt.
+	 *
+	 * And we don't want to repeatedly display the steps that has finished.
+	 */
+	displayFromStep = 0;
+
+	constructor( steps: StepConstructorParam[] ) {
 		this.runningSprite = new RunningSprite();
 		this.hasFailure = false;
 		this.hasPrinted = false;
@@ -55,9 +71,9 @@ export class ProgressTracker {
 		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
 	}
 
-	mapSteps( steps: Step[] ): Map< string, Step > {
+	mapSteps( steps: StepConstructorParam[] ): Map< string, Step > {
 		return steps.reduce( ( map, { id, name, status } ) => {
-			map.set( id, { id, name, status: status || 'pending' } );
+			map.set( id, { id, name, status: status ?? StepStatus.PENDING } );
 			return map;
 		}, new Map< string, Step >() );
 	}
@@ -86,12 +102,14 @@ export class ProgressTracker {
 			status,
 		} ) );
 
-		if ( ! steps.some( ( { status } ) => status === 'running' ) ) {
-			const firstPendingStepIndex = steps.findIndex( ( { status } ) => status === 'pending' );
+		if ( ! steps.some( ( { status } ) => status === StepStatus.RUNNING ) ) {
+			const firstPendingStepIndex = steps.findIndex(
+				( { status } ) => status === StepStatus.PENDING
+			);
 
 			if ( firstPendingStepIndex !== -1 ) {
 				// "Promote" the first "pending" to "running"
-				formattedSteps[ firstPendingStepIndex ].status = 'running';
+				formattedSteps[ firstPendingStepIndex ].status = StepStatus.RUNNING;
 			}
 		}
 
@@ -103,7 +121,7 @@ export class ProgressTracker {
 			return undefined;
 		}
 		const steps = [ ...this.getSteps().values() ];
-		return steps.find( ( { status } ) => status === 'pending' );
+		return steps.find( ( { status } ) => status === StepStatus.PENDING );
 	}
 
 	getCurrentStep(): Step | undefined {
@@ -112,23 +130,23 @@ export class ProgressTracker {
 		}
 
 		const steps = [ ...this.getSteps().values() ];
-		return steps.find( ( { status } ) => status === 'running' );
+		return steps.find( ( { status } ) => status === StepStatus.RUNNING );
 	}
 
 	stepRunning( stepId: string ): void {
-		this.setStatusForStepId( stepId, 'running' );
+		this.setStatusForStepId( stepId, StepStatus.RUNNING );
 	}
 
 	stepFailed( stepId: string ): void {
-		this.setStatusForStepId( stepId, 'failed' );
+		this.setStatusForStepId( stepId, StepStatus.FAILED );
 	}
 
 	stepSkipped( stepId: string ): void {
-		this.setStatusForStepId( stepId, 'skipped' );
+		this.setStatusForStepId( stepId, StepStatus.SKIPPED );
 	}
 
 	stepSuccess( stepId: string ) {
-		this.setStatusForStepId( stepId, 'success' );
+		this.setStatusForStepId( stepId, StepStatus.SUCCESS );
 		// The stepSuccess helper automatically sets the next step to "running"
 		const nextStep = this.getNextStep();
 		if ( nextStep ) {
@@ -137,10 +155,10 @@ export class ProgressTracker {
 	}
 
 	allStepsSucceeded(): boolean {
-		return [ ...this.getSteps().values() ].every( ( { status } ) => status === 'success' );
+		return [ ...this.getSteps().values() ].every( ( { status } ) => status === StepStatus.SUCCESS );
 	}
 
-	setStatusForStepId( stepId: string, status: string ) {
+	setStatusForStepId( stepId: string, status: StepStatus ) {
 		const step = this.stepsFromCaller.get( stepId );
 		if ( ! step ) {
 			// Only allowed to update existing steps with this method
@@ -151,7 +169,7 @@ export class ProgressTracker {
 			throw new Error( `Step name ${ stepId } is already completed.` );
 		}
 
-		if ( status === 'failed' ) {
+		if ( status === StepStatus.FAILED ) {
 			this.hasFailure = true;
 		}
 
@@ -174,24 +192,81 @@ export class ProgressTracker {
 		}
 	}
 
+	async handleContinuePrompt< PromptReturn >(
+		prompt: ( setPromptShown: () => void ) => Promise< PromptReturn >
+	): Promise< PromptReturn > {
+		this.print();
+		this.stopPrinting();
+
+		let isPromptShown = false;
+
+		const setPromptShown = () => {
+			isPromptShown = true;
+		};
+
+		const returnValue = await prompt( setPromptShown );
+
+		if ( isPromptShown ) {
+			this.displayFromStep = [ ...this.getSteps().values() ].findIndex(
+				step => step.status === StepStatus.RUNNING
+			);
+		}
+		let hasPrintedOnce = false;
+
+		const printingStartedPromise = new Promise< void >( resolve => {
+			this.startPrinting( () => {
+				if ( hasPrintedOnce ) {
+					return;
+				}
+
+				// this is so that we leave some room for the progress tracker to refresh
+				// without this, any prompt, or any text in between will get overwritten by the progress tracker
+				let linesToSkip = '';
+
+				for ( let iteration = 0; iteration < this.stepsFromCaller.size; iteration++ ) {
+					linesToSkip += EOL;
+				}
+
+				if ( isPromptShown ) {
+					process.stdout.write( linesToSkip );
+				}
+
+				hasPrintedOnce = true;
+
+				resolve();
+			} );
+		} );
+
+		await printingStartedPromise;
+
+		return returnValue;
+	}
+
 	print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();
 		}
 		const stepValues = [ ...this.getSteps().values() ];
-		const logs = stepValues.reduce( ( accumulator, { name, id, percentage, status, progress } ) => {
-			const statusIcon = getGlyphForStatus( status, this.runningSprite );
-			let suffix = '';
-			if ( id === 'upload' ) {
-				if ( status === 'running' && percentage ) {
-					suffix = percentage;
+		const logs = stepValues.reduce(
+			( accumulator, { name, id, percentage, status, progress }, stepNumber ) => {
+				if ( stepNumber < this.displayFromStep ) {
+					return accumulator;
 				}
-			} else if ( progress ) {
-				suffix = progress;
-			}
-			return `${ accumulator }${ statusIcon } ${ name } ${ suffix }\n`;
-		}, '' );
+
+				const statusIcon = getGlyphForStatus( status, this.runningSprite );
+				let suffix = '';
+				if ( id === 'upload' ) {
+					if ( status === StepStatus.RUNNING && percentage ) {
+						suffix = percentage;
+					}
+				} else if ( progress ) {
+					suffix = progress;
+				}
+				return `${ accumulator }${ statusIcon } ${ name } ${ suffix }\n`;
+			},
+			''
+		);
 
 		// Output the logs
 		singleLogLine( `${ this.prefix || '' }${ logs }${ this.suffix || '' }` );
