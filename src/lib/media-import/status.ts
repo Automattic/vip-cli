@@ -38,6 +38,7 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 					status
 					filesTotal
 					filesProcessed
+					failureDetailsUrl
 					failureDetails {
 						previousStatus
 						globalErrors
@@ -280,29 +281,37 @@ ${ maybeExitPrompt }
 		setProgressTrackerSuffix();
 		progressTracker.print();
 
-		const fileErrors = results.failureDetails?.fileErrors ?? [];
-		if ( fileErrors.length > 0 ) {
-			progressTracker.suffix += `${ chalk.yellow(
-				`⚠️  ${ fileErrors.length } file error(s) have been extracted`
-			) }`;
-			if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
-				progressTracker.suffix += `. ${ chalk.italic.yellow(
-					'File-errors report size threshold reached.'
+		if ( results.failureDetailsUrl ) {
+			progressTracker.suffix += `\n\n${ chalk.yellow(
+				`⚠️ All errors have been exported to ${ chalk.bold(
+					results.failureDetailsUrl
+				) }. Please check the link for more details.`
+			) }\n\n`;
+		} else {
+			const fileErrors = results.failureDetails?.fileErrors ?? [];
+			if ( fileErrors.length > 0 ) {
+				progressTracker.suffix += `${ chalk.yellow(
+					`⚠️  ${ fileErrors.length } file error(s) have been extracted`
 				) }`;
-			}
-			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
-			const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
-				exportFileErrorsToJson ? '.json' : '.txt'
-			}`;
-			try {
-				await writeFile( errorsFile, formattedData );
-				progressTracker.suffix += `\n\n${ chalk.yellow(
-					`All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
-				) }\n\n`;
-			} catch ( writeFileErr ) {
-				progressTracker.suffix += `\n\n${ chalk.red(
-					`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
-				) }\n\n`;
+				if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
+					progressTracker.suffix += `. ${ chalk.italic.yellow(
+						'File-errors report size threshold reached.'
+					) }`;
+				}
+				const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
+				const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
+					exportFileErrorsToJson ? '.json' : '.txt'
+				}`;
+				try {
+					await writeFile( errorsFile, formattedData );
+					progressTracker.suffix += `\n\n${ chalk.yellow(
+						`All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
+					) }\n\n`;
+				} catch ( writeFileErr ) {
+					progressTracker.suffix += `\n\n${ chalk.red(
+						`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
+					) }\n\n`;
+				}
 			}
 		}
 
