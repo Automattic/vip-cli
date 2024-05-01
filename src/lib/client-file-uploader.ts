@@ -11,7 +11,7 @@ import { PassThrough } from 'stream';
 import { Parser as XmlParser } from 'xml2js';
 import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 
-import http from '../lib/api/http';
+import http, { type FetchOptions } from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
 
 // Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
@@ -413,10 +413,17 @@ async function getSignedUploadRequestData( {
 	uploadId = undefined,
 	partNumber = undefined,
 }: GetSignedUploadRequestDataArgs ): Promise< PresignedRequest > {
-	const response = await http( '/upload/site-import-presigned-url', {
+	const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
+	const reqOptions = {
 		method: 'POST',
 		body: { action, appId, basename, envId, etagResults, partNumber, uploadId },
-	} );
+	} as FetchOptions;
+	if ( WPVIP_DEPLOY_TOKEN ) {
+		reqOptions.headers = {
+			Authorization: `Bearer ${ WPVIP_DEPLOY_TOKEN }`,
+		};
+	}
+	const response = await http( '/upload/site-import-presigned-url', reqOptions );
 
 	if ( response.status !== 200 ) {
 		throw new Error( ( await response.text() ) || response.statusText );
