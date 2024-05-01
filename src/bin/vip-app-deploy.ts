@@ -245,9 +245,15 @@ Processing the file for deployment to your environment...
 
 	// Start the deploy
 	try {
+		const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
 		const startDeployResults = await api.mutate( {
 			mutation: START_DEPLOY_MUTATION,
 			variables: startDeployVariables,
+			context: {
+				headers: {
+					Authorization: `Bearer ${ WPVIP_DEPLOY_TOKEN }`,
+				},
+			},
 		} );
 
 		debug( { startDeployResults } );

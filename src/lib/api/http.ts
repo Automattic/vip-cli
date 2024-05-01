@@ -1,5 +1,10 @@
 import debugLib from 'debug';
-import fetch, { type BodyInit, type Response, type RequestInit } from 'node-fetch';
+import fetch, {
+	type BodyInit,
+	type Response,
+	type RequestInit,
+	type HeadersInit,
+} from 'node-fetch';
 
 import { API_HOST } from '../../lib/api';
 import env from '../../lib/env';
@@ -8,9 +13,10 @@ import Token from '../../lib/token';
 
 const debug = debugLib( '@automattic/vip:http' );
 
-type FetchOptions = Omit< RequestInit, 'body' > & {
+export type FetchOptions = Omit< RequestInit, 'body' > & {
 	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 	body?: BodyInit | Record< string, unknown >;
+	headers?: HeadersInit | Record< string, string >;
 };
 
 /**
