@@ -858,12 +858,6 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
 		.option(
-			[ 'G', 'mailhog' ],
-			'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)',
-			undefined,
-			processBooleanOption
-		)
-		.option(
 			[ 'A', 'mailpit' ],
 			'Enable Mailpit. By default it is disabled',
 			undefined,
