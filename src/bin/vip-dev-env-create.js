@@ -19,7 +19,6 @@ import {
 	handleCLIException,
 	validateDependencies,
 	processStringOrBooleanOption,
-	handleDeprecatedOptions,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
@@ -98,8 +97,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	await validateDependencies( lando, slug );
 
 	debug( 'Args: ', arg, 'Options: ', opt );
-
-	handleDeprecatedOptions( opt );
 
 	const trackingInfo = {
 		slug,
