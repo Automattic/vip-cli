@@ -14,7 +14,6 @@ import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
 	handleCLIException,
-	handleDeprecatedOptions,
 	processSlug,
 	promptForArguments,
 	validateDependencies,
@@ -52,8 +51,6 @@ addDevEnvConfigurationOptions( cmd );
 cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = await getEnvironmentName( opt );
-
-	handleDeprecatedOptions( opt );
 
 	const lando = await bootstrapLando();
 	await validateDependencies( lando, slug );
@@ -97,7 +94,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			mariadb: currentInstanceData.mariadb,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,
-			mailpit: currentInstanceData.mailpit ?? currentInstanceData.mailhog,
+			mailpit: currentInstanceData.mailpit,
 			photon: currentInstanceData.photon,
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,

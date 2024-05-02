@@ -225,7 +225,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 
 	// Mailpit migration
 	if ( ! newInstanceData.mailpit ) {
-		newInstanceData.mailpit = newInstanceData.mailhog ?? false;
+		newInstanceData.mailpit = false;
 	}
 
 	// MariaDB migration
@@ -445,11 +445,6 @@ export function readEnvironmentData( slug: string ): InstanceData {
 	if ( instanceData.clientCode ) {
 		// clientCode was renamed to appCode
 		instanceData.appCode = instanceData.clientCode as ComponentConfig;
-	}
-
-	if ( instanceData.mailhog ) {
-		instanceData.mailpit = instanceData.mailhog;
-		delete instanceData.mailhog;
 	}
 
 	return instanceData;

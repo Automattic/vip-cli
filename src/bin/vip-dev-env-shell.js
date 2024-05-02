@@ -24,7 +24,6 @@ const userMap = {
 	memcached: 'memcache',
 	elasticsearch: 'elasticsearch',
 	phpmyadmin: 'www-data',
-	mailhog: 'mailhog',
 	mailpit: 'root',
 	photon: 'root',
 };

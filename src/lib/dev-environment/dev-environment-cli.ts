@@ -858,12 +858,6 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
 		.option(
-			[ 'G', 'mailhog' ],
-			'Enable Mailpit. By default it is disabled (deprecated option, please use --mailpit instead)',
-			undefined,
-			processBooleanOption
-		)
-		.option(
 			[ 'A', 'mailpit' ],
 			'Enable Mailpit. By default it is disabled',
 			undefined,
@@ -995,18 +989,3 @@ const getVSCodeExecutable = () => {
 	}
 	return null;
 };
-
-export function handleDeprecatedOptions( opts: Record< string, unknown > ): void {
-	if ( opts.mailhog ) {
-		console.warn(
-			chalk.yellow(
-				'Warning: --mailhog is deprecated and will be removed in a future release. Please use --mailpit instead.'
-			)
-		);
-		if ( opts.mailpit === undefined ) {
-			opts.mailpit = opts.mailhog;
-		}
-
-		delete opts.mailhog;
-	}
-}
