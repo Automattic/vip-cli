@@ -95,6 +95,15 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( step.id, { ...step, progress } );
 	}
 
+	updateMessage( message: string ) {
+		const step = this.getCurrentStep();
+		if ( ! step ) {
+			return;
+		}
+
+		this.stepsFromCaller.set( step.id, { ...step, name: message } );
+	}
+
 	setStepsFromServer( steps: StepFromServer[] ) {
 		const formattedSteps: Step[] = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
