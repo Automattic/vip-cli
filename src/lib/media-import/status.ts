@@ -1,5 +1,6 @@
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import chalk from 'chalk';
+import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -13,7 +14,7 @@ import {
 	Maybe,
 } from '../../graphqlTypes';
 import API from '../../lib/api';
-import { capitalize, formatEnvironment, formatData, RunningSprite } from '../../lib/cli/format';
+import { capitalize, formatData, formatEnvironment, RunningSprite } from '../../lib/cli/format';
 import {
 	AppForMediaImport,
 	currentUserCanImportForApp,
@@ -272,8 +273,63 @@ ${ maybeExitPrompt }
 			void checkStatus( IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
 		} );
 
+	async function exportFailureDetails(
+		fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[]
+	) {
+		const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
+		const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
+			exportFileErrorsToJson ? '.json' : '.txt'
+		}`;
+		try {
+			await writeFile( errorsFile, formattedData );
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
+			) }`;
+		} catch ( writeFileErr ) {
+			progressTracker.suffix += `${ chalk.red(
+				`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
+			) }`;
+		}
+	}
+
+	async function fetchFailureDetails( failureDetailsUrl: string ) {
+		progressTracker.suffix += `
+=============================================================
+Downloading errors details from ${ failureDetailsUrl }...
+\n`;
+		try {
+			const response = await fetch( failureDetailsUrl );
+			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
+		} catch ( err ) {
+			progressTracker.suffix += `${ chalk.red(
+				`Could not download error details\n${ ( err as Error ).message }`
+			) }`;
+			throw err;
+		}
+	}
+
+	async function promptFailureDetailsDownload( failureDetailsUrl: string ) {
+		progressTracker.suffix += `${ chalk.yellow(
+			`⚠️  Error details can be found on ${ chalk.bold( failureDetailsUrl ) }. `
+		) }\n`;
+		progressTracker.print( { clearAfter: true } );
+
+		const failureDetails = await prompt( {
+			type: 'confirm',
+			name: 'download',
+			message: 'Do you want to download them now?',
+		} );
+
+		if ( ! failureDetails.download ) {
+			return;
+		}
+
+		const failureDetailsErrors = await fetchFailureDetails( failureDetailsUrl );
+		await exportFailureDetails( failureDetailsErrors );
+	}
+
 	try {
-		const results = await getResults();
+		const results: AppEnvironmentMediaImportStatus = await getResults();
 		overallStatus = results.status ?? 'unknown';
 
 		progressTracker.stopPrinting();
@@ -282,36 +338,21 @@ ${ maybeExitPrompt }
 		progressTracker.print();
 
 		if ( results.failureDetailsUrl ) {
-			progressTracker.suffix += `\n\n${ chalk.yellow(
-				`⚠️ All errors have been exported to ${ chalk.bold(
-					results.failureDetailsUrl
-				) }. Please check the link for more details.`
-			) }\n\n`;
+			await promptFailureDetailsDownload( results.failureDetailsUrl as unknown as string );
 		} else {
+			// Falls back to exporting errors to a local file
 			const fileErrors = results.failureDetails?.fileErrors ?? [];
 			if ( fileErrors.length > 0 ) {
 				progressTracker.suffix += `${ chalk.yellow(
 					`⚠️  ${ fileErrors.length } file error(s) have been extracted`
 				) }`;
+
 				if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
 					progressTracker.suffix += `. ${ chalk.italic.yellow(
 						'File-errors report size threshold reached.'
 					) }`;
 				}
-				const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
-				const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
-					exportFileErrorsToJson ? '.json' : '.txt'
-				}`;
-				try {
-					await writeFile( errorsFile, formattedData );
-					progressTracker.suffix += `\n\n${ chalk.yellow(
-						`All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
-					) }\n\n`;
-				} catch ( writeFileErr ) {
-					progressTracker.suffix += `\n\n${ chalk.red(
-						`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
-					) }\n\n`;
-				}
+				await exportFailureDetails( fileErrors );
 			}
 		}
 
