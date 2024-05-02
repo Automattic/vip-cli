@@ -10,6 +10,7 @@ import {
 import chalk from 'chalk';
 import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
+import fetch from 'node-fetch';
 
 /**
  * Internal dependencies
@@ -21,6 +22,7 @@ import API, {
 } from '../lib/api';
 import * as exit from '../lib/cli/exit';
 import { ProgressTracker } from '../lib/cli/progress';
+import { createProxyAgent } from '../lib/http/proxy-agent';
 import { CommandTracker } from '../lib/tracker';
 import { pollUntil } from '../lib/utils';
 
@@ -164,9 +166,11 @@ export class PhpMyAdminCommand {
 	async readyToServe(): Promise< boolean > {
 		const url = `https://${ this.env.primaryDomain?.name }/.wpvip/pma/auth`;
 
+		const agent = createProxyAgent( url );
 		const resp = await fetch( url, {
 			method: 'GET',
 			redirect: 'manual',
+			agent: agent ?? undefined,
 		} );
 
 		// If we get 401, the domain is hidden behind a login wall, so we cannot access it
