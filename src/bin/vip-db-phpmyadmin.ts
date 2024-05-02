@@ -28,6 +28,9 @@ const appQuery = `
 		name
 		type
 		uniqueLabel
+		primaryDomain {
+			name
+		}
 	}
 `;
 

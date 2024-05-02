@@ -124,6 +124,7 @@ export class PhpMyAdminCommand {
 	track: CommandTracker;
 	steps = {
 		ENABLE: 'enable',
+		LB_DELAY: 'lb_delay',
 		GENERATE: 'generate',
 	};
 	private progressTracker: ProgressTracker;
@@ -134,6 +135,7 @@ export class PhpMyAdminCommand {
 		this.track = trackerFn;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
+			{ id: this.steps.LB_DELAY, name: 'Waiting for PHPMyAdmin to be ready' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
 		] );
 	}
@@ -159,14 +161,29 @@ export class PhpMyAdminCommand {
 		return await getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
 	}
 
+	async readyToServe(): Promise< boolean > {
+		const url = `https://${ this.env.primaryDomain?.name }/.wpvip/pma/auth`;
+
+		// Specify proxy
+		const resp = await fetch( url, {
+			method: 'GET',
+			redirect: 'manual',
+		} );
+
+		// If we get 401, the domain is hidden behind a login wall, so we cannot access it
+		if ( resp.status === 401 ) {
+			throw new Error( 'We cannot check if PhpMyAdmin is ready due to a login wall' );
+		}
+
+		const text = await resp.text();
+		return text.startsWith( 'Login link expired' );
+	}
+
 	async maybeEnablePhpMyAdmin(): Promise< void > {
 		const status = await this.getStatus();
 		if ( ! [ 'running', 'enabled' ].includes( status ) ) {
 			await enablePhpMyAdmin( this.env.id as number );
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
-
-			// Additional 30s for LB routing to be updated
-			await new Promise( resolve => setTimeout( resolve, 30000 ) );
 		}
 	}
 
@@ -211,6 +228,16 @@ export class PhpMyAdminCommand {
 			exit.withError(
 				'Failed to enable PhpMyAdmin. Please try again. If the problem persists, please contact support.'
 			);
+		}
+
+		this.progressTracker.stepRunning( this.steps.LB_DELAY );
+		try {
+			await pollUntil( this.readyToServe.bind( this ), 5000 );
+			this.progressTracker.stepSuccess( this.steps.LB_DELAY );
+		} catch ( err ) {
+			const error = err as Error;
+			this.progressTracker.updateMessage( `Skipped: ${ error.message }` );
+			this.progressTracker.stepSkipped( this.steps.LB_DELAY );
 		}
 
 		let url;
