@@ -164,7 +164,6 @@ export class PhpMyAdminCommand {
 	async readyToServe(): Promise< boolean > {
 		const url = `https://${ this.env.primaryDomain?.name }/.wpvip/pma/auth`;
 
-		// Specify proxy
 		const resp = await fetch( url, {
 			method: 'GET',
 			redirect: 'manual',
