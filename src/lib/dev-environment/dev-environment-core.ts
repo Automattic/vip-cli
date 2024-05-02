@@ -224,9 +224,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	}
 
 	// Mailpit migration
-	if ( ! newInstanceData.mailpit ) {
-		newInstanceData.mailpit = false;
-	}
+	newInstanceData.mailpit ??= false;
 
 	// MariaDB migration
 	if ( ! newInstanceData.mariadb ) {
