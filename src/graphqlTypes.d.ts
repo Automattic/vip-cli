@@ -784,6 +784,8 @@ export type AppEnvironmentMediaImportStatus = {
 	__typename?: 'AppEnvironmentMediaImportStatus';
 	/** Media Import failure details */
 	failureDetails?: Maybe< AppEnvironmentMediaImportStatusFailureDetails >;
+	/** URL to download the media import error log */
+	failureDetailsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	/** Total number of media files that were imported */
 	filesProcessed?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	/** Total number of media files that are to be import */
@@ -794,8 +796,6 @@ export type AppEnvironmentMediaImportStatus = {
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	/** The actual status of the Media Import */
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** URL for the failure details */
-	failureDetailsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 /** Response payload for executing a status change action on a Media Import */
