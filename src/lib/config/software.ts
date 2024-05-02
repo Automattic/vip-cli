@@ -40,7 +40,10 @@ export const appQuery = `
 		}
 	}`;
 
-export const appQueryFragments = gql`
+// $FlowFixMe: gql template is not supported by flow
+// This causes a GraphQL Document Validation failure in the codegen.ts file
+// To fix this, we need to add the tag to the gql template
+export const appQueryFragments = `
 	fragment Software on AppEnvironmentSoftwareSettingsSoftware {
 		name
 		slug

@@ -90,6 +90,12 @@ used.
    dependencies without updating `package.json`
 3. Run `npm run typescript:codegen:generate` - this will regenerate the types.
 
+#### Throubleshooting
+
+- You might encounter an error message saying GraphQL Document Validation failed with 4 errors;
+  Error 0: Unknown fragment "Software". - This is because the codegen script is looking for fragments in the schema.
+  You can skip this by adding the tag `gql` in the const appQueryFragments declaration (`export const appQueryFragments = gql(...)`.
+
 ## Alerting
 
 There are no alerts.
