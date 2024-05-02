@@ -11,20 +11,20 @@ const debug = debugLib( '@automattic/vip:lib:utils' );
  *
  * @param {Function} fn       A function to poll
  * @param {number}   interval Poll interval in milliseconds
- * @param {Function} isDone   A function that accepts the return of `fn`. Stops the polling if it returns true
+ * @param {Function} isDone   A function that accepts the return of `fn`. Stops the polling if it returns true. If not provided, the polling stops when `fn` returns a truthy value.
  * @return {Promise}          A promise which resolves when the polling is done
  * @throws {Error}            If the fn throws an error
  */
 export async function pollUntil< T >(
 	fn: () => Promise< T >,
 	interval: number,
-	isDone: ( v: T ) => boolean
+	isDone?: ( v: T ) => boolean
 ): Promise< void > {
 	let done = false;
 	while ( ! done ) {
 		// eslint-disable-next-line no-await-in-loop
 		const result = await fn();
-		done = isDone( result );
+		done = isDone?.( result ) || Boolean( result );
 		if ( ! done ) {
 			// eslint-disable-next-line no-await-in-loop
 			await setTimeout( interval );
