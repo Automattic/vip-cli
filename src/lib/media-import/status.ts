@@ -310,7 +310,9 @@ Downloading errors details from ${ failureDetailsUrl }...
 
 	async function promptFailureDetailsDownload( failureDetailsUrl: string ) {
 		progressTracker.suffix += `${ chalk.yellow(
-			`⚠️  Error details can be found on ${ chalk.bold( failureDetailsUrl ) }. `
+			`⚠️  Error details can be found on ${ chalk.bold(
+				failureDetailsUrl
+			) } ${ chalk.italic.yellow( '(unique link expires in 15 minutes)' ) }. `
 		) }\n`;
 		progressTracker.print( { clearAfter: true } );
 
