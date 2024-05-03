@@ -1,5 +1,15 @@
 ## Changelog
 
+### 2.39.5
+* Custom Deploys: Pass in deploy token to StartCustomDeploy mutation and allow `getSignedUploadRequestData()` to accept another bearer token
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.4...2.39.5
+
+### 2.39.4
+* Dev-env: Hotfix mysql 8.4 being incompatible due to auth plugin deprecation
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.3...2.39.4
+
 ### 2.39.3
 
 * Update/docs pt vip config

@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "2.39.4",
+  "version": "2.39.6-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -107,9 +107,9 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "@automattic/eslint-plugin-wpvip": "0.9.1",
-    "@babel/cli": "7.24.1",
-    "@babel/core": "7.24.4",
-    "@babel/preset-env": "7.24.4",
+    "@babel/cli": "7.24.5",
+    "@babel/core": "7.24.5",
+    "@babel/preset-env": "7.24.5",
     "@babel/preset-typescript": "7.24.1",
     "@jest/globals": "^29.7.0",
     "@jest/test-sequencer": "^29.7.0",

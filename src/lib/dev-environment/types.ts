@@ -13,7 +13,6 @@ export interface InstanceOptions {
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	xdebugConfig?: string;
-	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
 	photon?: boolean;
 
@@ -69,7 +68,6 @@ export interface ConfigurationFileOptions {
 	phpmyadmin?: boolean;
 	xdebug?: boolean;
 	'xdebug-config'?: string;
-	mailhog?: boolean; // Legacy
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
 	photon?: boolean;
@@ -97,7 +95,6 @@ export interface InstanceData {
 	mariadb?: string; // Legacy
 	php: string;
 	elasticsearch?: string | boolean;
-	mailhog?: boolean; // Legacy
 	mailpit: boolean;
 	photon: boolean;
 	pullAfter?: number;

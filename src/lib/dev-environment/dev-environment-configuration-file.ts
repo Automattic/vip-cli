@@ -112,7 +112,7 @@ function sanitizeConfiguration(
 		elasticsearch: stringToBooleanIfDefined( configuration.elasticsearch ),
 		phpmyadmin: stringToBooleanIfDefined( configuration.phpmyadmin ),
 		xdebug: stringToBooleanIfDefined( configuration.xdebug ),
-		mailpit: stringToBooleanIfDefined( configuration.mailpit ?? configuration.mailhog ),
+		mailpit: stringToBooleanIfDefined( configuration.mailpit ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
 		meta: configurationMeta,
@@ -166,7 +166,7 @@ export function mergeConfigurationFileOptions(
 		phpmyadmin: configurationFileOptions.phpmyadmin,
 		xdebug: configurationFileOptions.xdebug,
 		xdebugConfig: configurationFileOptions[ 'xdebug-config' ],
-		mailpit: configurationFileOptions.mailpit ?? configurationFileOptions.mailhog,
+		mailpit: configurationFileOptions.mailpit,
 		mediaRedirectDomain: configurationFileOptions[ 'media-redirect-domain' ],
 		photon: configurationFileOptions.photon,
 	};
