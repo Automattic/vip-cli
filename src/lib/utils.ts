@@ -12,15 +12,19 @@ const debug = debugLib( '@automattic/vip:lib:utils' );
  * @param {Function} fn       A function to poll
  * @param {number}   interval Poll interval in milliseconds
  * @param {Function} isDone   A function that accepts the return of `fn`. Stops the polling if it returns true. If not provided, the polling stops when `fn` returns a truthy value.
+ * @param {number}   cutOff   Maximum time to poll in milliseconds
  * @return {Promise}          A promise which resolves when the polling is done
  * @throws {Error}            If the fn throws an error
  */
 export async function pollUntil< T >(
 	fn: () => Promise< T >,
 	interval: number,
-	isDone?: ( v: T ) => boolean
+	isDone?: ( v: T ) => boolean,
+	cutOff?: number
 ): Promise< void > {
 	let done = false;
+	const cutOffTime = cutOff ? Date.now() + cutOff : 0;
+
 	while ( ! done ) {
 		// eslint-disable-next-line no-await-in-loop
 		const result = await fn();
@@ -28,6 +32,9 @@ export async function pollUntil< T >(
 		if ( ! done ) {
 			// eslint-disable-next-line no-await-in-loop
 			await setTimeout( interval );
+		}
+		if ( cutOffTime && cutOffTime < Date.now() ) {
+			throw new Error( 'Polling timed out' );
 		}
 	}
 }

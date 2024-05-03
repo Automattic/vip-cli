@@ -126,7 +126,7 @@ export class PhpMyAdminCommand {
 	track: CommandTracker;
 	steps = {
 		ENABLE: 'enable',
-		LB_DELAY: 'lb_delay',
+		PROCESSING: 'Processing',
 		GENERATE: 'generate',
 	};
 	private progressTracker: ProgressTracker;
@@ -137,7 +137,7 @@ export class PhpMyAdminCommand {
 		this.track = trackerFn;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
-			{ id: this.steps.LB_DELAY, name: 'Waiting for PHPMyAdmin to be ready' },
+			{ id: this.steps.PROCESSING, name: 'Processing' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
 		] );
 	}
@@ -233,14 +233,14 @@ export class PhpMyAdminCommand {
 			);
 		}
 
-		this.progressTracker.stepRunning( this.steps.LB_DELAY );
+		this.progressTracker.stepRunning( this.steps.PROCESSING );
 		try {
-			await pollUntil( this.readyToServe.bind( this ), 5000 );
-			this.progressTracker.stepSuccess( this.steps.LB_DELAY );
+			await pollUntil( this.readyToServe.bind( this ), 5000, undefined, 300000 );
+			this.progressTracker.stepSuccess( this.steps.PROCESSING );
 		} catch ( err ) {
 			const error = err as Error;
 			this.progressTracker.updateMessage( `Skipped: ${ error.message }` );
-			this.progressTracker.stepSkipped( this.steps.LB_DELAY );
+			this.progressTracker.stepSkipped( this.steps.PROCESSING );
 		}
 
 		let url;
