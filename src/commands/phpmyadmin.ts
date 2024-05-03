@@ -126,7 +126,7 @@ export class PhpMyAdminCommand {
 	track: CommandTracker;
 	steps = {
 		ENABLE: 'enable',
-		PROCESSING: 'Processing',
+		PROCESSING: 'processing',
 		GENERATE: 'generate',
 	};
 	private progressTracker: ProgressTracker;
