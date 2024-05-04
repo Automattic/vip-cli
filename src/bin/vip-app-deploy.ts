@@ -11,7 +11,7 @@ import gql from 'graphql-tag';
 /**
  * Internal dependencies
  */
-import { App, AppEnvironment, AppEnvironmentCustomDeployInput } from '../graphqlTypes';
+import { AppEnvironmentCustomDeployInput } from '../graphqlTypes';
 import API from '../lib/api';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -23,36 +23,8 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import {
-	isSupportedApp,
-	validateCustomDeployKey,
-	validateFile,
-} from '../lib/custom-deploy/custom-deploy';
+import { validateCustomDeployKey, validateFile } from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
-
-const appQuery = `
-	id,
-	name,
-	type,
-	typeId
-	organization { id, name },
-	environments{
-		id
-		appId
-		type
-		name
-		launched
-		isK8sResident
-		syncProgress { status }
-		primaryDomain { name }
-		wpSites {
-			nodes {
-				homeUrl
-				id
-			}
-		}
-	}
-`;
 
 const START_DEPLOY_MUTATION = gql`
 	mutation StartCustomDeploy($input: AppEnvironmentCustomDeployInput) {
@@ -108,29 +80,31 @@ export async function promptToContinue( params: PromptToContinueParams ) {
 }
 
 export async function appDeployCmd( arg: string[] = [], opts: Record< string, unknown > = {} ) {
-	const app = opts.app as App;
-	const env = opts.env as AppEnvironment;
+	const app = opts.app as string | number;
+	const env = opts.env as string | number;
 
 	const [ fileName ] = arg;
 	const fileMeta = await getFileMeta( fileName );
-	const inputBasename = fileMeta.basename;
+	const fileInputBasename = fileMeta.basename;
 
 	debug( 'Options: ', opts );
 	debug( 'Args: ', arg );
 
-	const appId = env.appId as number;
-	const envId = env.id as number;
+	debug( 'Validating custom deploy key...' );
+	const { appId, envId, ...validatedArgs } = await validateCustomDeployKey( app, env );
+	console.log( { appId, envId, validatedArgs } );
+
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
-	if ( ! isSupportedApp( app ) ) {
+	if ( ! validatedArgs.customDeploysEnabled ) {
 		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
-		exit.withError( 'The type of application you specified does not currently support deploys.' );
+		exit.withError(
+			'The type of application you specified does not currently support custom deploys.'
+		);
 	}
 
-	debug( 'Validating custom deploy key if present...' );
-	await validateCustomDeployKey( envId );
-
-	await validateFile( app, env, fileMeta );
+	debug( 'Validating file...' );
+	await validateFile( appId, envId, fileMeta );
 
 	await track( 'deploy_app_command_execute' );
 
@@ -145,13 +119,12 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	const deployMessage = ( opts.message as string ) ?? '';
 	const forceDeploy = opts.force;
 
-	const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
 	if ( ! forceDeploy ) {
 		const promptParams: PromptToContinueParams = {
-			launched: Boolean( env.launched ),
-			formattedEnvironment: formatEnvironment( env.type as string ),
+			launched: Boolean( validatedArgs.launched ),
+			formattedEnvironment: formatEnvironment( validatedArgs.envType ),
 			track,
-			domain,
+			domain: validatedArgs.primaryDomainName,
 		};
 
 		await promptToContinue( promptParams );
@@ -220,8 +193,8 @@ Processing the file for deployment to your environment...
 		} = await uploadImportSqlFileToS3( uploadParams );
 
 		startDeployVariables.input = {
-			id: app.id,
-			environmentId: env.id,
+			id: appId,
+			environmentId: envId,
 			basename: fileMeta.basename,
 			checksum,
 			deployMessage,
@@ -275,12 +248,12 @@ Processing the file for deployment to your environment...
 	progressTracker.suffix = '';
 	progressTracker.print( { clearAfter: true } );
 
-	const deploymentsUrl = `https://dashboard.wpvip.com/apps/${ appId }/${ env.type }/code/deployments`;
+	const deploymentsUrl = `https://dashboard.wpvip.com/apps/${ appId }/${ validatedArgs.envType }/code/deployments`;
 	console.log(
 		`\n✅ ${ chalk.bold(
-			chalk.underline( chalk.magenta( inputBasename ) )
+			chalk.underline( chalk.magenta( fileInputBasename ) )
 		) } has been sent for deployment to ${ chalk.bold(
-			chalk.blue( domain )
+			chalk.blue( validatedArgs.primaryDomainName )
 		) }. \nTo check deployment status, go to ${ chalk.bold(
 			'VIP Dashboard'
 		) }: ${ deploymentsUrl }`
@@ -305,12 +278,11 @@ const examples = [
 ];
 
 void command( {
-	appContext: true,
-	appQuery,
-	envContext: true,
 	requiredArgs: 1,
 } )
 	.examples( examples )
 	.option( 'message', 'Custom message for deploy' )
 	.option( 'force', 'Skip prompt' )
+	.option( 'app', 'The application name or ID' )
+	.option( 'env', 'The environment name or ID' )
 	.argv( process.argv, appDeployCmd );
