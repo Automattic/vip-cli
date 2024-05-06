@@ -312,14 +312,16 @@ Downloading errors details from ${ failureDetailsUrl }...
 		progressTracker.suffix += `${ chalk.yellow(
 			`⚠️  Error details can be found on ${ chalk.bold(
 				failureDetailsUrl
-			) } ${ chalk.italic.yellow( '(unique link expires in 15 minutes)' ) }. `
+			) } ${ chalk.italic.yellow(
+				'(file will be stored in the server for 7 days and its unique link expires in 15 minutes)'
+			) }. `
 		) }\n`;
 		progressTracker.print( { clearAfter: true } );
 
 		const failureDetails = await prompt( {
 			type: 'confirm',
 			name: 'download',
-			message: 'Do you want to download them now?',
+			message: 'Download error details now?',
 		} );
 
 		if ( ! failureDetails.download ) {
