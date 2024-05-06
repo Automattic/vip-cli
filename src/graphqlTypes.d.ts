@@ -947,6 +947,8 @@ export type AppEnvironmentStartDbBackupCopyPayload = {
 
 /** Mutation request input to start a Media Import */
 export type AppEnvironmentStartMediaImportInput = {
+	/** API version to be used for the media import */
+	apiVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
 	/** Publicly accessible URL that contains an archive of the media files to be imported */
