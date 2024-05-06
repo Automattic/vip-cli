@@ -1,12 +1,10 @@
 import fs from 'fs';
 import gql from 'graphql-tag';
 
-import { App } from '../../graphqlTypes';
 import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
-import { WORDPRESS_SITE_TYPE_IDS } from '../../lib/constants/vipgo';
 import { trackEventWithEnv } from '../../lib/tracker';
 import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
 
@@ -18,9 +16,9 @@ type CustomDeployInfo = {
 	appId: number;
 	envId: number;
 	envType: string;
+	envUniqueLabel: string;
 	primaryDomainName: string;
 	launched: boolean;
-	customDeploysEnabled: boolean;
 };
 
 type ValidateMutationPayload = {
@@ -28,10 +26,6 @@ type ValidateMutationPayload = {
 		validateCustomDeployAccess: CustomDeployInfo;
 	} | null;
 };
-
-export function isSupportedApp( app: App ): boolean {
-	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
-}
 
 export async function validateCustomDeployKey(
 	app: string | number,
@@ -48,14 +42,14 @@ export async function validateCustomDeployKey(
 			appId,
 			envId,
 			envType,
+			envUniqueLabel,
 			primaryDomainName,
-			launched,
-			customDeploysEnabled
+			launched
 		}
 	}
 `;
 
-	const api = API();
+	const api = API( { exitOnError: true } );
 	try {
 		const result: ValidateMutationPayload = await api.mutate( {
 			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,

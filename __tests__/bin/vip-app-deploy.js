@@ -4,7 +4,6 @@ import { uploadImportSqlFileToS3 } from '../../src/lib/client-file-uploader';
 import {
 	validateFile,
 	promptToContinue,
-	isSupportedApp,
 	validateCustomDeployKey,
 } from '../../src/lib/custom-deploy/custom-deploy';
 import { validateDeployFileExt, validateFilename } from '../../src/lib/validations/custom-deploy';
@@ -21,8 +20,15 @@ jest.mock( '../../src/lib/custom-deploy/custom-deploy', () => ( {
 	validateFile: jest.fn(),
 	renameFile: jest.fn(),
 	promptToContinue: jest.fn().mockResolvedValue( true ),
-	isSupportedApp: jest.fn().mockResolvedValue( true ),
-	validateCustomDeployKey: jest.fn(),
+	validateCustomDeployKey: jest.fn().mockResolvedValue( {
+		success: true,
+		appId: 123,
+		envId: 124,
+		envType: 'develop',
+		envUniqueLabel: 'develop',
+		primaryDomainName: 'example.com/develop',
+		launched: false,
+	} ),
 } ) );
 
 jest.mock( '../../src/lib/cli/command', () => {
@@ -91,8 +97,6 @@ describe( 'vip-app-deploy', () => {
 	describe( 'appDeployCmd', () => {
 		it( 'should call expected functions', async () => {
 			await appDeployCmd( args, opts );
-
-			expect( isSupportedApp ).toHaveBeenCalledTimes( 1 );
 
 			expect( validateCustomDeployKey ).toHaveBeenCalledTimes( 1 );
 

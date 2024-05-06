@@ -85,23 +85,15 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 
 	const [ fileName ] = arg;
 	const fileMeta = await getFileMeta( fileName );
-	const fileInputBasename = fileMeta.basename;
 
 	debug( 'Options: ', opts );
 	debug( 'Args: ', arg );
 
 	debug( 'Validating custom deploy key...' );
 	const { appId, envId, ...validatedArgs } = await validateCustomDeployKey( app, env );
-	console.log( { appId, envId, validatedArgs } );
+	debug( 'Validated environment data: ', { appId, envId, validatedArgs } );
 
 	const track = trackEventWithEnv.bind( null, appId, envId );
-
-	if ( ! validatedArgs.customDeploysEnabled ) {
-		await track( 'deploy_app_command_error', { error_type: 'unsupported-app' } );
-		exit.withError(
-			'The type of application you specified does not currently support custom deploys.'
-		);
-	}
 
 	debug( 'Validating file...' );
 	await validateFile( appId, envId, fileMeta );
@@ -248,10 +240,10 @@ Processing the file for deployment to your environment...
 	progressTracker.suffix = '';
 	progressTracker.print( { clearAfter: true } );
 
-	const deploymentsUrl = `https://dashboard.wpvip.com/apps/${ appId }/${ validatedArgs.envType }/code/deployments`;
+	const deploymentsUrl = `https://dashboard.wpvip.com/apps/${ appId }/${ validatedArgs.envUniqueLabel }/code/deployments`;
 	console.log(
 		`\n✅ ${ chalk.bold(
-			chalk.underline( chalk.magenta( fileInputBasename ) )
+			chalk.underline( chalk.magenta( fileMeta.basename ) )
 		) } has been sent for deployment to ${ chalk.bold(
 			chalk.blue( validatedArgs.primaryDomainName )
 		) }. \nTo check deployment status, go to ${ chalk.bold(
