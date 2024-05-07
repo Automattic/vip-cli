@@ -1,38 +1,57 @@
 import fs from 'fs';
 import gql from 'graphql-tag';
 
-import { App, AppEnvironment } from '../../graphqlTypes';
 import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
-import { WORDPRESS_SITE_TYPE_IDS } from '../../lib/constants/vipgo';
 import { trackEventWithEnv } from '../../lib/tracker';
 import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
 
-export function isSupportedApp( app: App ): boolean {
-	return WORDPRESS_SITE_TYPE_IDS.includes( app.typeId as number );
-}
+type CustomDeployInfo = {
+	success: boolean;
+	appId: number;
+	envId: number;
+	envType: string;
+	envUniqueLabel: string;
+	primaryDomainName: string;
+	launched: boolean;
+};
 
-export async function validateCustomDeployKey( envId: number ): Promise< void > {
+type ValidateMutationPayload = {
+	data?: {
+		validateCustomDeployAccess: CustomDeployInfo;
+	} | null;
+};
+
+export async function validateCustomDeployKey(
+	app: string | number,
+	env: string | number
+): Promise< CustomDeployInfo > {
 	if ( ! WPVIP_DEPLOY_TOKEN ) {
 		exit.withError( 'Valid custom deploy key is required.' );
 	}
 
 	const VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION = gql`
 	mutation ValidateCustomDeployAccess {
-		validateCustomDeployAccess( input: { environmentIds: ${ envId } } ) {
-			success
+		validateCustomDeployAccess( input: { app: "${ String( app ) }", env: "${ String( env ) }" } ) {
+			success,
+			appId,
+			envId,
+			envType,
+			envUniqueLabel,
+			primaryDomainName,
+			launched
 		}
 	}
 `;
 
-	const api = API();
+	const api = API( { exitOnError: true } );
 	try {
-		await api.mutate( {
+		const result: ValidateMutationPayload = await api.mutate( {
 			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
 			context: {
 				headers: {
@@ -40,20 +59,22 @@ export async function validateCustomDeployKey( envId: number ): Promise< void > 
 				},
 			},
 		} );
+
+		if ( ! result.data?.validateCustomDeployAccess ) {
+			throw new Error( 'Not found' );
+		}
+
+		return result.data?.validateCustomDeployAccess;
 	} catch ( error ) {
-		exit.withError(
-			`Unauthorized: Invalid or non-existent custom deploy key for environment ${ envId }.`
-		);
+		exit.withError( `Unauthorized: Invalid or non-existent custom deploy key for environment.` );
 	}
 }
 
 /**
  * @param {FileMeta} fileMeta
  */
-export async function validateFile( app: App, env: AppEnvironment, fileMeta: FileMeta ) {
+export async function validateFile( appId: number, envId: number, fileMeta: FileMeta ) {
 	const { fileName, basename, isCompressed } = fileMeta;
-	const appId = env.appId as number;
-	const envId = env.id as number;
 	const track = trackEventWithEnv.bind( null, appId, envId );
 
 	if ( ! fs.existsSync( fileName ) ) {

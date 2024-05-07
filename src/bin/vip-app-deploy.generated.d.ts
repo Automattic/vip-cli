@@ -10,6 +10,5 @@ export type StartCustomDeployMutation = {
 		__typename?: 'AppEnvironmentCustomDeployPayload';
 		message?: string | null;
 		success?: boolean | null;
-		app?: { __typename?: 'App'; id?: number | null; name?: string | null } | null;
 	} | null;
 };

@@ -665,7 +665,6 @@ export type AppEnvironmentCustomDeployInput = {
 
 export type AppEnvironmentCustomDeployPayload = {
 	__typename?: 'AppEnvironmentCustomDeployPayload';
-	app?: Maybe< App >;
 	message?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
