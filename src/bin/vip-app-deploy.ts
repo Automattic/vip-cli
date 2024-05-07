@@ -29,12 +29,8 @@ import { trackEventWithEnv } from '../lib/tracker';
 const START_DEPLOY_MUTATION = gql`
 	mutation StartCustomDeploy($input: AppEnvironmentCustomDeployInput) {
 		startCustomDeploy(input: $input) {
-			app {
-				id
-				name
-			}
-			message
 			success
+			message
 		}
 	}
 `;
