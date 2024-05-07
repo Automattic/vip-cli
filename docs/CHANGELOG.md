@@ -1,5 +1,10 @@
 ## Changelog
 
+### 2.39.6
+* Custom Deploys: Update deploy validation to run fully off of the custom deploy token. There are breaking changes associated with these updates, so the VIP CLI must be updated to this latest version in order to continue using the custom deploy functionality.
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.5...2.39.6
+
 ### 2.39.5
 * Custom Deploys: Pass in deploy token to StartCustomDeploy mutation and allow `getSignedUploadRequestData()` to accept another bearer token
 
