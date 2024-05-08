@@ -302,7 +302,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
 		} catch ( err ) {
 			progressTracker.suffix += `${ chalk.red(
-				`Could not download error details\n${ ( err as Error ).message }`
+				`Could not download file import errors report\n${ ( err as Error ).message }`
 			) }`;
 			throw err;
 		}
@@ -313,7 +313,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 			`⚠️  Error details can be found on ${ chalk.bold(
 				failureDetailsUrl
 			) } ${ chalk.italic.yellow(
-				'(file will be stored in the server for 7 days and its unique link expires in 15 minutes)'
+				'(This link will be valid for the next 15 minutes. The report is retained for 7 days since the import was run.)'
 			) }. `
 		) }\n`;
 		progressTracker.print( { clearAfter: true } );
@@ -321,7 +321,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 		const failureDetails = await prompt( {
 			type: 'confirm',
 			name: 'download',
-			message: 'Download error details now?',
+			message: 'Download file import errors report now?',
 		} );
 
 		if ( ! failureDetails.download ) {
@@ -348,7 +348,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 			const fileErrors = results.failureDetails?.fileErrors ?? [];
 			if ( fileErrors.length > 0 ) {
 				progressTracker.suffix += `${ chalk.yellow(
-					`⚠️  ${ fileErrors.length } file error(s) have been extracted`
+					`⚠️  ${ fileErrors.length } file import error(s) were found`
 				) }`;
 
 				if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
