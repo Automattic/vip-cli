@@ -332,37 +332,61 @@ Downloading errors details from ${ failureDetailsUrl }...
 		await exportFailureDetails( failureDetailsErrors );
 	}
 
+	function linkExpiredOutput( results: AppEnvironmentMediaImportStatus ) {
+		if (
+			results.filesTotal &&
+			results.filesProcessed &&
+			results.filesTotal !== results.filesProcessed
+		) {
+			const errorsFound = results.filesTotal - results.filesProcessed;
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  ${ errorsFound } error(s) were found. File import errors report link expired.`
+			) }`;
+		}
+	}
+
+	async function exportLocallyOutput(
+		fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[],
+		results: AppEnvironmentMediaImportStatus
+	) {
+		progressTracker.suffix += `${ chalk.yellow(
+			`⚠️  ${ fileErrors.length } file import error(s) were found`
+		) }`;
+
+		if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
+			progressTracker.suffix += `. ${ chalk.italic.yellow(
+				'File import errors report size threshold reached.'
+			) }`;
+		}
+		await exportFailureDetails( fileErrors );
+	}
+
 	try {
 		const results: AppEnvironmentMediaImportStatus = await getResults();
 		overallStatus = results.status ?? 'unknown';
 
 		progressTracker.stopPrinting();
-
 		setProgressTrackerSuffix();
 		progressTracker.print();
 
 		if ( results.failureDetailsUrl ) {
 			await promptFailureDetailsDownload( results.failureDetailsUrl as unknown as string );
 		} else {
-			// Falls back to exporting errors to a local file
 			const fileErrors = results.failureDetails?.fileErrors ?? [];
-			if ( fileErrors.length > 0 ) {
-				progressTracker.suffix += `${ chalk.yellow(
-					`⚠️  ${ fileErrors.length } file import error(s) were found`
-				) }`;
 
-				if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
-					progressTracker.suffix += `. ${ chalk.italic.yellow(
-						'File-errors report size threshold reached.'
-					) }`;
-				}
-				await exportFailureDetails( fileErrors );
+			if ( fileErrors.length > 0 ) {
+				// Errors were observed and are present in the dto
+				// Fall back to exporting errors to local file
+				await exportLocallyOutput( fileErrors, results );
+			} else {
+				// Errors are not present in the dto
+				// And file error details report link is not available
+				linkExpiredOutput( results );
 			}
 		}
 
 		// Print one final time
 		progressTracker.print( { clearAfter: true } );
-
 		process.exit( 0 );
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();
