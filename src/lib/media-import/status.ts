@@ -312,7 +312,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 		progressTracker.suffix += `${ chalk.yellow(
 			`⚠️  Error details can be found on ${ chalk.bold(
 				failureDetailsUrl
-			) } ${ chalk.italic.yellow(
+			) }\n${ chalk.italic.yellow(
 				'(This link will be valid for the next 15 minutes. The report is retained for 7 days from the completion of the import.)'
 			) }. `
 		) }\n`;
