@@ -377,11 +377,11 @@ Downloading errors details from ${ failureDetailsUrl }...
 			if ( fileErrors.length > 0 ) {
 				// Errors were observed and are present in the dto
 				// Fall back to exporting errors to local file
-				await exportLocallyOutput( fileErrors, results );
+				await printFailureDetails( fileErrors, results );
 			} else {
 				// Errors are not present in the dto
 				// And file error details report link is not available
-				linkExpiredOutput( results );
+				printFileErrorsReportLinkExpiredError( results );
 			}
 		}
 
