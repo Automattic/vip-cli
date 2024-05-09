@@ -379,7 +379,7 @@ Downloading errors details from ${ fileErrorsUrl }...
 				// Errors were observed and are present in the dto
 				// Fall back to exporting errors to local file
 				await printFailureDetails( fileErrors, results );
-			} else {
+			} else if ( 'ABORTED' !== overallStatus ) {
 				// Errors are not present in the dto
 				// And file error details report link is not available
 				// do not print this message if the import was aborted
