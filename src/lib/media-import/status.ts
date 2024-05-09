@@ -313,7 +313,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 			`⚠️  Error details can be found on ${ chalk.bold(
 				failureDetailsUrl
 			) } ${ chalk.italic.yellow(
-				'(This link will be valid for the next 15 minutes. The report is retained for 7 days since the import was run.)'
+				'(This link will be valid for the next 15 minutes. The report is retained for 7 days from the completion of the import.)'
 			) }. `
 		) }\n`;
 		progressTracker.print( { clearAfter: true } );
@@ -332,7 +332,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 		await exportFailureDetails( failureDetailsErrors );
 	}
 
-	function linkExpiredOutput( results: AppEnvironmentMediaImportStatus ) {
+	function printFileErrorsReportLinkExpiredError( results: AppEnvironmentMediaImportStatus ) {
 		if (
 			results.filesTotal &&
 			results.filesProcessed &&
@@ -345,7 +345,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 		}
 	}
 
-	async function exportLocallyOutput(
+	async function printFailureDetails(
 		fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[],
 		results: AppEnvironmentMediaImportStatus
 	) {
