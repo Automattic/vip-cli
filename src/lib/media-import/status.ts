@@ -309,13 +309,6 @@ Downloading errors details from ${ fileErrorsUrl }...
 	}
 
 	async function promptFailureDetailsDownload( fileErrorsUrl: string ) {
-		progressTracker.suffix += `${ chalk.yellow(
-			`⚠️  Error details can be found on ${ chalk.bold( fileErrorsUrl ) }\n${ chalk.italic.yellow(
-				'(This link will be valid for the next 15 minutes. The report is retained for 7 days from the completion of the import.)'
-			) }. `
-		) }\n`;
-		progressTracker.print( { clearAfter: true } );
-
 		const failureDetails = await prompt( {
 			type: 'confirm',
 			name: 'download',
@@ -323,6 +316,14 @@ Downloading errors details from ${ fileErrorsUrl }...
 		} );
 
 		if ( ! failureDetails.download ) {
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  Click on the following link to download the file import errors report`
+			) }`;
+			progressTracker.suffix += `\n${ chalk.italic.yellow(
+				'(The link will be valid for the next 15 minutes & the data is retained for 7 days since the completion of the import)'
+			) } `;
+			progressTracker.suffix += `\n\n${ chalk.bold.yellow( fileErrorsUrl ) }`;
+			progressTracker.print( { clearAfter: true } );
 			return;
 		}
 
@@ -381,6 +382,7 @@ Downloading errors details from ${ fileErrorsUrl }...
 			} else {
 				// Errors are not present in the dto
 				// And file error details report link is not available
+				// do not print this message if the import was aborted
 				printFileErrorsReportLinkExpiredError( results );
 			}
 		}
