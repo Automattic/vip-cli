@@ -310,9 +310,7 @@ Downloading errors details from ${ fileErrorsUrl }...
 
 	async function promptFailureDetailsDownload( fileErrorsUrl: string ) {
 		progressTracker.suffix += `${ chalk.yellow(
-			`⚠️  Error details can be found on ${ chalk.bold(
-				fileErrorsUrl
-			) }\n${ chalk.italic.yellow(
+			`⚠️  Error details can be found on ${ chalk.bold( fileErrorsUrl ) }\n${ chalk.italic.yellow(
 				'(This link will be valid for the next 15 minutes. The report is retained for 7 days from the completion of the import.)'
 			) }. `
 		) }\n`;
