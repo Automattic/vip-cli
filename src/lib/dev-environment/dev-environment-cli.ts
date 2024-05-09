@@ -611,6 +611,7 @@ export function promptForBoolean( message: string, initial: boolean ): Promise< 
 	if ( isStdinTTY ) {
 		const confirm = new Confirm( {
 			message,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment
 			initial: initial as any, // TS definition is wrong, so we need to bypass it to show the correct hint.
 		} );
 
