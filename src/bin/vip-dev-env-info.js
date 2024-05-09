@@ -37,12 +37,19 @@ command()
 	.option( 'extended', 'Show extended information about the dev environment' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const slug = await getEnvironmentName( opt );
-
+		let trackingInfo;
+		let slug;
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
 
-		const trackingInfo = opt.all ? { all: true } : getEnvTrackingInfo( slug );
+		if ( opt.all ) {
+			trackingInfo = { all: true };
+			slug = '';
+		} else {
+			slug = await getEnvironmentName( opt );
+			trackingInfo = getEnvTrackingInfo( slug );
+		}
+
+		await validateDependencies( lando, slug );
 		await trackEvent( 'dev_env_info_command_execute', trackingInfo );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
