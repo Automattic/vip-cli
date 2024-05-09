@@ -22,11 +22,11 @@ export type AppQuery = {
 				status?: string | null;
 				filesTotal?: number | null;
 				filesProcessed?: number | null;
-				failureDetailsUrl?: string | null;
 				failureDetails?: {
 					__typename?: 'AppEnvironmentMediaImportStatusFailureDetails';
 					previousStatus?: string | null;
 					globalErrors?: Array< string | null > | null;
+					fileErrorsUrl?: string | null;
 					fileErrors?: Array< {
 						__typename?: 'AppEnvironmentMediaImportStatusFailureDetailsFileErrors';
 						fileName?: string | null;
