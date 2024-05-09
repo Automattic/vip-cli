@@ -39,7 +39,6 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 					status
 					filesTotal
 					filesProcessed
-					failureDetailsUrl
 					failureDetails {
 						previousStatus
 						globalErrors
@@ -47,6 +46,7 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 							fileName
 							errors
 						}
+						fileErrorsUrl
 					}
 				}
 			}
@@ -292,13 +292,13 @@ ${ maybeExitPrompt }
 		}
 	}
 
-	async function fetchFailureDetails( failureDetailsUrl: string ) {
+	async function fetchFailureDetails( fileErrorsUrl: string ) {
 		progressTracker.suffix += `
 =============================================================
-Downloading errors details from ${ failureDetailsUrl }...
+Downloading errors details from ${ fileErrorsUrl }...
 \n`;
 		try {
-			const response = await fetch( failureDetailsUrl );
+			const response = await fetch( fileErrorsUrl );
 			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
 		} catch ( err ) {
 			progressTracker.suffix += `${ chalk.red(
@@ -308,10 +308,10 @@ Downloading errors details from ${ failureDetailsUrl }...
 		}
 	}
 
-	async function promptFailureDetailsDownload( failureDetailsUrl: string ) {
+	async function promptFailureDetailsDownload( fileErrorsUrl: string ) {
 		progressTracker.suffix += `${ chalk.yellow(
 			`⚠️  Error details can be found on ${ chalk.bold(
-				failureDetailsUrl
+				fileErrorsUrl
 			) }\n${ chalk.italic.yellow(
 				'(This link will be valid for the next 15 minutes. The report is retained for 7 days from the completion of the import.)'
 			) }. `
@@ -328,7 +328,7 @@ Downloading errors details from ${ failureDetailsUrl }...
 			return;
 		}
 
-		const failureDetailsErrors = await fetchFailureDetails( failureDetailsUrl );
+		const failureDetailsErrors = await fetchFailureDetails( fileErrorsUrl );
 		await exportFailureDetails( failureDetailsErrors );
 	}
 
@@ -369,8 +369,10 @@ Downloading errors details from ${ failureDetailsUrl }...
 		setProgressTrackerSuffix();
 		progressTracker.print();
 
-		if ( results.failureDetailsUrl ) {
-			await promptFailureDetailsDownload( results.failureDetailsUrl as unknown as string );
+		if ( results.failureDetails?.fileErrorsUrl ) {
+			await promptFailureDetailsDownload(
+				results.failureDetails.fileErrorsUrl as unknown as string
+			);
 		} else {
 			const fileErrors = results.failureDetails?.fileErrors ?? [];
 
