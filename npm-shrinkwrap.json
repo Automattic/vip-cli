@@ -105,7 +105,7 @@
         "vip-wp": "dist/bin/vip-wp.js"
       },
       "devDependencies": {
-        "@automattic/eslint-plugin-wpvip": "0.9.1",
+        "@automattic/eslint-plugin-wpvip": "0.10.0",
         "@babel/cli": "7.24.5",
         "@babel/core": "7.24.5",
         "@babel/preset-env": "7.24.5",
@@ -201,9 +201,9 @@
       }
     },
     "node_modules/@automattic/eslint-plugin-wpvip": {
-      "version": "0.9.1",
-      "resolved": "https://registry.npmjs.org/@automattic/eslint-plugin-wpvip/-/eslint-plugin-wpvip-0.9.1.tgz",
-      "integrity": "sha512-yLouh3GVNsWaw3Rd21Iko3o1gUkMh/76CM6ZhFRMRgT5iZtSrx8ycHzuZjI0a2UhSew34kpBr7gJE1y1qTMTDA==",
+      "version": "0.10.0",
+      "resolved": "https://registry.npmjs.org/@automattic/eslint-plugin-wpvip/-/eslint-plugin-wpvip-0.10.0.tgz",
+      "integrity": "sha512-ayPD/BRSPPUGwwzp27LcLZlIQ38AloRaDuh3zKNaIUItC0VsRz3ZwGOh+hp4qvFJPy9LoKkcJ491P8BDze1WdQ==",
       "dev": true,
       "dependencies": {
         "@babel/eslint-parser": "7.23.3",
@@ -13593,9 +13593,9 @@
       }
     },
     "@automattic/eslint-plugin-wpvip": {
-      "version": "0.9.1",
-      "resolved": "https://registry.npmjs.org/@automattic/eslint-plugin-wpvip/-/eslint-plugin-wpvip-0.9.1.tgz",
-      "integrity": "sha512-yLouh3GVNsWaw3Rd21Iko3o1gUkMh/76CM6ZhFRMRgT5iZtSrx8ycHzuZjI0a2UhSew34kpBr7gJE1y1qTMTDA==",
+      "version": "0.10.0",
+      "resolved": "https://registry.npmjs.org/@automattic/eslint-plugin-wpvip/-/eslint-plugin-wpvip-0.10.0.tgz",
+      "integrity": "sha512-ayPD/BRSPPUGwwzp27LcLZlIQ38AloRaDuh3zKNaIUItC0VsRz3ZwGOh+hp4qvFJPy9LoKkcJ491P8BDze1WdQ==",
       "dev": true,
       "requires": {
         "@babel/eslint-parser": "7.23.3",
