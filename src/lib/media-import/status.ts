@@ -312,7 +312,8 @@ Downloading errors details from ${ fileErrorsUrl }...
 		const failureDetails = await prompt( {
 			type: 'confirm',
 			name: 'download',
-			message: 'Download file import errors report now?',
+			message:
+				'Download file import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
 		} );
 
 		if ( ! failureDetails.download ) {
@@ -320,7 +321,7 @@ Downloading errors details from ${ fileErrorsUrl }...
 				`⚠️  Click on the following link to download the file import errors report`
 			) }`;
 			progressTracker.suffix += `\n${ chalk.italic.yellow(
-				'(The link will be valid for the next 15 minutes & the data is retained for 7 days since the completion of the import)'
+				'(The link will be valid for the next 15 minutes & the report will be downloadable for up to 7 days from the completion of the import)'
 			) } `;
 			progressTracker.suffix += `\n\n${ chalk.bold.yellow( fileErrorsUrl ) }\n`;
 			progressTracker.print( { clearAfter: true } );
