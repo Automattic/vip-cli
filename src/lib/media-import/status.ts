@@ -283,7 +283,7 @@ ${ maybeExitPrompt }
 		try {
 			await writeFile( errorsFile, formattedData );
 			progressTracker.suffix += `${ chalk.yellow(
-				`⚠️  All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
+				`⚠️  All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }\n`
 			) }`;
 		} catch ( writeFileErr ) {
 			progressTracker.suffix += `${ chalk.red(
@@ -322,7 +322,7 @@ Downloading errors details from ${ fileErrorsUrl }...
 			progressTracker.suffix += `\n${ chalk.italic.yellow(
 				'(The link will be valid for the next 15 minutes & the data is retained for 7 days since the completion of the import)'
 			) } `;
-			progressTracker.suffix += `\n\n${ chalk.bold.yellow( fileErrorsUrl ) }`;
+			progressTracker.suffix += `\n\n${ chalk.bold.yellow( fileErrorsUrl ) }\n`;
 			progressTracker.print( { clearAfter: true } );
 			return;
 		}
