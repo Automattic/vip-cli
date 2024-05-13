@@ -1,28 +1,30 @@
 #!/usr/bin/env node
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
+
+const exampleUsage = 'vip dev-env import';
+const usage = 'vip dev-env import';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import sql file.sql`,
-		description: 'Import the given SQL file to your site',
+		usage: `${ exampleUsage } sql /Users/example/Downloads/file.sql`,
+		description: 'Import the SQL file named "file.sql" from a path on the user\'s local machine to a running local environment.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads`,
+		usage: `${ exampleUsage } media /Users/example/Desktop/uploads`,
 		description:
-			'Import contents of the given WP uploads folder file into the media library of the default dev environment',
+			'Import the contents of the "uploads" directory from a path on the user\'s local machine to the "/wp-content/uploads" directory of a running local environment.',
 	},
 ];
 
 command( {
 	requiredArgs: 1,
+	usage,
 } )
 	.examples( examples )
-	.command( 'sql', 'Import SQL to your dev-env database from a file' )
+	.command( 'sql', 'Import a SQL file to a running local environment.' )
 	.command(
 		'media',
-		'Import media files to the dev environment of your application from a compressed web archive. ' +
-			'This command will copy the contents of a folder to the `uploads` folder of the target dev environment.'
+		'Import media files to a running local environment.'
 	)
 	.argv( process.argv );

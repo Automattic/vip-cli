@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	handleCLIException,
 	validateDependencies,
@@ -10,14 +9,19 @@ import { printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
+const exampleUsage = 'vip dev-env list';
+const usage = 'vip dev-env list';
+
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } list`,
-		description: 'Return information about all local dev environments',
+		usage: `${ exampleUsage } list`,
+		description: 'Retrieve basic information about all local environments.',
 	},
 ];
 
-command()
+command( {
+	usage,
+})
 	.examples( examples )
 	.argv( process.argv, async () => {
 		const lando = await bootstrapLando();

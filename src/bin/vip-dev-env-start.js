@@ -3,7 +3,6 @@
 import debugLib from 'debug';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	validateDependencies,
@@ -17,27 +16,41 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env start';
+const usage = 'vip dev-env start';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } start`,
-		description: 'Starts a local dev environment',
+		usage: `${ exampleUsage } --slug=example-site`,
+		description: 'Start a local environment named "example-site".',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } start --vscode`,
+		usage: `${ exampleUsage } --skip-wp-versions-check --slug=example-site`,
 		description:
-			'Start a local environment and generate a Workspace file for developing in Visual Studio Code',
+			'Skip the prompt to upgrade WordPress to the latest release version and start a local environment with WordPress v6.4 configured.',
+	},
+	{
+		usage: `${ exampleUsage } --skip-rebuild --slug=example-site`,
+		description:
+			'Start only the services of a local environment that are not currently in a running state.',
+	},
+	{
+		usage: `${ exampleUsage } --vscode --slug=example-site`,
+		description:
+			'Start a local environment and generate a Workspace file for developing in Visual Studio Code.',
 	},
 ];
 
-command()
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'skip-rebuild', 'Only start stopped services' )
+command( {
+	usage,
+})
+	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option( 'skip-rebuild', 'Only start services that are not in a running state.' )
 	.option(
 		[ 'w', 'skip-wp-versions-check' ],
-		'Skip prompt to update WordPress version if not on latest'
+		'Skip the prompt to update WordPress that occurs unless the last major release version is configured.'
 	)
-	.option( 'vscode', 'Generate a Visual Studio Code Workspace file' )
+	.option( 'vscode', 'Generate a Visual Studio Code Workspace file.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

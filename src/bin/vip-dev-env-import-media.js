@@ -11,24 +11,23 @@ import {
 import { importMediaPath } from '../lib/dev-environment/dev-environment-core';
 import { trackEvent } from '../lib/tracker';
 
+const exampleUsage = 'vip dev-env import media';
+const usage = 'vip dev-env import media';
+
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads`,
+		usage: `${ exampleUsage } /Users/example/Desktop/uploads --slug="example-site"`,
 		description:
-			'Import contents of the given WP uploads folder file into the media library of the default dev environment',
-	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } import media path/to/wp-content/uploads --slug=mysite`,
-		description:
-			'Import contents of the given WP uploads folder file into the media library of a dev environment named `mysite`',
+			'Import the contents of the "uploads" directory from a path on the user\'s local machine to the "/wp-content/uploads" directory of the local environment named "example-site".',
 	},
 ];
 
 command( {
 	requiredArgs: 1,
+	usage,
 } )
 	.examples( examples )
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
+	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ filePath ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );

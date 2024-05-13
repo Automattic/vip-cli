@@ -32,16 +32,23 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env update';
+const usage = 'vip dev-env update';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } update`,
-		description: 'Retriggers setup wizard in order to change environment configuration',
+		usage: `${ exampleUsage } --slug=example-site`,
+		description: 'Update the settings of a local environment named "example-site" in the setup wizard.',
+	},
+	{
+		usage: `${ exampleUsage } --php=8.2 --app-code=/Users/example/Desktop/example-app-code --slug=example-site`,
+		description: 'Update the version of PHP running on the local environment to 8.2 and load application code from a path on the user\'s local machine.\n' +
+		'       * Options that are set in the command will be skipped in the setup wizard.',
 	},
 ];
-const cmd = command().option(
-	'slug',
-	'Custom name of the dev environment',
+const cmd = command( {
+	usage,
+} ).option( 'slug', 'A unique name for a local environment. Default is "vip-local".',
 	undefined,
 	processSlug
 );

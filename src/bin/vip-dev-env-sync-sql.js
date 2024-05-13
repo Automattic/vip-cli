@@ -2,7 +2,6 @@
 
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	processBooleanOption,
@@ -13,10 +12,12 @@ import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-
 import { makeCommandTracker } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
+const usage = 'vip dev-env sync sql';
+
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } sync sql @my-test.develop --slug=my_site`,
-		description: "Syncs with the `my-test` site's `develop` environment database into `my_site`",
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site`,
+		description: 'Sync the database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 ];
 
@@ -49,9 +50,10 @@ command( {
 	envContext: true,
 	requiredArgs: 0,
 	module: 'dev-env-sync-sql',
+	usage,
 } )
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'force', 'Disable validations before running sync', undefined, processBooleanOption )
+	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const { app, env, ...optRest } = opt;

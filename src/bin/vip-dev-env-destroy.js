@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
@@ -17,21 +16,26 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env destroy';
+const usage = 'vip dev-env destroy';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } destroy`,
-		description: 'Destroys the default local dev environment',
+		usage: `${ exampleUsage } --slug=example-site`,
+		description: 'Completely remove a local environment named "example-site" by removing all Docker containers, volumes, and configuration files.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } destroy --slug=foo`,
-		description: 'Destroys a local dev environment named foo',
+		usage: `${ exampleUsage } --soft --slug=example-site`,
+		description: 'Remove the Docker containers and volumes of a local environment named "example-site" but preserve the configuration files.\n' +
+		'      * The configuration files allow the local environment to be restarted with new Docker containers and volumes.',
 	},
 ];
 
-command()
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'soft', 'Keep config files needed to start an environment intact' )
+const cmd = command( {
+	usage,
+} )
+	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option( 'soft', 'Preserve an environment\’s configuration files; allows an environment to be regenerated with the start command.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

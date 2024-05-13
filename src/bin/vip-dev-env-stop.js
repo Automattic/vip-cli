@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
@@ -17,16 +16,20 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env stop';
+const usage = 'vip dev-env stop';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } stop`,
-		description: 'Stops a local dev environment',
+		usage: `${ exampleUsage } --slug=example-site`,
+		description: 'Stop a local environment named "example-site".',
 	},
 ];
 
-command()
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
+command( {
+	usage,
+})
+	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

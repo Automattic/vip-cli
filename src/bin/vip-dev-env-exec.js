@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
@@ -15,25 +14,32 @@ import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-
 import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
+const exampleUsage = 'vip dev-env exec';
+const usage = 'vip dev-env exec';
+
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec -- wp post list`,
-		description: 'Use dev-environment to run `wp post list`',
+		usage: `${ exampleUsage } --slug=example-site -- wp post list`,
+		description: 'Run a WP-CLI command against a local environment named "example-site".\n' +
+		'      * A double dash ("--") must separate the arguments of "vip" from those of the "wp" command.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp post list --posts_per_page=500`,
-		description: 'Use dev-environment "my-site" to run `wp post list --posts_per_page=500`',
+		usage: `${ exampleUsage } --slug=example-site -- wp user list --url=example.example-site.vipdev.lndo.site`,
+		description: 'Target the WP-CLI command against the network site "example.example-site.vipdev.lndo.site" of a local multisite environment.`',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } exec --slug my_site -- wp shell`,
-		description: 'Use dev-environment "my_site" to run interactive wp shell',
+		usage: `${ exampleUsage } --slug=example-site -- wp shell`,
+		description: 'Run the WP-CLI command "wp shell" against a local environment to open an interactive PHP console.',
 	},
 ];
 
-command( { wildcardCommand: true } )
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'force', 'Disable validations before task execution', undefined, processBooleanOption )
-	.option( 'quiet', 'Suppress output', undefined, processBooleanOption )
+command( { 
+	wildcardCommand: true,
+	usage,
+} )
+	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option( 'force', 'Skip validation for a local environment to be in a running state.', undefined, processBooleanOption )
+	.option( 'quiet', 'Suppress informational messages.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt );
@@ -49,7 +55,7 @@ command( { wildcardCommand: true } )
 			const argSplitterFound = argSplitterIx > -1;
 			if ( unmatchedArgs.length > 0 && ! argSplitterFound ) {
 				throw new Error(
-					'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)'
+					'A double dash ("--") must separate the arguments of "vip" from those of the "wp" command. Run "vip dev-env exec --help" for examples.'
 				);
 			}
 
@@ -62,7 +68,7 @@ command( { wildcardCommand: true } )
 			if ( ! opt.force ) {
 				const isUp = await isEnvUp( lando, getEnvironmentPath( slug ) );
 				if ( ! isUp ) {
-					throw new UserError( 'Environment needs to be started before running a command' );
+					throw new UserError( 'A WP-CLI command can only be executed on a running local environment.' );
 				}
 			}
 
