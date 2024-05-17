@@ -38,15 +38,19 @@ const examples = [
 	},
 	{
 		usage: `${ exampleUsage } --soft`,
-		description: 'Remove the Docker containers and volumes of all local environments but preserve their configuration files.\n' +
-		'      * Preserving the configuration files allows the local environments to be regenerated; new Docker containers and volumes will be created.',
+		description:
+			'Remove the Docker containers and volumes of all local environments but preserve their configuration files.\n' +
+			'      * Preserving the configuration files allows the local environments to be regenerated; new Docker containers and volumes will be created.',
 	},
 ];
 
 command( {
 	usage,
-})
-	.option( 'soft', 'Preserve an environment\’s configuration files; allows an environment to be regenerated with the start command.' )
+} )
+	.option(
+		'soft',
+		'Preserve an environment’s configuration files; allows an environment to be regenerated with the start command.'
+	)
 	.option( 'force', 'Skip confirmation.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

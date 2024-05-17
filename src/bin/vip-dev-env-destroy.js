@@ -22,20 +22,30 @@ const usage = 'vip dev-env destroy';
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
-		description: 'Completely remove a local environment named "example-site" by removing all Docker containers, volumes, and configuration files.',
+		description:
+			'Completely remove a local environment named "example-site" by removing all Docker containers, volumes, and configuration files.',
 	},
 	{
 		usage: `${ exampleUsage } --soft --slug=example-site`,
-		description: 'Remove the Docker containers and volumes of a local environment named "example-site" but preserve the configuration files.\n' +
-		'      * The preserved configuration files allow the local environment to be restarted with new Docker containers and volumes.',
+		description:
+			'Remove the Docker containers and volumes of a local environment named "example-site" but preserve the configuration files.\n' +
+			'      * The preserved configuration files allow the local environment to be restarted with new Docker containers and volumes.',
 	},
 ];
 
-const cmd = command( {
+command( {
 	usage,
 } )
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
-	.option( 'soft', 'Preserve an environment\’s configuration files; allows an environment to be regenerated with the start command.' )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
+	.option(
+		'soft',
+		'Preserve an environment’s configuration files; allows an environment to be regenerated with the start command.'
+	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

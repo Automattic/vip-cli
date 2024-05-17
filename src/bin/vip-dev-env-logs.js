@@ -21,7 +21,8 @@ const usage = 'vip dev-env logs';
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
-		description: 'Retrieve logs for all running services of the local environment named "example-site".',
+		description:
+			'Retrieve logs for all running services of the local environment named "example-site".',
 	},
 	{
 		usage: `${ exampleUsage } --service=elasticsearch --slug=example-site`,
@@ -38,7 +39,12 @@ const examples = [
 command( {
 	usage,
 } )
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
 	.option( [ 'f', 'follow' ], 'Continually output logs as they are generated.' )
 	.option( 'service', 'Restrict to a single service.' )
 	.examples( examples )

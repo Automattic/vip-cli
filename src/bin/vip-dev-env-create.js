@@ -39,8 +39,9 @@ const usage = 'vip dev-env create';
 const examples = [
 	{
 		usage: exampleUsage,
-		description: 'Create a new VIP Local Development Environment.\n' +
-		'       * The environment will be named "vip-local" by default if a custom name is not assigned with "--slug" .',
+		description:
+			'Create a new VIP Local Development Environment.\n' +
+			'       * The environment will be named "vip-local" by default if a custom name is not assigned with "--slug" .',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
@@ -56,16 +57,27 @@ const examples = [
 	},
 	{
 		usage: `vip @example-app.production dev-env create --slug=example-site --app-code=/Users/example/Desktop/example-repo`,
-		description: 'Create a new local environment with settings based on the production environment of the "example-app" application and load the locally git-cloned application repository "example-repo".',
+		description:
+			'Create a new local environment with settings based on the production environment of the "example-app" application and load the locally git-cloned application repository "example-repo".',
 	},
 ];
 
 const cmd = command( {
 	usage,
 } )
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
 	.option( 'title', 'A descriptive value for the WordPress Site Title. Default is "VIP Dev").' )
-	.option( 'multisite', 'Create environment as a multisite. Accepts "y" for a subdomain multisite, "subdirectory" (recommended) for a subdirectory multisite, or "false". Default is "y".', undefined, processStringOrBooleanOption );
+	.option(
+		'multisite',
+		'Create environment as a multisite. Accepts "y" for a subdomain multisite, "subdirectory" (recommended) for a subdirectory multisite, or "false". Default is "y".',
+		undefined,
+		processStringOrBooleanOption
+	);
 
 addDevEnvConfigurationOptions( cmd );
 

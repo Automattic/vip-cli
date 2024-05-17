@@ -43,8 +43,13 @@ const examples = [
 
 command( {
 	usage,
-})
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
 	.option( 'skip-rebuild', 'Only start services that are not in a running state.' )
 	.option(
 		[ 'w', 'skip-wp-versions-check' ],

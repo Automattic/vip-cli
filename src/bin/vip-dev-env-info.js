@@ -28,7 +28,8 @@ const examples = [
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site --extended`,
-		description: 'Retrieve a larger amount of information about the local environment named "example-site".',
+		description:
+			'Retrieve a larger amount of information about the local environment named "example-site".',
 	},
 	{
 		usage: `${ exampleUsage } --all`,
@@ -38,8 +39,13 @@ const examples = [
 
 command( {
 	usage,
-})
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
 	.option( 'all', 'Retrieve information about all local environments.' )
 	.option( 'extended', 'Retrieve a larger amount of information.' )
 	.examples( examples )

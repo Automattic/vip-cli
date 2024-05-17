@@ -28,8 +28,13 @@ const examples = [
 
 command( {
 	usage,
-})
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

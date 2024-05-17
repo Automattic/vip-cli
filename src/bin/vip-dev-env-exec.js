@@ -20,25 +20,38 @@ const usage = 'vip dev-env exec';
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site -- wp post list`,
-		description: 'Run a WP-CLI command against a local environment named "example-site".\n' +
-		'      * A double dash ("--") must separate the arguments of "vip" from those of the "wp" command.',
+		description:
+			'Run a WP-CLI command against a local environment named "example-site".\n' +
+			'      * A double dash ("--") must separate the arguments of "vip" from those of the "wp" command.',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site -- wp user list --url=example.example-site.vipdev.lndo.site`,
-		description: 'Target the WP-CLI command against the network site "example.example-site.vipdev.lndo.site" of a local multisite environment.',
+		description:
+			'Target the WP-CLI command against the network site "example.example-site.vipdev.lndo.site" of a local multisite environment.',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site -- wp shell`,
-		description: 'Run the WP-CLI command "wp shell" against a local environment to open an interactive PHP console.',
+		description:
+			'Run the WP-CLI command "wp shell" against a local environment to open an interactive PHP console.',
 	},
 ];
 
-command( { 
+command( {
 	wildcardCommand: true,
 	usage,
 } )
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
-	.option( 'force', 'Skip validation for a local environment to be in a running state.', undefined, processBooleanOption )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
+	.option(
+		'force',
+		'Skip validation for a local environment to be in a running state.',
+		undefined,
+		processBooleanOption
+	)
 	.option( 'quiet', 'Suppress informational messages.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
@@ -68,7 +81,9 @@ command( {
 			if ( ! opt.force ) {
 				const isUp = await isEnvUp( lando, getEnvironmentPath( slug ) );
 				if ( ! isUp ) {
-					throw new UserError( 'A WP-CLI command can only be executed on a running local environment.' );
+					throw new UserError(
+						'A WP-CLI command can only be executed on a running local environment.'
+					);
 				}
 			}
 

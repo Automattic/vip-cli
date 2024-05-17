@@ -5,7 +5,6 @@ import debugLib from 'debug';
 
 import command from '../lib/cli/command';
 import {
-	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_NOT_FOUND,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../lib/constants/dev-environment';
@@ -38,21 +37,26 @@ const usage = 'vip dev-env update';
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
-		description: 'Update or confirm all settings for the local environment named "example-site" in the setup wizard.',
+		description:
+			'Update or confirm all settings for the local environment named "example-site" in the setup wizard.',
 	},
 	{
 		usage: `${ exampleUsage } --php=8.2 --slug=example-site`,
-		description: 'Update the PHP version to 8.2 in the `update` command then enter the setup wizard to update or confirm all other settings.\n' +
-		'       * Configuration options that are set in the `update` command will be skipped in the setup wizard.',
+		description:
+			'Update the PHP version to 8.2 in the `update` command then enter the setup wizard to update or confirm all other settings.\n' +
+			'       * Configuration options that are set in the `update` command will be skipped in the setup wizard.',
 	},
 	{
 		usage: `${ exampleUsage } --app-code=/Users/example/Desktop/example-app-code --slug=example-site`,
-		description: 'Update application code to load from a path on the user\'s local machine for the local environment.',
+		description:
+			"Update application code to load from a path on the user's local machine for the local environment.",
 	},
 ];
 const cmd = command( {
 	usage,
-} ).option( 'slug', 'A unique name for a local environment. Default is "vip-local".',
+} ).option(
+	'slug',
+	'A unique name for a local environment. Default is "vip-local".',
 	undefined,
 	processSlug
 );

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
@@ -27,7 +26,12 @@ command( {
 	usage,
 } )
 	.examples( examples )
-	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ filePath ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );

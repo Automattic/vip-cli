@@ -14,14 +14,14 @@ const usage = 'vip dev-env list';
 
 const examples = [
 	{
-		usage: '${ exampleUsage }',
+		usage: `${ exampleUsage }`,
 		description: 'Retrieve basic information about all local environments.',
 	},
 ];
 
 command( {
 	usage,
-})
+} )
 	.examples( examples )
 	.argv( process.argv, async () => {
 		const lando = await bootstrapLando();

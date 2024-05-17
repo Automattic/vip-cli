@@ -8,7 +8,8 @@ const usage = 'vip dev-env import';
 const examples = [
 	{
 		usage: `${ exampleUsage } sql /Users/example/Downloads/file.sql`,
-		description: 'Import the SQL file named "file.sql" from a path on the user\'s local machine to a running local environment.',
+		description:
+			'Import the SQL file named "file.sql" from a path on the user\'s local machine to a running local environment.',
 	},
 	{
 		usage: `${ exampleUsage } media /Users/example/Desktop/uploads`,
@@ -23,8 +24,5 @@ command( {
 } )
 	.examples( examples )
 	.command( 'sql', 'Import a SQL file to a running local environment.' )
-	.command(
-		'media',
-		'Import media files to a running local environment.'
-	)
+	.command( 'media', 'Import media files to a running local environment.' )
 	.argv( process.argv );
