@@ -32,16 +32,16 @@ const userMap = {
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
-		description: 'Create and enter an SSH command shell for the local environment named "example-site".',
+		description: 'Create and enter an SSH command shell for the PHP service (default) of the local environment named "example-site".',
 	},
 	{
 		usage: `${ exampleUsage } --root --slug=example-site`,
-		description: 'Create and enter an SSH command shell for the local environment with root privileges.',
+		description: 'Create and enter an SSH command shell with root privileges for the local environment.',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site -- ls -lha`,
 		description: 'Create an SSH command shell for the local environment and run the command "ls -lha".\n' +
-		'      * A double dash ("--") must separate the arguments of "vip" from those of the "wp" command.',
+		'      * A double dash ("--") must separate the arguments of "vip" from those of the command.',
 	},
 	{
 		usage: `${ exampleUsage } --service=database --slug=example-site -- ls -lha`,
@@ -77,7 +77,7 @@ command( {
 } )
 	.option( 'slug', 'A unique name for a local environment. Default is "vip-local".', undefined, processSlug )
 	.option( 'root', 'Create with root privileges.' )
-	.option( 'service', 'Restrict to a single service. Default is "php".' )
+	.option( 'service', 'Restrict to a single service.' )
 	.examples( examples )
 	.argv( process.argv, async ( args, opt ) => {
 		const slug = await getEnvironmentName( opt );

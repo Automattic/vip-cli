@@ -14,5 +14,6 @@ command( {
 	requiredArgs: 1,
 	usage,
 } )
+	.examples( examples )
 	.command( 'sql', 'Sync the database of a VIP Platform environment to a local environment.' )
 	.argv( process.argv );

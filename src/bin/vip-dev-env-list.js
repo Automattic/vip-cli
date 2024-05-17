@@ -14,7 +14,7 @@ const usage = 'vip dev-env list';
 
 const examples = [
 	{
-		usage: `${ exampleUsage } list`,
+		usage: '${ exampleUsage }',
 		description: 'Retrieve basic information about all local environments.',
 	},
 ];

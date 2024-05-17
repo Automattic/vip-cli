@@ -39,7 +39,7 @@ const examples = [
 	{
 		usage: `${ exampleUsage } --soft`,
 		description: 'Remove the Docker containers and volumes of all local environments but preserve their configuration files.\n' +
-		'      * Preserving the configuration files allows the local environments to be restarted; new Docker containers and volumes will be generated.',
+		'      * Preserving the configuration files allows the local environments to be regenerated; new Docker containers and volumes will be created.',
 	},
 ];
 

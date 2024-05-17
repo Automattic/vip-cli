@@ -40,23 +40,23 @@ const examples = [
 	{
 		usage: exampleUsage,
 		description: 'Create a new VIP Local Development Environment.\n' +
-		'       * If a custom name is not assigned with "--slug" the environment will be named "vip-local" by default.',
+		'       * The environment will be named "vip-local" by default if a custom name is not assigned with "--slug" .',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
 		description:
-			'Create a new local environment with the unique slug "example-site".\n' +
-			'       * Unique slugs allow multiple local environments to exist simultaneously.',
+			'Create a new local environment with the unique name "example-site".\n' +
+			'       * Unique names allow multiple local environments to exist simultaneously.',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site --multisite=y --php=8.2 --wordpress=6.4`,
 		description:
 			'Create a new local environment configured as a multisite running PHP 8.2 and WordPress version 6.4.\n' +
-			'       * Options that are set in the command will be skipped in the setup wizard.',
+			'       * Options that are set in the `create` command will be skipped in the setup wizard.',
 	},
 	{
 		usage: `vip @example-app.production dev-env create --slug=example-site --app-code=/Users/example/Desktop/example-repo`,
-		description: 'Create a new local environment with settings based on the production environment of the "example-app" application and load the locally git-cloned application repository.',
+		description: 'Create a new local environment with settings based on the production environment of the "example-app" application and load the locally git-cloned application repository "example-repo".',
 	},
 ];
 

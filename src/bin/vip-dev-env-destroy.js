@@ -27,7 +27,7 @@ const examples = [
 	{
 		usage: `${ exampleUsage } --soft --slug=example-site`,
 		description: 'Remove the Docker containers and volumes of a local environment named "example-site" but preserve the configuration files.\n' +
-		'      * The configuration files allow the local environment to be restarted with new Docker containers and volumes.',
+		'      * The preserved configuration files allow the local environment to be restarted with new Docker containers and volumes.',
 	},
 ];
 

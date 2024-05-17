@@ -27,7 +27,7 @@ const examples = [
 	{
 		usage: `${ exampleUsage } --skip-wp-versions-check --slug=example-site`,
 		description:
-			'Skip the prompt to upgrade WordPress to the latest release version and start a local environment with WordPress v6.4 configured.',
+			'Skip the prompt to upgrade WordPress to the latest release version and start a local environment with the less recent version of WordPress currently configured.',
 	},
 	{
 		usage: `${ exampleUsage } --skip-rebuild --slug=example-site`,
@@ -48,7 +48,7 @@ command( {
 	.option( 'skip-rebuild', 'Only start services that are not in a running state.' )
 	.option(
 		[ 'w', 'skip-wp-versions-check' ],
-		'Skip the prompt to update WordPress that occurs unless the last major release version is configured.'
+		'Skip the prompt to update WordPress; occurs if the last major release version is not configured.'
 	)
 	.option( 'vscode', 'Generate a Visual Studio Code Workspace file.' )
 	.examples( examples )

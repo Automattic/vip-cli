@@ -38,12 +38,16 @@ const usage = 'vip dev-env update';
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
-		description: 'Update the settings of a local environment named "example-site" in the setup wizard.',
+		description: 'Update or confirm all settings for the local environment named "example-site" in the setup wizard.',
 	},
 	{
-		usage: `${ exampleUsage } --php=8.2 --app-code=/Users/example/Desktop/example-app-code --slug=example-site`,
-		description: 'Update the version of PHP running on the local environment to 8.2 and load application code from a path on the user\'s local machine.\n' +
-		'       * Options that are set in the command will be skipped in the setup wizard.',
+		usage: `${ exampleUsage } --php=8.2 --slug=example-site`,
+		description: 'Update the PHP version to 8.2 in the `update` command then enter the setup wizard to update or confirm all other settings.\n' +
+		'       * Configuration options that are set in the `update` command will be skipped in the setup wizard.',
+	},
+	{
+		usage: `${ exampleUsage } --app-code=/Users/example/Desktop/example-app-code --slug=example-site`,
+		description: 'Update application code to load from a path on the user\'s local machine for the local environment.',
 	},
 ];
 const cmd = command( {

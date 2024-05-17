@@ -25,7 +25,7 @@ const examples = [
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site -- wp user list --url=example.example-site.vipdev.lndo.site`,
-		description: 'Target the WP-CLI command against the network site "example.example-site.vipdev.lndo.site" of a local multisite environment.`',
+		description: 'Target the WP-CLI command against the network site "example.example-site.vipdev.lndo.site" of a local multisite environment.',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site -- wp shell`,
