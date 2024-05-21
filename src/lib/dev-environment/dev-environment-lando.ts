@@ -8,7 +8,7 @@ import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
 import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import path from 'node:path';
+import path, { dirname } from 'node:path';
 import xdgBasedir from 'xdg-basedir';
 
 import {
@@ -33,9 +33,10 @@ const debug = debugLib( DEBUG_KEY );
  * @return {Promise<LandoConfig>} Lando configuration
  */
 async function getLandoConfig(): Promise< LandoConfig > {
-	const nodeModulesPath = path.join( __dirname, '..', '..', '..', 'node_modules' );
-	const landoPath = path.join( nodeModulesPath, 'lando' );
-	const atLandoPath = path.join( nodeModulesPath, '@lando' );
+	// The path will be smth like `yarn/global/node_modules/lando/lib/lando.js`; we need the path up to `lando` (inclusive)
+	const landoPath = dirname( dirname( require.resolve( 'lando' ) ) );
+	// The path will be smth like `yarn/global/node_modules/@lando/compose/index.js`; we need the path up to `@lando` (inclusive)
+	const atLandoPath = dirname( dirname( require.resolve( '@lando/compose' ) ) );
 
 	debug( `Getting Lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
 
