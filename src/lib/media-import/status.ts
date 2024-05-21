@@ -302,7 +302,7 @@ Downloading errors details from ${ fileErrorsUrl }...
 			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
 		} catch ( err ) {
 			progressTracker.suffix += `${ chalk.red(
-				`Could not download file import errors report\n${ ( err as Error ).message }`
+				`Could not download import errors report\n${ ( err as Error ).message }`
 			) }`;
 			throw err;
 		}
@@ -313,17 +313,22 @@ Downloading errors details from ${ fileErrorsUrl }...
 			type: 'confirm',
 			name: 'download',
 			message:
-				'Download file import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
+				'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
 		} );
 
 		if ( ! failureDetails.download ) {
 			progressTracker.suffix += `${ chalk.yellow(
-				`⚠️  Click on the following link to download the file import errors report`
+				`⚠️  An error report file has been generated for this media import. Access it within the next 15 minutes by clicking on the URL below.`
 			) }`;
-			progressTracker.suffix += `\n${ chalk.italic.yellow(
-				'(The link will be valid for the next 15 minutes & the report will be downloadable for up to 7 days from the completion of the import)'
+			progressTracker.suffix += `\n${ chalk.yellow(
+				`Or, generate a new URL by running the ${ chalk.bgYellow(
+					'vip import media status'
+				) } command.`
 			) } `;
-			progressTracker.suffix += `\n\n${ chalk.bold.yellow( fileErrorsUrl ) }\n`;
+			progressTracker.suffix += `\n${ chalk.yellow(
+				'The report will be downloadable for up to 7 days after the completion of the import or until a new media import is performed.'
+			) }`;
+			progressTracker.suffix += `\n\n${ chalk.underline( fileErrorsUrl ) }\n`;
 			progressTracker.print( { clearAfter: true } );
 			return;
 		}
@@ -350,12 +355,12 @@ Downloading errors details from ${ fileErrorsUrl }...
 		results: AppEnvironmentMediaImportStatus
 	) {
 		progressTracker.suffix += `${ chalk.yellow(
-			`⚠️  ${ fileErrors.length } file import error(s) were found`
+			`⚠️  ${ fileErrors.length } import error(s) were found`
 		) }`;
 
 		if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
 			progressTracker.suffix += `. ${ chalk.italic.yellow(
-				'File import errors report size threshold reached.'
+				'Import errors report size threshold reached.'
 			) }`;
 		}
 		await exportFailureDetails( fileErrors );
