@@ -355,12 +355,12 @@ Downloading errors details from ${ fileErrorsUrl }
 		results: AppEnvironmentMediaImportStatus
 	) {
 		progressTracker.suffix += `${ chalk.yellow(
-			`⚠️  ${ fileErrors.length } import error(s) were found`
+			`⚠️  ${ fileErrors.length } file import error(s) were found`
 		) }`;
 
 		if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
 			progressTracker.suffix += `. ${ chalk.italic.yellow(
-				'Import errors report size threshold reached.'
+				'File import errors report size threshold reached.'
 			) }`;
 		}
 		await exportFailureDetails( fileErrors );
