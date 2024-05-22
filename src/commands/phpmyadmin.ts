@@ -164,7 +164,7 @@ export class PhpMyAdminCommand {
 	}
 
 	async readyToServe(): Promise< boolean > {
-		const url = `https://${ this.env.primaryDomain?.name }/.wpvip/pma/auth`;
+		const url = `https://${ this.env.primaryDomain?.name }/.wpvip/pma/health`;
 
 		const agent = createProxyAgent( url );
 		const resp = await fetch( url, {
@@ -173,13 +173,16 @@ export class PhpMyAdminCommand {
 			agent: agent ?? undefined,
 		} );
 
-		// If we get 401, the domain is hidden behind a login wall, so we cannot access it
-		if ( resp.status === 401 ) {
-			throw new Error( 'We cannot check if PhpMyAdmin is ready due to a login wall' );
+		if ( resp.status !== 200 ) {
+			return false;
 		}
 
-		const text = await resp.text();
-		return text.startsWith( 'Login link expired' );
+		const { status, error } = ( await resp.json() ) as { status: string; error?: string };
+		if ( status === 'Ok' ) {
+			return true;
+		}
+
+		throw new Error( `Failed to serve phpMyAdmin: ${ error }` );
 	}
 
 	async maybeEnablePhpMyAdmin(): Promise< void > {
@@ -235,7 +238,7 @@ export class PhpMyAdminCommand {
 
 		this.progressTracker.stepRunning( this.steps.PROCESSING );
 		try {
-			await pollUntil( this.readyToServe.bind( this ), 5000, undefined, 300000 );
+			await pollUntil( this.readyToServe.bind( this ), 5000 );
 			this.progressTracker.stepSuccess( this.steps.PROCESSING );
 		} catch ( err ) {
 			const error = err as Error;
