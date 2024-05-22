@@ -297,6 +297,7 @@ ${ maybeExitPrompt }
 =============================================================
 Downloading errors details from ${ fileErrorsUrl }
 \n`;
+		progressTracker.print( { clearAfter: true } );
 		try {
 			const response = await fetch( fileErrorsUrl );
 			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
