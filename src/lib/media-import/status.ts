@@ -295,7 +295,7 @@ ${ maybeExitPrompt }
 	async function fetchFailureDetails( fileErrorsUrl: string ) {
 		progressTracker.suffix += `
 =============================================================
-Downloading errors details from ${ fileErrorsUrl }...
+Downloading errors details from ${ fileErrorsUrl }
 \n`;
 		try {
 			const response = await fetch( fileErrorsUrl );
