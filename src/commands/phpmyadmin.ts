@@ -126,7 +126,7 @@ export class PhpMyAdminCommand {
 	track: CommandTracker;
 	steps = {
 		ENABLE: 'enable',
-		PROCESSING: 'processing',
+		PREPARING: 'preparing',
 		GENERATE: 'generate',
 	};
 	private progressTracker: ProgressTracker;
@@ -137,7 +137,7 @@ export class PhpMyAdminCommand {
 		this.track = trackerFn;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
-			{ id: this.steps.PROCESSING, name: 'Processing' },
+			{ id: this.steps.PREPARING, name: 'Preparing' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
 		] );
 	}
@@ -236,14 +236,14 @@ export class PhpMyAdminCommand {
 			);
 		}
 
-		this.progressTracker.stepRunning( this.steps.PROCESSING );
+		this.progressTracker.stepRunning( this.steps.PREPARING );
 		try {
 			await pollUntil( this.readyToServe.bind( this ), 5000 );
-			this.progressTracker.stepSuccess( this.steps.PROCESSING );
+			this.progressTracker.stepSuccess( this.steps.PREPARING );
 		} catch ( err ) {
 			const error = err as Error;
 			this.progressTracker.updateMessage( `Skipped: ${ error.message }` );
-			this.progressTracker.stepSkipped( this.steps.PROCESSING );
+			this.progressTracker.stepSkipped( this.steps.PREPARING );
 		}
 
 		let url;
