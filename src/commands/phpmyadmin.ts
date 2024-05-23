@@ -189,7 +189,15 @@ export class PhpMyAdminCommand {
 			await enablePhpMyAdmin( this.env.id as number );
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
 		}
+
+		const timeout = setTimeout( () => {
+			this.progressTracker.updateMessage(
+				'Enabling PHPMyAdmin for this environment. This step may take a while. We appreciate your patience.'
+			);
+		}, 30000 );
+
 		await pollUntil( this.readyToServe.bind( this ), 5000 );
+		clearTimeout( timeout );
 	}
 
 	async run( silent = false ): Promise< void > {
