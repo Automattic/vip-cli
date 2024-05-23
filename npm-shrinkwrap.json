@@ -31,7 +31,7 @@
         "ini": "4.1.3",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli.git#1c45a75",
+        "lando": "github:automattic/lando-cli.git#1b25a3b",
         "node-fetch": "^2.6.1",
         "open": "^10.0.0",
         "proxy-from-env": "^1.1.0",
@@ -5525,6 +5525,14 @@
         "node": ">=8"
       }
     },
+    "node_modules/clone": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/clone/-/clone-2.1.2.tgz",
+      "integrity": "sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==",
+      "engines": {
+        "node": ">=0.8"
+      }
+    },
     "node_modules/co": {
       "version": "4.6.0",
       "resolved": "https://registry.npmjs.org/co/-/co-4.6.0.tgz",
@@ -9780,9 +9788,12 @@
       "dev": true
     },
     "node_modules/jsonfile": {
-      "version": "2.4.0",
-      "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-2.4.0.tgz",
-      "integrity": "sha512-PKllAqbgLgxHaj8TElYymKCAgrASebJrWpTnEkOaTowt23VKXXN0sUeriJ+eh7y6ufb/CC5ap11pz71/cM0hUw==",
+      "version": "6.1.0",
+      "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
+      "integrity": "sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==",
+      "dependencies": {
+        "universalify": "^2.0.0"
+      },
       "optionalDependencies": {
         "graceful-fs": "^4.1.6"
       }
@@ -9868,7 +9879,7 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#1c45a75a3ca921c145f9b927ad862d0f224b8537",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#1b25a3b388e2b485dd2df9d46c186c437355a600",
       "dependencies": {
         "@lando/compose": "1.0.0",
         "@lando/mailhog": "0.8.0",
@@ -9883,9 +9894,9 @@
         "inquirer-autocomplete-prompt": "^1.0.1",
         "ip": "^1.1.9",
         "js-yaml": "^4.1.0",
-        "jsonfile": "^2.4.0",
+        "jsonfile": "^6.1.0",
         "lodash": "^4.17.21",
-        "node-cache": "^4.1.1",
+        "node-cache": "^5.1.2",
         "object-hash": "^1.1.8",
         "semver": "^7.3.8",
         "shelljs": "^0.8.4",
@@ -10382,23 +10393,14 @@
       "optional": true
     },
     "node_modules/node-cache": {
-      "version": "4.2.1",
-      "resolved": "https://registry.npmjs.org/node-cache/-/node-cache-4.2.1.tgz",
-      "integrity": "sha512-BOb67bWg2dTyax5kdef5WfU3X8xu4wPg+zHzkvls0Q/QpYycIFRLEEIdAx9Wma43DxG6Qzn4illdZoYseKWa4A==",
+      "version": "5.1.2",
+      "resolved": "https://registry.npmjs.org/node-cache/-/node-cache-5.1.2.tgz",
+      "integrity": "sha512-t1QzWwnk4sjLWaQAS8CHgOJ+RAfmHpxFWmc36IWTiWHQfs0w5JDMBS1b1ZxQteo0vVVuWJvIUKHDkkeK7vIGCg==",
       "dependencies": {
-        "clone": "2.x",
-        "lodash": "^4.17.15"
+        "clone": "2.x"
       },
       "engines": {
-        "node": ">= 0.4.6"
-      }
-    },
-    "node_modules/node-cache/node_modules/clone": {
-      "version": "2.1.2",
-      "resolved": "https://registry.npmjs.org/clone/-/clone-2.1.2.tgz",
-      "integrity": "sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==",
-      "engines": {
-        "node": ">=0.8"
+        "node": ">= 8.0.0"
       }
     },
     "node_modules/node-fetch": {
@@ -12662,6 +12664,14 @@
       "version": "6.0.1",
       "resolved": "https://registry.npmjs.org/universal-user-agent/-/universal-user-agent-6.0.1.tgz",
       "integrity": "sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ=="
+    },
+    "node_modules/universalify": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz",
+      "integrity": "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==",
+      "engines": {
+        "node": ">= 10.0.0"
+      }
     },
     "node_modules/update-browserslist-db": {
       "version": "1.0.13",
@@ -17383,6 +17393,11 @@
         }
       }
     },
+    "clone": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/clone/-/clone-2.1.2.tgz",
+      "integrity": "sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w=="
+    },
     "co": {
       "version": "4.6.0",
       "resolved": "https://registry.npmjs.org/co/-/co-4.6.0.tgz",
@@ -20468,11 +20483,12 @@
       "dev": true
     },
     "jsonfile": {
-      "version": "2.4.0",
-      "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-2.4.0.tgz",
-      "integrity": "sha512-PKllAqbgLgxHaj8TElYymKCAgrASebJrWpTnEkOaTowt23VKXXN0sUeriJ+eh7y6ufb/CC5ap11pz71/cM0hUw==",
+      "version": "6.1.0",
+      "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
+      "integrity": "sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==",
       "requires": {
-        "graceful-fs": "^4.1.6"
+        "graceful-fs": "^4.1.6",
+        "universalify": "^2.0.0"
       }
     },
     "jsonwebtoken": {
@@ -20541,8 +20557,8 @@
       "dev": true
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#1c45a75a3ca921c145f9b927ad862d0f224b8537",
-      "from": "lando@github:automattic/lando-cli.git#1c45a75",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#1b25a3b388e2b485dd2df9d46c186c437355a600",
+      "from": "lando@github:automattic/lando-cli.git#1b25a3b",
       "requires": {
         "@lando/compose": "1.0.0",
         "@lando/mailhog": "0.8.0",
@@ -20557,9 +20573,9 @@
         "inquirer-autocomplete-prompt": "^1.0.1",
         "ip": "^1.1.9",
         "js-yaml": "^4.1.0",
-        "jsonfile": "^2.4.0",
+        "jsonfile": "^6.1.0",
         "lodash": "^4.17.21",
-        "node-cache": "^4.1.1",
+        "node-cache": "^5.1.2",
         "object-hash": "^1.1.8",
         "semver": "^7.3.8",
         "shelljs": "^0.8.4",
@@ -20958,19 +20974,11 @@
       "optional": true
     },
     "node-cache": {
-      "version": "4.2.1",
-      "resolved": "https://registry.npmjs.org/node-cache/-/node-cache-4.2.1.tgz",
-      "integrity": "sha512-BOb67bWg2dTyax5kdef5WfU3X8xu4wPg+zHzkvls0Q/QpYycIFRLEEIdAx9Wma43DxG6Qzn4illdZoYseKWa4A==",
+      "version": "5.1.2",
+      "resolved": "https://registry.npmjs.org/node-cache/-/node-cache-5.1.2.tgz",
+      "integrity": "sha512-t1QzWwnk4sjLWaQAS8CHgOJ+RAfmHpxFWmc36IWTiWHQfs0w5JDMBS1b1ZxQteo0vVVuWJvIUKHDkkeK7vIGCg==",
       "requires": {
-        "clone": "2.x",
-        "lodash": "^4.17.15"
-      },
-      "dependencies": {
-        "clone": {
-          "version": "2.1.2",
-          "resolved": "https://registry.npmjs.org/clone/-/clone-2.1.2.tgz",
-          "integrity": "sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w=="
-        }
+        "clone": "2.x"
       }
     },
     "node-fetch": {
@@ -22594,6 +22602,11 @@
       "version": "6.0.1",
       "resolved": "https://registry.npmjs.org/universal-user-agent/-/universal-user-agent-6.0.1.tgz",
       "integrity": "sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ=="
+    },
+    "universalify": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz",
+      "integrity": "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw=="
     },
     "update-browserslist-db": {
       "version": "1.0.13",
