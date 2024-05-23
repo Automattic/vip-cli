@@ -706,7 +706,7 @@ export function validateDockerInstalled( lando: Lando ): void {
 	if ( ! engine ) {
 		if ( ! lando.config.dockerBin ) {
 			throw new UserError(
-				'docker could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
+				'docker binary could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
 			);
 		}
 
@@ -720,7 +720,7 @@ export function validateDockerInstalled( lando: Lando ): void {
 	if ( ! composePlugin ) {
 		if ( ! compose ) {
 			throw new Error(
-				'docker-compose could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/'
+				'docker-compose binary could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/'
 			);
 		}
 
