@@ -18,7 +18,7 @@ import {
 	getVersionList,
 	readEnvironmentData,
 } from './dev-environment-core';
-import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
+import { validateDockerInstalled } from './dev-environment-lando';
 import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -150,8 +150,6 @@ export const validateDependencies = async ( lando: Lando, slug: string ) => {
 	const now = new Date();
 
 	validateDockerInstalled( lando );
-	await validateDockerAccess( lando );
-
 	if ( slug ) {
 		await verifyDNSResolution( slug );
 	}

@@ -46,11 +46,11 @@ command()
 
 		const startProcessing = new Date();
 
-		const versions = await lando.engine.daemon.getVersions();
 		const trackingInfo = getEnvTrackingInfo( slug );
 		trackingInfo.vscode = Boolean( opt.vscode );
-		trackingInfo.docker = versions.engine;
-		trackingInfo.docker_compose = versions.compose;
+		trackingInfo.docker = lando.config.versions.engine;
+		trackingInfo.docker_compose = lando.config.versions.compose;
+		trackingInfo.compose_plugin = lando.config.versions.composePlugin;
 
 		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
 
