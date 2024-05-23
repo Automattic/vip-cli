@@ -126,7 +126,6 @@ export class PhpMyAdminCommand {
 	track: CommandTracker;
 	steps = {
 		ENABLE: 'enable',
-		PREPARING: 'preparing',
 		GENERATE: 'generate',
 	};
 	private progressTracker: ProgressTracker;
@@ -137,7 +136,6 @@ export class PhpMyAdminCommand {
 		this.track = trackerFn;
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
-			{ id: this.steps.PREPARING, name: 'Preparing' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
 		] );
 	}
@@ -191,6 +189,7 @@ export class PhpMyAdminCommand {
 			await enablePhpMyAdmin( this.env.id as number );
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
 		}
+		await pollUntil( this.readyToServe.bind( this ), 5000 );
 	}
 
 	async run( silent = false ): Promise< void > {
@@ -234,16 +233,6 @@ export class PhpMyAdminCommand {
 			exit.withError(
 				'Failed to enable PhpMyAdmin. Please try again. If the problem persists, please contact support.'
 			);
-		}
-
-		this.progressTracker.stepRunning( this.steps.PREPARING );
-		try {
-			await pollUntil( this.readyToServe.bind( this ), 5000 );
-			this.progressTracker.stepSuccess( this.steps.PREPARING );
-		} catch ( err ) {
-			const error = err as Error;
-			this.progressTracker.updateMessage( `Skipped: ${ error.message }` );
-			this.progressTracker.stepSkipped( this.steps.PREPARING );
 		}
 
 		let url;
