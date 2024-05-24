@@ -3,6 +3,7 @@
  * External dependencies
  */
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import nock from 'nock';
 
 /**
  * Internal dependencies
@@ -61,7 +62,7 @@ describe( 'commands/PhpMyAdminCommand', () => {
 
 	describe( '.run', () => {
 		const app = { id: 123 };
-		const env = { id: 456, jobs: [] };
+		const env = { id: 456, jobs: [], primaryDomain: { name: 'foo.com' } };
 		const tracker = jest.fn() as CommandTracker;
 		const cmd = new PhpMyAdminCommand( app, env, tracker );
 		const openUrl = jest.spyOn( cmd, 'openUrl' );
@@ -71,6 +72,7 @@ describe( 'commands/PhpMyAdminCommand', () => {
 		} );
 
 		it( 'should open the generated URL in browser', async () => {
+			jest.spyOn( cmd, 'readyToServe' ).mockResolvedValueOnce( true );
 			await cmd.run();
 			expect( pmaEnabledQueryMockTrue ).toHaveBeenCalledWith( {
 				query: expect.anything(),
@@ -90,6 +92,26 @@ describe( 'commands/PhpMyAdminCommand', () => {
 				},
 			} );
 			expect( openUrl ).toHaveBeenCalledWith( 'http://test-url.com' );
+		} );
+
+		describe( 'readyToServe', () => {
+			const domainNock = nock( 'https://foo.com' );
+
+			afterEach( () => {
+				domainNock.done();
+			} );
+
+			it( 'should do healthcheck', async () => {
+				domainNock.get( '/.wpvip/pma/health' ).reply( 200, { status: 'Ok' } );
+				await expect( cmd.readyToServe() ).resolves.toBeTruthy();
+				expect( domainNock.isDone() ).toBeTruthy();
+			} );
+
+			it( 'should false if healthcheck returns non 200 response', async () => {
+				domainNock.get( '/.wpvip/pma/health' ).reply( 500, 'Internal Server Error' );
+				await expect( cmd.readyToServe() ).resolves.toBeFalsy();
+				expect( domainNock.isDone() ).toBeTruthy();
+			} );
 		} );
 	} );
 } );
