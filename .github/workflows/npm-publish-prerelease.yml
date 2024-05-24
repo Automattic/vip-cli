@@ -22,3 +22,5 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           PROVENANCE: 'true'
           NPM_TAG: ${{ inputs.npm_tag }}
+        env:
+          npm_config_tag: ${{ inputs.npm_tag }}
