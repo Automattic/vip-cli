@@ -36,7 +36,7 @@ const examples = [
 	},
 	{
 		usage:
-			'${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com/site-three,site-three.example-site.vipdev.lndo.site" --search-replace="example-site.com,example-site.vipdev.lndo.site" --slug="example-site"',
+			`${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com/site-three,site-three.example-site.vipdev.lndo.site" --search-replace="example-site.com,example-site.vipdev.lndo.site" --slug="example-site"`,
 		description:
 			'Search and replace 2 pairs of strings during the import of the SQL file to a local multisite environment.',
 	},
