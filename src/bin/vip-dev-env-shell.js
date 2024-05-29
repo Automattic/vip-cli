@@ -3,7 +3,6 @@
 import debugLib from 'debug';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	validateDependencies,
@@ -16,6 +15,8 @@ import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environme
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env shell';
+const usage = 'vip dev-env shell';
 
 const userMap = {
 	nginx: 'www-data',
@@ -30,21 +31,25 @@ const userMap = {
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell`,
-		description: 'Spawns a shell in the dev environment',
-	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -r`,
-		description: 'Spawns a shell in the dev environment under root user',
-	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -- ls -lha`,
-		description: 'Runs `ls -lha` command in the shell in the dev environment',
-	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } shell -S database -- ls -lha`,
+		usage: `${ exampleUsage } --slug=example-site`,
 		description:
-			'Runs `ls -lha` command in the shell of the database service in the dev environment',
+			'Create and enter an SSH command shell for the PHP service (default) of the local environment named "example-site".',
+	},
+	{
+		usage: `${ exampleUsage } --root --slug=example-site`,
+		description:
+			'Create and enter an SSH command shell with root privileges for the local environment.',
+	},
+	{
+		usage: `${ exampleUsage } --slug=example-site -- ls -lha`,
+		description:
+			'Create an SSH command shell for the local environment and run the command "ls -lha".\n' +
+			'      * A double dash ("--") must separate the arguments of "vip" from those of the command.',
+	},
+	{
+		usage: `${ exampleUsage } --service=database --slug=example-site -- ls -lha`,
+		description:
+			'Create an SSH command shell for the database service of the local environment and run the command "ls -lha".',
 	},
 ];
 
@@ -56,7 +61,7 @@ function getCommand( args ) {
 	const splitterIdx = process.argv.findIndex( argument => '--' === argument );
 	if ( args.length > 0 && splitterIdx === -1 ) {
 		throw new Error(
-			'Please provide "--" argument to separate arguments for "vip" and command to be executed (see "--help" for examples)'
+			'A double dash ("--") must separate the arguments of "vip" from those of the command to be executed. Run "vip dev-env shell --help" for examples.'
 		);
 	}
 
@@ -69,10 +74,18 @@ function getCommand( args ) {
 	return cmd;
 }
 
-command( { wildcardCommand: true } )
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'root', 'Spawn a root shell' )
-	.option( 'service', 'Spawn a shell in a specific service (php if omitted)' )
+command( {
+	wildcardCommand: true,
+	usage,
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
+	.option( 'root', 'Create with root privileges.' )
+	.option( 'service', 'Restrict to a single service.' )
 	.examples( examples )
 	.argv( process.argv, async ( args, opt ) => {
 		const slug = await getEnvironmentName( opt );

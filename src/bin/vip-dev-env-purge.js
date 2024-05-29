@@ -10,7 +10,6 @@ import debugLib from 'debug';
  * Internal dependencies
  */
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	handleCLIException,
@@ -25,21 +24,34 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env purge';
+const usage = 'vip dev-env purge';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } purge`,
-		description: 'Destroys all local dev environments',
+		usage: `${ exampleUsage }`,
+		description: 'Destroy all local environments.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } purge --force`,
-		description: 'Destroys all local dev environments without prompting',
+		usage: `${ exampleUsage } --force`,
+		description: 'Destroy all local environments without requiring confirmation from the user.',
+	},
+	{
+		usage: `${ exampleUsage } --soft`,
+		description:
+			'Remove the Docker containers and volumes of all local environments but preserve their configuration files.\n' +
+			'      * Preserving the configuration files allows the local environments to be regenerated; new Docker containers and volumes will be created.',
 	},
 ];
 
-command()
-	.option( 'soft', 'Keep config files needed to start an environment intact' )
-	.option( 'force', 'Removes prompt that verifies if user wants to destroy all environments' )
+command( {
+	usage,
+} )
+	.option(
+		'soft',
+		'Preserve an environment’s configuration files; allows an environment to be regenerated with the start command.'
+	)
+	.option( 'force', 'Skip confirmation.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		debug( 'Args: ', arg, 'Options: ', opt );
@@ -54,7 +66,7 @@ command()
 
 		if ( ! opt.force ) {
 			const purge = await promptForBoolean(
-				'Are you sure you want to purge ALL existing dev environments?',
+				'Are you sure you want to purge ALL existing local environments?',
 				true
 			);
 
@@ -74,7 +86,7 @@ command()
 					// eslint-disable-next-line no-await-in-loop
 					await destroyEnvironment( lando, slug, removeFiles );
 
-					const message = chalk.green( '✓' ) + ' Environment destroyed.\n';
+					const message = chalk.green( '✓' ) + ' Environments purged.\n';
 					console.log( message );
 				} catch ( error ) {
 					const trackingInfoChild = getEnvTrackingInfo( slug );

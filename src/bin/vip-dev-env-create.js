@@ -6,10 +6,6 @@ import debugLib from 'debug';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import {
-	DEV_ENVIRONMENT_FULL_COMMAND,
-	DEV_ENVIRONMENT_SUBCOMMAND,
-} from '../lib/constants/dev-environment';
-import {
 	DEFAULT_SLUG,
 	getEnvironmentName,
 	promptForArguments,
@@ -36,41 +32,52 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env create';
+const usage = 'vip dev-env create';
 
+// Command examples
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create`,
-		description: 'Creates a local dev environment',
-	},
-	{
-		usage: `vip @123.production ${ DEV_ENVIRONMENT_SUBCOMMAND } create`,
-		description: 'Creates a local dev environment for production site for id 123',
-	},
-	{
-		usage: `vip ${ DEV_ENVIRONMENT_SUBCOMMAND } create --slug=my_site`,
-		description: 'Creates a local dev environment aliased as "my_site"',
-	},
-	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --slug=test`,
+		usage: exampleUsage,
 		description:
-			'Assigning unique slugs to environments allows multiple environments to be created.',
+			'Create a new VIP Local Development Environment.\n' +
+			'       * The environment will be named "vip-local" by default if a custom name is not assigned with "--slug" .',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite --wordpress="5.8" --app-code="~/git/my_code"`,
+		usage: `${ exampleUsage } --slug=example-site`,
 		description:
-			'Creates a local multisite dev environment using WP 5.8 and application code is expected to be in "~/git/my_code"',
+			'Create a new local environment with the unique name "example-site".\n' +
+			'       * Unique names allow multiple local environments to exist simultaneously.',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } create --multisite=subdirectory --wordpress="5.8" --app-code="~/git/my_code"`,
+		usage: `${ exampleUsage } --slug=example-site --multisite=y --php=8.2 --wordpress=6.4`,
 		description:
-			'Creates a local multisite dev environment with a subdirectory URL structure using WP 5.8 and application code is expected to be in "~/git/my_code"',
+			'Create a new local environment configured as a multisite running PHP 8.2 and WordPress version 6.4.\n' +
+			'       * Options that are set in the `create` command will be skipped in the setup wizard.',
+	},
+	{
+		usage: `vip @example-app.production dev-env create --slug=example-site --app-code=/Users/example/Desktop/example-repo`,
+		description:
+			'Create a new local environment with settings based on the production environment of the "example-app" application and load the locally git-cloned application repository "example-repo".',
 	},
 ];
 
-const cmd = command()
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'title', 'Title for the WordPress site' )
-	.option( 'multisite', 'Enable multisite install', undefined, processStringOrBooleanOption );
+const cmd = command( {
+	usage,
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
+	.option( 'title', 'A descriptive value for the WordPress Site Title. Default is "VIP Dev").' )
+	.option(
+		'multisite',
+		'Create environment as a multisite. Accepts "y" for a subdomain multisite, "subdirectory" (recommended) for a subdirectory multisite, or "false". Default is "y".',
+		undefined,
+		processStringOrBooleanOption
+	);
 
 addDevEnvConfigurationOptions( cmd );
 
@@ -155,7 +162,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const message =
 			'\n' +
 			chalk.green( '✓' ) +
-			` environment created.\n\nTo start it please run:\n\n${ startCommand }\n`;
+			` environment created.\n\nTo start the environment run:\n\n${ startCommand }\n`;
 		console.log( message );
 
 		await trackEvent( 'dev_env_create_command_success', trackingInfo );

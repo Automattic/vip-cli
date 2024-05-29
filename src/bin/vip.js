@@ -30,7 +30,7 @@ const runCmd = async function () {
 		.command( 'backup', 'Generate a backup of an environment.' )
 		.command( 'cache', 'Manage page cache for your VIP applications' )
 		.command( 'config', 'Manage environment configurations.' )
-		.command( 'dev-env', 'Use local dev-environment' )
+		.command( 'dev-env', 'Create and manage VIP Local Development Environments.' )
 		.command( 'export', 'Export a copy of data associated with an environment.' )
 		.command( 'import', 'Import media or SQL files into your VIP applications' )
 		.command( 'logs', 'Get logs from your VIP applications' )
