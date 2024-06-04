@@ -3,7 +3,6 @@
 import debugLib from 'debug';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
@@ -16,31 +15,38 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env logs';
+const usage = 'vip dev-env logs';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site`,
-		description: 'Return all logs from a local dev environment named "my_site"',
+		usage: `${ exampleUsage } --slug=example-site`,
+		description:
+			'Retrieve logs for all running services of the local environment named "example-site".',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site --service=elasticsearch`,
+		usage: `${ exampleUsage } --service=elasticsearch --slug=example-site`,
 		description:
-			'Return logs from the "elasticsearch" service from a local dev environment named "my_site"',
+			'Retrieve logs only for the "elasticsearch" service of the local environment named "example-site".',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } logs --slug=my_site --service=elasticsearch -f`,
+		usage: `${ exampleUsage } --service=database --follow --slug=example-site`,
 		description:
-			'Follow logs from the "elasticsearch" service from a local dev environment named "my_site"',
+			'Retrieve and continually output logs for the "database" service of the local environment named "example-site".',
 	},
 ];
 
-command()
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( [ 'f', 'follow' ], 'Follow logs for a specific service in local dev environment' )
+command( {
+	usage,
+} )
 	.option(
-		'service',
-		'Show logs for a specific service in local dev environment. Defaults to all if none passed in.'
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
 	)
+	.option( [ 'f', 'follow' ], 'Continually output logs as they are generated.' )
+	.option( 'service', 'Restrict to a single service.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );

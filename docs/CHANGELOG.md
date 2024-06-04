@@ -1,5 +1,20 @@
 ## Changelog
 
+### 2.39.7
+
+* Fix promptForBoolean to display the default initial value capitalized
+* fix(dev-env): `vip dev-env info --all` should not ask for a slug
+* build(deps-dev): bump rimraf from 5.0.5 to 5.0.7
+* build(deps): bump cli-table3 from 0.6.4 to 0.6.5
+* build(deps): bump semver from 7.6.0 to 7.6.2
+* build(deps-dev): bump @types/node from 18.19.31 to 18.19.33
+* build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.9.1 to 0.10/1832
+* build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.10.0 to 0.11l/1835
+* fix(dev-env): plugin loading when using yarn to install VIP CLI
+* feat(dev-env): track versions of `docker` and `docker-compose`
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.6...2.39.7
+
 ### 2.39.6
 * Custom Deploys: Update deploy validation to run fully off of the custom deploy token. There are breaking changes associated with these updates, so the VIP CLI must be updated to this latest version in order to continue using the custom deploy functionality.
 

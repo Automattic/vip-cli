@@ -5,20 +5,17 @@ import command from '../lib/cli/command';
 command( {
 	requiredArgs: 0,
 } )
-	.command( 'create', 'Create a new local dev environment' )
-	.command( 'update', 'Update an already created local dev environment' )
-	.command( 'start', 'Start a local dev environment' )
-	.command( 'stop', 'Stop a local dev environment' )
-	.command(
-		'destroy',
-		'Remove containers, networks, volumes and configuration files of a local dev environment'
-	)
-	.command( 'info', 'Provides basic info about one or multiple local dev environments' )
-	.command( 'list', 'Provides basic info about all local dev environments' )
-	.command( 'exec', 'Execute a WP-CLI command in local dev environment' )
-	.command( 'import', 'Import data into a local WordPress environment' )
-	.command( 'shell', 'Spawns a shell in a dev environment' )
-	.command( 'logs', 'View logs from a local WordPress environment' )
-	.command( 'sync', 'Pull data from production to local development environment' )
-	.command( 'purge', 'Destroy all existing environments' )
+	.command( 'create', 'Create a new local environment.' )
+	.command( 'update', 'Update the settings of a local environment.' )
+	.command( 'start', 'Start a local environment.' )
+	.command( 'stop', 'Stop a local environment.' )
+	.command( 'destroy', 'Remove a local environment.' )
+	.command( 'info', 'Retrieve information about a local environment.' )
+	.command( 'list', 'Retrieve information about all local environments.' )
+	.command( 'exec', 'Run a WP-CLI command against a local environment.' )
+	.command( 'import', 'Import media or database files to a local environment.' )
+	.command( 'shell', 'Create a shell and run commands against a local environment.' )
+	.command( 'logs', 'Retrieve logs for a local environment.' )
+	.command( 'sync', 'Sync the database of a VIP Platform environment to a local environment.' )
+	.command( 'purge', 'Remove all local environments.' )
 	.argv( process.argv );

@@ -3,7 +3,6 @@
 import debugLib from 'debug';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_FULL_COMMAND } from '../lib/constants/dev-environment';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
@@ -19,22 +18,36 @@ import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env info';
+const usage = 'vip dev-env info';
 
 const examples = [
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info --all`,
-		description: 'Return information about all local dev environments',
+		usage: `${ exampleUsage } --slug=example-site`,
+		description: 'Retrieve basic information about the local environment named "example-site".',
 	},
 	{
-		usage: `${ DEV_ENVIRONMENT_FULL_COMMAND } info --slug=my_site`,
-		description: 'Return information about a local dev environment named "my_site"',
+		usage: `${ exampleUsage } --slug=example-site --extended`,
+		description:
+			'Retrieve a larger amount of information about the local environment named "example-site".',
+	},
+	{
+		usage: `${ exampleUsage } --all`,
+		description: 'Retrieve basic information about all local environments.',
 	},
 ];
 
-command()
-	.option( 'slug', 'Custom name of the dev environment', undefined, processSlug )
-	.option( 'all', 'Show Info for all local dev environments' )
-	.option( 'extended', 'Show extended information about the dev environment' )
+command( {
+	usage,
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
+	.option( 'all', 'Retrieve information about all local environments.' )
+	.option( 'extended', 'Retrieve a larger amount of information.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		let trackingInfo;

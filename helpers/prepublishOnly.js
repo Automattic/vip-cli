@@ -23,7 +23,7 @@ const releaseTag = process.env.npm_config_tag ?? 'latest';
 			}
 		}
 
-		if ( config.gitEnforceBranch && releaseTag !== 'next' ) {
+		if ( config.gitEnforceBranch && releaseTag === 'latest' ) {
 			const currentBranch = await execAsync( 'git branch --show-current' );
 
 			if ( currentBranch.trim() !== config.gitEnforceBranch ) {
