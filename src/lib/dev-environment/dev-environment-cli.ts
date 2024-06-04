@@ -231,7 +231,7 @@ interface LocalComponent {
 
 interface ImageComponent {
 	mode: 'image';
-	tag: string;
+	tag: string | undefined;
 }
 
 export function processComponentOptionInput(
@@ -258,7 +258,7 @@ export function processComponentOptionInput(
 
 	return {
 		mode: 'image',
-		tag: param,
+		tag: param === 'demo' ? undefined : param,
 	};
 }
 
@@ -412,10 +412,10 @@ async function processWordPress(
 	let result: WordPressConfig;
 	const allowLocal = false;
 	const defaultObject = defaultValue
-		? processComponentOptionInput( defaultValue, allowLocal )
+		? ( processComponentOptionInput( defaultValue, allowLocal ) as WordPressConfig )
 		: null;
 	if ( preselectedValue ) {
-		result = processComponentOptionInput( preselectedValue, allowLocal );
+		result = processComponentOptionInput( preselectedValue, allowLocal ) as WordPressConfig;
 	} else {
 		result = await promptForWordPress( defaultObject );
 	}
