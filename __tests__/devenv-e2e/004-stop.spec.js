@@ -58,7 +58,7 @@ describe( 'vip dev-env stop', () => {
 			env,
 		} );
 		expect( result.rc ).toBeGreaterThan( 0 );
-		expect( result.stderr ).toContain( "Error: Environment doesn't exist." );
+		expect( result.stderr ).toContain( 'Error: Environment not found.' );
 
 		return expect( checkEnvExists( slug ) ).resolves.toBe( false );
 	} );
@@ -73,7 +73,7 @@ describe( 'vip dev-env stop', () => {
 			true
 		);
 		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'environment stopped' );
+		expect( result.stdout ).toContain( `environment "${ slug }" stopped` );
 
 		const containersAfterStop = await getContainersForProject( docker, slug );
 		expect( containersAfterStop ).toHaveLength( 0 );
@@ -91,11 +91,33 @@ describe( 'vip dev-env stop', () => {
 			true
 		);
 		expect( result.rc ).toBe( 0 );
-		expect( result.stdout ).toContain( 'environment stopped' );
+		expect( result.stdout ).toContain( `environment "${ slug }" stopped` );
 
 		const containersAfterStop = await getContainersForProject( docker, slug );
 		expect( containersAfterStop ).toHaveLength( 0 );
 
 		await destroyEnvironment( cliTest, slug, env );
+	} );
+
+	it( 'should be able to stop all environments', async () => {
+		const slug1 = getProjectSlug();
+		const slug2 = getProjectSlug();
+		expect( await checkEnvExists( slug1 ) ).toBe( false );
+		expect( await checkEnvExists( slug2 ) ).toBe( false );
+
+		await createAndStartEnvironment( cliTest, slug1, env );
+		await createAndStartEnvironment( cliTest, slug2, env );
+
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvStop, '--all' ],
+			{ env },
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `environment "${ slug1 }" stopped` );
+		expect( result.stdout ).toContain( `environment "${ slug2 }" stopped` );
+
+		await destroyEnvironment( cliTest, slug1, env );
+		await destroyEnvironment( cliTest, slug2, env );
 	} );
 } );
