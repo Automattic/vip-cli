@@ -1,5 +1,20 @@
 ## Changelog
 
+### 3.0.0
+
+* fix(dev-env): demo code is displayed as `[demo-image]`
+* build(deps-dev): bump @types/node from 18.19.33 to 18.19.34
+* build(deps): bump debug from 4.3.4 to 4.3.5
+* ci: remove duplicate check
+* Update the dev-env commands to follow the VIP-CLI style guide
+* build(deps-dev): bump the babel group with 4 updates
+* ci: add publish prerelease workflow
+* build(deps): bump step-security/harden-runner from 2.7.1 to 2.8.0
+* build(deps): bump ini from 4.1.2 to 4.1.3
+* Integrate media import v2 flow and expand on media import error report messaging
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.7...3.0.0
+
 ### 2.39.7
 
 * Fix promptForBoolean to display the default initial value capitalized
