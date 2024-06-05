@@ -128,7 +128,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		);
 		instanceData.siteSlug = slug;
 
-		await updateEnvironment( instanceData );
+		await updateEnvironment( lando, instanceData );
 
 		const message =
 			'\n' +

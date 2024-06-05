@@ -155,7 +155,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	instanceData.siteSlug = slug;
 
 	try {
-		await createEnvironment( instanceData );
+		await createEnvironment( lando, instanceData );
 
 		await printEnvironmentInfo( lando, slug, { extended: false, suppressWarnings: true } );
 
