@@ -1,5 +1,6 @@
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import chalk from 'chalk';
+import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -13,7 +14,7 @@ import {
 	Maybe,
 } from '../../graphqlTypes';
 import API from '../../lib/api';
-import { capitalize, formatEnvironment, formatData, RunningSprite } from '../../lib/cli/format';
+import { capitalize, formatData, formatEnvironment, RunningSprite } from '../../lib/cli/format';
 import {
 	AppForMediaImport,
 	currentUserCanImportForApp,
@@ -45,6 +46,7 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 							fileName
 							errors
 						}
+						fileErrorsUrl
 					}
 				}
 			}
@@ -271,44 +273,129 @@ ${ maybeExitPrompt }
 			void checkStatus( IMPORT_MEDIA_PROGRESS_POLL_INTERVAL );
 		} );
 
+	async function exportFailureDetails(
+		fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[]
+	) {
+		const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
+		const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
+			exportFileErrorsToJson ? '.json' : '.txt'
+		}`;
+		try {
+			await writeFile( errorsFile, formattedData );
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }\n`
+			) }`;
+		} catch ( writeFileErr ) {
+			progressTracker.suffix += `${ chalk.red(
+				`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
+			) }`;
+		}
+	}
+
+	async function fetchFailureDetails( fileErrorsUrl: string ) {
+		progressTracker.suffix += `
+=============================================================
+Downloading errors details from ${ fileErrorsUrl }
+\n`;
+		progressTracker.print( { clearAfter: true } );
+		try {
+			const response = await fetch( fileErrorsUrl );
+			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
+		} catch ( err ) {
+			progressTracker.suffix += `${ chalk.red(
+				`Could not download import errors report\n${ ( err as Error ).message }`
+			) }`;
+			throw err;
+		}
+	}
+
+	async function promptFailureDetailsDownload( fileErrorsUrl: string ) {
+		const failureDetails = await prompt( {
+			type: 'confirm',
+			name: 'download',
+			message:
+				'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
+		} );
+
+		if ( ! failureDetails.download ) {
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  An error report file has been generated for this media import. Access it within the next 15 minutes by clicking on the URL below.`
+			) }`;
+			progressTracker.suffix += `\n${ chalk.yellow(
+				`Or, generate a new URL by running the ${ chalk.bgYellow(
+					'vip import media status'
+				) } command.`
+			) } `;
+			progressTracker.suffix += `\n${ chalk.yellow(
+				'The report will be downloadable for up to 7 days after the completion of the import or until a new media import is performed.'
+			) }`;
+			progressTracker.suffix += `\n\n${ chalk.underline( fileErrorsUrl ) }\n`;
+			progressTracker.print( { clearAfter: true } );
+			return;
+		}
+
+		const failureDetailsErrors = await fetchFailureDetails( fileErrorsUrl );
+		await exportFailureDetails( failureDetailsErrors );
+	}
+
+	function printFileErrorsReportLinkExpiredError( results: AppEnvironmentMediaImportStatus ) {
+		if (
+			results.filesTotal &&
+			results.filesProcessed &&
+			results.filesTotal !== results.filesProcessed
+		) {
+			const errorsFound = results.filesTotal - results.filesProcessed;
+			progressTracker.suffix += `${ chalk.yellow(
+				`⚠️  ${ errorsFound } error(s) were found. File import errors report link expired.`
+			) }`;
+		}
+	}
+
+	async function printFailureDetails(
+		fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[],
+		results: AppEnvironmentMediaImportStatus
+	) {
+		progressTracker.suffix += `${ chalk.yellow(
+			`⚠️  ${ fileErrors.length } file import error(s) were found`
+		) }`;
+
+		if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
+			progressTracker.suffix += `. ${ chalk.italic.yellow(
+				'File import errors report size threshold reached.'
+			) }`;
+		}
+		await exportFailureDetails( fileErrors );
+	}
+
 	try {
-		const results = await getResults();
+		const results: AppEnvironmentMediaImportStatus = await getResults();
 		overallStatus = results.status ?? 'unknown';
 
 		progressTracker.stopPrinting();
-
 		setProgressTrackerSuffix();
 		progressTracker.print();
 
-		const fileErrors = results.failureDetails?.fileErrors ?? [];
-		if ( fileErrors.length > 0 ) {
-			progressTracker.suffix += `${ chalk.yellow(
-				`⚠️  ${ fileErrors.length } file error(s) have been extracted`
-			) }`;
-			if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
-				progressTracker.suffix += `. ${ chalk.italic.yellow(
-					'File-errors report size threshold reached.'
-				) }`;
-			}
-			const formattedData = buildFileErrors( fileErrors, exportFileErrorsToJson );
-			const errorsFile = `media-import-${ app.name ?? '' }-${ Date.now() }${
-				exportFileErrorsToJson ? '.json' : '.txt'
-			}`;
-			try {
-				await writeFile( errorsFile, formattedData );
-				progressTracker.suffix += `\n\n${ chalk.yellow(
-					`All errors have been exported to ${ chalk.bold( resolve( errorsFile ) ) }`
-				) }\n\n`;
-			} catch ( writeFileErr ) {
-				progressTracker.suffix += `\n\n${ chalk.red(
-					`Could not export errors to file\n${ ( writeFileErr as Error ).message }`
-				) }\n\n`;
+		if ( results.failureDetails?.fileErrorsUrl ) {
+			await promptFailureDetailsDownload(
+				results.failureDetails.fileErrorsUrl as unknown as string
+			);
+		} else {
+			const fileErrors = results.failureDetails?.fileErrors ?? [];
+
+			if ( fileErrors.length > 0 ) {
+				// Errors were observed and are present in the dto
+				// Fall back to exporting errors to local file
+				await printFailureDetails( fileErrors, results );
+			} else if ( 'ABORTED' !== overallStatus ) {
+				// Errors are not present in the dto
+				// And file error details report link is not available
+				// do not print this message if the import was aborted
+				printFileErrorsReportLinkExpiredError( results );
 			}
 		}
 
 		// Print one final time
 		progressTracker.print( { clearAfter: true } );
-
 		process.exit( 0 );
 	} catch ( importFailed ) {
 		progressTracker.stopPrinting();

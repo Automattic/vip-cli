@@ -26,6 +26,7 @@ export type AppQuery = {
 					__typename?: 'AppEnvironmentMediaImportStatusFailureDetails';
 					previousStatus?: string | null;
 					globalErrors?: Array< string | null > | null;
+					fileErrorsUrl?: string | null;
 					fileErrors?: Array< {
 						__typename?: 'AppEnvironmentMediaImportStatusFailureDetailsFileErrors';
 						fileName?: string | null;

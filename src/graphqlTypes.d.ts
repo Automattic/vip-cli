@@ -813,6 +813,8 @@ export type AppEnvironmentMediaImportStatusFailureDetails = {
 	__typename?: 'AppEnvironmentMediaImportStatusFailureDetails';
 	/** List of errors per file */
 	fileErrors?: Maybe< Array< Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors > > >;
+	/** URL to download the media import error log */
+	fileErrorsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	/** List of global errors per import */
 	globalErrors?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
 	/** Status of the Media Import prior to failing */
@@ -944,6 +946,8 @@ export type AppEnvironmentStartDbBackupCopyPayload = {
 
 /** Mutation request input to start a Media Import */
 export type AppEnvironmentStartMediaImportInput = {
+	/** API version to be used for the media import */
+	apiVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
 	/** Publicly accessible URL that contains an archive of the media files to be imported */

@@ -12,6 +12,8 @@ import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 import { trackEventWithEnv } from '../lib/tracker';
 
+const API_VERSION = 'v2';
+
 const appQuery = `
 	id,
 	name,
@@ -142,6 +144,7 @@ Importing Media into your App...
 						archiveUrl: url,
 						overwriteExistingFiles,
 						importIntermediateImages,
+						apiVersion: API_VERSION,
 					},
 				},
 			} );
