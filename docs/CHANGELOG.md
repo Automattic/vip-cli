@@ -1,5 +1,11 @@
 ## Changelog
 
+### 3.1.0
+
+* Integrate Media Import v2 flow and expand on media import error report messaging
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.0.0...3.1.0
+
 ### 3.0.0
 
 * fix(dev-env): demo code is displayed as `[demo-image]`
@@ -11,7 +17,6 @@
 * ci: add publish prerelease workflow
 * build(deps): bump step-security/harden-runner from 2.7.1 to 2.8.0
 * build(deps): bump ini from 4.1.2 to 4.1.3
-* Integrate media import v2 flow and expand on media import error report messaging
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/2.39.7...3.0.0
 
