@@ -305,6 +305,12 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 	if ( component.mode === 'local' ) {
 		return component.dir ?? '';
 	}
+
+	// Environments created by the old code will have `component.tag` set to `demo` instead of `undefined`.
+	if ( component.tag === 'demo' ) {
+		component.tag = undefined;
+	}
+
 	return component.tag ?? '[demo-image]';
 }
 
