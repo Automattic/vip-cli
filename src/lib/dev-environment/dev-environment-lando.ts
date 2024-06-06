@@ -110,7 +110,7 @@ async function initLandoApplication( lando: Lando, instancePath: string ): Promi
 	return app;
 }
 
-async function regenerateLandofile( instancePath: string ): Promise< void > {
+async function regenerateLandofile( lando: Lando, instancePath: string ): Promise< void > {
 	const landoFile = path.join( instancePath, '.lando.yml' );
 
 	try {
@@ -125,14 +125,14 @@ async function regenerateLandofile( instancePath: string ): Promise< void > {
 	const slug = path.basename( instancePath );
 	const currentInstanceData = readEnvironmentData( slug );
 	currentInstanceData.pullAfter = 0;
-	await updateEnvironment( currentInstanceData );
+	await updateEnvironment( lando, currentInstanceData );
 }
 
 async function landoRecovery( lando: Lando, instancePath: string, error: unknown ): Promise< App > {
 	debug( 'Error initializing Lando app', error );
 	console.warn( chalk.yellow( 'There was an error initializing Lando, trying to recover...' ) );
 	try {
-		await regenerateLandofile( instancePath );
+		await regenerateLandofile( lando, instancePath );
 	} catch ( err ) {
 		console.error(
 			`${ chalk.bold.red(

@@ -113,9 +113,9 @@ export async function startEnvironment(
 
 	let updated = false;
 	if ( ! options.skipWpVersionsCheck ) {
-		updated = await maybeUpdateWordPressImage( slug );
+		updated = await maybeUpdateWordPressImage( lando, slug );
 	}
-	updated = updated || ( await maybeUpdateVersion( slug ) );
+	updated = updated || ( await maybeUpdateVersion( lando, slug ) );
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( lando, instancePath );
@@ -142,7 +142,10 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 	await landoStop( lando, instancePath );
 }
 
-export async function createEnvironment( instanceData: InstanceData ): Promise< void > {
+export async function createEnvironment(
+	lando: Lando,
+	instanceData: InstanceData
+): Promise< void > {
 	const slug = instanceData.siteSlug;
 	debug( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
 
@@ -159,10 +162,13 @@ export async function createEnvironment( instanceData: InstanceData ): Promise< 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( preProcessedInstanceData, instancePath );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath );
 }
 
-export async function updateEnvironment( instanceData: InstanceData ): Promise< void > {
+export async function updateEnvironment(
+	lando: Lando,
+	instanceData: InstanceData
+): Promise< void > {
 	const slug = instanceData.siteSlug;
 	debug( 'Will process an environment', slug, 'with instanceData for updating: ', instanceData );
 
@@ -179,7 +185,7 @@ export async function updateEnvironment( instanceData: InstanceData ): Promise< 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( preProcessedInstanceData, instancePath );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath );
 }
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
@@ -470,11 +476,17 @@ export function writeEnvironmentData( slug: string, data: InstanceData ): Promis
 }
 
 async function prepareLandoEnv(
+	lando: Lando,
 	instanceData: InstanceData,
 	instancePath: string
 ): Promise< void > {
-	const landoFile = await ejs.renderFile( landoFileTemplatePath, instanceData );
-	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, instanceData );
+	const templateData = {
+		...instanceData,
+		domain: lando.config.domain,
+	};
+
+	const landoFile = await ejs.renderFile( landoFileTemplatePath, templateData );
+	const nginxFile = await ejs.renderFile( nginxFileTemplatePath, templateData );
 	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
@@ -697,7 +709,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
  * @param {string} slug slug
  * @return {boolean} boolean
  */
-async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
+async function maybeUpdateWordPressImage( lando: Lando, slug: string ): Promise< boolean > {
 	const versions = await getVersionList();
 	if ( ! versions.length ) {
 		return false;
@@ -785,7 +797,7 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 		envData.wordpress.tag = version?.tag ?? '';
 		envData.wordpress.ref = version?.ref;
 
-		await updateEnvironment( envData );
+		await updateEnvironment( lando, envData );
 
 		return true;
 	}
@@ -794,19 +806,19 @@ async function maybeUpdateWordPressImage( slug: string ): Promise< boolean > {
 		envData.wordpress.doNotUpgrade = true;
 		console.log( "We won't ask about upgrading this environment anymore." );
 		console.log( `To manually upgrade please run: ${ chalk.yellow( updateCommand ) }` );
-		await updateEnvironment( envData );
+		await updateEnvironment( lando, envData );
 	}
 
 	return false;
 }
 
-async function maybeUpdateVersion( slug: string ): Promise< boolean > {
+async function maybeUpdateVersion( lando: Lando, slug: string ): Promise< boolean > {
 	const envData = readEnvironmentData( slug );
 	const currentVersion = envData.version;
 
 	console.log( 'Current local environment version is: ' + chalk.yellow( currentVersion ) );
 	if ( ! currentVersion || semver.lt( currentVersion, DEV_ENVIRONMENT_VERSION ) ) {
-		await updateEnvironment( envData );
+		await updateEnvironment( lando, envData );
 		console.log(
 			'Local environment version updated to: ' + chalk.green( DEV_ENVIRONMENT_VERSION )
 		);
