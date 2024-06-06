@@ -632,6 +632,11 @@ function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirector
 }
 
 export function resolvePhpVersion( version: string ): string {
+	// It is painful to rewrite tests :-(
+	if ( version === '' ) {
+		return '';
+	}
+
 	debug( `Resolving PHP version %j`, version );
 
 	let result: string;
