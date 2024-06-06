@@ -379,7 +379,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					title: 'a',
 					muPlugins: 'mu',
 					appCode: 'code',
-					wordpress: 'wp',
+					wordpress: testReleaseWP,
 				},
 				default: {},
 			},
@@ -387,7 +387,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					muPlugins: 'mu',
 					appCode: 'code',
-					wordpress: 'wp',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					title: 'b',
