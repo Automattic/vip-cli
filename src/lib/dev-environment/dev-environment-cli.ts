@@ -641,7 +641,7 @@ export function resolvePhpVersion( version: string ): string {
 		if ( image ) {
 			result = image.image;
 		} else {
-			result = images[ 0 ].image;
+			throw new UserError( `Unknown or unsupported PHP version: ${ version }.` );
 		}
 	} else {
 		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
