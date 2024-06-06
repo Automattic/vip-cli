@@ -54,7 +54,7 @@ const cmd = command( {
 	wildcardCommand: true,
 	usage,
 } ).examples( examples );
-cmd.option( 'yes', 'Auto-confirm update' );
+cmd.option( 'yes', 'Skip the confirmation prompt and automatically submit "y".' );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const { app, env } = opt;
 	const { softwareSettings } = env;

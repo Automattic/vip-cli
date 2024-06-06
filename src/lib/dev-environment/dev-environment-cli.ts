@@ -830,43 +830,61 @@ export function processVersionOption( value: unknown ): string {
 export function addDevEnvConfigurationOptions( command: Args ): Args {
 	// We leave the third parameter to undefined on some because the defaults are handled in preProcessInstanceData()
 	return command
-		.option( 'wordpress', 'Use a specific WordPress version', undefined, processVersionOption )
-		.option( [ 'u', 'mu-plugins' ], 'Use a specific mu-plugins changeset or local directory' )
+		.option(
+			'wordpress',
+			'Manage the version of WordPress. Accepts a string value for major versions (6.x). Defaults to the most recent version of WordPress.',
+			undefined,
+			processVersionOption
+		)
+		.option(
+			[ 'u', 'mu-plugins' ],
+			'Manage the source for VIP MU plugins. Accepts "demo" (default) for a read-only image of the staging branch, or a path to a built copy of VIP MU plugins on the local machine.'
+		)
 		.option(
 			'app-code',
-			'Use the application code from a local directory or use "demo" for VIP skeleton code'
+			'Manage the source for application code. Accepts "demo" (default) for a read-only image of WordPress skeleton code, or a path to a git cloned application repo on the local machine.'
 		)
 		.option(
 			'phpmyadmin',
-			'Enable PHPMyAdmin component. By default it is disabled',
+			'Manage PHPMyAdmin, disabled by default. Accepts "y" (default value) to enable or "n" to disable. When enabled, refer to the value of PHPMYADMIN URLS in the information output for a local environment for the URL to access phpMyAdmin.',
 			undefined,
 			processBooleanOption
 		)
-		.option( 'xdebug', 'Enable XDebug. By default it is disabled', undefined, processBooleanOption )
+		.option(
+			'xdebug',
+			'Manage XDebug, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
+			undefined,
+			processBooleanOption
+		)
 		.option(
 			'xdebug_config',
-			'Extra configuration to pass to xdebug via XDEBUG_CONFIG environment variable'
+			'Override some default configuration settings for Xdebug. Accepts a string value that is assigned to the XDEBUG_CONFIG environment variable.'
 		)
 		.option(
 			'elasticsearch',
-			'Enable Elasticsearch (needed by Enterprise Search)',
+			'Manage Elasticsearch (required by Enterprise Search), disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		)
 		.option(
 			[ 'r', 'media-redirect-domain' ],
-			'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.'
+			'Configure media files to be proxied from a VIP Platform environment. Accepts a string value for the primary domain of the VIP Platform environment or "n" to disable the media proxy.'
 		)
-		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
+		.option(
+			'php',
+			'Manage the version of PHP. Accepts a string value for minor versions (8.x). Defaults to the most recent version of PHP.',
+			undefined,
+			processVersionOption
+		)
 		.option(
 			[ 'A', 'mailpit' ],
-			'Enable Mailpit. By default it is disabled',
+			'Manage Mailpit, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		)
 		.option(
 			[ 'H', 'photon' ],
-			'Enable Photon. By default it is disabled',
+			'Manage Photon, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		);

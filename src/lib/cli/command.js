@@ -470,7 +470,7 @@ args.argv = async function ( argv, cb ) {
 					Boolean( options.exportFileErrorsToJson ) &&
 					! [ 'false', 'no' ].includes( options.exportFileErrorsToJson );
 				info.push( {
-					key: 'Export any file errors encountered to a JSON file instead of a plain text file',
+					key: 'Export any file errors encountered to a JSON file instead of a plain text file.',
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
 				} );
 				break;
@@ -566,25 +566,41 @@ export default function ( opts ) {
 	};
 
 	if ( _opts.appContext || _opts.requireConfirm ) {
-		args.option( 'app', 'Specify the app' );
+		args.option(
+			'app',
+			'Target an application. Accepts a string value for the application name or an integer for the application ID.'
+		);
 	}
 
 	if ( _opts.envContext || _opts.childEnvContext ) {
-		args.option( 'env', 'Specify the environment' );
+		args.option( 'env', 'Target an environment. Accepts a string value for the environment type.' );
 	}
 
 	if ( _opts.requireConfirm ) {
-		args.option( 'force', 'Skip confirmation', false );
+		args.option( 'force', 'Skip confirmation.', false );
 	}
 
 	if ( _opts.format ) {
-		args.option( 'format', 'Format results', 'table' );
+		args.option(
+			'format',
+			'Render output in a particular format. Accepts "table" (default), "csv", and "json".',
+			'table'
+		);
 	}
 
 	// Add help and version to all subcommands
-	args.option( 'help', 'Output the help for the (sub)command' );
-	args.option( 'version', 'Output the version number' );
-	args.option( 'debug', 'Activate debug output' );
+	args.option(
+		'help',
+		'Retrieve a description, examples, and available options for a (sub)command.'
+	);
+	args.option(
+		'version',
+		'Retrieve the version number of VIP-CLI currently installed on the local machine.'
+	);
+	args.option(
+		'debug',
+		'Generate verbose output during command execution to help identify or fix errors or bugs.'
+	);
 
 	return args;
 }
