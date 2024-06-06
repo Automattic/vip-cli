@@ -124,7 +124,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const instanceData = await promptForArguments(
 			finalPreselectedOptions,
 			defaultOptions,
-			suppressPrompts
+			suppressPrompts,
+			false
 		);
 		instanceData.siteSlug = slug;
 
