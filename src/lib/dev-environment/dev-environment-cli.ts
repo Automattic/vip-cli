@@ -634,22 +634,12 @@ function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirector
 export function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version %j`, version );
 
-	if ( version.startsWith( 'image:' ) ) {
-		return version;
-	}
-
 	let result: string;
 	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value.image === version );
 		if ( image ) {
 			result = image.image;
-		} else if ( version.includes( '/' ) ) {
-			// Assuming this is a Docker image
-			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
-			// and then called `vip dev-env update` again. The custom image won't match our images
-			// but we still want to use it.
-			result = version;
 		} else {
 			result = images[ 0 ].image;
 		}

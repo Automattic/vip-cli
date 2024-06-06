@@ -204,9 +204,6 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	newInstanceData.php =
 		instanceData.php ||
 		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image;
-	if ( newInstanceData.php.startsWith( 'image:' ) ) {
-		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
-	}
 
 	// FIXME: isNaN supports only number in TypeScript, actually, because isNaN('123') returns false despite being a string
 	if ( isNaN( instanceData.wordpress.tag as unknown as number ) ) {
