@@ -7,11 +7,13 @@ import command from '../lib/cli/command';
 import {
 	getEnvTrackingInfo,
 	getEnvironmentName,
-	handleCLIException,
 	processSlug,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import { stopEnvironment } from '../lib/dev-environment/dev-environment-core';
+import {
+	getAllEnvironmentNames,
+	stopEnvironment,
+} from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
@@ -24,6 +26,10 @@ const examples = [
 		usage: `${ exampleUsage } --slug=example-site`,
 		description: 'Stop a local environment named "example-site".',
 	},
+	{
+		usage: `${ exampleUsage } --all`,
+		description: 'Stops all local environments.',
+	},
 ];
 
 command( {
@@ -35,27 +41,60 @@ command( {
 		undefined,
 		processSlug
 	)
+	.option( 'all', 'Stop all local environments.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const slug = await getEnvironmentName( opt );
-
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
+		await validateDependencies( lando, '' );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 
-		const trackingInfo = getEnvTrackingInfo( slug );
+		/** @type {Record< string, unknown >} */
+		let trackingInfo;
+		/** @type {string[]} */
+		let environments;
+		if ( opt.all ) {
+			trackingInfo = { all: true };
+			environments = getAllEnvironmentNames();
+		} else {
+			const slug = await getEnvironmentName( opt );
+			trackingInfo = getEnvTrackingInfo( slug );
+			environments = [ slug ];
+		}
+
 		await trackEvent( 'dev_env_stop_command_execute', trackingInfo );
 
-		try {
-			await stopEnvironment( lando, slug );
+		for ( const slug of environments ) {
+			try {
+				// eslint-disable-next-line no-await-in-loop
+				await stopEnvironment( lando, slug );
 
-			const message = chalk.green( '✓' ) + ' environment stopped.\n';
-			console.log( message );
+				const message = chalk.green( '✓' ) + ` environment "${ slug }" stopped.\n`;
+				console.log( message );
+			} catch ( error ) {
+				let err;
+				if ( ! ( error instanceof Error ) ) {
+					err = new Error( error?.toString() );
+				} else {
+					err = error;
+				}
 
+				process.exitCode = 1;
+				const errorTrackingInfo = {
+					...trackingInfo,
+					failure: err.message,
+					stack: err.stack,
+				};
+
+				// trackEvent does not throw
+				// eslint-disable-next-line no-await-in-loop
+				await trackEvent( 'dev_env_stop_command_error', errorTrackingInfo );
+
+				console.error( chalk.red( 'Error:' ), err.message.replace( 'ERROR: ', '' ) );
+			}
+		}
+
+		if ( process.exitCode === 0 ) {
 			await trackEvent( 'dev_env_stop_command_success', trackingInfo );
-		} catch ( error ) {
-			await handleCLIException( error, 'dev_env_stop_command_error', trackingInfo );
-			process.exitCode = 1;
 		}
 	} );
