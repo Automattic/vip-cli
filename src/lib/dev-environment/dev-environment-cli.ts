@@ -283,7 +283,8 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 export async function promptForArguments(
 	preselectedOptions: InstanceOptions,
 	defaultOptions: InstanceOptions,
-	suppressPrompts: boolean = false
+	suppressPrompts: boolean,
+	create: boolean
 ): Promise< InstanceData > {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
@@ -347,7 +348,7 @@ export async function promptForArguments(
 		photon: 'Photon',
 	};
 
-	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
+	if ( create && ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
 		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
 		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
 		if ( setMediaRedirectDomain ) {
@@ -782,13 +783,40 @@ export async function promptForComponent(
 const FALSE_OPTIONS = [ 'false', 'no', 'n', '0' ] as const;
 const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ] as const;
 
+declare global {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	interface ReadonlyArray< T > {
+		/**
+		 * Determines whether an array includes a certain element, returning true or false as appropriate.
+		 * @param searchElement The element to search for.
+		 * @param fromIndex The position in this array at which to begin searching for searchElement.
+		 */
+		includes( searchElement: unknown, fromIndex?: number ): boolean;
+	}
+}
+
 export function processBooleanOption( value: unknown ): boolean {
 	if ( ! value ) {
 		return false;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
-	return ! ( FALSE_OPTIONS as readonly string[] ).includes( value.toString().toLowerCase() ); // NOSONAR
+	return ! FALSE_OPTIONS.includes( value.toString().toLowerCase() ); // NOSONAR
+}
+
+export function processMediaRedirectDomainOption( value: unknown ): string {
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	const val = ( value ?? '' ).toString();
+
+	if ( FALSE_OPTIONS.includes( val.toLowerCase() ) ) {
+		return '';
+	}
+
+	if ( TRUE_OPTIONS.includes( val.toLowerCase() ) ) {
+		throw new UserError( 'Media redirect domain must be a domain name or an URL' );
+	}
+
+	return val;
 }
 
 export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
@@ -796,11 +824,11 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 		return value;
 	}
 
-	if ( ! value || ( FALSE_OPTIONS as readonly string[] ).includes( value.toLowerCase() ) ) {
+	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase() ) ) {
 		return false;
 	}
 
-	if ( ( TRUE_OPTIONS as readonly string[] ).includes( value.toLowerCase() ) ) {
+	if ( TRUE_OPTIONS.includes( value.toLowerCase() ) ) {
 		return true;
 	}
 
@@ -853,7 +881,9 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			[ 'r', 'media-redirect-domain' ],
-			'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.'
+			'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.',
+			undefined,
+			processMediaRedirectDomainOption
 		)
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
 		.option(

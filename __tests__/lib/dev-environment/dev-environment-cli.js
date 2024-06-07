@@ -397,7 +397,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			prompt.mockResolvedValue( { input: input.default.title } );
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( input.preselected.title ) {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
@@ -463,7 +463,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			confirmRunMock.mockResolvedValue( input.default.multisite );
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( 'multisite' in input.preselected ) {
 				expect( prompt ).toHaveBeenCalledTimes( 0 );
@@ -503,7 +503,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( input.preselected.mediaRedirectDomain ) {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
@@ -541,7 +541,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		] )( 'should handle mariadb', async input => {
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			const expectedMaria = input.preselected.mariadb
 				? input.preselected.mariadb
