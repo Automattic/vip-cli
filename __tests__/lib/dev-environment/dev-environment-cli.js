@@ -379,7 +379,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					title: 'a',
 					muPlugins: 'mu',
 					appCode: 'code',
-					wordpress: 'wp',
+					wordpress: testReleaseWP,
 				},
 				default: {},
 			},
@@ -387,7 +387,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					muPlugins: 'mu',
 					appCode: 'code',
-					wordpress: 'wp',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					title: 'b',
@@ -588,14 +588,18 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ].image ],
 			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ].image ],
 			[ '8.3', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.3' ].image ],
-			[ 'image:php:8.0', 'image:php:8.0' ],
-			[
-				'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0',
-				'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0',
-			],
 		] )( 'should process versions correctly', async ( input, expected ) => {
 			const actual = resolvePhpVersion( input );
 			expect( actual ).toStrictEqual( expected );
 		} );
+
+		it.each( [ [ '7.4' ], [ 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:7.3' ] ] )(
+			'should throw an error for invalid version',
+			async version => {
+				expect( () => resolvePhpVersion( version ) ).toThrow(
+					`Unknown or unsupported PHP version: ${ version }`
+				);
+			}
+		);
 	} );
 } );

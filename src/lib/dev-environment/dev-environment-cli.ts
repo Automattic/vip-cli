@@ -419,6 +419,16 @@ async function processWordPress(
 		result = await promptForWordPress( defaultObject );
 	}
 
+	const versions = await getVersionList();
+	if ( versions.length ) {
+		versions.sort( ( before, after ) => ( before.tag < after.tag ? 1 : -1 ) );
+		const match = versions.find( ( { tag } ) => tag === result.tag );
+
+		if ( typeof match === 'undefined' ) {
+			throw new UserError( `Unknown or unsupported WordPress version: ${ result.tag }.` );
+		}
+	}
+
 	debug( result );
 	return result;
 }
@@ -631,11 +641,12 @@ function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirector
 }
 
 export function resolvePhpVersion( version: string ): string {
-	debug( `Resolving PHP version %j`, version );
-
-	if ( version.startsWith( 'image:' ) ) {
-		return version;
+	// It is painful to rewrite tests :-(
+	if ( version === '' ) {
+		return '';
 	}
+
+	debug( `Resolving PHP version %j`, version );
 
 	let result: string;
 	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
@@ -643,14 +654,8 @@ export function resolvePhpVersion( version: string ): string {
 		const image = images.find( value => value.image === version );
 		if ( image ) {
 			result = image.image;
-		} else if ( version.includes( '/' ) ) {
-			// Assuming this is a Docker image
-			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
-			// and then called `vip dev-env update` again. The custom image won't match our images
-			// but we still want to use it.
-			result = version;
 		} else {
-			result = images[ 0 ].image;
+			throw new UserError( `Unknown or unsupported PHP version: ${ version }.` );
 		}
 	} else {
 		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
