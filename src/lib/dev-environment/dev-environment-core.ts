@@ -313,7 +313,7 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 	}
 
 	// Environments created by the old code will have `component.tag` set to `demo` instead of `undefined`.
-	if ( component.tag === 'demo' ) {
+	if ( component.tag === 'demo' || component.tag === 'latest' ) {
 		component.tag = undefined;
 	}
 
@@ -371,6 +371,12 @@ export async function printEnvironmentInfo(
 		appInfo.title = environmentData.wpTitle;
 		appInfo.multisite = Boolean( environmentData.multisite );
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];
+		let xdebug = environmentData.xdebug ? 'enabled' : 'disabled';
+		if ( environmentData.xdebug && environmentData.xdebugConfig ) {
+			xdebug += ' (with additional configuration)';
+		}
+		appInfo.xdebug = xdebug;
+
 		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
 		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
 		appInfo[ 'App Code' ] = parseComponentForInfo( environmentData.appCode );
