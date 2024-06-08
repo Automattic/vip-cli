@@ -99,8 +99,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		/** @type {InstanceOptions} */
 		const defaultOptions = {
-			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'latest',
-			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'latest',
+			appCode: currentInstanceData.appCode.dir || currentInstanceData.appCode.tag || 'demo',
+			muPlugins: currentInstanceData.muPlugins.dir || currentInstanceData.muPlugins.tag || 'demo',
 			wordpress: currentInstanceData.wordpress.tag || 'trunk',
 			elasticsearch: currentInstanceData.elasticsearch,
 			php:
