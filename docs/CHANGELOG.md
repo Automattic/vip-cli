@@ -1,5 +1,12 @@
 ## Changelog
 
+### 3.3.0
+
+* fix(dev-env): make sure wildcard subdomains work with SSL/TLS
+* feat(dev-env): add XDebug information to `vip dev-env info --extended`
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.2.0...3.3.0
+
 ### 3.2.0
 
 * feat(dev-env): make `domain` configurable
