@@ -1,5 +1,26 @@
 ## Changelog
 
+### 3.3.0
+
+* fix(dev-env): make sure wildcard subdomains work with SSL/TLS
+* feat(dev-env): add XDebug information to `vip dev-env info --extended`
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.2.0...3.3.0
+
+### 3.2.0
+
+* feat(dev-env): make `domain` configurable
+* build(deps): bump actions/dependency-review-action from 4.3.2 to 4.3.3
+* build(deps-dev): bump the babel group with 4 updates
+* Update the slowlogs command to follow the VIP-CLI styleguide
+* feat(dev-env): add `--all` to `vip dev-env stop`
+* chore: update lando to 77dad3a
+* fix: CVE-2024-29415 in `socks`
+* fix(dev-env): allow for unsetting media redirect domain
+* fix(dev-env): validate version values
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.1.0...3.2.0
+
 ### 3.1.0
 
 * Integrate Media Import v2 flow and expand on media import error report messaging

@@ -237,7 +237,7 @@ function getConfigurationFileExample(): string {
 	return `configuration-version: ${ getLatestConfigurationFileVersion() }
 slug: dev-site
 title: Dev Site
-php: 8.0
+php: 8.2
 wordpress: 6.2
 app-code: ../
 mu-plugins: image

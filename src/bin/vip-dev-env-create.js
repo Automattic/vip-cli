@@ -150,12 +150,13 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	const instanceData = await promptForArguments(
 		preselectedOptions,
 		defaultOptions,
-		suppressPrompts
+		suppressPrompts,
+		true
 	);
 	instanceData.siteSlug = slug;
 
 	try {
-		await createEnvironment( instanceData );
+		await createEnvironment( lando, instanceData );
 
 		await printEnvironmentInfo( lando, slug, { extended: false, suppressWarnings: true } );
 

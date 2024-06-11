@@ -3,14 +3,14 @@ env_file:
   - .env
 proxy:
   nginx:
-    - <%= siteSlug %>.vipdev.lndo.site
+    - <%= siteSlug %>.<%= domain %>
 <% if ( multisite ) { %>
-    - '*.<%= siteSlug %>.vipdev.lndo.site'
+    - '*.<%= siteSlug %>.<%= domain %>'
 <% } %>
   phpmyadmin:
-    - <%= siteSlug %>-pma.vipdev.lndo.site
+    - <%= siteSlug %>-pma.<%= domain %>
   mailpit:
-    - <%= siteSlug %>-mailpit.vipdev.lndo.site:8025
+    - <%= siteSlug %>-mailpit.<%= domain %>:8025
 
 services:
   devtools:
@@ -38,7 +38,6 @@ services:
       image: ghcr.io/automattic/vip-container-images/nginx:latest
       command: nginx -g "daemon off;"
       environment:
-        LANDO_NO_SCRIPTS: 1
         LANDO_NEEDS_EXEC: 1
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
@@ -79,9 +78,9 @@ services:
         sh /dev-tools/setup.sh
         --host database
         --user root
-        --domain "http://<%= siteSlug %>.vipdev.lndo.site/"
+        --domain "http://<%= siteSlug %>.<%= domain %>/"
         --title "<%= wpTitle %>"
-        <% if ( multisite ) { %>--ms-domain "<%= siteSlug %>.vipdev.lndo.site" <% if ( multisite === true || multisite === 'subdomain' ) { %>--subdomain <% } %> <% } %>
+        <% if ( multisite ) { %>--ms-domain "<%= siteSlug %>.<%= domain %>" <% if ( multisite === true || multisite === 'subdomain' ) { %>--subdomain <% } %> <% } %>
   database:
     type: compose
     services:
@@ -226,7 +225,6 @@ services:
         - ":8025"
       environment:
         LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
         LANDO_NEEDS_EXEC: 1
 <% } %>
 

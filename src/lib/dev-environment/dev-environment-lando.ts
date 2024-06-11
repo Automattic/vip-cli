@@ -9,6 +9,7 @@ import { lookup } from 'node:dns/promises';
 import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path, { dirname } from 'node:path';
+import { satisfies } from 'semver';
 import xdgBasedir from 'xdg-basedir';
 
 import {
@@ -110,7 +111,7 @@ async function initLandoApplication( lando: Lando, instancePath: string ): Promi
 	return app;
 }
 
-async function regenerateLandofile( instancePath: string ): Promise< void > {
+async function regenerateLandofile( lando: Lando, instancePath: string ): Promise< void > {
 	const landoFile = path.join( instancePath, '.lando.yml' );
 
 	try {
@@ -125,14 +126,14 @@ async function regenerateLandofile( instancePath: string ): Promise< void > {
 	const slug = path.basename( instancePath );
 	const currentInstanceData = readEnvironmentData( slug );
 	currentInstanceData.pullAfter = 0;
-	await updateEnvironment( currentInstanceData );
+	await updateEnvironment( lando, currentInstanceData );
 }
 
 async function landoRecovery( lando: Lando, instancePath: string, error: unknown ): Promise< App > {
 	debug( 'Error initializing Lando app', error );
 	console.warn( chalk.yellow( 'There was an error initializing Lando, trying to recover...' ) );
 	try {
-		await regenerateLandofile( instancePath );
+		await regenerateLandofile( lando, instancePath );
 	} catch ( err ) {
 		console.error(
 			`${ chalk.bold.red(
@@ -206,6 +207,7 @@ export async function bootstrapLando(): Promise< Lando > {
 			}
 
 			const pull = registryResolvable && ( instanceData.pullAfter ?? 0 ) < Date.now();
+			console.log( pull );
 			if (
 				Array.isArray( data.opts.pullable ) &&
 				Array.isArray( data.opts.local ) &&
@@ -216,6 +218,7 @@ export async function bootstrapLando(): Promise< Lando > {
 				// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
 				data.opts.local = data.opts.pullable;
 				data.opts.pullable = [];
+				console.log( data.opts );
 			}
 
 			if ( pull || ! instanceData.pullAfter ) {
@@ -693,28 +696,38 @@ async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
 }
 
 export function validateDockerInstalled( lando: Lando ): void {
-	lando.log.verbose( 'docker-engine exists: %s', lando.engine.dockerInstalled );
-	if ( ! lando.engine.dockerInstalled ) {
-		throw new UserError(
-			'docker could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
-		);
-	}
-	lando.log.verbose( 'docker-compose exists: %s', lando.engine.composeInstalled );
-	if ( ! lando.engine.composeInstalled ) {
-		throw Error(
-			'docker-compose could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/'
-		);
-	}
-}
+	const { engine, composePlugin, compose } = lando.config.versions as {
+		engine: string;
+		composePlugin: string;
+		compose: string;
+	};
 
-export async function validateDockerAccess( lando: Lando ): Promise< void > {
-	const docker = lando.engine.docker;
-	lando.log.verbose( 'Fetching docker info to verify Docker connection' );
-	try {
-		await docker.info();
-	} catch ( error ) {
+	lando.log.verbose( 'docker-engine version: %s', engine );
+	if ( ! engine ) {
+		if ( ! lando.config.dockerBin ) {
+			throw new UserError(
+				'docker binary could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
+			);
+		}
+
 		throw new UserError(
 			'Failed to connect to Docker. Please verify that Docker engine (service) is running and follow the troubleshooting instructions for your platform.'
 		);
+	}
+	lando.log.verbose( 'docker-compose version: %s', compose );
+	lando.log.verbose( 'compose plugin version: %s', composePlugin );
+
+	if ( ! composePlugin ) {
+		if ( ! compose ) {
+			throw new Error(
+				'docker-compose binary could not be located! Please follow the following instructions to install it - https://docs.docker.com/compose/install/'
+			);
+		}
+
+		if ( ! satisfies( compose, '^2.0.0' ) ) {
+			throw new Error(
+				`docker-compose version ${ compose } is not supported. Please upgrade to version 2.0.0 or higher - https://docs.docker.com/compose/install/`
+			);
+		}
 	}
 }
