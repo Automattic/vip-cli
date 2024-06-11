@@ -42,7 +42,7 @@
         "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
         "socks-proxy-agent": "^5.0.1",
         "update-notifier": "7.0.0",
-        "uuid": "9.0.1",
+        "uuid": "10.0.0",
         "xdg-basedir": "^4.0.0",
         "xml2js": "^0.5.0"
       },
@@ -8228,11 +8228,6 @@
         "node": ">= 0.10"
       }
     },
-    "node_modules/ip": {
-      "version": "1.1.9",
-      "resolved": "https://registry.npmjs.org/ip/-/ip-1.1.9.tgz",
-      "integrity": "sha512-cyRxvOEpNHNtchU3Ln9KC/auJgup87llfQpQ+t5ghoC/UhL16SWzbueiCsdTnWmqAWl7LadfuwhlqmtOaqMHdQ=="
-    },
     "node_modules/ip-address": {
       "version": "9.0.5",
       "resolved": "https://registry.npmjs.org/ip-address/-/ip-address-9.0.5.tgz",
@@ -9986,6 +9981,18 @@
       },
       "engines": {
         "node": ">=8"
+      }
+    },
+    "node_modules/lando/node_modules/uuid": {
+      "version": "9.0.1",
+      "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
+      "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==",
+      "funding": [
+        "https://github.com/sponsors/broofa",
+        "https://github.com/sponsors/ctavan"
+      ],
+      "bin": {
+        "uuid": "dist/bin/uuid"
       }
     },
     "node_modules/lando/node_modules/yargs": {
@@ -12869,9 +12876,9 @@
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
     "node_modules/uuid": {
-      "version": "9.0.1",
-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
-      "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==",
+      "version": "10.0.0",
+      "resolved": "https://registry.npmjs.org/uuid/-/uuid-10.0.0.tgz",
+      "integrity": "sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==",
       "funding": [
         "https://github.com/sponsors/broofa",
         "https://github.com/sponsors/ctavan"
@@ -19403,11 +19410,6 @@
       "resolved": "https://registry.npmjs.org/interpret/-/interpret-1.4.0.tgz",
       "integrity": "sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA=="
     },
-    "ip": {
-      "version": "1.1.9",
-      "resolved": "https://registry.npmjs.org/ip/-/ip-1.1.9.tgz",
-      "integrity": "sha512-cyRxvOEpNHNtchU3Ln9KC/auJgup87llfQpQ+t5ghoC/UhL16SWzbueiCsdTnWmqAWl7LadfuwhlqmtOaqMHdQ=="
-    },
     "ip-address": {
       "version": "9.0.5",
       "resolved": "https://registry.npmjs.org/ip-address/-/ip-address-9.0.5.tgz",
@@ -20674,6 +20676,11 @@
           "requires": {
             "ansi-regex": "^5.0.1"
           }
+        },
+        "uuid": {
+          "version": "9.0.1",
+          "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
+          "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="
         },
         "yargs": {
           "version": "16.2.0",
@@ -22763,9 +22770,9 @@
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
     "uuid": {
-      "version": "9.0.1",
-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
-      "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="
+      "version": "10.0.0",
+      "resolved": "https://registry.npmjs.org/uuid/-/uuid-10.0.0.tgz",
+      "integrity": "sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ=="
     },
     "v8-to-istanbul": {
       "version": "9.1.0",
