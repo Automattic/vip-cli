@@ -842,11 +842,11 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			'app-code',
-			'Manage the source for application code. Accepts "demo" (default) for a read-only image of WordPress skeleton code, or a path to a git cloned application repo on the local machine.'
+			'Manage the source for application code. Accepts "demo" (default) for a read-only image of WordPress VIP skeleton application code, or a path to a VIP formatted application repo on the local machine.'
 		)
 		.option(
 			'phpmyadmin',
-			'Manage PHPMyAdmin, disabled by default. Accepts "y" (default value) to enable or "n" to disable. When enabled, refer to the value of PHPMYADMIN URLS in the information output for a local environment for the URL to access phpMyAdmin.',
+			'Manage phpMyAdmin, disabled by default. Accepts "y" (default value) to enable or "n" to disable. When enabled, refer to the value of "PHPMYADMIN URLS" in the information output for a local environment for the URL to access phpMyAdmin.',
 			undefined,
 			processBooleanOption
 		)
