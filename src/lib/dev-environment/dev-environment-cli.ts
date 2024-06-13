@@ -18,7 +18,7 @@ import {
 	getVersionList,
 	readEnvironmentData,
 } from './dev-environment-core';
-import { validateDockerInstalled, validateDockerAccess } from './dev-environment-lando';
+import { validateDockerInstalled } from './dev-environment-lando';
 import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -150,8 +150,6 @@ export const validateDependencies = async ( lando: Lando, slug: string ) => {
 	const now = new Date();
 
 	validateDockerInstalled( lando );
-	await validateDockerAccess( lando );
-
 	if ( slug ) {
 		await verifyDNSResolution( slug );
 	}
@@ -285,7 +283,8 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 export async function promptForArguments(
 	preselectedOptions: InstanceOptions,
 	defaultOptions: InstanceOptions,
-	suppressPrompts: boolean = false
+	suppressPrompts: boolean,
+	create: boolean
 ): Promise< InstanceData > {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
@@ -349,7 +348,7 @@ export async function promptForArguments(
 		photon: 'Photon',
 	};
 
-	if ( ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
+	if ( create && ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
 		const mediaRedirectPromptText = `Would you like to redirect to ${ defaultOptions.mediaRedirectDomain } for missing media files?`;
 		const setMediaRedirectDomain = await promptForBoolean( mediaRedirectPromptText, true );
 		if ( setMediaRedirectDomain ) {
@@ -418,6 +417,16 @@ async function processWordPress(
 		result = processComponentOptionInput( preselectedValue, allowLocal ) as WordPressConfig;
 	} else {
 		result = await promptForWordPress( defaultObject );
+	}
+
+	const versions = await getVersionList();
+	if ( versions.length ) {
+		versions.sort( ( before, after ) => ( before.tag < after.tag ? 1 : -1 ) );
+		const match = versions.find( ( { tag } ) => tag === result.tag );
+
+		if ( typeof match === 'undefined' ) {
+			throw new UserError( `Unknown or unsupported WordPress version: ${ result.tag }.` );
+		}
 	}
 
 	debug( result );
@@ -632,11 +641,12 @@ function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirector
 }
 
 export function resolvePhpVersion( version: string ): string {
-	debug( `Resolving PHP version %j`, version );
-
-	if ( version.startsWith( 'image:' ) ) {
-		return version;
+	// It is painful to rewrite tests :-(
+	if ( version === '' ) {
+		return '';
 	}
+
+	debug( `Resolving PHP version %j`, version );
 
 	let result: string;
 	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
@@ -644,14 +654,8 @@ export function resolvePhpVersion( version: string ): string {
 		const image = images.find( value => value.image === version );
 		if ( image ) {
 			result = image.image;
-		} else if ( version.includes( '/' ) ) {
-			// Assuming this is a Docker image
-			// This can happen when we first called `vip dev-env update -P image:ghcr.io/...`
-			// and then called `vip dev-env update` again. The custom image won't match our images
-			// but we still want to use it.
-			result = version;
 		} else {
-			result = images[ 0 ].image;
+			throw new UserError( `Unknown or unsupported PHP version: ${ version }.` );
 		}
 	} else {
 		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
@@ -784,13 +788,40 @@ export async function promptForComponent(
 const FALSE_OPTIONS = [ 'false', 'no', 'n', '0' ] as const;
 const TRUE_OPTIONS = [ 'true', 'yes', 'y', '1' ] as const;
 
+declare global {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	interface ReadonlyArray< T > {
+		/**
+		 * Determines whether an array includes a certain element, returning true or false as appropriate.
+		 * @param searchElement The element to search for.
+		 * @param fromIndex The position in this array at which to begin searching for searchElement.
+		 */
+		includes( searchElement: unknown, fromIndex?: number ): boolean;
+	}
+}
+
 export function processBooleanOption( value: unknown ): boolean {
 	if ( ! value ) {
 		return false;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
-	return ! ( FALSE_OPTIONS as readonly string[] ).includes( value.toString().toLowerCase() ); // NOSONAR
+	return ! FALSE_OPTIONS.includes( value.toString().toLowerCase() ); // NOSONAR
+}
+
+export function processMediaRedirectDomainOption( value: unknown ): string {
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	const val = ( value ?? '' ).toString();
+
+	if ( FALSE_OPTIONS.includes( val.toLowerCase() ) ) {
+		return '';
+	}
+
+	if ( TRUE_OPTIONS.includes( val.toLowerCase() ) ) {
+		throw new UserError( 'Media redirect domain must be a domain name or an URL' );
+	}
+
+	return val;
 }
 
 export function processStringOrBooleanOption( value: string | boolean ): string | boolean {
@@ -798,11 +829,11 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 		return value;
 	}
 
-	if ( ! value || ( FALSE_OPTIONS as readonly string[] ).includes( value.toLowerCase() ) ) {
+	if ( ! value || FALSE_OPTIONS.includes( value.toLowerCase() ) ) {
 		return false;
 	}
 
-	if ( ( TRUE_OPTIONS as readonly string[] ).includes( value.toLowerCase() ) ) {
+	if ( TRUE_OPTIONS.includes( value.toLowerCase() ) ) {
 		return true;
 	}
 
@@ -855,7 +886,9 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			[ 'r', 'media-redirect-domain' ],
-			'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.'
+			'Domain to redirect for missing media files. This can be used to still have images without the need to import them locally.',
+			undefined,
+			processMediaRedirectDomainOption
 		)
 		.option( 'php', 'Explicitly choose PHP version to use', undefined, processVersionOption )
 		.option(

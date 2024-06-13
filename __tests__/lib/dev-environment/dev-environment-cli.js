@@ -379,7 +379,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 					title: 'a',
 					muPlugins: 'mu',
 					appCode: 'code',
-					wordpress: 'wp',
+					wordpress: testReleaseWP,
 				},
 				default: {},
 			},
@@ -387,7 +387,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				preselected: {
 					muPlugins: 'mu',
 					appCode: 'code',
-					wordpress: 'wp',
+					wordpress: testReleaseWP,
 				},
 				default: {
 					title: 'b',
@@ -397,7 +397,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			prompt.mockResolvedValue( { input: input.default.title } );
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( input.preselected.title ) {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
@@ -463,7 +463,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			confirmRunMock.mockResolvedValue( input.default.multisite );
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( 'multisite' in input.preselected ) {
 				expect( prompt ).toHaveBeenCalledTimes( 0 );
@@ -503,7 +503,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			confirmRunMock.mockResolvedValue( input.default.mediaRedirectDomain );
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( input.preselected.mediaRedirectDomain ) {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
@@ -541,7 +541,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		] )( 'should handle mariadb', async input => {
 			selectRunMock.mockResolvedValue( '' );
 
-			const result = await promptForArguments( input.preselected, input.default );
+			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			const expectedMaria = input.preselected.mariadb
 				? input.preselected.mariadb
@@ -588,14 +588,18 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ].image ],
 			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ].image ],
 			[ '8.3', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.3' ].image ],
-			[ 'image:php:8.0', 'image:php:8.0' ],
-			[
-				'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0',
-				'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:8.0',
-			],
 		] )( 'should process versions correctly', async ( input, expected ) => {
 			const actual = resolvePhpVersion( input );
 			expect( actual ).toStrictEqual( expected );
 		} );
+
+		it.each( [ [ '7.4' ], [ 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:7.3' ] ] )(
+			'should throw an error for invalid version',
+			async version => {
+				expect( () => resolvePhpVersion( version ) ).toThrow(
+					`Unknown or unsupported PHP version: ${ version }`
+				);
+			}
+		);
 	} );
 } );

@@ -1,12 +1,6 @@
 export const DEV_ENVIRONMENT_SUBCOMMAND = 'dev-env';
 export const DEV_ENVIRONMENT_FULL_COMMAND = `vip ${ DEV_ENVIRONMENT_SUBCOMMAND }`;
 
-export const DEV_ENVIRONMENT_DEFAULTS = {
-	title: 'VIP Dev',
-	multisite: false,
-	phpVersion: '8.0',
-} as const;
-
 export const DEV_ENVIRONMENT_PROMPT_INTRO =
 	'This is a wizard to help you set up your local dev environment.\n\n' +
 	'Sensible default values were pre-selected for convenience. ' +
@@ -43,6 +37,12 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.3',
 		label: '8.3',
 	},
+} as const;
+
+export const DEV_ENVIRONMENT_DEFAULTS = {
+	title: 'VIP Dev',
+	multisite: false,
+	phpVersion: Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ],
 } as const;
 
 export const DEV_ENVIRONMENT_VERSION = '2.0.3';

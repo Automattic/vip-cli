@@ -204,9 +204,6 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	newInstanceData.php =
 		instanceData.php ||
 		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image;
-	if ( newInstanceData.php.startsWith( 'image:' ) ) {
-		newInstanceData.php = newInstanceData.php.slice( 'image:'.length );
-	}
 
 	// FIXME: isNaN supports only number in TypeScript, actually, because isNaN('123') returns false despite being a string
 	if ( isNaN( instanceData.wordpress.tag as unknown as number ) ) {
@@ -313,7 +310,7 @@ function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): 
 	}
 
 	// Environments created by the old code will have `component.tag` set to `demo` instead of `undefined`.
-	if ( component.tag === 'demo' ) {
+	if ( component.tag === 'demo' || component.tag === 'latest' ) {
 		component.tag = undefined;
 	}
 
@@ -371,6 +368,12 @@ export async function printEnvironmentInfo(
 		appInfo.title = environmentData.wpTitle;
 		appInfo.multisite = Boolean( environmentData.multisite );
 		appInfo.php = environmentData.php.split( ':' )[ 1 ];
+		let xdebug = environmentData.xdebug ? 'enabled' : 'disabled';
+		if ( environmentData.xdebug && environmentData.xdebugConfig ) {
+			xdebug += ' (with additional configuration)';
+		}
+		appInfo.xdebug = xdebug;
+
 		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
 		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
 		appInfo[ 'App Code' ] = parseComponentForInfo( environmentData.appCode );

@@ -49,7 +49,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			if ( /docker-compose/.test( command ) ) {
 				callback( null, '2.12.2', '' );
 			} else if ( /docker/.test( command ) ) {
-				callback( null, '23.0.4', '' );
+				callback( null, '{"ServerVersion": "25.0.2"}', '' );
 			} else {
 				callback( new Error(), '', '' );
 			}
