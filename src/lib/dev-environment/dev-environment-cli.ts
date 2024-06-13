@@ -858,7 +858,7 @@ export function processVersionOption( value: unknown ): string {
 	return value?.toString() ?? '';
 }
 
-const phpVersionsSupported: string = Object.keys(DEV_ENVIRONMENT_PHP_VERSIONS).join(', ');
+const phpVersionsSupported: string = Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).join( ', ' );
 
 export function addDevEnvConfigurationOptions( command: Args ): Args {
 	// We leave the third parameter to undefined on some because the defaults are handled in preProcessInstanceData()
@@ -907,7 +907,7 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			'php',
-			`Manage the version of PHP. Accepts a string value for minor versions: ${phpVersionsSupported}.`,
+			`Manage the version of PHP. Accepts a string value for minor versions: ${ phpVersionsSupported }.`,
 			undefined,
 			processVersionOption
 		)
