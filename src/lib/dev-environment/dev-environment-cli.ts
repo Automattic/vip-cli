@@ -879,13 +879,13 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			'phpmyadmin',
-			'Manage phpMyAdmin, disabled by default. Accepts "y" (default value) to enable or "n" to disable. When enabled, refer to the value of "PHPMYADMIN URLS" in the information output for a local environment for the URL to access phpMyAdmin.',
+			'Enable or disable phpMyAdmin, disabled by default. Accepts "y" (default value) to enable or "n" to disable. When enabled, refer to the value of "PHPMYADMIN URLS" in the information output for a local environment for the URL to access phpMyAdmin.',
 			undefined,
 			processBooleanOption
 		)
 		.option(
 			'xdebug',
-			'Manage XDebug, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
+			'Enable or disable XDebug, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		)
@@ -895,7 +895,7 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			'elasticsearch',
-			'Manage Elasticsearch (required by Enterprise Search), disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
+			'Enable or disable Elasticsearch (required by Enterprise Search), disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		)
@@ -913,13 +913,13 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			[ 'A', 'mailpit' ],
-			'Manage Mailpit, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
+			'Enable or disable Mailpit, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		)
 		.option(
 			[ 'H', 'photon' ],
-			'Manage Photon, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
+			'Enable or disable Photon, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
 			undefined,
 			processBooleanOption
 		);
