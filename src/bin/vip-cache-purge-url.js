@@ -72,6 +72,6 @@ command( {
 	wildcardCommand: true,
 	usage,
 } )
-	.option( 'from-file', 'Read URLs from a file, can be used to purge multiple URLs.' )
+	.option( 'from-file', 'Read one or more URLs from a file, each listed on a single line.' )
 	.examples( examples )
 	.argv( process.argv, cachePurgeCommand );
