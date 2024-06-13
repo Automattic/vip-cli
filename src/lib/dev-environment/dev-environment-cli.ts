@@ -907,7 +907,7 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 		)
 		.option(
 			'php',
-			`Manage the version of PHP. Accepts a string value for minor versions: ${ phpVersionsSupported }.`,
+			`Manage the version of PHP. Accepts a string value for minor versions: ${ phpVersionsSupported }`,
 			undefined,
 			processVersionOption
 		)
