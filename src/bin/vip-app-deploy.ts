@@ -105,9 +105,9 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	fileMeta.basename = `${ datePrefix }-${ fileMeta.basename }`;
 
 	const deployMessage = ( opts.message as string ) ?? '';
-	const forceDeploy = opts.force;
+	const skipConfirm = opts.force || opts.skipConfirmation;
 
-	if ( ! forceDeploy ) {
+	if ( ! skipConfirm ) {
 		const promptParams: PromptToContinueParams = {
 			launched: Boolean( validatedArgs.launched ),
 			formattedEnvironment: formatEnvironment( validatedArgs.envType ),
@@ -260,7 +260,7 @@ const examples = [
 		description: 'Deploy the given compressed file to your site',
 	},
 	{
-		usage: 'vip app @mysite.develop deploy file.zip --force',
+		usage: 'vip app @mysite.develop deploy file.zip --skip-confirmation',
 		description: 'Deploy the given compressed file to your site without prompting',
 	},
 ];
@@ -270,7 +270,8 @@ void command( {
 } )
 	.examples( examples )
 	.option( 'message', 'Custom message for deploy' )
-	.option( 'force', 'Skip prompt' )
+	.option( 'skip-confirmation', 'Skip confirmation prompt' )
+	.option( 'force', 'Skip confirmation prompt (deprecated)' )
 	.option( 'app', 'The application name or ID' )
 	.option( 'env', 'The environment name or ID' )
 	.argv( process.argv, appDeployCmd );
