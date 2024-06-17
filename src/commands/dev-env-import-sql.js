@@ -70,7 +70,7 @@ export class DevEnvImportSQLCommand {
 				throw new UserError( 'Environment needs to be started first' );
 			}
 
-			const expectedDomain = `${ this.slug }.vipdev.lndo.site`;
+			const expectedDomain = `${ this.slug }.${ lando.config.domain }`;
 			await validateSQL( resolvedPath, {
 				isImport: false,
 				skipChecks: [],
