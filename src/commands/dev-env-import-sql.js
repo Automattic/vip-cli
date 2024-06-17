@@ -79,7 +79,7 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash', '--skip-plugins', '--skip-themes' ].concat(
+		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
 			this.options.quiet ? '--silent' : []
 		);
 		const origIsTTY = process.stdin.isTTY;
@@ -106,7 +106,9 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat( this.options.quiet ? '--quiet' : [] );
+		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat(
+			this.options.quiet ? '--quiet' : []
+		);
 		await exec( lando, this.slug, cacheArg );
 
 		if (
