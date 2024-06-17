@@ -1,5 +1,16 @@
 ## Changelog
 
+### 3.3.1
+
+* build(deps): bump step-security/harden-runner from 2.8.0 to 2.8.1
+* build(deps): bump uuid from 9.0.1 to 10.0.0
+* fix: CVE-2024-4068 in `braces`
+* [dev-env] Update calls to WP-CLI to include --skip-plugins and --skip-themes
+* fix(dev-env): use correct domain for environments
+* vip app deploy: Deprecate force and add skip-confirmation
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.3.0...3.3.1
+
 ### 3.3.0
 
 * fix(dev-env): make sure wildcard subdomains work with SSL/TLS
