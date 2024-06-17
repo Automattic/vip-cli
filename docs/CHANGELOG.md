@@ -8,6 +8,7 @@
 * [dev-env] Update calls to WP-CLI to include --skip-plugins and --skip-themes
 * fix(dev-env): use correct domain for environments
 * vip app deploy: Deprecate force and add skip-confirmation
+* Hide branch for vip app if Custom Deployment
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.3.0...3.3.1
 
