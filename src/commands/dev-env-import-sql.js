@@ -106,7 +106,7 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush' ].concat( this.options.quiet ? '--quiet' : [] );
+		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, cacheArg );
 
 		if (
@@ -133,6 +133,8 @@ export class DevEnvImportSQLCommand {
 			'dev-env-add-admin',
 			'--username=vipgo',
 			'--password=password',
+			'--skip-plugins',
+			'--skip-themes',
 		].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, addUserArg );
 	}
