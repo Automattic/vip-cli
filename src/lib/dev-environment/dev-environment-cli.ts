@@ -115,9 +115,9 @@ export async function handleCLIException(
 	}
 }
 
-const verifyDNSResolution = async ( slug: string ): Promise< void > => {
+const verifyDNSResolution = async ( slug: string, domain: string ): Promise< void > => {
 	const expectedIP = '127.0.0.1';
-	const testDomain = `${ slug }.vipdev.lndo.site`;
+	const testDomain = `${ slug }.${ domain }`;
 	const advice = `Please add following line to hosts file on your system:\n\n${ expectedIP } ${ testDomain }\n\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n`;
 
 	debug( `Verifying DNS resolution for ${ testDomain }` );
@@ -151,7 +151,7 @@ export const validateDependencies = async ( lando: Lando, slug: string ) => {
 
 	validateDockerInstalled( lando );
 	if ( slug ) {
-		await verifyDNSResolution( slug );
+		await verifyDNSResolution( slug, lando.config.domain ?? 'vipdev.lndo.site' );
 	}
 
 	const duration = new Date().getTime() - now.getTime();

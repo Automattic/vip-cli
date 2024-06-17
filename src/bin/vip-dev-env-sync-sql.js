@@ -80,7 +80,7 @@ command( {
 			throw new UserError( 'Environment needs to be started first' );
 		}
 
-		const cmd = new DevEnvSyncSQLCommand( app, env, slug, trackerFn );
+		const cmd = new DevEnvSyncSQLCommand( app, env, slug, lando, trackerFn );
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?
 		const didCommandRun = await cmd.run();
