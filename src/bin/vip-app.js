@@ -23,7 +23,7 @@ command( { requiredArgs: 1, format: true } )
 		try {
 			res = await app(
 				arg[ 0 ],
-				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name},launched}'
+				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name},launched,deploymentStrategy}'
 			);
 		} catch ( err ) {
 			await trackEvent( 'app_command_fetch_error', {
@@ -64,6 +64,14 @@ command( { requiredArgs: 1, format: true } )
 
 			// Flatten object
 			clonedEnv.primaryDomain = clonedEnv.primaryDomain.name;
+
+			// Set branch to empty for custom deployments
+			if ( clonedEnv.deploymentStrategy === 'custom-deploy' ) {
+				clonedEnv.branch = '-';
+			}
+
+			// Hide "deployment strategy" column
+			delete clonedEnv.deploymentStrategy;
 
 			return clonedEnv;
 		} );
