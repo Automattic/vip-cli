@@ -79,7 +79,7 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
+		const importArg = [ 'db', '--disable-auto-rehash', '--skip-plugins', '--skip-themes' ].concat(
 			this.options.quiet ? '--silent' : []
 		);
 		const origIsTTY = process.stdin.isTTY;
