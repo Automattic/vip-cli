@@ -70,7 +70,7 @@ export class DevEnvImportSQLCommand {
 				throw new UserError( 'Environment needs to be started first' );
 			}
 
-			const expectedDomain = `${ this.slug }.vipdev.lndo.site`;
+			const expectedDomain = `${ this.slug }.${ lando.config.domain }`;
 			await validateSQL( resolvedPath, {
 				isImport: false,
 				skipChecks: [],
@@ -106,7 +106,9 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush' ].concat( this.options.quiet ? '--quiet' : [] );
+		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat(
+			this.options.quiet ? '--quiet' : []
+		);
 		await exec( lando, this.slug, cacheArg );
 
 		if (
@@ -133,6 +135,8 @@ export class DevEnvImportSQLCommand {
 			'dev-env-add-admin',
 			'--username=vipgo',
 			'--password=password',
+			'--skip-plugins',
+			'--skip-themes',
 		].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, addUserArg );
 	}

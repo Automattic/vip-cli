@@ -1,5 +1,6 @@
 import { replace } from '@automattic/vip-search-replace';
 import fs from 'fs';
+import Lando from 'lando';
 import { PassThrough } from 'stream';
 
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
@@ -77,12 +78,14 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		},
 	};
 
+	const lando = new Lando( { domain: 'vipdev.lndo.site' } );
+
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
 			const mockExport = jest.spyOn( ExportSQLCommand.prototype, 'run' );
 			mockExport.mockResolvedValue();
 
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 			await cmd.generateExport();
 
 			expect( mockExport ).toHaveBeenCalled();
@@ -91,7 +94,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 	describe( 'generateSearchReplaceMap', () => {
 		it( 'should return a map of search-replace values', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 			cmd.slug = 'test-slug';
 			cmd.siteUrls = [ 'test.go-vip.com' ];
 			cmd.generateSearchReplaceMap();
@@ -100,7 +103,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		} );
 
 		it( 'should return a map of search-replace values for multisite', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug' );
+			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug', lando );
 			cmd.slug = 'test-slug';
 			cmd.siteUrls = [ 'test.go-vip.com', 'subsite.com' ];
 			cmd.generateSearchReplaceMap();
@@ -114,7 +117,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the SQL file', async () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 			cmd.searchReplaceMap = { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' };
 			cmd.slug = 'test-slug';
 
@@ -131,7 +134,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			const mockImport = jest.spyOn( DevEnvImportSQLCommand.prototype, 'run' );
 			mockImport.mockResolvedValue();
 
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 			await cmd.runImport();
 
 			expect( mockImport ).toHaveBeenCalled();
@@ -139,7 +142,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	} );
 
 	describe( '.run', () => {
-		const syncCommand = new DevEnvSyncSQLCommand( app, env, 'test-slug' );
+		const syncCommand = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 		const exportSpy = jest.spyOn( syncCommand, 'generateExport' );
 		const generateSearchReplaceMapSpy = jest.spyOn( syncCommand, 'generateSearchReplaceMap' );
 		const searchReplaceSpy = jest.spyOn( syncCommand, 'runSearchReplace' );

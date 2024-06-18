@@ -58,6 +58,7 @@ export class DevEnvSyncSQLCommand {
 	app;
 	env;
 	slug;
+	lando;
 	tmpDir;
 	siteUrls;
 	searchReplaceMap;
@@ -69,18 +70,20 @@ export class DevEnvSyncSQLCommand {
 	 * @param {string}   app       The app object
 	 * @param {string}   env       The environment object
 	 * @param {string}   slug      The site slug
+	 * @param {Object}   lando     The lando object
 	 * @param {Function} trackerFn Function to call for tracking
 	 */
-	constructor( app, env, slug, trackerFn = () => {} ) {
+	constructor( app, env, slug, lando, trackerFn = () => {} ) {
 		this.app = app;
 		this.env = env;
 		this.slug = slug;
+		this.lando = lando;
 		this.track = trackerFn;
 		this.tmpDir = makeTempDir();
 	}
 
 	get landoDomain() {
-		return `${ this.slug }.vipdev.lndo.site`;
+		return `${ this.slug }.${ this.lando.config.domain }`;
 	}
 
 	get sqlFile() {
