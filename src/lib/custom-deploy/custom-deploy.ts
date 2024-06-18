@@ -1,5 +1,10 @@
 import fs from 'fs';
 import gql from 'graphql-tag';
+import zlib from 'zlib';
+import { join, extname } from 'path';
+import extract from 'extract-zip';
+import { exec } from 'child_process';
+import debugLib from 'debug';
 
 import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
@@ -7,6 +12,9 @@ import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { trackEventWithEnv } from '../../lib/tracker';
 import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
+import { makeTempDir } from '../../lib/utils';
+
+const debug = debugLib( '@automattic/vip:bin:lib-custom-deploy' );
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
@@ -128,4 +136,149 @@ export async function validateFile( appId: number, envId: number, fileMeta: File
 			`The deploy file size (${ fileSize } bytes) exceeds the limit (${ DEPLOY_MAX_FILE_SIZE } bytes).`
 		);
 	}
+}
+
+/**
+ * Extracts the compressed file to a temporary directory
+ *
+ * @param {string} file The compressed file
+ * @returns {string} The path to the temporary directory
+ */
+export async function extractFile( file: string ): Promise< string > {
+	const tempDir = makeTempDir( 'custom-deploy' );
+	const ext = extname( file );
+
+	if ( ext === '.zip' ) {
+		try {
+			await extract( file, { dir: tempDir } );
+		} catch ( error ) {
+			exit.withError( `Error extracting file: ${ error }` );
+		}
+	} else {
+		// .tar.gz, .tgz files
+		try {
+			await new Promise< void >( ( resolve, reject ) => {
+				const tarProcess = exec( `tar -xz -C ${ tempDir }`, ( err, stdout, stderr ) => {
+					if ( err ) {
+						reject( err );
+					} else {
+						console.log( `Decompressed and untarred to: ${ tempDir }` );
+						resolve();
+					}
+				} );
+
+				if ( tarProcess.stdin ) {
+					fs.createReadStream( file )
+						.pipe( zlib.createGunzip() )
+						.pipe( tarProcess.stdin )
+						.on( 'error', reject );
+				} else {
+					reject( new Error( 'Failed to create tar process stdin stream' ) );
+				}
+			} );
+		} catch ( error ) {
+			exit.withError( `Error decompressing and extracting file: ${ error }` );
+		}
+	}
+
+	return tempDir;
+}
+
+/**
+ * Recursively remove unwanted items from the directory
+ *
+ * @param {string} directory The directory to clean
+ * @param {string[]} files The files in the directory
+ */
+function rmUnneededItems( directory: string, files: string[] ) {
+	const itemsToRm = [
+		'__MACOSX',
+		'.DS_Store',
+		'Thumbs.db',
+		'desktop.ini',
+		'.Spotlight-V100',
+		'.Trashes',
+		'.fseventsd',
+		'.apdisk',
+		'.TemporaryItems',
+	];
+
+	for ( const file of files ) {
+		const filePath = `${ directory }/${ file }`;
+
+		if ( itemsToRm.includes( file ) ) {
+			debug( `Removing unwanted item: ${ filePath }` );
+			fs.rmSync( filePath, { recursive: true, force: true } );
+		} else {
+			const stats = fs.statSync( filePath );
+			if ( stats.isDirectory() ) {
+				const nestedFiles = fs.readdirSync( filePath );
+				rmUnneededItems( filePath, nestedFiles );
+			}
+		}
+	}
+}
+
+/**
+ * Recursively checks if the directory contains any dangerous filenames or symlinks.
+ *
+ * @param {string} directory The directory to validate
+ * @param {string} items The items in the directory
+ */
+function validateDirContentsRecursively( directory: string, items: string[] ) {
+	for ( const itemName of items ) {
+		const itemPath = join( directory, itemName );
+
+		if (
+			/[!/:*?"<>|']/.test( itemName ) ||
+			( itemName.startsWith( '.' ) && itemName.length > 1 )
+		) {
+			exit.withError( `Error: Dangerous filename detected: ${ itemName }` );
+		}
+
+		const stats = fs.lstatSync( itemPath );
+		if ( stats.isSymbolicLink() ) {
+			exit.withError( `Error: Symlink detected: ${ itemName }` );
+		}
+
+		// If the item is a directory, recursively validate its contents
+		if ( stats.isDirectory() ) {
+			// Skip node_modules and its .bin subdirectory
+			if ( itemPath.includes( 'node_modules' ) && itemPath.includes( '.bin' ) ) {
+				continue;
+			}
+
+			const recursiveItems = fs.readdirSync( itemPath );
+			validateDirContentsRecursively( itemPath, recursiveItems );
+		}
+	}
+}
+
+function validateRootFolder( directory: string, folder: string ) {
+	const path = join( directory, folder );
+	const stats = fs.statSync( path );
+	if ( ! stats.isDirectory() ) {
+		exit.withError( 'The compressed file should have a root folder.' );
+	}
+
+	const rootFolderContents = fs.readdirSync( path );
+	if ( ! rootFolderContents.includes( 'themes' ) ) {
+		exit.withError( "The compressed file should contain a 'themes' folder." );
+	}
+}
+
+export function validateDirectory( directory: string ) {
+	const files = fs.readdirSync( directory );
+
+	rmUnneededItems( directory, files );
+
+	if ( files.length === 0 ) {
+		exit.withError( 'The compressed file should contain at least one folder.' );
+	} else if ( files.length !== 1 ) {
+		exit.withError( 'The compressed file should contain only one folder.' );
+	}
+
+	validateDirContentsRecursively( directory, files );
+
+	validateRootFolder( directory, files[ 0 ] );
 }
