@@ -51,7 +51,7 @@ command( {
 			let bail = false;
 
 			for ( const err of error.graphQLErrors ) {
-				if ( err.message !== 'Site is already syncing.' ) {
+				if ( err.message !== 'Site is already syncing' ) {
 					bail = true;
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
