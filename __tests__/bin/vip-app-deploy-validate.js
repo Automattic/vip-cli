@@ -1,6 +1,6 @@
 import { appDeployValidateCmd } from '../../src/bin/vip-app-deploy-validate';
-import { getFileMeta } from '../../src/lib/client-file-uploader';
 import * as exit from '../../src/lib/cli/exit';
+import { getFileMeta } from '../../src/lib/client-file-uploader';
 import { validateFile } from '../../src/lib/custom-deploy/custom-deploy';
 import {
 	validateName,
@@ -66,7 +66,7 @@ describe( 'vip-app-deploy-validate', () => {
 			basename => {
 				validateName( basename, true );
 				expect( exitSpy ).toHaveBeenCalledWith(
-					`Filename ${ basename } contains disallowed characters: [!:*?"<>|\'/^\\.\\.]+`
+					`Filename ${ basename } contains disallowed characters: [!:*?"<>|'/^..]+`
 				);
 			}
 		);
@@ -84,7 +84,7 @@ describe( 'vip-app-deploy-validate', () => {
 			basename => {
 				validateName( basename, false );
 				expect( exitSpy ).toHaveBeenCalledWith(
-					`Filename ${ basename } contains disallowed characters: [!/:*?"<>|\'/^\\.\\.]+`
+					`Filename ${ basename } contains disallowed characters: [!/:*?"<>|'/^..]+`
 				);
 			}
 		);

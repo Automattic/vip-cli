@@ -13,8 +13,8 @@ import { extname } from 'path';
 import command from '../lib/cli/command';
 import { getFileMeta } from '../lib/client-file-uploader';
 import { validateFile } from '../lib/custom-deploy/custom-deploy';
-import { validateZipFile, validateTarFile } from '../lib/validations/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
+import { validateZipFile, validateTarFile } from '../lib/validations/custom-deploy';
 
 const debug = debugLib( '@automattic/vip:bin:vip-app-deploy-validate' );
 
@@ -25,7 +25,6 @@ export async function appDeployValidateCmd(
 	const app = opts.app as string | number;
 	const env = opts.env as string | number;
 
-	debug( 'file: ' + arg );
 	const [ fileName ] = arg;
 	const fileMeta = await getFileMeta( fileName );
 

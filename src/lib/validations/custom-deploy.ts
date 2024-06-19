@@ -1,6 +1,6 @@
-import path from 'path';
 import AdmZip from 'adm-zip';
 import { constants } from 'node:fs';
+import path from 'path';
 import * as tar from 'tar';
 
 import * as exit from '../../lib/cli/exit';
@@ -64,8 +64,11 @@ export function validateName( name: string, isDirectory: boolean ) {
 		return;
 	}
 
-	const invalidCharsPattern = isDirectory ? /[!\:*?"<>|']|^\.\..*$/ : /[!\/:*?"<>|']|^\.\..*$/;
-	const errorMessage = errorMessages.invalidChars( name, isDirectory ? '[!:*?"<>|\'/^\\.\\.]+' : '[!/:*?"<>|\'/^\\.\\.]+' );
+	const invalidCharsPattern = isDirectory ? /[!:*?"<>|']|^\.\..*$/ : /[!/:*?"<>|']|^\.\..*$/;
+	const errorMessage = errorMessages.invalidChars(
+		name,
+		isDirectory ? '[!:*?"<>|\'/^..]+' : '[!/:*?"<>|\'/^..]+'
+	);
 	if ( invalidCharsPattern.test( name ) ) {
 		exit.withError( errorMessage );
 	}
@@ -81,16 +84,18 @@ function validateZipSymlink( entry: AdmZip.IZipEntry ) {
 		return;
 	}
 
-	const madeBy = entry.header.made >> 8;
+	const madeBy = entry.header.made >> 8; // eslint-disable-line no-bitwise
 	const errorMsg = errorMessages.symlink + entry.name;
 
 	// DOS
+	/* eslint-disable no-bitwise, eqeqeq */
 	if ( madeBy === 0 && ( entry.attr & 0x0400 ) == 0x0400 ) {
 		exit.withError( errorMsg );
 	}
 
 	// Unix
 	if ( madeBy === 3 && ( ( entry.attr >>> 16 ) & constants.S_IFLNK ) === constants.S_IFLNK ) {
+		/* eslint-enable no-bitwise, eqeqeq */
 		exit.withError( errorMsg );
 	}
 }
@@ -150,7 +155,8 @@ export function validateZipFile( filePath: string ) {
 
 		zipEntries.forEach( entry => validateZipEntry( entry ) );
 	} catch ( error ) {
-		exit.withError( `Error reading file: ${ error }` );
+		const err = error as Error;
+		exit.withError( `Error reading file: ${ err.message }` );
 	}
 }
 
@@ -176,7 +182,7 @@ function validateTarThemes( rootFolder: string, tarEntries: TarEntry[] ) {
  *
  * @param {TarEntry} entry The tar entry to validate
  */
-async function validateTarEntry( entry: TarEntry ) {
+function validateTarEntry( entry: TarEntry ) {
 	if ( entry.path.startsWith( macosxDir ) ) {
 		return;
 	}

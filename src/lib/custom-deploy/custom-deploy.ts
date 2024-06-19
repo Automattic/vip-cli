@@ -129,4 +129,3 @@ export async function validateFile( appId: number, envId: number, fileMeta: File
 		);
 	}
 }
-
