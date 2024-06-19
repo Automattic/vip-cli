@@ -92,10 +92,10 @@ command( {
 
 	if ( syncing ) {
 		if ( environment.syncProgress.status === 'running' ) {
-			console.log( chalk.yellow( 'Note:' ), 'A data sync is already running' );
+			console.log( chalk.yellow( 'Note:' ), 'A data sync is already running.' );
 		} else {
-			console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site' );
-			console.log( chalk.yellow( 'Note:' ), 'Please wait a few minutes before trying again' );
+			console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site.' );
+			console.log( chalk.yellow( 'Note:' ), 'Please wait a few minutes before trying again.' );
 		}
 	}
 
@@ -183,7 +183,7 @@ command( {
 					error: 'API returned `failed` status',
 				} );
 
-				out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }` );
+				out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }.` );
 				out.push( '' );
 				break;
 
@@ -193,7 +193,7 @@ command( {
 
 				await trackEvent( 'sync_command_success' );
 
-				out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }` );
+				out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
 				out.push( '' );
 				break;
 		}

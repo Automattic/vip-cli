@@ -71,7 +71,7 @@ const cmd = command( {
 		undefined,
 		processSlug
 	)
-	.option( 'title', 'A descriptive value for the WordPress Site Title. Default is "VIP Dev").' )
+	.option( 'title', 'A descriptive value for the WordPress Site Title. Default is "VIP Dev".' )
 	.option(
 		'multisite',
 		'Create environment as a multisite. Accepts "y" for a subdomain multisite, "subdirectory" (recommended) for a subdirectory multisite, or "false". Default is "y".',
