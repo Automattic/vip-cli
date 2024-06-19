@@ -268,6 +268,7 @@ const examples = [
 void command( {
 	requiredArgs: 1,
 } )
+	.command( 'validate', 'Validate a file before deploying in Custom Deployments' )
 	.examples( examples )
 	.option( 'message', 'Custom message for deploy' )
 	.option( 'skip-confirmation', 'Skip confirmation prompt' )
