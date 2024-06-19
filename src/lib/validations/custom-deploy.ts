@@ -88,8 +88,8 @@ function validateZipSymlink( entry: AdmZip.IZipEntry ) {
 	const errorMsg = errorMessages.symlink + entry.name;
 
 	// DOS
-	/* eslint-disable no-bitwise, eqeqeq */
-	if ( madeBy === 0 && ( entry.attr & 0x0400 ) == 0x0400 ) {
+	/* eslint-disable no-bitwise */
+	if ( madeBy === 0 && ( entry.attr & 0x0400 ) === 0x0400 ) {
 		exit.withError( errorMsg );
 	}
 
