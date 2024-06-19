@@ -2,11 +2,8 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import { constants } from 'node:fs';
 import * as tar from 'tar';
-import debugLib from 'debug';
 
 import * as exit from '../../lib/cli/exit';
-
-const debug = debugLib( '@automattic/vip:bin:vip-lib-deploy-validate' );
 
 interface TarEntry {
 	path: string;
@@ -20,7 +17,7 @@ const errorMessages = {
 	singleRootDir: 'The compressed file must contain a single root directory!',
 	invalidExt: 'Invalid file extension. Please provide a .zip, .tar.gz, or a .tgz file.',
 	invalidChars: ( filename: string, invalidChars: string ) =>
-		`Filename "${ filename }" contains disallowed characters: ${ invalidChars }`,
+		`Filename ${ filename } contains disallowed characters: ${ invalidChars }`,
 };
 const symlinkIgnorePattern = /\/node_modules\/[^/]+\/\.bin\//;
 const macosxDir = '__MACOSX';
@@ -52,7 +49,7 @@ export function validateFilename( filename: string ) {
 	const re = /^[a-z0-9\-_.]+$/i;
 
 	if ( ! re.test( filename ) ) {
-		exit.withError( errorMessages.invalidChars( filename, re.toString() ) );
+		exit.withError( errorMessages.invalidChars( filename, '[0-9,a-z,A-Z,-,_,.]' ) );
 	}
 }
 
@@ -62,13 +59,13 @@ export function validateFilename( filename: string ) {
  * @param {string} name The name of the file
  * @param {bool} isDirectory Whether the file is a directory
  */
-function validateName( name: string, isDirectory: boolean ) {
+export function validateName( name: string, isDirectory: boolean ) {
 	if ( name.startsWith( '._' ) ) {
 		return;
 	}
 
 	const invalidCharsPattern = isDirectory ? /[!\:*?"<>|']|^\.\..*$/ : /[!\/:*?"<>|']|^\.\..*$/;
-	const errorMessage = errorMessages.invalidChars( name, invalidCharsPattern.toString() );
+	const errorMessage = errorMessages.invalidChars( name, isDirectory ? '[!:*?"<>|\'/^\\.\\.]+' : '[!/:*?"<>|\'/^\\.\\.]+' );
 	if ( invalidCharsPattern.test( name ) ) {
 		exit.withError( errorMessage );
 	}

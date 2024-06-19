@@ -1,6 +1,5 @@
 import fs from 'fs';
 import gql from 'graphql-tag';
-import debugLib from 'debug';
 
 import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';

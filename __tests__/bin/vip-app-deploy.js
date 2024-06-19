@@ -36,6 +36,7 @@ jest.mock( '../../src/lib/cli/command', () => {
 		argv: () => commandMock,
 		examples: () => commandMock,
 		option: () => commandMock,
+		command: () => commandMock,
 	};
 	return jest.fn( () => commandMock );
 } );
@@ -70,7 +71,7 @@ describe( 'vip-app-deploy', () => {
 			async basename => {
 				validateFilename( basename );
 				expect( exitSpy ).toHaveBeenCalledWith(
-					'Error: The characters used in the name of a file for custom deploys are limited to [0-9,a-z,A-Z,-,_,.]'
+					`Filename ${ basename } contains disallowed characters: [0-9,a-z,A-Z,-,_,.]`
 				);
 			}
 		);
