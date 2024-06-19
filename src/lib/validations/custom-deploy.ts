@@ -95,7 +95,7 @@ function validateZipSymlink( entry: AdmZip.IZipEntry ) {
 
 	// Unix
 	if ( madeBy === 3 && ( ( entry.attr >>> 16 ) & constants.S_IFLNK ) === constants.S_IFLNK ) {
-		/* eslint-enable no-bitwise, eqeqeq */
+		/* eslint-enable no-bitwise */
 		exit.withError( errorMsg );
 	}
 }
