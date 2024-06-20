@@ -821,6 +821,7 @@ async function maybeUpdateVersion( lando: Lando, slug: string ): Promise< boolea
 
 	console.log( 'Current local environment version is: ' + chalk.yellow( currentVersion ) );
 	if ( ! currentVersion || semver.lt( currentVersion, DEV_ENVIRONMENT_VERSION ) ) {
+		envData.pullAfter = undefined;
 		await updateEnvironment( lando, envData );
 		console.log(
 			'Local environment version updated to: ' + chalk.green( DEV_ENVIRONMENT_VERSION )
