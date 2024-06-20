@@ -207,7 +207,6 @@ export async function bootstrapLando(): Promise< Lando > {
 			}
 
 			const pull = registryResolvable && ( instanceData.pullAfter ?? 0 ) < Date.now();
-			console.log( pull );
 			if (
 				Array.isArray( data.opts.pullable ) &&
 				Array.isArray( data.opts.local ) &&
@@ -218,7 +217,6 @@ export async function bootstrapLando(): Promise< Lando > {
 				// Note that if some of the images are not available, they will still be pulled by `docker-compose`.
 				data.opts.local = data.opts.pullable;
 				data.opts.pullable = [];
-				console.log( data.opts );
 			}
 
 			if ( pull || ! instanceData.pullAfter ) {
