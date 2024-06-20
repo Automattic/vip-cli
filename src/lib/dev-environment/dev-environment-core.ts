@@ -782,7 +782,7 @@ async function maybeUpdateWordPressImage( lando: Lando, slug: string ): Promise<
 		type: 'select',
 		name: 'upgrade',
 		message: 'Would you like to upgrade WordPress? ',
-		choices: [ 'no', 'yes', "no (don't ask anymore)" ],
+		choices: [ 'yes', 'no', "no (don't ask anymore)" ],
 	} );
 
 	// If the user takes the new WP version path
