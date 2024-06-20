@@ -6,14 +6,20 @@ import * as exit from '../lib/cli/exit';
 import { readFromFile } from '../lib/read-file';
 import { trackEvent } from '../lib/tracker';
 
+const usage = 'vip cache purge-url';
+const exampleUsage = 'vip @example-app.develop cache purge-url';
+
 const examples = [
 	{
-		usage: 'vip cache purge-url <URL>',
-		description: 'Purge a URL from page cache',
+		usage:
+			`${ exampleUsage } https://example-app-develop.go-vip.co/sample-page/` +
+			'\n    - Purged URL: https://example-app.develop.go-vip.co/sample-page/',
+		description: 'Purge the page cache for a single URL.',
 	},
 	{
-		usage: 'vip cache purge-url --from-file=/dev/vip/urls.txt',
-		description: 'Purge multiple URLs from page cache',
+		usage: `${ exampleUsage } --from-file=./urls.txt`,
+		description:
+			'Purge the page cache for multiple URLs, each listed on a single line in a local file.',
 	},
 ];
 
@@ -64,8 +70,8 @@ command( {
 	appQuery,
 	envContext: true,
 	wildcardCommand: true,
-	usage: 'vip cache purge-url <URL>',
+	usage,
 } )
-	.option( 'from-file', 'Read URLs from file (useful to purge multiple URLs)' )
+	.option( 'from-file', 'Read one or more URLs from a file, each listed on a single line.' )
 	.examples( examples )
 	.argv( process.argv, cachePurgeCommand );
