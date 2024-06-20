@@ -115,6 +115,7 @@ function sanitizeConfiguration(
 		mailpit: stringToBooleanIfDefined( configuration.mailpit ),
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
+		cron: stringToBooleanIfDefined( configuration.cron ),
 		meta: configurationMeta,
 	};
 
@@ -169,6 +170,7 @@ export function mergeConfigurationFileOptions(
 		mailpit: configurationFileOptions.mailpit,
 		mediaRedirectDomain: configurationFileOptions[ 'media-redirect-domain' ],
 		photon: configurationFileOptions.photon,
+		cron: configurationFileOptions.cron,
 	};
 
 	const mergedOptions: InstanceOptions = {};
@@ -247,5 +249,6 @@ elasticsearch: false
 xdebug: false
 mailpit: false
 photon: false
+cron: false
 `;
 }

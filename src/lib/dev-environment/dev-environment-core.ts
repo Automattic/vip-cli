@@ -226,6 +226,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.photon = false;
 	}
 
+	if ( ! newInstanceData.cron ) {
+		newInstanceData.cron = false;
+	}
+
 	// Mailpit migration
 	newInstanceData.mailpit ??= false;
 

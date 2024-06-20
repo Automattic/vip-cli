@@ -339,6 +339,7 @@ export async function promptForArguments(
 		siteSlug: '',
 		mailpit: false,
 		photon: false,
+		cron: false,
 	};
 
 	const promptLabels = {
@@ -346,6 +347,7 @@ export async function promptForArguments(
 		phpmyadmin: 'phpMyAdmin',
 		mailpit: 'Mailpit',
 		photon: 'Photon',
+		cron: 'Cron',
 	};
 
 	if ( create && ! instanceData.mediaRedirectDomain && defaultOptions.mediaRedirectDomain ) {
@@ -380,7 +382,7 @@ export async function promptForArguments(
 		);
 	}
 
-	const services = [ 'phpmyadmin', 'xdebug', 'mailpit', 'photon' ] as const;
+	const services = [ 'phpmyadmin', 'xdebug', 'mailpit', 'photon', 'cron' ] as const;
 	for ( const service of services ) {
 		if ( service in instanceData ) {
 			const preselected = preselectedOptions[ service ];
@@ -920,6 +922,12 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 			`Manage the version of PHP. Accepts a string value for minor versions: ${ phpVersionsSupported }`,
 			undefined,
 			processVersionOption
+		)
+		.option(
+			'cron',
+			'Enable or disable cron, disabled by default. Accepts "y" (default value) to enable or "n" to disable.',
+			undefined,
+			processBooleanOption
 		)
 		.option(
 			[ 'A', 'mailpit' ],
