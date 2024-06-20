@@ -790,7 +790,7 @@ async function maybeUpdateWordPressImage( lando: Lando, slug: string ): Promise<
 		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
-		const choice: WordPressConfig = await promptForWordPress( null );
+		const choice: WordPressConfig = await promptForWordPress( newestWordPressImage?.tag ?? null );
 		const version: WordPressTag | undefined = versions.find(
 			( { tag } ) => tag.trim() === choice.tag.trim()
 		);
