@@ -782,7 +782,7 @@ async function maybeUpdateWordPressImage( lando: Lando, slug: string ): Promise<
 		type: 'select',
 		name: 'upgrade',
 		message: 'Would you like to upgrade WordPress? ',
-		choices: [ 'no', 'yes', "no (don't ask anymore)" ],
+		choices: [ 'yes', 'no', "no (don't ask anymore)" ],
 	} );
 
 	// If the user takes the new WP version path
@@ -790,7 +790,7 @@ async function maybeUpdateWordPressImage( lando: Lando, slug: string ): Promise<
 		console.log( 'Upgrading from: ' + chalk.yellow( currentWordPressTag ) + ' to:' );
 
 		// Select a new image
-		const choice: WordPressConfig = await promptForWordPress( null );
+		const choice: WordPressConfig = await promptForWordPress( newestWordPressImage?.tag ?? null );
 		const version: WordPressTag | undefined = versions.find(
 			( { tag } ) => tag.trim() === choice.tag.trim()
 		);

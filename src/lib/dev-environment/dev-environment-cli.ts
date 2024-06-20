@@ -695,7 +695,7 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 }
 
 export async function promptForWordPress(
-	defaultObject: WordPressConfig | null
+	defaultObject: WordPressConfig | string | null
 ): Promise< WordPressConfig > {
 	debug( `Prompting for wordpress with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames.wordpress;
@@ -704,7 +704,17 @@ export async function promptForWordPress(
 
 	// image with selection
 	const tagChoices = await getTagChoices();
-	let option = defaultObject?.tag ?? tagChoices[ 0 ].value;
+
+	if (
+		typeof defaultObject === 'string' &&
+		! tagChoices.find( choice => choice.value === defaultObject )
+	) {
+		throw new Error( `Unknown or unsupported WordPress version: ${ defaultObject }.` );
+	}
+
+	let option =
+		typeof defaultObject === 'string' ? defaultObject : defaultObject?.tag ?? tagChoices[ 0 ].value;
+
 	if ( isStdinTTY ) {
 		const message = `${ messagePrefix }Which version would you like`;
 		const selectTag = new Select( {
