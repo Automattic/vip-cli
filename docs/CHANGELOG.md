@@ -1,5 +1,16 @@
 ## Changelog
 
+### 3.4.0
+
+* Updating command option descriptions to follow the VIP-CLI style guide
+* build(deps-dev): bump @types/node from 18.19.34 to 18.19.36
+* Add `vip app deploy validate` command for Custom Deployments
+* fix(dev-env): remove debug code
+* fix(dev-env): force pull images on environment version update
+* chore(deps): update `ws` to fix CVE-2024-37890
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.3.1...3.4.0
+
 ### 3.3.1
 
 * build(deps): bump step-security/harden-runner from 2.8.0 to 2.8.1
