@@ -515,7 +515,9 @@ export async function checkEnvHealth(
 	}
 
 	if ( urlsToScan.length ) {
-		scanResults = scanResults.concat( await app.scanUrls( urlsToScan, { max: 1 } ) );
+		scanResults = scanResults.concat(
+			await app.scanUrls( urlsToScan, { max: 1, waitCodes: [ 502, 504 ] } )
+		);
 	}
 
 	const result: Record< string, boolean > = {};
