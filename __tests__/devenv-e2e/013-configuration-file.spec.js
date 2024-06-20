@@ -207,6 +207,7 @@ describe( 'vip dev-env configuration file', () => {
 		const expectedXDebug = true;
 		const expectedMailpit = true;
 		const expectedPhoton = true;
+		const expectedCron = true;
 
 		expect( await checkEnvExists( expectedSlug ) ).toBe( false );
 
@@ -222,6 +223,7 @@ describe( 'vip dev-env configuration file', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 			'mu-plugins': 'image',
 			'app-code': 'image',
 		} );
@@ -256,6 +258,7 @@ describe( 'vip dev-env configuration file', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 		} );
 
 		return expect( checkEnvExists( expectedSlug ) ).resolves.toBe( true );
@@ -268,6 +271,7 @@ describe( 'vip dev-env configuration file', () => {
 		const expectedXDebug = false;
 		const expectedMailpit = false;
 		const expectedPhoton = false;
+		const expectedCron = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -280,6 +284,7 @@ describe( 'vip dev-env configuration file', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 		} );
 
 		const spawnOptions = {
@@ -299,6 +304,7 @@ describe( 'vip dev-env configuration file', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 		} );
 
 		// Update environment from changed configuration file
@@ -310,6 +316,7 @@ describe( 'vip dev-env configuration file', () => {
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
 			photon: ! expectedPhoton,
+			cron: ! expectedCron,
 		} );
 
 		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate ], spawnOptions, true );
@@ -324,6 +331,7 @@ describe( 'vip dev-env configuration file', () => {
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
 			photon: ! expectedPhoton,
+			cron: ! expectedCron,
 		} );
 	} );
 } );
