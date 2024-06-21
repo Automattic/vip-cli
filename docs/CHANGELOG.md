@@ -1,5 +1,15 @@
 ## Changelog
 
+### 3.4.1
+
+* Updating vip cache commands descriptions and examples to follow the VIP-CLI style guide
+* Dev-env: Upgrade WordPress upgrade prompt to "yes" and pre-select latest version not trunk
+* build(deps-dev): bump @types/node from 18.19.36 to 18.19.37
+* fix(dev-env): retry healthcheck only on 502 and 504 status codes
+* fix(dev-env): set the user/group for `nginx` container to `nginx:nginx`
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.4.0...3.4.1
+
 ### 3.4.0
 
 * Updating command option descriptions to follow the VIP-CLI style guide
