@@ -57,7 +57,7 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		} );
 
 		if (
-			! ( await confirm( `Are you sure? ${ chalk.bold.red( 'Deletion is permanent' ) } (y/N)` ) )
+			! ( await confirm( `Are you sure? ${ chalk.bold.red( 'Deletion is permanent' ) }` ) )
 		) {
 			await trackEvent( 'envvar_delete_user_cancelled_confirmation', trackingParams );
 			cancel();

@@ -86,7 +86,7 @@ export async function setEnvVarCommand( arg, opt ) {
 		}
 
 		if (
-			! ( await confirm( `Please ${ chalk.bold( 'confirm' ) } the input value above (y/N)` ) )
+			! ( await confirm( `Please ${ chalk.bold( 'confirm' ) } the input value above` ) )
 		) {
 			await trackEvent( 'envvar_set_user_cancelled_confirmation', trackingParams );
 			cancel();
