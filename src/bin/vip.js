@@ -26,7 +26,10 @@ const runCmd = async function () {
 	const cmd = command();
 	cmd
 		.command( 'logout', 'Log out the current authenticated VIP-CLI user.' )
-		.command( 'app', 'List and modify your VIP applications' )
+		.command(
+			'app',
+			'Interact with applications that the current authenticated VIP-CLI user has permission to access.'
+		)
 		.command( 'backup', 'Generate a backup of an environment.' )
 		.command( 'cache', 'Manage page cache for an environment.' )
 		.command( 'config', 'Manage environment configurations.' )

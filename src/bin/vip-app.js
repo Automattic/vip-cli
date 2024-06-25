@@ -7,15 +7,26 @@ import command, { getEnvIdentifier } from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
 command( { requiredArgs: 1, format: true } )
-	.example( 'vip app <app>', 'Pass an app name or ID to get details about that app' )
-	.example( 'vip app 123', 'Get details about the app with ID 123' )
-	.example( 'vip app vip-test', 'Get details about the app named vip-test' )
 	.example(
-		'vip app @mysite.develop deploy <file.zip>',
-		'Deploy the given compressed file to your site'
+		'vip app list',
+		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'
 	)
-	.command( 'list', 'List your VIP applications' )
-	.command( 'deploy', 'Deploy to your app from a file' )
+	.example(
+		'vip app example-app',
+		'Retrieve information about the application named "example-app" and its environments.'
+	)
+	.example(
+		'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip',
+		'Deploy a local archived file named "file.zip" that contains application code to a VIP Platform environment that has Custom Deployment enabled.'
+	)
+	.command(
+		'list',
+		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'
+	)
+	.command(
+		'deploy',
+		'Deploy an archived file of application code to an environment that has Custom Deployment enabled.'
+	)
 	.argv( process.argv, async arg => {
 		await trackEvent( 'app_command_execute' );
 

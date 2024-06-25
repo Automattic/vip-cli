@@ -17,6 +17,7 @@ import { trackEventWithEnv } from '../lib/tracker';
 import { validateZipFile, validateTarFile } from '../lib/validations/custom-deploy';
 
 const debug = debugLib( '@automattic/vip:bin:vip-app-deploy-validate' );
+const baseUsage = 'vip app deploy validate';
 
 export async function appDeployValidateCmd(
 	arg: string[] = [],
@@ -45,21 +46,20 @@ export async function appDeployValidateCmd(
 		await validateTarFile( fileName );
 	}
 
-	console.log( chalk.green( '✓ Compressed file has been successfully validated with no errors!' ) );
+	console.log( chalk.green( '✓ Compressed file has been successfully validated with no errors.' ) );
 }
 
 // Command examples for the `vip app deploy validate` help prompt
 const examples = [
 	{
-		usage: 'vip app @mysite.develop deploy validate <file.zip|file.tar.gz>',
-		description: 'Validate the compressed file to see if it can be deployed to your site',
+		usage: 'vip app deploy validate file.zip.tar',
+		description: 'Validate the directory structure of the local archived file named "file.tar".',
 	},
 ];
 
 void command( {
 	requiredArgs: 1,
+	usage: baseUsage,
 } )
 	.examples( examples )
-	.option( 'app', 'The application name or ID' )
-	.option( 'env', 'The environment name or ID' )
 	.argv( process.argv, appDeployValidateCmd );
