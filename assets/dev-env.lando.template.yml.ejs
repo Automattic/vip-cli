@@ -39,6 +39,8 @@ services:
       command: nginx -g "daemon off;"
       environment:
         LANDO_NEEDS_EXEC: 1
+        LANDO_WEBROOT_USER: nginx
+        LANDO_WEBROOT_GROUP: nginx
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
