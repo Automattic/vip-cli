@@ -335,9 +335,13 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: "'(siteurl|home)',\\s?'(.*?)'",
+		matcher: "'(siteurl|home)',\\s?'([^']+)'",
 		matchHandler: ( lineNumber, results, expectedDomain ) => {
-			const foundDomain = results[ 2 ].replace( /https?:\/\//, '' );
+			let foundDomain = results[ 2 ];
+			if ( ! /^https?:\/\//i.test( foundDomain ) ) {
+				return { falsePositive: true };
+			}
+			foundDomain = foundDomain.replace( /^https?:\/\//, '' );
 			if ( ! foundDomain.trim() ) {
 				return { falsePositive: true };
 			}
