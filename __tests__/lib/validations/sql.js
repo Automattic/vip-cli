@@ -127,6 +127,12 @@ describe( 'lib/validations/sql', () => {
 				'Use \'--search-replace="super-empoyees.com,test.domain"\' switch to replace the domain'
 			);
 		} );
+		// https://github.com/Automattic/vip-cli/issues/1906
+		it( 'should not suggest to replace non-URLs', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="home,test.domain"\' switch to replace the domain'
+			);
+		} );
 	} );
 
 	describe( 'it fails when the import file is compressed', () => {
