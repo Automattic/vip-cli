@@ -14,6 +14,7 @@ import * as exit from '../lib/cli/exit';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
+import { retry } from '../lib/retry';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -82,7 +83,7 @@ export const CREATE_EXPORT_JOB_MUTATION = gql`
  * @param {number} envId Environment ID
  * @return {Promise} A promise which resolves to the latest backup and job status
  */
-async function fetchLatestBackupAndJobStatus( appId, envId ) {
+async function fetchLatestBackupAndJobStatusBase( appId, envId ) {
 	const api = API();
 
 	const response = await api.query( {
@@ -101,6 +102,20 @@ async function fetchLatestBackupAndJobStatus( appId, envId ) {
 	const jobs = environments[ 0 ].jobs;
 
 	return { latestBackup, jobs };
+}
+
+async function fetchLatestBackupAndJobStatus( appId, envId ) {
+	return await retry(
+		{
+			retryOnlyIf: options => {
+				return (
+					( options.error.message || '' ).indexOf( 'Unexpected token < in JSON at position 0' ) !==
+					-1
+				);
+			},
+		},
+		() => fetchLatestBackupAndJobStatusBase( appId, envId )
+	);
 }
 
 /**
