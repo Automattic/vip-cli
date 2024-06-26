@@ -12,9 +12,9 @@ interface TarEntry {
 }
 
 const errorMessages = {
-	missingThemes: 'Missing `themes` directory from root folder!',
+	missingThemes: 'Missing `themes` directory from root folder.',
 	symlink: 'Symlink detected: ',
-	singleRootDir: 'The compressed file must contain a single root directory!',
+	singleRootDir: 'The compressed file must contain a single root directory.',
 	invalidExt: 'Invalid file extension. Please provide a .zip, .tar.gz, or a .tgz file.',
 	invalidChars: ( filename: string, invalidChars: string ) =>
 		`Filename ${ filename } contains disallowed characters: ${ invalidChars }`,
