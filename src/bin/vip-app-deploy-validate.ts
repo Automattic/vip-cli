@@ -52,8 +52,8 @@ export async function appDeployValidateCmd(
 // Command examples for the `vip app deploy validate` help prompt
 const examples = [
 	{
-		usage: 'vip app deploy validate file.zip.tar',
-		description: 'Validate the directory structure of the local archived file named "file.tar".',
+		usage: 'vip app deploy validate file.tar.gz',
+		description: 'Validate the directory structure of the local archived file named "file.tar.gz".',
 	},
 ];
 
