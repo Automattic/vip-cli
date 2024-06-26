@@ -259,9 +259,9 @@ const examples = [
 	},
 	{
 		usage:
-			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.tar --message="A description for this deploy"',
+			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.tgz --message="A description for this deploy"',
 		description:
-			'Add a descriptive message for the Custom Deployment of the archived file named "file.tar".',
+			'Add a descriptive message for the Custom Deployment of the archived file named "file.tgz".',
 	},
 	{
 		usage:
