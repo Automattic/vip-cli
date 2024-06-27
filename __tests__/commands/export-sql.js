@@ -94,7 +94,9 @@ API.mockImplementation( () => {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
 describe( 'commands/ExportSQLCommand', () => {
-	beforeEach( () => {} );
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
 
 	describe( '.getExportJob', () => {
 		const app = { id: 123, name: 'test-app' };
@@ -104,6 +106,22 @@ describe( 'commands/ExportSQLCommand', () => {
 		it( 'should return the export job for the latest backup', async () => {
 			const exportJob = await exportCommand.getExportJob();
 			expect( exportJob ).toEqual( mockApp.environments[ 0 ].jobs[ 0 ] );
+		} );
+
+		it( 'should retry fetching export jobs', async () => {
+			const queryMockThrowsError = jest.fn( () => {
+				throw new Error( 'Unexpected token < in JSON at position 0' );
+			} );
+
+			API.mockImplementationOnce( () => {
+				return {
+					query: queryMockThrowsError,
+				};
+			} );
+			const exportJob = await exportCommand.getExportJob();
+			expect( exportJob ).toEqual( mockApp.environments[ 0 ].jobs[ 0 ] );
+			expect( queryMockThrowsError ).toHaveBeenCalledTimes( 1 );
+			expect( queryMock ).toHaveBeenCalledTimes( 1 );
 		} );
 	} );
 
