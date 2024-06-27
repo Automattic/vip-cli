@@ -36,6 +36,7 @@ const START_DEPLOY_MUTATION = gql`
 `;
 
 const debug = debugLib( '@automattic/vip:bin:vip-app-deploy' );
+const baseUsage = 'vip app deploy';
 
 const DEPLOY_PREFLIGHT_PROGRESS_STEPS = [
 	{ id: 'upload', name: 'Uploading file' },
@@ -252,27 +253,36 @@ Processing the file for deployment to your environment...
 const examples = [
 	// `app` subcommand
 	{
-		usage: 'vip app @mysite.develop deploy file.zip',
-		description: 'Deploy the given compressed file to your site',
+		usage: 'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip',
+		description:
+			'Deploy a local archived file named "file.zip" that contains application code to a VIP Platform environment that has Custom Deployment enabled.',
 	},
 	{
-		usage: 'vip app @mysite.develop deploy file.zip --message "This is a deploy message"',
-		description: 'Deploy the given compressed file to your site',
+		usage:
+			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.tgz --message="A description for this deploy"',
+		description:
+			'Add a descriptive message for the Custom Deployment of the archived file named "file.tgz".',
 	},
 	{
-		usage: 'vip app @mysite.develop deploy file.zip --skip-confirmation',
-		description: 'Deploy the given compressed file to your site without prompting',
+		usage:
+			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.tar.gz --skip-confirmation',
+		description:
+			'Skip the confirmation prompt for the Custom Deployment of the archived file named "file.tar.gz" to the environment.',
 	},
 ];
 
 void command( {
 	requiredArgs: 1,
+	usage: baseUsage,
 } )
-	.command( 'validate', 'Validate a file before deploying in Custom Deployments' )
+	.command( 'validate', 'Validate the directory structure of an archived file.' )
 	.examples( examples )
-	.option( 'message', 'Custom message for deploy' )
-	.option( 'skip-confirmation', 'Skip confirmation prompt' )
+	.option( 'message', 'Add a description of a deployment.' )
+	.option( 'skip-confirmation', 'Skip the confirmation prompt.' )
 	.option( 'force', 'Skip confirmation prompt (deprecated)' )
-	.option( 'app', 'The application name or ID' )
-	.option( 'env', 'The environment name or ID' )
+	.option(
+		'app',
+		'Target an application. Accepts a string value for the application name or an integer for the application ID.'
+	)
+	.option( 'env', 'Target an environment. Accepts a string value for the environment type.' )
 	.argv( process.argv, appDeployCmd );
