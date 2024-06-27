@@ -1,5 +1,20 @@
 ## Changelog
 
+### 3.4.2
+
+* New develop release: 3.4.2-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/1898
+* build(deps-dev): bump @types/node from 18.19.37 to 18.19.38 by @dependabot in https://github.com/Automattic/vip-cli/pull/1901
+* build(deps-dev): bump typescript from 5.4.5 to 5.5.2 by @dependabot in https://github.com/Automattic/vip-cli/pull/1900
+* build(deps-dev): bump @types/uuid from 9.0.8 to 10.0.0 by @dependabot in https://github.com/Automattic/vip-cli/pull/1902
+* build(deps-dev): bump @types/node from 18.19.38 to 18.19.39 by @dependabot in https://github.com/Automattic/vip-cli/pull/1905
+* fix(dev-env): ensure that URLs suggested for replacement start with `http(s)://` by @sjinks in https://github.com/Automattic/vip-cli/pull/1907
+* Remove unnecessary y/N choice for confirmations by @sanmai in https://github.com/Automattic/vip-cli/pull/1903
+* Update the vip app command to follow the VIP-CLI style guide by @yolih in https://github.com/Automattic/vip-cli/pull/1908
+* Add retries to the fetching of jobs data by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1909
+* New package release: v3.4.2 by @github-actions in https://github.com/Automattic/vip-cli/pull/1911
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.4.1...3.4.2
+
 ### 3.4.1
 
 * Updating vip cache commands descriptions and examples to follow the VIP-CLI style guide
