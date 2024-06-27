@@ -469,7 +469,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				expect( prompt ).toHaveBeenCalledTimes( 0 );
 			} else {
 				expect( prompt ).toHaveBeenCalledTimes( 1 );
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 6 );
 			}
 
 			const expectedValue =
@@ -506,9 +506,9 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			const result = await promptForArguments( input.preselected, input.default, false, true );
 
 			if ( input.preselected.mediaRedirectDomain ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 5 );
-			} else {
 				expect( confirmRunMock ).toHaveBeenCalledTimes( 6 );
+			} else {
+				expect( confirmRunMock ).toHaveBeenCalledTimes( 7 );
 			}
 
 			const expectedValue = input.preselected.mediaRedirectDomain

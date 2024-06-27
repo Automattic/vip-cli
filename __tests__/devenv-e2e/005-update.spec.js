@@ -76,6 +76,7 @@ describe( 'vip dev-env update', () => {
 		const expectedXDebug = false;
 		const expectedMailpit = false;
 		const expectedPhoton = false;
+		const expectedCron = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -95,6 +96,7 @@ describe( 'vip dev-env update', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 		} );
 
 		// prettier-ignore
@@ -106,6 +108,7 @@ describe( 'vip dev-env update', () => {
 			'-x', `${ ! expectedXDebug }`,
 			'-A', `${ ! expectedMailpit }`,
 			'-H', `${ ! expectedPhoton }`,
+			'-c', `${ ! expectedCron }`,
 		], { env }, true );
 
 		expect( result.rc ).toBe( 0 );
@@ -119,6 +122,7 @@ describe( 'vip dev-env update', () => {
 			xdebug: ! expectedXDebug,
 			mailpit: ! expectedMailpit,
 			photon: ! expectedPhoton,
+			cron: ! expectedCron,
 		} );
 	} );
 

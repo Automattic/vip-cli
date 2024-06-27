@@ -75,6 +75,7 @@ describe( 'vip dev-env create', () => {
 		const expectedXDebug = false;
 		const expectedMailpit = false;
 		const expectedPhoton = false;
+		const expectedCron = false;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -102,6 +103,7 @@ describe( 'vip dev-env create', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 		} );
 	} );
 
@@ -116,6 +118,7 @@ describe( 'vip dev-env create', () => {
 		const expectedXDebug = true;
 		const expectedMailpit = true;
 		const expectedPhoton = true;
+		const expectedCron = true;
 
 		expect( await checkEnvExists( slug ) ).toBe( false );
 
@@ -135,6 +138,7 @@ describe( 'vip dev-env create', () => {
 			'-x', `${ expectedXDebug }`,
 			'-A', `${ expectedMailpit }`,
 			'-H', `${ expectedPhoton }`,
+			'-c', `${ expectedCron }`,
 		], { env }, true );
 
 		expect( result.rc ).toBe( 0 );
@@ -156,6 +160,7 @@ describe( 'vip dev-env create', () => {
 			xdebug: expectedXDebug,
 			mailpit: expectedMailpit,
 			photon: expectedPhoton,
+			cron: expectedCron,
 		} );
 	} );
 } );

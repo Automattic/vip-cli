@@ -15,6 +15,7 @@ export interface InstanceOptions {
 	xdebugConfig?: string;
 	mailpit?: boolean;
 	photon?: boolean;
+	cron?: boolean;
 
 	[ index: string ]: unknown;
 }
@@ -71,6 +72,7 @@ export interface ConfigurationFileOptions {
 	mailpit?: boolean;
 	'media-redirect-domain'?: string;
 	photon?: boolean;
+	cron?: boolean;
 
 	meta?: ConfigurationFileMeta;
 	[ index: string ]: unknown;
@@ -97,6 +99,7 @@ export interface InstanceData {
 	elasticsearch?: string | boolean;
 	mailpit: boolean;
 	photon: boolean;
+	cron: boolean;
 	pullAfter?: number;
 	autologinKey?: string;
 	version?: string;
