@@ -13,8 +13,8 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
-import { getAbsolutePath, pollUntil } from '../lib/utils';
 import { retry } from '../lib/retry';
+import { getAbsolutePath, pollUntil } from '../lib/utils';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 

@@ -120,8 +120,8 @@ describe( 'commands/ExportSQLCommand', () => {
 			} );
 			const exportJob = await exportCommand.getExportJob();
 			expect( exportJob ).toEqual( mockApp.environments[ 0 ].jobs[ 0 ] );
-			expect( queryMockThrowsError ).toBeCalledTimes( 1 );
-			expect( queryMock ).toBeCalledTimes( 1 );
+			expect( queryMockThrowsError ).toHaveBeenCalledTimes( 1 );
+			expect( queryMock ).toHaveBeenCalledTimes( 1 );
 		} );
 	} );
 
