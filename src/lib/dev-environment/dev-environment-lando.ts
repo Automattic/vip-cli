@@ -470,20 +470,21 @@ async function getExtraServicesConnections(
 		// eslint-disable-next-line no-await-in-loop
 		const containerScan = service.id ? await lando.engine.docker.scan( service.id ) : null;
 		if ( containerScan?.NetworkSettings.Ports ) {
-			type ExternalMapping = ( typeof containerScan.NetworkSettings.Ports )[ number ];
+			const mappings = Object.values( containerScan.NetworkSettings.Ports ).filter(
+				externalMapping => externalMapping?.length
+			);
 
-			const mappings = Object.keys( containerScan.NetworkSettings.Ports )
-				.map( internalPort => containerScan.NetworkSettings.Ports[ internalPort ] )
-				.filter( ( externalMapping: ExternalMapping | undefined ) => externalMapping?.length );
-
-			if ( mappings.length ) {
-				const { HostIp: host, HostPort: port } = mappings[ 0 ][ 0 ];
+			mappings[ 0 ]?.forEach( ( { HostIp: host, HostPort: port } ) => {
 				const label = displayConfiguration.label ?? service.service;
 				const value =
 					( displayConfiguration.protocol ? `${ displayConfiguration.protocol }://` : '' ) +
 					`${ host }:${ port }`;
-				extraServices[ label ] = value;
-			}
+				if ( extraServices[ label ] ) {
+					extraServices[ label ] += `, ${ value }`;
+				} else {
+					extraServices[ label ] = value;
+				}
+			} );
 		}
 	}
 
