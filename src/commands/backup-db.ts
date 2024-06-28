@@ -87,18 +87,18 @@ async function createBackupJob( appId: number, envId: number ) {
 
 // Library for a possible command in the future: vip backup db @app.env
 export class BackupDBCommand {
-	app: App;
-	env: AppEnvironment;
-	job?: Job;
-	jobStatus?: string;
-	jobAge?: number;
-	backupName?: string;
-	silent?: boolean;
-	steps = {
+	public app: App;
+	public env: AppEnvironment;
+	public job?: Job;
+	public jobStatus?: string;
+	public jobAge?: number;
+	public backupName?: string;
+	public silent?: boolean;
+	public steps = {
 		PREPARE: 'prepare',
 		GENERATE: 'generate',
 	};
-	track: CommandTracker;
+	public track: CommandTracker;
 	private progressTracker: ProgressTracker;
 
 	constructor( app: App, env: AppEnvironment, trackerFn: CommandTracker = async () => {} ) {
@@ -111,14 +111,14 @@ export class BackupDBCommand {
 		this.track = trackerFn;
 	}
 
-	log( msg: string ) {
+	public log( msg: string ) {
 		if ( this.silent ) {
 			return;
 		}
 		console.log( msg );
 	}
 
-	isDone( job?: Job ) {
+	private isDone( job?: Job ) {
 		return ! job?.inProgressLock;
 	}
 
@@ -127,12 +127,12 @@ export class BackupDBCommand {
 	 *
 	 * @return {void}
 	 */
-	stopProgressTracker() {
+	private stopProgressTracker() {
 		this.progressTracker.print();
 		this.progressTracker.stopPrinting();
 	}
 
-	async loadBackupJob() {
+	public async loadBackupJob() {
 		this.job = await getBackupJob( this.app.id ?? 0, this.env.id ?? 0 );
 		this.backupName =
 			this.job?.metadata?.find( meta => meta?.name === 'backupName' )?.value ?? 'Unknown';
@@ -148,7 +148,7 @@ export class BackupDBCommand {
 		return this.job;
 	}
 
-	async run( silent = false ) {
+	public async run( silent = false ) {
 		this.silent = silent;
 
 		await this.loadBackupJob();

@@ -31,22 +31,22 @@ export interface StepFromServer {
 }
 
 export class ProgressTracker {
-	hasFailure: boolean;
-	hasPrinted: boolean;
-	printInterval: NodeJS.Timeout | undefined;
+	public hasFailure: boolean;
+	public hasPrinted: boolean;
+	public printInterval: NodeJS.Timeout | undefined;
 
 	// Track the state of each step
-	stepsFromCaller: Map< string, Step >;
-	stepsFromServer: Map< string, Step >;
+	public stepsFromCaller: Map< string, Step >;
+	public stepsFromServer: Map< string, Step >;
 
 	// Spinnerz go brrrr
-	runningSprite: RunningSprite;
+	public runningSprite: RunningSprite;
 
 	// This gets printed before the step status
-	prefix: string;
+	public prefix: string;
 
 	// This gets printed after the step status
-	suffix: string;
+	public suffix: string;
 
 	/**
 	 * This determines from which step should we display the steps
@@ -55,7 +55,7 @@ export class ProgressTracker {
 	 *
 	 * And we don't want to repeatedly display the steps that has finished.
 	 */
-	displayFromStep = 0;
+	public displayFromStep = 0;
 
 	constructor( steps: StepConstructorParam[] ) {
 		this.runningSprite = new RunningSprite();
@@ -67,18 +67,18 @@ export class ProgressTracker {
 		this.suffix = '';
 	}
 
-	getSteps(): Map< string, Step > {
+	public getSteps(): Map< string, Step > {
 		return new Map( [ ...this.stepsFromCaller, ...this.stepsFromServer ] );
 	}
 
-	mapSteps( steps: StepConstructorParam[] ): Map< string, Step > {
+	public mapSteps( steps: StepConstructorParam[] ): Map< string, Step > {
 		return steps.reduce( ( map, { id, name, status } ) => {
 			map.set( id, { id, name, status: status ?? StepStatus.PENDING } );
 			return map;
 		}, new Map< string, Step >() );
 	}
 
-	setUploadPercentage( percentage: string ) {
+	public setUploadPercentage( percentage: string ) {
 		const uploadStep = this.stepsFromCaller.get( 'upload' );
 		if ( ! uploadStep ) {
 			return;
@@ -86,7 +86,7 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( 'upload', { ...uploadStep, percentage } );
 	}
 
-	setProgress( progress: string ) {
+	public setProgress( progress: string ) {
 		const step = this.getCurrentStep();
 		if ( ! step ) {
 			return;
@@ -95,7 +95,7 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( step.id, { ...step, progress } );
 	}
 
-	setStepsFromServer( steps: StepFromServer[] ) {
+	public setStepsFromServer( steps: StepFromServer[] ) {
 		const formattedSteps: Step[] = steps.map( ( { name, status }, index ) => ( {
 			id: `server-${ index }-${ name }`,
 			name,
@@ -116,7 +116,7 @@ export class ProgressTracker {
 		this.stepsFromServer = this.mapSteps( formattedSteps );
 	}
 
-	getNextStep(): Step | undefined {
+	public getNextStep(): Step | undefined {
 		if ( this.allStepsSucceeded() ) {
 			return undefined;
 		}
@@ -124,7 +124,7 @@ export class ProgressTracker {
 		return steps.find( ( { status } ) => status === StepStatus.PENDING );
 	}
 
-	getCurrentStep(): Step | undefined {
+	public getCurrentStep(): Step | undefined {
 		if ( this.allStepsSucceeded() ) {
 			return undefined;
 		}
@@ -133,19 +133,19 @@ export class ProgressTracker {
 		return steps.find( ( { status } ) => status === StepStatus.RUNNING );
 	}
 
-	stepRunning( stepId: string ): void {
+	public stepRunning( stepId: string ): void {
 		this.setStatusForStepId( stepId, StepStatus.RUNNING );
 	}
 
-	stepFailed( stepId: string ): void {
+	public stepFailed( stepId: string ): void {
 		this.setStatusForStepId( stepId, StepStatus.FAILED );
 	}
 
-	stepSkipped( stepId: string ): void {
+	public stepSkipped( stepId: string ): void {
 		this.setStatusForStepId( stepId, StepStatus.SKIPPED );
 	}
 
-	stepSuccess( stepId: string ) {
+	public stepSuccess( stepId: string ) {
 		this.setStatusForStepId( stepId, StepStatus.SUCCESS );
 		// The stepSuccess helper automatically sets the next step to "running"
 		const nextStep = this.getNextStep();
@@ -154,11 +154,11 @@ export class ProgressTracker {
 		}
 	}
 
-	allStepsSucceeded(): boolean {
+	public allStepsSucceeded(): boolean {
 		return [ ...this.getSteps().values() ].every( ( { status } ) => status === StepStatus.SUCCESS );
 	}
 
-	setStatusForStepId( stepId: string, status: StepStatus ) {
+	public setStatusForStepId( stepId: string, status: StepStatus ) {
 		const step = this.stepsFromCaller.get( stepId );
 		if ( ! step ) {
 			// Only allowed to update existing steps with this method
@@ -179,20 +179,20 @@ export class ProgressTracker {
 		} );
 	}
 
-	startPrinting( prePrintCallback: () => unknown = () => {} ): void {
+	public startPrinting( prePrintCallback: () => unknown = () => {} ): void {
 		this.printInterval = setInterval( () => {
 			prePrintCallback();
 			this.print();
 		}, PRINT_INTERVAL );
 	}
 
-	stopPrinting(): void {
+	public stopPrinting(): void {
 		if ( this.printInterval ) {
 			clearInterval( this.printInterval );
 		}
 	}
 
-	async handleContinuePrompt< PromptReturn >(
+	public async handleContinuePrompt< PromptReturn >(
 		prompt: ( setPromptShown: () => void ) => Promise< PromptReturn >
 	): Promise< PromptReturn > {
 		this.print();
@@ -242,7 +242,7 @@ export class ProgressTracker {
 		return returnValue;
 	}
 
-	print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
+	public print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();

@@ -12,19 +12,19 @@ type MediaImportStatus = Pick<
 >;
 
 export class MediaImportProgressTracker {
-	hasFailure: boolean;
-	hasPrinted: boolean;
-	printInterval: NodeJS.Timeout | undefined;
-	status: MediaImportStatus;
+	public hasFailure: boolean;
+	public hasPrinted: boolean;
+	public printInterval: NodeJS.Timeout | undefined;
+	public status: MediaImportStatus;
 
 	// Spinnerz go brrrr
-	runningSprite: RunningSprite;
+	public runningSprite: RunningSprite;
 
 	// This gets printed before the step status
-	prefix: string;
+	public prefix: string;
 
 	// This gets printed after the step status
-	suffix: string;
+	public suffix: string;
 
 	constructor( status: MediaImportStatus ) {
 		this.runningSprite = new RunningSprite();
@@ -35,27 +35,27 @@ export class MediaImportProgressTracker {
 		this.hasPrinted = false;
 	}
 
-	setStatus( status: MediaImportStatus ) {
+	public setStatus( status: MediaImportStatus ) {
 		if ( 'FAILED' === status.status ) {
 			this.hasFailure = true;
 		}
 		this.status = { ...status };
 	}
 
-	startPrinting( prePrintCallback = (): void => {} ): void {
+	public startPrinting( prePrintCallback = (): void => {} ): void {
 		this.printInterval = setInterval( () => {
 			prePrintCallback();
 			this.print();
 		}, PRINT_INTERVAL );
 	}
 
-	stopPrinting(): void {
+	public stopPrinting(): void {
 		if ( this.printInterval ) {
 			clearInterval( this.printInterval );
 		}
 	}
 
-	print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
+	public print( { clearAfter = false }: { clearAfter?: boolean } = {} ): void {
 		if ( ! this.hasPrinted ) {
 			this.hasPrinted = true;
 			singleLogLine.clear();

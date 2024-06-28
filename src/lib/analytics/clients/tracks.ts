@@ -30,7 +30,7 @@ export default class Tracks implements AnalyticsClient {
 	private userAgent: string;
 	private baseParams: BaseParams;
 
-	static readonly ENDPOINT = 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
+	public static readonly ENDPOINT = 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 
 	constructor( userId: string, userType: string, eventPrefix: string, env: Env ) {
 		this.eventPrefix = eventPrefix;
@@ -44,7 +44,7 @@ export default class Tracks implements AnalyticsClient {
 		};
 	}
 
-	async trackEvent(
+	public async trackEvent(
 		name: string,
 		eventProps: Record< string, unknown > = {}
 	): Promise< Response | false > {
@@ -111,7 +111,7 @@ export default class Tracks implements AnalyticsClient {
 		return false;
 	}
 
-	send( extraParams: Record< string, unknown > ): Promise< Response > {
+	public send( extraParams: Record< string, unknown > ): Promise< Response > {
 		const params = { ...this.baseParams, ...extraParams };
 
 		const method = 'POST';

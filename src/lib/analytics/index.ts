@@ -23,7 +23,7 @@ export default class Analytics {
 		this.clients = clients;
 	}
 
-	async trackEvent(
+	public async trackEvent(
 		name: string,
 		props: Record< string, unknown > = {}
 	): Promise< ( Response | false )[] > {
