@@ -17,13 +17,13 @@ export interface PromptStatus {
 }
 
 export class BackupStorageAvailability {
-	archiveSize: number;
+	private archiveSize: number;
 
 	constructor( archiveSize: number ) {
 		this.archiveSize = archiveSize;
 	}
 
-	static createFromDbCopyJob( job: Job ): BackupStorageAvailability {
+	public static createFromDbCopyJob( job: Job ): BackupStorageAvailability {
 		const bytesWrittenMeta = job.metadata?.find( meta => meta?.name === 'bytesWritten' );
 		if ( ! bytesWrittenMeta?.value ) {
 			throw new Error( 'Meta not found' );
@@ -32,7 +32,7 @@ export class BackupStorageAvailability {
 		return new BackupStorageAvailability( Number( bytesWrittenMeta.value ) );
 	}
 
-	getDockerStorageKiBRaw(): string | undefined {
+	public getDockerStorageKiBRaw(): string | undefined {
 		return exec( `docker run --rm alpine df -k`, { silent: true } )
 			.grep( /\/dev\/vda1/ )
 			.head( { '-n': 1 } )
@@ -40,7 +40,7 @@ export class BackupStorageAvailability {
 			.split( ' ' )[ 3 ];
 	}
 
-	getDockerStorageAvailable(): number {
+	public getDockerStorageAvailable(): number {
 		const kiBLeft = this.getDockerStorageKiBRaw();
 
 		if ( ! kiBLeft || Number.isNaN( Number( kiBLeft ) ) ) {
@@ -50,48 +50,48 @@ export class BackupStorageAvailability {
 		return Number( kiBLeft ) * 1024;
 	}
 
-	bytesToHuman( bytes: number ) {
+	public bytesToHuman( bytes: number ) {
 		return formatMetricBytes( bytes );
 	}
 
-	async getStorageAvailableInVipPath() {
+	public async getStorageAvailableInVipPath() {
 		const vipDir = path.join( xdgBasedir.data ?? os.tmpdir(), 'vip' );
 
 		const diskSpace = await checkDiskSpace( vipDir );
 		return diskSpace.free;
 	}
 
-	getReserveSpace(): number {
+	public getReserveSpace(): number {
 		return oneGiBInBytes;
 	}
 
-	getSqlSize(): number {
+	public getSqlSize(): number {
 		// We estimated that it'd be about 3.5x the archive size.
 		return this.archiveSize * 3.5;
 	}
 
-	getArchiveSize(): number {
+	public getArchiveSize(): number {
 		return this.archiveSize;
 	}
 
-	getStorageRequiredInMainMachine(): number {
+	public getStorageRequiredInMainMachine(): number {
 		return this.getArchiveSize() + this.getSqlSize() + this.getReserveSpace();
 	}
 
-	getStorageRequiredInDockerMachine(): number {
+	public getStorageRequiredInDockerMachine(): number {
 		return this.getSqlSize() + this.getReserveSpace();
 	}
 
-	async isStorageAvailableInMainMachine(): Promise< boolean > {
+	public async isStorageAvailableInMainMachine(): Promise< boolean > {
 		return ( await this.getStorageAvailableInVipPath() ) > this.getStorageRequiredInMainMachine();
 	}
 
-	isStorageAvailableInDockerMachine(): boolean {
+	public isStorageAvailableInDockerMachine(): boolean {
 		return this.getDockerStorageAvailable() > this.getStorageRequiredInDockerMachine();
 	}
 
 	// eslint-disable-next-line id-length
-	async validateAndPromptDiskSpaceWarningForBackupImport(): Promise< PromptStatus > {
+	public async validateAndPromptDiskSpaceWarningForBackupImport(): Promise< PromptStatus > {
 		const isStorageAvailable =
 			( await this.getStorageAvailableInVipPath() ) > this.getArchiveSize();
 		if ( ! isStorageAvailable ) {
@@ -115,7 +115,7 @@ export class BackupStorageAvailability {
 	}
 
 	// eslint-disable-next-line id-length
-	async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< PromptStatus > {
+	public async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< PromptStatus > {
 		let storageAvailableInMainMachinePrompted = false;
 
 		// there's two prompts, so as long as one prompt is shown, we need to set isPromptShown

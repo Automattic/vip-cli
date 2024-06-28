@@ -44,7 +44,7 @@ export default class Token {
 		}
 	}
 
-	valid(): boolean {
+	public valid(): boolean {
 		if ( ! this._id ) {
 			return false;
 		}
@@ -61,7 +61,7 @@ export default class Token {
 		return now > this.iat && now < this.exp;
 	}
 
-	expired(): boolean {
+	public expired(): boolean {
 		if ( ! this.exp ) {
 			return false;
 		}
@@ -70,15 +70,15 @@ export default class Token {
 		return now > this.exp;
 	}
 
-	get id(): number {
+	public get id(): number {
 		return this._id ?? NaN;
 	}
 
-	get raw(): string {
+	public get raw(): string {
 		return this._raw ?? '';
 	}
 
-	static async uuid(): Promise< string > {
+	public static async uuid(): Promise< string > {
 		const service = Token.getServiceName( '-uuid' );
 
 		let _uuid = await keychain.getPassword( service );
@@ -90,31 +90,31 @@ export default class Token {
 		return _uuid;
 	}
 
-	static async setUuid( _uuid: string ): Promise< void > {
+	public static async setUuid( _uuid: string ): Promise< void > {
 		const service = Token.getServiceName( '-uuid' );
 		await keychain.setPassword( service, _uuid );
 	}
 
-	static set( token: string ): Promise< boolean > {
+	public static set( token: string ): Promise< boolean > {
 		const service = Token.getServiceName();
 
 		return keychain.setPassword( service, token );
 	}
 
-	static async get(): Promise< Token > {
+	public static async get(): Promise< Token > {
 		const service = Token.getServiceName();
 
 		const token = ( await keychain.getPassword( service ) ) ?? '';
 		return new Token( token );
 	}
 
-	static purge(): Promise< boolean > {
+	public static purge(): Promise< boolean > {
 		const service = Token.getServiceName();
 
 		return keychain.deletePassword( service );
 	}
 
-	static getServiceName( modifier: string = '' ): string {
+	public static getServiceName( modifier: string = '' ): string {
 		let service = SERVICE;
 
 		if ( PRODUCTION_API_HOST !== API_HOST ) {

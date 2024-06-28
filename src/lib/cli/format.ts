@@ -177,19 +177,19 @@ export function capitalize( str: unknown ): string {
 export const RUNNING_SPRITE_GLYPHS = [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ];
 
 export class RunningSprite {
-	count: number;
+	private count: number;
 
 	constructor() {
 		this.count = 0;
 	}
 
-	next() {
+	public next() {
 		if ( ++this.count >= RUNNING_SPRITE_GLYPHS.length ) {
 			this.count = 0;
 		}
 	}
 
-	toString() {
+	public toString() {
 		const glyph = RUNNING_SPRITE_GLYPHS[ this.count ];
 		this.next(); // TODO: throttle
 		return glyph;

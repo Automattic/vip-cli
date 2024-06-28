@@ -118,11 +118,11 @@ async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< str
 }
 
 export class PhpMyAdminCommand {
-	app: App;
-	env: AppEnvironment;
-	silent?: boolean;
-	track: CommandTracker;
-	steps = {
+	private app: App;
+	private env: AppEnvironment;
+	private silent?: boolean;
+	private track: CommandTracker;
+	private steps = {
 		ENABLE: 'enable',
 		GENERATE: 'generate',
 	};
@@ -138,28 +138,28 @@ export class PhpMyAdminCommand {
 		] );
 	}
 
-	log( msg: string ): void {
+	private log( msg: string ): void {
 		if ( this.silent ) {
 			return;
 		}
 		console.log( msg );
 	}
 
-	stopProgressTracker(): void {
+	private stopProgressTracker(): void {
 		this.progressTracker.print();
 		this.progressTracker.stopPrinting();
 	}
 
-	async openUrl( url: string ): Promise< void > {
+	public async openUrl( url: string ): Promise< void > {
 		const { default: open } = await import( 'open' );
 		void open( url, { wait: false } );
 	}
 
-	async getStatus(): Promise< string > {
+	public async getStatus(): Promise< string > {
 		return await getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
 	}
 
-	async maybeEnablePhpMyAdmin(): Promise< void > {
+	private async maybeEnablePhpMyAdmin(): Promise< void > {
 		const status = await this.getStatus();
 		if ( ! [ 'running', 'enabled' ].includes( status ) ) {
 			await enablePhpMyAdmin( this.env.id as number );
@@ -170,7 +170,7 @@ export class PhpMyAdminCommand {
 		}
 	}
 
-	async run( silent = false ): Promise< void > {
+	public async run( silent = false ): Promise< void > {
 		this.silent = silent;
 
 		if ( ! this.app.id ) {

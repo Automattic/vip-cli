@@ -12,7 +12,7 @@ export default class Insecure implements Keychain {
 		this.configstore = new Configstore( this.file );
 	}
 
-	getPassword( service: string ): Promise< string | null > {
+	public getPassword( service: string ): Promise< string | null > {
 		try {
 			const value: unknown = this.configstore.get( service );
 			if ( null === value || undefined === value ) {
@@ -22,25 +22,25 @@ export default class Insecure implements Keychain {
 			// eslint-disable-next-line @typescript-eslint/no-base-to-string
 			return Promise.resolve( value.toString() ); // NOSONAR
 		} catch ( err ) {
-			return Promise.reject( err );
+			return Promise.reject( err as Error );
 		}
 	}
 
-	setPassword( service: string, password: string ): Promise< boolean > {
+	public setPassword( service: string, password: string ): Promise< boolean > {
 		try {
 			this.configstore.set( service, password );
 			return Promise.resolve( true );
 		} catch ( err ) {
-			return Promise.reject( err );
+			return Promise.reject( err as Error );
 		}
 	}
 
-	deletePassword( service: string ): Promise< boolean > {
+	public deletePassword( service: string ): Promise< boolean > {
 		try {
 			this.configstore.delete( service );
 			return Promise.resolve( true );
 		} catch ( err ) {
-			return Promise.reject( err );
+			return Promise.reject( err as Error );
 		}
 	}
 }
