@@ -3,9 +3,10 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import url from 'url';
 
+import API from '../lib/api';
 import command from '../lib/cli/command';
+import { mediaImportGetConfig } from '../lib/media-import/config';
 import { trackEvent } from '../lib/tracker';
 import {
 	acceptedExtensions,
@@ -19,21 +20,46 @@ import {
 	summaryLogs,
 } from '../lib/vip-import-validate-files';
 
-command( { requiredArgs: 1, format: true } )
-	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
-	.argv( process.argv, async arg => {
+const appQuery = `
+	id,
+	name,
+	type,
+	organization { id, name },
+	environments{
+		id
+		appId
+		type
+		name
+		primaryDomain { name }
+	}
+`;
+
+command( {
+	appContext: true,
+	appQuery,
+	envContext: true,
+	module: 'import-media',
+	requiredArgs: 1,
+} )
+	// .example( '@TTODO ADD EXAMPLE' )
+	.argv( process.argv, async ( args, opts ) => {
+		console.log( args );
+		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } =
+			opts;
+		// const [ url ] = args;
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation
 		 *
 		 * Manipulating the file path/name to extract the folder name
 		 */
-		const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
-		arg = url.parse( folder ); // Then parse the file to its URL parts
-		const filePath = arg.path; // Extract the path of the file
+		// const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
+		// arg = url.parse( folder ); // Then parse the file to its URL parts
+		// const filePath = arg.path; // Extract the path of the file
 
 		let folderValidation;
 
+		const filePath = 'uploads'; // Temporary folder path for testing
 		/**
 		 * Folder structure validation
 		 *
@@ -75,6 +101,10 @@ command( { requiredArgs: 1, format: true } )
 		const errorFileTypes = [];
 		const errorFileNames = [];
 		const intermediateImages = {};
+
+		const api = API();
+		const mediaImportConfig = await mediaImportGetConfig( api, app.id, env.id );
+		console.debug( 'mediaImportConfig', mediaImportConfig );
 
 		// Iterate through each file to isolate the extension name
 		for ( const file of files ) {
