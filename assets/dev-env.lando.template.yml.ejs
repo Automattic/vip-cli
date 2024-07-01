@@ -124,12 +124,25 @@ services:
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:
-    type: phpmyadmin
-    hosts:
-      - database
-    overrides:
+    type: compose
+    services:
+      image: phpmyadmin:5
+      command: /docker-entrypoint.sh apache2-foreground
       environment:
+        MYSQL_ROOT_PASSWORD: ''
+        PMA_HOSTS: database
+        PMA_PORT: 3306
+        PMA_USER: root
+        PMA_PASSWORD: ''
         UPLOAD_LIMIT: 4G
+        LANDO_NO_USER_PERMS: 1
+        LANDO_NEEDS_EXEC: 1
+      ports:
+        - 127.0.0.1::80
+      volumes:
+        - pma_www:/var/www/html
+    volumes:
+      pma_www:
 <% } %>
 
 <% if ( elasticsearch ) { %>
