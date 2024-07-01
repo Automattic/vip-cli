@@ -23,6 +23,8 @@ export type Scalars = {
 	BigInt: { input: any; output: any };
 	/** Date custom scalar type */
 	Date: { input: any; output: any };
+	/** DynamicType scalar type */
+	DynamicType: { input: any; output: any };
 };
 
 export type AcceptInvitationInput = {
@@ -177,6 +179,7 @@ export type AppEnvironment = {
 	logs?: Maybe< AppEnvironmentLogsList >;
 	logsConfig?: Maybe< AppEnvironmentLogShipping >;
 	mediaExports?: Maybe< MediaExportsList >;
+	mediaImportConfig?: Maybe< AppEnvironmentMediaImportConfig >;
 	mediaImportStatus?: Maybe< AppEnvironmentMediaImportStatus >;
 	metrics?: Maybe< AggregatedMetricMeasurements >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -765,6 +768,17 @@ export type AppEnvironmentLogsList = {
 	nodes?: Maybe< Array< Maybe< AppEnvironmentLog > > >;
 	pollingDelaySeconds: Scalars[ 'Int' ][ 'output' ];
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+};
+
+/** Media Import Configuration */
+export type AppEnvironmentMediaImportConfig = {
+	__typename?: 'AppEnvironmentMediaImportConfig';
+	/** Allowed File Types */
+	allowedFileTypes?: Maybe< Scalars[ 'DynamicType' ][ 'output' ] >;
+	/** Allowed File Name Length */
+	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Allowed File Size Limit */
+	fileSizeLimitInBytes?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 /** Response payload for starting and fetching a Media Import */
