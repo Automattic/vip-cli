@@ -19,7 +19,9 @@ import {
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
 	summaryLogs,
-	validateFiles, getAllowedFileTypesString,
+	validateFiles,
+	logErrorsForInvalidFileSizes,
+	logErrorsForInvalidFileNamesCharCount,
 } from '../lib/vip-import-validate-files';
 
 const appQuery = `
@@ -93,12 +95,8 @@ command( {
 		}
 
 		/**
-		 * File extension validation
-		 *
-		 * Ensure that prohibited media file types are not used
+		 * Get Media Import configuration
 		 */
-		console.debug( 'FILES', files );
-		// Get media import configuration
 		const api = API();
 		const mediaImportConfig = await mediaImportGetConfig( api, app.id, env.id );
 
@@ -107,16 +105,37 @@ command( {
 			return;
 		}
 
-		// Collect invalid files for error logging
-		const { intermediateImagesTotal, errorFileTypes, errorFileNames, intermediateImages } =
-			await validateFiles( files, mediaImportConfig );
+		/**
+		 * File Validation
+		 * Collect all errors from file validation
+		 */
+		const {
+			intermediateImagesTotal,
+			errorFileTypes,
+			errorFileNames,
+			errorFileSizes,
+			errorFileNamesCharCount,
+			intermediateImages,
+		} = await validateFiles( files, mediaImportConfig );
 
 		/**
 		 * Error logging
+		 * @todo make logging dynamic
 		 */
-		const allowedFileTypesString = getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
+		const allowedFileTypesString = 'testing'; // getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
 		if ( errorFileTypes.length > 0 ) {
 			logErrorsForInvalidFileTypes( errorFileTypes, allowedFileTypesString );
+		}
+
+		if ( errorFileSizes.length > 0 ) {
+			logErrorsForInvalidFileSizes( errorFileSizes, mediaImportConfig.fileSizeLimitInBytes );
+		}
+
+		if ( errorFileNamesCharCount.length > 0 ) {
+			logErrorsForInvalidFileNamesCharCount(
+				errorFileNamesCharCount,
+				mediaImportConfig.fileNameCharCount
+			);
 		}
 
 		if ( errorFileNames.length > 0 ) {

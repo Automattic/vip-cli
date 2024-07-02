@@ -2,7 +2,6 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -27,10 +26,19 @@ export async function validateFiles(
 	let intermediateImagesTotal = 0;
 	const errorFileTypes: string[] = [];
 	const errorFileNames: string[] = [];
+	const errorFileSizes: string[] = [];
+	const errorFileNamesCharCount: string[] = [];
 	const intermediateImages = {};
 
 	if ( null === mediaImportConfig ) {
-		return { intermediateImagesTotal, errorFileTypes, errorFileNames, intermediateImages };
+		return {
+			intermediateImagesTotal,
+			errorFileTypes,
+			errorFileNames,
+			errorFileSizes,
+			errorFileNamesCharCount,
+			intermediateImages,
+		};
 	}
 
 	// Iterate through each file to isolate the extension name
@@ -56,6 +64,13 @@ export async function validateFiles(
 		}
 
 		/**
+		 * File size validation
+		 */
+		if ( ! isFileSizeValid( file, <number>mediaImportConfig.fileSizeLimitInBytes ) ) {
+			errorFileSizes.push( file );
+		}
+
+		/**
 		 * Filename validation
 		 *
 		 * Ensure that filenames don't contain prohibited characters
@@ -65,9 +80,11 @@ export async function validateFiles(
 			errorFileNames.push( file );
 		}
 
-		// Validate file size
-		if ( ! isFileSizeValid( file, mediaImportConfig.fileSizeLimitInBytes ) ) {
-			errorFileTypes.push( file );
+		/**
+		 * Validate file name char count limit
+		 */
+		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig.fileNameCharCount ) ) {
+			errorFileNamesCharCount.push( file );
 		}
 
 		/**
@@ -96,10 +113,17 @@ export async function validateFiles(
 	/**
 	 * @todo create an interface/type for the return value
 	 */
-	return { intermediateImagesTotal, errorFileTypes, errorFileNames, intermediateImages };
+	return {
+		intermediateImagesTotal,
+		errorFileTypes,
+		errorFileNames,
+		errorFileSizes,
+		errorFileNamesCharCount,
+		intermediateImages,
+	};
 }
 
-function getExtAndType( filePath: string, allowedFileTypes ): ExtType {
+const getExtAndType = ( filePath: string, allowedFileTypes: unknown ): ExtType => {
 	const extType = {
 		ext: null,
 		type: null,
@@ -120,12 +144,14 @@ function getExtAndType( filePath: string, allowedFileTypes ): ExtType {
 	return extType;
 };
 
-const isFileSizeValid = ( filePathOnDisk: string, fileSizeLimitInBytes ): boolean => {
+const isFileSizeValid = ( filePathOnDisk: string, fileSizeLimitInBytes: number ): boolean => {
 	const fileStat: fs.Stats = fs.statSync( filePathOnDisk );
-	if ( fileSizeLimitInBytes < fileStat.size ) {
-		return false;
-	}
-	return true;
+	return fileSizeLimitInBytes >= fileStat.size;
+};
+
+const isFileNameCharCountValid = ( file: string, fileNameCharCount: number ): boolean => {
+	const filename: string = path.basename( file );
+	return filename.length <= fileNameCharCount;
 };
 
 /**
@@ -717,7 +743,41 @@ export const logErrorsForInvalidFileTypes = (
 	} );
 
 	console.log();
-	recommendAcceptableFileTypes( allowedFileTypes );
+	recommendAcceptableFileTypes( allowedFileTypes ); // @todo this is too verbose
+	console.log( '------------------------------------------------------------' );
+	console.log();
+};
+
+// Log errors for files with invalid size
+export const logErrorsForInvalidFileSizes = (
+	invalidFiles: string[],
+	fileSizeLimitInBytes: number
+): void => {
+	invalidFiles.forEach( file => {
+		console.error(
+			chalk.red( '✕' ),
+			`File size cannot be more than ${ fileSizeLimitInBytes / 1024 / 1024 / 1024 } GB`,
+			chalk.cyan( `${ file }` )
+		);
+	} );
+
+	console.log( '------------------------------------------------------------' );
+	console.log();
+};
+
+// Log errors for files with invalid size
+export const logErrorsForInvalidFileNamesCharCount = (
+	invalidFiles: string[],
+	fileNameCharCount: number
+): void => {
+	invalidFiles.forEach( file => {
+		console.error(
+			chalk.red( '✕' ),
+			`File name cannot have more than ${ fileNameCharCount } characters`,
+			chalk.cyan( `${ file }` )
+		);
+	} );
+
 	console.log( '------------------------------------------------------------' );
 	console.log();
 };
