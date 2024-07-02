@@ -19,7 +19,7 @@ import {
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
 	summaryLogs,
-	validateFiles,
+	validateFiles, getAllowedFileTypesString,
 } from '../lib/vip-import-validate-files';
 
 const appQuery = `
@@ -114,8 +114,9 @@ command( {
 		/**
 		 * Error logging
 		 */
+		const allowedFileTypesString = getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
 		if ( errorFileTypes.length > 0 ) {
-			logErrorsForInvalidFileTypes( errorFileTypes, mediaImportConfig.allowedFileTypes );
+			logErrorsForInvalidFileTypes( errorFileTypes, allowedFileTypesString );
 		}
 
 		if ( errorFileNames.length > 0 ) {

@@ -192,12 +192,17 @@ const recommendedFileStructure = (): void => {
 };
 
 // Recommend accepted file types
-const recommendAcceptableFileTypes = ( allowedFileTypes ): void => {
-	console.log(
-		'Todo: use new media config allowed file types'
-		// 'Accepted file types: \n\n' + chalk.magenta( `${ allowedFileTypes.join( ', ' ) }` )
-	);
+const recommendAcceptableFileTypes = ( allowedFileTypesString: string ): void => {
+	console.log( 'Accepted file types: \n\n' + chalk.magenta( `${ allowedFileTypesString }` ) );
 	console.log();
+};
+
+// Function to transform object values into a string
+export const getAllowedFileTypesString = ( allowedFileTypes ): string => {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+	return Object.entries( allowedFileTypes )
+		.map( ( [ key, value ] ) => `${ key }: ${ JSON.stringify( value ) }` )
+		.join( ', ' );
 };
 
 // Accepted file name characters
@@ -685,7 +690,10 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
  */
 
 // Log errors for files with invalid file extensions and recommend accepted file types
-export const logErrorsForInvalidFileTypes = ( invalidFiles: string[], allowedFileTypes ): void => {
+export const logErrorsForInvalidFileTypes = (
+	invalidFiles: string[],
+	allowedFileTypes: string
+): void => {
 	invalidFiles.forEach( file => {
 		console.error(
 			chalk.red( '✕' ),
