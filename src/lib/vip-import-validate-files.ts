@@ -1,122 +1,122 @@
+/**
+ * External dependencies
+ */
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
-// Accepted media file extensions
-export const acceptedExtensions: string[] = [
-	'jpg',
-	'jpeg',
-	'jpe',
-	'gif',
-	'png',
-	'bmp',
-	'svg',
-	'tiff',
-	'tif',
-	'ico',
-	'asf',
-	'asx',
-	'wmv',
-	'wmx',
-	'wm',
-	'avi',
-	'divx',
-	'mov',
-	'qt',
-	'mpeg',
-	'mpg',
-	'mpe',
-	'mp4',
-	'm4v',
-	'ogv',
-	'webm',
-	'mkv',
-	'3gp',
-	'3gpp',
-	'3g2',
-	'3gp2',
-	'txt',
-	'asc',
-	'c',
-	'cc',
-	'h',
-	'srt',
-	'csv',
-	'tsv',
-	'ics',
-	'rtx',
-	'css',
-	'vtt',
-	'dfxp',
-	'mp3',
-	'm4a',
-	'm4b',
-	'ra',
-	'ram',
-	'wav',
-	'ogg',
-	'oga',
-	'mid',
-	'midi',
-	'wma',
-	'wax',
-	'mka',
-	'rtf',
-	'js',
-	'pdf',
-	'class',
-	'psd',
-	'xcf',
-	'doc',
-	'pot',
-	'pps',
-	'ppt',
-	'wri',
-	'xla',
-	'xls',
-	'xlt',
-	'xlw',
-	'mdb',
-	'mpp',
-	'docx',
-	'docm',
-	'dotx',
-	'dotm',
-	'xlsx',
-	'xlsm',
-	'xlsb',
-	'xltx',
-	'xltm',
-	'xlam',
-	'pptx',
-	'pptm',
-	'ppsx',
-	'ppsm',
-	'potx',
-	'potm',
-	'ppam',
-	'sldx',
-	'sldm',
-	'onetoc',
-	' onetoc2',
-	'onetmp',
-	'onepkg',
-	'oxps',
-	'xps',
-	'odt',
-	'odp',
-	'ods',
-	'odg',
-	'odc',
-	'odb',
-	'odf',
-	'webp',
-	'wp',
-	'wpd',
-	'key',
-	'numbers',
-	'pages',
-];
+/**
+ * Internal dependencies
+ */
+import { AppEnvironmentMediaImportConfig } from '../graphqlTypes';
+
+interface ExtType {
+	ext: string | null;
+	type: string[] | null;
+}
+/**
+ * File info validation
+ *
+ * Validate the file info for media files
+ */
+export async function validateFiles(
+	files: string[],
+	mediaImportConfig: AppEnvironmentMediaImportConfig
+) {
+	let intermediateImagesTotal = 0;
+	const errorFileTypes = [];
+	const errorFileNames = [];
+	const intermediateImages = {};
+
+	if ( null === mediaImportConfig ) {
+		return { intermediateImagesTotal, errorFileTypes, errorFileNames, intermediateImages };
+	}
+
+	// Iterate through each file to isolate the extension name
+	for ( const file of files ) {
+		// Check if file is a directory
+		// eslint-disable-next-line no-await-in-loop,@typescript-eslint/no-unsafe-argument
+		const stats = await fs.promises.stat( file );
+		const isFolder = stats.isDirectory();
+
+		// Check for any invalid file extensions and types
+		// Returns extension and type, null for invalid extensions or type
+		let fileExtType: ExtType = { ext: null, type: null };
+		if ( null !== mediaImportConfig.allowedFileTypes ) {
+			fileExtType = getExtAndType( file, mediaImportConfig.allowedFileTypes );
+		}
+		const isFileExtensionValid = fileExtType.ext;
+		const isFileTypeValid = fileExtType.type;
+
+		// Collect files that have no extension, have invalid extensions,
+		// or are directories for error logging
+		if ( ! isFileTypeValid || ! isFileExtensionValid || isFolder ) {
+			errorFileTypes.push( file );
+		}
+
+		/**
+		 * Filename validation
+		 *
+		 * Ensure that filenames don't contain prohibited characters
+		 */
+		// Collect files that have invalid file names for error logging
+		if ( isFileSanitized( file ) ) {
+			errorFileNames.push( file );
+		}
+
+		/**
+		 * Intermediate image validation
+		 *
+		 * Detect any intermediate images.
+		 *
+		 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
+		 * You can resize an image directly on VIP so intermediate images are not necessary.
+		 */
+		const original = doesImageHaveExistingSource( file );
+
+		// If an image is an intermediate image, increment the total number and
+		// populate key/value pairs of the original image and intermediate image(s)
+		if ( original ) {
+			intermediateImagesTotal++;
+
+			if ( intermediateImages[ original ] ) {
+				// Key: original image, value: intermediate image(s)
+				intermediateImages[ original ] = `${ intermediateImages[ original ] }, ${ file }`;
+			} else {
+				intermediateImages[ original ] = file;
+			}
+		}
+	}
+	/**
+	 * @todo create an interface/type for the return value
+	 */
+	return { intermediateImagesTotal, errorFileTypes, errorFileNames, intermediateImages };
+}
+
+function getExtAndType( filePath: string, allowedFileTypes ): ExtType {
+	const extType = {
+		ext: null,
+		type: null,
+	};
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+	for ( const [ key, value ] of Object.entries( allowedFileTypes ) ) {
+		// eslint-disable-next-line security/detect-non-literal-regexp
+		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
+		const matches = regex.exec( filePath );
+		if ( matches ) {
+			extType.type = value;
+			extType.ext = matches[ 1 ];
+			break;
+		}
+	}
+
+	return extType;
+}
+
+/**
+ * End file info validation
+ */
 
 /**
  * Character validation global variables
@@ -192,9 +192,10 @@ const recommendedFileStructure = (): void => {
 };
 
 // Recommend accepted file types
-const recommendAcceptableFileTypes = (): void => {
+const recommendAcceptableFileTypes = ( allowedFileTypes ): void => {
 	console.log(
-		'Accepted file types: \n\n' + chalk.magenta( `${ acceptedExtensions.join( ', ' ) }` )
+		'Todo: use new media config allowed file types'
+		// 'Accepted file types: \n\n' + chalk.magenta( `${ allowedFileTypes.join( ', ' ) }` )
 	);
 	console.log();
 };
@@ -684,7 +685,7 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
  */
 
 // Log errors for files with invalid file extensions and recommend accepted file types
-export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ): void => {
+export const logErrorsForInvalidFileTypes = ( invalidFiles: string[], allowedFileTypes ): void => {
 	invalidFiles.forEach( file => {
 		console.error(
 			chalk.red( '✕' ),
@@ -694,7 +695,7 @@ export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ): void => 
 	} );
 
 	console.log();
-	recommendAcceptableFileTypes();
+	recommendAcceptableFileTypes( allowedFileTypes );
 	console.log( '------------------------------------------------------------' );
 	console.log();
 };

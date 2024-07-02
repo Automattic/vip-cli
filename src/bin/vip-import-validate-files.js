@@ -1,23 +1,25 @@
 #!/usr/bin/env node
 
+/**
+ * External dependencies
+ */
 import chalk from 'chalk';
-import fs from 'fs';
-import path from 'path';
 
+/**
+ * Internal dependencies
+ */
 import API from '../lib/api';
 import command from '../lib/cli/command';
 import { mediaImportGetConfig } from '../lib/media-import/config';
 import { trackEvent } from '../lib/tracker';
 import {
-	acceptedExtensions,
 	findNestedDirectories,
 	folderStructureValidation,
-	isFileSanitized,
-	doesImageHaveExistingSource,
 	logErrorsForIntermediateImages,
 	logErrorsForInvalidFileTypes,
 	logErrorsForInvalidFilenames,
 	summaryLogs,
+	validateFiles,
 } from '../lib/vip-import-validate-files';
 
 const appQuery = `
@@ -50,6 +52,7 @@ command( {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation
+		 * @todo Add file manipulation to extract the folder name
 		 *
 		 * Manipulating the file path/name to extract the folder name
 		 */
@@ -90,83 +93,29 @@ command( {
 		}
 
 		/**
-		 * Media file extension validation
+		 * File extension validation
 		 *
 		 * Ensure that prohibited media file types are not used
 		 */
-
-		// Collect invalid files for error logging
-		let intermediateImagesTotal = 0;
-
-		const errorFileTypes = [];
-		const errorFileNames = [];
-		const intermediateImages = {};
-
+		console.debug( 'FILES', files );
+		// Get media import configuration
 		const api = API();
 		const mediaImportConfig = await mediaImportGetConfig( api, app.id, env.id );
-		console.debug( 'mediaImportConfig', mediaImportConfig );
 
-		// Iterate through each file to isolate the extension name
-		for ( const file of files ) {
-			// Check if file is a directory
-			// eslint-disable-next-line no-await-in-loop
-			const stats = await fs.promises.stat( file );
-			const isFolder = stats.isDirectory();
-
-			const extension = path.extname( file ); // Extract the extension of the file
-			const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g- .jpg -> jpg)
-			const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
-
-			// Check for any invalid file extensions
-			// Returns true if ext is valid; false if invalid
-			const validExtensions = acceptedExtensions.includes( extLowerCase );
-
-			// Collect files that have no extension, have invalid extensions,
-			// or are directories for error logging
-			if ( ! extension || ! validExtensions || isFolder ) {
-				errorFileTypes.push( file );
-			}
-
-			/**
-			 * Filename validation
-			 *
-			 * Ensure that filenames don't contain prohibited characters
-			 */
-
-			// Collect files that have invalid file names for error logging
-			if ( isFileSanitized( file ) ) {
-				errorFileNames.push( file );
-			}
-
-			/**
-			 * Intermediate image validation
-			 *
-			 * Detect any intermediate images.
-			 *
-			 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
-			 * You can resize an image directly on VIP so intermediate images are not necessary.
-			 */
-			const original = doesImageHaveExistingSource( file );
-
-			// If an image is an intermediate image, increment the total number and
-			// populate key/value pairs of the original image and intermediate image(s)
-			if ( original ) {
-				intermediateImagesTotal++;
-
-				if ( intermediateImages[ original ] ) {
-					// Key: original image, value: intermediate image(s)
-					intermediateImages[ original ] = `${ intermediateImages[ original ] }, ${ file }`;
-				} else {
-					intermediateImages[ original ] = file;
-				}
-			}
+		if ( ! mediaImportConfig ) {
+			console.error( chalk.red( '✕ Error:' ), 'Media import configuration not available' );
+			return;
 		}
+
+		// Collect invalid files for error logging
+		const { intermediateImagesTotal, errorFileTypes, errorFileNames, intermediateImages } =
+			await validateFiles( files, mediaImportConfig );
 
 		/**
 		 * Error logging
 		 */
 		if ( errorFileTypes.length > 0 ) {
-			logErrorsForInvalidFileTypes( errorFileTypes );
+			logErrorsForInvalidFileTypes( errorFileTypes, mediaImportConfig.allowedFileTypes );
 		}
 
 		if ( errorFileNames.length > 0 ) {

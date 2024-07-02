@@ -22,9 +22,7 @@ export async function mediaImportGetConfig(
 	api: ApolloClient< NormalizedCacheObject >,
 	appId: number,
 	envId: number
-	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 ): Promise< AppEnvironmentMediaImportConfig | null > {
-	console.debug( 'DEBUGGING MY NEW VALDIATION' ); // DEBUG
 	const response = await api.query< AppQuery, AppQueryVariables >( {
 		query: IMPORT_MEDIA_CONFIG_QUERY,
 		variables: { appId, envId },
