@@ -1,7 +1,7 @@
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import gql from 'graphql-tag';
 
-import { AppQuery, AppQueryVariables } from './status.generated';
+import { AppQuery, AppQueryVariables } from './config.generated';
 import { AppEnvironmentMediaImportConfig } from '../../graphqlTypes';
 
 const IMPORT_MEDIA_CONFIG_QUERY = gql`
