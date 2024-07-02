@@ -8,17 +8,18 @@ import path from 'path';
 /**
  * Internal dependencies
  */
+
 import { AppEnvironmentMediaImportConfig } from '../graphqlTypes';
 
 interface ExtType {
 	ext: string | null;
-	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-	type: unknown | null;
+	type: string | null;
 }
 
 interface AllowedFileTypes {
 	[ key: string ]: unknown;
 }
+
 /**
  * File info validation
  *
@@ -33,7 +34,7 @@ export async function validateFiles(
 	const errorFileNames: string[] = [];
 	const errorFileSizes: string[] = [];
 	const errorFileNamesCharCount: string[] = [];
-	const intermediateImages: [] = [];
+	const intermediateImages: { [ key: string ]: string } = {};
 
 	// Iterate through each file to isolate the extension name
 	for ( const file of files ) {
@@ -90,7 +91,7 @@ export async function validateFiles(
 		 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
 		 * You can resize an image directly on VIP so intermediate images are not necessary.
 		 */
-		const original = doesImageHaveExistingSource( file );
+		const original: string | false = doesImageHaveExistingSource( file );
 
 		// If an image is an intermediate image, increment the total number and
 		// populate key/value pairs of the original image and intermediate image(s)
@@ -117,16 +118,6 @@ export async function validateFiles(
 		intermediateImages,
 	};
 }
-
-interface ExtType {
-	ext: string | null;
-	type: string | null;
-}
-
-interface AllowedFileTypes {
-	[ key: string ]: unknown;
-}
-
 const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): ExtType => {
 	const extType: ExtType = {
 		ext: null,
@@ -139,7 +130,7 @@ const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): 
 		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
 		const matches = regex.exec( filePath );
 		if ( matches ) {
-			extType.type = value;
+			extType.type = value as string;
 			extType.ext = matches[ 1 ];
 			break;
 		}
