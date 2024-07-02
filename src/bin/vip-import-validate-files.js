@@ -45,12 +45,10 @@ command( {
 	module: 'import-media',
 	requiredArgs: 1,
 } )
-	// .example( '@TTODO ADD EXAMPLE' )
+	// .example( '@TODO ADD EXAMPLE' )
 	.argv( process.argv, async ( args, opts ) => {
 		console.log( args );
-		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } =
-			opts;
-		// const [ url ] = args;
+		const { app, env } = opts;
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation

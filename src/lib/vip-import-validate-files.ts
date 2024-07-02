@@ -12,7 +12,12 @@ import { AppEnvironmentMediaImportConfig } from '../graphqlTypes';
 
 interface ExtType {
 	ext: string | null;
-	type: string[] | null;
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+	type: unknown | null;
+}
+
+interface AllowedFileTypes {
+	[ key: string ]: unknown;
 }
 /**
  * File info validation
@@ -28,18 +33,7 @@ export async function validateFiles(
 	const errorFileNames: string[] = [];
 	const errorFileSizes: string[] = [];
 	const errorFileNamesCharCount: string[] = [];
-	const intermediateImages = {};
-
-	if ( null === mediaImportConfig ) {
-		return {
-			intermediateImagesTotal,
-			errorFileTypes,
-			errorFileNames,
-			errorFileSizes,
-			errorFileNamesCharCount,
-			intermediateImages,
-		};
-	}
+	const intermediateImages: [] = [];
 
 	// Iterate through each file to isolate the extension name
 	for ( const file of files ) {
@@ -52,6 +46,7 @@ export async function validateFiles(
 		// Returns extension and type, null for invalid extensions or type
 		let fileExtType: ExtType = { ext: null, type: null };
 		if ( null !== mediaImportConfig.allowedFileTypes ) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			fileExtType = getExtAndType( file, mediaImportConfig.allowedFileTypes );
 		}
 		const isFileExtensionValid = fileExtType.ext;
@@ -123,14 +118,23 @@ export async function validateFiles(
 	};
 }
 
-const getExtAndType = ( filePath: string, allowedFileTypes: unknown ): ExtType => {
-	const extType = {
+interface ExtType {
+	ext: string | null;
+	type: string | null;
+}
+
+interface AllowedFileTypes {
+	[ key: string ]: unknown;
+}
+
+const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): ExtType => {
+	const extType: ExtType = {
 		ext: null,
 		type: null,
 	};
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 	for ( const [ key, value ] of Object.entries( allowedFileTypes ) ) {
+		// Create a regular expression to match the file extension
 		// eslint-disable-next-line security/detect-non-literal-regexp
 		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
 		const matches = regex.exec( filePath );
@@ -238,8 +242,7 @@ const recommendAcceptableFileTypes = ( allowedFileTypesString: string ): void =>
 };
 
 // Function to transform object values into a string
-export const getAllowedFileTypesString = ( allowedFileTypes ): string => {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+export const getAllowedFileTypesString = ( allowedFileTypes: AllowedFileTypes ): string => {
 	return Object.entries( allowedFileTypes )
 		.map( ( [ key, value ] ) => `${ key }: ${ JSON.stringify( value ) }` )
 		.join( ', ' );
@@ -667,9 +670,7 @@ export const isFileSanitized = ( file: string ): boolean => {
 	sanitizedFile = sanitizedFile.replace( regexSpaces, ' ' );
 
 	// Check if the filename has been sanitized
-	const checkFile = sanitizedFile !== filename;
-
-	return checkFile;
+	return sanitizedFile !== filename;
 };
 
 /**
