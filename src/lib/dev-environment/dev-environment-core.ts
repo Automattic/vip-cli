@@ -377,6 +377,7 @@ export async function printEnvironmentInfo(
 			xdebug += ' (with additional configuration)';
 		}
 		appInfo.xdebug = xdebug;
+		appInfo.cron = environmentData.cron ? 'enabled' : 'disabled';
 
 		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
 		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
