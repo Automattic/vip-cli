@@ -2,6 +2,7 @@
  * External dependencies
  */
 import chalk from 'chalk';
+import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -24,8 +25,8 @@ export async function validateFiles(
 	mediaImportConfig: AppEnvironmentMediaImportConfig
 ) {
 	let intermediateImagesTotal = 0;
-	const errorFileTypes = [];
-	const errorFileNames = [];
+	const errorFileTypes: string[] = [];
+	const errorFileNames: string[] = [];
 	const intermediateImages = {};
 
 	if ( null === mediaImportConfig ) {
@@ -62,6 +63,11 @@ export async function validateFiles(
 		// Collect files that have invalid file names for error logging
 		if ( isFileSanitized( file ) ) {
 			errorFileNames.push( file );
+		}
+
+		// Validate file size
+		if ( ! isFileSizeValid( file, mediaImportConfig.fileSizeLimitInBytes ) ) {
+			errorFileTypes.push( file );
 		}
 
 		/**
@@ -112,7 +118,15 @@ function getExtAndType( filePath: string, allowedFileTypes ): ExtType {
 	}
 
 	return extType;
-}
+};
+
+const isFileSizeValid = ( filePathOnDisk: string, fileSizeLimitInBytes ): boolean => {
+	const fileStat: fs.Stats = fs.statSync( filePathOnDisk );
+	if ( fileSizeLimitInBytes < fileStat.size ) {
+		return false;
+	}
+	return true;
+};
 
 /**
  * End file info validation
