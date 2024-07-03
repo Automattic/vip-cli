@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "3.4.3-dev.0",
+  "version": "3.5.1-dev.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "3.4.3-dev.0",
+      "version": "3.5.1-dev.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -12643,9 +12643,9 @@
       }
     },
     "node_modules/typescript": {
-      "version": "5.5.2",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.5.2.tgz",
-      "integrity": "sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==",
+      "version": "5.5.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.5.3.tgz",
+      "integrity": "sha512-/hreyEujaB0w76zKo6717l3L0o/qEUtRgdvUBvlkhoWeOVMjMuHNHk0BRBzikzuGDqNmPQbg5ifMEqsHLiIUcQ==",
       "dev": true,
       "bin": {
         "tsc": "bin/tsc",
@@ -22653,9 +22653,9 @@
       }
     },
     "typescript": {
-      "version": "5.5.2",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.5.2.tgz",
-      "integrity": "sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==",
+      "version": "5.5.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.5.3.tgz",
+      "integrity": "sha512-/hreyEujaB0w76zKo6717l3L0o/qEUtRgdvUBvlkhoWeOVMjMuHNHk0BRBzikzuGDqNmPQbg5ifMEqsHLiIUcQ==",
       "dev": true
     },
     "typical": {
