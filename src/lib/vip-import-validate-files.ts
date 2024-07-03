@@ -46,7 +46,7 @@ export async function validateFiles(
 		intermediateImages: {},
 	};
 
-	for ( const file of files ) {
+	const fileValidationPromises = files.map( async file => {
 		const isFolder = await isDirectory( file );
 		const fileExtType = getFileExtType(
 			file,
@@ -78,7 +78,9 @@ export async function validateFiles(
 				validationResult.intermediateImages[ original ] = file;
 			}
 		}
-	}
+	} );
+
+	await Promise.all( fileValidationPromises );
 	return validationResult;
 }
 
