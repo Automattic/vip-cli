@@ -16,7 +16,7 @@ interface ExtType {
 	type: string | null;
 }
 
-interface AllowedFileTypes {
+interface MediaImportAllowedFileTypes {
 	[ key: string ]: unknown;
 }
 
@@ -49,13 +49,16 @@ export async function validateFiles(
 
 	for ( const file of files ) {
 		const isFolder = await isDirectory( file );
-		const fileExtType = getFileExtType( file, mediaImportConfig.allowedFileTypes );
+		const fileExtType = getFileExtType(
+			file,
+			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
+		);
 
 		if ( isInvalidFile( fileExtType, isFolder ) ) {
 			validationResult.errorFileTypes.push( file );
 		}
 
-		if ( ! isFileSizeValid( file, mediaImportConfig.fileSizeLimitInBytes ) ) {
+		if ( ! isFileSizeValid( file, <number>mediaImportConfig.fileSizeLimitInBytes ) ) {
 			validationResult.errorFileSizes.push( file );
 		}
 
@@ -63,7 +66,7 @@ export async function validateFiles(
 			validationResult.errorFileNames.push( file );
 		}
 
-		if ( ! isFileNameCharCountValid( file, mediaImportConfig.fileNameCharCount ) ) {
+		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig.fileNameCharCount ) ) {
 			validationResult.errorFileNamesCharCount.push( file );
 		}
 
@@ -85,7 +88,10 @@ const isDirectory = async ( file: string ): Promise< boolean > => {
 	return stats.isDirectory();
 };
 
-const getFileExtType = ( file: string, allowedFileTypes: AllowedFileTypes | null ): ExtType => {
+const getFileExtType = (
+	file: string,
+	allowedFileTypes: MediaImportAllowedFileTypes | null
+): ExtType => {
 	if ( ! allowedFileTypes ) return { ext: null, type: null };
 	return getExtAndType( file, allowedFileTypes );
 };
@@ -93,7 +99,10 @@ const getFileExtType = ( file: string, allowedFileTypes: AllowedFileTypes | null
 const isInvalidFile = ( fileExtType: ExtType, isFolder: boolean ): boolean => {
 	return ! fileExtType.type || ! fileExtType.ext || isFolder;
 };
-const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): ExtType => {
+const getExtAndType = (
+	filePath: string,
+	allowedFileTypes: MediaImportAllowedFileTypes
+): ExtType => {
 	const extType: ExtType = { ext: null, type: null };
 	for ( const [ key, value ] of Object.entries( allowedFileTypes ) ) {
 		// Create a regular expression to match the file extension
@@ -202,7 +211,9 @@ const recommendAcceptableFileTypes = ( allowedFileTypesString: string ): void =>
 };
 
 // Function to transform object values into a string
-export const getAllowedFileTypesString = ( allowedFileTypes: AllowedFileTypes ): string => {
+export const getAllowedFileTypesString = (
+	allowedFileTypes: MediaImportAllowedFileTypes
+): string => {
 	return Object.entries( allowedFileTypes )
 		.map( ( [ key, value ] ) => `${ key }: ${ JSON.stringify( value ) }` )
 		.join( ', ' );
