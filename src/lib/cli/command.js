@@ -276,7 +276,9 @@ args.argv = async function ( argv, cb ) {
 				exit.withError( 'Environment production is not allowed for this command' );
 			}
 
-			const env = options.app.environments.find( cur => getEnvIdentifier( cur ) === options.env );
+			const env = options.app.environments.find(
+				cur => getEnvIdentifier( cur ).toLowerCase() === options.env.toLowerCase()
+			);
 
 			if ( ! env ) {
 				await trackEvent( 'command_childcontext_param_error', {
