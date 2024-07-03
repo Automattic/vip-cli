@@ -4,6 +4,7 @@
  * External dependencies
  */
 import chalk from 'chalk';
+import url from 'url';
 
 /**
  * Internal dependencies
@@ -22,6 +23,7 @@ import {
 	validateFiles,
 	logErrorsForInvalidFileSizes,
 	logErrorsForInvalidFileNamesCharCount,
+	getAllowedFileTypesString,
 } from '../lib/vip-import-validate-files';
 
 const appQuery = `
@@ -42,27 +44,25 @@ command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
-	module: 'import-media',
 	requiredArgs: 1,
 } )
-	// .example( '@TODO ADD EXAMPLE' )
+	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
 	.argv( process.argv, async ( args, opts ) => {
-		console.log( args );
+		console.debug( 'ARGS', args );
+		console.debug( 'OPTS', opts );
 		const { app, env } = opts;
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation
-		 * @todo Add file manipulation to extract the folder name
 		 *
 		 * Manipulating the file path/name to extract the folder name
 		 */
-		// const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
-		// arg = url.parse( folder ); // Then parse the file to its URL parts
-		// const filePath = arg.path; // Extract the path of the file
+		const folder = args.join(); // File comes in as an array as part of the args- turn it into a string
+		args = url.parse( folder ); // Then parse the file to its URL parts
+		const filePath = args.path; // Extract the path of the file
 
 		let folderValidation;
 
-		const filePath = 'uploads'; // Temporary folder path for testing
 		/**
 		 * Folder structure validation
 		 *
@@ -120,7 +120,7 @@ command( {
 		 * Error logging
 		 * @todo make logging dynamic
 		 */
-		const allowedFileTypesString = 'testing'; // getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
+		const allowedFileTypesString = getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
 		if ( errorFileTypes.length > 0 ) {
 			logErrorsForInvalidFileTypes( errorFileTypes, allowedFileTypesString );
 		}
