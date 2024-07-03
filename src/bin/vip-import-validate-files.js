@@ -44,8 +44,6 @@ command( {
 } )
 	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
 	.argv( process.argv, async ( args, opts ) => {
-		console.debug( 'ARGS', args );
-		console.debug( 'OPTS', opts );
 		const { app, env } = opts;
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
