@@ -8,7 +8,6 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-
 import { AppEnvironmentMediaImportConfig } from '../graphqlTypes';
 
 interface ExtType {
@@ -215,7 +214,7 @@ export const getAllowedFileTypesString = (
 	allowedFileTypes: MediaImportAllowedFileTypes
 ): string => {
 	return Object.entries( allowedFileTypes )
-		.map( ( [ key, value ] ) => `${ key }: ${ JSON.stringify( value ) }` )
+		.map( ( [ key, value ] ) => `${ key }` )
 		.join( ', ' );
 };
 
@@ -712,7 +711,7 @@ export const logErrorsForInvalidFileTypes = (
 	} );
 
 	console.log();
-	recommendAcceptableFileTypes( allowedFileTypes ); // @todo this is too verbose
+	recommendAcceptableFileTypes( allowedFileTypes );
 	console.log( '------------------------------------------------------------' );
 	console.log();
 };
