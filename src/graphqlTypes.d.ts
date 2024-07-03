@@ -20,11 +20,11 @@ export type Scalars = {
 	Boolean: { input: boolean; output: boolean };
 	Int: { input: number; output: number };
 	Float: { input: number; output: number };
-	/** AllowedFileTypes scalar type */
-	AllowedFileTypes: { input: any; output: any };
 	BigInt: { input: any; output: any };
 	/** Date custom scalar type */
 	Date: { input: any; output: any };
+	/** MediaImportAllowedFileTypes scalar type */
+	MediaImportAllowedFileTypes: { input: any; output: any };
 };
 
 export type AcceptInvitationInput = {
@@ -774,7 +774,7 @@ export type AppEnvironmentLogsList = {
 export type AppEnvironmentMediaImportConfig = {
 	__typename?: 'AppEnvironmentMediaImportConfig';
 	/** Allowed File Types */
-	allowedFileTypes?: Maybe< Scalars[ 'AllowedFileTypes' ][ 'output' ] >;
+	allowedFileTypes?: Maybe< Scalars[ 'MediaImportAllowedFileTypes' ][ 'output' ] >;
 	/** Allowed File Name Length */
 	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	/** Allowed File Size Limit */
