@@ -20,6 +20,15 @@ interface AllowedFileTypes {
 	[ key: string ]: unknown;
 }
 
+interface ValidationResult {
+	intermediateImagesTotal: number;
+	errorFileTypes: string[];
+	errorFileNames: string[];
+	errorFileSizes: string[];
+	errorFileNamesCharCount: string[];
+	intermediateImages: { [ key: string ]: string };
+}
+
 /**
  * File info validation
  *
@@ -28,105 +37,66 @@ interface AllowedFileTypes {
 export async function validateFiles(
 	files: string[],
 	mediaImportConfig: AppEnvironmentMediaImportConfig
-) {
-	let intermediateImagesTotal = 0;
-	const errorFileTypes: string[] = [];
-	const errorFileNames: string[] = [];
-	const errorFileSizes: string[] = [];
-	const errorFileNamesCharCount: string[] = [];
-	const intermediateImages: { [ key: string ]: string } = {};
+): Promise< ValidationResult > {
+	const validationResult: ValidationResult = {
+		intermediateImagesTotal: 0,
+		errorFileTypes: [],
+		errorFileNames: [],
+		errorFileSizes: [],
+		errorFileNamesCharCount: [],
+		intermediateImages: {},
+	};
 
-	// Iterate through each file to isolate the extension name
 	for ( const file of files ) {
-		// Check if file is a directory
-		// eslint-disable-next-line no-await-in-loop,@typescript-eslint/no-unsafe-argument
-		const stats = await fs.promises.stat( file );
-		const isFolder = stats.isDirectory();
+		const isFolder = await isDirectory( file );
+		const fileExtType = getFileExtType( file, mediaImportConfig.allowedFileTypes );
 
-		// Check for any invalid file extensions and types
-		// Returns extension and type, null for invalid extensions or type
-		let fileExtType: ExtType = { ext: null, type: null };
-		if ( null !== mediaImportConfig.allowedFileTypes ) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-			fileExtType = getExtAndType( file, mediaImportConfig.allowedFileTypes );
-		}
-		const isFileExtensionValid = fileExtType.ext;
-		const isFileTypeValid = fileExtType.type;
-
-		// Collect files that have no extension, have invalid extensions,
-		// or are directories for error logging
-		if ( ! isFileTypeValid || ! isFileExtensionValid || isFolder ) {
-			errorFileTypes.push( file );
+		if ( isInvalidFile( fileExtType, isFolder ) ) {
+			validationResult.errorFileTypes.push( file );
 		}
 
-		/**
-		 * File size validation
-		 */
-		if ( ! isFileSizeValid( file, <number>mediaImportConfig.fileSizeLimitInBytes ) ) {
-			errorFileSizes.push( file );
+		if ( ! isFileSizeValid( file, mediaImportConfig.fileSizeLimitInBytes ) ) {
+			validationResult.errorFileSizes.push( file );
 		}
 
-		/**
-		 * Filename validation
-		 *
-		 * Ensure that filenames don't contain prohibited characters
-		 */
-		// Collect files that have invalid file names for error logging
 		if ( isFileSanitized( file ) ) {
-			errorFileNames.push( file );
+			validationResult.errorFileNames.push( file );
 		}
 
-		/**
-		 * Validate file name char count limit
-		 */
-		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig.fileNameCharCount ) ) {
-			errorFileNamesCharCount.push( file );
+		if ( ! isFileNameCharCountValid( file, mediaImportConfig.fileNameCharCount ) ) {
+			validationResult.errorFileNamesCharCount.push( file );
 		}
 
-		/**
-		 * Intermediate image validation
-		 *
-		 * Detect any intermediate images.
-		 *
-		 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
-		 * You can resize an image directly on VIP so intermediate images are not necessary.
-		 */
-		const original: string | false = doesImageHaveExistingSource( file );
-
-		// If an image is an intermediate image, increment the total number and
-		// populate key/value pairs of the original image and intermediate image(s)
+		const original = doesImageHaveExistingSource( file );
 		if ( original ) {
-			intermediateImagesTotal++;
-
-			if ( intermediateImages[ original ] ) {
-				// Key: original image, value: intermediate image(s)
-				intermediateImages[ original ] = `${ intermediateImages[ original ] }, ${ file }`;
+			validationResult.intermediateImagesTotal++;
+			if ( validationResult.intermediateImages[ original ] ) {
+				validationResult.intermediateImages[ original ] += `, ${ file }`;
 			} else {
-				intermediateImages[ original ] = file;
+				validationResult.intermediateImages[ original ] = file;
 			}
 		}
 	}
-	/**
-	 * @todo create an interface/type for the return value
-	 */
-	return {
-		intermediateImagesTotal,
-		errorFileTypes,
-		errorFileNames,
-		errorFileSizes,
-		errorFileNamesCharCount,
-		intermediateImages,
-	};
+	return validationResult;
 }
-const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): ExtType => {
-	const extType: ExtType = {
-		ext: null,
-		type: null,
-	};
 
+const isDirectory = async ( file: string ): Promise< boolean > => {
+	const stats = await fs.promises.stat( file );
+	return stats.isDirectory();
+};
+
+const getFileExtType = ( file: string, allowedFileTypes: AllowedFileTypes | null ): ExtType => {
+	if ( ! allowedFileTypes ) return { ext: null, type: null };
+	return getExtAndType( file, allowedFileTypes );
+};
+
+const isInvalidFile = ( fileExtType: ExtType, isFolder: boolean ): boolean => {
+	return ! fileExtType.type || ! fileExtType.ext || isFolder;
+};
+const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): ExtType => {
+	const extType: ExtType = { ext: null, type: null };
 	for ( const [ key, value ] of Object.entries( allowedFileTypes ) ) {
 		// Create a regular expression to match the file extension
-		// eslint-disable-next-line security/detect-non-literal-regexp
 		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
 		const matches = regex.exec( filePath );
 		if ( matches ) {
@@ -135,7 +105,6 @@ const getExtAndType = ( filePath: string, allowedFileTypes: AllowedFileTypes ): 
 			break;
 		}
 	}
-
 	return extType;
 };
 
@@ -661,6 +630,7 @@ export const isFileSanitized = ( file: string ): boolean => {
 	sanitizedFile = sanitizedFile.replace( regexSpaces, ' ' );
 
 	// Check if the filename has been sanitized
+
 	return sanitizedFile !== filename;
 };
 
@@ -690,7 +660,6 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 
 	// Intermediate image regex check
 	const intermediateImage = identifyIntermediateImage( filename );
-
 	if ( null !== intermediateImage ) {
 		const imageSizing = intermediateImage[ 0 ]; // First capture group of the regex validation
 		const extension = path.extname( filename ).slice( 1 ); // Extension of the path (e.g.- `.jpg`)
@@ -698,12 +667,10 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
 		// e.g.- `panda4000x6000.png` -> `panda.png`
 		const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
-
 		const splitFolder = file.split( '/' );
 
 		// Remove the last element (intermediate image filename) and replace it with the original image filename
 		splitFolder.splice( splitFolder.length - 1, 1, baseFileName );
-
 		const originalImage = splitFolder.join( '/' );
 
 		// Check if an image with the same path + name (the original) already exists
@@ -711,7 +678,6 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 			return originalImage;
 		}
 	}
-
 	return false;
 };
 
