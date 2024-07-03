@@ -209,15 +209,6 @@ const recommendAcceptableFileTypes = ( allowedFileTypesString: string ): void =>
 	console.log();
 };
 
-// Function to transform object values into a string
-export const getAllowedFileTypesString = (
-	allowedFileTypes: MediaImportAllowedFileTypes
-): string => {
-	return Object.entries( allowedFileTypes )
-		.map( ( [ key, value ] ) => `${ key }` )
-		.join( ', ' );
-};
-
 // Accepted file name characters
 const recommendAcceptableFileNames = (): void => {
 	const allowedCharacters = [ ...acceptedCharactersSet ].join( ' ' );
@@ -694,7 +685,7 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 type LogErrorOptions = {
 	errorType: string;
 	invalidFiles: string[];
-	limit?: string | number | Record<string, string>;
+	limit?: string | number | Record< string, string >;
 };
 
 /**

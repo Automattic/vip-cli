@@ -116,11 +116,10 @@ command( {
 		 * Error logging
 		 * Not sure if the changes made to the error logging better
 		 */
-		const allowedFileTypesString = getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
 		logErrors( {
 			errorType: 'invalid_types',
 			invalidFiles: errorFileTypes,
-			limit: allowedFileTypesString,
+			limit: Object.keys( mediaImportConfig.allowedFileTypes ),
 		} );
 		logErrors( {
 			errorType: 'invalid_sizes',
