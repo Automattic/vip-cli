@@ -152,7 +152,9 @@ command( {
 			folderErrorsLength: folderValidation.length,
 			intImagesErrorsLength: intermediateImagesTotal,
 			fileTypeErrorsLength: errorFileTypes.length,
+			fileErrorFileSizesLength: errorFileSizes.length,
 			filenameErrorsLength: errorFileNames.length,
+			fileNameCharCountErrorsLength: errorFileNamesCharCount.length,
 			totalFiles: files.length,
 			totalFolders: nestedDirectories.length,
 		} );

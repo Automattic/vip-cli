@@ -766,7 +766,9 @@ interface SummaryLogsParams {
 	folderErrorsLength: number;
 	intImagesErrorsLength: number;
 	fileTypeErrorsLength: number;
+	fileErrorFileSizesLength: number;
 	filenameErrorsLength: number;
+	fileNameCharCountErrorsLength: number;
 	totalFiles: number;
 	totalFolders: number;
 }
@@ -775,7 +777,9 @@ export const summaryLogs = ( {
 	folderErrorsLength,
 	intImagesErrorsLength,
 	fileTypeErrorsLength,
+	fileErrorFileSizesLength,
 	filenameErrorsLength,
+	fileNameCharCountErrorsLength,
 	totalFiles,
 	totalFolders,
 }: SummaryLogsParams ) => {
@@ -822,6 +826,20 @@ export const summaryLogs = ( {
 		);
 	}
 
+	if ( fileErrorFileSizesLength > 0 ) {
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red( ` ${ fileTypeErrorsLength } invalid file sizes` ) +
+				`, ${ totalFiles } files total`
+		);
+	} else {
+		messages.push(
+			chalk.white.bgGreen( '    PASS     ' ) +
+				chalk.green( ` ${ fileTypeErrorsLength } invalid file sizes` ) +
+				`, ${ totalFiles } files total`
+		);
+	}
+
 	if ( filenameErrorsLength ) {
 		messages.push(
 			chalk.white.bgRed( '   ERROR     ' ) +
@@ -832,6 +850,24 @@ export const summaryLogs = ( {
 		messages.push(
 			chalk.bgGreen( '    PASS     ' ) +
 				chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) +
+				`, ${ totalFiles } files total`
+		);
+	}
+
+	if ( fileNameCharCountErrorsLength ) {
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red(
+					` ${ filenameErrorsLength } file names reached the maximum character count limit `
+				) +
+				`, ${ totalFiles } files total`
+		);
+	} else {
+		messages.push(
+			chalk.bgGreen( '    PASS     ' ) +
+				chalk.green(
+					` ${ filenameErrorsLength } file names reached the maximum character count limit`
+				) +
 				`, ${ totalFiles } files total`
 		);
 	}
