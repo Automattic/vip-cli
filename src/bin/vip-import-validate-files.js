@@ -16,14 +16,10 @@ import { trackEvent } from '../lib/tracker';
 import {
 	findNestedDirectories,
 	folderStructureValidation,
-	logErrorsForIntermediateImages,
-	logErrorsForInvalidFileTypes,
-	logErrorsForInvalidFilenames,
 	summaryLogs,
 	validateFiles,
-	logErrorsForInvalidFileSizes,
-	logErrorsForInvalidFileNamesCharCount,
 	getAllowedFileTypesString,
+	logErrors,
 } from '../lib/vip-import-validate-files';
 
 const appQuery = `
@@ -118,31 +114,33 @@ command( {
 
 		/**
 		 * Error logging
-		 * @todo make logging dynamic
+		 * Not sure if the changes made to the error logging better
 		 */
 		const allowedFileTypesString = getAllowedFileTypesString( mediaImportConfig.allowedFileTypes );
-		if ( errorFileTypes.length > 0 ) {
-			logErrorsForInvalidFileTypes( errorFileTypes, allowedFileTypesString );
-		}
-
-		if ( errorFileSizes.length > 0 ) {
-			logErrorsForInvalidFileSizes( errorFileSizes, mediaImportConfig.fileSizeLimitInBytes );
-		}
-
-		if ( errorFileNamesCharCount.length > 0 ) {
-			logErrorsForInvalidFileNamesCharCount(
-				errorFileNamesCharCount,
-				mediaImportConfig.fileNameCharCount
-			);
-		}
-
-		if ( errorFileNames.length > 0 ) {
-			logErrorsForInvalidFilenames( errorFileNames );
-		}
-
-		if ( Object.keys( intermediateImages ).length > 0 ) {
-			logErrorsForIntermediateImages( intermediateImages );
-		}
+		logErrors( {
+			errorType: 'invalid_types',
+			invalidFiles: errorFileTypes,
+			limit: allowedFileTypesString,
+		} );
+		logErrors( {
+			errorType: 'invalid_sizes',
+			invalidFiles: errorFileSizes,
+			limit: mediaImportConfig.fileSizeLimitInBytes,
+		} );
+		logErrors( {
+			errorType: 'invalid_name_character_counts',
+			invalidFiles: errorFileNamesCharCount,
+			limit: mediaImportConfig.fileNameCharCount,
+		} );
+		logErrors( {
+			errorType: 'invalid_names',
+			invalidFiles: errorFileNames,
+		} );
+		logErrors( {
+			errorType: 'intermediate_images',
+			invalidFiles: Object.keys( intermediateImages ),
+			invalidFilesObj: intermediateImages,
+		} );
 
 		// Log a summary of all errors
 		summaryLogs( {

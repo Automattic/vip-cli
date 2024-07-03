@@ -691,94 +691,79 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 	return false;
 };
 
+type LogErrorOptions = {
+	errorType: string;
+	invalidFiles: string[];
+	limit?: string | number | Record<string, string>;
+};
+
 /**
  * Error logging
  *
  * Log errors for invalid folders or files
  */
-
-// Log errors for files with invalid file extensions and recommend accepted file types
-export const logErrorsForInvalidFileTypes = (
-	invalidFiles: string[],
-	allowedFileTypes: string
-): void => {
-	invalidFiles.forEach( file => {
-		console.error(
-			chalk.red( '✕' ),
-			'File extensions: Invalid file type for file: ',
-			chalk.cyan( `${ file }` )
-		);
-	} );
-
-	console.log();
-	recommendAcceptableFileTypes( allowedFileTypes );
-	console.log( '------------------------------------------------------------' );
-	console.log();
-};
-
-// Log errors for files with invalid size
-export const logErrorsForInvalidFileSizes = (
-	invalidFiles: string[],
-	fileSizeLimitInBytes: number
-): void => {
-	invalidFiles.forEach( file => {
-		console.error(
-			chalk.red( '✕' ),
-			`File size cannot be more than ${ fileSizeLimitInBytes / 1024 / 1024 / 1024 } GB`,
-			chalk.cyan( `${ file }` )
-		);
-	} );
-
-	console.log( '------------------------------------------------------------' );
-	console.log();
-};
-
-// Log errors for files with invalid size
-export const logErrorsForInvalidFileNamesCharCount = (
-	invalidFiles: string[],
-	fileNameCharCount: number
-): void => {
-	invalidFiles.forEach( file => {
-		console.error(
-			chalk.red( '✕' ),
-			`File name cannot have more than ${ fileNameCharCount } characters`,
-			chalk.cyan( `${ file }` )
-		);
-	} );
-
-	console.log( '------------------------------------------------------------' );
-	console.log();
-};
-
-// Log errors for files with invalid filenames and show a list of accepted/prohibited chars
-export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ): void => {
-	invalidFiles.forEach( file => {
-		console.error(
-			chalk.red( '✕' ),
-			'Character validation: Invalid filename for file: ',
-			chalk.cyan( `${ file }` )
-		);
-	} );
-
-	console.log();
-	recommendAcceptableFileNames();
-	console.log( '------------------------------------------------------------' );
-	console.log();
-};
-
-// Log errors for intermediate image file duplicates
-export const logErrorsForIntermediateImages = ( obj: Record< string, string > ): void => {
-	for ( const original in obj ) {
-		console.error(
-			chalk.red( '✕' ),
-			'Intermediate images: Duplicate files found:\n' +
-				'Original file: ' +
-				chalk.blue( `${ original }\n` ) +
-				'Intermediate images: ' +
-				chalk.cyan( `${ obj[ original ] }\n` )
-		);
+export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions ): void => {
+	if ( invalidFiles.length === 0 ) {
+		return;
 	}
+
+	invalidFiles.forEach( file => {
+		switch ( errorType ) {
+			case 'invalid_types':
+				console.error(
+					chalk.red( '✕' ),
+					'File extensions: Invalid file type for file: ',
+					chalk.cyan( `${ file }` )
+				);
+				break;
+			case 'invalid_sizes':
+				console.error(
+					chalk.red( '✕' ),
+					`File size cannot be more than ${ ( limit as number ) / 1024 / 1024 / 1024 } GB`,
+					chalk.cyan( `${ file }` )
+				);
+				break;
+			case 'invalid_name_character_counts':
+				console.error(
+					chalk.red( '✕' ),
+					`File name cannot have more than ${ limit as number } characters`,
+					chalk.cyan( `${ file }` )
+				);
+				break;
+			case 'invalid_names':
+				console.error(
+					chalk.red( '✕' ),
+					'Character validation: Invalid filename for file: ',
+					chalk.cyan( `${ file }` )
+				);
+				break;
+			case 'intermediate_images':
+				console.error(
+					chalk.red( '✕' ),
+					'Intermediate images: Duplicate files found:\n' +
+						'Original file: ' +
+						chalk.blue( `${ file }\n` ) +
+						'Intermediate images: ' +
+						chalk.cyan( `${ ( limit as Record< string, string > )[ file ] }\n` )
+				);
+				break;
+			default:
+				console.error( chalk.red( '✕' ), 'Unknown error type:', errorType );
+		}
+	} );
+
 	console.log( '------------------------------------------------------------' );
+	console.log();
+
+	if ( errorType === 'invalid_types' ) {
+		recommendAcceptableFileTypes( limit as string );
+		console.log( '------------------------------------------------------------' );
+		console.log();
+	} else if ( errorType === 'invalid_names' ) {
+		recommendAcceptableFileNames();
+		console.log( '------------------------------------------------------------' );
+		console.log();
+	}
 };
 
 interface SummaryLogsParams {
