@@ -718,6 +718,8 @@ export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions )
 					'File extensions: Invalid file type for file: ',
 					chalk.cyan( `${ file }` )
 				);
+				console.log();
+				recommendAcceptableFileTypes( limit as string );
 				break;
 			case ValidateFilesErrors.INTERMEDIATE_IMAGES:
 				console.error(
@@ -735,8 +737,6 @@ export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions )
 					`File size cannot be more than ${ ( limit as number ) / 1024 / 1024 / 1024 } GB`,
 					chalk.cyan( `${ file }` )
 				);
-				recommendAcceptableFileTypes( limit as string );
-				console.log( '------------------------------------------------------------' );
 				console.log();
 				break;
 			case ValidateFilesErrors.INVALID_NAME_CHARACTER_COUNTS:
@@ -753,16 +753,12 @@ export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions )
 					chalk.cyan( `${ file }` )
 				);
 				recommendAcceptableFileNames();
-				console.log( '------------------------------------------------------------' );
-				console.log();
 				break;
 
 			default:
 				console.error( chalk.red( '✕' ), 'Unknown error type:', errorType );
 		}
 	} );
-
-	console.log( '------------------------------------------------------------' );
 	console.log();
 };
 
