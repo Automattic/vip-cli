@@ -18,8 +18,8 @@ import {
 	folderStructureValidation,
 	summaryLogs,
 	validateFiles,
-	getAllowedFileTypesString,
 	logErrors,
+	ValidateFilesErrors,
 } from '../lib/vip-import-validate-files';
 
 const appQuery = `
@@ -115,26 +115,26 @@ command( {
 		 * Not sure if the changes made to the error logging better
 		 */
 		logErrors( {
-			errorType: 'invalid_types',
+			errorType: ValidateFilesErrors.INVALID_TYPES,
 			invalidFiles: errorFileTypes,
 			limit: Object.keys( mediaImportConfig.allowedFileTypes ),
 		} );
 		logErrors( {
-			errorType: 'invalid_sizes',
+			errorType: ValidateFilesErrors.INVALID_SIZES,
 			invalidFiles: errorFileSizes,
 			limit: mediaImportConfig.fileSizeLimitInBytes,
 		} );
 		logErrors( {
-			errorType: 'invalid_name_character_counts',
+			errorType: ValidateFilesErrors.INVALID_NAME_CHARACTER_COUNTS,
 			invalidFiles: errorFileNamesCharCount,
 			limit: mediaImportConfig.fileNameCharCount,
 		} );
 		logErrors( {
-			errorType: 'invalid_names',
+			errorType: ValidateFilesErrors.INVALID_NAMES,
 			invalidFiles: errorFileNames,
 		} );
 		logErrors( {
-			errorType: 'intermediate_images',
+			errorType: ValidateFilesErrors.INTERMEDIATE_IMAGES,
 			invalidFiles: Object.keys( intermediateImages ),
 			invalidFilesObj: intermediateImages,
 		} );

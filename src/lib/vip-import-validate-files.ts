@@ -10,6 +10,20 @@ import path from 'path';
  */
 import { AppEnvironmentMediaImportConfig } from '../graphqlTypes';
 
+export const enum ValidateFilesErrors {
+	INVALID_TYPES = 'invalid_types',
+	INTERMEDIATE_IMAGES = 'intermediate_images',
+	INVALID_SIZES = 'invalid_sizes',
+	INVALID_NAMES = 'invalid_names',
+	INVALID_NAME_CHARACTER_COUNTS = 'invalid_name_character_counts',
+}
+
+interface LogErrorOptions {
+	errorType: ValidateFilesErrors;
+	invalidFiles: string[];
+	limit?: string | number | Record< string, string >;
+}
+
 interface ExtType {
 	ext: string | null;
 	type: string | null;
@@ -107,6 +121,7 @@ const getExtAndType = (
 	const extType: ExtType = { ext: null, type: null };
 	for ( const [ key, value ] of Object.entries( allowedFileTypes ) ) {
 		// Create a regular expression to match the file extension
+		// eslint-disable-next-line security/detect-non-literal-regexp
 		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
 		const matches = regex.exec( filePath );
 		if ( matches ) {
@@ -684,17 +699,12 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 	return false;
 };
 
-type LogErrorOptions = {
-	errorType: string;
-	invalidFiles: string[];
-	limit?: string | number | Record< string, string >;
-};
-
 /**
  * Error logging
  *
  * Log errors for invalid folders or files
  */
+
 export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions ): void => {
 	if ( invalidFiles.length === 0 ) {
 		return;
@@ -702,35 +712,14 @@ export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions )
 
 	invalidFiles.forEach( file => {
 		switch ( errorType ) {
-			case 'invalid_types':
+			case ValidateFilesErrors.INVALID_TYPES:
 				console.error(
 					chalk.red( '✕' ),
 					'File extensions: Invalid file type for file: ',
 					chalk.cyan( `${ file }` )
 				);
 				break;
-			case 'invalid_sizes':
-				console.error(
-					chalk.red( '✕' ),
-					`File size cannot be more than ${ ( limit as number ) / 1024 / 1024 / 1024 } GB`,
-					chalk.cyan( `${ file }` )
-				);
-				break;
-			case 'invalid_name_character_counts':
-				console.error(
-					chalk.red( '✕' ),
-					`File name cannot have more than ${ limit as number } characters`,
-					chalk.cyan( `${ file }` )
-				);
-				break;
-			case 'invalid_names':
-				console.error(
-					chalk.red( '✕' ),
-					'Character validation: Invalid filename for file: ',
-					chalk.cyan( `${ file }` )
-				);
-				break;
-			case 'intermediate_images':
+			case ValidateFilesErrors.INTERMEDIATE_IMAGES:
 				console.error(
 					chalk.red( '✕' ),
 					'Intermediate images: Duplicate files found:\n' +
@@ -740,6 +729,34 @@ export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions )
 						chalk.cyan( `${ ( limit as Record< string, string > )[ file ] }\n` )
 				);
 				break;
+			case ValidateFilesErrors.INVALID_SIZES:
+				console.error(
+					chalk.red( '✕' ),
+					`File size cannot be more than ${ ( limit as number ) / 1024 / 1024 / 1024 } GB`,
+					chalk.cyan( `${ file }` )
+				);
+				recommendAcceptableFileTypes( limit as string );
+				console.log( '------------------------------------------------------------' );
+				console.log();
+				break;
+			case ValidateFilesErrors.INVALID_NAME_CHARACTER_COUNTS:
+				console.error(
+					chalk.red( '✕' ),
+					`File name cannot have more than ${ limit as number } characters`,
+					chalk.cyan( `${ file }` )
+				);
+				break;
+			case ValidateFilesErrors.INVALID_NAMES:
+				console.error(
+					chalk.red( '✕' ),
+					'Character validation: Invalid filename for file: ',
+					chalk.cyan( `${ file }` )
+				);
+				recommendAcceptableFileNames();
+				console.log( '------------------------------------------------------------' );
+				console.log();
+				break;
+
 			default:
 				console.error( chalk.red( '✕' ), 'Unknown error type:', errorType );
 		}
@@ -747,16 +764,6 @@ export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions )
 
 	console.log( '------------------------------------------------------------' );
 	console.log();
-
-	if ( errorType === 'invalid_types' ) {
-		recommendAcceptableFileTypes( limit as string );
-		console.log( '------------------------------------------------------------' );
-		console.log();
-	} else if ( errorType === 'invalid_names' ) {
-		recommendAcceptableFileNames();
-		console.log( '------------------------------------------------------------' );
-		console.log();
-	}
 };
 
 interface SummaryLogsParams {
