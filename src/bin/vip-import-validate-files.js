@@ -36,13 +36,21 @@ const appQuery = `
 	}
 `;
 
+const baseUsage = 'vip import validate-files';
+
 command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
 	requiredArgs: 1,
+	usage: `${ baseUsage } <folder_name>`,
 } )
-	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
+	.examples( [
+		{
+			usage: 'vip import validate-files @mysite.production <folder_name>',
+			description: 'Run the import validation against the folder of media files',
+		},
+	] )
 	.argv( process.argv, async ( args, opts ) => {
 		const { app, env } = opts;
 		await trackEvent( 'import_validate_files_command_execute' );
