@@ -9,9 +9,8 @@ import url from 'url';
 /**
  * Internal dependencies
  */
-import API from '../lib/api';
 import command from '../lib/cli/command';
-import { mediaImportGetConfig } from '../lib/media-import/config';
+import { getMediaImportConfig } from '../lib/media-import/config';
 import { trackEvent } from '../lib/tracker';
 import {
 	findNestedDirectories,
@@ -97,8 +96,7 @@ command( {
 		/**
 		 * Get Media Import configuration
 		 */
-		const api = API();
-		const mediaImportConfig = await mediaImportGetConfig( api, app.id, env.id );
+		const mediaImportConfig = await getMediaImportConfig( app.id, env.id );
 
 		if ( ! mediaImportConfig ) {
 			console.error( chalk.red( '✕ Error:' ), 'Media import configuration not available' );

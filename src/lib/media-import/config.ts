@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 
 import { AppQuery, AppQueryVariables } from './config.generated';
 import { AppEnvironmentMediaImportConfig } from '../../graphqlTypes';
+import API from '../api';
 
 const IMPORT_MEDIA_CONFIG_QUERY = gql`
 	query App($appId: Int, $envId: Int) {
@@ -18,11 +19,11 @@ const IMPORT_MEDIA_CONFIG_QUERY = gql`
 	}
 `;
 
-export async function mediaImportGetConfig(
-	api: ApolloClient< NormalizedCacheObject >,
+export async function getMediaImportConfig(
 	appId: number,
 	envId: number
 ): Promise< AppEnvironmentMediaImportConfig | null > {
+	const api: ApolloClient< NormalizedCacheObject > = API();
 	const response = await api.query< AppQuery, AppQueryVariables >( {
 		query: IMPORT_MEDIA_CONFIG_QUERY,
 		variables: { appId, envId },
@@ -42,5 +43,5 @@ export async function mediaImportGetConfig(
 }
 
 export default {
-	mediaImportGetConfig,
+	getMediaImportConfig,
 };
