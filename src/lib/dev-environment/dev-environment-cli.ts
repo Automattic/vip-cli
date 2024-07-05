@@ -4,7 +4,6 @@ import debugLib from 'debug';
 import { prompt, Confirm, Select } from 'enquirer';
 import Lando from 'lando';
 import formatters from 'lando/lib/formatters';
-import { lookup } from 'node:dns/promises';
 import { existsSync, lstatSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'path';
@@ -114,37 +113,6 @@ export async function handleCLIException(
 		debug( exception );
 	}
 }
-
-const verifyDNSResolution = async ( slug: string, domain: string ): Promise< void > => {
-	const expectedIP = '127.0.0.1';
-	const testDomain = `${ slug }.${ domain }`;
-	const advice = `Please add following line to hosts file on your system:\n\n${ expectedIP } ${ testDomain }\n\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n`;
-
-	debug( `Verifying DNS resolution for ${ testDomain }` );
-	try {
-		let address;
-		try {
-			address = await lookup( testDomain, 4 );
-			debug( `Got DNS response ${ address.address }` );
-		} catch ( error ) {
-			throw new UserError( `DNS resolution for ${ testDomain } failed.`, {
-				cause: error,
-			} );
-		}
-
-		if ( address.address !== expectedIP ) {
-			throw new UserError(
-				`DNS resolution for ${ testDomain } returned unexpected IP ${ address.address }. Expected value is ${ expectedIP }.`
-			);
-		}
-	} catch ( error ) {
-		if ( error instanceof UserError ) {
-			console.warn( chalk.yellow.bold( 'Warning:' ), `${ error.message }\n\n${ advice }` );
-		} else {
-			throw error;
-		}
-	}
-};
 
 export const validateDependencies = ( lando: Lando ) => {
 	const now = new Date();

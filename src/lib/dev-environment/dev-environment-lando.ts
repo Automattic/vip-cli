@@ -508,31 +508,24 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 	];
 
 	for ( const domain of domains ) {
+		const advice = `Please add following line to the hosts file on your system:\n\n127.0.0.1 ${ domain }\n\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n`;
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			const addresses = await lookup( domain, { all: true } );
-			debug(
-				'%s resolves to %j',
-				domain,
-				addresses.map( addr => addr.address )
-			);
+			const address = await lookup( domain, 4 );
+			debug( '%s resolves to %s', domain, address.address );
 
-			if ( ! addresses.some( addr => addr.address === '127.0.0.1' ) ) {
+			if ( address.address !== '127.0.0.1' ) {
 				console.warn(
-					chalk.yellow(
-						`${ domain } does not resolve to 127.0.0.1. Things may not work as expected.`
-					)
+					chalk.yellow.bold( 'WARNING:' ),
+					`${ domain } resolves to ${ address.address } instead of 127.0.0.1. Things may not work as expected.\n\n${ advice }`
 				);
 			}
 		} catch ( err ) {
 			const msg = err instanceof Error ? err.message : 'Unknown error';
 			debug( 'Failed to resolve %s: %s', domain, msg );
-			console.warn( chalk.yellow( `WARNING: Failed to resolve ${ domain }: ${ msg }\n` ) );
-			console.warn( `You may need to add\n\n127.0.0.1 ${ domain }\n\nto your hosts file.\n` );
 			console.warn(
-				chalk.cyan(
-					'Learn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n'
-				)
+				chalk.yellow.bold( 'WARNING:' ),
+				`Failed to resolve ${ domain }: ${ msg }\n\n${ advice }`
 			);
 		}
 	}
