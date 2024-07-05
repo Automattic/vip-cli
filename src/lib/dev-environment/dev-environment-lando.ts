@@ -491,6 +491,53 @@ async function getExtraServicesConnections(
 	return extraServices;
 }
 
+async function tryResolveDomains( urls: string[] ): Promise< void > {
+	const domains = [
+		...new Set(
+			urls
+				.filter( url => url.toLowerCase().startsWith( 'http' ) )
+				.map( url => {
+					try {
+						return new URL( url ).hostname;
+					} catch ( err ) {
+						return undefined;
+					}
+				} )
+				.filter( domain => domain !== undefined )
+		),
+	];
+
+	for ( const domain of domains ) {
+		try {
+			// eslint-disable-next-line no-await-in-loop
+			const addresses = await lookup( domain, { all: true } );
+			debug(
+				'%s resolves to %j',
+				domain,
+				addresses.map( addr => addr.address )
+			);
+
+			if ( ! addresses.some( addr => addr.address === '127.0.0.1' ) ) {
+				console.warn(
+					chalk.yellow(
+						`${ domain } does not resolve to 127.0.0.1. Things may not work as expected.`
+					)
+				);
+			}
+		} catch ( err ) {
+			const msg = err instanceof Error ? err.message : 'Unknown error';
+			debug( 'Failed to resolve %s: %s', domain, msg );
+			console.warn( chalk.yellow( `WARNING: Failed to resolve ${ domain }: ${ msg }\n` ) );
+			console.warn( `You may need to add\n\n127.0.0.1 ${ domain }\n\nto your hosts file.\n` );
+			console.warn(
+				chalk.cyan(
+					'Learn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n'
+				)
+			);
+		}
+	}
+}
+
 export async function checkEnvHealth(
 	lando: Lando,
 	instancePath: string
@@ -509,10 +556,17 @@ export async function checkEnvHealth(
 		} );
 
 	const urlsToScan = Object.keys( urls ).filter( url => ! url.includes( '*' ) );
+	await tryResolveDomains( urlsToScan );
 	let scanResults: ScanResult[] = [];
 	if ( Array.isArray( app.urls ) ) {
 		scanResults = app.urls;
-		app.urls.forEach( entry => urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 ) );
+		app.urls.forEach( entry => {
+			// We use different status codes to see if the service is up.
+			// We may consider the service is up when Lando considers it is down.
+			if ( entry.color !== 'red' ) {
+				urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 );
+			}
+		} );
 	}
 
 	if ( urlsToScan.length ) {
@@ -542,7 +596,8 @@ export async function isEnvUp( lando: Lando, instancePath: string ): Promise< bo
 		.flat()
 		.filter( url => ! /^https?:\/\/(localhost|127\.0\.0\.1):/.exec( url ) );
 
-	const scanResult = await app.scanUrls( webUrls, { max: 1 } );
+	await tryResolveDomains( webUrls );
+	const scanResult = await app.scanUrls( webUrls, { max: 1, waitCodes: [ 502, 504 ] } );
 	const duration = new Date().getTime() - now.getTime();
 	debug( 'isEnvUp took %d ms', duration );
 
