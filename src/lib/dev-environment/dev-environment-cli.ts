@@ -146,14 +146,10 @@ const verifyDNSResolution = async ( slug: string, domain: string ): Promise< voi
 	}
 };
 
-export const validateDependencies = async ( lando: Lando, slug: string ) => {
+export const validateDependencies = ( lando: Lando ) => {
 	const now = new Date();
 
 	validateDockerInstalled( lando );
-	if ( slug ) {
-		await verifyDNSResolution( slug, lando.config.domain ?? 'vipdev.lndo.site' );
-	}
-
 	const duration = new Date().getTime() - now.getTime();
 	debug( 'Validation checks completed in %d ms', duration );
 };

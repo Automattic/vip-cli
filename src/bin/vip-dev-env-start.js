@@ -60,7 +60,7 @@ command( {
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
+		validateDependencies( lando );
 
 		const startProcessing = new Date();
 

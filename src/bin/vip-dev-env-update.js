@@ -68,7 +68,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = await getEnvironmentName( opt );
 
 	const lando = await bootstrapLando();
-	await validateDependencies( lando, slug );
+	validateDependencies( lando );
 
 	const trackingInfo = getEnvTrackingInfo( slug );
 	await trackEvent( 'dev_env_update_command_execute', trackingInfo );
