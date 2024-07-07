@@ -523,7 +523,6 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 			}
 		} catch ( err ) {
 			const msg = err instanceof Error ? err.message : 'Unknown error';
-			debug( 'Failed to resolve %s: %s', domain, msg );
 			domainsToFix.push( domain );
 			console.warn( chalk.yellow.bold( 'WARNING:' ), `Failed to resolve ${ domain }: ${ msg }` );
 		}
