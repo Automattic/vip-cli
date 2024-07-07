@@ -507,27 +507,38 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 		),
 	];
 
+	const domainsToFix: string[] = [];
 	for ( const domain of domains ) {
-		const advice = `Please add following line to the hosts file on your system:\n\n127.0.0.1 ${ domain }\n\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n`;
 		try {
 			// eslint-disable-next-line no-await-in-loop
 			const address = await lookup( domain, 4 );
 			debug( '%s resolves to %s', domain, address.address );
 
 			if ( address.address !== '127.0.0.1' ) {
+				domainsToFix.push( domain );
 				console.warn(
 					chalk.yellow.bold( 'WARNING:' ),
-					`${ domain } resolves to ${ address.address } instead of 127.0.0.1. Things may not work as expected.\n\n${ advice }`
+					`${ domain } resolves to ${ address.address } instead of 127.0.0.1. Things may not work as expected.`
 				);
 			}
 		} catch ( err ) {
 			const msg = err instanceof Error ? err.message : 'Unknown error';
 			debug( 'Failed to resolve %s: %s', domain, msg );
-			console.warn(
-				chalk.yellow.bold( 'WARNING:' ),
-				`Failed to resolve ${ domain }: ${ msg }\n\n${ advice }`
-			);
+			domainsToFix.push( domain );
+			console.warn( chalk.yellow.bold( 'WARNING:' ), `Failed to resolve ${ domain }: ${ msg }` );
 		}
+	}
+
+	if ( domainsToFix.length ) {
+		console.warn(
+			chalk.yellow( 'Please add the following lines to the hosts file on your system:\n' )
+		);
+		console.warn( domainsToFix.map( domain => `127.0.0.1 ${ domain }` ).join( '\n' ) );
+		console.warn(
+			chalk.yellow(
+				'\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n'
+			)
+		);
 	}
 }
 
