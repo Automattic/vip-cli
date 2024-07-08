@@ -1,5 +1,13 @@
 ## Changelog
 
+## 3.5.1
+
+* fix(dev-env): display cron status in `vip dev-env info --extended`
+* build(deps-dev): bump typescript from 5.5.2 to 5.5.3
+* fix: case mismatch in environment identifier matcher
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.5.0...3.5.1
+
 ### 3.5.0
 
 * feat(dev-env): add support for cron
