@@ -24,14 +24,10 @@ import {
 const appQuery = `
 	id,
 	name,
-	type,
-	organization { id, name },
 	environments{
 		id
 		appId
 		type
-		name
-		primaryDomain { name }
 	}
 `;
 
