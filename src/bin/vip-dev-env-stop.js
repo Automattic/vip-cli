@@ -45,7 +45,7 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, '' );
+		validateDependencies( lando );
 
 		debug( 'Args: ', arg, 'Options: ', opt );
 

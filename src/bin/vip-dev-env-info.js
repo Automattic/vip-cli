@@ -62,7 +62,7 @@ command( {
 			trackingInfo = getEnvTrackingInfo( slug );
 		}
 
-		await validateDependencies( lando, slug );
+		validateDependencies( lando );
 		await trackEvent( 'dev_env_info_command_execute', trackingInfo );
 
 		debug( 'Args: ', arg, 'Options: ', opt );

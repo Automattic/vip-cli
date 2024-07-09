@@ -101,7 +101,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	}
 
 	const lando = await bootstrapLando();
-	await validateDependencies( lando, slug );
+	validateDependencies( lando );
 
 	debug( 'Args: ', arg, 'Options: ', opt );
 

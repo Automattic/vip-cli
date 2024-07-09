@@ -51,7 +51,7 @@ command( {
 		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, slug );
+		validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_destroy_command_execute', trackingInfo );
