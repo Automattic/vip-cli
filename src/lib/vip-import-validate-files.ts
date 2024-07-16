@@ -8,7 +8,7 @@ import path from 'path';
 /**
  * Internal dependencies
  */
-import { AppEnvironmentMediaImportConfig } from '../graphqlTypes';
+import { MediaImportConfig } from '../graphqlTypes';
 
 export const enum ValidateFilesErrors {
 	INVALID_TYPES = 'invalid_types',
@@ -49,7 +49,7 @@ interface ValidationResult {
  */
 export async function validateFiles(
 	files: string[],
-	mediaImportConfig: AppEnvironmentMediaImportConfig
+	mediaImportConfig: MediaImportConfig
 ): Promise< ValidationResult > {
 	const validationResult: ValidationResult = {
 		intermediateImagesTotal: 0,
@@ -64,6 +64,7 @@ export async function validateFiles(
 		const isFolder = await isDirectory( file );
 		const fileExtType = getFileExtType(
 			file,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
 		);
 
@@ -71,6 +72,7 @@ export async function validateFiles(
 			validationResult.errorFileTypes.push( file );
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		if ( ! isFileSizeValid( file, <number>mediaImportConfig.fileSizeLimitInBytes ) ) {
 			validationResult.errorFileSizes.push( file );
 		}
@@ -79,7 +81,8 @@ export async function validateFiles(
 			validationResult.errorFileNames.push( file );
 		}
 
-		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig.fileNameCharCount ) ) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig?.fileNameCharCount ) ) {
 			validationResult.errorFileNamesCharCount.push( file );
 		}
 

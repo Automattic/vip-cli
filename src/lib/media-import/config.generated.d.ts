@@ -4,7 +4,7 @@ export type Unnamed_1_QueryVariables = Types.Exact< { [ key: string ]: never } >
 
 export type Unnamed_1_Query = {
 	__typename?: 'Query';
-	getMediaImportConfig?: {
+	mediaImportConfig?: {
 		__typename?: 'MediaImportConfig';
 		fileNameCharCount?: number | null;
 		fileSizeLimitInBytes?: any | null;

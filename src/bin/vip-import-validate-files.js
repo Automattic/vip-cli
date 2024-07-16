@@ -21,33 +21,21 @@ import {
 	ValidateFilesErrors,
 } from '../lib/vip-import-validate-files';
 
-const appQuery = `
-	id,
-	name,
-	environments{
-		id
-		appId
-		type
-	}
-`;
+const examples = [
+	{
+		usage: 'vip import validate-files <folder_name>',
+		description: 'Run the import validation against the folder of media files',
+	},
+];
 
 const baseUsage = 'vip import validate-files';
 
 command( {
-	appContext: true,
-	appQuery,
-	envContext: true,
 	requiredArgs: 1,
 	usage: `${ baseUsage } <folder_name>`,
 } )
-	.examples( [
-		{
-			usage: 'vip import validate-files @mysite.production <folder_name>',
-			description: 'Run the import validation against the folder of media files',
-		},
-	] )
-	.argv( process.argv, async ( args, opts ) => {
-		const { app, env } = opts;
+	.examples( examples )
+	.argv( process.argv, async ( args ) => {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation
@@ -92,7 +80,7 @@ command( {
 		/**
 		 * Get Media Import configuration
 		 */
-		const mediaImportConfig = await getMediaImportConfig( app.id, env.id );
+		const mediaImportConfig = await getMediaImportConfig();
 
 		if ( ! mediaImportConfig ) {
 			console.error( chalk.red( '✕ Error:' ), 'Media import configuration not available' );

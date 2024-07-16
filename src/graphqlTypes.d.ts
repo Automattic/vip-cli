@@ -2651,7 +2651,7 @@ export type Query = {
 	dbBackupCopies?: Maybe< DbBackupCopyList >;
 	domain?: Maybe< Domain >;
 	domains?: Maybe< DomainList >;
-	getMediaImportConfig?: Maybe< MediaImportConfig >;
+	mediaImportConfig?: Maybe< MediaImportConfig >;
 	me?: Maybe< User >;
 	organization?: Maybe< Organization >;
 	organizations?: Maybe< OrgList >;
