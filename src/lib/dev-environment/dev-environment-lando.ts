@@ -491,6 +491,56 @@ async function getExtraServicesConnections(
 	return extraServices;
 }
 
+async function tryResolveDomains( urls: string[] ): Promise< void > {
+	const domains = [
+		...new Set(
+			urls
+				.filter( url => url.toLowerCase().startsWith( 'http' ) )
+				.map( url => {
+					try {
+						return new URL( url ).hostname;
+					} catch ( err ) {
+						return undefined;
+					}
+				} )
+				.filter( domain => domain !== undefined )
+		),
+	];
+
+	const domainsToFix: string[] = [];
+	for ( const domain of domains ) {
+		try {
+			// eslint-disable-next-line no-await-in-loop
+			const address = await lookup( domain, 4 );
+			debug( '%s resolves to %s', domain, address.address );
+
+			if ( address.address !== '127.0.0.1' ) {
+				domainsToFix.push( domain );
+				console.warn(
+					chalk.yellow.bold( 'WARNING:' ),
+					`${ domain } resolves to ${ address.address } instead of 127.0.0.1. Things may not work as expected.`
+				);
+			}
+		} catch ( err ) {
+			const msg = err instanceof Error ? err.message : 'Unknown error';
+			domainsToFix.push( domain );
+			console.warn( chalk.yellow.bold( 'WARNING:' ), `Failed to resolve ${ domain }: ${ msg }` );
+		}
+	}
+
+	if ( domainsToFix.length ) {
+		console.warn(
+			chalk.yellow( 'Please add the following lines to the hosts file on your system:\n' )
+		);
+		console.warn( domainsToFix.map( domain => `127.0.0.1 ${ domain }` ).join( '\n' ) );
+		console.warn(
+			chalk.yellow(
+				'\nLearn more: https://docs.wpvip.com/vip-local-development-environment/troubleshooting-dev-env/#h-resolve-networking-configuration-issues\n'
+			)
+		);
+	}
+}
+
 export async function checkEnvHealth(
 	lando: Lando,
 	instancePath: string
@@ -509,10 +559,17 @@ export async function checkEnvHealth(
 		} );
 
 	const urlsToScan = Object.keys( urls ).filter( url => ! url.includes( '*' ) );
+	await tryResolveDomains( urlsToScan );
 	let scanResults: ScanResult[] = [];
 	if ( Array.isArray( app.urls ) ) {
 		scanResults = app.urls;
-		app.urls.forEach( entry => urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 ) );
+		app.urls.forEach( entry => {
+			// We use different status codes to see if the service is up.
+			// We may consider the service is up when Lando considers it is down.
+			if ( entry.color !== 'red' ) {
+				urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 );
+			}
+		} );
 	}
 
 	if ( urlsToScan.length ) {
@@ -542,7 +599,8 @@ export async function isEnvUp( lando: Lando, instancePath: string ): Promise< bo
 		.flat()
 		.filter( url => ! /^https?:\/\/(localhost|127\.0\.0\.1):/.exec( url ) );
 
-	const scanResult = await app.scanUrls( webUrls, { max: 1 } );
+	await tryResolveDomains( webUrls );
+	const scanResult = await app.scanUrls( webUrls, { max: 1, waitCodes: [ 502, 504 ] } );
 	const duration = new Date().getTime() - now.getTime();
 	debug( 'isEnvUp took %d ms', duration );
 

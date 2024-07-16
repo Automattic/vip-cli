@@ -1,5 +1,12 @@
 ## Changelog
 
+## 3.6.0
+
+* build(deps-dev): bump rimraf from 5.0.7 to 5.0.8
+* feat(dev-env): add DNS check to health check to ensure domains resolve correctly
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.5.1...3.6.0
+
 ## 3.5.1
 
 * fix(dev-env): display cron status in `vip dev-env info --extended`

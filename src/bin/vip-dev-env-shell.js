@@ -91,7 +91,7 @@ command( {
 		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando();
-		await validateDependencies( lando, '' );
+		validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_shell_command_execute', trackingInfo );
