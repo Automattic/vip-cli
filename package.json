@@ -109,7 +109,7 @@
   "devDependencies": {
     "@automattic/eslint-plugin-wpvip": "0.13.0",
     "@babel/cli": "7.24.8",
-    "@babel/core": "7.24.8",
+    "@babel/core": "7.24.9",
     "@babel/preset-env": "7.24.8",
     "@babel/preset-typescript": "7.24.7",
     "@jest/globals": "^29.7.0",
