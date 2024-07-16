@@ -21,30 +21,21 @@ import {
 	ValidateFilesErrors,
 } from '../lib/vip-import-validate-files';
 
-const examples = [
-	{
-		usage: 'vip import validate-files <folder_name>',
-		description: 'Run the import validation against the folder of media files',
-	},
-];
-
-const baseUsage = 'vip import validate-files';
-
-command( {
-	requiredArgs: 1,
-	usage: `${ baseUsage } <folder_name>`,
-} )
-	.examples( examples )
-	.argv( process.argv, async args => {
+command( { requiredArgs: 1, format: true } )
+	.example(
+		'vip import validate-files <folder_name>',
+		'Run the import validation against the folder of media files'
+	)
+	.argv( process.argv, async arg => {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation
 		 *
 		 * Manipulating the file path/name to extract the folder name
 		 */
-		const folder = args.join(); // File comes in as an array as part of the args- turn it into a string
-		args = url.parse( folder ); // Then parse the file to its URL parts
-		const filePath = args.path; // Extract the path of the file
+		const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
+		arg = url.parse( folder ); // Then parse the file to its URL parts
+		const filePath = arg.path; // Extract the path of the file
 
 		let folderValidation;
 
