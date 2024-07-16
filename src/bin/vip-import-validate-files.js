@@ -35,7 +35,7 @@ command( {
 	usage: `${ baseUsage } <folder_name>`,
 } )
 	.examples( examples )
-	.argv( process.argv, async ( args ) => {
+	.argv( process.argv, async args => {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
 		 * File manipulation
