@@ -117,6 +117,7 @@ const getFileExtType = (
 const isInvalidFile = ( fileExtType: ExtType, isFolder: boolean ): boolean => {
 	return ! fileExtType.type || ! fileExtType.ext || isFolder;
 };
+
 const getExtAndType = (
 	filePath: string,
 	allowedFileTypes: MediaImportAllowedFileTypes

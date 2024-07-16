@@ -1,8 +1,8 @@
 import * as Types from '../../graphqlTypes';
 
-export type Unnamed_1_QueryVariables = Types.Exact< { [ key: string ]: never } >;
+export type MediaImportConfigQueryVariables = Types.Exact< { [ key: string ]: never } >;
 
-export type Unnamed_1_Query = {
+export type MediaImportConfigQuery = {
 	__typename?: 'Query';
 	mediaImportConfig?: {
 		__typename?: 'MediaImportConfig';
