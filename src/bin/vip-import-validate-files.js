@@ -74,7 +74,10 @@ command( { requiredArgs: 1, format: true } )
 		const mediaImportConfig = await getMediaImportConfig();
 
 		if ( ! mediaImportConfig ) {
-			console.error( chalk.red( '✕ Error:' ), 'Media import configuration not available' );
+			console.error(
+				chalk.red( '✕ Error:' ),
+				'Could not retrieve validation metadata. Please contact VIP Support.'
+			);
 			return;
 		}
 
