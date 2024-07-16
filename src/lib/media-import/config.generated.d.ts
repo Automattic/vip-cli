@@ -1,22 +1,13 @@
 import * as Types from '../../graphqlTypes';
 
-export type AppQueryVariables = Types.Exact< {
-	appId?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
-	envId?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
-} >;
+export type Unnamed_1_QueryVariables = Types.Exact< { [ key: string ]: never } >;
 
-export type AppQuery = {
+export type Unnamed_1_Query = {
 	__typename?: 'Query';
-	app?: {
-		__typename?: 'App';
-		environments?: Array< {
-			__typename?: 'AppEnvironment';
-			mediaImportConfig?: {
-				__typename?: 'AppEnvironmentMediaImportConfig';
-				fileNameCharCount?: number | null;
-				fileSizeLimitInBytes?: any | null;
-				allowedFileTypes?: any | null;
-			} | null;
-		} | null > | null;
+	getMediaImportConfig?: {
+		__typename?: 'MediaImportConfig';
+		fileNameCharCount?: number | null;
+		fileSizeLimitInBytes?: any | null;
+		allowedFileTypes?: any | null;
 	} | null;
 };

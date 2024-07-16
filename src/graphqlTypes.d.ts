@@ -179,7 +179,6 @@ export type AppEnvironment = {
 	logs?: Maybe< AppEnvironmentLogsList >;
 	logsConfig?: Maybe< AppEnvironmentLogShipping >;
 	mediaExports?: Maybe< MediaExportsList >;
-	mediaImportConfig?: Maybe< AppEnvironmentMediaImportConfig >;
 	mediaImportStatus?: Maybe< AppEnvironmentMediaImportStatus >;
 	metrics?: Maybe< AggregatedMetricMeasurements >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -768,17 +767,6 @@ export type AppEnvironmentLogsList = {
 	nodes?: Maybe< Array< Maybe< AppEnvironmentLog > > >;
 	pollingDelaySeconds: Scalars[ 'Int' ][ 'output' ];
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
-};
-
-/** Media Import Configuration */
-export type AppEnvironmentMediaImportConfig = {
-	__typename?: 'AppEnvironmentMediaImportConfig';
-	/** Allowed File Types */
-	allowedFileTypes?: Maybe< Scalars[ 'MediaImportAllowedFileTypes' ][ 'output' ] >;
-	/** Allowed File Name Length */
-	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Allowed File Size Limit */
-	fileSizeLimitInBytes?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 /** Response payload for starting and fetching a Media Import */
@@ -1998,6 +1986,17 @@ export type MediaExportsList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+/** Media Import Configuration */
+export type MediaImportConfig = {
+	__typename?: 'MediaImportConfig';
+	/** Allowed File Types */
+	allowedFileTypes?: Maybe< Scalars[ 'MediaImportAllowedFileTypes' ][ 'output' ] >;
+	/** Allowed File Name Length */
+	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Allowed File Size Limit */
+	fileSizeLimitInBytes?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+};
+
 export type MetricMeasurement = {
 	__typename?: 'MetricMeasurement';
 	baseline?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
@@ -2652,6 +2651,7 @@ export type Query = {
 	dbBackupCopies?: Maybe< DbBackupCopyList >;
 	domain?: Maybe< Domain >;
 	domains?: Maybe< DomainList >;
+	getMediaImportConfig?: Maybe< MediaImportConfig >;
 	me?: Maybe< User >;
 	organization?: Maybe< Organization >;
 	organizations?: Maybe< OrgList >;

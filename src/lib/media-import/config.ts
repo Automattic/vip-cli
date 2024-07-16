@@ -6,15 +6,11 @@ import { AppEnvironmentMediaImportConfig } from '../../graphqlTypes';
 import API from '../api';
 
 const IMPORT_MEDIA_CONFIG_QUERY = gql`
-	query App($appId: Int, $envId: Int) {
-		app(id: $appId) {
-			environments(id: $envId) {
-				mediaImportConfig {
-					fileNameCharCount
-					fileSizeLimitInBytes
-					allowedFileTypes
-				}
-			}
+	{
+		getMediaImportConfig {
+			fileNameCharCount
+			fileSizeLimitInBytes
+			allowedFileTypes
 		}
 	}
 `;
