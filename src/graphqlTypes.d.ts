@@ -23,6 +23,8 @@ export type Scalars = {
 	BigInt: { input: any; output: any };
 	/** Date custom scalar type */
 	Date: { input: any; output: any };
+	/** MediaImportAllowedFileTypes scalar type */
+	MediaImportAllowedFileTypes: { input: any; output: any };
 };
 
 export type AcceptInvitationInput = {
@@ -1984,6 +1986,17 @@ export type MediaExportsList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+/** Media Import Configuration */
+export type MediaImportConfig = {
+	__typename?: 'MediaImportConfig';
+	/** Allowed File Types */
+	allowedFileTypes?: Maybe< Scalars[ 'MediaImportAllowedFileTypes' ][ 'output' ] >;
+	/** Allowed File Name Length */
+	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Allowed File Size Limit */
+	fileSizeLimitInBytes?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+};
+
 export type MetricMeasurement = {
 	__typename?: 'MetricMeasurement';
 	baseline?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
@@ -2638,6 +2651,7 @@ export type Query = {
 	dbBackupCopies?: Maybe< DbBackupCopyList >;
 	domain?: Maybe< Domain >;
 	domains?: Maybe< DomainList >;
+	mediaImportConfig?: Maybe< MediaImportConfig >;
 	me?: Maybe< User >;
 	organization?: Maybe< Organization >;
 	organizations?: Maybe< OrgList >;
