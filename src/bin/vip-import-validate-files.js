@@ -48,6 +48,11 @@ command( { requiredArgs: 1, format: true } )
 		 */
 		const nestedFiles = findNestedDirectories( filePath );
 
+		// Terminates the command here if no nested files found
+		if ( ! nestedFiles ) {
+			return;
+		}
+
 		const { files, folderStructureObj } = nestedFiles; // Destructure
 
 		// Check if there are any nested directories within the given folder
