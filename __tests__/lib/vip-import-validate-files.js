@@ -6,6 +6,7 @@ import {
 	isFileSanitized,
 	validateFiles,
 	logErrors,
+	findNestedDirectories,
 } from '../../src/lib/vip-import-validate-files';
 
 global.console = { log: jest.fn(), error: jest.fn() };
@@ -212,6 +213,51 @@ describe( 'lib/vip-import-validate-files', () => {
 		it( 'should not log anything if invalidFiles array is empty', () => {
 			logErrors( { errorType: 'invalid_types', invalidFiles: [], limit: '' } );
 			expect( mockConsoleError ).not.toHaveBeenCalled();
+		} );
+	} );
+	describe( 'findNestedDirectories()', () => {
+		// Mocking file system and chalk
+		jest.mock( 'fs' );
+		jest.mock( 'chalk', () => ( {
+			red: jest.fn( () => 'red' ),
+		} ) );
+
+		let readdirSyncMock;
+		let statSyncMock;
+
+		beforeEach( () => {
+			readdirSyncMock = jest.spyOn( fs, 'readdirSync' );
+			statSyncMock = jest.spyOn( fs, 'statSync' );
+		} );
+
+		afterEach( () => {
+			jest.resetAllMocks();
+		} );
+
+		it( 'should return undefined and log an error if the directory cannot be read', () => {
+			const errorMessage = 'Reason: ENOTDIR: not a directory, scandir ~/Downloads/wp-content.zip';
+			readdirSyncMock.mockImplementation( () => {
+				throw new Error( errorMessage );
+			} );
+
+			console.error = jest.fn();
+
+			const result = findNestedDirectories( '~/Downloads/wp-content.zip' );
+
+			expect( result ).toBeUndefined();
+			expect( console.error ).toHaveBeenCalledWith(
+				chalk.red( '✕' ),
+				` Error: Cannot read nested directory: ~/Downloads/wp-content.zip. Reason: ${ errorMessage }`
+			);
+		} );
+
+		it( 'should return an empty result for an empty directory', () => {
+			readdirSyncMock.mockReturnValue( [] );
+			statSyncMock.mockReturnValue( { isDirectory: () => false } );
+
+			const result = findNestedDirectories( '/empty/dir' );
+
+			expect( result ).toEqual( { files: [], folderStructureObj: {} } );
 		} );
 	} );
 } );
