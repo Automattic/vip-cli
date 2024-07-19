@@ -96,5 +96,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: List installed packages
+        run: npm list
+
+      - name: Install jest
+        run: npm install jest
+
       - name: Run tests
-        run: npm run jest
+        run: npm run test
