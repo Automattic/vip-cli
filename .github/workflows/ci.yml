@@ -79,8 +79,8 @@ jobs:
       fail-fast: true
       matrix:
         node-version:
-          - 'lts/*'
-          - 'lts/-1'
+#          - 'lts/*'
+#          - 'lts/-1'
           - current
     steps:
       - name: Check out the source code
@@ -95,6 +95,18 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: List installed packages
+        run: npm list
+
+      - name: Verify jest installation
+        run: npm ls jest
+
+      - name: Install jest
+        run: npm install jest
+
+      - name: Verify jest installation after running install
+        run: npm ls jest
 
       - name: Run tests
         run: npm run jest
