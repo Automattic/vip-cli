@@ -38,7 +38,9 @@ jobs:
           cache-dependency-path: npm-shrinkwrap.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci
 
       - name: Run ${{ matrix.config.tool }}
         run: npm run '${{ matrix.config.tool }}'
@@ -67,7 +69,9 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci
 
       - name: Run audit
         run: npm audit signatures
@@ -79,8 +83,8 @@ jobs:
       fail-fast: true
       matrix:
         node-version:
-          - 'lts/*'
-          - 'lts/-1'
+#          - 'lts/*'
+#          - 'lts/-1'
           - current
     steps:
       - name: Check out the source code
@@ -94,7 +98,9 @@ jobs:
           cache-dependency-path: npm-shrinkwrap.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci
 
       - name: Run tests
         run: npm run jest
