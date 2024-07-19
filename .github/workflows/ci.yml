@@ -40,6 +40,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: List installed packages
+        run: npm list
+
+      - name: Verify jest installation
+        run: npm ls jest
+
       - name: Run ${{ matrix.config.tool }}
         run: npm run '${{ matrix.config.tool }}'
 
@@ -99,8 +105,8 @@ jobs:
       - name: List installed packages
         run: npm list
 
-      - name: Install jest
-        run: npm install jest
+      - name: Verify jest installation
+        run: npm ls jest
 
       - name: Run tests
         run: npm run test
