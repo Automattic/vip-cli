@@ -1,122 +1,155 @@
+/**
+ * External dependencies
+ */
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
-// Accepted media file extensions
-export const acceptedExtensions: string[] = [
-	'jpg',
-	'jpeg',
-	'jpe',
-	'gif',
-	'png',
-	'bmp',
-	'svg',
-	'tiff',
-	'tif',
-	'ico',
-	'asf',
-	'asx',
-	'wmv',
-	'wmx',
-	'wm',
-	'avi',
-	'divx',
-	'mov',
-	'qt',
-	'mpeg',
-	'mpg',
-	'mpe',
-	'mp4',
-	'm4v',
-	'ogv',
-	'webm',
-	'mkv',
-	'3gp',
-	'3gpp',
-	'3g2',
-	'3gp2',
-	'txt',
-	'asc',
-	'c',
-	'cc',
-	'h',
-	'srt',
-	'csv',
-	'tsv',
-	'ics',
-	'rtx',
-	'css',
-	'vtt',
-	'dfxp',
-	'mp3',
-	'm4a',
-	'm4b',
-	'ra',
-	'ram',
-	'wav',
-	'ogg',
-	'oga',
-	'mid',
-	'midi',
-	'wma',
-	'wax',
-	'mka',
-	'rtf',
-	'js',
-	'pdf',
-	'class',
-	'psd',
-	'xcf',
-	'doc',
-	'pot',
-	'pps',
-	'ppt',
-	'wri',
-	'xla',
-	'xls',
-	'xlt',
-	'xlw',
-	'mdb',
-	'mpp',
-	'docx',
-	'docm',
-	'dotx',
-	'dotm',
-	'xlsx',
-	'xlsm',
-	'xlsb',
-	'xltx',
-	'xltm',
-	'xlam',
-	'pptx',
-	'pptm',
-	'ppsx',
-	'ppsm',
-	'potx',
-	'potm',
-	'ppam',
-	'sldx',
-	'sldm',
-	'onetoc',
-	' onetoc2',
-	'onetmp',
-	'onepkg',
-	'oxps',
-	'xps',
-	'odt',
-	'odp',
-	'ods',
-	'odg',
-	'odc',
-	'odb',
-	'odf',
-	'webp',
-	'wp',
-	'wpd',
-	'key',
-	'numbers',
-	'pages',
-];
+/**
+ * Internal dependencies
+ */
+import { MediaImportConfig } from '../graphqlTypes';
+
+export const enum ValidateFilesErrors {
+	INVALID_TYPES = 'invalid_types',
+	INTERMEDIATE_IMAGES = 'intermediate_images',
+	INVALID_SIZES = 'invalid_sizes',
+	INVALID_NAMES = 'invalid_names',
+	INVALID_NAME_CHARACTER_COUNTS = 'invalid_name_character_counts',
+}
+
+interface LogErrorOptions {
+	errorType: ValidateFilesErrors;
+	invalidFiles: string[];
+	limit?: string | number | Record< string, string >;
+}
+
+interface ExtType {
+	ext: string | null;
+	type: string | null;
+}
+
+interface MediaImportAllowedFileTypes {
+	[ key: string ]: unknown;
+}
+
+interface ValidationResult {
+	intermediateImagesTotal: number;
+	errorFileTypes: string[];
+	errorFileNames: string[];
+	errorFileSizes: string[];
+	errorFileNamesCharCount: string[];
+	intermediateImages: { [ key: string ]: string };
+}
+
+/**
+ * File info validation
+ *
+ * Validate the file info for media files
+ */
+export async function validateFiles(
+	files: string[],
+	mediaImportConfig: MediaImportConfig
+): Promise< ValidationResult > {
+	const validationResult: ValidationResult = {
+		intermediateImagesTotal: 0,
+		errorFileTypes: [],
+		errorFileNames: [],
+		errorFileSizes: [],
+		errorFileNamesCharCount: [],
+		intermediateImages: {},
+	};
+
+	const fileValidationPromises = files.map( async file => {
+		const isFolder = await isDirectory( file );
+		const fileExtType = getFileExtType(
+			file,
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
+		);
+
+		if ( isInvalidFile( fileExtType, isFolder ) ) {
+			validationResult.errorFileTypes.push( file );
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		if ( ! isFileSizeValid( file, <number>mediaImportConfig.fileSizeLimitInBytes ) ) {
+			validationResult.errorFileSizes.push( file );
+		}
+
+		if ( isFileSanitized( file ) ) {
+			validationResult.errorFileNames.push( file );
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig?.fileNameCharCount ) ) {
+			validationResult.errorFileNamesCharCount.push( file );
+		}
+
+		const original = doesImageHaveExistingSource( file );
+		if ( original ) {
+			validationResult.intermediateImagesTotal++;
+			if ( validationResult.intermediateImages[ original ] ) {
+				validationResult.intermediateImages[ original ] += `, ${ file }`;
+			} else {
+				validationResult.intermediateImages[ original ] = file;
+			}
+		}
+	} );
+
+	await Promise.all( fileValidationPromises );
+	return validationResult;
+}
+
+const isDirectory = async ( file: string ): Promise< boolean > => {
+	const stats = await fs.promises.stat( file );
+	return stats.isDirectory();
+};
+
+const getFileExtType = (
+	file: string,
+	allowedFileTypes: MediaImportAllowedFileTypes | null
+): ExtType => {
+	if ( ! allowedFileTypes ) return { ext: null, type: null };
+	return getExtAndType( file, allowedFileTypes );
+};
+
+const isInvalidFile = ( fileExtType: ExtType, isFolder: boolean ): boolean => {
+	return ! fileExtType.type || ! fileExtType.ext || isFolder;
+};
+
+const getExtAndType = (
+	filePath: string,
+	allowedFileTypes: MediaImportAllowedFileTypes
+): ExtType => {
+	const extType: ExtType = { ext: null, type: null };
+	for ( const [ key, value ] of Object.entries( allowedFileTypes ) ) {
+		// Create a regular expression to match the file extension
+		// eslint-disable-next-line security/detect-non-literal-regexp
+		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
+		const matches = regex.exec( filePath );
+		if ( matches ) {
+			extType.type = value as string;
+			extType.ext = matches[ 1 ];
+			break;
+		}
+	}
+	return extType;
+};
+
+const isFileSizeValid = ( filePathOnDisk: string, fileSizeLimitInBytes: number ): boolean => {
+	const fileStat: fs.Stats = fs.statSync( filePathOnDisk );
+	return fileSizeLimitInBytes >= fileStat.size;
+};
+
+const isFileNameCharCountValid = ( file: string, fileNameCharCount: number ): boolean => {
+	const filename: string = path.basename( file );
+	return filename.length <= fileNameCharCount;
+};
+
+/**
+ * End file info validation
+ */
 
 /**
  * Character validation global variables
@@ -192,10 +225,8 @@ const recommendedFileStructure = (): void => {
 };
 
 // Recommend accepted file types
-const recommendAcceptableFileTypes = (): void => {
-	console.log(
-		'Accepted file types: \n\n' + chalk.magenta( `${ acceptedExtensions.join( ', ' ) }` )
-	);
+const recommendAcceptableFileTypes = ( allowedFileTypesString: string ): void => {
+	console.log( 'Accepted file types: \n\n' + chalk.magenta( `${ allowedFileTypesString }` ) );
 	console.log();
 };
 
@@ -621,9 +652,8 @@ export const isFileSanitized = ( file: string ): boolean => {
 	sanitizedFile = sanitizedFile.replace( regexSpaces, ' ' );
 
 	// Check if the filename has been sanitized
-	const checkFile = sanitizedFile !== filename;
 
-	return checkFile;
+	return sanitizedFile !== filename;
 };
 
 /**
@@ -652,7 +682,6 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 
 	// Intermediate image regex check
 	const intermediateImage = identifyIntermediateImage( filename );
-
 	if ( null !== intermediateImage ) {
 		const imageSizing = intermediateImage[ 0 ]; // First capture group of the regex validation
 		const extension = path.extname( filename ).slice( 1 ); // Extension of the path (e.g.- `.jpg`)
@@ -660,12 +689,10 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 		// Filename manipulation: if an image is an intermediate image, strip away the image sizing
 		// e.g.- `panda4000x6000.png` -> `panda.png`
 		const baseFileName = filename.replace( imageSizing, '' ) + '.' + extension;
-
 		const splitFolder = file.split( '/' );
 
 		// Remove the last element (intermediate image filename) and replace it with the original image filename
 		splitFolder.splice( splitFolder.length - 1, 1, baseFileName );
-
 		const originalImage = splitFolder.join( '/' );
 
 		// Check if an image with the same path + name (the original) already exists
@@ -673,7 +700,6 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
 			return originalImage;
 		}
 	}
-
 	return false;
 };
 
@@ -683,58 +709,70 @@ export const doesImageHaveExistingSource = ( file: string ): string | false => {
  * Log errors for invalid folders or files
  */
 
-// Log errors for files with invalid file extensions and recommend accepted file types
-export const logErrorsForInvalidFileTypes = ( invalidFiles: string[] ): void => {
-	invalidFiles.forEach( file => {
-		console.error(
-			chalk.red( '✕' ),
-			'File extensions: Invalid file type for file: ',
-			chalk.cyan( `${ file }` )
-		);
-	} );
-
-	console.log();
-	recommendAcceptableFileTypes();
-	console.log( '------------------------------------------------------------' );
-	console.log();
-};
-
-// Log errors for files with invalid filenames and show a list of accepted/prohibited chars
-export const logErrorsForInvalidFilenames = ( invalidFiles: string[] ): void => {
-	invalidFiles.forEach( file => {
-		console.error(
-			chalk.red( '✕' ),
-			'Character validation: Invalid filename for file: ',
-			chalk.cyan( `${ file }` )
-		);
-	} );
-
-	console.log();
-	recommendAcceptableFileNames();
-	console.log( '------------------------------------------------------------' );
-	console.log();
-};
-
-// Log errors for intermediate image file duplicates
-export const logErrorsForIntermediateImages = ( obj: Record< string, string > ): void => {
-	for ( const original in obj ) {
-		console.error(
-			chalk.red( '✕' ),
-			'Intermediate images: Duplicate files found:\n' +
-				'Original file: ' +
-				chalk.blue( `${ original }\n` ) +
-				'Intermediate images: ' +
-				chalk.cyan( `${ obj[ original ] }\n` )
-		);
+export const logErrors = ( { errorType, invalidFiles, limit }: LogErrorOptions ): void => {
+	if ( invalidFiles.length === 0 ) {
+		return;
 	}
-	console.log( '------------------------------------------------------------' );
+
+	invalidFiles.forEach( file => {
+		switch ( errorType ) {
+			case ValidateFilesErrors.INVALID_TYPES:
+				console.error(
+					chalk.red( '✕' ),
+					'File extensions: Invalid file type for file: ',
+					chalk.cyan( `${ file }` )
+				);
+				console.log();
+				recommendAcceptableFileTypes( limit as string );
+				break;
+			case ValidateFilesErrors.INTERMEDIATE_IMAGES:
+				console.error(
+					chalk.red( '✕' ),
+					'Intermediate images: Duplicate files found:\n' +
+						'Original file: ' +
+						chalk.blue( `${ file }\n` ) +
+						'Intermediate images: ' +
+						chalk.cyan( `${ ( limit as Record< string, string > )[ file ] }\n` )
+				);
+				break;
+			case ValidateFilesErrors.INVALID_SIZES:
+				console.error(
+					chalk.red( '✕' ),
+					`File size cannot be more than ${ ( limit as number ) / 1024 / 1024 / 1024 } GB`,
+					chalk.cyan( `${ file }` )
+				);
+				console.log();
+				break;
+			case ValidateFilesErrors.INVALID_NAME_CHARACTER_COUNTS:
+				console.error(
+					chalk.red( '✕' ),
+					`File name cannot have more than ${ limit as number } characters`,
+					chalk.cyan( `${ file }` )
+				);
+				break;
+			case ValidateFilesErrors.INVALID_NAMES:
+				console.error(
+					chalk.red( '✕' ),
+					'Character validation: Invalid filename for file: ',
+					chalk.cyan( `${ file }` )
+				);
+				recommendAcceptableFileNames();
+				break;
+
+			default:
+				console.error( chalk.red( '✕' ), 'Unknown error type:', errorType );
+		}
+	} );
+	console.log();
 };
 
 interface SummaryLogsParams {
 	folderErrorsLength: number;
 	intImagesErrorsLength: number;
 	fileTypeErrorsLength: number;
+	fileErrorFileSizesLength: number;
 	filenameErrorsLength: number;
+	fileNameCharCountErrorsLength: number;
 	totalFiles: number;
 	totalFolders: number;
 }
@@ -743,7 +781,9 @@ export const summaryLogs = ( {
 	folderErrorsLength,
 	intImagesErrorsLength,
 	fileTypeErrorsLength,
+	fileErrorFileSizesLength,
 	filenameErrorsLength,
+	fileNameCharCountErrorsLength,
 	totalFiles,
 	totalFolders,
 }: SummaryLogsParams ) => {
@@ -790,6 +830,20 @@ export const summaryLogs = ( {
 		);
 	}
 
+	if ( fileErrorFileSizesLength > 0 ) {
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red( ` ${ fileTypeErrorsLength } invalid file sizes` ) +
+				`, ${ totalFiles } files total`
+		);
+	} else {
+		messages.push(
+			chalk.white.bgGreen( '    PASS     ' ) +
+				chalk.green( ` ${ fileTypeErrorsLength } invalid file sizes` ) +
+				`, ${ totalFiles } files total`
+		);
+	}
+
 	if ( filenameErrorsLength ) {
 		messages.push(
 			chalk.white.bgRed( '   ERROR     ' ) +
@@ -800,6 +854,24 @@ export const summaryLogs = ( {
 		messages.push(
 			chalk.bgGreen( '    PASS     ' ) +
 				chalk.green( ` ${ filenameErrorsLength } invalid filenames` ) +
+				`, ${ totalFiles } files total`
+		);
+	}
+
+	if ( fileNameCharCountErrorsLength ) {
+		messages.push(
+			chalk.white.bgRed( '   ERROR     ' ) +
+				chalk.red(
+					` ${ filenameErrorsLength } file names reached the maximum character count limit `
+				) +
+				`, ${ totalFiles } files total`
+		);
+	} else {
+		messages.push(
+			chalk.bgGreen( '    PASS     ' ) +
+				chalk.green(
+					` ${ filenameErrorsLength } file names reached the maximum character count limit`
+				) +
 				`, ${ totalFiles } files total`
 		);
 	}

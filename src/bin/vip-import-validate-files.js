@@ -1,26 +1,31 @@
 #!/usr/bin/env node
 
+/**
+ * External dependencies
+ */
 import chalk from 'chalk';
-import fs from 'fs';
-import path from 'path';
 import url from 'url';
 
+/**
+ * Internal dependencies
+ */
 import command from '../lib/cli/command';
+import { getMediaImportConfig } from '../lib/media-import/config';
 import { trackEvent } from '../lib/tracker';
 import {
-	acceptedExtensions,
 	findNestedDirectories,
 	folderStructureValidation,
-	isFileSanitized,
-	doesImageHaveExistingSource,
-	logErrorsForIntermediateImages,
-	logErrorsForInvalidFileTypes,
-	logErrorsForInvalidFilenames,
 	summaryLogs,
+	validateFiles,
+	logErrors,
+	ValidateFilesErrors,
 } from '../lib/vip-import-validate-files';
 
 command( { requiredArgs: 1, format: true } )
-	.example( 'vip import validate-files <file>', 'Run the import validation against the file' )
+	.example(
+		'vip import validate-files <folder_name>',
+		'Run the import validation against the folder of media files'
+	)
 	.argv( process.argv, async arg => {
 		await trackEvent( 'import_validate_files_command_execute' );
 		/**
@@ -64,95 +69,68 @@ command( { requiredArgs: 1, format: true } )
 		}
 
 		/**
-		 * Media file extension validation
-		 *
-		 * Ensure that prohibited media file types are not used
+		 * Get Media Import configuration
 		 */
+		const mediaImportConfig = await getMediaImportConfig();
 
-		// Collect invalid files for error logging
-		let intermediateImagesTotal = 0;
-
-		const errorFileTypes = [];
-		const errorFileNames = [];
-		const intermediateImages = {};
-
-		// Iterate through each file to isolate the extension name
-		for ( const file of files ) {
-			// Check if file is a directory
-			// eslint-disable-next-line no-await-in-loop
-			const stats = await fs.promises.stat( file );
-			const isFolder = stats.isDirectory();
-
-			const extension = path.extname( file ); // Extract the extension of the file
-			const ext = extension.substr( 1 ); // We only want the ext name minus the period (e.g- .jpg -> jpg)
-			const extLowerCase = ext.toLowerCase(); // Change any uppercase extensions to lowercase
-
-			// Check for any invalid file extensions
-			// Returns true if ext is valid; false if invalid
-			const validExtensions = acceptedExtensions.includes( extLowerCase );
-
-			// Collect files that have no extension, have invalid extensions,
-			// or are directories for error logging
-			if ( ! extension || ! validExtensions || isFolder ) {
-				errorFileTypes.push( file );
-			}
-
-			/**
-			 * Filename validation
-			 *
-			 * Ensure that filenames don't contain prohibited characters
-			 */
-
-			// Collect files that have invalid file names for error logging
-			if ( isFileSanitized( file ) ) {
-				errorFileNames.push( file );
-			}
-
-			/**
-			 * Intermediate image validation
-			 *
-			 * Detect any intermediate images.
-			 *
-			 * Intermediate images are copies of images that are resized, so you may have multiples of the same image.
-			 * You can resize an image directly on VIP so intermediate images are not necessary.
-			 */
-			const original = doesImageHaveExistingSource( file );
-
-			// If an image is an intermediate image, increment the total number and
-			// populate key/value pairs of the original image and intermediate image(s)
-			if ( original ) {
-				intermediateImagesTotal++;
-
-				if ( intermediateImages[ original ] ) {
-					// Key: original image, value: intermediate image(s)
-					intermediateImages[ original ] = `${ intermediateImages[ original ] }, ${ file }`;
-				} else {
-					intermediateImages[ original ] = file;
-				}
-			}
+		if ( ! mediaImportConfig ) {
+			console.error(
+				chalk.red( '✕ Error:' ),
+				'Could not retrieve validation metadata. Please contact VIP Support.'
+			);
+			return;
 		}
 
 		/**
-		 * Error logging
+		 * File Validation
+		 * Collect all errors from file validation
 		 */
-		if ( errorFileTypes.length > 0 ) {
-			logErrorsForInvalidFileTypes( errorFileTypes );
-		}
+		const {
+			intermediateImagesTotal,
+			errorFileTypes,
+			errorFileNames,
+			errorFileSizes,
+			errorFileNamesCharCount,
+			intermediateImages,
+		} = await validateFiles( files, mediaImportConfig );
 
-		if ( errorFileNames.length > 0 ) {
-			logErrorsForInvalidFilenames( errorFileNames );
-		}
-
-		if ( Object.keys( intermediateImages ).length > 0 ) {
-			logErrorsForIntermediateImages( intermediateImages );
-		}
+		/**
+		 * Error logging
+		 * Not sure if the changes made to the error logging better
+		 */
+		logErrors( {
+			errorType: ValidateFilesErrors.INVALID_TYPES,
+			invalidFiles: errorFileTypes,
+			limit: Object.keys( mediaImportConfig.allowedFileTypes ),
+		} );
+		logErrors( {
+			errorType: ValidateFilesErrors.INVALID_SIZES,
+			invalidFiles: errorFileSizes,
+			limit: mediaImportConfig.fileSizeLimitInBytes,
+		} );
+		logErrors( {
+			errorType: ValidateFilesErrors.INVALID_NAME_CHARACTER_COUNTS,
+			invalidFiles: errorFileNamesCharCount,
+			limit: mediaImportConfig.fileNameCharCount,
+		} );
+		logErrors( {
+			errorType: ValidateFilesErrors.INVALID_NAMES,
+			invalidFiles: errorFileNames,
+		} );
+		logErrors( {
+			errorType: ValidateFilesErrors.INTERMEDIATE_IMAGES,
+			invalidFiles: Object.keys( intermediateImages ),
+			invalidFilesObj: intermediateImages,
+		} );
 
 		// Log a summary of all errors
 		summaryLogs( {
 			folderErrorsLength: folderValidation.length,
 			intImagesErrorsLength: intermediateImagesTotal,
 			fileTypeErrorsLength: errorFileTypes.length,
+			fileErrorFileSizesLength: errorFileSizes.length,
 			filenameErrorsLength: errorFileNames.length,
+			fileNameCharCountErrorsLength: errorFileNamesCharCount.length,
 			totalFiles: files.length,
 			totalFolders: nestedDirectories.length,
 		} );

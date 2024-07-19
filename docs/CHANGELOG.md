@@ -1,5 +1,19 @@
 ## Changelog
 
+## 3.7.0
+
+* New develop release: 3.6.1-dev.0 by @github-actions in #1931
+* build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.12.0 to 0.13.0 by @dependabot in #1932
+* build(deps-dev): bump the babel group with 3 updates by @dependabot in #1936
+* build(deps): bump update-notifier from 7.0.0 to 7.1.0 by @dependabot in #1937
+* build(deps): bump actions/dependency-review-action from 4.3.3 to 4.3.4 by @dependabot in #1938
+* build(deps-dev): bump @babel/core from 7.24.8 to 7.24.9 in the babel group by @dependabot in #1939
+* build(deps-dev): bump @types/dockerode from 3.3.29 to 3.3.30 by @dependabot in #1941
+* update: media import validate-files by @ariskataoka in #1919
+* New package release: v3.7.0 by @github-actions in #1943
+  
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.6.0...3.7.0
+
 ## 3.6.0
 
 * build(deps-dev): bump rimraf from 5.0.7 to 5.0.8
