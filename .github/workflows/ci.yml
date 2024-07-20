@@ -96,11 +96,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Debug List installed packages
-        run: npm list
-
-      - name: Debug Verify jest installation
-        run: npm ls jest
-
       - name: Run tests
         run: npm run jest
