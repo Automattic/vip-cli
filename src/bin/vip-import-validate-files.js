@@ -15,6 +15,7 @@ import { trackEvent } from '../lib/tracker';
 import {
 	findNestedDirectories,
 	folderStructureValidation,
+	isDirectory,
 	summaryLogs,
 	validateFiles,
 	logErrors,
@@ -36,6 +37,11 @@ command( { requiredArgs: 1, format: true } )
 		const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
 		arg = url.parse( folder ); // Then parse the file to its URL parts
 		const filePath = arg.path; // Extract the path of the file
+
+		if ( ! ( await isDirectory( filePath ) ) ) {
+			console.error( chalk.red( '✕ Error:' ), 'The given path is not a directory' );
+			return;
+		}
 
 		let folderValidation;
 

@@ -101,7 +101,7 @@ export async function validateFiles(
 	return validationResult;
 }
 
-const isDirectory = async ( file: string ): Promise< boolean > => {
+export const isDirectory = async ( file: string ): Promise< boolean > => {
 	const stats = await fs.promises.stat( file );
 	return stats.isDirectory();
 };
