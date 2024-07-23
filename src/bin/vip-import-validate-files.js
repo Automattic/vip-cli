@@ -22,7 +22,7 @@ import {
 	ValidateFilesErrors,
 } from '../lib/vip-import-validate-files';
 
-export async function vipImportValidateFilesCmd( arg = [], opt = {} ) {
+export async function vipImportValidateFilesCmd( arg = [] ) {
 	await trackEvent( 'import_validate_files_command_execute' );
 	/**
 	 * File manipulation
