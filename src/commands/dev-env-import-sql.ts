@@ -17,12 +17,20 @@ import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
 import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
-export class DevEnvImportSQLCommand {
-	fileName;
-	options;
-	slug;
+export interface DevEnvImportSQLOptions {
+	skipValidate: string;
+	quiet: string;
+	skipReindex: string;
+	searchReplace: string;
+	inPlace: boolean;
+}
 
-	constructor( fileName, options, slug ) {
+export class DevEnvImportSQLCommand {
+	constructor(
+		public fileName: string,
+		public options: DevEnvImportSQLOptions,
+		public slug: string
+	) {
 		this.fileName = fileName;
 		this.options = options;
 		this.slug = slug;
@@ -52,7 +60,8 @@ export class DevEnvImportSQLCommand {
 				}
 
 				this.fileName = sqlFile;
-			} catch ( err ) {
+			} catch ( error ) {
+				const err = error as Error;
 				exit.withError( `Error extracting the SQL file: ${ err.message }` );
 			}
 		}
