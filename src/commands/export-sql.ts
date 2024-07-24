@@ -5,6 +5,12 @@ import https from 'https';
 import path from 'path';
 
 import { BackupDBCommand } from './backup-db';
+import {
+	AppBackupAndJobStatusQuery,
+	GenerateDbBackupCopyUrlMutation,
+} from './export-sql.generated';
+import { App, AppEnvironment, Backup, Job } from '../graphqlTypes';
+import { TrackFunction } from '../lib/analytics/clients/tracks';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
@@ -18,8 +24,6 @@ import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { retry } from '../lib/retry';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
-import { AppBackupAndJobStatusQuery } from './export-sql.generated';
-import { Backup, Job } from '../graphqlTypes';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -111,7 +115,14 @@ async function fetchLatestBackupAndJobStatusBase(
 	return { latestBackup, jobs };
 }
 
-async function fetchLatestBackupAndJobStatus( appId: number, envId: number ) {
+async function fetchLatestBackupAndJobStatus(
+	appId: number | undefined | null,
+	envId: number | undefined | null
+) {
+	if ( ! appId || ! envId ) {
+		throw new Error( 'App ID and Env ID missing' );
+	}
+
 	return await retry(
 		{
 			retryOnlyIf: options => {
@@ -134,12 +145,16 @@ async function fetchLatestBackupAndJobStatus( appId: number, envId: number ) {
  * @return {Promise} A promise which resolves to the download link
  */
 async function generateDownloadLink(
-	appId: number,
-	envId: number,
-	backupId: number
-): Promise< any > {
+	appId: number | null | undefined,
+	envId: number | null | undefined,
+	backupId: number | null | undefined
+): Promise< string > {
+	if ( ! appId || ! envId || ! backupId ) {
+		throw new Error( 'generateDownloadLink: A parameter is missing' );
+	}
+
 	const api = API();
-	const response = await api.mutate( {
+	const response = await api.mutate< GenerateDbBackupCopyUrlMutation >( {
 		mutation: GENERATE_DOWNLOAD_LINK_MUTATION,
 		variables: {
 			input: {
@@ -150,13 +165,7 @@ async function generateDownloadLink(
 		},
 	} );
 
-	const {
-		data: {
-			generateDBBackupCopyUrl: { url },
-		},
-	} = response;
-
-	return url;
+	return response.data?.generateDBBackupCopyUrl?.url as string;
 }
 
 /**
@@ -165,10 +174,18 @@ async function generateDownloadLink(
  * @param {number} appId    Application ID
  * @param {number} envId    Environment ID
  * @param {number} backupId Backup ID
- * @return {Promise} A promise which resolves to null if job creation succeeds
+ * @return {Promise} A promise which resolves to undefined if job creation succeeds
  * @throws {Error} Throws an error if the job creation fails
  */
-async function createExportJob( appId: number, envId: number, backupId: number ): Promise< any > {
+async function createExportJob(
+	appId: number | undefined | null,
+	envId: number | undefined | null,
+	backupId: number | undefined | null
+): Promise< undefined > {
+	if ( ! appId || ! envId || ! backupId ) {
+		throw new Error( 'createExportJob: Some fields are undefined' );
+	}
+
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
@@ -190,7 +207,7 @@ async function createExportJob( appId: number, envId: number, backupId: number )
 
 export interface ExportSQLOptions {
 	outputFile?: string;
-	confirmEnoughStorageHook?: ( job: any ) => Promise< PromptStatus >;
+	confirmEnoughStorageHook?: ( job: Job ) => Promise< PromptStatus >;
 	generateBackup?: boolean;
 }
 
@@ -198,20 +215,18 @@ export interface ExportSQLOptions {
  * Class representing an export command workflow
  */
 export class ExportSQLCommand {
-	app;
-	env;
-	progressTracker;
-	outputFile;
-	generateBackup;
-	confirmEnoughStorageHook;
-	steps = {
+	private progressTracker: ProgressTracker;
+	private readonly outputFile: string | null;
+	private readonly generateBackup: boolean;
+	private readonly confirmEnoughStorageHook: ExportSQLOptions[ 'confirmEnoughStorageHook' ];
+	private readonly steps = {
 		PREPARE: 'prepare',
 		CREATE: 'create',
 		DOWNLOAD_LINK: 'downloadLink',
 		CONFIRM_ENOUGH_STORAGE: 'confirmEnoughStorage',
 		DOWNLOAD: 'download',
 	};
-	track;
+	private readonly track: TrackFunction;
 
 	/**
 	 * Creates an instance of SQLExportCommand
@@ -222,10 +237,10 @@ export class ExportSQLCommand {
 	 * @param {Function} trackerFn  The progress tracker function
 	 */
 	constructor(
-		app: any,
-		env: any,
+		private readonly app: App,
+		private readonly env: AppEnvironment,
 		options: ExportSQLOptions = {},
-		trackerFn: Function = () => {}
+		trackerFn: TrackFunction = () => {}
 	) {
 		this.app = app;
 		this.env = env;
@@ -248,7 +263,7 @@ export class ExportSQLCommand {
 	 *
 	 * @return {Promise} A promise which resolves to the export job
 	 */
-	async getExportJob(): Promise< Job | undefined > {
+	private async getExportJob(): Promise< Job | undefined > {
 		const { latestBackup, jobs } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
@@ -267,7 +282,7 @@ export class ExportSQLCommand {
 	 *
 	 * @return A promise which resolves to the filename
 	 */
-	async getExportedFileName(): Promise< string > {
+	private async getExportedFileName(): Promise< string > {
 		const job = await this.getExportJob();
 		if ( ! job ) {
 			throw new Error( 'Job not found' );
@@ -284,7 +299,7 @@ export class ExportSQLCommand {
 	 * @return {Promise} A promise which resolves to the path of the downloaded file
 	 * @throws {Error} Throws an error if the download fails
 	 */
-	async downloadExportedFile( url: string ): Promise< any > {
+	private async downloadExportedFile( url: string ): Promise< string > {
 		const filename = this.outputFile || ( await this.getExportedFileName() ) || 'exported.sql.gz';
 		const file = fs.createWriteStream( filename );
 
@@ -306,7 +321,7 @@ export class ExportSQLCommand {
 					reject( err );
 				} );
 
-				response.on( 'data', chunk => {
+				response.on( 'data', ( chunk: string ) => {
 					current += chunk.length;
 					this.progressTracker.setProgress(
 						`- ${ ( ( 100 * current ) / total ).toFixed( 2 ) }% (${ formatBytes(
@@ -324,7 +339,7 @@ export class ExportSQLCommand {
 	 * @param job The export job
 	 * @return True if the preflight step is successful
 	 */
-	isPrepared( job: Job | undefined ): boolean {
+	private isPrepared( job: Job | undefined ): boolean {
 		const step = job?.progress?.steps?.find( st => st?.id === 'preflight' );
 		return step?.status === 'success';
 	}
@@ -335,22 +350,20 @@ export class ExportSQLCommand {
 	 * @param job The export job
 	 * @return True if the upload step is successful
 	 */
-	isCreated( job: Job | undefined ) {
+	private isCreated( job: Job | undefined ) {
 		const step = job?.progress?.steps?.find( st => st?.id === 'upload_backup' );
 		return step?.status === 'success';
 	}
 
 	/**
 	 * Stops the progress tracker
-	 *
-	 * @return {void}
 	 */
-	stopProgressTracker() {
+	private stopProgressTracker(): void {
 		this.progressTracker.print();
 		this.progressTracker.stopPrinting();
 	}
 
-	async runBackupJob() {
+	private async runBackupJob() {
 		const cmd = new BackupDBCommand( this.app, this.env );
 
 		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
@@ -363,7 +376,11 @@ export class ExportSQLCommand {
 		await cmd.run( false );
 	}
 
-	async confirmEnoughStorage( job: Job | undefined ): Promise< PromptStatus > {
+	private async confirmEnoughStorage( job: Job | undefined ): Promise< PromptStatus > {
+		if ( ! job ) {
+			throw new Error( 'confirmEnoughStorage: job is missing' );
+		}
+
 		if ( this.confirmEnoughStorageHook ) {
 			return await this.confirmEnoughStorageHook( job );
 		}
@@ -378,7 +395,7 @@ export class ExportSQLCommand {
 	 * Sequentially runs the steps of the export workflow
 	 *
 	 */
-	async run() {
+	public async run() {
 		if ( this.outputFile ) {
 			try {
 				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
@@ -429,7 +446,7 @@ export class ExportSQLCommand {
 			console.log( `Exporting database backup with timestamp ${ latestBackup.createdAt }` );
 
 			try {
-				await createExportJob( this.app.id, this.env.id, latestBackup.id as number );
+				await createExportJob( this.app.id, this.env.id, latestBackup.id );
 			} catch ( err ) {
 				const error = err as Error;
 				// Todo: match error code instead of message substring
@@ -491,7 +508,7 @@ export class ExportSQLCommand {
 			exit.withError( 'Command canceled by user.' );
 		}
 
-		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id as number );
+		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
 
 		// The export file is prepared. Let's download it

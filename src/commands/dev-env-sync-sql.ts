@@ -3,17 +3,18 @@
 import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
 import fs from 'fs';
+import Lando from 'lando';
 import urlLib from 'url';
 
 import { DevEnvImportSQLCommand } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
+import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
-import Lando from "lando";
-import { AppEnvironment, Job } from "../graphqlTypes";
 
 /**
  * Finds the site home url from the SQL line
@@ -35,11 +36,11 @@ function findSiteHomeUrl( sql: string ): string | null {
  * @return  List of site urls
  * @throws {Error} If there is an error reading the file
  */
-async function extractSiteUrls( sqlFile: string ): Promise<string[]> {
+async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 	const readInterface = await getReadInterface( sqlFile );
 
 	return new Promise( ( resolve, reject ) => {
-		const domains: Set<string> = new Set();
+		const domains: Set< string > = new Set();
 		readInterface.on( 'line', line => {
 			const domain = findSiteHomeUrl( line );
 			if ( domain ) {
@@ -57,14 +58,10 @@ async function extractSiteUrls( sqlFile: string ): Promise<string[]> {
 }
 
 export class DevEnvSyncSQLCommand {
-	app;
-	env;
-	slug;
-	lando;
-	tmpDir;
-	siteUrls: string[] = [];
-	searchReplaceMap: Record<string, string> = {};
-	track;
+	private readonly tmpDir: string;
+	private siteUrls: string[] = [];
+	private searchReplaceMap: Record< string, string > = {};
+	private readonly track: TrackFunction;
 
 	/**
 	 * Creates a new instance of the command
@@ -75,7 +72,13 @@ export class DevEnvSyncSQLCommand {
 	 * @param lando     The lando object
 	 * @param trackerFn Function to call for tracking
 	 */
-	constructor( app: string, env: AppEnvironment, slug: string, lando: Lando, trackerFn: Function = () => {} ) {
+	constructor(
+		private readonly app: App,
+		private readonly env: AppEnvironment,
+		private readonly slug: string,
+		private readonly lando: Lando,
+		trackerFn: TrackFunction = () => {}
+	) {
 		this.app = app;
 		this.env = env;
 		this.slug = slug;
@@ -84,19 +87,19 @@ export class DevEnvSyncSQLCommand {
 		this.tmpDir = makeTempDir();
 	}
 
-	get landoDomain() {
+	private get landoDomain(): string {
 		return `${ this.slug }.${ this.lando.config.domain }`;
 	}
 
-	get sqlFile() {
+	private get sqlFile(): string {
 		return `${ this.tmpDir }/sql-export.sql`;
 	}
 
-	get gzFile() {
+	private get gzFile(): string {
 		return `${ this.tmpDir }/sql-export.sql.gz`;
 	}
 
-	async confirmEnoughStorage( job: Job ) {
+	private async confirmEnoughStorage( job: Job ) {
 		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
 		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport();
 	}
@@ -105,7 +108,7 @@ export class DevEnvSyncSQLCommand {
 	 * Runs the SQL export command to generate the SQL export from
 	 * the latest backup
 	 */
-	async generateExport() {
+	private async generateExport(): Promise< void > {
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
@@ -122,7 +125,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the search-replace is complete
 	 * @throws {Error} If there is an error reading the file
 	 */
-	async runSearchReplace(): Promise<void> {
+	private async runSearchReplace(): Promise< void > {
 		const replacements = Object.entries( this.searchReplaceMap ).flat();
 		const readStream = fs.createReadStream( this.sqlFile );
 		const replacedStream = await replace( readStream, replacements );
@@ -139,7 +142,7 @@ export class DevEnvSyncSQLCommand {
 		} );
 	}
 
-	generateSearchReplaceMap() {
+	private generateSearchReplaceMap(): void {
 		this.searchReplaceMap = {};
 
 		for ( const url of this.siteUrls ) {
@@ -153,7 +156,7 @@ export class DevEnvSyncSQLCommand {
 			if ( ! site?.blogId || site.blogId === 1 ) continue;
 
 			const url = site?.homeUrl?.replace( /https?:\/\//, '' );
-			if ( !url || ! this.searchReplaceMap[ url ] ) continue;
+			if ( ! url || ! this.searchReplaceMap[ url ] ) continue;
 
 			this.searchReplaceMap[ url ] = `${ this.slugifyDomain( url ) }-${ site.blogId }.${
 				this.landoDomain
@@ -161,7 +164,7 @@ export class DevEnvSyncSQLCommand {
 		}
 	}
 
-	slugifyDomain( domain: string ) {
+	private slugifyDomain( domain: string ): string {
 		return String( domain )
 			.normalize( 'NFKD' ) // split accented characters into their base characters and diacritical marks
 			.replace( /[\u0300-\u036f]/g, '' ) // remove all the accents, which happen to be all in the \u03xx UNICODE block.
@@ -178,7 +181,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the import is complete
 	 * @throws {Error} If there is an error importing the file
 	 */
-	async runImport() {
+	private async runImport(): Promise< void > {
 		const importOptions = {
 			inPlace: true,
 			skipValidate: true,
@@ -192,13 +195,13 @@ export class DevEnvSyncSQLCommand {
 	 * Sequentially runs the commands to export, search-replace, and import the SQL file
 	 * to the local environment
 	 *
-	 * @return {Promise<void>} Promise that resolves to true when the commands are complete. It will return false if the user did not continue during validation prompts.
+	 * @return Promise that resolves to true when the commands are complete. It will return false if the user did not continue during validation prompts.
 	 */
-	async run() {
+	public async run(): Promise< boolean > {
 		try {
 			await this.generateExport();
 		} catch ( err ) {
-      const error = err as Error
+			const error = err as Error;
 			// this.generateExport probably catches all exceptions, track the event and runs exit.withError() but if things go really wrong
 			// and we have no tracking data, we would at least have it logged here.
 			// the following will not get executed if this.generateExport() calls exit.withError() on all exception
@@ -215,7 +218,7 @@ export class DevEnvSyncSQLCommand {
 			await unzipFile( this.gzFile, this.sqlFile );
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
-      const error = err as Error
+			const error = err as Error;
 			await this.track( 'error', {
 				error_type: 'archive_extraction',
 				error_message: error.message,
@@ -228,7 +231,7 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Extracting site urls from the SQL file...' );
 			this.siteUrls = await extractSiteUrls( this.sqlFile );
 		} catch ( err ) {
-      const error = err as Error
+			const error = err as Error;
 			await this.track( 'error', {
 				error_type: 'extract_site_urls',
 				error_message: error.message,
@@ -249,7 +252,7 @@ export class DevEnvSyncSQLCommand {
 			await this.runSearchReplace();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
-      const error = err as Error
+			const error = err as Error;
 			await this.track( 'error', {
 				error_type: 'search_replace',
 				error_message: error.message,
@@ -264,7 +267,7 @@ export class DevEnvSyncSQLCommand {
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
 			return true;
 		} catch ( err ) {
-      const error = err as Error
+			const error = err as Error;
 			await this.track( 'error', {
 				error_type: 'import_sql_file',
 				error_message: error.message,

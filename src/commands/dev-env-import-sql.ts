@@ -21,8 +21,8 @@ export interface DevEnvImportSQLOptions {
 	skipReindex?: string;
 	searchReplace?: string;
 	inPlace: boolean;
-  skipValidate: boolean;
-  quiet: boolean;
+	skipValidate: boolean;
+	quiet: boolean;
 }
 
 export class DevEnvImportSQLCommand {
@@ -36,7 +36,7 @@ export class DevEnvImportSQLCommand {
 		this.slug = slug;
 	}
 
-	async run() {
+	public async run(): Promise< void > {
 		const lando = await bootstrapLando();
 		validateDependencies( lando );
 
