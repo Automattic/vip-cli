@@ -79,10 +79,6 @@ export class DevEnvSyncSQLCommand {
 		private readonly lando: Lando,
 		trackerFn: TrackFunction = () => {}
 	) {
-		this.app = app;
-		this.env = env;
-		this.slug = slug;
-		this.lando = lando;
 		this.track = trackerFn;
 		this.tmpDir = makeTempDir();
 	}

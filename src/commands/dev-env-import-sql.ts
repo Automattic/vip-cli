@@ -27,14 +27,10 @@ export interface DevEnvImportSQLOptions {
 
 export class DevEnvImportSQLCommand {
 	constructor(
-		public fileName: string,
-		public options: DevEnvImportSQLOptions,
-		public slug: string
-	) {
-		this.fileName = fileName;
-		this.options = options;
-		this.slug = slug;
-	}
+		private fileName: string,
+		private readonly options: DevEnvImportSQLOptions,
+		private readonly slug: string
+	) {}
 
 	public async run(): Promise< void > {
 		const lando = await bootstrapLando();
