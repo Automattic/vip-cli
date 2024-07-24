@@ -9,12 +9,17 @@ import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
-import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
+import {
+	BackupStorageAvailability,
+	PromptStatus,
+} from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { retry } from '../lib/retry';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
+import { AppBackupAndJobStatusQuery } from './export-sql.generated';
+import { Backup, Job } from '../graphqlTypes';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
 
@@ -83,28 +88,30 @@ export const CREATE_EXPORT_JOB_MUTATION = gql`
  * @param {number} envId Environment ID
  * @return {Promise} A promise which resolves to the latest backup and job status
  */
-async function fetchLatestBackupAndJobStatusBase( appId, envId ) {
+async function fetchLatestBackupAndJobStatusBase(
+	appId: number,
+	envId: number
+): Promise< {
+	latestBackup: Backup | undefined;
+	jobs: Job[];
+} > {
 	const api = API();
 
-	const response = await api.query( {
+	const response = await api.query< AppBackupAndJobStatusQuery >( {
 		query: BACKUP_AND_JOB_STATUS_QUERY,
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
 
-	const {
-		data: {
-			app: { environments },
-		},
-	} = response;
+	const environments = response.data.app?.environments;
 
-	const latestBackup = environments[ 0 ].latestBackup;
-	const jobs = environments[ 0 ].jobs;
+	const latestBackup: Backup | undefined = environments?.[ 0 ]?.latestBackup as Backup;
+	const jobs: Job[] = ( environments?.[ 0 ]?.jobs || [] ) as Job[];
 
 	return { latestBackup, jobs };
 }
 
-async function fetchLatestBackupAndJobStatus( appId, envId ) {
+async function fetchLatestBackupAndJobStatus( appId: number, envId: number ) {
 	return await retry(
 		{
 			retryOnlyIf: options => {
@@ -126,7 +133,11 @@ async function fetchLatestBackupAndJobStatus( appId, envId ) {
  * @param {number} backupId Backup ID
  * @return {Promise} A promise which resolves to the download link
  */
-async function generateDownloadLink( appId, envId, backupId ) {
+async function generateDownloadLink(
+	appId: number,
+	envId: number,
+	backupId: number
+): Promise< any > {
 	const api = API();
 	const response = await api.mutate( {
 		mutation: GENERATE_DOWNLOAD_LINK_MUTATION,
@@ -157,7 +168,7 @@ async function generateDownloadLink( appId, envId, backupId ) {
  * @return {Promise} A promise which resolves to null if job creation succeeds
  * @throws {Error} Throws an error if the job creation fails
  */
-async function createExportJob( appId, envId, backupId ) {
+async function createExportJob( appId: number, envId: number, backupId: number ): Promise< any > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
@@ -177,13 +188,18 @@ async function createExportJob( appId, envId, backupId ) {
 	enableGlobalGraphQLErrorHandling();
 }
 
+export interface ExportSQLOptions {
+	outputFile?: string;
+	confirmEnoughStorageHook?: ( job: any ) => Promise< PromptStatus >;
+	generateBackup?: boolean;
+}
+
 /**
  * Class representing an export command workflow
  */
 export class ExportSQLCommand {
 	app;
 	env;
-	downloadLink;
 	progressTracker;
 	outputFile;
 	generateBackup;
@@ -205,7 +221,12 @@ export class ExportSQLCommand {
 	 * @param {object}   options 		The optional parameters
 	 * @param {Function} trackerFn  The progress tracker function
 	 */
-	constructor( app, env, options = {}, trackerFn = () => {} ) {
+	constructor(
+		app: any,
+		env: any,
+		options: ExportSQLOptions = {},
+		trackerFn: Function = () => {}
+	) {
 		this.app = app;
 		this.env = env;
 		this.outputFile =
@@ -227,25 +248,33 @@ export class ExportSQLCommand {
 	 *
 	 * @return {Promise} A promise which resolves to the export job
 	 */
-	async getExportJob() {
+	async getExportJob(): Promise< Job | undefined > {
 		const { latestBackup, jobs } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
+
+		if ( ! latestBackup ) {
+			return undefined;
+		}
 
 		// Find the job that generates the export for the latest backup
 		return jobs.find( job => {
-			const metadata = job.metadata.find( md => md.name === 'backupId' );
-			return metadata && parseInt( metadata.value, 10 ) === latestBackup.id;
+			const metadata = ( job.metadata || [] ).find( md => md?.name === 'backupId' );
+			return metadata && parseInt( metadata.value as string, 10 ) === latestBackup.id;
 		} );
 	}
 
 	/**
 	 * Fetches the S3 filename of the exported backup
 	 *
-	 * @return {Promise} A promise which resolves to the filename
+	 * @return A promise which resolves to the filename
 	 */
-	async getExportedFileName() {
+	async getExportedFileName(): Promise< string > {
 		const job = await this.getExportJob();
-		const metadata = job.metadata.find( md => md.name === 'uploadPath' );
-		return metadata?.value.split( '/' )[ 1 ];
+		if ( ! job ) {
+			throw new Error( 'Job not found' );
+		}
+
+		const metadata = job.metadata?.find( md => md?.name === 'uploadPath' );
+		return metadata?.value?.split( '/' )[ 1 ] as string;
 	}
 
 	/**
@@ -255,23 +284,25 @@ export class ExportSQLCommand {
 	 * @return {Promise} A promise which resolves to the path of the downloaded file
 	 * @throws {Error} Throws an error if the download fails
 	 */
-	async downloadExportedFile( url ) {
+	async downloadExportedFile( url: string ): Promise< any > {
 		const filename = this.outputFile || ( await this.getExportedFileName() ) || 'exported.sql.gz';
 		const file = fs.createWriteStream( filename );
 
-		return new Promise( ( resolve, reject ) => {
+		return new Promise< string >( ( resolve, reject ) => {
 			https.get( url, response => {
 				response.pipe( file );
-				const total = parseInt( response.headers[ 'content-length' ], 10 );
+				const total = parseInt( response.headers[ 'content-length' ] as string, 10 );
 				let current = 0;
 
 				file.on( 'finish', () => {
 					file.close();
-					resolve( path.resolve( file.path ) );
+					resolve( path.resolve( file.path as string ) );
 				} );
 
 				file.on( 'error', err => {
-					fs.unlink( filename );
+					// TODO: fs.unlink runs in the background so there's a chance that the app dies before it finishes.
+					//  This needs fixing.
+					fs.unlink( filename, () => null );
 					reject( err );
 				} );
 
@@ -290,22 +321,22 @@ export class ExportSQLCommand {
 	/**
 	 * Checks if the export job's preflight step is successful
 	 *
-	 * @param {any} job The export job
-	 * @return {boolean} True if the preflight step is successful
+	 * @param job The export job
+	 * @return True if the preflight step is successful
 	 */
-	isPrepared( job ) {
-		const step = job?.progress.steps.find( st => st.id === 'preflight' );
+	isPrepared( job: Job | undefined ): boolean {
+		const step = job?.progress?.steps?.find( st => st?.id === 'preflight' );
 		return step?.status === 'success';
 	}
 
 	/**
 	 * Checks if the export job's S3 upload step is successful
 	 *
-	 * @param {any} job The export job
-	 * @return {boolean} True if the upload step is successful
+	 * @param job The export job
+	 * @return True if the upload step is successful
 	 */
-	isCreated( job ) {
-		const step = job?.progress.steps.find( st => st.id === 'upload_backup' );
+	isCreated( job: Job | undefined ) {
+		const step = job?.progress?.steps?.find( st => st?.id === 'upload_backup' );
 		return step?.status === 'success';
 	}
 
@@ -332,12 +363,14 @@ export class ExportSQLCommand {
 		await cmd.run( false );
 	}
 
-	async confirmEnoughStorage( job ) {
+	async confirmEnoughStorage( job: Job | undefined ): Promise< PromptStatus > {
 		if ( this.confirmEnoughStorageHook ) {
 			return await this.confirmEnoughStorageHook( job );
 		}
 
-		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob(
+			job as unknown as Job
+		);
 		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
 	}
 
@@ -350,12 +383,13 @@ export class ExportSQLCommand {
 			try {
 				fs.accessSync( path.parse( this.outputFile ).dir, fs.constants.W_OK );
 			} catch ( err ) {
+				const error = err as Error;
 				await this.track( 'error', {
 					error_type: 'cannot_write_to_path',
-					error_message: `Cannot write to the specified path: ${ err?.message }`,
-					stack: err?.stack,
+					error_message: `Cannot write to the specified path: ${ error?.message }`,
+					stack: error?.stack,
 				} );
-				exit.withError( `Cannot write to the specified path: ${ err?.message }` );
+				exit.withError( `Cannot write to the specified path: ${ error?.message }` );
 			}
 		}
 
@@ -365,20 +399,20 @@ export class ExportSQLCommand {
 
 		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
+		if ( ! latestBackup ) {
+			await this.track( 'error', {
+				error_type: 'no_backup_found',
+				error_message: 'No backup found for the site',
+			} );
+			exit.withError( `No backup found for site ${ this.app.name }` );
+		}
+
 		if ( ! this.generateBackup ) {
-			if ( ! latestBackup ) {
-				await this.track( 'error', {
-					error_type: 'no_backup_found',
-					error_message: 'No backup found for the site',
-				} );
-				exit.withError( `No backup found for site ${ this.app.name }` );
-			} else {
-				console.log(
-					`${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${
-						latestBackup.createdAt
-					}`
-				);
-			}
+			console.log(
+				`${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${
+					latestBackup.createdAt
+				}`
+			);
 		} else {
 			console.log(
 				`${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${
@@ -395,14 +429,15 @@ export class ExportSQLCommand {
 			console.log( `Exporting database backup with timestamp ${ latestBackup.createdAt }` );
 
 			try {
-				await createExportJob( this.app.id, this.env.id, latestBackup.id );
+				await createExportJob( this.app.id, this.env.id, latestBackup.id as number );
 			} catch ( err ) {
+				const error = err as Error;
 				// Todo: match error code instead of message substring
-				if ( err?.message.includes( 'Backup Copy already in progress' ) ) {
+				if ( error.message.includes( 'Backup Copy already in progress' ) ) {
 					await this.track( 'error', {
 						error_type: 'job_already_running',
-						error_message: err?.message,
-						stack: err?.stack,
+						error_message: error.message,
+						stack: error.stack,
 					} );
 					exit.withError(
 						'There is an export job already running for this environment: ' +
@@ -412,11 +447,11 @@ export class ExportSQLCommand {
 				} else {
 					await this.track( 'error', {
 						error_type: 'create_export_job',
-						error_message: err?.message,
-						stack: err?.stack,
+						error_message: error.message,
+						stack: error.stack,
 					} );
 				}
-				exit.withError( `Error creating export job: ${ err?.message }` );
+				exit.withError( `Error creating export job: ${ error.message }` );
 			}
 		}
 
@@ -456,7 +491,7 @@ export class ExportSQLCommand {
 			exit.withError( 'Command canceled by user.' );
 		}
 
-		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
+		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id as number );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
 
 		// The export file is prepared. Let's download it
@@ -466,14 +501,15 @@ export class ExportSQLCommand {
 			this.stopProgressTracker();
 			console.log( `File saved to ${ filepath }` );
 		} catch ( err ) {
+			const error = err as Error;
 			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
 			this.stopProgressTracker();
 			await this.track( 'error', {
 				error_type: 'download_failed',
-				error_message: err?.message,
-				stack: err?.stack,
+				error_message: error.message,
+				stack: error.stack,
 			} );
-			exit.withError( `Error downloading exported file: ${ err?.message }` );
+			exit.withError( `Error downloading exported file: ${ error.message }` );
 		}
 	}
 }
