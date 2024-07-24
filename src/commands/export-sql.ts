@@ -242,8 +242,6 @@ export class ExportSQLCommand {
 		options: ExportSQLOptions = {},
 		trackerFn: TrackFunction = () => {}
 	) {
-		this.app = app;
-		this.env = env;
 		this.outputFile =
 			typeof options.outputFile === 'string' ? getAbsolutePath( options.outputFile ) : null;
 		this.confirmEnoughStorageHook = options.confirmEnoughStorageHook;
