@@ -636,7 +636,7 @@ export async function getApplicationInformation(
 export async function resolveImportPath(
 	slug: string,
 	fileName: string,
-	searchReplace: string | string[] | null,
+	searchReplace: string | string[] | null | undefined,
 	inPlace: boolean
 ): Promise< string > {
 	debug( `Will try to resolve path - ${ fileName }` );

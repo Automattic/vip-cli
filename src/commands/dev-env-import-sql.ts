@@ -18,11 +18,11 @@ import { makeTempDir } from '../lib/utils';
 import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
 export interface DevEnvImportSQLOptions {
-	skipValidate: string;
-	quiet: string;
-	skipReindex: string;
-	searchReplace: string;
+	skipReindex?: string;
+	searchReplace?: string;
 	inPlace: boolean;
+  skipValidate: boolean;
+  quiet: boolean;
 }
 
 export class DevEnvImportSQLCommand {
