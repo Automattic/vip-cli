@@ -6,7 +6,7 @@ import Lando, { LandoConfig } from 'lando/lib/lando';
 import landoUtils, { AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
-import { mkdir, rename } from 'node:fs/promises';
+import { FileHandle, mkdir, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
@@ -23,6 +23,10 @@ import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
+
+export interface LandoExecOptions {
+	stdio?: string | [ FileHandle, string, string ];
+}
 
 /**
  * This file will hold all the interactions with lando library
@@ -616,7 +620,7 @@ export async function landoExec(
 	instancePath: string,
 	toolName: string,
 	args: string[],
-	options: Record< string, unknown >
+	options: LandoExecOptions
 ) {
 	const app = await getLandoApplication( lando, instancePath );
 

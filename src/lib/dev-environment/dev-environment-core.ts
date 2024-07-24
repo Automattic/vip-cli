@@ -25,6 +25,7 @@ import {
 	landoRebuild,
 	landoLogs,
 	LandoLogsOptions,
+	LandoExecOptions,
 } from './dev-environment-lando';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
@@ -394,7 +395,7 @@ export function exec(
 	lando: Lando,
 	slug: string,
 	args: string[],
-	options: Record< string, string > = {}
+	options: LandoExecOptions = {}
 ): Promise< unknown > {
 	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
