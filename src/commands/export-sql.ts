@@ -215,18 +215,18 @@ export interface ExportSQLOptions {
  * Class representing an export command workflow
  */
 export class ExportSQLCommand {
-	private progressTracker: ProgressTracker;
-	private readonly outputFile: string | null;
-	private readonly generateBackup: boolean;
-	private readonly confirmEnoughStorageHook: ExportSQLOptions[ 'confirmEnoughStorageHook' ];
-	private readonly steps = {
+	public progressTracker: ProgressTracker;
+	public outputFile: string | null;
+	public generateBackup: boolean;
+	public confirmEnoughStorageHook: ExportSQLOptions[ 'confirmEnoughStorageHook' ];
+	public steps = {
 		PREPARE: 'prepare',
 		CREATE: 'create',
 		DOWNLOAD_LINK: 'downloadLink',
 		CONFIRM_ENOUGH_STORAGE: 'confirmEnoughStorage',
 		DOWNLOAD: 'download',
 	};
-	private readonly track: TrackFunction;
+	public track: TrackFunction;
 
 	/**
 	 * Creates an instance of SQLExportCommand
@@ -237,8 +237,8 @@ export class ExportSQLCommand {
 	 * @param {Function} trackerFn  The progress tracker function
 	 */
 	constructor(
-		private readonly app: App,
-		private readonly env: AppEnvironment,
+		public app: App,
+		public env: AppEnvironment,
 		options: ExportSQLOptions = {},
 		trackerFn: TrackFunction = () => {}
 	) {
@@ -261,7 +261,7 @@ export class ExportSQLCommand {
 	 *
 	 * @return {Promise} A promise which resolves to the export job
 	 */
-	private async getExportJob(): Promise< Job | undefined > {
+	public async getExportJob(): Promise< Job | undefined > {
 		const { latestBackup, jobs } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
 
 		if ( ! latestBackup ) {
@@ -280,7 +280,7 @@ export class ExportSQLCommand {
 	 *
 	 * @return A promise which resolves to the filename
 	 */
-	private async getExportedFileName(): Promise< string > {
+	public async getExportedFileName(): Promise< string > {
 		const job = await this.getExportJob();
 		if ( ! job ) {
 			throw new Error( 'Job not found' );
@@ -297,7 +297,7 @@ export class ExportSQLCommand {
 	 * @return {Promise} A promise which resolves to the path of the downloaded file
 	 * @throws {Error} Throws an error if the download fails
 	 */
-	private async downloadExportedFile( url: string ): Promise< string > {
+	public async downloadExportedFile( url: string ): Promise< string > {
 		const filename = this.outputFile || ( await this.getExportedFileName() ) || 'exported.sql.gz';
 		const file = fs.createWriteStream( filename );
 
@@ -337,7 +337,7 @@ export class ExportSQLCommand {
 	 * @param job The export job
 	 * @return True if the preflight step is successful
 	 */
-	private isPrepared( job: Job | undefined ): boolean {
+	public isPrepared( job: Job | undefined ): boolean {
 		const step = job?.progress?.steps?.find( st => st?.id === 'preflight' );
 		return step?.status === 'success';
 	}
@@ -348,7 +348,7 @@ export class ExportSQLCommand {
 	 * @param job The export job
 	 * @return True if the upload step is successful
 	 */
-	private isCreated( job: Job | undefined ) {
+	public isCreated( job: Job | undefined ) {
 		const step = job?.progress?.steps?.find( st => st?.id === 'upload_backup' );
 		return step?.status === 'success';
 	}
@@ -356,12 +356,12 @@ export class ExportSQLCommand {
 	/**
 	 * Stops the progress tracker
 	 */
-	private stopProgressTracker(): void {
+	public stopProgressTracker(): void {
 		this.progressTracker.print();
 		this.progressTracker.stopPrinting();
 	}
 
-	private async runBackupJob() {
+	public async runBackupJob() {
 		const cmd = new BackupDBCommand( this.app, this.env );
 
 		let noticeMessage = `\n${ chalk.yellow( 'NOTICE: ' ) }`;
@@ -374,7 +374,7 @@ export class ExportSQLCommand {
 		await cmd.run( false );
 	}
 
-	private async confirmEnoughStorage( job: Job | undefined ): Promise< PromptStatus > {
+	public async confirmEnoughStorage( job: Job | undefined ): Promise< PromptStatus > {
 		if ( ! job ) {
 			throw new Error( 'confirmEnoughStorage: job is missing' );
 		}
