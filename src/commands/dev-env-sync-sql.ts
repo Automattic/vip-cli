@@ -58,10 +58,10 @@ async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 }
 
 export class DevEnvSyncSQLCommand {
-	private readonly tmpDir: string;
-	private siteUrls: string[] = [];
-	private searchReplaceMap: Record< string, string > = {};
-	private readonly track: TrackFunction;
+	public tmpDir: string;
+	public siteUrls: string[] = [];
+	public searchReplaceMap: Record< string, string > = {};
+	public track: TrackFunction;
 
 	/**
 	 * Creates a new instance of the command
@@ -73,10 +73,10 @@ export class DevEnvSyncSQLCommand {
 	 * @param trackerFn Function to call for tracking
 	 */
 	constructor(
-		private readonly app: App,
-		private readonly env: AppEnvironment,
-		private readonly slug: string,
-		private readonly lando: Lando,
+		public app: App,
+		public env: AppEnvironment,
+		public slug: string,
+		public lando: Lando,
 		trackerFn: TrackFunction = () => {}
 	) {
 		this.track = trackerFn;
@@ -104,7 +104,7 @@ export class DevEnvSyncSQLCommand {
 	 * Runs the SQL export command to generate the SQL export from
 	 * the latest backup
 	 */
-	private async generateExport(): Promise< void > {
+	public async generateExport(): Promise< void > {
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
@@ -121,7 +121,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the search-replace is complete
 	 * @throws {Error} If there is an error reading the file
 	 */
-	private async runSearchReplace(): Promise< void > {
+	public async runSearchReplace(): Promise< void > {
 		const replacements = Object.entries( this.searchReplaceMap ).flat();
 		const readStream = fs.createReadStream( this.sqlFile );
 		const replacedStream = await replace( readStream, replacements );
@@ -138,7 +138,7 @@ export class DevEnvSyncSQLCommand {
 		} );
 	}
 
-	private generateSearchReplaceMap(): void {
+	public generateSearchReplaceMap(): void {
 		this.searchReplaceMap = {};
 
 		for ( const url of this.siteUrls ) {
@@ -177,7 +177,7 @@ export class DevEnvSyncSQLCommand {
 	 * @return {Promise<void>} Promise that resolves when the import is complete
 	 * @throws {Error} If there is an error importing the file
 	 */
-	private async runImport(): Promise< void > {
+	public async runImport(): Promise< void > {
 		const importOptions = {
 			inPlace: true,
 			skipValidate: true,
