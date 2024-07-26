@@ -1,6 +1,8 @@
 import { replace } from '@automattic/vip-search-replace';
-import fs from 'fs';
+import fs, { ReadStream } from 'fs';
 import Lando from 'lando';
+import { WriteStream } from 'node:fs';
+import { Interface } from 'node:readline';
 import { PassThrough } from 'stream';
 
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
@@ -16,7 +18,7 @@ import { getReadInterface } from '../../src/lib/validations/line-by-line';
  *
  * @return {Stream} A passthrough stream
  */
-function getMockStream( eventArgs, timeout = 10 ) {
+function getMockStream( eventArgs: { name: string; data?: string }[], timeout = 10 ) {
 	const mockStream = new PassThrough();
 
 	if ( ! eventArgs ) {
@@ -33,8 +35,14 @@ function getMockStream( eventArgs, timeout = 10 ) {
 	return mockStream;
 }
 
-const mockReadStream = getMockStream( [ { name: 'finish' }, { name: 'data', data: 'data' } ], 10 );
-const mockWriteStream = getMockStream( [ { name: 'finish' } ], 20 );
+const mockReadStream: ReadStream = getMockStream(
+	[ { name: 'finish' }, { name: 'data', data: 'data' } ],
+	10
+) as unknown as ReadStream;
+const mockWriteStream: WriteStream = getMockStream(
+	[ { name: 'finish' } ],
+	20
+) as unknown as WriteStream;
 
 jest.spyOn( fs, 'createReadStream' ).mockReturnValue( mockReadStream );
 jest.spyOn( fs, 'createWriteStream' ).mockReturnValue( mockWriteStream );
@@ -56,9 +64,11 @@ jest.mock( '../../src/lib/validations/line-by-line', () => {
 	};
 } );
 
-replace.mockResolvedValue( mockReadStream );
-unzipFile.mockResolvedValue();
-getReadInterface.mockReturnValue( getMockStream( [ { name: 'close' } ] ), 100 );
+jest.mocked( replace ).mockResolvedValue( mockReadStream );
+jest.mocked( unzipFile ).mockResolvedValue();
+jest
+	.mocked( getReadInterface )
+	.mockResolvedValue( getMockStream( [ { name: 'close' } ], 100 ) as unknown as Interface );
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
@@ -149,7 +159,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		const importSpy = jest.spyOn( syncCommand, 'runImport' );
 
 		beforeAll( () => {
-			exportSpy.mockResolvedValue( true );
+			exportSpy.mockResolvedValue();
 			searchReplaceSpy.mockResolvedValue();
 			importSpy.mockResolvedValue();
 		} );

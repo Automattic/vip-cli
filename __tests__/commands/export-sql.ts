@@ -61,7 +61,7 @@ const queryMock = jest.fn().mockImplementation( () => {
 } );
 
 jest.mock( '../../src/lib/api', () => jest.fn() );
-API.mockImplementation( () => {
+( jest.mocked( API ) as jest.SpyInstance ).mockImplementation( () => {
 	return {
 		query: queryMock,
 		mutate: jest.fn().mockImplementation( ( { mutation } ) => {
@@ -113,7 +113,7 @@ describe( 'commands/ExportSQLCommand', () => {
 				throw new Error( 'Unexpected token < in JSON at position 0' );
 			} );
 
-			API.mockImplementationOnce( () => {
+			jest.mocked( API as unknown as jest.SpyInstance ).mockImplementationOnce( () => {
 				return {
 					query: queryMockThrowsError,
 				};
@@ -154,14 +154,14 @@ describe( 'commands/ExportSQLCommand', () => {
 
 		const exportCommand = new ExportSQLCommand( app, env );
 
-		it( 'should return true if the S3 upload step has completed', async () => {
-			const isCreated = await exportCommand.isCreated( job );
+		it( 'should return true if the S3 upload step has completed', () => {
+			const isCreated = exportCommand.isCreated( job );
 			expect( isCreated ).toEqual( true );
 		} );
 
-		it( 'should return false if the S3 upload step has not completed', async () => {
+		it( 'should return false if the S3 upload step has not completed', () => {
 			job.progress.steps[ 0 ].status = 'in_progress';
-			const isCreated = await exportCommand.isCreated( job );
+			const isCreated = exportCommand.isCreated( job );
 			expect( isCreated ).toEqual( false );
 		} );
 	} );
@@ -184,14 +184,14 @@ describe( 'commands/ExportSQLCommand', () => {
 
 		const exportCommand = new ExportSQLCommand( app, env );
 
-		it( 'should return true if the preflight step has completed', async () => {
-			const isPrepared = await exportCommand.isPrepared( job );
+		it( 'should return true if the preflight step has completed', () => {
+			const isPrepared = exportCommand.isPrepared( job );
 			expect( isPrepared ).toEqual( true );
 		} );
 
-		it( 'should return false if the preflight step has not completed', async () => {
+		it( 'should return false if the preflight step has not completed', () => {
 			job.progress.steps[ 0 ].status = 'in_progress';
-			const isPrepared = await exportCommand.isPrepared( job );
+			const isPrepared = exportCommand.isPrepared( job );
 			expect( isPrepared ).toEqual( false );
 		} );
 	} );
