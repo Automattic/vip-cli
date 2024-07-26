@@ -13,6 +13,8 @@ import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
+import { isMyDumperFile } from '../lib/database';
+import { exec } from '../lib/dev-environment/dev-environment-core';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -57,11 +59,17 @@ async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 	} );
 }
 
+export enum SqlDumpType {
+	MYDUMPER = 'MYDUMPER',
+	MYSQLDUMP = 'MYSQLDUMP',
+}
+
 export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
 	public searchReplaceMap: Record< string, string > = {};
 	public track: TrackFunction;
+	private _sqlDumpType?: SqlDumpType;
 
 	/**
 	 * Creates a new instance of the command
@@ -93,6 +101,19 @@ export class DevEnvSyncSQLCommand {
 
 	private get gzFile(): string {
 		return `${ this.tmpDir }/sql-export.sql.gz`;
+	}
+
+	private getSqlDumpType(): SqlDumpType {
+		if ( ! this._sqlDumpType ) {
+			throw new Error( 'SQL Dump type not initialized' );
+		}
+
+		return this._sqlDumpType;
+	}
+
+	private async initSqlDumpType(): Promise< void > {
+		const isMyDumper = await isMyDumperFile( this.sqlFile );
+		this._sqlDumpType = isMyDumper ? SqlDumpType.MYDUMPER : SqlDumpType.MYSQLDUMP;
 	}
 
 	private async confirmEnoughStorage( job: Job ) {
@@ -136,6 +157,23 @@ export class DevEnvSyncSQLCommand {
 			} );
 			replacedStream.on( 'error', reject );
 		} );
+	}
+
+	public async runWPSearchReplace(): Promise< void > {
+		const replacements = this.searchReplaceMap;
+		for ( const url in replacements ) {
+			const replacement = replacements[ url ];
+			// eslint-disable-next-line no-await-in-loop
+			await exec( this.lando, this.slug, [
+				'wp',
+				'search-replace',
+				'--all-tables',
+				`//${ url }`,
+				`//${ replacement }`,
+				'--skip-plugins',
+				'--skip-themes',
+			] );
+		}
 	}
 
 	public generateSearchReplaceMap(): void {
@@ -212,6 +250,7 @@ export class DevEnvSyncSQLCommand {
 		try {
 			console.log( `Extracting the exported file ${ this.gzFile }...` );
 			await unzipFile( this.gzFile, this.sqlFile );
+			await this.initSqlDumpType();
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
 			const error = err as Error;
@@ -239,29 +278,30 @@ export class DevEnvSyncSQLCommand {
 		console.log( 'Generating search-replace configuration...' );
 		this.generateSearchReplaceMap();
 
-		try {
-			console.log( 'Running the following search-replace operations on the SQL file:' );
-			for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
-				console.log( `  ${ domain } -> ${ landoDomain }` );
-			}
+		if ( this.getSqlDumpType() === SqlDumpType.MYSQLDUMP ) {
+			try {
+				console.log( 'Running the following search-replace operations on the SQL file:' );
+				for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
+					console.log( `  ${ domain } -> ${ landoDomain }` );
+				}
 
-			await this.runSearchReplace();
-			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
-		} catch ( err ) {
-			const error = err as Error;
-			await this.track( 'error', {
-				error_type: 'search_replace',
-				error_message: error.message,
-				stack: error.stack,
-			} );
-			exit.withError( `Error replacing domains: ${ error.message }` );
+				await this.runSearchReplace();
+				console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
+			} catch ( err ) {
+				const error = err as Error;
+				await this.track( 'error', {
+					error_type: 'search_replace',
+					error_message: error.message,
+					stack: error.stack,
+				} );
+				exit.withError( `Error replacing domains: ${ error.message }` );
+			}
 		}
 
 		try {
 			console.log( 'Importing the SQL file...' );
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
-			return true;
 		} catch ( err ) {
 			const error = err as Error;
 			await this.track( 'error', {
@@ -271,5 +311,27 @@ export class DevEnvSyncSQLCommand {
 			} );
 			exit.withError( `Error importing SQL file: ${ error.message }` );
 		}
+
+		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
+			try {
+				console.log( 'Running the following search-replace operations on the database:' );
+				for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
+					console.log( `  ${ domain } -> ${ landoDomain }` );
+				}
+
+				await this.runWPSearchReplace();
+				console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
+			} catch ( err ) {
+				const error = err as Error;
+				await this.track( 'error', {
+					error_type: 'search_replace',
+					error_message: error.message,
+					stack: error.stack,
+				} );
+				exit.withError( `Error replacing domains: ${ error.message }` );
+			}
+		}
+
+		return true;
 	}
 }

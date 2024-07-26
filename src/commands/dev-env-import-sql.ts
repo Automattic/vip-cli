@@ -3,6 +3,7 @@ import fs from 'fs';
 
 import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
+import { isMyDumperFile } from '../lib/database';
 import {
 	processBooleanOption,
 	validateDependencies,
@@ -38,6 +39,8 @@ export class DevEnvImportSQLCommand {
 
 		validateImportFileExtension( this.fileName );
 
+		const isMyDumper = await isMyDumperFile( this.fileName );
+
 		// Check if file is compressed and if so, extract the
 		const fileMeta = await getFileMeta( this.fileName );
 		if ( fileMeta.isCompressed ) {
@@ -66,7 +69,7 @@ export class DevEnvImportSQLCommand {
 		const resolvedPath = await resolveImportPath(
 			this.slug,
 			this.fileName,
-			searchReplace,
+			isMyDumper ? [] : searchReplace,
 			inPlace
 		);
 
@@ -109,6 +112,23 @@ export class DevEnvImportSQLCommand {
 
 		if ( searchReplace?.length && ! inPlace ) {
 			fs.unlinkSync( resolvedPath );
+		}
+
+		if ( isMyDumper && searchReplace?.length ) {
+			for ( const pair of searchReplace ) {
+				const [ from, to ] = pair.split( ',' ).map( item => item.trim() );
+				// TODO: Investigate if it's worth it to refactor everything to only use wp's version of wp search-replace
+				// eslint-disable-next-line no-await-in-loop
+				await exec( lando, this.slug, [
+					'wp',
+					'search-replace',
+					'--all-tables',
+					`//${ from }`,
+					`//${ to }`,
+					'--skip-plugins',
+					'--skip-themes',
+				] );
+			}
 		}
 
 		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat(
