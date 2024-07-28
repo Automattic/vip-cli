@@ -17,6 +17,11 @@ interface BaseParams {
 	'commonProps[_via_ua]': string;
 }
 
+export type TrackFunction = (
+	name: string,
+	eventProps: Record< string, unknown >
+) => void | Promise< void >;
+
 /**
  * Simple class for tracking using Automattic Tracks.
  *
