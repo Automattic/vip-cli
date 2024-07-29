@@ -1,7 +1,7 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import readline from 'node:readline';
 import { Readable } from 'node:stream';
-import readline from 'readline';
-import zlib from 'zlib';
+import zlib from 'node:zlib';
 
 export const isMyDumperFile = async ( filePath: string ) => {
 	const isCompressed = filePath.endsWith( '.gz' );
