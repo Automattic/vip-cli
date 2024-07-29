@@ -1,5 +1,23 @@
 ## Changelog
 
+## 3.7.1
+
+* New develop release: 3.7.1-dev.0 by @github-actions in #1944
+* build(deps): bump step-security/harden-runner from 2.8.1 to 2.9.0 by @dependabot in #1950
+* build(deps): bump semver from 7.6.2 to 7.6.3 by @dependabot in #1946
+* build(deps-dev): bump @types/node from 18.19.39 to 18.19.41 by @dependabot in #1951
+* refactor(dev-env): do not load SSH keys by @sjinks in #1934
+* build(deps): bump tar from 7.4.0 to 7.4.1 by @dependabot in #1952
+* build(deps-dev): bump typescript from 5.5.3 to 5.5.4 by @dependabot in #1954
+* build(deps-dev): bump @types/node from 18.19.41 to 18.19.42 by @dependabot in #1956
+* Refactor dev-env sync, dev-env import and export-sql to TypeScript by @abdullah-kasim in #1955
+* build(deps): bump tar from 7.4.1 to 7.4.3 by @dependabot in #1963
+* build(deps-dev): bump @types/dockerode from 3.3.30 to 3.3.31 by @dependabot in #1960
+* Gracefully fail when directory is not detected by @ariskataoka in #1947
+* New package release: v3.7.1 by @github-actions in #1966
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.0...3.7.1
+
 ## 3.7.0
 
 * New develop release: 3.6.1-dev.0 by @github-actions in #1931
