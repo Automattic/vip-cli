@@ -70,18 +70,13 @@ export async function validateFiles(
 			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
 		);
 
-		if ( isInvalidFile( fileExtType, isFolder ) ) {
-			validationResult.errorFileTypes.push( file );
-		}
-
 		const realMimeType = getFileType( file );
 		const realMimeSplit = realMimeType.split( '/' );
-
-		console.log( fileExtType, realMimeType );
-
 		const typeSplit = fileExtType.type?.map( type => type.split( '/' )[ 0 ] ) || [];
 
-		if ( GENERIC_BIN_TYPES.includes( realMimeType ) ) {
+		if ( isInvalidFile( fileExtType, isFolder ) ) {
+			validationResult.errorFileTypes.push( file );
+		} else if ( GENERIC_BIN_TYPES.includes( realMimeType ) ) {
 			// `file` sometimes will return a file as a generic binary type. In which case we will need to check it
 			// against the expected MIME type. We only allow the file to be uploaded if the expected MIME types are
 			// one of `application`, `video` or `audio` which are expected to be binary files.
@@ -137,6 +132,7 @@ export async function validateFiles(
 	} );
 
 	await Promise.all( fileValidationPromises );
+
 	return validationResult;
 }
 
@@ -168,7 +164,7 @@ const getExtAndType = (
 		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
 		const matches = regex.exec( filePath );
 		if ( matches ) {
-			extType.type = value as string[];
+			extType.type = typeof value === 'string' ? [ value ] : ( value as string[] );
 			extType.ext = matches[ 1 ];
 			break;
 		}

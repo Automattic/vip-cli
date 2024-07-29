@@ -1,4 +1,7 @@
-import { execFileSync } from 'child_process';
+/**
+ * External dependencies
+ */
+import cp from 'child_process';
 
 /**
  * Get SQL statements matching a supplied pattern from a file stream
@@ -41,22 +44,23 @@ export function getMultilineStatement( statementRegex: RegExp ): ( line: string 
 export function getFileType( filepath: string ): string {
 	const regex = new RegExp( /^\w+\/[-+.\w]+/g );
 
-	let errMsg: string;
+	let result;
+
 	try {
-		const result = execFileSync( '/usr/bin/file', [ '-b', '--mime-type', filepath ] );
-
-		// execFileSync returns a Buffer so we need to convert it to a string
-		const resultStr = result.toString().trim();
-
-		// If it doesn't look like a MIME type string than it's probably an error
-		if ( ! regex.test( resultStr ) ) {
-			errMsg = `Error encountered while trying to find mime type for ${ filepath }: ${ resultStr }`;
-			throw new Error( errMsg );
-		}
-
-		return resultStr;
+		result = cp.execFileSync( '/usr/bin/file', [ '-b', '--mime-type', filepath ] );
 	} catch ( err ) {
-		errMsg = `Failed to run command to find mime type for ${ filepath }: ${ err as string }`;
+		const errMsg = `Failed to find mime type for ${ filepath }: ${ err as string }`;
 		throw new Error( errMsg );
 	}
+
+	// execFileSync returns a Buffer so we need to convert it to a string
+	const resultStr = result.toString().trim();
+
+	// If it doesn't look like a MIME type string than it's probably an error
+	if ( ! regex.test( resultStr ) ) {
+		const errMsg = `Error encountered while trying to find mime type for ${ filepath }: ${ resultStr }`;
+		throw new Error( errMsg );
+	}
+
+	return resultStr;
 }

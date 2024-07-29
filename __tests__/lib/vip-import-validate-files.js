@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import cp from 'child_process';
 import fs from 'fs';
 
 import {
@@ -55,7 +56,11 @@ describe( 'lib/vip-import-validate-files', () => {
 
 	describe( 'validateFiles()', () => {
 		const mediaImportConfig = {
-			allowedFileTypes: { jpg: 'image/jpeg', png: 'image/png' },
+			allowedFileTypes: {
+				jpg: 'image/jpeg',
+				png: 'image/png',
+				mp3: 'audio/mpeg',
+			},
 			fileSizeLimitInBytes: 5000000, // 5MB
 			fileNameCharCount: 255,
 		};
@@ -69,6 +74,8 @@ describe( 'lib/vip-import-validate-files', () => {
 				.spyOn( fs.promises, 'stat' )
 				.mockResolvedValue( { isDirectory: () => false, size: 4000 } );
 			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 10 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'text/plain' );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'application/octet-stream' );
 
 			const result = await validateFiles( [ 'file1.txt', 'file2.exe' ], mediaImportConfig );
 			expect( result.errorFileTypes ).toEqual( [ 'file1.txt', 'file2.exe' ] );
@@ -77,6 +84,8 @@ describe( 'lib/vip-import-validate-files', () => {
 		it( 'should detect valid file types and invalid file sizes', async () => {
 			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
 			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 6000000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/jpeg' );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/png' );
 
 			const result = await validateFiles( [ 'file1.jpg', 'file2.png' ], mediaImportConfig );
 			expect( result.errorFileSizes ).toEqual( [ 'file1.jpg', 'file2.png' ] );
@@ -85,6 +94,8 @@ describe( 'lib/vip-import-validate-files', () => {
 		it( 'should detect valid file types and valid file sizes', async () => {
 			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
 			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 4000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/jpeg' );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/png' );
 
 			const result = await validateFiles( [ 'file1.jpg', 'file2.png' ], mediaImportConfig );
 			expect( result.errorFileTypes ).toEqual( [] );
@@ -94,6 +105,9 @@ describe( 'lib/vip-import-validate-files', () => {
 		it( 'should detect files with invalid filenames', async () => {
 			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
 			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 4000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/jpeg' );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/png' );
+
 			const result = await validateFiles(
 				[ 'file%20name.jpg', 'file+name.png' ],
 				mediaImportConfig
@@ -104,6 +118,7 @@ describe( 'lib/vip-import-validate-files', () => {
 		it( 'should detect files with filenames exceeding character count limit', async () => {
 			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
 			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 4000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/jpeg' );
 
 			const longFileName = 'a'.repeat( 256 ) + '.jpg';
 			const result = await validateFiles( [ longFileName ], mediaImportConfig );
@@ -114,9 +129,80 @@ describe( 'lib/vip-import-validate-files', () => {
 			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
 			jest.spyOn( fs, 'existsSync' ).mockReturnValue( true );
 			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 4000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'image/jpeg' );
 
 			const result = await validateFiles( [ 'image-4000x6000.jpg' ], mediaImportConfig );
 			expect( result.intermediateImagesTotal ).toBe( 1 );
+		} );
+
+		it( 'should check mime for generic file types', async () => {
+			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 60000 } );
+
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'application/octet-stream' );
+			const result = await validateFiles( [ 'file1.txt' ], mediaImportConfig );
+			expect( result.errorFileTypes ).toEqual( [ 'file1.txt' ] );
+
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'application/octet-stream' );
+			const result2 = await validateFiles( [ 'file1.mp3' ], mediaImportConfig );
+			expect( result2.errorFileTypes ).toEqual( [] );
+		} );
+
+		it( 'should check mime for audio/video', async () => {
+			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 60000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'audio/mpeg' );
+
+			const result = await validateFiles( [ 'file1.txt' ], mediaImportConfig );
+			expect( result.errorFileTypes ).toEqual( [ 'file1.txt' ] );
+
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'audio/mpeg' );
+			const result2 = await validateFiles( [ 'file1.mp3' ], mediaImportConfig );
+			expect( result2.errorFileTypes ).toEqual( [] );
+		} );
+
+		it( 'should check file extension for plain text', async () => {
+			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 60000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'text/plain' );
+
+			const config = {
+				...mediaImportConfig,
+				allowedFileTypes: {
+					jpg: 'image/jpeg',
+					png: 'image/png',
+					mp3: 'audio/mpeg',
+					csv: 'text/csv',
+				},
+			};
+			const result = await validateFiles( [ 'file1.mp3' ], config );
+			expect( result.errorFileTypes ).toEqual( [ 'file1.mp3' ] );
+
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'text/plain' );
+			const resul2 = await validateFiles( [ 'file1.csv' ], config );
+			expect( resul2.errorFileTypes ).toEqual( [] );
+		} );
+
+		it( 'should check file extension for rich text', async () => {
+			jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isDirectory: () => false } );
+			jest.spyOn( fs, 'statSync' ).mockReturnValue( { size: 60000 } );
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'text/rtf' );
+
+			const config = {
+				...mediaImportConfig,
+				allowedFileTypes: {
+					jpg: 'image/jpeg',
+					png: 'image/png',
+					mp3: 'audio/mpeg',
+					rtf: 'ext/rtf',
+				},
+			};
+			const result = await validateFiles( [ 'file1.mp3' ], config );
+			expect( result.errorFileTypes ).toEqual( [ 'file1.mp3' ] );
+
+			jest.spyOn( cp, 'execFileSync' ).mockReturnValueOnce( 'text/rtf' );
+			const resul2 = await validateFiles( [ 'file1.rtf' ], config );
+			expect( resul2.errorFileTypes ).toEqual( [] );
 		} );
 	} );
 
