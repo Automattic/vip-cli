@@ -8,6 +8,8 @@ import path from 'path';
 /**
  * Internal dependencies
  */
+import { GENERIC_BIN_TYPES, GENERIC_TEXT_TYPES } from './constants/file-type';
+import { getFileType } from './validations/utils';
 import { MediaImportConfig } from '../graphqlTypes';
 
 export const enum ValidateFilesErrors {
@@ -26,7 +28,7 @@ interface LogErrorOptions {
 
 interface ExtType {
 	ext: string | null;
-	type: string | null;
+	type: string[] | null;
 }
 
 interface MediaImportAllowedFileTypes {
@@ -69,6 +71,43 @@ export async function validateFiles(
 		);
 
 		if ( isInvalidFile( fileExtType, isFolder ) ) {
+			validationResult.errorFileTypes.push( file );
+		}
+
+		const realMimeType = getFileType( file );
+		const realMimeSplit = realMimeType.split( '/' );
+
+		console.log( fileExtType, realMimeType );
+
+		const typeSplit = fileExtType.type?.map( type => type.split( '/' )[ 0 ] ) || [];
+
+		if ( GENERIC_BIN_TYPES.includes( realMimeType ) ) {
+			// `file` sometimes will return a file as a generic binary type. In which case we will need to check it
+			// against the expected MIME type. We only allow the file to be uploaded if the expected MIME types are
+			// one of `application`, `video` or `audio` which are expected to be binary files.
+			if ( ! typeSplit.some( type => [ 'application', 'video', 'audio' ].includes( type ) ) ) {
+				validationResult.errorFileTypes.push( file );
+			}
+		} else if ( realMimeSplit[ 0 ] === 'video' || realMimeSplit[ 0 ] === 'audio' ) {
+			// For audio and video files, we only need to check that the real MIME type and the expected MIME type
+			// matches in the major part. This allows for media files that are named with the wrong extension
+			// i.e.: `.mov` instead of `.mp4`
+			if ( realMimeSplit[ 0 ] !== typeSplit[ 0 ] ) {
+				validationResult.errorFileTypes.push( file );
+			}
+		} else if ( realMimeType === 'text/plain' ) {
+			// A few common file types are sometimes detected as `text/plain`, allow those.
+			if ( ! fileExtType.type?.some( type => GENERIC_TEXT_TYPES.includes( type ) ) ) {
+				validationResult.errorFileTypes.push( file );
+			}
+		} else if ( realMimeType === 'text/rtf' ) {
+			// Check for RTF files
+			const rtfTypes = [ 'ext/rtf', 'text/plain', 'application/rtf' ];
+			if ( ! fileExtType.type?.some( type => rtfTypes.includes( type ) ) ) {
+				validationResult.errorFileTypes.push( file );
+			}
+		} else if ( ! fileExtType.type?.includes( realMimeType ) ) {
+			// For every other case, assume it's dangerous if expected type doesn't match real type
 			validationResult.errorFileTypes.push( file );
 		}
 
@@ -129,7 +168,7 @@ const getExtAndType = (
 		const regex = new RegExp( `(?:\\.)(${ key })$`, 'i' );
 		const matches = regex.exec( filePath );
 		if ( matches ) {
-			extType.type = value as string;
+			extType.type = value as string[];
 			extType.ext = matches[ 1 ];
 			break;
 		}
