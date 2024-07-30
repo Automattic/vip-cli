@@ -271,6 +271,14 @@ tooling:
     cmd:
       - wp
 
+tooling:
+  db-myloader:
+    service: php
+    description: "Run WP-CLI command"
+    user: www-data
+    cmd:
+      - myloader -h database -u wordpress -p wordpress --database wordpress
+
   db:
     service: php
     description: "Connect to the DB using mysql client (e.g. allow to run imports)"

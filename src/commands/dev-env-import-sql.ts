@@ -1,17 +1,18 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import os from 'os';
 
 import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
-import { isMyDumperFile } from '../lib/database';
+import { getSqlDumpDetails, SqlDumpDetails, SqlDumpType } from '../lib/database';
 import {
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
+	exec,
 	getEnvironmentPath,
 	resolveImportPath,
-	exec,
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
@@ -39,7 +40,8 @@ export class DevEnvImportSQLCommand {
 
 		validateImportFileExtension( this.fileName );
 
-		const isMyDumper = await isMyDumperFile( this.fileName );
+		const dumpDetails = await getSqlDumpDetails( this.fileName );
+		const isMyDumper = dumpDetails.type === SqlDumpType.MYDUMPER;
 
 		// Check if file is compressed and if so, extract the
 		const fileMeta = await getFileMeta( this.fileName );
@@ -87,9 +89,8 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
-			this.options.quiet ? '--silent' : []
-		);
+		const importArg = this.getImportArgs( dumpDetails );
+
 		const origIsTTY = process.stdin.isTTY;
 
 		try {
@@ -164,5 +165,30 @@ export class DevEnvImportSQLCommand {
 			'--skip-themes',
 		].concat( this.options.quiet ? '--quiet' : [] );
 		await exec( lando, this.slug, addUserArg );
+	}
+
+	public getImportArgs( dumpDetails: SqlDumpDetails ) {
+		let importArg = [ 'db', '--disable-auto-rehash' ].concat(
+			this.options.quiet ? '--silent' : []
+		);
+		const threadCount = Math.max( os.cpus().length - 2, 1 );
+		if ( dumpDetails.type === SqlDumpType.MYDUMPER ) {
+			importArg = [
+				'db-myloader',
+				'--overwrite-tables',
+				`--threads=${ threadCount }`,
+				'--max-threads-for-schema-creation=10',
+				'--max-threads-for-index-creation=10',
+				'--skip-triggers',
+				'--skip-post',
+				'--checksum="SKIP"',
+				'--metadata-refresh-interval=2000000',
+				'--stream',
+				'--source-db',
+				dumpDetails.sourceDb,
+			].concat( this.options.quiet ? [ '--verbose=0' ] : [ '--verbose=3' ] );
+		}
+
+		return importArg;
 	}
 }

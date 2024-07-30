@@ -13,7 +13,7 @@ import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
-import { isMyDumperFile } from '../lib/database';
+import { getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { exec } from '../lib/dev-environment/dev-environment-core';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
@@ -57,11 +57,6 @@ async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 
 		readInterface.on( 'error', reject );
 	} );
-}
-
-export enum SqlDumpType {
-	MYDUMPER = 'MYDUMPER',
-	MYSQLDUMP = 'MYSQLDUMP',
 }
 
 export class DevEnvSyncSQLCommand {
@@ -112,8 +107,8 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	private async initSqlDumpType(): Promise< void > {
-		const isMyDumper = await isMyDumperFile( this.sqlFile );
-		this._sqlDumpType = isMyDumper ? SqlDumpType.MYDUMPER : SqlDumpType.MYSQLDUMP;
+		const dumpDetails = await getSqlDumpDetails( this.sqlFile );
+		this._sqlDumpType = dumpDetails.type;
 	}
 
 	private async confirmEnoughStorage( job: Job ) {
