@@ -5,6 +5,7 @@ import fs from 'fs';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 
+import { getSqlDumpDetails, SqlDumpType } from './database';
 import { makeTempDir } from './utils';
 import * as exit from '../lib/cli/exit';
 import { confirm } from '../lib/cli/prompt';
@@ -120,6 +121,11 @@ export const searchAndReplace = async (
 
 	const startTime = process.hrtime();
 	const fileSize = getFileSize( fileName );
+	const dumpDetails = await getSqlDumpDetails( fileName );
+
+	if ( dumpDetails.type === SqlDumpType.MYDUMPER ) {
+		exit.withError( 'Search and replace-related tooling is currently not yet support' );
+	}
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs.length ) {
