@@ -119,8 +119,6 @@ export async function validateFiles(
 			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
 		);
 
-		console.log( fileExtType );
-
 		if ( isInvalidFile( fileExtType, isFolder ) || ! hasValidMimetype( file, fileExtType ) ) {
 			validationResult.errorFileTypes.push( file );
 		}
