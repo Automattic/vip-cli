@@ -1,11 +1,26 @@
 import fs from 'node:fs';
 import readline from 'node:readline';
-import { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
-export const isMyDumperFile = async ( filePath: string ) => {
+import { createExternalizedPromise } from './promise';
+
+export enum SqlDumpType {
+	MYDUMPER = 'MYDUMPER',
+	MYSQLDUMP = 'MYSQLDUMP',
+}
+
+export interface SqlDumpDetails {
+	type: SqlDumpType;
+	sourceDb: string;
+}
+
+export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDetails > => {
 	const isCompressed = filePath.endsWith( '.gz' );
-	let fileStream: Readable;
+	let fileStream: fs.ReadStream | zlib.Gunzip;
+	// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+	const readLineExternalPromise = createExternalizedPromise< void >();
+	// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+	const fileStreamExternalPromise = createExternalizedPromise< void >();
 
 	if ( isCompressed ) {
 		fileStream = await getSqlFileStreamFromCompressedFile( filePath );
@@ -19,6 +34,7 @@ export const isMyDumperFile = async ( filePath: string ) => {
 	} );
 
 	let isMyDumper = false;
+	let sourceDB = '';
 	let currentLineNumber = 0;
 
 	for await ( const line of readLine ) {
@@ -26,19 +42,53 @@ export const isMyDumperFile = async ( filePath: string ) => {
 			continue;
 		}
 
-		if ( line.match( /^-- metadata.header / ) ) {
+		const metadataMatch = line.match( /^-- metadata.header / );
+
+		const sourceDBMatch = line.match( /^-- (.*)-schema-create.sql/ ) ?? [];
+		const sourceDBName = sourceDBMatch[ 1 ];
+
+		if ( metadataMatch && ! isMyDumper ) {
 			isMyDumper = true;
 			break;
 		}
 
-		if ( currentLineNumber > 10 ) {
-			// we'll assume that this isn't the correct file if we still haven't found `-- metadata.header` even at the 10th line.
+		if ( sourceDBMatch && ! sourceDB ) {
+			sourceDB = sourceDBName;
+		}
+
+		if ( sourceDB && isMyDumper ) {
+			// all fields found? end the search early.
 			break;
 		}
+
+		if ( currentLineNumber > 100 ) {
+			// we'll assume that this isn't the correct file if we still haven't found `-- metadata.header` even at the 100th line.
+			break;
+		}
+
 		currentLineNumber++;
 	}
 
-	return isMyDumper;
+	readLine.on( 'close', () => {
+		readLineExternalPromise.resolve();
+	} );
+
+	fileStream.on( 'close', () => {
+		fileStreamExternalPromise.resolve();
+	} );
+
+	readLine.close();
+	fileStream.close();
+
+	await Promise.allSettled( [
+		readLineExternalPromise.promise,
+		fileStreamExternalPromise.promise,
+	] );
+
+	return {
+		type: isMyDumper ? SqlDumpType.MYDUMPER : SqlDumpType.MYSQLDUMP,
+		sourceDb: sourceDB,
+	};
 };
 
 const verifyFileExists = async ( filePath: string ) => {
@@ -49,12 +99,12 @@ const verifyFileExists = async ( filePath: string ) => {
 	}
 };
 
-const getSqlFileStreamFromGz = async ( filePath: string ): Promise< Readable > => {
+const getSqlFileStreamFromGz = async ( filePath: string ): Promise< zlib.Gunzip > => {
 	await verifyFileExists( filePath );
 	return fs.createReadStream( filePath ).pipe( zlib.createGunzip() );
 };
 
-const getSqlFileStreamFromCompressedFile = async ( filePath: string ): Promise< Readable > => {
+const getSqlFileStreamFromCompressedFile = async ( filePath: string ): Promise< zlib.Gunzip > => {
 	if ( filePath.endsWith( '.gz' ) ) {
 		return await getSqlFileStreamFromGz( filePath );
 	}
