@@ -44,6 +44,55 @@ interface ValidationResult {
 	intermediateImages: { [ key: string ]: string };
 }
 
+function hasValidMimetype( file: string, fileExtType: ExtType ): boolean {
+	console.log( file );
+	let realMimeType: string;
+	try {
+		realMimeType = getFileType( file );
+	} catch ( error ) {
+		console.warn(
+			`Failed to extract mimetype of file ${ file } because of error:`,
+			( error as Error ).message
+		);
+		return false;
+	}
+
+	const realMimeSplit = realMimeType.split( '/' );
+	const typeSplit = fileExtType.type?.map( type => type.split( '/' )[ 0 ] ) || [];
+
+	if ( GENERIC_BIN_TYPES.includes( realMimeType ) ) {
+		// `file` sometimes will return a file as a generic binary type. In which case we will need to check it
+		// against the expected MIME type. We only allow the file to be uploaded if the expected MIME types are
+		// one of `application`, `video` or `audio` which are expected to be binary files.
+		if ( ! typeSplit.some( type => [ 'application', 'video', 'audio' ].includes( type ) ) ) {
+			return false;
+		}
+	} else if ( realMimeSplit[ 0 ] === 'video' || realMimeSplit[ 0 ] === 'audio' ) {
+		// For audio and video files, we only need to check that the real MIME type and the expected MIME type
+		// matches in the major part. This allows for media files that are named with the wrong extension
+		// i.e.: `.mov` instead of `.mp4`
+		if ( realMimeSplit[ 0 ] !== typeSplit[ 0 ] ) {
+			return false;
+		}
+	} else if ( realMimeType === 'text/plain' ) {
+		// A few common file types are sometimes detected as `text/plain`, allow those.
+		if ( ! fileExtType.type?.some( type => GENERIC_TEXT_TYPES.includes( type ) ) ) {
+			return false;
+		}
+	} else if ( realMimeType === 'text/rtf' ) {
+		// Check for RTF files
+		const rtfTypes = [ 'ext/rtf', 'text/plain', 'application/rtf' ];
+		if ( ! fileExtType.type?.some( type => rtfTypes.includes( type ) ) ) {
+			return false;
+		}
+	} else if ( ! fileExtType.type?.includes( realMimeType ) ) {
+		// For every other case, assume it's dangerous if expected type doesn't match real type
+		return false;
+	}
+
+	return true;
+}
+
 /**
  * File info validation
  *
@@ -70,39 +119,9 @@ export async function validateFiles(
 			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
 		);
 
-		const realMimeType = getFileType( file );
-		const realMimeSplit = realMimeType.split( '/' );
-		const typeSplit = fileExtType.type?.map( type => type.split( '/' )[ 0 ] ) || [];
+		console.log( fileExtType );
 
-		if ( isInvalidFile( fileExtType, isFolder ) ) {
-			validationResult.errorFileTypes.push( file );
-		} else if ( GENERIC_BIN_TYPES.includes( realMimeType ) ) {
-			// `file` sometimes will return a file as a generic binary type. In which case we will need to check it
-			// against the expected MIME type. We only allow the file to be uploaded if the expected MIME types are
-			// one of `application`, `video` or `audio` which are expected to be binary files.
-			if ( ! typeSplit.some( type => [ 'application', 'video', 'audio' ].includes( type ) ) ) {
-				validationResult.errorFileTypes.push( file );
-			}
-		} else if ( realMimeSplit[ 0 ] === 'video' || realMimeSplit[ 0 ] === 'audio' ) {
-			// For audio and video files, we only need to check that the real MIME type and the expected MIME type
-			// matches in the major part. This allows for media files that are named with the wrong extension
-			// i.e.: `.mov` instead of `.mp4`
-			if ( realMimeSplit[ 0 ] !== typeSplit[ 0 ] ) {
-				validationResult.errorFileTypes.push( file );
-			}
-		} else if ( realMimeType === 'text/plain' ) {
-			// A few common file types are sometimes detected as `text/plain`, allow those.
-			if ( ! fileExtType.type?.some( type => GENERIC_TEXT_TYPES.includes( type ) ) ) {
-				validationResult.errorFileTypes.push( file );
-			}
-		} else if ( realMimeType === 'text/rtf' ) {
-			// Check for RTF files
-			const rtfTypes = [ 'ext/rtf', 'text/plain', 'application/rtf' ];
-			if ( ! fileExtType.type?.some( type => rtfTypes.includes( type ) ) ) {
-				validationResult.errorFileTypes.push( file );
-			}
-		} else if ( ! fileExtType.type?.includes( realMimeType ) ) {
-			// For every other case, assume it's dangerous if expected type doesn't match real type
+		if ( isInvalidFile( fileExtType, isFolder ) || ! hasValidMimetype( file, fileExtType ) ) {
 			validationResult.errorFileTypes.push( file );
 		}
 

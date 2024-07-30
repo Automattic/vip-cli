@@ -42,6 +42,13 @@ export function getMultilineStatement( statementRegex: RegExp ): ( line: string 
 }
 
 export function getFileType( filepath: string ): string {
+	// Check if the computer has the file command installed
+	try {
+		cp.execFileSync( '/usr/bin/file', [ '-v' ] );
+	} catch ( err ) {
+		throw new Error( '/usr/bin/file does not exist this computer' );
+	}
+
 	const regex = new RegExp( /^\w+\/[-+.\w]+/g );
 
 	let result;
