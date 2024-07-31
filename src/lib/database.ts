@@ -18,8 +18,6 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 	const isCompressed = filePath.endsWith( '.gz' );
 	let fileStream: fs.ReadStream | zlib.Gunzip;
 	// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-	const readLineExternalPromise = createExternalizedPromise< void >();
-	// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
 	const fileStreamExternalPromise = createExternalizedPromise< void >();
 
 	if ( isCompressed ) {
@@ -69,21 +67,13 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 		currentLineNumber++;
 	}
 
-	readLine.on( 'close', () => {
-		readLineExternalPromise.resolve();
-	} );
-
 	fileStream.on( 'close', () => {
 		fileStreamExternalPromise.resolve();
 	} );
 
 	readLine.close();
 	fileStream.close();
-
-	await Promise.allSettled( [
-		readLineExternalPromise.promise,
-		fileStreamExternalPromise.promise,
-	] );
+	await fileStreamExternalPromise.promise;
 
 	return {
 		type: isMyDumper ? SqlDumpType.MYDUMPER : SqlDumpType.MYSQLDUMP,
