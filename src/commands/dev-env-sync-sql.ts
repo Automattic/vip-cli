@@ -6,7 +6,7 @@ import fs from 'fs';
 import Lando from 'lando';
 import urlLib from 'url';
 
-import { DevEnvImportSQLCommand } from './dev-env-import-sql';
+import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
 import { App, AppEnvironment, Job } from '../graphqlTypes';
 import { TrackFunction } from '../lib/analytics/clients/tracks';
@@ -14,7 +14,12 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { getSqlDumpDetails, SqlDumpType } from '../lib/database';
-import { exec } from '../lib/dev-environment/dev-environment-core';
+import {
+	addAdminUser,
+	flushCache,
+	reIndexSearch,
+	runWpSearchReplace,
+} from '../lib/dev-environment/dev-environment-database';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -25,7 +30,7 @@ import { getReadInterface } from '../lib/validations/line-by-line';
  * @return Site home url. null if not found
  */
 function findSiteHomeUrl( sql: string ): string | null {
-	const regex = "'(siteurl|home)',\\s?'(.*?)'";
+	const regex = `['"](siteurl|home)['"],\\s?['"](.*?)['"]`;
 	const url = sql.match( regex )?.[ 2 ] || '';
 
 	return urlLib.parse( url ).hostname || null;
@@ -155,20 +160,11 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	public async runWPSearchReplace(): Promise< void > {
-		const replacements = this.searchReplaceMap;
-		for ( const url in replacements ) {
-			const replacement = replacements[ url ];
-			// eslint-disable-next-line no-await-in-loop
-			await exec( this.lando, this.slug, [
-				'wp',
-				'search-replace',
-				'--all-tables',
-				`//${ url }`,
-				`//${ replacement }`,
-				'--skip-plugins',
-				'--skip-themes',
-			] );
-		}
+		await runWpSearchReplace( this.lando, this.slug, this.searchReplaceMap, true );
+	}
+
+	public async recreateAdminUser(): Promise< void > {
+		await addAdminUser( this.lando, this.slug, true );
 	}
 
 	public generateSearchReplaceMap(): void {
@@ -211,10 +207,13 @@ export class DevEnvSyncSQLCommand {
 	 * @throws {Error} If there is an error importing the file
 	 */
 	public async runImport(): Promise< void > {
-		const importOptions = {
+		const importOptions: DevEnvImportSQLOptions = {
 			inPlace: true,
 			skipValidate: true,
 			quiet: true,
+			skipAdminCreation: true,
+			skipCacheFlush: true,
+			skipReindex: true,
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run();
@@ -325,6 +324,54 @@ export class DevEnvSyncSQLCommand {
 				} );
 				exit.withError( `Error replacing domains: ${ error.message }` );
 			}
+		}
+
+		try {
+			console.log( 'Recreating the admin user' );
+
+			await this.recreateAdminUser();
+			console.log( `${ chalk.green( '✓' ) } Admin user recreated` );
+		} catch ( err ) {
+			const error = err as Error;
+			await this.track( 'error', {
+				error_type: 'recreate_admin_user',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error recreating the admin user: ${ error.message }` );
+		}
+
+		try {
+			console.log( 'Flushing cache' );
+
+			await flushCache( this.lando, this.slug );
+			console.log( `${ chalk.green( '✓' ) } Cache flushed` );
+		} catch ( err ) {
+			const error = err as Error;
+			await this.track( 'error', {
+				error_type: 'cache_flush',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error flushing cache: ${ error.message }` );
+		}
+
+		try {
+			console.log( 'Reindexing search (if enabled)' );
+			try {
+				await reIndexSearch( this.lando, this.slug );
+			} catch ( err ) {
+				// no-op
+			}
+			console.log( `${ chalk.green( '✓' ) } Search reindexed` );
+		} catch ( err ) {
+			const error = err as Error;
+			await this.track( 'error', {
+				error_type: 'reindex_search',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error re-indexing search: ${ error.message }` );
 		}
 
 		return true;

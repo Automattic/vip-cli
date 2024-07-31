@@ -14,16 +14,24 @@ import {
 	getEnvironmentPath,
 	resolveImportPath,
 } from '../lib/dev-environment/dev-environment-core';
+import {
+	addAdminUser,
+	flushCache,
+	reIndexSearch,
+	runWpSearchReplace,
+} from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
 import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
 export interface DevEnvImportSQLOptions {
-	skipReindex?: string;
-	searchReplace?: string;
+	skipReindex?: string | boolean;
+	searchReplace?: string[];
 	inPlace: boolean;
 	skipValidate: boolean;
+	skipAdminCreation?: boolean;
+	skipCacheFlush?: boolean;
 	quiet: boolean;
 }
 
@@ -116,55 +124,33 @@ export class DevEnvImportSQLCommand {
 		}
 
 		if ( isMyDumper && searchReplace?.length ) {
-			for ( const pair of searchReplace ) {
-				const [ from, to ] = pair.split( ',' ).map( item => item.trim() );
-				// TODO: Investigate if it's worth it to refactor everything to only use wp's version of wp search-replace
-				// eslint-disable-next-line no-await-in-loop
-				await exec( lando, this.slug, [
-					'wp',
-					'search-replace',
-					'--all-tables',
-					`//${ from }`,
-					`//${ to }`,
-					'--skip-plugins',
-					'--skip-themes',
-				] );
-			}
+			const searchReplaceMap = searchReplace
+				.map( pair => pair.split( ',' ).map( item => item.trim() ) )
+				.reduce( ( prev, pair ) => {
+					prev[ pair[ 0 ] ] = pair[ 1 ];
+					return prev;
+				}, {} as Record< string, string > );
+			await runWpSearchReplace( lando, this.slug, searchReplaceMap, this.options.quiet );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat(
-			this.options.quiet ? '--quiet' : []
-		);
-		await exec( lando, this.slug, cacheArg );
+		if ( ! this.options.skipCacheFlush ) {
+			await flushCache( lando, this.slug, this.options.quiet );
+		}
 
 		if (
 			undefined === this.options.skipReindex ||
 			! processBooleanOption( this.options.skipReindex )
 		) {
 			try {
-				await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-				await exec( lando, this.slug, [
-					'wp',
-					'vip-search',
-					'index',
-					'--setup',
-					'--network-wide',
-					'--skip-confirm',
-				] );
+				await reIndexSearch( lando, this.slug );
 			} catch {
 				// Exception means they don't have vip-search enabled.
 			}
 		}
 
-		const addUserArg = [
-			'wp',
-			'dev-env-add-admin',
-			'--username=vipgo',
-			'--password=password',
-			'--skip-plugins',
-			'--skip-themes',
-		].concat( this.options.quiet ? '--quiet' : [] );
-		await exec( lando, this.slug, addUserArg );
+		if ( ! this.options.skipAdminCreation ) {
+			await addAdminUser( lando, this.slug );
+		}
 	}
 
 	public getImportArgs( dumpDetails: SqlDumpDetails ) {
