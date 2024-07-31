@@ -176,16 +176,15 @@ export class DevEnvImportSQLCommand {
 			importArg = [
 				'db-myloader',
 				'--overwrite-tables',
+				`--source-db=${ dumpDetails.sourceDb }`,
 				`--threads=${ threadCount }`,
 				'--max-threads-for-schema-creation=10',
 				'--max-threads-for-index-creation=10',
 				'--skip-triggers',
 				'--skip-post',
-				'--checksum="SKIP"',
+				'--checksum=SKIP',
 				'--metadata-refresh-interval=2000000',
 				'--stream',
-				'--source-db',
-				dumpDetails.sourceDb,
 			].concat( this.options.quiet ? [ '--verbose=0' ] : [ '--verbose=3' ] );
 		}
 

@@ -47,7 +47,6 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 
 		if ( metadataMatch && ! isMyDumper ) {
 			isMyDumper = true;
-			break;
 		}
 
 		if ( sourceDBMatch && ! sourceDB ) {
