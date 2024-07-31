@@ -91,7 +91,7 @@ export class DevEnvImportSQLCommand {
 			const expectedDomain = `${ this.slug }.${ lando.config.domain }`;
 			await validateSQL( resolvedPath, {
 				isImport: false,
-				skipChecks: [],
+				skipChecks: isMyDumper ? [ 'dropTable', 'dropDB' ] : [],
 				extraCheckParams: { siteHomeUrlLando: expectedDomain },
 			} );
 		}
