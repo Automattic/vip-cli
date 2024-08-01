@@ -124,7 +124,9 @@ export const searchAndReplace = async (
 	const dumpDetails = await getSqlDumpDetails( fileName );
 
 	if ( dumpDetails.type === SqlDumpType.MYDUMPER ) {
-		exit.withError( 'Search and replace-related tooling is currently not yet support' );
+		exit.withError(
+			'Search and replace-related tooling is currently not yet support for mydumper-based sql dumps'
+		);
 	}
 
 	// if we don't have any pairs to replace with, return the input file

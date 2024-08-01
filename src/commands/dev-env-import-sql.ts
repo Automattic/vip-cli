@@ -119,7 +119,7 @@ export class DevEnvImportSQLCommand {
 			process.stdin.isTTY = origIsTTY;
 		}
 
-		if ( searchReplace?.length && ! inPlace ) {
+		if ( ! isMyDumper && searchReplace?.length && ! inPlace ) {
 			fs.unlinkSync( resolvedPath );
 		}
 
@@ -168,6 +168,7 @@ export class DevEnvImportSQLCommand {
 				'--max-threads-for-index-creation=10',
 				'--skip-triggers',
 				'--skip-post',
+				'--innodb-optimize-keys',
 				'--checksum=SKIP',
 				'--metadata-refresh-interval=2000000',
 				'--stream',

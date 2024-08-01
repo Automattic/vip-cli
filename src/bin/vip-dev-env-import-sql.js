@@ -66,6 +66,9 @@ command( {
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ fileName ] = unmatchedArgs;
 		const slug = await getEnvironmentName( opt );
+		if ( opt.searchReplace && ! Array.isArray( opt.searchReplace ) ) {
+			opt.searchReplace = [ opt.searchReplace ];
+		}
 		const cmd = new DevEnvImportSQLCommand( fileName, opt, slug );
 		const trackingInfo = getEnvTrackingInfo( cmd.slug );
 		const trackerFn = makeCommandTracker( 'dev_env_import_sql', trackingInfo );
