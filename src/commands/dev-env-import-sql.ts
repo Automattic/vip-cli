@@ -18,7 +18,6 @@ import {
 	addAdminUser,
 	flushCache,
 	reIndexSearch,
-	runWpSearchReplace,
 } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
@@ -79,7 +78,7 @@ export class DevEnvImportSQLCommand {
 		const resolvedPath = await resolveImportPath(
 			this.slug,
 			this.fileName,
-			isMyDumper ? [] : searchReplace,
+			searchReplace,
 			inPlace
 		);
 
@@ -119,18 +118,8 @@ export class DevEnvImportSQLCommand {
 			process.stdin.isTTY = origIsTTY;
 		}
 
-		if ( ! isMyDumper && searchReplace?.length && ! inPlace ) {
+		if ( searchReplace?.length && ! inPlace ) {
 			fs.unlinkSync( resolvedPath );
-		}
-
-		if ( isMyDumper && searchReplace?.length ) {
-			const searchReplaceMap = searchReplace
-				.map( pair => pair.split( ',' ).map( item => item.trim() ) )
-				.reduce( ( prev, pair ) => {
-					prev[ pair[ 0 ] ] = pair[ 1 ];
-					return prev;
-				}, {} as Record< string, string > );
-			await runWpSearchReplace( lando, this.slug, searchReplaceMap, this.options.quiet );
 		}
 
 		if ( ! this.options.skipCacheFlush ) {

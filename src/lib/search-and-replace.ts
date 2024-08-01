@@ -2,17 +2,16 @@ import { replace } from '@automattic/vip-search-replace';
 import { red } from 'chalk';
 import debugLib from 'debug';
 import fs from 'fs';
+import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 
-import { getSqlDumpDetails, SqlDumpType } from './database';
+import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from './database';
 import { makeTempDir } from './utils';
 import * as exit from '../lib/cli/exit';
 import { confirm } from '../lib/cli/prompt';
 import { getFileSize } from '../lib/client-file-uploader';
 import { trackEvent } from '../lib/tracker';
-
-import type { Readable, Writable } from 'node:stream';
 
 const debug = debugLib( '@automattic/vip:lib:search-and-replace' );
 
@@ -122,12 +121,7 @@ export const searchAndReplace = async (
 	const startTime = process.hrtime();
 	const fileSize = getFileSize( fileName );
 	const dumpDetails = await getSqlDumpDetails( fileName );
-
-	if ( dumpDetails.type === SqlDumpType.MYDUMPER ) {
-		exit.withError(
-			'Search and replace-related tooling is currently not yet support for mydumper-based sql dumps'
-		);
-	}
+	const isMyDumper = dumpDetails.type === SqlDumpType.MYDUMPER;
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs.length ) {
@@ -165,7 +159,7 @@ export const searchAndReplace = async (
 		output,
 	} );
 
-	let replacedStream;
+	let replacedStream: NodeJS.ReadableStream;
 	try {
 		replacedStream = await replace( readStream, replacements, binary );
 	} catch ( replaceError ) {
@@ -173,8 +167,18 @@ export const searchAndReplace = async (
 		exit.withError( replaceError as string | Error );
 	}
 
+	const streams: ( NodeJS.ReadableStream | NodeJS.ReadWriteStream | NodeJS.WritableStream )[] = [
+		replacedStream,
+	];
+
+	if ( isMyDumper ) {
+		streams.push( fixMyDumperTransform() );
+	}
+
+	streams.push( writeStream );
+
 	try {
-		await pipeline( replacedStream, writeStream );
+		await pipeline( streams );
 	} catch ( error ) {
 		console.log(
 			red(

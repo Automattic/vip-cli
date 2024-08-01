@@ -4,6 +4,7 @@ import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
 import fs from 'fs';
 import Lando from 'lando';
+import { pipeline } from 'node:stream/promises';
 import urlLib from 'url';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
@@ -13,13 +14,7 @@ import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
-import { getSqlDumpDetails, SqlDumpType } from '../lib/database';
-import {
-	addAdminUser,
-	flushCache,
-	reIndexSearch,
-	runWpSearchReplace,
-} from '../lib/dev-environment/dev-environment-database';
+import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -148,23 +143,18 @@ export class DevEnvSyncSQLCommand {
 		const replacedStream = await replace( readStream, replacements );
 
 		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
-		replacedStream.pipe( fs.createWriteStream( outputFile ) );
+		const streams: ( NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream )[] = [
+			replacedStream,
+		];
+		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
+			streams.push( fixMyDumperTransform() );
+		}
 
-		return new Promise( ( resolve, reject ) => {
-			replacedStream.on( 'finish', () => {
-				fs.renameSync( outputFile, this.sqlFile );
-				resolve();
-			} );
-			replacedStream.on( 'error', reject );
-		} );
-	}
+		streams.push( fs.createWriteStream( outputFile ) );
 
-	public async runWPSearchReplace(): Promise< void > {
-		await runWpSearchReplace( this.lando, this.slug, this.searchReplaceMap, true );
-	}
+		await pipeline( streams );
 
-	public async recreateAdminUser(): Promise< void > {
-		await addAdminUser( this.lando, this.slug, true );
+		fs.renameSync( outputFile, this.sqlFile );
 	}
 
 	public generateSearchReplaceMap(): void {
@@ -211,9 +201,6 @@ export class DevEnvSyncSQLCommand {
 			inPlace: true,
 			skipValidate: true,
 			quiet: true,
-			skipAdminCreation: true,
-			skipCacheFlush: true,
-			skipReindex: true,
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run();
@@ -272,24 +259,22 @@ export class DevEnvSyncSQLCommand {
 		console.log( 'Generating search-replace configuration...' );
 		this.generateSearchReplaceMap();
 
-		if ( this.getSqlDumpType() === SqlDumpType.MYSQLDUMP ) {
-			try {
-				console.log( 'Running the following search-replace operations on the SQL file:' );
-				for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
-					console.log( `  ${ domain } -> ${ landoDomain }` );
-				}
-
-				await this.runSearchReplace();
-				console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
-			} catch ( err ) {
-				const error = err as Error;
-				await this.track( 'error', {
-					error_type: 'search_replace',
-					error_message: error.message,
-					stack: error.stack,
-				} );
-				exit.withError( `Error replacing domains: ${ error.message }` );
+		try {
+			console.log( 'Running the following search-replace operations on the SQL file:' );
+			for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
+				console.log( `  ${ domain } -> ${ landoDomain }` );
 			}
+
+			await this.runSearchReplace();
+			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
+		} catch ( err ) {
+			const error = err as Error;
+			await this.track( 'error', {
+				error_type: 'search_replace',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error replacing domains: ${ error.message }` );
 		}
 
 		try {
@@ -304,74 +289,6 @@ export class DevEnvSyncSQLCommand {
 				stack: error.stack,
 			} );
 			exit.withError( `Error importing SQL file: ${ error.message }` );
-		}
-
-		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
-			try {
-				console.log( 'Running the following search-replace operations on the database:' );
-				for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
-					console.log( `  ${ domain } -> ${ landoDomain }` );
-				}
-
-				await this.runWPSearchReplace();
-				console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
-			} catch ( err ) {
-				const error = err as Error;
-				await this.track( 'error', {
-					error_type: 'search_replace',
-					error_message: error.message,
-					stack: error.stack,
-				} );
-				exit.withError( `Error replacing domains: ${ error.message }` );
-			}
-		}
-
-		try {
-			console.log( 'Recreating the admin user' );
-
-			await this.recreateAdminUser();
-			console.log( `${ chalk.green( '✓' ) } Admin user recreated` );
-		} catch ( err ) {
-			const error = err as Error;
-			await this.track( 'error', {
-				error_type: 'recreate_admin_user',
-				error_message: error.message,
-				stack: error.stack,
-			} );
-			exit.withError( `Error recreating the admin user: ${ error.message }` );
-		}
-
-		try {
-			console.log( 'Flushing cache' );
-
-			await flushCache( this.lando, this.slug );
-			console.log( `${ chalk.green( '✓' ) } Cache flushed` );
-		} catch ( err ) {
-			const error = err as Error;
-			await this.track( 'error', {
-				error_type: 'cache_flush',
-				error_message: error.message,
-				stack: error.stack,
-			} );
-			exit.withError( `Error flushing cache: ${ error.message }` );
-		}
-
-		try {
-			console.log( 'Reindexing search (if enabled)' );
-			try {
-				await reIndexSearch( this.lando, this.slug );
-			} catch ( err ) {
-				// no-op
-			}
-			console.log( `${ chalk.green( '✓' ) } Search reindexed` );
-		} catch ( err ) {
-			const error = err as Error;
-			await this.track( 'error', {
-				error_type: 'reindex_search',
-				error_message: error.message,
-				stack: error.stack,
-			} );
-			exit.withError( `Error re-indexing search: ${ error.message }` );
 		}
 
 		return true;
