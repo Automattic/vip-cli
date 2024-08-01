@@ -67,9 +67,13 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 		currentLineNumber++;
 	}
 
-	fileStream.on( 'close', () => {
+	if ( fileStream instanceof fs.ReadStream ) {
+		fileStream.on( 'close', () => {
+			fileStreamExternalPromise.resolve();
+		} );
+	} else {
 		fileStreamExternalPromise.resolve();
-	} );
+	}
 
 	readLine.close();
 	fileStream.close();
