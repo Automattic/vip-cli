@@ -124,7 +124,7 @@
         "@types/ejs": "^3.1.5",
         "@types/jest": "^29.5.8",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^18.19.5",
+        "@types/node": "^22.0.2",
         "@types/node-fetch": "^2.6.9",
         "@types/proxy-from-env": "^1.0.4",
         "@types/semver": "^7.5.5",
@@ -3865,11 +3865,11 @@
       "dev": true
     },
     "node_modules/@types/node": {
-      "version": "18.19.42",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.19.42.tgz",
-      "integrity": "sha512-d2ZFc/3lnK2YCYhos8iaNIYu9Vfhr92nHiyJHRltXWjXUBjEE+A4I58Tdbnw4VhggSW+2j5y5gTrLs4biNnubg==",
+      "version": "22.0.2",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.0.2.tgz",
+      "integrity": "sha512-yPL6DyFwY5PiMVEwymNeqUTKsDczQBJ/5T7W/46RwLU/VH+AA8aT5TZkvBviLKLbbm0hlfftEkGrNzfRk/fofQ==",
       "dependencies": {
-        "undici-types": "~5.26.4"
+        "undici-types": "~6.11.1"
       }
     },
     "node_modules/@types/node-fetch": {
@@ -3931,6 +3931,21 @@
       "dependencies": {
         "@types/node": "^18.11.18"
       }
+    },
+    "node_modules/@types/ssh2/node_modules/@types/node": {
+      "version": "18.19.42",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.19.42.tgz",
+      "integrity": "sha512-d2ZFc/3lnK2YCYhos8iaNIYu9Vfhr92nHiyJHRltXWjXUBjEE+A4I58Tdbnw4VhggSW+2j5y5gTrLs4biNnubg==",
+      "dev": true,
+      "dependencies": {
+        "undici-types": "~5.26.4"
+      }
+    },
+    "node_modules/@types/ssh2/node_modules/undici-types": {
+      "version": "5.26.5",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz",
+      "integrity": "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==",
+      "dev": true
     },
     "node_modules/@types/stack-utils": {
       "version": "2.0.1",
@@ -12514,9 +12529,9 @@
       }
     },
     "node_modules/undici-types": {
-      "version": "5.26.5",
-      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz",
-      "integrity": "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="
+      "version": "6.11.1",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.11.1.tgz",
+      "integrity": "sha512-mIDEX2ek50x0OlRgxryxsenE5XaQD4on5U2inY7RApK3SOJpofyw7uW2AyfMKkhAxXIceo2DeWGVGwyvng1GNQ=="
     },
     "node_modules/unicode-canonical-property-names-ecmascript": {
       "version": "2.0.0",
@@ -16122,11 +16137,11 @@
       "dev": true
     },
     "@types/node": {
-      "version": "18.19.42",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.19.42.tgz",
-      "integrity": "sha512-d2ZFc/3lnK2YCYhos8iaNIYu9Vfhr92nHiyJHRltXWjXUBjEE+A4I58Tdbnw4VhggSW+2j5y5gTrLs4biNnubg==",
+      "version": "22.0.2",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.0.2.tgz",
+      "integrity": "sha512-yPL6DyFwY5PiMVEwymNeqUTKsDczQBJ/5T7W/46RwLU/VH+AA8aT5TZkvBviLKLbbm0hlfftEkGrNzfRk/fofQ==",
       "requires": {
-        "undici-types": "~5.26.4"
+        "undici-types": "~6.11.1"
       }
     },
     "@types/node-fetch": {
@@ -16189,6 +16204,23 @@
       "dev": true,
       "requires": {
         "@types/node": "^18.11.18"
+      },
+      "dependencies": {
+        "@types/node": {
+          "version": "18.19.42",
+          "resolved": "https://registry.npmjs.org/@types/node/-/node-18.19.42.tgz",
+          "integrity": "sha512-d2ZFc/3lnK2YCYhos8iaNIYu9Vfhr92nHiyJHRltXWjXUBjEE+A4I58Tdbnw4VhggSW+2j5y5gTrLs4biNnubg==",
+          "dev": true,
+          "requires": {
+            "undici-types": "~5.26.4"
+          }
+        },
+        "undici-types": {
+          "version": "5.26.5",
+          "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz",
+          "integrity": "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==",
+          "dev": true
+        }
       }
     },
     "@types/stack-utils": {
@@ -22390,9 +22422,9 @@
       }
     },
     "undici-types": {
-      "version": "5.26.5",
-      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz",
-      "integrity": "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="
+      "version": "6.11.1",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.11.1.tgz",
+      "integrity": "sha512-mIDEX2ek50x0OlRgxryxsenE5XaQD4on5U2inY7RApK3SOJpofyw7uW2AyfMKkhAxXIceo2DeWGVGwyvng1GNQ=="
     },
     "unicode-canonical-property-names-ecmascript": {
       "version": "2.0.0",
