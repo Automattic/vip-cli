@@ -29,8 +29,6 @@ export interface DevEnvImportSQLOptions {
 	searchReplace?: string[];
 	inPlace: boolean;
 	skipValidate: boolean;
-	skipAdminCreation?: boolean;
-	skipCacheFlush?: boolean;
 	quiet: boolean;
 }
 
@@ -122,9 +120,7 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		if ( ! this.options.skipCacheFlush ) {
-			await flushCache( lando, this.slug, this.options.quiet );
-		}
+		await flushCache( lando, this.slug, this.options.quiet );
 
 		if (
 			undefined === this.options.skipReindex ||
@@ -137,9 +133,7 @@ export class DevEnvImportSQLCommand {
 			}
 		}
 
-		if ( ! this.options.skipAdminCreation ) {
-			await addAdminUser( lando, this.slug );
-		}
+		await addAdminUser( lando, this.slug );
 	}
 
 	public getImportArgs( dumpDetails: SqlDumpDetails ) {
