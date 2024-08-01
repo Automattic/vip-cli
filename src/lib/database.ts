@@ -112,7 +112,12 @@ export const fixMyDumperTransform = () => {
 				.toString()
 				.split( lineEnding )
 				.map( line => {
-					const match = line.match( regex ) as RegExpMatchArray;
+					const match = line.match( regex );
+
+					if ( ! match ) {
+						return line;
+					}
+
 					const tablePart = match[ 1 ];
 					return `-- ${ tablePart } -1`;
 				} );
