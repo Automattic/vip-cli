@@ -90,11 +90,11 @@ export class DevEnvSyncSQLCommand {
 		return `${ this.slug }.${ this.lando.config.domain }`;
 	}
 
-	private get sqlFile(): string {
+	public get sqlFile(): string {
 		return `${ this.tmpDir }/sql-export.sql`;
 	}
 
-	private get gzFile(): string {
+	public get gzFile(): string {
 		return `${ this.tmpDir }/sql-export.sql.gz`;
 	}
 
@@ -106,7 +106,7 @@ export class DevEnvSyncSQLCommand {
 		return this._sqlDumpType;
 	}
 
-	private async initSqlDumpType(): Promise< void > {
+	public async initSqlDumpType(): Promise< void > {
 		const dumpDetails = await getSqlDumpDetails( this.sqlFile );
 		this._sqlDumpType = dumpDetails.type;
 	}
