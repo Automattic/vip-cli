@@ -107,7 +107,7 @@ export const fixMyDumperTransform = () => {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
 			const chunkString = chunk.toString();
 			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const regex = /^-- ([0-9A-Za-z\-_.]+) [0-9]+$/;
+			const regex = /^-- ([^ ]+) [0-9]+$/;
 			const lines = chunk
 				.toString()
 				.split( lineEnding )
