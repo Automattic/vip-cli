@@ -79,11 +79,11 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		it( 'should run search-replace operation on the mysqldump file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump.sql.gz' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
 				cmd.gzFile
 			);
 			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump.sql' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql' ),
 				cmd.sqlFile
 			);
 			await cmd.initSqlDumpType();
@@ -100,11 +100,11 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		it( 'should run search-replace operation on the mydumper file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper.sql.gz' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.sql.gz' ),
 				cmd.gzFile
 			);
 			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper.sql' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.sql' ),
 				cmd.sqlFile
 			);
 			await cmd.initSqlDumpType();
@@ -118,7 +118,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			] );
 
 			const fileContentExpected = fs.readFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper.expected.sql' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.expected.sql' ),
 				'utf8'
 			);
 			const fileContent = fs.readFileSync( cmd.sqlFile, 'utf8' );
@@ -148,11 +148,11 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 		beforeAll( () => {
 			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump.sql.gz' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
 				syncCommand.gzFile
 			);
 			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump.sql' ),
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql' ),
 				syncCommand.sqlFile
 			);
 			exportSpy.mockResolvedValue();
