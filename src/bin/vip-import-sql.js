@@ -56,7 +56,7 @@ const appQuery = `
 			dbOperationInProgress
 			importInProgress
 		}
-		wpSites {
+		wpSitesSDS {
 			nodes {
 				homeUrl
 				id
@@ -319,7 +319,7 @@ const displayPlaybook = ( {
 		const selectedEnvironmentObj = app?.environments?.find(
 			env => unformattedEnvironment === env.type
 		);
-		siteArray = selectedEnvironmentObj?.wpSites?.nodes;
+		siteArray = selectedEnvironmentObj?.wpSitesSDS?.nodes;
 	}
 
 	if ( ! tableNames.length ) {
