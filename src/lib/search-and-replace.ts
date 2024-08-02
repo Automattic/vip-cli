@@ -116,12 +116,17 @@ export const searchAndReplace = async (
 	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise< SearchReplaceOutput > => {
-	await trackEvent( 'searchreplace_started', { is_import: isImport, in_place: inPlace } );
+	const dumpDetails = await getSqlDumpDetails( fileName );
+	const isMyDumper = dumpDetails.type === SqlDumpType.MYDUMPER;
+
+	await trackEvent( 'searchreplace_started', {
+		is_import: isImport,
+		in_place: inPlace,
+		sqldump_type: dumpDetails.type,
+	} );
 
 	const startTime = process.hrtime();
 	const fileSize = getFileSize( fileName );
-	const dumpDetails = await getSqlDumpDetails( fileName );
-	const isMyDumper = dumpDetails.type === SqlDumpType.MYDUMPER;
 
 	// if we don't have any pairs to replace with, return the input file
 	if ( ! pairs.length ) {
@@ -148,6 +153,7 @@ export const searchAndReplace = async (
 			await trackEvent( 'search_replace_in_place_cancelled', {
 				is_import: isImport,
 				in_place: inPlace,
+				sqldump_type: dumpDetails.type,
 			} );
 			process.exit();
 		}
@@ -191,7 +197,11 @@ export const searchAndReplace = async (
 	const endTime = process.hrtime( startTime );
 	const end = endTime[ 1 ] / 1000000; // time in ms
 
-	await trackEvent( 'searchreplace_completed', { time_to_run: end, file_size: fileSize } );
+	await trackEvent( 'searchreplace_completed', {
+		time_to_run: end,
+		file_size: fileSize,
+		sqldump_type: dumpDetails.type,
+	} );
 
 	return {
 		inputFileName: fileName,

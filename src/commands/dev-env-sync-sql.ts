@@ -63,7 +63,7 @@ export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
 	public searchReplaceMap: Record< string, string > = {};
-	public track: TrackFunction;
+	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
 
 	/**
@@ -82,8 +82,15 @@ export class DevEnvSyncSQLCommand {
 		public lando: Lando,
 		trackerFn: TrackFunction = () => {}
 	) {
-		this.track = trackerFn;
+		this._track = trackerFn;
 		this.tmpDir = makeTempDir();
+	}
+
+	public track( name: string, eventProps: Record< string, unknown > ) {
+		return this._track( name, {
+			...eventProps,
+			sqldump_type: this._sqlDumpType,
+		} );
 	}
 
 	private get landoDomain(): string {
@@ -125,7 +132,7 @@ export class DevEnvSyncSQLCommand {
 			this.app,
 			this.env,
 			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
-			this.track
+			this.track.bind( this )
 		);
 		await exportCommand.run();
 	}
