@@ -89,7 +89,7 @@ const verifyFileExists = async ( filePath: string ) => {
 	try {
 		await fs.promises.access( filePath, fs.constants.F_OK );
 	} catch {
-		throw new Error( 'File not accessible. Does file exists?' );
+		throw new Error( 'File not accessible. Does file exist?' );
 	}
 };
 
