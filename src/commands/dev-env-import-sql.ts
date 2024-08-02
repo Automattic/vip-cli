@@ -8,18 +8,23 @@ import {
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
+	exec,
 	getEnvironmentPath,
 	resolveImportPath,
-	exec,
 } from '../lib/dev-environment/dev-environment-core';
+import {
+	addAdminUser,
+	flushCache,
+	reIndexSearch,
+} from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
 import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
 
 export interface DevEnvImportSQLOptions {
-	skipReindex?: string;
-	searchReplace?: string;
+	skipReindex?: string | boolean;
+	searchReplace?: string[];
 	inPlace: boolean;
 	skipValidate: boolean;
 	quiet: boolean;
@@ -84,9 +89,8 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const fd = await fs.promises.open( resolvedPath, 'r' );
-		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
-			this.options.quiet ? '--silent' : []
-		);
+		const importArg = this.getImportArgs();
+
 		const origIsTTY = process.stdin.isTTY;
 
 		try {
@@ -111,38 +115,27 @@ export class DevEnvImportSQLCommand {
 			fs.unlinkSync( resolvedPath );
 		}
 
-		const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat(
-			this.options.quiet ? '--quiet' : []
-		);
-		await exec( lando, this.slug, cacheArg );
+		await flushCache( lando, this.slug, this.options.quiet );
 
 		if (
 			undefined === this.options.skipReindex ||
 			! processBooleanOption( this.options.skipReindex )
 		) {
 			try {
-				await exec( lando, this.slug, [ 'wp', 'cli', 'has-command', 'vip-search' ] );
-				await exec( lando, this.slug, [
-					'wp',
-					'vip-search',
-					'index',
-					'--setup',
-					'--network-wide',
-					'--skip-confirm',
-				] );
+				await reIndexSearch( lando, this.slug );
 			} catch {
 				// Exception means they don't have vip-search enabled.
 			}
 		}
 
-		const addUserArg = [
-			'wp',
-			'dev-env-add-admin',
-			'--username=vipgo',
-			'--password=password',
-			'--skip-plugins',
-			'--skip-themes',
-		].concat( this.options.quiet ? '--quiet' : [] );
-		await exec( lando, this.slug, addUserArg );
+		await addAdminUser( lando, this.slug );
+	}
+
+	public getImportArgs() {
+		const importArg = [ 'db', '--disable-auto-rehash' ].concat(
+			this.options.quiet ? '--silent' : []
+		);
+
+		return importArg;
 	}
 }
