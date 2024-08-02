@@ -26,31 +26,6 @@ export const reIndexSearch = async ( lando: Lando, slug: string ) => {
 	] );
 };
 
-export const runWpSearchReplace = async (
-	lando: Lando,
-	slug: string,
-	searchReplaceMap: Record< string, string >,
-	quiet?: boolean
-) => {
-	for ( const url in searchReplaceMap ) {
-		const replacement = searchReplaceMap[ url ];
-		// eslint-disable-next-line no-await-in-loop
-		await exec(
-			lando,
-			slug,
-			[
-				'wp',
-				'search-replace',
-				'--all-tables',
-				`${ url }`,
-				`${ replacement }`,
-				'--skip-plugins',
-				'--skip-themes',
-			].concat( quiet ? [ '--quiet' ] : [] )
-		);
-	}
-};
-
 export const flushCache = async ( lando: Lando, slug: string, quiet?: boolean ) => {
 	const cacheArg = [ 'wp', 'cache', 'flush', '--skip-plugins', '--skip-themes' ].concat(
 		quiet ? [ '--quiet' ] : []
