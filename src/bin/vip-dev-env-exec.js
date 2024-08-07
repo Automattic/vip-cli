@@ -25,9 +25,9 @@ const examples = [
 			'      * A double dash ("--") must separate the arguments of "vip" from those of the "wp" command.',
 	},
 	{
-		usage: `${ exampleUsage } --slug=example-site -- wp user list --url=example.example-site.vipdev.lndo.site`,
+		usage: `${ exampleUsage } --slug=example-site -- wp user list --url=example.example-site.vipdev.site`,
 		description:
-			'Target the WP-CLI command against the network site "example.example-site.vipdev.lndo.site" of a local multisite environment.',
+			'Target the WP-CLI command against the network site "example.example-site.vipdev.site" of a local multisite environment.',
 	},
 	{
 		usage: `${ exampleUsage } --slug=example-site -- wp shell`,

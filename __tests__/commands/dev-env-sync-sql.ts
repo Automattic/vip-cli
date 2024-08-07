@@ -88,7 +88,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		},
 	};
 
-	const lando = new Lando( { domain: 'vipdev.lndo.site' } );
+	const lando = new Lando( { domain: 'vipdev.site' } );
 
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
@@ -109,7 +109,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			cmd.siteUrls = [ 'test.go-vip.com' ];
 			cmd.generateSearchReplaceMap();
 
-			expect( cmd.searchReplaceMap ).toEqual( { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' } );
+			expect( cmd.searchReplaceMap ).toEqual( { 'test.go-vip.com': 'test-slug.vipdev.site' } );
 		} );
 
 		it( 'should return a map of search-replace values for multisite', () => {
@@ -119,8 +119,8 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			cmd.generateSearchReplaceMap();
 
 			expect( cmd.searchReplaceMap ).toEqual( {
-				'test.go-vip.com': 'test-slug.vipdev.lndo.site',
-				'subsite.com': 'subsite-com-2.test-slug.vipdev.lndo.site',
+				'test.go-vip.com': 'test-slug.vipdev.site',
+				'subsite.com': 'subsite-com-2.test-slug.vipdev.site',
 			} );
 		} );
 	} );
@@ -128,13 +128,13 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the SQL file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
-			cmd.searchReplaceMap = { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' };
+			cmd.searchReplaceMap = { 'test.go-vip.com': 'test-slug.vipdev.site' };
 			cmd.slug = 'test-slug';
 
 			await cmd.runSearchReplace();
 			expect( replace ).toHaveBeenCalledWith( mockReadStream, [
 				'test.go-vip.com',
-				'test-slug.vipdev.lndo.site',
+				'test-slug.vipdev.site',
 			] );
 		} );
 	} );

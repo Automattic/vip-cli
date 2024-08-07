@@ -85,7 +85,7 @@ describe( 'vip dev-env exec', () => {
 				true
 			);
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout ).toContain( `http://${ slug }.vipdev.lndo.site` );
+			expect( result.stdout ).toContain( `http://${ slug }.vipdev.site` );
 		} );
 
 		it( 'should fail on unknown commands', async () => {
@@ -115,7 +115,7 @@ describe( 'vip dev-env exec', () => {
 				true
 			);
 			expect( result.rc ).toBe( 0 );
-			expect( result.stdout.trim() ).toBe( `http://${ slug }.vipdev.lndo.site` );
+			expect( result.stdout.trim() ).toBe( `http://${ slug }.vipdev.site` );
 		} );
 
 		it( 'should not be verbose on non-zero exit code', async () => {

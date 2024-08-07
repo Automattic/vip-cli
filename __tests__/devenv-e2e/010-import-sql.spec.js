@@ -149,7 +149,7 @@ describe( 'vip dev-env import sql', () => {
 			const dumpFileName = path.join( tmpPath, 'dump.sql' );
 			await writeFile( dumpFileName, result.stdout );
 
-			const expectedHomeValue = 'http://test.vipdev.lndo.site';
+			const expectedHomeValue = 'http://test.vipdev.site';
 
 			result = await cliTest.spawn(
 				[
@@ -159,7 +159,7 @@ describe( 'vip dev-env import sql', () => {
 					slug,
 					dumpFileName,
 					'-r',
-					`http://${ slug }.vipdev.lndo.site,${ expectedHomeValue }`,
+					`http://${ slug }.vipdev.site,${ expectedHomeValue }`,
 				],
 				{ env },
 				true

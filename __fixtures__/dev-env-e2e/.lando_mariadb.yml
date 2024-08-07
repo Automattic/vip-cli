@@ -3,10 +3,10 @@ env_file:
   - .env
 proxy:
   nginx:
-    - vip-local.vipdev.lndo.site
+    - vip-local.vipdev.site
 
   phpmyadmin:
-    - vip-local-pma.vipdev.lndo.site
+    - vip-local-pma.vipdev.site
 services:
 
   devtools:
@@ -156,7 +156,7 @@ services:
 
 
     run:
-      - sh /dev-tools/setup.sh database root "http://vip-local.vipdev.lndo.site/" "VIP Dev" 
+      - sh /dev-tools/setup.sh database root "http://vip-local.vipdev.site/" "VIP Dev" 
 
   database:
     type: compose

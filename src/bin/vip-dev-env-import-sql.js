@@ -20,22 +20,22 @@ const examples = [
 			'Import the SQL file named "file.sql" from a path on the user\'s local machine to a running local environment named "example-site".',
 	},
 	{
-		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com,example-site.vipdev.lndo.site" --slug="example-site"`,
+		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com,example-site.vipdev.site" --slug="example-site"`,
 		description:
-			'Search for the string "example-site.com" in the SQL file and replace it with "example-site.vipdev.lndo.site" during the import.',
+			'Search for the string "example-site.com" in the SQL file and replace it with "example-site.vipdev.site" during the import.',
 	},
 	{
-		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com,example-site.vipdev.lndo.site" --skip-reindex --slug="example-site"`,
+		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com,example-site.vipdev.site" --skip-reindex --slug="example-site"`,
 		description:
 			'Import the SQL file to a local environment with Elasticsearch enabled, and do not reindex after the import is completed.',
 	},
 	{
-		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com,example-site.vipdev.lndo.site" --in-place`,
+		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com,example-site.vipdev.site" --in-place`,
 		description:
 			'Perform the search and replace operation on the local SQL file ("file.sql"), save the changes, and import the updated file to the local environment.',
 	},
 	{
-		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com/site-three,site-three.example-site.vipdev.lndo.site" --search-replace="example-site.com,example-site.vipdev.lndo.site" --slug="example-site"`,
+		usage: `${ exampleUsage } /Users/example/Downloads/file.sql --search-replace="example-site.com/site-three,site-three.example-site.vipdev.site" --search-replace="example-site.com,example-site.vipdev.site" --slug="example-site"`,
 		description:
 			'Search and replace 2 pairs of strings during the import of the SQL file to a local multisite environment.',
 	},

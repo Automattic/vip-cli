@@ -85,7 +85,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,
 		home: fakeHomeDir,
-		domain: 'vipdev.lndo.site',
+		domain: 'vipdev.site',
 		version: 'unknown',
 	};
 
