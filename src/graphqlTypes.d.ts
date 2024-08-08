@@ -813,8 +813,6 @@ export type AppEnvironmentMediaImportStatusChange = {
 /** Media Import Failure details */
 export type AppEnvironmentMediaImportStatusFailureDetails = {
 	__typename?: 'AppEnvironmentMediaImportStatusFailureDetails';
-	/** List of errors per file */
-	fileErrors?: Maybe< Array< Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors > > >;
 	/** URL to download the media import error log */
 	fileErrorsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	/** List of global errors per import */

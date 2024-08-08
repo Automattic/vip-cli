@@ -42,10 +42,6 @@ const IMPORT_MEDIA_PROGRESS_QUERY = gql`
 					failureDetails {
 						previousStatus
 						globalErrors
-						fileErrors {
-							fileName
-							errors
-						}
 						fileErrorsUrl
 					}
 				}
@@ -351,22 +347,6 @@ Downloading errors details from ${ fileErrorsUrl }
 		}
 	}
 
-	async function printFailureDetails(
-		fileErrors: Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors >[],
-		results: AppEnvironmentMediaImportStatus
-	) {
-		progressTracker.suffix += `${ chalk.yellow(
-			`⚠️  ${ fileErrors.length } file import error(s) were found`
-		) }`;
-
-		if ( ( results.filesTotal ?? 0 ) - ( results.filesProcessed ?? 0 ) !== fileErrors.length ) {
-			progressTracker.suffix += `. ${ chalk.italic.yellow(
-				'File import errors report size threshold reached.'
-			) }`;
-		}
-		await exportFailureDetails( fileErrors );
-	}
-
 	try {
 		const results: AppEnvironmentMediaImportStatus = await getResults();
 		overallStatus = results.status ?? 'unknown';
@@ -379,19 +359,10 @@ Downloading errors details from ${ fileErrorsUrl }
 			await promptFailureDetailsDownload(
 				results.failureDetails.fileErrorsUrl as unknown as string
 			);
-		} else {
-			const fileErrors = results.failureDetails?.fileErrors ?? [];
-
-			if ( fileErrors.length > 0 ) {
-				// Errors were observed and are present in the dto
-				// Fall back to exporting errors to local file
-				await printFailureDetails( fileErrors, results );
-			} else if ( 'ABORTED' !== overallStatus ) {
-				// Errors are not present in the dto
-				// And file error details report link is not available
-				// do not print this message if the import was aborted
-				printFileErrorsReportLinkExpiredError( results );
-			}
+		} else if ( 'ABORTED' !== overallStatus ) {
+			// print report link expired if required
+			// do not print this message if the import was aborted
+			printFileErrorsReportLinkExpiredError( results );
 		}
 
 		// Print one final time
