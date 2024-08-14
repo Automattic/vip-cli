@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "3.8.0",
+  "version": "3.8.1-dev.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "3.8.0",
+      "version": "3.8.1-dev.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
