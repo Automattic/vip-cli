@@ -3,6 +3,7 @@
 import chalk from 'chalk';
 
 import command from '../lib/cli/command';
+import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
@@ -36,6 +37,24 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};
+
+	const envName = opt.env.type;
+	const appName = opt.app.name;
+
+	if ( ! opt.skipConfirmation && envName === 'production' ) {
+		const yes = await confirm(
+			`Are you sure you want to delete the environment variable ${ name } on ${ formatEnvironment(
+				envName
+			) } for site ${ appName }?`
+		);
+
+		if ( ! yes ) {
+			trackEvent( 'wpcli_confirm_cancel', trackingParams ).catch( () => {} );
+
+			console.log( 'Command cancelled' );
+			process.exit();
+		}
+	}
 
 	debug(
 		`Request: Delete environment variable ${ JSON.stringify( name ) } for ${ getEnvContext(
