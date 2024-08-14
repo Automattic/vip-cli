@@ -1,8 +1,22 @@
 ## Changelog
 
+## 3.8.0
+
+* build(deps-dev): bump @babel/preset-env from 7.24.8 to 7.25.0 in the babel group by @dependabot in https://github.com/Automattic/vip-cli/pull/1971
+* build(deps): bump debug from 4.3.5 to 4.3.6 by @dependabot in https://github.com/Automattic/vip-cli/pull/1973
+* SQL Import: Switch to wpSitesSDS query by @mjangda in https://github.com/Automattic/vip-cli/pull/1975
+* Extract many import-sql functionality to a separate file by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1979
+* build(deps-dev): bump the babel group across 1 directory with 2 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1977
+* build(deps): bump adm-zip from 0.5.14 to 0.5.15 by @dependabot in https://github.com/Automattic/vip-cli/pull/1981
+* build(deps): bump step-security/harden-runner from 2.9.0 to 2.9.1 by @dependabot in https://github.com/Automattic/vip-cli/pull/1983
+* BB8-11630: Add confirmation for production env vars setting/deleting by @rebeccahum in https://github.com/Automattic/vip-cli/pull/1985
+* Remove querying `fileErrors` in Graphql API while fetching Media import status by @aagam-shah in https://github.com/Automattic/vip-cli/pull/1986
+* Mydumper integration by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1962
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.1...3.8.0
+
 ## 3.7.1
 
-* New develop release: 3.7.1-dev.0 by @github-actions in #1944
 * build(deps): bump step-security/harden-runner from 2.8.1 to 2.9.0 by @dependabot in #1950
 * build(deps): bump semver from 7.6.2 to 7.6.3 by @dependabot in #1946
 * build(deps-dev): bump @types/node from 18.19.39 to 18.19.41 by @dependabot in #1951
@@ -14,13 +28,11 @@
 * build(deps): bump tar from 7.4.1 to 7.4.3 by @dependabot in #1963
 * build(deps-dev): bump @types/dockerode from 3.3.30 to 3.3.31 by @dependabot in #1960
 * Gracefully fail when directory is not detected by @ariskataoka in #1947
-* New package release: v3.7.1 by @github-actions in #1966
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.0...3.7.1
 
 ## 3.7.0
 
-* New develop release: 3.6.1-dev.0 by @github-actions in #1931
 * build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.12.0 to 0.13.0 by @dependabot in #1932
 * build(deps-dev): bump the babel group with 3 updates by @dependabot in #1936
 * build(deps): bump update-notifier from 7.0.0 to 7.1.0 by @dependabot in #1937
@@ -28,7 +40,6 @@
 * build(deps-dev): bump @babel/core from 7.24.8 to 7.24.9 in the babel group by @dependabot in #1939
 * build(deps-dev): bump @types/dockerode from 3.3.29 to 3.3.30 by @dependabot in #1941
 * update: media import validate-files by @ariskataoka in #1919
-* New package release: v3.7.0 by @github-actions in #1943
   
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.6.0...3.7.0
 
