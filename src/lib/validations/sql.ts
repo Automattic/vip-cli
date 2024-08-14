@@ -9,6 +9,7 @@ import {
 	type PostLineExecutionProcessingParams,
 	getReadInterface,
 } from '../../lib/validations/line-by-line';
+import { OmitIndexSignature } from '../types';
 
 let problemsFound = 0;
 let lineNum = 1;
@@ -61,9 +62,14 @@ export interface Checks {
 	[ key: string ]: CheckType;
 }
 
+export type CheckName = keyof OmitIndexSignature< Checks >;
+
 interface ValidationOptions {
 	isImport: boolean;
-	skipChecks: string[];
+	// ignoring eslint for the following - this info is still useful for code completion
+	// at least until we can refactor to this to be stricter.
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+	skipChecks: ( string | CheckName )[];
 	extraCheckParams: Record< string, string >;
 }
 
@@ -326,7 +332,7 @@ const checks: Checks = {
 		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
 	},
 	siteHomeUrl: {
-		matcher: "'(siteurl|home)',\\s?'(.*?)'",
+		matcher: `['"](siteurl|home)['"],\\s?['"](.*?)['"]`,
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] + ' ' + results[ 2 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
@@ -335,7 +341,7 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: "'(siteurl|home)',\\s?'([^']+)'",
+		matcher: `['"](siteurl|home)['"],\\s?['"]([^'"]+)['"]`,
 		matchHandler: ( lineNumber, results, expectedDomain ) => {
 			let foundDomain = results[ 2 ];
 			if ( ! /^https?:\/\//i.test( foundDomain ) ) {

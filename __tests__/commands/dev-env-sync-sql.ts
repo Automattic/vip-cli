@@ -1,74 +1,24 @@
 import { replace } from '@automattic/vip-search-replace';
-import fs, { ReadStream } from 'fs';
+import fs from 'fs';
 import Lando from 'lando';
-import { WriteStream } from 'node:fs';
-import { Interface } from 'node:readline';
-import { PassThrough } from 'stream';
+import path from 'path';
 
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { DevEnvSyncSQLCommand } from '../../src/commands/dev-env-sync-sql';
 import { ExportSQLCommand } from '../../src/commands/export-sql';
-import { unzipFile } from '../../src/lib/client-file-uploader';
-import { getReadInterface } from '../../src/lib/validations/line-by-line';
+import * as clientFileUploader from '../../src/lib/client-file-uploader';
 
-/**
- *
- * @param {Array<{name, data}>} eventArgs Event arguments
- * @param {timeout}             timeout
- *
- * @return {Stream} A passthrough stream
- */
-function getMockStream( eventArgs: { name: string; data?: string }[], timeout = 10 ) {
-	const mockStream = new PassThrough();
-
-	if ( ! eventArgs ) {
-		eventArgs = [ { name: 'finish' } ];
-	}
-
-	// Leave 10ms of room for the listeners to setup
-	setTimeout( () => {
-		eventArgs.forEach( ( { name, data } ) => {
-			mockStream.emit( name, data );
-		} );
-	}, timeout );
-
-	return mockStream;
-}
-
-const mockReadStream: ReadStream = getMockStream(
-	[ { name: 'finish' }, { name: 'data', data: 'data' } ],
-	10
-) as unknown as ReadStream;
-const mockWriteStream: WriteStream = getMockStream(
-	[ { name: 'finish' } ],
-	20
-) as unknown as WriteStream;
-
-jest.spyOn( fs, 'createReadStream' ).mockReturnValue( mockReadStream );
-jest.spyOn( fs, 'createWriteStream' ).mockReturnValue( mockWriteStream );
-jest.spyOn( fs, 'renameSync' ).mockImplementation( () => {} );
 jest.mock( '@automattic/vip-search-replace', () => {
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	const { PassThrough } = require( 'node:stream' ) as typeof import('node:stream');
 	return {
-		replace: jest.fn(),
-	};
-} );
-jest.mock( '../../src/lib/client-file-uploader', () => {
-	return {
-		unzipFile: jest.fn(),
-	};
-} );
-
-jest.mock( '../../src/lib/validations/line-by-line', () => {
-	return {
-		getReadInterface: jest.fn(),
+		replace: jest.fn( ( ...args ) => {
+			return Promise.resolve( new PassThrough().pipe( args[ 0 ] ) );
+		} ),
 	};
 } );
 
-jest.mocked( replace ).mockResolvedValue( mockReadStream );
-jest.mocked( unzipFile ).mockResolvedValue();
-jest
-	.mocked( getReadInterface )
-	.mockResolvedValue( getMockStream( [ { name: 'close' } ], 100 ) as unknown as Interface );
+jest.spyOn( clientFileUploader, 'unzipFile' );
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
@@ -126,16 +76,54 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	} );
 
 	describe( '.runSearchReplace', () => {
-		it( 'should run search-replace operation on the SQL file', async () => {
+		it( 'should run search-replace operation on the mysqldump file', async () => {
 			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			fs.copyFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
+				cmd.gzFile
+			);
+			fs.copyFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql' ),
+				cmd.sqlFile
+			);
+			await cmd.initSqlDumpType();
 			cmd.searchReplaceMap = { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' };
 			cmd.slug = 'test-slug';
 
 			await cmd.runSearchReplace();
-			expect( replace ).toHaveBeenCalledWith( mockReadStream, [
+			expect( replace ).toHaveBeenCalledWith( expect.any( Object ), [
 				'test.go-vip.com',
 				'test-slug.vipdev.lndo.site',
 			] );
+		} );
+
+		it( 'should run search-replace operation on the mydumper file', async () => {
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			fs.copyFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.sql.gz' ),
+				cmd.gzFile
+			);
+			fs.copyFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.sql' ),
+				cmd.sqlFile
+			);
+			await cmd.initSqlDumpType();
+			cmd.searchReplaceMap = { 'test.go-vip.com': 'test-slug.vipdev.lndo.site' };
+			cmd.slug = 'test-slug';
+
+			await cmd.runSearchReplace();
+			expect( replace ).toHaveBeenCalledWith( expect.any( Object ), [
+				'test.go-vip.com',
+				'test-slug.vipdev.lndo.site',
+			] );
+
+			const fileContentExpected = fs.readFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.expected.sql' ),
+				'utf8'
+			);
+			const fileContent = fs.readFileSync( cmd.sqlFile, 'utf8' );
+
+			expect( fileContent ).toBe( fileContentExpected );
 		} );
 	} );
 
@@ -159,6 +147,14 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		const importSpy = jest.spyOn( syncCommand, 'runImport' );
 
 		beforeAll( () => {
+			fs.copyFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
+				syncCommand.gzFile
+			);
+			fs.copyFileSync(
+				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql' ),
+				syncCommand.sqlFile
+			);
 			exportSpy.mockResolvedValue();
 			searchReplaceSpy.mockResolvedValue();
 			importSpy.mockResolvedValue();
@@ -174,7 +170,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			await syncCommand.run();
 
 			expect( exportSpy ).toHaveBeenCalled();
-			expect( unzipFile ).toHaveBeenCalled();
+			expect( clientFileUploader.unzipFile ).toHaveBeenCalled();
 			expect( generateSearchReplaceMapSpy ).toHaveBeenCalled();
 			expect( searchReplaceSpy ).toHaveBeenCalled();
 			expect( importSpy ).toHaveBeenCalled();

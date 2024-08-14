@@ -4,15 +4,17 @@ import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
 import fs from 'fs';
 import Lando from 'lando';
+import { pipeline } from 'node:stream/promises';
 import urlLib from 'url';
 
-import { DevEnvImportSQLCommand } from './dev-env-import-sql';
+import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
 import { App, AppEnvironment, Job } from '../graphqlTypes';
 import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
+import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -23,7 +25,7 @@ import { getReadInterface } from '../lib/validations/line-by-line';
  * @return Site home url. null if not found
  */
 function findSiteHomeUrl( sql: string ): string | null {
-	const regex = "'(siteurl|home)',\\s?'(.*?)'";
+	const regex = `['"](siteurl|home)['"],\\s?['"](.*?)['"]`;
 	const url = sql.match( regex )?.[ 2 ] || '';
 
 	return urlLib.parse( url ).hostname || null;
@@ -61,7 +63,8 @@ export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
 	public searchReplaceMap: Record< string, string > = {};
-	public track: TrackFunction;
+	public _track: TrackFunction;
+	private _sqlDumpType?: SqlDumpType;
 
 	/**
 	 * Creates a new instance of the command
@@ -79,20 +82,40 @@ export class DevEnvSyncSQLCommand {
 		public lando: Lando,
 		trackerFn: TrackFunction = () => {}
 	) {
-		this.track = trackerFn;
+		this._track = trackerFn;
 		this.tmpDir = makeTempDir();
+	}
+
+	public track( name: string, eventProps: Record< string, unknown > ) {
+		return this._track( name, {
+			...eventProps,
+			sqldump_type: this._sqlDumpType,
+		} );
 	}
 
 	private get landoDomain(): string {
 		return `${ this.slug }.${ this.lando.config.domain }`;
 	}
 
-	private get sqlFile(): string {
+	public get sqlFile(): string {
 		return `${ this.tmpDir }/sql-export.sql`;
 	}
 
-	private get gzFile(): string {
+	public get gzFile(): string {
 		return `${ this.tmpDir }/sql-export.sql.gz`;
+	}
+
+	private getSqlDumpType(): SqlDumpType {
+		if ( ! this._sqlDumpType ) {
+			throw new Error( 'SQL Dump type not initialized' );
+		}
+
+		return this._sqlDumpType;
+	}
+
+	public async initSqlDumpType(): Promise< void > {
+		const dumpDetails = await getSqlDumpDetails( this.sqlFile );
+		this._sqlDumpType = dumpDetails.type;
 	}
 
 	private async confirmEnoughStorage( job: Job ) {
@@ -109,7 +132,7 @@ export class DevEnvSyncSQLCommand {
 			this.app,
 			this.env,
 			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
-			this.track
+			this.track.bind( this )
 		);
 		await exportCommand.run();
 	}
@@ -127,15 +150,18 @@ export class DevEnvSyncSQLCommand {
 		const replacedStream = await replace( readStream, replacements );
 
 		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
-		replacedStream.pipe( fs.createWriteStream( outputFile ) );
+		const streams: ( NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream )[] = [
+			replacedStream,
+		];
+		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
+			streams.push( fixMyDumperTransform() );
+		}
 
-		return new Promise( ( resolve, reject ) => {
-			replacedStream.on( 'finish', () => {
-				fs.renameSync( outputFile, this.sqlFile );
-				resolve();
-			} );
-			replacedStream.on( 'error', reject );
-		} );
+		streams.push( fs.createWriteStream( outputFile ) );
+
+		await pipeline( streams );
+
+		fs.renameSync( outputFile, this.sqlFile );
 	}
 
 	public generateSearchReplaceMap(): void {
@@ -178,7 +204,7 @@ export class DevEnvSyncSQLCommand {
 	 * @throws {Error} If there is an error importing the file
 	 */
 	public async runImport(): Promise< void > {
-		const importOptions = {
+		const importOptions: DevEnvImportSQLOptions = {
 			inPlace: true,
 			skipValidate: true,
 			quiet: true,
@@ -212,6 +238,7 @@ export class DevEnvSyncSQLCommand {
 		try {
 			console.log( `Extracting the exported file ${ this.gzFile }...` );
 			await unzipFile( this.gzFile, this.sqlFile );
+			await this.initSqlDumpType();
 			console.log( `${ chalk.green( '✓' ) } Extracted to ${ this.sqlFile }` );
 		} catch ( err ) {
 			const error = err as Error;
@@ -261,7 +288,6 @@ export class DevEnvSyncSQLCommand {
 			console.log( 'Importing the SQL file...' );
 			await this.runImport();
 			console.log( `${ chalk.green( '✓' ) } SQL file imported` );
-			return true;
 		} catch ( err ) {
 			const error = err as Error;
 			await this.track( 'error', {
@@ -271,5 +297,7 @@ export class DevEnvSyncSQLCommand {
 			} );
 			exit.withError( `Error importing SQL file: ${ error.message }` );
 		}
+
+		return true;
 	}
 }
