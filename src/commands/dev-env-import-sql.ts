@@ -16,6 +16,7 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import {
 	addAdminUser,
+	dataCleanup,
 	flushCache,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
@@ -134,6 +135,7 @@ export class DevEnvImportSQLCommand {
 		}
 
 		await addAdminUser( lando, this.slug );
+		await dataCleanup( lando, this.slug, this.options.quiet );
 	}
 
 	public getImportArgs( dumpDetails: SqlDumpDetails ) {
