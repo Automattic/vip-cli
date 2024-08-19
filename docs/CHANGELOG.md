@@ -1,45 +1,52 @@
 ## Changelog
 
+## 3.8.1
+
+* fix(dev-env): clean up data after `vip dev-env sync sql`
+* security: fix high severity CVE-2024-39338 in `axios`
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.0...3.8.1
+
 ## 3.8.0
 
-* build(deps-dev): bump @babel/preset-env from 7.24.8 to 7.25.0 in the babel group by @dependabot in https://github.com/Automattic/vip-cli/pull/1971
-* build(deps): bump debug from 4.3.5 to 4.3.6 by @dependabot in https://github.com/Automattic/vip-cli/pull/1973
-* SQL Import: Switch to wpSitesSDS query by @mjangda in https://github.com/Automattic/vip-cli/pull/1975
-* Extract many import-sql functionality to a separate file by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1979
-* build(deps-dev): bump the babel group across 1 directory with 2 updates by @dependabot in https://github.com/Automattic/vip-cli/pull/1977
-* build(deps): bump adm-zip from 0.5.14 to 0.5.15 by @dependabot in https://github.com/Automattic/vip-cli/pull/1981
-* build(deps): bump step-security/harden-runner from 2.9.0 to 2.9.1 by @dependabot in https://github.com/Automattic/vip-cli/pull/1983
-* BB8-11630: Add confirmation for production env vars setting/deleting by @rebeccahum in https://github.com/Automattic/vip-cli/pull/1985
-* Remove querying `fileErrors` in Graphql API while fetching Media import status by @aagam-shah in https://github.com/Automattic/vip-cli/pull/1986
-* Mydumper integration by @abdullah-kasim in https://github.com/Automattic/vip-cli/pull/1962
+* build(deps-dev): bump @babel/preset-env from 7.24.8 to 7.25.0 in the babel group
+* build(deps): bump debug from 4.3.5 to 4.3.6
+* SQL Import: Switch to wpSitesSDS query
+* Extract many import-sql functionality to a separate file
+* build(deps-dev): bump the babel group across 1 directory with 2 updates
+* build(deps): bump adm-zip from 0.5.14 to 0.5.15
+* build(deps): bump step-security/harden-runner from 2.9.0 to 2.9.1
+* BB8-11630: Add confirmation for production env vars setting/deleting
+* Remove querying `fileErrors` in Graphql API while fetching Media import status
+* Mydumper integration
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.1...3.8.0
 
 ## 3.7.1
 
-* build(deps): bump step-security/harden-runner from 2.8.1 to 2.9.0 by @dependabot in #1950
-* build(deps): bump semver from 7.6.2 to 7.6.3 by @dependabot in #1946
-* build(deps-dev): bump @types/node from 18.19.39 to 18.19.41 by @dependabot in #1951
-* refactor(dev-env): do not load SSH keys by @sjinks in #1934
-* build(deps): bump tar from 7.4.0 to 7.4.1 by @dependabot in #1952
-* build(deps-dev): bump typescript from 5.5.3 to 5.5.4 by @dependabot in #1954
-* build(deps-dev): bump @types/node from 18.19.41 to 18.19.42 by @dependabot in #1956
-* Refactor dev-env sync, dev-env import and export-sql to TypeScript by @abdullah-kasim in #1955
-* build(deps): bump tar from 7.4.1 to 7.4.3 by @dependabot in #1963
-* build(deps-dev): bump @types/dockerode from 3.3.30 to 3.3.31 by @dependabot in #1960
-* Gracefully fail when directory is not detected by @ariskataoka in #1947
+* build(deps): bump step-security/harden-runner from 2.8.1 to 2.9.0
+* build(deps): bump semver from 7.6.2 to 7.6.3
+* build(deps-dev): bump @types/node from 18.19.39 to 18.19.41
+* refactor(dev-env): do not load SSH keys
+* build(deps): bump tar from 7.4.0 to 7.4.1
+* build(deps-dev): bump typescript from 5.5.3 to 5.5.4
+* build(deps-dev): bump @types/node from 18.19.41 to 18.19.42
+* Refactor dev-env sync, dev-env import and export-sql to TypeScript
+* build(deps): bump tar from 7.4.1 to 7.4.3
+* build(deps-dev): bump @types/dockerode from 3.3.30 to 3.3.31
+* Gracefully fail when directory is not detected
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.0...3.7.1
 
 ## 3.7.0
 
-* build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.12.0 to 0.13.0 by @dependabot in #1932
-* build(deps-dev): bump the babel group with 3 updates by @dependabot in #1936
-* build(deps): bump update-notifier from 7.0.0 to 7.1.0 by @dependabot in #1937
-* build(deps): bump actions/dependency-review-action from 4.3.3 to 4.3.4 by @dependabot in #1938
-* build(deps-dev): bump @babel/core from 7.24.8 to 7.24.9 in the babel group by @dependabot in #1939
-* build(deps-dev): bump @types/dockerode from 3.3.29 to 3.3.30 by @dependabot in #1941
-* update: media import validate-files by @ariskataoka in #1919
+* build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.12.0 to 0.13.0
+* build(deps-dev): bump the babel group with 3 updates
+* build(deps): bump update-notifier from 7.0.0 to 7.1.0
+* build(deps): bump actions/dependency-review-action from 4.3.3 to 4.3.4
+* build(deps-dev): bump @babel/core from 7.24.8 to 7.24.9 in the babel group
+* build(deps-dev): bump @types/dockerode from 3.3.29 to 3.3.30
+* update: media import validate-files
   
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.6.0...3.7.0
 
