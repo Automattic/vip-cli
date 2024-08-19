@@ -184,6 +184,9 @@
     "@postman/node-keytar": "~7.9.3"
   },
   "overrides": {
+    "node-fetch@^2.6.1": {
+      "whatwg-url": "^14.0.0"
+    },
     "@lando/compose": {
       "js-yaml": "^4.1.0"
     },
