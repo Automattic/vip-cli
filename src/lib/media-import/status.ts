@@ -55,6 +55,7 @@ export interface MediaImportCheckStatusInput {
 	env: AppEnvironment;
 	progressTracker: MediaImportProgressTracker;
 	exportFileErrorsToJson: boolean;
+	saveErrorLog: boolean;
 }
 
 async function getStatus(
@@ -159,6 +160,7 @@ export async function mediaImportCheckStatus( {
 	env,
 	progressTracker,
 	exportFileErrorsToJson,
+	saveErrorLog,
 }: MediaImportCheckStatusInput ) {
 	// Stop printing so we can pass our callback
 	progressTracker.stopPrinting();
@@ -306,12 +308,16 @@ Downloading errors details from ${ fileErrorsUrl }
 	}
 
 	async function promptFailureDetailsDownload( fileErrorsUrl: string ) {
-		const failureDetails = await prompt( {
-			type: 'confirm',
-			name: 'download',
-			message:
-				'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
-		} );
+		const failureDetails = ! saveErrorLog
+			? await prompt( {
+					type: 'confirm',
+					name: 'download',
+					message:
+						'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
+			  } )
+			: {
+					download: true,
+			  };
 
 		if ( ! failureDetails.download ) {
 			progressTracker.suffix += `${ chalk.yellow(

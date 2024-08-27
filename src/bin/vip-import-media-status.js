@@ -34,7 +34,12 @@ command( {
 		'Export any file errors encountered to a JSON file instead of a plain text file',
 		false
 	)
-	.argv( process.argv, async ( arg, { app, env, exportFileErrorsToJson } ) => {
+	.option(
+		'saveErrorLog',
+		'If errors were encountered, save the error log file without prompting',
+		false
+	)
+	.argv( process.argv, async ( arg, { app, env, exportFileErrorsToJson, saveErrorLog } ) => {
 		const { id: envId, appId } = env;
 		const track = trackEventWithEnv.bind( null, appId, envId );
 
@@ -53,5 +58,11 @@ command( {
 Checking the Media import status for your environment...
 `;
 
-		await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
+		await mediaImportCheckStatus( {
+			app,
+			env,
+			progressTracker,
+			exportFileErrorsToJson,
+			saveErrorLog,
+		} );
 	} );

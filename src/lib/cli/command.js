@@ -475,6 +475,15 @@ args.argv = async function ( argv, cb ) {
 					key: 'Export any file errors encountered to a JSON file instead of a plain text file.',
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
 				} );
+
+				options.saveErrorLog =
+					Object.hasOwn( options, 'saveErrorLog' ) &&
+					Boolean( options.saveErrorLog ) &&
+					! [ 'false', 'no' ].includes( options.saveErrorLog );
+				info.push( {
+					key: 'If errors were encountered, save the error log file without prompting.',
+					value: options.saveErrorLog ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+				} );
 				break;
 			default:
 		}
