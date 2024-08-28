@@ -32,7 +32,7 @@
         "ini": "4.1.3",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli.git#77dad3a",
+        "lando": "github:automattic/lando-cli.git#3ecb5d6",
         "node-fetch": "^2.6.1",
         "open": "^10.0.0",
         "proxy-from-env": "^1.1.0",
@@ -2494,14 +2494,6 @@
         "node": ">=18.0.0"
       }
     },
-    "node_modules/@isaacs/fs-minipass/node_modules/minipass": {
-      "version": "7.1.2",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
-      "engines": {
-        "node": ">=16 || 14 >=14.17"
-      }
-    },
     "node_modules/@istanbuljs/load-nyc-config": {
       "version": "1.1.0",
       "resolved": "https://registry.npmjs.org/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz",
@@ -3066,102 +3058,6 @@
       "version": "4.17.21",
       "inBundle": true,
       "license": "MIT"
-    },
-    "node_modules/@lando/mailhog": {
-      "version": "0.8.0",
-      "resolved": "https://registry.npmjs.org/@lando/mailhog/-/mailhog-0.8.0.tgz",
-      "integrity": "sha512-BLa/3l1z+6eW865nnGStV0KeG7rF0H5TT6uAIaYh9kOn8vS1UqKUifVsW5tpl54C6goYH+HqGH45aQzeM5Xxgw==",
-      "bundleDependencies": [
-        "lodash"
-      ],
-      "dependencies": {
-        "lodash": "^4.17.21"
-      },
-      "engines": {
-        "node": ">=16.0.0"
-      }
-    },
-    "node_modules/@lando/mailhog/node_modules/lodash": {
-      "version": "4.17.21",
-      "inBundle": true,
-      "license": "MIT"
-    },
-    "node_modules/@lando/phpmyadmin": {
-      "version": "0.5.0",
-      "resolved": "https://registry.npmjs.org/@lando/phpmyadmin/-/phpmyadmin-0.5.0.tgz",
-      "integrity": "sha512-u9Yz1HacMR6Hfxf6MAk5FGfvCDtY2coHaVgQ9h/JW8dbJd4Y+Evumi8FKwUlMRpkH1MB+dxaVkl/VJoozgM33g==",
-      "dependencies": {
-        "js-yaml": "^3.4.6",
-        "lodash": "^4.17.21",
-        "semver": "^7.3.2",
-        "tar": "^6.1.11"
-      },
-      "engines": {
-        "node": ">=14.0.0"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/chownr": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/chownr/-/chownr-2.0.0.tgz",
-      "integrity": "sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==",
-      "engines": {
-        "node": ">=10"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/minizlib": {
-      "version": "2.1.2",
-      "resolved": "https://registry.npmjs.org/minizlib/-/minizlib-2.1.2.tgz",
-      "integrity": "sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==",
-      "dependencies": {
-        "minipass": "^3.0.0",
-        "yallist": "^4.0.0"
-      },
-      "engines": {
-        "node": ">= 8"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/minizlib/node_modules/minipass": {
-      "version": "3.3.6",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-      "integrity": "sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==",
-      "dependencies": {
-        "yallist": "^4.0.0"
-      },
-      "engines": {
-        "node": ">=8"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/mkdirp": {
-      "version": "1.0.4",
-      "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz",
-      "integrity": "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==",
-      "bin": {
-        "mkdirp": "bin/cmd.js"
-      },
-      "engines": {
-        "node": ">=10"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/tar": {
-      "version": "6.2.1",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-6.2.1.tgz",
-      "integrity": "sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==",
-      "dependencies": {
-        "chownr": "^2.0.0",
-        "fs-minipass": "^2.0.0",
-        "minipass": "^5.0.0",
-        "minizlib": "^2.1.1",
-        "mkdirp": "^1.0.3",
-        "yallist": "^4.0.0"
-      },
-      "engines": {
-        "node": ">=10"
-      }
-    },
-    "node_modules/@lando/phpmyadmin/node_modules/yallist": {
-      "version": "4.0.0",
-      "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-      "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
     },
     "node_modules/@nicolo-ribaudo/chokidar-2": {
       "version": "2.1.8-no-fsevents.3",
@@ -7455,33 +7351,6 @@
       "resolved": "https://registry.npmjs.org/fs-constants/-/fs-constants-1.0.0.tgz",
       "integrity": "sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow=="
     },
-    "node_modules/fs-minipass": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/fs-minipass/-/fs-minipass-2.1.0.tgz",
-      "integrity": "sha512-V/JgOLFCS+R6Vcq0slCuaeWEdNC3ouDlJMNIsacH2VtALiu9mV4LPrHc5cDl8k5aw6J8jwgWWpiTo5RYhmIzvg==",
-      "dependencies": {
-        "minipass": "^3.0.0"
-      },
-      "engines": {
-        "node": ">= 8"
-      }
-    },
-    "node_modules/fs-minipass/node_modules/minipass": {
-      "version": "3.3.6",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-      "integrity": "sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==",
-      "dependencies": {
-        "yallist": "^4.0.0"
-      },
-      "engines": {
-        "node": ">=8"
-      }
-    },
-    "node_modules/fs-minipass/node_modules/yallist": {
-      "version": "4.0.0",
-      "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-      "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
-    },
     "node_modules/fs-readdir-recursive": {
       "version": "1.1.0",
       "resolved": "https://registry.npmjs.org/fs-readdir-recursive/-/fs-readdir-recursive-1.1.0.tgz",
@@ -9820,12 +9689,10 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#77dad3a68e4765b9732d33fa9089a9a754f9eb12",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#3ecb5d63ebd6d01a3ce64fa5a8396459b9f200cf",
       "license": "GPL-3.0",
       "dependencies": {
         "@lando/compose": "1.0.0",
-        "@lando/mailhog": "0.8.0",
-        "@lando/phpmyadmin": "0.5.0",
         "axios": "^1.7.2",
         "bluebird": "^3.4.1",
         "cli-table3": "^0.6.5",
@@ -9844,7 +9711,7 @@
         "string-argv": "0.1.1",
         "through": "^2.3.8",
         "transliteration": "^2.3.5",
-        "uuid": "^9.0.0",
+        "uuid": "^10.0.0",
         "valid-url": "^1.0.9",
         "winston": "2.4.5",
         "yargonaut": "^1.1.4",
@@ -9901,18 +9768,6 @@
       },
       "engines": {
         "node": ">=8"
-      }
-    },
-    "node_modules/lando/node_modules/uuid": {
-      "version": "9.0.1",
-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
-      "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==",
-      "funding": [
-        "https://github.com/sponsors/broofa",
-        "https://github.com/sponsors/ctavan"
-      ],
-      "bin": {
-        "uuid": "dist/bin/uuid"
       }
     },
     "node_modules/lando/node_modules/yargs": {
@@ -10205,11 +10060,12 @@
       }
     },
     "node_modules/minipass": {
-      "version": "5.0.0",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-5.0.0.tgz",
-      "integrity": "sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==",
+      "version": "7.1.2",
+      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
+      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
+      "license": "ISC",
       "engines": {
-        "node": ">=8"
+        "node": ">=16 || 14 >=14.17"
       }
     },
     "node_modules/minizlib": {
@@ -10222,14 +10078,6 @@
       },
       "engines": {
         "node": ">= 18"
-      }
-    },
-    "node_modules/minizlib/node_modules/minipass": {
-      "version": "7.1.2",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
-      "engines": {
-        "node": ">=16 || 14 >=14.17"
       }
     },
     "node_modules/mkdir-p": {
@@ -11390,15 +11238,6 @@
         "url": "https://github.com/sponsors/isaacs"
       }
     },
-    "node_modules/rimraf/node_modules/minipass": {
-      "version": "7.1.2",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
-      "license": "ISC",
-      "engines": {
-        "node": ">=16 || 14 >=14.17"
-      }
-    },
     "node_modules/run-applescript": {
       "version": "7.0.0",
       "resolved": "https://registry.npmjs.org/run-applescript/-/run-applescript-7.0.0.tgz",
@@ -12181,14 +12020,6 @@
       "integrity": "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==",
       "engines": {
         "node": ">=18"
-      }
-    },
-    "node_modules/tar/node_modules/minipass": {
-      "version": "7.1.2",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
-      "engines": {
-        "node": ">=16 || 14 >=14.17"
       }
     },
     "node_modules/test-exclude": {
@@ -15139,13 +14970,6 @@
       "integrity": "sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==",
       "requires": {
         "minipass": "^7.0.4"
-      },
-      "dependencies": {
-        "minipass": {
-          "version": "7.1.2",
-          "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-          "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw=="
-        }
       }
     },
     "@istanbuljs/load-nyc-config": {
@@ -15591,80 +15415,6 @@
         "lodash": {
           "version": "4.17.21",
           "bundled": true
-        }
-      }
-    },
-    "@lando/mailhog": {
-      "version": "0.8.0",
-      "resolved": "https://registry.npmjs.org/@lando/mailhog/-/mailhog-0.8.0.tgz",
-      "integrity": "sha512-BLa/3l1z+6eW865nnGStV0KeG7rF0H5TT6uAIaYh9kOn8vS1UqKUifVsW5tpl54C6goYH+HqGH45aQzeM5Xxgw==",
-      "requires": {
-        "lodash": "^4.17.21"
-      },
-      "dependencies": {
-        "lodash": {
-          "version": "4.17.21",
-          "bundled": true
-        }
-      }
-    },
-    "@lando/phpmyadmin": {
-      "version": "0.5.0",
-      "resolved": "https://registry.npmjs.org/@lando/phpmyadmin/-/phpmyadmin-0.5.0.tgz",
-      "integrity": "sha512-u9Yz1HacMR6Hfxf6MAk5FGfvCDtY2coHaVgQ9h/JW8dbJd4Y+Evumi8FKwUlMRpkH1MB+dxaVkl/VJoozgM33g==",
-      "requires": {
-        "js-yaml": "^4.1.0",
-        "lodash": "^4.17.21",
-        "semver": "^7.3.2",
-        "tar": "^6.1.11"
-      },
-      "dependencies": {
-        "chownr": {
-          "version": "2.0.0",
-          "resolved": "https://registry.npmjs.org/chownr/-/chownr-2.0.0.tgz",
-          "integrity": "sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ=="
-        },
-        "minizlib": {
-          "version": "2.1.2",
-          "resolved": "https://registry.npmjs.org/minizlib/-/minizlib-2.1.2.tgz",
-          "integrity": "sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==",
-          "requires": {
-            "minipass": "^3.0.0",
-            "yallist": "^4.0.0"
-          },
-          "dependencies": {
-            "minipass": {
-              "version": "3.3.6",
-              "resolved": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-              "integrity": "sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==",
-              "requires": {
-                "yallist": "^4.0.0"
-              }
-            }
-          }
-        },
-        "mkdirp": {
-          "version": "1.0.4",
-          "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz",
-          "integrity": "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw=="
-        },
-        "tar": {
-          "version": "6.2.1",
-          "resolved": "https://registry.npmjs.org/tar/-/tar-6.2.1.tgz",
-          "integrity": "sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==",
-          "requires": {
-            "chownr": "^2.0.0",
-            "fs-minipass": "^2.0.0",
-            "minipass": "^5.0.0",
-            "minizlib": "^2.1.1",
-            "mkdirp": "^1.0.3",
-            "yallist": "^4.0.0"
-          }
-        },
-        "yallist": {
-          "version": "4.0.0",
-          "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-          "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
         }
       }
     },
@@ -18877,29 +18627,6 @@
       "resolved": "https://registry.npmjs.org/fs-constants/-/fs-constants-1.0.0.tgz",
       "integrity": "sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow=="
     },
-    "fs-minipass": {
-      "version": "2.1.0",
-      "resolved": "https://registry.npmjs.org/fs-minipass/-/fs-minipass-2.1.0.tgz",
-      "integrity": "sha512-V/JgOLFCS+R6Vcq0slCuaeWEdNC3ouDlJMNIsacH2VtALiu9mV4LPrHc5cDl8k5aw6J8jwgWWpiTo5RYhmIzvg==",
-      "requires": {
-        "minipass": "^3.0.0"
-      },
-      "dependencies": {
-        "minipass": {
-          "version": "3.3.6",
-          "resolved": "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz",
-          "integrity": "sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==",
-          "requires": {
-            "yallist": "^4.0.0"
-          }
-        },
-        "yallist": {
-          "version": "4.0.0",
-          "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-          "integrity": "sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A=="
-        }
-      }
-    },
     "fs-readdir-recursive": {
       "version": "1.1.0",
       "resolved": "https://registry.npmjs.org/fs-readdir-recursive/-/fs-readdir-recursive-1.1.0.tgz",
@@ -20562,12 +20289,10 @@
       "integrity": "sha512-tPhhoGUiEiU/WXR4rt8klIoLdnTtyu+9jVKHd/wauEjYud32jyn63mzKWQweaQrHWxBQtYoVtdcEnYX1LosnFQ=="
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#77dad3a68e4765b9732d33fa9089a9a754f9eb12",
-      "from": "lando@github:automattic/lando-cli.git#77dad3a",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#3ecb5d63ebd6d01a3ce64fa5a8396459b9f200cf",
+      "from": "lando@github:automattic/lando-cli.git#3ecb5d6",
       "requires": {
         "@lando/compose": "1.0.0",
-        "@lando/mailhog": "0.8.0",
-        "@lando/phpmyadmin": "0.5.0",
         "axios": "^1.7.2",
         "bluebird": "^3.4.1",
         "cli-table3": "^0.6.5",
@@ -20586,7 +20311,7 @@
         "string-argv": "0.1.1",
         "through": "^2.3.8",
         "transliteration": "^2.3.5",
-        "uuid": "^9.0.0",
+        "uuid": "^10.0.0",
         "valid-url": "^1.0.9",
         "winston": "2.4.5",
         "yargonaut": "^1.1.4",
@@ -20625,11 +20350,6 @@
           "requires": {
             "ansi-regex": "^5.0.1"
           }
-        },
-        "uuid": {
-          "version": "9.0.1",
-          "resolved": "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz",
-          "integrity": "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="
         },
         "yargs": {
           "version": "16.2.0",
@@ -20875,9 +20595,9 @@
       "integrity": "sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g=="
     },
     "minipass": {
-      "version": "5.0.0",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-5.0.0.tgz",
-      "integrity": "sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ=="
+      "version": "7.1.2",
+      "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
+      "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw=="
     },
     "minizlib": {
       "version": "3.0.1",
@@ -20886,13 +20606,6 @@
       "requires": {
         "minipass": "^7.0.4",
         "rimraf": "^5.0.5"
-      },
-      "dependencies": {
-        "minipass": {
-          "version": "7.1.2",
-          "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-          "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw=="
-        }
       }
     },
     "mkdir-p": {
@@ -21718,11 +21431,6 @@
           "requires": {
             "brace-expansion": "^2.0.1"
           }
-        },
-        "minipass": {
-          "version": "7.1.2",
-          "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-          "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw=="
         }
       }
     },
@@ -22265,11 +21973,6 @@
           "version": "3.0.0",
           "resolved": "https://registry.npmjs.org/chownr/-/chownr-3.0.0.tgz",
           "integrity": "sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g=="
-        },
-        "minipass": {
-          "version": "7.1.2",
-          "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
-          "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw=="
         }
       }
     },
