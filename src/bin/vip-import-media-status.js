@@ -36,7 +36,7 @@ command( {
 	)
 	.option(
 		'saveErrorLog',
-		'If errors were encountered, save the error log file without prompting',
+		'Download file-error logs without prompting',
 		false
 	)
 	.argv( process.argv, async ( arg, { app, env, exportFileErrorsToJson, saveErrorLog } ) => {
