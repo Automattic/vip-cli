@@ -343,7 +343,7 @@ Downloading errors details from ${ fileErrorsUrl }
 	function printFileErrorsReportLinkExpiredError( results: AppEnvironmentMediaImportStatus ) {
 		if (
 			results.filesTotal &&
-			results.filesProcessed &&
+			typeof results.filesProcessed === 'number' &&
 			results.filesTotal !== results.filesProcessed
 		) {
 			const errorsFound = results.filesTotal - results.filesProcessed;
