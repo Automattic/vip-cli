@@ -349,6 +349,19 @@ args.argv = async function ( argv, cb ) {
 		}
 	}
 
+	// Negotiate flag values
+	switch ( _opts.module ) {
+		case 'import-media':
+			if ( [ true, 'true', 'yes' ].includes( options.saveErrorLog ) ) {
+				options.saveErrorLog = 'true';
+			} else if ( [ false, 'false', 'no' ].includes( options.saveErrorLog ) ) {
+				options.saveErrorLog = 'false';
+			} else {
+				options.saveErrorLog = 'prompt';
+			}
+			break;
+	}
+
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
 		/** @type {Tuple[]} */
