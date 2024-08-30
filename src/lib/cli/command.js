@@ -476,14 +476,6 @@ args.argv = async function ( argv, cb ) {
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
 				} );
 
-				if ( Object.hasOwn( options, 'saveErrorLog' ) && 'prompt' !== options.saveErrorLog ) {
-					options.saveErrorLog =
-						Boolean( options.saveErrorLog ) && ! [ 'false', 'no' ].includes( options.saveErrorLog )
-							? 'true'
-							: 'false';
-				} else {
-					options.saveErrorLog = 'prompt';
-				}
 				info.push( {
 					key: 'Download file-error logs?',
 					value: options.saveErrorLog,

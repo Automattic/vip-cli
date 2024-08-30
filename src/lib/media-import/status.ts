@@ -317,7 +317,7 @@ Downloading errors details from ${ fileErrorsUrl }
 							'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
 				  } )
 				: {
-						download: 'true' === saveErrorLog,
+						download: [ 'true', 'yes' ].includes( saveErrorLog ),
 				  };
 
 		if ( ! failureDetails.download ) {
