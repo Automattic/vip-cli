@@ -476,13 +476,17 @@ args.argv = async function ( argv, cb ) {
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
 				} );
 
-				options.saveErrorLog =
-					Object.hasOwn( options, 'saveErrorLog' ) &&
-					Boolean( options.saveErrorLog ) &&
-					! [ 'false', 'no' ].includes( options.saveErrorLog );
+				if ( Object.hasOwn( options, 'saveErrorLog' ) && 'prompt' !== options.saveErrorLog ) {
+					options.saveErrorLog =
+						Boolean( options.saveErrorLog ) && ! [ 'false', 'no' ].includes( options.saveErrorLog )
+							? 'true'
+							: 'false';
+				} else {
+					options.saveErrorLog = 'prompt';
+				}
 				info.push( {
-					key: 'If errors were encountered, save the error log file without prompting.',
-					value: options.saveErrorLog ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+					key: 'Download file-error logs?',
+					value: options.saveErrorLog,
 				} );
 				break;
 			default:

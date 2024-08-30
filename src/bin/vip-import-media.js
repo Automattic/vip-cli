@@ -98,11 +98,7 @@ Are you sure you want to import the contents of the url?
 		'Export any file errors encountered to a JSON file instead of a plain text file',
 		false
 	)
-	.option(
-		'saveErrorLog',
-		'Download file-error logs without prompting',
-		false
-	)
+	.option( 'saveErrorLog', 'Download file-error logs without prompting', 'prompt' )
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
