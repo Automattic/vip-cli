@@ -55,6 +55,7 @@ export interface MediaImportCheckStatusInput {
 	env: AppEnvironment;
 	progressTracker: MediaImportProgressTracker;
 	exportFileErrorsToJson: boolean;
+	force?: boolean;
 }
 
 async function getStatus(
@@ -159,6 +160,7 @@ export async function mediaImportCheckStatus( {
 	env,
 	progressTracker,
 	exportFileErrorsToJson,
+	force,
 }: MediaImportCheckStatusInput ) {
 	// Stop printing so we can pass our callback
 	progressTracker.stopPrinting();
@@ -306,28 +308,30 @@ Downloading errors details from ${ fileErrorsUrl }
 	}
 
 	async function promptFailureDetailsDownload( fileErrorsUrl: string ) {
-		const failureDetails = await prompt( {
-			type: 'confirm',
-			name: 'download',
-			message:
-				'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
-		} );
+		if ( ! force ) {
+			const failureDetails = await prompt( {
+				type: 'confirm',
+				name: 'download',
+				message:
+					'Download import errors report now? (Report will be downloadable for up to 7 days from the completion of the import)',
+			} );
 
-		if ( ! failureDetails.download ) {
-			progressTracker.suffix += `${ chalk.yellow(
-				`⚠️  An error report file has been generated for this media import. Access it within the next 15 minutes by clicking on the URL below.`
-			) }`;
-			progressTracker.suffix += `\n${ chalk.yellow(
-				`Or, generate a new URL by running the ${ chalk.bgYellow(
-					'vip import media status'
-				) } command.`
-			) } `;
-			progressTracker.suffix += `\n${ chalk.yellow(
-				'The report will be downloadable for up to 7 days after the completion of the import or until a new media import is performed.'
-			) }`;
-			progressTracker.suffix += `\n\n${ chalk.underline( fileErrorsUrl ) }\n`;
-			progressTracker.print( { clearAfter: true } );
-			return;
+			if ( ! failureDetails.download ) {
+				progressTracker.suffix += `${ chalk.yellow(
+					`⚠️  An error report file has been generated for this media import. Access it within the next 15 minutes by clicking on the URL below.`
+				) }`;
+				progressTracker.suffix += `\n${ chalk.yellow(
+					`Or, generate a new URL by running the ${ chalk.bgYellow(
+						'vip import media status'
+					) } command.`
+				) } `;
+				progressTracker.suffix += `\n${ chalk.yellow(
+					'The report will be downloadable for up to 7 days after the completion of the import or until a new media import is performed.'
+				) }`;
+				progressTracker.suffix += `\n\n${ chalk.underline( fileErrorsUrl ) }\n`;
+				progressTracker.print( { clearAfter: true } );
+				return;
+			}
 		}
 
 		const failureDetailsErrors = await fetchFailureDetails( fileErrorsUrl );

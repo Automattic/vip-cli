@@ -102,8 +102,14 @@ Are you sure you want to import the contents of the url?
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
 	.argv( process.argv, async ( args, opts ) => {
-		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } =
-			opts;
+		const {
+			app,
+			env,
+			exportFileErrorsToJson,
+			overwriteExistingFiles,
+			importIntermediateImages,
+			force,
+		} = opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
@@ -149,7 +155,7 @@ Importing Media into your App...
 				},
 			} );
 
-			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
+			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson, force } );
 		} catch ( error ) {
 			if ( error.graphQLErrors ) {
 				for ( const err of error.graphQLErrors ) {
