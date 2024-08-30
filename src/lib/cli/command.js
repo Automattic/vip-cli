@@ -476,6 +476,8 @@ args.argv = async function ( argv, cb ) {
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
 				} );
 
+				options.saveErrorLog =
+					options.saveErrorLog === undefined ? 'prompt' : `${ options.saveErrorLog }`;
 				info.push( {
 					key: 'Download file-error logs?',
 					value: options.saveErrorLog,
