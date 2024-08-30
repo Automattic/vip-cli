@@ -100,7 +100,7 @@ Are you sure you want to import the contents of the url?
 	)
 	.option(
 		'saveErrorLog',
-		'If errors were encountered, save the error log file without prompting',
+		'Download file-error logs without prompting',
 		false
 	)
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
