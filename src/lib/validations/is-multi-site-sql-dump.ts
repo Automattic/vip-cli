@@ -1,4 +1,5 @@
-const SQL_CREATE_TABLE_IS_MULTISITE_REGEX = /^CREATE TABLE `?(wp_\d+_[a-z0-9_]*|wp_blogs)/i;
+const SQL_CREATE_TABLE_IS_MULTISITE_REGEX =
+	/^CREATE TABLE(?: IF NOT EXISTS)? `?(wp_\d+_[a-z0-9_]*|wp_blogs)/i;
 const SQL_CONTAINS_MULTISITE_WP_USERS_REGEX = /`spam` tinyint\(2\)|`deleted` tinyint\(2\)/i;
 
 export function sqlDumpLineIsMultiSite( line: string ): boolean {
