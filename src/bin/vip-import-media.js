@@ -98,18 +98,25 @@ Are you sure you want to import the contents of the url?
 		'Export any file errors encountered to a JSON file instead of a plain text file',
 		false
 	)
+	.option( 'saveErrorLog', 'Download file-error logs without prompting' )
 	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
 	.option( 'importIntermediateImages', 'Import intermediate image files', false )
 	.examples( examples )
 	.argv( process.argv, async ( args, opts ) => {
-		const { app, env, exportFileErrorsToJson, overwriteExistingFiles, importIntermediateImages } =
-			opts;
+		const {
+			app,
+			env,
+			exportFileErrorsToJson,
+			saveErrorLog,
+			overwriteExistingFiles,
+			importIntermediateImages,
+		} = opts;
 		const [ url ] = args;
 
 		if ( ! isSupportedUrl( url ) ) {
 			console.log(
 				chalk.red( `
-Error: 
+Error:
 	Invalid URL provided: ${ url }
 	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import` )
 			);
@@ -149,7 +156,13 @@ Importing Media into your App...
 				},
 			} );
 
-			await mediaImportCheckStatus( { app, env, progressTracker, exportFileErrorsToJson } );
+			await mediaImportCheckStatus( {
+				app,
+				env,
+				progressTracker,
+				exportFileErrorsToJson,
+				saveErrorLog,
+			} );
 		} catch ( error ) {
 			if ( error.graphQLErrors ) {
 				for ( const err of error.graphQLErrors ) {

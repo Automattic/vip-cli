@@ -349,6 +349,19 @@ args.argv = async function ( argv, cb ) {
 		}
 	}
 
+	// Negotiate flag values
+	switch ( _opts.module ) {
+		case 'import-media':
+			if ( [ true, 'true', 'yes' ].includes( options.saveErrorLog ) ) {
+				options.saveErrorLog = 'true';
+			} else if ( [ false, 'false', 'no' ].includes( options.saveErrorLog ) ) {
+				options.saveErrorLog = 'false';
+			} else {
+				options.saveErrorLog = 'prompt';
+			}
+			break;
+	}
+
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
 		/** @type {Tuple[]} */
@@ -474,6 +487,11 @@ args.argv = async function ( argv, cb ) {
 				info.push( {
 					key: 'Export any file errors encountered to a JSON file instead of a plain text file.',
 					value: options.exportFileErrorsToJson ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+				} );
+
+				info.push( {
+					key: 'Download file-error logs?',
+					value: options.saveErrorLog,
 				} );
 				break;
 			default:
