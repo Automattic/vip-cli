@@ -81,7 +81,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 				namespace: '@lando',
 			},
 		],
-		disablePlugins: [ '@lando/argv', '@lando/mailhog', '@lando/phpmyadmin' ],
+		disablePlugins: [],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,
 		home: fakeHomeDir,

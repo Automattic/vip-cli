@@ -95,10 +95,6 @@ async function getStatus(
 	const environment = environments[ 0 ] ?? {};
 	const { importStatus, jobs, launched } = environment;
 
-	if ( ! environment.isK8sResident && ! jobs?.length ) {
-		return {};
-	}
-
 	const [ importJob ] = jobs ?? [];
 
 	return {
@@ -271,7 +267,7 @@ ${ maybeExitPrompt }
 
 				let jobStatus;
 				let jobSteps = [];
-				if ( env.isK8sResident && ! isMissingImportJobAndShouldReturnFast ) {
+				if ( ! isMissingImportJobAndShouldReturnFast ) {
 					// in the future the API may provide this in k8s jobs so account for that.
 					// Until then we need to create the importJob from the status object.
 					if ( ! importJob ) {
