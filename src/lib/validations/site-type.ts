@@ -57,7 +57,7 @@ export const siteTypeValidations = {
 				error_type: 'subsite-import-without-subsite-sql-dump',
 			} );
 			throw new Error(
-				'You have requested a subsite SQL import but have not provided a subsite compatiable SQL dump.'
+				'You have requested a subsite SQL import but have not provided a subsite compatible SQL dump.'
 			);
 		}
 
