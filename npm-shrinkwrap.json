@@ -29,7 +29,7 @@
         "graphql": "15.5.1",
         "graphql-tag": "2.12.6",
         "https-proxy-agent": "^5.0.1",
-        "ini": "4.1.3",
+        "ini": "5.0.0",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
         "lando": "github:automattic/lando-cli.git#3ecb5d6",
@@ -7915,11 +7915,11 @@
       "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
     },
     "node_modules/ini": {
-      "version": "4.1.3",
-      "resolved": "https://registry.npmjs.org/ini/-/ini-4.1.3.tgz",
-      "integrity": "sha512-X7rqawQBvfdjS10YU1y1YVreA3SsLrW9dX2CewP2EbBJM4ypVNLDkO5y04gejPwKIY9lR+7r9gn3rFPt/kmWFg==",
+      "version": "5.0.0",
+      "resolved": "https://registry.npmjs.org/ini/-/ini-5.0.0.tgz",
+      "integrity": "sha512-+N0ngpO3e7cRUWOJAS7qw0IZIVc6XPrW4MlFBdD066F2L4k1L6ker3hLqSq7iXxU5tgS4WGkIUElWn5vogAEnw==",
       "engines": {
-        "node": "^14.17.0 || ^16.13.0 || >=18.0.0"
+        "node": "^18.17.0 || >=20.5.0"
       }
     },
     "node_modules/inquirer": {
@@ -19012,9 +19012,9 @@
       "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
     },
     "ini": {
-      "version": "4.1.3",
-      "resolved": "https://registry.npmjs.org/ini/-/ini-4.1.3.tgz",
-      "integrity": "sha512-X7rqawQBvfdjS10YU1y1YVreA3SsLrW9dX2CewP2EbBJM4ypVNLDkO5y04gejPwKIY9lR+7r9gn3rFPt/kmWFg=="
+      "version": "5.0.0",
+      "resolved": "https://registry.npmjs.org/ini/-/ini-5.0.0.tgz",
+      "integrity": "sha512-+N0ngpO3e7cRUWOJAS7qw0IZIVc6XPrW4MlFBdD066F2L4k1L6ker3hLqSq7iXxU5tgS4WGkIUElWn5vogAEnw=="
     },
     "inquirer": {
       "version": "6.5.2",
