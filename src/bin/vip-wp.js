@@ -56,8 +56,6 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 	stdoutStream.on( 'error', err => {
 		commandRunning = false;
 
-		console.log( 'ERROR 5 on bindStreamEvents' );
-
 		// TODO handle this better
 		console.error( 'Error: ' + err.message );
 	} );
@@ -88,7 +86,6 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 const getTokenForCommand = async ( appId, envId, command ) => {
 	const api = API();
 
-	console.log( 'getTokenForCommand->', command );
 	return api.mutate( {
 		mutation: gql`
 			mutation TriggerWPCLICommandMutation($input: AppEnvironmentTriggerWPCLICommandInput) {
@@ -142,7 +139,6 @@ const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 
 	} );
 
 	IOStream( socket ).on( 'error', err => {
-		console.log( 'ERROR 4 ON STREAM' );
 		// This returns the error so it can be catched by the socket.on('error')
 		return err;
 	} );
@@ -192,7 +188,6 @@ const bindReconnectEvents = ( {
 		// Rebind new streams
 		pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
-		console.log( 'before bindStreamEvents' );
 		bindStreamEvents( {
 			subShellRl,
 			isSubShell,
@@ -265,7 +260,6 @@ commandWrapper( {
 } )
 	.option( 'yes', 'Run the command in production without a confirmation prompt' )
 	.argv( process.argv, async ( args, opts ) => {
-		console.log( 'ARGS:::::: ', args );
 		const isSubShell = 0 === args.length;
 
 		// Have to re-quote anything that needs it before we pass it on
@@ -294,9 +288,7 @@ commandWrapper( {
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams ).catch( () => {} );
 
-		console.log( 'FIIIIIIIII ' );
 		if ( isSubShell ) {
-			console.log( 'RESET THE CURSOR??!?!?! ' );
 			// Reset the cursor (can get messed up with enquirer)
 			process.stdout.write( '\u001b[?25h' );
 			console.log(
@@ -305,7 +297,6 @@ commandWrapper( {
 				) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!`
 			);
 		} else if ( envName === 'production' ) {
-			console.log( 'wheres the message??!?!?! ' );
 			const yes =
 				opts.yes ||
 				( await confirm(
@@ -327,7 +318,6 @@ commandWrapper( {
 				process.exit();
 			}
 		}
-		console.log( '\n\ncontinues...' );
 
 		// We'll handle our own errors, thank you
 		disableGlobalGraphQLErrorHandling();
@@ -365,94 +355,120 @@ commandWrapper( {
 		const inputLines = []; // Buffer for multiline input
 
 		subShellRl.on( 'line', async line => {
-			// If the command is empty or an empty line is entered, process the multiline input
+			if ( commandRunning ) {
+				return;
+			}
+
+			// Check for exit, like SSH (handles both `exit` and `exit;`)
+			if ( line.trim().startsWith( 'exit' ) ) {
+				subShellRl.close();
+				process.exit();
+			}
+
+			const startsWithWp = line.startsWith( 'wp ' );
+			const empty = 0 === line.length;
+			const userCmdCancelled = line === cancelCommandChar;
+
+			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
+				console.log(
+					chalk.red( 'Error:' ),
+					'invalid command, please pass a valid WP CLI command.'
+				);
+				subShellRl.prompt();
+				return;
+			}
+
+			// Add each line to the buffer (even for single-line input)
+			inputLines.push( line );
+
+			// Check if the user has entered an empty line to process the multiline input
 			if ( line.trim() === '' ) {
 				// Join the buffered lines into a single multiline string
-				const multilineInput = inputLines.join( '\n' );
+				const multilineInput = inputLines.join( '\n' ).trim();
 				inputLines.length = 0; // Clear the buffer after processing
 
-				if ( commandRunning ) {
-					console.log( 'COMMAND RUNNING' );
+				// Skip if there's no input
+				if ( ! multilineInput ) {
+					subShellRl.prompt();
 					return;
 				}
 
-				if ( ! multilineInput.trim() ) {
-					subShellRl.prompt();
-					return; // Skip if there is no multiline input
-				}
-
 				try {
-					console.log( 'Processing multiline input: ', multilineInput );
-
-					// Send the multiline input as a command (without the 'wp ' prefix)
 					const result = await getTokenForCommand(
 						appId,
 						envId,
 						multilineInput.replace( /^wp /, '' )
 					);
-
-					const {
-						data: {
-							triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken },
-						},
-					} = result;
-
-					const token = await Token.get();
-					const extraHeaders = {
-						Authorization: `Bearer ${ token.raw }`,
-					};
-
-					const socket = SocketIO( `${ API_HOST }/wp-cli`, {
-						transportOptions: {
-							polling: {
-								extraHeaders,
-							},
-							websocket: {
-								extraHeaders,
-							},
-						},
-						agent: createProxyAgent( API_HOST ),
-					} );
-
-					currentJob = await launchCommandAndGetStreams( {
-						socket,
-						guid: cliCommand.guid,
-						inputToken,
-					} );
-
-					pipeStreamsToProcess( {
-						stdin: currentJob.stdinStream,
-						stdout: currentJob.stdoutStream,
-					} );
-
-					commandRunning = true;
-
-					bindStreamEvents( {
-						subShellRl,
-						commonTrackingParams,
-						isSubShell,
-						stdoutStream: currentJob.stdoutStream,
-					} );
-
-					bindReconnectEvents( {
-						cliCommand,
-						inputToken,
-						subShellRl,
-						commonTrackingParams,
-						isSubShell,
-					} );
 				} catch ( error ) {
-					console.error( 'Error processing multiline input:', error );
+					// If this was a GraphQL error, print that to the message to the line
+					if ( error.graphQLErrors ) {
+						error.graphQLErrors.forEach( err => {
+							console.log( chalk.red( 'Error:' ), err.message );
+						} );
+					} else {
+						// Else, other type of error, just dump it
+						console.log( error );
+					}
+
 					if ( ! isSubShell ) {
 						subShellRl.close();
 						process.exit( 1 );
 					}
+
 					subShellRl.prompt();
 					return;
 				}
-			} else {
-				// Add each line of input to the buffer
-				inputLines.push( line );
+
+				const {
+					data: {
+						triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken },
+					},
+				} = result;
+
+				const token = await Token.get();
+				const extraHeaders = {
+					Authorization: `Bearer ${ token.raw }`,
+				};
+
+				const socket = SocketIO( `${ API_HOST }/wp-cli`, {
+					transportOptions: {
+						polling: {
+							extraHeaders,
+						},
+						websocket: {
+							extraHeaders,
+						},
+					},
+					agent: createProxyAgent( API_HOST ),
+				} );
+
+				currentJob = await launchCommandAndGetStreams( {
+					socket,
+					guid: cliCommand.guid,
+					inputToken,
+				} );
+
+				pipeStreamsToProcess( {
+					stdin: currentJob.stdinStream,
+					stdout: currentJob.stdoutStream,
+				} );
+
+				commandRunning = true;
+
+				bindStreamEvents( {
+					subShellRl,
+					commonTrackingParams,
+					isSubShell,
+					stdoutStream: currentJob.stdoutStream,
+				} );
+
+				bindReconnectEvents( {
+					cliCommand,
+					inputToken,
+					subShellRl,
+					commonTrackingParams,
+					isSubShell,
+				} );
 			}
 
 			subShellRl.prompt(); // Continue prompting after handling the line
