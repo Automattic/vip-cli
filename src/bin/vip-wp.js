@@ -67,7 +67,8 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 		await trackEvent( 'wpcli_command_end', commonTrackingParams );
 
 		// Tell socket.io to stop trying to connect
-		currentJob.socket.close();
+		// here is the proble,m!!!!
+		// currentJob.socket.close();
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 		// Reset offset
@@ -352,108 +353,183 @@ commandWrapper( {
 		}
 
 		const subShellRl = readline.createInterface( subShellSettings );
+		let inputBuffer = ''; // Buffer to accumulate input for multiline commands
+
 		subShellRl.on( 'line', async line => {
-			if ( commandRunning ) {
-				return;
-			}
-
-			// Handle plain return / newline
-			if ( ! line ) {
-				subShellRl.prompt();
-				return;
-			}
-
-			// Check for exit, like SSH (handles both `exit` and `exit;`)
-			if ( line.startsWith( 'exit' ) ) {
+			// Handle the 'exit' command to stop the process
+			if ( line.trim() === 'exit' ) {
 				subShellRl.close();
 				process.exit();
 			}
 
-			const startsWithWp = line.startsWith( 'wp ' );
-			const empty = 0 === line.length;
-			const userCmdCancelled = line === cancelCommandChar;
+			if ( line.trim() !== '' ) {
+				console.log( 'Please enter a command 1111' );
+				inputBuffer += `${ line }\n`;
 
-			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
-				console.log(
-					chalk.red( 'Error:' ),
-					'invalid command, please pass a valid WP CLI command.'
-				);
-				subShellRl.prompt();
-				return;
-			}
+				if ( ! inputBuffer.includes( '\n\n' ) ) {
+					const commandInput = inputBuffer.trim();
 
-			subShellRl.pause();
+					if ( commandRunning ) {
+						return;
+					}
+					let result;
+					try {
+						result = await getTokenForCommand( appId, envId, commandInput.replace( /^wp /, '' ) );
+					} catch ( error ) {
+						// If this was a GraphQL error, print that to the message to the line
+						if ( error.graphQLErrors ) {
+							error.graphQLErrors.forEach( err => {
+								console.log( chalk.red( 'Error:' ), err.message );
+							} );
+						} else {
+							// Else, other type of error, just dump it
+							console.log( error );
+						}
 
-			let result;
-			try {
-				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
-			} catch ( error ) {
-				// If this was a GraphQL error, print that to the message to the line
-				if ( error.graphQLErrors ) {
-					error.graphQLErrors.forEach( err => {
-						console.log( chalk.red( 'Error:' ), err.message );
+						if ( ! isSubShell ) {
+							console.log( 'close subshell' );
+							subShellRl.close();
+							process.exit( 1 );
+						}
+						return;
+					}
+
+					const {
+						data: {
+							triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken },
+						},
+					} = result;
+
+					const token = await Token.get();
+					const extraHeaders = {
+						Authorization: `Bearer ${ token.raw }`,
+					};
+
+					const socket = SocketIO( `${ API_HOST }/wp-cli`, {
+						transportOptions: {
+							polling: {
+								extraHeaders,
+							},
+							websocket: {
+								extraHeaders,
+							},
+						},
+						agent: createProxyAgent( API_HOST ),
 					} );
-				} else {
-					// Else, other type of error, just dump it
-					console.log( error );
+
+					currentJob = await launchCommandAndGetStreams( {
+						socket,
+						guid: cliCommand.guid,
+						inputToken,
+					} );
+
+					pipeStreamsToProcess( {
+						stdin: currentJob.stdinStream,
+						stdout: currentJob.stdoutStream,
+					} );
+					commandRunning = true;
+
+					bindStreamEvents( {
+						subShellRl,
+						commonTrackingParams,
+						isSubShell,
+						stdoutStream: currentJob.stdoutStream,
+					} );
+					bindReconnectEvents( {
+						cliCommand,
+						inputToken,
+						subShellRl,
+						commonTrackingParams,
+						isSubShell,
+					} );
+
+					inputBuffer = '';
+					subShellRl.prompt();
+				}
+				subShellRl.prompt();
+			} else {
+				console.log( 'Please enter a command' );
+				const commandInput = inputBuffer.trim();
+				inputBuffer = '';
+
+				if ( ! commandInput ) {
+					subShellRl.prompt();
+					return;
+				}
+				let result;
+				try {
+					result = await getTokenForCommand( appId, envId, commandInput.replace( /^wp /, '' ) );
+				} catch ( error ) {
+					// If this was a GraphQL error, print that to the message to the line
+					if ( error.graphQLErrors ) {
+						error.graphQLErrors.forEach( err => {
+							console.log( chalk.red( 'Error:' ), err.message );
+						} );
+					} else {
+						// Else, other type of error, just dump it
+						console.log( error );
+					}
+
+					if ( ! isSubShell ) {
+						subShellRl.close();
+						process.exit( 1 );
+					}
+
+					subShellRl.prompt();
+					return;
 				}
 
-				if ( ! isSubShell ) {
-					subShellRl.close();
-					process.exit( 1 );
-				}
+				const {
+					data: {
+						triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken },
+					},
+				} = result;
+
+				const token = await Token.get();
+				const extraHeaders = {
+					Authorization: `Bearer ${ token.raw }`,
+				};
+
+				const socket = SocketIO( `${ API_HOST }/wp-cli`, {
+					transportOptions: {
+						polling: {
+							extraHeaders,
+						},
+						websocket: {
+							extraHeaders,
+						},
+					},
+					agent: createProxyAgent( API_HOST ),
+				} );
+
+				currentJob = await launchCommandAndGetStreams( {
+					socket,
+					guid: cliCommand.guid,
+					inputToken,
+				} );
+
+				pipeStreamsToProcess( {
+					stdin: currentJob.stdinStream,
+					stdout: currentJob.stdoutStream,
+				} );
+				commandRunning = true;
+
+				bindStreamEvents( {
+					subShellRl,
+					commonTrackingParams,
+					isSubShell,
+					stdoutStream: currentJob.stdoutStream,
+				} );
+				bindReconnectEvents( {
+					cliCommand,
+					inputToken,
+					subShellRl,
+					commonTrackingParams,
+					isSubShell,
+				} );
 
 				subShellRl.prompt();
-				return;
 			}
-
-			const {
-				data: {
-					triggerWPCLICommandOnAppEnvironment: { command: cliCommand, inputToken },
-				},
-			} = result;
-
-			const token = await Token.get();
-			const extraHeaders = {
-				Authorization: `Bearer ${ token.raw }`,
-			};
-
-			const socket = SocketIO( `${ API_HOST }/wp-cli`, {
-				transportOptions: {
-					polling: {
-						extraHeaders,
-					},
-					websocket: {
-						extraHeaders,
-					},
-				},
-				agent: createProxyAgent( API_HOST ),
-			} );
-
-			currentJob = await launchCommandAndGetStreams( {
-				socket,
-				guid: cliCommand.guid,
-				inputToken,
-			} );
-
-			pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-			commandRunning = true;
-
-			bindStreamEvents( {
-				subShellRl,
-				commonTrackingParams,
-				isSubShell,
-				stdoutStream: currentJob.stdoutStream,
-			} );
-
-			bindReconnectEvents( {
-				cliCommand,
-				inputToken,
-				subShellRl,
-				commonTrackingParams,
-				isSubShell,
-			} );
 		} );
 
 		// Fix to re-add the \n character that readline strips when terminal == true
