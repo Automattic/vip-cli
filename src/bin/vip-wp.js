@@ -68,17 +68,25 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 
 		// Tell socket.io to stop trying to connect
 		// here is the proble,m!!!!
-		// currentJob.socket.close();
+		currentJob.socket.close();
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 		// Reset offset
 		currentOffset = 0;
 
 		if ( ! isSubShell ) {
+			console.log( 'NAO É SUBSHELL!!!' );
 			subShellRl.close();
 			process.exit();
 			return;
 		}
+
+		// Ensure subshell is paused before resuming - it seems readline doesn't handle this well
+		if ( ! subShellRl.paused ) {
+			subShellRl.pause(); // Explicitly pause before resuming
+		}
+
+		console.log( 'É SUBSHELL!!!!!!!', subShellRl );
 		subShellRl.resume();
 		subShellRl.prompt();
 	} );
