@@ -1,5 +1,32 @@
 ## Changelog
 
+## 3.8.3
+
+* build(deps): bump adm-zip from 0.5.15 to 0.5.16
+* build(deps): bump debug from 4.3.6 to 4.3.7
+* build(deps): bump ini from 4.1.3 to 5.0.0
+* build(deps): bump update-notifier from 7.3.0 to 7.3.1
+* build(deps-dev): bump typescript from 5.5.4 to 5.6.2
+* security: address GHSA-952p-6rrq-rcjv in `micromatch`
+* chore(deps): update Lando
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.2...3.8.3
+
+## 3.8.2
+
+* chore(deps): make `node-fetch` 2.x depend on `whatwg-url` 14.x to address deprecations
+* build(deps-dev): bump nock from 13.5.4 to 13.5.5
+* build(deps-dev): bump @babel/preset-env from 7.25.3 to 7.25.4 in the babel group
+* build(deps): bump update-notifier from 7.1.0 to 7.3.0
+* chore(deps): update Lando
+* build(deps-dev): bump @babel/cli from 7.24.8 to 7.25.6 in the babel group
+* fix(import-media): Display success/total count even if all files fail to import
+* Remove Kubernetes-specific checks for job existence in SQL import status
+* BB8-11725: SQL Import - Update multisite regex to match optional `IF NOT EXISTS`
+* Add saveErrorLog flag to import media command
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.1...3.8.2
+
 ## 3.8.1
 
 * fix(dev-env): clean up data after `vip dev-env sync sql`
