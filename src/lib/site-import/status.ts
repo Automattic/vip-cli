@@ -171,6 +171,20 @@ The server said:
 				}
 
 				break;
+			case 'update_primary_domain':
+				message += `\nThis error occurred during the update of the primary domain.
+
+${ rollbackMessage }
+`;
+				if ( importFailed.commandOutput ) {
+					const commandOutput = ( [] as string[] ).concat( importFailed.commandOutput ).join( ';' );
+					message += `
+Please inspect your input file and make the appropriate corrections before trying again.
+The server said:
+> ${ chalk.red( commandOutput ) }
+`;
+				}
+				break;
 			default:
 		}
 	}
