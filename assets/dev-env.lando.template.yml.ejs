@@ -117,7 +117,7 @@ services:
   memcached:
     type: compose
     services:
-      image: memcached:1.6-alpine3.16
+      image: memcached:1.6-alpine
       command: memcached -m 64
       environment:
         LANDO_NO_USER_PERMS: 1
