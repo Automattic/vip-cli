@@ -1,5 +1,19 @@
 ## Changelog
 
+## 3.8.4
+
+* build(deps): bump step-security/harden-runner from 2.9.1 to 2.10.1
+* build(deps-dev): bump @types/jest from 29.5.12 to 29.5.13 in the testing group
+* build(deps-dev): bump @types/node from 18.19.42 to 22.5.5
+* build(deps-dev): bump eslint from 8.57.0 to 8.57.1
+* Also outputs command output message when import fails on the `update_primary_domain` step.
+* build(deps-dev): bump @types/node from 22.5.5 to 22.7.2
+* build(deps): bump socket.io-client from 4.7.5 to 4.8.0
+* security(dev-env): update memcached image
+* build(deps-dev): bump @types/node from 22.7.2 to 22.7.4
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.3...3.8.4
+
 ## 3.8.3
 
 * build(deps): bump adm-zip from 0.5.15 to 0.5.16
