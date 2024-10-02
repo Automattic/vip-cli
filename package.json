@@ -142,7 +142,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@apollo/client": "3.3.6",
+    "@apollo/client": "3.11.8",
     "@automattic/vip-go-preflight-checks": "^2.0.16",
     "@automattic/vip-search-replace": "^1.1.1",
     "@json2csv/plainjs": "^7.0.3",
