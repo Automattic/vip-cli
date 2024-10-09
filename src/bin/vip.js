@@ -40,7 +40,7 @@ const runCmd = async function () {
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'slowlogs', 'Retrieve MySQL slow query logs from an environment.' )
 		.command( 'db', "Access an environment's database." )
-		.command( 'sync', 'Sync production to a development environment' )
+		.command( 'sync', 'Sync a database from production to a non-production environment.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'validate', 'Validate your VIP application and environment' )
 		.command( 'wp', 'Run WP CLI commands against an environment' );
