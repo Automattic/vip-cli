@@ -25,7 +25,7 @@ command( {
 } )
 	.example(
 		'vip @example-app.develop sync',
-		'Sync the production environment database of the "example-app" application to the development environment.'
+		'Sync the production environment database of the "example-app" application to the develop environment.'
 	)
 	.argv( process.argv, async ( arg, opts ) => {
 		const api = API();
