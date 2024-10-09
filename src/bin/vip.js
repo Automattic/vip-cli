@@ -35,7 +35,7 @@ const runCmd = async function () {
 		.command( 'config', 'Manage environment configurations.' )
 		.command( 'dev-env', 'Create and manage VIP Local Development Environments.' )
 		.command( 'export', 'Export a copy of data associated with an environment.' )
-		.command( 'import', 'Import media or SQL files into your VIP applications' )
+		.command( 'import', 'Import media or SQL database files to an environment.' )
 		.command( 'logs', 'Get logs from your VIP applications' )
 		.command( 'search-replace', 'Perform search and replace tasks on files' )
 		.command( 'slowlogs', 'Retrieve MySQL slow query logs from an environment.' )
