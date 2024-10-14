@@ -22,182 +22,187 @@ command( {
 	childEnvContext: true,
 	module: 'sync',
 	requireConfirm: 'Are you sure you want to sync from production?',
-} ).argv( process.argv, async ( arg, opts ) => {
-	const api = API();
-	let syncing = false;
+} )
+	.example(
+		'vip @example-app.develop sync',
+		'Sync the production environment database of the "example-app" application to the develop environment.'
+	)
+	.argv( process.argv, async ( arg, opts ) => {
+		const api = API();
+		let syncing = false;
 
-	await trackEvent( 'sync_command_execute' );
+		await trackEvent( 'sync_command_execute' );
 
-	try {
-		await api.mutate( {
-			mutation: gql`
-				mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput) {
-					syncEnvironment(input: $input) {
-						environment {
-							id
+		try {
+			await api.mutate( {
+				mutation: gql`
+					mutation SyncEnvironmentMutation($input: AppEnvironmentSyncInput) {
+						syncEnvironment(input: $input) {
+							environment {
+								id
+							}
 						}
 					}
-				}
-			`,
-			variables: {
-				input: {
-					id: opts.app.id,
-					environmentId: opts.env.id,
+				`,
+				variables: {
+					input: {
+						id: opts.app.id,
+						environmentId: opts.env.id,
+					},
 				},
-			},
-		} );
-	} catch ( error ) {
-		if ( error.graphQLErrors ) {
-			let bail = false;
+			} );
+		} catch ( error ) {
+			if ( error.graphQLErrors ) {
+				let bail = false;
 
-			for ( const err of error.graphQLErrors ) {
-				if ( err.message !== 'Site is already syncing' ) {
-					bail = true;
-					console.log( chalk.red( 'Error:' ), err.message );
+				for ( const err of error.graphQLErrors ) {
+					if ( err.message !== 'Site is already syncing' ) {
+						bail = true;
+						console.log( chalk.red( 'Error:' ), err.message );
+					}
+				}
+
+				// TODO: Log e
+
+				if ( bail ) {
+					return;
 				}
 			}
 
-			// TODO: Log e
+			syncing = true;
+			await trackEvent( 'sync_command_execute_error', {
+				error: `Already syncing: ${ error.message }`,
+			} );
+		}
 
-			if ( bail ) {
-				return;
+		const sprite = {
+			count: 0,
+			sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
+			next() {
+				this.count++;
+
+				if ( this.count >= this.sprite.length ) {
+					this.count = 0;
+				}
+
+				return {
+					value: this.sprite[ this.count ],
+					done: false,
+				};
+			},
+		};
+
+		const application = await app( opts.app.id, appQuery );
+		let environment = application.environments.find( env => env.id === opts.env.id );
+
+		if ( syncing ) {
+			if ( environment.syncProgress.status === 'running' ) {
+				console.log( chalk.yellow( 'Note:' ), 'A data sync is already running.' );
+			} else {
+				console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site.' );
+				console.log( chalk.yellow( 'Note:' ), 'Please wait a few minutes before trying again.' );
 			}
 		}
 
-		syncing = true;
-		await trackEvent( 'sync_command_execute_error', {
-			error: `Already syncing: ${ error.message }`,
-		} );
-	}
+		console.log();
+		console.log( `  syncing: ${ chalk.yellow( opts.app.name ) }` );
+		console.log( `     from: ${ formatEnvironment( 'production' ) }` );
+		console.log( `       to: ${ formatEnvironment( opts.env.type ) }` );
 
-	const sprite = {
-		count: 0,
-		sprite: [ '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' ],
-		next() {
-			this.count++;
-
-			if ( this.count >= this.sprite.length ) {
-				this.count = 0;
-			}
-
-			return {
-				value: this.sprite[ this.count ],
-				done: false,
-			};
-		},
-	};
-
-	const application = await app( opts.app.id, appQuery );
-	let environment = application.environments.find( env => env.id === opts.env.id );
-
-	if ( syncing ) {
-		if ( environment.syncProgress.status === 'running' ) {
-			console.log( chalk.yellow( 'Note:' ), 'A data sync is already running.' );
-		} else {
-			console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site.' );
-			console.log( chalk.yellow( 'Note:' ), 'Please wait a few minutes before trying again.' );
-		}
-	}
-
-	console.log();
-	console.log( `  syncing: ${ chalk.yellow( opts.app.name ) }` );
-	console.log( `     from: ${ formatEnvironment( 'production' ) }` );
-	console.log( `       to: ${ formatEnvironment( opts.env.type ) }` );
-
-	let count = 0;
-	const progress = setInterval( async () => {
-		if ( count++ % 10 === 0 ) {
-			// Query the API 1/10 of the time (every 1s)
-			// The rest of the iterations are just for moving the spinner
-			api
-				.query( {
-					query: gql`
-						query App($id: Int, $sync: Int) {
-							app(id: $id) {
-								id
-								name
-								environments {
+		let count = 0;
+		const progress = setInterval( async () => {
+			if ( count++ % 10 === 0 ) {
+				// Query the API 1/10 of the time (every 1s)
+				// The rest of the iterations are just for moving the spinner
+				api
+					.query( {
+						query: gql`
+							query App($id: Int, $sync: Int) {
+								app(id: $id) {
 									id
 									name
-									defaultDomain
-									branch
-									datacenter
-									syncProgress(sync: $sync) {
-										status
-										sync
-										steps {
-											name
+									environments {
+										id
+										name
+										defaultDomain
+										branch
+										datacenter
+										syncProgress(sync: $sync) {
 											status
+											sync
+											steps {
+												name
+												status
+											}
 										}
 									}
 								}
 							}
-						}
-					`,
-					fetchPolicy: 'network-only',
-					variables: {
-						id: opts.app.id,
-						sync: environment.syncProgress.sync,
-					},
-				} )
-				.then( res => res.data.app )
-				.then( _app => {
-					environment = _app.environments.find( env => env.id === opts.env.id );
-				} );
-		}
-
-		const marks = {
-			pending: '○',
-			running: chalk.blueBright( sprite.next().value ),
-			success: chalk.green( '✓' ),
-			failed: chalk.red( '✕' ),
-			unknown: chalk.yellow( '✕' ),
-		};
-
-		const out = [];
-		const steps = environment.syncProgress.steps || [];
-
-		out.push( '' );
-
-		steps.forEach( step => {
-			if ( step.status === 'pending' ) {
-				out.push( chalk.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
-			} else {
-				out.push( ` ${ marks[ step.status ] } ${ step.name }` );
+						`,
+						fetchPolicy: 'network-only',
+						variables: {
+							id: opts.app.id,
+							sync: environment.syncProgress.sync,
+						},
+					} )
+					.then( res => res.data.app )
+					.then( _app => {
+						environment = _app.environments.find( env => env.id === opts.env.id );
+					} );
 			}
-		} );
 
-		out.push( '' );
+			const marks = {
+				pending: '○',
+				running: chalk.blueBright( sprite.next().value ),
+				success: chalk.green( '✓' ),
+				failed: chalk.red( '✕' ),
+				unknown: chalk.yellow( '✕' ),
+			};
 
-		switch ( environment.syncProgress.status ) {
-			case 'running':
-				out.push(
-					`${ marks.running } Press ^C to hide progress. Data sync will continue in the background.`
-				);
-				break;
+			const out = [];
+			const steps = environment.syncProgress.steps || [];
 
-			case 'failed':
-				clearInterval( progress );
+			out.push( '' );
 
-				await trackEvent( 'sync_command_error', {
-					error: 'API returned `failed` status',
-				} );
+			steps.forEach( step => {
+				if ( step.status === 'pending' ) {
+					out.push( chalk.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
+				} else {
+					out.push( ` ${ marks[ step.status ] } ${ step.name }` );
+				}
+			} );
 
-				out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }.` );
-				out.push( '' );
-				break;
+			out.push( '' );
 
-			case 'success':
-			default:
-				clearInterval( progress );
+			switch ( environment.syncProgress.status ) {
+				case 'running':
+					out.push(
+						`${ marks.running } Press ^C to hide progress. Data sync will continue in the background.`
+					);
+					break;
 
-				await trackEvent( 'sync_command_success' );
+				case 'failed':
+					clearInterval( progress );
 
-				out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
-				out.push( '' );
-				break;
-		}
+					await trackEvent( 'sync_command_error', {
+						error: 'API returned `failed` status',
+					} );
 
-		stdout( out.join( '\n' ) );
-	}, 100 );
-} );
+					out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }.` );
+					out.push( '' );
+					break;
+
+				case 'success':
+				default:
+					clearInterval( progress );
+
+					await trackEvent( 'sync_command_success' );
+
+					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
+					out.push( '' );
+					break;
+			}
+
+			stdout( out.join( '\n' ) );
+		}, 100 );
+	} );
