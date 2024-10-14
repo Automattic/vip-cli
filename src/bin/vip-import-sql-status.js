@@ -25,34 +25,49 @@ environments{
 }
 `;
 
+const usage = 'vip import sql status';
+
+// Command examples
+const examples = [
+	{
+		usage: 'vip @example-app.develop import sql status',
+		description:
+			'Check the status of the most recent SQL database file import to the develop environment of the "example-app" application.\n' +
+			'       * If the import is still in progress, the command will poll until the import is complete.',
+	},
+];
+
 command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
-} ).argv( process.argv, async ( arg, { app, env } ) => {
-	const { id: envId, appId } = env;
-	const track = trackEventWithEnv.bind( null, appId, envId );
+	usage,
+} )
+	.examples( examples )
+	.argv( process.argv, async ( arg, { app, env } ) => {
+		const { id: envId, appId } = env;
+		const track = trackEventWithEnv.bind( null, appId, envId );
 
-	if ( ! isSupportedApp( app ) ) {
-		await track( 'import_sql_command_error', { errorType: 'unsupported-app' } );
-		exit.withError(
-			'The type of application you specified does not currently support SQL imports.'
-		);
-	}
+		if ( ! isSupportedApp( app ) ) {
+			await track( 'import_sql_command_error', { errorType: 'unsupported-app' } );
+			exit.withError(
+				'The type of application you specified does not currently support SQL imports.'
+			);
+		}
 
-	await track( 'import_sql_check_status_command_execute' );
+		await track( 'import_sql_check_status_command_execute' );
 
-	const progressTracker = new ProgressTracker( [] );
-	progressTracker.prefix = `
+		const progressTracker = new ProgressTracker( [] );
+		progressTracker.prefix = `
 =============================================================
 Checking the SQL import status for your environment...
 `;
 
-	await importSqlCheckStatus( {
-		app,
-		env,
-		progressTracker,
-		shouldReturnMissingJobImmediately: true,
+		await importSqlCheckStatus( {
+			app,
+			env,
+			progressTracker,
+			shouldReturnMissingJobImmediately: true,
+		} );
 	} );
-} );
