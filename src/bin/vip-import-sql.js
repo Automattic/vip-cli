@@ -397,11 +397,7 @@ void command( {
 		'Search for a given URL in the SQL file and replace it with another. The format for the value is `<from-url>,<to-url>` (e.g. --search-replace="https://from.com,https://to.com"'
 	)
 	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
-	.option(
-		'output',
-		'Specify the replacement output file for Search and Replace',
-		'process.stdout'
-	)
+	.option( 'output', 'Specify the replacement output file for Search and Replace' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
@@ -512,7 +508,7 @@ Processing the SQL import for your environment...
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
-				output: true,
+				output: opts.output ?? true, // "true" creates a temp output file instead of printing to stdout, as we need to upload the output to S3.
 			} );
 
 			if ( typeof outputFileName !== 'string' ) {
