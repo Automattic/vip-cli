@@ -1,5 +1,14 @@
 ## Changelog
 
+## 3.8.5
+
+* This release is mainly to trigger a `go-search-replace` update to version 0.0.7. [Please go here](https://github.com/Automattic/go-search-replace/releases/tag/0.0.7) to see the release notes for `go-search-replace` version 0.0.7.
+* build(deps-dev): bump the babel group with 4 updates
+* build(deps-dev): bump typescript from 5.6.2 to 5.6.3
+* Update the sync command to follow the VIP-CLI style guide
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.4...3.8.5
+
 ## 3.8.4
 
 * build(deps): bump step-security/harden-runner from 2.9.1 to 2.10.1
