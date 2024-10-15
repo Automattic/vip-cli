@@ -41,7 +41,7 @@
         "single-line-log": "1.1.2",
         "socket.io-client": "^4.5.3",
         "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
-        "socks-proxy-agent": "^5.0.1",
+        "socks-proxy-agent": "^8.0.4",
         "tar": "^7.4.0",
         "update-notifier": "7.3.1",
         "uuid": "10.0.0",
@@ -11554,16 +11554,27 @@
       }
     },
     "node_modules/socks-proxy-agent": {
-      "version": "5.0.1",
-      "resolved": "https://registry.npmjs.org/socks-proxy-agent/-/socks-proxy-agent-5.0.1.tgz",
-      "integrity": "sha512-vZdmnjb9a2Tz6WEQVIurybSwElwPxMZaIc7PzqbJTrezcKNznv6giT7J7tZDZ1BojVaa1jvO/UiUdhDVB0ACoQ==",
+      "version": "8.0.4",
+      "resolved": "https://registry.npmjs.org/socks-proxy-agent/-/socks-proxy-agent-8.0.4.tgz",
+      "integrity": "sha512-GNAq/eg8Udq2x0eNiFkr9gRg5bA7PXEWagQdeRX4cPSG+X/8V38v637gim9bjFptMk1QWsCTr0ttrJEiXbNnRw==",
       "dependencies": {
-        "agent-base": "^6.0.2",
-        "debug": "4",
-        "socks": "^2.3.3"
+        "agent-base": "^7.1.1",
+        "debug": "^4.3.4",
+        "socks": "^2.8.3"
       },
       "engines": {
-        "node": ">= 6"
+        "node": ">= 14"
+      }
+    },
+    "node_modules/socks-proxy-agent/node_modules/agent-base": {
+      "version": "7.1.1",
+      "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-7.1.1.tgz",
+      "integrity": "sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==",
+      "dependencies": {
+        "debug": "^4.3.4"
+      },
+      "engines": {
+        "node": ">= 14"
       }
     },
     "node_modules/source-map": {
@@ -21653,13 +21664,23 @@
       }
     },
     "socks-proxy-agent": {
-      "version": "5.0.1",
-      "resolved": "https://registry.npmjs.org/socks-proxy-agent/-/socks-proxy-agent-5.0.1.tgz",
-      "integrity": "sha512-vZdmnjb9a2Tz6WEQVIurybSwElwPxMZaIc7PzqbJTrezcKNznv6giT7J7tZDZ1BojVaa1jvO/UiUdhDVB0ACoQ==",
+      "version": "8.0.4",
+      "resolved": "https://registry.npmjs.org/socks-proxy-agent/-/socks-proxy-agent-8.0.4.tgz",
+      "integrity": "sha512-GNAq/eg8Udq2x0eNiFkr9gRg5bA7PXEWagQdeRX4cPSG+X/8V38v637gim9bjFptMk1QWsCTr0ttrJEiXbNnRw==",
       "requires": {
-        "agent-base": "^6.0.2",
-        "debug": "4",
-        "socks": "^2.3.3"
+        "agent-base": "^7.1.1",
+        "debug": "^4.3.4",
+        "socks": "^2.8.3"
+      },
+      "dependencies": {
+        "agent-base": {
+          "version": "7.1.1",
+          "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-7.1.1.tgz",
+          "integrity": "sha512-H0TSyFNDMomMNJQBn8wFV5YC/2eJ+VXECwOadZJT554xP6cODZHPX3H9QMQECxvrgiSOP1pHjy1sMWQVYJOUOA==",
+          "requires": {
+            "debug": "^4.3.4"
+          }
+        }
       }
     },
     "source-map": {
