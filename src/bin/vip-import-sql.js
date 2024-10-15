@@ -193,7 +193,7 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop import sql file.sql',
 		description:
-			'Import the local SQL database file "file.sql" to the develop environment of the "example-app" application.',
+			'Import the local SQL database backup file "file.sql" to the develop environment of the "example-app" application.',
 	},
 	// `search-replace` flag
 	{
@@ -227,7 +227,7 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop import sql status',
 		description:
-			'Check the status of the most recent SQL database file import to the develop environment of the "example-app" application.\n' +
+			'Check the status of the most recent SQL database import to the develop environment of the "example-app" application.\n' +
 			'       * This will continue to poll until the import is complete.',
 	},
 ];
@@ -389,7 +389,7 @@ void command( {
 	module: 'import-sql',
 	usage,
 } )
-	.command( 'status', 'Check the status of a SQL database file import currently in progress.' )
+	.command( 'status', 'Check the status of a SQL database import currently in progress.' )
 	.option(
 		'skip-validate',
 		'Do not perform file validation prior to import. If the file contains unsupported entries, the import is likely to fail.'

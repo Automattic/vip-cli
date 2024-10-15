@@ -32,7 +32,7 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop import sql status',
 		description:
-			'Check the status of the most recent SQL database file import to the develop environment of the "example-app" application.\n' +
+			'Check the status of the most recent SQL database import to the develop environment of the "example-app" application.\n' +
 			'       * If the import is still in progress, the command will poll until the import is complete.',
 	},
 ];
