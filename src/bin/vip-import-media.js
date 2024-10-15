@@ -42,24 +42,33 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
+const usage = 'vip import media';
+
 const debug = debugLib( 'vip:vip-import-media' );
 
 // Command examples for the `vip import media` help prompt
 const examples = [
 	{
-		usage: 'vip import media @mysite.production https://<path_to_publicly_accessible_archive>',
-		description: 'Start a media import with the contents of the archive file in the URL',
+		usage: 'vip @example-app.production import media https://example.com/uploads.tar.gz',
+		description:
+			'Import the archived file "uploads.tar.gz" from a publicly accessible URL to a production environment.',
+	},
+	// Format error logs
+	{
+		usage:
+			'vip @example-app.production import media https://example.com/uploads.tar.gz --overwriteExistingFiles --exportFileErrorsToJson',
+		description:
+			'Overwrite existing files with the imported files if they have the same file path and name, and format the error log for the import in JSON.',
 	},
 	// `media status` subcommand
 	{
-		usage: 'vip import media status @mysite.production',
-		description:
-			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
+		usage: 'vip @example-app.production import media status',
+		description: 'Check the status of the most recent media import.',
 	},
 	// `media abort` subcommand
 	{
-		usage: 'vip import media abort @mysite.production',
-		description: 'Abort an ongoing import',
+		usage: 'vip @example-app.production import media abort',
+		description: 'Abort the currently running media import.',
 	},
 ];
 
@@ -79,6 +88,7 @@ command( {
 	envContext: true,
 	module: 'import-media',
 	requiredArgs: 1,
+	usage,
 	requireConfirm: `
 ${ chalk.red.bold(
 	"NOTE: If the provided archive's directory structure contains an `uploads/` directory,"
@@ -88,19 +98,25 @@ ${ chalk.red.bold(
 ) }
 ${ chalk.red.bold( 'If no `uploads/` directory is found, all files will be imported, as is.' ) }
 
-Are you sure you want to import the contents of the url?
+Are you sure you want to import the contents of the URL?
 `,
 } )
-	.command( 'status', 'Check the status of the latest Media Import' )
-	.command( 'abort', 'Abort the Media Import running for your App' )
+	.command(
+		'status',
+		'Check the status of a currently running media import or retrieve an error log of the most recent media import.'
+	)
+	.command( 'abort', 'Abort the media import currently in progress.' )
+	.option( 'exportFileErrorsToJson', 'Format the error log in JSON. Default is TXT.' )
 	.option(
-		'exportFileErrorsToJson',
-		'Export any file errors encountered to a JSON file instead of a plain text file',
+		'saveErrorLog',
+		'Skip the confirmation prompt and download an error log for the import automatically.'
+	)
+	.option(
+		'overwriteExistingFiles',
+		'Overwrite existing files with the imported files if they have the same path and file name.',
 		false
 	)
-	.option( 'saveErrorLog', 'Download file-error logs without prompting' )
-	.option( 'overwriteExistingFiles', 'Overwrite any existing files', false )
-	.option( 'importIntermediateImages', 'Import intermediate image files', false )
+	.option( 'importIntermediateImages', 'Include intermediate image files in the import.', false )
 	.examples( examples )
 	.argv( process.argv, async ( args, opts ) => {
 		const {
@@ -118,7 +134,7 @@ Are you sure you want to import the contents of the url?
 				chalk.red( `
 Error:
 	Invalid URL provided: ${ url }
-	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import` )
+	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import.` )
 			);
 			return;
 		}

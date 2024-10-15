@@ -36,7 +36,7 @@ export async function vipImportValidateFilesCmd( arg = [] ) {
 	if ( ! ( await isDirectory( filePath ) ) ) {
 		console.error(
 			chalk.red( '✕ Error:' ),
-			'The given path is not a directory, please provide a valid directory path.'
+			'The given path is not a directory. Provide a valid directory path.'
 		);
 		return;
 	}
@@ -74,7 +74,7 @@ export async function vipImportValidateFilesCmd( arg = [] ) {
 	 * - Intermediate image validation
 	 */
 	if ( ! files || ! files.length || files.length <= 0 ) {
-		console.error( chalk.red( '✕ Error:' ), 'Media files directory cannot be empty' );
+		console.error( chalk.red( '✕ Error:' ), 'The media files directory cannot be empty.' );
 	}
 
 	/**
@@ -159,12 +159,14 @@ export async function vipImportValidateFilesCmd( arg = [] ) {
 
 	await trackEvent( 'import_validate_files_command_success', allErrors );
 }
+const usage = 'vip import validate-files';
 
-command( { requiredArgs: 1, format: true } )
+command( { requiredArgs: 1, usage, format: true } )
 	.examples( [
 		{
-			usage: 'vip import validate-files <folder_name>',
-			description: 'Run the import validation against the folder of media files',
+			usage: 'vip import validate-files /Users/user-name/Desktop/uploads',
+			description:
+				'Validate the directory structure and contents of the local directory "uploads/".',
 		},
 	] )
 	.argv( process.argv, vipImportValidateFilesCmd );
