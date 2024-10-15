@@ -63,7 +63,7 @@ describe( 'vipImportValidateFilesCmd', () => {
 
 		expect( console.error ).toHaveBeenCalledWith(
 			chalk.red( '✕ Error:' ),
-			'The given path is not a directory, please provide a valid directory path.'
+			'The given path is not a directory. Provide a valid directory path.'
 		);
 	} );
 
@@ -87,7 +87,7 @@ describe( 'vipImportValidateFilesCmd', () => {
 
 		expect( console.error ).toHaveBeenCalledWith(
 			chalk.red( '✕ Error:' ),
-			'Media files directory cannot be empty'
+			'The media files directory cannot be empty.'
 		);
 	} );
 
