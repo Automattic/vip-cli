@@ -1,4 +1,4 @@
-import { formatBytes, formatDuration, requoteArgs } from '../../../src/lib/cli/format';
+import { formatBytes, formatDuration, requoteArgs, table } from '../../../src/lib/cli/format';
 
 describe( 'utils/cli/format', () => {
 	describe( 'requoteArgs', () => {
@@ -55,6 +55,12 @@ describe( 'utils/cli/format', () => {
 			expect( formatBytes( 1024 ) ).toStrictEqual( '1 KB' );
 			expect( formatBytes( 1000000 ) ).toStrictEqual( '976.56 KB' );
 			expect( formatBytes( 10004008 ) ).toStrictEqual( '9.54 MB' );
+		} );
+	} );
+
+	describe( 'table', () => {
+		it( 'should properly format null values', () => {
+			expect( table( [ { name: 'Hello', value: null } ] ) ).toMatch( /.*Hello.*null.*/i );
 		} );
 	} );
 
