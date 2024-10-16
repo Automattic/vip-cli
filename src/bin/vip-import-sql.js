@@ -78,12 +78,13 @@ const START_IMPORT_MUTATION = gql`
 	}
 `;
 
+const usage = 'vip import sql';
 const debug = debugLib( '@automattic/vip:bin:vip-import-sql' );
 
 const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
-	{ id: 'replace', name: 'Performing Search and Replace' },
+	{ id: 'replace', name: 'Performing search and replace' },
 	{ id: 'upload', name: 'Uploading file' },
-	{ id: 'queue_import', name: 'Queueing Import' },
+	{ id: 'queue_import', name: 'Queueing import' },
 ];
 
 /**
@@ -166,7 +167,7 @@ export async function gates( app, env, fileMeta ) {
 	if ( ! env?.importStatus ) {
 		await track( 'import_sql_command_error', { error_type: 'empty-import-status' } );
 		exit.withError(
-			'Could not determine the import status for this environment. Check the app/environment and if the problem persists, contact support for assistance'
+			'Could not determine the import status for this environment. Check the app/environment and if the problem persists, contact support for assistance.'
 		);
 	}
 	const {
@@ -190,44 +191,44 @@ export async function gates( app, env, fileMeta ) {
 const examples = [
 	// `sql` subcommand
 	{
-		usage: 'vip import sql @mysite.develop file.sql',
-		description: 'Import the given SQL file to your site',
+		usage: 'vip @example-app.develop import sql file.sql',
+		description:
+			'Import the local SQL database backup file "file.sql" to the develop environment of the "example-app" application.',
 	},
 	// `search-replace` flag
 	{
 		usage:
-			'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com"',
+			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com"',
 		description:
-			'Perform a Search and Replace, then import the replaced file to your site.\n' +
-			'       * Ensure there are no spaces between your search-replace parameters',
+			'Perform a search and replace operation on the SQL database file during the import process.',
 	},
 	// `search-replace` flag
 	{
 		usage:
-			'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --search-replace="example.com/from,example.com/to"',
+			'vip @example-app.develop import sql file.sql --search-replace="from.example.com,to.example.com" --search-replace="example.com/from,example.com/to"',
 		description:
-			'Perform multiple search and replace tasks, then import the updated file to your site.',
+			'Perform multiple search and replace operations on the SQL database file during the import process.',
 	},
 	// `in-place` flag
 	{
 		usage:
-			'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --in-place',
+			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --in-place',
 		description:
-			'Search and Replace on the input `file.sql`, then import the updated file to your site',
+			'Perform a search and replace operation on "file.sql" locally, save the changes, then import the updated file.',
 	},
 	// `output` flag
 	{
 		usage:
-			'vip import sql @mysite.develop file.sql --search-replace="https://from.example.com,https://to.example.com" --output="output.sql"',
+			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --output="updated-file.sql"',
 		description:
-			'Output the performed Search and Replace to the specified output file, then import the replaced file to your site\n' +
-			'       * Has no effect when the `in-place` flag is used',
+			'Create a copy of the imported file with the completed search and replace operations and save it locally to a file named "updated-file.sql".',
 	},
 	// `sql status` subcommand
 	{
-		usage: 'vip import sql status @mysite.develop',
+		usage: 'vip @example-app.develop import sql status',
 		description:
-			'Check the status of the most recent import. If an import is running, this will poll until it is complete.',
+			'Check the status of the most recent SQL database import to the develop environment of the "example-app" application.\n' +
+			'       * This will continue to poll until the import is complete.',
 	},
 ];
 
@@ -245,9 +246,9 @@ export const promptToContinue = async ( {
 	const promptResponse = await prompt( {
 		type: 'input',
 		name: 'confirmedDomain',
-		message: `You are about to import ${ source } into a ${
-			launched ? 'launched' : 'un-launched'
-		} ${ formattedEnvironment } site ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
+		message: `You are about to import ${ source } into the ${
+			launched ? 'launched' : 'unlaunched'
+		} ${ formattedEnvironment } environment ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
 			promptToMatch
 		) }' (without the quotes) to continue:\n`,
 	} );
@@ -278,7 +279,7 @@ export async function validateAndGetTableNames( {
 	} catch ( validateErr ) {
 		console.log( '' );
 		exit.withError( `${ validateErr.message }\n
-If you are confident the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+If you are confident that the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
 			'--skip-validate'
 		) } option.
 ` );
@@ -323,24 +324,24 @@ const displayPlaybook = ( {
 	}
 
 	if ( ! tableNames.length ) {
-		debug( 'Validation was skipped, no playbook information will be displayed' );
+		debug( 'Validation was skipped. No playbook information will be displayed.' );
 	} else {
 		// output the table names
 		console.log();
 		if ( ! isMultiSite ) {
-			console.log( 'Below are a list of Tables that will be imported by this process:' );
+			console.log( 'Tables that will be imported by this process:' );
 			console.log( columns( tableNames ) );
 		} else {
 			// we have siteArray from the API, use it and the table names together
 			if ( siteArray === 'undefined' || ! siteArray ) {
 				console.log(
 					chalk.yellowBright(
-						'Unable to determine the subsites affected by this import, please proceed only if you are confident on the contents in the import file.'
+						'Unable to determine the network sites affected by this import. Please proceed only if you are confident that the contents of the file are valid for import.'
 					)
 				);
 				return;
 			} else if ( ! siteArray?.length ) {
-				throw new Error( 'There were no sites in your multisite installation' );
+				throw new Error( 'There were no sites in your multisite installation.' );
 			}
 
 			const multiSiteBreakdown = siteArray.map( wpSite => {
@@ -362,7 +363,7 @@ const displayPlaybook = ( {
 			if ( launched ) {
 				console.log(
 					chalk.yellowBright(
-						'You are updating tables in a launched multi site installation. Sites in the same network may have their performance impacted by this operation.'
+						'You are updating tables in a launched multisite environment. The performance of sites on the network might be impacted by this operation.'
 					)
 				);
 			}
@@ -386,18 +387,25 @@ void command( {
 	envContext: true,
 	requiredArgs: 1,
 	module: 'import-sql',
+	usage,
 } )
-	.command( 'status', 'Check the status of the current running import' )
+	.command( 'status', 'Check the status of a SQL database import currently in progress.' )
 	.option(
 		'skip-validate',
-		'Do not perform pre-upload file validation. If unsupported entries are present, the import is likely to fail'
+		'Do not perform file validation prior to import. If the file contains unsupported entries, the import is likely to fail.'
 	)
 	.option(
 		'search-replace',
-		'Search for a given URL in the SQL file and replace it with another. The format for the value is `<from-url>,<to-url>` (e.g. --search-replace="https://from.com,https://to.com"'
+		'Search for a string in the SQL file and replace it with a new string. Separate the values by a comma only; no spaces (e.g. --search-replace=“from,to”).'
 	)
-	.option( 'in-place', 'Search and Replace explicitly on the given input file' )
-	.option( 'output', 'Specify the replacement output file for Search and Replace' )
+	.option(
+		'in-place',
+		'Perform a search and replace operation on a local SQL file, save the results to the file, then import the updated file.'
+	)
+	.option(
+		'output',
+		'Create a local copy of the imported file with the completed search and replace operations. Ignored if the command includes --in-place, or excludes a --search-replace operation. Accepts a local file path.'
+	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
@@ -410,7 +418,7 @@ void command( {
 		if ( fileMeta.isCompressed ) {
 			console.log(
 				chalk.yellowBright(
-					'You are importing a compressed file. Validation and search-replace operation will be skipped.'
+					'You are importing a compressed file. Validation and search-replace operations will be skipped.'
 				)
 			);
 
@@ -514,7 +522,7 @@ Processing the SQL import for your environment...
 			if ( typeof outputFileName !== 'string' ) {
 				progressTracker.stepFailed( 'replace' );
 				return failWithError(
-					'Unable to determine location of the intermediate search & replace file.'
+					'Unable to determine location of the intermediate search and replace file.'
 				);
 			}
 

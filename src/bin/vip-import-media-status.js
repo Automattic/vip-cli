@@ -23,18 +23,38 @@ const appQuery = `
 	}
 `;
 
+const usage = 'vip import media status';
+
+// Command examples
+const examples = [
+	{
+		usage: 'vip @example-app.production import media status',
+		description:
+			'Check the status of the most recent media import.\n' +
+			'       * If the import is still in progress, the command will poll until the import is complete.\n' +
+			'       * If the import is already complete, the command will download an error log for the most recent import.',
+	},
+	{
+		usage:
+			'vip @example-app.production import media status --saveErrorLog --exportFileErrorsToJson',
+		description:
+			'Check the status of the most recent media import and automatically download the error log in JSON format.',
+	},
+];
 command( {
 	appContext: true,
 	appQuery,
 	envContext: true,
 	requiredArgs: 0,
+	usage,
 } )
+	.option( 'exportFileErrorsToJson', 'Format an error log in JSON. Default is TXT.' )
 	.option(
-		'exportFileErrorsToJson',
-		'Export any file errors encountered to a JSON file instead of a plain text file',
-		false
+		'saveErrorLog',
+		'Skip the confirmation prompt and download an error log automatically.',
+		'prompt'
 	)
-	.option( 'saveErrorLog', 'Download file-error logs without prompting', 'prompt' )
+	.examples( examples )
 	.argv( process.argv, async ( arg, { app, env, exportFileErrorsToJson, saveErrorLog } ) => {
 		const { id: envId, appId } = env;
 		const track = trackEventWithEnv.bind( null, appId, envId );
@@ -42,7 +62,7 @@ command( {
 		if ( ! isSupportedApp( app ) ) {
 			await track( 'import_media_command_error', { errorType: 'unsupported-app' } );
 			exit.withError(
-				'The type of application you specified does not currently support this feature'
+				'The type of application you specified does not currently support this feature.'
 			);
 		}
 
