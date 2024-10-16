@@ -257,24 +257,25 @@ const examples = [
 	{
 		usage: `vip @example-app.develop -- wp site list`,
 		description:
-			'Retrieve the list of network sites on the develop environment of the "example-app" WordPress multisite application.',
+			'Use a WP-CLI command to retrieve the list of network sites on the develop environment of the "example-app" WordPress multisite application.',
 	},
 	{
 		usage: `vip @example-app.production --yes -- wp user list`,
 		description:
-			'Retrieve the list of Super Admins on the production environment and automatically answer "yes" to the confirmation prompt.',
+			'Use a WP-CLI command to retrieve the list of Super Admins on the production environment and automatically answer "yes" to the confirmation prompt.',
 	},
 	{
-		usage: `vip @example-app.develop -- wp post list --posts_per_page=100 --url=site.example.com`,
-		description: 'Retrieve the list of posts for the network site site.example.com.',
+		usage: `vip @example-app.develop -- wp post list --posts_per_page=100 --url=dev.example.com`,
+		description:
+			'Use a WP-CLI command to retrieve the list of posts for the network site dev.example.com.',
 	},
 	{
 		usage:
-			`vip @example-app.develop --yes -- wp\n` +
+			`vip @example-app.develop -- wp\n` +
 			`    - example-app.develop:~$ wp option get home\n` +
 			`    - https://dev.example.com`,
 		description:
-			'Enter interactive shell mode to run a WP-CLI command like a standard terminal or SSH session.',
+			'Use the VIP-CLI to launch an interactive WP-CLI shell console and run WP-CLI commands on the develop environment.',
 	},
 ];
 
