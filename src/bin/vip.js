@@ -42,7 +42,10 @@ const runCmd = async function () {
 		.command( 'db', "Access an environment's database." )
 		.command( 'sync', 'Sync the database from production to a non-production environment.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
-		.command( 'validate', 'Validate your VIP application and environment' )
+		.command(
+			'validate',
+			'Scan a Node.js codebase on a local machine for potential issues that could prevent successful building or deploying.'
+		)
 		.command( 'wp', 'Run WP CLI commands against an environment' );
 
 	cmd.argv( process.argv );
