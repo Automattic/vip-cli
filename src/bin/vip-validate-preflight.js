@@ -590,11 +590,11 @@ command( commandOpts )
 	)
 	.option(
 		'node-version',
-		'Specify a Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR (e.g. ).'
+		'Specify a Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR.'
 	)
 	.option(
 		'wait',
-		'Specify an amount of time in milliseconds to wait for the app to boot up. Do not change unless you have issues.',
+		'Set the number of milliseconds to delay the start of a scan. Only necessary for apps that require a larger amount of time to start.',
 		3000
 	)
 	.option(
@@ -607,12 +607,22 @@ command( commandOpts )
 		{
 			usage: 'vip @example-node-app.production validate preflight',
 			description:
-				'Runs the preflight tests to validate if your application is ready to be deployed to VIP Go',
+				'Run the validate command from within the local Node.js codebase directory.\n' +
+				'       * Run the tests with settings that are identical to the targeted VIP Platform environment.',
 		},
 		{
-			usage: 'vip @mysite.production validate preflight --json > results.json',
+			usage:
+				'vip @example-node-app.production validate preflight --path=/Users/example/Desktop/example-node-repo',
 			description:
-				'Runs the preflight tests, but output the results in JSON format, and redirect the output to a file',
+				'Scan a local copy of the Node.js repository from a path on the user\'s local machine named "example-node-repo".',
+		},
+		{
+			usage: 'vip @example-node-app.production validate preflight --json > results.json',
+			description: 'Run the scan and output the results to a local file in JSON format.',
+		},
+		{
+			usage: 'vip @example-node-app.production validate preflight --node-version=18',
+			description: 'Run the scan and output the results to a local file in JSON format.',
 		},
 	] )
 	.argv( process.argv, vipValidatePreflightCommand );
