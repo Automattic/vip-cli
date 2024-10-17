@@ -404,7 +404,7 @@ void command( {
 	)
 	.option(
 		'output',
-		'Create a local copy of the imported file with the completed search and replace operations. Ignored if the command includes --in-place, or excludes a --search-replace operation. Accepts a local file path. Defaults to STDOUT.'
+		'Create a local copy of the imported file with the completed search and replace operations. Ignored if the command includes --in-place, or excludes a --search-replace operation. Accepts a local file path.'
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {
@@ -516,7 +516,7 @@ Processing the SQL import for your environment...
 			const { outputFileName } = await searchAndReplace( fileName, searchReplace, {
 				isImport: true,
 				inPlace: opts.inPlace,
-				output: true,
+				output: opts.output ?? true, // "true" creates a temp output file instead of printing to stdout, as we need to upload the output to S3.
 			} );
 
 			if ( typeof outputFileName !== 'string' ) {

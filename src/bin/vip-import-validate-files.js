@@ -161,7 +161,7 @@ export async function vipImportValidateFilesCmd( arg = [] ) {
 }
 const usage = 'vip import validate-files';
 
-command( { requiredArgs: 1, usage, format: true } )
+command( { requiredArgs: 1, usage } )
 	.examples( [
 		{
 			usage: 'vip import validate-files /Users/user-name/Desktop/uploads',

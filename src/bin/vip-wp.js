@@ -252,13 +252,41 @@ const bindReconnectEvents = ( {
 	} );
 };
 
+// Command examples
+const examples = [
+	{
+		usage: `vip @example-app.develop -- wp site list`,
+		description:
+			'Use a WP-CLI command to retrieve the list of network sites on the develop environment of the "example-app" WordPress multisite application.',
+	},
+	{
+		usage: `vip @example-app.production --yes -- wp user list`,
+		description:
+			'Use a WP-CLI command to retrieve the list of Super Admins on the production environment and automatically answer "yes" to the confirmation prompt.',
+	},
+	{
+		usage: `vip @example-app.develop -- wp post list --posts_per_page=100 --url=dev.example.com`,
+		description:
+			'Use a WP-CLI command to retrieve the list of posts for the network site dev.example.com.',
+	},
+	{
+		usage:
+			`vip @example-app.develop -- wp\n` +
+			`    - example-app.develop:~$ wp option get home\n` +
+			`    - https://dev.example.com`,
+		description:
+			'Use the VIP-CLI to launch an interactive WP-CLI shell console and run WP-CLI commands on the develop environment.',
+	},
+];
+
 commandWrapper( {
 	wildcardCommand: true,
 	appContext: true,
 	envContext: true,
 	appQuery,
 } )
-	.option( 'yes', 'Run the command in production without a confirmation prompt' )
+	.option( 'yes', 'Answer yes to the confirmation prompt (only on production environments).' )
+	.examples( examples )
 	.argv( process.argv, async ( args, opts ) => {
 		const isSubShell = 0 === args.length;
 
@@ -292,7 +320,7 @@ commandWrapper( {
 			// Reset the cursor (can get messed up with enquirer)
 			process.stdout.write( '\u001b[?25h' );
 			console.log(
-				`Welcome to the WP CLI shell for the ${ formatEnvironment(
+				`Welcome to the WP-CLI shell for the ${ formatEnvironment(
 					envName
 				) } environment of ${ chalk.green( appName ) } (${ opts.env.primaryDomain.name })!`
 			);
@@ -376,7 +404,7 @@ commandWrapper( {
 			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
 				console.log(
 					chalk.red( 'Error:' ),
-					'invalid command, please pass a valid WP CLI command.'
+					'invalid command, please pass a valid WP-CLI command.'
 				);
 				subShellRl.prompt();
 				return;
@@ -484,7 +512,7 @@ commandWrapper( {
 
 			console.log( 'Command cancelled by user' );
 
-			// if no command running (.e.g. interactive shell, exit only after doing cleanup)
+			// if no command running (.e.g. interactive shell) exit only after doing cleanup
 			if ( commandRunning === false ) {
 				process.exit();
 			}
