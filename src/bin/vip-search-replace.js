@@ -38,7 +38,7 @@ command( {
 	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
 	.option(
 		'output',
-		'Specify the replacement output file for Search and Replace. Defaults to STDOUT.'
+		'Create a local copy of the file with the completed search and replace operations. Ignored if the command includes --in-place. Accepts a local file path. Defaults to STDOUT.'
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
