@@ -332,7 +332,7 @@ tooling:
             nocopy: true
         - type: volume
           source: clientcode_vipconfig
-          target: /wp/wp-content/vip-config
+          target: /wp/vip-config
           volume:
             nocopy: true
 <% } else { %>
@@ -342,6 +342,6 @@ tooling:
         - <%= appCode.dir %>/plugins:/wp/wp-content/plugins
         - <%= appCode.dir %>/private:/wp/wp-content/private
         - <%= appCode.dir %>/themes:/wp/wp-content/themes
-        - <%= appCode.dir %>/vip-config:/wp/wp-content/vip-config
+        - <%= appCode.dir %>/vip-config:/wp/vip-config
 <% } %>
 <% } %>
