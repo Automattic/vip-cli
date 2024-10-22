@@ -152,7 +152,7 @@
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
-    "configstore": "5.0.1",
+    "configstore": "7.0.0",
     "copy-dir": "0.4.0",
     "debug": "4.3.7",
     "ejs": "^3.1.8",
