@@ -92,7 +92,7 @@ export function table( data: Record< string, Stringable >[] ): string {
 	} );
 
 	data.forEach( datum => {
-		const row = fields.map( field => datum[ field ].toString() );
+		const row = fields.map( field => String( datum[ field ] ) );
 		dataTable.push( row );
 	} );
 
