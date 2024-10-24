@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
-import Lando, { LandoConfig } from 'lando/lib/lando';
-import landoUtils, { AppInfo } from 'lando/plugins/lando-core/lib/utils';
+import Lando, { type LandoConfig } from 'lando/lib/lando';
+import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
 import { FileHandle, mkdir, rename } from 'node:fs/promises';
@@ -23,6 +23,7 @@ import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
+import type Landerode from 'lando/lib/docker';
 
 export interface LandoExecOptions {
 	stdio?: string | [ FileHandle, string, string ];
@@ -374,7 +375,7 @@ export async function landoInfo(
 		const reachableServices = app.info.filter( service => service.urls.length );
 		reachableServices.forEach( service => ( info[ `${ service.service } urls` ] = service.urls ) );
 
-		const health = await checkEnvHealth( lando, instancePath );
+		const health = await checkEnvHealth( lando, app );
 		const frontEndUrl = app.info.find( service => 'nginx' === service.service )?.urls[ 0 ] ?? '';
 
 		const extraService = await getExtraServicesConnections( lando, app );
@@ -545,37 +546,65 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 	}
 }
 
+async function getRunningServicesForProject(
+	docker: Landerode,
+	project: string
+): Promise< string[] > {
+	const containers = await docker.listContainers( {
+		filters: {
+			label: [ `com.docker.compose.project=${ project }` ],
+		},
+	} );
+
+	return containers
+		.filter( container => container.State === 'running' )
+		.map( container => container.Labels[ 'com.docker.compose.service' ] );
+}
+
 export async function checkEnvHealth(
 	lando: Lando,
-	instancePath: string
+	app: App
 ): Promise< Record< string, boolean > > {
 	const urls: Record< string, string > = {};
 
 	const now = new Date();
 
-	const app = await getLandoApplication( lando, instancePath );
+	app.urls ??= [];
 	app.info
 		.filter( service => service.urls.length )
 		.forEach( service => {
 			service.urls.forEach( url => {
-				urls[ url ] = service.service;
+				if ( ! /^https?:\/\/(localhost|127\.0\.0\.1):/.exec( url ) ) {
+					urls[ url ] = service.service;
+				}
 			} );
 		} );
 
 	const urlsToScan = Object.keys( urls ).filter( url => ! url.includes( '*' ) );
 	await tryResolveDomains( urlsToScan );
-	let scanResults: ScanResult[] = [];
-	if ( Array.isArray( app.urls ) ) {
-		scanResults = app.urls;
-		app.urls.forEach( entry => {
-			// We use different status codes to see if the service is up.
-			// We may consider the service is up when Lando considers it is down.
-			if ( entry.color !== 'red' ) {
-				urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 );
-			}
-		} );
-	}
+	app.urls.forEach( entry => {
+		// We use different status codes to see if the service is up.
+		// We may consider the service is up when Lando considers it is down.
+		if ( entry.color !== 'red' ) {
+			urlsToScan.splice( urlsToScan.indexOf( entry.url ), 1 );
+		}
+	} );
 
+	const runningServices = await getRunningServicesForProject( lando.engine.docker, app.project );
+	Object.entries( urls ).forEach( ( [ url, service ] ) => {
+		if ( ! runningServices.includes( service ) ) {
+			( app.urls as ScanResult[] ).push( {
+				url,
+				color: 'red',
+				status: false,
+			} );
+
+			debug( 'Service %s is not running, removing %s from the sacn queue', service, url );
+			urlsToScan.splice( urlsToScan.indexOf( url ), 1 );
+		}
+	} );
+
+	let scanResults = app.urls;
 	if ( urlsToScan.length ) {
 		scanResults = scanResults.concat(
 			await app.scanUrls( urlsToScan, { max: 1, waitCodes: [ 502, 504 ] } )
@@ -594,25 +623,9 @@ export async function checkEnvHealth(
 }
 
 export async function isEnvUp( lando: Lando, instancePath: string ): Promise< boolean > {
-	const now = new Date();
 	const app = await getLandoApplication( lando, instancePath );
-
-	const reachableServices = app.info.filter( service => service.urls.length );
-	const webUrls = reachableServices
-		.map( service => service.urls )
-		.flat()
-		.filter( url => ! /^https?:\/\/(localhost|127\.0\.0\.1):/.exec( url ) );
-
-	await tryResolveDomains( webUrls );
-	const scanResult = await app.scanUrls( webUrls, { max: 1, waitCodes: [ 502, 504 ] } );
-	const duration = new Date().getTime() - now.getTime();
-	debug( 'isEnvUp took %d ms', duration );
-
-	// If all the URLs are reachable then the app is considered 'up'
-	return (
-		scanResult.length > 0 &&
-		scanResult.filter( result => result.status ).length === scanResult.length
-	);
+	const healthResults = await checkEnvHealth( lando, app );
+	return Object.keys( healthResults ).length > 0 && Object.values( healthResults ).every( Boolean );
 }
 
 export async function landoExec(
