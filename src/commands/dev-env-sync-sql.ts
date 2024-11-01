@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import fs from 'fs';
 import Lando from 'lando';
 import { pipeline } from 'node:stream/promises';
-import urlLib from 'url';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
@@ -18,6 +17,19 @@ import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/dat
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
+function extractDomain( str: string | null | undefined ): string | null {
+	if ( ! str ) {
+		return null;
+	}
+
+	try {
+		const url = new URL( str );
+		return url.hostname;
+	} catch {
+		return null;
+	}
+}
+
 /**
  * Finds the site home url from the SQL line
  *
@@ -27,8 +39,7 @@ import { getReadInterface } from '../lib/validations/line-by-line';
 function findSiteHomeUrl( sql: string ): string | null {
 	const regex = `['"](siteurl|home)['"],\\s?['"](.*?)['"]`;
 	const url = sql.match( regex )?.[ 2 ] || '';
-
-	return urlLib.parse( url ).hostname || null;
+	return extractDomain( url );
 }
 
 /**
@@ -177,7 +188,7 @@ export class DevEnvSyncSQLCommand {
 		for ( const site of networkSites ) {
 			if ( ! site?.blogId || site.blogId === 1 ) continue;
 
-			const url = site?.homeUrl?.replace( /https?:\/\//, '' );
+			const url = extractDomain( site?.homeUrl );
 			if ( ! url || ! this.searchReplaceMap[ url ] ) continue;
 
 			this.searchReplaceMap[ url ] = `${ this.slugifyDomain( url ) }-${ site.blogId }.${
