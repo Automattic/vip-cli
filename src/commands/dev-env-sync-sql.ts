@@ -20,20 +20,12 @@ import { getReadInterface } from '../lib/validations/line-by-line';
 /**
  * Replaces the domain in the given URL
  *
- * @param string str    The URL to replace the domain in. Must be a valid URL.
+ * @param string str    The URL to replace the domain in.
  * @param string domain The new domain
  * @return The URL with the new domain
  */
-function replaceDomain( str: string, domain: string ): string {
-	const url = new URL( str );
-	url.hostname = domain;
-
-	// `URL.href()` always adds `/` for an empty path; we don't want that
-	const retval = url.href;
-	return retval.endsWith( '/' ) && ! str.endsWith( '/' )
-		? retval.substring( 0, retval.length - 1 )
-		: retval;
-}
+const replaceDomain = ( str: string, domain: string ): string =>
+	str.replace( /^([^:]+:\/\/)([^:/]+)/, `$1${ domain }` );
 
 /**
  * Strips the protocol from the URL
