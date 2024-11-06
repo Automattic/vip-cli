@@ -108,7 +108,7 @@ export class DevEnvImportSQLCommand {
 			 * Therefore, for the things to work, we have to pretend that stdin is not a TTY :-)
 			 */
 			process.stdin.isTTY = false;
-			await exec( lando, this.slug, importArg, { stdio: [ fd, 'pipe', 'pipe' ] } );
+			await exec( lando, this.slug, importArg, { stdio: [ fd.fd, 'pipe', 'pipe' ] } );
 
 			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );

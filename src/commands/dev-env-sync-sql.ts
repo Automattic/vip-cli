@@ -210,7 +210,7 @@ export class DevEnvSyncSQLCommand {
 			if ( ! this.searchReplaceMap[ strippedUrl ] ) continue;
 
 			const domain = new URL( url ).hostname;
-			const newDomain = `${ this.slugifyDomain( domain ) }-${ site.blogId }.${ this.landoDomain }`;
+			const newDomain = `${ this.slugifyDomain( domain ) }.${ this.landoDomain }`;
 
 			this.searchReplaceMap[ stripProtocol( url ) ] = stripProtocol(
 				replaceDomain( url, newDomain )
@@ -243,6 +243,34 @@ export class DevEnvSyncSQLCommand {
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run();
+	}
+
+	public async fixBlogsTable(): Promise< void > {
+		const networkSites = this.env.wpSitesSDS?.nodes;
+		if ( ! networkSites ) {
+			return;
+		}
+
+		const queries: string[] = [];
+		for ( const site of networkSites ) {
+			if ( ! site?.blogId || ! site?.homeUrl ) {
+				continue;
+			}
+
+			const oldDomain = new URL( site.homeUrl ).hostname;
+			const newDomain =
+				site.blogId !== 1
+					? `${ this.slugifyDomain( oldDomain ) }.${ this.landoDomain }`
+					: this.landoDomain;
+
+			queries.push(
+				`UPDATE wp_blogs SET domain = '${ newDomain }' WHERE blog_id = ${ Number( site.blogId ) };`
+			);
+		}
+
+		if ( queries.length ) {
+			await fs.promises.appendFile( this.sqlFile, queries.join( '\n' ) );
+		}
 	}
 
 	/**
@@ -305,6 +333,7 @@ export class DevEnvSyncSQLCommand {
 			}
 
 			await this.runSearchReplace();
+			await this.fixBlogsTable();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
 			const error = err as Error;
