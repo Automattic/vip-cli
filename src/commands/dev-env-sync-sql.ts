@@ -17,17 +17,33 @@ import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/dat
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
-function extractDomain( str: string | null | undefined ): string | null {
-	if ( ! str ) {
-		return null;
-	}
+/**
+ * Replaces the domain in the given URL
+ *
+ * @param string str    The URL to replace the domain in. Must be a valid URL.
+ * @param string domain The new domain
+ * @return The URL with the new domain
+ */
+function replaceDomain( str: string, domain: string ): string {
+	const url = new URL( str );
+	url.hostname = domain;
 
-	try {
-		const url = new URL( str );
-		return url.hostname;
-	} catch {
-		return null;
-	}
+	// `URL.href()` always adds `/` for an empty path; we don't want that
+	const retval = url.href;
+	return retval.endsWith( '/' ) && ! str.endsWith( '/' )
+		? retval.substring( 0, retval.length - 1 )
+		: retval;
+}
+
+/**
+ * Strips the protocol from the URL
+ *
+ * @param string url The URL to strip the protocol from
+ * @return The URL without the protocol
+ */
+function stripProtocol( url: string ): string {
+	const parts = url.split( '//', 2 );
+	return parts.length > 1 ? parts[ 1 ] : parts[ 0 ];
 }
 
 /**
@@ -39,7 +55,12 @@ function extractDomain( str: string | null | undefined ): string | null {
 function findSiteHomeUrl( sql: string ): string | null {
 	const regex = `['"](siteurl|home)['"],\\s?['"](.*?)['"]`;
 	const url = sql.match( regex )?.[ 2 ] || '';
-	return extractDomain( url );
+	try {
+		new URL( url );
+		return url;
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -53,17 +74,17 @@ async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 	const readInterface = await getReadInterface( sqlFile );
 
 	return new Promise( ( resolve, reject ) => {
-		const domains: Set< string > = new Set();
+		const urls: Set< string > = new Set();
 		readInterface.on( 'line', line => {
-			const domain = findSiteHomeUrl( line );
-			if ( domain ) {
-				domains.add( domain );
+			const url = findSiteHomeUrl( line );
+			if ( url ) {
+				urls.add( url );
 			}
 		} );
 
 		readInterface.on( 'close', () => {
-			// Soring by length so that longest domains are replaced first
-			resolve( Array.from( domains ).sort( ( dom1, dom2 ) => dom2.length - dom1.length ) );
+			// Soring by length so that longest URLs are replaced first
+			resolve( Array.from( urls ).sort( ( url1, url2 ) => url2.length - url1.length ) );
 		} );
 
 		readInterface.on( 'error', reject );
@@ -179,7 +200,9 @@ export class DevEnvSyncSQLCommand {
 		this.searchReplaceMap = {};
 
 		for ( const url of this.siteUrls ) {
-			this.searchReplaceMap[ url ] = this.landoDomain;
+			this.searchReplaceMap[ stripProtocol( url ) ] = stripProtocol(
+				replaceDomain( url, this.landoDomain )
+			);
 		}
 
 		const networkSites = this.env.wpSitesSDS?.nodes;
@@ -188,12 +211,18 @@ export class DevEnvSyncSQLCommand {
 		for ( const site of networkSites ) {
 			if ( ! site?.blogId || site.blogId === 1 ) continue;
 
-			const url = extractDomain( site?.homeUrl );
-			if ( ! url || ! this.searchReplaceMap[ url ] ) continue;
+			const url = site?.homeUrl;
+			if ( ! url ) continue;
 
-			this.searchReplaceMap[ url ] = `${ this.slugifyDomain( url ) }-${ site.blogId }.${
-				this.landoDomain
-			}`;
+			const strippedUrl = stripProtocol( url );
+			if ( ! this.searchReplaceMap[ strippedUrl ] ) continue;
+
+			const domain = new URL( url ).hostname;
+			const newDomain = `${ this.slugifyDomain( domain ) }-${ site.blogId }.${ this.landoDomain }`;
+
+			this.searchReplaceMap[ stripProtocol( url ) ] = stripProtocol(
+				replaceDomain( url, newDomain )
+			);
 		}
 	}
 
