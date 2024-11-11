@@ -25,7 +25,7 @@ import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
 import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
-const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];
+const ALLOWED_NODEJS_VERSIONS = [ '16', '18', '20', '22' ];
 
 export const appQuery = `
 	id
