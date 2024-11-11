@@ -6,7 +6,7 @@ import Lando, { type LandoConfig } from 'lando/lib/lando';
 import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
-import { FileHandle, mkdir, rename } from 'node:fs/promises';
+import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
@@ -24,9 +24,10 @@ import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
 import type Landerode from 'lando/lib/docker';
+import type { StdioOptions } from 'node:child_process';
 
 export interface LandoExecOptions {
-	stdio?: string | [ FileHandle, string, string ];
+	stdio?: StdioOptions;
 }
 
 /**
