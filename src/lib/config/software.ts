@@ -153,6 +153,7 @@ interface VersionChoice {
 	message: string;
 	value: string;
 	disabled?: boolean;
+	deprecated?: boolean;
 }
 
 interface VersionChoices {
@@ -175,16 +176,19 @@ const _optionsForVersion = ( softwareSettings: SoftwareSetting ): VersionChoice[
 			versionChoices.deprecated.push( {
 				message: `${ option.version } (deprecated)`,
 				value: option.version,
+				deprecated: option.deprecated,
 			} );
 		} else if ( option.unstable ) {
 			versionChoices.test.push( {
 				message: `${ option.version } (test)`,
 				value: option.version,
+				deprecated: option.deprecated,
 			} );
 		} else {
 			versionChoices.supported.push( {
 				message: option.version,
 				value: option.version,
+				deprecated: option.deprecated,
 			} );
 		}
 	}
@@ -431,9 +435,12 @@ export const formatSoftwareSettings = (
 	};
 
 	if ( includes.includes( 'available_versions' ) ) {
-		result.available_versions = _optionsForVersion( softwareSetting ).map( option => option.value );
+		result.available_versions = _optionsForVersion( softwareSetting )
+			.filter( option => ! option.deprecated )
+			.map( option => option.value );
+
 		if ( format !== 'json' ) {
-			result.available_versions = result.available_versions.join( ',' );
+			result.available_versions = result.available_versions.sort().join( ',' );
 		}
 	}
 

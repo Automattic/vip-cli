@@ -25,7 +25,7 @@ import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
 import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
-const ALLOWED_NODEJS_VERSIONS = [ '14', '16', '18' ];
+const ALLOWED_NODEJS_VERSIONS = [ '18', '20', '22' ];
 
 export const appQuery = `
 	id
@@ -50,7 +50,7 @@ export const appQuery = `
 `;
 
 let suppressOutput = false;
-let outputJson = false;
+let outputFormat = 'table';
 
 let harmoniaArgs = [];
 
@@ -382,7 +382,7 @@ async function handleResults( harmonia, results ) {
 	} );
 
 	// If the output is JSON, reenable the logToConsole output and print-out the json format.
-	if ( outputJson ) {
+	if ( outputFormat === 'json' ) {
 		suppressOutput = false;
 		logToConsole( harmonia.resultsJSON() );
 		process.exit( 0 );
@@ -492,9 +492,9 @@ async function validateArgs( opt ) {
 	}
 
 	// If the JSON option is enabled, all the stdout should be suppressed to prevent polluting the output.
-	if ( opt.json ) {
+	if ( opt.format === 'json' ) {
 		suppressOutput = true;
-		outputJson = true;
+		outputFormat = 'json';
 	}
 
 	if ( opt.app ) {
@@ -590,7 +590,9 @@ command( commandOpts )
 	)
 	.option(
 		'node-version',
-		'Specify a Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR.'
+		`Select a specific target Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
+			', '
+		) })`
 	)
 	.option(
 		'wait',
@@ -601,7 +603,7 @@ command( commandOpts )
 		[ 'p', 'port' ],
 		'Configure the port to use for the app (defaults to a random port between 3001 and 3999)'
 	)
-	.option( 'json', 'Output the results as JSON', false )
+	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
@@ -611,8 +613,7 @@ command( commandOpts )
 				'       * Run the tests with settings that are identical to the targeted VIP Platform environment.',
 		},
 		{
-			usage:
-				'vip @example-node-app.production validate preflight --path=/Users/example/Desktop/example-node-repo',
+			usage: 'vip @mysite.production validate preflight --format json > results.json',
 			description:
 				'Scan a local copy of the Node.js repository from a path on the user\'s local machine named "example-node-repo".',
 		},

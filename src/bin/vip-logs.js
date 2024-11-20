@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
+import CliTable3 from 'cli-table3';
 import { setTimeout } from 'timers/promises';
 
 import * as logsLib from '../lib/app-logs/app-logs';
@@ -11,6 +12,7 @@ import { trackEvent } from '../lib/tracker';
 
 const LIMIT_MIN = 1;
 const LIMIT_MAX = 5000;
+const LIMIT_DEFAULT = 500;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
 const ALLOWED_FORMATS = [ 'csv', 'json', 'table' ];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
@@ -143,11 +145,36 @@ function printLogs( logs, format ) {
 
 	let output = '';
 	if ( format && 'table' === format ) {
-		const rows = [];
-		for ( const { timestamp, message } of logs ) {
-			rows.push( `${ timestamp } ${ message }` );
-			output = rows.join( '\n' );
+		const options = {
+			wordWrap: true,
+			wrapOnWordBoundary: true,
+			head: [ 'Timestamp', 'Message' ],
+			style: {
+				head: [ 'cyan' ],
+				border: [ 'grey' ],
+			},
+		};
+
+		if ( process.stdout.isTTY && process.stdout.columns ) {
+			options.colWidths = [
+				'YYYY-MM-DDTHH:MM:SS.nnnnnnnnnZ'.length + 2 /* padding */,
+				Math.max(
+					process.stdout.columns - '│  │  │'.length - 'YYYY-MM-DDTHH:MM:SS.nnnnnnnnnZ'.length,
+					20
+				),
+			];
+		} else {
+			options.style.head = [];
+			options.style.border = [];
 		}
+
+		const table = new CliTable3( options );
+		for ( const { timestamp, message } of logs ) {
+			const msg = message.trimRight().replace( /\t/g, '    ' );
+			table.push( [ timestamp, msg ] );
+		}
+
+		output = table.toString();
 	} else {
 		output = formatData( logs, format );
 	}
@@ -161,6 +188,10 @@ function printLogs( logs, format ) {
  * @param {string} format
  */
 export function validateInputs( type, limit, format ) {
+	if ( limit === undefined ) {
+		limit = LIMIT_DEFAULT;
+	}
+
 	if ( ! ALLOWED_TYPES.includes( type ) ) {
 		exit.withError(
 			`Invalid type: ${ type }. The supported types are: ${ ALLOWED_TYPES.join( ', ' ) }.`
@@ -202,7 +233,8 @@ command( {
 	module: 'logs',
 } )
 	.option( 'type', 'The type of logs to be returned: "app" or "batch"', 'app' )
-	.option( 'limit', 'The maximum number of log lines', 500 )
+	// The default limit is set manually in the validateInputs function to address validation issues, avoiding incorrect replacement of the default value.
+	.option( 'limit', `The maximum number of log lines (defaults to ${ LIMIT_DEFAULT })` )
 	.option( 'follow', 'Keep fetching new logs as they are generated' )
 	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.examples( [

@@ -63,14 +63,26 @@ describe( 'getLogs', () => {
 			],
 		} ) );
 
-		await getLogs( [], opts );
+		const isTTY = process.stdout.isTTY;
+		try {
+			process.stdout.isTTY = false;
+			await getLogs( [], opts );
+		} finally {
+			process.stdout.isTTY = isTTY;
+		}
 
 		expect( logsLib.getRecentLogs ).toHaveBeenCalledTimes( 1 );
 		expect( logsLib.getRecentLogs ).toHaveBeenCalledWith( 1, 3, 'app', 500 );
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			'2021-11-05T20:18:36.234041811Z My container message 1\n2021-11-09T20:47:07.301221112Z My container message 2'
+			'┌────────────────────────────────┬────────────────────────┐\n' +
+				'│ Timestamp                      │ Message                │\n' +
+				'├────────────────────────────────┼────────────────────────┤\n' +
+				'│ 2021-11-05T20:18:36.234041811Z │ My container message 1 │\n' +
+				'├────────────────────────────────┼────────────────────────┤\n' +
+				'│ 2021-11-09T20:47:07.301221112Z │ My container message 2 │\n' +
+				'└────────────────────────────────┴────────────────────────┘'
 		);
 
 		const trackingParams = {

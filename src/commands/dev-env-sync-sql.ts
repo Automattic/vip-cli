@@ -251,6 +251,21 @@ export class DevEnvSyncSQLCommand {
 			return;
 		}
 
+		const prologue = `
+DROP PROCEDURE IF EXISTS vip_sync_update_blog_domains;
+DELIMITER $$
+CREATE PROCEDURE vip_sync_update_blog_domains()
+BEGIN
+    IF EXISTS (SELECT * FROM information_schema.tables WHERE table_schema = 'wordpress' AND table_name = 'wp_blogs') THEN
+`;
+		const epilogue = `
+    END IF;
+END$$
+DELIMITER ;
+CALL vip_sync_update_blog_domains();
+DROP PROCEDURE vip_sync_update_blog_domains;
+`;
+
 		const queries: string[] = [];
 		for ( const site of networkSites ) {
 			if ( ! site?.blogId || ! site?.homeUrl ) {
@@ -264,12 +279,15 @@ export class DevEnvSyncSQLCommand {
 					: this.landoDomain;
 
 			queries.push(
-				`UPDATE wp_blogs SET domain = '${ newDomain }' WHERE blog_id = ${ Number( site.blogId ) };`
+				`        UPDATE wp_blogs SET domain = '${ newDomain }' WHERE blog_id = ${ Number(
+					site.blogId
+				) };`
 			);
 		}
 
 		if ( queries.length ) {
-			await fs.promises.appendFile( this.sqlFile, queries.join( '\n' ) );
+			const sql = `${ prologue }\n${ queries.join( '\n' ) }\n${ epilogue }`;
+			await fs.promises.appendFile( this.sqlFile, sql );
 		}
 	}
 

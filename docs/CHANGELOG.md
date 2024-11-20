@@ -1,5 +1,57 @@
 ## Changelog
 
+## 3.8.7
+
+* fix(dev-env): SQL sync for single sites
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.6...3.8.7
+
+## 3.8.6
+
+* Updating Node.js versions and standardize the format
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.5...3.8.6
+
+## 3.8.5
+
+* build(deps-dev): bump the babel group with 4 updates
+* build(deps-dev): bump typescript from 5.6.2 to 5.6.3
+* Update the sync command to follow the VIP-CLI style guide
+* Update the `import` command group to follow the VIP-CLI style guide
+* Remove the unused `--format` option from validate media files command
+* Fix `--output` option of `vip import sql` command
+* Updates the `vip wp` command to follow the VIP-CLI style guide
+* build(deps-dev): bump the babel group with 2 updates
+* build(deps-dev): bump @types/node from 22.7.4 to 22.7.6
+* build(deps-dev): bump @types/node from 22.7.6 to 22.7.7
+* Use a more reliable way to convert to string
+* build(deps-dev): bump @types/node from 22.7.7 to 22.8.2
+* build(deps): bump socket.io-client from 4.8.0 to 4.8.1
+* build(deps-dev): bump @types/jest from 29.5.13 to 29.5.14 in the testing group
+* build(deps-dev): bump the babel group across 1 directory with 4 updates
+* build(deps): bump actions/dependency-review-action from 4.3.4 to 4.4.0
+* build(deps-dev): bump @types/node from 22.8.2 to 22.8.5
+* build(deps-dev): bump @types/adm-zip from 0.5.5 to 0.5.6
+* build(deps-dev): bump rimraf from 5.0.8 to 6.0.1
+* build(deps): bump uuid from 10.0.0 to 11.0.2
+* build(deps-dev): bump @types/node from 22.8.5 to 22.8.6
+* fix(dev-env): verify the container is running before URL scan
+* build(deps-dev): bump @types/node from 22.8.6 to 22.8.7
+* build(deps-dev): bump @types/node from 22.8.7 to 22.9.0
+* fix(dev-env): detection of URLs to replace for multisites
+* build(deps-dev): bump nock from 13.5.5 to 13.5.6
+* build(deps): bump uuid from 11.0.2 to 11.0.3
+* Update socket error handler
+* Fix --limit arg handling in vip logs command
+* New package release: v3.9.0 by 
+* Revert "New package release: v3.9.0"
+* chore(deps): update Lando to 6ca2668
+* fix: `table` format output
+* chore(deps): update `cpu-features` to 0.0.10
+* build(deps): bump @automattic/vip-go-preflight-checks from 2.0.17 to 2.0.18
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.4...3.8.5
+
 ## 3.8.4
 
 * build(deps): bump step-security/harden-runner from 2.9.1 to 2.10.1

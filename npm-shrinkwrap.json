@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "3.8.5-dev.0",
+  "version": "3.8.8-dev.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "3.8.5-dev.0",
+      "version": "3.8.8-dev.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -32,7 +32,7 @@
         "ini": "5.0.0",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli.git#4d8465e",
+        "lando": "github:automattic/lando-cli.git#6ca2668",
         "node-fetch": "^2.6.1",
         "open": "^10.0.0",
         "proxy-from-env": "^1.1.0",
@@ -250,9 +250,9 @@
       }
     },
     "node_modules/@automattic/vip-go-preflight-checks": {
-      "version": "2.0.17",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.17.tgz",
-      "integrity": "sha512-ydpTIwg5cmckOADUwmPd55H2vbIEGmC10pmO7OmRWAIwgyb47E3owUX2xFHfs4Z7F8PpDnt/5S9B5Z0x2bPAxQ==",
+      "version": "2.0.18",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.18.tgz",
+      "integrity": "sha512-I7bAndhd0pvkCas8qHrpT3p81mJotjkLr0r2G215jtg6lI1OV6L7+Xnkns/LONqPZROjoPxfErbega6C5IUuzw==",
       "dependencies": {
         "chalk": "^4.1.2",
         "command-line-args": "^5.2.1",
@@ -3526,9 +3526,9 @@
       }
     },
     "node_modules/@types/dockerode": {
-      "version": "3.3.31",
-      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.31.tgz",
-      "integrity": "sha512-42R9eoVqJDSvVspV89g7RwRqfNExgievLNWoHkg7NoWIqAmavIbgQBb4oc0qRtHkxE+I3Xxvqv7qVXFABKPBTg==",
+      "version": "3.3.32",
+      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.32.tgz",
+      "integrity": "sha512-xxcG0g5AWKtNyh7I7wswLdFvym4Mlqks5ZlKzxEUrGHS0r0PUOfxm2T0mspwu10mHQqu3Ck3MI3V2HqvLWE1fg==",
       "dev": true,
       "dependencies": {
         "@types/docker-modem": "*",
@@ -5532,14 +5532,14 @@
       }
     },
     "node_modules/cpu-features": {
-      "version": "0.0.9",
-      "resolved": "https://registry.npmjs.org/cpu-features/-/cpu-features-0.0.9.tgz",
-      "integrity": "sha512-AKjgn2rP2yJyfbepsmLfiYcmtNn/2eUvocUyM/09yB0YDiz39HteK/5/T4Onf0pmdYDMgkBoGvRLvEguzyL7wQ==",
+      "version": "0.0.10",
+      "resolved": "https://registry.npmjs.org/cpu-features/-/cpu-features-0.0.10.tgz",
+      "integrity": "sha512-9IkYqtX3YHPCzoVg1Py+o9057a3i0fp7S530UWokCSaFVTc7CwXPRiOjRjBQQ18ZCNafx78YfnG+HALxtVmOGA==",
       "hasInstallScript": true,
       "optional": true,
       "dependencies": {
         "buildcheck": "~0.0.6",
-        "nan": "^2.17.0"
+        "nan": "^2.19.0"
       },
       "engines": {
         "node": ">=10.0.0"
@@ -10085,9 +10085,10 @@
       "integrity": "sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s="
     },
     "node_modules/nan": {
-      "version": "2.18.0",
-      "resolved": "https://registry.npmjs.org/nan/-/nan-2.18.0.tgz",
-      "integrity": "sha512-W7tfG7vMOGtD30sHoZSSc/JVYiyDPEyQVso/Zz+/uQd0B0L46gtC+pHha5FFMRpil6fm/AoEcRWyOVi4+E/f8w==",
+      "version": "2.22.0",
+      "resolved": "https://registry.npmjs.org/nan/-/nan-2.22.0.tgz",
+      "integrity": "sha512-nbajikzWTMwsW+eSsNm3QwlOs7het9gGJU5dDZzRTQGk03vyBOauxgI4VakDzE0PtsGTmXPsXTbbjVhRwR5mpw==",
+      "license": "MIT",
       "optional": true
     },
     "node_modules/napi-build-utils": {
@@ -13403,9 +13404,9 @@
       }
     },
     "@automattic/vip-go-preflight-checks": {
-      "version": "2.0.17",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.17.tgz",
-      "integrity": "sha512-ydpTIwg5cmckOADUwmPd55H2vbIEGmC10pmO7OmRWAIwgyb47E3owUX2xFHfs4Z7F8PpDnt/5S9B5Z0x2bPAxQ==",
+      "version": "2.0.18",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.18.tgz",
+      "integrity": "sha512-I7bAndhd0pvkCas8qHrpT3p81mJotjkLr0r2G215jtg6lI1OV6L7+Xnkns/LONqPZROjoPxfErbega6C5IUuzw==",
       "requires": {
         "chalk": "^4.1.2",
         "command-line-args": "^5.2.1",
@@ -15785,9 +15786,9 @@
       }
     },
     "@types/dockerode": {
-      "version": "3.3.31",
-      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.31.tgz",
-      "integrity": "sha512-42R9eoVqJDSvVspV89g7RwRqfNExgievLNWoHkg7NoWIqAmavIbgQBb4oc0qRtHkxE+I3Xxvqv7qVXFABKPBTg==",
+      "version": "3.3.32",
+      "resolved": "https://registry.npmjs.org/@types/dockerode/-/dockerode-3.3.32.tgz",
+      "integrity": "sha512-xxcG0g5AWKtNyh7I7wswLdFvym4Mlqks5ZlKzxEUrGHS0r0PUOfxm2T0mspwu10mHQqu3Ck3MI3V2HqvLWE1fg==",
       "dev": true,
       "requires": {
         "@types/docker-modem": "*",
@@ -17271,13 +17272,13 @@
       }
     },
     "cpu-features": {
-      "version": "0.0.9",
-      "resolved": "https://registry.npmjs.org/cpu-features/-/cpu-features-0.0.9.tgz",
-      "integrity": "sha512-AKjgn2rP2yJyfbepsmLfiYcmtNn/2eUvocUyM/09yB0YDiz39HteK/5/T4Onf0pmdYDMgkBoGvRLvEguzyL7wQ==",
+      "version": "0.0.10",
+      "resolved": "https://registry.npmjs.org/cpu-features/-/cpu-features-0.0.10.tgz",
+      "integrity": "sha512-9IkYqtX3YHPCzoVg1Py+o9057a3i0fp7S530UWokCSaFVTc7CwXPRiOjRjBQQ18ZCNafx78YfnG+HALxtVmOGA==",
       "optional": true,
       "requires": {
         "buildcheck": "~0.0.6",
-        "nan": "^2.17.0"
+        "nan": "^2.19.0"
       }
     },
     "create-jest": {
@@ -20199,7 +20200,7 @@
     },
     "lando": {
       "version": "git+ssh://git@github.com/automattic/lando-cli.git#4d8465ece983ee6242528b54de6738f00804ca0d",
-      "from": "lando@github:automattic/lando-cli.git#4d8465e",
+      "from": "lando@github:automattic/lando-cli.git#6ca2668",
       "requires": {
         "@lando/compose": "1.0.0",
         "axios": "^1.7.2",
@@ -20584,9 +20585,9 @@
       "integrity": "sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s="
     },
     "nan": {
-      "version": "2.18.0",
-      "resolved": "https://registry.npmjs.org/nan/-/nan-2.18.0.tgz",
-      "integrity": "sha512-W7tfG7vMOGtD30sHoZSSc/JVYiyDPEyQVso/Zz+/uQd0B0L46gtC+pHha5FFMRpil6fm/AoEcRWyOVi4+E/f8w==",
+      "version": "2.22.0",
+      "resolved": "https://registry.npmjs.org/nan/-/nan-2.22.0.tgz",
+      "integrity": "sha512-nbajikzWTMwsW+eSsNm3QwlOs7het9gGJU5dDZzRTQGk03vyBOauxgI4VakDzE0PtsGTmXPsXTbbjVhRwR5mpw==",
       "optional": true
     },
     "napi-build-utils": {

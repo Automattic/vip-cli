@@ -53,11 +53,25 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 };
 
 const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdoutStream } ) => {
+	const criticalErrors = [
+		'ECONNRESET',
+		'ETIMEDOUT',
+		'EHOSTUNREACH',
+		'ENOSPC',
+		'EACCES',
+		'EMFILE',
+		'ENOMEM',
+	];
+
 	stdoutStream.on( 'error', err => {
 		commandRunning = false;
 
-		// TODO handle this better
-		console.error( 'Error: ' + err.message );
+		if ( criticalErrors.includes( err.code ) ) {
+			console.error( `Error: ${ err.message }` );
+		} else {
+			// TODO handle this better
+			debug( 'Error: ' + err.message );
+		}
 	} );
 
 	stdoutStream.on( 'end', async () => {
@@ -231,7 +245,7 @@ const bindReconnectEvents = ( {
 	} );
 
 	currentJob.socket.io.on( 'reconnect_attempt', attempt => {
-		console.error( 'There was an error connecting to the server. Retrying...' );
+		debug( 'There was an error connecting to the server. Retrying...' );
 
 		if ( attempt > 1 ) {
 			return;

@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "3.8.5-dev.0",
+  "version": "3.8.8-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -163,7 +163,7 @@
     "ini": "5.0.0",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli.git#4d8465e",
+    "lando": "github:automattic/lando-cli.git#6ca2668",
     "node-fetch": "^2.6.1",
     "open": "^10.0.0",
     "proxy-from-env": "^1.1.0",
