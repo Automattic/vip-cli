@@ -603,7 +603,8 @@ export default function ( opts ) {
 	if ( _opts.format ) {
 		args.option(
 			'format',
-			'Render output in a particular format. Accepts "table" (default), "csv", and "json".'
+			'Render output in a particular format. Accepts “csv”, and “json”.',
+			'table'
 		);
 	}
 

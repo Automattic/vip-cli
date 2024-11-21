@@ -329,7 +329,7 @@ describe( 'getLogs', () => {
 
 			expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 			expect( exit.withError ).toHaveBeenCalledWith(
-				`Invalid limit: ${ limit }. It should be a number between 1 and 5000.`
+				`Invalid limit: ${ limit }. Set the limit to an integer between 1 and 5000.`
 			);
 
 			expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
