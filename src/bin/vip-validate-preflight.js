@@ -590,9 +590,9 @@ command( commandOpts )
 	)
 	.option(
 		'node-version',
-		`Select a specific target Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
+		`The version of Node.JS to run the tests with. Accepts semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
 			', '
-		) })`
+		) }).`
 	)
 	.option(
 		'wait',
@@ -601,11 +601,18 @@ command( commandOpts )
 	)
 	.option(
 		[ 'p', 'port' ],
-		'Configure the port to use for the app (defaults to a random port between 3001 and 3999)'
+		'Configure a port to use for the application (defaults to a random value between 3001 and 3999)'
 	)
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
-	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
+	.option(
+		'format',
+		'Render output in a particular format. Accepts “table” (default), “csv”, and “json”.'
+	)
+	.option( [ 'P', 'path' ], 'Path to the local application code.', process.cwd() )
 	.examples( [
+		{
+			usage: 'vip validate preflight',
+			description: 'Run the validate command from within the local Node.js codebase directory.',
+		},
 		{
 			usage: 'vip @example-node-app.production validate preflight',
 			description:
@@ -613,12 +620,13 @@ command( commandOpts )
 				'       * Run the tests with settings that are identical to the targeted VIP Platform environment.',
 		},
 		{
-			usage: 'vip @mysite.production validate preflight --format json > results.json',
+			usage:
+				'vip @example-node-app.production validate preflight --path=/Users/example/Desktop/example-node-repo',
 			description:
 				'Scan a local copy of the Node.js repository from a path on the user\'s local machine named "example-node-repo".',
 		},
 		{
-			usage: 'vip @example-node-app.production validate preflight --json > results.json',
+			usage: 'vip @example-node-app.production validate preflight --format=json > results.json',
 			description: 'Run the scan and output the results to a local file in JSON format.',
 		},
 		{
