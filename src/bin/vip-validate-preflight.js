@@ -582,56 +582,54 @@ if ( parsedAlias.app ) {
 	);
 }
 
-command( commandOpts )
+const usage = 'vip validate preflight';
+
+command( { commandOpts, usage } )
 	.option(
 		'verbose',
-		'Increase logging level to include app build and server boot up messages. Prints rows to the console as they are updated.',
+		'Increase logging level to include app build and server boot up messages. Outputs rows to the console as they are generated.',
 		false
 	)
 	.option(
 		'node-version',
-		`The version of Node.JS to run the tests with. Accepts semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
+		`Set a version of Node.JS for the tests. Accepts semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
 			', '
 		) }).`
 	)
 	.option(
 		'wait',
-		'Set the number of milliseconds to delay the start of a scan. Only necessary for apps that require a larger amount of time to start.',
+		'Set the number of milliseconds to delay the start of the tests. Only necessary if an application requires a greater amount of time to start.',
 		3000
 	)
 	.option(
 		[ 'p', 'port' ],
-		'Configure a port to use for the application (defaults to a random value between 3001 and 3999)'
+		'Set a port for the application. (Defaults to a random value between 3001 and 3999)'
 	)
-	.option(
-		'format',
-		'Render output in a particular format. Accepts “table” (default), “csv”, and “json”.'
-	)
-	.option( [ 'P', 'path' ], 'Path to the local application code.', process.cwd() )
+	.option( 'format', 'Render output in a particular format. Accepts “csv” and “json”.', 'table' )
+	.option( [ 'P', 'path' ], 'Path to a local Node.js application directory.', process.cwd() )
 	.examples( [
 		{
 			usage: 'vip validate preflight',
-			description: 'Run the validate command from within the local Node.js codebase directory.',
+			description:
+				'Run the validate command from within the root of the local Node.js codebase directory.',
+		},
+		{
+			usage: 'vip validate preflight --path=/Users/example/Desktop/example-node-repo',
+			description:
+				'Run the validate command against a Node.js application directory at a specific local path.',
+		},
+		{
+			usage: 'vip @example-node-app.production validate preflight --node-version=20',
+			description: 'Run the validation tests with a specific version of Node.js.',
+		},
+		{
+			usage: 'vip validate preflight --format=json > results.json',
+			description: 'Output the results of the validation tests to a local file in JSON format.',
 		},
 		{
 			usage: 'vip @example-node-app.production validate preflight',
 			description:
-				'Run the validate command from within the local Node.js codebase directory.\n' +
-				'       * Run the tests with settings that are identical to the targeted VIP Platform environment.',
-		},
-		{
-			usage:
-				'vip @example-node-app.production validate preflight --path=/Users/example/Desktop/example-node-repo',
-			description:
-				'Scan a local copy of the Node.js repository from a path on the user\'s local machine named "example-node-repo".',
-		},
-		{
-			usage: 'vip @example-node-app.production validate preflight --format=json > results.json',
-			description: 'Run the scan and output the results to a local file in JSON format.',
-		},
-		{
-			usage: 'vip @example-node-app.production validate preflight --node-version=18',
-			description: 'Run the scan and output the results to a local file in JSON format.',
+				'Run the validation tests with settings based on a targeted VIP Platform environment.',
 		},
 	] )
 	.argv( process.argv, vipValidatePreflightCommand );

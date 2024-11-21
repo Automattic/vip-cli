@@ -199,7 +199,7 @@ void command( {
 		'Set the maximum number of log entries. Accepts an integer value between 1 and 500.',
 		500
 	)
-	.option( 'format', 'Render output in a particular format. Accepts “csv”, and “json”.', 'table' )
+	.option( 'format', 'Render output in a particular format. Accepts “csv” and “json”.', 'table' )
 	.examples( [
 		{
 			description:
