@@ -1,5 +1,11 @@
 ## Changelog
 
+### 3.9.0
+
+* feat(dev-env): add support for PHP 8.4
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.8...3.9.0
+
 ### 3.8.8
 
 * build(deps-dev): bump @types/dockerode from 3.3.31 to 3.3.32
