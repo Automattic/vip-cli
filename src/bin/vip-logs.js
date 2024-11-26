@@ -249,7 +249,11 @@ command( {
 		`The maximum number of entries to return. Accepts an integer value between 1 and 5000 (defaults to ${ LIMIT_DEFAULT }).`
 	)
 	.option( 'follow', 'Output new entries as they are generated.' )
-	.option( 'format', 'Render output in a particular format. Accepts “csv”, “json”, and “text”.', 'table' )
+	.option(
+		'format',
+		'Render output in a particular format. Accepts “csv”, “json”, and “text”.',
+		'table'
+	)
 	.examples( [
 		{
 			usage: 'vip @example-app.production logs',
