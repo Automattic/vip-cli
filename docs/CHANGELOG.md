@@ -3,6 +3,7 @@
 ### 3.9.0
 
 * feat(dev-env): add support for PHP 8.4
+* Change mount path for vip-config from WP_CONTENT_DIR to ABSPATH
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.8...3.9.0
 
