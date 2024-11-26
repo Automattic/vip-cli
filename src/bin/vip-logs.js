@@ -14,7 +14,7 @@ const LIMIT_MIN = 1;
 const LIMIT_MAX = 5000;
 const LIMIT_DEFAULT = 500;
 const ALLOWED_TYPES = [ 'app', 'batch' ];
-const ALLOWED_FORMATS = [ 'csv', 'json', 'table' ];
+const ALLOWED_FORMATS = [ 'csv', 'json', 'table', 'text' ];
 const DEFAULT_POLLING_DELAY_IN_SECONDS = 30;
 const MIN_POLLING_DELAY_IN_SECONDS = 5;
 const MAX_POLLING_DELAY_IN_SECONDS = 300;
@@ -148,7 +148,7 @@ function printLogs( logs, format ) {
 	} );
 
 	let output = '';
-	if ( format && 'table' === format ) {
+	if ( 'table' === format ) {
 		const options = {
 			wordWrap: true,
 			wrapOnWordBoundary: true,
@@ -179,6 +179,12 @@ function printLogs( logs, format ) {
 		}
 
 		output = table.toString();
+	} else if ( 'text' === format ) {
+		const rows = [];
+		for ( const { timestamp, message } of logs ) {
+			rows.push( `${ timestamp } ${ message }` );
+			output = rows.join( '\n' );
+		}
 	} else {
 		output = formatData( logs, format );
 	}
@@ -243,7 +249,7 @@ command( {
 		`The maximum number of entries to return. Accepts an integer value between 1 and 5000 (defaults to ${ LIMIT_DEFAULT }).`
 	)
 	.option( 'follow', 'Output new entries as they are generated.' )
-	.option( 'format', 'Render output in a particular format. Accepts “csv”, and “json”.', 'table' )
+	.option( 'format', 'Render output in a particular format. Accepts “csv”, “json”, and “text”.', 'table' )
 	.examples( [
 		{
 			usage: 'vip @example-app.production logs',
