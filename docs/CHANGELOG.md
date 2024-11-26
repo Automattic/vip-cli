@@ -3,7 +3,11 @@
 ### 3.9.0
 
 * feat(dev-env): add support for PHP 8.4
-* Change mount path for vip-config from WP_CONTENT_DIR to ABSPATH
+* Provide dedicated error message for when a token is marked as disabled due to inactivity
+* Set the mount path for vip-config to ABSPATH/vip-config to match production
+* Add --format="text" option to vip logs
+* build(deps-dev): bump typescript from 5.6.3 to 5.7.2
+* build(deps-dev): bump @types/node from 22.9.1 to 22.10.0
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.8...3.9.0
 
@@ -61,7 +65,7 @@
 * build(deps): bump uuid from 11.0.2 to 11.0.3
 * Update socket error handler
 * Fix --limit arg handling in vip logs command
-* New package release: v3.9.0 by 
+* New package release: v3.9.0 by
 * Revert "New package release: v3.9.0"
 * chore(deps): update Lando to 6ca2668
 * fix: `table` format output
@@ -158,7 +162,7 @@
 * build(deps-dev): bump @babel/core from 7.24.8 to 7.24.9 in the babel group
 * build(deps-dev): bump @types/dockerode from 3.3.29 to 3.3.30
 * update: media import validate-files
-  
+
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.6.0...3.7.0
 
 ### 3.6.0
