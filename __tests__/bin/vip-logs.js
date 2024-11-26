@@ -308,7 +308,7 @@ describe( 'getLogs', () => {
 
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith(
-			'Invalid format: jso. The supported formats are: csv, json, table.'
+			'Invalid format: jso. The supported formats are: csv, json, table, text.'
 		);
 
 		expect( logsLib.getRecentLogs ).not.toHaveBeenCalled();
