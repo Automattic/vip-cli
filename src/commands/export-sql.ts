@@ -33,11 +33,13 @@ const BACKUP_AND_JOB_STATUS_QUERY = gql`
 			id
 			environments(id: $envId) {
 				id
+				backupsSqlDumpTool
 				latestBackup {
 					id
 					type
 					size
 					filename
+					sqlDumpTool
 					createdAt
 				}
 				jobs(jobTypes: [db_backup_copy]) {
@@ -98,6 +100,7 @@ async function fetchLatestBackupAndJobStatusBase(
 ): Promise< {
 	latestBackup: Backup | undefined;
 	jobs: Job[];
+	envSqlDumpTool: string | null | undefined;
 } > {
 	const api = API();
 
@@ -108,11 +111,12 @@ async function fetchLatestBackupAndJobStatusBase(
 	} );
 
 	const environments = response.data.app?.environments;
+	const envSqlDumpTool = environments?.[ 0 ]?.backupsSqlDumpTool;
 
 	const latestBackup: Backup | undefined = environments?.[ 0 ]?.latestBackup as Backup;
 	const jobs: Job[] = ( environments?.[ 0 ]?.jobs || [] ) as Job[];
 
-	return { latestBackup, jobs };
+	return { latestBackup, jobs, envSqlDumpTool };
 }
 
 async function fetchLatestBackupAndJobStatus(
@@ -412,7 +416,10 @@ export class ExportSQLCommand {
 			await this.runBackupJob();
 		}
 
-		const { latestBackup } = await fetchLatestBackupAndJobStatus( this.app.id, this.env.id );
+		const { latestBackup, envSqlDumpTool } = await fetchLatestBackupAndJobStatus(
+			this.app.id,
+			this.env.id
+		);
 
 		if ( ! latestBackup ) {
 			await this.track( 'error', {
@@ -433,6 +440,18 @@ export class ExportSQLCommand {
 				`${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${
 					latestBackup.createdAt
 				}`
+			);
+		}
+
+		const showMyDumperWarning = ( latestBackup.sqlDumpTool ?? envSqlDumpTool ) === 'mydumper';
+		if ( showMyDumperWarning ) {
+			console.warn(
+				chalk.yellow.bold( 'WARNING:' ),
+				chalk.yellow(
+					'This is a large or complex database. The backup file for this database is generated with MyDumper. ' +
+						'The file can only be loaded with MyLoader. ' +
+						'For more information: https://github.com/mydumper/mydumper'
+				)
 			);
 		}
 

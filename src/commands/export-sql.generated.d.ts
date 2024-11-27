@@ -13,12 +13,14 @@ export type AppBackupAndJobStatusQuery = {
 		environments?: Array< {
 			__typename?: 'AppEnvironment';
 			id?: number | null;
+			backupsSqlDumpTool?: string | null;
 			latestBackup?: {
 				__typename?: 'Backup';
 				id?: number | null;
 				type?: string | null;
 				size?: number | null;
 				filename?: string | null;
+				sqlDumpTool?: string | null;
 				createdAt?: string | null;
 			} | null;
 			jobs?: Array<
