@@ -8,7 +8,7 @@ import { trackEvent } from '../lib/tracker';
 
 const baseUsage = 'vip app list';
 
-command( { usage: baseUsage } )
+command( { format: true, usage: baseUsage } )
 	.examples( [
 		{
 			usage:
