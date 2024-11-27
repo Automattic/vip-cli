@@ -1186,6 +1186,7 @@ export type Backup = {
 	filename?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
 	size?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+	sqlDumpTool?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
