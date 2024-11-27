@@ -67,6 +67,10 @@ args.argv = async function ( argv, cb ) {
 		debug: false,
 	} );
 
+	if ( _opts.format && ! options.format ) {
+		options.format = 'table';
+	}
+
 	if ( options.h || options.help ) {
 		this.showHelp();
 	}
@@ -603,8 +607,7 @@ export default function ( opts ) {
 	if ( _opts.format ) {
 		args.option(
 			'format',
-			'Render output in a particular format. Accepts “csv”, and “json”.',
-			'table'
+			'Render output in a particular format. Accepts “table“ (default), “csv“, and “json“.'
 		);
 	}
 

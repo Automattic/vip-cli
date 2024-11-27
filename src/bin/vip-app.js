@@ -6,7 +6,7 @@ import app from '../lib/api/app';
 import command, { getEnvIdentifier } from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
-command( { requiredArgs: 1, format: true } )
+command( { requiredArgs: 1 } )
 	.example(
 		'vip app list',
 		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'

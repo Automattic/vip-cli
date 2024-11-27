@@ -562,6 +562,7 @@ function sanitizeArgsForTracking( args ) {
 
 let commandOpts = {
 	module: 'harmonia',
+	format: true,
 };
 
 // The @app.env selector is optional, so we need to check if it was passed
@@ -605,8 +606,7 @@ command( { commandOpts, usage } )
 		[ 'p', 'port' ],
 		'Set a port for the application. (Defaults to a random value between 3001 and 3999)'
 	)
-	.option( 'format', 'Render output in a particular format. Accepts “csv” and “json”.', 'table' )
-	.option( [ 'P', 'path' ], 'Path to a local Node.js application directory.', process.cwd() )
+	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
 			usage: 'vip validate preflight',
