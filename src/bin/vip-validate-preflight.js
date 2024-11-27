@@ -588,12 +588,12 @@ const usage = 'vip validate preflight';
 command( { commandOpts, usage } )
 	.option(
 		'verbose',
-		'Increase logging level to include app build and server boot up messages. Outputs rows to the console as they are generated.',
+		'Increase logging level to include app build and server boot up messages.',
 		false
 	)
 	.option(
 		'node-version',
-		`Set a version of Node.JS for the tests. Accepts semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
+		`Set a version of Node.js for the tests. Accepts semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
 			', '
 		) }).`
 	)
