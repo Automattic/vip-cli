@@ -560,6 +560,7 @@ function sanitizeArgsForTracking( args ) {
 
 let commandOpts = {
 	module: 'harmonia',
+	format: true,
 };
 
 // The @app.env selector is optional, so we need to check if it was passed
@@ -601,7 +602,6 @@ command( commandOpts )
 		[ 'p', 'port' ],
 		'Configure the port to use for the app (defaults to a random port between 3001 and 3999)'
 	)
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
