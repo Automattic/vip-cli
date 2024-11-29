@@ -3429,9 +3429,9 @@
       "integrity": "sha512-VqAAkydywPpkw63WQhPVKCD3SdwXuihCUVZbbiY3SfSTGQyHmwRoq27y4dmJdZuJwd5JIlQoMPyGvMbUPY0RKQ=="
     },
     "node_modules/@types/adm-zip": {
-      "version": "0.5.6",
-      "resolved": "https://registry.npmjs.org/@types/adm-zip/-/adm-zip-0.5.6.tgz",
-      "integrity": "sha512-lRlcSLg5Yoo7C2H2AUiAoYlvifWoCx/se7iUNiCBTfEVVYFVn+Tr9ZGed4K73tYgLe9O4PjdJvbxlkdAOx/qiw==",
+      "version": "0.5.7",
+      "resolved": "https://registry.npmjs.org/@types/adm-zip/-/adm-zip-0.5.7.tgz",
+      "integrity": "sha512-DNEs/QvmyRLurdQPChqq0Md4zGvPwHerAJYWk9l2jCbD1VPpnzRJorOdiq4zsw09NFbYnhfsoEhWtxIzXpn2yw==",
       "dev": true,
       "dependencies": {
         "@types/node": "*"
@@ -15689,9 +15689,9 @@
       "integrity": "sha512-VqAAkydywPpkw63WQhPVKCD3SdwXuihCUVZbbiY3SfSTGQyHmwRoq27y4dmJdZuJwd5JIlQoMPyGvMbUPY0RKQ=="
     },
     "@types/adm-zip": {
-      "version": "0.5.6",
-      "resolved": "https://registry.npmjs.org/@types/adm-zip/-/adm-zip-0.5.6.tgz",
-      "integrity": "sha512-lRlcSLg5Yoo7C2H2AUiAoYlvifWoCx/se7iUNiCBTfEVVYFVn+Tr9ZGed4K73tYgLe9O4PjdJvbxlkdAOx/qiw==",
+      "version": "0.5.7",
+      "resolved": "https://registry.npmjs.org/@types/adm-zip/-/adm-zip-0.5.7.tgz",
+      "integrity": "sha512-DNEs/QvmyRLurdQPChqq0Md4zGvPwHerAJYWk9l2jCbD1VPpnzRJorOdiq4zsw09NFbYnhfsoEhWtxIzXpn2yw==",
       "dev": true,
       "requires": {
         "@types/node": "*"
