@@ -1,4 +1,4 @@
-import StreamZip, { StreamZipAsync, ZipEntry } from 'node-stream-zip';
+import StreamZip, { ZipEntry } from 'node-stream-zip';
 import { constants } from 'node:fs';
 import path from 'path';
 import * as tar from 'tar';

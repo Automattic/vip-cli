@@ -29,7 +29,7 @@ describe( 'vip-app-deploy-validate e2e', () => {
 				file: '__fixtures__/custom-deploy/no-themes-folder.zip',
 				error: `Missing \`themes\` directory from root folder.`,
 			},
-		] )( 'should throw an error for invalid zip file - $file', async ( { file, error }) => {
+		] )( 'should throw an error for invalid zip file - $file', async ( { file, error } ) => {
 			await validateZipFile( file );
 
 			expect( exitSpy ).toHaveBeenCalledWith( error );
