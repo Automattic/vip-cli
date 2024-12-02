@@ -1,4 +1,4 @@
-import AdmZip from 'adm-zip';
+import StreamZip, { StreamZipAsync, ZipEntry } from 'node-stream-zip';
 import { constants } from 'node:fs';
 import path from 'path';
 import * as tar from 'tar';
@@ -77,14 +77,14 @@ export function validateName( name: string, isDirectory: boolean ) {
 /**
  * Validate the existence of a symlink in a zip file. Ignores symlinks in node_modules/.bin/
  *
- * @param {IZipEntry} entry The zip entry to validate
+ * @param {ZipEntry} entry The zip entry to validate
  */
-function validateZipSymlink( entry: AdmZip.IZipEntry ) {
-	if ( symlinkIgnorePattern.test( entry.entryName ) ) {
+function validateZipSymlink( entry: ZipEntry ) {
+	if ( symlinkIgnorePattern.test( entry.name ) ) {
 		return;
 	}
 
-	const madeBy = entry.header.made >> 8; // eslint-disable-line no-bitwise
+	const madeBy = entry.verMade >> 8; // eslint-disable-line no-bitwise
 	const errorMsg = errorMessages.symlink + entry.name;
 
 	// DOS
@@ -104,25 +104,25 @@ function validateZipSymlink( entry: AdmZip.IZipEntry ) {
  * Validate a zip entry for disallowed characters and symlinks.
  * Ignores __MACOSX directories.
  *
- * @param {IZipEntry} entry The zip entry to validate
+ * @param {ZipEntry} entry The zip entry to validate
  */
-function validateZipEntry( entry: AdmZip.IZipEntry ) {
-	if ( entry.entryName.startsWith( macosxDir ) ) {
+function validateZipEntry( entry: ZipEntry ) {
+	if ( entry.name.startsWith( macosxDir ) ) {
 		return;
 	}
 
-	validateName( entry.isDirectory ? entry.entryName : entry.name, entry.isDirectory );
+	validateName( entry.isDirectory ? entry.name : path.basename( entry.name ), entry.isDirectory );
 	validateZipSymlink( entry );
 }
 
 /**
  * Validate the existence of a themes directory in the root folder.
  *
- * @param {IZipEntry[]} zipEntries The zip entries to validate
+ * @param {ZipEntry[]} zipEntries The zip entries to validate
  */
-function validateZipThemes( rootFolder: string, zipEntries: AdmZip.IZipEntry[] ) {
+function validateZipThemes( rootFolder: string, zipEntries: ZipEntry[] ) {
 	const hasThemesDir = zipEntries.some(
-		entry => entry.isDirectory && entry.entryName.startsWith( path.join( rootFolder, 'themes/' ) )
+		entry => entry.isDirectory && entry.name.startsWith( path.join( rootFolder, 'themes/' ) )
 	);
 
 	if ( ! hasThemesDir ) {
@@ -135,25 +135,26 @@ function validateZipThemes( rootFolder: string, zipEntries: AdmZip.IZipEntry[] )
  *
  * @param {string} filePath The path to the zip file
  */
-export function validateZipFile( filePath: string ) {
+export async function validateZipFile( filePath: string ) {
 	try {
-		const zipFile = new AdmZip( filePath );
-		const zipEntries = zipFile.getEntries();
+		const zipFile = new StreamZip.async( { file: filePath } );
 
-		const rootDirs = zipEntries.filter(
+		const zipEntries = await zipFile.entries();
+
+		const rootDirs = Object.values( zipEntries ).filter(
 			entry =>
 				entry.isDirectory &&
-				! entry.entryName.startsWith( macosxDir ) &&
-				( entry.entryName.match( /\//g ) || [] ).length === 1
+				! entry.name.startsWith( macosxDir ) &&
+				( entry.name.match( /\//g ) || [] ).length === 1
 		);
 		if ( rootDirs.length !== 1 ) {
 			exit.withError( errorMessages.singleRootDir );
 		}
 
-		const rootFolder = rootDirs[ 0 ].entryName;
-		validateZipThemes( rootFolder, zipEntries );
+		const rootFolder = rootDirs[ 0 ].name;
+		validateZipThemes( rootFolder, Object.values( zipEntries ) );
 
-		zipEntries.forEach( entry => validateZipEntry( entry ) );
+		Object.values( zipEntries ).forEach( entry => validateZipEntry( entry ) );
 	} catch ( error ) {
 		const err = error as Error;
 		exit.withError( `Error reading file: ${ err.message }` );
