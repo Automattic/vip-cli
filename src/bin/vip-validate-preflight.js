@@ -113,14 +113,14 @@ async function getBuildConfiguration( application, environment ) {
 			console.log(
 				`${ chalk.red(
 					'Error:'
-				) } You don't have the required permissions to run validations for this environment.\n` +
+				) } You do not have sufficient permissions to run validations for this environment.\n` +
 					`You must be either be an admin of the ${ chalk.bold.underline(
 						application.organization.name
 					) } organization, or, alternatively,\n` +
 					`a guest of that organization and an admin of the ${ chalk.bold.underline(
 						application.name
 					) } application.\n\n` +
-					'You can read more about organization and application roles on our documentation:\n' +
+					'Read more about organization and application roles in our documentation:\n' +
 					chalk.underline( 'https://docs.wpvip.com/manage-user-access/vip-dashboard/' )
 			);
 
@@ -202,7 +202,7 @@ export async function vipValidatePreflightCommand( arg, opt ) {
 		} );
 
 		return exit.withError(
-			`Could not find a 'package.json' in the current folder (${ opt.path }).`
+			`Could not find a 'package.json' in the current directory (${ opt.path }).`
 		);
 	}
 
@@ -440,7 +440,7 @@ async function handleResults( harmonia, results ) {
 			`${ chalk.bold.bgRedBright(
 				'  NOT PASS  '
 			) } There was a critical failure that makes the application ` +
-				'incompatible with VIP Go. Please review the results and re-run the tests.'
+				'incompatible with the VIP Platform. Please review the results and re-run the tests.'
 		);
 		process.exit( 1 );
 	}
@@ -453,7 +453,7 @@ async function handleResults( harmonia, results ) {
 		logToConsole(
 			`${ chalk.bold.bgYellow(
 				'  PASS  '
-			) } The application has passed the required tests, but it does not follow all the recommendations.`
+			) } The application has passed the required tests, but it does not follow all of the recommendations.`
 		);
 		logToConsole( 'Please review the results.' );
 		process.exit( 0 );
@@ -464,14 +464,16 @@ async function handleResults( harmonia, results ) {
 		logToConsole(
 			`${ chalk.bold.bgRed(
 				'  NOT PASS  '
-			) } The application has failed some tests, and will very likely have problems in a production ` +
-				'environment. Please review all the errors found in the results.'
+			) } The application has failed some tests, and will very likely have problems on a production ` +
+				'environment. Please review all of the errors found in the results.'
 		);
 		process.exit( 1 );
 	}
 
 	logToConsole(
-		`${ chalk.bold.bgGreen( '  PASS  ' ) } Congratulations. The application passes all the tests.`
+		`${ chalk.bold.bgGreen(
+			'  PASS  '
+		) } Congratulations! The application passes all of the tests.`
 	);
 	process.exit( 0 );
 }
@@ -560,6 +562,7 @@ function sanitizeArgsForTracking( args ) {
 
 let commandOpts = {
 	module: 'harmonia',
+	format: true,
 };
 
 // The @app.env selector is optional, so we need to check if it was passed
@@ -576,43 +579,57 @@ if ( parsedAlias.app ) {
 	logToConsole(
 		chalk.bold.yellow( 'Warning: ' ) +
 			'The preflight tests are running without a provided application and/or environment.\n' +
-			'Some app-dependent configurations, such as environment variables, might not defined.'
+			'Some app-dependent configurations, such as environment variables, might not be defined.'
 	);
 }
 
-command( commandOpts )
+const usage = 'vip validate preflight';
+
+command( { commandOpts, usage } )
 	.option(
 		'verbose',
-		'Increase logging level to include app build and server boot up messages',
+		'Increase logging level to include app build and server boot up messages.',
 		false
 	)
 	.option(
 		'node-version',
-		`Select a specific target Node.JS version in semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
+		`Set a version of Node.js for the tests. Accepts semver format (MAJOR.MINOR.PATCH) or a MAJOR (${ ALLOWED_NODEJS_VERSIONS.join(
 			', '
-		) })`
+		) }).`
 	)
 	.option(
 		'wait',
-		'Configure the time to wait in ms for the app to boot up. Do not change unless you have issues',
+		'Set the number of milliseconds to delay the start of the tests. Only necessary if an application requires a greater amount of time to start.',
 		3000
 	)
 	.option(
 		[ 'p', 'port' ],
-		'Configure the port to use for the app (defaults to a random port between 3001 and 3999)'
+		'Set a port for the application. (Defaults to a random value between 3001 and 3999)'
 	)
-	.option( 'format', 'Output the log lines in CSV or JSON format', 'table' )
 	.option( [ 'P', 'path' ], 'Path to the app to be tested', process.cwd() )
 	.examples( [
 		{
-			usage: 'vip @mysite.production validate preflight',
+			usage: 'vip validate preflight',
 			description:
-				'Runs the preflight tests to validate if your application is ready to be deployed to VIP Go',
+				'Run the validate command from within the root of the local Node.js codebase directory.',
 		},
 		{
-			usage: 'vip @mysite.production validate preflight --format json > results.json',
+			usage: 'vip validate preflight --path=/Users/example/Desktop/example-node-repo',
 			description:
-				'Runs the preflight tests, but output the results in JSON format, and redirect the output to a file',
+				'Run the validate command against a Node.js application directory at a specific local path.',
+		},
+		{
+			usage: 'vip @example-node-app.production validate preflight --node-version=20',
+			description: 'Run the validation tests with a specific version of Node.js.',
+		},
+		{
+			usage: 'vip validate preflight --format=json > results.json',
+			description: 'Output the results of the validation tests to a local file in JSON format.',
+		},
+		{
+			usage: 'vip @example-node-app.production validate preflight',
+			description:
+				'Run the validation tests with settings based on a targeted VIP Platform environment.',
 		},
 	] )
 	.argv( process.argv, vipValidatePreflightCommand );

@@ -400,11 +400,11 @@ void command( {
 	)
 	.option(
 		'in-place',
-		'Perform a search and replace operation on a local SQL file, save the results to the file, then import the updated file.'
+		'Overwrite the local input file with the results of the search and replace operation prior to import.'
 	)
 	.option(
 		'output',
-		'Create a local copy of the imported file with the completed search and replace operations. Ignored if the command includes --in-place, or excludes a --search-replace operation. Accepts a local file path.'
+		'The local file path to save a copy of the results from the search and replace operation when the --search-replace option is passed. Ignored when used with the --in-place option.'
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {

@@ -8,7 +8,7 @@ command( {
 } )
 	.command(
 		'preflight',
-		'Runs preflight tests to validate if your application is ready to be deployed'
+		'Run a full suite of validation tests against a local Node.js codebase to identify potential issues that could prevent successful building or deploying.'
 	)
 	.argv( process.argv, async () => {
 		await trackEvent( 'vip_validate_command_execute' );

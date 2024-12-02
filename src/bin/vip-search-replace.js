@@ -12,33 +12,39 @@ const debug = debugLib( '@automattic/vip:bin:vip-search-replace' );
 const examples = [
 	// `search-replace` flag
 	{
-		usage: 'vip search-replace <file.sql> --search-replace="from,to"',
+		usage: 'vip search-replace file.sql --search-replace="from,to"',
 		description:
-			'Replace instances of <from> with <to> in the provided <file.sql>\n' +
-			'       * Ensure there are no spaces between your search-replace parameters',
+			'Search for every instance of the value "from" in the local input file named "file.sql" and replace it with the value "to".\n' +
+			'       * Results of the operation output to STDOUT by default.',
 	},
 	// `in-place` flag
 	{
-		usage: 'vip search-replace <file.sql> --search-replace="from,to" --in-place',
-		description: 'Perform Search and Replace explicitly on the provided input <file.sql> file',
+		usage: 'vip search-replace file.sql --search-replace="from,to" --in-place',
+		description:
+			'Perform the search and replace operation on the local input file "file.sql" and overwrite the file with the results.',
 	},
 	// `output` flag
 	{
-		usage: 'vip search-replace <file.sql> --search-replace="from,to" --output="<output.sql>"',
+		usage: 'vip search-replace file.sql --search-replace="from,to" --output=output-file.sql',
 		description:
-			'Search and Replace to the specified output <output.sql> file\n' +
-			'       * Has no effect when the `in-place` flag is used',
+			'Perform the search and replace operation and save the results to a local clone of the input file named "output-file.sql".',
 	},
 ];
 
 command( {
 	requiredArgs: 1,
 } )
-	.option( 'search-replace', 'Specify the <from> and <to> pairs to be replaced' )
-	.option( 'in-place', 'Perform the search and replace explicitly on the input file' )
+	.option(
+		'search-replace',
+		'A comma-separated pair of strings that specify the values to search for and replace (e.g. --search-replace="from,to").'
+	)
+	.option(
+		'in-place',
+		'Overwrite the local input file with the results of the search and replace operation.'
+	)
 	.option(
 		'output',
-		'Create a local copy of the file with the completed search and replace operations. Ignored if the command includes --in-place. Accepts a local file path. Defaults to STDOUT.'
+		'The local file path used to save a copy of the results from the search and replace operation. Ignored when used with the --in-place option.'
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

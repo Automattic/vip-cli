@@ -1,18 +1,40 @@
 ## Changelog
 
-## 3.8.7
+### 3.9.0
+
+* feat(dev-env): add support for PHP 8.4
+* Provide dedicated error message for when a token is marked as disabled due to inactivity
+* Set the mount path for vip-config to ABSPATH/vip-config to match production
+* Add --format="text" option to vip logs
+* build(deps-dev): bump typescript from 5.6.3 to 5.7.2
+* build(deps-dev): bump @types/node from 22.9.1 to 22.10.0
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.8...3.9.0
+
+### 3.8.8
+
+* build(deps-dev): bump @types/dockerode from 3.3.31 to 3.3.32
+* Update the `search-replace` command to follow the VIP-CLI style guide
+* Update the`vip logs` command to follow the VIP-CLI style guide
+* build(deps-dev): bump @types/node from 22.9.0 to 22.9.1
+* build(deps): bump actions/dependency-review-action from 4.4.0 to 4.5.0
+* build(deps): bump step-security/harden-runner from 2.10.1 to 2.10.2
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.7...3.8.8
+
+### 3.8.7
 
 * fix(dev-env): SQL sync for single sites
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.6...3.8.7
 
-## 3.8.6
+### 3.8.6
 
 * Updating Node.js versions and standardize the format
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.5...3.8.6
 
-## 3.8.5
+### 3.8.5
 
 * build(deps-dev): bump the babel group with 4 updates
 * build(deps-dev): bump typescript from 5.6.2 to 5.6.3
@@ -43,7 +65,7 @@
 * build(deps): bump uuid from 11.0.2 to 11.0.3
 * Update socket error handler
 * Fix --limit arg handling in vip logs command
-* New package release: v3.9.0 by 
+* New package release: v3.9.0 by
 * Revert "New package release: v3.9.0"
 * chore(deps): update Lando to 6ca2668
 * fix: `table` format output
@@ -52,7 +74,7 @@
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.4...3.8.5
 
-## 3.8.4
+### 3.8.4
 
 * build(deps): bump step-security/harden-runner from 2.9.1 to 2.10.1
 * build(deps-dev): bump @types/jest from 29.5.12 to 29.5.13 in the testing group
@@ -66,7 +88,7 @@
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.3...3.8.4
 
-## 3.8.3
+### 3.8.3
 
 * build(deps): bump adm-zip from 0.5.15 to 0.5.16
 * build(deps): bump debug from 4.3.6 to 4.3.7
@@ -78,7 +100,7 @@
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.2...3.8.3
 
-## 3.8.2
+### 3.8.2
 
 * chore(deps): make `node-fetch` 2.x depend on `whatwg-url` 14.x to address deprecations
 * build(deps-dev): bump nock from 13.5.4 to 13.5.5
@@ -93,14 +115,14 @@
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.1...3.8.2
 
-## 3.8.1
+### 3.8.1
 
 * fix(dev-env): clean up data after `vip dev-env sync sql`
 * security: fix high severity CVE-2024-39338 in `axios`
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.8.0...3.8.1
 
-## 3.8.0
+### 3.8.0
 
 * build(deps-dev): bump @babel/preset-env from 7.24.8 to 7.25.0 in the babel group
 * build(deps): bump debug from 4.3.5 to 4.3.6
@@ -115,7 +137,7 @@
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.1...3.8.0
 
-## 3.7.1
+### 3.7.1
 
 * build(deps): bump step-security/harden-runner from 2.8.1 to 2.9.0
 * build(deps): bump semver from 7.6.2 to 7.6.3
@@ -131,7 +153,7 @@
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.7.0...3.7.1
 
-## 3.7.0
+### 3.7.0
 
 * build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.12.0 to 0.13.0
 * build(deps-dev): bump the babel group with 3 updates
@@ -140,17 +162,17 @@
 * build(deps-dev): bump @babel/core from 7.24.8 to 7.24.9 in the babel group
 * build(deps-dev): bump @types/dockerode from 3.3.29 to 3.3.30
 * update: media import validate-files
-  
+
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.6.0...3.7.0
 
-## 3.6.0
+### 3.6.0
 
 * build(deps-dev): bump rimraf from 5.0.7 to 5.0.8
 * feat(dev-env): add DNS check to health check to ensure domains resolve correctly
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.5.1...3.6.0
 
-## 3.5.1
+### 3.5.1
 
 * fix(dev-env): display cron status in `vip dev-env info --extended`
 * build(deps-dev): bump typescript from 5.5.2 to 5.5.3
