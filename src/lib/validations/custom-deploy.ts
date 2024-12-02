@@ -118,12 +118,17 @@ function validateZipEntry( entry: ZipEntry ) {
 /**
  * Validate the existence of a themes directory in the root folder.
  *
+ * @param rootFolder The root folder of the zip file
  * @param {ZipEntry[]} zipEntries The zip entries to validate
  */
 function validateZipThemes( rootFolder: string, zipEntries: ZipEntry[] ) {
-	const hasThemesDir = zipEntries.some(
-		entry => entry.isDirectory && entry.name.startsWith( path.join( rootFolder, 'themes/' ) )
-	);
+	const hasThemesDir = zipEntries.some( entry => {
+		// Convert win32 path separators to posix path separators
+		const posixPath = entry.name.replace( /\\/g, '/' );
+		const requiredPosixPath = path.join( rootFolder, 'themes/' ).replace( /\\/g, '/' );
+
+		return entry.isDirectory && posixPath.startsWith( requiredPosixPath );
+	} );
 
 	if ( ! hasThemesDir ) {
 		exit.withError( errorMessages.missingThemes );

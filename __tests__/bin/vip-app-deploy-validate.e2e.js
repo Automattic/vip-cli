@@ -3,6 +3,7 @@ import { validateZipFile } from '../../src/lib/validations/custom-deploy';
 
 const exitSpy = jest.spyOn( exit, 'withError' );
 jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
+console.error = jest.fn();
 
 describe( 'vip-app-deploy-validate e2e', () => {
 	beforeEach( async () => {
