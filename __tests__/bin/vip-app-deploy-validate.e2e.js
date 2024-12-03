@@ -11,22 +11,48 @@ describe( 'vip-app-deploy-validate e2e', () => {
 	} );
 
 	describe( 'validateZipFile', () => {
-		it( 'should not throw error for valid zip file', async () => {
-			await validateZipFile( '__fixtures__/custom-deploy/valid-zip.zip' );
+		it.each( [
+			//	Archive:  __fixtures__/custom-deploy/valid-zip-posix.zip
+			//		__MACOSX/
+			//		mysite/
+			//		mysite/.DS_Store
+			//		mysite/__MACOSX
+			//		mysite/themes
+			//		mysite/themes/.DS_Store
+			//		mysite/themes/__MACOSX
+			//		mysite/themes/mytheme.php
+			'__fixtures__/custom-deploy/valid-zip-posix.zip',
+
+			//	Archive:  __fixtures__/custom-deploy/valid-zip-win32.zip
+			//		mysite/
+			//		mysite/themes
+			//		mysite/themes/mytheme.php
+			'__fixtures__/custom-deploy/valid-zip-win32.zip',
+		] )( 'should not throw error for valid zip file: %s', async file => {
+			await validateZipFile( file );
 
 			expect( exitSpy ).not.toHaveBeenCalled();
 		} );
 
 		it.each( [
 			{
-				file: '__fixtures__/custom-deploy/invalid-file.zip',
+				//	Archive:  __fixtures__/custom-deploy/invalid-file-chars.zip
+				//		mysite/
+				//		mysite/themes
+				//		mysite/themes/invalid-file-name?.txt
+				file: '__fixtures__/custom-deploy/invalid-file-chars.zip',
 				error: `Filename invalid-file-name?.txt contains disallowed characters: [!/:*?"<>|'/^..]+`,
 			},
 			{
+				//	Archive:  __fixtures__/custom-deploy/no-root-folder.zip
+				//		no-root-folder.txt
 				file: '__fixtures__/custom-deploy/no-root-folder.zip',
 				error: `The compressed file must contain a single root directory.`,
 			},
 			{
+				//	Archive:  __fixtures__/custom-deploy/no-themes-folder.zip
+				//		mysite/
+				//		mysite/file
 				file: '__fixtures__/custom-deploy/no-themes-folder.zip',
 				error: `Missing \`themes\` directory from root folder.`,
 			},
