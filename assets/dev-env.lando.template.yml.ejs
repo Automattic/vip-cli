@@ -134,18 +134,13 @@ services:
     type: compose
     services:
       image: memcached:1.6-alpine
-      command: memcached -m 64
-      environment:
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
+    entrypoint: /usr/local/bin/memcached -m 64
 
 <% if ( phpmyadmin ) { %>
   phpmyadmin:
     type: compose
     services:
       image: phpmyadmin:5
-      command: /docker-entrypoint.sh apache2-foreground
       environment:
         MYSQL_ROOT_PASSWORD: ''
         PMA_HOSTS: database
@@ -161,6 +156,7 @@ services:
         - pma_www:/var/www/html
     volumes:
       pma_www:
+    entrypoint: /docker-entrypoint.sh apache2-foreground
 <% } %>
 
 <% if ( elasticsearch ) { %>
@@ -168,7 +164,6 @@ services:
     type: compose
     services:
       image: elasticsearch:7.17.8
-      command: /usr/local/bin/docker-entrypoint.sh
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
         ELASTICSEARCH_CLUSTER_NAME: 'bespin'
@@ -176,15 +171,13 @@ services:
         ELASTICSEARCH_PORT_NUMBER: 9200
         discovery.type: 'single-node'
         xpack.security.enabled: 'false'
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
       ports:
         - ":9200"
       volumes:
         - search_data:/usr/share/elasticsearch/data
     volumes:
       search_data:
+    entrypoint: /usr/local/bin/docker-entrypoint.sh
 <% } %>
 
   wordpress:
@@ -227,7 +220,6 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/skeleton:latest
-      command: exit 0
       volumes:
         - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
         - clientcode_images:/clientcode/images
@@ -245,6 +237,7 @@ services:
       clientcode_themes: {}
       clientcode_vipconfig: {}
     initOnly: true
+    entrypoint: /bin/true
 <% } %>
 
 <% if ( mailpit ) { %>
@@ -252,13 +245,10 @@ services:
     type: compose
     services:
       image: axllent/mailpit:latest
-      command: /mailpit
       ports:
         - ":1025"
         - ":8025"
-      environment:
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NEEDS_EXEC: 1
+    entrypoint: /mailpit
 <% } %>
 
 <% if ( photon ) { %>
@@ -266,13 +256,9 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/photon:latest
-      command: /usr/sbin/php-fpm
-      environment:
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
       volumes:
         - ./uploads:/usr/share/webapps/photon/uploads:ro
+    entrypoint: /usr/sbin/php-fpm
 <% } %>
 
 tooling:
