@@ -41,7 +41,7 @@ export async function appDeployValidateCmd(
 
 	const ext = extname( fileName );
 	if ( ext === '.zip' ) {
-		validateZipFile( fileName );
+		await validateZipFile( fileName );
 	} else {
 		await validateTarFile( fileName );
 	}
