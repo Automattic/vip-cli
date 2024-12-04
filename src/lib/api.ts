@@ -54,7 +54,7 @@ export default function API( {
 				networkError.result?.code === 'token-disabled-inactivity'
 			) {
 				message =
-					'Your token has been disabled due to inactivity; please log out with `vip logout`, then try again.';
+					'Your token has expired due to inactivity; please log out with `vip logout`, then try again.';
 			}
 			console.error( chalk.red( 'Unauthorized:' ), message );
 			process.exit( 1 );
