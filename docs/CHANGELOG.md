@@ -1,5 +1,16 @@
 ## Changelog
 
+### 3.9.1
+
+* Fix custom deploy zip file size limitation
+* build(deps-dev): bump @types/node from 22.10.0 to 22.10.1
+* build(deps-dev): bump @types/adm-zip from 0.5.6 to 0.5.7
+* Update the `vip validate` command group to follow the VIP-CLI style guide
+* fix: make the help text for the `format` option consistent for all commands
+* Add a warning on `vip export` when exporting a MyDumper SQL dump
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.1...3.9.1
+
 ### 3.9.0
 
 * feat(dev-env): add support for PHP 8.4
