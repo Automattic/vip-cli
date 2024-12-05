@@ -19,7 +19,6 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/dev-tools:0.9
-      command: /bin/true
       volumes:
         - devtools:/dev-tools
         - scripts:/scripts
@@ -31,6 +30,7 @@ services:
       devtools: {}
       scripts:
     initOnly: true
+    entrypoint: sh -c 'test -d /dev-tools-orig && /usr/bin/rsync -a --delete /dev-tools-orig/ /dev-tools/ || true'
 
   nginx:
     type: compose
@@ -66,6 +66,17 @@ services:
 <% } %>
         LANDO_NO_USER_PERMS: 'enable'
         LANDO_NEEDS_EXEC: 1
+      depends_on:
+        database:
+          condition: service_started
+        memcached:
+          condition: service_started
+<% if ( elasticsearch ) { %>
+        elasticsearch:
+          condition: service_started
+<% } %>
+        devtools:
+          condition: service_completed_successfully
       volumes:
         - type: volume
           source: devtools
