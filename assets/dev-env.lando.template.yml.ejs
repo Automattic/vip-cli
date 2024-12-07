@@ -22,10 +22,6 @@ services:
       volumes:
         - devtools:/dev-tools
         - scripts:/scripts
-      environment:
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
     volumes:
       devtools: {}
       scripts:
@@ -38,14 +34,13 @@ services:
     sslExpose: false
     services:
       image: ghcr.io/automattic/vip-container-images/nginx:latest
-      command: nginx -g "daemon off;"
-      environment:
-        LANDO_NEEDS_EXEC: 1
-        LANDO_WEBROOT_USER: nginx
-        LANDO_WEBROOT_GROUP: nginx
       volumes:
         - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
 <% wpVolumes() %>
+      depends_on:
+        php:
+          condition: service_started
+    entrypoint: /usr/sbin/nginx -g "daemon off;"
 
   php:
     type: compose
@@ -77,6 +72,16 @@ services:
 <% } %>
         devtools:
           condition: service_completed_successfully
+        wordpress:
+          condition: service_started
+<% if ( muPlugins.mode == 'image' ) { %>
+        vip-mu-plugins:
+          condition: service_started
+<% } %>
+<% if ( appCode.mode == 'image' ) { %>
+        demo-app-code:
+          condition: service_completed_successfully
+<% } %>
       volumes:
         - type: volume
           source: devtools
