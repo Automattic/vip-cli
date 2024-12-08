@@ -198,10 +198,6 @@ services:
           target: /scripts
           volume:
             nocopy: true
-      environment:
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
     initOnly: true
     entrypoint: /usr/bin/rsync -a --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/
 
