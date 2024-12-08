@@ -7,7 +7,7 @@ import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
 import { mkdir, rename } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
 import xdgBasedir from 'xdg-basedir';
@@ -89,6 +89,10 @@ async function getLandoConfig(): Promise< LandoConfig > {
 		home: fakeHomeDir,
 		domain: 'vipdev.lndo.site',
 		version: 'unknown',
+		env: {
+			LANDO_HOST_USER_ID: process.platform === 'win32' ? '1000' : `${ userInfo().uid }`,
+			LANDO_HOST_GROUP_ID: process.platform === 'win32' ? '1000' : `${ userInfo().gid }`,
+		},
 	};
 
 	return buildConfig( config );
