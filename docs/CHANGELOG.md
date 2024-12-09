@@ -1,5 +1,11 @@
 ## Changelog
 
+### 3.9.2
+
+* Fix `vip app`
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.1...3.9.2
+
 ### 3.9.1
 
 * Fix custom deploy zip file size limitation
