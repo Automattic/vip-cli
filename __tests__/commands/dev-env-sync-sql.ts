@@ -31,6 +31,10 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		wpSitesSDS: {
 			nodes: [
 				{
+					blogId: 1,
+					homeUrl: 'https://test.go-vip.com',
+				},
+				{
 					blogId: 2,
 					homeUrl: 'https://subsite.com',
 				},
