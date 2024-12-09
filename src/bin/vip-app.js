@@ -6,7 +6,7 @@ import app from '../lib/api/app';
 import command, { getEnvIdentifier } from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
 
-command( { requiredArgs: 1 } )
+command( { requiredArgs: 1, format: true } )
 	.example(
 		'vip app list',
 		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'
@@ -59,12 +59,6 @@ command( { requiredArgs: 1 } )
 		// Clone the read-only response object so we can modify it
 		const clonedResponse = Object.assign( {}, res );
 
-		const header = [
-			{ key: 'id', value: res.id },
-			{ key: 'name', value: res.name },
-			{ key: 'repo', value: res.repo },
-		];
-
 		clonedResponse.environments = clonedResponse.environments.map( env => {
 			const clonedEnv = Object.assign( {}, env );
 
@@ -87,5 +81,5 @@ command( { requiredArgs: 1 } )
 			return clonedEnv;
 		} );
 
-		return { header, data: clonedResponse.environments };
+		return clonedResponse.environments;
 	} );
