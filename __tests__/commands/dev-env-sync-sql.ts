@@ -42,6 +42,10 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 					blogId: 3,
 					homeUrl: 'https://another.com/path',
 				},
+				{
+					blogId: 4,
+					homeUrl: 'https://test.go-vip.com/path',
+				},
 			],
 		},
 	};
@@ -73,13 +77,14 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		it( 'should return a map of search-replace values for multisite', () => {
 			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug', lando );
 			cmd.slug = 'test-slug';
-			cmd.siteUrls = [ 'https://test.go-vip.com', 'http://subsite.com', 'http://another.com/path' ];
+			cmd.siteUrls = msEnv.wpSitesSDS.nodes.map( node => node.homeUrl );
 			cmd.generateSearchReplaceMap();
 
 			expect( cmd.searchReplaceMap ).toEqual( {
 				'test.go-vip.com': 'test-slug.vipdev.lndo.site',
 				'subsite.com': 'subsite-com.test-slug.vipdev.lndo.site',
 				'another.com/path': 'another-com.test-slug.vipdev.lndo.site/path',
+				'test.go-vip.com/path': 'test-slug.vipdev.lndo.site/path',
 			} );
 		} );
 	} );
