@@ -200,6 +200,9 @@ export class DevEnvSyncSQLCommand {
 		const networkSites = this.env.wpSitesSDS?.nodes;
 		if ( ! networkSites ) return;
 
+		const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
+		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
+
 		for ( const site of networkSites ) {
 			if ( ! site?.blogId || site.blogId === 1 ) continue;
 
@@ -210,7 +213,10 @@ export class DevEnvSyncSQLCommand {
 			if ( ! this.searchReplaceMap[ strippedUrl ] ) continue;
 
 			const domain = new URL( url ).hostname;
-			const newDomain = `${ this.slugifyDomain( domain ) }.${ this.landoDomain }`;
+			const newDomain =
+				primaryDomain === domain
+					? this.landoDomain
+					: `${ this.slugifyDomain( domain ) }.${ this.landoDomain }`;
 
 			this.searchReplaceMap[ stripProtocol( url ) ] = stripProtocol(
 				replaceDomain( url, newDomain )
@@ -266,6 +272,9 @@ CALL vip_sync_update_blog_domains();
 DROP PROCEDURE vip_sync_update_blog_domains;
 `;
 
+		const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
+		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
+
 		const queries: string[] = [];
 		for ( const site of networkSites ) {
 			if ( ! site?.blogId || ! site?.homeUrl ) {
@@ -274,7 +283,7 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 
 			const oldDomain = new URL( site.homeUrl ).hostname;
 			const newDomain =
-				site.blogId !== 1
+				primaryDomain !== oldDomain
 					? `${ this.slugifyDomain( oldDomain ) }.${ this.landoDomain }`
 					: this.landoDomain;
 
