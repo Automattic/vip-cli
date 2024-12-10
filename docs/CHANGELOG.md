@@ -1,5 +1,13 @@
 ## Changelog
 
+### 3.9.3
+
+* security: update `cross-spawn` to fix a high-severity CVE-2024-21538
+* chore: fix issues in `package.json`
+* fix(dev-env) sync: don't slugify domain if it matches the primary domain
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.2...3.9.3
+
 ### 3.9.2
 
 * Fix `vip app`
