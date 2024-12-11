@@ -22,6 +22,7 @@ const examples = [
 
 const appQuery = `
 	id,
+	name,
 	environments{
 		id
 		appId
