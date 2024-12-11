@@ -1,5 +1,11 @@
 ## Changelog
 
+### 3.9.4
+
+* fix(phpmyadmin): populate application name in App Query
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.3...3.9.4
+
 ### 3.9.3
 
 * security: update `cross-spawn` to fix a high-severity CVE-2024-21538
