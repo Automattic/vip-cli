@@ -73,7 +73,7 @@ services:
         devtools:
           condition: service_completed_successfully
         wordpress:
-          condition: service_started
+          condition: service_completed_successfully
 <% if ( muPlugins.mode == 'image' ) { %>
         vip-mu-plugins:
           condition: service_started
