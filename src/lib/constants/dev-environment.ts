@@ -49,4 +49,4 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	phpVersion: Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ],
 } as const;
 
-export const DEV_ENVIRONMENT_VERSION = '2.1.2';
+export const DEV_ENVIRONMENT_VERSION = '2.1.3';
