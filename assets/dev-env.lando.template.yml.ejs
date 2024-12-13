@@ -73,7 +73,7 @@ services:
         devtools:
           condition: service_completed_successfully
         wordpress:
-          condition: service_started
+          condition: service_completed_successfully
 <% if ( muPlugins.mode == 'image' ) { %>
         vip-mu-plugins:
           condition: service_started
@@ -191,8 +191,6 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
-#      command: /usr/local/bin/entrypoint.sh
-      command: sh -c "rsync -a --chown=www-data:www-data /wp/ /shared/; sleep infinity"
       volumes:
         - ./wordpress:/shared
         - type: volume
@@ -200,10 +198,8 @@ services:
           target: /scripts
           volume:
             nocopy: true
-#      environment:
-#        LANDO_NO_SCRIPTS: 1
-#        LANDO_NEEDS_EXEC: 1
-#    initOnly: true
+    initOnly: true
+    entrypoint: /usr/bin/rsync -a --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/
 
 <% if ( muPlugins.mode == 'image' ) { %>
   vip-mu-plugins:
