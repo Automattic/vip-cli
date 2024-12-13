@@ -76,7 +76,7 @@ services:
           condition: service_completed_successfully
 <% if ( muPlugins.mode == 'image' ) { %>
         vip-mu-plugins:
-          condition: service_started
+          condition: service_completed_successfully
 <% } %>
 <% if ( appCode.mode == 'image' ) { %>
         demo-app-code:
@@ -202,7 +202,6 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
-      command: sh /run.sh
       volumes:
         - mu-plugins:/shared
         - type: volume
@@ -210,12 +209,10 @@ services:
           target: /scripts
           volume:
             nocopy: true
-      environment:
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
     volumes:
       mu-plugins: {}
     initOnly: true
+    entrypoint: /run.sh
 <% } %>
 
 <% if ( appCode.mode == 'image' ) { %>
