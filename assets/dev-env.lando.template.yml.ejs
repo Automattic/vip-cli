@@ -110,10 +110,8 @@ services:
     services:
 <% if ( mariadb ) { %>
       image: mariadb:<%= mariadb %>
-      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
 <% } else { %>
       image: mysql:8.4
-      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --mysql-native-password=ON
 <% } %>
       ports:
         - ":3306"
@@ -129,6 +127,11 @@ services:
         - database_data:/var/lib/mysql
     volumes:
       database_data:
+<% if ( mariadb ) { %>
+    entrypoint: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
+<% } else { %>
+    entrypoint: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --mysql-native-password=ON
+<% } %>
 
   memcached:
     type: compose
