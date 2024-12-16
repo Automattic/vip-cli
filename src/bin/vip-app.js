@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import app from '../lib/api/app';
 import command, { getEnvIdentifier } from '../lib/cli/command';
 import { trackEvent } from '../lib/tracker';
+import { parseApiError } from '../lib/utils';
 
 command( { requiredArgs: 1, format: true } )
 	.example(
@@ -41,7 +42,17 @@ command( { requiredArgs: 1, format: true } )
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
 
-			console.log( `App ${ chalk.blueBright( arg[ 0 ] ) } does not exist` );
+			const apiErrorMsg = parseApiError( err );
+
+			let errorMsg = `Unable to locate app ${ chalk.blueBright( arg[ 0 ] ) }`;
+
+			if ( apiErrorMsg ) {
+				errorMsg += ': ' + apiErrorMsg;
+			} else {
+				errorMsg += ': Invalid application or connection issue?';
+			}
+
+			console.log( errorMsg );
 			return;
 		}
 
@@ -50,7 +61,7 @@ command( { requiredArgs: 1, format: true } )
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
 
-			console.log( `App ${ chalk.blueBright( arg[ 0 ] ) } does not exist` );
+			console.log( `App ${ chalk.blueBright( arg[ 0 ] ) } was not found` );
 			return;
 		}
 
