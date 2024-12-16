@@ -83,7 +83,6 @@ export function getAbsolutePath( filePath: string ): string {
  *
  * @return {string|null} Error string when error was found, otherwise null.
  */
-
 export function parseApiError( err: {
 	networkError?: { message?: string };
 	message?: string;
