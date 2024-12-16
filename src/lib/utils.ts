@@ -87,14 +87,14 @@ export function getAbsolutePath( filePath: string ): string {
 export function parseApiError( err: {
 	networkError?: { message?: string };
 	message?: string;
-	graphQLErrors: unknown[];
+	graphQLErrors?: { message?: string }[];
 } ): string | null {
 	if ( err?.networkError?.message ) {
 		return err?.networkError?.message;
 	}
 
 	if ( err?.graphQLErrors && err?.graphQLErrors?.length > 0 && err?.graphQLErrors[ 0 ]?.message ) {
-		return <string>err?.graphQLErrors[ 0 ]?.message;
+		return err?.graphQLErrors[ 0 ]?.message;
 	}
 
 	if ( err?.message ) {
