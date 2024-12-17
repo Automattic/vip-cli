@@ -92,8 +92,8 @@ export function parseApiError( err: {
 		return err?.networkError?.message;
 	}
 
-	if ( err?.graphQLErrors && err?.graphQLErrors?.length > 0 && err?.graphQLErrors[ 0 ]?.message ) {
-		return err?.graphQLErrors[ 0 ]?.message;
+	if ( err?.graphQLErrors?.[ 0 ]?.message ) {
+		return err.graphQLErrors[ 0 ].message;
 	}
 
 	if ( err?.message ) {
