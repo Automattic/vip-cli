@@ -12,6 +12,7 @@ import pkg from '../../../package.json';
 import API from '../../lib/api';
 import app from '../../lib/api/app';
 import { trackEvent } from '../../lib/tracker';
+import { parseApiError } from '../../lib/utils';
 import UserError from '../user-error';
 
 function uncaughtError( err ) {
@@ -232,7 +233,7 @@ args.argv = async function ( argv, cb ) {
 					error: 'Invalid app selected',
 				} );
 
-				exit.withError( `App ${ chalk.blueBright( appSelection.app.name ) } does not exist` );
+				exit.withError( `App ${ chalk.blueBright( appSelection.app.name ) } could not be located` );
 			}
 
 			await trackEvent( 'command_appcontext_list_select_success' );
@@ -247,7 +248,19 @@ args.argv = async function ( argv, cb ) {
 					error: 'App lookup failed',
 				} );
 
-				exit.withError( `App ${ chalk.blueBright( options.app ) } does not exist` );
+				// Get error message, if available.
+				const apiErrorMsg = parseApiError( err );
+
+				let errorMsg = `Unable to find app ${ chalk.blueBright( options.app ) }: `;
+
+				if ( apiErrorMsg ) {
+					errorMsg += apiErrorMsg;
+				} else {
+					// Should happen rarely, if ever. Let's include stack trace for debugging.
+					errorMsg += 'Unknown error. If this persists, please contact VIP support.\n' + err.stack;
+				}
+
+				exit.withError( errorMsg );
 			}
 
 			if ( ! appLookup?.id ) {

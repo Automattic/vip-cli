@@ -75,3 +75,30 @@ export function getAbsolutePath( filePath: string ): string {
 
 	return filePath;
 }
+
+/**
+ * Parse error object and return probable error.
+ *
+ * @param {Error} Error object
+ *
+ * @return {string|null} Error string when error was found, otherwise null.
+ */
+export function parseApiError( err: {
+	networkError?: { message?: string };
+	message?: string;
+	graphQLErrors?: { message?: string }[];
+} ): string | null {
+	if ( err?.networkError?.message ) {
+		return err?.networkError?.message;
+	}
+
+	if ( err?.graphQLErrors?.[ 0 ]?.message ) {
+		return err.graphQLErrors[ 0 ].message;
+	}
+
+	if ( err?.message ) {
+		return err?.message;
+	}
+
+	return null;
+}
