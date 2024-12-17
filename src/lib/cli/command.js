@@ -248,14 +248,16 @@ args.argv = async function ( argv, cb ) {
 					error: 'App lookup failed',
 				} );
 
+				// Get error message, if available.
 				const apiErrorMsg = parseApiError( err );
 
-				let errorMsg = `Unable to find app ${ chalk.blueBright( options.app ) }`;
+				let errorMsg = `Unable to find app ${ chalk.blueBright( options.app ) }: `;
 
 				if ( apiErrorMsg ) {
-					errorMsg += ': ' + apiErrorMsg;
+					errorMsg += apiErrorMsg;
 				} else {
-					errorMsg += ': Invalid application or connection issue?';
+					// Should happen rarely, if ever. Let's include stack trace for debugging.
+					errorMsg += 'Unknown error. If this persists, please contact VIP support.\n' + err.stack;
 				}
 
 				exit.withError( errorMsg );

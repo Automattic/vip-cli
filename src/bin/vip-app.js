@@ -42,14 +42,16 @@ command( { requiredArgs: 1, format: true } )
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
 
+			// Get error message, if available.
 			const apiErrorMsg = parseApiError( err );
 
-			let errorMsg = `Unable to locate app ${ chalk.blueBright( arg[ 0 ] ) }`;
+			let errorMsg = `Unable to locate app ${ chalk.blueBright( arg[ 0 ] ) }: `;
 
 			if ( apiErrorMsg ) {
-				errorMsg += ': ' + apiErrorMsg;
+				errorMsg += apiErrorMsg;
 			} else {
-				errorMsg += ': Invalid application or connection issue?';
+				// No error message, so let's include stack trace for debugging.
+				errorMsg += 'Unknown error. Please contact VIP support if this persists.\n' + err.stack;
 			}
 
 			console.log( errorMsg );
