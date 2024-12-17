@@ -1,5 +1,13 @@
 ## Changelog
 
+### 3.9.5
+
+* fix: improve error handling and output
+* refactor(dev-env): make wordpress init-only container
+* refactor(dev-env): let dev-tools handle their volumes
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.4...3.9.5
+
 ### 3.9.4
 
 * fix(phpmyadmin): populate application name in App Query
