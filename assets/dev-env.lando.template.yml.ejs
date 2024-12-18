@@ -120,9 +120,6 @@ services:
         MYSQL_USER: wordpress
         MYSQL_PASSWORD: wordpress
         MYSQL_DATABASE: wordpress
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NO_SCRIPTS: 1
-        LANDO_NEEDS_EXEC: 1
       volumes:
         - database_data:/var/lib/mysql
     volumes:
@@ -151,8 +148,6 @@ services:
         PMA_USER: root
         PMA_PASSWORD: ''
         UPLOAD_LIMIT: 4G
-        LANDO_NO_USER_PERMS: 1
-        LANDO_NEEDS_EXEC: 1
       ports:
         - 127.0.0.1::80
       volumes:
@@ -189,11 +184,6 @@ services:
       image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
       volumes:
         - ./wordpress:/shared
-        - type: volume
-          source: scripts
-          target: /scripts
-          volume:
-            nocopy: true
     initOnly: true
     entrypoint: /usr/bin/rsync -a --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/
 
@@ -204,11 +194,6 @@ services:
       image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
       volumes:
         - mu-plugins:/shared
-        - type: volume
-          source: scripts
-          target: /scripts
-          volume:
-            nocopy: true
     volumes:
       mu-plugins: {}
     initOnly: true
