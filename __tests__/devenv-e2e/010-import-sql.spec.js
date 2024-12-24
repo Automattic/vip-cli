@@ -94,6 +94,19 @@ describe( 'vip dev-env import sql', () => {
 			}
 		);
 
+		it.each( [ 'fail-autoIncrement-validation.sql.gz', 'fail-autoIncrement-validation.sql' ] )(
+			'should fail if the file fails auto increment validation',
+			async baseName => {
+				const file = path.join( __dirname, `../../__fixtures__/dev-env-e2e/${ baseName }` );
+				const result = await cliTest.spawn(
+					[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
+					{ env }
+				);
+				expect( result.rc ).toBeGreaterThan( 0 );
+				expect( result.stderr ).toContain( 'SQL Error: AUTO_INCREMENT attribute was not found' );
+			}
+		);
+
 		it.each( [ 'fail-validation.sql.gz', 'fail-validation.sql' ] )(
 			'should allow to bypass validation',
 			async baseName => {
