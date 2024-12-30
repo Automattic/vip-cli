@@ -377,6 +377,17 @@ const checks: Checks = {
 			"Ensure your application works with InnoDB and update your SQL dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' statements. " +
 			"We suggest you search for all 'ENGINE=X' entries and replace them with 'ENGINE=InnoDB'!",
 	},
+	autoIncrement: {
+		matcher: /\s(NOT NULL AUTO_INCREMENT,)/i,
+		matchHandler: ( _lineNumber, results ) => ( { text: results[ 1 ] } ),
+		outputFormatter: requiredCheckFormatter,
+		results: [],
+		message: 'AUTO_INCREMENT attribute',
+		excerpt:
+			"'AUTO_INCREMENT attribute' should be present (case-insensitive) for all CREATE TABLE statements",
+		recommendation:
+			'Check import settings to include AUTO_INCREMENT attribute in all the CREATE TABLE statements',
+	},
 };
 
 const DEV_ENV_SPECIFIC_CHECKS = [ 'useStatement', 'siteHomeUrlLando' ];
