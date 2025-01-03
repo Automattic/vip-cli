@@ -1,5 +1,5 @@
 export function getAppMounts( app: any ): any;
-export function dockerComposify( data: any ): any;
+export function dockerComposify( data: string ): string;
 export function appMachineName( data: any ): string;
 export function dumpComposeData( data: any, dir: any ): any;
 export function loadComposeFiles( files: any, dir: any ): any;

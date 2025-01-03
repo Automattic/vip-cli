@@ -3,6 +3,7 @@ import copydir from 'copy-dir';
 import debugLib from 'debug';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
+import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -268,6 +269,14 @@ export async function destroyEnvironment(
 	} else {
 		debug( "Lando file doesn't exist, skipping lando destroy." );
 	}
+
+	await fs.promises.rm(
+		path.join( xdgDataDirectory(), 'vip', 'lando', 'compose', dockerComposify( slug ) ),
+		{
+			force: true,
+			recursive: true,
+		}
+	);
 
 	if ( removeFiles ) {
 		await fs.promises.rm( instancePath, { recursive: true } );
