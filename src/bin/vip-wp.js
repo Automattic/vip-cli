@@ -411,7 +411,7 @@ commandWrapper( {
 				process.exit();
 			}
 
-			const startsWithWp = line.startsWith( 'wp ' );
+			const startsWithWp = line.trim().startsWith( 'wp ' );
 			const empty = 0 === line.length;
 			const userCmdCancelled = line === cancelCommandChar;
 
