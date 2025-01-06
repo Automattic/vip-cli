@@ -44,7 +44,7 @@
         "socks-proxy-agent": "^5.0.1",
         "tar": "^7.4.0",
         "update-notifier": "7.3.1",
-        "uuid": "11.0.3",
+        "uuid": "11.0.4",
         "xdg-basedir": "^4.0.0",
         "xml2js": "^0.5.0"
       },
@@ -12630,9 +12630,9 @@
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
     "node_modules/uuid": {
-      "version": "11.0.3",
-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-11.0.3.tgz",
-      "integrity": "sha512-d0z310fCWv5dJwnX1Y/MncBAqGMKEzlBb1AOf7z9K8ALnd0utBX/msg/fA0+sbyN1ihbMsLhrBlnl1ak7Wa0rg==",
+      "version": "11.0.4",
+      "resolved": "https://registry.npmjs.org/uuid/-/uuid-11.0.4.tgz",
+      "integrity": "sha512-IzL6VtTTYcAhA/oghbFJ1Dkmqev+FpQWnCBaKq/gUluLxliWvO8DPFWfIviRmYbtaavtSQe4WBL++rFjdcGWEg==",
       "funding": [
         "https://github.com/sponsors/broofa",
         "https://github.com/sponsors/ctavan"
@@ -22383,9 +22383,9 @@
       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
     },
     "uuid": {
-      "version": "11.0.3",
-      "resolved": "https://registry.npmjs.org/uuid/-/uuid-11.0.3.tgz",
-      "integrity": "sha512-d0z310fCWv5dJwnX1Y/MncBAqGMKEzlBb1AOf7z9K8ALnd0utBX/msg/fA0+sbyN1ihbMsLhrBlnl1ak7Wa0rg=="
+      "version": "11.0.4",
+      "resolved": "https://registry.npmjs.org/uuid/-/uuid-11.0.4.tgz",
+      "integrity": "sha512-IzL6VtTTYcAhA/oghbFJ1Dkmqev+FpQWnCBaKq/gUluLxliWvO8DPFWfIviRmYbtaavtSQe4WBL++rFjdcGWEg=="
     },
     "v8-to-istanbul": {
       "version": "9.1.0",
