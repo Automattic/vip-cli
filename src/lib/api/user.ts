@@ -1,8 +1,9 @@
 import gql from 'graphql-tag';
 
 import { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';
-import { User } from '../../graphqlTypes';
 import API from '../../lib/api';
+
+import type { Me } from '../../graphqlTypes';
 
 const QUERY_CURRENT_USER = gql`
 	query Me {
@@ -20,7 +21,7 @@ const QUERY_CURRENT_USER = gql`
 	}
 `;
 
-export async function getCurrentUserInfo(): Promise< User > {
+export async function getCurrentUserInfo(): Promise< Me > {
 	const api = API();
 
 	const response = await api.query< IsVipQuery, IsVipQueryVariables >( {

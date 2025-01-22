@@ -8,9 +8,5 @@ export type PurgePageCacheMutationMutationVariables = Types.Exact< {
 
 export type PurgePageCacheMutationMutation = {
 	__typename?: 'Mutation';
-	purgePageCache?: {
-		__typename?: 'PurgePageCachePayload';
-		success: boolean;
-		urls: Array< string >;
-	} | null;
+	purgePageCache: { __typename?: 'PurgePageCachePayload'; success: boolean; urls: Array< string > };
 };

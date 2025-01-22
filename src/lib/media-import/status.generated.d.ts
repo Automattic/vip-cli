@@ -27,11 +27,6 @@ export type AppQuery = {
 					previousStatus?: string | null;
 					globalErrors?: Array< string | null > | null;
 					fileErrorsUrl?: string | null;
-					fileErrors?: Array< {
-						__typename?: 'AppEnvironmentMediaImportStatusFailureDetailsFileErrors';
-						fileName?: string | null;
-						errors?: Array< string | null > | null;
-					} | null > | null;
 				} | null;
 			} | null;
 		} | null > | null;

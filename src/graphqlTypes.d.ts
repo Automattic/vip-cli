@@ -21,9 +21,8 @@ export type Scalars = {
 	Int: { input: number; output: number };
 	Float: { input: number; output: number };
 	BigInt: { input: any; output: any };
-	/** Date custom scalar type */
 	Date: { input: any; output: any };
-	/** MediaImportAllowedFileTypes scalar type */
+	JSON: { input: any; output: any };
 	MediaImportAllowedFileTypes: { input: any; output: any };
 };
 
@@ -34,6 +33,19 @@ export type AcceptInvitationInput = {
 export type AcceptInvitationPayload = {
 	__typename?: 'AcceptInvitationPayload';
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type ActivateCertificateBySiteInput = {
+	bypassDomainValidation?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	certificateId: Scalars[ 'Int' ][ 'input' ];
+	clientSiteId: Scalars[ 'Int' ][ 'input' ];
+	skipConfigReloads?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+};
+
+export type ActivateCertificateBySitePayload = {
+	__typename?: 'ActivateCertificateBySitePayload';
+	failedDomains?: Maybe< Array< Maybe< Scalars[ 'Int' ][ 'output' ] > > >;
+	status: Scalars[ 'String' ][ 'output' ];
 };
 
 export type ActivateCertificateInput = {
@@ -62,9 +74,9 @@ export type AddCertificatePayload = {
 };
 
 export type AddNotificationRecipientInput = {
-	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	appId?: InputMaybe< Scalars[ 'BigInt' ][ 'input' ] >;
 	description?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	meta?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	meta?: InputMaybe< NotificationRecipientMetaInput >;
 	name: Scalars[ 'String' ][ 'input' ];
 	organizationId: Scalars[ 'BigInt' ][ 'input' ];
 	recipientType: NotificationRecipientType;
@@ -78,27 +90,51 @@ export type AddNotificationRecipientPayload = {
 
 export type AddNotificationSubscriptionInput = {
 	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
-	applicationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	description: Scalars[ 'String' ][ 'input' ];
-	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	meta?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	entityType: Scalars[ 'String' ][ 'input' ];
+	entityValue: Scalars[ 'String' ][ 'input' ];
+	meta?: InputMaybe< NotificationSubscriptionMetaInput >;
 	notificationRecipientId: Scalars[ 'BigInt' ][ 'input' ];
-	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId: Scalars[ 'BigInt' ][ 'input' ];
+	vin?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
 export type AddNotificationSubscriptionPayload = {
 	__typename?: 'AddNotificationSubscriptionPayload';
-	notificationRecipientId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	notificationSubscriptionId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	notificationSubscription?: Maybe< NotificationSubscription >;
 };
 
 export type AggregatedMetricMeasurements = {
 	__typename?: 'AggregatedMetricMeasurements';
+	aggrFunction?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	currTotalAggr?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
 	measurementUnit?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	measurements: Array< Maybe< MetricMeasurement > >;
 	metricDisplayName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	metricName: Scalars[ 'String' ][ 'output' ];
+	prevTotalAggr?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+	queryId: Scalars[ 'String' ][ 'output' ];
 	resolution?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type Anomaly429ContextData = AnomalyContextData & {
+	__typename?: 'Anomaly429ContextData';
+	topCountryCodes: Array< Maybe< AnomalyContextTable > >;
+	topHosts: Array< Maybe< AnomalyContextTable > >;
+	topRemoteAddr: Array< Maybe< AnomalyContextTable > >;
+	topUserAgents: Array< Maybe< AnomalyContextTable > >;
+	totalRequests: Scalars[ 'Int' ][ 'output' ];
+	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type AnomalyContextData = {
+	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type AnomalyContextTable = {
+	__typename?: 'AnomalyContextTable';
+	count: Scalars[ 'Int' ][ 'output' ];
+	item: Scalars[ 'String' ][ 'output' ];
 };
 
 export type App = Model & {
@@ -109,6 +145,7 @@ export type App = Model & {
 	features?: Maybe< Array< Maybe< Feature > > >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
 	organization?: Maybe< Organization >;
 	organizationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	pageviews?: Maybe< Pageviews >;
@@ -128,6 +165,15 @@ export type AppEnvironmentsArgs = {
 	type?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
+export type AppNotificationSubscriptionsArgs = {
+	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	notificationRecipientId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationSubscriptionsOnly?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	vin?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+};
+
 export type AppPermissionsArgs = {
 	permissions?: InputMaybe< Array< InputMaybe< Scalars[ 'String' ][ 'input' ] > > >;
 };
@@ -137,15 +183,17 @@ export type AppEnvironment = {
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	activeBackup?: Maybe< Backup >;
 	allowedIPs?: Maybe< AppEnvironmentIpAllowList >;
+	anomalyContext?: Maybe< MetricAnomalyContext >;
 	appId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	backupPolicyId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	backupShippingConfig?: Maybe< AppEnvironmentBackupShipping >;
 	backups?: Maybe< BackupsList >;
+	backupsSqlDumpTool?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	basicAuth?: Maybe< AppEnvironmentBasicAuth >;
 	branch?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	branches?: Maybe< AppEnvironmentBranchesList >;
 	buildConfiguration?: Maybe< BuildConfiguration >;
 	builds?: Maybe< BuildList >;
-	/** Get codebase related information */
 	codebase?: Maybe< CodebaseInfo >;
 	commands?: Maybe< WpcliCommandList >;
 	commits?: Maybe< GitCommitList >;
@@ -155,18 +203,25 @@ export type AppEnvironment = {
 	dbBackupCopies?: Maybe< DbBackupCopyList >;
 	dbOperationInProgress?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	defaultDomain?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	deploymentStrategy?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	deployments?: Maybe< DeploymentList >;
 	deploys?: Maybe< DeployList >;
 	domains?: Maybe< DomainList >;
+	edgeConfig?: Maybe< EdgeConfig >;
 	environmentVariables?: Maybe< EnvironmentVariablesList >;
 	events?: Maybe< AuditEventList >;
+	eventsCounts?: Maybe< Array< Maybe< AuditEventCount > > >;
+	getIntegrationsDevEnvConfig?: Maybe< IntegrationDevEnvConfig >;
 	health?: Maybe< AppEnvironmentHealth >;
 	hstsSettings?: Maybe< AppEnvironmentHstsSettings >;
 	icon?: Maybe< AppEnvironmentIcon >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	importStatus?: Maybe< AppEnvironmentImportStatus >;
+	integration?: Maybe< Integration >;
+	integrations?: Maybe< IntegrationList >;
 	ips?: Maybe< AppEnvironmentIPs >;
 	isDBPartitioningEnabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isFedramp?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	isK8sResident?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	isMultisite?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	isOnLatestCode?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
@@ -180,10 +235,14 @@ export type AppEnvironment = {
 	logsConfig?: Maybe< AppEnvironmentLogShipping >;
 	mediaExports?: Maybe< MediaExportsList >;
 	mediaImportStatus?: Maybe< AppEnvironmentMediaImportStatus >;
+	metricAnomalies?: Maybe< MetricAnomaliesList >;
+	metricThresholds?: Maybe< Array< Maybe< MetricThreshold > > >;
 	metrics?: Maybe< AggregatedMetricMeasurements >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	newRelic?: Maybe< AppEnvironmentNewRelic >;
 	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
 	permissions?: Maybe< Array< Maybe< PermissionResult > > >;
+	phpMyAdminStatus?: Maybe< PhpMyAdminStatus >;
 	primaryDomain?: Maybe< Domain >;
 	primaryDomainSwitchProgress?: Maybe< AppEnvironmentPrimaryDomainSwitchProgress >;
 	pullRequests?: Maybe< GitHubPullRequestList >;
@@ -197,12 +256,13 @@ export type AppEnvironment = {
 	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	uniqueLabel?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	updateSubsiteDomainStatus?: Maybe< AppEnvironmentUpdateSubsiteDomainStatus >;
-	/** Get WordPress Site Installation Details */
 	wpInstallation?: Maybe< WpInstallation >;
-	/** Get WordPress Site Details */
 	wpSites?: Maybe< WpSiteList >;
-	/** Get WordPress Site Details from SDS */
 	wpSitesSDS?: Maybe< WpSiteList >;
+};
+
+export type AppEnvironmentAnomalyContextArgs = {
+	anomalyId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
 export type AppEnvironmentBackupsArgs = {
@@ -211,6 +271,10 @@ export type AppEnvironmentBackupsArgs = {
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	id?: InputMaybe< Scalars[ 'Float' ][ 'input' ] >;
 	startDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+};
+
+export type AppEnvironmentBranchesArgs = {
+	limit?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
 export type AppEnvironmentCommandsArgs = {
@@ -242,20 +306,38 @@ export type AppEnvironmentDeploysArgs = {
 export type AppEnvironmentDomainsArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	isVerified?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	matching?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type AppEnvironmentEventsArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	afterTs?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	beforeTs?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	excludeAnomalyEvents?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	excludeWPCLI?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	types?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+};
+
+export type AppEnvironmentEventsCountsArgs = {
+	from?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	to?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	types?: InputMaybe< Array< InputMaybe< Scalars[ 'String' ][ 'input' ] > > >;
 };
 
 export type AppEnvironmentHealthArgs = {
+	endDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	startDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type AppEnvironmentIconArgs = {
 	size?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type AppEnvironmentIntegrationArgs = {
+	networkSiteId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	slug?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type AppEnvironmentJobsArgs = {
@@ -273,10 +355,31 @@ export type AppEnvironmentMediaExportsArgs = {
 	nextCursor?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-export type AppEnvironmentMetricsArgs = {
+export type AppEnvironmentMetricAnomaliesArgs = {
+	algorithmVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	excludeCustomAnomalies?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	fromDate?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
 	metricName?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	toDate?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+};
+
+export type AppEnvironmentMetricThresholdsArgs = {
+	metricName?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+};
+
+export type AppEnvironmentMetricsArgs = {
+	aggregate?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	fromDate?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+	includeBaseline?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	metricName?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	toDate?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+};
+
+export type AppEnvironmentNotificationSubscriptionsArgs = {
+	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	notificationRecipientId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
 export type AppEnvironmentPermissionsArgs = {
@@ -323,53 +426,35 @@ export type AppEnvironmentWpSitesSdsArgs = {
 	sort?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-/** Mutation request input to abort a Media Import */
 export type AppEnvironmentAbortMediaImportInput = {
-	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
-	/** The uniqueID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
 };
 
-/** Response payload for aborting a Media Import */
 export type AppEnvironmentAbortMediaImportPayload = {
 	__typename?: 'AppEnvironmentAbortMediaImportPayload';
-	/** The unique ID of the Application */
 	applicationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** The unique ID of the Environment */
 	environmentId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Media Import Abort Action Response */
 	mediaImportStatusChange?: Maybe< AppEnvironmentMediaImportStatusChange >;
 };
 
-/** Variables for the Activate Let's Encrypt Mutation */
 export type AppEnvironmentActivateLetsEncryptOnDomainInput = {
-	/** The unique ID for the domain */
 	domainId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	/** The ID of the environment that this domain belongs to */
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	/** The unique ID for the domain */
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	/** Provisions the www-alt domain */
 	includeWWW?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
-	/** Overrides the existing certificate (if any) on the domain */
 	overrideExisting?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
-/** Response from the Activate Let's Encrypt Mutation */
 export type AppEnvironmentActivateLetsEncryptOnDomainPayload = {
 	__typename?: 'AppEnvironmentActivateLetsEncryptOnDomainPayload';
-	/** The domain that Let's Encrypt was activated on */
 	domain?: Maybe< Domain >;
 };
 
-/** Variables for the Add Domain mutation */
 export type AppEnvironmentAddDomainInput = {
-	/** The domain name (i.e. something like example.com or sub.example.com) */
 	domain?: InputMaybe< NewDomain >;
-	/** The ID of the environment that this domain belongs to */
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	/** The unique ID for the domain */
+	generateVerificationCode?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
@@ -378,25 +463,30 @@ export type AppEnvironmentAddDomainPayload = {
 	domain?: Maybe< Domain >;
 };
 
-/** Variables for the AddRequestStats mutation */
-export type AppEnvironmentAddRequestStatsInput = {
-	/** The application ID */
-	applicationId: Scalars[ 'Int' ][ 'input' ];
-	/** Date for which we want to sync - if we want to sync only for one day */
-	date?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The environment ID where we want to run the command */
+export type AppEnvironmentAddNewRelicUserInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	email: Scalars[ 'String' ][ 'input' ];
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** Date range for which we want to sync - if we want to sync for a range */
+	firstName: Scalars[ 'String' ][ 'input' ];
+	lastName: Scalars[ 'String' ][ 'input' ];
+};
+
+export type AppEnvironmentAddNewRelicUserPayload = {
+	__typename?: 'AppEnvironmentAddNewRelicUserPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
+export type AppEnvironmentAddRequestStatsInput = {
+	applicationId: Scalars[ 'Int' ][ 'input' ];
+	date?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	environmentId: Scalars[ 'Int' ][ 'input' ];
 	fromDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	toDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-/** Response payload for Request Stats */
 export type AppEnvironmentAddRequestStatsPayload = {
 	__typename?: 'AppEnvironmentAddRequestStatsPayload';
-	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'output' ];
-	/** The unique ID of the environment */
 	environmentId: Scalars[ 'Int' ][ 'output' ];
 };
 
@@ -475,6 +565,34 @@ export type AppEnvironmentBasicAuthUserInput = {
 	username?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
+export type AppEnvironmentBranch = {
+	__typename?: 'AppEnvironmentBranch';
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type AppEnvironmentBranchesList = {
+	__typename?: 'AppEnvironmentBranchesList';
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes?: Maybe< Array< Maybe< AppEnvironmentBranch > > >;
+	pollingDelaySeconds: Scalars[ 'Int' ][ 'output' ];
+	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+};
+
+export type AppEnvironmentCustomDeployInput = {
+	basename?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	checksum?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	deployMessage?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type AppEnvironmentCustomDeployPayload = {
+	__typename?: 'AppEnvironmentCustomDeployPayload';
+	app?: Maybe< App >;
+	message?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
 export type AppEnvironmentDeactivateDomainInput = {
 	domainId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -484,6 +602,37 @@ export type AppEnvironmentDeactivateDomainInput = {
 export type AppEnvironmentDeactivateDomainPayload = {
 	__typename?: 'AppEnvironmentDeactivateDomainPayload';
 	domain?: Maybe< Domain >;
+};
+
+export type AppEnvironmentDeleteNewRelicUserInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+	userId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type AppEnvironmentDeleteNewRelicUserPayload = {
+	__typename?: 'AppEnvironmentDeleteNewRelicUserPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
+export type AppEnvironmentDisableNewRelicInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type AppEnvironmentDisableNewRelicPayload = {
+	__typename?: 'AppEnvironmentDisableNewRelicPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
+export type AppEnvironmentEnableDisableCustomDeployInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type AppEnvironmentEnableDisableCustomDeployPayload = {
+	__typename?: 'AppEnvironmentEnableDisableCustomDeployPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
 };
 
 export type AppEnvironmentEnableLaunchModeInput = {
@@ -496,6 +645,16 @@ export type AppEnvironmentEnableLaunchModePayload = {
 	__typename?: 'AppEnvironmentEnableLaunchModePayload';
 	app?: Maybe< App >;
 	environment?: Maybe< AppEnvironment >;
+};
+
+export type AppEnvironmentEnableNewRelicInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type AppEnvironmentEnableNewRelicPayload = {
+	__typename?: 'AppEnvironmentEnableNewRelicPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
 };
 
 export type AppEnvironmentGenerateDbBackupCopyUrlInput = {
@@ -513,6 +672,7 @@ export type AppEnvironmentGenerateDbBackupCopyUrlPayload = {
 
 export type AppEnvironmentGenerateMediaExportSignedUrlInput = {
 	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	archiveFileIndex?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	mediaExportId?: InputMaybe< Scalars[ 'Float' ][ 'input' ] >;
 	target?: InputMaybe< AppEnvironmentGenerateMediaExportSignedUrlTarget >;
@@ -531,43 +691,27 @@ export type AppEnvironmentGenericSoftware = AppEnvironmentSoftware & {
 	version: Scalars[ 'String' ][ 'output' ];
 };
 
-/** Details about the environment's HSTS settings */
 export type AppEnvironmentHstsSettings = {
 	__typename?: 'AppEnvironmentHSTSSettings';
-	/** Whether HSTS is enabled for an App Environment */
 	enabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Whether the header includes the includesSubdomains directive */
 	includeSubdomains?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** The value of the max-age directive */
 	maxAge?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Whether the header includes the preload directive */
 	preload?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Whether the App Environment enforces HTTPS everywhere */
 	sslEverywhere?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
-/** Variables for the UpdateHSTSSettings mutation */
 export type AppEnvironmentHstsSettingsInput = {
-	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** The unique ID of the Application */
 	id: Scalars[ 'Int' ][ 'input' ];
-	/** Whether the header should include the includesSubdomains directive */
 	includeSubdomains?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
-	/** The value of the max-age directive */
 	maxAge?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	/** Whether the header should include the preload directive */
 	preload?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
-/** Response payload for HSTS Settings updates */
 export type AppEnvironmentHstsSettingsPayload = {
 	__typename?: 'AppEnvironmentHSTSSettingsPayload';
-	/** The Application that was updated */
 	app?: Maybe< App >;
-	/** The response message from GOOP */
 	message?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Whether the update was successful */
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
@@ -657,20 +801,6 @@ export type AppEnvironmentIcon = {
 	width?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
-export type AppEnvironmentCustomDeployInput = {
-	basename?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	checksum?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	deployMessage?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-};
-
-export type AppEnvironmentCustomDeployPayload = {
-	__typename?: 'AppEnvironmentCustomDeployPayload';
-	message?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-};
-
 export type AppEnvironmentImportInput = {
 	basename?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -718,6 +848,11 @@ export type AppEnvironmentLaunchedPayload = {
 	__typename?: 'AppEnvironmentLaunchedPayload';
 	app?: Maybe< App >;
 	environment?: Maybe< AppEnvironment >;
+};
+
+export type AppEnvironmentListNewRelicInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	environmentId: Scalars[ 'Int' ][ 'input' ];
 };
 
 export type AppEnvironmentLog = {
@@ -769,65 +904,70 @@ export type AppEnvironmentLogsList = {
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
-/** Response payload for starting and fetching a Media Import */
 export type AppEnvironmentMediaImportPayload = {
 	__typename?: 'AppEnvironmentMediaImportPayload';
-	/** The unique ID of the Application */
 	applicationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** The unique ID of the Environment */
 	environmentId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Media Import Status */
 	mediaImportStatus: AppEnvironmentMediaImportStatus;
 };
 
-/** Current status of a Media Import */
 export type AppEnvironmentMediaImportStatus = {
 	__typename?: 'AppEnvironmentMediaImportStatus';
-	/** Media Import failure details */
 	failureDetails?: Maybe< AppEnvironmentMediaImportStatusFailureDetails >;
-	/** Total number of media files that were imported */
+	failureDetailsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	filesProcessed?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Total number of media files that are to be import */
 	filesTotal?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Unique Identifier for a Media Import */
 	importId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Alias of environmentId */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** The actual status of the Media Import */
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
-/** Response payload for executing a status change action on a Media Import */
 export type AppEnvironmentMediaImportStatusChange = {
 	__typename?: 'AppEnvironmentMediaImportStatusChange';
-	/** Unique Identifier for a Media Import */
 	importId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Alias of environmentId */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** The status of Media Import prior to status change action */
 	statusFrom?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** The status of Media Import after the status change action */
 	statusTo?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
-/** Media Import Failure details */
 export type AppEnvironmentMediaImportStatusFailureDetails = {
 	__typename?: 'AppEnvironmentMediaImportStatusFailureDetails';
-	/** URL to download the media import error log */
+	fileErrors?: Maybe< Array< Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors > > >;
 	fileErrorsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** List of global errors per import */
 	globalErrors?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
-	/** Status of the Media Import prior to failing */
 	previousStatus?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
-/** Media Import File Errors */
 export type AppEnvironmentMediaImportStatusFailureDetailsFileErrors = {
 	__typename?: 'AppEnvironmentMediaImportStatusFailureDetailsFileErrors';
-	/** List of Errors per file */
 	errors?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
-	/** File Name */
 	fileName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type AppEnvironmentNewRelic = {
+	__typename?: 'AppEnvironmentNewRelic';
+	canManageUsers?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	dashboardUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	deactivationTimestamp?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	enabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isMaintenanceMode?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isSetupComplete?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	samplingPercentage?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+	users?: Maybe< AppEnvironmentNewRelicUsersList >;
+};
+
+export type AppEnvironmentNewRelicUser = {
+	__typename?: 'AppEnvironmentNewRelicUser';
+	email?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type AppEnvironmentNewRelicUsersList = {
+	__typename?: 'AppEnvironmentNewRelicUsersList';
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes?: Maybe< Array< Maybe< AppEnvironmentNewRelicUser > > >;
+	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 export type AppEnvironmentPrimaryDomainSwitchInput = {
@@ -897,15 +1037,10 @@ export type AppEnvironmentSoftwareSettings = {
 	wordpress?: Maybe< AppEnvironmentSoftwareSettingsSoftware >;
 };
 
-/** Variables for the UpdateSoftwareSettings mutation */
 export type AppEnvironmentSoftwareSettingsInput = {
-	/** The unique ID of the Application */
 	appId: Scalars[ 'Int' ][ 'input' ];
-	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** The name of the software being updated */
 	softwareName: Scalars[ 'String' ][ 'input' ];
-	/** The version the software is being updated to */
 	softwareVersion: Scalars[ 'String' ][ 'input' ];
 };
 
@@ -944,19 +1079,12 @@ export type AppEnvironmentStartDbBackupCopyPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
-/** Mutation request input to start a Media Import */
 export type AppEnvironmentStartMediaImportInput = {
-	/** API version to be used for the media import */
 	apiVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
-	/** Publicly accessible URL that contains an archive of the media files to be imported */
 	archiveUrl: Scalars[ 'String' ][ 'input' ];
-	/** The uniqueID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** Whether to import intermediate images or not */
 	importIntermediateImages?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
-	/** Whether to overwrite existing files or not */
 	overwriteExistingFiles?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
@@ -1044,8 +1172,9 @@ export type AppEnvironmentSyncStep = {
 };
 
 export type AppEnvironmentTriggerDbBackupInput = {
-	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	dryRun?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+	id: Scalars[ 'Int' ][ 'input' ];
 };
 
 export type AppEnvironmentTriggerDbBackupPayload = {
@@ -1053,22 +1182,15 @@ export type AppEnvironmentTriggerDbBackupPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
-/** Variables for the Run WP-CLI Command mutation */
 export type AppEnvironmentTriggerWpcliCommandInput = {
-	/** The command we want to run. Note: should not include 'wp' */
 	command?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The environment ID where we want to run the command */
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	/** The application ID */
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
-/** Response from the Run WP-CLI Command mutation */
 export type AppEnvironmentTriggerWpcliCommandPayload = {
 	__typename?: 'AppEnvironmentTriggerWPCLICommandPayload';
-	/** The command that was executed */
 	command?: Maybe< WpcliCommand >;
-	/** The token for authenticating the socket connection */
 	inputToken?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -1122,6 +1244,12 @@ export type ApplicationRole = {
 
 export type ApplicationRoleId = 'admin' | 'read' | 'write';
 
+export type ApplicationsResult = {
+	__typename?: 'ApplicationsResult';
+	items?: Maybe< Array< Maybe< InflatedApplication > > >;
+	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
 export type AuditEvent = {
 	__typename?: 'AuditEvent';
 	actor?: Maybe< AuditEventActor >;
@@ -1150,6 +1278,12 @@ export type AuditEventActor = {
 
 export type AuditEventActorAvatarUrlArgs = {
 	width?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type AuditEventCount = {
+	__typename?: 'AuditEventCount';
+	count?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type AuditEventList = {
@@ -1197,6 +1331,12 @@ export type BackupsList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+export type Blueprint = {
+	__typename?: 'Blueprint';
+	config?: Maybe< Scalars[ 'JSON' ][ 'output' ] >;
+	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
 export type Build = Model & {
 	__typename?: 'Build';
 	commit_author: Scalars[ 'String' ][ 'output' ];
@@ -1211,16 +1351,11 @@ export type Build = Model & {
 	vendor_id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
-/** Build configuration for the environment */
 export type BuildConfiguration = {
 	__typename?: 'BuildConfiguration';
-	/** Build type */
 	buildType: Scalars[ 'String' ][ 'output' ];
-	/** Node.js build environment variables */
 	nodeBuildDockerEnv: Scalars[ 'String' ][ 'output' ];
-	/** Node.js version */
 	nodeJSVersion: Scalars[ 'String' ][ 'output' ];
-	/** npm token */
 	npmToken?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -1256,6 +1391,10 @@ export type CsrInfo = {
 	state: Scalars[ 'String' ][ 'input' ];
 };
 
+export type CancelEmailVerificationTokenInput = {
+	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
 export type CancelInvitationInput = {
 	invitationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
@@ -1265,16 +1404,18 @@ export type CancelInvitationPayload = {
 	invitation?: Maybe< Invitation >;
 };
 
-/** Variables for the Cancel WP-CLI Command mutation */
+export type CancelPendingEmailVerificationTokenPayload = {
+	__typename?: 'CancelPendingEmailVerificationTokenPayload';
+	cancelledToken?: Maybe< Token >;
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
 export type CancelWpcliCommandInput = {
-	/** The unique ID for the running command */
 	guid?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-/** Response from the Cancel WP-CLI Command mutation */
 export type CancelWpcliCommandPayload = {
 	__typename?: 'CancelWPCLICommandPayload';
-	/** The command that was cancelled */
 	command?: Maybe< WpcliCommand >;
 };
 
@@ -1283,16 +1424,13 @@ export type Certificate = {
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	beginsTimestamp?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	certificateId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Domain name. Ex: www.example.com */
 	commonName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	created?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** OpenSSL generated CSR string */
 	csr?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	csrDecoded?: Maybe< CsrDecoded >;
 	expiresTimestamp?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	hasCertificate?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	issuer?: Maybe< CertificateIssuer >;
-	/** Alternative names */
 	san?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
 	valid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
@@ -1309,6 +1447,19 @@ export type CertificateList = {
 	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	nodes?: Maybe< Array< Maybe< Certificate > > >;
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type CodebaseChangeRepoInput = {
+	appId: Scalars[ 'Int' ][ 'input' ];
+	branch: Scalars[ 'String' ][ 'input' ];
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type CodebaseChangeRepoResult = {
+	__typename?: 'CodebaseChangeRepoResult';
+	code?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	message: Scalars[ 'String' ][ 'output' ];
+	success: Scalars[ 'Boolean' ][ 'output' ];
 };
 
 export type CodebaseInfo = {
@@ -1338,25 +1489,15 @@ export type CodebaseTask = {
 	status: Scalars[ 'String' ][ 'output' ];
 };
 
-/** Variables for the CodebaseUpdatePlugin mutation */
 export type CodebaseUpdatePluginInput = {
-	/** The unique ID of the Application */
 	appId: Scalars[ 'Int' ][ 'input' ];
-	/** The download link for the new plugin version */
 	download?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** The location of the plugin in the codebase */
 	location?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The marketplace the plugin belongs too */
 	marketplace?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The name of the plugin */
 	name?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The plugin slug */
 	slug: Scalars[ 'String' ][ 'input' ];
-	/** The new version to update the plugin */
 	version?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	/** The number of active vulns on the plugin */
 	vulnCount?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
@@ -1411,7 +1552,6 @@ export type DbBackupCopy = Model & {
 	__typename?: 'DBBackupCopy';
 	config?: Maybe< DbBackupCopyConfig >;
 	filePath: Scalars[ 'String' ][ 'output' ];
-	/** id is not implemented by DBBackupCopy as it does not have an integer id */
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
@@ -1435,6 +1575,25 @@ export type DbPartitioningDataset = {
 	__typename?: 'DBPartitioningDataset';
 	displayName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type DeactivatePurposeTokenInput = {
+	id: Scalars[ 'Int' ][ 'input' ];
+	purpose: Scalars[ 'String' ][ 'input' ];
+};
+
+export type DeactivatePurposeTokenPayload = {
+	__typename?: 'DeactivatePurposeTokenPayload';
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type DeactivateUserTokenInput = {
+	tokenId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type DeactivateUserTokenPayload = {
+	__typename?: 'DeactivateUserTokenPayload';
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
 export type DebugPageCacheInput = {
@@ -1478,6 +1637,26 @@ export type DeleteCertificatePayload = {
 	deleted?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+export type DeleteIdentityProviderInput = {
+	id: Scalars[ 'Int' ][ 'input' ];
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type DeleteIdentityProviderPayload = {
+	__typename?: 'DeleteIdentityProviderPayload';
+	deleted?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type DeleteMetricThresholdsInput = {
+	envId: Scalars[ 'Int' ][ 'input' ];
+	metricName: Scalars[ 'String' ][ 'input' ];
+};
+
+export type DeleteMetricThresholdsPayload = {
+	__typename?: 'DeleteMetricThresholdsPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
 export type DeleteNotificationRecipientInput = {
 	notificationRecipientId: Scalars[ 'Int' ][ 'input' ];
 	organizationId: Scalars[ 'Int' ][ 'input' ];
@@ -1489,9 +1668,6 @@ export type DeleteNotificationRecipientPayload = {
 };
 
 export type DeleteNotificationSubscriptionInput = {
-	applicationId: Scalars[ 'Int' ][ 'input' ];
-	environmentId: Scalars[ 'Int' ][ 'input' ];
-	notificationRecipientId: Scalars[ 'Int' ][ 'input' ];
 	notificationSubscriptionId: Scalars[ 'Int' ][ 'input' ];
 };
 
@@ -1578,42 +1754,31 @@ export type DeploymentStepStatus =
 	| 'Running'
 	| 'Waiting';
 
-/** A domain for an environment */
 export type Domain = {
 	__typename?: 'Domain';
-	/** Is the domain currently active? */
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** The active certificate of the domain */
 	certificate?: Maybe< Certificate >;
-	/** The matching certificates of the domain */
 	certificates?: Maybe< CertificateList >;
-	/** The date the domain was added to the system */
 	createdAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** What is the IP of the domain and does it point to VIP? */
 	dns?: Maybe< DomainDnsRecord >;
-	/** The environment this domain belongs to */
+	emailDeliverabilityLastCheckedAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	environment?: Maybe< AppEnvironment >;
-	/** Does this domain have a valid TLS certificate? (Note: SSL is a misnomer there; we are using TLS certificates.) */
 	hasSSL?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** The unique ID for the domain */
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Is this a default domain? (*.go-vip.co / *.go-vip.net) */
 	isDefault?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Is the domain using a Let's Encrypt certificate */
+	isDkimValid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isDmarcValid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	isLetsEncrypt?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Is this the primary domain for the environment? */
 	isPrimary?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** What are the issues that may block LE provisioning for this domain? */
+	isSpfValid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isVerified?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	letsEncryptCompatibility?: Maybe< Array< Maybe< DomainLetsEncryptCompatibility > > >;
-	/** What is the status of LE provisioning? */
 	letsEncryptStatus?: Maybe< Array< Maybe< DomainLetsEncryptStatus > > >;
-	/** The domain name (i.e. something like example.com or sub.example.com) */
 	name: Scalars[ 'String' ][ 'output' ];
-	/** The wildcard value for the current domain */
+	verificationCode?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	wildcard?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
-/** A domain for an environment */
 export type DomainCertificatesArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -1655,32 +1820,154 @@ export type DomainList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
-/** Customer-provided environment variable / constant */
+export type EdgeConfig = {
+	__typename?: 'EdgeConfig';
+	accessRestrictions: EdgeConfigAccessRestrictions;
+};
+
+export type EdgeConfigAccessRestrictions = {
+	__typename?: 'EdgeConfigAccessRestrictions';
+	ip?: Maybe< EdgeConfigAccessRestrictionsIp >;
+	userAgent?: Maybe< EdgeConfigAccessRestrictionsUserAgent >;
+};
+
+export type EdgeConfigAccessRestrictionsIp = {
+	__typename?: 'EdgeConfigAccessRestrictionsIp';
+	action: EdgeConfigAccessRestrictionsIpAction;
+	groups: Array< EdgeConfigAccessRestrictionsIpGroup >;
+};
+
+export type EdgeConfigAccessRestrictionsIpAction = 'allow' | 'deny';
+
+export type EdgeConfigAccessRestrictionsIpGroup = {
+	__typename?: 'EdgeConfigAccessRestrictionsIpGroup';
+	createdAt: Scalars[ 'Date' ][ 'output' ];
+	id: Scalars[ 'String' ][ 'output' ];
+	ips: Array< Maybe< Scalars[ 'String' ][ 'output' ] > >;
+	notes: Scalars[ 'String' ][ 'output' ];
+	updatedAt: Scalars[ 'Date' ][ 'output' ];
+};
+
+export type EdgeConfigAccessRestrictionsIpGroupInput = {
+	id?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	ips: Array< InputMaybe< Scalars[ 'String' ][ 'input' ] > >;
+	notes: Scalars[ 'String' ][ 'input' ];
+};
+
+export type EdgeConfigAccessRestrictionsUserAgent = {
+	__typename?: 'EdgeConfigAccessRestrictionsUserAgent';
+	groups?: Maybe< Array< Maybe< EdgeConfigAccessRestrictionsUserAgentGroup > > >;
+};
+
+export type EdgeConfigAccessRestrictionsUserAgentGroup = {
+	__typename?: 'EdgeConfigAccessRestrictionsUserAgentGroup';
+	createdAt: Scalars[ 'Date' ][ 'output' ];
+	id: Scalars[ 'String' ][ 'output' ];
+	notes: Scalars[ 'String' ][ 'output' ];
+	rules: Array< EdgeConfigAccessRestrictionsUserAgentRule >;
+	updatedAt: Scalars[ 'Date' ][ 'output' ];
+};
+
+export type EdgeConfigAccessRestrictionsUserAgentOperator = 'contains' | 'equals';
+
+export type EdgeConfigAccessRestrictionsUserAgentRule = {
+	__typename?: 'EdgeConfigAccessRestrictionsUserAgentRule';
+	operator: EdgeConfigAccessRestrictionsUserAgentOperator;
+	value: Scalars[ 'String' ][ 'output' ];
+};
+
+export type EdgeConfigUpdateIpAccessRestrictionsInput = {
+	action: EdgeConfigAccessRestrictionsIpAction;
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+	groups: Array< InputMaybe< EdgeConfigAccessRestrictionsIpGroupInput > >;
+};
+
+export type EdgeConfigUpdateUserAgentAccessRestrictionsInput = {
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+	groups: Array< EdgeConfigUpdateUserAgentGroupInput >;
+};
+
+export type EdgeConfigUpdateUserAgentGroupInput = {
+	id?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	notes: Scalars[ 'String' ][ 'input' ];
+	rules: Array< EdgeConfigUpdateUserAgentGroupRuleInput >;
+};
+
+export type EdgeConfigUpdateUserAgentGroupRuleInput = {
+	operator: EdgeConfigAccessRestrictionsUserAgentOperator;
+	value: Scalars[ 'String' ][ 'input' ];
+};
+
+export type EmailNotificationRecipient = NotificationRecipient & {
+	__typename?: 'EmailNotificationRecipient';
+	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
+	organizationId: Scalars[ 'Int' ][ 'output' ];
+	recipientType?: Maybe< NotificationRecipientType >;
+	recipientValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	updatedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+};
+
+export type EmailVerificationStatus =
+	| 'CANCELED'
+	| 'EXPIRED'
+	| 'LEGACY_UNVERIFIED'
+	| 'PENDING'
+	| 'UNVERIFIED'
+	| 'VERIFIED';
+
+export type EmailVerificationTokenData = {
+	__typename?: 'EmailVerificationTokenData';
+	email?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	expires?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	status?: Maybe< EmailVerificationStatus >;
+};
+
+export type EmailVerificationTokenPayload = {
+	__typename?: 'EmailVerificationTokenPayload';
+	email?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	expiresAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type EnableIdentityProviderEncryptionInput = {
+	identityProviderId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type EnableIdentityProviderEncryptionPayload = {
+	__typename?: 'EnableIdentityProviderEncryptionPayload';
+	identityProvider?: Maybe< IdentityProvider >;
+};
+
+export type EnablePhpMyAdminInput = {
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type EnablePhpMyAdminPayload = {
+	__typename?: 'EnablePhpMyAdminPayload';
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
 export type EnvironmentVariable = {
 	__typename?: 'EnvironmentVariable';
-	/** Environment variable name */
 	name: Scalars[ 'String' ][ 'output' ];
-	/** Environment variable value */
 	value?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type EnvironmentVariableInput = {
-	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
-	/** The unique ID of the environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** Environment variable name (must consist of uppercase letters, numbers, and underscore */
 	name: Scalars[ 'String' ][ 'input' ];
-	/** Environment variable value */
 	value: Scalars[ 'String' ][ 'input' ];
 };
 
-/** Customer-provided environment variables / constants */
 export type EnvironmentVariablesList = {
 	__typename?: 'EnvironmentVariablesList';
-	/** The environment variables for this environment */
 	nodes?: Maybe< Array< Maybe< EnvironmentVariable > > >;
-	/** The total number of environment variables for this environment */
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
@@ -1696,6 +1983,36 @@ export type Feature = Model & {
 	context?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type GenerateCustomDeployAccessInput = {
+	environmentIds?: InputMaybe< Array< Scalars[ 'Int' ][ 'input' ] > >;
+};
+
+export type GenerateCustomDeployAccessPayload = {
+	__typename?: 'GenerateCustomDeployAccessPayload';
+	expiresAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	token?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type GenerateEmailVerificationTokenInput = {
+	email: Scalars[ 'String' ][ 'input' ];
+};
+
+export type GeneratePhpMyAdminAccessInput = {
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type GeneratePhpMyAdminAccessPayload = {
+	__typename?: 'GeneratePhpMyAdminAccessPayload';
+	expiresAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type GetIntegrationInput = {
+	inflate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	networkSiteId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	slug: Scalars[ 'String' ][ 'input' ];
 };
 
 export type GitActor = {
@@ -1842,17 +2159,33 @@ export type GitRepository = {
 	platform?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
+export type GoogleChatNotificationRecipient = NotificationRecipient & {
+	__typename?: 'GoogleChatNotificationRecipient';
+	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
+	organizationId: Scalars[ 'Int' ][ 'output' ];
+	recipientType?: Maybe< NotificationRecipientType >;
+	recipientValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	updatedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+};
+
 export type IdentityProvider = Model & {
 	__typename?: 'IdentityProvider';
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	callbackURL?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	certificate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	certificateExpiryDate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	createdAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	dashboardLoginURL?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	displayName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	entryPoint?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	firstSuccessfulLogin?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	issuer?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	metadataXML?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	organizationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	provider?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	secondaryCertificate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -1868,6 +2201,83 @@ export type IdentityProviderList = ModelList & {
 	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	nodes?: Maybe< Array< Maybe< IdentityProvider > > >;
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type InflatedApplication = {
+	__typename?: 'InflatedApplication';
+	environments?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
+	id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	is_multisite?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type InflatedNetworkSite = {
+	__typename?: 'InflatedNetworkSite';
+	config?: Maybe< Scalars[ 'JSON' ][ 'output' ] >;
+	id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type Integration = {
+	__typename?: 'Integration';
+	appId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	applications?: Maybe< ApplicationsResult >;
+	config?: Maybe< Scalars[ 'JSON' ][ 'output' ] >;
+	envId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	network_site?: Maybe< NetworkSiteResult >;
+	network_sites?: Maybe< NetworkSitesResult >;
+	orgId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	slug: Scalars[ 'String' ][ 'output' ];
+	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type IntegrationApplicationsArgs = {
+	limit?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	page?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type IntegrationNetwork_SitesArgs = {
+	limit?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	page?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	search?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	status?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+};
+
+export type IntegrationCenter = Model & {
+	__typename?: 'IntegrationCenter';
+	blocks: Scalars[ 'String' ][ 'output' ];
+	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	meta: Scalars[ 'String' ][ 'output' ];
+	slug: Scalars[ 'String' ][ 'output' ];
+	title: Scalars[ 'String' ][ 'output' ];
+};
+
+export type IntegrationCenterList = ModelList & {
+	__typename?: 'IntegrationCenterList';
+	edges?: Maybe< Array< Maybe< IntegrationCenter > > >;
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes?: Maybe< Array< Maybe< IntegrationCenter > > >;
+	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type IntegrationDevEnvConfig = {
+	__typename?: 'IntegrationDevEnvConfig';
+	data?: Maybe< Scalars[ 'JSON' ][ 'output' ] >;
+};
+
+export type IntegrationList = {
+	__typename?: 'IntegrationList';
+	nodes: Array< IntegrationListItem >;
+	total: Scalars[ 'Int' ][ 'output' ];
+};
+
+export type IntegrationListItem = {
+	__typename?: 'IntegrationListItem';
+	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	slug: Scalars[ 'String' ][ 'output' ];
+	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type Invitation = Model & {
@@ -1957,6 +2367,53 @@ export type JobProgressStep = {
 	step?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
+export type ManageIntegrationInput = {
+	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	config?: InputMaybe< Scalars[ 'JSON' ][ 'input' ] >;
+	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	networkId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	slug: Scalars[ 'String' ][ 'input' ];
+	status: Scalars[ 'String' ][ 'input' ];
+};
+
+export type Me = {
+	__typename?: 'Me';
+	applicationRoles?: Maybe< UserApplicationRoleList >;
+	auth0Id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	authMethod?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	currentIP?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	displayName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	emailAddress?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	emailVerification?: Maybe< EmailVerificationTokenData >;
+	githubUsername?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	isConsideredInactive?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isEmailLegacyUnverified?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isEmailVerified?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isVIP?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isVipAuthUser?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	lastSeenAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	mfaMethods?: Maybe< MfaMethods >;
+	organizationRoles?: Maybe< UserOrganizationRoleList >;
+	samlIdentityProviderName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	samlNameId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	samlOrganizationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	shouldBeVIP?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	tokens?: Maybe< Array< Maybe< Token > > >;
+	vipAuthId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	wpcomUsername?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type MeApplicationRolesArgs = {
+	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type MeOrganizationRolesArgs = {
+	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
 export type MediaExport = {
 	__typename?: 'MediaExport';
 	createdAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -1965,9 +2422,10 @@ export type MediaExport = {
 	expiresAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	filesProcessed?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	filesTotal?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	id?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	subsite?: Maybe< WpSite >;
+	totalArchiveFiles?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	totalSizeInBytes?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
 	user?: Maybe< WpcliCommandUser >;
 };
@@ -1985,22 +2443,82 @@ export type MediaExportsList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
-/** Media Import Configuration */
 export type MediaImportConfig = {
 	__typename?: 'MediaImportConfig';
-	/** Allowed File Types */
 	allowedFileTypes?: Maybe< Scalars[ 'MediaImportAllowedFileTypes' ][ 'output' ] >;
-	/** Allowed File Name Length */
 	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Allowed File Size Limit */
 	fileSizeLimitInBytes?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+};
+
+export type MetricAnomaliesList = {
+	__typename?: 'MetricAnomaliesList';
+	anomalies: Array< Maybe< MetricAnomaly > >;
+	environmentId: Scalars[ 'Int' ][ 'output' ];
+	metricName: Scalars[ 'String' ][ 'output' ];
+	queryId: Scalars[ 'String' ][ 'output' ];
+	siteId: Scalars[ 'Int' ][ 'output' ];
+	totalAnomalies: Scalars[ 'Int' ][ 'output' ];
+};
+
+export type MetricAnomaly = {
+	__typename?: 'MetricAnomaly';
+	algorithmVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	customMetricThresholdsConfigId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	endTime?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	endValue?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	startTime: Scalars[ 'String' ][ 'output' ];
+	startValue?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+};
+
+export type MetricAnomalyContext = {
+	__typename?: 'MetricAnomalyContext';
+	algorithmVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	data?: Maybe< AnomalyContextData >;
+	endTime?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	endValue?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	startTime?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	startValue?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
 };
 
 export type MetricMeasurement = {
 	__typename?: 'MetricMeasurement';
 	baseline?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+	isAnomalous?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	timestamp: Scalars[ 'String' ][ 'output' ];
+	value?: Maybe< Scalars[ 'Float' ][ 'output' ] >;
+};
+
+export type MetricThreshold = {
+	__typename?: 'MetricThreshold';
+	metricName: Scalars[ 'String' ][ 'output' ];
+	operator: Scalars[ 'String' ][ 'output' ];
 	value: Scalars[ 'Float' ][ 'output' ];
+};
+
+export type MetricThresholdInput = {
+	operator: Scalars[ 'String' ][ 'input' ];
+	value: Scalars[ 'Float' ][ 'input' ];
+};
+
+export type MfaMethods = {
+	__typename?: 'MfaMethods';
+	configuredMethods?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
+	preferredMethod?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type MicrosoftTeamsNotificationRecipient = NotificationRecipient & {
+	__typename?: 'MicrosoftTeamsNotificationRecipient';
+	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
+	organizationId: Scalars[ 'Int' ][ 'output' ];
+	recipientType?: Maybe< NotificationRecipientType >;
+	recipientValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	updatedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 };
 
 export type Model = {
@@ -2015,108 +2533,113 @@ export type ModelList = {
 
 export type Mutation = {
 	__typename?: 'Mutation';
-	abortMediaImport?: Maybe< AppEnvironmentAbortMediaImportPayload >;
-	/** Accept an invitation to an organization */
-	acceptInvitation?: Maybe< AcceptInvitationPayload >;
-	activateCertificate?: Maybe< ActivateCertificatePayload >;
-	/** Activate a Let's Encrypt TLS certificate for a domain */
-	activateLetsEncryptOnDomainForAppEnvironment?: Maybe< AppEnvironmentActivateLetsEncryptOnDomainPayload >;
-	addBasicAuth?: Maybe< AppEnvironmentBasicAuthPayload >;
-	addCertificate?: Maybe< AddCertificatePayload >;
-	/** Add a domain to an environment */
-	addDomainToAppEnvironment?: Maybe< AppEnvironmentAddDomainPayload >;
-	/** Environment variables */
+	abortMediaImport: AppEnvironmentAbortMediaImportPayload;
+	acceptInvitation: AcceptInvitationPayload;
+	activateCertificate: ActivateCertificatePayload;
+	activateCertificateBySite?: Maybe< ActivateCertificateBySitePayload >;
+	activateLetsEncryptOnDomainForAppEnvironment: AppEnvironmentActivateLetsEncryptOnDomainPayload;
+	addBasicAuth: AppEnvironmentBasicAuthPayload;
+	addCertificate: AddCertificatePayload;
+	addDomainToAppEnvironment: AppEnvironmentAddDomainPayload;
 	addEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
-	/** Notifications */
+	addNewRelicUser?: Maybe< AppEnvironmentAddNewRelicUserPayload >;
 	addNotificationRecipient?: Maybe< AddNotificationRecipientPayload >;
-	addNotificationSubscription?: Maybe< AddNotificationSubscriptionPayload >;
-	/** Request stats */
+	addNotificationSubscription: AddNotificationSubscriptionPayload;
 	addRequestStats?: Maybe< AppEnvironmentAddRequestStatsPayload >;
-	/** Cancel an invitation to an organization */
-	cancelInvitation?: Maybe< CancelInvitationPayload >;
-	/** Stop a running WP-CLI command */
-	cancelWPCLICommand?: Maybe< CancelWpcliCommandPayload >;
-	/** TLS Management */
-	createCSR?: Maybe< CreateCsrPayload >;
-	/** Invite a user to an organization */
-	createInvitation?: Maybe< CreateInvitationPayload >;
-	createUser?: Maybe< CreateUserPayload >;
-	/** Remove a domain from an environment */
-	deactivateDomainOnAppEnvironment?: Maybe< AppEnvironmentDeactivateDomainPayload >;
-	/** Debug page cache object */
-	debugPageCache?: Maybe< DebugPageCachePayload >;
-	decodeCSR?: Maybe< CsrDecoded >;
-	deleteBackupShippingConfig?: Maybe< AppEnvironmentBackupShippingPayload >;
-	deleteBasicAuth?: Maybe< AppEnvironmentBasicAuthPayload >;
-	deleteCertificate?: Maybe< DeleteCertificatePayload >;
+	cancelInvitation: CancelInvitationPayload;
+	cancelPendingEmailVerificationToken: CancelPendingEmailVerificationTokenPayload;
+	cancelWPCLICommand: CancelWpcliCommandPayload;
+	changeRepo: CodebaseChangeRepoResult;
+	createCSR: CreateCsrPayload;
+	createInvitation: CreateInvitationPayload;
+	createUser: CreateUserPayload;
+	deactivateDomainOnAppEnvironment: AppEnvironmentDeactivateDomainPayload;
+	deactivatePurposeToken: DeactivatePurposeTokenPayload;
+	deactivateUserToken: DeactivateUserTokenPayload;
+	debugPageCache: DebugPageCachePayload;
+	decodeCSR: CsrDecoded;
+	deleteBackupShippingConfig: AppEnvironmentBackupShippingPayload;
+	deleteBasicAuth: AppEnvironmentBasicAuthPayload;
+	deleteCertificate: DeleteCertificatePayload;
 	deleteEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
-	/** Delete one or more IPs from the IP Allow List for an environment */
-	deleteIPAllowList?: Maybe< AppEnvironmentIpAllowListPayload >;
-	deleteLogShippingConfig?: Maybe< AppEnvironmentLogShippingPayload >;
-	deleteNotificationRecipient?: Maybe< DeleteNotificationRecipientPayload >;
-	deleteNotificationSubscription?: Maybe< DeleteNotificationSubscriptionPayload >;
-	deleteOrganizationAuthDomain?: Maybe< OrganizationAuthDomainDeletePayload >;
-	disableBackupShipping?: Maybe< AppEnvironmentBackupShippingPayload >;
+	deleteIPAllowList: AppEnvironmentIpAllowListPayload;
+	deleteIdentityProvider: DeleteIdentityProviderPayload;
+	deleteLogShippingConfig: AppEnvironmentLogShippingPayload;
+	deleteMetricThresholds?: Maybe< DeleteMetricThresholdsPayload >;
+	deleteNewRelicUser?: Maybe< AppEnvironmentDeleteNewRelicUserPayload >;
+	deleteNotificationRecipient: DeleteNotificationRecipientPayload;
+	deleteNotificationSubscription: DeleteNotificationSubscriptionPayload;
+	deleteOrganizationAuthDomain: OrganizationAuthDomainDeletePayload;
+	disableBackupShipping: AppEnvironmentBackupShippingPayload;
+	disableCustomDeploy?: Maybe< AppEnvironmentEnableDisableCustomDeployPayload >;
+	disableEnforceSSOAccess: Scalars[ 'Boolean' ][ 'output' ];
 	disableFeature?: Maybe< AppFeaturePayload >;
-	disableLogShipping?: Maybe< AppEnvironmentLogShippingPayload >;
-	editBasicAuth?: Maybe< AppEnvironmentBasicAuthPayload >;
-	enableBackupShipping?: Maybe< AppEnvironmentBackupShippingPayload >;
+	disableIdentityProviderEncryption: EnableIdentityProviderEncryptionPayload;
+	disableLogShipping: AppEnvironmentLogShippingPayload;
+	disableNewRelic?: Maybe< AppEnvironmentDisableNewRelicPayload >;
+	editBasicAuth: AppEnvironmentBasicAuthPayload;
+	enableBackupShipping: AppEnvironmentBackupShippingPayload;
+	enableCustomDeploy?: Maybe< AppEnvironmentEnableDisableCustomDeployPayload >;
+	enableEnforceSSOAccess: Scalars[ 'Boolean' ][ 'output' ];
 	enableFeature?: Maybe< AppFeaturePayload >;
+	enableIdentityProviderEncryption: EnableIdentityProviderEncryptionPayload;
 	enableLaunchMode?: Maybe< AppEnvironmentEnableLaunchModePayload >;
-	enableLogShipping?: Maybe< AppEnvironmentLogShippingPayload >;
-	/** Generate a presigned download URL to a previously copied database backup */
+	enableLogShipping: AppEnvironmentLogShippingPayload;
+	enableNewRelic?: Maybe< AppEnvironmentEnableNewRelicPayload >;
+	enablePHPMyAdmin?: Maybe< EnablePhpMyAdminPayload >;
+	generateCustomDeployAccess?: Maybe< GenerateCustomDeployAccessPayload >;
 	generateDBBackupCopyUrl?: Maybe< AppEnvironmentGenerateDbBackupCopyUrlPayload >;
+	generateEmailVerificationToken: EmailVerificationTokenPayload;
 	generateMediaExportSignedUrl?: Maybe< AppEnvironmentGenerateMediaExportSignedUrlPayload >;
-	generateUserToken?: Maybe< UserTokenGenerationPayload >;
+	generatePHPMyAdminAccess?: Maybe< GeneratePhpMyAdminAccessPayload >;
+	generateUserToken: UserTokenGenerationPayload;
 	launchApplication?: Maybe< AppEnvironmentLaunchedPayload >;
-	/** Purge page cache object(s) */
-	purgePageCache?: Maybe< PurgePageCachePayload >;
-	/** Remove a user from an organization (removes all roles and applications permissions) */
-	removeUserFromOrganization?: Maybe< RemoveUserFromOrganizationPayload >;
-	/** Replace all IPs in the IP Allow List for an environment */
-	replaceIPAllowList?: Maybe< AppEnvironmentIpAllowListPayload >;
-	/** Resend an invitation to an organization */
-	resendInvitation?: Maybe< ResendInvitationPayload >;
-	/** Rollback */
-	rollback?: Maybe< RollbackPayload >;
-	/** Organization Auth Domains */
-	saveOrganizationAuthDomain?: Maybe< OrganizationAuthDomainPayload >;
-	sendTestNotification?: Maybe< SendTestNotificationPayload >;
-	setUserApplicationRoles?: Maybe< SetUserApplicationRolesPayload >;
-	setUserOrganizationRole?: Maybe< UpdateUserOrganizationRolePayload >;
-	startDBBackupCopy?: Maybe< AppEnvironmentStartDbBackupCopyPayload >;
-	startImport?: Maybe< AppEnvironmentImportPayload >;
-	/** Media Exports */
-	startMediaExport?: Maybe< StartMediaExportPayload >;
-	/** Import Media into your Production Environment */
-	startMediaImport?: Maybe< AppEnvironmentMediaImportPayload >;
-	/** Switch the primary domain for an environment */
-	switchEnvironmentPrimaryDomain?: Maybe< AppEnvironmentPrimaryDomainSwitchPayload >;
-	syncEnvironment?: Maybe< AppEnvironmentSyncPayload >;
-	toggleVIPStatus?: Maybe< ToggleUserVipStatusPayload >;
-	triggerDatabaseBackup?: Maybe< AppEnvironmentTriggerDbBackupPayload >;
-	/** Execute a WP-CLI command on an environment */
-	triggerWPCLICommandOnAppEnvironment?: Maybe< AppEnvironmentTriggerWpcliCommandPayload >;
-	updateBackupShippingConfig?: Maybe< AppEnvironmentBackupShippingPayload >;
-	updateCertificate?: Maybe< UpdateCertificatePayload >;
-	/** Network Sites */
-	updateEnvironmentSubsiteDomain?: Maybe< AppEnvironmentUpdateSubsiteDomainPayload >;
-	updateEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
-	/** HSTS Settings */
-	updateHSTSSettings?: Maybe< AppEnvironmentHstsSettingsPayload >;
-	/** Add one or more IPs to the IP Allow List for an environment */
-	updateIPAllowList?: Maybe< AppEnvironmentIpAllowListPayload >;
-	updateLogShippingConfig?: Maybe< AppEnvironmentLogShippingPayload >;
-	updateNotificationRecipient?: Maybe< UpdateNotificationRecipientPayload >;
-	updateNotificationSubscription?: Maybe< UpdateNotificationSubscriptionPayload >;
-	/** Plugin Update */
-	updatePlugin?: Maybe< CodebaseUpdatePluginResult >;
-	/** Software Settings */
-	updateSoftwareSettings?: Maybe< AppEnvironmentSoftwareSettings >;
-	updateWPSiteLaunchStatus?: Maybe< WpSiteLaunchStatusPayload >;
-	validateLogShippingConfig?: Maybe< AppEnvironmentLogShippingValidationPayload >;
-	/** BYOR */
+	manageIntegration?: Maybe< Integration >;
+	purgePageCache: PurgePageCachePayload;
+	removeUserFromOrganization: RemoveUserFromOrganizationPayload;
+	replaceIPAllowList: AppEnvironmentIpAllowListPayload;
+	replaceOrganizationAuthDomains: OrganizationAuthDomainReplacePayload;
+	requestFeatureUpgrade?: Maybe< RequestFeatureUpgradePayload >;
+	resendInvitation: ResendInvitationPayload;
+	rollback: RollbackPayload;
+	saveIdentityProvider: SaveIdentityProviderPayload;
+	saveOrganizationAuthDomain: OrganizationAuthDomainPayload;
+	sendTestNotification: SendTestNotificationPayload;
+	setIdentityProviderValidations: SetIdentityProviderValidationsPayload;
+	setMetricThresholds?: Maybe< SetOrUpdateMetricThresholdPayload >;
+	setUserApplicationRoles: SetUserApplicationRolesPayload;
+	setUserOrganizationRole: UpdateUserOrganizationRolePayload;
 	startCustomDeploy?: Maybe< AppEnvironmentCustomDeployPayload >;
+	startDBBackupCopy: AppEnvironmentStartDbBackupCopyPayload;
+	startImport: AppEnvironmentImportPayload;
+	startMediaExport?: Maybe< StartMediaExportPayload >;
+	startMediaImport?: Maybe< AppEnvironmentMediaImportPayload >;
+	switchEnvironmentPrimaryDomain: AppEnvironmentPrimaryDomainSwitchPayload;
+	syncEnvironment: AppEnvironmentSyncPayload;
+	toggleVIPStatus: ToggleUserVipStatusPayload;
+	triggerDatabaseBackup: AppEnvironmentTriggerDbBackupPayload;
+	triggerWPCLICommandOnAppEnvironment: AppEnvironmentTriggerWpcliCommandPayload;
+	updateBackupShippingConfig: AppEnvironmentBackupShippingPayload;
+	updateCertificate: UpdateCertificatePayload;
+	updateEnvironmentSubsiteDomain: AppEnvironmentUpdateSubsiteDomainPayload;
+	updateEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
+	updateHSTSSettings?: Maybe< AppEnvironmentHstsSettingsPayload >;
+	updateIPAccessRestrictions?: Maybe< EdgeConfigAccessRestrictionsIp >;
+	updateIPAllowList: AppEnvironmentIpAllowListPayload;
+	updateLogShippingConfig: AppEnvironmentLogShippingPayload;
+	updateMetricThresholds?: Maybe< SetOrUpdateMetricThresholdPayload >;
+	updateNotificationRecipient: UpdateNotificationRecipientPayload;
+	updateNotificationSubscription: UpdateNotificationSubscriptionPayload;
+	updatePlugin: CodebaseUpdatePluginResult;
+	updateSoftwareSettings?: Maybe< AppEnvironmentSoftwareSettings >;
+	updateUser: UpdateUserPayload;
+	updateUserAgentAccessRestrictions?: Maybe< EdgeConfigAccessRestrictionsUserAgent >;
+	updateWPSiteLaunchStatus: WpSiteLaunchStatusPayload;
+	validateCustomDeployAccess?: Maybe< ValidateCustomDeployAccessPayload >;
+	validateEmailVerificationToken: ValidateEmailVerificationTokenPayload;
+	validateLogShippingConfig: AppEnvironmentLogShippingValidationPayload;
+	validatePHPMyAdminAccess?: Maybe< ValidatePhpMyAdminAccessPayload >;
+	verifyDnsTxtRecord: VerifyDnsTxtRecordPayload;
 };
 
 export type MutationAbortMediaImportArgs = {
@@ -2129,6 +2652,10 @@ export type MutationAcceptInvitationArgs = {
 
 export type MutationActivateCertificateArgs = {
 	input?: InputMaybe< ActivateCertificateInput >;
+};
+
+export type MutationActivateCertificateBySiteArgs = {
+	input?: InputMaybe< ActivateCertificateBySiteInput >;
 };
 
 export type MutationActivateLetsEncryptOnDomainForAppEnvironmentArgs = {
@@ -2151,6 +2678,10 @@ export type MutationAddEnvironmentVariableArgs = {
 	input?: InputMaybe< EnvironmentVariableInput >;
 };
 
+export type MutationAddNewRelicUserArgs = {
+	input?: InputMaybe< AppEnvironmentAddNewRelicUserInput >;
+};
+
 export type MutationAddNotificationRecipientArgs = {
 	input?: InputMaybe< AddNotificationRecipientInput >;
 };
@@ -2167,8 +2698,16 @@ export type MutationCancelInvitationArgs = {
 	input?: InputMaybe< CancelInvitationInput >;
 };
 
+export type MutationCancelPendingEmailVerificationTokenArgs = {
+	input?: InputMaybe< CancelEmailVerificationTokenInput >;
+};
+
 export type MutationCancelWpcliCommandArgs = {
 	input?: InputMaybe< CancelWpcliCommandInput >;
+};
+
+export type MutationChangeRepoArgs = {
+	input?: InputMaybe< CodebaseChangeRepoInput >;
 };
 
 export type MutationCreateCsrArgs = {
@@ -2185,6 +2724,14 @@ export type MutationCreateUserArgs = {
 
 export type MutationDeactivateDomainOnAppEnvironmentArgs = {
 	input?: InputMaybe< AppEnvironmentDeactivateDomainInput >;
+};
+
+export type MutationDeactivatePurposeTokenArgs = {
+	input?: InputMaybe< DeactivatePurposeTokenInput >;
+};
+
+export type MutationDeactivateUserTokenArgs = {
+	input?: InputMaybe< DeactivateUserTokenInput >;
 };
 
 export type MutationDebugPageCacheArgs = {
@@ -2215,8 +2762,20 @@ export type MutationDeleteIpAllowListArgs = {
 	input?: InputMaybe< AppEnvironmentIpAllowListInput >;
 };
 
+export type MutationDeleteIdentityProviderArgs = {
+	input?: InputMaybe< DeleteIdentityProviderInput >;
+};
+
 export type MutationDeleteLogShippingConfigArgs = {
 	input?: InputMaybe< AppEnvironmentLogShippingInput >;
+};
+
+export type MutationDeleteMetricThresholdsArgs = {
+	input?: InputMaybe< DeleteMetricThresholdsInput >;
+};
+
+export type MutationDeleteNewRelicUserArgs = {
+	input?: InputMaybe< AppEnvironmentDeleteNewRelicUserInput >;
 };
 
 export type MutationDeleteNotificationRecipientArgs = {
@@ -2235,12 +2794,28 @@ export type MutationDisableBackupShippingArgs = {
 	input?: InputMaybe< AppEnvironmentBackupShippingInput >;
 };
 
+export type MutationDisableCustomDeployArgs = {
+	input?: InputMaybe< AppEnvironmentEnableDisableCustomDeployInput >;
+};
+
+export type MutationDisableEnforceSsoAccessArgs = {
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+};
+
 export type MutationDisableFeatureArgs = {
 	input?: InputMaybe< AppFeatureInput >;
 };
 
+export type MutationDisableIdentityProviderEncryptionArgs = {
+	input?: InputMaybe< EnableIdentityProviderEncryptionInput >;
+};
+
 export type MutationDisableLogShippingArgs = {
 	input?: InputMaybe< AppEnvironmentLogShippingInput >;
+};
+
+export type MutationDisableNewRelicArgs = {
+	input?: InputMaybe< AppEnvironmentDisableNewRelicInput >;
 };
 
 export type MutationEditBasicAuthArgs = {
@@ -2251,8 +2826,20 @@ export type MutationEnableBackupShippingArgs = {
 	input?: InputMaybe< AppEnvironmentBackupShippingInput >;
 };
 
+export type MutationEnableCustomDeployArgs = {
+	input?: InputMaybe< AppEnvironmentEnableDisableCustomDeployInput >;
+};
+
+export type MutationEnableEnforceSsoAccessArgs = {
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+};
+
 export type MutationEnableFeatureArgs = {
 	input?: InputMaybe< AppFeatureInput >;
+};
+
+export type MutationEnableIdentityProviderEncryptionArgs = {
+	input?: InputMaybe< EnableIdentityProviderEncryptionInput >;
 };
 
 export type MutationEnableLaunchModeArgs = {
@@ -2263,12 +2850,32 @@ export type MutationEnableLogShippingArgs = {
 	input?: InputMaybe< AppEnvironmentLogShippingInput >;
 };
 
+export type MutationEnableNewRelicArgs = {
+	input?: InputMaybe< AppEnvironmentEnableNewRelicInput >;
+};
+
+export type MutationEnablePhpMyAdminArgs = {
+	input?: InputMaybe< EnablePhpMyAdminInput >;
+};
+
+export type MutationGenerateCustomDeployAccessArgs = {
+	input?: InputMaybe< GenerateCustomDeployAccessInput >;
+};
+
 export type MutationGenerateDbBackupCopyUrlArgs = {
 	input?: InputMaybe< AppEnvironmentGenerateDbBackupCopyUrlInput >;
 };
 
+export type MutationGenerateEmailVerificationTokenArgs = {
+	input: GenerateEmailVerificationTokenInput;
+};
+
 export type MutationGenerateMediaExportSignedUrlArgs = {
 	input?: InputMaybe< AppEnvironmentGenerateMediaExportSignedUrlInput >;
+};
+
+export type MutationGeneratePhpMyAdminAccessArgs = {
+	input?: InputMaybe< GeneratePhpMyAdminAccessInput >;
 };
 
 export type MutationGenerateUserTokenArgs = {
@@ -2277,6 +2884,10 @@ export type MutationGenerateUserTokenArgs = {
 
 export type MutationLaunchApplicationArgs = {
 	input?: InputMaybe< AppEnvironmentLaunchedInput >;
+};
+
+export type MutationManageIntegrationArgs = {
+	input: ManageIntegrationInput;
 };
 
 export type MutationPurgePageCacheArgs = {
@@ -2291,12 +2902,24 @@ export type MutationReplaceIpAllowListArgs = {
 	input?: InputMaybe< AppEnvironmentIpAllowListInput >;
 };
 
+export type MutationReplaceOrganizationAuthDomainsArgs = {
+	input?: InputMaybe< OrganizationAuthDomainReplaceInput >;
+};
+
+export type MutationRequestFeatureUpgradeArgs = {
+	input?: InputMaybe< RequestFeatureUpgradeInput >;
+};
+
 export type MutationResendInvitationArgs = {
 	input?: InputMaybe< ResendInvitationInput >;
 };
 
 export type MutationRollbackArgs = {
 	input?: InputMaybe< RollbackInput >;
+};
+
+export type MutationSaveIdentityProviderArgs = {
+	input?: InputMaybe< SaveIdentityProviderInput >;
 };
 
 export type MutationSaveOrganizationAuthDomainArgs = {
@@ -2307,6 +2930,14 @@ export type MutationSendTestNotificationArgs = {
 	input?: InputMaybe< SendTestNotificationInput >;
 };
 
+export type MutationSetIdentityProviderValidationsArgs = {
+	input: SetIdentityProviderValidationsInput;
+};
+
+export type MutationSetMetricThresholdsArgs = {
+	input?: InputMaybe< SetOrUpdateMetricThresholdsInput >;
+};
+
 export type MutationSetUserApplicationRolesArgs = {
 	input?: InputMaybe< SetUserApplicationRolesInput >;
 };
@@ -2315,16 +2946,16 @@ export type MutationSetUserOrganizationRoleArgs = {
 	input?: InputMaybe< UpdateUserOrganizationRoleInput >;
 };
 
+export type MutationStartCustomDeployArgs = {
+	input?: InputMaybe< AppEnvironmentCustomDeployInput >;
+};
+
 export type MutationStartDbBackupCopyArgs = {
 	input?: InputMaybe< AppEnvironmentStartDbBackupCopyInput >;
 };
 
 export type MutationStartImportArgs = {
 	input?: InputMaybe< AppEnvironmentImportInput >;
-};
-
-export type MutationStartCustomDeployArgs = {
-	input?: InputMaybe< AppEnvironmentCustomDeployInput >;
 };
 
 export type MutationStartMediaExportArgs = {
@@ -2375,12 +3006,20 @@ export type MutationUpdateHstsSettingsArgs = {
 	input?: InputMaybe< AppEnvironmentHstsSettingsInput >;
 };
 
+export type MutationUpdateIpAccessRestrictionsArgs = {
+	input?: InputMaybe< EdgeConfigUpdateIpAccessRestrictionsInput >;
+};
+
 export type MutationUpdateIpAllowListArgs = {
 	input?: InputMaybe< AppEnvironmentIpAllowListInput >;
 };
 
 export type MutationUpdateLogShippingConfigArgs = {
 	input?: InputMaybe< AppEnvironmentLogShippingInput >;
+};
+
+export type MutationUpdateMetricThresholdsArgs = {
+	input?: InputMaybe< SetOrUpdateMetricThresholdsInput >;
 };
 
 export type MutationUpdateNotificationRecipientArgs = {
@@ -2399,25 +3038,69 @@ export type MutationUpdateSoftwareSettingsArgs = {
 	input?: InputMaybe< AppEnvironmentSoftwareSettingsInput >;
 };
 
+export type MutationUpdateUserArgs = {
+	input?: InputMaybe< UpdateUserInput >;
+};
+
+export type MutationUpdateUserAgentAccessRestrictionsArgs = {
+	input?: InputMaybe< EdgeConfigUpdateUserAgentAccessRestrictionsInput >;
+};
+
 export type MutationUpdateWpSiteLaunchStatusArgs = {
 	input?: InputMaybe< WpSiteLaunchStatusInput >;
+};
+
+export type MutationValidateCustomDeployAccessArgs = {
+	input?: InputMaybe< ValidateCustomDeployAccessInput >;
+};
+
+export type MutationValidateEmailVerificationTokenArgs = {
+	input: ValidateEmailVerificationTokenInput;
 };
 
 export type MutationValidateLogShippingConfigArgs = {
 	input?: InputMaybe< AppEnvironmentLogShippingInput >;
 };
 
+export type MutationVerifyDnsTxtRecordArgs = {
+	input?: InputMaybe< VerifyDnsTxtRecordInput >;
+};
+
+export type NetworkSiteResult = {
+	__typename?: 'NetworkSiteResult';
+	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type NetworkSitesResult = {
+	__typename?: 'NetworkSitesResult';
+	blueprint?: Maybe< Blueprint >;
+	items?: Maybe< Array< Maybe< InflatedNetworkSite > > >;
+	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
 export type NewDomain = {
 	name: Scalars[ 'String' ][ 'input' ];
 };
 
+export type NewRelicUser = {
+	email: Scalars[ 'String' ][ 'output' ];
+	id: Scalars[ 'Int' ][ 'output' ];
+	name: Scalars[ 'String' ][ 'output' ];
+};
+
+export type NewRelicUserList = {
+	__typename?: 'NewRelicUserList';
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes: Array< Maybe< NewRelicUser > >;
+	total: Scalars[ 'BigInt' ][ 'output' ];
+};
+
 export type NotificationRecipient = {
-	__typename?: 'NotificationRecipient';
 	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id: Scalars[ 'Int' ][ 'output' ];
-	meta?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
 	organizationId: Scalars[ 'Int' ][ 'output' ];
 	recipientType?: Maybe< NotificationRecipientType >;
 	recipientValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -2426,30 +3109,54 @@ export type NotificationRecipient = {
 
 export type NotificationRecipientList = {
 	__typename?: 'NotificationRecipientList';
-	nodes?: Maybe< Array< Maybe< NotificationRecipient > > >;
-	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes: Array< Maybe< NotificationRecipient > >;
+	total: Scalars[ 'BigInt' ][ 'output' ];
 };
 
-export type NotificationRecipientType = 'EMAIL' | 'SLACK' | 'WEBHOOK';
+export type NotificationRecipientMetaInput = {
+	webhookVersion?: InputMaybe< NotificationWebhookVersion >;
+};
+
+export type NotificationRecipientType =
+	| 'EMAIL'
+	| 'GOOGLE_CHAT'
+	| 'MICROSOFT_TEAMS'
+	| 'SLACK'
+	| 'WEBHOOK';
 
 export type NotificationSubscription = {
 	__typename?: 'NotificationSubscription';
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	application?: Maybe< App >;
 	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	entityType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	entityValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	entityType: Scalars[ 'String' ][ 'output' ];
+	entityValue: Scalars[ 'String' ][ 'output' ];
 	id: Scalars[ 'Int' ][ 'output' ];
-	meta?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	meta?: Maybe< NotificationSubscriptionMeta >;
 	notificationRecipient?: Maybe< NotificationRecipient >;
 	updatedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	vin?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
 export type NotificationSubscriptionList = {
 	__typename?: 'NotificationSubscriptionList';
-	nodes?: Maybe< Array< Maybe< NotificationSubscription > > >;
-	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes: Array< Maybe< NotificationSubscription > >;
+	total: Scalars[ 'BigInt' ][ 'output' ];
 };
+
+export type NotificationSubscriptionMeta = {
+	__typename?: 'NotificationSubscriptionMeta';
+	eventTypes?: Maybe< Array< Scalars[ 'String' ][ 'output' ] > >;
+};
+
+export type NotificationSubscriptionMetaInput = {
+	eventTypes?: InputMaybe< Array< Scalars[ 'String' ][ 'input' ] > >;
+};
+
+export type NotificationWebhookVersion = 'v0' | 'v1';
 
 export type OrgList = ModelList & {
 	__typename?: 'OrgList';
@@ -2457,6 +3164,12 @@ export type OrgList = ModelList & {
 	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	nodes?: Maybe< Array< Maybe< Organization > > >;
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type OrgRequestStatsList = {
+	__typename?: 'OrgRequestStatsList';
+	nodes: Array< Maybe< SiteRequestStat > >;
+	total: Scalars[ 'BigInt' ][ 'output' ];
 };
 
 export type OrgRole = {
@@ -2471,21 +3184,34 @@ export type Organization = Model & {
 	__typename?: 'Organization';
 	apps?: Maybe< AppList >;
 	authDomains?: Maybe< OrganizationAuthDomainList >;
+	considerUsersInactiveAfterDays?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	contacts?: Maybe< OrganizationContacts >;
+	enforceSSOAccess?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	events?: Maybe< AuditEventList >;
+	features?: Maybe< Array< Maybe< OrganizationFeature > > >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	identityProviders?: Maybe< IdentityProviderList >;
+	integration?: Maybe< Integration >;
+	integrations?: Maybe< IntegrationList >;
 	invitations?: Maybe< InvitationList >;
+	isFedramp?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	letsEncryptDisallowed?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	notificationRecipients?: Maybe< NotificationRecipientList >;
+	notificationSubscription?: Maybe< NotificationSubscription >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
 	pageviews?: Maybe< Pageviews >;
 	permissions?: Maybe< Array< Maybe< PermissionResult > > >;
 	plan?: Maybe< OrganizationPlan >;
+	requestStats?: Maybe< OrgRequestStatsList >;
+	salesforceId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	serviceStatus?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	slug?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	supportPackage?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	traffic?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	trafficType?: Maybe< TrafficType >;
 	users?: Maybe< UserList >;
+	visitorsStats?: Maybe< VisitorsStatsList >;
 };
 
 export type OrganizationAppsArgs = {
@@ -2501,12 +3227,17 @@ export type OrganizationAuthDomainsArgs = {
 
 export type OrganizationEventsArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	excludeAnomalyEvents?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	order?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type OrganizationIdentityProvidersArgs = {
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type OrganizationIntegrationArgs = {
+	slug: Scalars[ 'String' ][ 'input' ];
 };
 
 export type OrganizationInvitationsArgs = {
@@ -2517,18 +3248,46 @@ export type OrganizationInvitationsArgs = {
 };
 
 export type OrganizationNotificationRecipientsArgs = {
+	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	matching?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+};
+
+export type OrganizationNotificationSubscriptionArgs = {
+	id: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type OrganizationNotificationSubscriptionsArgs = {
+	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	notificationRecipientId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	vin?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
 export type OrganizationPermissionsArgs = {
 	permissions?: InputMaybe< Array< InputMaybe< Scalars[ 'String' ][ 'input' ] > > >;
 };
 
+export type OrganizationRequestStatsArgs = {
+	from?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+	to?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+};
+
 export type OrganizationUsersArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	authMethod?: InputMaybe< UserAuthMethod >;
+	externalUsers?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	isVIP?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+};
+
+export type OrganizationVisitorsStatsArgs = {
+	days?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	from?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+	to?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
 };
 
 export type OrganizationAuthDomain = Model & {
@@ -2542,13 +3301,13 @@ export type OrganizationAuthDomain = Model & {
 
 export type OrganizationAuthDomainCreateInput = {
 	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
-	domain?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	domain: Scalars[ 'String' ][ 'input' ];
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId: Scalars[ 'Int' ][ 'input' ];
 };
 
 export type OrganizationAuthDomainDeleteInput = {
-	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	id: Scalars[ 'Int' ][ 'input' ];
 };
 
 export type OrganizationAuthDomainDeletePayload = {
@@ -2568,14 +3327,45 @@ export type OrganizationAuthDomainPayload = {
 	authDomain?: Maybe< OrganizationAuthDomain >;
 };
 
+export type OrganizationAuthDomainReplaceInput = {
+	domains: Array< Scalars[ 'String' ][ 'input' ] >;
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type OrganizationAuthDomainReplacePayload = {
+	__typename?: 'OrganizationAuthDomainReplacePayload';
+	authDomains?: Maybe< Array< Maybe< OrganizationAuthDomain > > >;
+	organization?: Maybe< Organization >;
+};
+
+export type OrganizationContact = {
+	__typename?: 'OrganizationContact';
+	email?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	title?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type OrganizationContactList = {
+	__typename?: 'OrganizationContactList';
+	nodes?: Maybe< Array< Maybe< OrganizationContact > > >;
+	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
 export type OrganizationContacts = {
 	__typename?: 'OrganizationContacts';
-	accountOwners?: Maybe< SalesforceContactList >;
-	supportContacts?: Maybe< SalesforceContactList >;
-	technicalContacts?: Maybe< SalesforceContactList >;
-	vipLaunchTAM?: Maybe< SalesforceContact >;
-	vipRelationshipManager?: Maybe< SalesforceContact >;
-	vipTechnicalAccountManager?: Maybe< SalesforceContact >;
+	accountOwners?: Maybe< OrganizationContactList >;
+	supportContacts?: Maybe< OrganizationContactList >;
+	technicalContacts?: Maybe< OrganizationContactList >;
+	vipLaunchTAM?: Maybe< OrganizationContact >;
+	vipRelationshipManager?: Maybe< OrganizationContact >;
+	vipTechnicalAccountManager?: Maybe< OrganizationContact >;
+};
+
+export type OrganizationFeature = {
+	__typename?: 'OrganizationFeature';
+	enabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	slug?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type OrganizationPlan = {
@@ -2588,7 +3378,14 @@ export type OrganizationPlan = {
 	planName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	planStartDate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	ticketSLA?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	traffic?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	trafficType?: Maybe< TrafficType >;
 	uptimeSLA?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type PhpMyAdminStatus = {
+	__typename?: 'PHPMyAdminStatus';
+	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type PageviewDetails = {
@@ -2650,8 +3447,11 @@ export type Query = {
 	dbBackupCopies?: Maybe< DbBackupCopyList >;
 	domain?: Maybe< Domain >;
 	domains?: Maybe< DomainList >;
+	integrationCenter?: Maybe< IntegrationCenterList >;
+	listIntegrations?: Maybe< IntegrationList >;
+	listPurposeTokens?: Maybe< TokenList >;
+	me?: Maybe< Me >;
 	mediaImportConfig?: Maybe< MediaImportConfig >;
-	me?: Maybe< User >;
 	organization?: Maybe< Organization >;
 	organizations?: Maybe< OrgList >;
 	repo?: Maybe< Repo >;
@@ -2692,6 +3492,23 @@ export type QueryDomainsArgs = {
 	wildcards?: InputMaybe< Array< InputMaybe< Scalars[ 'String' ][ 'input' ] > > >;
 };
 
+export type QueryIntegrationCenterArgs = {
+	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type QueryListIntegrationsArgs = {
+	applicationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type QueryListPurposeTokensArgs = {
+	environmentIds: Array< InputMaybe< Scalars[ 'Int' ][ 'input' ] > >;
+	purpose: Scalars[ 'String' ][ 'input' ];
+	userId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
 export type QueryOrganizationArgs = {
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
@@ -2715,6 +3532,7 @@ export type QueryUserArgs = {
 
 export type QueryUsersArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	externalUsers?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	isVIP?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	matching?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
@@ -2737,6 +3555,17 @@ export type Repo = Model & {
 	branch?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type RequestFeatureUpgradeInput = {
+	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	feature: Scalars[ 'String' ][ 'input' ];
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+};
+
+export type RequestFeatureUpgradePayload = {
+	__typename?: 'RequestFeatureUpgradePayload';
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
 export type RequestHeader = {
@@ -2801,18 +3630,22 @@ export type RollbackPayload = {
 	newDeployment?: Maybe< Deployment >;
 };
 
-export type SalesforceContact = {
-	__typename?: 'SalesforceContact';
-	email?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	title?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+export type SaveIdentityProviderInput = {
+	active: Scalars[ 'Boolean' ][ 'input' ];
+	certificate: Scalars[ 'String' ][ 'input' ];
+	displayName?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	entryPoint?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	issuer?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+	provider: Scalars[ 'String' ][ 'input' ];
+	secondaryCertificate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	slug?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-export type SalesforceContactList = {
-	__typename?: 'SalesforceContactList';
-	nodes?: Maybe< Array< Maybe< SalesforceContact > > >;
-	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+export type SaveIdentityProviderPayload = {
+	__typename?: 'SaveIdentityProviderPayload';
+	identityProvider?: Maybe< IdentityProvider >;
 };
 
 export type SendTestNotificationInput = {
@@ -2833,6 +3666,35 @@ export type ServerResponse = {
 	statusCode: Scalars[ 'Int' ][ 'output' ];
 };
 
+export type SetIdentityProviderValidationsInput = {
+	id: Scalars[ 'Int' ][ 'input' ];
+	organizationId: Scalars[ 'Int' ][ 'input' ];
+	validateAudience: Scalars[ 'Boolean' ][ 'input' ];
+	wantAssertionsSigned: Scalars[ 'Boolean' ][ 'input' ];
+	wantAuthnResponseSigned: Scalars[ 'Boolean' ][ 'input' ];
+};
+
+export type SetIdentityProviderValidationsPayload = {
+	__typename?: 'SetIdentityProviderValidationsPayload';
+	id: Scalars[ 'Int' ][ 'output' ];
+	organizationId: Scalars[ 'Int' ][ 'output' ];
+	validateAudience: Scalars[ 'Boolean' ][ 'output' ];
+	wantAssertionsSigned: Scalars[ 'Boolean' ][ 'output' ];
+	wantAuthnResponseSigned: Scalars[ 'Boolean' ][ 'output' ];
+};
+
+export type SetOrUpdateMetricThresholdPayload = {
+	__typename?: 'SetOrUpdateMetricThresholdPayload';
+	success: Scalars[ 'Boolean' ][ 'output' ];
+	thresholds?: Maybe< Array< Maybe< MetricThreshold > > >;
+};
+
+export type SetOrUpdateMetricThresholdsInput = {
+	envId: Scalars[ 'Int' ][ 'input' ];
+	metricName: Scalars[ 'String' ][ 'input' ];
+	thresholds: Array< InputMaybe< MetricThresholdInput > >;
+};
+
 export type SetUserApplicationRolesInput = {
 	applicationRoles: Array< InputMaybe< UserApplicationRoleInput > >;
 };
@@ -2840,6 +3702,30 @@ export type SetUserApplicationRolesInput = {
 export type SetUserApplicationRolesPayload = {
 	__typename?: 'SetUserApplicationRolesPayload';
 	applicationRoles?: Maybe< Array< Maybe< UserApplicationRole > > >;
+};
+
+export type SiteRequestStat = {
+	__typename?: 'SiteRequestStat';
+	billableApiRequestCount: Scalars[ 'BigInt' ][ 'output' ];
+	billableAppRequestCount: Scalars[ 'BigInt' ][ 'output' ];
+	clientSiteId: Scalars[ 'BigInt' ][ 'output' ];
+	dailyBillableApiRequestCount: Scalars[ 'BigInt' ][ 'output' ];
+	dailyBillableAppRequestCount: Scalars[ 'BigInt' ][ 'output' ];
+	date: Scalars[ 'String' ][ 'output' ];
+	resolution: Scalars[ 'String' ][ 'output' ];
+};
+
+export type SlackNotificationRecipient = NotificationRecipient & {
+	__typename?: 'SlackNotificationRecipient';
+	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
+	organizationId: Scalars[ 'Int' ][ 'output' ];
+	recipientType?: Maybe< NotificationRecipientType >;
+	recipientValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	updatedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 };
 
 export type StartMediaExportConfigOptions = {
@@ -2860,6 +3746,19 @@ export type StartMediaExportPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+export type Stats = {
+	__typename?: 'Stats';
+	dailyUniqueVisitorsCount: Scalars[ 'Int' ][ 'output' ];
+	date: Scalars[ 'String' ][ 'output' ];
+	monthlyUniqueVisitorsCount: Scalars[ 'Int' ][ 'output' ];
+};
+
+export type StatsList = {
+	__typename?: 'StatsList';
+	nodes: Array< Maybe< Stats > >;
+	total: Scalars[ 'BigInt' ][ 'output' ];
+};
+
 export type ToggleUserVipStatusInput = {
 	githubUsername: Scalars[ 'String' ][ 'input' ];
 	isVIP?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
@@ -2873,10 +3772,25 @@ export type ToggleUserVipStatusPayload = {
 export type Token = Model & {
 	__typename?: 'Token';
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	disabledDueToInactivity?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	environmentIds?: Maybe< Array< Maybe< Scalars[ 'Int' ][ 'output' ] > > >;
 	exp?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	expiresAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	lastUsedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	purpose?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	userId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
+
+export type TokenList = ModelList & {
+	__typename?: 'TokenList';
+	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	nodes: Array< Token >;
+	total: Scalars[ 'Int' ][ 'output' ];
+};
+
+export type TrafficType = 'HTTP' | 'MUV';
 
 export type UpdateCertificateInput = {
 	certificate: Scalars[ 'String' ][ 'input' ];
@@ -2895,7 +3809,7 @@ export type UpdateNotificationRecipientInput = {
 	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	description?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	id: Scalars[ 'Int' ][ 'input' ];
-	meta?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	meta?: InputMaybe< NotificationRecipientMetaInput >;
 	name?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	organizationId: Scalars[ 'Int' ][ 'input' ];
 	recipientType?: InputMaybe< NotificationRecipientType >;
@@ -2909,17 +3823,25 @@ export type UpdateNotificationRecipientPayload = {
 
 export type UpdateNotificationSubscriptionInput = {
 	active?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
-	applicationId: Scalars[ 'Int' ][ 'input' ];
-	description: Scalars[ 'String' ][ 'input' ];
-	environmentId: Scalars[ 'Int' ][ 'input' ];
-	meta?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
-	notificationRecipientId: Scalars[ 'Int' ][ 'input' ];
+	description?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	entityType?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	entityValue?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	meta?: InputMaybe< NotificationSubscriptionMetaInput >;
+	notificationRecipientId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	notificationSubscriptionId: Scalars[ 'Int' ][ 'input' ];
+	vin?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
 export type UpdateNotificationSubscriptionPayload = {
 	__typename?: 'UpdateNotificationSubscriptionPayload';
 	notificationSubscription?: Maybe< NotificationSubscription >;
+};
+
+export type UpdateUserInput = {
+	displayName?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	emailAddress?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	githubUsername?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	userId: Scalars[ 'Int' ][ 'input' ];
 };
 
 export type UpdateUserOrganizationRoleInput = {
@@ -2934,22 +3856,44 @@ export type UpdateUserOrganizationRolePayload = {
 	user?: Maybe< User >;
 };
 
+export type UpdateUserPayload = {
+	__typename?: 'UpdateUserPayload';
+	user?: Maybe< User >;
+};
+
 export type User = Model & {
 	__typename?: 'User';
 	applicationRoles?: Maybe< UserApplicationRoleList >;
 	auth0Id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	authMethod?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	displayName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	emailAddress?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	emailVerification?: Maybe< EmailVerificationTokenData >;
 	githubUsername?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	isConsideredInactive?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isEmailLegacyUnverified?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isEmailVerified?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	isVIP?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	isVipAuthUser?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	lastSeenAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	mfaMethods?: Maybe< MfaMethods >;
 	organizationRoles?: Maybe< UserOrganizationRoleList >;
+	samlIdentityProviderName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	samlNameId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	samlOrganizationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	tokens?: Maybe< Array< Maybe< Token > > >;
+	vipAuthId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	wpcomUsername?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type UserApplicationRolesArgs = {
 	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type UserOrganizationRolesArgs = {
+	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
 export type UserApplicationRole = Model & {
@@ -2977,6 +3921,8 @@ export type UserApplicationRoleList = ModelList & {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+export type UserAuthMethod = 'github' | 'organization_sso' | 'other_sso' | 'restricted' | 'wpcom';
+
 export type UserList = ModelList & {
 	__typename?: 'UserList';
 	edges?: Maybe< Array< Maybe< User > > >;
@@ -2990,6 +3936,9 @@ export type UserOrganizationRole = Model & {
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	organization?: Maybe< Organization >;
 	organizationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	restricted?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	restrictedBy?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	restrictedOrgName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	role?: Maybe< OrgRole >;
 	roleId?: Maybe< OrgRoleId >;
 	source?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -3018,6 +3967,58 @@ export type VipprMeta = {
 	comments?: Maybe< Array< Maybe< GitHubComment > > >;
 	reviewComments?: Maybe< Array< Maybe< GitHubPullRequestReviewComment > > >;
 	reviews?: Maybe< Array< Maybe< GitHubReview > > >;
+};
+
+export type ValidateCustomDeployAccessInput = {
+	app: Scalars[ 'String' ][ 'input' ];
+	env: Scalars[ 'String' ][ 'input' ];
+};
+
+export type ValidateCustomDeployAccessPayload = {
+	__typename?: 'ValidateCustomDeployAccessPayload';
+	appId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	envId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	envType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	envUniqueLabel?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	launched?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	primaryDomainName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type ValidateEmailVerificationTokenInput = {
+	token: Scalars[ 'String' ][ 'input' ];
+};
+
+export type ValidateEmailVerificationTokenPayload = {
+	__typename?: 'ValidateEmailVerificationTokenPayload';
+	email?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type ValidatePhpMyAdminAccessPayload = {
+	__typename?: 'ValidatePhpMyAdminAccessPayload';
+	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type VerifyDnsTxtRecordInput = {
+	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+};
+
+export type VerifyDnsTxtRecordPayload = {
+	__typename?: 'VerifyDnsTxtRecordPayload';
+	valid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+};
+
+export type VisitorsStats = {
+	__typename?: 'VisitorsStats';
+	parselySiteId: Scalars[ 'String' ][ 'output' ];
+	stats: StatsList;
+};
+
+export type VisitorsStatsList = {
+	__typename?: 'VisitorsStatsList';
+	nodes: Array< Maybe< VisitorsStats > >;
+	total: Scalars[ 'BigInt' ][ 'output' ];
 };
 
 export type WpcliCommand = {
@@ -3052,128 +4053,81 @@ export type WpcliCommandUser = {
 
 export type WpInstallation = {
 	__typename?: 'WPInstallation';
-	/** Core WordPress Site Installation Details */
 	core?: Maybe< WpInstallationCoreDetails >;
-	/** App Environment Name */
 	environmentName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Details about Jetpack */
 	jetpack?: Maybe< WpInstallationJetpackDetails >;
-	/** Details about all plugins installed */
 	plugins?: Maybe< Array< WpInstallationPluginDetails > >;
-	/** App Environment / GOOP Site ID */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Last updated timestamp of the Site Installation Details */
 	timestamp?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 export type WpInstallationCoreDetails = {
 	__typename?: 'WPInstallationCoreDetails';
-	/** Is WordPress Multisite Installation */
 	isMultisite?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** WordPress Installation PHP Version */
 	phpVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** WordPress Installation Version */
 	wpVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpInstallationJetpackDetails = {
 	__typename?: 'WPInstallationJetpackDetails';
-	/** Is Jetpack available on WordPress Installation */
 	available?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Jetpack Version */
 	version?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** VIP Jetpack Version */
 	vipVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpInstallationPluginDetails = {
 	__typename?: 'WPInstallationPluginDetails';
-	/** WordPress Plugin activated by */
 	activatedBy?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Is WordPress Plugin active */
 	active: Scalars[ 'Boolean' ][ 'output' ];
-	/** WordPress Plugin update download link */
 	downloadLink?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** WordPress Plugin available update version */
 	hasUpdate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** WordPress Plugin marketplace */
 	marketplace?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** WordPress Plugin name */
 	name: Scalars[ 'String' ][ 'output' ];
-	/** WordPress Plugin path */
 	path: Scalars[ 'String' ][ 'output' ];
-	/** WordPress Plugin slug */
 	slug?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** WordPress Plugin version */
 	version: Scalars[ 'String' ][ 'output' ];
 };
 
 export type WpSite = {
 	__typename?: 'WPSite';
-	/** WordPress Site/Blog ID */
 	blogId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** List of WordPress PHP defines/constants used in the blog */
 	constants?: Maybe< Array< Maybe< WpSitePhpConstants > > >;
-	/** WordPress Home URL option */
 	homeUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** [DEPRECATING SOON] Alias for blogId */
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** WP Site Installation Details */
 	installation?: Maybe< WpInstallation >;
-	/** [DEPRECATING SOON] Is blog active */
 	isActive?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Jetpack Details */
 	jetpack?: Maybe< WpSiteJetpackDetails >;
-	/** [DEPRECATING SOON] Alias for jetpack */
 	jetpackDetails?: Maybe< WpSiteJetpackDetails >;
-	/** Launched status of the subsite */
 	launchStatus?: Maybe< WpSiteLaunchStatus >;
-	/** Details about Parse.ly plugin (wp-parsely) usage */
 	parsely?: Maybe< WpSiteParselyDetails >;
-	/** List of enabled plugins on the blog */
 	plugins?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
-	/** WordPress Site URL option */
 	siteUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Last updated timestamp of the Site Details */
 	timestamp?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 export type WpSiteJetpackDetails = {
 	__typename?: 'WPSiteJetpackDetails';
-	/** Is Jetpack Active */
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** [DEPRECATING SOON] Jetpack Cache Site ID */
 	cacheSiteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Jetpack Cache Site ID */
 	id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Enabled Jetpack modules */
 	modules?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
 };
 
 export type WpSiteLaunchStatus = 'LAUNCHED' | 'LAUNCHING' | 'NOT_LAUNCHED' | 'UNKNOWN';
 
-/** Variables for the UpdateWPSiteLaunchStatus mutation */
 export type WpSiteLaunchStatusInput = {
-	/** Unique ID of the application */
 	appId: Scalars[ 'Int' ][ 'input' ];
-	/** Unique ID of the environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
-	/** Updated launch status of the network site */
 	launchStatus: WpSiteLaunchStatus;
-	/** ID of the network site (subsite) being updated */
 	networkSiteId: Scalars[ 'Int' ][ 'input' ];
 };
 
-/** Variables for the UpdateWPSiteLaunchStatus mutation */
 export type WpSiteLaunchStatusPayload = {
 	__typename?: 'WPSiteLaunchStatusPayload';
 	app?: Maybe< App >;
 	environment?: Maybe< AppEnvironment >;
 	launchStatus?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** ID of the network site (subsite) being updated */
 	networkSiteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
-	/** Updated launch status of the network site */
-	updated?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
 export type WpSiteList = {
@@ -3185,46 +4139,53 @@ export type WpSiteList = {
 
 export type WpSiteParselyConfigs = {
 	__typename?: 'WPSiteParselyConfigs';
-	/** Does the site have a Parse.ly API Secret configured? */
 	haveApiSecret?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Is autotrack disabled (to allow Dynamic Tracking to be used)? */
 	isAutotrackingDisabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Is JavaScript Tracking disabled? */
 	isJavascriptDisabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Is the site pinned to the specific plugin version? */
 	isPinnedVersion?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Is JavaScript tracking enabled for logged in users? */
 	shouldTrackLoggedInUsers?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Parse.ly Site ID (aka apikey) */
 	siteId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Details about tracked post types */
 	trackedPostTypes?: Maybe< Array< Maybe< WpSiteParselyTrackedPostTypesConfig > > >;
 };
 
 export type WpSiteParselyDetails = {
 	__typename?: 'WPSiteParselyDetails';
-	/** Is wp-parsely active? */
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	/** Details about how the plugin is configured on site */
 	configs?: Maybe< WpSiteParselyConfigs >;
-	/** How wp-parsely is activated (if active) */
 	integrationType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** Version for the wp-parsely plugin */
 	version?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpSiteParselyTrackedPostTypesConfig = {
 	__typename?: 'WPSiteParselyTrackedPostTypesConfig';
-	/** The slug for the post type */
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** How is the post type tracked within Parse.ly? (post, non-post, or do-not-track) */
 	trackType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpSitePhpConstants = {
 	__typename?: 'WPSitePhpConstants';
-	/** WordPress PHP Define/Constant key */
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
-	/** WordPress PHP Define/Constant value */
 	value?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type WebhookNotificationRecipient = NotificationRecipient & {
+	__typename?: 'WebhookNotificationRecipient';
+	createdAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	description?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	id: Scalars[ 'Int' ][ 'output' ];
+	meta?: Maybe< WebhookRecipientMeta >;
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	notificationSubscriptions?: Maybe< NotificationSubscriptionList >;
+	organizationId: Scalars[ 'Int' ][ 'output' ];
+	recipientType?: Maybe< NotificationRecipientType >;
+	recipientValue?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	updatedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+};
+
+export type WebhookRecipientMeta = {
+	__typename?: 'WebhookRecipientMeta';
+	lastResponse?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	lastResponseCode?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	lastResponseTime?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	webhookVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { User } from '../graphqlTypes';
+import { Me } from '../graphqlTypes';
 import { getCurrentUserInfo } from '../lib/api/user';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -15,7 +15,7 @@ export async function whoamiCommand() {
 
 	await trackEvent( 'whoami_command_execute', trackingParams );
 
-	let currentUser: User;
+	let currentUser: Me;
 	try {
 		currentUser = await getCurrentUserInfo();
 	} catch ( err: unknown ) {

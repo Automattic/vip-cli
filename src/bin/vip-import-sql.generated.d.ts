@@ -6,10 +6,10 @@ export type StartImportMutationVariables = Types.Exact< {
 
 export type StartImportMutation = {
 	__typename?: 'Mutation';
-	startImport?: {
+	startImport: {
 		__typename?: 'AppEnvironmentImportPayload';
 		message?: string | null;
 		success?: boolean | null;
 		app?: { __typename?: 'App'; id?: number | null; name?: string | null } | null;
-	} | null;
+	};
 };

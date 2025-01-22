@@ -6,10 +6,10 @@ export type SyncEnvironmentMutationMutationVariables = Types.Exact< {
 
 export type SyncEnvironmentMutationMutation = {
 	__typename?: 'Mutation';
-	syncEnvironment?: {
+	syncEnvironment: {
 		__typename?: 'AppEnvironmentSyncPayload';
 		environment?: { __typename?: 'AppEnvironment'; id?: number | null } | null;
-	} | null;
+	};
 };
 
 export type AppQueryVariables = Types.Exact< {

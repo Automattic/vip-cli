@@ -97,9 +97,9 @@ export type BackupDbCopyMutationVariables = Types.Exact< {
 
 export type BackupDbCopyMutation = {
 	__typename?: 'Mutation';
-	startDBBackupCopy?: {
+	startDBBackupCopy: {
 		__typename?: 'AppEnvironmentStartDBBackupCopyPayload';
 		message?: string | null;
 		success?: boolean | null;
-	} | null;
+	};
 };

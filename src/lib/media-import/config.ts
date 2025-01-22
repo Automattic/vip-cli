@@ -1,11 +1,12 @@
 import gql from 'graphql-tag';
 
-import { MediaImportConfigQuery } from './config.generated';
-import { MediaImportConfig } from '../../graphqlTypes';
 import API from '../api';
 
+import type { MediaImportConfigQuery } from './config.generated';
+import type { MediaImportConfig } from '../../graphqlTypes';
+
 const IMPORT_MEDIA_CONFIG_QUERY = gql`
-	{
+	query MediaImportConfig {
 		mediaImportConfig {
 			fileNameCharCount
 			fileSizeLimitInBytes
