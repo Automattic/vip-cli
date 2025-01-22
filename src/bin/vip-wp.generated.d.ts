@@ -6,21 +6,9 @@ export type TriggerWpcliCommandMutationMutationVariables = Types.Exact< {
 
 export type TriggerWpcliCommandMutationMutation = {
 	__typename?: 'Mutation';
-	triggerWPCLICommandOnAppEnvironment?: {
+	triggerWPCLICommandOnAppEnvironment: {
 		__typename?: 'AppEnvironmentTriggerWPCLICommandPayload';
 		inputToken?: string | null;
 		command?: { __typename?: 'WPCLICommand'; guid?: string | null } | null;
-	} | null;
-};
-
-export type CancelWpcliCommandMutationVariables = Types.Exact< {
-	input?: Types.InputMaybe< Types.CancelWpcliCommandInput >;
-} >;
-
-export type CancelWpcliCommandMutation = {
-	__typename?: 'Mutation';
-	cancelWPCLICommand?: {
-		__typename?: 'CancelWPCLICommandPayload';
-		command?: { __typename?: 'WPCLICommand'; id?: number | null } | null;
-	} | null;
+	};
 };

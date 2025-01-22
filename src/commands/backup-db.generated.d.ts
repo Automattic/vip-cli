@@ -6,10 +6,10 @@ export type TriggerDatabaseBackupMutationVariables = Types.Exact< {
 
 export type TriggerDatabaseBackupMutation = {
 	__typename?: 'Mutation';
-	triggerDatabaseBackup?: {
+	triggerDatabaseBackup: {
 		__typename?: 'AppEnvironmentTriggerDBBackupPayload';
 		success?: boolean | null;
-	} | null;
+	};
 };
 
 export type AppBackupJobStatusQueryVariables = Types.Exact< {

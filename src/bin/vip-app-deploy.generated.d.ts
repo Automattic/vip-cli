@@ -6,9 +6,9 @@ export type StartCustomDeployMutationVariables = Types.Exact< {
 
 export type StartCustomDeployMutation = {
 	__typename?: 'Mutation';
-	startDeploy?: {
+	startCustomDeploy?: {
 		__typename?: 'AppEnvironmentCustomDeployPayload';
-		message?: string | null;
 		success?: boolean | null;
+		message?: string | null;
 	} | null;
 };

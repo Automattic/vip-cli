@@ -6,7 +6,7 @@ export type AbortMediaImportMutationVariables = Types.Exact< {
 
 export type AbortMediaImportMutation = {
 	__typename?: 'Mutation';
-	abortMediaImport?: {
+	abortMediaImport: {
 		__typename?: 'AppEnvironmentAbortMediaImportPayload';
 		applicationId?: number | null;
 		environmentId?: number | null;
@@ -17,5 +17,5 @@ export type AbortMediaImportMutation = {
 			statusFrom?: string | null;
 			statusTo?: string | null;
 		} | null;
-	} | null;
+	};
 };

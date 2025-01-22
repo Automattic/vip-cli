@@ -40,27 +40,28 @@ export const appQuery = `
 		}
 	}`;
 
-export const appQueryFragments = `fragment Software on AppEnvironmentSoftwareSettingsSoftware {
+export const appQueryFragments = gql`
+	fragment Software on AppEnvironmentSoftwareSettingsSoftware {
 		name
 		slug
 		pinned
 		current {
-		  version
-		  default
-		  deprecated
-		  unstable
-		  compatible
-		  latestRelease
-		  private
+			version
+			default
+			deprecated
+			unstable
+			compatible
+			latestRelease
+			private
 		}
 		options {
-		  version
-		  default
-		  deprecated
-		  unstable
-		  compatible
-		  latestRelease
-		  private
+			version
+			default
+			deprecated
+			unstable
+			compatible
+			latestRelease
+			private
 		}
 	}
 `;

@@ -4,5 +4,5 @@ export type IsVipQueryVariables = Types.Exact< { [ key: string ]: never } >;
 
 export type IsVipQuery = {
 	__typename?: 'Query';
-	me?: { __typename?: 'User'; isVIP?: boolean | null } | null;
+	me?: { __typename?: 'Me'; isVIP?: boolean | null } | null;
 };

@@ -3,6 +3,7 @@ import copydir from 'copy-dir';
 import debugLib from 'debug';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
+import { print } from 'graphql';
 import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
@@ -598,7 +599,7 @@ export async function getApplicationInformation(
 			}
 		}`;
 
-	const queryResult = await app( appId, fieldsQuery, softwareQueryFragment );
+	const queryResult = await app( appId, fieldsQuery, print( softwareQueryFragment ) );
 
 	const appData = {} as AppInfo;
 

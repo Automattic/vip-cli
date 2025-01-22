@@ -1,5 +1,32 @@
 import * as Types from '../../graphqlTypes';
 
+export type SoftwareFragment = {
+	__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+	name: string;
+	slug: string;
+	pinned: boolean;
+	current: {
+		__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+		version: string;
+		default: boolean;
+		deprecated: boolean;
+		unstable: boolean;
+		compatible: boolean;
+		latestRelease: string;
+		private: boolean;
+	};
+	options: Array< {
+		__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+		version: string;
+		default: boolean;
+		deprecated: boolean;
+		unstable: boolean;
+		compatible: boolean;
+		latestRelease: string;
+		private: boolean;
+	} >;
+};
+
 export type UpdateSoftwareSettingsMutationVariables = Types.Exact< {
 	appId: Types.Scalars[ 'Int' ][ 'input' ];
 	envId: Types.Scalars[ 'Int' ][ 'input' ];
@@ -11,10 +38,110 @@ export type UpdateSoftwareSettingsMutation = {
 	__typename?: 'Mutation';
 	updateSoftwareSettings?: {
 		__typename?: 'AppEnvironmentSoftwareSettings';
-		php?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-		wordpress?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-		muplugins?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
-		nodejs?: { __typename?: 'AppEnvironmentSoftwareSettingsSoftware' } | null;
+		php?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array< {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			} >;
+		} | null;
+		wordpress?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array< {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			} >;
+		} | null;
+		muplugins?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array< {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			} >;
+		} | null;
+		nodejs?: {
+			__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+			name: string;
+			slug: string;
+			pinned: boolean;
+			current: {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			};
+			options: Array< {
+				__typename?: 'AppEnvironmentSoftwareSettingsVersion';
+				version: string;
+				default: boolean;
+				deprecated: boolean;
+				unstable: boolean;
+				compatible: boolean;
+				latestRelease: string;
+				private: boolean;
+			} >;
+		} | null;
 	} | null;
 };
 

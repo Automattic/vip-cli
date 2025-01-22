@@ -1,9 +1,10 @@
 import gql from 'graphql-tag';
 
-import { GetAppSlowlogsQueryVariables } from './app-slowlogs.generated';
-import { GetRecentSlowlogsResponse } from './types';
-import { Query } from '../../graphqlTypes';
 import API from '../../lib/api';
+
+import type { GetAppLogsQueryVariables } from './app-slowlogs.generated';
+import type { GetRecentSlowlogsResponse } from './types';
+import type { Query } from '../../graphqlTypes';
 
 export const LIMIT_MAX = 5000;
 
@@ -37,7 +38,7 @@ export async function getRecentSlowlogs(
 ): Promise< GetRecentSlowlogsResponse > {
 	const api = API( { exitOnError: false } );
 
-	const response = await api.query< Query, GetAppSlowlogsQueryVariables >( {
+	const response = await api.query< Query, GetAppLogsQueryVariables >( {
 		query: QUERY_ENVIRONMENT_SLOWLOGS,
 		variables: {
 			appId,
