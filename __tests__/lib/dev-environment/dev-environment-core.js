@@ -190,6 +190,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						primaryDomain: '',
 						php: '',
 						wordpress: '',
+						integrations: {},
 					},
 				},
 			},
@@ -249,6 +250,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 									},
 								},
 							},
+							integrations: {},
 						},
 						{
 							name: 'prodName',
@@ -270,6 +272,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						primaryDomain: 'test.develop.com',
 						php: '8.1',
 						wordpress: '6.2',
+						integrations: {},
 					},
 				},
 			},

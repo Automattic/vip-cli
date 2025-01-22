@@ -586,6 +586,9 @@ export async function getApplicationInformation(
 			type,
 			branch,
 			isMultisite,
+			getIntegrationsDevEnvConfig {
+				data
+			}
 			primaryDomain {
 				name
 			},
@@ -636,6 +639,8 @@ export async function getApplicationInformation(
 				primaryDomain: envData.primaryDomain?.name ?? '',
 				php: envData.softwareSettings?.php?.current.version ?? '',
 				wordpress: envData.softwareSettings?.wordpress?.current.version ?? '',
+				integrations:
+					( envData.getIntegrationsDevEnvConfig?.data as Record< string, unknown > ) ?? {},
 			};
 		}
 	}
