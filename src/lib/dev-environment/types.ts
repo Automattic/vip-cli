@@ -32,6 +32,7 @@ export interface AppInfo {
 		primaryDomain: string;
 		php: string;
 		wordpress: string;
+		integrations: Record< string, unknown >;
 	};
 }
 
