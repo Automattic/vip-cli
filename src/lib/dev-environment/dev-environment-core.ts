@@ -70,9 +70,12 @@ const landoFileName = '.lando.yml';
 const landoBackupFileName = '.lando.backup.yml';
 const nginxFileName = 'extra.conf';
 const instanceDataFileName = 'instance_data.json';
+const integrationsConfigFileName = 'integrations.json';
+const integrationsConfigBackupFileName = 'integrations.json.bak';
 
 const uploadPathString = 'uploads';
 const nginxPathString = 'nginx';
+const integrationsConfigPathString = 'integrations-config';
 
 interface StartEnvironmentOptions {
 	skipRebuild: boolean;
@@ -147,7 +150,8 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 
 export async function createEnvironment(
 	lando: Lando,
-	instanceData: InstanceData
+	instanceData: InstanceData,
+	integrationsConfig?: Record< string, unknown > | undefined
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	debug( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
@@ -165,7 +169,7 @@ export async function createEnvironment(
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, integrationsConfig );
 }
 
 export async function updateEnvironment(
@@ -188,7 +192,7 @@ export async function updateEnvironment(
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined );
 }
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
@@ -494,10 +498,46 @@ export function writeEnvironmentData( slug: string, data: InstanceData ): Promis
 	return fs.promises.writeFile( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
 }
 
+async function writeIntegrationsConfig(
+	instancePath: string,
+	integrationsConfig: Record< string, unknown > | undefined
+): Promise< void > {
+	const integrationsConfigPath = path.join( instancePath, integrationsConfigPathString );
+	const integrationsConfigTargetPath = path.join(
+		integrationsConfigPath,
+		integrationsConfigFileName
+	);
+
+	await fs.promises.mkdir( integrationsConfigPath, { recursive: true } );
+
+	if ( integrationsConfig !== undefined ) {
+		const integrationsConfigBackupTargetPath = path.join(
+			integrationsConfigPath,
+			integrationsConfigBackupFileName
+		);
+
+		try {
+			await fs.promises.rename( integrationsConfigTargetPath, integrationsConfigBackupTargetPath );
+			console.log(
+				`Backup of ${ integrationsConfigFileName } was created in ${ integrationsConfigBackupTargetPath }`
+			);
+		} catch ( err ) {
+			if ( 'ENOENT' !== ( err as NodeJS.ErrnoException ).code ) {
+				throw err;
+			}
+		}
+
+		const configJson = JSON.stringify( integrationsConfig, null, 4 );
+		await fs.promises.writeFile( integrationsConfigTargetPath, configJson );
+		debug( `Integrations configuration file created in ${ integrationsConfigTargetPath }` );
+	}
+}
+
 async function prepareLandoEnv(
 	lando: Lando,
 	instanceData: InstanceData,
-	instancePath: string
+	instancePath: string,
+	integrationsConfig: Record< string, unknown > | undefined
 ): Promise< void > {
 	const templateData = {
 		...instanceData,
@@ -536,6 +576,8 @@ async function prepareLandoEnv(
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 	debug( `Nginx file created in ${ nginxFileTargetPath }` );
 	debug( `Instance data file created in ${ instanceDataTargetPath }` );
+
+	await writeIntegrationsConfig( instancePath, integrationsConfig );
 }
 
 export function getAllEnvironmentNames(): string[] {
