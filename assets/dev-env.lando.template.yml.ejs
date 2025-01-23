@@ -15,19 +15,6 @@ proxy:
 keys: false
 
 services:
-  devtools:
-    type: compose
-    services:
-      image: ghcr.io/automattic/vip-container-images/dev-tools:0.9
-      volumes:
-        - devtools:/dev-tools
-        - scripts:/scripts
-    volumes:
-      devtools: {}
-      scripts:
-    initOnly: true
-    entrypoint: sh -c 'test -d /dev-tools-orig && /usr/bin/rsync -a --delete /dev-tools-orig/ /dev-tools/ || true'
-
   nginx:
     type: compose
     ssl: true
@@ -70,8 +57,6 @@ services:
         elasticsearch:
           condition: service_started
 <% } %>
-        devtools:
-          condition: service_completed_successfully
         wordpress:
           condition: service_completed_successfully
 <% if ( muPlugins.mode == 'image' ) { %>
@@ -193,13 +178,13 @@ services:
       image: ghcr.io/automattic/vip-container-images/wordpress:<%= wordpress.tag %>
       volumes:
         - ./wordpress:/shared
-        - type: volume
-          source: scripts
-          target: /scripts
-          volume:
-            nocopy: true
+        - devtools:/dev-tools
+        - scripts:/scripts
     initOnly: true
-    entrypoint: /usr/bin/rsync -a --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/
+    entrypoint: sh -c '/usr/bin/rsync -a --delete --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -a --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
+    volumes:
+      devtools:
+      scripts:
 
 <% if ( muPlugins.mode == 'image' ) { %>
   vip-mu-plugins:
