@@ -301,6 +301,7 @@ tooling:
         - ./log:/wp/log
         - ./uploads:/wp/wp-content/uploads
         - ./wordpress:/wp
+        - ./integrations-config:/wp/config/integrations-config
 <% if ( muPlugins.mode == 'image' ) { %>
         - type: volume
           source: mu-plugins
