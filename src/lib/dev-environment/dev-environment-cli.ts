@@ -226,6 +226,9 @@ export function processComponentOptionInput(
 }
 
 export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
+	const integrationsConfig = appInfo.environment?.integrations ?? {};
+	const hasES = integrationsConfig[ 'enterprise-search' ]?.env?.status === 'enabled';
+
 	return {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
@@ -233,6 +236,7 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
 		php: appInfo.environment?.php ?? '',
 		wordpress: appInfo.environment?.wordpress ?? '',
+		elasticsearch: hasES,
 	};
 }
 

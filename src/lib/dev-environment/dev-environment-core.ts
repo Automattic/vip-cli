@@ -45,7 +45,13 @@ import { createProxyAgent } from '../http/proxy-agent';
 import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
 
-import type { AppInfo, ComponentConfig, InstanceData, WordPressConfig } from './types';
+import type {
+	AppInfo,
+	ComponentConfig,
+	InstanceData,
+	IntegrationConfig,
+	WordPressConfig,
+} from './types';
 import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -151,9 +157,10 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 export async function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
-	integrationsConfig?: Record< string, unknown > | undefined
+	integrationsConfig?: Record< string, IntegrationConfig > | undefined
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
+	integrationsConfig ??= {};
 	debug( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
@@ -167,6 +174,7 @@ export async function createEnvironment(
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
+
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, integrationsConfig );
@@ -682,7 +690,8 @@ export async function getApplicationInformation(
 				php: envData.softwareSettings?.php?.current.version ?? '',
 				wordpress: envData.softwareSettings?.wordpress?.current.version ?? '',
 				integrations:
-					( envData.getIntegrationsDevEnvConfig?.data as Record< string, unknown > ) ?? {},
+					( envData.getIntegrationsDevEnvConfig?.data as Record< string, IntegrationConfig > ) ??
+					{},
 			};
 		}
 	}

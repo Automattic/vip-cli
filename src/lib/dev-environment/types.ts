@@ -20,6 +20,18 @@ export interface InstanceOptions {
 	[ index: string ]: unknown;
 }
 
+export interface IntergrationSettings {
+	status: string;
+	config?: Record< string, unknown >;
+}
+
+export interface IntegrationConfig {
+	type?: string;
+	org?: IntergrationSettings;
+	env?: IntergrationSettings;
+	network_sites?: IntergrationSettings;
+}
+
 export interface AppInfo {
 	id?: number | null;
 	name?: string | null;
@@ -32,7 +44,7 @@ export interface AppInfo {
 		primaryDomain: string;
 		php: string;
 		wordpress: string;
-		integrations: Record< string, unknown >;
+		integrations: Record< string, IntegrationConfig >;
 	};
 }
 

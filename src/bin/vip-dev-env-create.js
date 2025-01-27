@@ -125,7 +125,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 	/** @type {import('../lib/dev-environment/types').InstanceOptions} */
 	let defaultOptions = {};
-	/** @type {Record<string,unknown>} */
+	/** @type {Record<string,import('../lib/dev-environment/types').IntegrationConfig>} */
 	let integrationsConfig = {};
 
 	try {
