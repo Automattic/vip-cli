@@ -42,11 +42,18 @@ function isServerError(
 
 export default function API( {
 	exitOnError = true,
+	silenceAuthErrors = false,
 }: {
 	exitOnError?: boolean;
+	silenceAuthErrors?: boolean;
 } = {} ): ApolloClient< NormalizedCacheObject > {
 	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
-		if ( networkError && 'statusCode' in networkError && networkError.statusCode === 401 ) {
+		if (
+			! silenceAuthErrors &&
+			networkError &&
+			'statusCode' in networkError &&
+			networkError.statusCode === 401
+		) {
 			let message =
 				'You are not authorized to perform this request; please logout with `vip logout`, then try again.';
 			if (

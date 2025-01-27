@@ -414,20 +414,19 @@ async function processComponent(
 	let allowLocal: boolean = true;
 
 	if ( component === 'muPlugins' ) {
-		let currentUser = null;
 		try {
-			currentUser = await getCurrentUserInfo();
-			allowLocal = currentUser?.isVIP || false;
+			const currentUser = await getCurrentUserInfo( true );
+			allowLocal = currentUser?.isVIP ?? false;
 		} catch ( err ) {
 			allowLocal = false;
 		}
 	}
 
 	const defaultObject = defaultValue
-		? processComponentOptionInput( defaultValue, allowLocal )
+		? processComponentOptionInput( defaultValue, allowLocal as unknown as true )
 		: null;
 	if ( preselectedValue ) {
-		result = processComponentOptionInput( preselectedValue, allowLocal );
+		result = processComponentOptionInput( preselectedValue, allowLocal as unknown as true );
 
 		if ( ! suppressPrompts ) {
 			console.log(
