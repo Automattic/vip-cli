@@ -7,7 +7,7 @@ export const DEV_ENVIRONMENT_PROMPT_INTRO =
 	'You may also choose to create multiple environments with different settings using the --slug option.\n\n';
 export const DEV_ENVIRONMENT_NOT_FOUND = 'Environment not found.';
 
-export const DEV_ENVIRONMENT_COMPONENTS = [ 'muPlugins', 'appCode' ] as const;
+export const DEV_ENVIRONMENT_COMPONENTS = [ 'appCode', 'muPlugins' ] as const;
 export const DEV_ENVIRONMENT_COMPONENTS_WITH_WP = [
 	'wordpress',
 	...DEV_ENVIRONMENT_COMPONENTS,

@@ -21,8 +21,8 @@ const QUERY_CURRENT_USER = gql`
 	}
 `;
 
-export async function getCurrentUserInfo(): Promise< Me > {
-	const api = API();
+export async function getCurrentUserInfo( silenceAuthErrors = false ): Promise< Me > {
+	const api = API( { silenceAuthErrors } );
 
 	const response = await api.query< IsVipQuery, IsVipQueryVariables >( {
 		query: QUERY_CURRENT_USER,

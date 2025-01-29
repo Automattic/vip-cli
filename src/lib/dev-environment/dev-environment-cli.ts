@@ -18,6 +18,7 @@ import {
 	readEnvironmentData,
 } from './dev-environment-core';
 import { validateDockerInstalled } from './dev-environment-lando';
+import { getCurrentUserInfo } from '../api/user';
 import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
@@ -62,7 +63,7 @@ const componentDisplayNames: Record<
 	string
 > = {
 	wordpress: 'WordPress',
-	muPlugins: 'vip-go-mu-plugins',
+	muPlugins: 'VIP MU Plugins',
 	appCode: 'application code',
 } as const;
 
@@ -410,12 +411,22 @@ async function processComponent(
 	);
 	let result: ComponentConfig;
 
-	const allowLocal = true;
+	let allowLocal: boolean = true;
+
+	if ( component === 'muPlugins' ) {
+		try {
+			const currentUser = await getCurrentUserInfo( true );
+			allowLocal = currentUser?.isVIP ?? false;
+		} catch ( err ) {
+			allowLocal = false;
+		}
+	}
+
 	const defaultObject = defaultValue
-		? processComponentOptionInput( defaultValue, allowLocal )
+		? processComponentOptionInput( defaultValue, allowLocal as unknown as true )
 		: null;
 	if ( preselectedValue ) {
-		result = processComponentOptionInput( preselectedValue, allowLocal );
+		result = processComponentOptionInput( preselectedValue, allowLocal as unknown as true );
 
 		if ( ! suppressPrompts ) {
 			console.log(
@@ -746,7 +757,7 @@ export async function promptForComponent(
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
 		const directoryPath = await promptForText(
-			`${ messagePrefix }What is a path to your local ${ componentDisplayName }`,
+			`${ messagePrefix }What is a path to your local ${ componentDisplayName }?`,
 			defaultObject?.dir ?? ''
 		);
 		return {
