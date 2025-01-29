@@ -188,7 +188,7 @@ services:
   wordpress:
     type: compose
     services:
-      image: ghcr.io/automattic/vip-container-images/wordpress:6.1
+      image: ghcr.io/automattic/vip-container-images/wordpress:6.6
       command: sh -c "rsync -a /wp/ /shared/; chown www-data -R /shared; sleep infinity"
       volumes:
         - ./wordpress:/shared
