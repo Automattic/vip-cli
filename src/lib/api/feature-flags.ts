@@ -5,7 +5,7 @@ import API from '../../lib/api';
 
 import type { IsVipQuery, IsVipQueryVariables } from './feature-flags.generated';
 
-const api: ApolloClient< NormalizedCacheObject > = API();
+const api: ApolloClient< NormalizedCacheObject > = API( { silenceAuthErrors: true } );
 
 const isVipQuery = gql`
 	query isVIP {
