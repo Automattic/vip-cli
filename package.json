@@ -64,7 +64,10 @@
     "vip-sync": "dist/bin/vip-sync.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js",
-    "vip-logout": "dist/bin/vip-logout.js"
+    "vip-logout": "dist/bin/vip-logout.js",
+    "vip-internal": "dist/bin/vip-internal.js",
+    "vip-internal-is-logged-in": "dist/bin/vip-internal-is-logged-in.js",
+    "vip-internal-fetch-integrations": "dist/bin/vip-internal-fetch-integrations.js"
   },
   "scripts": {
     "typescript:codegen:install-dependencies": "npm install --no-save @graphql-codegen/cli @graphql-codegen/typescript @graphql-codegen/near-operation-file-preset @graphql-codegen/typescript-operations",

@@ -640,8 +640,8 @@ export function getEnvironmentPath( name: string ): string {
 }
 
 export async function getApplicationInformation(
-	appId: number,
-	envType: string | null
+	appId: number | string,
+	envType: string | null | undefined
 ): Promise< AppInfo > {
 	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `
@@ -670,10 +670,10 @@ export async function getApplicationInformation(
 			},
 			softwareSettings {
 				php {
-				  ...Software
+					...Software
 				}
 				wordpress {
-				  ...Software
+					...Software
 				}
 			}
 		}`;
