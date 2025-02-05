@@ -11,6 +11,7 @@ import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
+import { confirm } from '../lib/cli/prompt';
 import {
 	checkFileAccess,
 	getFileSize,
@@ -474,6 +475,22 @@ void command( {
 			isMultiSite,
 			tableNames,
 		} );
+
+		if ( opts.inPlace ) {
+			const approved = await confirm(
+				[],
+				'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
+			);
+
+			if ( ! approved ) {
+				await trackEventWithEnv( 'search_replace_in_place_cancelled', {
+					is_import: true,
+					in_place: opts.inPlace,
+				} );
+
+				process.exit();
+			}
+		}
 
 		/**
 		 * =========== WARNING =============

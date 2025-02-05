@@ -148,13 +148,11 @@ export const searchAndReplace = async (
 	const replacements = pairs.flatMap( pair => pair.split( ',' ).map( str => str.trim() ) );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
-	if ( inPlace ) {
-		const approved =
-			batchMode ||
-			( await confirm(
-				[],
-				'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
-			) );
+	if ( inPlace && ! batchMode ) {
+		const approved = await confirm(
+			[],
+			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
+		);
 
 		// Bail if user does not wish to proceed
 		if ( ! approved ) {
