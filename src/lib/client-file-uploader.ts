@@ -313,7 +313,14 @@ async function uploadUsingPutObject( {
 		} );
 	}
 
-	const { Code, Message } = parsedResponse.Error;
+	let Code: string;
+	let Message: string;
+	if ( parsedResponse?.Error ) {
+		( { Code, Message } = parsedResponse.Error );
+	} else {
+		Code = `HTTP Error ${ response.status }`;
+		Message = response.statusText;
+	}
 
 	throw new Error( `Unable to upload to cloud storage. ${ JSON.stringify( { Code, Message } ) }` );
 }

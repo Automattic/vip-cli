@@ -517,6 +517,7 @@ Processing the SQL import for your environment...
 				isImport: true,
 				inPlace: opts.inPlace,
 				output: opts.output ?? true, // "true" creates a temp output file instead of printing to stdout, as we need to upload the output to S3.
+				batchMode: true,
 			} );
 
 			if ( typeof outputFileName !== 'string' ) {
