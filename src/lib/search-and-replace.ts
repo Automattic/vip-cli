@@ -102,6 +102,7 @@ export interface SearchReplaceOptions {
 	isImport: boolean;
 	inPlace: boolean;
 	output: boolean | string | Writable;
+	batchMode?: boolean;
 }
 
 export interface SearchReplaceOutput {
@@ -113,7 +114,12 @@ export interface SearchReplaceOutput {
 export const searchAndReplace = async (
 	fileName: string,
 	pairs: string[] | string,
-	{ isImport = true, inPlace = false, output = process.stdout }: SearchReplaceOptions,
+	{
+		isImport = true,
+		inPlace = false,
+		output = process.stdout,
+		batchMode = false,
+	}: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise< SearchReplaceOutput > => {
 	const dumpDetails = await getSqlDumpDetails( fileName );
@@ -142,7 +148,7 @@ export const searchAndReplace = async (
 	const replacements = pairs.flatMap( pair => pair.split( ',' ).map( str => str.trim() ) );
 	debug( 'Pairs: ', pairs, 'Replacements: ', replacements );
 
-	if ( inPlace ) {
+	if ( inPlace && ! batchMode ) {
 		const approved = await confirm(
 			[],
 			'Are you sure you want to run search and replace on your input file? This operation is not reversible.'

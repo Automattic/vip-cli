@@ -11,6 +11,7 @@ import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
+import { confirm } from '../lib/cli/prompt';
 import {
 	checkFileAccess,
 	getFileSize,
@@ -475,6 +476,22 @@ void command( {
 			tableNames,
 		} );
 
+		if ( opts.inPlace ) {
+			const approved = await confirm(
+				[],
+				'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
+			);
+
+			if ( ! approved ) {
+				await trackEventWithEnv( 'search_replace_in_place_cancelled', {
+					is_import: true,
+					in_place: opts.inPlace,
+				} );
+
+				process.exit();
+			}
+		}
+
 		/**
 		 * =========== WARNING =============
 		 *
@@ -517,6 +534,7 @@ Processing the SQL import for your environment...
 				isImport: true,
 				inPlace: opts.inPlace,
 				output: opts.output ?? true, // "true" creates a temp output file instead of printing to stdout, as we need to upload the output to S3.
+				batchMode: true,
 			} );
 
 			if ( typeof outputFileName !== 'string' ) {
