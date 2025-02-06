@@ -117,3 +117,5 @@ export interface InstanceData {
 	autologinKey?: string;
 	version?: string;
 }
+
+type EditorType = 'vscode' | 'cursor' | 'phpstorm';

@@ -1063,3 +1063,75 @@ export function getVSCodeWorkspacePath( slug: string ) {
 
 	return workspacePath;
 }
+
+/**
+ * Generates PHPStorm project configuration including debug settings
+ *
+ * @param {string} slug - The slug of the environment to generate PHPStorm config for
+ * @return {string} Project directory path
+ */
+export function generatePHPStormWorkspace( slug: string ): string {
+	debug( 'Generating PHPStorm Workspace' );
+	const location = getEnvironmentPath( slug );
+	const projectPath = getPHPStormProjectPath( slug );
+	const instanceData = readEnvironmentData( slug );
+
+	const pathMappings = generatePathMappings( location, instanceData );
+
+	// Create .idea directory
+	fs.mkdirSync( path.join( projectPath, '.idea' ), { recursive: true } );
+
+	// Generate workspace.xml
+	const workspaceXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PhpWorkspaceProjectConfiguration">
+    <include_path>
+      <path value="$PROJECT_DIR$/wordpress" />
+			${ instanceData?.muPlugins?.dir ? `<path value="${ instanceData.muPlugins.dir }" />` : '' }
+    </include_path>
+  </component>
+  <component name="PhpDebugGeneral" listening_started="true" />
+  <component name="PhpDebugXdebugSettings">
+    <debug_server_list>
+      <server host="localhost" port="9003" />
+    </debug_server_list>
+    <path_mappings>
+${ Object.entries( pathMappings )
+	.map(
+		( [ serverPath, localPath ] ) =>
+			`      <mapping server_path="${ serverPath }" local_path="$PROJECT_DIR$/${ path.relative(
+				location,
+				localPath
+			) }" />`
+	)
+	.join( '\n' ) }
+    </path_mappings>
+  </component>
+</project>`;
+
+	fs.writeFileSync( path.join( projectPath, '.idea', 'workspace.xml' ), workspaceXml );
+
+	// Generate misc.xml
+	const miscXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="PHP_${ instanceData.php.replace(
+		/\./g,
+		'_'
+	) }" project-jdk-name="PHP ${ instanceData.php }" project-jdk-type="PHP" />
+</project>`;
+
+	fs.writeFileSync( path.join( projectPath, '.idea', 'misc.xml' ), miscXml );
+
+	return projectPath;
+}
+
+/**
+ * Gets the path where PHPStorm project files should be stored
+ *
+ * @param {string} slug Environment slug
+ * @return {string} Path to PHPStorm project directory
+ */
+export function getPHPStormProjectPath( slug: string ): string {
+	const location = getEnvironmentPath( slug );
+	return location;
+}

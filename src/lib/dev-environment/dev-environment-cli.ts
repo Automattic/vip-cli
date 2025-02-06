@@ -16,6 +16,7 @@ import {
 	getEnvironmentPath,
 	getVersionList,
 	readEnvironmentData,
+	generatePHPStormWorkspace,
 } from './dev-environment-core';
 import { validateDockerInstalled } from './dev-environment-lando';
 import { getCurrentUserInfo } from '../api/user';
@@ -998,7 +999,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	}
 }
 
-type EditorType = 'vscode' | 'cursor';
+type EditorType = 'vscode' | 'cursor' | 'phpstorm';
 
 interface WorkspaceConfig {
 	extension: string;
@@ -1026,7 +1027,15 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 		candidates: [ 'cursor' ],
 		workspace: {
 			extension: 'code-workspace',
-			generator: generateVSCodeWorkspace, // Currently uses same format as VS Code
+			generator: generateVSCodeWorkspace,
+		},
+	},
+	phpstorm: {
+		displayName: 'PHPStorm',
+		candidates: [ 'phpstorm', 'pstorm' ],
+		workspace: {
+			extension: 'ipr',
+			generator: generatePHPStormWorkspace,
 		},
 	},
 };
