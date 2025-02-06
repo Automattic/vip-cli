@@ -1056,3 +1056,10 @@ const generatePathMappings = ( location: string, instanceData: InstanceData ) =>
 
 	return pathMappings;
 };
+
+export function getVSCodeWorkspacePath( slug: string ) {
+	const location = getEnvironmentPath( slug );
+	const workspacePath = path.join( location, `${ slug }.code-workspace` );
+
+	return workspacePath;
+}
