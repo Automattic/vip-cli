@@ -14,7 +14,6 @@ import {
 	generateVSCodeWorkspace,
 	getAllEnvironmentNames,
 	getEnvironmentPath,
-	getVSCodeWorkspacePath,
 	getVersionList,
 	readEnvironmentData,
 } from './dev-environment-core';
@@ -1003,7 +1002,7 @@ type EditorType = 'vscode' | 'cursor';
 
 interface WorkspaceConfig {
 	extension: string;
-	generator: (slug: string) => string; // Returns path to generated workspace file
+	generator: ( slug: string ) => string; // Returns path to generated workspace file
 }
 
 interface EditorConfig {
@@ -1013,7 +1012,7 @@ interface EditorConfig {
 }
 
 // Map of supported editors and their configurations
-const SUPPORTED_EDITORS: Record<EditorType, EditorConfig> = {
+const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 	vscode: {
 		displayName: 'VS Code',
 		candidates: [ 'code', 'code-insiders', 'codium' ],
@@ -1024,7 +1023,7 @@ const SUPPORTED_EDITORS: Record<EditorType, EditorConfig> = {
 	},
 	cursor: {
 		displayName: 'Cursor',
-		candidates: ['cursor'],
+		candidates: [ 'cursor' ],
 		workspace: {
 			extension: 'code-workspace',
 			generator: generateVSCodeWorkspace, // Currently uses same format as VS Code
@@ -1034,7 +1033,7 @@ const SUPPORTED_EDITORS: Record<EditorType, EditorConfig> = {
 
 // Helper to get workspace path for any editor
 function getWorkspacePath( slug: string, editor: EditorType ): string {
-	const { workspace } = SUPPORTED_EDITORS[editor];
+	const { workspace } = SUPPORTED_EDITORS[ editor ];
 	return path.join( getEnvironmentPath( slug ), `${ slug }.${ workspace.extension }` );
 }
 
@@ -1050,7 +1049,9 @@ export function postStart( slug: string, options: PostStartOptions ): void {
 		const editor = options.editor.toLowerCase();
 		if ( ! Object.keys( SUPPORTED_EDITORS ).includes( editor ) ) {
 			throw new Error(
-				`Invalid editor specified. Supported editors are: ${ Object.keys( SUPPORTED_EDITORS ).join( ', ' ) }`
+				`Invalid editor specified. Supported editors are: ${ Object.keys( SUPPORTED_EDITORS ).join(
+					', '
+				) }`
 			);
 		}
 		editorType = editor as EditorType;
@@ -1064,9 +1065,9 @@ export function postStart( slug: string, options: PostStartOptions ): void {
 }
 
 const launchEditor = ( slug: string, type: EditorType ) => {
-	const editorConfig = SUPPORTED_EDITORS[type];
+	const editorConfig = SUPPORTED_EDITORS[ type ];
 	const workspacePath = getWorkspacePath( slug, type );
-	
+
 	if ( existsSync( workspacePath ) ) {
 		console.log( 'Workspace already exists, skipping creation.' );
 	} else {

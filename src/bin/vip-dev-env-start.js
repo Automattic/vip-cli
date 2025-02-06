@@ -60,8 +60,14 @@ command( {
 		[ 'w', 'skip-wp-versions-check' ],
 		'Skip the prompt to update WordPress; occurs if the last major release version is not configured.'
 	)
-	.option( 'vscode', 'Generate a Visual Studio Code Workspace file (deprecated, use --editor=vscode instead).' )
-	.option( 'editor', 'Generate a workspace file for the specified editor (supports: vscode, cursor).' )
+	.option(
+		'vscode',
+		'Generate a Visual Studio Code Workspace file (deprecated, use --editor=vscode instead).'
+	)
+	.option(
+		'editor',
+		'Generate a workspace file for the specified editor (supports: vscode, cursor).'
+	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
@@ -71,8 +77,8 @@ command( {
 		const startProcessing = new Date();
 
 		const trackingInfo = getEnvTrackingInfo( slug );
-		trackingInfo.editor = opt.editor || (opt.vscode ? 'vscode' : undefined);
-		trackingInfo.vscode = Boolean(opt.vscode);
+		trackingInfo.editor = opt.editor || ( opt.vscode ? 'vscode' : undefined );
+		trackingInfo.vscode = Boolean( opt.vscode );
 		trackingInfo.docker = lando.config.versions.engine;
 		trackingInfo.docker_compose = lando.config.versions.compose;
 		trackingInfo.compose_plugin = lando.config.versions.composePlugin;
@@ -96,7 +102,7 @@ command( {
 			process.exitCode = 1;
 		}
 
-		postStart( slug, { 
+		postStart( slug, {
 			editor: opt.editor,
 			vscode: Boolean( opt.vscode ),
 		} );

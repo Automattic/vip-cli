@@ -11,9 +11,6 @@ import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
 import xdgBasedir from 'xdg-basedir';
-import { existsSync } from 'fs';
-import { spawn } from 'child_process';
-import { which } from 'which';
 
 import {
 	handleCLIException,
