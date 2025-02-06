@@ -35,9 +35,14 @@ const examples = [
 			'Start only the services of a local environment that are not currently in a running state.',
 	},
 	{
-		usage: `${ exampleUsage } --vscode --slug=example-site`,
+		usage: `${ exampleUsage } --editor=vscode --slug=example-site`,
 		description:
 			'Start a local environment and generate a Workspace file for developing in Visual Studio Code.',
+	},
+	{
+		usage: `${ exampleUsage } --editor=cursor --slug=example-site`,
+		description:
+			'Start a local environment and generate a Workspace file for developing in Cursor Editor.',
 	},
 ];
 
@@ -55,7 +60,8 @@ command( {
 		[ 'w', 'skip-wp-versions-check' ],
 		'Skip the prompt to update WordPress; occurs if the last major release version is not configured.'
 	)
-	.option( 'vscode', 'Generate a Visual Studio Code Workspace file.' )
+	.option( 'vscode', 'Generate a Visual Studio Code Workspace file (deprecated, use --editor=vscode instead).' )
+	.option( 'editor', 'Generate a workspace file for the specified editor (supports: vscode, cursor).' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
@@ -65,7 +71,8 @@ command( {
 		const startProcessing = new Date();
 
 		const trackingInfo = getEnvTrackingInfo( slug );
-		trackingInfo.vscode = Boolean( opt.vscode );
+		trackingInfo.editor = opt.editor || (opt.vscode ? 'vscode' : undefined);
+		trackingInfo.vscode = Boolean(opt.vscode);
 		trackingInfo.docker = lando.config.versions.engine;
 		trackingInfo.docker_compose = lando.config.versions.compose;
 		trackingInfo.compose_plugin = lando.config.versions.composePlugin;
@@ -89,5 +96,8 @@ command( {
 			process.exitCode = 1;
 		}
 
-		postStart( slug, { openVSCode: Boolean( opt.vscode ) } );
+		postStart( slug, { 
+			editor: opt.editor,
+			vscode: Boolean( opt.vscode ),
+		} );
 	} );

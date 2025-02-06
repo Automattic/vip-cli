@@ -998,38 +998,67 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	}
 }
 
+type EditorType = 'vscode' | 'cursor';
+
 export interface PostStartOptions {
-	openVSCode: boolean;
+	editor?: string;
+	vscode?: boolean;
 }
 
 export function postStart( slug: string, options: PostStartOptions ): void {
-	if ( options.openVSCode ) {
-		launchVSCode( slug );
+	let editorType: EditorType | undefined;
+
+	if (options.editor) {
+		const editor = options.editor.toLowerCase();
+		if (editor !== 'vscode' && editor !== 'cursor') {
+			throw new Error('Invalid editor specified. Supported editors are: vscode, cursor');
+		}
+		editorType = editor as EditorType;
+	} else if (options.vscode) {
+		editorType = 'vscode';
+	}
+
+	if (editorType) {
+		launchEditor(slug, editorType);
 	}
 }
 
-const launchVSCode = ( slug: string ) => {
-	const workspacePath = getVSCodeWorkspacePath( slug );
-
+const launchEditor = ( slug: string, type: EditorType ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug ); // Both editors use .code-workspace
+	const editorName = type === 'vscode' ? 'VS Code' : 'Cursor';
+	
 	if ( existsSync( workspacePath ) ) {
-		console.log( 'VS Code workspace already exists, skipping creation.' );
+		console.log( 'Workspace already exists, skipping creation.' );
 	} else {
-		generateVSCodeWorkspace( slug );
-		console.log( 'VS Code workspace generated' );
+		generateVSCodeWorkspace( slug ); // Both use same workspace format
+		console.log( `${ editorName } workspace generated` );
 	}
 
-	const vsCodeExecutable = getVSCodeExecutable();
-	if ( vsCodeExecutable ) {
-		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	const executable = type === 'vscode' ? getVSCodeExecutable() : getCursorExecutable();
+	if ( executable ) {
+		spawn( executable, [ workspacePath ], { shell: process.platform === 'win32' } );
 	} else {
 		console.log(
-			`VS Code was not detected in the expected path. VS Code Workspace file location:\n${ workspacePath }`
+			`${ editorName } was not detected in the expected path. Workspace file location:\n${ workspacePath }`
 		);
 	}
 };
 
 const getVSCodeExecutable = () => {
 	const candidates = [ 'code', 'code-insiders', 'codium' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
+};
+
+const getCursorExecutable = () => {
+	const candidates = [ 'cursor' ];
 	for ( const candidate of candidates ) {
 		const result = which( candidate );
 		if ( result ) {

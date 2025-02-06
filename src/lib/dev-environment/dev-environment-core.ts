@@ -11,6 +11,9 @@ import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
 import xdgBasedir from 'xdg-basedir';
+import { existsSync } from 'fs';
+import { spawn } from 'child_process';
+import { which } from 'which';
 
 import {
 	handleCLIException,
@@ -94,6 +97,11 @@ interface WordPressTag {
 	cacheable: boolean;
 	locked: boolean;
 	prerelease: boolean;
+}
+
+export interface PostStartOptions {
+	openVSCode: boolean;
+	openCursor: boolean;
 }
 
 function xdgDataDirectory(): string {
@@ -1057,4 +1065,52 @@ export function getVSCodeWorkspacePath( slug: string ) {
 	const workspacePath = path.join( location, `${ slug }.code-workspace` );
 
 	return workspacePath;
+}
+
+export function getCursorWorkspacePath( slug: string ): string {
+	return path.join( getEnvironmentPath( slug ), `${ slug }.code-workspace` );
+}
+
+const getCursorExecutable = () => {
+	const candidates = [ 'cursor' ];
+	for ( const candidate of candidates ) {
+		const result = which( candidate );
+		if ( result ) {
+			debug( `Found ${ candidate } in path` );
+			return candidate;
+		}
+		debug( `Could not find ${ candidate } in path` );
+	}
+	return null;
+};
+
+// Refactor the existing launchVSCode to be more generic
+const launchEditor = ( slug: string, type: 'vscode' | 'cursor' ) => {
+	const workspacePath = getVSCodeWorkspacePath( slug ); // Both use .code-workspace
+	
+	if ( existsSync( workspacePath ) ) {
+		console.log( 'Workspace already exists, skipping creation.' );
+	} else {
+		generateVSCodeWorkspace( slug ); // Both use same workspace format
+		console.log( `${ type === 'vscode' ? 'VS Code' : 'Cursor' } workspace generated` );
+	}
+
+	const executable = type === 'vscode' ? getVSCodeExecutable() : getCursorExecutable();
+	if ( executable ) {
+		spawn( executable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	} else {
+		console.log(
+			`${ type === 'vscode' ? 'VS Code' : 'Cursor' } was not detected in the expected path. Workspace file location:\n${ workspacePath }`
+		);
+	}
+};
+
+// Update the existing postStart function
+export function postStart( slug: string, options: PostStartOptions ): void {
+	if ( options.openVSCode ) {
+		launchEditor( slug, 'vscode' );
+	}
+	if ( options.openCursor ) {
+		launchEditor( slug, 'cursor' );
+	}
 }
