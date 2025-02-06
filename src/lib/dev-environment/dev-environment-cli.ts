@@ -13,6 +13,7 @@ import { getConfigurationFileOptions } from './dev-environment-configuration-fil
 import {
 	generateVSCodeWorkspace,
 	getAllEnvironmentNames,
+	getEnvironmentPath,
 	getVSCodeWorkspacePath,
 	getVersionList,
 	readEnvironmentData,
@@ -1000,6 +1001,43 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 
 type EditorType = 'vscode' | 'cursor';
 
+interface WorkspaceConfig {
+	extension: string;
+	generator: (slug: string) => string; // Returns path to generated workspace file
+}
+
+interface EditorConfig {
+	displayName: string;
+	candidates: string[];
+	workspace: WorkspaceConfig;
+}
+
+// Map of supported editors and their configurations
+const SUPPORTED_EDITORS: Record<EditorType, EditorConfig> = {
+	vscode: {
+		displayName: 'VS Code',
+		candidates: [ 'code', 'code-insiders', 'codium' ],
+		workspace: {
+			extension: 'code-workspace',
+			generator: generateVSCodeWorkspace,
+		},
+	},
+	cursor: {
+		displayName: 'Cursor',
+		candidates: ['cursor'],
+		workspace: {
+			extension: 'code-workspace',
+			generator: generateVSCodeWorkspace, // Currently uses same format as VS Code
+		},
+	},
+};
+
+// Helper to get workspace path for any editor
+function getWorkspacePath( slug: string, editor: EditorType ): string {
+	const { workspace } = SUPPORTED_EDITORS[editor];
+	return path.join( getEnvironmentPath( slug ), `${ slug }.${ workspace.extension }` );
+}
+
 export interface PostStartOptions {
 	editor?: string;
 	vscode?: boolean;
@@ -1008,57 +1046,45 @@ export interface PostStartOptions {
 export function postStart( slug: string, options: PostStartOptions ): void {
 	let editorType: EditorType | undefined;
 
-	if (options.editor) {
+	if ( options.editor ) {
 		const editor = options.editor.toLowerCase();
-		if (editor !== 'vscode' && editor !== 'cursor') {
-			throw new Error('Invalid editor specified. Supported editors are: vscode, cursor');
+		if ( ! Object.keys( SUPPORTED_EDITORS ).includes( editor ) ) {
+			throw new Error(
+				`Invalid editor specified. Supported editors are: ${ Object.keys( SUPPORTED_EDITORS ).join( ', ' ) }`
+			);
 		}
 		editorType = editor as EditorType;
-	} else if (options.vscode) {
+	} else if ( options.vscode ) {
 		editorType = 'vscode';
 	}
 
-	if (editorType) {
-		launchEditor(slug, editorType);
+	if ( editorType ) {
+		launchEditor( slug, editorType );
 	}
 }
 
 const launchEditor = ( slug: string, type: EditorType ) => {
-	const workspacePath = getVSCodeWorkspacePath( slug ); // Both editors use .code-workspace
-	const editorName = type === 'vscode' ? 'VS Code' : 'Cursor';
+	const editorConfig = SUPPORTED_EDITORS[type];
+	const workspacePath = getWorkspacePath( slug, type );
 	
 	if ( existsSync( workspacePath ) ) {
 		console.log( 'Workspace already exists, skipping creation.' );
 	} else {
-		generateVSCodeWorkspace( slug ); // Both use same workspace format
-		console.log( `${ editorName } workspace generated` );
+		editorConfig.workspace.generator( slug );
+		console.log( `${ editorConfig.displayName } workspace generated` );
 	}
 
-	const executable = type === 'vscode' ? getVSCodeExecutable() : getCursorExecutable();
+	const executable = findExecutable( editorConfig.candidates );
 	if ( executable ) {
 		spawn( executable, [ workspacePath ], { shell: process.platform === 'win32' } );
 	} else {
 		console.log(
-			`${ editorName } was not detected in the expected path. Workspace file location:\n${ workspacePath }`
+			`${ editorConfig.displayName } was not detected in the expected path. Workspace file location:\n${ workspacePath }`
 		);
 	}
 };
 
-const getVSCodeExecutable = () => {
-	const candidates = [ 'code', 'code-insiders', 'codium' ];
-	for ( const candidate of candidates ) {
-		const result = which( candidate );
-		if ( result ) {
-			debug( `Found ${ candidate } in path` );
-			return candidate;
-		}
-		debug( `Could not find ${ candidate } in path` );
-	}
-	return null;
-};
-
-const getCursorExecutable = () => {
-	const candidates = [ 'cursor' ];
+const findExecutable = ( candidates: string[] ): string | null => {
 	for ( const candidate of candidates ) {
 		const result = which( candidate );
 		if ( result ) {
