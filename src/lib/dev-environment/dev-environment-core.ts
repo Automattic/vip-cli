@@ -1119,7 +1119,10 @@ ${ Object.entries( pathMappings )
         </path_mappings>
       </server>
     </servers>
-  </component>	
+  </component>
+	  <component name="WordPressConfiguration" enabled="true">
+    <wordpressPath>$PROJECT_DIR$/wordpress</wordpressPath>
+  </component>
 </project>`;
 
 	fs.writeFileSync( path.join( projectPath, '.idea', 'workspace.xml' ), workspaceXml );
@@ -1136,32 +1139,31 @@ ${ Object.entries( pathMappings )
 	);
 
 	const modulesXml = `
-	<module type="PHP_MODULE" version="4">
+	<?xml version="1.0" encoding="UTF-8"?>
+	<module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
-	<path value="" />
-	<path value="${ instanceData?.appCode?.dir ?? '' }" />
-
-	<content url="file://${ instanceData?.appCode?.dir ?? '' }">
-		<sourceFolder url="file://${ instanceData?.appCode?.dir ?? '' }" isTestSource="false" />
-	</content>
-	<content url="file://${ instanceData?.muPlugins?.dir ?? '' }">
-		<sourceFolder url="file://${ instanceData?.muPlugins?.dir ?? '' }" isTestSource="false" />
-	</content>
-	<content url="file://$PROJECT_DIR$/wordpress">
-		<sourceFolder url="file://$PROJECT_DIR$/wordpress" isTestSource="false" />
-	</content>
+	<content url="file://$MODULE_DIR$" />
+	<content url="file://$PROJECT_DIR$/${ path.relative(
+		projectPath,
+		instanceData?.appCode?.dir ?? ''
+	) }" />
+	<content url="file://$PROJECT_DIR$/${ path.relative(
+		projectPath,
+		instanceData?.muPlugins?.dir ?? ''
+	) }" />
+	<content url="file://$PROJECT_DIR$/wordpress" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
 </component>
 </module>
 `;
-	fs.writeFileSync( path.join( projectPath, '.idea', 'modules.xml' ), modulesXml );
+	fs.writeFileSync( path.join( projectPath, '.idea', slug + '.iml' ), modulesXml );
 
 	// Generate misc.xml
 	const miscXml = `<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" languageLevel="PHP_${ instanceData.php.replace(
-		/\./g,
-		'_'
-	) }" project-jdk-name="PHP ${ instanceData.php }" project-jdk-type="PHP" />
+  <component name="ProjectRootManager" version="2" languageLevel="PHP_8_0" project-jdk-name="PHP 8.0" project-jdk-type="PHP" />
+
 </project>`;
 
 	fs.writeFileSync( path.join( projectPath, '.idea', 'misc.xml' ), miscXml );
@@ -1179,3 +1181,4 @@ export function getPHPStormProjectPath( slug: string ): string {
 	const location = getEnvironmentPath( slug );
 	return location;
 }
+``;
