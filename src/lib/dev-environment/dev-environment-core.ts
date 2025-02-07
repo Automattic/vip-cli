@@ -1046,10 +1046,7 @@ const generatePathMappings = ( location: string, instanceData: InstanceData ) =>
 		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'plugins' );
 		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'private' );
 		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
-		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve(
-			instanceData.appCode.dir,
-			'vip-config'
-		);
+		pathMappings[ '/wp/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
 	}
 
 	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
@@ -1079,7 +1076,7 @@ export function generatePHPStormWorkspace( slug: string ): string {
 	const pathMappings = generatePathMappings( location, instanceData );
 
 	// Create .idea directory
-	fs.mkdirSync( path.join( projectPath, '.idea' ), { recursive: true } );
+	fs.mkdirSync( path.join( projectPath, '.idea', 'runConfigurations' ), { recursive: true } );
 
 	// Generate workspace.xml
 	const workspaceXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1087,7 +1084,8 @@ export function generatePHPStormWorkspace( slug: string ): string {
   <component name="PhpWorkspaceProjectConfiguration">
     <include_path>
       <path value="$PROJECT_DIR$/wordpress" />
-			${ instanceData?.muPlugins?.dir ? `<path value="${ instanceData.muPlugins.dir }" />` : '' }
+${ instanceData?.muPlugins?.dir ? `<path value="${ instanceData.muPlugins.dir }" />` : '' }
+${ instanceData?.appCode?.dir ? `<path value="${ instanceData.appCode.dir }" />` : '' }
     </include_path>
   </component>
   <component name="PhpDebugGeneral" listening_started="true" />
@@ -1099,7 +1097,7 @@ export function generatePHPStormWorkspace( slug: string ): string {
 ${ Object.entries( pathMappings )
 	.map(
 		( [ serverPath, localPath ] ) =>
-			`      <mapping server_path="${ serverPath }" local_path="$PROJECT_DIR$/${ path.relative(
+			`      <mapping local-root="${ serverPath }" remote-root="$PROJECT_DIR$/${ path.relative(
 				location,
 				localPath
 			) }" />`
@@ -1107,9 +1105,55 @@ ${ Object.entries( pathMappings )
 	.join( '\n' ) }
     </path_mappings>
   </component>
+  <component name="PhpServers">
+    <servers>
+      <server host="localhost" id="1252bc4b-3fd9-45f4-9cef-660891c2823e" name="localhost" use_path_mappings="true">
+        <path_mappings>
+          <mapping local-root="$PROJECT_DIR$/wordpress" remote-root="/wp" />
+          ${ Object.entries( pathMappings )
+						.map(
+							( [ serverPath, localPath ] ) =>
+								`          <mapping local-root="${ localPath }" remote-root="${ serverPath }" />`
+						)
+						.join( '\n' ) }
+        </path_mappings>
+      </server>
+    </servers>
+  </component>	
 </project>`;
 
 	fs.writeFileSync( path.join( projectPath, '.idea', 'workspace.xml' ), workspaceXml );
+
+	const xdebugXml = `<component name="ProjectRunConfigurationManager">
+<configuration default="false" name="VIP Debug" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug" nameIsGenerated="true" filter_connections="NOT_FILTER" server_name="localhost" session_id="XDEBUG">
+		<method v="2" />
+  </configuration>
+</component>
+`;
+	fs.writeFileSync(
+		path.join( projectPath, '.idea', 'runConfigurations', 'vip-xdebug.xml' ),
+		xdebugXml
+	);
+
+	const modulesXml = `
+	<module type="PHP_MODULE" version="4">
+  <component name="NewModuleRootManager">
+	<path value="" />
+	<path value="${ instanceData?.appCode?.dir ?? '' }" />
+
+	<content url="file://${ instanceData?.appCode?.dir ?? '' }">
+		<sourceFolder url="file://${ instanceData?.appCode?.dir ?? '' }" isTestSource="false" />
+	</content>
+	<content url="file://${ instanceData?.muPlugins?.dir ?? '' }">
+		<sourceFolder url="file://${ instanceData?.muPlugins?.dir ?? '' }" isTestSource="false" />
+	</content>
+	<content url="file://$PROJECT_DIR$/wordpress">
+		<sourceFolder url="file://$PROJECT_DIR$/wordpress" isTestSource="false" />
+	</content>
+</component>
+</module>
+`;
+	fs.writeFileSync( path.join( projectPath, '.idea', 'modules.xml' ), modulesXml );
 
 	// Generate misc.xml
 	const miscXml = `<?xml version="1.0" encoding="UTF-8"?>
