@@ -81,6 +81,9 @@ services:
 <% wpVolumes() %>
     run_as_root:
       - chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp
+<% if ( appCode.mode == 'image' ) { %>
+      - chown www-data:www-data /wp/wp-content/plugins
+<% } %>
     run:
       - >
         sh /dev-tools/setup.sh

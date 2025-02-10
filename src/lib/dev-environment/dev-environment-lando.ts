@@ -659,7 +659,6 @@ export async function landoExec(
 
 		tool.app = app;
 		tool.name = toolName;
-		tool.dir = '/';
 
 		if ( options.stdio ) {
 			tool.stdio = options.stdio;
