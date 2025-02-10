@@ -44,6 +44,11 @@ const examples = [
 		description:
 			'Start a local environment and generate a Workspace file for developing in Cursor Editor.',
 	},
+	{
+		usage: `${ exampleUsage } --editor=phpstorm --slug=example-site`,
+		description:
+			'Start a local environment and generate a Workspace file for developing in PhpStorm.',
+	},
 ];
 
 command( {
@@ -66,7 +71,7 @@ command( {
 	)
 	.option(
 		'editor',
-		'Generate a workspace file for the specified editor (supports: vscode, cursor).'
+		'Generate a workspace file for the specified editor (supports: vscode, cursor, phpstorm).'
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
