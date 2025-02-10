@@ -55,7 +55,7 @@ const runCmd = async function () {
 	cmd.argv( process.argv, null, {
 		usageFilter: usage =>
 			// eslint-disable-next-line no-control-regex
-			`${ usage }`.replace( /^ {4}(\u001B....)?internal(\u001B....)?(.+)$\n/m, '' ),
+			`${ usage }`.replace( /^ {4}(\u001B\[..m)?internal(\u001B\[..m)?(.+)$\n/m, '' ),
 	} );
 };
 
