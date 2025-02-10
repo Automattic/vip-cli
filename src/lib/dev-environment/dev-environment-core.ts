@@ -1139,14 +1139,14 @@ ${ Object.entries( pathMappings )
 	);
 
 	const projectXml = `<?xml version="1.0" encoding="UTF-8"?>
-		<project version="4">
-			<component name="ProjectModuleManager">
-				<modules>
-					<module fileurl="file://$PROJECT_DIR$/.idea/${ slug }.iml" filepath="$PROJECT_DIR$/.idea/${ slug }.iml" />
-				</modules>
-			</component>
-		</project>
-	`;
+<project version="4">
+	<component name="ProjectModuleManager">
+		<modules>
+			<module fileurl="file://$PROJECT_DIR$/.idea/${ slug }.iml" filepath="$PROJECT_DIR$/.idea/${ slug }.iml" />
+		</modules>
+	</component>
+</project>
+`;
 	fs.writeFileSync( path.join( projectPath, '.idea', 'modules.xml' ), projectXml );
 
 	const modulesXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1156,10 +1156,10 @@ ${ Object.entries( pathMappings )
 			projectPath,
 			instanceData?.appCode?.dir ?? ''
 		) }" />
-	<content url="file://$MODULE_DIR$/${ path.relative(
-		projectPath,
-		instanceData?.muPlugins?.dir ?? ''
-	) }" />
+		<content url="file://$MODULE_DIR$/${ path.relative(
+			projectPath,
+			instanceData?.muPlugins?.dir ?? ''
+		) }" />
 			<content url="file://$MODULE_DIR$" />
 			<orderEntry type="sourceFolder" forTests="false" />
 		<orderEntry type="inheritedJdk" />
