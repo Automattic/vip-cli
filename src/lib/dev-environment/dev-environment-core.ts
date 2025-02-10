@@ -1178,7 +1178,5 @@ ${ Object.entries( pathMappings )
  * @return {string} Path to PHPStorm project directory
  */
 export function getPHPStormProjectPath( slug: string ): string {
-	const location = getEnvironmentPath( slug );
-	return location;
+	return getEnvironmentPath( slug );
 }
-``;
