@@ -105,7 +105,11 @@ declare class Args {
 	showHelp(): void;
 	showVersion(): void;
 
-	argv: ( argv: string[], cb: unknown, options?: Partial<ConfigurationOptions> ) => Promise< unknown >;
+	argv: (
+		argv: string[],
+		cb: unknown,
+		options?: Partial< ConfigurationOptions >
+	) => Promise< unknown >;
 
 	// utils.js
 	handleType( value: unknown ): [ string, ( ( v: unknown ) => unknown )? ];
