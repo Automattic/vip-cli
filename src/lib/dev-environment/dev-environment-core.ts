@@ -1107,20 +1107,20 @@ ${ Object.entries( pathMappings )
   </component>
   <component name="PhpServers">
     <servers>
-      <server host="localhost" id="1252bc4b-3fd9-45f4-9cef-660891c2823e" name="localhost" use_path_mappings="true">
+      <server host="localhost" id="${ uuid() }" name="localhost" use_path_mappings="true">
         <path_mappings>
           <mapping local-root="$PROJECT_DIR$/wordpress" remote-root="/wp" />
           ${ Object.entries( pathMappings )
 						.map(
 							( [ serverPath, localPath ] ) =>
-								`          <mapping local-root="${ localPath }" remote-root="${ serverPath }" />`
+								`<mapping local-root="${ localPath }" remote-root="${ serverPath }" />`
 						)
 						.join( '\n' ) }
         </path_mappings>
       </server>
     </servers>
   </component>
-	  <component name="WordPressConfiguration" enabled="true">
+		<component name="WordPressConfiguration" enabled="true">
     <wordpressPath>$PROJECT_DIR$/wordpress</wordpressPath>
   </component>
 </project>`;
@@ -1128,7 +1128,7 @@ ${ Object.entries( pathMappings )
 	fs.writeFileSync( path.join( projectPath, '.idea', 'workspace.xml' ), workspaceXml );
 
 	const xdebugXml = `<component name="ProjectRunConfigurationManager">
-<configuration default="false" name="VIP Debug" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug" nameIsGenerated="true" filter_connections="NOT_FILTER" server_name="localhost" session_id="XDEBUG">
+	<configuration default="false" name="VIP Debug" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug" nameIsGenerated="true" filter_connections="NOT_FILTER" server_name="localhost" session_id="XDEBUG">
 		<method v="2" />
   </configuration>
 </component>
@@ -1138,35 +1138,35 @@ ${ Object.entries( pathMappings )
 		xdebugXml
 	);
 
-	const modulesXml = `
-	<?xml version="1.0" encoding="UTF-8"?>
+	const projectXml = `<?xml version="1.0" encoding="UTF-8"?>
+		<project version="4">
+			<component name="ProjectModuleManager">
+				<modules>
+					<module fileurl="file://$PROJECT_DIR$/.idea/${ slug }.iml" filepath="$PROJECT_DIR$/.idea/${ slug }.iml" />
+				</modules>
+			</component>
+		</project>
+	`;
+	fs.writeFileSync( path.join( projectPath, '.idea', 'modules.xml' ), projectXml );
+
+	const modulesXml = `<?xml version="1.0" encoding="UTF-8"?>
 	<module type="WEB_MODULE" version="4">
-  <component name="NewModuleRootManager">
-	<content url="file://$MODULE_DIR$" />
-	<content url="file://$PROJECT_DIR$/${ path.relative(
-		projectPath,
-		instanceData?.appCode?.dir ?? ''
-	) }" />
-	<content url="file://$PROJECT_DIR$/${ path.relative(
+		<component name="NewModuleRootManager">
+		<content url="file://$MODULE_DIR$/${ path.relative(
+			projectPath,
+			instanceData?.appCode?.dir ?? ''
+		) }" />
+	<content url="file://$MODULE_DIR$/${ path.relative(
 		projectPath,
 		instanceData?.muPlugins?.dir ?? ''
 	) }" />
-	<content url="file://$PROJECT_DIR$/wordpress" />
-    <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-</component>
+			<content url="file://$MODULE_DIR$" />
+			<orderEntry type="sourceFolder" forTests="false" />
+		<orderEntry type="inheritedJdk" />
+		</component>
 </module>
 `;
 	fs.writeFileSync( path.join( projectPath, '.idea', slug + '.iml' ), modulesXml );
-
-	// Generate misc.xml
-	const miscXml = `<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectRootManager" version="2" languageLevel="PHP_8_0" project-jdk-name="PHP 8.0" project-jdk-type="PHP" />
-
-</project>`;
-
-	fs.writeFileSync( path.join( projectPath, '.idea', 'misc.xml' ), miscXml );
 
 	return projectPath;
 }
