@@ -1009,6 +1009,9 @@ interface WorkspaceConfig {
 interface EditorConfig {
 	displayName: string;
 	candidates: string[];
+	errors?: {
+		notFound?: string;
+	};
 	workspace: WorkspaceConfig;
 }
 
@@ -1032,7 +1035,10 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 	},
 	phpstorm: {
 		displayName: 'PHPStorm',
-		candidates: [ '/Applications/PHPStorm' ],
+		candidates: [ 'phpstorm', 'phpstorm64.exe' ],
+		errors: {
+			notFound: `PHPStorm launcher was not detected in the expected path.\nPlease follow the setup instructions: https://www.jetbrains.com/help/phpstorm/working-with-the-ide-features-from-command-line.html#standalone`,
+		},
 		workspace: {
 			extension: 'ipr',
 			generator: generatePHPStormWorkspace,
@@ -1086,18 +1092,20 @@ const launchEditor = ( slug: string, type: EditorType ) => {
 	const workspacePath = getWorkspacePath( slug, type );
 
 	if ( existsSync( workspacePath ) ) {
-		console.log( 'Workspace already exists, skipping creation.' );
+		console.log( 'Project already exists, skipping creation.' );
 	} else {
 		editorConfig.workspace.generator( slug );
-		console.log( `${ editorConfig.displayName } workspace generated` );
+		console.log( `${ editorConfig.displayName } project generated` );
 	}
+	console.log( `Project file location:\n${ workspacePath }\n` );
 
 	const executable = findExecutable( editorConfig.candidates );
 	if ( executable ) {
 		spawn( executable, [ workspacePath ], { shell: process.platform === 'win32' } );
 	} else {
 		console.log(
-			`${ editorConfig.displayName } was not detected in the expected path. Workspace file location:\n${ workspacePath }`
+			editorConfig.errors?.notFound ||
+				`${ editorConfig.displayName } was not detected in the expected path.`
 		);
 	}
 };
