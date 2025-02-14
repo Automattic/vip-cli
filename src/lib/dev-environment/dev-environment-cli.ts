@@ -999,7 +999,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	}
 }
 
-type EditorType = 'vscode' | 'cursor' | 'phpstorm';
+type EditorType = 'vscode' | 'cursor' | 'phpstorm' | 'windsurf';
 
 interface WorkspaceConfig {
 	extension: string;
@@ -1032,10 +1032,18 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 	},
 	phpstorm: {
 		displayName: 'PHPStorm',
-		candidates: [ 'phpstorm', 'pstorm' ],
+		candidates: [ '/Applications/PHPStorm' ],
 		workspace: {
 			extension: 'ipr',
 			generator: generatePHPStormWorkspace,
+		},
+	},
+	windsurf: {
+		displayName: 'Windsurf',
+		candidates: [ 'windsurf' ],
+		workspace: {
+			extension: 'code-workspace',
+			generator: generateVSCodeWorkspace,
 		},
 	},
 };

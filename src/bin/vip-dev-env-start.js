@@ -71,7 +71,7 @@ command( {
 	)
 	.option(
 		'editor',
-		'Generate a workspace file for the specified editor (supports: vscode, cursor, phpstorm).'
+		'Generate a workspace file for the specified editor (supports: vscode, cursor, windsurf, phpstorm).'
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
