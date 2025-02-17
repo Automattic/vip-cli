@@ -246,15 +246,16 @@ export class DevEnvSyncSQLCommand {
 			inPlace: true,
 			skipValidate: true,
 			quiet: true,
+			postImportSQL: this.fixBlogsTableQuery(),
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run();
 	}
 
-	public async fixBlogsTable(): Promise< void > {
+	private fixBlogsTableQuery() {
 		const networkSites = this.env.wpSitesSDS?.nodes;
 		if ( ! networkSites ) {
-			return;
+			return '';
 		}
 
 		const prologue = `
@@ -294,10 +295,11 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 			);
 		}
 
-		if ( queries.length ) {
-			const sql = `${ prologue }\n${ queries.join( '\n' ) }\n${ epilogue }`;
-			await fs.promises.appendFile( this.sqlFile, sql );
+		if ( queries.length === 0 ) {
+			return '';
 		}
+
+		return `${ prologue }\n${ queries.join( '\n' ) }\n${ epilogue }`;
 	}
 
 	/**
@@ -360,7 +362,6 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 			}
 
 			await this.runSearchReplace();
-			await this.fixBlogsTable();
 			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 		} catch ( err ) {
 			const error = err as Error;

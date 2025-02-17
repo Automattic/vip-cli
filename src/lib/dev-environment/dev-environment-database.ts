@@ -45,3 +45,7 @@ export const flushCache = async ( lando: Lando, slug: string, quiet?: boolean ) 
 	);
 	await exec( lando, slug, cacheArg );
 };
+
+export const executeQuery = async ( lando: Lando, slug: string, query: string ) => {
+	await exec( lando, slug, [ 'wp', 'db', 'query', query ] );
+};
