@@ -124,7 +124,7 @@ export async function startEnvironment(
 	}
 
 	let updated = false;
-	if ( ! options.skipWpVersionsCheck ) {
+	if ( ! options.skipWpVersionsCheck && process.stdin.isTTY ) {
 		updated = await maybeUpdateWordPressImage( lando, slug );
 	}
 	updated = updated || ( await maybeUpdateVersion( lando, slug ) );
