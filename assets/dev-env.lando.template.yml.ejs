@@ -184,7 +184,7 @@ services:
         - devtools:/dev-tools
         - scripts:/scripts
     initOnly: true
-    entrypoint: sh -c '/usr/bin/rsync -a --delete --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -a --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
+    entrypoint: /bin/sh -c '/usr/bin/rsync -ac --delete --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
     volumes:
       devtools:
       scripts:
@@ -194,7 +194,7 @@ services:
     type: compose
     services:
       image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
-      command: sh /run.sh
+      command: /bin/sh /run.sh
       volumes:
         - mu-plugins:/shared
         - type: volume
