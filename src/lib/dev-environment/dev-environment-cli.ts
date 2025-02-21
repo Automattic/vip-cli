@@ -309,6 +309,7 @@ export async function promptForArguments(
 		mailpit: false,
 		photon: false,
 		cron: false,
+		overrides: preselectedOptions.overrides,
 	};
 
 	const promptLabels = {
