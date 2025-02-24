@@ -106,17 +106,30 @@ Are you sure you want to import the contents of the URL?
 		'Check the status of a currently running media import or retrieve an error log of the most recent media import.'
 	)
 	.command( 'abort', 'Abort the media import currently in progress.' )
-	.option( 'exportFileErrorsToJson', 'Format the error log in JSON. Default is TXT.' )
+	.option( 'exportFileErrorsToJson', 'Alias for --export-file-errors-to-json. (deprecated)' )
+	.option( 'export-file-errors-to-json', 'Format the error log in JSON. Default is TXT.' )
+	.option( 'saveErrorLog', 'Alias for --save-error-log. (deprecated)' )
 	.option(
-		'saveErrorLog',
+		'save-error-log',
 		'Skip the confirmation prompt and download an error log for the import automatically.'
 	)
+	.option( 'overwriteExistingFiles', 'Alias for --overwrite-existing-files. (deprecated)', false )
 	.option(
-		'overwriteExistingFiles',
+		'overwrite-existing-files',
 		'Overwrite existing files with the imported files if they have the same path and file name.',
 		false
 	)
-	.option( 'importIntermediateImages', 'Include intermediate image files in the import.', false )
+	.option(
+		[ 't', 'allow-all-file-types' ],
+		'Allow all files to be imported, bypass the file type validation rules.',
+		false
+	)
+	.option(
+		'importIntermediateImages',
+		'Alias for --import-intermediate-images. (deprecated)',
+		false
+	)
+	.option( 'import-intermediate-images', 'Include intermediate image files in the import.', false )
 	.examples( examples )
 	.argv( process.argv, async ( args, opts ) => {
 		const {
@@ -125,6 +138,7 @@ Are you sure you want to import the contents of the URL?
 			exportFileErrorsToJson,
 			saveErrorLog,
 			overwriteExistingFiles,
+			allowAllFileTypes,
 			importIntermediateImages,
 		} = opts;
 		const [ url ] = args;
@@ -167,6 +181,7 @@ Importing Media into your App...
 						archiveUrl: url,
 						overwriteExistingFiles,
 						importIntermediateImages,
+						skipFileTypeValidation: allowAllFileTypes,
 						apiVersion: API_VERSION,
 					},
 				},

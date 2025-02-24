@@ -497,6 +497,11 @@ args.argv = async function ( argv, cb ) {
 					value: options.importIntermediateImages ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
 				} );
 
+				info.push( {
+					key: 'Allow all file types',
+					value: options.allowAllFileTypes ? '✅ Yes' : `${ chalk.red( 'x' ) } No`,
+				} );
+
 				options.exportFileErrorsToJson =
 					Object.hasOwn( options, 'exportFileErrorsToJson' ) &&
 					Boolean( options.exportFileErrorsToJson ) &&
