@@ -116,6 +116,7 @@ function sanitizeConfiguration(
 		'media-redirect-domain': configuration[ 'media-redirect-domain' ]?.toString(),
 		photon: stringToBooleanIfDefined( configuration.photon ),
 		cron: stringToBooleanIfDefined( configuration.cron ),
+		overrides: configuration.overrides?.toString(),
 		meta: configurationMeta,
 	};
 
@@ -174,6 +175,7 @@ export function mergeConfigurationFileOptions(
 		mediaRedirectDomain: configurationFileOptions[ 'media-redirect-domain' ],
 		photon: configurationFileOptions.photon,
 		cron: configurationFileOptions.cron,
+		overrides: configurationFileOptions.overrides,
 	};
 
 	const mergedOptions: InstanceOptions = {};
