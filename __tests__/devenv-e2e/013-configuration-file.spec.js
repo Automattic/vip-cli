@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { mkdtemp, rm, mkdir, realpath } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, realpath, readFile, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import xdgBaseDir from 'xdg-basedir';
@@ -333,5 +333,81 @@ describe( 'vip dev-env configuration file', () => {
 			photon: ! expectedPhoton,
 			cron: ! expectedCron,
 		} );
+	} );
+
+	it( 'should create .lando.local.yml if overrides have been provided', async () => {
+		const slug = getProjectSlug();
+		const expectedOverrides = `services:\n  wordpress:\n    services:\n      pull_policy: never\n`;
+
+		expect( await checkEnvExists( slug ) ).toBe( false );
+
+		await writeConfigurationFile( tmpWorkingDirectoryPath, {
+			'configuration-version': '1',
+			slug,
+			overrides: expectedOverrides,
+		} );
+
+		const spawnOptions = {
+			env,
+			cwd: tmpWorkingDirectoryPath,
+		};
+
+		const result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate ],
+			spawnOptions,
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `Using environment ${ slug }` );
+		expect( result.stderr ).toBe( '' );
+
+		const data = readEnvironmentData( slug );
+		expect( data ).toMatchObject( {
+			siteSlug: slug,
+			overrides: expectedOverrides,
+		} );
+
+		const overrideFile = path.join( tmpPath, 'vip', 'dev-environment', slug, '.lando.local.yml' );
+		const overrideContent = await readFile( overrideFile, 'utf8' );
+		expect( overrideContent ).toBe( expectedOverrides );
+	} );
+
+	it( 'should remove .lando.local.yml if no overrides have been provided', async () => {
+		const slug = getProjectSlug();
+		const overrides = `services:\n  wordpress:\n    services:\n      pull_policy: never\n`;
+
+		expect( await checkEnvExists( slug ) ).toBe( false );
+
+		await writeConfigurationFile( tmpWorkingDirectoryPath, {
+			'configuration-version': '1',
+			slug,
+			overrides,
+		} );
+
+		const spawnOptions = {
+			env,
+			cwd: tmpWorkingDirectoryPath,
+		};
+
+		let result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvCreate ], spawnOptions, true );
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `Using environment ${ slug }` );
+		expect( result.stderr ).toBe( '' );
+
+		await writeConfigurationFile( tmpWorkingDirectoryPath, {
+			'configuration-version': '1',
+			slug,
+			overrides: '',
+		} );
+
+		result = await cliTest.spawn( [ process.argv[ 0 ], vipDevEnvUpdate ], spawnOptions, true );
+		expect( result.rc ).toBe( 0 );
+		expect( result.stderr ).toBe( '' );
+
+		const data = readEnvironmentData( slug );
+		expect( data.overrides ).toBeFalsy();
+
+		const overrideFile = path.join( tmpPath, 'vip', 'dev-environment', slug, '.lando.local.yml' );
+		return expect( stat( overrideFile ) ).rejects.toThrow();
 	} );
 } );
