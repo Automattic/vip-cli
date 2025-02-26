@@ -159,7 +159,11 @@ Error:
 		debug( 'Options: ', opts );
 		debug( 'Args:', args );
 
-		await track( 'import_media_start_execute' );
+		await track( 'import_media_start_execute', {
+			overwrite_existing_files: overwriteExistingFiles,
+			allow_all_file_types: allowAllFileTypes,
+			import_intermediate_images: importIntermediateImages,
+		} );
 
 		const progressTracker = new MediaImportProgressTracker( [] );
 		progressTracker.prefix = `
