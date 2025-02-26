@@ -163,6 +163,8 @@ Error:
 			overwrite_existing_files: overwriteExistingFiles,
 			allow_all_file_types: allowAllFileTypes,
 			import_intermediate_images: importIntermediateImages,
+			export_file_errors_to_json: exportFileErrorsToJson,
+			save_error_log: saveErrorLog,
 		} );
 
 		const progressTracker = new MediaImportProgressTracker( [] );
