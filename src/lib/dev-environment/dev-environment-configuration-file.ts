@@ -251,8 +251,9 @@ async function findConfigurationFile(): Promise<
 			}
 
 			return { configurationPath: file, configurationContents: contents };
-		} catch (error) {
-			debug(`Error reading or rendering file ${file}: ${error.message}`);
+		} catch ( error ) {
+			const err = error instanceof Error ? error : new Error( 'Unknown error' );
+			debug( `Error reading or rendering file ${ file }: ${ err.message }` );
 		}
 	}
 
