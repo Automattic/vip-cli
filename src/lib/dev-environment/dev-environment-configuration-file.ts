@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
+import ejs from 'ejs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -12,6 +13,7 @@ import type { ConfigurationFileMeta, ConfigurationFileOptions, InstanceOptions }
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const CONFIGURATION_FILE_NAME = 'vip-dev-env.yml';
+export const CONFIGURATION_TEMPLATE_FILE_NAME = 'vip-dev-env.yml.ejs';
 
 export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
 	const configurationFile = await findConfigurationFile();
@@ -200,30 +202,62 @@ async function findConfigurationFile(): Promise<
 
 	let depth = 0;
 	const maxDepth = 64;
-	const pathPromises = [];
 
+	type Location = {
+		dir: string;
+		file: string;
+		template: boolean;
+	};
+
+	const locations: Location[] = [];
 	while ( currentPath !== rootPath && depth < maxDepth ) {
-		const configurationPath = path.join(
-			currentPath,
-			CONFIGURATION_FOLDER,
-			CONFIGURATION_FILE_NAME
-		);
-
-		pathPromises.push(
-			readFile( configurationPath, 'utf8' ).then( configurationContents => ( {
-				configurationPath,
-				configurationContents,
-			} ) )
+		locations.push(
+			{
+				dir: path.join( currentPath, CONFIGURATION_FOLDER ),
+				file: path.join( currentPath, CONFIGURATION_FOLDER, CONFIGURATION_TEMPLATE_FILE_NAME ),
+				template: true,
+			},
+			{
+				dir: path.join( currentPath, CONFIGURATION_FOLDER ),
+				file: path.join( currentPath, CONFIGURATION_FOLDER, CONFIGURATION_FILE_NAME ),
+				template: false,
+			},
+			{
+				dir: currentPath,
+				file: path.join( currentPath, '.' + CONFIGURATION_TEMPLATE_FILE_NAME ),
+				template: true,
+			},
+			{
+				dir: currentPath,
+				file: path.join( currentPath, '.' + CONFIGURATION_FILE_NAME ),
+				template: false,
+			}
 		);
 
 		// Move up one directory
 		currentPath = path.dirname( currentPath );
 
 		// Use depth as a sanity check to avoid an infitite loop
-		depth++;
+		++depth;
 	}
 
-	return Promise.any( pathPromises ).catch( () => false );
+	for ( const { dir, file, template } of locations ) {
+		try {
+			// eslint-disable-next-line no-await-in-loop
+			const contents = await readFile( file, 'utf8' );
+			if ( template ) {
+				const rendered = ejs.render( contents, { configDir: dir } );
+				return { configurationPath: file, configurationContents: rendered };
+			}
+
+			return { configurationPath: file, configurationContents: contents };
+		} catch ( error ) {
+			const err = error instanceof Error ? error : new Error( 'Unknown error' );
+			debug( `Error reading or rendering file ${ file }: ${ err.message }` );
+		}
+	}
+
+	return false;
 }
 
 const CONFIGURATION_FILE_VERSIONS = [ '1' ];
