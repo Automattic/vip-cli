@@ -251,8 +251,8 @@ async function findConfigurationFile(): Promise<
 			}
 
 			return { configurationPath: file, configurationContents: contents };
-		} catch {
-			// Swallow
+		} catch (error) {
+			debug(`Error reading or rendering file ${file}: ${error.message}`);
 		}
 	}
 
