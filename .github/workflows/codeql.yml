@@ -24,6 +24,7 @@ jobs:
       matrix:
         language:
           - javascript-typescript
+          - actions
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
