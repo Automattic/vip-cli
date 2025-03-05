@@ -17,6 +17,12 @@ const examples = [
 			'Search for every instance of the value "from" in the local input file named "file.sql" and replace it with the value "to".\n' +
 			'       * Results of the operation output to STDOUT by default.',
 	},
+	// multiple  operations
+	{
+		usage: 'vip search-replace file.sql --search-replace="from,to" --search-replace="before,after"',
+		description:
+			'Perform search and replace operations for 2 pairs of strings in the local input file named "file.sql".',
+	},
 	// `in-place` flag
 	{
 		usage: 'vip search-replace file.sql --search-replace="from,to" --in-place',
@@ -36,7 +42,7 @@ command( {
 } )
 	.option(
 		'search-replace',
-		'A comma-separated pair of strings that specify the values to search for and replace (e.g. --search-replace="from,to").'
+		'A comma-separated pair of strings that specify the values to search for and replace (e.g. --search-replace="from,to"). Can '
 	)
 	.option(
 		'in-place',
