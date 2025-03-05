@@ -136,19 +136,21 @@ function adjustRelativePaths(
 	configurationFilePath: string
 ): ConfigurationFileOptions {
 	const configurationDirectory = path.resolve( path.dirname( configurationFilePath ) );
+	const imageOption = [ 'demo', 'image' ];
+	let value: string | undefined;
 
-	if ( configuration[ 'app-code' ] && configuration[ 'app-code' ] !== 'image' ) {
-		const dir = configuration[ 'app-code' ];
-		configuration[ 'app-code' ] = path.isAbsolute( dir )
-			? dir
-			: path.join( configurationDirectory, dir );
+	value = configuration[ 'app-code' ];
+	if ( value && ! imageOption.includes( value ) ) {
+		configuration[ 'app-code' ] = path.isAbsolute( value )
+			? value
+			: path.join( configurationDirectory, value );
 	}
 
-	if ( configuration[ 'mu-plugins' ] && configuration[ 'mu-plugins' ] !== 'image' ) {
-		const dir = configuration[ 'mu-plugins' ];
-		configuration[ 'mu-plugins' ] = path.isAbsolute( dir )
-			? dir
-			: path.join( configurationDirectory, dir );
+	value = configuration[ 'mu-plugins' ];
+	if ( value && ! imageOption.includes( value ) ) {
+		configuration[ 'mu-plugins' ] = path.isAbsolute( value )
+			? value
+			: path.join( configurationDirectory, value );
 	}
 
 	return configuration;
