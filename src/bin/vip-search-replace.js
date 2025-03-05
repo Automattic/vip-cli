@@ -21,7 +21,7 @@ const examples = [
 	{
 		usage: 'vip search-replace file.sql --search-replace="from,to" --search-replace="before,after"',
 		description:
-			'Perform search and replace operations for 2 pairs of strings in the local input file named "file.sql".',
+			'Perform a search and replace operation for more than one pair of values in the local input file named "file.sql".',
 	},
 	// `in-place` flag
 	{
@@ -42,7 +42,7 @@ command( {
 } )
 	.option(
 		'search-replace',
-		'A comma-separated pair of strings that specify the values to search for and replace (e.g. --search-replace="from,to"). Can '
+		'A comma-separated pair of strings that specify the values to search for and replace (e.g. --search-replace="from,to").'
 	)
 	.option(
 		'in-place',
