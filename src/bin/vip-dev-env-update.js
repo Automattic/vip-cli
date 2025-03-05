@@ -114,6 +114,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			mediaRedirectDomain: currentInstanceData.mediaRedirectDomain,
 			multisite: false,
 			title: '',
+			cron: currentInstanceData.cron,
 		};
 
 		const providedOptions = Object.keys( opt )
