@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run npm-prepare-release
-        uses: Automattic/vip-actions/npm-prepare-release@e14930c8c34a8ff57b1a99659ba517420027057b # trunk
+        uses: Automattic/vip-actions/npm-prepare-release@dbd477b39f2122bf594da2d65dc0ea8ab5fc9bf0 # trunk
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
