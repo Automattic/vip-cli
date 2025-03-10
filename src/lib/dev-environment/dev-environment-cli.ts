@@ -1041,7 +1041,7 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 			notFound: `PHPStorm launcher was not detected in the expected path.\nPlease follow the setup instructions: https://www.jetbrains.com/help/phpstorm/working-with-the-ide-features-from-command-line.html#standalone`,
 		},
 		workspace: {
-			extension: 'ipr',
+			extension: 'iml',
 			generator: generatePHPStormWorkspace,
 		},
 	},
@@ -1058,6 +1058,10 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 // Helper to get workspace path for any editor
 function getWorkspacePath( slug: string, editor: EditorType ): string {
 	const { workspace } = SUPPORTED_EDITORS[ editor ];
+	if ( editor === 'phpstorm' ) {
+		return path.join( getEnvironmentPath( slug ), '.idea', `${ slug }.${ workspace.extension }` );
+	}
+
 	return path.join( getEnvironmentPath( slug ), `${ slug }.${ workspace.extension }` );
 }
 
@@ -1098,11 +1102,14 @@ const launchEditor = ( slug: string, type: EditorType ) => {
 		editorConfig.workspace.generator( slug );
 		console.log( `${ editorConfig.displayName } project generated` );
 	}
+
 	console.log( `Project file location:\n${ workspacePath }\n` );
 
 	const executable = findExecutable( editorConfig.candidates );
 	if ( executable ) {
-		spawn( executable, [ workspacePath ], { shell: process.platform === 'win32' } );
+		// For PHPStorm, pass the environment home folder instead of the workspace path
+		const launchPath = type === 'phpstorm' ? getEnvironmentPath( slug ) : workspacePath;
+		spawn( executable, [ launchPath ], { shell: process.platform === 'win32' } );
 	} else {
 		console.log(
 			editorConfig.errors?.notFound ||

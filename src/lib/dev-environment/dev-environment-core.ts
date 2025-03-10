@@ -1080,13 +1080,13 @@ export function getVSCodeWorkspacePath( slug: string ) {
 export function generatePHPStormWorkspace( slug: string ): string {
 	debug( 'Generating PHPStorm Workspace' );
 	const location = getEnvironmentPath( slug );
-	const projectPath = getPHPStormProjectPath( slug );
+	// const location = location;
 	const instanceData = readEnvironmentData( slug );
 
 	const pathMappings = generatePathMappings( location, instanceData );
 
 	// Create .idea directory
-	fs.mkdirSync( path.join( projectPath, '.idea', 'runConfigurations' ), { recursive: true } );
+	fs.mkdirSync( path.join( location, '.idea', 'runConfigurations' ), { recursive: true } );
 
 	// Generate workspace.xml
 	const workspaceXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -1135,7 +1135,7 @@ ${ Object.entries( pathMappings )
   </component>
 </project>`;
 
-	fs.writeFileSync( path.join( projectPath, '.idea', 'workspace.xml' ), workspaceXml );
+	fs.writeFileSync( path.join( location, '.idea', 'workspace.xml' ), workspaceXml );
 
 	const xdebugXml = `<component name="ProjectRunConfigurationManager">
 	<configuration default="false" name="VIP Debug" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug" nameIsGenerated="true" filter_connections="NOT_FILTER" server_name="localhost" session_id="XDEBUG">
@@ -1144,7 +1144,7 @@ ${ Object.entries( pathMappings )
 </component>
 `;
 	fs.writeFileSync(
-		path.join( projectPath, '.idea', 'runConfigurations', 'vip-xdebug.xml' ),
+		path.join( location, '.idea', 'runConfigurations', 'vip-xdebug.xml' ),
 		xdebugXml
 	);
 
@@ -1157,17 +1157,17 @@ ${ Object.entries( pathMappings )
 	</component>
 </project>
 `;
-	fs.writeFileSync( path.join( projectPath, '.idea', 'modules.xml' ), projectXml );
+	fs.writeFileSync( path.join( location, '.idea', 'modules.xml' ), projectXml );
 
 	const modulesXml = `<?xml version="1.0" encoding="UTF-8"?>
 	<module type="WEB_MODULE" version="4">
 		<component name="NewModuleRootManager">
 		<content url="file://$MODULE_DIR$/${ path.relative(
-			projectPath,
+			location,
 			instanceData?.appCode?.dir ?? ''
 		) }" />
 		<content url="file://$MODULE_DIR$/${ path.relative(
-			projectPath,
+			location,
 			instanceData?.muPlugins?.dir ?? ''
 		) }" />
 			<content url="file://$MODULE_DIR$" />
@@ -1176,17 +1176,7 @@ ${ Object.entries( pathMappings )
 		</component>
 </module>
 `;
-	fs.writeFileSync( path.join( projectPath, '.idea', slug + '.iml' ), modulesXml );
+	fs.writeFileSync( path.join( location, '.idea', slug + '.iml' ), modulesXml );
 
-	return projectPath;
-}
-
-/**
- * Gets the path where PHPStorm project files should be stored
- *
- * @param {string} slug Environment slug
- * @return {string} Path to PHPStorm project directory
- */
-export function getPHPStormProjectPath( slug: string ): string {
-	return getEnvironmentPath( slug );
+	return location;
 }
