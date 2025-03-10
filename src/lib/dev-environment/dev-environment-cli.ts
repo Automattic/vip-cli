@@ -1058,12 +1058,7 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 // Helper to get workspace path for any editor
 function getWorkspacePath( slug: string, editor: EditorType ): string {
 	const { workspace } = SUPPORTED_EDITORS[ editor ];
-	switch ( editor ) {
-		case 'phpstorm':
-			return getEnvironmentPath( slug );
-		default:
-			return path.join( getEnvironmentPath( slug ), `${ slug }.${ workspace.extension }` );
-	}
+	return path.join( getEnvironmentPath( slug ), `${ slug }.${ workspace.extension }` );
 }
 
 export interface PostStartOptions {
