@@ -60,7 +60,9 @@ export async function getDockerSocket(): Promise< string | null > {
 		// Try the default location
 		paths.push( '/var/run/docker.sock' );
 		// Try alternative locations
+		paths.push( '/run/docker.sock' );
 		paths.push( join( homedir(), '.docker', 'run', 'docker.sock' ) );
+		paths.push( join( homedir(), '.colima', 'default', 'docker.sock' ) );
 		paths.push( join( homedir(), '.orbstack', 'run', 'docker.sock' ) );
 
 		for ( const socketPath of paths ) {

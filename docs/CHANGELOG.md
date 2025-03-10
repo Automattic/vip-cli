@@ -1,5 +1,65 @@
 ## Changelog
 
+### 3.12.0
+
+* fix: rsync to skip files based on checksum
+* fix(dev-env): do not show the update prompt when stdin is not a TTY
+* fix(dev-env): handling of absolute paths in configuration files
+* feat(dev-env): overrides for the default configuration
+* build(deps): bump step-security/harden-runner from 2.10.4 to 2.11.0
+* build(deps-dev): bump @types/dockerode from 3.3.34 to 3.3.35
+* feat(dev-env): support templates for dev env configs
+* build(deps-dev): bump @types/node from 22.10.1 to 22.13.9
+* build(deps-dev): bump typescript from 5.7.3 to 5.8.2
+* build(deps): bump uuid from 11.0.3 to 11.1.0
+* fix(dev-env): accept `demo` as an alias of `image`
+* fix(dev-env): cron handling by `vip dev-env update`
+* ci: CodeQL scan for GHA
+* Update/search replace example
+* fix: forcefully strip `.js` from the command
+* build(deps): bump Automattic/vip-actions from e14930c8c34a8ff57b1a99659ba517420027057b to dbd477b39f2122bf594da2d65dc0ea8ab5fc9bf0
+* build(deps-dev): bump the babel group with 2 updates
+* build(deps): bump semver from 7.6.3 to 7.7.1
+* build(deps): bump debug from 4.3.7 to 4.4.0
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.11.0...3.12.0
+
+### 3.11.0
+
+* Add option to skip maintenance mode during SQL import
+* Fix dev-env-sync for mydumper backups
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.10.0...3.11.0
+
+### 3.10.0
+
+* VIP-CLI interactive console: Trim leading and ending spaces in command passed in
+* fix(dev-env): remove `lando/compose/env` directory when environment is destroyed
+* chore: update GraphQL types
+* feat: query integrations and their configuration
+* build(deps-dev): bump dockerode from 4.0.2 to 4.0.4
+* build(deps-dev): bump @types/dockerode from 3.3.32 to 3.3.33
+* feat(dev-env): write integrations config when creating an environment
+* build(deps-dev): bump @types/dockerode from 3.3.33 to 3.3.34
+* refactor(dev-env): merge `dev-tools` into `wordpress`
+* feat(dev-env): Improvements to configuration wizard
+* fix: ignore auth failures when querying feature flags
+* feat(dev-env): automatically enable Elasticsearch when Enterprise Search integration is enabled
+* fix(import-sql): progress tracker is incompatible with interactivity
+* fix(dev-env): add support for colima socket
+* build(deps): bump step-security/harden-runner from 2.10.2 to 2.10.4
+* build(deps-dev): bump typescript from 5.7.2 to 5.7.3
+* build(deps-dev): bump the babel group across 1 directory with 3 updates
+* fix(dev-env): make `wp plugin scaffold` work
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.6...3.10.0
+
+### 3.9.6
+
+* Adds check for AUTO_INCREMENT attribute in SQL import
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.9.5...3.9.6
+
 ### 3.9.5
 
 * fix: improve error handling and output

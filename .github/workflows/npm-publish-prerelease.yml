@@ -16,7 +16,7 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@v0.6.0
+      - uses: Automattic/vip-actions/npm-publish-prerelease@dbd477b39f2122bf594da2d65dc0ea8ab5fc9bf0 # trunk
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

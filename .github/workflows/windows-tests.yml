@@ -1,14 +1,20 @@
 name: Run VIP-cli tests
+
 on: pull_request
 
 env:
   NODE_OPTIONS: --unhandled-rejections=warn
   DO_NOT_TRACK: '1'
 
+permissions:
+  contents: read
+
 jobs:
   Run_windows_tests:
     name: Run Windows Tests
     runs-on: windows-latest
+    permissions:
+      contents: read
     steps:
       # To prevent issues with fixtures on Windows tests
       - name: Set git to use LF

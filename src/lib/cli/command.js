@@ -36,8 +36,15 @@ let _opts = {};
 
 let alreadyConfirmedDebugAttachment = false;
 
+/**
+ * @param {string[]} argv
+ */
 // eslint-disable-next-line complexity
 args.argv = async function ( argv, cb ) {
+	if ( process.platform !== 'win32' && argv[ 1 ]?.endsWith( '.js' ) ) {
+		argv[ 1 ] = argv[ 1 ].slice( 0, -3 );
+	}
+
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',

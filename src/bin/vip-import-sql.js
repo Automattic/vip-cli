@@ -407,10 +407,14 @@ void command( {
 		'output',
 		'The local file path to save a copy of the results from the search and replace operation when the --search-replace option is passed. Ignored when used with the --in-place option.'
 	)
+	.option(
+		'skip-maintenance-mode',
+		'Imports data without putting the environment in maintenance mode. Available only for unlaunched environments. Caution: This may cause site instability during import.'
+	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
-		let { skipValidate, searchReplace } = opts;
+		let { skipValidate, searchReplace, skipMaintenanceMode } = opts;
 		const { id: envId, appId } = env;
 		const [ fileName ] = arg;
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
@@ -583,6 +587,7 @@ Processing the SQL import for your environment...
 				basename,
 				md5,
 				searchReplace: [],
+				skipMaintenanceMode,
 			};
 
 			if ( searchReplace ) {

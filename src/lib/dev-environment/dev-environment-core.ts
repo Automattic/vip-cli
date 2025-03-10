@@ -73,6 +73,7 @@ const nginxFileTemplatePath = path.join(
 	'dev-env.nginx.template.conf.ejs'
 );
 const landoFileName = '.lando.yml';
+const landoOverridesFileName = '.lando.local.yml';
 const landoBackupFileName = '.lando.backup.yml';
 const nginxFileName = 'extra.conf';
 const instanceDataFileName = 'instance_data.json';
@@ -129,7 +130,7 @@ export async function startEnvironment(
 	}
 
 	let updated = false;
-	if ( ! options.skipWpVersionsCheck ) {
+	if ( ! options.skipWpVersionsCheck && process.stdin.isTTY ) {
 		updated = await maybeUpdateWordPressImage( lando, slug );
 	}
 	updated = updated || ( await maybeUpdateVersion( lando, slug ) );
@@ -261,6 +262,8 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	// newInstanceData
 	newInstanceData.autologinKey = uuid();
 	newInstanceData.version = DEV_ENVIRONMENT_VERSION;
+
+	newInstanceData.overrides = instanceData.overrides ?? '';
 
 	return newInstanceData;
 }
@@ -562,6 +565,7 @@ async function prepareLandoEnv(
 	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
+	const landoOverridesFileTargetPath = path.join( instancePath, landoOverridesFileName );
 	const landoBackupFileTargetPath = path.join( instancePath, landoBackupFileName );
 	const nginxFolderPath = path.join( instancePath, nginxPathString );
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
@@ -591,6 +595,12 @@ async function prepareLandoEnv(
 	debug( `Instance data file created in ${ instanceDataTargetPath }` );
 
 	await writeIntegrationsConfig( instancePath, integrationsConfig );
+
+	if ( instanceData.overrides ) {
+		await fs.promises.writeFile( landoOverridesFileTargetPath, instanceData.overrides );
+	} else {
+		await fs.promises.rm( landoOverridesFileTargetPath, { force: true } );
+	}
 }
 
 export function getAllEnvironmentNames(): string[] {

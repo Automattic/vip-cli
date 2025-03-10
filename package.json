@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "3.9.7-dev.0",
+  "version": "3.12.1-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -108,9 +108,9 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "@automattic/eslint-plugin-wpvip": "0.13.0",
-    "@babel/cli": "7.25.9",
-    "@babel/core": "7.26.0",
-    "@babel/preset-env": "7.26.0",
+    "@babel/cli": "7.26.4",
+    "@babel/core": "7.26.9",
+    "@babel/preset-env": "7.26.9",
     "@babel/preset-typescript": "7.26.0",
     "@jest/globals": "^29.7.0",
     "@jest/test-sequencer": "^29.7.0",
@@ -151,7 +151,7 @@
     "cli-table3": "^0.6.3",
     "configstore": "5.0.1",
     "copy-dir": "0.4.0",
-    "debug": "4.3.7",
+    "debug": "4.4.0",
     "ejs": "^3.1.8",
     "enquirer": "2.4.1",
     "fetch-retry": "^6.0.0",
@@ -166,7 +166,7 @@
     "node-stream-zip": "1.15.0",
     "open": "^10.0.0",
     "proxy-from-env": "^1.1.0",
-    "semver": "7.6.3",
+    "semver": "7.7.1",
     "shelljs": "^0.8.5",
     "single-line-log": "1.1.2",
     "socket.io-client": "^4.5.3",
@@ -174,7 +174,7 @@
     "socks-proxy-agent": "^5.0.1",
     "tar": "^7.4.0",
     "update-notifier": "7.3.1",
-    "uuid": "11.0.3",
+    "uuid": "11.1.0",
     "xdg-basedir": "^4.0.0",
     "xml2js": "^0.5.0"
   },

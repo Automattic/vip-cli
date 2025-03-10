@@ -17,6 +17,7 @@ import {
 import {
 	addAdminUser,
 	dataCleanup,
+	executeQuery,
 	flushCache,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
@@ -31,6 +32,7 @@ export interface DevEnvImportSQLOptions {
 	inPlace: boolean;
 	skipValidate: boolean;
 	quiet: boolean;
+	postImportSQL?: string;
 }
 
 export class DevEnvImportSQLCommand {
@@ -119,6 +121,10 @@ export class DevEnvImportSQLCommand {
 
 		if ( searchReplace?.length && ! inPlace ) {
 			fs.unlinkSync( resolvedPath );
+		}
+
+		if ( this.options.postImportSQL ) {
+			await executeQuery( lando, this.slug, this.options.postImportSQL );
 		}
 
 		await flushCache( lando, this.slug, this.options.quiet );

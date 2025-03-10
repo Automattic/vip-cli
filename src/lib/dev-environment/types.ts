@@ -16,6 +16,7 @@ export interface InstanceOptions {
 	mailpit?: boolean;
 	photon?: boolean;
 	cron?: boolean;
+	overrides?: string;
 
 	[ index: string ]: unknown;
 }
@@ -86,6 +87,7 @@ export interface ConfigurationFileOptions {
 	'media-redirect-domain'?: string;
 	photon?: boolean;
 	cron?: boolean;
+	overrides?: string;
 
 	meta?: ConfigurationFileMeta;
 	[ index: string ]: unknown;
@@ -116,6 +118,7 @@ export interface InstanceData {
 	pullAfter?: number;
 	autologinKey?: string;
 	version?: string;
+	overrides?: string;
 }
 
 export type EditorType = 'vscode' | 'cursor' | 'phpstorm' | 'windsurf';
