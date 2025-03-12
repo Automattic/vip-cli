@@ -150,10 +150,18 @@ export class DevEnvImportSQLCommand {
 		);
 		const threadCount = Math.max( os.cpus().length - 2, 1 );
 		if ( dumpDetails.type === SqlDumpType.MYDUMPER ) {
+			if ( ! dumpDetails.sourceDb ) {
+				console.log(
+					`${ chalk.yellow(
+						'!'
+					) } Unable to identify source DB. Skipping myloader source-db option`
+				);
+			}
+
 			importArg = [
 				'db-myloader',
 				'--overwrite-tables',
-				`--source-db=${ dumpDetails.sourceDb }`,
+				...( dumpDetails.sourceDb ? [ `--source-db=${ dumpDetails.sourceDb }` ] : [] ),
 				`--threads=${ threadCount }`,
 				'--max-threads-for-schema-creation=10',
 				'--max-threads-for-index-creation=10',
