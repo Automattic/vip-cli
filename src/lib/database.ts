@@ -174,6 +174,16 @@ const collectMetadataSizes = ( metadataDetails: MetadataDetails ) => {
 			} );
 			callback( null, chunk );
 		},
+		flush( callback: TransformCallback ) {
+			// flush any remaining size to the last section
+			if ( metadataDetails.currentSection ) {
+				metadataDetails.sectionSizes[ metadataDetails.currentSection ] ||= 0;
+				// no extra new line for the last section
+				metadataDetails.sectionSizes[ metadataDetails.currentSection ] +=
+					metadataDetails.currentSize;
+			}
+			callback( null );
+		},
 	} );
 };
 

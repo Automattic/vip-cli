@@ -9,11 +9,24 @@ import { ExportSQLCommand } from '../../src/commands/export-sql';
 import * as clientFileUploader from '../../src/lib/client-file-uploader';
 
 jest.mock( '@automattic/vip-search-replace', () => {
+	const original: typeof import('@automattic/vip-search-replace') = jest.requireActual(
+		'@automattic/vip-search-replace'
+	);
 	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	const { PassThrough } = require( 'node:stream' ) as typeof import('node:stream');
+	const pathRequire = require( 'path' ) as typeof import('path');
 	return {
-		replace: jest.fn( ( ...args ) => {
-			return Promise.resolve( new PassThrough().pipe( args[ 0 ] ) );
+		replace: jest.fn( ( ...args: Parameters< ( typeof original )[ 'replace' ] > ) => {
+			let searchReplaceBinaryFilename = `go-search-replace-test-${ process.platform }-${ process.arch }`;
+			if ( 'win32' === process.platform ) {
+				searchReplaceBinaryFilename += '.exe';
+			}
+
+			args[ 2 ] = pathRequire.join(
+				__dirname,
+				`../../__fixtures__/search-replace-binaries/${ searchReplaceBinaryFilename }`
+			);
+
+			return original.replace( ...args );
 		} ),
 	};
 } );
