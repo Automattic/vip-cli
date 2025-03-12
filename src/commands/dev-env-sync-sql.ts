@@ -13,7 +13,12 @@ import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
-import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import {
+	getSqlDumpDetails,
+	mutateFixMyDumperStreamChain,
+	SqlDumpType,
+	StreamContainer,
+} from '../lib/database';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -174,16 +179,17 @@ export class DevEnvSyncSQLCommand {
 		const replacedStream = await replace( readStream, replacements );
 
 		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
-		const streams: ( NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream )[] = [
-			replacedStream,
-		];
+		const streamContainer: StreamContainer = {
+			streams: [ replacedStream ],
+		};
+
 		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
-			streams.push( fixMyDumperTransform() );
+			await mutateFixMyDumperStreamChain( outputFile, streamContainer );
 		}
 
-		streams.push( fs.createWriteStream( outputFile ) );
+		streamContainer.streams.push( fs.createWriteStream( outputFile ) );
 
-		await pipeline( streams );
+		await pipeline( streamContainer.streams );
 
 		fs.renameSync( outputFile, this.sqlFile );
 	}

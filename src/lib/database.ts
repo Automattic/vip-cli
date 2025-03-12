@@ -1,9 +1,12 @@
 import fs from 'node:fs';
 import readline from 'node:readline';
 import { Transform, TransformCallback } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import zlib from 'node:zlib';
+import path from 'path';
 
 import { createExternalizedPromise } from './promise';
+import { makeTempDir } from './utils';
 
 export enum SqlDumpType {
 	MYDUMPER = 'MYDUMPER',
@@ -106,26 +109,101 @@ const getSqlFileStreamFromCompressedFile = async ( filePath: string ): Promise< 
 	throw new Error( 'Not a supported compressed file' );
 };
 
-export const fixMyDumperTransform = () => {
+export interface MetadataDetails {
+	sectionSizes: Record< string, number >;
+	currentSection: string;
+	currentSize: number;
+}
+
+const sectionRegex = /^-- ([^ ]+) [0-9]+$/;
+
+const collectMetadataSizes = ( metadataDetails: MetadataDetails ) => {
 	return new Transform( {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
 			const chunkString = chunk.toString();
 			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const regex = /^-- ([^ ]+) [0-9]+$/;
-			const lines = chunk
-				.toString()
-				.split( lineEnding )
-				.map( line => {
-					const match = line.match( regex );
 
-					if ( ! match ) {
-						return line;
-					}
+			chunkString.split( lineEnding ).forEach( line => {
+				const match = line.match( sectionRegex );
 
-					const tablePart = match[ 1 ];
-					return `-- ${ tablePart } -1`;
-				} );
+				if ( ! match ) {
+					metadataDetails.currentSize += Buffer.byteLength( line + lineEnding );
+					return;
+				}
+
+				// if we find a match, then the end of the data is reached.
+				const section = match[ 1 ];
+
+				// switch over to the new section
+				const previousSection = metadataDetails.currentSection;
+				metadataDetails.currentSection = section;
+
+				// and add remaining size to the previous section
+				if ( previousSection ) {
+					// subtract 1 length of lineEnding because
+					//  between each section, there's a newline that isn't included.
+					metadataDetails.sectionSizes[ previousSection ] +=
+						metadataDetails.currentSize - lineEnding.length;
+					metadataDetails.currentSize = 0;
+				}
+			} );
+			callback( null, chunk );
+		},
+	} );
+};
+
+const fixMyDumperTransform = ( metadataDetails: MetadataDetails ) => {
+	return new Transform( {
+		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
+			const chunkString = chunk.toString();
+			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
+			const lines = chunkString.split( lineEnding ).map( line => {
+				const match = line.match( sectionRegex );
+
+				if ( ! match ) {
+					return line;
+				}
+
+				const section = match[ 1 ];
+				return `-- ${ section } ${ metadataDetails.sectionSizes[ section ] }`;
+			} );
 			callback( null, lines.join( lineEnding ) );
 		},
 	} );
+};
+
+export interface StreamContainer {
+	streams: ( NodeJS.ReadableStream | NodeJS.ReadWriteStream | NodeJS.WritableStream )[];
+}
+
+export const mutateFixMyDumperStreamChain = async (
+	filePath: string,
+	streamContainer: StreamContainer
+) => {
+	// we do two passes, one for collecting metadata sizes,
+	//  and one for applying metadata sizes.
+
+	// Single pass is impossible for large databases, because calculating sizes
+	//  require the whole content, and the content of a section can be gigabytes in size.
+	//  So big database will run out of memory
+	const firstPassFile = path.join(
+		makeTempDir( 'mydumper-first-pass' ),
+		path.basename( filePath )
+	);
+	const metadataDetails: MetadataDetails = {
+		currentSection: '',
+		currentSize: 0,
+		sectionSizes: {},
+	};
+
+	streamContainer.streams.push( collectMetadataSizes( metadataDetails ) );
+	streamContainer.streams.push( fs.createWriteStream( firstPassFile ) );
+	await pipeline( streamContainer.streams );
+	const firstPassReadStream = fs.createReadStream( firstPassFile );
+	firstPassReadStream.on( 'close', () => {
+		fs.rmSync( firstPassFile, {
+			force: true,
+		} );
+	} );
+	streamContainer.streams = [ firstPassReadStream, fixMyDumperTransform( metadataDetails ) ];
 };
