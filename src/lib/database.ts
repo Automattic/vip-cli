@@ -118,13 +118,35 @@ export interface MetadataDetails {
 const sectionRegex = /^-- ([^ ]+) [0-9]+$/;
 
 const collectMetadataSizes = ( metadataDetails: MetadataDetails ) => {
+	let incompleteLineBuffer = '';
 	return new Transform( {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
 			const chunkString = chunk.toString();
 			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
+			const lines = chunkString.split( lineEnding );
+			incompleteLineBuffer += lines[ 0 ];
 
-			chunkString.split( lineEnding ).forEach( line => {
+			// when there's no new line, it's a partial line.
+			if ( lines.length === 1 ) {
+				// skip processing, we can't process without a complete line.
+				callback( null, chunk );
+				return;
+			}
+
+			lines.forEach( ( lineParam, index ) => {
+				let line = lineParam;
+				if ( index === 0 ) {
+					line = incompleteLineBuffer;
+					incompleteLineBuffer = '';
+				}
+				const isLastLine = index === lines.length - 1;
 				const match = line.match( sectionRegex );
+
+				if ( isLastLine ) {
+					// skip last line processing - part of this line is part of the next chunk.
+					incompleteLineBuffer += line;
+					return;
+				}
 
 				if ( ! match ) {
 					metadataDetails.currentSize += Buffer.byteLength( line + lineEnding );
@@ -140,12 +162,15 @@ const collectMetadataSizes = ( metadataDetails: MetadataDetails ) => {
 
 				// and add remaining size to the previous section
 				if ( previousSection ) {
-					// subtract 1 length of lineEnding because
-					//  between each section, there's a newline that isn't included.
+					metadataDetails.sectionSizes[ previousSection ] ||= 0;
+					// subtract 1 length of lineEnding because there's a newline between sections
+					// that isn't included in the meta header size calculation
 					metadataDetails.sectionSizes[ previousSection ] +=
 						metadataDetails.currentSize - lineEnding.length;
-					metadataDetails.currentSize = 0;
 				}
+				// always reset size to 0 once we hit a new section.
+				// helps account for file start padding.
+				metadataDetails.currentSize = 0;
 			} );
 			callback( null, chunk );
 		},
@@ -153,11 +178,35 @@ const collectMetadataSizes = ( metadataDetails: MetadataDetails ) => {
 };
 
 const fixMyDumperTransform = ( metadataDetails: MetadataDetails ) => {
+	let incompleteLineBuffer = '';
 	return new Transform( {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
 			const chunkString = chunk.toString();
 			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const lines = chunkString.split( lineEnding ).map( line => {
+			const lines = chunkString.split( lineEnding );
+			incompleteLineBuffer += lines[ 0 ];
+
+			// when there's no new line, it's a partial line.
+			if ( lines.length === 1 ) {
+				// skip processing, we can't process without a complete line.
+				callback( null, chunk );
+				return;
+			}
+
+			const result = lines.map( ( lineParam, index ) => {
+				let line = lineParam;
+				if ( index === 0 ) {
+					line = incompleteLineBuffer;
+					incompleteLineBuffer = '';
+				}
+				const isLastLine = index === lines.length - 1;
+				if ( isLastLine ) {
+					// skip last line processing - part of this line is part of the next chunk.
+					incompleteLineBuffer += line;
+					// since it's part of the next chunk, don't include it in the result.
+					return '';
+				}
+
 				const match = line.match( sectionRegex );
 
 				if ( ! match ) {
@@ -167,7 +216,7 @@ const fixMyDumperTransform = ( metadataDetails: MetadataDetails ) => {
 				const section = match[ 1 ];
 				return `-- ${ section } ${ metadataDetails.sectionSizes[ section ] }`;
 			} );
-			callback( null, lines.join( lineEnding ) );
+			callback( null, result.join( lineEnding ) );
 		},
 	} );
 };
