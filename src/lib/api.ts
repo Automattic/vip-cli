@@ -101,7 +101,9 @@ export default function API( {
 	const proxyAgent = createProxyAgent( API_URL );
 
 	const httpLink = new HttpLink( {
-		uri: API_URL,
+		uri: operation => {
+			return `${ API_URL }?x_query=${ decodeURIComponent( operation.operationName ) }`;
+		},
 		fetch: http,
 		fetchOptions: {
 			agent: proxyAgent,
