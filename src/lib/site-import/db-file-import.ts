@@ -2,8 +2,8 @@ import { App, AppEnvironment } from '../../graphqlTypes';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { DATABASE_APPLICATION_TYPE_IDS } from '../../lib/constants/vipgo';
 
-export const SQL_IMPORT_FILE_SIZE_LIMIT = 100 * GB_IN_BYTES;
-export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 5 * GB_IN_BYTES;
+export const SQL_IMPORT_FILE_SIZE_LIMIT = 200 * GB_IN_BYTES;
+export const SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED = 10 * GB_IN_BYTES;
 
 export type AppForImport = Pick< App, 'id' | 'environments' | 'name' | 'organization' | 'typeId' >;
 
