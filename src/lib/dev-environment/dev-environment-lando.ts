@@ -42,10 +42,8 @@ const debug = debugLib( DEBUG_KEY );
 async function getLandoConfig(): Promise< LandoConfig > {
 	// The path will be smth like `yarn/global/node_modules/lando/lib/lando.js`; we need the path up to `lando` (inclusive)
 	const landoPath = dirname( dirname( require.resolve( 'lando' ) ) );
-	// The path will be smth like `yarn/global/node_modules/@lando/compose/index.js`; we need the path up to `@lando` (inclusive)
-	const atLandoPath = dirname( dirname( require.resolve( '@lando/compose' ) ) );
 
-	debug( `Getting Lando config, using paths '${ landoPath }' and '${ atLandoPath }' for plugins` );
+	debug( `Getting Lando config, using paths '${ landoPath }' for plugins` );
 
 	const isLandoDebugSelected = debugLib.enabled( DEBUG_KEY );
 	const isAllDebugSelected = debugLib.enabled( '"*"' );
@@ -75,14 +73,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
 		postLandoFiles: [ '.lando.local.yml' ],
-		pluginDirs: [
-			landoPath,
-			{
-				path: atLandoPath,
-				subdir: '.',
-				namespace: '@lando',
-			},
-		],
+		pluginDirs: [ landoPath ],
 		disablePlugins: [],
 		proxyName: 'vip-dev-env-proxy',
 		userConfRoot: landoDir,

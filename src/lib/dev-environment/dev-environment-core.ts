@@ -116,12 +116,17 @@ export async function startEnvironment(
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug( 'Instance path for %s is %s', slug, instancePath );
 
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
+	}
+
+	const envFilePath = path.join( instancePath, '.env' );
+	if ( ! fs.existsSync( envFilePath ) ) {
+		fs.writeFileSync( envFilePath, '' );
 	}
 
 	let updated = false;
@@ -565,6 +570,7 @@ async function prepareLandoEnv(
 	const nginxFolderPath = path.join( instancePath, nginxPathString );
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+	const envFilePath = path.join( instancePath, '.env' );
 
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
@@ -583,6 +589,7 @@ async function prepareLandoEnv(
 		fs.promises.writeFile( landoFileTargetPath, landoFile ),
 		fs.promises.writeFile( nginxFileTargetPath, nginxFile ),
 		fs.promises.writeFile( instanceDataTargetPath, instanceDataFile ),
+		fs.promises.appendFile( envFilePath, '' ),
 	] );
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
