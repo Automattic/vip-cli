@@ -125,9 +125,7 @@ export async function startEnvironment(
 	}
 
 	const envFilePath = path.join( instancePath, '.env' );
-	if ( ! fs.existsSync( envFilePath ) ) {
-		fs.writeFileSync( envFilePath, '' );
-	}
+	fs.appendFileSync( envFilePath, '' );
 
 	let updated = false;
 	if ( ! options.skipWpVersionsCheck && process.stdin.isTTY ) {
