@@ -161,7 +161,8 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 export async function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
-	integrationsConfig?: Record< string, IntegrationConfig > | undefined
+	integrationsConfig?: Record< string, IntegrationConfig > | undefined,
+	envVars?: Record< string, string > | undefined
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	integrationsConfig ??= {};
@@ -181,7 +182,13 @@ export async function createEnvironment(
 
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, integrationsConfig );
+	await prepareLandoEnv(
+		lando,
+		preProcessedInstanceData,
+		instancePath,
+		integrationsConfig,
+		envVars
+	);
 }
 
 export async function updateEnvironment(
@@ -204,7 +211,7 @@ export async function updateEnvironment(
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
@@ -551,7 +558,8 @@ async function prepareLandoEnv(
 	lando: Lando,
 	instanceData: InstanceData,
 	instancePath: string,
-	integrationsConfig: Record< string, unknown > | undefined
+	integrationsConfig: Record< string, unknown > | undefined,
+	envVars: Record< string, string > | undefined
 ): Promise< void > {
 	const templateData = {
 		...instanceData,
@@ -587,8 +595,22 @@ async function prepareLandoEnv(
 		fs.promises.writeFile( landoFileTargetPath, landoFile ),
 		fs.promises.writeFile( nginxFileTargetPath, nginxFile ),
 		fs.promises.writeFile( instanceDataTargetPath, instanceDataFile ),
-		fs.promises.appendFile( envFilePath, '' ),
 	] );
+
+	if ( envVars !== undefined ) {
+		const env: string[] = [];
+		Object.entries( envVars ?? {} ).forEach( ( [ key, value ] ) => {
+			// See https://docs.docker.com/reference/compose-file/services/#env_file-format
+			// We don't want interpolation, hence single quotes.
+			// Inner quotes must be escaped.
+			value = value.replace( /'/g, "\\'" );
+			env.push( `${ key }='${ value }'` );
+		} );
+
+		await fs.promises.writeFile( envFilePath, env.join( '\n' ) );
+	} else {
+		await fs.promises.appendFile( envFilePath, '' );
+	}
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 	debug( `Nginx file created in ${ nginxFileTargetPath }` );
@@ -651,6 +673,13 @@ export async function getApplicationInformation(
 			type,
 			branch,
 			isMultisite,
+			environmentVariables {
+				total
+				nodes {
+					name
+					value
+				}
+			}
 			getIntegrationsDevEnvConfig {
 				data
 			}
@@ -696,6 +725,13 @@ export async function getApplicationInformation(
 		}
 
 		if ( envData ) {
+			const envVars: Record< string, string > = {};
+			envData.environmentVariables?.nodes?.forEach( envvar => {
+				if ( envvar?.name && envvar?.value ) {
+					envVars[ envvar.name ] = envvar.value;
+				}
+			} );
+
 			appData.environment = {
 				name: envData.name,
 				branch: envData.branch,
@@ -707,6 +743,7 @@ export async function getApplicationInformation(
 				integrations:
 					( envData.getIntegrationsDevEnvConfig?.data as Record< string, IntegrationConfig > ) ??
 					{},
+				envVars,
 			};
 		}
 	}
