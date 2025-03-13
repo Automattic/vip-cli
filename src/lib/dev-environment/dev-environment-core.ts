@@ -1016,19 +1016,27 @@ export function generateVSCodeWorkspace( slug: string ) {
 		folders.push( { path: instanceData.appCode.dir } );
 	}
 
+	// Create debug configuration
+	const debugConfig = {
+		name: `Debug ${ slug }`,
+		type: 'php',
+		request: 'launch',
+		port: 9003,
+		pathMappings,
+	};
+
+	// Check if running under WSL and add hostname if needed
+	// This is to allow xdebug to work when running under WSL
+	if ( process.env?.WSL_DISTRO_NAME ) {
+		debug( 'WSL detected, adding hostname to debug configuration' );
+		( debugConfig as any ).hostname = '0.0.0.0';
+	}
+
 	const workspace = {
 		folders,
 		launch: {
 			version: '0.2.0',
-			configurations: [
-				{
-					name: `Debug ${ slug }`,
-					type: 'php',
-					request: 'launch',
-					port: 9003,
-					pathMappings,
-				},
-			],
+			configurations: [ debugConfig ],
 		},
 	};
 
