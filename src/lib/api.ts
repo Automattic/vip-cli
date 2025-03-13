@@ -102,6 +102,10 @@ export default function API( {
 
 	const httpLink = new HttpLink( {
 		uri: operation => {
+			// to make it easier to write tests, we'll skip adding x_query for tests
+			if ( process.env.NODE_ENV === 'test' ) {
+				return API_URL;
+			}
 			return `${ API_URL }?x_query=${ decodeURIComponent( operation.operationName ) }`;
 		},
 		fetch: http,
