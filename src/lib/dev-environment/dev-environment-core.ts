@@ -601,10 +601,8 @@ async function prepareLandoEnv(
 		const env: string[] = [];
 		Object.entries( envVars ?? {} ).forEach( ( [ key, value ] ) => {
 			// See https://docs.docker.com/reference/compose-file/services/#env_file-format
-			// We don't want interpolation, hence single quotes.
-			// Inner quotes must be escaped.
-			value = value.replace( /'/g, "\\'" );
-			env.push( `${ key }='${ value }'` );
+			value = value.replace( /([$"\\])/g, '\\$1' );
+			env.push( `${ key }="${ value }"` );
 		} );
 
 		await fs.promises.writeFile( envFilePath, env.join( '\n' ) );
