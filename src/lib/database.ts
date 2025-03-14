@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import readline from 'node:readline';
-import { Transform, TransformCallback } from 'node:stream';
 import zlib from 'node:zlib';
 
 import { createExternalizedPromise } from './promise';
@@ -104,28 +103,4 @@ const getSqlFileStreamFromCompressedFile = async ( filePath: string ): Promise< 
 	}
 
 	throw new Error( 'Not a supported compressed file' );
-};
-
-export const fixMyDumperTransform = () => {
-	return new Transform( {
-		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
-			const chunkString = chunk.toString();
-			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const regex = /^-- ([^ ]+) [0-9]+$/;
-			const lines = chunk
-				.toString()
-				.split( lineEnding )
-				.map( line => {
-					const match = line.match( regex );
-
-					if ( ! match ) {
-						return line;
-					}
-
-					const tablePart = match[ 1 ];
-					return `-- ${ tablePart } -1`;
-				} );
-			callback( null, lines.join( lineEnding ) );
-		},
-	} );
 };

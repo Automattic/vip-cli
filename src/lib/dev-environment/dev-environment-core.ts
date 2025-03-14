@@ -42,7 +42,6 @@ import {
 	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
 import { createProxyAgent } from '../http/proxy-agent';
-import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
 
 import type {
@@ -709,14 +708,9 @@ export async function getApplicationInformation(
 	return appData;
 }
 
-export async function resolveImportPath(
-	slug: string,
-	fileName: string,
-	searchReplace: string | string[] | null | undefined,
-	inPlace: boolean
-): Promise< string > {
+export function resolveImportPath( fileName: string ) {
 	debug( `Will try to resolve path - ${ fileName }` );
-	let resolvedPath = resolvePath( fileName );
+	const resolvedPath = resolvePath( fileName );
 
 	debug( `Filename ${ fileName } resolved to ${ resolvedPath }` );
 
@@ -730,21 +724,6 @@ export async function resolveImportPath(
 		throw new UserError(
 			`The provided file ${ resolvedPath } is a directory. Please point to a sql file.`
 		);
-	}
-
-	// Run Search and Replace if the --search-replace flag was provided
-	if ( searchReplace?.length ) {
-		const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
-			isImport: true,
-			output: true,
-			inPlace,
-		} );
-
-		if ( typeof outputFileName !== 'string' ) {
-			throw new Error( 'Unable to determine location of the intermediate search & replace file.' );
-		}
-
-		resolvedPath = outputFileName;
 	}
 
 	return resolvedPath;

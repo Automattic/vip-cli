@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import Lando from 'lando';
 import os from 'os';
 
 import * as exit from '../lib/cli/exit';
@@ -22,6 +23,8 @@ import {
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { searchAndReplace } from '../lib/search-and-replace';
+import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
 import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
@@ -76,12 +79,38 @@ export class DevEnvImportSQLCommand {
 		}
 
 		const { searchReplace, inPlace } = this.options;
-		const resolvedPath = await resolveImportPath(
-			this.slug,
-			this.fileName,
-			searchReplace,
-			inPlace
-		);
+		let resolvedPath = resolveImportPath( this.fileName );
+
+		// Run Search and Replace if the --search-replace flag was provided
+		// For mydumper files, we use wp search-replace after importing the database
+		if ( ! isMyDumper && searchReplace?.length ) {
+			try {
+				const { outputFileName } = await searchAndReplace( resolvedPath, searchReplace, {
+					isImport: true,
+					output: true,
+					inPlace,
+				} );
+
+				if ( typeof outputFileName !== 'string' ) {
+					throw new Error(
+						'Unable to determine location of the intermediate search & replace file.'
+					);
+				}
+
+				resolvedPath = outputFileName;
+			} catch ( err ) {
+				const error = err as Error;
+
+				await trackEvent( 'error', {
+					error_type: 'search_replace',
+					error_message: error.message,
+					stack: error.stack,
+				} );
+				exit.withError( `Error replacing domains: ${ error.message }` );
+			}
+
+			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
+		}
 
 		if ( ! this.options.skipValidate ) {
 			if ( ! ( await isEnvUp( lando, getEnvironmentPath( this.slug ) ) ) ) {
@@ -111,6 +140,10 @@ export class DevEnvImportSQLCommand {
 			 */
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd.fd, 'pipe', 'pipe' ] } );
+
+			if ( isMyDumper ) {
+				await this.executePostSearchReplace( lando );
+			}
 
 			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
@@ -175,5 +208,28 @@ export class DevEnvImportSQLCommand {
 		}
 
 		return importArg;
+	}
+
+	private async executePostSearchReplace( lando: Lando ): Promise< void > {
+		const searchReplace = this.options.searchReplace;
+		if ( ! searchReplace ) {
+			return;
+		}
+
+		for ( const pair of searchReplace ) {
+			const [ search, replace ] = pair.split( ',' );
+
+			// eslint-disable-next-line no-await-in-loop
+			await exec( lando, this.slug, [
+				'wp',
+				'search-replace',
+				search,
+				replace,
+				'--all-tables',
+				'--report-changed-only',
+			] );
+		}
+
+		console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
 	}
 }

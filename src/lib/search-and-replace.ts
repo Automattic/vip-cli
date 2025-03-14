@@ -6,7 +6,7 @@ import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 
-import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from './database';
+import { getSqlDumpDetails, SqlDumpType } from './database';
 import { makeTempDir } from './utils';
 import * as exit from '../lib/cli/exit';
 import { confirm } from '../lib/cli/prompt';
@@ -182,10 +182,6 @@ export const searchAndReplace = async (
 	const streams: ( NodeJS.ReadableStream | NodeJS.ReadWriteStream | NodeJS.WritableStream )[] = [
 		replacedStream,
 	];
-
-	if ( isMyDumper ) {
-		streams.push( fixMyDumperTransform() );
-	}
 
 	streams.push( writeStream );
 

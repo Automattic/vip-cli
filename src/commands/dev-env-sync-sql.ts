@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
-import fs from 'fs';
 import Lando from 'lando';
-import { pipeline } from 'node:stream/promises';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
@@ -13,7 +10,7 @@ import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
-import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import { getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -161,33 +158,6 @@ export class DevEnvSyncSQLCommand {
 		await exportCommand.run();
 	}
 
-	/**
-	 * Runs the search-replace operation on the SQL file
-	 * to replace the site urls with the lando domain
-	 *
-	 * @return {Promise<void>} Promise that resolves when the search-replace is complete
-	 * @throws {Error} If there is an error reading the file
-	 */
-	public async runSearchReplace(): Promise< void > {
-		const replacements = Object.entries( this.searchReplaceMap ).flat();
-		const readStream = fs.createReadStream( this.sqlFile );
-		const replacedStream = await replace( readStream, replacements );
-
-		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
-		const streams: ( NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream )[] = [
-			replacedStream,
-		];
-		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
-			streams.push( fixMyDumperTransform() );
-		}
-
-		streams.push( fs.createWriteStream( outputFile ) );
-
-		await pipeline( streams );
-
-		fs.renameSync( outputFile, this.sqlFile );
-	}
-
 	public generateSearchReplaceMap(): void {
 		this.searchReplaceMap = {};
 
@@ -247,6 +217,9 @@ export class DevEnvSyncSQLCommand {
 			skipValidate: true,
 			quiet: true,
 			postImportSQL: this.fixBlogsTableQuery(),
+			searchReplace: Object.entries( this.searchReplaceMap ).map(
+				( [ from, to ] ) => `${ from },${ to }`
+			),
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run();
@@ -355,22 +328,8 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 		console.log( 'Generating search-replace configuration...' );
 		this.generateSearchReplaceMap();
 
-		try {
-			console.log( 'Running the following search-replace operations on the SQL file:' );
-			for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
-				console.log( `  ${ domain } -> ${ landoDomain }` );
-			}
-
-			await this.runSearchReplace();
-			console.log( `${ chalk.green( '✓' ) } Search-replace operation is complete` );
-		} catch ( err ) {
-			const error = err as Error;
-			await this.track( 'error', {
-				error_type: 'search_replace',
-				error_message: error.message,
-				stack: error.stack,
-			} );
-			exit.withError( `Error replacing domains: ${ error.message }` );
+		for ( const [ domain, landoDomain ] of Object.entries( this.searchReplaceMap ) ) {
+			console.log( `  ${ domain } -> ${ landoDomain }` );
 		}
 
 		try {
