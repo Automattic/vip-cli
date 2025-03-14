@@ -599,10 +599,8 @@ async function prepareLandoEnv(
 
 	if ( envVars !== undefined ) {
 		const env: string[] = [];
-		Object.entries( envVars ?? {} ).forEach( ( [ key, value ] ) => {
-			// See https://docs.docker.com/reference/compose-file/services/#env_file-format
-			value = value.replace( /([$"\\])/g, '\\$1' );
-			env.push( `${ key }="${ value }"` );
+		Object.entries( envVars ?? {} ).forEach( ( [ key ] ) => {
+			env.push( `VIP_ENV_VAR_${ key }=` );
 		} );
 
 		await fs.promises.writeFile( envFilePath, env.join( '\n' ) );
@@ -672,10 +670,8 @@ export async function getApplicationInformation(
 			branch,
 			isMultisite,
 			environmentVariables {
-				total
 				nodes {
 					name
-					value
 				}
 			}
 			getIntegrationsDevEnvConfig {
@@ -725,8 +721,8 @@ export async function getApplicationInformation(
 		if ( envData ) {
 			const envVars: Record< string, string > = {};
 			envData.environmentVariables?.nodes?.forEach( envvar => {
-				if ( envvar?.name && envvar?.value ) {
-					envVars[ envvar.name ] = envvar.value;
+				if ( envvar?.name ) {
+					envVars[ envvar.name ] = '';
 				}
 			} );
 
