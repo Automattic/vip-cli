@@ -47,7 +47,7 @@ jobs:
     name: Dependaban
     runs-on: ubuntu-latest
     steps:
-      - uses: Automattic/vip-actions/dependaban@dbd477b39f2122bf594da2d65dc0ea8ab5fc9bf0 # trunk
+      - uses: Automattic/vip-actions/dependaban@bb2853ecb6cd7dba2efe589ebb10cf930759fe69 # trunk
 
   audit:
     name: Verify signatures and provenance statements
