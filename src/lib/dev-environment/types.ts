@@ -121,3 +121,5 @@ export interface InstanceData {
 	version?: string;
 	overrides?: string;
 }
+
+export type EditorType = 'vscode' | 'cursor' | 'phpstorm' | 'windsurf';

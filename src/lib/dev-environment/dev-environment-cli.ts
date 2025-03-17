@@ -13,9 +13,10 @@ import { getConfigurationFileOptions } from './dev-environment-configuration-fil
 import {
 	generateVSCodeWorkspace,
 	getAllEnvironmentNames,
-	getVSCodeWorkspacePath,
+	getEnvironmentPath,
 	getVersionList,
 	readEnvironmentData,
+	generatePHPStormWorkspace,
 } from './dev-environment-core';
 import { validateDockerInstalled } from './dev-environment-lando';
 import { getCurrentUserInfo } from '../api/user';
@@ -999,38 +1000,125 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	}
 }
 
+type EditorType = 'vscode' | 'cursor' | 'phpstorm' | 'windsurf';
+
+interface WorkspaceConfig {
+	extension: string;
+	generator: ( slug: string ) => string; // Returns path to generated workspace file
+}
+
+interface EditorConfig {
+	displayName: string;
+	candidates: string[];
+	errors?: {
+		notFound?: string;
+	};
+	workspace: WorkspaceConfig;
+}
+
+// Map of supported editors and their configurations
+const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
+	vscode: {
+		displayName: 'VS Code',
+		candidates: [ 'code', 'code-insiders', 'codium' ],
+		workspace: {
+			extension: 'code-workspace',
+			generator: generateVSCodeWorkspace,
+		},
+	},
+	cursor: {
+		displayName: 'Cursor',
+		candidates: [ 'cursor' ],
+		workspace: {
+			extension: 'code-workspace',
+			generator: generateVSCodeWorkspace,
+		},
+	},
+	phpstorm: {
+		displayName: 'PHPStorm',
+		candidates: [ 'phpstorm', 'phpstorm64.exe' ],
+		errors: {
+			notFound: `PHPStorm launcher was not detected in the expected path.\nPlease follow the setup instructions: https://www.jetbrains.com/help/phpstorm/working-with-the-ide-features-from-command-line.html#standalone`,
+		},
+		workspace: {
+			extension: 'iml',
+			generator: generatePHPStormWorkspace,
+		},
+	},
+	windsurf: {
+		displayName: 'Windsurf',
+		candidates: [ 'windsurf' ],
+		workspace: {
+			extension: 'code-workspace',
+			generator: generateVSCodeWorkspace,
+		},
+	},
+};
+
+// Helper to get workspace path for any editor
+function getWorkspacePath( slug: string, editor: EditorType ): string {
+	const { workspace } = SUPPORTED_EDITORS[ editor ];
+	if ( editor === 'phpstorm' ) {
+		return path.join( getEnvironmentPath( slug ), '.idea', `${ slug }.${ workspace.extension }` );
+	}
+
+	return path.join( getEnvironmentPath( slug ), `${ slug }.${ workspace.extension }` );
+}
+
 export interface PostStartOptions {
-	openVSCode: boolean;
+	editor?: string;
+	vscode?: boolean;
 }
 
 export function postStart( slug: string, options: PostStartOptions ): void {
-	if ( options.openVSCode ) {
-		launchVSCode( slug );
+	let editorType: EditorType | undefined;
+
+	if ( options.editor ) {
+		const editor = options.editor.toLowerCase();
+		if ( ! Object.keys( SUPPORTED_EDITORS ).includes( editor ) ) {
+			throw new Error(
+				`Invalid editor specified. Supported editors are: ${ Object.keys( SUPPORTED_EDITORS ).join(
+					', '
+				) }`
+			);
+		}
+		editorType = editor as EditorType;
+	} else if ( options.vscode ) {
+		editorType = 'vscode';
+	}
+
+	if ( editorType ) {
+		launchEditor( slug, editorType );
 	}
 }
 
-const launchVSCode = ( slug: string ) => {
-	const workspacePath = getVSCodeWorkspacePath( slug );
+const launchEditor = ( slug: string, type: EditorType ) => {
+	const editorConfig = SUPPORTED_EDITORS[ type ];
+	const workspacePath = getWorkspacePath( slug, type );
 
 	if ( existsSync( workspacePath ) ) {
-		console.log( 'VS Code workspace already exists, skipping creation.' );
+		console.log( 'Project already exists, skipping creation.' );
 	} else {
-		generateVSCodeWorkspace( slug );
-		console.log( 'VS Code workspace generated' );
+		editorConfig.workspace.generator( slug );
+		console.log( `${ editorConfig.displayName } project generated` );
 	}
 
-	const vsCodeExecutable = getVSCodeExecutable();
-	if ( vsCodeExecutable ) {
-		spawn( vsCodeExecutable, [ workspacePath ], { shell: process.platform === 'win32' } );
+	console.log( `Project file location:\n${ workspacePath }\n` );
+
+	const executable = findExecutable( editorConfig.candidates );
+	if ( executable ) {
+		// For PHPStorm, pass the environment home folder instead of the workspace path
+		const launchPath = type === 'phpstorm' ? getEnvironmentPath( slug ) : workspacePath;
+		spawn( executable, [ launchPath ], { shell: process.platform === 'win32' } );
 	} else {
 		console.log(
-			`VS Code was not detected in the expected path. VS Code Workspace file location:\n${ workspacePath }`
+			editorConfig.errors?.notFound ||
+				`${ editorConfig.displayName } was not detected in the expected path.`
 		);
 	}
 };
 
-const getVSCodeExecutable = () => {
-	const candidates = [ 'code', 'code-insiders', 'codium' ];
+const findExecutable = ( candidates: string[] ): string | null => {
 	for ( const candidate of candidates ) {
 		const result = which( candidate );
 		if ( result ) {
