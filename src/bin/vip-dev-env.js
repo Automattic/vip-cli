@@ -2,6 +2,11 @@
 
 import command from '../lib/cli/command';
 
+if ( process.getuid?.() === 0 ) {
+	console.error( 'This script should not be run as root. Exiting.' );
+	process.exit( 1 );
+}
+
 command( {
 	requiredArgs: 0,
 } )
