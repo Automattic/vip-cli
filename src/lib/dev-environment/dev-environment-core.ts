@@ -116,13 +116,16 @@ export async function startEnvironment(
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug( 'Instance path for %s is %s', slug, instancePath );
 
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
+
+	const envFilePath = path.join( instancePath, '.env' );
+	fs.appendFileSync( envFilePath, '' );
 
 	let updated = false;
 	if ( ! options.skipWpVersionsCheck && process.stdin.isTTY ) {
@@ -158,7 +161,8 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 export async function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
-	integrationsConfig?: Record< string, IntegrationConfig > | undefined
+	integrationsConfig?: Record< string, IntegrationConfig > | undefined,
+	envVars?: Record< string, string > | undefined
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	integrationsConfig ??= {};
@@ -178,7 +182,13 @@ export async function createEnvironment(
 
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, integrationsConfig );
+	await prepareLandoEnv(
+		lando,
+		preProcessedInstanceData,
+		instancePath,
+		integrationsConfig,
+		envVars
+	);
 }
 
 export async function updateEnvironment(
@@ -201,7 +211,7 @@ export async function updateEnvironment(
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
@@ -548,7 +558,8 @@ async function prepareLandoEnv(
 	lando: Lando,
 	instanceData: InstanceData,
 	instancePath: string,
-	integrationsConfig: Record< string, unknown > | undefined
+	integrationsConfig: Record< string, unknown > | undefined,
+	envVars: Record< string, string > | undefined
 ): Promise< void > {
 	const templateData = {
 		...instanceData,
@@ -565,6 +576,7 @@ async function prepareLandoEnv(
 	const nginxFolderPath = path.join( instancePath, nginxPathString );
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+	const envFilePath = path.join( instancePath, '.env' );
 
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
@@ -584,6 +596,17 @@ async function prepareLandoEnv(
 		fs.promises.writeFile( nginxFileTargetPath, nginxFile ),
 		fs.promises.writeFile( instanceDataTargetPath, instanceDataFile ),
 	] );
+
+	if ( envVars !== undefined ) {
+		const env: string[] = [];
+		Object.entries( envVars ?? {} ).forEach( ( [ key ] ) => {
+			env.push( `VIP_ENV_VAR_${ key }=` );
+		} );
+
+		await fs.promises.writeFile( envFilePath, env.join( '\n' ) );
+	} else {
+		await fs.promises.appendFile( envFilePath, '' );
+	}
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 	debug( `Nginx file created in ${ nginxFileTargetPath }` );
@@ -646,6 +669,11 @@ export async function getApplicationInformation(
 			type,
 			branch,
 			isMultisite,
+			environmentVariables {
+				nodes {
+					name
+				}
+			}
 			getIntegrationsDevEnvConfig {
 				data
 			}
@@ -691,6 +719,13 @@ export async function getApplicationInformation(
 		}
 
 		if ( envData ) {
+			const envVars: Record< string, string > = {};
+			envData.environmentVariables?.nodes?.forEach( envvar => {
+				if ( envvar?.name ) {
+					envVars[ envvar.name ] = '';
+				}
+			} );
+
 			appData.environment = {
 				name: envData.name,
 				branch: envData.branch,
@@ -702,6 +737,7 @@ export async function getApplicationInformation(
 				integrations:
 					( envData.getIntegrationsDevEnvConfig?.data as Record< string, IntegrationConfig > ) ??
 					{},
+				envVars,
 			};
 		}
 	}

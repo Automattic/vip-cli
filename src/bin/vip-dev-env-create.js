@@ -127,11 +127,14 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	let defaultOptions = {};
 	/** @type {Record<string,import('../lib/dev-environment/types').IntegrationConfig>} */
 	let integrationsConfig = {};
+	/** @type {Record<string,string>} */
+	let envVars = {};
 
 	try {
 		if ( opt.app ) {
 			const appInfo = await getApplicationInformation( opt.app, opt.env );
 			integrationsConfig = appInfo.environment?.integrations ?? {};
+			envVars = appInfo.environment?.envVars ?? {};
 			defaultOptions = getOptionsFromAppInfo( appInfo );
 		}
 	} catch ( error ) {
@@ -159,7 +162,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 	instanceData.siteSlug = slug;
 
 	try {
-		await createEnvironment( lando, instanceData, integrationsConfig );
+		await createEnvironment( lando, instanceData, integrationsConfig, envVars );
 
 		await printEnvironmentInfo( lando, slug, { extended: false, suppressWarnings: true } );
 

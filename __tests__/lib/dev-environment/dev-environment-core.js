@@ -191,6 +191,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						php: '',
 						wordpress: '',
 						integrations: {},
+						envVars: {},
 					},
 				},
 			},
@@ -251,6 +252,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 								},
 							},
 							integrations: {},
+							envVars: {},
 						},
 						{
 							name: 'prodName',
@@ -273,6 +275,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 						php: '8.1',
 						wordpress: '6.2',
 						integrations: {},
+						envVars: {},
 					},
 				},
 			},

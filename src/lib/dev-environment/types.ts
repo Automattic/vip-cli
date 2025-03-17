@@ -46,6 +46,7 @@ export interface AppInfo {
 		php: string;
 		wordpress: string;
 		integrations: Record< string, IntegrationConfig >;
+		envVars: Record< string, string >;
 	};
 }
 
