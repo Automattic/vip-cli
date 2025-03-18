@@ -21,8 +21,10 @@ export type Scalars = {
 	Int: { input: number; output: number };
 	Float: { input: number; output: number };
 	BigInt: { input: any; output: any };
+	/** Date custom scalar type */
 	Date: { input: any; output: any };
 	JSON: { input: any; output: any };
+	/** MediaImportAllowedFileTypes scalar type */
 	MediaImportAllowedFileTypes: { input: any; output: any };
 };
 
@@ -194,6 +196,7 @@ export type AppEnvironment = {
 	branches?: Maybe< AppEnvironmentBranchesList >;
 	buildConfiguration?: Maybe< BuildConfiguration >;
 	builds?: Maybe< BuildList >;
+	/** Get codebase related information */
 	codebase?: Maybe< CodebaseInfo >;
 	commands?: Maybe< WpcliCommandList >;
 	commits?: Maybe< GitCommitList >;
@@ -245,7 +248,6 @@ export type AppEnvironment = {
 	phpMyAdminStatus?: Maybe< PhpMyAdminStatus >;
 	primaryDomain?: Maybe< Domain >;
 	primaryDomainSwitchProgress?: Maybe< AppEnvironmentPrimaryDomainSwitchProgress >;
-	pullRequests?: Maybe< GitHubPullRequestList >;
 	repo?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	requestStats?: Maybe< RequestStatsList >;
 	slowlogs?: Maybe< AppEnvironmentSlowlogsList >;
@@ -256,8 +258,11 @@ export type AppEnvironment = {
 	type?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	uniqueLabel?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	updateSubsiteDomainStatus?: Maybe< AppEnvironmentUpdateSubsiteDomainStatus >;
+	/** Get WordPress Site Installation Details */
 	wpInstallation?: Maybe< WpInstallation >;
+	/** Get WordPress Site Details */
 	wpSites?: Maybe< WpSiteList >;
+	/** Get WordPress Site Details from SDS */
 	wpSitesSDS?: Maybe< WpSiteList >;
 };
 
@@ -390,10 +395,6 @@ export type AppEnvironmentPrimaryDomainSwitchProgressArgs = {
 	primaryDomainSwitchId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
-export type AppEnvironmentPullRequestsArgs = {
-	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-};
-
 export type AppEnvironmentRequestStatsArgs = {
 	date?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	days?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -426,35 +427,55 @@ export type AppEnvironmentWpSitesSdsArgs = {
 	sort?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
+/** Mutation request input to abort a Media Import */
 export type AppEnvironmentAbortMediaImportInput = {
+	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
+	/** The uniqueID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
 };
 
+/** Response payload for aborting a Media Import */
 export type AppEnvironmentAbortMediaImportPayload = {
 	__typename?: 'AppEnvironmentAbortMediaImportPayload';
+	/** The unique ID of the Application */
 	applicationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** The unique ID of the Environment */
 	environmentId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Media Import Abort Action Response */
 	mediaImportStatusChange?: Maybe< AppEnvironmentMediaImportStatusChange >;
 };
 
+/** Variables for the Activate Let's Encrypt Mutation */
 export type AppEnvironmentActivateLetsEncryptOnDomainInput = {
+	/** The unique ID for the domain */
 	domainId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	/** The ID of the environment that this domain belongs to */
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	/** The unique ID for the domain */
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	/** Provisions the www-alt domain */
 	includeWWW?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	/** Overrides the existing certificate (if any) on the domain */
 	overrideExisting?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
+/** Response from the Activate Let's Encrypt Mutation */
 export type AppEnvironmentActivateLetsEncryptOnDomainPayload = {
 	__typename?: 'AppEnvironmentActivateLetsEncryptOnDomainPayload';
+	/** The domain that Let's Encrypt was activated on */
 	domain?: Maybe< Domain >;
 };
 
+/** Variables for the Add Domain mutation */
 export type AppEnvironmentAddDomainInput = {
+	/** The domain name (i.e. something like example.com or sub.example.com) */
 	domain?: InputMaybe< NewDomain >;
+	/** The ID of the environment that this domain belongs to */
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	/** Flag to set verification code */
 	generateVerificationCode?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	/** The App ID */
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
@@ -476,17 +497,25 @@ export type AppEnvironmentAddNewRelicUserPayload = {
 	success: Scalars[ 'Boolean' ][ 'output' ];
 };
 
+/** Variables for the AddRequestStats mutation */
 export type AppEnvironmentAddRequestStatsInput = {
+	/** The application ID */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
+	/** Date for which we want to sync - if we want to sync only for one day */
 	date?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The environment ID where we want to run the command */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** Date range for which we want to sync - if we want to sync for a range */
 	fromDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	toDate?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
+/** Response payload for Request Stats */
 export type AppEnvironmentAddRequestStatsPayload = {
 	__typename?: 'AppEnvironmentAddRequestStatsPayload';
+	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'output' ];
+	/** The unique ID of the environment */
 	environmentId: Scalars[ 'Int' ][ 'output' ];
 };
 
@@ -691,27 +720,43 @@ export type AppEnvironmentGenericSoftware = AppEnvironmentSoftware & {
 	version: Scalars[ 'String' ][ 'output' ];
 };
 
+/** Details about the environment's HSTS settings */
 export type AppEnvironmentHstsSettings = {
 	__typename?: 'AppEnvironmentHSTSSettings';
+	/** Whether HSTS is enabled for an App Environment */
 	enabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Whether the header includes the includesSubdomains directive */
 	includeSubdomains?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** The value of the max-age directive */
 	maxAge?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Whether the header includes the preload directive */
 	preload?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Whether the App Environment enforces HTTPS everywhere */
 	sslEverywhere?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+/** Variables for the UpdateHSTSSettings mutation */
 export type AppEnvironmentHstsSettingsInput = {
+	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** The unique ID of the Application */
 	id: Scalars[ 'Int' ][ 'input' ];
+	/** Whether the header should include the includesSubdomains directive */
 	includeSubdomains?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	/** The value of the max-age directive */
 	maxAge?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	/** Whether the header should include the preload directive */
 	preload?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
+/** Response payload for HSTS Settings updates */
 export type AppEnvironmentHstsSettingsPayload = {
 	__typename?: 'AppEnvironmentHSTSSettingsPayload';
+	/** The Application that was updated */
 	app?: Maybe< App >;
+	/** The response message from GOOP */
 	message?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Whether the update was successful */
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
@@ -775,18 +820,6 @@ export type AppEnvironmentIpAllowList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
-export type AppEnvironmentIpAllowListInput = {
-	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
-	ips?: InputMaybe< Array< InputMaybe< Scalars[ 'String' ][ 'input' ] > > >;
-};
-
-export type AppEnvironmentIpAllowListPayload = {
-	__typename?: 'AppEnvironmentIPAllowListPayload';
-	app?: Maybe< App >;
-	ips?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
-};
-
 export type AppEnvironmentIPs = {
 	__typename?: 'AppEnvironmentIPs';
 	ipv4?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
@@ -807,6 +840,7 @@ export type AppEnvironmentImportInput = {
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	md5?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	searchReplace?: InputMaybe< Array< InputMaybe< AppEnvironmentImportSearchReplace > > >;
+	skipMaintenanceMode?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
 export type AppEnvironmentImportPayload = {
@@ -904,43 +938,68 @@ export type AppEnvironmentLogsList = {
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
+/** Response payload for starting and fetching a Media Import */
 export type AppEnvironmentMediaImportPayload = {
 	__typename?: 'AppEnvironmentMediaImportPayload';
+	/** The unique ID of the Application */
 	applicationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** The unique ID of the Environment */
 	environmentId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Media Import Status */
 	mediaImportStatus: AppEnvironmentMediaImportStatus;
 };
 
+/** Current status of a Media Import */
 export type AppEnvironmentMediaImportStatus = {
 	__typename?: 'AppEnvironmentMediaImportStatus';
+	/** Media Import failure details */
 	failureDetails?: Maybe< AppEnvironmentMediaImportStatusFailureDetails >;
+	/** URL to download the media import error log */
 	failureDetailsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Total number of media files that were imported */
 	filesProcessed?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Total number of media files that are to be import */
 	filesTotal?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Unique Identifier for a Media Import */
 	importId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Alias of environmentId */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** The actual status of the Media Import */
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
+/** Response payload for executing a status change action on a Media Import */
 export type AppEnvironmentMediaImportStatusChange = {
 	__typename?: 'AppEnvironmentMediaImportStatusChange';
+	/** Unique Identifier for a Media Import */
 	importId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Alias of environmentId */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** The status of Media Import prior to status change action */
 	statusFrom?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** The status of Media Import after the status change action */
 	statusTo?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
+/** Media Import Failure details */
 export type AppEnvironmentMediaImportStatusFailureDetails = {
 	__typename?: 'AppEnvironmentMediaImportStatusFailureDetails';
+	/** List of errors per file */
 	fileErrors?: Maybe< Array< Maybe< AppEnvironmentMediaImportStatusFailureDetailsFileErrors > > >;
+	/** URL to download the media import error log */
 	fileErrorsUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** List of global errors per import */
 	globalErrors?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
+	/** Status of the Media Import prior to failing */
 	previousStatus?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
+/** Media Import File Errors */
 export type AppEnvironmentMediaImportStatusFailureDetailsFileErrors = {
 	__typename?: 'AppEnvironmentMediaImportStatusFailureDetailsFileErrors';
+	/** List of Errors per file */
 	errors?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
+	/** File Name */
 	fileName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -1037,10 +1096,15 @@ export type AppEnvironmentSoftwareSettings = {
 	wordpress?: Maybe< AppEnvironmentSoftwareSettingsSoftware >;
 };
 
+/** Variables for the UpdateSoftwareSettings mutation */
 export type AppEnvironmentSoftwareSettingsInput = {
+	/** The unique ID of the Application */
 	appId: Scalars[ 'Int' ][ 'input' ];
+	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** The name of the software being updated */
 	softwareName: Scalars[ 'String' ][ 'input' ];
+	/** The version the software is being updated to */
 	softwareVersion: Scalars[ 'String' ][ 'input' ];
 };
 
@@ -1079,12 +1143,19 @@ export type AppEnvironmentStartDbBackupCopyPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+/** Mutation request input to start a Media Import */
 export type AppEnvironmentStartMediaImportInput = {
+	/** API version to be used for the media import */
 	apiVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
+	/** Publicly accessible URL that contains an archive of the media files to be imported */
 	archiveUrl: Scalars[ 'String' ][ 'input' ];
+	/** The uniqueID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** Whether to import intermediate images or not */
 	importIntermediateImages?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
+	/** Whether to overwrite existing files or not */
 	overwriteExistingFiles?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 };
 
@@ -1182,15 +1253,22 @@ export type AppEnvironmentTriggerDbBackupPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+/** Variables for the Run WP-CLI Command mutation */
 export type AppEnvironmentTriggerWpcliCommandInput = {
+	/** The command we want to run. Note: should not include 'wp' */
 	command?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The environment ID where we want to run the command */
 	environmentId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	/** The application ID */
 	id?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
+/** Response from the Run WP-CLI Command mutation */
 export type AppEnvironmentTriggerWpcliCommandPayload = {
 	__typename?: 'AppEnvironmentTriggerWPCLICommandPayload';
+	/** The command that was executed */
 	command?: Maybe< WpcliCommand >;
+	/** The token for authenticating the socket connection */
 	inputToken?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -1334,6 +1412,7 @@ export type BackupsList = {
 export type Blueprint = {
 	__typename?: 'Blueprint';
 	config?: Maybe< Scalars[ 'JSON' ][ 'output' ] >;
+	requires_fresh_blueprint?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -1351,11 +1430,16 @@ export type Build = Model & {
 	vendor_id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+/** Build configuration for the environment */
 export type BuildConfiguration = {
 	__typename?: 'BuildConfiguration';
+	/** Build type */
 	buildType: Scalars[ 'String' ][ 'output' ];
+	/** Node.js build environment variables */
 	nodeBuildDockerEnv: Scalars[ 'String' ][ 'output' ];
+	/** Node.js version */
 	nodeJSVersion: Scalars[ 'String' ][ 'output' ];
+	/** npm token */
 	npmToken?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -1410,12 +1494,16 @@ export type CancelPendingEmailVerificationTokenPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+/** Variables for the Cancel WP-CLI Command mutation */
 export type CancelWpcliCommandInput = {
+	/** The unique ID for the running command */
 	guid?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
+/** Response from the Cancel WP-CLI Command mutation */
 export type CancelWpcliCommandPayload = {
 	__typename?: 'CancelWPCLICommandPayload';
+	/** The command that was cancelled */
 	command?: Maybe< WpcliCommand >;
 };
 
@@ -1424,13 +1512,16 @@ export type Certificate = {
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	beginsTimestamp?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	certificateId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Domain name. Ex: www.example.com */
 	commonName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	created?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** OpenSSL generated CSR string */
 	csr?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	csrDecoded?: Maybe< CsrDecoded >;
 	expiresTimestamp?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	hasCertificate?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	issuer?: Maybe< CertificateIssuer >;
+	/** Alternative names */
 	san?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
 	valid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
@@ -1449,9 +1540,13 @@ export type CertificateList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+/** Variables for the CodebaseChangeRepo mutation */
 export type CodebaseChangeRepoInput = {
+	/** The unique ID of the Application */
 	appId: Scalars[ 'Int' ][ 'input' ];
+	/** The new branch name */
 	branch: Scalars[ 'String' ][ 'input' ];
+	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
 };
 
@@ -1489,15 +1584,25 @@ export type CodebaseTask = {
 	status: Scalars[ 'String' ][ 'output' ];
 };
 
+/** Variables for the CodebaseUpdatePlugin mutation */
 export type CodebaseUpdatePluginInput = {
+	/** The unique ID of the Application */
 	appId: Scalars[ 'Int' ][ 'input' ];
+	/** The download link for the new plugin version */
 	download?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The unique ID of the Environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** The location of the plugin in the codebase */
 	location?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The marketplace the plugin belongs too */
 	marketplace?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The name of the plugin */
 	name?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The plugin slug */
 	slug: Scalars[ 'String' ][ 'input' ];
+	/** The new version to update the plugin */
 	version?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The number of active vulns on the plugin */
 	vulnCount?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 };
 
@@ -1552,6 +1657,7 @@ export type DbBackupCopy = Model & {
 	__typename?: 'DBBackupCopy';
 	config?: Maybe< DbBackupCopyConfig >;
 	filePath: Scalars[ 'String' ][ 'output' ];
+	/** id is not implemented by DBBackupCopy as it does not have an integer id */
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
@@ -1649,6 +1755,7 @@ export type DeleteIdentityProviderPayload = {
 
 export type DeleteMetricThresholdsInput = {
 	envId: Scalars[ 'Int' ][ 'input' ];
+	eventType: Scalars[ 'String' ][ 'input' ];
 	metricName: Scalars[ 'String' ][ 'input' ];
 };
 
@@ -1754,31 +1861,54 @@ export type DeploymentStepStatus =
 	| 'Running'
 	| 'Waiting';
 
+/** A domain for an environment */
 export type Domain = {
 	__typename?: 'Domain';
+	/** Is the domain currently active? */
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** The active certificate of the domain */
 	certificate?: Maybe< Certificate >;
+	/** The matching certificates of the domain */
 	certificates?: Maybe< CertificateList >;
+	/** The date the domain was added to the system */
 	createdAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** What is the IP of the domain and does it point to VIP? */
 	dns?: Maybe< DomainDnsRecord >;
+	/** When was the email deliverability last checked? */
 	emailDeliverabilityLastCheckedAt?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** The environment this domain belongs to */
 	environment?: Maybe< AppEnvironment >;
+	/** Does this domain have a valid TLS certificate? (Note: SSL is a misnomer there; we are using TLS certificates.) */
 	hasSSL?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** The unique ID for the domain */
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Is this a default domain? (*.go-vip.co / *.go-vip.net) */
 	isDefault?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is the DKIM record valid? */
 	isDkimValid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is the DMARC record valid? */
 	isDmarcValid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is the domain using a Let's Encrypt certificate */
 	isLetsEncrypt?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is this the primary domain for the environment? */
 	isPrimary?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is the SPF record valid? */
 	isSpfValid?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is the domain ownership verified? */
 	isVerified?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** What are the issues that may block LE provisioning for this domain? */
 	letsEncryptCompatibility?: Maybe< Array< Maybe< DomainLetsEncryptCompatibility > > >;
+	/** What is the status of LE provisioning? */
 	letsEncryptStatus?: Maybe< Array< Maybe< DomainLetsEncryptStatus > > >;
+	/** The domain name (i.e. something like example.com or sub.example.com) */
 	name: Scalars[ 'String' ][ 'output' ];
+	/** The generated TXT record for the domain */
 	verificationCode?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** The wildcard value for the current domain */
 	wildcard?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
+/** A domain for an environment */
 export type DomainCertificatesArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -1952,22 +2082,38 @@ export type EnablePhpMyAdminPayload = {
 	success?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
+export type Environment = {
+	__typename?: 'Environment';
+	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+/** Customer-provided environment variable / constant */
 export type EnvironmentVariable = {
 	__typename?: 'EnvironmentVariable';
+	/** Environment variable name */
 	name: Scalars[ 'String' ][ 'output' ];
+	/** Environment variable value */
 	value?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type EnvironmentVariableInput = {
+	/** The unique ID of the Application */
 	applicationId: Scalars[ 'Int' ][ 'input' ];
+	/** The unique ID of the environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** Environment variable name (must consist of uppercase letters, numbers, and underscore */
 	name: Scalars[ 'String' ][ 'input' ];
+	/** Environment variable value */
 	value: Scalars[ 'String' ][ 'input' ];
 };
 
+/** Customer-provided environment variables / constants */
 export type EnvironmentVariablesList = {
 	__typename?: 'EnvironmentVariablesList';
+	/** The environment variables for this environment */
 	nodes?: Maybe< Array< Maybe< EnvironmentVariable > > >;
+	/** The total number of environment variables for this environment */
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
@@ -2205,7 +2351,7 @@ export type IdentityProviderList = ModelList & {
 
 export type InflatedApplication = {
 	__typename?: 'InflatedApplication';
-	environments?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
+	environments?: Maybe< Array< Maybe< Environment > > >;
 	id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	is_multisite?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -2214,6 +2360,7 @@ export type InflatedApplication = {
 export type InflatedNetworkSite = {
 	__typename?: 'InflatedNetworkSite';
 	config?: Maybe< Scalars[ 'JSON' ][ 'output' ] >;
+	home_url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -2252,6 +2399,7 @@ export type IntegrationCenter = Model & {
 	meta: Scalars[ 'String' ][ 'output' ];
 	slug: Scalars[ 'String' ][ 'output' ];
 	title: Scalars[ 'String' ][ 'output' ];
+	visibility: Scalars[ 'String' ][ 'output' ];
 };
 
 export type IntegrationCenterList = ModelList & {
@@ -2260,6 +2408,21 @@ export type IntegrationCenterList = ModelList & {
 	nextCursor?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	nodes?: Maybe< Array< Maybe< IntegrationCenter > > >;
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type IntegrationClientList = {
+	__typename?: 'IntegrationClientList';
+	nodes: Array< IntegrationClientListItem >;
+	total: Scalars[ 'Int' ][ 'output' ];
+};
+
+export type IntegrationClientListItem = {
+	__typename?: 'IntegrationClientListItem';
+	has_active_apps?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	slug: Scalars[ 'String' ][ 'output' ];
+	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	visibility?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type IntegrationDevEnvConfig = {
@@ -2278,6 +2441,7 @@ export type IntegrationListItem = {
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	slug: Scalars[ 'String' ][ 'output' ];
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	visibility?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type Invitation = Model & {
@@ -2443,10 +2607,14 @@ export type MediaExportsList = {
 	total?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
+/** Media Import Configuration */
 export type MediaImportConfig = {
 	__typename?: 'MediaImportConfig';
+	/** Allowed File Types */
 	allowedFileTypes?: Maybe< Scalars[ 'MediaImportAllowedFileTypes' ][ 'output' ] >;
+	/** Allowed File Name Length */
 	fileNameCharCount?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Allowed File Size Limit */
 	fileSizeLimitInBytes?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
@@ -2492,6 +2660,7 @@ export type MetricMeasurement = {
 
 export type MetricThreshold = {
 	__typename?: 'MetricThreshold';
+	id: Scalars[ 'Int' ][ 'output' ];
 	metricName: Scalars[ 'String' ][ 'output' ];
 	operator: Scalars[ 'String' ][ 'output' ];
 	value: Scalars[ 'Float' ][ 'output' ];
@@ -2534,35 +2703,46 @@ export type ModelList = {
 export type Mutation = {
 	__typename?: 'Mutation';
 	abortMediaImport: AppEnvironmentAbortMediaImportPayload;
+	/** Accept an invitation to an organization */
 	acceptInvitation: AcceptInvitationPayload;
 	activateCertificate: ActivateCertificatePayload;
+	/** Activate a certificate for all domains on a site */
 	activateCertificateBySite?: Maybe< ActivateCertificateBySitePayload >;
+	/** Activate a Let's Encrypt TLS certificate for a domain */
 	activateLetsEncryptOnDomainForAppEnvironment: AppEnvironmentActivateLetsEncryptOnDomainPayload;
 	addBasicAuth: AppEnvironmentBasicAuthPayload;
 	addCertificate: AddCertificatePayload;
+	/** Add a domain to an environment */
 	addDomainToAppEnvironment: AppEnvironmentAddDomainPayload;
 	addEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
 	addNewRelicUser?: Maybe< AppEnvironmentAddNewRelicUserPayload >;
 	addNotificationRecipient?: Maybe< AddNotificationRecipientPayload >;
 	addNotificationSubscription: AddNotificationSubscriptionPayload;
+	/** Request stats */
 	addRequestStats?: Maybe< AppEnvironmentAddRequestStatsPayload >;
+	/** Cancel an invitation to an organization */
 	cancelInvitation: CancelInvitationPayload;
 	cancelPendingEmailVerificationToken: CancelPendingEmailVerificationTokenPayload;
+	/** Stop a running WP-CLI command */
 	cancelWPCLICommand: CancelWpcliCommandPayload;
+	/** Repository Management */
 	changeRepo: CodebaseChangeRepoResult;
 	createCSR: CreateCsrPayload;
+	/** Invite a user to an organization */
 	createInvitation: CreateInvitationPayload;
 	createUser: CreateUserPayload;
+	/** Remove a domain from an environment */
 	deactivateDomainOnAppEnvironment: AppEnvironmentDeactivateDomainPayload;
+	/** Purpose Token Management */
 	deactivatePurposeToken: DeactivatePurposeTokenPayload;
 	deactivateUserToken: DeactivateUserTokenPayload;
+	/** Debug page cache object */
 	debugPageCache: DebugPageCachePayload;
 	decodeCSR: CsrDecoded;
 	deleteBackupShippingConfig: AppEnvironmentBackupShippingPayload;
 	deleteBasicAuth: AppEnvironmentBasicAuthPayload;
 	deleteCertificate: DeleteCertificatePayload;
 	deleteEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
-	deleteIPAllowList: AppEnvironmentIpAllowListPayload;
 	deleteIdentityProvider: DeleteIdentityProviderPayload;
 	deleteLogShippingConfig: AppEnvironmentLogShippingPayload;
 	deleteMetricThresholds?: Maybe< DeleteMetricThresholdsPayload >;
@@ -2580,6 +2760,7 @@ export type Mutation = {
 	editBasicAuth: AppEnvironmentBasicAuthPayload;
 	enableBackupShipping: AppEnvironmentBackupShippingPayload;
 	enableCustomDeploy?: Maybe< AppEnvironmentEnableDisableCustomDeployPayload >;
+	/** Enforce SSO Access */
 	enableEnforceSSOAccess: Scalars[ 'Boolean' ][ 'output' ];
 	enableFeature?: Maybe< AppFeaturePayload >;
 	enableIdentityProviderEncryption: EnableIdentityProviderEncryptionPayload;
@@ -2588,24 +2769,31 @@ export type Mutation = {
 	enableNewRelic?: Maybe< AppEnvironmentEnableNewRelicPayload >;
 	enablePHPMyAdmin?: Maybe< EnablePhpMyAdminPayload >;
 	generateCustomDeployAccess?: Maybe< GenerateCustomDeployAccessPayload >;
+	/** Generate a presigned download URL to a previously copied database backup */
 	generateDBBackupCopyUrl?: Maybe< AppEnvironmentGenerateDbBackupCopyUrlPayload >;
+	/** Email Verification Token Management */
 	generateEmailVerificationToken: EmailVerificationTokenPayload;
 	generateMediaExportSignedUrl?: Maybe< AppEnvironmentGenerateMediaExportSignedUrlPayload >;
+	/** PhpMyAdmin */
 	generatePHPMyAdminAccess?: Maybe< GeneratePhpMyAdminAccessPayload >;
 	generateUserToken: UserTokenGenerationPayload;
 	launchApplication?: Maybe< AppEnvironmentLaunchedPayload >;
+	/** Manage Integration */
 	manageIntegration?: Maybe< Integration >;
+	/** Purge page cache object(s) */
 	purgePageCache: PurgePageCachePayload;
+	/** Remove a user from an organization (removes all roles and applications permissions) */
 	removeUserFromOrganization: RemoveUserFromOrganizationPayload;
-	replaceIPAllowList: AppEnvironmentIpAllowListPayload;
 	replaceOrganizationAuthDomains: OrganizationAuthDomainReplacePayload;
 	requestFeatureUpgrade?: Maybe< RequestFeatureUpgradePayload >;
+	/** Resend an invitation to an organization */
 	resendInvitation: ResendInvitationPayload;
 	rollback: RollbackPayload;
 	saveIdentityProvider: SaveIdentityProviderPayload;
 	saveOrganizationAuthDomain: OrganizationAuthDomainPayload;
 	sendTestNotification: SendTestNotificationPayload;
 	setIdentityProviderValidations: SetIdentityProviderValidationsPayload;
+	/** Custom Metric Thresholds management */
 	setMetricThresholds?: Maybe< SetOrUpdateMetricThresholdPayload >;
 	setUserApplicationRoles: SetUserApplicationRolesPayload;
 	setUserOrganizationRole: UpdateUserOrganizationRolePayload;
@@ -2613,25 +2801,30 @@ export type Mutation = {
 	startDBBackupCopy: AppEnvironmentStartDbBackupCopyPayload;
 	startImport: AppEnvironmentImportPayload;
 	startMediaExport?: Maybe< StartMediaExportPayload >;
+	/** Import Media into your Production Environment */
 	startMediaImport?: Maybe< AppEnvironmentMediaImportPayload >;
+	/** Switch the primary domain for an environment */
 	switchEnvironmentPrimaryDomain: AppEnvironmentPrimaryDomainSwitchPayload;
 	syncEnvironment: AppEnvironmentSyncPayload;
 	toggleVIPStatus: ToggleUserVipStatusPayload;
 	triggerDatabaseBackup: AppEnvironmentTriggerDbBackupPayload;
+	/** Execute a WP-CLI command on an environment */
 	triggerWPCLICommandOnAppEnvironment: AppEnvironmentTriggerWpcliCommandPayload;
 	updateBackupShippingConfig: AppEnvironmentBackupShippingPayload;
 	updateCertificate: UpdateCertificatePayload;
 	updateEnvironmentSubsiteDomain: AppEnvironmentUpdateSubsiteDomainPayload;
 	updateEnvironmentVariable?: Maybe< EnvironmentVariablesPayload >;
+	/** HSTS Settings */
 	updateHSTSSettings?: Maybe< AppEnvironmentHstsSettingsPayload >;
 	updateIPAccessRestrictions?: Maybe< EdgeConfigAccessRestrictionsIp >;
-	updateIPAllowList: AppEnvironmentIpAllowListPayload;
 	updateLogShippingConfig: AppEnvironmentLogShippingPayload;
 	updateMetricThresholds?: Maybe< SetOrUpdateMetricThresholdPayload >;
 	updateNotificationRecipient: UpdateNotificationRecipientPayload;
 	updateNotificationSubscription: UpdateNotificationSubscriptionPayload;
+	/** Plugin Update */
 	updatePlugin: CodebaseUpdatePluginResult;
 	updateSoftwareSettings?: Maybe< AppEnvironmentSoftwareSettings >;
+	/** Update a user's GitHub username or email address */
 	updateUser: UpdateUserPayload;
 	updateUserAgentAccessRestrictions?: Maybe< EdgeConfigAccessRestrictionsUserAgent >;
 	updateWPSiteLaunchStatus: WpSiteLaunchStatusPayload;
@@ -2639,6 +2832,7 @@ export type Mutation = {
 	validateEmailVerificationToken: ValidateEmailVerificationTokenPayload;
 	validateLogShippingConfig: AppEnvironmentLogShippingValidationPayload;
 	validatePHPMyAdminAccess?: Maybe< ValidatePhpMyAdminAccessPayload >;
+	/** Verify a DNS TXT record */
 	verifyDnsTxtRecord: VerifyDnsTxtRecordPayload;
 };
 
@@ -2756,10 +2950,6 @@ export type MutationDeleteCertificateArgs = {
 
 export type MutationDeleteEnvironmentVariableArgs = {
 	input?: InputMaybe< EnvironmentVariableInput >;
-};
-
-export type MutationDeleteIpAllowListArgs = {
-	input?: InputMaybe< AppEnvironmentIpAllowListInput >;
 };
 
 export type MutationDeleteIdentityProviderArgs = {
@@ -2898,10 +3088,6 @@ export type MutationRemoveUserFromOrganizationArgs = {
 	input?: InputMaybe< RemoveUserFromOrganizationInput >;
 };
 
-export type MutationReplaceIpAllowListArgs = {
-	input?: InputMaybe< AppEnvironmentIpAllowListInput >;
-};
-
 export type MutationReplaceOrganizationAuthDomainsArgs = {
 	input?: InputMaybe< OrganizationAuthDomainReplaceInput >;
 };
@@ -3010,10 +3196,6 @@ export type MutationUpdateIpAccessRestrictionsArgs = {
 	input?: InputMaybe< EdgeConfigUpdateIpAccessRestrictionsInput >;
 };
 
-export type MutationUpdateIpAllowListArgs = {
-	input?: InputMaybe< AppEnvironmentIpAllowListInput >;
-};
-
 export type MutationUpdateLogShippingConfigArgs = {
 	input?: InputMaybe< AppEnvironmentLogShippingInput >;
 };
@@ -3068,6 +3250,7 @@ export type MutationVerifyDnsTxtRecordArgs = {
 
 export type NetworkSiteResult = {
 	__typename?: 'NetworkSiteResult';
+	home_url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
@@ -3192,7 +3375,7 @@ export type Organization = Model & {
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	identityProviders?: Maybe< IdentityProviderList >;
 	integration?: Maybe< Integration >;
-	integrations?: Maybe< IntegrationList >;
+	integrations?: Maybe< IntegrationClientList >;
 	invitations?: Maybe< InvitationList >;
 	isFedramp?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	letsEncryptDisallowed?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
@@ -3217,6 +3400,7 @@ export type Organization = Model & {
 export type OrganizationAppsArgs = {
 	active?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	appType?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
 	matching?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
@@ -3495,6 +3679,8 @@ export type QueryDomainsArgs = {
 export type QueryIntegrationCenterArgs = {
 	after?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	first?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	search?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	slug?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type QueryListIntegrationsArgs = {
@@ -4053,80 +4239,126 @@ export type WpcliCommandUser = {
 
 export type WpInstallation = {
 	__typename?: 'WPInstallation';
+	/** Core WordPress Site Installation Details */
 	core?: Maybe< WpInstallationCoreDetails >;
+	/** App Environment Name */
 	environmentName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Details about Jetpack */
 	jetpack?: Maybe< WpInstallationJetpackDetails >;
+	/** Details about all plugins installed */
 	plugins?: Maybe< Array< WpInstallationPluginDetails > >;
+	/** App Environment / GOOP Site ID */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Last updated timestamp of the Site Installation Details */
 	timestamp?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 export type WpInstallationCoreDetails = {
 	__typename?: 'WPInstallationCoreDetails';
+	/** Is WordPress Multisite Installation */
 	isMultisite?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** WordPress Installation PHP Version */
 	phpVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** WordPress Installation Version */
 	wpVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpInstallationJetpackDetails = {
 	__typename?: 'WPInstallationJetpackDetails';
+	/** Is Jetpack available on WordPress Installation */
 	available?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Jetpack Version */
 	version?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** VIP Jetpack Version */
 	vipVersion?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpInstallationPluginDetails = {
 	__typename?: 'WPInstallationPluginDetails';
+	/** WordPress Plugin activated by */
 	activatedBy?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Is WordPress Plugin active */
 	active: Scalars[ 'Boolean' ][ 'output' ];
+	/** WordPress Plugin update download link */
 	downloadLink?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** WordPress Plugin available update version */
 	hasUpdate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** WordPress Plugin marketplace */
 	marketplace?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** WordPress Plugin name */
 	name: Scalars[ 'String' ][ 'output' ];
+	/** WordPress Plugin path */
 	path: Scalars[ 'String' ][ 'output' ];
+	/** WordPress Plugin slug */
 	slug?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** WordPress Plugin version */
 	version: Scalars[ 'String' ][ 'output' ];
 };
 
 export type WpSite = {
 	__typename?: 'WPSite';
+	/** WordPress Site/Blog ID */
 	blogId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** List of WordPress PHP defines/constants used in the blog */
 	constants?: Maybe< Array< Maybe< WpSitePhpConstants > > >;
+	/** WordPress Home URL option */
 	homeUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** [DEPRECATING SOON] Alias for blogId */
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** WP Site Installation Details */
 	installation?: Maybe< WpInstallation >;
+	/** [DEPRECATING SOON] Is blog active */
 	isActive?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Jetpack Details */
 	jetpack?: Maybe< WpSiteJetpackDetails >;
+	/** [DEPRECATING SOON] Alias for jetpack */
 	jetpackDetails?: Maybe< WpSiteJetpackDetails >;
+	/** Launched status of the subsite */
 	launchStatus?: Maybe< WpSiteLaunchStatus >;
+	/** Details about Parse.ly plugin (wp-parsely) usage */
 	parsely?: Maybe< WpSiteParselyDetails >;
+	/** List of enabled plugins on the blog */
 	plugins?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
+	/** WordPress Site URL option */
 	siteUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Last updated timestamp of the Site Details */
 	timestamp?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
 export type WpSiteJetpackDetails = {
 	__typename?: 'WPSiteJetpackDetails';
+	/** Is Jetpack Active */
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** [DEPRECATING SOON] Jetpack Cache Site ID */
 	cacheSiteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Jetpack Cache Site ID */
 	id?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Enabled Jetpack modules */
 	modules?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
 };
 
 export type WpSiteLaunchStatus = 'LAUNCHED' | 'LAUNCHING' | 'NOT_LAUNCHED' | 'UNKNOWN';
 
+/** Variables for the UpdateWPSiteLaunchStatus mutation */
 export type WpSiteLaunchStatusInput = {
+	/** Unique ID of the application */
 	appId: Scalars[ 'Int' ][ 'input' ];
+	/** Unique ID of the environment */
 	environmentId: Scalars[ 'Int' ][ 'input' ];
+	/** Updated launch status of the network site */
 	launchStatus: WpSiteLaunchStatus;
+	/** ID of the network site (subsite) being updated */
 	networkSiteId: Scalars[ 'Int' ][ 'input' ];
 };
 
+/** Variables for the UpdateWPSiteLaunchStatus mutation */
 export type WpSiteLaunchStatusPayload = {
 	__typename?: 'WPSiteLaunchStatusPayload';
 	app?: Maybe< App >;
 	environment?: Maybe< AppEnvironment >;
+	/** Updated launch status of the network site */
 	launchStatus?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** ID of the network site (subsite) being updated */
 	networkSiteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
@@ -4139,32 +4371,47 @@ export type WpSiteList = {
 
 export type WpSiteParselyConfigs = {
 	__typename?: 'WPSiteParselyConfigs';
+	/** Does the site have a Parse.ly API Secret configured? */
 	haveApiSecret?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is autotrack disabled (to allow Dynamic Tracking to be used)? */
 	isAutotrackingDisabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is JavaScript Tracking disabled? */
 	isJavascriptDisabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is the site pinned to the specific plugin version? */
 	isPinnedVersion?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is JavaScript tracking enabled for logged in users? */
 	shouldTrackLoggedInUsers?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Parse.ly Site ID (aka apikey) */
 	siteId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Details about tracked post types */
 	trackedPostTypes?: Maybe< Array< Maybe< WpSiteParselyTrackedPostTypesConfig > > >;
 };
 
 export type WpSiteParselyDetails = {
 	__typename?: 'WPSiteParselyDetails';
+	/** Is wp-parsely active? */
 	active?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Details about how the plugin is configured on site */
 	configs?: Maybe< WpSiteParselyConfigs >;
+	/** How wp-parsely is activated (if active) */
 	integrationType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** Version for the wp-parsely plugin */
 	version?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpSiteParselyTrackedPostTypesConfig = {
 	__typename?: 'WPSiteParselyTrackedPostTypesConfig';
+	/** The slug for the post type */
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** How is the post type tracked within Parse.ly? (post, non-post, or do-not-track) */
 	trackType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type WpSitePhpConstants = {
 	__typename?: 'WPSitePhpConstants';
+	/** WordPress PHP Define/Constant key */
 	name?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	/** WordPress PHP Define/Constant value */
 	value?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
