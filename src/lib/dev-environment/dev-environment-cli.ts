@@ -292,7 +292,8 @@ export async function promptForArguments(
 					resolvePhpVersion( defaultOptions.php ?? DEV_ENVIRONMENT_DEFAULTS.phpVersion )
 			  ),
 		mariadb: preselectedOptions.mariadb ?? defaultOptions.mariadb,
-		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain ?? '',
+		mediaRedirectDomain:
+			preselectedOptions.mediaRedirectDomain ?? defaultOptions.mediaRedirectDomain ?? '',
 		wordpress: {
 			mode: 'image',
 			tag: '',
@@ -327,6 +328,14 @@ export async function promptForArguments(
 		if ( setMediaRedirectDomain ) {
 			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain;
 		}
+	} else if ( ! create && defaultOptions.mediaRedirectDomain ) {
+		const mediaRedirectPromptText = 'URL to redirect for missing media files ("n" to disable)?';
+		const mediaRedirectDomain = await promptForURL(
+			mediaRedirectPromptText,
+			defaultOptions.mediaRedirectDomain
+		);
+
+		instanceData.mediaRedirectDomain = mediaRedirectDomain;
 	}
 
 	instanceData.wordpress = await processWordPress(
@@ -551,6 +560,38 @@ export async function promptForText( message: string, initial: string ): Promise
 	}
 
 	return ( result.input || '' ).trim();
+}
+
+export async function promptForURL( message: string, initial: string ): Promise< string > {
+	interface PromptResult {
+		input: string;
+	}
+
+	let result: PromptResult = { input: initial };
+	if ( isStdinTTY ) {
+		const URLValidator = ( value: string ) => {
+			if ( ! value.trim() || value === 'n' ) {
+				return true;
+			}
+
+			try {
+				new URL( value );
+				return true;
+			} catch {
+				return 'value needs to be a valid URL or an empty string';
+			}
+		};
+
+		result = await prompt< PromptResult >( {
+			type: 'input',
+			name: 'input',
+			message,
+			initial,
+			validate: URLValidator,
+		} );
+	}
+
+	return result.input.trim();
 }
 
 const multisiteOptions = [ 'subdomain', 'subdirectory' ] as const;
