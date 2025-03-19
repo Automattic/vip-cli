@@ -46,6 +46,7 @@ export interface AppInfo {
 		php: string;
 		wordpress: string;
 		integrations: Record< string, IntegrationConfig >;
+		envVars: Record< string, string >;
 	};
 }
 
@@ -120,3 +121,5 @@ export interface InstanceData {
 	version?: string;
 	overrides?: string;
 }
+
+export type EditorType = 'vscode' | 'cursor' | 'phpstorm' | 'windsurf';

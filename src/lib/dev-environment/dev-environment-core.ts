@@ -96,6 +96,11 @@ interface WordPressTag {
 	prerelease: boolean;
 }
 
+export interface PostStartOptions {
+	openVSCode: boolean;
+	openCursor: boolean;
+}
+
 function xdgDataDirectory(): string {
 	if ( xdgBasedir.data ) {
 		return xdgBasedir.data;
@@ -115,13 +120,16 @@ export async function startEnvironment(
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug( 'Instance path for %s is %s', slug, instancePath );
 
 	const environmentExists = fs.existsSync( instancePath );
 
 	if ( ! environmentExists ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
+
+	const envFilePath = path.join( instancePath, '.env' );
+	fs.appendFileSync( envFilePath, '' );
 
 	let updated = false;
 	if ( ! options.skipWpVersionsCheck && process.stdin.isTTY ) {
@@ -157,7 +165,8 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 export async function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
-	integrationsConfig?: Record< string, IntegrationConfig > | undefined
+	integrationsConfig?: Record< string, IntegrationConfig > | undefined,
+	envVars?: Record< string, string > | undefined
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	integrationsConfig ??= {};
@@ -177,7 +186,13 @@ export async function createEnvironment(
 
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, integrationsConfig );
+	await prepareLandoEnv(
+		lando,
+		preProcessedInstanceData,
+		instancePath,
+		integrationsConfig,
+		envVars
+	);
 }
 
 export async function updateEnvironment(
@@ -200,7 +215,7 @@ export async function updateEnvironment(
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined );
+	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }
 
 function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
@@ -547,7 +562,8 @@ async function prepareLandoEnv(
 	lando: Lando,
 	instanceData: InstanceData,
 	instancePath: string,
-	integrationsConfig: Record< string, unknown > | undefined
+	integrationsConfig: Record< string, unknown > | undefined,
+	envVars: Record< string, string > | undefined
 ): Promise< void > {
 	const templateData = {
 		...instanceData,
@@ -564,6 +580,7 @@ async function prepareLandoEnv(
 	const nginxFolderPath = path.join( instancePath, nginxPathString );
 	const nginxFileTargetPath = path.join( nginxFolderPath, nginxFileName );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
+	const envFilePath = path.join( instancePath, '.env' );
 
 	await fs.promises.mkdir( instancePath, { recursive: true } );
 	await fs.promises.mkdir( nginxFolderPath, { recursive: true } );
@@ -583,6 +600,17 @@ async function prepareLandoEnv(
 		fs.promises.writeFile( nginxFileTargetPath, nginxFile ),
 		fs.promises.writeFile( instanceDataTargetPath, instanceDataFile ),
 	] );
+
+	if ( envVars !== undefined ) {
+		const env: string[] = [];
+		Object.entries( envVars ?? {} ).forEach( ( [ key ] ) => {
+			env.push( `VIP_ENV_VAR_${ key }=` );
+		} );
+
+		await fs.promises.writeFile( envFilePath, env.join( '\n' ) );
+	} else {
+		await fs.promises.appendFile( envFilePath, '' );
+	}
 
 	debug( `Lando file created in ${ landoFileTargetPath }` );
 	debug( `Nginx file created in ${ nginxFileTargetPath }` );
@@ -645,6 +673,11 @@ export async function getApplicationInformation(
 			type,
 			branch,
 			isMultisite,
+			environmentVariables {
+				nodes {
+					name
+				}
+			}
 			getIntegrationsDevEnvConfig {
 				data
 			}
@@ -690,6 +723,13 @@ export async function getApplicationInformation(
 		}
 
 		if ( envData ) {
+			const envVars: Record< string, string > = {};
+			envData.environmentVariables?.nodes?.forEach( envvar => {
+				if ( envvar?.name ) {
+					envVars[ envvar.name ] = '';
+				}
+			} );
+
 			appData.environment = {
 				name: envData.name,
 				branch: envData.branch,
@@ -701,6 +741,7 @@ export async function getApplicationInformation(
 				integrations:
 					( envData.getIntegrationsDevEnvConfig?.data as Record< string, IntegrationConfig > ) ??
 					{},
+				envVars,
 			};
 		}
 	}
@@ -990,19 +1031,34 @@ export function generateVSCodeWorkspace( slug: string ) {
 		folders.push( { path: instanceData.appCode.dir } );
 	}
 
+	// Create debug configuration
+	const debugConfig: {
+		name: string;
+		type: string;
+		request: string;
+		port: number;
+		pathMappings: Record< string, string >;
+		hostname?: string;
+	} = {
+		name: `Debug ${ slug }`,
+		type: 'php',
+		request: 'launch',
+		port: 9003,
+		pathMappings,
+	};
+
+	// Check if running under WSL and add hostname if needed
+	// This is to allow xdebug to work when running under WSL
+	if ( process.env?.WSL_DISTRO_NAME ) {
+		debug( 'WSL detected, adding hostname to debug configuration' );
+		debugConfig.hostname = '0.0.0.0';
+	}
+
 	const workspace = {
 		folders,
 		launch: {
 			version: '0.2.0',
-			configurations: [
-				{
-					name: `Debug ${ slug }`,
-					type: 'php',
-					request: 'launch',
-					port: 9003,
-					pathMappings,
-				},
-			],
+			configurations: [ debugConfig ],
 		},
 	};
 
@@ -1030,10 +1086,7 @@ const generatePathMappings = ( location: string, instanceData: InstanceData ) =>
 		pathMappings[ '/wp/wp-content/plugins' ] = path.resolve( instanceData.appCode.dir, 'plugins' );
 		pathMappings[ '/wp/wp-content/private' ] = path.resolve( instanceData.appCode.dir, 'private' );
 		pathMappings[ '/wp/wp-content/themes' ] = path.resolve( instanceData.appCode.dir, 'themes' );
-		pathMappings[ '/wp/wp-content/vip-config' ] = path.resolve(
-			instanceData.appCode.dir,
-			'vip-config'
-		);
+		pathMappings[ '/wp/vip-config' ] = path.resolve( instanceData.appCode.dir, 'vip-config' );
 	}
 
 	pathMappings[ '/wp' ] = path.resolve( location, 'wordpress' );
@@ -1046,4 +1099,114 @@ export function getVSCodeWorkspacePath( slug: string ) {
 	const workspacePath = path.join( location, `${ slug }.code-workspace` );
 
 	return workspacePath;
+}
+
+/**
+ * Generates PHPStorm project configuration including debug settings
+ *
+ * @param {string} slug - The slug of the environment to generate PHPStorm config for
+ * @return {string} Project directory path
+ */
+export function generatePHPStormWorkspace( slug: string ): string {
+	debug( 'Generating PHPStorm Workspace' );
+	const location = getEnvironmentPath( slug );
+	// const location = location;
+	const instanceData = readEnvironmentData( slug );
+
+	const pathMappings = generatePathMappings( location, instanceData );
+
+	// Create .idea directory
+	fs.mkdirSync( path.join( location, '.idea', 'runConfigurations' ), { recursive: true } );
+
+	// Generate workspace.xml
+	const workspaceXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PhpWorkspaceProjectConfiguration">
+    <include_path>
+      <path value="$PROJECT_DIR$/wordpress" />
+${ instanceData?.muPlugins?.dir ? `<path value="${ instanceData.muPlugins.dir }" />` : '' }
+${ instanceData?.appCode?.dir ? `<path value="${ instanceData.appCode.dir }" />` : '' }
+    </include_path>
+  </component>
+  <component name="PhpDebugGeneral" listening_started="true" />
+  <component name="PhpDebugXdebugSettings">
+    <debug_server_list>
+      <server host="localhost" port="9003" />
+    </debug_server_list>
+    <path_mappings>
+${ Object.entries( pathMappings )
+	.map(
+		( [ serverPath, localPath ] ) =>
+			`      <mapping local-root="${ serverPath }" remote-root="$PROJECT_DIR$/${ path.relative(
+				location,
+				localPath
+			) }" />`
+	)
+	.join( '\n' ) }
+    </path_mappings>
+  </component>
+  <component name="PhpServers">
+    <servers>
+      <server host="localhost" id="${ uuid() }" name="localhost" use_path_mappings="true">
+        <path_mappings>
+          <mapping local-root="$PROJECT_DIR$/wordpress" remote-root="/wp" />
+          ${ Object.entries( pathMappings )
+						.map(
+							( [ serverPath, localPath ] ) =>
+								`<mapping local-root="${ localPath }" remote-root="${ serverPath }" />`
+						)
+						.join( '\n' ) }
+        </path_mappings>
+      </server>
+    </servers>
+  </component>
+		<component name="WordPressConfiguration" enabled="true">
+    <wordpressPath>$PROJECT_DIR$/wordpress</wordpressPath>
+  </component>
+</project>`;
+
+	fs.writeFileSync( path.join( location, '.idea', 'workspace.xml' ), workspaceXml );
+
+	const xdebugXml = `<component name="ProjectRunConfigurationManager">
+	<configuration default="false" name="VIP Debug" type="PhpRemoteDebugRunConfigurationType" factoryName="PHP Remote Debug" nameIsGenerated="true" filter_connections="NOT_FILTER" server_name="localhost" session_id="XDEBUG">
+		<method v="2" />
+  </configuration>
+</component>
+`;
+	fs.writeFileSync(
+		path.join( location, '.idea', 'runConfigurations', 'vip-xdebug.xml' ),
+		xdebugXml
+	);
+
+	const projectXml = `<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+	<component name="ProjectModuleManager">
+		<modules>
+			<module fileurl="file://$PROJECT_DIR$/.idea/${ slug }.iml" filepath="$PROJECT_DIR$/.idea/${ slug }.iml" />
+		</modules>
+	</component>
+</project>
+`;
+	fs.writeFileSync( path.join( location, '.idea', 'modules.xml' ), projectXml );
+
+	const modulesXml = `<?xml version="1.0" encoding="UTF-8"?>
+	<module type="WEB_MODULE" version="4">
+		<component name="NewModuleRootManager">
+		<content url="file://$MODULE_DIR$/${ path.relative(
+			location,
+			instanceData?.appCode?.dir ?? ''
+		) }" />
+		<content url="file://$MODULE_DIR$/${ path.relative(
+			location,
+			instanceData?.muPlugins?.dir ?? ''
+		) }" />
+			<content url="file://$MODULE_DIR$" />
+			<orderEntry type="sourceFolder" forTests="false" />
+		<orderEntry type="inheritedJdk" />
+		</component>
+</module>
+`;
+	fs.writeFileSync( path.join( location, '.idea', slug + '.iml' ), modulesXml );
+
+	return location;
 }

@@ -35,6 +35,8 @@ services:
       image: <%= php %>
       command: run.sh
       working_dir: /wp
+      env_file:
+        - .env
       environment:
         XDEBUG: <%= xdebug ? 'enable' : 'disable' %>
 <% if ( xdebugConfig ) { %>
