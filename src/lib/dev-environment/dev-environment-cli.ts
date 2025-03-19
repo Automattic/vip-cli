@@ -575,7 +575,11 @@ export async function promptForURL( message: string, initial: string ): Promise<
 			}
 
 			try {
-				new URL( value );
+				const url = new URL( value );
+				if ( url.protocol !== 'http:' && url.protocol !== 'https:' ) {
+					return 'value must be a http:// or https:// URL';
+				}
+
 				return true;
 			} catch {
 				return 'value needs to be a valid URL or an empty string';
@@ -591,7 +595,8 @@ export async function promptForURL( message: string, initial: string ): Promise<
 		} );
 	}
 
-	return result.input.trim();
+	const retval = result.input.trim();
+	return retval === 'n' ? '' : retval;
 }
 
 const multisiteOptions = [ 'subdomain', 'subdirectory' ] as const;
