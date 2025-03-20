@@ -20,7 +20,6 @@
         "cli-columns": "^4.0.0",
         "cli-table3": "^0.6.3",
         "configstore": "5.0.1",
-        "copy-dir": "0.4.0",
         "debug": "4.4.0",
         "ejs": "^3.1.8",
         "enquirer": "2.4.1",
@@ -5626,14 +5625,6 @@
       "integrity": "sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==",
       "dev": true
     },
-    "node_modules/copy-dir": {
-      "version": "0.4.0",
-      "resolved": "https://registry.npmjs.org/copy-dir/-/copy-dir-0.4.0.tgz",
-      "integrity": "sha512-mIefrD97nE1XX2th570tR5UQvW6/92czEPGe+oTtrxPAJl+KOKLpzcRa+e38WEpmt/IUN1n65KvRMzPblR+fDQ==",
-      "dependencies": {
-        "mkdir-p": "~0.0.4"
-      }
-    },
     "node_modules/core-js-compat": {
       "version": "3.40.0",
       "resolved": "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.40.0.tgz",
@@ -10194,11 +10185,6 @@
       "funding": {
         "url": "https://github.com/sponsors/isaacs"
       }
-    },
-    "node_modules/mkdir-p": {
-      "version": "0.0.7",
-      "resolved": "https://registry.npmjs.org/mkdir-p/-/mkdir-p-0.0.7.tgz",
-      "integrity": "sha512-VkWaZNxDgZle/aJAemUAWdyYX7geyuleKYFfRejf/pFKjxBDbWrMAy41ijg5EiI1U00WR9JcvynuDedE/fTxLA=="
     },
     "node_modules/mkdirp": {
       "version": "3.0.1",
@@ -17720,14 +17706,6 @@
       "integrity": "sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==",
       "dev": true
     },
-    "copy-dir": {
-      "version": "0.4.0",
-      "resolved": "https://registry.npmjs.org/copy-dir/-/copy-dir-0.4.0.tgz",
-      "integrity": "sha512-mIefrD97nE1XX2th570tR5UQvW6/92czEPGe+oTtrxPAJl+KOKLpzcRa+e38WEpmt/IUN1n65KvRMzPblR+fDQ==",
-      "requires": {
-        "mkdir-p": "~0.0.4"
-      }
-    },
     "core-js-compat": {
       "version": "3.40.0",
       "resolved": "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.40.0.tgz",
@@ -21040,11 +21018,6 @@
           }
         }
       }
-    },
-    "mkdir-p": {
-      "version": "0.0.7",
-      "resolved": "https://registry.npmjs.org/mkdir-p/-/mkdir-p-0.0.7.tgz",
-      "integrity": "sha512-VkWaZNxDgZle/aJAemUAWdyYX7geyuleKYFfRejf/pFKjxBDbWrMAy41ijg5EiI1U00WR9JcvynuDedE/fTxLA=="
     },
     "mkdirp": {
       "version": "3.0.1",

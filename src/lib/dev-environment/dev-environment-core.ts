@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import copydir from 'copy-dir';
 import debugLib from 'debug';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
@@ -7,6 +6,7 @@ import { print } from 'graphql';
 import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
+import { cp, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -805,7 +805,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const files = fs.readdirSync( resolvedPath );
+	const files = await readdir( resolvedPath );
 	if ( files.includes( uploadPathString ) ) {
 		const confirm = await prompt( {
 			type: 'confirm',
@@ -821,7 +821,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	const uploadsPath = path.join( environmentPath, uploadPathString );
 
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
-	copydir.sync( resolvedPath, uploadsPath );
+	await cp( resolvedPath, uploadsPath, { recursive: true } );
 	console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
 }
 
