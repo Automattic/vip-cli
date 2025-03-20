@@ -821,8 +821,13 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	const uploadsPath = path.join( environmentPath, uploadPathString );
 
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
-	await cp( resolvedPath, uploadsPath, { recursive: true } );
-	console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
+	try {
+		await cp( resolvedPath, uploadsPath, { recursive: true } );
+		console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
+	} catch ( error ) {
+		console.error( `${ chalk.red( '✗' ) } Error copying files to ${ uploadsPath }.` );
+		throw error;
+	}
 }
 
 /**
