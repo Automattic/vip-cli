@@ -505,11 +505,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 			const result = await promptForArguments( input.preselected, input.default, false, true );
 
-			if ( input.preselected.mediaRedirectDomain ) {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 6 );
-			} else {
-				expect( confirmRunMock ).toHaveBeenCalledTimes( 7 );
-			}
+			expect( confirmRunMock ).toHaveBeenCalledTimes( 6 );
 
 			const expectedValue = input.preselected.mediaRedirectDomain
 				? input.preselected.mediaRedirectDomain
