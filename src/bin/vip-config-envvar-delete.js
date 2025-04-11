@@ -108,5 +108,5 @@ command( {
 	usage: `${ baseUsage } <VARIABLE_NAME>`,
 } )
 	.examples( examples )
-	.option( 'skip-confirmation', 'Skip manual confirmation of input (USE WITH CAUTION)', false )
+	.option( 'skip-confirmation', 'Skip the confirmation prompt (USE WITH CAUTION).', false )
 	.argv( process.argv, deleteEnvVarCommand );
