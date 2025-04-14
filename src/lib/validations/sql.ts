@@ -1,6 +1,6 @@
+import { stdout as log } from '@wwa/single-line-log';
 import chalk from 'chalk';
-import path from 'path';
-import { stdout as log } from 'single-line-log';
+import path from 'node:path';
 
 import * as exit from '../../lib/cli/exit';
 import { getFileMeta } from '../../lib/client-file-uploader';

@@ -1,5 +1,5 @@
+import { stdout as singleLogLine } from '@wwa/single-line-log';
 import { EOL } from 'node:os';
-import { stdout as singleLogLine } from 'single-line-log';
 
 import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 
