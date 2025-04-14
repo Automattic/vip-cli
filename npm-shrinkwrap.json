@@ -30,7 +30,7 @@
         "ini": "5.0.0",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#540a5e0",
+        "lando": "github:automattic/lando-cli#710193e",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "1.15.0",
         "open": "^10.0.0",
@@ -7207,9 +7207,13 @@
       "integrity": "sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag=="
     },
     "node_modules/figlet": {
-      "version": "1.5.2",
-      "resolved": "https://registry.npmjs.org/figlet/-/figlet-1.5.2.tgz",
-      "integrity": "sha512-WOn21V8AhyE1QqVfPIVxe3tupJacq1xGkPTB4iagT6o+P2cAgEOOwIxMftr4+ZCTI6d551ij9j61DFr0nsP2uQ==",
+      "version": "1.8.1",
+      "resolved": "https://registry.npmjs.org/figlet/-/figlet-1.8.1.tgz",
+      "integrity": "sha512-kEC3Sme+YvA8Hkibv0NR1oClGcWia0VB2fC1SlMy027cwe795Xx40Xiv/nw/iFAwQLupymWh+uhAAErn/7hwPg==",
+      "license": "MIT",
+      "bin": {
+        "figlet": "bin/index.js"
+      },
       "engines": {
         "node": ">= 0.4.0"
       }
@@ -7727,17 +7731,6 @@
       },
       "engines": {
         "node": ">= 0.4.0"
-      }
-    },
-    "node_modules/has-ansi": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/has-ansi/-/has-ansi-2.0.0.tgz",
-      "integrity": "sha1-NPUEnOHs3ysGSa8+8k5F7TVBbZE=",
-      "dependencies": {
-        "ansi-regex": "^2.0.0"
-      },
-      "engines": {
-        "node": ">=0.10.0"
       }
     },
     "node_modules/has-bigints": {
@@ -9734,14 +9727,16 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#540a5e035a4f679500f93d98112029b76a55f661",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#710193e69f3f7b69b5b4f711c2376ac90e5d9de3",
       "license": "GPL-3.0",
       "dependencies": {
         "axios": "^1.8.2",
         "bluebird": "^3.4.1",
+        "chalk": "^4.1.2",
         "cli-table3": "^0.6.5",
         "copy-dir": "^1.3.0",
         "dockerode": "^4.0.0",
+        "figlet": "^1.8.0",
         "glob": "^7.1.3",
         "inquirer": "^6.2.1",
         "inquirer-autocomplete-prompt": "^1.0.1",
@@ -9758,7 +9753,6 @@
         "uuid": "^11.0.0",
         "valid-url": "^1.0.9",
         "winston": "2.4.5",
-        "yargonaut": "^1.1.4",
         "yargs": "^16.1.0"
       },
       "bin": {
@@ -10681,14 +10675,6 @@
       },
       "engines": {
         "node": ">=6"
-      }
-    },
-    "node_modules/parent-require": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/parent-require/-/parent-require-1.0.0.tgz",
-      "integrity": "sha512-2MXDNZC4aXdkkap+rBBMv0lUsfJqvX5/2FiYYnfCnorZt3Pk06/IOR5KeaoghgS2w07MLWgjbsnyaq6PdHn2LQ==",
-      "engines": {
-        "node": ">= 0.4.0"
       }
     },
     "node_modules/parse-json": {
@@ -13564,47 +13550,6 @@
       "integrity": "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==",
       "engines": {
         "node": ">=18"
-      }
-    },
-    "node_modules/yargonaut": {
-      "version": "1.1.4",
-      "resolved": "https://registry.npmjs.org/yargonaut/-/yargonaut-1.1.4.tgz",
-      "integrity": "sha512-rHgFmbgXAAzl+1nngqOcwEljqHGG9uUZoPjsdZEs1w5JW9RXYzrSvH/u70C1JE5qFi0qjsdhnUX/dJRpWqitSA==",
-      "dependencies": {
-        "chalk": "^1.1.1",
-        "figlet": "^1.1.1",
-        "parent-require": "^1.0.0"
-      }
-    },
-    "node_modules/yargonaut/node_modules/ansi-styles": {
-      "version": "2.2.1",
-      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-2.2.1.tgz",
-      "integrity": "sha512-kmCevFghRiWM7HB5zTPULl4r9bVFSWjz62MhqizDGUrq2NWuNMQyuv4tHHoKJHs69M/MF64lEcHdYIocrdWQYA==",
-      "engines": {
-        "node": ">=0.10.0"
-      }
-    },
-    "node_modules/yargonaut/node_modules/chalk": {
-      "version": "1.1.3",
-      "resolved": "https://registry.npmjs.org/chalk/-/chalk-1.1.3.tgz",
-      "integrity": "sha512-U3lRVLMSlsCfjqYPbLyVv11M9CPW4I728d6TCKMAOJueEeB9/8o+eSsMnxPJD+Q+K909sdESg7C+tIkoH6on1A==",
-      "dependencies": {
-        "ansi-styles": "^2.2.1",
-        "escape-string-regexp": "^1.0.2",
-        "has-ansi": "^2.0.0",
-        "strip-ansi": "^3.0.0",
-        "supports-color": "^2.0.0"
-      },
-      "engines": {
-        "node": ">=0.10.0"
-      }
-    },
-    "node_modules/yargonaut/node_modules/supports-color": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-2.0.0.tgz",
-      "integrity": "sha512-KKNVtd6pCYgPIKU4cp2733HWYCpplQhddZLBUryaAHou723x+FRzQ5Df824Fj+IyyuiQTRoub4SnIFfIcrp70g==",
-      "engines": {
-        "node": ">=0.8.0"
       }
     },
     "node_modules/yargs": {
@@ -18864,9 +18809,9 @@
       "integrity": "sha512-BUFj1aMubgib37I3v4q78fYo63Po7t4HUPTpQ6/QE6yK6cIQrP+W43FYToeTEyg5m2Y7eFUtijUuAv/PDlWuag=="
     },
     "figlet": {
-      "version": "1.5.2",
-      "resolved": "https://registry.npmjs.org/figlet/-/figlet-1.5.2.tgz",
-      "integrity": "sha512-WOn21V8AhyE1QqVfPIVxe3tupJacq1xGkPTB4iagT6o+P2cAgEOOwIxMftr4+ZCTI6d551ij9j61DFr0nsP2uQ=="
+      "version": "1.8.1",
+      "resolved": "https://registry.npmjs.org/figlet/-/figlet-1.8.1.tgz",
+      "integrity": "sha512-kEC3Sme+YvA8Hkibv0NR1oClGcWia0VB2fC1SlMy027cwe795Xx40Xiv/nw/iFAwQLupymWh+uhAAErn/7hwPg=="
     },
     "figures": {
       "version": "2.0.0",
@@ -19232,14 +19177,6 @@
       "dev": true,
       "requires": {
         "function-bind": "^1.1.1"
-      }
-    },
-    "has-ansi": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/has-ansi/-/has-ansi-2.0.0.tgz",
-      "integrity": "sha1-NPUEnOHs3ysGSa8+8k5F7TVBbZE=",
-      "requires": {
-        "ansi-regex": "^2.0.0"
       }
     },
     "has-bigints": {
@@ -20665,14 +20602,16 @@
       "integrity": "sha512-tPhhoGUiEiU/WXR4rt8klIoLdnTtyu+9jVKHd/wauEjYud32jyn63mzKWQweaQrHWxBQtYoVtdcEnYX1LosnFQ=="
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#540a5e035a4f679500f93d98112029b76a55f661",
-      "from": "lando@github:automattic/lando-cli#540a5e0",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#710193e69f3f7b69b5b4f711c2376ac90e5d9de3",
+      "from": "lando@github:automattic/lando-cli#710193e",
       "requires": {
         "axios": "^1.8.2",
         "bluebird": "^3.4.1",
+        "chalk": "^4.1.2",
         "cli-table3": "^0.6.5",
         "copy-dir": "^1.3.0",
         "dockerode": "^4.0.0",
+        "figlet": "^1.8.0",
         "glob": "^7.1.3",
         "inquirer": "^6.2.1",
         "inquirer-autocomplete-prompt": "^1.0.1",
@@ -20689,7 +20628,6 @@
         "uuid": "^11.0.0",
         "valid-url": "^1.0.9",
         "winston": "2.4.5",
-        "yargonaut": "^1.1.4",
         "yargs": "^16.1.0"
       },
       "dependencies": {
@@ -21381,11 +21319,6 @@
       "requires": {
         "callsites": "^3.0.0"
       }
-    },
-    "parent-require": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/parent-require/-/parent-require-1.0.0.tgz",
-      "integrity": "sha512-2MXDNZC4aXdkkap+rBBMv0lUsfJqvX5/2FiYYnfCnorZt3Pk06/IOR5KeaoghgS2w07MLWgjbsnyaq6PdHn2LQ=="
     },
     "parse-json": {
       "version": "5.2.0",
@@ -23412,40 +23345,6 @@
       "version": "5.0.0",
       "resolved": "https://registry.npmjs.org/yallist/-/yallist-5.0.0.tgz",
       "integrity": "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="
-    },
-    "yargonaut": {
-      "version": "1.1.4",
-      "resolved": "https://registry.npmjs.org/yargonaut/-/yargonaut-1.1.4.tgz",
-      "integrity": "sha512-rHgFmbgXAAzl+1nngqOcwEljqHGG9uUZoPjsdZEs1w5JW9RXYzrSvH/u70C1JE5qFi0qjsdhnUX/dJRpWqitSA==",
-      "requires": {
-        "chalk": "^1.1.1",
-        "figlet": "^1.1.1",
-        "parent-require": "^1.0.0"
-      },
-      "dependencies": {
-        "ansi-styles": {
-          "version": "2.2.1",
-          "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-2.2.1.tgz",
-          "integrity": "sha512-kmCevFghRiWM7HB5zTPULl4r9bVFSWjz62MhqizDGUrq2NWuNMQyuv4tHHoKJHs69M/MF64lEcHdYIocrdWQYA=="
-        },
-        "chalk": {
-          "version": "1.1.3",
-          "resolved": "https://registry.npmjs.org/chalk/-/chalk-1.1.3.tgz",
-          "integrity": "sha512-U3lRVLMSlsCfjqYPbLyVv11M9CPW4I728d6TCKMAOJueEeB9/8o+eSsMnxPJD+Q+K909sdESg7C+tIkoH6on1A==",
-          "requires": {
-            "ansi-styles": "^2.2.1",
-            "escape-string-regexp": "^1.0.2",
-            "has-ansi": "^2.0.0",
-            "strip-ansi": "^3.0.0",
-            "supports-color": "^2.0.0"
-          }
-        },
-        "supports-color": {
-          "version": "2.0.0",
-          "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-2.0.0.tgz",
-          "integrity": "sha512-KKNVtd6pCYgPIKU4cp2733HWYCpplQhddZLBUryaAHou723x+FRzQ5Df824Fj+IyyuiQTRoub4SnIFfIcrp70g=="
-        }
-      }
     },
     "yargs": {
       "version": "17.7.2",
