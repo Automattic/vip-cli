@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
+import { stdout } from '@wwa/single-line-log';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
-import { stdout } from 'single-line-log';
 
 import API from '../lib/api';
 import app from '../lib/api/app';

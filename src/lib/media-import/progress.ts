@@ -1,4 +1,4 @@
-import { stdout as singleLogLine } from 'single-line-log';
+import { stdout as singleLogLine } from '@wwa/single-line-log';
 
 import { AppEnvironmentMediaImportStatus } from '../../graphqlTypes';
 import { RunningSprite } from '../../lib/cli/format';
