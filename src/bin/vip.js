@@ -52,7 +52,11 @@ const runCmd = async function () {
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' )
 		.command( 'internal', 'Internal commands used by VIP automation tools.' );
 
-	cmd.argv( process.argv );
+	cmd.argv( process.argv, null, {
+		usageFilter: usage =>
+			// eslint-disable-next-line no-control-regex
+			`${ usage }`.replace( /^ {4}(\u001B....)?internal(\u001B....)?(.+)$\n/m, '' ),
+	} );
 };
 
 /**

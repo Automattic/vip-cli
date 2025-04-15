@@ -40,7 +40,7 @@ let alreadyConfirmedDebugAttachment = false;
  * @param {string[]} argv
  */
 // eslint-disable-next-line complexity
-args.argv = async function ( argv, cb ) {
+args.argv = async function ( argv, cb, config = {} ) {
 	if ( process.platform !== 'win32' && argv[ 1 ]?.endsWith( '.js' ) ) {
 		argv[ 1 ] = argv[ 1 ].slice( 0, -3 );
 	}
@@ -54,6 +54,8 @@ args.argv = async function ( argv, cb ) {
 		alreadyConfirmedDebugAttachment = true;
 	}
 	const parsedAlias = parseEnvAliasFromArgv( argv );
+
+	this.config = { ...this.config, ...config };
 
 	// A usage option allows us to override the default usage text, which isn't
 	// accurate for subcommands. By default, it will display something like (note
