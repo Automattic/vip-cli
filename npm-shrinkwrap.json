@@ -248,9 +248,10 @@
       }
     },
     "node_modules/@automattic/vip-go-preflight-checks": {
-      "version": "2.0.18",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.18.tgz",
-      "integrity": "sha512-I7bAndhd0pvkCas8qHrpT3p81mJotjkLr0r2G215jtg6lI1OV6L7+Xnkns/LONqPZROjoPxfErbega6C5IUuzw==",
+      "version": "2.0.19",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.19.tgz",
+      "integrity": "sha512-gdddnI133KBbXUJP86cEMWwHCWxuqerwmk9bgEMGuunE6K/IcnCHzDvEuvc2UM8f+L20gSKWGd8NKSi9dOzO3w==",
+      "license": "MIT",
       "dependencies": {
         "chalk": "^4.1.2",
         "command-line-args": "^5.2.1",
@@ -13471,9 +13472,9 @@
       }
     },
     "@automattic/vip-go-preflight-checks": {
-      "version": "2.0.18",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.18.tgz",
-      "integrity": "sha512-I7bAndhd0pvkCas8qHrpT3p81mJotjkLr0r2G215jtg6lI1OV6L7+Xnkns/LONqPZROjoPxfErbega6C5IUuzw==",
+      "version": "2.0.19",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-go-preflight-checks/-/vip-go-preflight-checks-2.0.19.tgz",
+      "integrity": "sha512-gdddnI133KBbXUJP86cEMWwHCWxuqerwmk9bgEMGuunE6K/IcnCHzDvEuvc2UM8f+L20gSKWGd8NKSi9dOzO3w==",
       "requires": {
         "chalk": "^4.1.2",
         "command-line-args": "^5.2.1",
