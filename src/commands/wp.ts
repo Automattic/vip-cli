@@ -146,7 +146,10 @@ export class WPCliCommandOverSSH {
 					conn.exec(
 						`GUID=${ guid } INPUT_TOKEN=${ inputToken } VERSION=${ pkg.version }`,
 						( err, stream ) => {
-							if ( err ) throw err;
+							if ( err ) {
+							   reject( err );
+							   return;
+							 }
 
 							// OpenSSH does not implement the method of signal passing,
 							// so we need to handle SIGINT and SIGTERM manually
