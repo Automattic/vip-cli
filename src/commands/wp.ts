@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
 import * as ssh2 from 'ssh2';
@@ -14,6 +15,11 @@ import API from '../lib/api';
 import { CommandTracker, makeCommandTracker } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:wp/ssh' );
+
+const NON_TTY_COLUMNS = 100;
+const NON_TTY_ROWS = 15;
+
+const SSH_HANDSHAKE_TIMEOUT_MS = 5000;
 
 interface TriggerWPCLICommandMutationResponse {
 	triggerWPCLICommandOnAppEnvironment: {
@@ -52,7 +58,7 @@ const TRIGGER_WP_CLI_COMMAND_MUTATION = gql`
 const getSSHAuthForCommand = async ( appId: number, envId: number, command: string ) => {
 	const api = API();
 
-	return api.mutate( {
+	return api.mutate< TriggerWPCLICommandMutationResponse >( {
 		mutation: TRIGGER_WP_CLI_COMMAND_MUTATION,
 		variables: {
 			input: {
@@ -61,8 +67,17 @@ const getSSHAuthForCommand = async ( appId: number, envId: number, command: stri
 				command,
 			},
 		},
-	} ) as Promise< { data: TriggerWPCLICommandMutationResponse } >;
+	} );
 };
+
+export class NonZeroExitCodeError extends Error {
+	public exitCode: number;
+
+	constructor( message: string, exitCode: number ) {
+		super( message );
+		this.exitCode = exitCode;
+	}
+}
 
 export class WPCliCommandOverSSH {
 	private app: App;
@@ -82,13 +97,12 @@ export class WPCliCommandOverSSH {
 
 	public async run( command: string ): Promise< void > {
 		if ( ! this.app.id || ! this.env.id ) {
-			console.error( 'No app ID or environment ID provided' );
-
 			await this.track( 'error', {
 				error: 'no_app_env_id',
 				message: 'No app or env ID provided',
 			} );
-			return;
+
+			throw new Error( 'No app ID or environment ID provided' );
 		}
 
 		debug( "Requesting SSH authentication for command '%s'", command );
@@ -97,7 +111,21 @@ export class WPCliCommandOverSSH {
 
 		const data = sshAuth.data?.triggerWPCLICommandOnAppEnvironment;
 
-		debug( 'Connecting to SSH' );
+		if ( ! data ) {
+			await this.track( 'error', {
+				error: 'no_ssh_auth_data',
+				message: 'No SSH authentication data received',
+			} );
+
+			throw new Error( 'WP-CLI SSH Authentication failed' );
+		}
+
+		debug( 'Connecting to SSH', {
+			host: data.sshAuthentication.host,
+			port: data.sshAuthentication.port,
+			username: data.sshAuthentication.username,
+			guid: data.command.guid,
+		} );
 
 		try {
 			await this.executeCommandOverSSH( {
@@ -112,12 +140,26 @@ export class WPCliCommandOverSSH {
 
 			await this.track( 'success', { guid: data?.command.guid } );
 		} catch ( err ) {
-			console.log( err );
+			if ( err instanceof NonZeroExitCodeError ) {
+				await this.track( 'error', {
+					guid: data?.command.guid,
+					error: 'non_zero_exit_code',
+					message: `Command failed with exit code ${ err.exitCode }`,
+				} );
+
+				process.exit( err.exitCode );
+			}
+			const message = err instanceof Error ? err.message : String( err );
+
+			console.error( `${ chalk.red( 'Error:' ) } ${ message }` );
+
 			await this.track( 'error', {
 				guid: data?.command.guid,
 				error: 'ssh_command_failed',
 				message: 'Error executing command over SSH',
 			} );
+
+			throw new Error( message );
 		}
 	}
 
@@ -138,22 +180,33 @@ export class WPCliCommandOverSSH {
 		guid: string;
 		inputToken: string;
 	} ) {
-		return new Promise( ( resolve, reject ) => {
+		return new Promise< void >( ( resolve, reject ) => {
 			const conn = new ssh2.Client();
+
+			const columns = process.stdout.columns || NON_TTY_COLUMNS;
+			const rows = process.stdout.rows || NON_TTY_ROWS;
+			const isTTY = process.stdout.isTTY ? 'true' : 'false';
+
+			let commandStarted = false;
 
 			conn
 				.on( 'ready', () => {
 					conn.exec(
-						`GUID=${ guid } INPUT_TOKEN=${ inputToken } VERSION=${ pkg.version }`,
+						`GUID=${ guid } INPUT_TOKEN=${ inputToken } VERSION=${ pkg.version } ROWS=${ rows } COLUMNS=${ columns } TTY=${ isTTY }`,
 						( err, stream ) => {
 							if ( err ) {
-							   reject( err );
-							   return;
-							 }
+								reject( err );
+								return;
+							}
 
-							// OpenSSH does not implement the method of signal passing,
-							// so we need to handle SIGINT and SIGTERM manually
-							// https://github.com/mscdex/ssh2/issues/165#issuecomment-51422980
+							stream.on( 'exit', ( exitCode: number ) => {
+								if ( exitCode !== 0 ) {
+									reject( new NonZeroExitCodeError( `Command failed`, exitCode ) );
+								}
+							} );
+
+							commandStarted = true;
+
 							const handleSIGINT = () => {
 								process.removeListener( 'SIGINT', handleSIGINT );
 								console.log( 'SIGINT received. Canceling command...' );
@@ -172,8 +225,11 @@ export class WPCliCommandOverSSH {
 							process.stdin.pipe( stream );
 
 							stream.on( 'close', () => {
+								process.removeListener( 'SIGINT', handleSIGINT );
+								process.removeListener( 'SIGTERM', handleSIGTERM );
+
 								conn.end();
-								resolve( '' );
+								resolve();
 							} );
 						}
 					);
@@ -181,12 +237,18 @@ export class WPCliCommandOverSSH {
 				.on( 'error', err => {
 					reject( err );
 				} )
+				.on( 'close', () => {
+					if ( ! commandStarted ) {
+						reject( new Error( 'Connection closed before command started' ) );
+					}
+				} )
 				.connect( {
 					host,
 					port,
 					username,
 					privateKey,
 					passphrase,
+					readyTimeout: SSH_HANDSHAKE_TIMEOUT_MS,
 				} );
 		} );
 	}

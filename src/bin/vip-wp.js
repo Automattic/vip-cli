@@ -31,6 +31,7 @@ const appQuery = `id, name,
 	type
 	name
 	isK8sResident
+	wpcliStrategy
 	primaryDomain {
 		name
 	}
@@ -370,7 +371,7 @@ commandWrapper( {
 
 		let countSIGINT = 0;
 
-		if ( ! opts.env.isK8sResident ) {
+		if ( opts.env.wpcliStrategy === 'ssh' ) {
 			const wpCommandRunner = new WPCliCommandOverSSH( opts.app, opts.env );
 			await wpCommandRunner.run( cmd );
 			return;
