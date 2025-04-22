@@ -68,8 +68,9 @@ async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 	return new Promise( ( resolve, reject ) => {
 		const urls: Set< string > = new Set();
 		readInterface.on( 'line', line => {
-			const url = findSiteHomeUrl( line );
+			let url = findSiteHomeUrl( line );
 			if ( url ) {
+				url = url.replace( /\/$/, '' );
 				urls.add( url );
 			}
 		} );
@@ -209,7 +210,7 @@ export class DevEnvSyncSQLCommand {
 			const url = site?.homeUrl;
 			if ( ! url ) continue;
 
-			const strippedUrl = stripProtocol( url );
+			const strippedUrl = stripProtocol( url ).replace( /\/$/, '' );
 			if ( ! this.searchReplaceMap[ strippedUrl ] ) continue;
 
 			const domain = new URL( url ).hostname;
