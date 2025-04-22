@@ -76,7 +76,7 @@ export class WPCliCommandOverSSH {
 		this.track = makeCommandTracker( 'wp', {
 			app: this.app.id,
 			env: this.env.id,
-			executionType: 'ssh',
+			execution_type: 'ssh',
 		} );
 	}
 
