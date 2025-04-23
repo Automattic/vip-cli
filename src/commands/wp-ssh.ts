@@ -55,21 +55,6 @@ const TRIGGER_WP_CLI_COMMAND_MUTATION = gql`
 	}
 `;
 
-const getSSHAuthForCommand = async ( appId: number, envId: number, command: string ) => {
-	const api = API();
-
-	return api.mutate< TriggerWPCLICommandMutationResponse >( {
-		mutation: TRIGGER_WP_CLI_COMMAND_MUTATION,
-		variables: {
-			input: {
-				id: appId,
-				environmentId: envId,
-				command,
-			},
-		},
-	} );
-};
-
 export class NonZeroExitCodeError extends Error {
 	public exitCode: number;
 
@@ -95,11 +80,15 @@ export class WPCliCommandOverSSH {
 		} );
 	}
 
-	public async run( command: string ): Promise< void > {
+	public async run(
+		command: string,
+		extraTrackingInfo: Record< string, unknown > = {}
+	): Promise< void > {
 		if ( ! this.app.id || ! this.env.id ) {
 			await this.track( 'error', {
 				error: 'no_app_env_id',
 				message: 'No app or env ID provided',
+				...extraTrackingInfo,
 			} );
 
 			throw new Error( 'No app ID or environment ID provided' );
@@ -107,7 +96,7 @@ export class WPCliCommandOverSSH {
 
 		debug( "Requesting SSH authentication for command '%s'", command );
 
-		const sshAuth = await getSSHAuthForCommand( this.app.id, this.env.id, command );
+		const sshAuth = await this.getSSHAuthForCommand( command, extraTrackingInfo );
 
 		const data = sshAuth.data?.triggerWPCLICommandOnAppEnvironment;
 
@@ -115,6 +104,7 @@ export class WPCliCommandOverSSH {
 			await this.track( 'error', {
 				error: 'no_ssh_auth_data',
 				message: 'No SSH authentication data received',
+				...extraTrackingInfo,
 			} );
 
 			throw new Error( 'WP-CLI SSH Authentication failed' );
@@ -145,6 +135,7 @@ export class WPCliCommandOverSSH {
 					guid: data?.command.guid,
 					error: 'non_zero_exit_code',
 					message: `Command failed with exit code ${ err.exitCode }`,
+					...extraTrackingInfo,
 				} );
 
 				process.exit( err.exitCode );
@@ -157,9 +148,10 @@ export class WPCliCommandOverSSH {
 				guid: data?.command.guid,
 				error: 'ssh_command_failed',
 				message: 'Error executing command over SSH',
+				...extraTrackingInfo,
 			} );
 
-			throw new Error( message );
+			process.exit( 1 );
 		}
 	}
 
@@ -251,5 +243,35 @@ export class WPCliCommandOverSSH {
 					readyTimeout: SSH_HANDSHAKE_TIMEOUT_MS,
 				} );
 		} );
+	}
+
+	private async getSSHAuthForCommand(
+		command: string,
+		extraTrackingInfo: Record< string, unknown > | undefined
+	) {
+		const api = API();
+
+		try {
+			return api.mutate< TriggerWPCLICommandMutationResponse >( {
+				mutation: TRIGGER_WP_CLI_COMMAND_MUTATION,
+				variables: {
+					input: {
+						id: this.app.id,
+						environmentId: this.env.id,
+						command,
+					},
+				},
+			} );
+		} catch ( error ) {
+			const message = error instanceof Error ? error.message : String( error );
+
+			await this.track( 'error', {
+				error: 'trigger_failed',
+				message,
+				...extraTrackingInfo,
+			} );
+
+			throw new Error( `Unable to trigger the WP-CLI command` );
+		}
 	}
 }

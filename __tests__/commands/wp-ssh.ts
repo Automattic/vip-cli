@@ -5,7 +5,7 @@ import Stream from 'node:stream';
 import { Client } from 'ssh2';
 import { PassThrough } from 'stream';
 
-import { WPCliCommandOverSSH } from '../../src/commands/wp';
+import { WPCliCommandOverSSH } from '../../src/commands/wp-ssh';
 import API from '../../src/lib/api';
 import { CommandTracker } from '../../src/lib/tracker';
 
@@ -133,7 +133,7 @@ describe( 'WPCommand', () => {
 
 			const result = cmd.run( 'plugin list' );
 
-			await expect( result ).rejects.toThrow( 'ops!' );
+			await expect( result ).rejects.toThrow( 'Process exited with code: 1' );
 
 			expect( consoleErrorMock ).toHaveBeenCalledWith( expect.stringMatching( /ops!/ ) );
 		} );

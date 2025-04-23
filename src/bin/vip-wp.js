@@ -8,7 +8,7 @@ import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import { Writable } from 'stream';
 
-import { WPCliCommandOverSSH } from '../commands/wp';
+import { WPCliCommandOverSSH } from '../commands/wp-ssh';
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
 import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -372,7 +372,7 @@ commandWrapper( {
 
 		if ( opts.env.wpcliStrategy === 'ssh' ) {
 			const wpCommandRunner = new WPCliCommandOverSSH( opts.app, opts.env );
-			await wpCommandRunner.run( cmd );
+			await wpCommandRunner.run( cmd, { command: commandForAnalytics } );
 			return;
 		}
 
