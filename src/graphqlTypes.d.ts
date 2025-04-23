@@ -21,10 +21,8 @@ export type Scalars = {
 	Int: { input: number; output: number };
 	Float: { input: number; output: number };
 	BigInt: { input: any; output: any };
-	/** Date custom scalar type */
 	Date: { input: any; output: any };
 	JSON: { input: any; output: any };
-	/** MediaImportAllowedFileTypes scalar type */
 	MediaImportAllowedFileTypes: { input: any; output: any };
 };
 
@@ -264,6 +262,7 @@ export type AppEnvironment = {
 	wpSites?: Maybe< WpSiteList >;
 	/** Get WordPress Site Details from SDS */
 	wpSitesSDS?: Maybe< WpSiteList >;
+	wpcliStrategy?: Maybe< AppEnvironmentWpCliStrategy >;
 };
 
 export type AppEnvironmentAnomalyContextArgs = {
@@ -1009,7 +1008,6 @@ export type AppEnvironmentNewRelic = {
 	dashboardUrl?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	deactivationTimestamp?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	enabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
-	isMaintenanceMode?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	isSetupComplete?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	samplingPercentage?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 	users?: Maybe< AppEnvironmentNewRelicUsersList >;
@@ -1270,6 +1268,7 @@ export type AppEnvironmentTriggerWpcliCommandPayload = {
 	command?: Maybe< WpcliCommand >;
 	/** The token for authenticating the socket connection */
 	inputToken?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	sshAuthentication?: Maybe< WpCliSshAuthentication >;
 };
 
 export type AppEnvironmentUpdateSubsiteDomainInput = {
@@ -1293,6 +1292,8 @@ export type AppEnvironmentUpdateSubsiteDomainStatus = {
 	progress?: Maybe< AppEnvironmentStatusProgress >;
 	updateSubsiteDomainInProgress?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
+
+export type AppEnvironmentWpCliStrategy = 'ssh' | 'websocket';
 
 export type AppFeatureInput = {
 	context?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
@@ -2565,6 +2566,7 @@ export type Me = {
 	samlOrganizationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	shouldBeVIP?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	tokens?: Maybe< Array< Maybe< Token > > >;
+	trackingUserId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	vipAuthId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	wpcomUsername?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
@@ -4080,6 +4082,7 @@ export type UserApplicationRolesArgs = {
 
 export type UserOrganizationRolesArgs = {
 	organizationId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
+	roleId?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type UserApplicationRole = Model & {
@@ -4235,6 +4238,15 @@ export type WpcliCommandUser = {
 	id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	isVIP?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 	wpcomUsername?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+};
+
+export type WpCliSshAuthentication = {
+	__typename?: 'WPCliSSHAuthentication';
+	host: Scalars[ 'String' ][ 'output' ];
+	passphrase: Scalars[ 'String' ][ 'output' ];
+	port: Scalars[ 'String' ][ 'output' ];
+	privateKey: Scalars[ 'String' ][ 'output' ];
+	username: Scalars[ 'String' ][ 'output' ];
 };
 
 export type WpInstallation = {
