@@ -30,7 +30,6 @@ const appQuery = `id, name,
 	appId
 	type
 	name
-	isK8sResident
 	wpcliStrategy
 	primaryDomain {
 		name
