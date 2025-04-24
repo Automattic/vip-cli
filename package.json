@@ -5,6 +5,7 @@
   "main": "index.js",
   "bin": {
     "vip": "dist/bin/vip.js",
+    "vip-new": "dist/bin/vip-new.js",
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
     "vip-cache": "dist/bin/vip-cache.js",
@@ -75,7 +76,15 @@
     "lint": "npm run cmd:lint .",
     "lint:fix": "npm run cmd:lint . -- --fix",
     "publish-please": "publish-please",
-    "prepublishOnly": "node ./helpers/prepublishOnly.js"
+    "prepublishOnly": "node ./helpers/prepublishOnly.js",
+    "bundle": "node scripts/bundle.js",
+    "create-executable": "node scripts/create-executable.js",
+    "create-executable:darwin-arm64": "node scripts/create-executable.js --platform darwin --arch arm64",
+    "create-executable:darwin-x64": "node scripts/create-executable.js --platform darwin --arch x64",
+    "create-executable:linux-x64": "node scripts/create-executable.js --platform linux --arch x64",
+    "create-executable:linux-arm64": "node scripts/create-executable.js --platform linux --arch arm64",
+    "create-executable:win-x64": "node scripts/create-executable.js --platform win32 --arch x64",
+    "create-all-executables": "npm run create-executable:darwin-arm64 && npm run create-executable:darwin-x64 && npm run create-executable:linux-x64 && npm run create-executable:linux-arm64 && npm run create-executable:win-x64"
   },
   "repository": {
     "type": "git",
@@ -148,6 +157,7 @@
     "chalk": "4.1.2",
     "cli-columns": "^4.0.0",
     "cli-table": "github:automattic/cli-table#7b14232",
+    "commander": "^11.1.0",
     "configstore": "5.0.1",
     "copy-dir": "0.4.0",
     "debug": "4.3.4",

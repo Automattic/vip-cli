@@ -16,159 +16,183 @@ import config from '../lib/cli/config';
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import Token from '../lib/token';
 import { trackEvent, aliasUser } from '../lib/tracker';
+import { shouldDelegateToNewBinary, delegateToNewBinary } from '../lib/compat/delegate';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
-if ( config && config.environment !== 'production' ) {
-	debug( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
-	debug(
-		'You should `npm link` your locally checked out copy of this repo as part of your development setup.'
-	);
+/**
+ * Check if we should run the new unified CLI instead
+ */
+async function checkDelegation() {
+	// If this is a command that should be delegated to the new CLI,
+	// we'll do that instead of running the old command
+	if (shouldDelegateToNewBinary(process.argv)) {
+		try {
+			await delegateToNewBinary(process.argv);
+			process.exit(0);
+		} catch (error) {
+			debug('Error delegating to new CLI:', error);
+			// If delegation fails, we'll fall back to the old CLI
+		}
+	}
 }
 
-// Config
-const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
+// Try to delegate to the new CLI first
+checkDelegation().then(() => {
+	// If we get here, either delegation was not needed or it failed,
+	// so we continue with the old CLI implementation
 
-const runCmd = async function () {
-	const cmd = command();
-	cmd
-		.command( 'logout', 'Logout from your current session' )
-		.command( 'app', 'List and modify your VIP applications' )
-		.command( 'cache', 'Manage page cache for your VIP applications' )
-		.command( 'config', 'Set configuration for your VIP applications' )
-		.command( 'dev-env', 'Use local dev-environment' )
-		.command( 'export', 'Export data from your VIP application' )
-		.command( 'import', 'Import media or SQL files into your VIP applications' )
-		.command( 'logs', 'Get logs from your VIP applications' )
-		.command( 'search-replace', 'Perform search and replace tasks on files' )
-		.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
-		.command( 'sync', 'Sync production to a development environment' )
-		.command( 'whoami', 'Display details about the currently logged-in user' )
-		.command( 'validate', 'Validate your VIP application and environment' )
-		.command( 'wp', 'Run WP CLI commands against an environment' );
-
-	cmd.argv( process.argv );
-};
-
-function doesArgvHaveAtLeastOneParam( argv: Array< any >, params: Array< any > ): boolean {
-	return argv.some( arg => params.includes( arg ) );
-}
-
-const rootCmd = async function () {
-	let token = await Token.get();
-
-	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
-	const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
-	const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
-	const isLoginCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'login' ] );
-	const isDevEnvCommandWithoutEnv =
-		doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
-		! containsAppEnvArgument( process.argv );
-
-	debug( 'Argv:', process.argv );
-
-	if (
-		! isLoginCommand &&
-		( isLogoutCommand ||
-			isHelpCommand ||
-			isVersionCommand ||
-			isDevEnvCommandWithoutEnv ||
-			token?.valid() )
-	) {
-		await runCmd();
-	} else {
-		console.log();
-		console.log( '   _    __ ________         ________    ____' );
-		console.log( '  | |  / //  _/ __        / ____/ /   /  _/' );
-		console.log( '  | | / / / // /_/ /______/ /   / /    / /  ' );
-		console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
-		console.log( '  |___//___/_/           ____/_____/___/   ' );
-		console.log();
-		console.log(
-			'  VIP-CLI is your tool for interacting with and managing your VIP applications.'
+	if ( config && config.environment !== 'production' ) {
+		debug( `${ chalk.bgYellow( 'WARNING:' ) } RUNNING DEV VERSION OF @automattic/vip` );
+		debug(
+			'You should `npm link` your locally checked out copy of this repo as part of your development setup.'
 		);
-		console.log();
+	}
 
-		console.log(
-			'  Authenticate your installation of VIP-CLI with your Personal Access Token. This URL will be opened in your web browser automatically so that you can retrieve your token: ' +
-				tokenURL
-		);
-		console.log();
+	// Config
+	const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 
-		await trackEvent( 'login_command_execute' );
+	const runCmd = async function () {
+		const cmd = command();
+		cmd
+			.command( 'logout', 'Logout from your current session' )
+			.command( 'app', 'List and modify your VIP applications' )
+			.command( 'cache', 'Manage page cache for your VIP applications' )
+			.command( 'config', 'Set configuration for your VIP applications' )
+			.command( 'dev-env', 'Use local dev-environment' )
+			.command( 'export', 'Export data from your VIP application' )
+			.command( 'import', 'Import media or SQL files into your VIP applications' )
+			.command( 'logs', 'Get logs from your VIP applications' )
+			.command( 'search-replace', 'Perform search and replace tasks on files' )
+			.command( 'slowlogs', 'Get slowlogs from your VIP applications' )
+			.command( 'sync', 'Sync production to a development environment' )
+			.command( 'whoami', 'Display details about the currently logged-in user' )
+			.command( 'validate', 'Validate your VIP application and environment' )
+			.command( 'wp', 'Run WP CLI commands against an environment' );
 
-		const answer = await prompt( {
-			type: 'confirm',
-			name: 'continue',
-			message: 'Ready to authenticate?',
-		} );
+		cmd.argv( process.argv );
+	};
 
-		if ( ! answer.continue ) {
-			await trackEvent( 'login_command_browser_cancelled' );
+	function doesArgvHaveAtLeastOneParam( argv: Array< any >, params: Array< any > ): boolean {
+		return argv.some( arg => params.includes( arg ) );
+	}
 
-			return;
-		}
+	const rootCmd = async function () {
+		let token = await Token.get();
 
-		opn( tokenURL, { wait: false } );
+		const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
+		const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
+		const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
+		const isLoginCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'login' ] );
+		const isDevEnvCommandWithoutEnv =
+			doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
+			! containsAppEnvArgument( process.argv );
 
-		await trackEvent( 'login_command_browser_opened' );
+		debug( 'Argv:', process.argv );
 
-		const { token: tokenInput } = await prompt( {
-			type: 'password',
-			name: 'token',
-			message: 'Access Token:',
-		} );
+		if (
+			! isLoginCommand &&
+			( isLogoutCommand ||
+				isHelpCommand ||
+				isVersionCommand ||
+				isDevEnvCommandWithoutEnv ||
+				token?.valid() )
+		) {
+			await runCmd();
+		} else {
+			console.log();
+			console.log( '   _    __ ________         ________    ____' );
+			console.log( '  | |  / //  _/ __        / ____/ /   /  _/' );
+			console.log( '  | | / / / // /_/ /______/ /   / /    / /  ' );
+			console.log( '  | |/ /_/ // ____//_____/ /___/ /____/ /   ' );
+			console.log( '  |___//___/_/           ____/_____/___/   ' );
+			console.log();
+			console.log(
+				'  VIP-CLI is your tool for interacting with and managing your VIP applications.'
+			);
+			console.log();
 
-		try {
-			token = new Token( tokenInput );
-		} catch ( err ) {
-			console.log( 'The token provided is malformed. Please check the token and try again.' );
+			console.log(
+				'  Authenticate your installation of VIP-CLI with your Personal Access Token. This URL will be opened in your web browser automatically so that you can retrieve your token: ' +
+					tokenURL
+			);
+			console.log();
 
-			await trackEvent( 'login_command_token_submit_error', { error: err.message } );
+			await trackEvent( 'login_command_execute' );
 
-			return;
-		}
-
-		if ( token.expired() ) {
-			console.log( 'The token provided is expired. Please log in again to refresh the token.' );
-
-			await trackEvent( 'login_command_token_submit_error', { error: 'expired' } );
-
-			return;
-		}
-
-		if ( ! token.valid() ) {
-			console.log( 'The provided token is not valid. Please log in again to refresh the token.' );
-
-			await trackEvent( 'login_command_token_submit_error', { error: 'invalid' } );
-
-			return;
-		}
-
-		try {
-			await Token.set( token.raw );
-		} catch ( err ) {
-			await trackEvent( 'login_command_token_submit_error', {
-				error: err.message,
+			const answer = await prompt( {
+				type: 'confirm',
+				name: 'continue',
+				message: 'Ready to authenticate?',
 			} );
 
-			throw err;
+			if ( ! answer.continue ) {
+				await trackEvent( 'login_command_browser_cancelled' );
+
+				return;
+			}
+
+			opn( tokenURL, { wait: false } );
+
+			await trackEvent( 'login_command_browser_opened' );
+
+			const { token: tokenInput } = await prompt( {
+				type: 'password',
+				name: 'token',
+				message: 'Access Token:',
+			} );
+
+			try {
+				token = new Token( tokenInput );
+			} catch ( err ) {
+				console.log( 'The token provided is malformed. Please check the token and try again.' );
+
+				await trackEvent( 'login_command_token_submit_error', { error: err.message } );
+
+				return;
+			}
+
+			if ( token.expired() ) {
+				console.log( 'The token provided is expired. Please log in again to refresh the token.' );
+
+				await trackEvent( 'login_command_token_submit_error', { error: 'expired' } );
+
+				return;
+			}
+
+			if ( ! token.valid() ) {
+				console.log( 'The provided token is not valid. Please log in again to refresh the token.' );
+
+				await trackEvent( 'login_command_token_submit_error', { error: 'invalid' } );
+
+				return;
+			}
+
+			try {
+				await Token.set( token.raw );
+			} catch ( err ) {
+				await trackEvent( 'login_command_token_submit_error', {
+					error: err.message,
+				} );
+
+				throw err;
+			}
+
+			// De-anonymize user for tracking
+			await aliasUser( token.id );
+
+			await trackEvent( 'login_command_token_submit_success' );
+
+			if ( isLoginCommand ) {
+				console.log( 'You are now logged in - see `vip -h` for a list of available commands.' );
+
+				process.exit();
+			}
+
+			await runCmd();
 		}
+	};
 
-		// De-anonymize user for tracking
-		await aliasUser( token.id );
-
-		await trackEvent( 'login_command_token_submit_success' );
-
-		if ( isLoginCommand ) {
-			console.log( 'You are now logged in - see `vip -h` for a list of available commands.' );
-
-			process.exit();
-		}
-
-		await runCmd();
-	}
-};
-
-// We may end up having an unhandled rejection here :-(
-void rootCmd();
+	// We may end up having an unhandled rejection here :-(
+	void rootCmd();
+});
