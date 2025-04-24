@@ -41,6 +41,7 @@
         "socket.io-client": "^4.5.3",
         "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
         "socks-proxy-agent": "^5.0.1",
+        "ssh2": "1.16.0",
         "tar": "^7.4.0",
         "update-notifier": "7.3.1",
         "uuid": "11.1.0",
@@ -127,6 +128,7 @@
         "@types/proxy-from-env": "^1.0.4",
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.8.15",
+        "@types/ssh2": "^1.15.4",
         "@types/tar": "^6.1.13",
         "@types/update-notifier": "^6.0.8",
         "@types/xml2js": "^0.4.14",
@@ -3797,9 +3799,9 @@
       }
     },
     "node_modules/@types/ssh2": {
-      "version": "1.11.11",
-      "resolved": "https://registry.npmjs.org/@types/ssh2/-/ssh2-1.11.11.tgz",
-      "integrity": "sha512-LdnE7UBpvHCgUznvn2fwLt2hkaENcKPFqOyXGkvyTLfxCXBN6roc1RmECNYuzzbHePzD3PaAov5rri9hehzx9Q==",
+      "version": "1.15.5",
+      "resolved": "https://registry.npmjs.org/@types/ssh2/-/ssh2-1.15.5.tgz",
+      "integrity": "sha512-N1ASjp/nXH3ovBHddRJpli4ozpk6UdDYIX4RJWFa9L1YKnzdhTlVmiGHm4DZnj/jLbqZpes4aeR30EFGQtvhQQ==",
       "dev": true,
       "dependencies": {
         "@types/node": "^18.11.18"
@@ -16092,9 +16094,9 @@
       }
     },
     "@types/ssh2": {
-      "version": "1.11.11",
-      "resolved": "https://registry.npmjs.org/@types/ssh2/-/ssh2-1.11.11.tgz",
-      "integrity": "sha512-LdnE7UBpvHCgUznvn2fwLt2hkaENcKPFqOyXGkvyTLfxCXBN6roc1RmECNYuzzbHePzD3PaAov5rri9hehzx9Q==",
+      "version": "1.15.5",
+      "resolved": "https://registry.npmjs.org/@types/ssh2/-/ssh2-1.15.5.tgz",
+      "integrity": "sha512-N1ASjp/nXH3ovBHddRJpli4ozpk6UdDYIX4RJWFa9L1YKnzdhTlVmiGHm4DZnj/jLbqZpes4aeR30EFGQtvhQQ==",
       "dev": true,
       "requires": {
         "@types/node": "^18.11.18"

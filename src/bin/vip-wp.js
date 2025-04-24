@@ -8,6 +8,7 @@ import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
 import { Writable } from 'stream';
 
+import { WPCliCommandOverSSH } from '../commands/wp-ssh';
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
 import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -29,6 +30,7 @@ const appQuery = `id, name,
 	appId
 	type
 	name
+	wpcliStrategy
 	primaryDomain {
 		name
 	}
@@ -367,6 +369,12 @@ commandWrapper( {
 		const promptIdentifier = `${ appName }.${ getEnvIdentifier( opts.env ) }`;
 
 		let countSIGINT = 0;
+
+		if ( opts.env.wpcliStrategy === 'ssh' ) {
+			const wpCommandRunner = new WPCliCommandOverSSH( opts.app, opts.env );
+			await wpCommandRunner.run( cmd, { command: commandForAnalytics } );
+			return;
+		}
 
 		const mutableStdout = new Writable( {
 			write( chunk, encoding, callback ) {
