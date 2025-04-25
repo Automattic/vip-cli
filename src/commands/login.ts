@@ -19,7 +19,10 @@ export default class LoginCommand extends Command {
     this.description('Authenticate with VIP');
     this.requiresAuth = false;
   
+    debug('Login command initialized');
+  
     this.action(async () => {
+      debug('Login action triggered');
       await this.loginFlow();
     });
   }
@@ -28,6 +31,7 @@ export default class LoginCommand extends Command {
    * Execute login flow
    */
   private async loginFlow(): Promise<void> {
+    debug('Starting login flow');
     console.log();
     console.log('   _    __ ________         ________    ____');
     console.log('  | |  / //  _/ __        / ____/ /   /  _/');

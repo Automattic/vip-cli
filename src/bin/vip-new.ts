@@ -60,23 +60,28 @@ function checkForUpdates(): void {
  * Check if --debug flag is present and enable debugging
  */
 function setupDebug(): void {
-  const debugIndex = process.argv.indexOf('--debug');
-  if (debugIndex > -1) {
-    // Get debug value (if any)
-    const debugValue = process.argv[debugIndex + 1];
-    const debugPattern = debugValue && !debugValue.startsWith('-') 
-      ? debugValue 
-      : '*';
+  const isDebugEnabled = process.argv.some(arg => arg === '--debug' || arg.startsWith('--debug='));
+  
+  if (isDebugEnabled) {
+    // Find debug arg
+    const debugArg = process.argv.find(arg => arg.startsWith('--debug='));
+    
+    // If debug has a value (--debug=pattern), use that pattern, otherwise enable all
+    let debugPattern = '*';
+    if (debugArg && debugArg.startsWith('--debug=')) {
+      debugPattern = debugArg.split('=')[1];
+    }
     
     // Enable debug output
     debugLib.enable(debugPattern);
+    debug(`Debug enabled with pattern: ${debugPattern}`);
     
     // Remove from argv to prevent Commander from complaining
-    if (!debugValue || debugValue.startsWith('-')) {
-      process.argv.splice(debugIndex, 1);
-    } else {
-      process.argv.splice(debugIndex, 2);
-    }
+    // But keep it in the environment for child processes
+    process.env.DEBUG = debugPattern;
+    
+    // Filter out debug args
+    process.argv = process.argv.filter(arg => arg !== '--debug' && !arg.startsWith('--debug='));
   }
 }
 

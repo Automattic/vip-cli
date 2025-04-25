@@ -58,17 +58,34 @@ const commandManifest: CommandDefinition[] = [
  */
 async function loadCommand(commandDef: CommandDefinition): Promise<any> {
   try {
-    const commandPath = path.resolve(__dirname, commandDef.path);
-    debug(`Loading command from ${commandPath}`);
+    // For resolving JS files after compilation
+    const resolvedPath = path.resolve(__dirname, commandDef.path);
+    debug(`Looking for command at ${resolvedPath}`);
     
-    // Check if the path exists
-    if (!fs.existsSync(`${commandPath}.ts`) && !fs.existsSync(`${commandPath}.js`)) {
-      debug(`Command file not found at ${commandPath}`);
+    // Check multiple possible paths:
+    // 1. Direct .js file (e.g., app.js)
+    // 2. Directory with index.js (e.g., app/index.js)
+    const jsPath = `${resolvedPath}.js`;
+    const indexPath = path.join(resolvedPath, 'index.js');
+    
+    let finalPath: string | null = null;
+    
+    if (fs.existsSync(jsPath)) {
+      debug(`Found command file at ${jsPath}`);
+      finalPath = resolvedPath;
+    } else if (fs.existsSync(indexPath)) {
+      debug(`Found command file at ${indexPath}`);
+      finalPath = path.join(resolvedPath, 'index');
+    } else {
+      debug(`Command file not found at ${jsPath} or ${indexPath}`);
       return null;
     }
     
-    // Dynamic import
-    const commandModule = await import(commandDef.path);
+    // Calculate the relative path from current file to the command file for import
+    const relativePath = `./${path.relative(path.dirname(__filename), finalPath)}`;
+    
+    debug(`Importing from relative path: ${relativePath}`);
+    const commandModule = await import(relativePath);
     return commandModule.default || commandModule;
   } catch (error) {
     debug(`Failed to load command ${commandDef.name}:`, error);

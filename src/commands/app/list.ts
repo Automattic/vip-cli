@@ -38,12 +38,14 @@ export default class AppListCommand extends Command {
               edges {
                 id
                 name
-                slug
+                repo
                 environments {
                   id
                   name
                   type
-                  primaryDomain
+                  primaryDomain {
+                    name
+                  }
                 }
               }
             }
@@ -64,7 +66,7 @@ export default class AppListCommand extends Command {
       const apps = res.data.apps.edges.map(app => ({
         ID: app.id,
         Name: app.name,
-        Slug: app.slug,
+        Repo: app.repo || 'N/A',
         Environments: app.environments?.length || 0,
       }));
       
