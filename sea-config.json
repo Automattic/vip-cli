@@ -1,0 +1,4 @@
+{
+  "main": "./wrapper.js",
+  "output": "sea-prep.blob"
+}

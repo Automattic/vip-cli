@@ -154,4 +154,4 @@ async function main(): Promise<void> {
 }
 
 // Start the CLI
-main().catch(uncaughtError); 
+main().catch(uncaughtError);
