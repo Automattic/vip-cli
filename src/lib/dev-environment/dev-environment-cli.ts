@@ -480,6 +480,26 @@ async function processComponent(
 	return result;
 }
 
+export function validatePathsInOptions( opt: Record< string, string | boolean | number > ) {
+	if ( opt.appCode ) {
+		const result = validateAppCodeLocalPath( `${ opt.appCode }` );
+		if ( ! result.result ) {
+			console.warn( chalk.yellow( 'Warning:' ), result.message );
+			delete opt.appCode;
+			delete opt.a;
+		}
+	}
+
+	if ( opt.muPlugins ) {
+		const result = validateMuPluginsLocalPath( `${ opt.muPlugins }` );
+		if ( ! result.result ) {
+			console.warn( chalk.yellow( 'Warning:' ), result.message );
+			delete opt.muPlugins;
+			delete opt.m;
+		}
+	}
+}
+
 async function validateLocalPath(
 	config: ComponentConfig,
 	validator: ComponentPathValidator,
