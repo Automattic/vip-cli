@@ -101,7 +101,13 @@ export default function API( {
 	const proxyAgent = createProxyAgent( API_URL );
 
 	const httpLink = new HttpLink( {
-		uri: API_URL,
+		uri: operation => {
+			// to make it easier to write tests, we'll skip adding x_query for tests
+			if ( process.env.NODE_ENV === 'test' ) {
+				return API_URL;
+			}
+			return `${ API_URL }?x_query=${ decodeURIComponent( operation.operationName ) }`;
+		},
 		fetch: http,
 		fetchOptions: {
 			agent: proxyAgent,
