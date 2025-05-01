@@ -1,16 +1,39 @@
 import { exec } from './dev-environment-core';
+import { readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import crypto from 'crypto';
 
 import type Lando from 'lando';
 
+const generatePassword = (): string => {
+	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+	const passwordLength = 12;
+	const randomBytes = crypto.randomBytes( passwordLength );
+	let password = '';
+
+	for ( let i = 0; i < passwordLength; i++ ) {
+		const randomIndex = randomBytes[ i ] % chars.length;
+		password += chars[ randomIndex ];
+	}
+
+	return password;
+};
+
 export const addAdminUser = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+	const password = generatePassword();
 	const addUserArg = [
 		'wp',
 		'dev-env-add-admin',
 		'--username=vipgo',
-		'--password=password',
+		`--password=${ password }`,
 		'--skip-plugins',
 		'--skip-themes',
 	].concat( quiet ? [ '--quiet' ] : [] );
+
+	// Store the password in instance data
+	const instanceData = readEnvironmentData( slug );
+	instanceData.adminPassword = password;
+	await writeEnvironmentData( slug, instanceData );
+
 	await exec( lando, slug, addUserArg );
 };
 
