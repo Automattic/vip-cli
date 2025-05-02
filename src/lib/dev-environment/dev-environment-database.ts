@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import { randomInt } from 'node:crypto';
 
 import { exec, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 
@@ -7,11 +7,10 @@ import type Lando from 'lando';
 const generatePassword = (): string => {
 	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
 	const passwordLength = 12;
-	const randomBytes = crypto.randomBytes( passwordLength );
 	let password = '';
 
 	for ( let idx = 0; idx < passwordLength; idx++ ) {
-		const randomIndex = randomBytes[ idx ] % chars.length;
+		const randomIndex = randomInt( 0, chars.length );
 		password += chars[ randomIndex ];
 	}
 
