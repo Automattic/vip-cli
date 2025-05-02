@@ -402,8 +402,8 @@ export async function landoInfo(
 			appInfo[ 'Default username' ] = 'vipgo';
 
 			// Get the stored password from instance data
-			const instanceData = readEnvironmentData( appInfo.slug );
-			appInfo[ 'Default password' ] = instanceData.adminPassword || 'password';
+			const instanceData = readEnvironmentData( appInfo.slug as string );
+			appInfo[ 'Default password' ] = instanceData.adminPassword || 'password'; // NOSONAR
 		}
 
 		if ( ! options.suppressWarnings && hasWarnings ) {
