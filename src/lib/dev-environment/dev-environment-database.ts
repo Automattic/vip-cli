@@ -31,9 +31,9 @@ export const addAdminUser = async ( lando: Lando, slug: string, quiet?: boolean 
 	// Store the password in instance data
 	const instanceData = readEnvironmentData( slug );
 	instanceData.adminPassword = password;
-	await writeEnvironmentData( slug, instanceData );
 
 	await exec( lando, slug, addUserArg );
+	await writeEnvironmentData( slug, instanceData );
 };
 
 export const dataCleanup = async ( lando: Lando, slug: string, quiet?: boolean ) => {
