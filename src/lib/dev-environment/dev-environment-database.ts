@@ -18,7 +18,11 @@ const generatePassword = (): string => {
 };
 
 export const addAdminUser = async ( lando: Lando, slug: string, quiet?: boolean ) => {
-	const password = generatePassword();
+	const instanceData = readEnvironmentData( slug );
+	const password =
+		! instanceData.adminPassword || instanceData.adminPassword === 'password'
+			? generatePassword()
+			: instanceData.adminPassword;
 	const addUserArg = [
 		'wp',
 		'dev-env-add-admin',
@@ -28,12 +32,12 @@ export const addAdminUser = async ( lando: Lando, slug: string, quiet?: boolean 
 		'--skip-themes',
 	].concat( quiet ? [ '--quiet' ] : [] );
 
-	// Store the password in instance data
-	const instanceData = readEnvironmentData( slug );
-	instanceData.adminPassword = password;
-
 	await exec( lando, slug, addUserArg );
-	await writeEnvironmentData( slug, instanceData );
+	// eslint-disable-next-line security/detect-possible-timing-attacks
+	if ( password !== instanceData.adminPassword ) {
+		instanceData.adminPassword = password;
+		await writeEnvironmentData( slug, instanceData );
+	}
 };
 
 export const dataCleanup = async ( lando: Lando, slug: string, quiet?: boolean ) => {
