@@ -118,6 +118,7 @@ export interface InstanceData {
 	cron: boolean;
 	pullAfter?: number;
 	autologinKey?: string;
+	adminPassword?: string;
 	version?: string;
 	overrides?: string;
 }
