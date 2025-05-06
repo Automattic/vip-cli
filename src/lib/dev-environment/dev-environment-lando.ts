@@ -190,8 +190,12 @@ export async function bootstrapLando(): Promise< Lando > {
 	try {
 		const socket = await getDockerSocket();
 		const config = await getLandoConfig();
+
+		debug( 'Docker socket: %j', socket );
+
 		if ( socket ) {
 			config.engineConfig = await getEngineConfig( socket );
+			debug( 'Engine config: %j', config.engineConfig );
 		}
 
 		const lando = new Lando( config );
@@ -203,7 +207,7 @@ export async function bootstrapLando(): Promise< Lando > {
 				registryResolvable = ( await lookup( 'ghcr.io' ) ).address.length > 0 || false;
 				debug( 'Registry ghcr.io is resolvable' );
 			} catch ( err ) {
-				debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
+				debug( 'Registry ghcr.io is not resolvable, image pull might be broken. Error: %O', err );
 				registryResolvable = false;
 			}
 
