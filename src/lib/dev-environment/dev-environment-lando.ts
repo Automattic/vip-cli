@@ -206,8 +206,8 @@ export async function bootstrapLando(): Promise< Lando > {
 			try {
 				registryResolvable = ( await lookup( 'ghcr.io' ) ).address.length > 0 || false;
 				debug( 'Registry ghcr.io is resolvable' );
-			} catch {
-				debug( 'Registry ghcr.io is not resolvable, image pull might be broken.' );
+			} catch ( err ) {
+				debug( 'Registry ghcr.io is not resolvable, image pull might be broken. Error: %O', err );
 				registryResolvable = false;
 			}
 
