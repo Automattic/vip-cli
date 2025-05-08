@@ -180,7 +180,7 @@ export function createEnvironment(
 	const alreadyExists = fs.existsSync( instancePath );
 
 	if ( alreadyExists ) {
-		throw new Error( 'Environment already exists.' );
+		return Promise.reject( new Error( 'Environment already exists.' ) );
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
