@@ -4,7 +4,7 @@ import { exec, readEnvironmentData, writeEnvironmentData } from './dev-environme
 
 import type Lando from 'lando';
 
-const generatePassword = (): string => {
+export const generatePassword = (): string => {
 	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
 	const passwordLength = 12;
 	let password = '';

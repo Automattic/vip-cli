@@ -115,6 +115,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			multisite: false,
 			title: '',
 			cron: currentInstanceData.cron,
+			adminPassword: currentInstanceData.adminPassword,
 		};
 
 		const providedOptions = Object.keys( opt )
