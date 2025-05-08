@@ -16,6 +16,7 @@ import {
 	processSlug,
 	promptForArguments,
 	validateDependencies,
+	ensureValidPathsInOptions,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -82,6 +83,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		const currentInstanceData = readEnvironmentData( slug );
 
 		debug( 'Read instance data', currentInstanceData );
+
+		ensureValidPathsInOptions( opt );
 
 		/** @type {InstanceOptions} */
 		const preselectedOptions = {
