@@ -163,7 +163,7 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 	await landoStop( lando, instancePath );
 }
 
-export async function createEnvironment(
+export function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
 	integrationsConfig?: Record< string, IntegrationConfig > | undefined,
@@ -187,7 +187,7 @@ export async function createEnvironment(
 
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv(
+	return prepareLandoEnv(
 		lando,
 		preProcessedInstanceData,
 		instancePath,
@@ -241,9 +241,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.wordpress.tag = 'trunk';
 	}
 
-	if ( ! newInstanceData.xdebugConfig ) {
-		newInstanceData.xdebugConfig = '';
-	}
+	newInstanceData.xdebugConfig ??= '';
 
 	if ( ! newInstanceData.xdebug ) {
 		newInstanceData.xdebug = false;
@@ -265,9 +263,7 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 	newInstanceData.mailpit ??= false;
 
 	// MariaDB migration
-	if ( ! newInstanceData.mariadb ) {
-		newInstanceData.mariadb = undefined;
-	}
+	newInstanceData.mariadb ??= undefined;
 
 	// newInstanceData
 	newInstanceData.autologinKey = uuid();
