@@ -16,7 +16,7 @@ import {
 	validateDependencies,
 	processStringOrBooleanOption,
 	processSlug,
-	validatePathsInOptions,
+	ensureValidPathsInOptions,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -146,7 +146,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		console.log( chalk.yellow( 'Warning:' ), message );
 	}
 
-	validatePathsInOptions( opt );
+	ensureValidPathsInOptions( opt );
 
 	let preselectedOptions = opt;
 	let suppressPrompts = false;

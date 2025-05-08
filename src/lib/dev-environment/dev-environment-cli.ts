@@ -480,7 +480,7 @@ async function processComponent(
 	return result;
 }
 
-export function validatePathsInOptions( opt: Record< string, string | boolean | number > ) {
+export function ensureValidPathsInOptions( opt: Record< string, string | boolean | number > ) {
 	if ( opt.appCode ) {
 		const result = validateAppCodeLocalPath( `${ opt.appCode }` );
 		if ( ! result.result ) {
