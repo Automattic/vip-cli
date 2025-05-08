@@ -17,6 +17,7 @@ export interface InstanceOptions {
 	photon?: boolean;
 	cron?: boolean;
 	overrides?: string;
+	adminPassword?: string;
 
 	[ index: string ]: unknown;
 }

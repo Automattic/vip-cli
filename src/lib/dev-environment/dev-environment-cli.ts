@@ -262,7 +262,7 @@ export async function promptForArguments(
 	try {
 		const currentUser = await getCurrentUserInfo( true );
 		isVIPUser = currentUser?.isVIP ?? false;
-	} catch ( err ) {
+	} catch {
 		isVIPUser = false;
 	}
 
@@ -320,6 +320,7 @@ export async function promptForArguments(
 		photon: false,
 		cron: false,
 		overrides: preselectedOptions.overrides,
+		adminPassword: preselectedOptions.adminPassword,
 	};
 
 	const promptLabels = {
