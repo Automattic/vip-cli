@@ -36,7 +36,7 @@
         "node-stream-zip": "1.15.0",
         "open": "^10.0.0",
         "proxy-from-env": "^1.1.0",
-        "semver": "7.7.1",
+        "semver": "7.7.2",
         "shelljs": "^0.9.1",
         "socket.io-client": "^4.5.3",
         "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
@@ -11420,9 +11420,9 @@
       "integrity": "sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw=="
     },
     "node_modules/semver": {
-      "version": "7.7.1",
-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.1.tgz",
-      "integrity": "sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==",
+      "version": "7.7.2",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz",
+      "integrity": "sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==",
       "license": "ISC",
       "bin": {
         "semver": "bin/semver.js"
@@ -21612,9 +21612,9 @@
       "integrity": "sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw=="
     },
     "semver": {
-      "version": "7.7.1",
-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.1.tgz",
-      "integrity": "sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA=="
+      "version": "7.7.2",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz",
+      "integrity": "sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA=="
     },
     "set-function-name": {
       "version": "2.0.1",
