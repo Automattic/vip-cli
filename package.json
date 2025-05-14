@@ -151,7 +151,7 @@
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
     "configstore": "5.0.1",
-    "debug": "4.4.0",
+    "debug": "4.4.1",
     "ejs": "^3.1.8",
     "enquirer": "2.4.1",
     "fetch-retry": "^6.0.0",
