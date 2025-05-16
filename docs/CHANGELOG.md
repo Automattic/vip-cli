@@ -1,5 +1,40 @@
 ## Changelog
 
+### 3.15.0
+
+* chore(deps): update `lando`
+* Add query name to the GraphQL endpoint as a query string by @abdullah
+* build(deps): bump open from 10.1.1 to 10.1.2
+* build(deps-dev): bump the babel group with 4 updates
+* feat(dev-env) randomize vipgo password post-import
+* chore(dev-env): add more Docker-related logging
+* build(deps-dev): bump @types/node from 22.14.1 to 22.15.14
+* build(deps-dev): bump the babel group with 2 updates
+* chore: address Dependabot deprecations
+* feat(dev-env): set random password for `vipgo` user
+* build(deps-dev): bump @types/node from 22.15.14 to 22.15.16
+* fix(wp): handling of CR characters
+* fix(dev-env): validation of `--app-code` and `--mu-plugins` options
+* fix(dev-env): ensure all required peroperties are present for rebuild
+* build(deps): bump actions/dependency-review-action from 4.6.0 to 4.7.0
+* build(deps-dev): bump @types/shelljs from 0.8.15 to 0.8.16
+* build(deps-dev): bump @types/node from 22.15.16 to 22.15.17
+* build(deps): bump actions/dependency-review-action from 4.7.0 to 4.7.1
+* build(deps): bump debug from 4.4.0 to 4.4.1
+* build(deps): bump semver from 7.7.1 to 7.7.2
+* build(deps): bump shelljs from 0.9.2 to 0.10.0
+* build(deps-dev): bump @types/node from 22.15.17 to 22.15.18
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.14.0...3.15.0
+
+### 3.14.0
+
+* build(deps): bump step-security/harden-runner from 2.11.1 to 2.12.0
+* build(deps-dev): bump dockerode from 4.0.5 to 4.0.6
+* Add ability to run WP-CLI commands over SSH
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.13.0...3.14.0
+
 ### 3.13.0
 
 * build(deps): bump Automattic/vip-actions from dbd477b39f2122bf594da2d65dc0ea8ab5fc9bf0 to bb2853ecb6cd7dba2efe589ebb10cf930759fe69
