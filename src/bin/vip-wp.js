@@ -6,8 +6,9 @@ import gql from 'graphql-tag';
 import readline from 'readline';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
-import { Writable } from 'stream';
+import { Transform, Writable } from 'stream';
 
+import { WPCliCommandOverSSH } from '../commands/wp-ssh';
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
 import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -29,6 +30,7 @@ const appQuery = `id, name,
 	appId
 	type
 	name
+	wpcliStrategy
 	primaryDomain {
 		name
 	}
@@ -41,14 +43,32 @@ const cancelCommandChar = '\x03';
 let currentJob = null;
 let currentOffset = 0;
 let commandRunning = false;
+const isStdinTty = process.stdin.isTTY;
+
+const normalizeNewlineStream = new Transform( {
+	transform( chunk, encoding, callback ) {
+		callback( null, chunk.toString().replace( /\r/g, '\n' ) );
+	},
+} );
 
 const pipeStreamsToProcess = ( { stdin, stdout: outStream } ) => {
-	process.stdin.pipe( stdin );
+	if ( isStdinTty ) {
+		process.stdin.pipe( normalizeNewlineStream ).pipe( stdin );
+	} else {
+		process.stdin.pipe( stdin );
+	}
+
 	outStream.pipe( process.stdout );
 };
 
 const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
-	process.stdin.unpipe( stdin );
+	if ( isStdinTty ) {
+		process.stdin.unpipe( normalizeNewlineStream );
+		normalizeNewlineStream.unpipe( stdin );
+	} else {
+		process.stdin.unpipe( stdin );
+	}
+
 	outStream.unpipe( process.stdout );
 };
 
@@ -368,6 +388,12 @@ commandWrapper( {
 
 		let countSIGINT = 0;
 
+		if ( opts.env.wpcliStrategy === 'ssh' ) {
+			const wpCommandRunner = new WPCliCommandOverSSH( opts.app, opts.env );
+			await wpCommandRunner.run( cmd, { command: commandForAnalytics } );
+			return;
+		}
+
 		const mutableStdout = new Writable( {
 			write( chunk, encoding, callback ) {
 				if ( ! this.muted ) {
@@ -386,6 +412,7 @@ commandWrapper( {
 			terminal: true,
 			prompt: '',
 			historySize: 0,
+			crlfDelay: Infinity,
 		};
 
 		if ( isSubShell ) {
@@ -496,16 +523,6 @@ commandWrapper( {
 				commonTrackingParams,
 				isSubShell,
 			} );
-		} );
-
-		// Fix to re-add the \n character that readline strips when terminal == true
-		process.stdin.on( 'data', data => {
-			// only run this in interactive mode for prompts from WP commands
-			if ( commandRunning && 0 === Buffer.compare( data, Buffer.from( '\r' ) ) ) {
-				if ( currentJob?.stdinStream ) {
-					currentJob.stdinStream.write( '\n' );
-				}
-			}
 		} );
 
 		subShellRl.on( 'SIGINT', async () => {

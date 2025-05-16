@@ -222,7 +222,7 @@ export function processComponentOptionInput(
 
 	return {
 		mode: 'image',
-		tag: param === 'demo' ? undefined : param,
+		tag: param === 'demo' || param === 'image' ? undefined : param,
 	};
 }
 
@@ -258,6 +258,14 @@ export async function promptForArguments(
 ): Promise< InstanceData > {
 	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
+	let isVIPUser: boolean;
+	try {
+		const currentUser = await getCurrentUserInfo( true );
+		isVIPUser = currentUser?.isVIP ?? false;
+	} catch {
+		isVIPUser = false;
+	}
+
 	if ( suppressPrompts ) {
 		preselectedOptions = { ...defaultOptions, ...preselectedOptions };
 	} else {
@@ -292,7 +300,8 @@ export async function promptForArguments(
 					resolvePhpVersion( defaultOptions.php ?? DEV_ENVIRONMENT_DEFAULTS.phpVersion )
 			  ),
 		mariadb: preselectedOptions.mariadb ?? defaultOptions.mariadb,
-		mediaRedirectDomain: preselectedOptions.mediaRedirectDomain ?? '',
+		mediaRedirectDomain:
+			preselectedOptions.mediaRedirectDomain ?? defaultOptions.mediaRedirectDomain ?? '',
 		wordpress: {
 			mode: 'image',
 			tag: '',
@@ -311,6 +320,7 @@ export async function promptForArguments(
 		photon: false,
 		cron: false,
 		overrides: preselectedOptions.overrides,
+		adminPassword: preselectedOptions.adminPassword,
 	};
 
 	const promptLabels = {
@@ -327,21 +337,45 @@ export async function promptForArguments(
 		if ( setMediaRedirectDomain ) {
 			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain;
 		}
+	} else if ( ! create && defaultOptions.mediaRedirectDomain ) {
+		const mediaRedirectPromptText = 'URL to redirect for missing media files ("n" to disable)?';
+		const mediaRedirectDomain = await promptForURL(
+			mediaRedirectPromptText,
+			defaultOptions.mediaRedirectDomain
+		);
+
+		instanceData.mediaRedirectDomain = mediaRedirectDomain;
 	}
 
 	instanceData.wordpress = await processWordPress(
-		( preselectedOptions.wordpress ?? '' ).toString(),
-		( defaultOptions.wordpress ?? '' ).toString()
+		preselectedOptions.wordpress ?? '',
+		defaultOptions.wordpress ?? ''
 	);
 
-	for ( const component of DEV_ENVIRONMENT_COMPONENTS ) {
-		const option = ( preselectedOptions[ component ] ?? '' ).toString();
-		const defaultValue = ( defaultOptions[ component ] ?? '' ).toString();
+	instanceData.appCode = await processComponent(
+		'appCode',
+		preselectedOptions.appCode ?? '',
+		defaultOptions.appCode ?? '',
+		suppressPrompts,
+		validateAppCodeLocalPath
+	);
 
-		// eslint-disable-next-line no-await-in-loop
-		const result = await processComponent( component, option, defaultValue, suppressPrompts );
-		instanceData[ component ] = result;
+	let preselectedMU = preselectedOptions.muPlugins;
+	const defaultMU = defaultOptions.muPlugins;
+	if (
+		! preselectedMU &&
+		! isVIPUser &&
+		( ! defaultMU || [ 'demo', 'image' ].includes( defaultMU ) )
+	) {
+		preselectedMU = 'image';
 	}
+	instanceData.muPlugins = await processComponent(
+		'muPlugins',
+		preselectedMU ?? '',
+		defaultMU ?? '',
+		suppressPrompts,
+		validateMuPluginsLocalPath
+	);
 
 	debug( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
 	if ( 'elasticsearch' in preselectedOptions ) {
@@ -406,68 +440,93 @@ async function processWordPress(
 	return result;
 }
 
+type ComponentPathValidator = ( path: string ) => { result: boolean; message: string };
+
 async function processComponent(
-	component: keyof typeof componentDemoNames,
+	componentType: ( typeof DEV_ENVIRONMENT_COMPONENTS )[ number ],
 	preselectedValue: string,
 	defaultValue: string,
-	suppressPrompts: boolean = false
+	suppressPrompts: boolean,
+	localPathValidator: ComponentPathValidator
 ): Promise< ComponentConfig > {
 	debug(
-		`processing a component '${ component }', with preselected/default - ${ preselectedValue }/${ defaultValue }`
+		`Processing the '${ componentType }' component, with preselected = %s, default = %s`,
+		preselectedValue,
+		defaultValue
 	);
-	let result: ComponentConfig;
 
-	let allowLocal: boolean = true;
+	const defaultObject = defaultValue ? processComponentOptionInput( defaultValue, true ) : null;
 
-	if ( component === 'muPlugins' ) {
-		try {
-			const currentUser = await getCurrentUserInfo( true );
-			allowLocal = currentUser?.isVIP ?? false;
-		} catch ( err ) {
-			allowLocal = false;
-		}
+	if ( preselectedValue && ! suppressPrompts ) {
+		console.log(
+			'%s Path to your local %s: %s',
+			chalk.green( '✓' ),
+			componentDisplayNames[ componentType ],
+			preselectedValue
+		);
 	}
 
-	const defaultObject = defaultValue
-		? processComponentOptionInput( defaultValue, allowLocal as unknown as true )
-		: null;
-	if ( preselectedValue ) {
-		result = processComponentOptionInput( preselectedValue, allowLocal as unknown as true );
-
-		if ( ! suppressPrompts ) {
-			console.log(
-				`${ chalk.green( '✓' ) } Path to your local ${
-					componentDisplayNames[ component ]
-				}: ${ preselectedValue }`
-			);
-		}
-	} else {
-		result = await promptForComponent( component, allowLocal, defaultObject );
-	}
+	let result: ComponentConfig = preselectedValue
+		? processComponentOptionInput( preselectedValue, true )
+		: await promptForComponent( componentType, true, defaultObject );
 
 	debug( result );
 
-	while ( 'local' === result.mode ) {
-		const resolvedPath = resolvePath( result.dir ?? '' );
-		result.dir = resolvedPath;
+	if ( result.mode === 'local' ) {
+		result = await validateLocalPath( result, localPathValidator, componentType, defaultObject );
+	}
 
-		const { result: isPathValid, message } = validateLocalPath( component, resolvedPath );
+	debug( result );
+	return result;
+}
+
+export function ensureValidPathsInOptions( opt: Record< string, string | boolean | number > ) {
+	if ( opt.appCode ) {
+		const result = validateAppCodeLocalPath( `${ opt.appCode }` );
+		if ( ! result.result ) {
+			console.warn( chalk.yellow( 'Warning:' ), result.message );
+			delete opt.appCode;
+			delete opt.a;
+		}
+	}
+
+	if ( opt.muPlugins ) {
+		const result = validateMuPluginsLocalPath( `${ opt.muPlugins }` );
+		if ( ! result.result ) {
+			console.warn( chalk.yellow( 'Warning:' ), result.message );
+			delete opt.muPlugins;
+			delete opt.m;
+		}
+	}
+}
+
+async function validateLocalPath(
+	config: ComponentConfig,
+	validator: ComponentPathValidator,
+	componentName: ( typeof DEV_ENVIRONMENT_COMPONENTS )[ number ],
+	defaultObject: ComponentConfig | null
+): Promise< ComponentConfig > {
+	while ( config.mode === 'local' ) {
+		const resolvedPath = resolvePath( config.dir ?? '' );
+		config.dir = resolvedPath;
+
+		const { result: isPathValid, message } = validator( resolvedPath );
 
 		if ( isPathValid ) {
 			break;
 		} else if ( isStdinTTY ) {
 			console.log( chalk.yellow( 'Warning:' ), message );
 			// eslint-disable-next-line no-await-in-loop
-			result = await promptForComponent( component, allowLocal, defaultObject );
+			config = await promptForComponent( componentName, true, defaultObject );
 		} else {
 			throw new Error( message );
 		}
 	}
 
-	return result;
+	return config;
 }
 
-function validateLocalPath( component: string, providedPath: string ) {
+function validateMuPluginsLocalPath( providedPath: string ) {
 	if ( ! isNonEmptyDirectory( providedPath ) ) {
 		const message = `Provided path "${ providedPath }" does not point to a valid or existing directory.`;
 		return {
@@ -476,34 +535,47 @@ function validateLocalPath( component: string, providedPath: string ) {
 		};
 	}
 
-	if ( component === 'appCode' ) {
-		const files = [
-			'languages',
-			'plugins',
-			'themes',
-			'private',
-			'images',
-			'client-mu-plugins',
-			'vip-config',
-		];
+	return {
+		result: true,
+		message: '',
+	};
+}
 
-		const missingFiles = [];
-		for ( const file of files ) {
-			const filePath = path.resolve( providedPath, file );
-			if ( ! existsSync( filePath ) ) {
-				missingFiles.push( file );
-			}
+function validateAppCodeLocalPath( providedPath: string ) {
+	if ( ! isNonEmptyDirectory( providedPath ) ) {
+		const message = `Provided path "${ providedPath }" does not point to a valid or existing directory.`;
+		return {
+			result: false,
+			message,
+		};
+	}
+
+	const files = [
+		'languages',
+		'plugins',
+		'themes',
+		'private',
+		'images',
+		'client-mu-plugins',
+		'vip-config',
+	];
+
+	const missingFiles = [];
+	for ( const file of files ) {
+		const filePath = path.resolve( providedPath, file );
+		if ( ! existsSync( filePath ) ) {
+			missingFiles.push( file );
 		}
-		if ( missingFiles.length > 0 ) {
-			// eslint-disable-next-line max-len
-			const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
-				', '
-			) }. Learn more: https://docs.wpvip.com/wordpress-skeleton/`;
-			return {
-				result: false,
-				message,
-			};
-		}
+	}
+	if ( missingFiles.length > 0 ) {
+		// eslint-disable-next-line max-len
+		const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
+			', '
+		) }. Learn more: https://docs.wpvip.com/wordpress-skeleton/`;
+		return {
+			result: false,
+			message,
+		};
 	}
 
 	return {
@@ -551,6 +623,43 @@ export async function promptForText( message: string, initial: string ): Promise
 	}
 
 	return ( result.input || '' ).trim();
+}
+
+export async function promptForURL( message: string, initial: string ): Promise< string > {
+	interface PromptResult {
+		input: string;
+	}
+
+	let result: PromptResult = { input: initial };
+	if ( isStdinTTY ) {
+		const URLValidator = ( value: string ) => {
+			if ( ! value.trim() || value === 'n' ) {
+				return true;
+			}
+
+			try {
+				const url = new URL( value );
+				if ( url.protocol !== 'http:' && url.protocol !== 'https:' ) {
+					return 'value must be a http:// or https:// URL';
+				}
+
+				return true;
+			} catch {
+				return 'value needs to be a valid URL or an empty string';
+			}
+		};
+
+		result = await prompt< PromptResult >( {
+			type: 'input',
+			name: 'input',
+			message,
+			initial,
+			validate: URLValidator,
+		} );
+	}
+
+	const retval = result.input.trim();
+	return retval === 'n' ? '' : retval;
 }
 
 const multisiteOptions = [ 'subdomain', 'subdirectory' ] as const;

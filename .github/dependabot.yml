@@ -10,8 +10,6 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
-    reviewers:
-      - 'Automattic/vip-platform-patisserie'
     labels:
       - '[Status] Needs Review'
       - 'dependencies'
@@ -38,8 +36,6 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
-    reviewers:
-      - 'Automattic/vip-platform-patisserie'
     labels:
       - '[Status] Needs Review'
       - 'dependencies'

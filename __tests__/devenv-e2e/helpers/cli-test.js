@@ -13,7 +13,7 @@ export class CliTest {
 	 * @param {boolean}  printStderrOnError Whether to print stderr on error
 	 * @return {Promise<CliResult>} Return value of the command
 	 */
-	spawn( args, options, printStderrOnError ) {
+	spawn( args, options, printStderrOnError = false ) {
 		const [ command, ...commandArgs ] = args;
 
 		let stdout = '';

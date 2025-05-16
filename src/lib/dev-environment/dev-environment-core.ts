@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import copydir from 'copy-dir';
 import debugLib from 'debug';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
@@ -7,6 +6,7 @@ import { print } from 'graphql';
 import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
+import { cp, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -162,7 +162,7 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 	await landoStop( lando, instancePath );
 }
 
-export async function createEnvironment(
+export function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
 	integrationsConfig?: Record< string, IntegrationConfig > | undefined,
@@ -179,14 +179,14 @@ export async function createEnvironment(
 	const alreadyExists = fs.existsSync( instancePath );
 
 	if ( alreadyExists ) {
-		throw new Error( 'Environment already exists.' );
+		return Promise.reject( new Error( 'Environment already exists.' ) );
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 
 	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
-	await prepareLandoEnv(
+	return prepareLandoEnv(
 		lando,
 		preProcessedInstanceData,
 		instancePath,
@@ -218,9 +218,25 @@ export async function updateEnvironment(
 	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }
 
-function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
-	const newInstanceData = {
+function preProcessInstanceData( instanceData: InstanceData ): Required< InstanceData > {
+	const newInstanceData: Required< InstanceData > = {
 		...instanceData,
+		xdebugConfig: instanceData.xdebugConfig ?? '',
+		mariadb: instanceData.mariadb ?? '',
+		elasticsearch: instanceData.elasticsearch || false, // NOSONAR
+		php:
+			instanceData.php ??
+			DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image,
+		xdebug: Boolean( instanceData.xdebug ),
+		phpmyadmin: Boolean( instanceData.phpmyadmin ),
+		photon: Boolean( instanceData.photon ),
+		cron: Boolean( instanceData.cron ),
+		mailpit: Boolean( instanceData.mailpit ),
+		pullAfter: instanceData.pullAfter ?? 0,
+		autologinKey: uuid(),
+		adminPassword: instanceData.adminPassword ?? 'password',
+		version: DEV_ENVIRONMENT_VERSION,
+		overrides: instanceData.overrides ?? '',
 	};
 
 	if ( instanceData.mediaRedirectDomain && ! /^http/.exec( instanceData.mediaRedirectDomain ) ) {
@@ -228,51 +244,10 @@ function preProcessInstanceData( instanceData: InstanceData ): InstanceData {
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-	newInstanceData.elasticsearch = instanceData.elasticsearch || false; // NOSONAR
-
-	newInstanceData.php =
-		instanceData.php ||
-		DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image;
-
-	// FIXME: isNaN supports only number in TypeScript, actually, because isNaN('123') returns false despite being a string
+	// isNaN supports only number in TypeScript, actually, because isNaN('123') returns false despite being a string
 	if ( isNaN( instanceData.wordpress.tag as unknown as number ) ) {
 		newInstanceData.wordpress.tag = 'trunk';
 	}
-
-	if ( ! newInstanceData.xdebugConfig ) {
-		newInstanceData.xdebugConfig = '';
-	}
-
-	if ( ! newInstanceData.xdebug ) {
-		newInstanceData.xdebug = false;
-	}
-
-	if ( ! newInstanceData.phpmyadmin ) {
-		newInstanceData.phpmyadmin = false;
-	}
-
-	if ( ! newInstanceData.photon ) {
-		newInstanceData.photon = false;
-	}
-
-	if ( ! newInstanceData.cron ) {
-		newInstanceData.cron = false;
-	}
-
-	// Mailpit migration
-	newInstanceData.mailpit ??= false;
-
-	// MariaDB migration
-	if ( ! newInstanceData.mariadb ) {
-		newInstanceData.mariadb = undefined;
-	}
-
-	// newInstanceData
-	newInstanceData.autologinKey = uuid();
-	newInstanceData.version = DEV_ENVIRONMENT_VERSION;
-
-	newInstanceData.overrides = instanceData.overrides ?? '';
 
 	return newInstanceData;
 }
@@ -784,7 +759,7 @@ export async function importMediaPath( slug: string, filePath: string ) {
 		throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
 	}
 
-	const files = fs.readdirSync( resolvedPath );
+	const files = await readdir( resolvedPath );
 	if ( files.includes( uploadPathString ) ) {
 		const confirm = await prompt( {
 			type: 'confirm',
@@ -800,8 +775,13 @@ export async function importMediaPath( slug: string, filePath: string ) {
 	const uploadsPath = path.join( environmentPath, uploadPathString );
 
 	console.log( `${ chalk.yellow( '-' ) } Started copying files` );
-	copydir.sync( resolvedPath, uploadsPath );
-	console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
+	try {
+		await cp( resolvedPath, uploadsPath, { recursive: true } );
+		console.log( `${ chalk.green( '✓' ) } Files successfully copied to ${ uploadsPath }.` );
+	} catch ( error ) {
+		console.error( `${ chalk.red( '✗' ) } Error copying files to ${ uploadsPath }.` );
+		throw error;
+	}
 }
 
 /**

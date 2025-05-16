@@ -134,7 +134,10 @@ command( {
 	requiredArgs: 1,
 	usage: `${ baseUsage } <VARIABLE_NAME>`,
 } )
-	.option( 'from-file', 'Read environment variable value from file (useful for multiline input)' )
-	.option( 'skip-confirmation', 'Skip manual confirmation of input (USE WITH CAUTION)', false )
+	.option(
+		'from-file',
+		'Read environment variable value from a UTF-8-encoded text file (useful for multiline input). Accepts a relative or absolute path.'
+	)
+	.option( 'skip-confirmation', 'Skip the confirmation prompt (USE WITH CAUTION).', false )
 	.examples( examples )
 	.argv( process.argv, setEnvVarCommand );

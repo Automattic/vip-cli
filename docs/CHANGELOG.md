@@ -1,5 +1,56 @@
 ## Changelog
 
+### 3.13.0
+
+* build(deps): bump Automattic/vip-actions from dbd477b39f2122bf594da2d65dc0ea8ab5fc9bf0 to bb2853ecb6cd7dba2efe589ebb10cf930759fe69
+* feat(dev-env): add initial support for `.env` files
+* feat(dev-env): Refactor IDE support: add Cursor, PHPStorm and Windsurf
+* build(deps-dev): bump @automattic/eslint-plugin-wpvip from 0.13.0 to 0.13.1
+* build(deps): bump shelljs from 0.9.1 to 0.9.2
+* fix(dev-env): disallow running dev-env as `root`
+* chore(deps): update `lando` to `540a5e0`
+* fix(dev-env): handling of large media files in `vip dev-env import media`
+* build(deps-dev): bump @types/node from 22.13.10 to 22.13.11
+* build(deps-dev): bump the babel group with 2 updates
+* build(deps): bump Automattic/vip-actions from bb2853ecb6cd7dba2efe589ebb10cf930759fe69 to 1137b91acf0f5ea4e0db044bcf14ceabed9b068f
+* build(deps-dev): bump @types/semver from 7.5.8 to 7.7.0
+* build(deps-dev): bump @types/node from 22.13.11 to 22.13.14
+* fix(dev-env): `mu-plugins` prompt logic
+* build(deps-dev): bump dockerode from 4.0.4 to 4.0.5
+* fix(dev-env): handling of `mediaRedirectDomain` in `vip dev-env update`
+* chore: update GraphQL types
+* chore: remove overrides for `@lando/compose`
+* build(deps): bump step-security/harden-runner from 2.11.0 to 2.11.1
+* build(deps-dev): bump @types/dockerode from 3.3.35 to 3.3.37
+* build(deps): bump actions/dependency-review-action from 4.5.0 to 4.6.0
+* build(deps-dev): bump @types/node from 22.13.14 to 22.14.0
+* build(deps-dev): bump typescript from 5.8.2 to 5.8.3
+* build(deps-dev): bump @types/node from 22.14.0 to 22.14.1
+* chore(deps): update `lando`
+* chore(deps): replace `single-line-log` with a fork
+* Clarifying descriptions of options for `vip config envvar`
+* build(deps-dev): bump @types/dockerode from 3.3.37 to 3.3.38
+* build(deps): bump open from 10.1.0 to 10.1.1
+* build(deps): bump @automattic/vip-go-preflight-checks from 2.0.18 to 2.0.19
+* fix(dev-env): strip trailing slash in URLs when doing sync
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.12.2...3.13.0
+
+### 3.12.2
+
+* build(deps-dev): bump @babel/core from 7.26.9 to 7.26.10
+* Increase SQL import file size limit to 200G
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.12.1...3.12.2
+
+### 3.12.1
+
+* build(deps): bump shelljs from 0.8.5 to 0.9.1
+* build(deps-dev): bump @types/node from 22.13.9 to 22.13.10
+* Only use myloader source-db when provided
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.12.0...3.12.1
+
 ### 3.12.0
 
 * fix: rsync to skip files based on checksum

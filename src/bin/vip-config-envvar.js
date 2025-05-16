@@ -8,8 +8,9 @@ const exampleUsage = 'vip @example-app.develop config envvar';
 // Command examples
 const examples = [
 	{
-		usage: `${ exampleUsage } delete MY_VARIABLE`,
-		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
+		usage: `${ exampleUsage } set MY_VARIABLE`,
+		description:
+			'Add or update the environment variable "MY_VARIABLE" and assign its value at the prompt.',
 	},
 	{
 		usage: `${ exampleUsage } get MY_VARIABLE`,
@@ -24,9 +25,8 @@ const examples = [
 		description: 'List the names of all environment variables.',
 	},
 	{
-		usage: `${ exampleUsage } set MY_VARIABLE`,
-		description:
-			'Add or update the environment variable "MY_VARIABLE" and assign its value at the prompt.',
+		usage: `${ exampleUsage } delete MY_VARIABLE`,
+		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
 	},
 ];
 

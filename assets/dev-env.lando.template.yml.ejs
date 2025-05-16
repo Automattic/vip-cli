@@ -93,6 +93,7 @@ services:
         --user root
         --domain "http://<%= siteSlug %>.<%= domain %>/"
         --title "<%= wpTitle %>"
+        --wpadmin_password "<%= adminPassword %>"
         <% if ( multisite ) { %>--ms-domain "<%= siteSlug %>.<%= domain %>" <% if ( multisite === true || multisite === 'subdomain' ) { %>--subdomain <% } %> <% } %>
 
   database:
