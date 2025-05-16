@@ -167,7 +167,7 @@
     "open": "^10.0.0",
     "proxy-from-env": "^1.1.0",
     "semver": "7.7.2",
-    "shelljs": "^0.9.1",
+    "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
     "socks-proxy-agent": "^5.0.1",
