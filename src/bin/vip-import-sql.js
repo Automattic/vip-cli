@@ -118,6 +118,7 @@ function isValidMd5( md5 ) {
  * @param {string} fileNameOrURL
  * @param {boolean} isUrl
  * @param {string|null} md5
+ * @param searchReplace
  */
 // eslint-disable-next-line complexity
 export async function gates(
