@@ -16,6 +16,7 @@ import {
 	processSlug,
 	promptForArguments,
 	validateDependencies,
+	ensureValidPathsInOptions,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -83,6 +84,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 
 		debug( 'Read instance data', currentInstanceData );
 
+		ensureValidPathsInOptions( opt );
+
 		/** @type {InstanceOptions} */
 		const preselectedOptions = {
 			title: currentInstanceData.wpTitle,
@@ -115,6 +118,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			multisite: false,
 			title: '',
 			cron: currentInstanceData.cron,
+			adminPassword: currentInstanceData.adminPassword,
 		};
 
 		const providedOptions = Object.keys( opt )

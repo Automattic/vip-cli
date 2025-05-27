@@ -262,7 +262,7 @@ export async function promptForArguments(
 	try {
 		const currentUser = await getCurrentUserInfo( true );
 		isVIPUser = currentUser?.isVIP ?? false;
-	} catch ( err ) {
+	} catch {
 		isVIPUser = false;
 	}
 
@@ -320,6 +320,7 @@ export async function promptForArguments(
 		photon: false,
 		cron: false,
 		overrides: preselectedOptions.overrides,
+		adminPassword: preselectedOptions.adminPassword,
 	};
 
 	const promptLabels = {
@@ -477,6 +478,26 @@ async function processComponent(
 
 	debug( result );
 	return result;
+}
+
+export function ensureValidPathsInOptions( opt: Record< string, string | boolean | number > ) {
+	if ( opt.appCode ) {
+		const result = validateAppCodeLocalPath( `${ opt.appCode }` );
+		if ( ! result.result ) {
+			console.warn( chalk.yellow( 'Warning:' ), result.message );
+			delete opt.appCode;
+			delete opt.a;
+		}
+	}
+
+	if ( opt.muPlugins ) {
+		const result = validateMuPluginsLocalPath( `${ opt.muPlugins }` );
+		if ( ! result.result ) {
+			console.warn( chalk.yellow( 'Warning:' ), result.message );
+			delete opt.muPlugins;
+			delete opt.m;
+		}
+	}
 }
 
 async function validateLocalPath(

@@ -23,6 +23,7 @@ describe( 'vip dev-env update', () => {
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
+		// @ts-expect-error we have to ignore that data is read-only
 		xdgBaseDir.data = tmpPath;
 
 		env = prepareEnvironment( tmpPath );
@@ -66,6 +67,8 @@ describe( 'vip dev-env update', () => {
 
 		delete dataBefore.autologinKey;
 		delete dataAfter.autologinKey;
+		delete dataBefore.adminPassword;
+		delete dataAfter.adminPassword;
 		expect( dataBefore ).toEqual( dataAfter );
 	} );
 

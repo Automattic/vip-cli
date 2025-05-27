@@ -1,17 +1,43 @@
-import { exec } from './dev-environment-core';
+import { randomInt } from 'node:crypto';
+
+import { exec, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 
 import type Lando from 'lando';
 
+export const generatePassword = (): string => {
+	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+	const passwordLength = 12;
+	let password = '';
+
+	for ( let idx = 0; idx < passwordLength; idx++ ) {
+		const randomIndex = randomInt( 0, chars.length );
+		password += chars[ randomIndex ];
+	}
+
+	return password;
+};
+
 export const addAdminUser = async ( lando: Lando, slug: string, quiet?: boolean ) => {
+	const instanceData = readEnvironmentData( slug );
+	const password =
+		! instanceData.adminPassword || instanceData.adminPassword === 'password'
+			? generatePassword()
+			: instanceData.adminPassword;
 	const addUserArg = [
 		'wp',
 		'dev-env-add-admin',
 		'--username=vipgo',
-		'--password=password',
+		`--password=${ password }`,
 		'--skip-plugins',
 		'--skip-themes',
 	].concat( quiet ? [ '--quiet' ] : [] );
+
 	await exec( lando, slug, addUserArg );
+	// eslint-disable-next-line security/detect-possible-timing-attacks
+	if ( password !== instanceData.adminPassword ) {
+		instanceData.adminPassword = password;
+		await writeEnvironmentData( slug, instanceData );
+	}
 };
 
 export const dataCleanup = async ( lando: Lando, slug: string, quiet?: boolean ) => {

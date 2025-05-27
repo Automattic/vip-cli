@@ -37,7 +37,7 @@ async function canReadWrite( what: string ): Promise< boolean > {
 		// eslint-disable-next-line no-bitwise
 		await access( what, constants.R_OK | constants.W_OK );
 		return true;
-	} catch ( err ) {
+	} catch {
 		return false;
 	}
 }
@@ -72,7 +72,7 @@ export async function getDockerSocket(): Promise< string | null > {
 					process.env.DOCKER_HOST = `unix://${ socketPath }`;
 					return socketPath;
 				}
-			} catch ( err ) {
+			} catch {
 				// Do nothing
 			}
 		}

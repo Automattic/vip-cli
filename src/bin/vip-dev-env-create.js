@@ -16,6 +16,7 @@ import {
 	validateDependencies,
 	processStringOrBooleanOption,
 	processSlug,
+	ensureValidPathsInOptions,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -28,6 +29,7 @@ import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
 } from '../lib/dev-environment/dev-environment-core';
+import { generatePassword } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 
@@ -144,6 +146,8 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		console.log( chalk.yellow( 'Warning:' ), message );
 	}
 
+	ensureValidPathsInOptions( opt );
+
 	let preselectedOptions = opt;
 	let suppressPrompts = false;
 
@@ -160,6 +164,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		true
 	);
 	instanceData.siteSlug = slug;
+	instanceData.adminPassword = generatePassword();
 
 	try {
 		await createEnvironment( lando, instanceData, integrationsConfig, envVars );
