@@ -729,8 +729,6 @@ Processing the SQL import for your environment...
 
 			debug( { startImportResults } );
 		} catch ( gqlErr ) {
-			progressTracker.stepFailed( 'queue_import' );
-
 			await track( 'import_sql_command_error', {
 				error_type: 'StartImport-failed',
 				gql_err: gqlErr,
