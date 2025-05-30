@@ -1,6 +1,5 @@
 /* eslint-disable jest/no-conditional-expect */
 
-import { jest } from '@jest/globals';
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
