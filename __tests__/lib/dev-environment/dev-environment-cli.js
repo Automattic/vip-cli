@@ -633,10 +633,10 @@ app-code: demo
 		it.each( [
 			{ input: 'subdirectory', expected: 'subdirectory', description: 'subdirectory string' },
 			{ input: 'subdomain', expected: 'subdomain', description: 'subdomain string' },
-			{ input: 'y', expected: 'subdomain', description: 'y (yes) defaults to subdomain' },
-			{ input: 'yes', expected: 'subdomain', description: 'yes defaults to subdomain' },
-			{ input: 'true', expected: 'subdomain', description: 'true defaults to subdomain' },
-			{ input: '1', expected: 'subdomain', description: '1 defaults to subdomain' },
+			{ input: 'y', expected: true, description: 'y (yes) results in true (subdomain multisite)' },
+			{ input: 'yes', expected: true, description: 'yes results in true (subdomain multisite)' },
+			{ input: 'true', expected: true, description: 'true results in true (subdomain multisite)' },
+			{ input: '1', expected: true, description: '1 results in true (subdomain multisite)' },
 			{ input: 'false', expected: false, description: 'false becomes boolean false' },
 			{ input: 'no', expected: false, description: 'no becomes boolean false' },
 			{ input: 'n', expected: false, description: 'n becomes boolean false' },
@@ -659,13 +659,13 @@ app-code: demo
 		);
 
 		it.each( [
-			{ input: 'SUBDIRECTORY', expected: 'subdirectory' },
-			{ input: 'SubDomain', expected: 'subdomain' },
-			{ input: 'Y', expected: 'subdomain' },
-			{ input: 'TRUE', expected: 'subdomain' },
+			{ input: 'SUBDIRECTORY', expected: false },
+			{ input: 'SubDomain', expected: false },
+			{ input: 'Y', expected: true },
+			{ input: 'TRUE', expected: true },
 			{ input: 'FALSE', expected: false },
 		] )(
-			'should handle case-insensitive multisite values: $input to $expected ($description)',
+			'should handle case-sensitive multisite values (case changes result in false): $input to $expected',
 			async ( { input, expected } ) => {
 				const configContent = createConfigContent( input );
 
@@ -679,15 +679,15 @@ app-code: demo
 			}
 		);
 
-		it( 'should ignore invalid multisite values and not set the property', async () => {
+		it( 'should ignore invalid multisite values and set to false', async () => {
 			const configContent = createConfigContent( 'invalid-value' );
 
 			mockedReadFile.mockResolvedValueOnce( configContent );
 
 			const result = await devEnvConfiguration.getConfigurationFileOptions();
 
-			// Invalid values should result in the property being undefined and removed
-			expect( result.multisite ).toBeUndefined();
+			// Invalid values should result in the default value (false)
+			expect( result.multisite ).toBe( false );
 			expect( result.slug ).toBe( 'test-site' );
 		} );
 
@@ -705,8 +705,8 @@ app-code: demo
 
 			const result = await devEnvConfiguration.getConfigurationFileOptions();
 
-			// Boolean true should be treated as subdomain (like 'y' or 'true' string)
-			expect( result.multisite ).toStrictEqual( 'subdomain' );
+			// Boolean true should be treated as multisite enabled (boolean true)
+			expect( result.multisite ).toStrictEqual( true );
 		} );
 	} );
 } );
