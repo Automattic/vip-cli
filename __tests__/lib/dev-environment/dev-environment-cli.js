@@ -1,8 +1,10 @@
 /* eslint-disable jest/no-conditional-expect */
 
+import { jest } from '@jest/globals';
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
 import nock from 'nock';
+import { readFile } from 'node:fs/promises';
 import os from 'os';
 
 import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
@@ -22,6 +24,16 @@ import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-envir
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+
+// Mock fs operations for configuration file tests
+jest.mock( 'node:fs/promises' );
+
+// Mock exit module to prevent actual process exits during tests
+jest.mock( '../../../src/lib/cli/exit', () => ( {
+	withError: jest.fn( message => {
+		throw new Error( message );
+	} ),
+} ) );
 
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
@@ -597,5 +609,104 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 				);
 			}
 		);
+	} );
+
+	describe( 'configuration file multisite sanitization', () => {
+		const mockedReadFile = readFile;
+		const createConfigContent = multisiteValue => `
+configuration-version: 1
+slug: test-site
+multisite: ${ multisiteValue }
+mu-plugins: demo
+app-code: demo
+`;
+
+		beforeEach( () => {
+			jest.clearAllMocks();
+			jest.resetAllMocks();
+			// Mock process.cwd() to return a known directory
+			jest.spyOn( process, 'cwd' ).mockReturnValue( '/test/dir' );
+			// Default mock to reject all file reads
+			mockedReadFile.mockRejectedValue( new Error( 'File not found' ) );
+		} );
+
+		it.each( [
+			{ input: 'subdirectory', expected: 'subdirectory', description: 'subdirectory string' },
+			{ input: 'subdomain', expected: 'subdomain', description: 'subdomain string' },
+			{ input: 'y', expected: 'subdomain', description: 'y (yes) defaults to subdomain' },
+			{ input: 'yes', expected: 'subdomain', description: 'yes defaults to subdomain' },
+			{ input: 'true', expected: 'subdomain', description: 'true defaults to subdomain' },
+			{ input: '1', expected: 'subdomain', description: '1 defaults to subdomain' },
+			{ input: 'false', expected: false, description: 'false becomes boolean false' },
+			{ input: 'no', expected: false, description: 'no becomes boolean false' },
+			{ input: 'n', expected: false, description: 'n becomes boolean false' },
+			{ input: '0', expected: false, description: '0 becomes boolean false' },
+		] )(
+			'should sanitize multisite: $input to $expected ($description)',
+			async ( { input, expected } ) => {
+				const configContent = createConfigContent( input );
+
+				console.log( 'configContent', configContent );
+
+				mockedReadFile.mockResolvedValueOnce( configContent );
+
+				const result = await devEnvConfiguration.getConfigurationFileOptions();
+
+				expect( result.multisite ).toStrictEqual( expected );
+				expect( result.slug ).toBe( 'test-site' );
+				expect( result.version ).toBe( '1' );
+			}
+		);
+
+		it.each( [
+			{ input: 'SUBDIRECTORY', expected: 'subdirectory' },
+			{ input: 'SubDomain', expected: 'subdomain' },
+			{ input: 'Y', expected: 'subdomain' },
+			{ input: 'TRUE', expected: 'subdomain' },
+			{ input: 'FALSE', expected: false },
+		] )(
+			'should handle case-insensitive multisite values: $input to $expected ($description)',
+			async ( { input, expected } ) => {
+				const configContent = createConfigContent( input );
+
+				mockedReadFile.mockResolvedValueOnce( configContent );
+
+				const result = await devEnvConfiguration.getConfigurationFileOptions();
+
+				expect( result.multisite ).toStrictEqual( expected );
+				expect( result.slug ).toBe( 'test-site' );
+				expect( result.version ).toBe( '1' );
+			}
+		);
+
+		it( 'should ignore invalid multisite values and not set the property', async () => {
+			const configContent = createConfigContent( 'invalid-value' );
+
+			mockedReadFile.mockResolvedValueOnce( configContent );
+
+			const result = await devEnvConfiguration.getConfigurationFileOptions();
+
+			// Invalid values should result in the property being undefined and removed
+			expect( result.multisite ).toBeUndefined();
+			expect( result.slug ).toBe( 'test-site' );
+		} );
+
+		it( 'should handle non-string multisite values', async () => {
+			// Test with a config that has a non-string value (like a number or boolean from YAML)
+			const configContentWithBoolean = `
+configuration-version: 1
+slug: test-site
+multisite: true
+mu-plugins: demo
+app-code: demo
+`;
+
+			mockedReadFile.mockResolvedValueOnce( configContentWithBoolean );
+
+			const result = await devEnvConfiguration.getConfigurationFileOptions();
+
+			// Boolean true should be treated as subdomain (like 'y' or 'true' string)
+			expect( result.multisite ).toStrictEqual( 'subdomain' );
+		} );
 	} );
 } );
