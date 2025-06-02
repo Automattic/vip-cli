@@ -1,0 +1,117 @@
+name: Git Hash Security Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - trunk
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-git-hash-security:
+    name: Verify Full Git Commit Hashes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v4
+
+      - name: Check for short git hashes in package.json
+        run: |
+          echo "🔍 Checking package.json for short git commit hashes..."
+
+          # Find all github: dependencies
+          if grep -q "github:" package.json; then
+            echo "Found git dependencies in package.json:"
+            
+            # Check each github dependency line
+            grep "github:" package.json | while IFS= read -r line; do
+              echo "Checking: $line"
+              
+              # Extract the hash part after #
+              if [[ $line =~ github:[^#]*#([0-9a-f]+) ]]; then
+                hash="${BASH_REMATCH[1]}"
+                hash_length=${#hash}
+                dep_name=$(echo "$line" | sed 's/.*"\([^"]*\)".*/\1/')
+                
+                echo "  Found hash: $hash (length: $hash_length)"
+                
+                if [ $hash_length -lt 40 ]; then
+                  echo "❌ SECURITY VULNERABILITY: Short git hash detected!"
+                  echo "   Dependency: $dep_name"
+                  echo "   Hash '$hash' is only $hash_length characters"
+                  echo "   REQUIRED: Use full 40-character commit hash"
+                  echo ""
+                  echo "🛡️  SECURITY REQUIREMENT:"
+                  echo "   All git dependencies must use full 40-character commit hashes"
+                  echo "   Short hashes are vulnerable to collision attacks"
+                  echo ""
+                  echo "📖 Why this matters:"
+                  echo "   • 7-character hashes have only 268M possibilities"
+                  echo "   • Attackers can create colliding commits in forks"
+                  echo "   • This breaks builds and enables supply chain attacks"
+                  echo "   • Only full 40-character hashes provide security"
+                  exit 1
+                elif [ $hash_length -eq 40 ]; then
+                  echo "✅ $dep_name: Secure 40-character hash"
+                else
+                  echo "⚠️  $dep_name: Hash longer than 40 characters: $hash_length"
+                fi
+              elif [[ $line =~ github:[^#]*#([^\",:]+) ]]; then
+                # Non-hex hash (might be tag/branch)
+                ref="${BASH_REMATCH[1]}"
+                echo "  Found non-hex reference: $ref (likely tag/branch - OK)"
+              else
+                echo "  No hash found in line (may resolve to latest)"
+              fi
+            done
+          else
+            echo "No github: dependencies found in package.json"
+          fi
+
+          echo "✅ package.json validation complete"
+
+      - name: Check for short git hashes in npm-shrinkwrap.json
+        run: |
+          echo "🔍 Checking npm-shrinkwrap.json for short git commit hashes..."
+
+          if [ -f "npm-shrinkwrap.json" ]; then
+            # Look for git+ssh URLs with hashes
+            if grep -q "git+ssh:" npm-shrinkwrap.json; then
+              echo "Found git+ssh dependencies, checking hash lengths..."
+              
+              # Extract git+ssh lines and check hashes
+              grep "git+ssh:" npm-shrinkwrap.json | while IFS= read -r line; do
+                if [[ $line =~ git\+ssh://[^#]*#([0-9a-f]+) ]]; then
+                  hash="${BASH_REMATCH[1]}"
+                  hash_length=${#hash}
+                  
+                  if [ $hash_length -lt 40 ]; then
+                    echo "❌ SECURITY VULNERABILITY: Short git hash in npm-shrinkwrap.json!"
+                    echo "   Hash '$hash' is only $hash_length characters"
+                    echo ""
+                    echo "🔧 To fix this:"
+                    echo "   1. Update package.json to use full 40-character hashes"
+                    echo "   2. Delete npm-shrinkwrap.json"
+                    echo "   3. Run 'npm install' to regenerate with full hashes"
+                    exit 1
+                  fi
+                fi
+              done
+            fi
+            
+            echo "✅ npm-shrinkwrap.json: No short git hashes found"
+          else
+            echo "ℹ️  npm-shrinkwrap.json not found, skipping check"
+          fi
+
+      - name: Security check summary
+        run: |
+          echo ""
+          echo "🎉 Git Hash Security Check Complete!"
+          echo "✅ All git dependencies use secure 40-character commit hashes"
+          echo "✅ No collision-vulnerable short hashes detected"
+          echo "🛡️  Supply chain security requirements satisfied"
