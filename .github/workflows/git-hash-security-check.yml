@@ -22,7 +22,7 @@ jobs:
       - name: Check for short git hashes in package.json
         run: |
           echo "🔍 Checking package.json for short git commit hashes..."
-          
+
           # Find all github: dependencies
           if grep -q "github:" package.json; then
             echo "Found git dependencies in package.json:"
@@ -71,13 +71,13 @@ jobs:
           else
             echo "No github: dependencies found in package.json"
           fi
-          
+
           echo "✅ package.json validation complete"
 
       - name: Check for short git hashes in npm-shrinkwrap.json
         run: |
           echo "🔍 Checking npm-shrinkwrap.json for short git commit hashes..."
-          
+
           if [ -f "npm-shrinkwrap.json" ]; then
             # Look for git+ssh URLs with hashes
             if grep -q "git+ssh:" npm-shrinkwrap.json; then
@@ -114,4 +114,4 @@ jobs:
           echo "🎉 Git Hash Security Check Complete!"
           echo "✅ All git dependencies use secure 40-character commit hashes"
           echo "✅ No collision-vulnerable short hashes detected"
-          echo "🛡️  Supply chain security requirements satisfied" 
+          echo "🛡️  Supply chain security requirements satisfied"
