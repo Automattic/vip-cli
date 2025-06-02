@@ -5,10 +5,19 @@ import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { CONFIGURATION_FOLDER } from './dev-environment-cli';
+import {
+	CONFIGURATION_FOLDER,
+	resolveMultisite,
+	processStringOrBooleanOption,
+} from './dev-environment-cli';
 import * as exit from '../cli/exit';
 
-import type { ConfigurationFileMeta, ConfigurationFileOptions, InstanceOptions } from './types';
+import type {
+	ConfigurationFileMeta,
+	ConfigurationFileOptions,
+	InstanceOptions,
+	MultisiteKind,
+} from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -106,7 +115,9 @@ function sanitizeConfiguration(
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		slug: configuration.slug.toString(), // NOSONAR
 		title: configuration.title?.toString(),
-		multisite: stringToBooleanIfDefined( configuration.multisite ),
+		multisite: resolveMultisite(
+			processStringOrBooleanOption( configuration.multisite as MultisiteKind | boolean )
+		),
 		php: configuration.php?.toString(),
 		wordpress: configuration.wordpress?.toString(),
 		'mu-plugins': configuration[ 'mu-plugins' ]?.toString(),

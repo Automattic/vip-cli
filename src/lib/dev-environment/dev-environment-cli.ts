@@ -41,6 +41,7 @@ import type {
 	InstanceData,
 	WordPressConfig,
 	ConfigurationFileOptions,
+	MultisiteKind,
 } from './types';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -662,7 +663,7 @@ export async function promptForURL( message: string, initial: string ): Promise<
 	return retval === 'n' ? '' : retval;
 }
 
-const multisiteOptions = [ 'subdomain', 'subdirectory' ] as const;
+const multisiteOptions = [ 'subdomain', 'subdirectory' ] as MultisiteKind[];
 
 export async function promptForMultisite(
 	message: string,
@@ -722,7 +723,7 @@ export function promptForBoolean( message: string, initial: boolean ): Promise< 
 	return Promise.resolve( initial );
 }
 
-function resolveMultisite( value: string | boolean ): 'subdomain' | 'subdirectory' | boolean {
+export function resolveMultisite( value: string | boolean ): MultisiteKind | boolean {
 	const isMultisiteOption = (
 		val: unknown
 	): val is ( typeof multisiteOptions )[ number ] | boolean =>
