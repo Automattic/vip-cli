@@ -76,7 +76,7 @@ export interface ConfigurationFileOptions {
 	version?: string;
 	slug?: string;
 	title?: string;
-	multisite?: boolean | 'subdomain' | 'subdirectory';
+	multisite?: boolean | MultisiteKind;
 	php?: string;
 	wordpress?: string;
 	'mu-plugins'?: string;
@@ -103,7 +103,7 @@ export interface InstanceData {
 	[ index: string ]: unknown;
 	siteSlug: string;
 	wpTitle: string;
-	multisite: boolean | 'subdomain' | 'subdirectory';
+	multisite: boolean | MultisiteKind;
 	wordpress: WordPressConfig;
 	muPlugins: ComponentConfig;
 	appCode: ComponentConfig;
