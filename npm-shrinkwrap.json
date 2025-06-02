@@ -31,7 +31,7 @@
         "ini": "5.0.0",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#1d3e8c0",
+        "lando": "github:automattic/lando-cli#1d3e8c01f5f7e7f5b51b29aba145f3bddd2ca32e",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "1.15.0",
         "open": "^10.0.0",
@@ -20356,7 +20356,7 @@
     },
     "lando": {
       "version": "git+ssh://git@github.com/automattic/lando-cli.git#1d3e8c01f5f7e7f5b51b29aba145f3bddd2ca32e",
-      "from": "lando@github:automattic/lando-cli#1d3e8c0",
+      "from": "lando@github:automattic/lando-cli#1d3e8c01f5f7e7f5b51b29aba145f3bddd2ca32e",
       "requires": {
         "axios": "^1.8.2",
         "bluebird": "^3.4.1",
