@@ -1,25 +1,35 @@
 ## Changelog
 
+### 3.17.1
+
+* chore: Update Git Hash Checker Github Action
+* build(deps-dev): bump @types/node from 22.15.27 to 22.15.29
+* build(deps-dev): bump @babel/core from 7.27.3 to 7.27.4 in the babel group
+* chore(deps): update `tar-fs` to 2.1.3 to fix CVE-2025-48387
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.17.0...3.17.1
+
+### 3.17.0
+
+* Allow URLs in the SQL import command
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.16.1...3.17.0
+
 ### 3.16.1
 
-* New develop release: 3.16.1-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/2382
-* build(deps-dev): bump @types/node from 22.15.24 to 22.15.27 by @dependabot in https://github.com/Automattic/vip-cli/pull/2379
-* fix(dev-env): Support multisite subdirectory/subdomain values in vip-dev-env.yml files by @saroshaga in https://github.com/Automattic/vip-cli/pull/2381
-* chore(deps): update lando by @saroshaga in https://github.com/Automattic/vip-cli/pull/2388
-* New package release: v3.16.1 by @github-actions in https://github.com/Automattic/vip-cli/pull/2389
-
+* build(deps-dev): bump @types/node from 22.15.24 to 22.15.27
+* fix(dev-env): Support multisite subdirectory/subdomain values in vip-dev-env.yml files
+* chore(deps): update lando
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.16.0...3.16.1
 
 ### 3.16.0
 
-* New develop release: 3.15.1-dev.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/2369
-* build(deps-dev): bump @types/dockerode from 3.3.38 to 3.3.39 by @dependabot in https://github.com/Automattic/vip-cli/pull/2372
-* build(deps-dev): bump @types/node from 22.15.18 to 22.15.21 by @dependabot in https://github.com/Automattic/vip-cli/pull/2373
-* feat(dev-env) Update ES to elasticsearch:8.18.1 by @rinatkhaziev in https://github.com/Automattic/vip-cli/pull/2377
-* build(deps-dev): bump @types/node from 22.15.21 to 22.15.24 by @dependabot in https://github.com/Automattic/vip-cli/pull/2378
-* build(deps-dev): bump @babel/core from 7.27.1 to 7.27.3 in the babel group by @dependabot in https://github.com/Automattic/vip-cli/pull/2374
-* New package release: v3.16.0 by @github-actions in https://github.com/Automattic/vip-cli/pull/2380
+* build(deps-dev): bump @types/dockerode from 3.3.38 to 3.3.39
+* build(deps-dev): bump @types/node from 22.15.18 to 22.15.21
+* feat(dev-env) Update ES to elasticsearch:8.18.1
+* build(deps-dev): bump @types/node from 22.15.21 to 22.15.24
+* build(deps-dev): bump @babel/core from 7.27.1 to 7.27.3 in the babel group
 
 
 **Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.15.0...3.16.0
