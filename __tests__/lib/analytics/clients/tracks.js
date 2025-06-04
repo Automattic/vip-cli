@@ -1,19 +1,21 @@
 import nock from 'nock';
-import url from 'url';
 
 import Tracks from '../../../../src/lib/analytics/clients/tracks';
 import * as apiConfig from '../../../../src/lib/cli/apiConfig';
 
 describe( 'lib/analytics/tracks', () => {
-	const {
-		protocol: endpointProtocol,
-		host: endpointHost,
-		path: endpointPath,
-	} = url.parse( Tracks.ENDPOINT );
+	const url = new URL( Tracks.ENDPOINT );
 
-	const buildNock = () => nock( `${ endpointProtocol }//${ endpointHost }` ).post( endpointPath );
+	const buildNock = () => nock( url.origin ).persist().post( url.pathname );
 
-	afterEach( nock.cleanAll );
+	beforeEach( () => {
+		nock.disableNetConnect();
+	} );
+
+	afterEach( () => {
+		nock.cleanAll();
+		nock.enableNetConnect();
+	} );
 
 	describe( '.send()', () => {
 		/**
