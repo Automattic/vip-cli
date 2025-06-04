@@ -11,9 +11,7 @@ describe( 'lib/analytics/tracks', () => {
 		path: endpointPath,
 	} = url.parse( Tracks.ENDPOINT );
 
-	const buildNock = () => {
-		return nock( `${ endpointProtocol }//${ endpointHost }` ).post( endpointPath );
-	};
+	const buildNock = () => nock( `${ endpointProtocol }//${ endpointHost }` ).post( endpointPath );
 
 	afterEach( nock.cleanAll );
 
@@ -49,7 +47,7 @@ describe( 'lib/analytics/tracks', () => {
 			buildNock()
 				// No arrow function because we need `this`
 				.reply( 200, function ( uri, requestBody ) {
-					expect( this.req.headers[ 'user-agent' ] ).toEqual( [ 'vip-cli' ] ); // The header value is returned as an array
+					expect( this.req.headers[ 'user-agent' ] ).toEqual( 'vip-cli' );
 
 					expect( requestBody ).toEqual( expectedBody );
 				} );
