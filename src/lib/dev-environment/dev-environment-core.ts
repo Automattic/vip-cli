@@ -430,12 +430,12 @@ export function exec(
 }
 
 export async function doesEnvironmentExist( instancePath: string ): Promise< boolean > {
-	debug( 'Will check for environment at', instancePath );
+	debug( 'Will check for environment at %s', instancePath );
 	const file = path.join( instancePath, instanceDataFileName );
 	try {
 		const stats = await fs.promises.stat( file );
 		return stats.isFile();
-	} catch ( err ) {
+	} catch {
 		return false;
 	}
 }
