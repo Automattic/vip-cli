@@ -9,27 +9,27 @@ describe( 'utils/cli/format', () => {
 			},
 			{
 				input: [ 'textnospaces' ],
-				expected: [ 'textnospaces' ],
+				expected: [ '"textnospaces"' ],
 			},
 			{
 				input: [ '{"json":"json with spaces"}' ],
-				expected: [ '{"json":"json with spaces"}' ],
+				expected: [ '"{\\"json\\":\\"json with spaces\\"}"' ],
 			},
 			{
 				input: [ '{ "json"     :    "json with spaces outside strings"     }' ],
-				expected: [ '{ "json"     :    "json with spaces outside strings"     }' ],
+				expected: [ '"{ \\"json\\"     :    \\"json with spaces outside strings\\"     }"' ],
 			},
 			{
 				input: [
 					'   { "json"     :    "json with spaces outside strings and outside the object"     }   ',
 				],
 				expected: [
-					'   { "json"     :    "json with spaces outside strings and outside the object"     }   ',
+					'"   { \\"json\\"     :    \\"json with spaces outside strings and outside the object\\"     }   "',
 				],
 			},
 			{
 				input: [ '{ "json" : "spaces-outside-strings-only"      }' ],
-				expected: [ '{ "json" : "spaces-outside-strings-only"      }' ],
+				expected: [ '"{ \\"json\\" : \\"spaces-outside-strings-only\\"      }"' ],
 			},
 			{
 				input: [ '{"json":broken json with spaces}' ],
@@ -37,11 +37,11 @@ describe( 'utils/cli/format', () => {
 			},
 			{
 				input: [ '--foo=bar1 "bar2" "bar3"' ],
-				expected: [ '--foo="bar1 \\"bar2\\" \\"bar3\\""' ],
+				expected: [ '"--foo=bar1 \\"bar2\\" \\"bar3\\""' ],
 			},
 			{
 				input: [ '--foo', 'bar1 "bar2" "bar3"' ],
-				expected: [ '--foo', '"bar1 \\"bar2\\" \\"bar3\\""' ],
+				expected: [ '"--foo"', '"bar1 \\"bar2\\" \\"bar3\\""' ],
 			},
 		] )( 'should requote args when needed - %o', ( { input, expected } ) => {
 			const result = requoteArgs( input );

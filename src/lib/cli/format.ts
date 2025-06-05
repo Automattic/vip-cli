@@ -140,30 +140,7 @@ export function keyValue( values: Tuple[] ): string {
 }
 
 export function requoteArgs( args: string[] ): string[] {
-	return args.map( arg => {
-		if ( arg.includes( '--' ) && arg.includes( '=' ) && arg.includes( ' ' ) ) {
-			return arg.replace( /"/g, '\\"' ).replace( /^--([^=]*)=(.*)$/, '--$1="$2"' );
-		}
-
-		if ( arg.includes( ' ' ) && ! isJsonObject( arg ) ) {
-			return `"${ arg.replace( /"/g, '\\"' ) }"`;
-		}
-
-		return arg;
-	} );
-}
-
-export function isJsonObject( str: unknown ): boolean {
-	return typeof str === 'string' && str.trim().startsWith( '{' ) && isJson( str );
-}
-
-export function isJson( str: string ): boolean {
-	try {
-		JSON.parse( str );
-		return true;
-	} catch ( error ) {
-		return false;
-	}
+	return args.map( arg => `"${ arg.replace( /"/g, '\\"' ) }"` );
 }
 
 export function capitalize( str: unknown ): string {
