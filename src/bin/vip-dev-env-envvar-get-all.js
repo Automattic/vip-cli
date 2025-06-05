@@ -1,23 +1,16 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import {
-	doesEnvironmentExist,
-	getEnvironmentPath,
-} from '../lib/dev-environment/dev-environment-core';
-import { parseEnvValue, preparseEnvData } from '../lib/dev-environment/env-vars';
+import { parseEnvValue, readEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
@@ -48,13 +41,8 @@ async function getAllEnvVarsCommand( args, opt ) {
 	await trackEvent( `${ trackingPrefix }execute`, trackingInfo );
 
 	try {
-		const environmentPath = getEnvironmentPath( slug );
-		if ( ! ( await doesEnvironmentExist( environmentPath ) ) ) {
-			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-		}
-
-		const data = await readFile( path.join( environmentPath, '.env' ), 'utf-8' );
-		const envVars = preparseEnvData( data ).map( line => {
+		const data = await readEnvFile( slug );
+		const envVars = data.map( line => {
 			const [ key, value ] = line.split( '=', 2 ).map( part => part.trim() );
 			return { name: key, value: parseEnvValue( value ) };
 		} );

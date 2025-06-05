@@ -1,22 +1,15 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import { readFile, rename, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import {
-	doesEnvironmentExist,
-	getEnvironmentPath,
-} from '../lib/dev-environment/dev-environment-core';
-import { preparseEnvData } from '../lib/dev-environment/env-vars';
+import { readEnvFile, updateEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
@@ -42,30 +35,25 @@ async function deleteEnvVarCommand( args, opt ) {
 	await trackEvent( `${ trackingPrefix }execute`, trackingInfo );
 
 	try {
-		const environmentPath = getEnvironmentPath( slug );
-		if ( ! ( await doesEnvironmentExist( environmentPath ) ) ) {
-			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-		}
-
-		const data = await readFile( path.join( environmentPath, '.env' ), 'utf-8' );
-		const envVars = preparseEnvData( data ).map( line => {
-			const [ key, value ] = line.split( '=', 2 ).map( part => part.trim() );
-			return [ key, value ?? '' ];
+		let removed = false;
+		const data = await readEnvFile( slug );
+		const envVars = [];
+		data.forEach( line => {
+			const [ key ] = line.split( '=', 2 ).map( part => part.trim() );
+			if ( key !== name ) {
+				envVars.push( line );
+			} else {
+				removed = true;
+			}
 		} );
 
-		const index = envVars.findIndex( ( [ key ] ) => key === name );
-		if ( index === -1 ) {
+		if ( ! removed ) {
 			const message = `The environment variable "${ name }" does not exist\n`;
 			process.stderr.write( chalk.yellow( message ) );
 			process.exitCode = 1;
 		} else {
-			envVars.splice( index, 1 );
-			const updatedData = envVars.map( ( [ key, value ] ) => `${ key }=${ value }` ).join( '\n' );
-			await writeFile( path.join( environmentPath, '.env.tmp' ), updatedData, 'utf-8' );
-			await rename(
-				path.join( environmentPath, '.env.tmp' ),
-				path.join( environmentPath, '.env' )
-			);
+			const updatedData = envVars.join( '\n' );
+			await updateEnvFile( slug, updatedData );
 
 			process.stdout.write(
 				chalk.green( `The variable "${ name }" has been successfully deleted.\n` )

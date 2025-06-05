@@ -1,22 +1,15 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import { readFile, rename, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import {
-	doesEnvironmentExist,
-	getEnvironmentPath,
-} from '../lib/dev-environment/dev-environment-core';
-import { quoteEnvValue, preparseEnvData } from '../lib/dev-environment/env-vars';
+import { quoteEnvValue, readEnvFile, updateEnvFile } from '../lib/dev-environment/env-vars';
 import { validateNameWithMessage } from '../lib/envvar/api';
 import { cancel, promptForValue } from '../lib/envvar/input';
 import { debug } from '../lib/envvar/logging';
@@ -61,10 +54,7 @@ async function deleteEnvVarCommand( args, opt ) {
 	}
 
 	try {
-		const environmentPath = getEnvironmentPath( slug );
-		if ( ! ( await doesEnvironmentExist( environmentPath ) ) ) {
-			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-		}
+		const data = await readEnvFile( slug );
 
 		if ( newValue === undefined ) {
 			if ( opt.fromFile ) {
@@ -83,8 +73,7 @@ async function deleteEnvVarCommand( args, opt ) {
 		newValue = quoteEnvValue( newValue );
 		let replaced = false;
 
-		const data = await readFile( path.join( environmentPath, '.env' ), 'utf-8' );
-		const envVars = preparseEnvData( data ).map( line => {
+		const envVars = data.map( line => {
 			const [ key ] = line.split( '=', 2 ).map( part => part.trim() );
 			if ( key === name ) {
 				replaced = true;
@@ -99,8 +88,7 @@ async function deleteEnvVarCommand( args, opt ) {
 		}
 
 		const updatedData = envVars.join( '\n' );
-		await writeFile( path.join( environmentPath, '.env.tmp' ), updatedData, 'utf-8' );
-		await rename( path.join( environmentPath, '.env.tmp' ), path.join( environmentPath, '.env' ) );
+		await updateEnvFile( slug, updatedData );
 
 		process.stdout.write(
 			chalk.green( `The variable "${ name }" has been successfully updated.\n` )

@@ -1,22 +1,15 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 
 import command from '../lib/cli/command';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	getEnvTrackingInfo,
 	handleCLIException,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import {
-	doesEnvironmentExist,
-	getEnvironmentPath,
-} from '../lib/dev-environment/dev-environment-core';
-import { preparseEnvData } from '../lib/dev-environment/env-vars';
+import { parseEnvValue, readEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
@@ -43,22 +36,19 @@ async function getEnvVarsCommand( args, opt ) {
 	await trackEvent( `${ trackingPrefix }execute`, trackingInfo );
 
 	try {
-		const environmentPath = getEnvironmentPath( slug );
-		if ( ! ( await doesEnvironmentExist( environmentPath ) ) ) {
-			throw new Error( DEV_ENVIRONMENT_NOT_FOUND );
-		}
-
-		const data = await readFile( path.join( environmentPath, '.env' ), 'utf-8' );
-		const envVar = preparseEnvData( data )
+		const data = await readEnvFile( slug );
+		const envVar = data
 			.map( line => line.split( '=', 2 ) )
-			.find( ( [ key ] ) => name === key );
+			.find( ( [ key ] ) => name === key.trim() );
 
 		if ( undefined === envVar ) {
-			const message = `The environment variable "${ name }" does not exist\n`;
-			process.stderr.write( chalk.yellow( message ) );
+			process.stderr.write(
+				chalk.yellow( `The environment variable "${ name }" does not exist\n` )
+			);
 			process.exitCode = 1;
 		} else {
-			process.stdout.write( `${ envVar[ 1 ] }\n` );
+			const value = parseEnvValue( envVar[ 1 ] );
+			process.stdout.write( `${ value }\n` );
 		}
 
 		await trackEvent( `${ trackingPrefix }success`, trackingInfo );
