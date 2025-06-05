@@ -1,4 +1,8 @@
+import path from 'node:path';
+import xdgBasedir from 'xdg-basedir';
+
 import {
+	getEnvFilePath,
 	parseEnvValue,
 	preparseEnvData,
 	quoteEnvValue,
@@ -70,5 +74,14 @@ describe( 'quoteEnvValue', () => {
 		const expected = `"this is a\\tmultiline\\r\\nvalue with special characters: \\$'\\"\\\\"`;
 		const actual = quoteEnvValue( input );
 		expect( actual ).toEqual( expected );
+	} );
+} );
+
+describe( 'getEnvFilePath', () => {
+	it( 'should return the correct path for a given slug', () => {
+		const slug = 'vip-local';
+		const expected = path.join( `${ xdgBasedir.data }`, 'vip', 'dev-environment', slug, '.env' );
+		const actual = getEnvFilePath( slug, false );
+		return expect( actual ).resolves.toEqual( expected );
 	} );
 } );
