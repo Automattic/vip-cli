@@ -3,7 +3,7 @@
 import command from '../lib/cli/command';
 
 const usage = 'vip dev-env envvar';
-const exampleUsage = 'vip dev-env envvar';
+const exampleUsage = 'vip dev-env envvar --slug vip-local';
 
 const examples = [
 	{
