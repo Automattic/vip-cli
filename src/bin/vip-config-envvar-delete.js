@@ -34,6 +34,7 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		command: `${ baseUsage } ${ name }`,
 		env_id: opt.env.id,
 		org_id: opt.app.organization.id,
+		org_sfid: opt.app.organization.salesforceId,
 		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};

@@ -32,6 +32,7 @@ export async function getEnvVarCommand( arg, opt ) {
 		command: `${ baseUsage } ${ name }`,
 		env_id: opt.env.id,
 		org_id: opt.app.organization.id,
+		org_sfid: opt.app.organization.salesforceId,
 		variable_name: name,
 	};
 

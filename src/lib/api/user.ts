@@ -10,6 +10,7 @@ const QUERY_CURRENT_USER = gql`
 		me {
 			id
 			displayName
+			trackingUserId
 			isVIP
 			organizationRoles {
 				nodes {

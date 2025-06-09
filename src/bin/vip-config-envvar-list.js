@@ -31,6 +31,7 @@ export async function listEnvVarsCommand( arg, opt ) {
 		env_id: opt.env.id,
 		format: opt.format,
 		org_id: opt.app.organization.id,
+		org_sfid: opt.app.organization.salesforceId,
 	};
 
 	debug( `Request: list environment variables for ${ getEnvContext( opt.app, opt.env ) }` );
