@@ -28,13 +28,14 @@ class VIPLogger {
   private rootLogger: winston.Logger;
   private loggers: Map<string, DebugLikeLogger>;
   private enabledNamespaces: Set<string>;
+  private isDebugMode: boolean;
 
   constructor(options: VIPLoggerOptions = {}) {
     this.logDir = options.logDir || path.join(os.homedir(), '.vip-cli', 'logs');
     fs.mkdirSync(this.logDir, { recursive: true });
     
-    // Create the root logger with shared transports
-    this.rootLogger = this._createRootLogger(options);
+    // Check if --debug flag is passed
+    this.isDebugMode = process.argv.includes('--debug') || process.argv.includes('-d');
     
     // Container for namespace-specific loggers
     this.loggers = new Map();
@@ -44,6 +45,9 @@ class VIPLogger {
     if (process.env.DEBUG) {
       this.enabledNamespaces = this._parseDebugEnv(process.env.DEBUG);
     }
+    
+    // Create the root logger with shared transports
+    this.rootLogger = this._createRootLogger(options);
   }
 
   private _parseDebugEnv(debugEnv: string): Set<string> {
@@ -68,12 +72,13 @@ class VIPLogger {
   }
   
   private _createRootLogger(options: VIPLoggerOptions): winston.Logger {
-    const consoleLevel = options.consoleLevel || 'debug';
-    const fileLevel = options.fileLevel || 'debug';
+    // Determine console log level based on debug mode
+    const consoleLevel = options.consoleLevel || (this.isDebugMode ? 'debug' : 'warn');
+    const fileLevel = options.fileLevel || 'debug'; // Always log everything to file
     const filename = options.filename || 'vip-cli.log';
 
     return winston.createLogger({
-      level: 'debug',
+      level: 'debug', // Set internal level to debug to capture everything
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.json()
@@ -210,6 +215,11 @@ class VIPLogger {
     
     return dependencyLogger;
   }
+  
+  // Check if we're in debug mode
+  public isInDebugMode(): boolean {
+    return this.isDebugMode;
+  }
 }
 
 // Create singleton instance
@@ -230,5 +240,6 @@ export const logger = vipLogger;
 export const getRootLogger = (): winston.Logger => vipLogger.getRootLogger();
 export const createLoggerForDependency = (namespace: string): winston.Logger => 
   vipLogger.createLoggerForDependency(namespace);
+export const isDebugMode = (): boolean => vipLogger.isInDebugMode();
 
 export default debugLib; 
