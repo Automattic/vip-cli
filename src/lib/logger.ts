@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -12,15 +13,15 @@ interface VIPLoggerOptions {
 }
 
 interface DebugLikeLogger {
-	( ...args: any[] ): boolean;
+	( ...args: unknown[] ): boolean;
 	enabled: boolean;
 	namespace: string;
-	error: ( ...args: any[] ) => boolean;
-	warn: ( ...args: any[] ) => boolean;
-	info: ( ...args: any[] ) => boolean;
-	verbose: ( ...args: any[] ) => boolean;
-	debug: ( ...args: any[] ) => boolean;
-	silly: ( ...args: any[] ) => boolean;
+	error: ( ...args: unknown[] ) => boolean;
+	warn: ( ...args: unknown[] ) => boolean;
+	info: ( ...args: unknown[] ) => boolean;
+	verbose: ( ...args: unknown[] ) => boolean;
+	debug: ( ...args: unknown[] ) => boolean;
+	silly: ( ...args: unknown[] ) => boolean;
 }
 
 class VIPLogger {
