@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import { spawn } from 'child_process';
-import debugLib from '../logger';
 import { prompt, Confirm, Select } from 'enquirer';
 import Lando from 'lando';
 import formatters from 'lando/lib/formatters';
@@ -30,6 +29,7 @@ import {
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 	DEV_ENVIRONMENT_COMPONENTS_WITH_WP,
 } from '../constants/dev-environment';
+import debugLib from '../logger';
 import { trackEvent } from '../tracker';
 import UserError from '../user-error';
 
@@ -378,7 +378,10 @@ export async function promptForArguments(
 		validateMuPluginsLocalPath
 	);
 
-	debug.verbose( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
+	debug.verbose(
+		`Processing elasticsearch with preselected "%s"`,
+		preselectedOptions.elasticsearch
+	);
 	if ( 'elasticsearch' in preselectedOptions ) {
 		instanceData.elasticsearch = Boolean( preselectedOptions.elasticsearch );
 	} else {

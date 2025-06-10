@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import debugLib from '../logger';
 import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
 import Lando, { type LandoConfig } from 'lando/lib/lando';
@@ -20,6 +19,7 @@ import {
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import debugLib from '../logger';
 import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
@@ -207,7 +207,10 @@ export async function bootstrapLando(): Promise< Lando > {
 				registryResolvable = ( await lookup( 'ghcr.io' ) ).address.length > 0 || false;
 				debug( 'Registry ghcr.io is resolvable' );
 			} catch ( err ) {
-				debug.warn( 'Registry ghcr.io is not resolvable, image pull might be broken. Error: %O', err );
+				debug.warn(
+					'Registry ghcr.io is not resolvable, image pull might be broken. Error: %O',
+					err
+				);
 				registryResolvable = false;
 			}
 

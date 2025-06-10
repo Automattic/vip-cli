@@ -2,7 +2,6 @@
 
 import chalk from 'chalk';
 import columns from 'cli-columns';
-import debugLib from '../lib/logger';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 
@@ -19,6 +18,7 @@ import {
 	isFile,
 	uploadImportSqlFileToS3,
 } from '../lib/client-file-uploader';
+import debugLib from '../lib/logger';
 import { searchAndReplace } from '../lib/search-and-replace';
 import {
 	currentUserCanImportForApp,

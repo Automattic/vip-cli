@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import debugLib from '../lib/logger';
-
 import command from '../lib/cli/command';
 import {
 	getEnvTrackingInfo,
@@ -12,6 +10,7 @@ import {
 } from '../lib/dev-environment/dev-environment-cli';
 import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, landoShell } from '../lib/dev-environment/dev-environment-lando';
+import debugLib from '../lib/logger';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );

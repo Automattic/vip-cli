@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import debugLib from '../logger';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
 import { print } from 'graphql';
@@ -42,6 +41,7 @@ import {
 	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
 import { createProxyAgent } from '../http/proxy-agent';
+import debugLib from '../logger';
 import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
 
@@ -171,7 +171,12 @@ export function createEnvironment(
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	integrationsConfig ??= {};
-	debug.verbose( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
+	debug.verbose(
+		'Will process an environment',
+		slug,
+		'with instanceData for creation: ',
+		instanceData
+	);
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -185,7 +190,12 @@ export function createEnvironment(
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 
-	debug.verbose( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
+	debug.verbose(
+		'Will create an environment',
+		slug,
+		'with instanceData: ',
+		preProcessedInstanceData
+	);
 
 	return prepareLandoEnv(
 		lando,
@@ -201,7 +211,12 @@ export async function updateEnvironment(
 	instanceData: InstanceData
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
-	debug.verbose( 'Will process an environment', slug, 'with instanceData for updating: ', instanceData );
+	debug.verbose(
+		'Will process an environment',
+		slug,
+		'with instanceData for updating: ',
+		instanceData
+	);
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -214,7 +229,12 @@ export async function updateEnvironment(
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
-	debug.verbose( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
+	debug.verbose(
+		'Will create an environment',
+		slug,
+		'with instanceData: ',
+		preProcessedInstanceData
+	);
 
 	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }

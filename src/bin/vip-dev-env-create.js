@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
@@ -31,6 +30,7 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import { generatePassword } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import debugLib from '../lib/logger';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );

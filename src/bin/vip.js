@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 import { prompt } from 'enquirer';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
+import debugLib from '../lib/logger';
 import Token from '../lib/token';
 import { trackEvent, aliasUser } from '../lib/tracker';
 

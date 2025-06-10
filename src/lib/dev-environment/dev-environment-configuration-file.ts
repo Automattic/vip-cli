@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import debugLib from '../logger';
 import ejs from 'ejs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
@@ -11,6 +10,7 @@ import {
 	processStringOrBooleanOption,
 } from './dev-environment-cli';
 import * as exit from '../cli/exit';
+import debugLib from '../logger';
 
 import type {
 	ConfigurationFileMeta,
