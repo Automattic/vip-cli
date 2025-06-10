@@ -9,6 +9,7 @@ import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
+import util from 'util';
 import winston from 'winston';
 import xdgBasedir from 'xdg-basedir';
 
@@ -200,9 +201,10 @@ export async function bootstrapLando(): Promise< Lando > {
 
 		const lando = new Lando( config );
 
-		// Add a custom transport to Lando's logger that forwards logs to our VIP logger
+		// Get our VIP logger instance
 		const vipLogger = getRootLogger();
 
+		// Add a custom transport to Lando's logger that forwards logs to our VIP logger
 		// Create a custom Winston transport that forwards logs to our VIP logger
 		class VIPLoggerTransport extends winston.Transport {
 			constructor( opts ) {
@@ -212,15 +214,22 @@ export async function bootstrapLando(): Promise< Lando > {
 			}
 
 			log( info, callback ) {
-				const { level, message, ...meta } = info;
-
-				// Forward to our VIP logger with a lando prefix
 				try {
-					vipLogger[ level ]( `[lando] ${ message }`, ...Object.values( meta ) );
+					const { level, message, ...meta } = info;
+
+					// Extract splat array (format args) if available
+					// Winston 3 uses a special "splat" key for format args
+					const splat = meta[ Symbol.for( 'splat' ) ] || [];
+
+					// If we have format args, use Node's util.format to properly format the message
+					// This ensures %s, %d, %j placeholders are properly substituted
+					const formattedMessage = splat.length > 0 ? util.format( message, ...splat ) : message;
+
+					// Forward to our VIP logger with a lando prefix
+					vipLogger[ level ]( `[lando] ${ formattedMessage }` );
 				} catch ( error ) {
 					// Fallback if something goes wrong
 					vipLogger.debug( `[lando] Error forwarding log: ${ error }` );
-					vipLogger.debug( `[lando] Original message: ${ message }` );
 				}
 
 				// Signal the log was processed
