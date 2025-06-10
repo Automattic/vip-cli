@@ -1,6 +1,5 @@
 import args from 'args';
 import chalk from 'chalk';
-import debugLib from 'debug';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 
@@ -13,6 +12,7 @@ import API from '../../lib/api';
 import app from '../../lib/api/app';
 import { trackEvent } from '../../lib/tracker';
 import { parseApiError } from '../../lib/utils';
+import { getLogFilePath } from '../logger';
 import UserError from '../user-error';
 
 function uncaughtError( err ) {
@@ -24,7 +24,14 @@ function uncaughtError( err ) {
 		exit.withError( err );
 	}
 
-	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );
+	const logFilePath = getLogFilePath();
+
+	console.log( chalk.red( '✕' ), 'An unexpected error occurred.' );
+	console.log( chalk.yellow( 'For detailed debugging information, please check the log file:' ) );
+	console.log( chalk.cyan( logFilePath ) );
+	console.log( '' );
+	console.log( 'If you need further assistance, please contact VIP Support with this log file.' );
+	console.log( chalk.dim( 'Error details:' ) );
 	console.log( chalk.dim( err.stack ) );
 
 	exit.withError( 'Unexpected error' );
@@ -88,7 +95,10 @@ args.argv = async function ( argv, cb ) {
 	}
 
 	if ( options.debug || options.d ) {
-		debugLib.enable( options.debug === true ? '*' : options.debug );
+		// We don't need to call debug.enable since our logger already handles this
+		// Just keeping the flag for compatibility
+		const debugValue = options.debug === true ? '*' : options.debug;
+		process.env.DEBUG = debugValue;
 	}
 
 	// If we have both an --app/--env and an alias, we need to give a warning
@@ -627,7 +637,7 @@ export default function ( opts ) {
 	if ( _opts.format ) {
 		args.option(
 			'format',
-			'Render output in a particular format. Accepts “table“ (default), “csv“, and “json“.'
+			'Render output in a particular format. Accepts "table" (default), "csv", and "json".'
 		);
 	}
 
