@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import chalk from 'chalk';
 import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
