@@ -4,8 +4,8 @@
  * and those that use the debug library.
  */
 
-import debugLib, { createLoggerForDependency } from '../logger';
-import { attachLoggerToDependency } from '../utils';
+import debugLib, { createLoggerForDependency } from '../../logger';
+import { attachLoggerToDependency } from '../../utils';
 
 // Import a hypothetical third-party dependency
 // In a real scenario, replace this with the actual dependency

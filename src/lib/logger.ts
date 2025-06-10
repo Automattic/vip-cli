@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 import util from 'util';
 import winston from 'winston';
+import { Writable } from 'stream';
 
 interface VIPLoggerOptions {
 	logDir?: string;
@@ -235,32 +236,37 @@ class VIPLogger {
 			defaultMeta: { namespace },
 		} );
 
+		// Create a custom writable stream that forwards to our root logger
+		const customStream = new Writable({
+			write: (chunk, encoding, callback) => {
+				try {
+					const message = chunk.toString();
+					const logObj = JSON.parse(message);
+					// Add namespace if not provided
+					if (!logObj.namespace) {
+						logObj.namespace = namespace;
+					}
+					// Forward to our root logger at the appropriate level
+					const level = logObj.level || 'debug';
+					this.rootLogger.log({
+						level,
+						message: logObj.message,
+						namespace: logObj.namespace,
+						...logObj,
+					});
+				} catch (e) {
+					// Fallback if parsing fails
+					this.rootLogger.debug(`${namespace}: ${chunk.toString()}`);
+				}
+				callback();
+			}
+		});
+
 		// Add a transport that forwards to our root logger
 		dependencyLogger.add(
-			new winston.transports.Stream( {
-				stream: {
-					write: ( message: string ) => {
-						try {
-							const logObj = JSON.parse( message );
-							// Add namespace if not provided
-							if ( ! logObj.namespace ) {
-								logObj.namespace = namespace;
-							}
-							// Forward to our root logger at the appropriate level
-							const level = logObj.level || 'debug';
-							this.rootLogger.log( {
-								level,
-								message: logObj.message,
-								namespace: logObj.namespace,
-								...logObj,
-							} );
-						} catch ( e ) {
-							// Fallback if parsing fails
-							this.rootLogger.debug( `${ namespace }: ${ message }` );
-						}
-					},
-				},
-			} )
+			new winston.transports.Stream({
+				stream: customStream
+			})
 		);
 
 		return dependencyLogger;
