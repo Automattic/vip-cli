@@ -1,4 +1,4 @@
-import debugLib from 'debug';
+import debugLib, { createLoggerForDependency } from './logger';
 import fs from 'fs';
 import { setTimeout } from 'node:timers/promises';
 import os from 'os';
@@ -101,4 +101,26 @@ export function parseApiError( err: {
 	}
 
 	return null;
+}
+
+/**
+ * Creates a logger instance for a dependency
+ * 
+ * @param {string} namespace The namespace for the dependency's logger
+ * @param {object} dependency The dependency that needs a logger
+ * @param {string} loggerPropName The property name where the dependency expects the logger (defaults to 'logger')
+ * @return {object} The dependency with the logger attached
+ */
+export function attachLoggerToDependency< T extends object >(
+	namespace: string,
+	dependency: T,
+	loggerPropName = 'logger'
+): T {
+	const logger = createLoggerForDependency(namespace);
+	
+	// Create a new object with the logger attached
+	return {
+		...dependency,
+		[loggerPropName]: logger,
+	};
 }

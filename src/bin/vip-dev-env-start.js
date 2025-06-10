@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import debugLib from 'debug';
-
 import command from '../lib/cli/command';
 import {
 	getEnvTrackingInfo,
@@ -13,6 +11,7 @@ import {
 } from '../lib/dev-environment/dev-environment-cli';
 import { startEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
+import debugLib from '../lib/logger';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
@@ -75,6 +74,14 @@ command( {
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
+		// Demonstrate different log levels using our Winston-based logger
+		debug.error('This is an error log from dev-env-start');
+		debug.warn('This is a warning log from dev-env-start');
+		debug.info('This is an info log from dev-env-start');
+		debug.verbose('This is a verbose log from dev-env-start');
+		debug('This is a standard debug log from dev-env-start');
+		debug.silly('This is a silly log from dev-env-start');
+
 		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando();
 		validateDependencies( lando );

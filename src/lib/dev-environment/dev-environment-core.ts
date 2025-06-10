@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../logger';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
 import { print } from 'graphql';
@@ -117,11 +117,11 @@ export async function startEnvironment(
 	slug: string,
 	options: StartEnvironmentOptions
 ): Promise< void > {
-	debug( 'Will start an environment', slug );
+	debug.verbose( 'Will start an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for %s is %s', slug, instancePath );
+	debug.verbose( 'Instance path for %s is %s', slug, instancePath );
 
 	const environmentExists = fs.existsSync( instancePath );
 
@@ -148,11 +148,11 @@ export async function startEnvironment(
 }
 
 export async function stopEnvironment( lando: Lando, slug: string ): Promise< void > {
-	debug( 'Will stop an environment', slug );
+	debug.verbose( 'Will stop an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	const environmentExists = fs.existsSync( instancePath );
 
@@ -171,11 +171,11 @@ export function createEnvironment(
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	integrationsConfig ??= {};
-	debug( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
+	debug.verbose( 'Will process an environment', slug, 'with instanceData for creation: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	const alreadyExists = fs.existsSync( instancePath );
 
@@ -185,7 +185,7 @@ export function createEnvironment(
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
 
-	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
+	debug.verbose( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	return prepareLandoEnv(
 		lando,
@@ -201,11 +201,11 @@ export async function updateEnvironment(
 	instanceData: InstanceData
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
-	debug( 'Will process an environment', slug, 'with instanceData for updating: ', instanceData );
+	debug.verbose( 'Will process an environment', slug, 'with instanceData for updating: ', instanceData );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	const alreadyExists = fs.existsSync( instancePath );
 
@@ -214,7 +214,7 @@ export async function updateEnvironment(
 	}
 
 	const preProcessedInstanceData = preProcessInstanceData( instanceData );
-	debug( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
+	debug.verbose( 'Will create an environment', slug, 'with instanceData: ', preProcessedInstanceData );
 
 	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }
@@ -258,10 +258,10 @@ export async function destroyEnvironment(
 	slug: string,
 	removeFiles: boolean
 ): Promise< void > {
-	debug( 'Will destroy an environment', slug );
+	debug.verbose( 'Will destroy an environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
@@ -270,10 +270,10 @@ export async function destroyEnvironment(
 
 	const landoFilePath = path.join( instancePath, landoFileName );
 	if ( fs.existsSync( landoFilePath ) ) {
-		debug( 'Lando file exists, will lando destroy.' );
+		debug.verbose( 'Lando file exists, will lando destroy.' );
 		await landoDestroy( lando, instancePath );
 	} else {
-		debug( "Lando file doesn't exist, skipping lando destroy." );
+		debug.verbose( "Lando file doesn't exist, skipping lando destroy." );
 	}
 
 	await fs.promises.rm(
@@ -301,7 +301,7 @@ export async function printAllEnvironmentsInfo(
 ): Promise< void > {
 	const allEnvNames = getAllEnvironmentNames();
 
-	debug( 'Will print info for all environments. Names found: ', allEnvNames );
+	debug.verbose( 'Will print info for all environments. Names found: ', allEnvNames );
 
 	console.log(
 		'Found ' +
@@ -342,11 +342,11 @@ export async function showLogs(
 	slug: string,
 	options: LandoLogsOptions = {}
 ): Promise< unknown > {
-	debug( 'Will display logs command on env', slug, 'with options', options );
+	debug.verbose( 'Will display logs command on env', slug, 'with options', options );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	if ( options.service ) {
 		const appInfo = await landoInfo( lando, instancePath );
@@ -367,11 +367,11 @@ export async function printEnvironmentInfo(
 	slug: string,
 	options: PrintOptions
 ): Promise< void > {
-	debug( 'Will get info for an environment', slug );
+	debug.verbose( 'Will get info for an environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	const environmentExists = await doesEnvironmentExist( instancePath );
 	if ( ! environmentExists ) {
@@ -412,18 +412,18 @@ export function exec(
 	args: string[],
 	options: LandoExecOptions = {}
 ): Promise< unknown > {
-	debug( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
+	debug.verbose( 'Will run a wp command on env', slug, 'with args', args, ' and options', options );
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug.verbose( 'Instance path for', slug, 'is:', instancePath );
 
 	const [ command, ...commandArgs ] = args;
 	return landoExec( lando, instancePath, command, commandArgs, options );
 }
 
 export async function doesEnvironmentExist( instancePath: string ): Promise< boolean > {
-	debug( 'Will check for environment at', instancePath );
+	debug.verbose( 'Will check for environment at', instancePath );
 	const file = path.join( instancePath, instanceDataFileName );
 	try {
 		const stats = await fs.promises.stat( file );
@@ -434,7 +434,7 @@ export async function doesEnvironmentExist( instancePath: string ): Promise< boo
 }
 
 export function readEnvironmentData( slug: string ): InstanceData {
-	debug( 'Will try to get instance data for environment', slug );
+	debug.verbose( 'Will try to get instance data for environment', slug );
 
 	const instancePath = getEnvironmentPath( slug );
 
@@ -492,7 +492,7 @@ export function readEnvironmentData( slug: string ): InstanceData {
  * @return {Promise<void>} Promise
  */
 export function writeEnvironmentData( slug: string, data: InstanceData ): Promise< void > {
-	debug( 'Will try to write instance data for environment', slug );
+	debug.verbose( 'Will try to write instance data for environment', slug );
 	const instancePath = getEnvironmentPath( slug );
 	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
 
@@ -530,7 +530,7 @@ async function writeIntegrationsConfig(
 
 		const configJson = JSON.stringify( integrationsConfig, null, 4 );
 		await fs.promises.writeFile( integrationsConfigTargetPath, configJson );
-		debug( `Integrations configuration file created in ${ integrationsConfigTargetPath }` );
+		debug.verbose( `Integrations configuration file created in ${ integrationsConfigTargetPath }` );
 	}
 }
 
@@ -588,9 +588,9 @@ async function prepareLandoEnv(
 		await fs.promises.appendFile( envFilePath, '' );
 	}
 
-	debug( `Lando file created in ${ landoFileTargetPath }` );
-	debug( `Nginx file created in ${ nginxFileTargetPath }` );
-	debug( `Instance data file created in ${ instanceDataTargetPath }` );
+	debug.verbose( `Lando file created in ${ landoFileTargetPath }` );
+	debug.verbose( `Nginx file created in ${ nginxFileTargetPath }` );
+	debug.verbose( `Instance data file created in ${ instanceDataTargetPath }` );
 
 	await writeIntegrationsConfig( instancePath, integrationsConfig );
 
@@ -731,10 +731,10 @@ export async function resolveImportPath(
 	searchReplace: string | string[] | null | undefined,
 	inPlace: boolean
 ): Promise< string > {
-	debug( `Will try to resolve path - ${ fileName }` );
+	debug.verbose( `Will try to resolve path - ${ fileName }` );
 	let resolvedPath = resolvePath( fileName );
 
-	debug( `Filename ${ fileName } resolved to ${ resolvedPath }` );
+	debug.verbose( `Filename ${ fileName } resolved to ${ resolvedPath }` );
 
 	if ( ! fs.existsSync( resolvedPath ) ) {
 		throw new UserError(
@@ -989,7 +989,7 @@ export async function getVersionList(): Promise< WordPressTag[] > {
 		console.log(
 			chalk.yellow( 'fetchWordPressVersionList failed to retrieve an updated version list' )
 		);
-		debug( err );
+		debug.error( err );
 	}
 
 	// Try to parse the cached file if it exists.
@@ -997,7 +997,7 @@ export async function getVersionList(): Promise< WordPressTag[] > {
 		const data = await fs.promises.readFile( cacheFile, 'utf8' );
 		return JSON.parse( data ) as WordPressTag[];
 	} catch ( err ) {
-		debug( err );
+		debug.error( err );
 		return [
 			{
 				ref: 'HEAD',
@@ -1017,7 +1017,7 @@ export async function getVersionList(): Promise< WordPressTag[] > {
  * @return {string} Workspace path
  */
 export function generateVSCodeWorkspace( slug: string ) {
-	debug( 'Generating VS Code Workspace' );
+	debug.verbose( 'Generating VS Code Workspace' );
 	const location = getEnvironmentPath( slug );
 	const workspacePath = getVSCodeWorkspacePath( slug );
 	const instanceData = readEnvironmentData( slug );
@@ -1051,7 +1051,7 @@ export function generateVSCodeWorkspace( slug: string ) {
 	// Check if running under WSL and add hostname if needed
 	// This is to allow xdebug to work when running under WSL
 	if ( process.env?.WSL_DISTRO_NAME ) {
-		debug( 'WSL detected, adding hostname to debug configuration' );
+		debug.verbose( 'WSL detected, adding hostname to debug configuration' );
 		debugConfig.hostname = '0.0.0.0';
 	}
 
@@ -1109,7 +1109,7 @@ export function getVSCodeWorkspacePath( slug: string ) {
  * @return {string} Project directory path
  */
 export function generatePHPStormWorkspace( slug: string ): string {
-	debug( 'Generating PHPStorm Workspace' );
+	debug.verbose( 'Generating PHPStorm Workspace' );
 	const location = getEnvironmentPath( slug );
 	// const location = location;
 	const instanceData = readEnvironmentData( slug );

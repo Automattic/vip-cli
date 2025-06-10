@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 import { prompt } from 'enquirer';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';

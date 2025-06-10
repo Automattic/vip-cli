@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { spawn } from 'child_process';
-import debugLib from 'debug';
+import debugLib from '../logger';
 import { prompt, Confirm, Select } from 'enquirer';
 import Lando from 'lando';
 import formatters from 'lando/lib/formatters';
@@ -113,7 +113,7 @@ export async function handleCLIException(
 			);
 		}
 
-		debug( exception );
+		debug.error( exception );
 	}
 }
 
@@ -122,7 +122,7 @@ export const validateDependencies = ( lando: Lando ) => {
 
 	validateDockerInstalled( lando );
 	const duration = new Date().getTime() - now.getTime();
-	debug( 'Validation checks completed in %d ms', duration );
+	debug.verbose( 'Validation checks completed in %d ms', duration );
 };
 
 export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise< string > {
@@ -257,7 +257,7 @@ export async function promptForArguments(
 	suppressPrompts: boolean,
 	create: boolean
 ): Promise< InstanceData > {
-	debug( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
+	debug.verbose( 'Provided preselected', preselectedOptions, 'and default', defaultOptions );
 
 	let isVIPUser: boolean;
 	try {
@@ -378,7 +378,7 @@ export async function promptForArguments(
 		validateMuPluginsLocalPath
 	);
 
-	debug( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
+	debug.verbose( `Processing elasticsearch with preselected "%s"`, preselectedOptions.elasticsearch );
 	if ( 'elasticsearch' in preselectedOptions ) {
 		instanceData.elasticsearch = Boolean( preselectedOptions.elasticsearch );
 	} else {
@@ -404,7 +404,7 @@ export async function promptForArguments(
 		}
 	}
 
-	debug( 'Instance data after prompts', instanceData );
+	debug.verbose( 'Instance data after prompts', instanceData );
 	return instanceData;
 }
 
@@ -412,7 +412,7 @@ async function processWordPress(
 	preselectedValue: string,
 	defaultValue: string
 ): Promise< WordPressConfig > {
-	debug(
+	debug.verbose(
 		`processing 'WordPress', with preselected/default - ${ preselectedValue }/${ defaultValue }`
 	);
 
@@ -437,7 +437,7 @@ async function processWordPress(
 		}
 	}
 
-	debug( result );
+	debug.verbose( result );
 	return result;
 }
 
@@ -450,7 +450,7 @@ async function processComponent(
 	suppressPrompts: boolean,
 	localPathValidator: ComponentPathValidator
 ): Promise< ComponentConfig > {
-	debug(
+	debug.verbose(
 		`Processing the '${ componentType }' component, with preselected = %s, default = %s`,
 		preselectedValue,
 		defaultValue
@@ -471,13 +471,13 @@ async function processComponent(
 		? processComponentOptionInput( preselectedValue, true )
 		: await promptForComponent( componentType, true, defaultObject );
 
-	debug( result );
+	debug.verbose( result );
 
 	if ( result.mode === 'local' ) {
 		result = await validateLocalPath( result, localPathValidator, componentType, defaultObject );
 	}
 
-	debug( result );
+	debug.verbose( result );
 	return result;
 }
 
@@ -739,7 +739,7 @@ export function resolvePhpVersion( version: string ): string {
 		return '';
 	}
 
-	debug( `Resolving PHP version %j`, version );
+	debug.verbose( `Resolving PHP version %j`, version );
 
 	let result: string;
 	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
@@ -754,12 +754,12 @@ export function resolvePhpVersion( version: string ): string {
 		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
 	}
 
-	debug( 'Resolved PHP image: %j', result );
+	debug.verbose( 'Resolved PHP image: %j', result );
 	return result;
 }
 
 export async function promptForPhpVersion( initialValue: string ): Promise< string > {
-	debug( `Prompting for PHP version, preselected option is ${ initialValue }` );
+	debug.verbose( `Prompting for PHP version, preselected option is ${ initialValue }` );
 
 	let answer = initialValue;
 	if ( isStdinTTY ) {
@@ -790,7 +790,7 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 export async function promptForWordPress(
 	defaultObject: WordPressConfig | string | null
 ): Promise< WordPressConfig > {
-	debug( `Prompting for wordpress with default:`, defaultObject );
+	debug.verbose( `Prompting for wordpress with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames.wordpress;
 
 	const messagePrefix = `${ componentDisplayName } - `;
@@ -830,7 +830,7 @@ export async function promptForComponent(
 	allowLocal: boolean,
 	defaultObject: ComponentConfig | null
 ): Promise< ComponentConfig > {
-	debug( `Prompting for ${ component } with default:`, defaultObject );
+	debug.verbose( `Prompting for ${ component } with default:`, defaultObject );
 	const componentDisplayName = componentDisplayNames[ component ] || component;
 	const componentDemoName = componentDemoNames[ component ];
 	const modChoices = [];
@@ -868,7 +868,7 @@ export async function promptForComponent(
 		modeResult = ( await select.run() ) as typeof modeResult;
 	}
 
-	debug( modeResult );
+	debug.verbose( modeResult );
 
 	const messagePrefix = selectMode ? '\t' : `${ componentDisplayName } - `;
 	if ( 'local' === modeResult ) {
@@ -1232,10 +1232,10 @@ const findExecutable = ( candidates: string[] ): string | null => {
 	for ( const candidate of candidates ) {
 		const result = which( candidate );
 		if ( result ) {
-			debug( `Found ${ candidate } in path` );
+			debug.verbose( `Found ${ candidate } in path` );
 			return candidate;
 		}
-		debug( `Could not find ${ candidate } in path` );
+		debug.verbose( `Could not find ${ candidate } in path` );
 	}
 	return null;
 };

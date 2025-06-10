@@ -2,7 +2,7 @@
 
 import chalk from 'chalk';
 import columns from 'cli-columns';
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 

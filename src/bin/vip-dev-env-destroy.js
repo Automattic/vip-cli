@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 
 import command from '../lib/cli/command';
 import {
@@ -44,7 +44,7 @@ command( {
 	)
 	.option(
 		'soft',
-		'Preserve an environment’s configuration files; allows an environment to be regenerated with the start command.'
+		"Preserve an environment's configuration files; allows an environment to be regenerated with the start command."
 	)
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

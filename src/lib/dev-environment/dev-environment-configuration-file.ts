@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../logger';
 import ejs from 'ejs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
@@ -52,7 +52,7 @@ export async function getConfigurationFileOptions(): Promise< ConfigurationFileO
 		let configuration = sanitizeConfiguration( configurationFromFile, configurationPath );
 		configuration = adjustRelativePaths( configuration, configurationPath );
 
-		debug( 'Sanitized configuration from file:', configuration );
+		debug.verbose( 'Sanitized configuration from file:', configuration );
 		return configuration;
 	} catch ( err ) {
 		exit.withError( err instanceof Error ? err : new Error( 'Unknown error' ) );
@@ -260,7 +260,7 @@ async function findConfigurationFile(): Promise<
 			return { configurationPath: file, configurationContents: contents };
 		} catch ( error ) {
 			const err = error instanceof Error ? error : new Error( 'Unknown error' );
-			debug( `Error reading or rendering file ${ file }: ${ err.message }` );
+			debug.error( `Error reading or rendering file ${ file }: ${ err.message }` );
 		}
 	}
 

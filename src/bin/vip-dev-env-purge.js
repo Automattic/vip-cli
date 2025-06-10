@@ -4,7 +4,9 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import debugLib from 'debug';
+import { existsSync } from 'fs';
+import path from 'path';
+import * as process from 'process';
 
 /**
  * Internal dependencies
@@ -22,6 +24,7 @@ import {
 } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
+import debugLib from '../lib/logger';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 const exampleUsage = 'vip dev-env purge';

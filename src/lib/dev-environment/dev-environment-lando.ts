@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../logger';
 import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
 import Lando, { type LandoConfig } from 'lando/lib/lando';
@@ -131,7 +131,7 @@ async function regenerateLandofile( lando: Lando, instancePath: string ): Promis
 }
 
 async function landoRecovery( lando: Lando, instancePath: string, error: unknown ): Promise< App > {
-	debug( 'Error initializing Lando app', error );
+	debug.error( 'Error initializing Lando app', error );
 	console.warn( chalk.yellow( 'There was an error initializing Lando, trying to recover...' ) );
 	try {
 		await regenerateLandofile( lando, instancePath );
@@ -207,7 +207,7 @@ export async function bootstrapLando(): Promise< Lando > {
 				registryResolvable = ( await lookup( 'ghcr.io' ) ).address.length > 0 || false;
 				debug( 'Registry ghcr.io is resolvable' );
 			} catch ( err ) {
-				debug( 'Registry ghcr.io is not resolvable, image pull might be broken. Error: %O', err );
+				debug.warn( 'Registry ghcr.io is not resolvable, image pull might be broken. Error: %O', err );
 				registryResolvable = false;
 			}
 
@@ -299,7 +299,7 @@ async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | n
 			.getNetwork( networkName )
 			.inspect() ) as Promise< NetworkInspectInfo | null >;
 	} catch ( err ) {
-		debug( 'Error getting network %s: %s', networkName, ( err as Error ).message );
+		debug.warn( 'Error getting network %s: %s', networkName, ( err as Error ).message );
 		return null;
 	}
 }
@@ -311,7 +311,7 @@ async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 		try {
 			await proxy.remove( { force: true } );
 		} catch ( err ) {
-			debug( 'Error removing proxy container: %s', ( err as Error ).message );
+			debug.warn( 'Error removing proxy container: %s', ( err as Error ).message );
 		}
 	}
 }
