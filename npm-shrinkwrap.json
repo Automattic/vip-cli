@@ -20542,7 +20542,7 @@
     "lando": {
       "version": "git+ssh://git@github.com/automattic/lando-cli.git#c95a68db8101310d9ac477ca685c7623394fe541",
       "integrity": "sha512-eT9w0SIkb6WsBVQnFQQ498quyMvF8+NiwtnQX5WNlS0yqt8LPdrgnqsceIOsjWBxWEUsKSeM95wFFRg16PogmQ==",
-      "from": "lando@github:automattic/lando-cli#6aa89cc2",
+      "from": "lando@github:automattic/lando-cli#7462d7875de4e1443d6b362e7e0b443e600e4654",
       "requires": {
         "axios": "^1.8.2",
         "bluebird": "^3.4.1",
