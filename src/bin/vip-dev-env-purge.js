@@ -93,12 +93,14 @@ command( {
 					const trackingInfoChild = getEnvTrackingInfo( slug );
 					// eslint-disable-next-line no-await-in-loop
 					await handleCLIException( error, 'dev_env_purge_command_error', trackingInfoChild );
+					// eslint-disable-next-line no-import-assign
 					process.exitCode = 1;
 				}
 			}
 			await trackEvent( 'dev_env_purge_command_success', trackingInfo );
 		} catch ( error ) {
 			await handleCLIException( error, 'dev_env_purge_command_error', trackingInfo );
+			// eslint-disable-next-line no-import-assign
 			process.exitCode = 1;
 		}
 	} );
