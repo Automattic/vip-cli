@@ -9,6 +9,7 @@ import { mkdir, rename } from 'node:fs/promises';
 import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
+import winston from 'winston';
 import xdgBasedir from 'xdg-basedir';
 
 import {
@@ -19,7 +20,7 @@ import {
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
-import debugLib from '../logger';
+import debugLib, { getRootLogger, isDebugMode, getLogFilePath } from '../logger';
 import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
@@ -45,16 +46,12 @@ async function getLandoConfig(): Promise< LandoConfig > {
 
 	debug( `Getting Lando config, using paths '${ landoPath }' for plugins` );
 
-	const isLandoDebugSelected = debugLib.enabled( DEBUG_KEY );
-	const isAllDebugSelected = debugLib.enabled( '"*"' );
-	let logLevelConsole;
-	if ( isAllDebugSelected ) {
-		logLevelConsole = 'silly';
-	} else if ( isLandoDebugSelected ) {
-		logLevelConsole = 'debug';
-	} else {
-		logLevelConsole = 'warn';
-	}
+	// Get our VIP logger's debug mode state and root logger
+	const isInDebugMode = isDebugMode();
+	const vipLogDir = path.dirname( getLogFilePath() );
+
+	// Determine console log level based on debug mode (same as in our logger)
+	const logLevelConsole = isInDebugMode ? 'debug' : 'warn';
 
 	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	const vipDir = path.join( xdgBasedir.data || tmpdir(), 'vip' ); // NOSONAR
@@ -68,7 +65,10 @@ async function getLandoConfig(): Promise< LandoConfig > {
 	}
 
 	const config = {
-		logLevelConsole,
+		logLevelConsole, // Set console log level based on our debug mode
+		logLevel: 'debug', // Always log everything to file
+		logDir: vipLogDir, // Use our VIP log directory
+		logName: 'lando', // Use 'lando' as the logger name
 		configSources: [ path.join( landoDir, 'config.yml' ) ],
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
@@ -199,6 +199,54 @@ export async function bootstrapLando(): Promise< Lando > {
 		}
 
 		const lando = new Lando( config );
+
+		// Add a custom transport to Lando's logger that forwards logs to our VIP logger
+		const vipLogger = getRootLogger();
+
+		// Create a custom Winston transport that forwards logs to our VIP logger
+		class VIPLoggerTransport extends winston.Transport {
+			constructor( opts ) {
+				super( opts );
+				this.name = 'vip-logger-transport';
+				this.level = 'debug'; // Capture all logs
+			}
+
+			log( info, callback ) {
+				const { level, message, ...meta } = info;
+
+				// Forward to our VIP logger with a lando prefix
+				try {
+					vipLogger[ level ]( `[lando] ${ message }`, ...Object.values( meta ) );
+				} catch ( error ) {
+					// Fallback if something goes wrong
+					vipLogger.debug( `[lando] Error forwarding log: ${ error }` );
+					vipLogger.debug( `[lando] Original message: ${ message }` );
+				}
+
+				// Signal the log was processed
+				setImmediate( () => {
+					this.emit( 'logged', info );
+				} );
+
+				callback( null, true );
+			}
+		}
+
+		// Remove Lando's existing console transport to prevent duplicate logs
+		if ( lando.log.transports && lando.log.transports.console ) {
+			// We only want to remove the console transport to avoid duplicates
+			// But keep the file transports for compatibility with Lando's internals
+			lando.log.logger.remove( lando.log.transports.console );
+
+			debug( "Removed Lando's console transport, keeping file transports for compatibility" );
+		}
+
+		// Add our custom transport to Lando's logger
+		// This will forward all logs to our VIP logger
+		lando.log.logger.add( new VIPLoggerTransport( {} ) );
+
+		debug( "Added VIP logger transport to Lando's logger" );
+
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {
 			const instanceData = readEnvironmentData( data.name );
 

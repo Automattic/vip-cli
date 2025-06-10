@@ -50,6 +50,7 @@ class VIPLogger {
 		this.loggers = new Map();
 
 		// Parse DEBUG env var like the debug library does
+
 		this.enabledNamespaces = new Set( [ '*' ] ); // Enable all by default
 		if ( process.env.DEBUG ) {
 			this.enabledNamespaces = this._parseDebugEnv( process.env.DEBUG );
