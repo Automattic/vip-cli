@@ -20,11 +20,11 @@ The logger is designed to be a direct replacement for the debug library. You can
 import debugLib from '../lib/logger';
 
 // Create a namespaced logger
-const debug = debugLib('your:namespace');
+const debug = debugLib( 'your:namespace' );
 
 // Use it like debug
-debug('Some message');
-debug('Object: %o', { foo: 'bar' });
+debug( 'Some message' );
+debug( 'Object: %o', { foo: 'bar' } );
 ```
 
 ## Advanced Usage
@@ -35,15 +35,15 @@ Unlike debug, our logger provides standard Winston log levels:
 
 ```typescript
 import debugLib from '../lib/logger';
-const debug = debugLib('your:namespace');
+const debug = debugLib( 'your:namespace' );
 
 // Different log levels
-debug.error('Critical error');
-debug.warn('Warning message');
-debug.info('Informational message');
-debug.verbose('Verbose message');
-debug.debug('Debug message'); // Same as calling debug() directly
-debug.silly('Very detailed message');
+debug.error( 'Critical error' );
+debug.warn( 'Warning message' );
+debug.info( 'Informational message' );
+debug.verbose( 'Verbose message' );
+debug.debug( 'Debug message' ); // Same as calling debug() directly
+debug.silly( 'Very detailed message' );
 ```
 
 ### Integrating with Dependencies
@@ -55,14 +55,14 @@ import { createLoggerForDependency } from '../lib/logger';
 import { attachLoggerToDependency } from '../lib/utils';
 
 // For dependencies that accept a Winston logger
-const dependencyLogger = createLoggerForDependency('dependency:namespace');
-myDependency.setLogger(dependencyLogger);
+const dependencyLogger = createLoggerForDependency( 'dependency:namespace' );
+myDependency.setLogger( dependencyLogger );
 
 // Or use the utility function
 const enhancedDependency = attachLoggerToDependency(
-  'dependency:namespace',
-  myDependency,
-  'loggerPropName' // Optional, defaults to 'logger'
+	'dependency:namespace',
+	myDependency,
+	'loggerPropName' // Optional, defaults to 'logger'
 );
 ```
 
@@ -76,10 +76,10 @@ const currentDebugEnv = process.env.DEBUG || '';
 const dependencyDebugNamespaces = 'dependency-name:*,other-dependency:*';
 
 // Append to existing DEBUG env var
-if (currentDebugEnv) {
-  process.env.DEBUG = `${currentDebugEnv},${dependencyDebugNamespaces}`;
+if ( currentDebugEnv ) {
+	process.env.DEBUG = `${ currentDebugEnv },${ dependencyDebugNamespaces }`;
 } else {
-  process.env.DEBUG = dependencyDebugNamespaces;
+	process.env.DEBUG = dependencyDebugNamespaces;
 }
 ```
 
@@ -99,4 +99,4 @@ Log files are stored in:
 ~/.vip-cli/logs/vip-cli.log
 ```
 
-This path can be configured by modifying the options in the logger implementation. 
+This path can be configured by modifying the options in the logger implementation.
