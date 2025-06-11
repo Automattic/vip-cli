@@ -1,4 +1,4 @@
-import debugLib from 'debug';
+import debugLib from './logger';;
 import { Response } from 'node-fetch';
 
 import http from '../../../lib/api/http';

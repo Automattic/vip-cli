@@ -1,4 +1,4 @@
-import debugLib from 'debug';
+import debugLib from './logger';;
 import fetch, {
 	type BodyInit,
 	type Response,

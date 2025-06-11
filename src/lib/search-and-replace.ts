@@ -1,6 +1,6 @@
 import { replace } from '@automattic/vip-search-replace';
 import { red } from 'chalk';
-import debugLib from 'debug';
+import debugLib from './logger';;
 import fs from 'fs';
 import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';

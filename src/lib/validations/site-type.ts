@@ -1,4 +1,4 @@
-import debugLib from 'debug';
+import debugLib from './logger';;
 
 import { trackEventWithEnv } from '../../lib/tracker';
 import { isMultiSiteInSiteMeta } from '../../lib/validations/is-multi-site';

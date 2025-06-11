@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from './logger';;
 import gql from 'graphql-tag';
 
 import { AppForImport, currentUserCanImportForApp } from './db-file-import';

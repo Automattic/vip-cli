@@ -1,4 +1,4 @@
-import debugLib from 'debug';
+import debugLib from './logger';;
 
 import Pendo from './analytics/clients/pendo';
 import Tracks from './analytics/clients/tracks';

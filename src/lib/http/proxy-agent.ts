@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import debugLib from 'debug';
+import debugLib from './logger';;
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
 import { SocksProxyAgent } from 'socks-proxy-agent';

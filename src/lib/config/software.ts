@@ -1,4 +1,4 @@
-import debugLib from 'debug';
+import debugLib from './logger';;
 import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
 import { setTimeout } from 'node:timers/promises';
