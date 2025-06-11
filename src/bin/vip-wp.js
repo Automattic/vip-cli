@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 import gql from 'graphql-tag';
 import readline from 'readline';
 import SocketIO from 'socket.io-client';

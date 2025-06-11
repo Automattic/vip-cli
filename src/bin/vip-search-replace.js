@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';

@@ -4,7 +4,7 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 import { extname } from 'path';
 
 /**
