@@ -2,7 +2,7 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import debugLib from 'debug';
+import debugLib from '../lib/logger';
 import gql from 'graphql-tag';
 import * as ssh2 from 'ssh2';
 
