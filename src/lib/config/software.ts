@@ -1,8 +1,8 @@
-import debugLib from './logger';;
 import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
 import { setTimeout } from 'node:timers/promises';
 
+import debugLib from '../logger';
 import { UpdateJobQueryVariables } from './software.generated';
 import { JobInterface, Query } from '../../graphqlTypes';
 import API from '../api';

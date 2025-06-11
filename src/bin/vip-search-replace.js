@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
-import debugLib from '../lib/logger';
-
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import debugLib from '../lib/logger';
 import { searchAndReplace } from '../lib/search-and-replace';
 
 const debug = debugLib( '@automattic/vip:bin:vip-search-replace' );

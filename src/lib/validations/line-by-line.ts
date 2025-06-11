@@ -1,9 +1,9 @@
-import debugLib from './logger';;
 import { createReadStream } from 'node:fs';
 import { open } from 'node:fs/promises';
 import { type Interface, createInterface } from 'node:readline';
 
 import * as exit from '../../lib/cli/exit';
+import debugLib from '../logger';
 
 const debug = debugLib( 'vip:validations:line-by-line' );
 export interface PerLineValidationObject {

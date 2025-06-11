@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 import gql from 'graphql-tag';
 import readline from 'readline';
 import SocketIO from 'socket.io-client';
@@ -15,6 +14,7 @@ import * as exit from '../lib/cli/exit';
 import { formatEnvironment, requoteArgs } from '../lib/cli/format';
 import { confirm } from '../lib/cli/prompt';
 import { createProxyAgent } from '../lib/http/proxy-agent';
+import debugLib from '../lib/logger';
 import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
 

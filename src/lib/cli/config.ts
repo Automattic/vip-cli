@@ -1,4 +1,4 @@
-import debugLib from './logger';;
+import debugLib from '../logger';
 
 interface Config {
 	tracksUserType: string;

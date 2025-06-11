@@ -1,9 +1,8 @@
-import debugLib from './logger';;
-
 import Pendo from './analytics/clients/pendo';
 import Tracks from './analytics/clients/tracks';
 import Analytics from './analytics/index';
 import env from './env';
+import debugLib from './logger';
 import config from '../lib/cli/config';
 import Token from '../lib/token';
 

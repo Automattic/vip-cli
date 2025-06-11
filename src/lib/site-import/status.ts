@@ -1,7 +1,6 @@
 /* eslint-disable complexity */
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import chalk from 'chalk';
-import debugLib from './logger';;
 import gql from 'graphql-tag';
 
 import { AppForImport, currentUserCanImportForApp } from './db-file-import';
@@ -19,6 +18,7 @@ import API from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
 import { capitalize, formatEnvironment, getGlyphForStatus } from '../../lib/cli/format';
 import { ProgressTracker, StepFromServer, StepStatus } from '../../lib/cli/progress';
+import debugLib from '../logger';
 
 const debug = debugLib( 'vip:lib/site-import/status' );
 

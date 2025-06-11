@@ -1,6 +1,5 @@
-import debugLib from './logger';;
-
 import env from '../env';
+import debugLib from '../logger';
 
 import type { AnalyticsClient } from './clients/client';
 import type { Response } from 'node-fetch';

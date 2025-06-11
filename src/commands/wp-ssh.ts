@@ -2,7 +2,6 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 import gql from 'graphql-tag';
 import * as ssh2 from 'ssh2';
 
@@ -12,6 +11,7 @@ import * as ssh2 from 'ssh2';
 import pkg from '../../package.json';
 import { App, AppEnvironment } from '../graphqlTypes';
 import API from '../lib/api';
+import debugLib from '../lib/logger';
 import { CommandTracker, makeCommandTracker } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:wp/ssh' );

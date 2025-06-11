@@ -1,12 +1,12 @@
 import { replace } from '@automattic/vip-search-replace';
 import { red } from 'chalk';
-import debugLib from './logger';;
 import fs from 'fs';
 import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from './database';
+import debugLib from './logger';
 import { makeTempDir } from './utils';
 import * as exit from '../lib/cli/exit';
 import { confirm } from '../lib/cli/prompt';

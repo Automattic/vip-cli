@@ -1,5 +1,4 @@
-import debugLib from './logger';;
-
+import debugLib from '../logger';
 import { getEnvIdentifier } from '../../lib/cli/command';
 
 // Shared debugger.

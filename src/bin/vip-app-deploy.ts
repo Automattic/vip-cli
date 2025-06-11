@@ -4,7 +4,6 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 
@@ -24,6 +23,7 @@ import {
 	UploadArguments,
 } from '../lib/client-file-uploader';
 import { validateCustomDeployKey, validateFile } from '../lib/custom-deploy/custom-deploy';
+import debugLib from '../lib/logger';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const START_DEPLOY_MUTATION = gql`

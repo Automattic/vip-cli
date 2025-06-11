@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 
 import command from '../lib/cli/command';
 import { ProgressTracker } from '../lib/cli/progress';
@@ -12,6 +11,7 @@ import {
 	promptForUpdate,
 	triggerUpdate,
 } from '../lib/config/software';
+import debugLib from '../lib/logger';
 import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 

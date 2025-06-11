@@ -1,4 +1,3 @@
-import debugLib from './logger';;
 import fetch, {
 	type BodyInit,
 	type Response,
@@ -6,6 +5,7 @@ import fetch, {
 	type HeadersInit,
 } from 'node-fetch';
 
+import debugLib from '../logger';
 import { API_HOST } from '../../lib/api';
 import env from '../../lib/env';
 import { createProxyAgent } from '../../lib/http/proxy-agent';

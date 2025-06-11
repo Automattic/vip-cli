@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import debugLib from './logger';;
+
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { getProxyForUrl } from 'proxy-from-env';
 import { SocksProxyAgent } from 'socks-proxy-agent';
+
+import debugLib from '../logger';
 
 import type { Url } from 'url';
 const debug = debugLib( 'vip:proxy-agent' );

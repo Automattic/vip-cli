@@ -1,6 +1,5 @@
-import debugLib from './logger';;
-
 import Insecure from './keychain/insecure';
+import debugLib from './logger';
 
 import type { Keychain, KeychainConstructor } from './keychain/keychain';
 

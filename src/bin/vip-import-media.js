@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 import gql from 'graphql-tag';
 
 import API from '../lib/api';
 import command from '../lib/cli/command';
 // eslint-disable-next-line no-duplicate-imports
 import { formatEnvironment } from '../lib/cli/format';
+import debugLib from '../lib/logger';
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 import { trackEventWithEnv } from '../lib/tracker';

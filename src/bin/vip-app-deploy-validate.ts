@@ -4,7 +4,6 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import debugLib from '../lib/logger';
 import { extname } from 'path';
 
 /**
@@ -13,6 +12,7 @@ import { extname } from 'path';
 import command from '../lib/cli/command';
 import { getFileMeta } from '../lib/client-file-uploader';
 import { validateFile } from '../lib/custom-deploy/custom-deploy';
+import debugLib from '../lib/logger';
 import { trackEventWithEnv } from '../lib/tracker';
 import { validateZipFile, validateTarFile } from '../lib/validations/custom-deploy';
 

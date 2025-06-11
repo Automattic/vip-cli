@@ -1,5 +1,3 @@
-import debugLib from './logger';;
-
 import { trackEventWithEnv } from '../../lib/tracker';
 import { isMultiSiteInSiteMeta } from '../../lib/validations/is-multi-site';
 import { sqlDumpLineIsMultiSite } from '../../lib/validations/is-multi-site-sql-dump';
@@ -8,6 +6,7 @@ import {
 	getPrimaryDomain,
 } from '../../lib/validations/is-multisite-domain-mapped';
 import { getMultilineStatement } from '../../lib/validations/utils';
+import debugLib from '../logger';
 
 import type { PostLineExecutionProcessingParams } from '../../lib/validations/line-by-line';
 
