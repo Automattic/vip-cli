@@ -305,6 +305,15 @@ async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | n
 	}
 }
 
+export async function removeProxyCache( lando: Lando ): Promise< void > {
+	const { userConfRoot, proxyCache } = lando.config;
+	try {
+		await unlink( path.join( userConfRoot, 'cache', proxyCache ?? 'proxyCache' ) );
+	} catch {
+		// Swallow
+	}
+}
+
 async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 	const network = await getBridgeNetwork( lando );
 	if ( network?.Containers && Object.keys( network.Containers ).length === 1 ) {
@@ -315,13 +324,7 @@ async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 			debug( 'Error removing proxy container: %s', ( err as Error ).message );
 		}
 
-		try {
-			await unlink(
-				path.join( lando.config.userConfRoot, 'cache', lando.config.proxyCache ?? 'proxyCache' )
-			);
-		} catch {
-			// Swallow
-		}
+		await removeProxyCache( lando );
 	}
 }
 
@@ -738,7 +741,10 @@ export async function getProxyContainer(
 async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
 	const proxyContainer = await getProxyContainer( lando );
 	if ( proxyContainer && ! proxyContainer.State.Running ) {
-		const container = lando.engine.docker.getContainer( proxyContainer.Name );
+		const containerName = proxyContainer.Name.startsWith( '/' )
+			? proxyContainer.Name.slice( 1 )
+			: proxyContainer.Name;
+		const container = lando.engine.docker.getContainer( containerName );
 		await container.remove();
 	}
 }
