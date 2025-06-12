@@ -6,7 +6,7 @@ import Lando, { type LandoConfig } from 'lando/lib/lando';
 import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
-import { mkdir, rename } from 'node:fs/promises';
+import { mkdir, rename, unlink } from 'node:fs/promises';
 import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
@@ -63,7 +63,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 
 	try {
 		await mkdir( fakeHomeDir, { recursive: true } );
-	} catch ( err ) {
+	} catch {
 		// Ignore
 	}
 
@@ -312,6 +312,14 @@ async function cleanUpLandoProxy( lando: Lando ): Promise< void > {
 			await proxy.remove( { force: true } );
 		} catch ( err ) {
 			debug( 'Error removing proxy container: %s', ( err as Error ).message );
+		}
+
+		try {
+			await unlink(
+				path.join( lando.config.userConfRoot, 'cache', lando.config.proxyCache ?? 'proxyCache' )
+			);
+		} catch {
+			// Swallow
 		}
 	}
 }
