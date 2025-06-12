@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
+import Dockerode from 'dockerode';
 import App, { type ScanResult } from 'lando/lib/app';
 import { buildConfig } from 'lando/lib/bootstrap';
 import Lando, { type LandoConfig } from 'lando/lib/lando';
@@ -711,6 +712,21 @@ export async function landoShell(
 	} );
 }
 
+export async function getProxyContainer(
+	lando: Lando
+): Promise< Dockerode.ContainerInspectInfo | null > {
+	const proxyContainerName = lando.config.proxyContainer as string;
+
+	const { docker } = lando.engine;
+	const containers = await docker.listContainers( { all: true } );
+	if ( containers.some( container => container.Names.includes( `/${ proxyContainerName }` ) ) ) {
+		const container = docker.getContainer( proxyContainerName );
+		return container.inspect();
+	}
+
+	return null;
+}
+
 /**
  * Sometimes the proxy network seems to disapper leaving only orphant stopped proxy container.
  * It seems to happen while restarting/powering off computer. This container would then failed
@@ -720,25 +736,11 @@ export async function landoShell(
  * can safely add a network and a new proxy container.
  */
 async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
-	const proxyContainerName = lando.config.proxyContainer as string;
-
-	const docker = lando.engine.docker;
-	const containers = await docker.listContainers( { all: true } );
-	const proxyContainerExists = containers.some( container =>
-		container.Names.includes( `/${ proxyContainerName }` )
-	);
-
-	if ( ! proxyContainerExists ) {
-		return;
+	const proxyContainer = await getProxyContainer( lando );
+	if ( proxyContainer && ! proxyContainer.State.Running ) {
+		const container = lando.engine.docker.getContainer( proxyContainer.Name );
+		await container.remove();
 	}
-
-	const proxyContainer = docker.getContainer( proxyContainerName );
-	const status = await proxyContainer.inspect();
-	if ( status.State.Running ) {
-		return;
-	}
-
-	await proxyContainer.remove();
 }
 
 export function validateDockerInstalled( lando: Lando ): void {

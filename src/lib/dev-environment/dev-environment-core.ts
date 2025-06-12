@@ -6,7 +6,7 @@ import { print } from 'graphql';
 import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
-import { cp, readdir } from 'node:fs/promises';
+import { cp, readdir, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -28,6 +28,7 @@ import {
 	landoLogs,
 	LandoLogsOptions,
 	LandoExecOptions,
+	getProxyContainer,
 } from './dev-environment-lando';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
@@ -137,6 +138,17 @@ export async function startEnvironment(
 		updated = await maybeUpdateWordPressImage( lando, slug );
 	}
 	updated = updated || ( await maybeUpdateVersion( lando, slug ) );
+
+	const proxyContainer = await getProxyContainer( lando );
+	if ( ! proxyContainer?.State.Running ) {
+		try {
+			await unlink(
+				path.join( lando.config.userConfRoot, 'cache', lando.config.proxyCache ?? 'proxyCache' )
+			);
+		} catch {
+			// Swallow
+		}
+	}
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( lando, instancePath );
