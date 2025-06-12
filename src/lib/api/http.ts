@@ -5,11 +5,11 @@ import fetch, {
 	type HeadersInit,
 } from 'node-fetch';
 
-import debugLib from '../logger';
 import { API_HOST } from '../../lib/api';
 import env from '../../lib/env';
 import { createProxyAgent } from '../../lib/http/proxy-agent';
 import Token from '../../lib/token';
+import debugLib from '../logger';
 
 const debug = debugLib( '@automattic/vip:http' );
 

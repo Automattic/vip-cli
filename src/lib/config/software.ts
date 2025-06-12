@@ -2,11 +2,11 @@ import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
 import { setTimeout } from 'node:timers/promises';
 
-import debugLib from '../logger';
 import { UpdateJobQueryVariables } from './software.generated';
 import { JobInterface, Query } from '../../graphqlTypes';
 import API from '../api';
 import { isAppNodejs, isAppWordPress } from '../app';
+import debugLib from '../logger';
 import UserError from '../user-error';
 
 const UPDATE_PROGRESS_POLL_INTERVAL = 5;

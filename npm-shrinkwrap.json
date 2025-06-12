@@ -31,7 +31,7 @@
         "ini": "5.0.0",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#7462d7875de4e1443d6b362e7e0b443e600e4654",
+        "lando": "github:automattic/lando-cli#0a133b973885af7f658ec5f5c7d3b3cbf001ceba",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "1.15.0",
         "open": "^10.0.0",
@@ -9704,8 +9704,8 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#7462d7875de4e1443d6b362e7e0b443e600e4654",
-      "integrity": "sha512-eT9w0SIkb6WsBVQnFQQ498quyMvF8+NiwtnQX5WNlS0yqt8LPdrgnqsceIOsjWBxWEUsKSeM95wFFRg16PogmQ==",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#0a133b973885af7f658ec5f5c7d3b3cbf001ceba",
+      "integrity": "sha512-ogQf4ObDnhWZkRuaQwgeyd1+rU8wM/l8/4vSbtGKVlA0kgK1+q24GvSnrpzwfw74gKgRFUxzdoe4PjrGBlkh3Q==",
       "license": "GPL-3.0",
       "dependencies": {
         "axios": "^1.8.2",
@@ -20540,9 +20540,9 @@
       "integrity": "sha512-tPhhoGUiEiU/WXR4rt8klIoLdnTtyu+9jVKHd/wauEjYud32jyn63mzKWQweaQrHWxBQtYoVtdcEnYX1LosnFQ=="
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#7462d7875de4e1443d6b362e7e0b443e600e4654",
-      "integrity": "sha512-eT9w0SIkb6WsBVQnFQQ498quyMvF8+NiwtnQX5WNlS0yqt8LPdrgnqsceIOsjWBxWEUsKSeM95wFFRg16PogmQ==",
-      "from": "lando@github:automattic/lando-cli#7462d7875de4e1443d6b362e7e0b443e600e4654",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#0a133b973885af7f658ec5f5c7d3b3cbf001ceba",
+      "integrity": "sha512-ogQf4ObDnhWZkRuaQwgeyd1+rU8wM/l8/4vSbtGKVlA0kgK1+q24GvSnrpzwfw74gKgRFUxzdoe4PjrGBlkh3Q==",
+      "from": "lando@github:automattic/lando-cli#0a133b973885af7f658ec5f5c7d3b3cbf001ceba",
       "requires": {
         "axios": "^1.8.2",
         "bluebird": "^3.4.1",

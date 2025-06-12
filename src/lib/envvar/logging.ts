@@ -1,5 +1,5 @@
-import debugLib from '../logger';
 import { getEnvIdentifier } from '../../lib/cli/command';
+import debugLib from '../logger';
 
 // Shared debugger.
 export const debug = debugLib( '@automattic/vip:bin:config:envvar' );
