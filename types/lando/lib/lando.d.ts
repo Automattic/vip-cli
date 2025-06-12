@@ -43,6 +43,8 @@ export interface LandoConfig extends Record< string, unknown > {
 
 	tooling?: Record< string, Record< string, unknown > >;
 	services?: Record< string, LandoService >;
+
+	proxyCache?: string;
 }
 
 export interface LandoTask {
