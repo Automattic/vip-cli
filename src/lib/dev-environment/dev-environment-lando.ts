@@ -43,6 +43,7 @@ const debug = debugLib( DEBUG_KEY );
 async function getLandoConfig(): Promise< LandoConfig > {
 	// The path will be smth like `yarn/global/node_modules/lando/lib/lando.js`; we need the path up to `lando` (inclusive)
 	const landoPath = dirname( dirname( require.resolve( 'lando' ) ) );
+	console.log( 'landoPath is %s', landoPath );
 
 	debug( `Getting Lando config, using paths '${ landoPath }' for plugins` );
 
@@ -86,6 +87,8 @@ async function getLandoConfig(): Promise< LandoConfig > {
 			LANDO_HOST_GROUP_ID: process.platform === 'win32' ? '1000' : `${ userInfo().gid }`,
 		},
 	};
+
+	console.log( 'Lando config: %j', config );
 
 	return buildConfig( config );
 }
