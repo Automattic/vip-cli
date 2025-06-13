@@ -2,7 +2,7 @@ import fetch, { type Response } from 'node-fetch';
 import querystring from 'querystring';
 
 import { checkIfUserIsVip } from '../../cli/apiConfig';
-import debugLib from '../logger';
+import debugLib from '../../logger';
 
 import type { AnalyticsClient } from './client';
 import type { Env } from '../../env';
