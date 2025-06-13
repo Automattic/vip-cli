@@ -6,12 +6,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import fs from 'fs';
-import os from 'os';
+import os, { userInfo } from 'os';
 import path from 'path';
 import { Writable } from 'stream';
 import util from 'util';
 import winston from 'winston';
 import Transport from 'winston-transport';
+import env from './env';
 
 interface VIPLoggerOptions {
 	logDir?: string;
@@ -294,6 +295,29 @@ class VIPLogger {
 
 // Create singleton instance
 const vipLogger = new VIPLogger();
+
+vipLogger.getRootLogger().debug( `
+===
+VIP-CLI debug log.
+Please provide this log when reporting an issue.
+This will help our team diagnose the issue quicker.
+==================================================
+
+Node:              ${ process.version }
+VIP-CLI:           ${ env.app.version }
+OS
+	Name:           ${ os.type() }
+	Release:        ${ os.release() }
+	Version:        ${ os.version() }
+
+User:              ${ userInfo().username }
+Platform:          ${ process.platform }
+Arch:              ${ process.arch }
+Home directory:    ${ userInfo().homedir }
+Current directory: ${ process.cwd() }
+
+Path:              ${ process.env.PATH }
+` );
 
 // Add a custom transport to Lando's logger that forwards logs to our VIP logger
 // Create a custom Winston transport that forwards logs to our VIP logger

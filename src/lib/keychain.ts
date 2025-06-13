@@ -12,7 +12,7 @@ try {
 	const Secure = require( './keychain/secure' ) as KeychainConstructor;
 	exportValue = new Secure();
 } catch ( error ) {
-	debug( 'Cannot use Secure keychain; falling back to Insecure keychain (Details: %o)', error );
+	debug( 'Cannot use Secure keychain; falling back to Insecure keychain' );
 
 	// Fallback to Insecure keychain if we can't
 	exportValue = new Insecure( 'vip-go-cli' );

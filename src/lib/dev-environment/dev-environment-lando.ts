@@ -221,27 +221,10 @@ export async function bootstrapLando(): Promise< Lando > {
 		lando.log.logger.add( new VIPLoggerTransport( { level: 'debug' } ) );
 		debug( "Added VIP logger transport to Lando's logger" );
 		debug( `
-Node:              ${ process.version }
-VIP-CLI:           ${ env.app.version }
-
-OS
-	Name:           ${ os.type() }
-	Release:        ${ os.release() }
-	Version:        ${ os.version() }
-
 Docker:
 	Socket:            ${ socket }
 	Engine config:     ${ JSON.stringify( config.engineConfig, null, 2 ) }
 	Socket exists:     ${ fs.existsSync( socket as string ) }
-
-User:              ${ userInfo().username }
-Platform:          ${ process.platform }
-Arch:              ${ process.arch }
-Home directory:    ${ userInfo().homedir }
-Current directory: ${ process.cwd() }
-
-Path:              ${ process.env.PATH }
-Network:           ${ JSON.stringify( os.networkInterfaces(), null, 2 ) }
 ` );
 
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {
