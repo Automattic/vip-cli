@@ -28,7 +28,7 @@ jest.mock( 'xdg-basedir', () => ( {
 
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
-jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
+jest.mock( '../../../src/lib/dev-environment/dev-environment-cli'.replace( /\//gu, path.sep ) );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	const cleanup = () =>
