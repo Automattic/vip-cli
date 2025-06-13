@@ -23,4 +23,5 @@ command( {
 	.command( 'logs', 'Retrieve logs for a local environment.' )
 	.command( 'sync', 'Sync the database of a VIP Platform environment to a local environment.' )
 	.command( 'purge', 'Remove all local environments.' )
+	.command( 'envvar', 'Manage environment variables for a local environment.' )
 	.argv( process.argv );
