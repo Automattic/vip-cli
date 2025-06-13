@@ -32,13 +32,13 @@ interface DebugLikeLogger {
 }
 
 class VIPLogger {
-	private logDir: string;
-	private rootLogger: winston.Logger;
-	private loggers: Map< string, DebugLikeLogger >;
-	private enabledNamespaces: Set< string >;
-	private isDebugMode: boolean;
-	private commandName: string;
-	private logFilePath: string;
+	private readonly logDir: string;
+	private readonly rootLogger: winston.Logger;
+	private readonly loggers: Map< string, DebugLikeLogger >;
+	private readonly enabledNamespaces: Set< string >;
+	private readonly isDebugMode: boolean;
+	private readonly commandName: string;
+	private readonly logFilePath: string;
 
 	constructor( options: VIPLoggerOptions = {} ) {
 		this.logDir = options.logDir || path.join( os.homedir(), '.vip-cli', 'logs' );
@@ -119,7 +119,7 @@ class VIPLogger {
 			if ( ! pattern ) continue;
 
 			// Handle negated patterns
-			const isExclude = pattern.charAt( 0 ) === '-';
+			const isExclude = pattern.startsWith( '-' );
 			const ns = isExclude ? pattern.slice( 1 ) : pattern;
 
 			if ( isExclude ) {
