@@ -210,7 +210,9 @@ export async function bootstrapLando(): Promise< Lando > {
 			console.log( 'lando.log.transports', lando.log.transports );
 			// Find the console transport if it exists
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const consoleTransport = lando.log.transports?.console;
+			const consoleTransport = lando.log.transports.find(
+				t => ( t as unknown as { name: string } ).name === 'console'
+			);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			lando.log?.logger.remove( consoleTransport );
