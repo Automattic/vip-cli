@@ -322,12 +322,16 @@ export class VIPLoggerTransport extends Transport {
 			// Forward to our VIP logger with a lando prefix
 			vipLogger.getRootLogger().log( {
 				level,
-				message: `@automattic/vip-cli-lando-bridge ${ formattedMessage }`,
+				message: `@automattic/vip:bin:dev-environment:lando-bridge ${ formattedMessage }`,
 			} );
 		} catch ( error ) {
 			// Fallback if something goes wrong
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			vipLogger.getRootLogger().debug( `@automattic/vip-cli-lando-bridge Error forwarding log: ${ error }` );
+			vipLogger
+				.getRootLogger()
+				.debug(
+					`@automattic/vip:bin:dev-environment:lando-bridge Error forwarding log: ${ error }`
+				);
 		}
 
 		// Signal the log was processed
