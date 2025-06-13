@@ -1106,7 +1106,7 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
 
 		return result;
-	} catch ( err ) {
+	} catch {
 		return {
 			slug,
 		};

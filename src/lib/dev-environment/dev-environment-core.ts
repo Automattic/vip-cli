@@ -455,7 +455,7 @@ export async function doesEnvironmentExist( instancePath: string ): Promise< boo
 	try {
 		const stats = await fs.promises.stat( file );
 		return stats.isFile();
-	} catch ( err ) {
+	} catch {
 		return false;
 	}
 }
