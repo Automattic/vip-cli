@@ -313,7 +313,7 @@ export class VIPLoggerTransport extends Transport {
 
 			// Extract splat array (format args) if available
 			// Winston 3 uses a special "splat" key for format args
-			const splat = meta[ Symbol.for( 'splat' ) ] || [];
+			const splat = meta.splat || [];
 
 			// If we have format args, use Node's util.format to properly format the message
 			// This ensures %s, %d, %j placeholders are properly substituted
