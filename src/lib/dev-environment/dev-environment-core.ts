@@ -27,6 +27,8 @@ import {
 	landoLogs,
 	LandoLogsOptions,
 	LandoExecOptions,
+	getProxyContainer,
+	removeProxyCache,
 } from './dev-environment-lando';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
@@ -137,6 +139,11 @@ export async function startEnvironment(
 		updated = await maybeUpdateWordPressImage( lando, slug );
 	}
 	updated = updated || ( await maybeUpdateVersion( lando, slug ) );
+
+	const proxyContainer = await getProxyContainer( lando );
+	if ( ! proxyContainer?.State.Running ) {
+		await removeProxyCache( lando );
+	}
 
 	if ( options.skipRebuild && ! updated ) {
 		await landoStart( lando, instancePath );
