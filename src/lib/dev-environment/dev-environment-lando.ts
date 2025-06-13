@@ -207,16 +207,9 @@ export async function bootstrapLando(): Promise< Lando > {
 
 		// Remove Lando's existing console transport to prevent duplicate logs
 		if ( lando.log.transports ) {
-			console.log( 'lando.log.transports', lando.log.transports );
-			// Find the console transport if it exists
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const consoleTransport = lando.log.transports.find(
-				t => ( t as unknown as { name: string } ).name === 'console'
-			);
-
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			lando.log?.logger.remove( consoleTransport );
-			debug( "Removed Lando's console transport, keeping file transports for compatibility" );
+			lando.log.logger.clear();
+			debug( "Removed Lando's transports" );
 		}
 		// }
 

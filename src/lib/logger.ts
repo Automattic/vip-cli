@@ -313,8 +313,7 @@ export class VIPLoggerTransport extends Transport {
 
 			// Extract splat array (format args) if available
 			// Winston 3 uses a special "splat" key for format args
-			const splat = meta.splat || [];
-
+			const splat = meta[ Symbol.for( 'splat' ) as unknown as keyof typeof meta ] || [];
 			// If we have format args, use Node's util.format to properly format the message
 			// This ensures %s, %d, %j placeholders are properly substituted
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -323,12 +322,12 @@ export class VIPLoggerTransport extends Transport {
 			// Forward to our VIP logger with a lando prefix
 			vipLogger.getRootLogger().log( {
 				level,
-				message: `[lando] ${ formattedMessage }`,
+				message: `@automattic/vip-cli-lando-bridge ${ formattedMessage }`,
 			} );
 		} catch ( error ) {
 			// Fallback if something goes wrong
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			vipLogger.getRootLogger().debug( `[lando] Error forwarding log: ${ error }` );
+			vipLogger.getRootLogger().debug( `@automattic/vip-cli-lando-bridge Error forwarding log: ${ error }` );
 		}
 
 		// Signal the log was processed
