@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import os from 'node:os';
 import chalk from 'chalk';
 import Dockerode from 'dockerode';
 import App, { type ScanResult } from 'lando/lib/app';
@@ -218,6 +219,23 @@ export async function bootstrapLando(): Promise< Lando > {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		lando.log.logger.add( new VIPLoggerTransport( { level: 'debug' } ) );
 		debug( "Added VIP logger transport to Lando's logger" );
+		debug( `
+Node:              ${ process.version }
+VIP-CLI:           ${ process.env.VIP_CLI_VERSION }
+OS Name:           ${ os.type() }
+OS Release:        ${ os.release() }
+OS Version:        ${ os.version() }
+User:              ${ userInfo().username }
+Platform:          ${ process.platform }
+Arch:              ${ process.arch }
+Home directory:    ${ userInfo().homedir }
+Current directory: ${ process.cwd() }
+
+Path:              ${ process.env.PATH }
+Network:           ${ JSON.stringify( os.networkInterfaces(), null, 2 ) }
+
+
+			` );
 
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {
 			const instanceData = readEnvironmentData( data.name );
