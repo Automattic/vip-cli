@@ -11,6 +11,7 @@ import path from 'path';
 import { Writable } from 'stream';
 import util from 'util';
 import winston from 'winston';
+import Transport from 'winston-transport';
 
 interface VIPLoggerOptions {
 	logDir?: string;
@@ -293,6 +294,51 @@ class VIPLogger {
 
 // Create singleton instance
 const vipLogger = new VIPLogger();
+
+// Add a custom transport to Lando's logger that forwards logs to our VIP logger
+// Create a custom Winston transport that forwards logs to our VIP logger
+export class VIPLoggerTransport extends Transport {
+	name: string;
+	level: string;
+
+	constructor( opts: winston.transport.TransportStreamOptions | undefined ) {
+		super( opts );
+		this.name = 'vip-logger-transport';
+		this.level = 'debug'; // Capture all logs
+	}
+
+	log( info: winston.LogEntry, callback: ( error: Error | null, success: boolean ) => void ): void {
+		try {
+			const { level, message, ...meta } = info;
+
+			// Extract splat array (format args) if available
+			// Winston 3 uses a special "splat" key for format args
+			const splat = meta[ Symbol.for( 'splat' ) ] || [];
+
+			// If we have format args, use Node's util.format to properly format the message
+			// This ensures %s, %d, %j placeholders are properly substituted
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			const formattedMessage = splat.length > 0 ? util.format( message, ...splat ) : message;
+
+			// Forward to our VIP logger with a lando prefix
+			vipLogger.getRootLogger().log( {
+				level,
+				message: `[lando] ${ formattedMessage }`,
+			} );
+		} catch ( error ) {
+			// Fallback if something goes wrong
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+			vipLogger.getRootLogger().debug( `[lando] Error forwarding log: ${ error }` );
+		}
+
+		// Signal the log was processed
+		setImmediate( () => {
+			this.emit( 'logged', info );
+		} );
+
+		callback( null, true );
+	}
+}
 
 // Export a debug-compatible function as the default export
 const debugLib = function ( namespace: string ): DebugLikeLogger {

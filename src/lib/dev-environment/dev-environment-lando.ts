@@ -12,8 +12,6 @@ import { mkdir, rename, unlink } from 'node:fs/promises';
 import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
-import util from 'util';
-import winston from 'winston';
 import xdgBasedir from 'xdg-basedir';
 
 import {
@@ -24,7 +22,7 @@ import {
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
-import debugLib, { getRootLogger, isDebugMode, getLogFilePath } from '../logger';
+import debugLib, { isDebugMode, getLogFilePath, VIPLoggerTransport } from '../logger';
 import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
@@ -205,58 +203,25 @@ export async function bootstrapLando(): Promise< Lando > {
 		const lando = new Lando( config );
 
 		// Get our VIP logger instance
-		const vipLogger = getRootLogger();
-
-		// Add a custom transport to Lando's logger that forwards logs to our VIP logger
-		// Create a custom Winston transport that forwards logs to our VIP logger
-		class VIPLoggerTransport extends winston.Transport {
-			constructor( opts ) {
-				super( opts );
-				this.name = 'vip-logger-transport';
-				this.level = 'debug'; // Capture all logs
-			}
-
-			log( info, callback ) {
-				try {
-					const { level, message, ...meta } = info;
-
-					// Extract splat array (format args) if available
-					// Winston 3 uses a special "splat" key for format args
-					const splat = meta[ Symbol.for( 'splat' ) ] || [];
-
-					// If we have format args, use Node's util.format to properly format the message
-					// This ensures %s, %d, %j placeholders are properly substituted
-					const formattedMessage = splat.length > 0 ? util.format( message, ...splat ) : message;
-
-					// Forward to our VIP logger with a lando prefix
-					vipLogger[ level ]( `[lando] ${ formattedMessage }` );
-				} catch ( error ) {
-					// Fallback if something goes wrong
-					vipLogger.debug( `[lando] Error forwarding log: ${ error }` );
-				}
-
-				// Signal the log was processed
-				setImmediate( () => {
-					this.emit( 'logged', info );
-				} );
-
-				callback( null, true );
-			}
-		}
+		// const vipLogger = getRootLogger();
 
 		// Remove Lando's existing console transport to prevent duplicate logs
-		if ( lando.log.transports && lando.log.transports.console ) {
-			// We only want to remove the console transport to avoid duplicates
-			// But keep the file transports for compatibility with Lando's internals
-			lando.log.logger.remove( lando.log.transports.console );
+		if ( lando.log.transports ) {
+			console.log( 'lando.log.transports', lando.log.transports );
+			// Find the console transport if it exists
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			const consoleTransport = lando.log.transports?.console;
 
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			lando.log?.logger.remove( consoleTransport );
 			debug( "Removed Lando's console transport, keeping file transports for compatibility" );
 		}
+		// }
 
 		// Add our custom transport to Lando's logger
 		// This will forward all logs to our VIP logger
-		lando.log.logger.add( new VIPLoggerTransport( {} ) );
-
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		lando.log.logger.add( new VIPLoggerTransport( { level: 'debug' } ) );
 		debug( "Added VIP logger transport to Lando's logger" );
 
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {

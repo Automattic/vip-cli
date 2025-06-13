@@ -1,6 +1,7 @@
 import winston = require('winston');
 export = Log;
 declare class Log extends winston.Logger {
+	[x: string]: any;
 	constructor( {
 		logDir,
 		logLevelConsole,
