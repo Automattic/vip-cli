@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import os from 'node:os';
 import chalk from 'chalk';
 import Dockerode from 'dockerode';
 import App, { type ScanResult } from 'lando/lib/app';
@@ -9,8 +8,9 @@ import Lando, { type LandoConfig } from 'lando/lib/lando';
 import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
+import fs from 'node:fs';
 import { mkdir, rename, unlink } from 'node:fs/promises';
-import { tmpdir, userInfo } from 'node:os';
+import os, { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
 import xdgBasedir from 'xdg-basedir';
@@ -22,6 +22,7 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
+import env from '../../lib/env';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import debugLib, { isDebugMode, getLogFilePath, VIPLoggerTransport } from '../logger';
 import UserError from '../user-error';
@@ -221,10 +222,18 @@ export async function bootstrapLando(): Promise< Lando > {
 		debug( "Added VIP logger transport to Lando's logger" );
 		debug( `
 Node:              ${ process.version }
-VIP-CLI:           ${ process.env.VIP_CLI_VERSION }
-OS Name:           ${ os.type() }
-OS Release:        ${ os.release() }
-OS Version:        ${ os.version() }
+VIP-CLI:           ${ env.app.version }
+
+OS
+	Name:           ${ os.type() }
+	Release:        ${ os.release() }
+	Version:        ${ os.version() }
+
+Docker:
+	Socket:            ${ socket }
+	Engine config:     ${ JSON.stringify( config.engineConfig, null, 2 ) }
+	Socket exists:     ${ fs.existsSync( socket as string ) }
+
 User:              ${ userInfo().username }
 Platform:          ${ process.platform }
 Arch:              ${ process.arch }
@@ -233,9 +242,7 @@ Current directory: ${ process.cwd() }
 
 Path:              ${ process.env.PATH }
 Network:           ${ JSON.stringify( os.networkInterfaces(), null, 2 ) }
-
-
-			` );
+` );
 
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {
 			const instanceData = readEnvironmentData( data.name );
