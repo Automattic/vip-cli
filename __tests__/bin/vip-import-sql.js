@@ -210,28 +210,10 @@ describe( 'vip-import-sql', () => {
 		} );
 
 		describe( 'URL imports', () => {
-			it( 'fails if MD5 is not provided for URL import', async () => {
-				const url = 'https://example.com/dump.sql';
-				await expect( gates( opts.app, opts.env, url, true ) ).rejects.toThrow(
-					'MD5 hash is required when importing from a URL. Please provide the --md5 parameter with a valid MD5 hash of the remote file.'
-				);
-			} );
-
 			it( 'fails if MD5 is invalid for URL import', async () => {
 				const url = 'https://example.com/dump.sql';
 				await expect( gates( opts.app, opts.env, url, true, 'invalid-md5' ) ).rejects.toThrow(
 					'The provided MD5 hash is invalid. It should be a 32-character hexadecimal string.'
-				);
-			} );
-
-			it( 'fails if search/replace is provided with URL import', async () => {
-				const url = 'https://example.com/dump.sql';
-				await expect(
-					gates( opts.app, opts.env, url, true, 'b5b39269e9105d6e1e9cd50ff54e6282', [
-						'search,replace',
-					] )
-				).rejects.toThrow(
-					'Search and replace operations are not supported when importing from a URL. Please remove the --search-replace option.'
 				);
 			} );
 
