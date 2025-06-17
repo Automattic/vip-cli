@@ -7,7 +7,7 @@ import { prompt } from 'enquirer';
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
 import Token from '../lib/token';
-import { trackEvent, aliasUser } from '../lib/tracker';
+import { aliasUser, trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -45,10 +45,6 @@ const runCmd = async function () {
 		.command( 'db', "Access an environment's database." )
 		.command( 'sync', 'Sync the database from production to a non-production environment.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
-		.command(
-			'validate',
-			'Scan a Node.js codebase for issues that could prevent building or deploying.'
-		)
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
 
 	cmd.argv( process.argv );

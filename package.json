@@ -62,8 +62,6 @@
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-slowlogs": "dist/bin/vip-slowlogs.js",
     "vip-sync": "dist/bin/vip-sync.js",
-    "vip-validate": "dist/bin/vip-validate.js",
-    "vip-validate-preflight": "dist/bin/vip-validate-preflight.js",
     "vip-whoami": "dist/bin/vip-whoami.js",
     "vip-wp": "dist/bin/vip-wp.js",
     "vip-logout": "dist/bin/vip-logout.js"
@@ -147,7 +145,6 @@
   },
   "dependencies": {
     "@apollo/client": "3.3.6",
-    "@automattic/vip-go-preflight-checks": "^2.0.16",
     "@automattic/vip-search-replace": "^1.1.1",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
