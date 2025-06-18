@@ -39,6 +39,7 @@ export async function setEnvVarCommand( arg, opt ) {
 		env_id: opt.env.id,
 		from_file: Boolean( opt.fromFile ),
 		org_id: opt.app.organization.id,
+		org_sfid: opt.app.organization.salesforceId,
 		skip_confirm: Boolean( opt.skipConfirmation ),
 		variable_name: name,
 	};

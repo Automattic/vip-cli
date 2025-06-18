@@ -46,6 +46,7 @@ export default class Pendo implements AnalyticsClient {
 			...this.context,
 			org_id: eventProps.org_slug,
 			org_slug: eventProps.org_slug,
+			org_sfid: eventProps.org_sfid,
 			userAgent: this.userAgent,
 			userId: this.userId,
 		};
@@ -69,6 +70,7 @@ export default class Pendo implements AnalyticsClient {
 			timestamp: Date.now(),
 			type: 'track',
 			visitorId: `${ this.context.userId as string }`,
+			accountId: `${ this.context.org_sfid as string }`,
 		};
 
 		debug( 'send()', body );
