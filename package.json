@@ -167,7 +167,7 @@
     "ini": "5.0.0",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli#e47d2ad1eba8a790ab87f33cde708a602f34281f",
+    "lando": "github:automattic/lando-cli#904ac116c75ce70364c702cd04bc43403a2a4898",
     "node-fetch": "^2.6.1",
     "node-stream-zip": "1.15.0",
     "open": "^10.0.0",
