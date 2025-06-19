@@ -21,4 +21,5 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           status: 'draft'
           category-id: '26'
+          link-to-pr: true
           source: 'last-release'
