@@ -11,7 +11,7 @@ import { PhpMyAdminCommand } from '../../src/commands/phpmyadmin';
 import API from '../../src/lib/api';
 import { CommandTracker } from '../../src/lib/tracker';
 
-const generatePMAAccessMutationMock = jest.fn( async () => {
+const generatePMAAccessMutationMock = jest.fn( async _param => {
 	return Promise.resolve( {
 		data: {
 			generatePHPMyAdminAccess: {
@@ -31,7 +31,7 @@ const enablePMAMutationMock = jest.fn( async () => {
 	} );
 } );
 
-const pmaEnabledQueryMockTrue = jest.fn( async () => {
+const pmaEnabledQueryMockTrue = jest.fn( async _param => {
 	return Promise.resolve( {
 		data: {
 			app: {
