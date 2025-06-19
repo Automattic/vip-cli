@@ -17,7 +17,7 @@ jobs:
       - uses: Automattic/vip-actions/changelog@update/build-tools
         with:
           endpoint: ${{ env.CHANGELOG_POST_ENDPOINT }}
-          endpoint-token: ${{ secrets.CHANGELOG_DOCS_POST_TOKEN }}
+          endpoint-token: ${{ secrets.CHANGELOG_POST_TOKEN }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           status: 'draft'
           category-id: '26'
