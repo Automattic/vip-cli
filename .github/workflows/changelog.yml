@@ -1,0 +1,21 @@
+name: Public Changelog
+on:
+  workflow_dispatch:
+  # release:
+  #   types: [published]
+
+jobs:
+  changelog:
+    name: Public Changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Update to Automattic/vip-actions/changelog@trunk once testing complete
+      - uses: Automattic/vip-actions/changelog@update/build-tools
+        with:
+          endpoint: ${{ env.CHANGELOG_POST_ENDPOINT }}
+          endpoint-token: ${{ secrets.CHANGELOG_DOCS_POST_TOKEN }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          status: 'draft'
+          category-id: '26'
+          source: 'last-release'
