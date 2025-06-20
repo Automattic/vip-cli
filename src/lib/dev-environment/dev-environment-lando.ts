@@ -93,8 +93,21 @@ async function getLandoConfig(): Promise< LandoConfig > {
 
 const appMap = new Map< string, App >();
 
+const patchLandoLogger = ( landoThing: Lando | App ) => {
+	landoThing.log.logger = getRootLogger();
+	landoThing.log.debug( 'pre-Foobar' );
+	// Create aliases for winston methods to maintain compatibility
+	[ 'error', 'warn', 'info', 'verbose', 'debug', 'silly' ].forEach( level => {
+		landoThing.log[ level ] = ( ...args: unknown[] ) =>
+			console.log( 'FROMOVERRIDE', level, args ) || getRootLogger()[ level ]( ...args );
+	} );
+	landoThing.log.debug( 'Foobar' );
+
 async function initLandoApplication( lando: Lando, instancePath: string ): Promise< App > {
+	console.log( lando.log.logger );
 	const app = lando.getApp( instancePath );
+
+	patchLandoLogger( app );
 
 	app.events.on( 'post-init', 1, () => {
 		const initOnly: string[] = [];
@@ -201,7 +214,7 @@ export async function bootstrapLando(): Promise< Lando > {
 		}
 
 		const lando = new Lando( config );
-		lando.log.logger = getRootLogger();
+		patchLandoLogger( lando );
 
 		// Get our VIP logger instance
 		// const vipLogger = getRootLogger();

@@ -139,6 +139,18 @@ class VIPLogger {
 		const consoleLevel = options.consoleLevel || ( this.isDebugMode ? 'debug' : 'warn' );
 		const fileLevel = options.fileLevel || 'debug'; // Always log everything to file
 
+		// Create a custom format that handles splat arguments like util.format
+		const splatFormat = winston.format( ( info ) => {
+			// Extract splat array (format args) if available
+			const splat = info[ Symbol.for( 'splat' ) as unknown as keyof typeof info ] || [];
+			// If we have format args, use Node's util.format to properly format the message
+			if ( Array.isArray( splat ) && splat.length > 0 ) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+				info.message = util.format( info.message, ...splat );
+			}
+			return info;
+		} );
+
 		return winston.createLogger( {
 			level: 'debug', // Set internal level to debug to capture everything
 			format: winston.format.combine( winston.format.timestamp(), winston.format.json() ),
@@ -146,6 +158,7 @@ class VIPLogger {
 				new winston.transports.Console( {
 					level: consoleLevel,
 					format: winston.format.combine(
+						splatFormat(),
 						winston.format.colorize(),
 						winston.format.timestamp( { format: 'HH:mm:ss' } ),
 						winston.format.printf(
@@ -158,6 +171,7 @@ class VIPLogger {
 					level: fileLevel,
 					filename: this.logFilePath,
 					format: winston.format.combine(
+						splatFormat(),
 						winston.format.timestamp(),
 						winston.format.printf(
 							( { timestamp, level, message, namespace = 'app' } ) =>
