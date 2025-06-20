@@ -265,7 +265,7 @@ class VIPLogger {
 						namespace: logObj.namespace,
 						...logObj,
 					} );
-				} catch ( e ) {
+				} catch ( error ) {
 					// Fallback if parsing fails
 					this.rootLogger.debug( `${ namespace }: ${ chunk.toString() }` );
 				}
