@@ -10,7 +10,7 @@ import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
 import fs from 'node:fs';
 import { mkdir, rename, unlink } from 'node:fs/promises';
-import os, { tmpdir, userInfo } from 'node:os';
+import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
 import xdgBasedir from 'xdg-basedir';
@@ -22,7 +22,6 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
-import env from '../../lib/env';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import debugLib, { isDebugMode, getLogFilePath, VIPLoggerTransport } from '../logger';
 import UserError from '../user-error';

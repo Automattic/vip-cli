@@ -12,6 +12,7 @@ import { Writable } from 'stream';
 import util from 'util';
 import winston from 'winston';
 import Transport from 'winston-transport';
+
 import env from './env';
 
 interface VIPLoggerOptions {
