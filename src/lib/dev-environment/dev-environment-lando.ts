@@ -23,7 +23,7 @@ import {
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
-import debugLib, { isDebugMode, getLogFilePath, VIPLoggerTransport } from '../logger';
+import debugLib, { isDebugMode, getLogFilePath, VIPLoggerTransport, getRootLogger } from '../logger';
 import UserError from '../user-error';
 
 import type { NetworkInspectInfo } from 'dockerode';
@@ -51,7 +51,6 @@ async function getLandoConfig(): Promise< LandoConfig > {
 
 	// Get our VIP logger's debug mode state and root logger
 	const isInDebugMode = isDebugMode();
-	const vipLogDir = path.dirname( getLogFilePath() );
 
 	// Determine console log level based on debug mode (same as in our logger)
 	const logLevelConsole = isInDebugMode ? 'debug' : 'warn';
@@ -70,7 +69,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 	const config = {
 		logLevelConsole, // Set console log level based on our debug mode
 		logLevel: 'debug', // Always log everything to file
-		logDir: vipLogDir, // Use our VIP log directory
+		// logDir: vipLogDir, // Use our VIP log directory
 		logName: 'lando', // Use 'lando' as the logger name
 		configSources: [ path.join( landoDir, 'config.yml' ) ],
 		landoFile: '.lando.yml',
@@ -202,6 +201,7 @@ export async function bootstrapLando(): Promise< Lando > {
 		}
 
 		const lando = new Lando( config );
+		lando.log.logger = getRootLogger();
 
 		// Get our VIP logger instance
 		// const vipLogger = getRootLogger();
@@ -209,15 +209,16 @@ export async function bootstrapLando(): Promise< Lando > {
 		// Remove Lando's existing console transport to prevent duplicate logs
 		if ( lando.log.transports ) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			lando.log.logger.clear();
+			// lando.log.logger.clear();
 			debug( "Removed Lando's transports" );
 		}
 		// }
-
+		console.log( 'lando.log.transports', lando.log.transports );
+		console.log( 'lando.log.logger', lando.log.logger );
 		// Add our custom transport to Lando's logger
 		// This will forward all logs to our VIP logger
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		lando.log.logger.add( new VIPLoggerTransport( { level: 'debug' } ) );
+		// lando.log.logger.add( new VIPLoggerTransport( { level: 'debug' } ) );
 		debug( "Added VIP logger transport to Lando's logger" );
 		debug( `
 Docker:
