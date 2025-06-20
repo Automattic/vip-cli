@@ -4,6 +4,7 @@ export interface DefaultOptions {
 		organization: {
 			id: number;
 			name: string;
+			salesforceId: string;
 		};
 	};
 	env: {
@@ -35,6 +36,7 @@ export interface GetBaseTrackingParamsOptions extends DefaultOptions {
 export interface BaseTrackingParams extends Record< string, unknown > {
 	command: string;
 	org_id: number;
+	org_sfid: string;
 	app_id: number;
 	env_id: number;
 	limit: number;

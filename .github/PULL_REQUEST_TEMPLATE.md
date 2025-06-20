@@ -16,6 +16,35 @@ Should include any special considerations, decisions, and links to relevant GitH
 
 Please don't include internal or private links :)
 
+## Changelog Description
+
+<!-- Changelogs are published for our customers. Well-written entries help them stay informed on platform changes and all of the great work that we do! -->
+
+<!-- Write a concise description of changes in the relevant section.
+- Add new line items as needed.
+- Entries should follow the [Common Changelog Style Guide](https://github.com/vweevers/common-changelog).
+- Remove all unused sections before merging.
+- Proof-read.
+-->
+
+### Added
+
+- <!-- e.g. "Added a new set of filters for MFA status" -->
+- <!-- e.g. "Dev-env: Added PHP 8.3 image" -->
+
+### Removed
+
+- <!-- e.g. "Dropped support of Node.js 14" -->
+
+### Fixed
+
+- <!-- e.g. "Fixed a bug causing blank lines in content to be ignored when using the Regex Parser" -->
+
+### Changed
+
+- <!-- e.g. "Increased priority of wp_mail_from filter in VIP Dashboard to prevent unintentional overriding" -->
+- <!-- e.g. "HyperDB: Updated to latest version to fix PHP error with addslashes()" -->
+
 ## Pull request checklist
 
 - [ ] Update [SETUP.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/SETUP.md#list-of-environmental-variables) with any new environmental variables.

@@ -338,7 +338,11 @@ export async function promptForArguments(
 		if ( setMediaRedirectDomain ) {
 			instanceData.mediaRedirectDomain = defaultOptions.mediaRedirectDomain;
 		}
-	} else if ( ! create && defaultOptions.mediaRedirectDomain ) {
+	} else if (
+		! create &&
+		defaultOptions.mediaRedirectDomain &&
+		! preselectedOptions.mediaRedirectDomain
+	) {
 		const mediaRedirectPromptText = 'URL to redirect for missing media files ("n" to disable)?';
 		const mediaRedirectDomain = await promptForURL(
 			mediaRedirectPromptText,

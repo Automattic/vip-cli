@@ -138,6 +138,7 @@ function getBaseTrackingParams( opt: GetBaseTrackingParamsOptions ): BaseTrackin
 	return {
 		command: 'vip slowlogs',
 		org_id: opt.app.organization.id,
+		org_sfid: opt.app.organization.salesforceId,
 		app_id: opt.app.id,
 		env_id: opt.env.id,
 		limit: opt.limit,

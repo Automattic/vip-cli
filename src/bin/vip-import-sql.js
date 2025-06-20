@@ -118,35 +118,11 @@ function isValidMd5( md5 ) {
  * @param {string} fileNameOrURL
  * @param {boolean} isUrl
  * @param {string|null} md5
- * @param searchReplace
  */
 // eslint-disable-next-line complexity
-export async function gates(
-	app,
-	env,
-	fileNameOrURL,
-	isUrl = false,
-	md5 = null,
-	searchReplace = []
-) {
+export async function gates( app, env, fileNameOrURL, isUrl = false, md5 = null ) {
 	const { id: envId, appId } = env;
 	const track = trackEventWithEnv.bind( null, appId, envId );
-
-	if ( isUrl ) {
-		if ( ! md5 ) {
-			await track( 'import_sql_command_error', { error_type: 'missing-md5' } );
-			exit.withError(
-				'MD5 hash is required when importing from a URL. Please provide the --md5 parameter with a valid MD5 hash of the remote file.'
-			);
-		}
-
-		if ( searchReplace.length > 0 ) {
-			await track( 'import_sql_command_error', { error_type: 'search-replace-with-url' } );
-			exit.withError(
-				'Search and replace operations are not supported when importing from a URL. Please remove the --search-replace option.'
-			);
-		}
-	}
 
 	if ( md5 && ! isValidMd5( md5 ) ) {
 		await track( 'import_sql_command_error', { error_type: 'invalid-md5' } );
@@ -268,8 +244,7 @@ const examples = [
 	},
 	// URL import
 	{
-		usage:
-			'vip @example-app.develop import sql https://example.org/file.sql --md5 b5b39269e9105d6e1e9cd50ff54e6282',
+		usage: 'vip @example-app.develop import sql https://example.org/file.sql',
 		description:
 			'Import a remote SQL database backup file from the URL with MD5 hash verification to the develop environment of the "example-app" application.',
 	},
@@ -483,7 +458,7 @@ void command( {
 	)
 	.option(
 		'md5',
-		'MD5 hash of the remote SQL file for verification. Required when importing from a URL.'
+		'MD5 hash of the remote SQL file for verification. If not provided, the verification will not be performed.'
 	)
 	.examples( examples )
 	// eslint-disable-next-line complexity
@@ -521,7 +496,7 @@ void command( {
 		await track( 'import_sql_command_execute', { is_url: isUrl } );
 
 		// halt operation of the import based on some rules
-		await gates( app, env, fileNameOrURL, isUrl, md5, searchReplace );
+		await gates( app, env, fileNameOrURL, isUrl, md5 );
 
 		// Log summary of import details
 		const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
