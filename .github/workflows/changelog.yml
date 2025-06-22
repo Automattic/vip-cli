@@ -13,7 +13,7 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v4
-      - uses: Automattic/vip-actions/changelog@trunk
+      - uses: Automattic/vip-actions/changelog@f083b1e1e0cd092ee5cafa6621d32a28c68bf7ee # trunk
         with:
           endpoint: ${{ env.CHANGELOG_POST_ENDPOINT }}
           endpoint-token: ${{ secrets.CHANGELOG_POST_TOKEN }}
