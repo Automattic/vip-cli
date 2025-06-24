@@ -37,7 +37,11 @@ describe( 'utils/cli/format', () => {
 			},
 			{
 				input: [ '--foo=bar1 "bar2" "bar3"' ],
-				expected: [ '"--foo=bar1 \\"bar2\\" \\"bar3\\""' ],
+				expected: [ '--foo="bar1 \\"bar2\\" \\"bar3\\""' ],
+			},
+			{
+				input: [ 'post', 'list', '--posts_per_page=1' ],
+				expected: [ '"post"', '"list"', '--posts_per_page="1"' ],
 			},
 			{
 				input: [ '--foo', 'bar1 "bar2" "bar3"' ],

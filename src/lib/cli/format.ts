@@ -140,7 +140,13 @@ export function keyValue( values: Tuple[] ): string {
 }
 
 export function requoteArgs( args: string[] ): string[] {
-	return args.map( arg => `"${ arg.replace( /"/g, '\\"' ) }"` );
+	return args.map( arg => {
+		if ( arg.startsWith( '--' ) && arg.includes( '=' ) ) {
+			return arg.replace( /"/g, '\\"' ).replace( /^--([^=]*)=(.*)$/, '--$1="$2"' );
+		}
+
+		return `"${ arg.replace( /"/g, '\\"' ) }"`;
+	} );
 }
 
 export function capitalize( str: unknown ): string {
