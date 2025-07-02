@@ -48,7 +48,7 @@ function stripProtocol( url: string ): string {
  * @return Site home url. null if not found
  */
 function findSiteHomeUrl( sql: string ): string | null {
-	const regex = /(['"])(?:siteurl|home)\1,\s?\1([Hh][Tt][Tt][Pp][Ss]?:\/\/.+?)\1/;
+	const regex = /(['"])(?:siteurl|home)\1,\s*\1([Hh][Tt][Tt][Pp][Ss]?:\/\/.+?)\1/;
 	const url = regex.exec( sql )?.[ 2 ] ?? '';
 	try {
 		const parsed = new URL( url );
