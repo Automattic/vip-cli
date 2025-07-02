@@ -208,7 +208,7 @@ export class DevEnvSyncSQLCommand {
 		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
 		debug(
 			'Network sites: %j, primary URL: %s, primary domain: %s',
-			networkSites,
+			networkSites.map( site => ( { blogId: site?.blogId, homeUrl: site?.homeUrl } ) ),
 			primaryUrl,
 			primaryDomain
 		);
