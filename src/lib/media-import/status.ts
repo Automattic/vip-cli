@@ -147,10 +147,10 @@ function buildFileErrors(
 
 	let errorString = '';
 	for ( const fileError of fileErrors ) {
-		errorString += `File Name: ${ fileError?.fileName ?? 'N/A' }`;
-		errorString += `\n\nErrors:\n\t- ${
+		errorString += `File Name: ${ JSON.stringify( fileError?.fileName ?? 'N/A' ) }`;
+		errorString += `\n\nErrors:\n\t- ${ JSON.stringify(
 			fileError?.errors?.join( ', ' ) ?? 'unknown error'
-		}\n\n\n\n`;
+		) }\n\n\n\n`;
 	}
 	return errorString;
 }
