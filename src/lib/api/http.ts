@@ -40,7 +40,8 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 
 	const authToken = await Token.get();
 
-	const proxyAgent = createProxyAgent( url );
+	// TODO: remove this cast once the typings are fixed
+	const proxyAgent = createProxyAgent( url ) as unknown as RequestInit[ 'agent' ];
 
 	debug( 'running fetch', url );
 
