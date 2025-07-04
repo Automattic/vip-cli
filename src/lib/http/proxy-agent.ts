@@ -18,7 +18,9 @@ const debug = debugLib( 'vip:proxy-agent' );
 // 4. VIP_USE_SYSTEM_PROXY and HTTPS_PROXY are set: an HTTPS_PROXY is returned
 // 5. NO_PROXY is set along with VIP_USE_SYSTEM_PROXY and any system proxy: null is returned if the no proxy applies, otherwise the first active proxy is used
 // This allows near full customization by the client of what proxy should be used, instead of making assumptions based on the URL string
-export function createProxyAgent( url: string | Url ): SocksProxyAgent | HttpsProxyAgent | null {
+export function createProxyAgent(
+	url: string | Url
+): SocksProxyAgent | HttpsProxyAgent< string > | null {
 	const VIP_PROXY = process.env.VIP_PROXY || process.env.vip_proxy || null; // NOSONAR
 	const SOCKS_PROXY = process.env.SOCKS_PROXY || process.env.socks_proxy || null; // NOSONAR
 	const HTTPS_PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || null; // NOSONAR
