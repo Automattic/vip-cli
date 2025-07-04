@@ -7,6 +7,7 @@ import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
 import { cp, readdir } from 'node:fs/promises';
+import { Agent } from 'node:http';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -947,7 +948,8 @@ async function maybeUpdateVersion( lando: Lando, slug: string ): Promise< boolea
  */
 export function fetchVersionList(): Promise< WordPressTag[] > {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	const proxyAgent = createProxyAgent( url );
+	// TODO: remove this cast once the typings are fixed
+	const proxyAgent = createProxyAgent( url ) as unknown as Agent;
 	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
 		res => res.json() as unknown as WordPressTag[]
 	);
