@@ -173,7 +173,7 @@
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
-    "socks-proxy-agent": "^5.0.1",
+    "socks-proxy-agent": "^8.0.5",
     "ssh2": "1.16.0",
     "tar": "^7.4.0",
     "update-notifier": "7.3.1",
