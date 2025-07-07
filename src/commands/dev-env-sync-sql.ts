@@ -2,6 +2,7 @@
 
 import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
+import debugLib from 'debug';
 import fs from 'fs';
 import Lando from 'lando';
 import { pipeline } from 'node:stream/promises';
@@ -16,6 +17,8 @@ import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
+
+const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 /**
  * Replaces the domain in the given URL
@@ -203,6 +206,12 @@ export class DevEnvSyncSQLCommand {
 
 		const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
 		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
+		debug(
+			'Network sites: %j, primary URL: %s, primary domain: %s',
+			networkSites.map( site => ( { blogId: site?.blogId, homeUrl: site?.homeUrl } ) ),
+			primaryUrl,
+			primaryDomain
+		);
 
 		for ( const site of networkSites ) {
 			if ( ! site?.blogId || site.blogId === 1 ) continue;
@@ -343,6 +352,7 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 		try {
 			console.log( 'Extracting site urls from the SQL file...' );
 			this.siteUrls = await extractSiteUrls( this.sqlFile );
+			debug( 'Extracted site URLs: %j', this.siteUrls );
 		} catch ( err ) {
 			const error = err as Error;
 			await this.track( 'error', {
