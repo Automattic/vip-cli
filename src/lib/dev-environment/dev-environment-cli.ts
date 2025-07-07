@@ -976,7 +976,7 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 	return command
 		.option(
 			'wordpress',
-			'Manage the version of WordPress. Accepts a string value for major versions (6.x). Defaults to the most recent version of WordPress.',
+			'Manage the version of WordPress. Accepts a string value for major versions (6.x) or "latest" (default).',
 			undefined,
 			processVersionOption
 		)
