@@ -434,11 +434,15 @@ async function processWordPress(
 	const versions = await getVersionList();
 	if ( versions.length ) {
 		versions.sort( ( before, after ) => ( before.tag < after.tag ? 1 : -1 ) );
-		const match = versions.find( ( { tag } ) => tag === result.tag );
+		const match = versions.find( ( { prerelease, tag } ) =>
+			result.tag === 'latest' ? ! prerelease : tag === result.tag
+		);
 
-		if ( typeof match === 'undefined' ) {
+		if ( match === undefined ) {
 			throw new UserError( `Unknown or unsupported WordPress version: ${ result.tag }.` );
 		}
+
+		result.tag = match.tag;
 	}
 
 	debug( result );
