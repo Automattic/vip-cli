@@ -160,7 +160,7 @@ export async function gates( app, env, fileNameOrURL, isUrl = false, md5 = null 
 
 		try {
 			await checkFileAccess( fileName );
-		} catch ( err ) {
+		} catch {
 			await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
 			exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 		}
