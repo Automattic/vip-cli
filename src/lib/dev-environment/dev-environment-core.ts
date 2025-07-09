@@ -968,7 +968,8 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise< 
 		expire.setSeconds( expire.getSeconds() + ttl );
 
 		return Number( new Date() ) > Number( expire );
-	} catch ( err ) {
+	} catch ( error ) {
+		debug( `Error checking version list expiration for cache file ${ cacheFile }:`, error );
 		return true;
 	}
 }
@@ -1120,7 +1121,6 @@ export function getVSCodeWorkspacePath( slug: string ) {
 export function generatePHPStormWorkspace( slug: string ): string {
 	debug( 'Generating PHPStorm Workspace' );
 	const location = getEnvironmentPath( slug );
-	// const location = location;
 	const instanceData = readEnvironmentData( slug );
 
 	const pathMappings = generatePathMappings( location, instanceData );

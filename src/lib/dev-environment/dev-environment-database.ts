@@ -1,8 +1,11 @@
+import debugLib from 'debug';
 import { randomInt } from 'node:crypto';
 
 import { exec, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
 
 import type Lando from 'lando';
+
+const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const generatePassword = (): string => {
 	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
@@ -50,6 +53,7 @@ export const dataCleanup = async ( lando: Lando, slug: string, quiet?: boolean )
 	} catch ( error ) {
 		// This must not be a fatal error
 		console.log( 'WARNING: data cleanup failed.' );
+		debug( 'Error during data cleanup:', error );
 	}
 };
 
