@@ -33,7 +33,7 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 	} );
 
 	let isMyDumper = false;
-	let sourceDB: string | undefined = '';
+	let sourceDB: string | undefined;
 	let currentLineNumber = 0;
 
 	for await ( const line of readLine ) {
