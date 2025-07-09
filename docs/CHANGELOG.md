@@ -1,5 +1,60 @@
 ## Changelog
 
+### 3.19.0
+
+* build(deps-dev): bump the testing group across 1 directory with 4 updates
+* New develop release: 3.18.1-dev.0 by @gi
+* build(deps-dev): bump the testing group with 3 updates
+* Remove preflight as part of the harmonia deprecation
+* Add changelog workflow
+* Changelogs: Update `vip-actions`
+* build(deps-dev): bump @types/dockerode from 3.3.41 to 3.3.42
+* build(deps-dev): bump the testing group with 2 updates
+* build(deps): bump step-security/harden-runner from 2.12.1 to 2.12.2
+* build(deps-dev): bump @babel/core from 7.27.4 to 7.27.7 in the babel group
+* build(deps-dev): bump the babel group with 3 updates
+* build(deps-dev): bump @types/shelljs from 0.8.16 to 0.8.17
+* build(deps-dev): bump the testing group with 3 updates
+* chore(deps): update Lando to fix PLTFRM-1195
+* build(deps): bump socks-proxy-agent from 5.0.1 to 8.0.5
+* build(deps): bump https-proxy-agent from 5.0.1 to 7.0.6
+* build(deps-dev): bump @types/node from 24.0.3 to 24.0.10
+* feat(dev-env): allow `latest` as WP version
+* feat(dev-env): add some logging to `DevEnvSyncSQLCommand`
+* Update to the description of the  `--wordpress` option for `dev-env`
+* build(deps-dev): bump @types/node from 24.0.10 to 24.0.12
+* fix: drop superfluous `as unknown` casts
+* fix: exception handling-related code smells
+* fix: Promise rejection is not caught by `try`
+* fix: RegExp-related issues
+* fix: fields that are only assigned in the constructor should be "readonly"
+* fix(dev-env): make URL extraction less error-prone
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.18.0...3.19.0
+
+### 3.18.0
+
+* fix: properly quote parameters for `vip wp`
+* build(deps-dev): bump dockerode from 4.0.6 to 4.0.7
+* build(deps-dev): bump @types/node from 22.15.29 to 22.15.30
+* build(deps-dev): bump @types/dockerode from 3.3.39 to 3.3.40
+* build(deps-dev): bump @types/node from 22.15.30 to 24.0.0
+* build(deps): bump step-security/harden-runner from 2.12.0 to 2.12.1
+* build(deps-dev): bump @types/node from 24.0.0 to 24.0.1
+* fix(dev-env): clear proxy cache before startup and after shutdown
+* feat(dev-env): add `vip dev-env envvar` commands
+* chore(deps): update `lando` to the latest version
+* Remove MD5 requirement restrictions for URL imports in vip-import-sql
+* build(deps-dev): bump @types/node from 24.0.1 to 24.0.3
+* build(deps-dev): bump @types/dockerode from 3.3.40 to 3.3.41
+* chore(deps): update `brace-expansion` to fix CVE-2025-5889
+* Bump ES to 8.18.2
+* fix: suppress prompt for media redirect with config files
+* Add changelog section to PR template
+* Update/Org salesforceId
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.17.1...3.18.0
+
 ### 3.17.1
 
 * chore: Update Git Hash Checker Github Action
