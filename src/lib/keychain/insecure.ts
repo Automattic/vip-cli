@@ -3,12 +3,9 @@ import Configstore from 'configstore';
 import type { Keychain } from './keychain';
 
 export default class Insecure implements Keychain {
-	private file: string;
-	private configstore: Configstore;
+	private readonly configstore: Configstore;
 
-	constructor( file: string ) {
-		this.file = file;
-
+	constructor( private readonly file: string ) {
 		this.configstore = new Configstore( this.file );
 	}
 

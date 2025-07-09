@@ -17,11 +17,7 @@ const client_info = {
 /* eslint-enable camelcase */
 
 export default class Analytics {
-	private clients: AnalyticsClient[];
-
-	constructor( clients: AnalyticsClient[] ) {
-		this.clients = clients;
-	}
+	constructor( private readonly clients: AnalyticsClient[] ) {}
 
 	public async trackEvent(
 		name: string,

@@ -31,15 +31,12 @@ export type TrackFunction = (
 // TODO: add batch support (can include multiples in `events` array)
 
 export default class Tracks implements AnalyticsClient {
-	private eventPrefix: string;
-	private userAgent: string;
-	private baseParams: BaseParams;
+	private readonly userAgent: string;
+	private readonly baseParams: BaseParams;
 
 	public static readonly ENDPOINT = 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 
-	constructor( userId: string, userType: string, eventPrefix: string, env: Env ) {
-		this.eventPrefix = eventPrefix;
-
+	constructor( userId: string, userType: string, private readonly eventPrefix: string, env: Env ) {
 		this.userAgent = env.userAgent;
 
 		this.baseParams = {
