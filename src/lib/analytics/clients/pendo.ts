@@ -18,9 +18,9 @@ interface PendoOptions {
  * Pendo analytics client.
  */
 export default class Pendo implements AnalyticsClient {
-	private eventPrefix: string;
-	private userAgent: string;
-	private userId: string;
+	private readonly eventPrefix: string;
+	private readonly userAgent: string;
+	private readonly userId: string;
 	private context: Env & Record< string, unknown > & { userId?: string };
 
 	public static readonly ENDPOINT = '/pendo';

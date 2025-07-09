@@ -65,17 +65,12 @@ export class NonZeroExitCodeError extends Error {
 }
 
 export class WPCliCommandOverSSH {
-	private app: App;
-	private env: AppEnvironment;
-	private track: CommandTracker;
+	private readonly track: CommandTracker;
 
-	constructor( app: App, env: AppEnvironment ) {
-		this.app = app;
-		this.env = env;
-
+	constructor( private readonly app: App, private readonly env: AppEnvironment ) {
 		this.track = makeCommandTracker( 'wp', {
-			app: this.app.id,
-			env: this.env.id,
+			app: app.id,
+			env: env.id,
 			execution_type: 'ssh',
 		} );
 	}

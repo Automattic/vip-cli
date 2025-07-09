@@ -13,10 +13,10 @@ interface Payload {
 // Config
 export const SERVICE = 'vip-go-cli';
 export default class Token {
-	private _raw?: string;
-	private _id?: number;
-	private iat?: Date;
-	private exp?: Date;
+	private readonly _raw?: string;
+	private readonly _id?: number;
+	private readonly iat?: Date;
+	private readonly exp?: Date;
 
 	constructor( token: string ) {
 		if ( ! token ) {

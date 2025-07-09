@@ -87,28 +87,26 @@ async function createBackupJob( appId: number, envId: number ) {
 
 // Library for a possible command in the future: vip backup db @app.env
 export class BackupDBCommand {
-	public app: App;
-	public env: AppEnvironment;
 	public job?: Job;
 	public jobStatus?: string;
 	public jobAge?: number;
 	public backupName?: string;
 	public silent?: boolean;
-	public steps = {
+	private readonly steps = {
 		PREPARE: 'prepare',
 		GENERATE: 'generate',
 	};
-	public track: CommandTracker;
-	private progressTracker: ProgressTracker;
+	private readonly progressTracker: ProgressTracker;
 
-	constructor( app: App, env: AppEnvironment, trackerFn: CommandTracker = async () => {} ) {
-		this.app = app;
-		this.env = env;
+	constructor(
+		private readonly app: App,
+		private readonly env: AppEnvironment,
+		private readonly track: CommandTracker = async () => {}
+	) {
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup generation' },
 			{ id: this.steps.GENERATE, name: 'Generating backup' },
 		] );
-		this.track = trackerFn;
 	}
 
 	public log( msg: string ) {

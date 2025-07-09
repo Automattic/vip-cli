@@ -17,11 +17,7 @@ export interface PromptStatus {
 }
 
 export class BackupStorageAvailability {
-	private archiveSize: number;
-
-	constructor( archiveSize: number ) {
-		this.archiveSize = archiveSize;
-	}
+	constructor( private readonly archiveSize: number ) {}
 
 	public static createFromDbCopyJob( job: Job ): BackupStorageAvailability {
 		const bytesWrittenMeta = job.metadata?.find( meta => meta?.name === 'bytesWritten' );

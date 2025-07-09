@@ -118,20 +118,18 @@ async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< str
 }
 
 export class PhpMyAdminCommand {
-	private app: App;
-	private env: AppEnvironment;
 	private silent?: boolean;
-	private track: CommandTracker;
-	private steps = {
+	private readonly steps = {
 		ENABLE: 'enable',
 		GENERATE: 'generate',
 	};
-	private progressTracker: ProgressTracker;
+	private readonly progressTracker: ProgressTracker;
 
-	constructor( app: App, env: AppEnvironment, trackerFn: CommandTracker = async () => {} ) {
-		this.app = app;
-		this.env = env;
-		this.track = trackerFn;
+	constructor(
+		private readonly app: App,
+		private readonly env: AppEnvironment,
+		private readonly track: CommandTracker = async () => {}
+	) {
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
 			{ id: this.steps.GENERATE, name: 'Generating access link' },
