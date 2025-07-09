@@ -968,7 +968,8 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise< 
 		expire.setSeconds( expire.getSeconds() + ttl );
 
 		return Number( new Date() ) > Number( expire );
-	} catch {
+	} catch ( error ) {
+		debug( `Error checking version list expiration for cache file ${ cacheFile }:`, error );
 		return true;
 	}
 }

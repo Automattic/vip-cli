@@ -121,7 +121,8 @@ async function regenerateLandofile( lando: Lando, instancePath: string ): Promis
 		const backup = `${ landoFile }.${ now }`;
 		await rename( landoFile, backup );
 		console.warn( chalk.yellow( 'Backed up %s to %s' ), landoFile, backup );
-	} catch {
+	} catch ( error ) {
+		debug( `Failed to backup lando file ${ landoFile }:`, error );
 		// Rename failed - possibly the file does not exist. Silently ignoring.
 	}
 
