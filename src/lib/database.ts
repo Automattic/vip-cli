@@ -12,7 +12,7 @@ export enum SqlDumpType {
 
 export interface SqlDumpDetails {
 	type: SqlDumpType;
-	sourceDb: string;
+	sourceDb: string | undefined;
 }
 
 export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDetails > => {
@@ -33,7 +33,7 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 	} );
 
 	let isMyDumper = false;
-	let sourceDB = '';
+	let sourceDB: string | undefined = '';
 	let currentLineNumber = 0;
 
 	for await ( const line of readLine ) {
@@ -43,8 +43,8 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 
 		const metadataMatch = /^-- metadata.header /.exec( line );
 
-		const sourceDBMatch = /^-- (.*)-schema-create.sql/.exec( line ) ?? [];
-		const sourceDBName = sourceDBMatch[ 1 ];
+		const sourceDBMatch = /^-- (.*)-schema-create.sql/.exec( line );
+		const sourceDBName = sourceDBMatch?.[ 1 ];
 
 		if ( metadataMatch && ! isMyDumper ) {
 			isMyDumper = true;
