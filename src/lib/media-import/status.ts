@@ -363,9 +363,7 @@ Downloading errors details from ${ fileErrorsUrl }
 		progressTracker.print();
 
 		if ( results.failureDetails?.fileErrorsUrl ) {
-			await promptFailureDetailsDownload(
-				results.failureDetails.fileErrorsUrl as unknown as string
-			);
+			await promptFailureDetailsDownload( results.failureDetails.fileErrorsUrl );
 		} else if ( 'ABORTED' !== overallStatus ) {
 			// print report link expired if required
 			// do not print this message if the import was aborted

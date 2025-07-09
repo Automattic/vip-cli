@@ -105,7 +105,7 @@ describe( 'WPCommand', () => {
 
 				// Simulate the SSH connection closing right after the command is executed
 				dummyStream.emit( 'close' );
-			} ) as unknown as Client[ 'exec' ] );
+			} ) as Client[ 'exec' ] );
 
 			await cmd.run( 'plugin list' );
 
@@ -129,7 +129,7 @@ describe( 'WPCommand', () => {
 				callback: ( err: Error, stream: Stream ) => void
 			) => {
 				callback( new Error( 'ops!' ), dummyStream );
-			} ) as unknown as Client[ 'exec' ] );
+			} ) as Client[ 'exec' ] );
 
 			const result = cmd.run( 'plugin list' );
 
@@ -150,7 +150,7 @@ describe( 'WPCommand', () => {
 				// Simulate the SSH connection closing right after the command is executed
 				dummyStream.emit( 'exit', 23 );
 				dummyStream.emit( 'close' );
-			} ) as unknown as Client[ 'exec' ] );
+			} ) as Client[ 'exec' ] );
 
 			const result = cmd.run( 'plugin list' );
 

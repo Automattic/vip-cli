@@ -387,9 +387,7 @@ export class ExportSQLCommand {
 			return await this.confirmEnoughStorageHook( job );
 		}
 
-		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob(
-			job as unknown as Job
-		);
+		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
 		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
 	}
 

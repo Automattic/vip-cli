@@ -951,7 +951,7 @@ export function fetchVersionList(): Promise< WordPressTag[] > {
 	// TODO: remove this cast once the typings are fixed
 	const proxyAgent = createProxyAgent( url ) as unknown as Agent;
 	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
-		res => res.json() as unknown as WordPressTag[]
+		res => res.json() as Promise< WordPressTag[] >
 	);
 }
 

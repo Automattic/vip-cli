@@ -24,5 +24,5 @@ export async function getMediaImportConfig(): Promise< MediaImportConfig | null 
 		fetchPolicy: 'network-only',
 	} );
 
-	return response?.data?.mediaImportConfig as unknown as MediaImportConfig | null;
+	return response?.data?.mediaImportConfig ?? null;
 }
