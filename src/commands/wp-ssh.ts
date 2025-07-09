@@ -252,7 +252,7 @@ export class WPCliCommandOverSSH {
 		const api = API();
 
 		try {
-			return api.mutate< TriggerWPCLICommandMutationResponse >( {
+			return await api.mutate< TriggerWPCLICommandMutationResponse >( {
 				mutation: TRIGGER_WP_CLI_COMMAND_MUTATION,
 				variables: {
 					input: {
