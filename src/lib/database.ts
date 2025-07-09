@@ -107,11 +107,11 @@ const getSqlFileStreamFromCompressedFile = async ( filePath: string ): Promise< 
 };
 
 export const fixMyDumperTransform = () => {
+	const regex = /^-- ([^ ]+) \d+$/;
 	return new Transform( {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
 			const chunkString = chunk.toString();
 			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const regex = /^-- ([^ ]+) \d+$/;
 			const lines = chunk
 				.toString()
 				.split( lineEnding )
