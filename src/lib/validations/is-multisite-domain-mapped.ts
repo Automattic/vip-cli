@@ -20,11 +20,8 @@ export const getPrimaryDomainFromSQL = ( statements: string[][] ): string => {
 		return '';
 	}
 
-	const SQL_WP_SITE_DOMAINS_REGEX = /\(1,'(.*?)'/s;
-	const matches = statements[ 0 ]
-		?.join( '' )
-		.replace( /\s/g, '' )
-		.match( SQL_WP_SITE_DOMAINS_REGEX );
+	const SQL_WP_SITE_DOMAINS_REGEX = /\(1,'([^']+)'/s;
+	const matches = SQL_WP_SITE_DOMAINS_REGEX.exec( statements[ 0 ].join( '' ).replace( /\s/g, '' ) );
 	return matches ? matches[ 1 ] : '';
 };
 

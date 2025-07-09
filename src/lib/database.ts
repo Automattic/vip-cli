@@ -41,9 +41,9 @@ export const getSqlDumpDetails = async ( filePath: string ): Promise< SqlDumpDet
 			continue;
 		}
 
-		const metadataMatch = line.match( /^-- metadata.header / );
+		const metadataMatch = /^-- metadata.header /.exec( line );
 
-		const sourceDBMatch = line.match( /^-- (.*)-schema-create.sql/ ) ?? [];
+		const sourceDBMatch = /^-- (.*)-schema-create.sql/.exec( line ) ?? [];
 		const sourceDBName = sourceDBMatch[ 1 ];
 
 		if ( metadataMatch && ! isMyDumper ) {
@@ -111,12 +111,12 @@ export const fixMyDumperTransform = () => {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
 			const chunkString = chunk.toString();
 			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const regex = /^-- ([^ ]+) [0-9]+$/;
+			const regex = /^-- ([^ ]+) \d+$/;
 			const lines = chunk
 				.toString()
 				.split( lineEnding )
 				.map( line => {
-					const match = line.match( regex );
+					const match = regex.exec( line );
 
 					if ( ! match ) {
 						return line;
