@@ -4,7 +4,7 @@ import Lando from 'lando';
 import path from 'path';
 
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
-import { DevEnvSyncSQLCommand } from '../../src/commands/dev-env-sync-sql';
+import { DevEnvSyncSQLCommand, findSiteHomeUrl } from '../../src/commands/dev-env-sync-sql';
 import { ExportSQLCommand } from '../../src/commands/export-sql';
 import * as clientFileUploader from '../../src/lib/client-file-uploader';
 
@@ -189,5 +189,19 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			expect( searchReplaceSpy ).toHaveBeenCalled();
 			expect( importSpy ).toHaveBeenCalled();
 		} );
+	} );
+} );
+
+describe( 'findSiteHomeUrl', () => {
+	it.each( [
+		[ `'siteurl', 'https://test.go-vip.com'`, 'https://test.go-vip.com' ],
+		[ `"siteurl", "https://test.go-vip.com"`, 'https://test.go-vip.com' ],
+		[ `'siteurl', "https://test.go-vip.com"`, null ],
+		[ `'home',    'HtTp://test.go-vip.com'`, 'HtTp://test.go-vip.com' ],
+		[ `'home','HTTP://test.go-vip.com'`, 'HTTP://test.go-vip.com' ],
+		[ `'home','Photo: istockphoto.com'`, null ],
+	] )( 'should return the correct home URL for %s', ( input, expected ) => {
+		const actual = findSiteHomeUrl( input );
+		expect( actual ).toBe( expected );
 	} );
 } );

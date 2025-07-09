@@ -47,12 +47,12 @@ function stripProtocol( url: string ): string {
  * @param sql A line in a SQL file
  * @return Site home url. null if not found
  */
-function findSiteHomeUrl( sql: string ): string | null {
-	const regex = `['"](siteurl|home)['"],\\s?['"](.*?)['"]`;
-	const url = sql.match( regex )?.[ 2 ] || '';
+export function findSiteHomeUrl( sql: string ): string | null {
+	const regex = /(['"])(?:siteurl|home)\1,\s*\1([Hh][Tt][Tt][Pp][Ss]?:\/\/.+?)\1/;
+	const url = regex.exec( sql )?.[ 2 ] ?? '';
 	try {
-		new URL( url );
-		return url;
+		const parsed = new URL( url );
+		return parsed.hostname ? url : null;
 	} catch {
 		return null;
 	}
