@@ -24,7 +24,7 @@ export async function getReadInterface( filename: string ): Promise< Interface >
 	let fd;
 	try {
 		fd = await open( filename );
-	} catch ( err ) {
+	} catch {
 		exit.withError(
 			'The file at the provided path is either missing or not readable. Please check the input and try again.'
 		);

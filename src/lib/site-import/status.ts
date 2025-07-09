@@ -349,17 +349,11 @@ ${ maybeExitPrompt }
 					importStepProgress,
 				} );
 
-				let jobCreationTime;
-				try {
-					jobCreationTime = new Date( createdAt ?? '' ).getTime();
-				} catch ( err ) {
-					debug( 'Unable to parse createdAt to a Date' );
-				}
-
+				const jobCreationTime = new Date( createdAt ?? '' ).getTime();
 				let failedImportStep;
 
 				if (
-					jobCreationTime &&
+					! isNaN( jobCreationTime ) &&
 					( importStepProgress?.started_at ?? 0 ) * 1000 >= jobCreationTime
 				) {
 					// The contents of the `import_progress` meta are pertinent to the most recent import job

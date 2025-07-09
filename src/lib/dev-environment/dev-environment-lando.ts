@@ -121,7 +121,7 @@ async function regenerateLandofile( lando: Lando, instancePath: string ): Promis
 		const backup = `${ landoFile }.${ now }`;
 		await rename( landoFile, backup );
 		console.warn( chalk.yellow( 'Backed up %s to %s' ), landoFile, backup );
-	} catch ( err ) {
+	} catch {
 		// Rename failed - possibly the file does not exist. Silently ignoring.
 	}
 
@@ -517,7 +517,7 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 				.map( url => {
 					try {
 						return new URL( url ).hostname;
-					} catch ( err ) {
+					} catch {
 						return undefined;
 					}
 				} )

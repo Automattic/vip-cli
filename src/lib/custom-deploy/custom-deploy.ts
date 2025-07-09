@@ -65,7 +65,7 @@ export async function validateCustomDeployKey(
 		}
 
 		return result.data?.validateCustomDeployAccess;
-	} catch ( error ) {
+	} catch {
 		exit.withError( `Unauthorized: Invalid or non-existent custom deploy key for environment.` );
 	}
 }
@@ -103,7 +103,7 @@ export async function validateFile( appId: number, envId: number, fileMeta: File
 
 	try {
 		await checkFileAccess( fileName );
-	} catch ( err ) {
+	} catch {
 		await track( 'deploy_app_command_error', { error_type: 'appfile-unreadable' } );
 		exit.withError( `File '${ fileName }' does not exist or is not readable.` );
 	}
