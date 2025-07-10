@@ -1,8 +1,12 @@
+import fs from 'node:fs';
+
+import { loadConfigFile } from '../../../src/lib/cli/config';
+
 describe( 'utils/cli/config', () => {
-	beforeEach( () => {
-		jest.resetModules();
-		jest.clearAllMocks();
+	afterEach( () => {
+		jest.restoreAllMocks();
 	} );
+
 	it.each( [
 		{
 			description: 'should return development if config.local.json is present',
@@ -17,28 +21,26 @@ describe( 'utils/cli/config', () => {
 		{
 			description: 'should throw error if config.local.json and config.publish.json are missing',
 			files: { local: false, publish: false },
-			expected: Error,
+			expected: null,
 		},
 	] )( '$description', ( { files, expected } ) => {
-		// An array of files would've been nicer but it doesn't play well with jest.doMock
-		if ( ! files.local ) {
-			jest.doMock( '../../../config/config.local.json', () => {
-				throw new Error();
-			} );
-		}
-		if ( ! files.publish ) {
-			jest.doMock( '../../../config/config.publish.json', () => {
-				throw new Error();
-			} );
-		}
+		const origReadFileSync = fs.readFileSync;
+		jest.spyOn( fs, 'readFileSync' ).mockImplementation( ( filePath, ...params ) => {
+			if ( typeof filePath !== 'string' || ! filePath.includes( 'config.' ) ) {
+				return origReadFileSync( filePath, ...params );
+			}
 
-		if ( ! files.local && ! files.publish ) {
-			// eslint-disable-next-line jest/no-conditional-expect
-			expect( () => require( '../../../src/lib/cli/config' ) ).toThrow( expected );
-		} else {
-			const config = require( '../../../src/lib/cli/config' );
-			// eslint-disable-next-line jest/no-conditional-expect
-			expect( config.default ).toMatchObject( expected );
-		}
+			if (
+				( filePath.includes( 'config.local.json' ) && ! files.local ) ||
+				( filePath.includes( 'config.publish.json' ) && ! files.publish )
+			) {
+				throw new Error();
+			}
+
+			return JSON.stringify( expected );
+		} );
+
+		const actual = loadConfigFile();
+		expect( actual ).toStrictEqual( expected );
 	} );
 } );
