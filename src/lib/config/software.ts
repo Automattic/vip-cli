@@ -360,10 +360,8 @@ const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterf
 	const jobs = result.data.app?.environments?.[ 0 ]?.jobs ?? [];
 
 	if ( jobs.length ) {
-		return jobs.reduce(
-			( prev, current ) =>
-				( prev?.createdAt || '' ) > ( current?.createdAt || '' ) ? prev : current,
-			null
+		return jobs.reduce( ( prev, current ) =>
+			( prev?.createdAt || '' ) > ( current?.createdAt || '' ) ? prev : current
 		);
 	}
 	return null;
