@@ -1,4 +1,6 @@
 import debugLib from 'debug';
+import { readFileSync, statSync } from 'node:fs'; // I don't like using synchronous versions, but until we migrate to ESM, we have to.
+import path from 'node:path';
 
 interface Config {
 	tracksUserType: string;
@@ -9,19 +11,36 @@ interface Config {
 
 const debug = debugLib( '@automattic/vip:lib:cli:config' );
 
-let configFromFile: Config;
-try {
-	// Get `local` config first; this will only exist in dev as it's npmignore-d.
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	configFromFile = require( '../../../config/config.local.json' ) as Config;
+function loadConfigFile(): Config | null {
+	const paths = [
+		// Get `local` config first; this will only exist in dev as it's npmignore-d.
+		path.join( __dirname, '../../../config/config.local.json' ),
+		path.join( __dirname, '../../../config/config.publish.json' ),
+	];
 
-	debug( 'Loaded config data from config.local.json' );
-} catch {
-	// Fall back to `publish` config file.
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	configFromFile = require( '../../../config/config.publish.json' ) as Config;
+	for ( const filePath of paths ) {
+		try {
+			statSync( filePath );
+			debug( `Found config file at ${ filePath }` );
+			const data = readFileSync( filePath, 'utf-8' );
+			return JSON.parse( data ) as Config;
+		} catch ( err ) {
+			if ( ! ( err instanceof Error ) || ! ( 'code' in err ) || err.code !== 'ENOENT' ) {
+				debug( `Error reading config file at ${ filePath }:`, err );
+			}
+		}
+	}
 
-	debug( 'Loaded config data from config.publish.json' );
+	return null;
 }
 
-export default configFromFile;
+const configFromFile = loadConfigFile();
+if ( null === configFromFile ) {
+	// This shouild not happen because `config/config.publish.json` is always present.
+	console.error( 'FATAL ERROR: Could not find a valid configuration file' );
+	process.exit( 1 );
+}
+
+// Without this, TypeScript will export `configFromFile` as `Config | null`
+const exportedConfig: Config = configFromFile;
+export default exportedConfig;
