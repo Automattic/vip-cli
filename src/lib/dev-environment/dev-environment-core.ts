@@ -7,7 +7,6 @@ import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
 import fs from 'node:fs';
 import { cp, readdir } from 'node:fs/promises';
-import { Agent } from 'node:http';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
@@ -227,6 +226,8 @@ export async function updateEnvironment(
 	await prepareLandoEnv( lando, preProcessedInstanceData, instancePath, undefined, undefined );
 }
 
+declare function isNaN( v: unknown ): boolean;
+
 function preProcessInstanceData( instanceData: InstanceData ): Required< InstanceData > {
 	const newInstanceData: Required< InstanceData > = {
 		...instanceData,
@@ -253,8 +254,7 @@ function preProcessInstanceData( instanceData: InstanceData ): Required< Instanc
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}
 
-	// isNaN supports only number in TypeScript, actually, because isNaN('123') returns false despite being a string
-	if ( isNaN( instanceData.wordpress.tag as unknown as number ) ) {
+	if ( isNaN( instanceData.wordpress.tag ) ) {
 		newInstanceData.wordpress.tag = 'trunk';
 	}
 
@@ -948,8 +948,7 @@ async function maybeUpdateVersion( lando: Lando, slug: string ): Promise< boolea
  */
 export function fetchVersionList(): Promise< WordPressTag[] > {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	// TODO: remove this cast once the typings are fixed
-	const proxyAgent = createProxyAgent( url ) as unknown as Agent;
+	const proxyAgent = createProxyAgent( url );
 	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
 		res => res.json() as Promise< WordPressTag[] >
 	);
