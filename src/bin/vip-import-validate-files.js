@@ -4,7 +4,6 @@
  * External dependencies
  */
 import chalk from 'chalk';
-import url from 'url';
 
 /**
  * Internal dependencies
@@ -29,9 +28,7 @@ export async function vipImportValidateFilesCmd( arg = [] ) {
 	 *
 	 * Manipulating the file path/name to extract the folder name
 	 */
-	const folder = arg.join(); // File comes in as an array as part of the args- turn it into a string
-	arg = url.parse( folder ); // Then parse the file to its URL parts
-	const filePath = arg.path; // Extract the path of the file
+	const filePath = arg.join(); // File comes in as an array as part of the args- turn it into a string
 
 	if ( ! ( await isDirectory( filePath ) ) ) {
 		console.error(

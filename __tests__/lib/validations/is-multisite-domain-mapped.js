@@ -3,7 +3,6 @@
  */
 
 import nock from 'nock';
-import url from 'url';
 
 import { API_URL } from '../../../src/lib/api';
 import {
@@ -80,10 +79,10 @@ describe( 'is-multisite-domain-mapped', () => {
 
 	describe( 'isMultisitePrimaryDomainMapped', () => {
 		beforeEach( () => {
-			const { protocol, host, path } = url.parse( API_URL );
+			const url = new URL( API_URL );
 
-			nock( `${ protocol }//${ host }` )
-				.post( path )
+			nock( url.origin )
+				.post( url.pathname )
 				.reply( 200, {
 					data: {
 						app: {
