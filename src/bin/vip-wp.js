@@ -273,10 +273,17 @@ const bindReconnectEvents = ( {
 
 		// create a new input stream so that we can still catch things like SIGINT while reconnecting
 		if ( currentJob.stdinStream ) {
-			process.stdin.unpipe( currentJob.stdinStream );
+			unpipeStreamsFromProcess( {
+				stdin: currentJob.stdinStream,
+				stdout: currentJob.stdoutStream,
+			} );
 		}
-		process.stdin.pipe( IOStream.createStream() );
+
+		currentJob.stdinStream = IOStream.createStream();
 		currentJob.stdoutStream = IOStream.createStream();
+
+		pipeStreamsToProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+
 		bindStreamEvents( {
 			subShellRl,
 			isSubShell,
