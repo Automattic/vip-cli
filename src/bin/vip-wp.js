@@ -141,6 +141,14 @@ const getTokenForCommand = async ( appId, envId, command ) => {
 	} );
 };
 
+/**
+ * Returns the error so it can be caught by the `socket.on('error')`.
+ *
+ * @param {Error} err
+ * @returns {Error}
+ */
+const onSocketError = err => err;
+
 const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 0 } ) => {
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();
@@ -172,10 +180,7 @@ const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 
 		exit.withError( `Cancel received from server: ${ message }` );
 	} );
 
-	IOStream( socket ).on( 'error', err => {
-		// This returns the error so it can be catched by the socket.on('error')
-		return err;
-	} );
+	IOStream( socket ).off( 'error', onSocketError ).on( 'error', onSocketError );
 
 	socket.on( 'error', err => {
 		if ( err === 'Rate limit exceeded' ) {
