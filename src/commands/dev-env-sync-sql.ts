@@ -15,6 +15,12 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import {
+	DBLiveCopyConfig,
+	downloadFile,
+	getDownloadURL,
+	startLiveBackupCopy,
+} from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -91,33 +97,31 @@ export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
 	public searchReplaceMap: Record< string, string > = {};
+	public configFile?: string;
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
 
 	/**
 	 * Creates a new instance of the command
-	 *
-	 * @param app       The app object
-	 * @param env       The environment object
-	 * @param slug      The site slug
-	 * @param lando     The lando object
-	 * @param trackerFn Function to call for tracking
 	 */
 	constructor(
 		public app: App,
 		public env: AppEnvironment,
 		public slug: string,
 		public lando: Lando,
-		trackerFn: TrackFunction = () => {}
+		trackerFn: TrackFunction = () => {},
+		configFile?: string
 	) {
 		this._track = trackerFn;
 		this.tmpDir = makeTempDir();
+		this.configFile = configFile;
 	}
 
 	public track( name: string, eventProps: Record< string, unknown > ) {
 		return this._track( name, {
 			...eventProps,
 			sqldump_type: this._sqlDumpType,
+			live_backup_copy: Boolean( this.configFile ),
 		} );
 	}
 
@@ -156,6 +160,12 @@ export class DevEnvSyncSQLCommand {
 	 * the latest backup
 	 */
 	public async generateExport(): Promise< void > {
+		if ( this.configFile ) {
+			await this.generateLiveBackupCopy();
+
+			return;
+		}
+
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
@@ -163,6 +173,51 @@ export class DevEnvSyncSQLCommand {
 			this.track.bind( this )
 		);
 		await exportCommand.run();
+	}
+
+	private async generateLiveBackupCopy(): Promise< void > {
+		if ( ! this.configFile ) {
+			throw new Error( 'Configuration file is required for live backup copy.' );
+		}
+
+		if ( ! this.app.id || ! this.env.id ) {
+			throw new Error( 'App ID and Environment ID are required to start live backup copy.' );
+		}
+
+		const config = JSON.parse( fs.readFileSync( this.configFile, 'utf-8' ) ) as DBLiveCopyConfig;
+		if ( ! config.type ) {
+			throw new Error( 'Invalid configuration file. Missing tool or type.' );
+		}
+
+		try {
+			console.log( `${ chalk.green( '✓' ) } Creating backup copy` );
+
+			const copyId = await startLiveBackupCopy( {
+				appId: this.app.id,
+				environmentId: this.env.id,
+				config,
+			} );
+
+			const downloadURL = await getDownloadURL( {
+				appId: this.app.id,
+				environmentId: this.env.id,
+				copyId,
+			} );
+
+			console.log( `${ chalk.green( '✓' ) } Downloading file` );
+
+			await downloadFile( downloadURL, this.gzFile );
+		} catch ( err ) {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+
+			await this.track( 'error', {
+				error_type: 'live_backup_copy',
+				error_message: message,
+				stack: err instanceof Error ? err.stack : undefined,
+			} );
+
+			exit.withError( `Error creating backup copy: ${ message }` );
+		}
 	}
 
 	/**
