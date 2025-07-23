@@ -113,8 +113,8 @@ function isValidMd5( md5 ) {
 }
 
 /**
- * @param {AppForImport} app
- * @param {EnvForImport} env
+ * @param {import('../lib/site-import/db-file-import').AppForImport} app
+ * @param {import('../lib/site-import/db-file-import').EnvForImport} env
  * @param {string} fileNameOrURL
  * @param {boolean} isUrl
  * @param {string|null} md5
@@ -427,7 +427,7 @@ const displayPlaybook = ( {
 	}
 };
 
-void command( {
+command( {
 	appContext: true,
 	appQuery,
 	envContext: true,

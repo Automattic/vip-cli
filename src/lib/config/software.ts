@@ -441,7 +441,8 @@ export const formatSoftwareSettings = (
 			.map( option => option.value );
 
 		if ( format !== 'json' ) {
-			result.available_versions = result.available_versions.sort().join( ',' );
+			result.available_versions.sort( ( lhs, rhs ) => lhs.localeCompare( rhs ) );
+			result.available_versions = result.available_versions.join( ',' );
 		}
 	}
 

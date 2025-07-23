@@ -65,7 +65,7 @@ export async function fileLineValidations(
 	return Promise.all(
 		validations.map( ( validation: PerLineValidationObject ) => {
 			if (
-				Object.prototype.hasOwnProperty.call( validation, 'postLineExecutionProcessing' ) &&
+				Object.hasOwn( validation, 'postLineExecutionProcessing' ) &&
 				typeof validation.postLineExecutionProcessing === 'function'
 			) {
 				return validation.postLineExecutionProcessing( {

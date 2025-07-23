@@ -118,17 +118,10 @@ export function keyValue( values: Tuple[] ): string {
 
 	for ( const { key, value } of values ) {
 		let formattedValue: string;
-
-		switch (
-			key.toLowerCase() // NOSONAR
-		) {
-			case 'environment':
-				formattedValue = formatEnvironment( value );
-				break;
-
-			default:
-				formattedValue = value;
-				break;
+		if ( key.toLowerCase() === 'environment' ) {
+			formattedValue = formatEnvironment( value );
+		} else {
+			formattedValue = value;
 		}
 
 		lines.push( `+ ${ key }: ${ formattedValue }` );
