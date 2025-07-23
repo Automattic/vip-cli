@@ -110,7 +110,6 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 		if ( ! isSubShell ) {
 			subShellRl.close();
 			process.exit();
-			return;
 		}
 		subShellRl.resume();
 		subShellRl.prompt();
