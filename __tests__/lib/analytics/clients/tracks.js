@@ -1,38 +1,16 @@
 import nock from 'nock';
-import url from 'url';
 
 import Tracks from '../../../../src/lib/analytics/clients/tracks';
 import * as apiConfig from '../../../../src/lib/cli/apiConfig';
 
 describe( 'lib/analytics/tracks', () => {
-	const {
-		protocol: endpointProtocol,
-		host: endpointHost,
-		path: endpointPath,
-	} = url.parse( Tracks.ENDPOINT );
+	const url = new URL( Tracks.ENDPOINT );
 
-	const buildNock = () => {
-		return nock( `${ endpointProtocol }//${ endpointHost }` ).post( endpointPath );
-	};
+	const buildNock = () => nock( url.origin ).post( url.pathname );
 
 	afterEach( nock.cleanAll );
 
 	describe( '.send()', () => {
-		/**
-		 * Allow overriding of process variables per test
-		 * Adapted from https://stackoverflow.com/a/48042799
-		 */
-		const OLD_ENV = process.env;
-
-		beforeEach( () => {
-			jest.resetModules();
-			process.env = { ...OLD_ENV };
-		} );
-
-		afterEach( () => {
-			process.env = OLD_ENV;
-		} );
-
 		it( 'should correctly construct remote request', () => {
 			const tracksClient = new Tracks( 123, 'vip', '', {
 				userAgent: 'vip-cli',
