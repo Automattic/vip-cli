@@ -59,11 +59,12 @@ command( {
 		undefined,
 		processSlug
 	)
-	.option( 'experimental-config-file', 'The backup copy config file', undefined )
+	.option( 'config-file', 'The backup copy config file', undefined )
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const { app, env, experimentalConfigFile, ...optRest } = opt;
+		const { app, env, configFile, ...optRest } = opt;
+
 		const slug = await getEnvironmentName( optRest );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
 			app: app.id,
@@ -81,14 +82,7 @@ command( {
 			throw new UserError( 'Environment needs to be started first' );
 		}
 
-		const cmd = new DevEnvSyncSQLCommand(
-			app,
-			env,
-			slug,
-			lando,
-			trackerFn,
-			experimentalConfigFile
-		);
+		const cmd = new DevEnvSyncSQLCommand( app, env, slug, lando, trackerFn, configFile );
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?
 		const didCommandRun = await cmd.run();

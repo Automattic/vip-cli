@@ -184,10 +184,7 @@ export class DevEnvSyncSQLCommand {
 			throw new Error( 'App ID and Environment ID are required to start live backup copy.' );
 		}
 
-		const config = JSON.parse( fs.readFileSync( this.configFile, 'utf-8' ) ) as DBLiveCopyConfig;
-		if ( ! config.type ) {
-			throw new Error( 'Invalid configuration file. Missing tool or type.' );
-		}
+		const config = this.loadLiveBackupCopyConfig( this.configFile );
 
 		try {
 			console.log( `${ chalk.green( '✓' ) } Creating backup copy` );
@@ -217,6 +214,20 @@ export class DevEnvSyncSQLCommand {
 			} );
 
 			exit.withError( `Error creating backup copy: ${ message }` );
+		}
+	}
+
+	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {
+		if ( ! fs.existsSync( configFile ) ) {
+			throw new Error( `Configuration file not found: ${ configFile }` );
+		}
+
+		try {
+			return JSON.parse( fs.readFileSync( configFile, 'utf-8' ) ) as DBLiveCopyConfig;
+		} catch ( err ) {
+			throw new Error(
+				`Error reading configuration file: ${ configFile } - ${ ( err as Error ).message }`
+			);
 		}
 	}
 
