@@ -11,7 +11,7 @@ import {
 } from './live-backup-copy.generated';
 import API from '../lib/api';
 
-const START_LIVE_COPY_MUTATION = gql( `
+export const START_LIVE_COPY_MUTATION = gql( `
 	mutation startLiveBackupCopy($input: LiveBackupCopyConfigInput!) {
 		startLiveBackupCopy(input: $input) {
 			message
@@ -20,7 +20,7 @@ const START_LIVE_COPY_MUTATION = gql( `
 	}
 ` );
 
-const GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION = gql( `
+export const GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION = gql( `
 	mutation generateLiveBackupCopyDownloadURL(
 		$input: AppEnvironmentLiveBackupCopyDownloadURLInput!
 	) {

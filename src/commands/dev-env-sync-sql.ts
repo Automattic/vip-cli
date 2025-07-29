@@ -15,12 +15,8 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
-import {
-	DBLiveCopyConfig,
-	downloadFile,
-	getDownloadURL,
-	startLiveBackupCopy,
-} from '../lib/live-backup-copy';
+import * as liveBackupCopy from '../lib/live-backup-copy';
+import { DBLiveCopyConfig } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -189,13 +185,13 @@ export class DevEnvSyncSQLCommand {
 		try {
 			console.log( `${ chalk.green( '✓' ) } Creating backup copy` );
 
-			const copyId = await startLiveBackupCopy( {
+			const copyId = await liveBackupCopy.startLiveBackupCopy( {
 				appId: this.app.id,
 				environmentId: this.env.id,
 				config,
 			} );
 
-			const downloadURL = await getDownloadURL( {
+			const downloadURL = await liveBackupCopy.getDownloadURL( {
 				appId: this.app.id,
 				environmentId: this.env.id,
 				copyId,
@@ -203,7 +199,7 @@ export class DevEnvSyncSQLCommand {
 
 			console.log( `${ chalk.green( '✓' ) } Downloading file` );
 
-			await downloadFile( downloadURL, this.gzFile );
+			await liveBackupCopy.downloadFile( downloadURL, this.gzFile );
 		} catch ( err ) {
 			const message = err instanceof Error ? err.message : 'Unknown error';
 
