@@ -148,13 +148,13 @@ export class PhpMyAdminCommand {
 		this.progressTracker.stopPrinting();
 	}
 
-	public async openUrl( url: string ): Promise< void > {
+	public async openUrl( url: string ): Promise< unknown > {
 		const { default: open } = await import( 'open' );
-		void open( url, { wait: false } );
+		return open( url, { wait: false } );
 	}
 
 	public async getStatus(): Promise< string > {
-		return await getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
+		return getPhpMyAdminStatus( this.app.id as number, this.env.id as number );
 	}
 
 	private async maybeEnablePhpMyAdmin(): Promise< void > {

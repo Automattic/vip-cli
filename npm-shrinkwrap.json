@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "3.19.1-dev.0",
+  "version": "3.19.2-dev.0",
   "lockfileVersion": 2,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "3.19.1-dev.0",
+      "version": "3.19.2-dev.0",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -30,7 +30,7 @@
         "ini": "5.0.0",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#25136fb80684743276239e2ee155080f3056790c",
+        "lando": "github:automattic/lando-cli#4cbdcf85ddd8b7ff53e912b9d9f1fced57ce39b7",
         "node-fetch": "^2.6.1",
         "node-stream-zip": "1.15.0",
         "open": "^10.0.0",
@@ -38,7 +38,7 @@
         "semver": "7.7.2",
         "shelljs": "^0.10.0",
         "socket.io-client": "^4.5.3",
-        "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
+        "socket.io-stream": "npm:@wwa/socket.io-stream@^0.10.0",
         "socks-proxy-agent": "^8.0.5",
         "ssh2": "1.16.0",
         "tar": "^7.4.0",
@@ -5604,11 +5604,6 @@
         "node": ">= 12.0.0"
       }
     },
-    "node_modules/component-bind": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/component-bind/-/component-bind-1.0.0.tgz",
-      "integrity": "sha512-WZveuKPeKAG9qY+FkYDeADzdHyTYdIboXS59ixDeRJL5ZhxpqUnxSOwop4FQjMsiYm3/Or8cegVbpAHNA7pHxw=="
-    },
     "node_modules/concat-map": {
       "version": "0.0.1",
       "resolved": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz",
@@ -9817,8 +9812,8 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#25136fb80684743276239e2ee155080f3056790c",
-      "integrity": "sha512-hOJd26UT7883hUE1XLcD9X39qz0ZuWatip+m7f6rJuHzIMKknJthWG3f9NPrIyuwWo9jZ3KhZc+b2f7n2WXwrQ==",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#4cbdcf85ddd8b7ff53e912b9d9f1fced57ce39b7",
+      "integrity": "sha512-Rac8WrmoZYbXHAtycCsy14Ly/NxOljMN3MOcBjSIX3fA0VSuWYYIgKCBbDfB8QB7XFzGkzK56mftdEo1Iyp1iw==",
       "license": "GPL-3.0",
       "dependencies": {
         "axios": "^1.8.2",
@@ -11941,29 +11936,12 @@
       }
     },
     "node_modules/socket.io-stream": {
-      "name": "@wearemothership/socket.io-stream",
-      "version": "0.9.1",
-      "resolved": "https://registry.npmjs.org/@wearemothership/socket.io-stream/-/socket.io-stream-0.9.1.tgz",
-      "integrity": "sha512-ZLoLvHpH9muTWWGlN2EBa4x5doeQuTD+zO5nMFmX3ndCJXw4Sy4XbfGtrgHsqspxaqqI+Hq1mOLT51pc583IIg==",
+      "name": "@wwa/socket.io-stream",
+      "version": "0.10.1",
+      "resolved": "https://registry.npmjs.org/@wwa/socket.io-stream/-/socket.io-stream-0.10.1.tgz",
+      "integrity": "sha512-EZp2bnG3f6Cpr+M7IaAmCNlLJuAREljmdNTko1+1LvUJ0idHgLqQQsLxMafFl/w7n58jl1hr91jMpK6pbCddKQ==",
       "dependencies": {
-        "component-bind": "~1.0.0",
-        "debug": "~4.3.4"
-      }
-    },
-    "node_modules/socket.io-stream/node_modules/debug": {
-      "version": "4.3.7",
-      "resolved": "https://registry.npmjs.org/debug/-/debug-4.3.7.tgz",
-      "integrity": "sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==",
-      "dependencies": {
-        "ms": "^2.1.3"
-      },
-      "engines": {
-        "node": ">=6.0"
-      },
-      "peerDependenciesMeta": {
-        "supports-color": {
-          "optional": true
-        }
+        "debug": "^4.4.1"
       }
     },
     "node_modules/socks": {
@@ -17402,11 +17380,6 @@
       "integrity": "sha512-QLyTNiZ2KDOibvFPlZ6ZngVsZ/0gYnE6uTXi5aoDg8ed3AkJAz4sEje3Y8a29hQ1s6A99MZXe47fLAXQ1rTqaw==",
       "dev": true
     },
-    "component-bind": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/component-bind/-/component-bind-1.0.0.tgz",
-      "integrity": "sha512-WZveuKPeKAG9qY+FkYDeADzdHyTYdIboXS59ixDeRJL5ZhxpqUnxSOwop4FQjMsiYm3/Or8cegVbpAHNA7pHxw=="
-    },
     "concat-map": {
       "version": "0.0.1",
       "resolved": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz",
@@ -20373,9 +20346,9 @@
       "integrity": "sha512-tPhhoGUiEiU/WXR4rt8klIoLdnTtyu+9jVKHd/wauEjYud32jyn63mzKWQweaQrHWxBQtYoVtdcEnYX1LosnFQ=="
     },
     "lando": {
-      "version": "git+ssh://git@github.com/automattic/lando-cli.git#25136fb80684743276239e2ee155080f3056790c",
-      "integrity": "sha512-hOJd26UT7883hUE1XLcD9X39qz0ZuWatip+m7f6rJuHzIMKknJthWG3f9NPrIyuwWo9jZ3KhZc+b2f7n2WXwrQ==",
-      "from": "lando@github:automattic/lando-cli#25136fb80684743276239e2ee155080f3056790c",
+      "version": "git+ssh://git@github.com/automattic/lando-cli.git#4cbdcf85ddd8b7ff53e912b9d9f1fced57ce39b7",
+      "integrity": "sha512-Rac8WrmoZYbXHAtycCsy14Ly/NxOljMN3MOcBjSIX3fA0VSuWYYIgKCBbDfB8QB7XFzGkzK56mftdEo1Iyp1iw==",
+      "from": "lando@github:automattic/lando-cli#4cbdcf85ddd8b7ff53e912b9d9f1fced57ce39b7",
       "requires": {
         "axios": "^1.8.2",
         "bluebird": "^3.4.1",
@@ -21851,22 +21824,11 @@
       }
     },
     "socket.io-stream": {
-      "version": "npm:@wearemothership/socket.io-stream@0.9.1",
-      "resolved": "https://registry.npmjs.org/@wearemothership/socket.io-stream/-/socket.io-stream-0.9.1.tgz",
-      "integrity": "sha512-ZLoLvHpH9muTWWGlN2EBa4x5doeQuTD+zO5nMFmX3ndCJXw4Sy4XbfGtrgHsqspxaqqI+Hq1mOLT51pc583IIg==",
+      "version": "npm:@wwa/socket.io-stream@0.10.1",
+      "resolved": "https://registry.npmjs.org/@wwa/socket.io-stream/-/socket.io-stream-0.10.1.tgz",
+      "integrity": "sha512-EZp2bnG3f6Cpr+M7IaAmCNlLJuAREljmdNTko1+1LvUJ0idHgLqQQsLxMafFl/w7n58jl1hr91jMpK6pbCddKQ==",
       "requires": {
-        "component-bind": "~1.0.0",
-        "debug": "~4.3.4"
-      },
-      "dependencies": {
-        "debug": {
-          "version": "4.3.7",
-          "resolved": "https://registry.npmjs.org/debug/-/debug-4.3.7.tgz",
-          "integrity": "sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==",
-          "requires": {
-            "ms": "^2.1.3"
-          }
-        }
+        "debug": "^4.4.1"
       }
     },
     "socks": {

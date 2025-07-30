@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "3.19.1-dev.0",
+  "version": "3.19.2-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -164,7 +164,7 @@
     "ini": "5.0.0",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli#25136fb80684743276239e2ee155080f3056790c",
+    "lando": "github:automattic/lando-cli#4cbdcf85ddd8b7ff53e912b9d9f1fced57ce39b7",
     "node-fetch": "^2.6.1",
     "node-stream-zip": "1.15.0",
     "open": "^10.0.0",
@@ -172,7 +172,7 @@
     "semver": "7.7.2",
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
-    "socket.io-stream": "npm:@wearemothership/socket.io-stream@^0.9.1",
+    "socket.io-stream": "npm:@wwa/socket.io-stream@^0.10.0",
     "socks-proxy-agent": "^8.0.5",
     "ssh2": "1.16.0",
     "tar": "^7.4.0",

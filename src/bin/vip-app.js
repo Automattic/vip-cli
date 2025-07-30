@@ -70,10 +70,10 @@ command( { requiredArgs: 1, format: true } )
 		await trackEvent( 'app_command_success' );
 
 		// Clone the read-only response object so we can modify it
-		const clonedResponse = Object.assign( {}, res );
+		const clonedResponse = { ...res };
 
 		clonedResponse.environments = clonedResponse.environments.map( env => {
-			const clonedEnv = Object.assign( {}, env );
+			const clonedEnv = { ...env };
 
 			clonedEnv.name = getEnvIdentifier( env );
 
