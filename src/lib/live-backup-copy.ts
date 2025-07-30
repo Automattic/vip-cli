@@ -82,8 +82,8 @@ export async function startLiveBackupCopy( {
 				environmentId,
 				tables,
 				type: config.type,
-				subsiteIds: config.subsite_ids,
-				wpcliCommand: config.wpcli_command,
+				subsiteIds: config.subsite_ids, // Map snake_case to camelCase
+				wpcliCommand: config.wpcli_command, // Map snake_case to camelCase
 			},
 		},
 	} );
