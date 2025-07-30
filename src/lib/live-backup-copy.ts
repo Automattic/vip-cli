@@ -145,10 +145,6 @@ export async function getDownloadURL( {
 			return result.data.generateLiveBackupCopyDownloadURL.url;
 		}
 
-		if ( result.data?.generateLiveBackupCopyDownloadURL?.processing === true ) {
-			await new Promise( resolve => setTimeout( resolve, 5000 ) );
-		}
-
 		if ( ! result.data?.generateLiveBackupCopyDownloadURL?.success ) {
 			throw new Error(
 				`Failed to generate download URL: ${
@@ -157,6 +153,10 @@ export async function getDownloadURL( {
 						: 'Unknown error'
 				}`
 			);
+		}
+
+		if ( result.data?.generateLiveBackupCopyDownloadURL?.processing === true ) {
+			await new Promise( resolve => setTimeout( resolve, 5000 ) );
 		}
 	}
 
