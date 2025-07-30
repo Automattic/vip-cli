@@ -145,8 +145,8 @@ export async function getDownloadURL( {
 		if ( ! result.data?.generateLiveBackupCopyDownloadURL?.success ) {
 			throw new Error(
 				`Failed to generate download URL: ${
-					result.data?.generateLiveBackupCopyDownloadURL?.url
-						? result.data?.generateLiveBackupCopyDownloadURL?.url
+					result.data?.generateLiveBackupCopyDownloadURL?.message
+						? result.data?.generateLiveBackupCopyDownloadURL?.message
 						: 'Unknown error'
 				}`
 			);
