@@ -98,7 +98,7 @@ export async function startLiveBackupCopy( {
 			`Failed to start live backup copy: ${
 				result.data?.startLiveBackupCopy?.message
 					? result.data?.startLiveBackupCopy?.message
-					: 'Unkown error'
+					: 'Unknown error'
 			}`
 		);
 	}
