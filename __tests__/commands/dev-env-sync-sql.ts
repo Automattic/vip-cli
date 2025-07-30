@@ -16,6 +16,7 @@ import {
 	GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
 	START_LIVE_COPY_MUTATION,
 } from '../../src/lib/live-backup-copy';
+import { makeTempDir } from '../../src/lib/utils';
 
 jest.mock( '@automattic/vip-search-replace', () => {
 	// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -98,7 +99,9 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		} );
 
 		describe( 'liveBackupCopy', () => {
-			const configFile = '/tmp/test-live-backup-config.json';
+			const tmpDir = makeTempDir();
+
+			const configFile = `${ tmpDir }/test-live-backup-config.json`;
 			const mockConfig = {
 				tool: 'mysqldump',
 				type: 'tables',
