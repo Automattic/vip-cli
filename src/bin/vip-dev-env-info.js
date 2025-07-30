@@ -24,16 +24,11 @@ const usage = 'vip dev-env info';
 const examples = [
 	{
 		usage: `${ exampleUsage } --slug=example-site`,
-		description: 'Retrieve basic information about the local environment named "example-site".',
-	},
-	{
-		usage: `${ exampleUsage } --slug=example-site --extended`,
-		description:
-			'Retrieve a larger amount of information about the local environment named "example-site".',
+		description: 'Retrieve information about the local environment named "example-site".',
 	},
 	{
 		usage: `${ exampleUsage } --all`,
-		description: 'Retrieve basic information about all local environments.',
+		description: 'Retrieve information about all local environments.',
 	},
 ];
 
@@ -47,7 +42,7 @@ command( {
 		processSlug
 	)
 	.option( 'all', 'Retrieve information about all local environments.' )
-	.option( 'extended', 'Retrieve a larger amount of information.' )
+	.option( 'extended', 'Deprecated, not used.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		let trackingInfo;
@@ -69,7 +64,7 @@ command( {
 
 		try {
 			const options = {
-				extended: Boolean( opt.extended ),
+				extended: true,
 				suppressWarnings: true,
 			};
 			if ( opt.all ) {
