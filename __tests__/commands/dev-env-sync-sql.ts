@@ -243,10 +243,13 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 				);
 				await cmd.generateExport();
 
-				expect.objectContaining( {
-					error_type: 'live_backup_copy',
-					error_message: 'ops!',
-				} );
+				expect( mockTracker ).toHaveBeenCalledWith(
+					'error',
+					expect.objectContaining( {
+						error_type: 'live_backup_copy',
+						error_message: 'oooops!',
+					} )
+				);
 				expect( exit.withError ).toHaveBeenCalledWith( 'Error creating backup copy: oooops!' );
 			} );
 		} );

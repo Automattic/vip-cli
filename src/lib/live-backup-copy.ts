@@ -81,7 +81,7 @@ export async function startLiveBackupCopy( {
 		variables: {
 			input: {
 				id: appId,
-				tool: SQLDumpTool.MYSQLDUMP,
+				tool: config.tool,
 				environmentId,
 				tables,
 				type: config.type,
