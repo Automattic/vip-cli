@@ -1,7 +1,4 @@
-import fs from 'fs';
 import gql from 'graphql-tag';
-import https from 'https';
-import path from 'path';
 
 import {
 	GenerateLiveBackupCopyDownloadUrlMutation,
@@ -161,26 +158,4 @@ export async function getDownloadURL( {
 	}
 
 	throw new Error( `Timeout: Download URL not generated within ${ timeoutInSeconds } seconds` );
-}
-
-export async function downloadFile( url: string, filename: string ) {
-	const file = fs.createWriteStream( filename );
-
-	return new Promise< string >( ( resolve, reject ) => {
-		https.get( url, response => {
-			response.pipe( file );
-
-			file.on( 'finish', () => {
-				file.close();
-				resolve( path.resolve( file.path as string ) );
-			} );
-
-			file.on( 'error', err => {
-				// TODO: fs.unlink runs in the background so there's a chance that the app dies before it finishes.
-				//  This needs fixing.
-				fs.unlink( filename, () => null );
-				reject( err );
-			} );
-		} );
-	} );
 }

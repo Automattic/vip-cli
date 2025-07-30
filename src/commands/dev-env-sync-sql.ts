@@ -15,6 +15,7 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import { downloadFile, OnProgressCallback } from '../lib/http/download-file';
 import * as liveBackupCopy from '../lib/live-backup-copy';
 import { DBLiveCopyConfig } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
@@ -199,7 +200,16 @@ export class DevEnvSyncSQLCommand {
 
 			console.log( `${ chalk.green( '✓' ) } Downloading file` );
 
-			await liveBackupCopy.downloadFile( downloadURL, this.gzFile );
+			const onProgressCallback: OnProgressCallback = ( bytesDownloaded, totalBytes ) => {
+				if ( totalBytes ) {
+					const percentage = ( ( bytesDownloaded / totalBytes ) * 100 ).toFixed( 2 );
+					process.stdout.write(
+						`  Downloading... ${ percentage }% (${ bytesDownloaded }/${ totalBytes } bytes)\r`
+					);
+				}
+			};
+
+			await downloadFile( downloadURL, this.gzFile, onProgressCallback );
 		} catch ( err ) {
 			const message = err instanceof Error ? err.message : 'Unknown error';
 

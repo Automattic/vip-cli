@@ -11,7 +11,7 @@ import { ExportSQLCommand } from '../../src/commands/export-sql';
 import API from '../../src/lib/api';
 import * as exit from '../../src/lib/cli/exit';
 import * as clientFileUploader from '../../src/lib/client-file-uploader';
-import * as liveBackupCopy from '../../src/lib/live-backup-copy';
+import * as downloadFileLib from '../../src/lib/http/download-file';
 import {
 	GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
 	START_LIVE_COPY_MUTATION,
@@ -44,14 +44,7 @@ jest.mock( '../../src/lib/cli/exit', () => ( {
 	withError: jest.fn(),
 } ) );
 
-jest.mock( '../../src/lib/live-backup-copy', () => {
-	const original = jest.requireActual( '../../src/lib/live-backup-copy' );
-
-	return {
-		...original,
-		downloadFile: jest.fn(),
-	};
-} );
+jest.mock( '../../src/lib/http/download-file' );
 
 jest.spyOn( clientFileUploader, 'unzipFile' );
 
@@ -136,10 +129,10 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 					}
 				} );
 
-				const mockDownloadFile = jest.spyOn( liveBackupCopy, 'downloadFile' );
-				mockDownloadFile.mockImplementation( ( url: string, filename: string ) => {
+				const mockDownloadFile = jest.spyOn( downloadFileLib, 'downloadFile' );
+				mockDownloadFile.mockImplementation( () => {
 					return new Promise( resolve => {
-						resolve( filename );
+						resolve();
 					} );
 				} );
 
@@ -148,7 +141,8 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 				expect( mockDownloadFile ).toHaveBeenCalledWith(
 					mockDownloadURL,
-					expect.stringMatching( /\/sql-export.sql.gz$/ )
+					expect.stringMatching( /\/sql-export.sql.gz$/ ),
+					expect.any( Function )
 				);
 
 				expect( apiMutateMock ).toHaveBeenCalledWith( {
