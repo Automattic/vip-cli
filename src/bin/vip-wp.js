@@ -15,12 +15,13 @@ import * as exit from '../lib/cli/exit';
 import { formatEnvironment, requoteArgs } from '../lib/cli/format';
 import { confirm } from '../lib/cli/prompt';
 import { createProxyAgent } from '../lib/http/proxy-agent';
+import { isAppNodejs } from '../lib/app';
 import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:wp' );
 
-const appQuery = `id, name,
+const appQuery = `id, name, typeId,
 	organization {
 		id
 		name
@@ -345,9 +346,14 @@ commandWrapper( {
 		const {
 			id: appId,
 			name: appName,
+			typeId: appTypeId,
 			organization: { id: orgId },
 		} = opts.app;
 		const { id: envId, type: envName } = opts.env;
+
+		if ( isAppNodejs( appTypeId ) ) {
+			exit.withError( 'WP-CLI commands are not supported on Node.js environments.' );
+		}
 
 		/* eslint-disable camelcase */
 		const commonTrackingParams = {
