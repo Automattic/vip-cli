@@ -47,11 +47,11 @@ export const downloadFile = async (
 		nodeReadable.pipe( fileStream );
 		await finished( fileStream );
 	} catch ( error ) {
-		fs.unlink( destinationPath, unlinkErr => {
-			if ( unlinkErr ) {
-				console.error( `Failed to delete partial file ${ destinationPath }:`, unlinkErr );
-			}
-		} );
+		try {
+			await fs.promises.unlink( destinationPath );
+		} catch ( unlinkErr ) {
+			console.error( `Failed to delete partial file ${ destinationPath }:`, unlinkErr );
+		}
 
 		throw new Error(
 			`Failed to write file to disk: ${ error instanceof Error ? error.message : 'Unknown error' }`
