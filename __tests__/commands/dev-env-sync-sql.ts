@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
-
 import { replace } from '@automattic/vip-search-replace';
 import fs from 'fs';
 import Lando from 'lando';
@@ -8,15 +6,7 @@ import path from 'path';
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { DevEnvSyncSQLCommand, findSiteHomeUrl } from '../../src/commands/dev-env-sync-sql';
 import { ExportSQLCommand } from '../../src/commands/export-sql';
-import API from '../../src/lib/api';
-import * as exit from '../../src/lib/cli/exit';
 import * as clientFileUploader from '../../src/lib/client-file-uploader';
-import * as downloadFileLib from '../../src/lib/http/download-file';
-import {
-	GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
-	START_LIVE_COPY_MUTATION,
-} from '../../src/lib/live-backup-copy';
-import { makeTempDir } from '../../src/lib/utils';
 
 jest.mock( '@automattic/vip-search-replace', () => {
 	// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -27,24 +17,6 @@ jest.mock( '@automattic/vip-search-replace', () => {
 		} ),
 	};
 } );
-
-const apiMutateMock = jest.fn();
-const apiQueryMock = jest.fn();
-
-jest.mock( '../../src/lib/api' );
-jest.mocked( API ).mockImplementation(
-	() =>
-		( {
-			mutate: apiMutateMock,
-			query: apiQueryMock,
-		} as any )
-);
-
-jest.mock( '../../src/lib/cli/exit', () => ( {
-	withError: jest.fn(),
-} ) );
-
-jest.mock( '../../src/lib/http/download-file' );
 
 jest.spyOn( clientFileUploader, 'unzipFile' );
 
@@ -89,163 +61,6 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			await cmd.generateExport();
 
 			expect( mockExport ).toHaveBeenCalled();
-		} );
-
-		describe( 'liveBackupCopy', () => {
-			const tmpDir = makeTempDir();
-
-			const configFile = `${ tmpDir }/test-live-backup-config.json`;
-			const mockConfig = {
-				tool: 'mysqldump',
-				type: 'tables',
-				tables: {
-					wp_users: { where: 'ID > 10', replace: true },
-					wp_posts: { 'skip-add-drop-table': true },
-					wp_options: {},
-				},
-			};
-
-			beforeEach( () => {
-				fs.writeFileSync( configFile, JSON.stringify( mockConfig ) );
-			} );
-
-			afterEach( () => {
-				jest.clearAllMocks();
-
-				if ( fs.existsSync( configFile ) ) {
-					fs.unlinkSync( configFile );
-				}
-			} );
-
-			it( 'should successfully create backup copy and download file', async () => {
-				const mockCopyId = 'test-copy-123';
-				const mockDownloadURL = 'https://example.com/download/test.sql.gz';
-
-				apiMutateMock.mockImplementation( ( { mutation } ) => {
-					if ( mutation === START_LIVE_COPY_MUTATION ) {
-						return { data: { startLiveBackupCopy: { copyId: mockCopyId } } };
-					} else if ( mutation === GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION ) {
-						return { data: { generateLiveBackupCopyDownloadURL: { url: mockDownloadURL } } };
-					}
-				} );
-
-				const mockDownloadFile = jest.spyOn( downloadFileLib, 'downloadFile' );
-				mockDownloadFile.mockImplementation( () => {
-					return new Promise( resolve => {
-						resolve();
-					} );
-				} );
-
-				const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, configFile );
-				await cmd.generateExport();
-
-				expect( mockDownloadFile ).toHaveBeenCalledWith(
-					mockDownloadURL,
-					expect.stringMatching( /\/sql-export.sql.gz$/ ),
-					expect.any( Function )
-				);
-
-				expect( apiMutateMock ).toHaveBeenCalledWith( {
-					mutation: START_LIVE_COPY_MUTATION,
-					variables: {
-						input: expect.objectContaining( {
-							id: app.id,
-							environmentId: env.id,
-							subsiteIds: undefined,
-							wpcliCommand: undefined,
-							tables: [
-								{
-									table: 'wp_users',
-									options: [
-										{ key: 'where', value: 'ID > 10' },
-										{ key: 'replace', value: 'true' },
-									],
-								},
-								{ table: 'wp_posts', options: [ { key: 'skip-add-drop-table', value: 'true' } ] },
-								{ table: 'wp_options' },
-							],
-						} ),
-					},
-				} );
-			} );
-
-			it( 'should throw error when configFile is not provided', async () => {
-				const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
-
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-				await expect( ( cmd as any ).generateLiveBackupCopy() ).rejects.toThrow(
-					'Configuration file is required for live backup copy.'
-				);
-			} );
-
-			it( 'should handle error during startLiveBackupCopy', async () => {
-				const mockTracker = jest.fn();
-
-				apiMutateMock.mockImplementation( ( { mutation } ) => {
-					if ( mutation === START_LIVE_COPY_MUTATION ) {
-						throw new Error( 'ops!' );
-					} else if ( mutation === GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION ) {
-						return {
-							data: {
-								generateLiveBackupCopyDownloadURL: {
-									url: 'https://example.com/download/test.sql.gz',
-								},
-							},
-						};
-					}
-				} );
-
-				const cmd = new DevEnvSyncSQLCommand(
-					app,
-					env,
-					'test-slug',
-					lando,
-					mockTracker,
-					configFile
-				);
-				await cmd.generateExport();
-
-				expect( mockTracker ).toHaveBeenCalledWith(
-					'error',
-					expect.objectContaining( {
-						error_type: 'live_backup_copy',
-						error_message: 'ops!',
-					} )
-				);
-				expect( exit.withError ).toHaveBeenCalledWith( 'Error creating backup copy: ops!' );
-			} );
-
-			it( 'should handle error during getDownloadURL', async () => {
-				const mockCopyId = 'test-copy-123';
-				const mockTracker = jest.fn();
-
-				apiMutateMock.mockImplementation( ( { mutation } ) => {
-					if ( mutation === START_LIVE_COPY_MUTATION ) {
-						return { data: { startLiveBackupCopy: { copyId: mockCopyId } } };
-					} else if ( mutation === GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION ) {
-						throw new Error( 'oooops!' );
-					}
-				} );
-
-				const cmd = new DevEnvSyncSQLCommand(
-					app,
-					env,
-					'test-slug',
-					lando,
-					mockTracker,
-					configFile
-				);
-				await cmd.generateExport();
-
-				expect( mockTracker ).toHaveBeenCalledWith(
-					'error',
-					expect.objectContaining( {
-						error_type: 'live_backup_copy',
-						error_message: 'oooops!',
-					} )
-				);
-				expect( exit.withError ).toHaveBeenCalledWith( 'Error creating backup copy: oooops!' );
-			} );
 		} );
 	} );
 

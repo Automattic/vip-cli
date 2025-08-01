@@ -653,6 +653,31 @@ export type AppEnvironmentBranchesList = {
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
+/** Input for creating a child environment from a production environment */
+export type AppEnvironmentCreateChildEnvironmentInput = {
+	/** The unique ID of the parent environment */
+	appId: Scalars[ 'Int' ][ 'input' ];
+	/** The branch to use for the child environment */
+	branch?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	/** The name for the new child environment */
+	environmentName: Scalars[ 'String' ][ 'input' ];
+	/** The PHP version for the child environment */
+	phpVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+};
+
+/** Response from creating a child environment */
+export type AppEnvironmentCreateChildEnvironmentPayload = {
+	__typename?: 'AppEnvironmentCreateChildEnvironmentPayload';
+	/** The unique ID of the newly created child environment */
+	environmentId: Scalars[ 'Int' ][ 'output' ];
+	/** The name of the newly created child environment */
+	environmentName: Scalars[ 'String' ][ 'output' ];
+	/** Success message */
+	message: Scalars[ 'String' ][ 'output' ];
+	/** Whether the operation was successful */
+	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
 export type AppEnvironmentCustomDeployInput = {
 	basename?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	checksum?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
@@ -945,6 +970,7 @@ export type AppEnvironmentLiveBackupCopyDownloadUrlInput = {
 export type AppEnvironmentLiveBackupCopyDownloadUrlPayload = {
 	__typename?: 'AppEnvironmentLiveBackupCopyDownloadURLPayload';
 	processing: Scalars[ 'Boolean' ][ 'output' ];
+	size?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	success: Scalars[ 'Boolean' ][ 'output' ];
 	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
@@ -2756,6 +2782,7 @@ export type LiveBackupCopy = {
 	error?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	expiresAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 	finishedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
+	size?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	status: LiveBackupCopyStatus;
 };
 
@@ -3005,6 +3032,8 @@ export type Mutation = {
 	/** Repository Management */
 	changeRepo: CodebaseChangeRepoResult;
 	createCSR: CreateCsrPayload;
+	/** Create a new non-production environment as a child of a production environment */
+	createChildEnvironment: AppEnvironmentCreateChildEnvironmentPayload;
 	/** Invite a user to an organization */
 	createInvitation: CreateInvitationPayload;
 	createUser: CreateUserPayload;
@@ -3205,6 +3234,10 @@ export type MutationChangeRepoArgs = {
 
 export type MutationCreateCsrArgs = {
 	input?: InputMaybe< CreateCsrInput >;
+};
+
+export type MutationCreateChildEnvironmentArgs = {
+	input: AppEnvironmentCreateChildEnvironmentInput;
 };
 
 export type MutationCreateInvitationArgs = {

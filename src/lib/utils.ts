@@ -6,30 +6,32 @@ import path from 'path';
 
 const debug = debugLib( '@automattic/vip:lib:utils' );
 
+export class PollingTimeoutError extends Error {}
+
 /**
  * Polls a function until its return value satisfies a condition
- *
- * @param {Function} fn       A function to poll
- * @param {number}   interval Poll interval in milliseconds
- * @param {Function} isDone   A function that accepts the return of `fn`. Stops the polling if it returns true
- * @return {Promise}          A promise which resolves when the polling is done
- * @throws {Error}            If the fn throws an error
  */
 export async function pollUntil< T >(
 	fn: () => Promise< T >,
 	interval: number,
-	isDone: ( v: T ) => boolean
-): Promise< void > {
-	let done = false;
-	while ( ! done ) {
+	isDone: ( v: T ) => boolean,
+	timeoutMs: number = 6 * 60 * 60 * 1000 // Default to 6 hours
+) {
+	const startTime = Date.now();
+
+	while ( Date.now() - startTime < timeoutMs ) {
 		// eslint-disable-next-line no-await-in-loop
 		const result = await fn();
-		done = isDone( result );
-		if ( ! done ) {
-			// eslint-disable-next-line no-await-in-loop
-			await setTimeout( interval );
+
+		if ( isDone( result ) ) {
+			return result;
 		}
+
+		// eslint-disable-next-line no-await-in-loop
+		await setTimeout( interval );
 	}
+
+	throw new PollingTimeoutError( 'Polling timed out' );
 }
 
 /**

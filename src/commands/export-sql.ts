@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import gql from 'graphql-tag';
-import https from 'https';
 import path from 'path';
 
 import { BackupDBCommand } from './backup-db';
@@ -22,6 +21,9 @@ import {
 import * as exit from '../lib/cli/exit';
 import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
+import { downloadFile, OnProgressCallback } from '../lib/http/download-file';
+import * as liveBackupCopy from '../lib/live-backup-copy';
+import { DBLiveCopyConfig } from '../lib/live-backup-copy';
 import { retry } from '../lib/retry';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
 
@@ -211,8 +213,9 @@ async function createExportJob(
 
 export interface ExportSQLOptions {
 	outputFile?: string;
-	confirmEnoughStorageHook?: ( job: Job ) => Promise< PromptStatus >;
+	confirmEnoughStorageHook?: ( archiveSize: number ) => Promise< PromptStatus >;
 	generateBackup?: boolean;
+	backupConfigFile?: string;
 }
 
 /**
@@ -231,6 +234,8 @@ export class ExportSQLCommand {
 		DOWNLOAD: 'download',
 	};
 	public track: TrackFunction;
+
+	private readonly backupConfigFile?: string;
 
 	/**
 	 * Creates an instance of SQLExportCommand
@@ -258,6 +263,7 @@ export class ExportSQLCommand {
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
 		this.track = trackerFn;
+		this.backupConfigFile = options.backupConfigFile;
 	}
 
 	/**
@@ -292,47 +298,6 @@ export class ExportSQLCommand {
 
 		const metadata = job.metadata?.find( md => md?.name === 'uploadPath' );
 		return metadata?.value?.split( '/' )[ 1 ] as string;
-	}
-
-	/**
-	 * Downloads the exported file
-	 *
-	 * @param {string} url The download URL
-	 * @return {Promise} A promise which resolves to the path of the downloaded file
-	 * @throws {Error} Throws an error if the download fails
-	 */
-	public async downloadExportedFile( url: string ): Promise< string > {
-		const filename = this.outputFile || ( await this.getExportedFileName() ) || 'exported.sql.gz';
-		const file = fs.createWriteStream( filename );
-
-		return new Promise< string >( ( resolve, reject ) => {
-			https.get( url, response => {
-				response.pipe( file );
-				const total = parseInt( response.headers[ 'content-length' ] as string, 10 );
-				let current = 0;
-
-				file.on( 'finish', () => {
-					file.close();
-					resolve( path.resolve( file.path as string ) );
-				} );
-
-				file.on( 'error', err => {
-					// TODO: fs.unlink runs in the background so there's a chance that the app dies before it finishes.
-					//  This needs fixing.
-					fs.unlink( filename, () => null );
-					reject( err );
-				} );
-
-				response.on( 'data', ( chunk: string ) => {
-					current += chunk.length;
-					this.progressTracker.setProgress(
-						`- ${ ( ( 100 * current ) / total ).toFixed( 2 ) }% (${ formatBytes(
-							current
-						) }/${ formatBytes( total ) })`
-					);
-				} );
-			} );
-		} );
 	}
 
 	/**
@@ -378,17 +343,15 @@ export class ExportSQLCommand {
 		await cmd.run( false );
 	}
 
-	public async confirmEnoughStorage( job: Job | undefined ): Promise< PromptStatus > {
-		if ( ! job ) {
-			throw new Error( 'confirmEnoughStorage: job is missing' );
-		}
-
+	public async confirmEnoughStorage( archiveSize: number ): Promise< PromptStatus > {
 		if ( this.confirmEnoughStorageHook ) {
-			return await this.confirmEnoughStorageHook( job );
+			return await this.confirmEnoughStorageHook( archiveSize );
 		}
 
-		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
-		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport();
+		const storageAvailability = new BackupStorageAvailability();
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForBackupImport(
+			archiveSize
+		);
 	}
 
 	/**
@@ -410,6 +373,85 @@ export class ExportSQLCommand {
 			}
 		}
 
+		const filename = this.outputFile || 'exported.sql.gz';
+
+		this.progressTracker.stepRunning( this.steps.PREPARE );
+		this.progressTracker.startPrinting();
+
+		let url: string;
+		let size: number | undefined;
+
+		if ( this.backupConfigFile ) {
+			const result = await this.generateLiveBackupCopy();
+
+			url = result.url;
+			size = result.size;
+		} else {
+			url = await this.runBackup();
+
+			const exportJob = await this.getExportJob();
+
+			if ( ! exportJob ) {
+				throw new Error( 'Export job not found' );
+			}
+
+			const bytesWrittenMeta = exportJob.metadata?.find( meta => meta?.name === 'bytesWritten' );
+			if ( ! bytesWrittenMeta?.value ) {
+				throw new Error( 'Export job metadata does not contain bytesWritten' );
+			}
+
+			size = Number( bytesWrittenMeta.value );
+		}
+
+		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
+			async setPromptShown => {
+				const status = await this.confirmEnoughStorage( size );
+				if ( status.isPromptShown ) {
+					setPromptShown();
+				}
+
+				return status.continue;
+			}
+		);
+
+		if ( storageConfirmed ) {
+			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
+		} else {
+			this.progressTracker.stepFailed( this.steps.CONFIRM_ENOUGH_STORAGE );
+			this.stopProgressTracker();
+			exit.withError( 'Command canceled by user.' );
+		}
+
+		// The export file is prepared. Let's download it
+		try {
+			const onProgressCallback: OnProgressCallback = ( current, total ) => {
+				if ( total ) {
+					this.progressTracker.setProgress(
+						`- ${ ( ( 100 * current ) / total ).toFixed( 2 ) }% (${ formatBytes(
+							current
+						) }/${ formatBytes( total ) })`
+					);
+				}
+			};
+
+			await downloadFile( url, filename, onProgressCallback );
+			this.progressTracker.stepSuccess( this.steps.DOWNLOAD );
+			this.stopProgressTracker();
+			console.log( `File saved to ${ filename }` );
+		} catch ( err ) {
+			const error = err as Error;
+			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
+			this.stopProgressTracker();
+			await this.track( 'error', {
+				error_type: 'download_failed',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error downloading exported file: ${ error.message }` );
+		}
+	}
+
+	private async runBackup() {
 		if ( this.generateBackup ) {
 			await this.runBackupJob();
 		}
@@ -487,14 +529,12 @@ export class ExportSQLCommand {
 			}
 		}
 
-		this.progressTracker.stepRunning( this.steps.PREPARE );
-		this.progressTracker.startPrinting();
-
 		await pollUntil(
 			this.getExportJob.bind( this ),
 			EXPORT_SQL_PROGRESS_POLL_INTERVAL,
 			this.isPrepared.bind( this )
 		);
+
 		this.progressTracker.stepSuccess( this.steps.PREPARE );
 
 		await pollUntil(
@@ -504,44 +544,67 @@ export class ExportSQLCommand {
 		);
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
-		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
-			async setPromptShown => {
-				const status = await this.confirmEnoughStorage( await this.getExportJob() );
-				if ( status.isPromptShown ) {
-					setPromptShown();
-				}
-
-				return status.continue;
-			}
-		);
-
-		if ( storageConfirmed ) {
-			this.progressTracker.stepSuccess( this.steps.CONFIRM_ENOUGH_STORAGE );
-		} else {
-			this.progressTracker.stepFailed( this.steps.CONFIRM_ENOUGH_STORAGE );
-			this.stopProgressTracker();
-			exit.withError( 'Command canceled by user.' );
-		}
-
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
 		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
 
-		// The export file is prepared. Let's download it
+		return url;
+	}
+
+	private async generateLiveBackupCopy() {
+		if ( ! this.backupConfigFile ) {
+			throw new Error( 'Configuration file is required for live backup copy.' );
+		}
+
+		if ( ! this.app.id || ! this.env.id ) {
+			throw new Error( 'App ID and Environment ID are required to start live backup copy.' );
+		}
+
+		const config = this.loadLiveBackupCopyConfig( this.backupConfigFile );
+
 		try {
-			const filepath = await this.downloadExportedFile( url );
-			this.progressTracker.stepSuccess( this.steps.DOWNLOAD );
-			this.stopProgressTracker();
-			console.log( `File saved to ${ filepath }` );
-		} catch ( err ) {
-			const error = err as Error;
-			this.progressTracker.stepFailed( this.steps.DOWNLOAD );
-			this.stopProgressTracker();
-			await this.track( 'error', {
-				error_type: 'download_failed',
-				error_message: error.message,
-				stack: error.stack,
+			const copyId = await liveBackupCopy.startLiveBackupCopy( {
+				appId: this.app.id,
+				environmentId: this.env.id,
+				config,
 			} );
-			exit.withError( `Error downloading exported file: ${ error.message }` );
+			this.progressTracker.stepSuccess( this.steps.PREPARE );
+
+			this.progressTracker.stepRunning( this.steps.CREATE );
+
+			const result = await liveBackupCopy.getDownloadURL( {
+				appId: this.app.id,
+				environmentId: this.env.id,
+				copyId,
+			} );
+			this.progressTracker.stepSuccess( this.steps.CREATE );
+
+			this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
+
+			return result;
+		} catch ( err ) {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+
+			await this.track( 'error', {
+				error_type: 'live_backup_copy',
+				error_message: message,
+				stack: err instanceof Error ? err.stack : undefined,
+			} );
+
+			exit.withError( `Error creating backup copy: ${ message }` );
+		}
+	}
+
+	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {
+		if ( ! fs.existsSync( configFile ) ) {
+			throw new Error( `Configuration file not found: ${ configFile }` );
+		}
+
+		try {
+			return JSON.parse( fs.readFileSync( configFile, 'utf-8' ) ) as DBLiveCopyConfig;
+		} catch ( err ) {
+			throw new Error(
+				`Error reading configuration file: ${ configFile } - ${ ( err as Error ).message }`
+			);
 		}
 	}
 }

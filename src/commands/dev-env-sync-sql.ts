@@ -9,15 +9,12 @@ import { pipeline } from 'node:stream/promises';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
-import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { App, AppEnvironment } from '../graphqlTypes';
 import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
-import { downloadFile, OnProgressCallback } from '../lib/http/download-file';
-import * as liveBackupCopy from '../lib/live-backup-copy';
-import { DBLiveCopyConfig } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -147,9 +144,11 @@ export class DevEnvSyncSQLCommand {
 		this._sqlDumpType = dumpDetails.type;
 	}
 
-	private async confirmEnoughStorage( job: Job ) {
-		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
-		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport();
+	private async confirmEnoughStorage( archiveSize: number ) {
+		const storageAvailability = new BackupStorageAvailability();
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+			Number.MAX_SAFE_INTEGER
+		);
 	}
 
 	/**
@@ -157,84 +156,17 @@ export class DevEnvSyncSQLCommand {
 	 * the latest backup
 	 */
 	public async generateExport(): Promise< void > {
-		if ( this.configFile ) {
-			await this.generateLiveBackupCopy();
-
-			return;
-		}
-
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
-			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
+			{
+				outputFile: this.gzFile,
+				confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ),
+				backupConfigFile: this.configFile,
+			},
 			this.track.bind( this )
 		);
 		await exportCommand.run();
-	}
-
-	private async generateLiveBackupCopy(): Promise< void > {
-		if ( ! this.configFile ) {
-			throw new Error( 'Configuration file is required for live backup copy.' );
-		}
-
-		if ( ! this.app.id || ! this.env.id ) {
-			throw new Error( 'App ID and Environment ID are required to start live backup copy.' );
-		}
-
-		const config = this.loadLiveBackupCopyConfig( this.configFile );
-
-		try {
-			console.log( `${ chalk.green( '✓' ) } Creating backup copy` );
-
-			const copyId = await liveBackupCopy.startLiveBackupCopy( {
-				appId: this.app.id,
-				environmentId: this.env.id,
-				config,
-			} );
-
-			const downloadURL = await liveBackupCopy.getDownloadURL( {
-				appId: this.app.id,
-				environmentId: this.env.id,
-				copyId,
-			} );
-
-			console.log( `${ chalk.green( '✓' ) } Downloading file` );
-
-			const onProgressCallback: OnProgressCallback = ( bytesDownloaded, totalBytes ) => {
-				if ( totalBytes ) {
-					const percentage = ( ( bytesDownloaded / totalBytes ) * 100 ).toFixed( 2 );
-					process.stdout.write(
-						`  Downloading... ${ percentage }% (${ bytesDownloaded }/${ totalBytes } bytes)\r`
-					);
-				}
-			};
-
-			await downloadFile( downloadURL, this.gzFile, onProgressCallback );
-		} catch ( err ) {
-			const message = err instanceof Error ? err.message : 'Unknown error';
-
-			await this.track( 'error', {
-				error_type: 'live_backup_copy',
-				error_message: message,
-				stack: err instanceof Error ? err.stack : undefined,
-			} );
-
-			exit.withError( `Error creating backup copy: ${ message }` );
-		}
-	}
-
-	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {
-		if ( ! fs.existsSync( configFile ) ) {
-			throw new Error( `Configuration file not found: ${ configFile }` );
-		}
-
-		try {
-			return JSON.parse( fs.readFileSync( configFile, 'utf-8' ) ) as DBLiveCopyConfig;
-		} catch ( err ) {
-			throw new Error(
-				`Error reading configuration file: ${ configFile } - ${ ( err as Error ).message }`
-			);
-		}
 	}
 
 	/**

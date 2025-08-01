@@ -6,6 +6,7 @@ import {
 	StartLiveBackupCopyMutation,
 	StartLiveBackupCopyMutationVariables,
 } from './live-backup-copy.generated';
+import { PollingTimeoutError, pollUntil } from './utils';
 import API from '../lib/api';
 
 export const START_LIVE_COPY_MUTATION = gql( `
@@ -25,6 +26,7 @@ export const GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION = gql( `
 			success
 			url
 			processing
+			size
 		}
 	}
 ` );
@@ -107,55 +109,67 @@ export async function getDownloadURL( {
 	appId,
 	environmentId,
 	copyId,
-	timeoutInSeconds = 60 * 60,
+	timeoutInSeconds = 2 * 60 * 60, // 2 hours default timeout
 }: {
 	appId: number;
 	environmentId: number;
 	copyId: string;
 	timeoutInSeconds?: number;
-} ): Promise< string > {
-	const startTime = Date.now();
-	const timeoutMs = timeoutInSeconds * 1000;
-
+} ) {
 	const api = API( { exitOnError: true } );
 
-	while ( Date.now() - startTime < timeoutMs ) {
-		// eslint-disable-next-line no-await-in-loop
-		const result = await api.mutate<
-			GenerateLiveBackupCopyDownloadUrlMutation,
-			GenerateLiveBackupCopyDownloadUrlMutationVariables
-		>( {
-			mutation: GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
-			variables: {
-				input: {
-					id: appId,
-					environmentId,
-					copyId,
-				},
+	try {
+		const result = await pollUntil(
+			async () => {
+				return await api.mutate<
+					GenerateLiveBackupCopyDownloadUrlMutation,
+					GenerateLiveBackupCopyDownloadUrlMutationVariables
+				>( {
+					mutation: GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
+					variables: {
+						input: {
+							id: appId,
+							environmentId,
+							copyId,
+						},
+					},
+				} );
 			},
-		} );
+			5000,
+			fetchResult => {
+				return Boolean(
+					fetchResult.data?.generateLiveBackupCopyDownloadURL?.url &&
+						! fetchResult.data?.generateLiveBackupCopyDownloadURL?.processing
+				);
+			},
+			timeoutInSeconds * 1000
+		);
 
 		if (
-			result.data?.generateLiveBackupCopyDownloadURL?.url &&
-			! result.data?.generateLiveBackupCopyDownloadURL?.processing
+			! result.data?.generateLiveBackupCopyDownloadURL?.success ||
+			! result.data.generateLiveBackupCopyDownloadURL.url ||
+			! result.data.generateLiveBackupCopyDownloadURL.size
 		) {
-			return result.data.generateLiveBackupCopyDownloadURL.url;
-		}
-
-		if ( ! result.data?.generateLiveBackupCopyDownloadURL?.success ) {
 			throw new Error(
 				`Failed to generate download URL: ${
-					result.data?.generateLiveBackupCopyDownloadURL?.message
-						? result.data?.generateLiveBackupCopyDownloadURL?.message
+					result.data?.generateLiveBackupCopyDownloadURL?.url
+						? result.data?.generateLiveBackupCopyDownloadURL?.url
 						: 'Unknown error'
 				}`
 			);
 		}
 
-		if ( result.data?.generateLiveBackupCopyDownloadURL?.processing === true ) {
-			await new Promise( resolve => setTimeout( resolve, 5000 ) );
+		return {
+			url: result.data.generateLiveBackupCopyDownloadURL.url,
+			size: result.data.generateLiveBackupCopyDownloadURL.size,
+		};
+	} catch ( error ) {
+		if ( error instanceof PollingTimeoutError ) {
+			throw new Error(
+				`Failed to generate download URL: Polling timed out after ${ timeoutInSeconds } seconds`
+			);
 		}
-	}
 
-	throw new Error( `Timeout: Download URL not generated within ${ timeoutInSeconds } seconds` );
+		throw new Error( 'Failed to generate download URL: Unknown error' );
+	}
 }

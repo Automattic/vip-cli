@@ -1,9 +1,18 @@
+import fs from 'fs';
+
 import {
 	ExportSQLCommand,
 	CREATE_EXPORT_JOB_MUTATION,
 	GENERATE_DOWNLOAD_LINK_MUTATION,
 } from '../../src/commands/export-sql';
 import API from '../../src/lib/api';
+import * as exit from '../../src/lib/cli/exit';
+import * as downloadFileModule from '../../src/lib/http/download-file';
+import {
+	GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
+	START_LIVE_COPY_MUTATION,
+} from '../../src/lib/live-backup-copy';
+import { makeTempDir } from '../../src/lib/utils';
 
 const mockApp = {
 	id: 123,
@@ -30,6 +39,10 @@ const mockApp = {
 						{
 							name: 'uploadPath',
 							value: 'db_backups/test-backup.sql.gz',
+						},
+						{
+							name: 'bytesWritten',
+							value: 1024000,
 						},
 					],
 					progress: {
@@ -60,36 +73,61 @@ const queryMock = jest.fn().mockImplementation( () => {
 	};
 } );
 
+const apiMutateMock = jest.fn().mockImplementation( ( { mutation } ) => {
+	switch ( mutation ) {
+		case GENERATE_DOWNLOAD_LINK_MUTATION:
+			return {
+				data: {
+					generateDBBackupCopyUrl: {
+						url: 'https://test-backup.sql.gz',
+						success: true,
+					},
+				},
+			};
+		case CREATE_EXPORT_JOB_MUTATION:
+			return {
+				data: {
+					startDBBackupCopy: {
+						success: true,
+						message: 'New job started',
+					},
+				},
+			};
+		case START_LIVE_COPY_MUTATION:
+			return {
+				data: {
+					startLiveBackupCopy: {
+						copyId: 'copy1234',
+					},
+				},
+			};
+		case GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION:
+			return {
+				data: {
+					generateLiveBackupCopyDownloadURL: {
+						url: 'https://example.com/download/test.sql.gz',
+						success: true,
+						size: 123456,
+						processing: false,
+					},
+				},
+			};
+		default:
+			return {};
+	}
+} );
+
 jest.mock( '../../src/lib/api', () => jest.fn() );
 ( jest.mocked( API ) as jest.SpyInstance ).mockImplementation( () => {
 	return {
 		query: queryMock,
-		mutate: jest.fn().mockImplementation( ( { mutation } ) => {
-			switch ( mutation ) {
-				case GENERATE_DOWNLOAD_LINK_MUTATION:
-					return {
-						data: {
-							generateDBBackupCopyUrl: {
-								url: 'https://test-backup.sql.gz',
-								success: true,
-							},
-						},
-					};
-				case CREATE_EXPORT_JOB_MUTATION:
-					return {
-						data: {
-							startDBBackupCopy: {
-								success: true,
-								message: 'New job started',
-							},
-						},
-					};
-				default:
-					return {};
-			}
-		} ),
+		mutate: apiMutateMock,
 	};
 } );
+
+jest.mock( '../../src/lib/cli/exit', () => ( {
+	withError: jest.fn(),
+} ) );
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
@@ -200,28 +238,159 @@ describe( 'commands/ExportSQLCommand', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
 		const exportCommand = new ExportSQLCommand( app, env );
-		const downloadSpy = jest.spyOn( exportCommand, 'downloadExportedFile' );
 		const stepSuccessSpy = jest.spyOn( exportCommand.progressTracker, 'stepSuccess' );
 		const confirmEnoughStorageSpy = jest.spyOn( exportCommand, 'confirmEnoughStorage' );
 
 		beforeAll( () => {
 			confirmEnoughStorageSpy.mockResolvedValue( { continue: true, isPromptShown: false } );
-			downloadSpy.mockResolvedValue( 'test-backup.sql.gz' );
 		} );
 
 		afterAll( () => {
-			downloadSpy.mockRestore();
 			stepSuccessSpy.mockRestore();
 			confirmEnoughStorageSpy.mockRestore();
 		} );
 
 		it( 'should sequentially run all the steps', async () => {
+			const downloadMock = jest.spyOn( downloadFileModule, 'downloadFile' ).mockResolvedValue();
+
 			await exportCommand.run();
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink' );
-			expect( downloadSpy ).toHaveBeenCalledWith( 'https://test-backup.sql.gz' );
+			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'download' );
+			expect( downloadMock ).toHaveBeenCalledWith(
+				'https://test-backup.sql.gz',
+				'exported.sql.gz',
+				expect.any( Function )
+			);
+		} );
+	} );
+
+	describe( 'liveBackupCopy', () => {
+		const tmpDir = makeTempDir();
+
+		const configFile = `${ tmpDir }/test-live-backup-config.json`;
+		const outputFile = `${ tmpDir }/sql-export.sql.gz`;
+		const mockConfig = {
+			tool: 'mysqldump',
+			type: 'tables',
+			tables: {
+				wp_users: { where: 'ID > 10', replace: true },
+				wp_posts: { 'skip-add-drop-table': true },
+				wp_options: {},
+			},
+		};
+
+		beforeEach( () => {
+			fs.writeFileSync( configFile, JSON.stringify( mockConfig ) );
+		} );
+
+		afterEach( () => {
+			jest.clearAllMocks();
+
+			if ( fs.existsSync( configFile ) ) {
+				fs.unlinkSync( configFile );
+			}
+		} );
+
+		it( 'should successfully create backup copy and download file', async () => {
+			const app = { id: 123, name: 'test-app' };
+			const env = { id: 456, name: 'test-env' };
+
+			const mockDownloadURL = 'https://example.com/download/test.sql.gz';
+
+			const exportCommand = new ExportSQLCommand( app, env, {
+				backupConfigFile: configFile,
+				outputFile,
+			} );
+
+			const mockDownloadFile = jest.spyOn( downloadFileModule, 'downloadFile' );
+			mockDownloadFile.mockImplementation( () => {
+				return new Promise( resolve => {
+					resolve();
+				} );
+			} );
+
+			await exportCommand.run();
+
+			expect( apiMutateMock ).toHaveBeenCalledWith( {
+				mutation: START_LIVE_COPY_MUTATION,
+				variables: {
+					input: {
+						id: 123,
+						environmentId: 456,
+						tool: 'mysqldump',
+						type: 'tables',
+						tables: [
+							{
+								table: 'wp_users',
+								options: [
+									{
+										key: 'where',
+										value: 'ID > 10',
+									},
+									{
+										key: 'replace',
+										value: 'true',
+									},
+								],
+							},
+							{
+								table: 'wp_posts',
+								options: [
+									{
+										key: 'skip-add-drop-table',
+										value: 'true',
+									},
+								],
+							},
+							{
+								table: 'wp_options',
+							},
+						],
+					},
+				},
+			} );
+
+			expect( mockDownloadFile ).toHaveBeenCalledWith(
+				mockDownloadURL,
+				expect.stringMatching( /\/sql-export.sql.gz$/ ),
+				expect.any( Function )
+			);
+		} );
+
+		it( 'should handle error during getDownloadURL', async () => {
+			const app = { id: 123, name: 'test-app' };
+			const env = { id: 456, name: 'test-env' };
+
+			const mockTracker = jest.fn();
+
+			const exportCommand = new ExportSQLCommand(
+				app,
+				env,
+				{
+					backupConfigFile: configFile,
+					outputFile,
+				},
+				mockTracker
+			);
+
+			const mockDownloadFile = jest.spyOn( downloadFileModule, 'downloadFile' );
+			mockDownloadFile.mockImplementation( () => {
+				throw new Error( 'ops!!!' );
+			} );
+
+			await exportCommand.run();
+
+			expect( mockTracker ).toHaveBeenCalledWith(
+				'error',
+				expect.objectContaining( {
+					error_type: 'download_failed',
+					error_message: 'ops!!!',
+				} )
+			);
+			expect( exit.withError ).toHaveBeenCalledWith( 'Error downloading exported file: ops!!!' );
 		} );
 	} );
 } );
