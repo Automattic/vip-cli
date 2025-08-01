@@ -596,7 +596,7 @@ export class ExportSQLCommand {
 				stack: err instanceof Error ? err.stack : undefined,
 			} );
 
-			exit.withError( `Error creating backup copy: ${ message }` );
+			exit.withError( `Error creating live backup copy: ${ message }` );
 		}
 	}
 
