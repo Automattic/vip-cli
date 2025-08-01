@@ -10,12 +10,12 @@ import { Transform, Writable } from 'stream';
 
 import { WPCliCommandOverSSH } from '../commands/wp-ssh';
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
+import { isAppNodejs } from '../lib/app';
 import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatEnvironment, requoteArgs } from '../lib/cli/format';
 import { confirm } from '../lib/cli/prompt';
 import { createProxyAgent } from '../lib/http/proxy-agent';
-import { isAppNodejs } from '../lib/app';
 import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
 
