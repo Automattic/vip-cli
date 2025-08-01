@@ -10,6 +10,7 @@ import { Transform, Writable } from 'stream';
 
 import { WPCliCommandOverSSH } from '../commands/wp-ssh';
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';
+import { isAppNodejs } from '../lib/app';
 import commandWrapper, { getEnvIdentifier } from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatEnvironment, requoteArgs } from '../lib/cli/format';
@@ -20,7 +21,7 @@ import { trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:wp' );
 
-const appQuery = `id, name,
+const appQuery = `id, name, typeId,
 	organization {
 		id
 		name
@@ -345,9 +346,14 @@ commandWrapper( {
 		const {
 			id: appId,
 			name: appName,
+			typeId: appTypeId,
 			organization: { id: orgId },
 		} = opts.app;
 		const { id: envId, type: envName } = opts.env;
+
+		if ( isAppNodejs( appTypeId ) ) {
+			exit.withError( 'WP-CLI commands are not supported on Node.js environments.' );
+		}
 
 		/* eslint-disable camelcase */
 		const commonTrackingParams = {
