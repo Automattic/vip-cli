@@ -16,7 +16,7 @@ export interface PromptStatus {
 }
 
 export class BackupStorageAvailability {
-	private getDockerStorageKiBRaw(): string | undefined {
+	public getDockerStorageKiBRaw(): string | undefined {
 		return exec( `docker run --rm alpine df -k`, { silent: true } )
 			.grep( /\/dev\/vda1/ )
 			.head( { '-n': 1 } )
@@ -24,7 +24,7 @@ export class BackupStorageAvailability {
 			.split( ' ' )[ 3 ];
 	}
 
-	private getDockerStorageAvailable(): number {
+	public getDockerStorageAvailable(): number {
 		const kiBLeft = this.getDockerStorageKiBRaw();
 
 		if ( ! kiBLeft || Number.isNaN( Number( kiBLeft ) ) ) {
@@ -34,48 +34,48 @@ export class BackupStorageAvailability {
 		return Number( kiBLeft ) * 1024;
 	}
 
-	private bytesToHuman( bytes: number ) {
+	public bytesToHuman( bytes: number ) {
 		return formatMetricBytes( bytes );
 	}
 
-	private async getStorageAvailableInVipPath() {
+	public async getStorageAvailableInVipPath() {
 		const vipDir = path.join( xdgBasedir.data ?? os.tmpdir(), 'vip' );
 
 		const diskSpace = await checkDiskSpace( vipDir );
 		return diskSpace.free;
 	}
 
-	private getReserveSpace(): number {
+	public getReserveSpace(): number {
 		return oneGiBInBytes;
 	}
 
-	private getSqlSize( archiveSize: number ): number {
+	public getSqlSize( archiveSize: number ): number {
 		// We estimated that it'd be about 3.5x the archive size.
 		return archiveSize * 3.5;
 	}
 
-	private getArchiveSize( archiveSize: number ): number {
+	public getArchiveSize( archiveSize: number ): number {
 		return archiveSize;
 	}
 
-	private getStorageRequiredInMainMachine( archiveSize: number ): number {
+	public getStorageRequiredInMainMachine( archiveSize: number ): number {
 		return (
 			this.getArchiveSize( archiveSize ) + this.getSqlSize( archiveSize ) + this.getReserveSpace()
 		);
 	}
 
-	private getStorageRequiredInDockerMachine( archiveSize: number ): number {
+	public getStorageRequiredInDockerMachine( archiveSize: number ): number {
 		return this.getSqlSize( archiveSize ) + this.getReserveSpace();
 	}
 
-	private async isStorageAvailableInMainMachine( archiveSize: number ): Promise< boolean > {
+	public async isStorageAvailableInMainMachine( archiveSize: number ): Promise< boolean > {
 		return (
 			( await this.getStorageAvailableInVipPath() ) >
 			this.getStorageRequiredInMainMachine( archiveSize )
 		);
 	}
 
-	private isStorageAvailableInDockerMachine( archiveSize: number ): boolean {
+	public isStorageAvailableInDockerMachine( archiveSize: number ): boolean {
 		return this.getDockerStorageAvailable() > this.getStorageRequiredInDockerMachine( archiveSize );
 	}
 

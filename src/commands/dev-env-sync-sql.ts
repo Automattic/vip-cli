@@ -147,7 +147,7 @@ export class DevEnvSyncSQLCommand {
 	private async confirmEnoughStorage( archiveSize: number ) {
 		const storageAvailability = new BackupStorageAvailability();
 		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
-			Number.MAX_SAFE_INTEGER
+			archiveSize
 		);
 	}
 
