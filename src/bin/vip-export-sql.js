@@ -49,9 +49,10 @@ command( {
 		'output',
 		'Download the file to a specific local directory path with a custom file name.'
 	)
+	.option( 'config-file', 'The backup copy config file', undefined )
 	.option( 'generate-backup', 'Generate a fresh database backup and export a copy of that backup.' )
 	.examples( examples )
-	.argv( process.argv, async ( arg, { app, env, output, generateBackup } ) => {
+	.argv( process.argv, async ( arg, { app, env, output, configFile, generateBackup } ) => {
 		const trackerFn = makeCommandTracker( 'export_sql', {
 			app: app.id,
 			env: env.uniqueLabel,
@@ -62,7 +63,7 @@ command( {
 		const exportCommand = new ExportSQLCommand(
 			app,
 			env,
-			{ outputFile: output, generateBackup },
+			{ outputFile: output, generateBackup, backupConfigFile: configFile },
 			trackerFn
 		);
 		await exportCommand.run();
