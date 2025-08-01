@@ -320,35 +320,20 @@ describe( 'commands/ExportSQLCommand', () => {
 					input: {
 						id: 123,
 						environmentId: 456,
-						tool: 'mysqldump',
-						type: 'tables',
-						tables: [
-							{
-								table: 'wp_users',
-								options: [
-									{
-										key: 'where',
-										value: 'ID > 10',
-									},
-									{
-										key: 'replace',
-										value: 'true',
-									},
-								],
+						config: {
+							tool: 'mysqldump',
+							type: 'tables',
+							tables: {
+								wp_users: {
+									where: 'ID > 10',
+									replace: true,
+								},
+								wp_posts: {
+									'skip-add-drop-table': true,
+								},
+								wp_options: {},
 							},
-							{
-								table: 'wp_posts',
-								options: [
-									{
-										key: 'skip-add-drop-table',
-										value: 'true',
-									},
-								],
-							},
-							{
-								table: 'wp_options',
-							},
-						],
+						},
 					},
 				},
 			} );

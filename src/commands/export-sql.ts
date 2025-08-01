@@ -216,6 +216,7 @@ export interface ExportSQLOptions {
 	confirmEnoughStorageHook?: ( archiveSize: number ) => Promise< PromptStatus >;
 	generateBackup?: boolean;
 	backupConfigFile?: string;
+	showMyDumperWarning?: boolean;
 }
 
 /**
@@ -236,6 +237,8 @@ export class ExportSQLCommand {
 	public track: TrackFunction;
 
 	private readonly backupConfigFile?: string;
+
+	private readonly showMyDumperWarning: boolean;
 
 	/**
 	 * Creates an instance of SQLExportCommand
@@ -264,6 +267,8 @@ export class ExportSQLCommand {
 		] );
 		this.track = trackerFn;
 		this.backupConfigFile = options.backupConfigFile;
+		this.showMyDumperWarning =
+			options.showMyDumperWarning === undefined ? true : options.showMyDumperWarning;
 	}
 
 	/**
@@ -483,7 +488,8 @@ export class ExportSQLCommand {
 			);
 		}
 
-		const showMyDumperWarning = ( latestBackup.sqlDumpTool ?? envSqlDumpTool ) === 'mydumper';
+		const showMyDumperWarning =
+			this.showMyDumperWarning && ( latestBackup.sqlDumpTool ?? envSqlDumpTool ) === 'mydumper';
 		if ( showMyDumperWarning ) {
 			console.warn(
 				chalk.yellow.bold( 'WARNING:' ),

@@ -2796,13 +2796,9 @@ export type LiveBackupCopyConfig = {
 };
 
 export type LiveBackupCopyConfigInput = {
+	config?: InputMaybe< Scalars[ 'JSON' ][ 'input' ] >;
 	environmentId: Scalars[ 'Int' ][ 'input' ];
 	id: Scalars[ 'Int' ][ 'input' ];
-	subsiteIds?: InputMaybe< Array< Scalars[ 'Int' ][ 'input' ] > >;
-	tables?: InputMaybe< Array< LiveBackupCopyTableConfigInput > >;
-	tool: LiveBackupCopyTool;
-	type: LiveBackupCopyType;
-	wpcliCommand?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type LiveBackupCopyStatus = 'completed' | 'failed' | 'in_progress' | 'pending';

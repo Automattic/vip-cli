@@ -63,16 +63,6 @@ export async function startLiveBackupCopy( {
 } ): Promise< string > {
 	const api = API( { exitOnError: true } );
 
-	const tables = config.tables
-		? Object.entries( config.tables ).map( ( [ table, options ] ) => {
-				const opts = Object.entries( options ).map( ( [ key, value ] ) => ( {
-					key,
-					value: value.toString(),
-				} ) );
-				return opts.length ? { table, options: opts } : { table };
-		  } )
-		: undefined;
-
 	const result = await api.mutate<
 		StartLiveBackupCopyMutation,
 		StartLiveBackupCopyMutationVariables
@@ -81,12 +71,8 @@ export async function startLiveBackupCopy( {
 		variables: {
 			input: {
 				id: appId,
-				tool: config.tool,
 				environmentId,
-				tables,
-				type: config.type,
-				subsiteIds: config.subsite_ids, // Map snake_case to camelCase
-				wpcliCommand: config.wpcli_command, // Map snake_case to camelCase
+				config,
 			},
 		},
 	} );
