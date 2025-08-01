@@ -157,6 +157,12 @@ export async function getDownloadURL( {
 			);
 		}
 
-		throw new Error( 'Failed to generate download URL: Unknown error' );
+		const errorMessage =
+			error instanceof Error
+				? error.message
+				: JSON.stringify(error);
+		throw new Error(
+			`Failed to generate download URL: ${errorMessage}`
+		);
 	}
 }
