@@ -23,7 +23,11 @@ import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { downloadFile, OnProgressCallback } from '../lib/http/download-file';
 import * as liveBackupCopy from '../lib/live-backup-copy';
-import { DBLiveCopyConfig } from '../lib/live-backup-copy';
+import {
+	LiveBackupCopyCLIOptions,
+	DBLiveCopyConfig,
+	BackupLiveCopyType,
+} from '../lib/live-backup-copy';
 import { retry } from '../lib/retry';
 import { getAbsolutePath, pollUntil } from '../lib/utils';
 
@@ -215,7 +219,7 @@ export interface ExportSQLOptions {
 	outputFile?: string;
 	confirmEnoughStorageHook?: ( archiveSize: number ) => Promise< PromptStatus >;
 	generateBackup?: boolean;
-	backupConfigFile?: string;
+	liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	showMyDumperWarning?: boolean;
 }
 
@@ -236,7 +240,7 @@ export class ExportSQLCommand {
 	};
 	public track: TrackFunction;
 
-	private readonly backupConfigFile?: string;
+	private readonly liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 
 	private readonly showMyDumperWarning: boolean;
 
@@ -266,7 +270,7 @@ export class ExportSQLCommand {
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
 		this.track = trackerFn;
-		this.backupConfigFile = options.backupConfigFile;
+		this.liveBackupCopyCLIOptions = options.liveBackupCopyCLIOptions;
 		this.showMyDumperWarning =
 			options.showMyDumperWarning === undefined ? true : options.showMyDumperWarning;
 	}
@@ -386,7 +390,7 @@ export class ExportSQLCommand {
 		let url: string;
 		let size: number | undefined;
 
-		if ( this.backupConfigFile ) {
+		if ( this.liveBackupCopyCLIOptions?.useLiveBackupCopy ) {
 			const result = await this.generateLiveBackupCopy();
 
 			url = result.url;
@@ -557,7 +561,7 @@ export class ExportSQLCommand {
 	}
 
 	private async generateLiveBackupCopy() {
-		if ( ! this.backupConfigFile ) {
+		if ( ! this.liveBackupCopyCLIOptions ) {
 			throw new Error( 'Configuration file is required for live backup copy.' );
 		}
 
@@ -565,7 +569,7 @@ export class ExportSQLCommand {
 			throw new Error( 'App ID and Environment ID are required to start live backup copy.' );
 		}
 
-		const config = this.loadLiveBackupCopyConfig( this.backupConfigFile );
+		const config = this.getLiveBackupConfigFromCLIOptions();
 
 		try {
 			const copyId = await liveBackupCopy.startLiveBackupCopy( {
@@ -598,6 +602,37 @@ export class ExportSQLCommand {
 
 			exit.withError( `Error creating live backup copy: ${ message }` );
 		}
+	}
+
+	private getLiveBackupConfigFromCLIOptions() {
+		if ( this.liveBackupCopyCLIOptions?.configFile ) {
+			return this.loadLiveBackupCopyConfig( this.liveBackupCopyCLIOptions?.configFile );
+		}
+
+		let type = BackupLiveCopyType.TABLES;
+		let tables: DBLiveCopyConfig[ 'tables' ];
+		let subsiteIds: DBLiveCopyConfig[ 'subsite_ids' ];
+		if ( this.liveBackupCopyCLIOptions?.tables ) {
+			tables = Object.fromEntries(
+				this.liveBackupCopyCLIOptions?.tables.map( key => [ key, {} ] )
+			);
+		}
+
+		if ( this.liveBackupCopyCLIOptions?.subsiteIds ) {
+			type = BackupLiveCopyType.SUBSITE_IDS;
+			subsiteIds = this.liveBackupCopyCLIOptions?.subsiteIds.map( id => Number( id ) );
+		}
+
+		if ( this.liveBackupCopyCLIOptions?.wpcliCommand ) {
+			type = BackupLiveCopyType.WP_CLI_COMMAND;
+		}
+
+		return {
+			type,
+			tables,
+			subsite_ids: subsiteIds,
+			wpcli_command: this.liveBackupCopyCLIOptions?.wpcliCommand,
+		};
 	}
 
 	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {

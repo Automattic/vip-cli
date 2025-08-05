@@ -6,8 +6,65 @@ import {
 	StartLiveBackupCopyMutation,
 	StartLiveBackupCopyMutationVariables,
 } from './live-backup-copy.generated';
+import UserError from './user-error';
 import { PollingTimeoutError, pollUntil } from './utils';
 import API from '../lib/api';
+
+export interface LiveBackupCopyCLIOptions {
+	useLiveBackupCopy?: boolean;
+	subsiteIds?: number[];
+	tables?: string[];
+	wpcliCommand?: string;
+	configFile?: string;
+}
+
+export function parseLiveBackupCopyCLIOptions(
+	configFile?: string,
+	table?: string | string[],
+	subsiteId?: number | number[],
+	wpcliCommand?: string
+): LiveBackupCopyCLIOptions {
+	const options: LiveBackupCopyCLIOptions = {};
+
+	if ( configFile && ( table || subsiteId || wpcliCommand ) ) {
+		throw new UserError(
+			'The --config-file option cannot be used with the --table, --subsite-id, or --wpcli-command options. Please use only one of these options at a time.'
+		);
+	}
+
+	if ( wpcliCommand && ( table || subsiteId ) ) {
+		throw new UserError(
+			'The --wpcli-command option cannot be used with the --table or --subsite-id options. Please use only one of these options at a time.'
+		);
+	}
+
+	let useLiveBackupCopy = false;
+
+	if ( table ) {
+		options.tables = Array.isArray( table ) ? table : [ table ];
+		useLiveBackupCopy = true;
+	}
+
+	if ( subsiteId ) {
+		options.subsiteIds = Array.isArray( subsiteId ) ? subsiteId : [ subsiteId ];
+		useLiveBackupCopy = true;
+	}
+
+	if ( configFile ) {
+		options.configFile = configFile;
+		useLiveBackupCopy = true;
+	}
+
+	if ( wpcliCommand ) {
+		options.wpcliCommand = wpcliCommand;
+		useLiveBackupCopy = true;
+	}
+
+	return {
+		...options,
+		useLiveBackupCopy,
+	};
+}
 
 export const START_LIVE_COPY_MUTATION = gql( `
 	mutation startLiveBackupCopy($input: LiveBackupCopyConfigInput!) {
@@ -45,7 +102,7 @@ export enum SQLDumpTool {
 }
 
 export interface DBLiveCopyConfig {
-	tool: SQLDumpTool;
+	tool?: SQLDumpTool;
 	type: BackupLiveCopyType;
 	tables?: Record< string, Record< string, string | boolean > >;
 	subsite_ids?: number[];

@@ -15,6 +15,7 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -91,7 +92,7 @@ export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
 	public searchReplaceMap: Record< string, string > = {};
-	public configFile?: string;
+	public liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
 
@@ -104,18 +105,18 @@ export class DevEnvSyncSQLCommand {
 		public slug: string,
 		public lando: Lando,
 		trackerFn: TrackFunction = () => {},
-		configFile?: string
+		liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions
 	) {
 		this._track = trackerFn;
 		this.tmpDir = makeTempDir();
-		this.configFile = configFile;
+		this.liveBackupCopyCLIOptions = liveBackupCopyCLIOptions;
 	}
 
 	public track( name: string, eventProps: Record< string, unknown > ) {
 		return this._track( name, {
 			...eventProps,
 			sqldump_type: this._sqlDumpType,
-			live_backup_copy: Boolean( this.configFile ),
+			live_backup_copy: this.liveBackupCopyCLIOptions?.useLiveBackupCopy,
 		} );
 	}
 
@@ -162,7 +163,7 @@ export class DevEnvSyncSQLCommand {
 			{
 				outputFile: this.gzFile,
 				confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ),
-				backupConfigFile: this.configFile,
+				liveBackupCopyCLIOptions: this.liveBackupCopyCLIOptions,
 			},
 			this.track.bind( this )
 		);

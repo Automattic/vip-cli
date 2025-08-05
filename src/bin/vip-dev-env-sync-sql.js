@@ -9,6 +9,7 @@ import {
 } from '../lib/dev-environment/dev-environment-cli';
 import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { parseLiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeCommandTracker } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
@@ -19,6 +20,21 @@ const examples = [
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site`,
 		description:
 			'Sync the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+	},
+	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --table=wp_posts --table=wp_comments`,
+		description:
+			'Sync only the wp_posts and wp_comments tables from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+	},
+	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --subsite-id=2 --subsite-id=3`,
+		description:
+			'Sync only the tables for the subsites with IDs 2 and 3 from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+	},
+	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --config-file=~/dev-env-sync-config.json`,
+		description:
+			'Use the specified config file to determine what to sync from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 ];
 
@@ -59,11 +75,33 @@ command( {
 		undefined,
 		processSlug
 	)
-	.option( 'config-file', 'The backup copy config file', undefined )
+	.option( 'table', 'A table to sync from the remote environment to the local environment.' )
+	.option(
+		'subsite-id',
+		'The ID of a subsite/network site to sync from the remote environment to the local environment.'
+	)
+	.option(
+		'wpcli-command',
+		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
+	)
+	.option( 'config-file', 'The backup copy config file to use for the sync.', undefined )
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const { app, env, configFile, ...optRest } = opt;
+		const { app, env, configFile, table, subsiteId, wpcliCommand, ...optRest } = opt;
+
+		const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
+			configFile,
+			table,
+			subsiteId,
+			wpcliCommand
+		);
+
+		if ( configFile && ( table || subsiteId ) ) {
+			throw new UserError(
+				'The --config-file option cannot be used with the --table or --subsite-id options.'
+			);
+		}
 
 		const slug = await getEnvironmentName( optRest );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
@@ -82,7 +120,14 @@ command( {
 			throw new UserError( 'Environment needs to be started first' );
 		}
 
-		const cmd = new DevEnvSyncSQLCommand( app, env, slug, lando, trackerFn, configFile );
+		const cmd = new DevEnvSyncSQLCommand(
+			app,
+			env,
+			slug,
+			lando,
+			trackerFn,
+			liveBackupCopyCLIOptions
+		);
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?
 		const didCommandRun = await cmd.run();

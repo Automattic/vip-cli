@@ -2,6 +2,7 @@
 
 import { ExportSQLCommand } from '../commands/export-sql';
 import command from '../lib/cli/command';
+import { parseLiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeCommandTracker } from '../lib/tracker';
 
 const examples = [
@@ -19,6 +20,21 @@ const examples = [
 		usage: 'vip @example-app.develop export sql --generate-backup',
 		description:
 			'Generate a fresh database backup for an environment and download a copy of that backup.',
+	},
+	{
+		usage: 'vip @example-app.develop export sql --table=wp_posts --table=wp_comments',
+		description:
+			'Generate a database backup including only the wp_posts and wp_comments tables, and download a copy of that backup.',
+	},
+	{
+		usage: 'vip @example-app.develop export sql --subsite-id=2 --subsite-id=3',
+		description:
+			'Generate a database backup including only the tables related to the subsites with IDs 2 and 3, and download a copy of that backup.',
+	},
+	{
+		usage: 'vip @example-app.develop export sql --config-file=~/db-export-config.json',
+		description:
+			'Generate a database backup using the specified config file, and download a copy of that backup.',
 	},
 ];
 
@@ -49,23 +65,42 @@ command( {
 		'output',
 		'Download the file to a specific local directory path with a custom file name.'
 	)
-	.option( 'config-file', 'The backup copy config file', undefined )
+	.option( 'table', 'A table to export from the remote environment.' )
+	.option( 'subsite-id', 'The ID of a subsite/network site to export from the remote environment.' )
+	.option(
+		'wpcli-command',
+		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
+	)
+	.option( 'config-file', 'The backup copy config file to use for the export.', undefined )
 	.option( 'generate-backup', 'Generate a fresh database backup and export a copy of that backup.' )
 	.examples( examples )
-	.argv( process.argv, async ( arg, { app, env, output, configFile, generateBackup } ) => {
-		const trackerFn = makeCommandTracker( 'export_sql', {
-			app: app.id,
-			env: env.uniqueLabel,
-			generate_backup: generateBackup,
-		} );
-		await trackerFn( 'execute' );
+	.argv(
+		process.argv,
+		async (
+			arg,
+			{ app, env, output, configFile, table, subsiteId, wpcliCommand, generateBackup }
+		) => {
+			const trackerFn = makeCommandTracker( 'export_sql', {
+				app: app.id,
+				env: env.uniqueLabel,
+				generate_backup: generateBackup,
+			} );
+			await trackerFn( 'execute' );
 
-		const exportCommand = new ExportSQLCommand(
-			app,
-			env,
-			{ outputFile: output, generateBackup, backupConfigFile: configFile },
-			trackerFn
-		);
-		await exportCommand.run();
-		await trackerFn( 'success' );
-	} );
+			const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
+				configFile,
+				table,
+				subsiteId,
+				wpcliCommand
+			);
+
+			const exportCommand = new ExportSQLCommand(
+				app,
+				env,
+				{ outputFile: output, generateBackup, liveBackupCopyCLIOptions },
+				trackerFn
+			);
+			await exportCommand.run();
+			await trackerFn( 'success' );
+		}
+	);

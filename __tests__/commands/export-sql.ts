@@ -301,7 +301,10 @@ describe( 'commands/ExportSQLCommand', () => {
 			const mockDownloadURL = 'https://example.com/download/test.sql.gz';
 
 			const exportCommand = new ExportSQLCommand( app, env, {
-				backupConfigFile: configFile,
+				liveBackupCopyCLIOptions: {
+					useLiveBackupCopy: true,
+					configFile,
+				},
 				outputFile,
 			} );
 
@@ -345,6 +348,147 @@ describe( 'commands/ExportSQLCommand', () => {
 			);
 		} );
 
+		it( 'should successfully create backup for specific tables and download file', async () => {
+			const app = { id: 123, name: 'test-app' };
+			const env = { id: 456, name: 'test-env' };
+
+			const mockDownloadURL = 'https://example.com/download/test.sql.gz';
+
+			const exportCommand = new ExportSQLCommand( app, env, {
+				liveBackupCopyCLIOptions: {
+					useLiveBackupCopy: true,
+					tables: [ 'wp_users', 'wp_posts' ],
+				},
+				outputFile,
+			} );
+
+			const mockDownloadFile = jest.spyOn( downloadFileModule, 'downloadFile' );
+			mockDownloadFile.mockImplementation( () => {
+				return new Promise( resolve => {
+					resolve();
+				} );
+			} );
+
+			await exportCommand.run();
+
+			expect( apiMutateMock ).toHaveBeenCalledWith( {
+				mutation: START_LIVE_COPY_MUTATION,
+				variables: {
+					input: {
+						id: 123,
+						environmentId: 456,
+						config: {
+							subsite_ids: undefined,
+							type: 'tables',
+							tables: {
+								wp_users: {},
+								wp_posts: {},
+							},
+							wpcli_command: undefined,
+						},
+					},
+				},
+			} );
+
+			expect( mockDownloadFile ).toHaveBeenCalledWith(
+				mockDownloadURL,
+				expect.stringMatching( /\/sql-export.sql.gz$/ ),
+				expect.any( Function )
+			);
+		} );
+
+		it( 'should successfully create backup for specific subsites and download file', async () => {
+			const app = { id: 123, name: 'test-app' };
+			const env = { id: 456, name: 'test-env' };
+
+			const mockDownloadURL = 'https://example.com/download/test.sql.gz';
+
+			const exportCommand = new ExportSQLCommand( app, env, {
+				liveBackupCopyCLIOptions: {
+					useLiveBackupCopy: true,
+					subsiteIds: [ 2, 3 ],
+				},
+				outputFile,
+			} );
+
+			const mockDownloadFile = jest.spyOn( downloadFileModule, 'downloadFile' );
+			mockDownloadFile.mockImplementation( () => {
+				return new Promise( resolve => {
+					resolve();
+				} );
+			} );
+
+			await exportCommand.run();
+
+			expect( apiMutateMock ).toHaveBeenCalledWith( {
+				mutation: START_LIVE_COPY_MUTATION,
+				variables: {
+					input: {
+						id: 123,
+						environmentId: 456,
+						config: {
+							subsite_ids: [ 2, 3 ],
+							type: 'subsite_ids',
+							tables: undefined,
+							wpcli_command: undefined,
+						},
+					},
+				},
+			} );
+
+			expect( mockDownloadFile ).toHaveBeenCalledWith(
+				mockDownloadURL,
+				expect.stringMatching( /\/sql-export.sql.gz$/ ),
+				expect.any( Function )
+			);
+		} );
+
+		it( 'should successfully create backup for specific wpcli command and download file', async () => {
+			const app = { id: 123, name: 'test-app' };
+			const env = { id: 456, name: 'test-env' };
+
+			const mockDownloadURL = 'https://example.com/download/test.sql.gz';
+
+			const exportCommand = new ExportSQLCommand( app, env, {
+				liveBackupCopyCLIOptions: {
+					useLiveBackupCopy: true,
+					wpcliCommand: 'custom-db-export-config --include-users --include-posts',
+				},
+				outputFile,
+			} );
+
+			const mockDownloadFile = jest.spyOn( downloadFileModule, 'downloadFile' );
+			mockDownloadFile.mockImplementation( () => {
+				return new Promise( resolve => {
+					resolve();
+				} );
+			} );
+
+			await exportCommand.run();
+
+			expect( apiMutateMock ).toHaveBeenCalledWith( {
+				mutation: START_LIVE_COPY_MUTATION,
+				variables: {
+					input: {
+						id: 123,
+						environmentId: 456,
+						config: {
+							subsite_ids: undefined,
+							type: 'wpcli_command',
+							tables: undefined,
+							wpcli_command: 'custom-db-export-config --include-users --include-posts',
+						},
+					},
+				},
+			} );
+
+			expect( mockDownloadFile ).toHaveBeenCalledWith(
+				mockDownloadURL,
+				expect.stringMatching( /\/sql-export.sql.gz$/ ),
+				expect.any( Function )
+			);
+		} );
+
 		it( 'should handle error during getDownloadURL', async () => {
 			const app = { id: 123, name: 'test-app' };
 			const env = { id: 456, name: 'test-env' };
@@ -355,7 +499,10 @@ describe( 'commands/ExportSQLCommand', () => {
 				app,
 				env,
 				{
-					backupConfigFile: configFile,
+					liveBackupCopyCLIOptions: {
+						useLiveBackupCopy: true,
+						configFile,
+					},
 					outputFile,
 				},
 				mockTracker
