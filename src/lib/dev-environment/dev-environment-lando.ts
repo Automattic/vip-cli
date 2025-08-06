@@ -15,6 +15,7 @@ import xdgBasedir from 'xdg-basedir';
 
 import {
 	doesEnvironmentExist,
+	getEnvironmentPath,
 	readEnvironmentData,
 	updateEnvironment,
 	writeEnvironmentData,
@@ -785,4 +786,26 @@ export function validateDockerInstalled( lando: Lando ): void {
 			);
 		}
 	}
+}
+
+export async function isContainerRunning(
+	lando: Lando,
+	slug: string,
+	serviceName: string
+): Promise< boolean > {
+	const envPath = getEnvironmentPath( slug );
+	const app = await getLandoApplication( lando, envPath );
+
+	const { docker } = app.engine;
+	const containers = await docker.listContainers( {
+		filters: {
+			label: [
+				`com.docker.compose.project=${ app.project }`,
+				`com.docker.compose.service=${ serviceName }`,
+			],
+			status: [ 'running' ],
+		},
+	} );
+
+	return containers.length > 0;
 }
