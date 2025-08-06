@@ -67,7 +67,7 @@ declare class App {
 	 */
 	log: any;
 	shell: any;
-	engine: any;
+	engine: import('lando/lib/engine');
 	metrics: any;
 	Promise: any;
 	events: import('lando/lib/events');

@@ -7,8 +7,7 @@ import {
 	processBooleanOption,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
-import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import { makeCommandTracker } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
@@ -73,9 +72,15 @@ command( {
 		await trackerFn( 'execute' );
 
 		const lando = await bootstrapLando();
-		const envPath = getEnvironmentPath( slug );
 
-		if ( ! ( await isEnvUp( lando, envPath ) ) && ! opt.force ) {
+		const isUp = (
+			await Promise.all( [
+				isContainerRunning( lando, slug, 'php' ),
+				isContainerRunning( lando, slug, 'database' ),
+			] )
+		 ).every( Boolean );
+
+		if ( ! isUp && ! opt.force ) {
 			await trackerFn( 'env_not_running_error', { errorMessage: 'Environment was not running' } );
 			throw new UserError( 'Environment needs to be started first' );
 		}
