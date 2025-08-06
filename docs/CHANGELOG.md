@@ -1,5 +1,42 @@
 ## Changelog
 
+### 3.19.2
+
+* Improve environment checks when importing or syncing local databases to prevent common errors.
+* Remove outdated options and clarify usage instructions for environment info commands.
+* Prevent certain unsupported commands from running in incompatible environments.
+* Upgrade internal components for better compatibility and future support.
+
+* refactor(dev-env): deprecate `extended` option in `vip dev-env info`
+* build(deps-dev): bump typescript from 5.8.3 to 5.9.2
+* build(deps): bump @automattic/vip-search-replace from 1.1.3 to 2.0.0
+* Do not allow WP-CLI commands to be run from Node Apps
+* build(deps-dev): bump @types/node from 24.1.0 to 24.2.0
+* refactor(dev-env): use `isContainerRunning` for import and sync commands
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.19.1...3.19.2
+
+### 3.19.1
+
+* build(deps-dev): bump @types/node from 24.0.12 to 24.0.13
+* build(deps): bump open from 10.1.2 to 10.2.0
+* build(deps-dev): bump @types/node from 24.0.13 to 24.0.14
+* build(deps): bump step-security/harden-runner from 2.12.2 to 2.13.0
+* ci: add AI Changelog workflow
+* build(deps-dev): bump @types/node from 24.0.14 to 24.0.15
+* build(deps-dev): bump @types/node from 24.0.15 to 24.1.0
+* build(deps-dev): bump the testing group with 3 updates
+* security: update `form-data` to fix CVE-2025-7783
+* fix(wp): resource leak during reconnection
+* fix(wp): EventEmitter memory leak for `error` listeners
+* refactor: remove deprecated `url.parse()` in favor of WHATWG URL API
+* ci: simplify changelog generation workflow
+* chore(deps): replace `socket.io-stream` with a fork
+* fix: code smells detected by SonarCloud
+* chore(deps): update Lando
+
+**Full Changelog**: https://github.com/Automattic/vip-cli/compare/3.19.0...3.19.1
+
 ### 3.19.0
 
 * build(deps-dev): bump the testing group across 1 directory with 4 updates
