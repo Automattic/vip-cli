@@ -21,7 +21,7 @@ Always generate commit messages using the [Conventional Commits](https://www.con
 ```
 
   * Use the **imperative mood** (e.g. "add", not "added").
-  * **REQUIRED**: Keep the summary under 72 characters.
+  * **REQUIRED**: Keep the summary under 50 characters.
   * Add a `BREAKING CHANGE:` footer if applicable.
   * Add issue references in the footer (e.g., `Fixes #123`).
 
@@ -91,7 +91,7 @@ BREAKING CHANGE: removed support for legacy token format
 
 ## Commit Body Guidelines
 
-### 🔒 The commit body is required
+### The commit body is required
 
 Always include a body in commit messages. The body must explain the **reasoning** behind the change.
 

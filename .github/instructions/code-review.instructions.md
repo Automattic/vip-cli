@@ -61,7 +61,7 @@ Use bullet points to highlight the main modifications, such as:
 
 Ensure the code meets all of the following:
 
-  * ✅ All tests pass and CI pipelines are green.
+  * ✅ Code changes include appropriate test coverage.
   * ✅ No regressions or backward-incompatible changes unless justified.
   * ✅ Code style and conventions are followed.
   * ✅ Adequate inline documentation or comments are present.
