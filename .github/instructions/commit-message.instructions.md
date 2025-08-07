@@ -1,5 +1,5 @@
 ---
-applyTo: "**"
+applyTo: '**'
 description: Commit Message Instructions for AI Assistant
 ---
 
@@ -20,54 +20,54 @@ Always generate commit messages using the [Conventional Commits](https://www.con
 (optional footer)
 ```
 
-  * Use the **imperative mood** (e.g. "add", not "added").
-  * **REQUIRED**: Keep the summary under 50 characters.
-  * Add a `BREAKING CHANGE:` footer if applicable.
-  * Add issue references in the footer (e.g., `Fixes #123`).
+- Use the **imperative mood** (e.g. "add", not "added").
+- **REQUIRED**: Keep the summary under 50 characters.
+- Add a `BREAKING CHANGE:` footer if applicable.
+- Add issue references in the footer (e.g., `Fixes #123`).
 
 ## Allowed Types
 
-  * `feat`: for new features
-  * `fix`: for bug fixes
-  * `docs`: for documentation only
-  * `style`: for formatting, whitespace, etc. (no code changes)
-  * `refactor`: for code restructuring (no behavior change)
-  * `perf`: for performance improvements
-  * `test`: for adding or modifying tests
-  * `chore`: for maintenance tasks (e.g., dependency bumps)
-  * `build`: for build system/config changes
-  * `ci`: for changes to CI/CD workflows
+- `feat`: for new features
+- `fix`: for bug fixes
+- `docs`: for documentation only
+- `style`: for formatting, whitespace, etc. (no code changes)
+- `refactor`: for code restructuring (no behavior change)
+- `perf`: for performance improvements
+- `test`: for adding or modifying tests
+- `chore`: for maintenance tasks (e.g., dependency bumps)
+- `build`: for build system/config changes
+- `ci`: for changes to CI/CD workflows
 
 ## Recommended Scopes
 
 ### 🔧 Dependencies
 
-| Context                             | Scope        |
-|-------------------------------------|--------------|
-| Runtime dependencies (axios, lodash)| `deps`       |
-| Dev dependencies (eslint, jest)     | `dev-deps`   |
-| Build tools (webpack, vite, babel)  | `vite`, `webpack`, `babel` |
-| Lock files                          | `lockfile`   |
+| Context                              | Scope                      |
+| ------------------------------------ | -------------------------- |
+| Runtime dependencies (axios, lodash) | `deps`                     |
+| Dev dependencies (eslint, jest)      | `dev-deps`                 |
+| Build tools (webpack, vite, babel)   | `vite`, `webpack`, `babel` |
+| Lock files                           | `lockfile`                 |
 
 ### ⚙ Build & CI
 
-| Context                             | Scope        |
-|-------------------------------------|--------------|
-| Webpack config                      | `webpack`    |
-| Vite config                         | `vite`       |
-| Dockerfiles                         | `docker`     |
-| GitHub Actions                      | `actions`    |
-| Any `.github/workflows/*.yml`       | `workflow`   |
-| CI config (CircleCI, Travis, etc.)  | `ci`, `circleci`, `travis` |
+| Context                            | Scope                      |
+| ---------------------------------- | -------------------------- |
+| Webpack config                     | `webpack`                  |
+| Vite config                        | `vite`                     |
+| Dockerfiles                        | `docker`                   |
+| GitHub Actions                     | `actions`                  |
+| Any `.github/workflows/*.yml`      | `workflow`                 |
+| CI config (CircleCI, Travis, etc.) | `ci`, `circleci`, `travis` |
 
 ### 🧪 Testing
 
-| Context                             | Scope        |
-|-------------------------------------|--------------|
-| Unit tests                          | `unit`       |
-| Integration tests                   | `integration`|
-| End-to-end tests                    | `e2e`        |
-| Mocks, fixtures                     | `fixtures`   |
+| Context           | Scope         |
+| ----------------- | ------------- |
+| Unit tests        | `unit`        |
+| Integration tests | `integration` |
+| End-to-end tests  | `e2e`         |
+| Mocks, fixtures   | `fixtures`    |
 
 ## Examples
 
@@ -123,23 +123,24 @@ Describe any manual testing steps performed or still required.
 
 The body should:
 
-  * Explain **why** the change was made (not how — that’s in the diff).
-  * Include any **context, motivation, or rationale**.
-  * Describe **side effects**, **limitations**, or **relevant decisions**.
+- Explain **why** the change was made (not how — that’s in the diff).
+- Include any **context, motivation, or rationale**.
+- Describe **side effects**, **limitations**, or **relevant decisions**.
 
 For trivial changes (e.g. formatting only), a simple one-liner like “No functional changes.” is acceptable.
 
 ### Formatting Rules
 
-  * Separate the summary and body with a blank line.
-  * Wrap lines at ~72 characters.
-  * Use full sentences in the present tense.
-  * Include a `BREAKING CHANGE:` footer if needed.
+- Separate the summary and body with a blank line.
+- Wrap lines at ~72 characters.
+- Use full sentences in the present tense.
+- Include a `BREAKING CHANGE:` footer if needed.
 
 ### Style Notes:
-  * Write concisely but with technical clarity.
-  * Use professional, neutral tone—avoid vague or overly general statements.
-  * Format as Markdown with clear sections and lists.
+
+- Write concisely but with technical clarity.
+- Use professional, neutral tone—avoid vague or overly general statements.
+- Format as Markdown with clear sections and lists.
 
 ### Examples
 
@@ -171,13 +172,13 @@ manual `setup-node` step is no longer needed.
 
 When removing code, follow these conventions:
 
-| Context                             | Type         | Scope Example              | Commit Example |
-|-------------------------------------|--------------|-----------------------------|----------------|
-| Removing unused or dead code        | `chore`      | `core`, `utils`, `api`      | `chore(core): remove unused helpers` |
-| Removing deprecated functionality   | `refactor` or `chore` | `api`, `auth`         | `refactor(api): remove deprecated v1 endpoints` |
-| Removing functionality as a breaking change | `feat` + `BREAKING CHANGE` | `core`, `auth` | `feat(auth): remove legacy session logic` + `BREAKING CHANGE:` |
-| Removing test code                  | `test`       | `unit`, `e2e`, `integration`| `test(unit): remove duplicate tests` |
-| Removing CI or build config         | `ci` or `build` | `workflow`, `actions`, `vite` | `ci(workflow): remove obsolete step` |
+| Context                                     | Type                       | Scope Example                 | Commit Example                                                 |
+| ------------------------------------------- | -------------------------- | ----------------------------- | -------------------------------------------------------------- |
+| Removing unused or dead code                | `chore`                    | `core`, `utils`, `api`        | `chore(core): remove unused helpers`                           |
+| Removing deprecated functionality           | `refactor` or `chore`      | `api`, `auth`                 | `refactor(api): remove deprecated v1 endpoints`                |
+| Removing functionality as a breaking change | `feat` + `BREAKING CHANGE` | `core`, `auth`                | `feat(auth): remove legacy session logic` + `BREAKING CHANGE:` |
+| Removing test code                          | `test`                     | `unit`, `e2e`, `integration`  | `test(unit): remove duplicate tests`                           |
+| Removing CI or build config                 | `ci` or `build`            | `workflow`, `actions`, `vite` | `ci(workflow): remove obsolete step`                           |
 
 ### Examples
 

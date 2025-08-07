@@ -1,5 +1,5 @@
 ---
-applyTo: "**"
+applyTo: '**'
 description: Code Review Instructions for AI Assistant
 ---
 
@@ -21,15 +21,15 @@ The review must be clear, context-aware, and aimed at experienced developers.
 
 Your task is to provide a detailed and specific code review focused on the following areas:
 
-  * **Security:**  
-    Identify vulnerabilities, injection risks, insecure dependencies, or sensitive data exposure.  
-    Comment on authentication, authorization, and any configuration concerns.
-  * **Performance:**  
-    Flag inefficient algorithms, redundant operations, bottlenecks, or excessive resource usage.
-  * **Code Quality:**  
-    Assess structure, maintainability, adherence to standards, and sufficiency of error handling or logging.
-  * **Readability:**  
-    Evaluate clarity of logic, naming, formatting, and inline documentation or comments.
+- **Security:**  
+  Identify vulnerabilities, injection risks, insecure dependencies, or sensitive data exposure.  
+  Comment on authentication, authorization, and any configuration concerns.
+- **Performance:**  
+  Flag inefficient algorithms, redundant operations, bottlenecks, or excessive resource usage.
+- **Code Quality:**  
+  Assess structure, maintainability, adherence to standards, and sufficiency of error handling or logging.
+- **Readability:**  
+  Evaluate clarity of logic, naming, formatting, and inline documentation or comments.
 
 ## Structure & Output Format
 
@@ -43,50 +43,50 @@ Provide a short summary of what the change does and why it matters. One or two s
 
 Use bullet points to highlight the main modifications, such as:
 
-  * New logic or major functions
-  * Refactoring or structural shifts
-  * Changes to dependencies or configs
+- New logic or major functions
+- Refactoring or structural shifts
+- Changes to dependencies or configs
 
 ### Impact & Context
 
-  * Mention any testing, performance, security, or compatibility implications.
-  * Highlight areas that may need manual QA, special attention during merge, or are part of critical flows.
+- Mention any testing, performance, security, or compatibility implications.
+- Highlight areas that may need manual QA, special attention during merge, or are part of critical flows.
 
 ### Suggestions (if any)
 
-  * Offer actionable recommendations to improve clarity, correctness, or maintainability.
-  * Suggest alternate patterns or call out edge cases the author may have missed.
+- Offer actionable recommendations to improve clarity, correctness, or maintainability.
+- Suggest alternate patterns or call out edge cases the author may have missed.
 
 ### Approval Readiness
 
 Ensure the code meets all of the following:
 
-  * ✅ Code changes include appropriate test coverage.
-  * ✅ No regressions or backward-incompatible changes unless justified.
-  * ✅ Code style and conventions are followed.
-  * ✅ Adequate inline documentation or comments are present.
-  * ✅ Edge cases and error handling are covered.
+- ✅ Code changes include appropriate test coverage.
+- ✅ No regressions or backward-incompatible changes unless justified.
+- ✅ Code style and conventions are followed.
+- ✅ Adequate inline documentation or comments are present.
+- ✅ Edge cases and error handling are covered.
 
 ## Additional Instructions
 
-  * Reference specific lines or files when making comments.
-  * Be precise and focused—avoid vague statements like "this could be better."
-  * Use clear, technical language suitable for experienced developers.
-  * Do not review unrelated code or files outside the diff.
+- Reference specific lines or files when making comments.
+- Be precise and focused—avoid vague statements like "this could be better."
+- Use clear, technical language suitable for experienced developers.
+- Do not review unrelated code or files outside the diff.
 
 ## Examples of Good vs. Concerning Patterns
 
-| Good Practice                     | Why It Matters                                 |
-|-----------------------------------|------------------------------------------------|
-| Clear function and variable names | Improves long-term maintainability             |
-| Avoiding deeply nested logic      | Enhances legibility and testability            |
-| Descriptive commit messages       | Helps future maintainers understand intent     |
+| Good Practice                     | Why It Matters                             |
+| --------------------------------- | ------------------------------------------ |
+| Clear function and variable names | Improves long-term maintainability         |
+| Avoiding deeply nested logic      | Enhances legibility and testability        |
+| Descriptive commit messages       | Helps future maintainers understand intent |
 
-| Concerning Pattern                      | Why It’s Problematic                           |
-|-----------------------------------------|------------------------------------------------|
-| Silent failure or catch-all `try/catch` | Masks real errors and makes debugging harder   |
-| Use of hard-coded credentials           | Poses a security risk                          |
-| Redundant code paths                    | Increases complexity without added value       |
+| Concerning Pattern                      | Why It’s Problematic                         |
+| --------------------------------------- | -------------------------------------------- |
+| Silent failure or catch-all `try/catch` | Masks real errors and makes debugging harder |
+| Use of hard-coded credentials           | Poses a security risk                        |
+| Redundant code paths                    | Increases complexity without added value     |
 
 ---
 
