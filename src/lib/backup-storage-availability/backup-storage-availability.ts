@@ -3,11 +3,11 @@ import { Confirm } from 'enquirer';
 import os from 'os';
 import path from 'path';
 import { exec } from 'shelljs';
-import xdgBasedir from 'xdg-basedir';
 
 import { DockerMachineNotFoundError } from './docker-machine-not-found-error';
 import { Job } from '../../graphqlTypes';
 import { formatMetricBytes } from '../cli/format';
+import { xdgData } from '../xdg-data';
 
 const oneGiBInBytes = 1024 * 1024 * 1024;
 
@@ -51,7 +51,7 @@ export class BackupStorageAvailability {
 	}
 
 	public async getStorageAvailableInVipPath() {
-		const vipDir = path.join( xdgBasedir.data ?? os.tmpdir(), 'vip' );
+		const vipDir = path.join( xdgData() ?? os.tmpdir(), 'vip' );
 
 		const diskSpace = await checkDiskSpace( vipDir );
 		return diskSpace.free;

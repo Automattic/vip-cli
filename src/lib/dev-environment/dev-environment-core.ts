@@ -10,7 +10,6 @@ import { cp, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
-import xdgBasedir from 'xdg-basedir';
 
 import {
 	handleCLIException,
@@ -46,6 +45,7 @@ import {
 import { createProxyAgent } from '../http/proxy-agent';
 import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
+import { xdgData } from '../xdg-data';
 
 import type {
 	AppInfo,
@@ -105,8 +105,9 @@ export interface PostStartOptions {
 }
 
 function xdgDataDirectory(): string {
-	if ( xdgBasedir.data ) {
-		return xdgBasedir.data;
+	const data = xdgData();
+	if ( data ) {
+		return data;
 	}
 
 	// This should not happen. If it does, this means that the system was unable to find user's home directory.

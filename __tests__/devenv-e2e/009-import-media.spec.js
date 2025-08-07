@@ -2,7 +2,6 @@ import { describe, expect, it, jest } from '@jest/globals';
 import { mkdtemp, rm, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import xdgBaseDir from 'xdg-basedir';
 
 import { CliTest } from './helpers/cli-test';
 import { vipDevEnvCreate, vipDevEnvImportMedia } from './helpers/commands';
@@ -23,7 +22,7 @@ describe( 'vip dev-env import media', () => {
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
-		xdgBaseDir.data = tmpPath;
+		process.env.XDG_DATA_HOME = tmpPath;
 
 		env = prepareEnvironment( tmpPath );
 	} );

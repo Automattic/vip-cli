@@ -27,7 +27,7 @@ describe( 'lib/analytics/tracks', () => {
 			buildNock()
 				// No arrow function because we need `this`
 				.reply( 200, function ( uri, requestBody ) {
-					expect( this.req.headers[ 'user-agent' ] ).toEqual( [ 'vip-cli' ] ); // The header value is returned as an array
+					expect( this.req.headers[ 'user-agent' ] ).toEqual( 'vip-cli' ); // The header value is returned as a string
 
 					expect( requestBody ).toEqual( expectedBody );
 				} );

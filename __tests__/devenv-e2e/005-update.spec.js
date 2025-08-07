@@ -2,7 +2,6 @@ import { describe, expect, it, jest } from '@jest/globals';
 import { copyFile, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import xdgBaseDir from 'xdg-basedir';
 
 import { CliTest } from './helpers/cli-test';
 import { vipDevEnvCreate, vipDevEnvUpdate } from './helpers/commands';
@@ -23,8 +22,7 @@ describe( 'vip dev-env update', () => {
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
-		// @ts-expect-error we have to ignore that data is read-only
-		xdgBaseDir.data = tmpPath;
+		process.env.XDG_DATA_HOME = tmpPath;
 
 		env = prepareEnvironment( tmpPath );
 	} );

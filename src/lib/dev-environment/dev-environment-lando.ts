@@ -11,7 +11,6 @@ import { mkdir, rename, unlink } from 'node:fs/promises';
 import { tmpdir, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
-import xdgBasedir from 'xdg-basedir';
 
 import {
 	doesEnvironmentExist,
@@ -23,6 +22,7 @@ import {
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
+import { xdgData } from '../xdg-data';
 
 import type { NetworkInspectInfo } from 'dockerode';
 import type Landerode from 'lando/lib/docker';
@@ -59,7 +59,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-	const vipDir = path.join( xdgBasedir.data || tmpdir(), 'vip' ); // NOSONAR
+	const vipDir = path.join( xdgData() ?? tmpdir(), 'vip' ); // NOSONAR
 	const landoDir = path.join( vipDir, 'lando' );
 	const fakeHomeDir = path.join( landoDir, 'home' );
 
