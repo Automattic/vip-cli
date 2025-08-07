@@ -77,19 +77,22 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		it( 'should throw for NON existing folder', async () => {
 			const slug = 'foo';
 			const expectedPath = getEnvironmentPath( slug );
-			fs._originalExistsSync = fs.existsSync;
+			const _originalExistsSync = fs.existsSync;
 			jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
 				if ( fpath === expectedPath ) {
 					return false;
 				}
 
-				return fs._originalExistsSync( fpath );
+				return _originalExistsSync( fpath );
 			} );
 
 			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
 
 			const lando = await bootstrapLando();
-			const promise = startEnvironment( lando, slug );
+			const promise = startEnvironment( lando, slug, {
+				skipRebuild: false,
+				skipWpVersionsCheck: true,
+			} );
 
 			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
 		} );
@@ -99,13 +102,13 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			delete process.env.DEBUG;
 			const slug = 'foo';
 			const expectedPath = getEnvironmentPath( slug );
-			fs._originalExistsSync = fs.existsSync;
+			const _originalExistsSync = fs.existsSync;
 			jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
 				if ( fpath === expectedPath ) {
 					return false;
 				}
 
-				return fs._originalExistsSync( fpath );
+				return _originalExistsSync( fpath );
 			} );
 
 			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
