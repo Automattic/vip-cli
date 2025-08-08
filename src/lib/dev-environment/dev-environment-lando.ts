@@ -8,7 +8,7 @@ import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { lookup } from 'node:dns/promises';
 import { mkdir, rename, unlink } from 'node:fs/promises';
-import { tmpdir, userInfo } from 'node:os';
+import { userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { satisfies } from 'semver';
 
@@ -58,8 +58,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 		logLevelConsole = 'warn';
 	}
 
-	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-	const vipDir = path.join( xdgData() ?? tmpdir(), 'vip' ); // NOSONAR
+	const vipDir = path.join( xdgData(), 'vip' );
 	const landoDir = path.join( vipDir, 'lando' );
 	const fakeHomeDir = path.join( landoDir, 'home' );
 

@@ -1,6 +1,5 @@
 import checkDiskSpace from 'check-disk-space';
 import { Confirm } from 'enquirer';
-import os from 'os';
 import path from 'path';
 import { exec } from 'shelljs';
 
@@ -51,7 +50,7 @@ export class BackupStorageAvailability {
 	}
 
 	public async getStorageAvailableInVipPath() {
-		const vipDir = path.join( xdgData() ?? os.tmpdir(), 'vip' );
+		const vipDir = path.join( xdgData(), 'vip' );
 
 		const diskSpace = await checkDiskSpace( vipDir );
 		return diskSpace.free;
