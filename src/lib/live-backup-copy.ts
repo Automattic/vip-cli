@@ -41,12 +41,26 @@ export function parseLiveBackupCopyCLIOptions(
 	let useLiveBackupCopy = false;
 
 	if ( table ) {
-		options.tables = Array.isArray( table ) ? table : [ table ];
+		if ( Array.isArray( table ) ) {
+			options.tables = table.flatMap( t => t.split( ',' ).map( name => name.trim() ) );
+		} else {
+			options.tables = table.split( ',' ).map( name => name.trim() );
+		}
 		useLiveBackupCopy = true;
 	}
 
 	if ( subsiteId ) {
-		options.subsiteIds = Array.isArray( subsiteId ) ? subsiteId : [ subsiteId ];
+		if ( Array.isArray( subsiteId ) ) {
+			options.subsiteIds = subsiteId.flatMap( id =>
+				String( id )
+					.split( ',' )
+					.map( idStr => Number( idStr.trim() ) )
+			);
+		} else {
+			options.subsiteIds = String( subsiteId )
+				.split( ',' )
+				.map( idStr => Number( idStr.trim() ) );
+		}
 		useLiveBackupCopy = true;
 	}
 

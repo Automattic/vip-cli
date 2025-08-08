@@ -27,9 +27,19 @@ const examples = [
 			'Sync only the wp_posts and wp_comments tables from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --table=wp_posts,wp_comments`,
+		description:
+			'Sync only the wp_posts and wp_comments tables using comma-separated syntax from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+	},
+	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --subsite-id=2 --subsite-id=3`,
 		description:
 			'Sync only the tables for the subsites with IDs 2 and 3 from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+	},
+	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --subsite-id=2,3`,
+		description:
+			'Sync only the tables for the subsites with IDs 2 and 3 using comma-separated syntax from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --config-file=~/dev-env-sync-config.json`,
@@ -75,10 +85,14 @@ command( {
 		undefined,
 		processSlug
 	)
-	.option( 'table', 'A table to sync from the remote environment to the local environment.' )
+	.option(
+		'table',
+		'A table to sync from the remote environment to the local environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.'
+	)
 	.option(
 		'subsite-id',
-		'The ID of a subsite/network site to sync from the remote environment to the local environment.'
+
+		'The ID of a subsite/network site to sync from the remote environment to the local environment. Multiple subsite IDs can be specified with multiple --subsite-id flags or as a comma-separated list.'
 	)
 	.option(
 		'wpcli-command',

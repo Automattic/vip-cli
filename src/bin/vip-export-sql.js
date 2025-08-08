@@ -27,9 +27,19 @@ const examples = [
 			'Generate a database backup including only the wp_posts and wp_comments tables, and download a copy of that backup.',
 	},
 	{
+		usage: 'vip @example-app.develop export sql --table=wp_posts,wp_comments',
+		description:
+			'Generate a database backup including only the wp_posts and wp_comments tables using comma-separated syntax, and download a copy of that backup.',
+	},
+	{
 		usage: 'vip @example-app.develop export sql --subsite-id=2 --subsite-id=3',
 		description:
 			'Generate a database backup including only the tables related to the subsites with IDs 2 and 3, and download a copy of that backup.',
+	},
+	{
+		usage: 'vip @example-app.develop export sql --subsite-id=2,3',
+		description:
+			'Generate a database backup including only the tables related to the subsites with IDs 2 and 3 using comma-separated syntax, and download a copy of that backup.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --config-file=~/db-export-config.json',
@@ -65,8 +75,8 @@ command( {
 		'output',
 		'Download the file to a specific local directory path with a custom file name.'
 	)
-	.option( 'table', 'A table to export from the remote environment.' )
-	.option( 'subsite-id', 'The ID of a subsite/network site to export from the remote environment.' )
+	.option( 'table', 'A table to export from the remote environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.' )
+	.option( 'subsite-id', 'The ID of a subsite/network site to export from the remote environment. Multiple subsite IDs can be specified with multiple --subsite-id flags or as a comma-separated list.' )
 	.option(
 		'wpcli-command',
 		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
