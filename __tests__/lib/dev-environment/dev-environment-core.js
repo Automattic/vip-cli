@@ -1,10 +1,8 @@
 import { expect, jest } from '@jest/globals';
 import enquirer from 'enquirer';
-import child from 'node:child_process';
 import fs from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
-import { EventEmitter } from 'node:stream';
 
 import app from '../../../src/lib/api/app';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
@@ -18,7 +16,6 @@ import {
 	resolveImportPath,
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import * as xdgData from '../../../src/lib/xdg-data';
 
@@ -47,22 +44,6 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		jest.restoreAllMocks();
 	} );
 
-	const mockedExec = ( command, options, callback ) => {
-		const emitter = new EventEmitter();
-
-		setImmediate( () => {
-			if ( /docker-compose/.test( command ) ) {
-				callback( null, '2.12.2', '' );
-			} else if ( /docker/.test( command ) ) {
-				callback( null, '{"ServerVersion": "25.0.2"}', '' );
-			} else {
-				callback( new Error(), '', '' );
-			}
-		} );
-
-		return emitter;
-	};
-
 	describe( 'createEnvironment', () => {
 		it( 'should throw for existing folder', () => {
 			const slug = 'foo';
@@ -86,10 +67,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				return _originalExistsSync( fpath );
 			} );
 
-			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
-
-			const lando = await bootstrapLando();
-			const promise = startEnvironment( lando, slug, {
+			const promise = startEnvironment( {}, slug, {
 				skipRebuild: false,
 				skipWpVersionsCheck: true,
 			} );
@@ -111,10 +89,7 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 				return _originalExistsSync( fpath );
 			} );
 
-			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
-
-			const lando = await bootstrapLando();
-			const promise = destroyEnvironment( lando, slug, true );
+			const promise = destroyEnvironment( {}, slug, true );
 
 			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
 		} );
