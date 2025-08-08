@@ -104,17 +104,6 @@ export interface PostStartOptions {
 	openCursor: boolean;
 }
 
-function xdgDataDirectory(): string {
-	const data = xdgData();
-	if ( data ) {
-		return data;
-	}
-
-	// This should not happen. If it does, this means that the system was unable to find user's home directory.
-	// If so, this does not leave us many options as to where to store the data.
-	throw new Error( 'Unable to determine data directory.' );
-}
-
 export async function startEnvironment(
 	lando: Lando,
 	slug: string,
@@ -286,7 +275,7 @@ export async function destroyEnvironment(
 	}
 
 	await fs.promises.rm(
-		path.join( xdgDataDirectory(), 'vip', 'lando', 'compose', dockerComposify( slug ) ),
+		path.join( xdgData(), 'vip', 'lando', 'compose', dockerComposify( slug ) ),
 		{
 			force: true,
 			recursive: true,
@@ -611,7 +600,7 @@ async function prepareLandoEnv(
 }
 
 export function getAllEnvironmentNames(): string[] {
-	const mainEnvironmentPath = xdgDataDirectory();
+	const mainEnvironmentPath = xdgData();
 
 	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
 
@@ -635,7 +624,7 @@ export function getEnvironmentPath( name: string ): string {
 		throw new Error( 'Name was not provided' );
 	}
 
-	const mainEnvironmentPath = xdgDataDirectory();
+	const mainEnvironmentPath = xdgData();
 
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', String( name ) );
 }
@@ -979,7 +968,7 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise< 
  */
 export async function getVersionList(): Promise< WordPressTag[] > {
 	let res;
-	const mainEnvironmentPath = xdgDataDirectory();
+	const mainEnvironmentPath = xdgData();
 	const cacheFilePath = path.join( mainEnvironmentPath, 'vip' );
 	const cacheFile = path.join( cacheFilePath, DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 	// Handle from cache

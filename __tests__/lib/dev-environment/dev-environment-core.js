@@ -17,20 +17,11 @@ import {
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
-import * as xdgData from '../../../src/lib/xdg-data';
+import { xdgData } from '../../../src/lib/xdg-data';
 
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
-
-const originalXDGDataHome = process.env.XDG_DATA_HOME;
-beforeAll( () => {
-	process.env.XDG_DATA_HOME = tmpdir();
-} );
-
-afterAll( () => {
-	process.env.XDG_DATA_HOME = originalXDGDataHome;
-} );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	const cleanup = () =>
@@ -101,21 +92,12 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 
 		it( 'should return correct location from xdg', () => {
-			process.env.XDG_DATA_HOME = 'bar';
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
 
-			const expectedPath = path.normalize( `${ xdgData.xdgData() }/vip/dev-environment/${ name }` );
+			const expectedPath = path.normalize( `${ xdgData() }/vip/dev-environment/${ name }` );
 
 			expect( filePath ).toBe( expectedPath );
-		} );
-
-		it( 'should throw if xdg is not available', () => {
-			jest.spyOn( xdgData, 'xdgData' ).mockReturnValue( undefined );
-			const name = 'foo';
-			expect( () => getEnvironmentPath( name ) ).toThrow(
-				new Error( 'Unable to determine data directory.' )
-			);
 		} );
 	} );
 	describe( 'getApplicationInformation', () => {
