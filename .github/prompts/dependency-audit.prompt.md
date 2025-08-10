@@ -12,15 +12,21 @@ Audit dependencies for security vulnerabilities
 
 Perform a comprehensive dependency audit for Node.js/TypeScript projects following these steps:
 
+### Important Formatting Guidelines
+
+- **Package Names**: Always format package names in backticks (e.g., `@types/node`, `lando`, `@apollo/client`) to prevent accidental mentions when reports are shared in GitHub issues or other platforms
+- **Dependency Classification**: Packages listed in the `dependencies` section of package.json should be treated as production dependencies, regardless of whether they appear to be development tools. For example, tools like `lando` or build tools may be listed as production dependencies because they are required for the application's runtime functionality
+
 1. **Dependency Discovery**
 
    - Identify all dependency management files (package.json, package-lock.json, npm-shrinkwrap.json)
    - Map direct vs transitive dependencies using `npm ls`
    - Check for lock files and version consistency
    - Review development vs production dependencies with `npm ls --production`
+   - **Important**: Classify dependencies based on their package.json location (`dependencies` vs `devDependencies`), not their apparent purpose
    - Identify version mismatches between specifications and installed versions
    - Analyze dependency resolution conflicts and overrides in package.json
-   - Review TypeScript type dependencies (@types/\*) for consistency
+   - Review TypeScript type dependencies (`@types/*`) for consistency
 
 2. **Version Analysis**
 
@@ -36,7 +42,7 @@ Perform a comprehensive dependency audit for Node.js/TypeScript projects followi
      - `npm audit` for Node.js projects - check for security vulnerabilities
      - `npm audit --json` for detailed vulnerability information in JSON format
      - `npm audit signatures` for package integrity verification
-     - `npm audit --fix --dry-run` to preview potential fixes
+     - `npm audit fix --dry-run` to preview potential fixes
      - `npx license-checker` for license compliance scanning
      - GitHub security advisories for all platforms
    - Identify critical, high, medium, and low severity vulnerabilities
@@ -138,8 +144,8 @@ Execute these commands as part of the audit process:
 ```bash
 npm audit                           # Basic security vulnerability scan
 npm audit --json                    # Detailed vulnerability information
-npm audit signatures               # Package integrity verification
-npm audit --fix --dry-run          # Preview potential security fixes
+npm audit signatures                # Package integrity verification
+npm audit fix --dry-run             # Preview potential security fixes
 ```
 
 ### Dependency Analysis
@@ -205,6 +211,7 @@ Provide a structured report with the following sections:
 - Tool command outputs and evidence
 - Package override analysis and security implications
 - TypeScript type dependency analysis
+- **Note**: All package names should be formatted in backticks (e.g., `package-name`) throughout the report
 
 ## Deliverables
 
