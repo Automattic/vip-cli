@@ -42,7 +42,9 @@ export function parseLiveBackupCopyCLIOptions(
 
 	if ( table ) {
 		if ( Array.isArray( table ) ) {
-			options.tables = table.flatMap( t => t.split( ',' ).map( name => name.trim() ) );
+			options.tables = table.flatMap( tableItem =>
+				tableItem.split( ',' ).map( name => name.trim() )
+			);
 		} else {
 			options.tables = table.split( ',' ).map( name => name.trim() );
 		}

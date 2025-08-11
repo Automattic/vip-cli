@@ -110,12 +110,6 @@ command( {
 			wpcliCommand
 		);
 
-		if ( configFile && ( table || subsiteId ) ) {
-			throw new UserError(
-				'The --config-file option cannot be used with the --table or --subsite-id options.'
-			);
-		}
-
 		const slug = await getEnvironmentName( optRest );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
 			app: app.id,

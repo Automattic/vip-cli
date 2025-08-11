@@ -75,8 +75,14 @@ command( {
 		'output',
 		'Download the file to a specific local directory path with a custom file name.'
 	)
-	.option( 'table', 'A table to export from the remote environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.' )
-	.option( 'subsite-id', 'The ID of a subsite/network site to export from the remote environment. Multiple subsite IDs can be specified with multiple --subsite-id flags or as a comma-separated list.' )
+	.option(
+		'table',
+		'A table to export from the remote environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.'
+	)
+	.option(
+		'subsite-id',
+		'The ID of a subsite/network site to export from the remote environment. Multiple subsite IDs can be specified with multiple --subsite-id flags or as a comma-separated list.'
+	)
 	.option(
 		'wpcli-command',
 		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'

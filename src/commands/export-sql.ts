@@ -643,9 +643,12 @@ export class ExportSQLCommand {
 		try {
 			return JSON.parse( fs.readFileSync( configFile, 'utf-8' ) ) as DBLiveCopyConfig;
 		} catch ( err ) {
-			throw new Error(
-				`Error reading configuration file: ${ configFile } - ${ ( err as Error ).message }`
-			);
+			const errMessage = err instanceof Error ? err.message : 'Unknown error';
+			if ( err instanceof SyntaxError ) {
+				throw new Error( `Invalid JSON in configuration file: ${ configFile } - ${ errMessage }` );
+			}
+
+			throw new Error( `Error reading configuration file: ${ configFile } - ${ errMessage }` );
 		}
 	}
 }
