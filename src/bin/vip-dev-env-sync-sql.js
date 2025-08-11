@@ -7,10 +7,8 @@ import {
 	processBooleanOption,
 	processSlug,
 } from '../lib/dev-environment/dev-environment-cli';
-import { getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
-import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
-import { parseLiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
+import { parseLiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeCommandTracker } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
