@@ -9,11 +9,7 @@ import {
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
-import {
-	exec,
-	getEnvironmentPath,
-	resolveImportPath,
-} from '../lib/dev-environment/dev-environment-core';
+import { exec, resolveImportPath } from '../lib/dev-environment/dev-environment-core';
 import {
 	addAdminUser,
 	dataCleanup,
@@ -21,7 +17,7 @@ import {
 	flushCache,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
-import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
+import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
 import { validate as validateSQL, validateImportFileExtension } from '../lib/validations/sql';
@@ -84,7 +80,14 @@ export class DevEnvImportSQLCommand {
 		);
 
 		if ( ! this.options.skipValidate ) {
-			if ( ! ( await isEnvUp( lando, getEnvironmentPath( this.slug ) ) ) ) {
+			const isUp = (
+				await Promise.all( [
+					isContainerRunning( lando, this.slug, 'php' ),
+					isContainerRunning( lando, this.slug, 'database' ),
+				] )
+			 ).every( Boolean );
+
+			if ( ! isUp ) {
 				throw new UserError( 'Environment needs to be started first' );
 			}
 
