@@ -28,7 +28,7 @@ jobs:
           - { name: Check formatting, tool: 'format:check' }
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v4
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v4
@@ -84,7 +84,7 @@ jobs:
           - current
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v4

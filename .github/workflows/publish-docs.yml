@@ -16,7 +16,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - run: npm i -g @automattic/vip
       - run: node ./helpers/generate-docs.js > /tmp/docs.json
       - name: Print docs.json
