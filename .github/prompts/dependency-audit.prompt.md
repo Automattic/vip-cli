@@ -216,6 +216,6 @@ Provide a structured report with the following sections:
 ## Deliverables
 
 1. **Console Output**: Display the complete dependency audit report directly in the chat/console
-2. **Markdown File**: Create an untitled markdown file (e.g., `untitled:Dependency-Audit-Report.md`) containing the complete report for easy saving and sharing
+2. **Markdown File**: Create an untitled markdown file (e.g., `Dependency-Audit-Report.md`) containing the complete report for easy saving and sharing
 
 The markdown file should be formatted identically to the console output, allowing users to save it for documentation purposes or share with team members.
