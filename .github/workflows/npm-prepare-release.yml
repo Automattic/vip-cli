@@ -23,7 +23,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run npm-prepare-release
         uses: Automattic/vip-actions/npm-prepare-release@1137b91acf0f5ea4e0db044bcf14ceabed9b068f # trunk
