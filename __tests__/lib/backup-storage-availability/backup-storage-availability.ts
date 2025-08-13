@@ -12,6 +12,9 @@ const oneGiBInBytes = 1024 * 1024 * 1024;
 describe( 'backup-storage-availability', () => {
 	afterEach( () => {
 		confirmRunSpy.mockClear();
+		if ( process.stdout.isTTY ) {
+			process.stdout.write( '\x1B[?25h' ); // Show cursor
+		}
 	} );
 
 	describe( 'validateAndPromptDiskSpaceWarningForBackupImport', () => {
