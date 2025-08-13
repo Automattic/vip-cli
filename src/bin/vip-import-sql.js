@@ -95,9 +95,8 @@ const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
  */
 function isValidUrl( str ) {
 	try {
-		new URL( str );
-
-		return true;
+		const url = new URL( str );
+		return ! /^[a-z]:$/iu.test( url.protocol );
 	} catch {
 		return false;
 	}
