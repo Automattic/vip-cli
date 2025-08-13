@@ -12,6 +12,7 @@ const config = {
 	maxWorkers: process.env.CI ? 1 : 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 	forceExit: true,
+	transformIgnorePatterns: [],
 };
 
 module.exports = config;

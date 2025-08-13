@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { createHash } from 'crypto';
 import debugLib from 'debug';
 import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
-import fetch, { HeaderInit, RequestInfo, RequestInit, Response } from 'node-fetch';
+import fetch, { HeadersInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
 import os from 'os';
@@ -238,7 +238,7 @@ interface UploadUsingArguments {
 
 interface PresignedRequest {
 	options: {
-		headers: HeaderInit;
+		headers: HeadersInit;
 	};
 	url: string;
 }
