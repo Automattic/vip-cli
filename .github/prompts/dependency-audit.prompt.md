@@ -12,6 +12,8 @@ Audit dependencies for security vulnerabilities
 
 Perform a comprehensive dependency audit for Node.js/TypeScript projects following these steps:
 
+**🔍 PRIORITIZE SEMANTIC SEARCH**: Use semantic search extensively throughout the audit to understand actual dependency usage patterns, find related code, and identify potential issues that command-line tools might miss.
+
 ### Important Formatting Guidelines
 
 - **Package Names**: Always format package names in backticks (e.g., `@types/node`, `lando`, `@apollo/client`) to prevent accidental mentions when reports are shared in GitHub issues or other platforms
@@ -19,32 +21,32 @@ Perform a comprehensive dependency audit for Node.js/TypeScript projects followi
 
 1. **Dependency Discovery**
 
+   - Use **semantic search** to locate dependency management files and patterns across the codebase
    - Identify all dependency management files (package.json, package-lock.json, npm-shrinkwrap.json)
    - Map direct vs transitive dependencies using `npm ls`
    - Check for lock files and version consistency
    - Review development vs production dependencies with `npm ls --production`
    - **Important**: Classify dependencies based on their package.json location (`dependencies` vs `devDependencies`), not their apparent purpose
-   - Identify version mismatches between specifications and installed versions
+   - Use **semantic search** to find import statements and usage patterns for dependency validation
    - Analyze dependency resolution conflicts and overrides in package.json
    - Review TypeScript type dependencies (`@types/*`) for consistency
 
 2. **Version Analysis**
 
-   - Check for outdated packages and available updates using `npm outdated` and `npm outdated --json`
+   - Check for outdated packages and available updates using `npm outdated --json`
+   - Use **semantic search** to find version-specific code patterns and compatibility issues
    - Identify packages with major version updates available
    - Review semantic versioning compliance
    - Analyze version pinning strategies
-   - Check dependency tree with `npm ls --depth=0` for top-level dependencies
 
 3. **Security Vulnerability Scan**
 
    - Run security audits using appropriate tools:
-     - `npm audit` for Node.js projects - check for security vulnerabilities
      - `npm audit --json` for detailed vulnerability information in JSON format
      - `npm audit signatures` for package integrity verification
      - `npm audit fix --dry-run` to preview potential fixes
-     - `npx license-checker` for license compliance scanning
      - GitHub security advisories for all platforms
+   - Use **semantic search** to identify vulnerable code patterns and usage of affected packages
    - Identify critical, high, medium, and low severity vulnerabilities
    - Check for known exploits and CVE references
    - Analyze vulnerability chains and transitive dependency risks
@@ -53,13 +55,15 @@ Perform a comprehensive dependency audit for Node.js/TypeScript projects followi
 4. **License Compliance**
 
    - Review all dependency licenses for compatibility using `npx license-checker --summary`
-   - Identify restrictive licenses (GPL, AGPL, etc.) using `npx license-checker | grep -E "GPL"`
+   - Identify restrictive licenses (GPL, AGPL, etc.) using `npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-3-Clause'` (invert check)
+   - Use **semantic search** to find license headers and copyright notices in source files
    - Check for license conflicts with project license
    - Document license obligations and requirements
    - Verify production vs development dependency license requirements
 
 5. **Dependency Health Assessment**
 
+   - Use **semantic search** to identify unused imports and dead code related to dependencies
    - Check package maintenance status and activity
    - Review contributor count and community support
    - Analyze release frequency and stability
@@ -75,6 +79,7 @@ Perform a comprehensive dependency audit for Node.js/TypeScript projects followi
 
 7. **Alternative Analysis**
 
+   - Use **semantic search** to find similar functionality across different dependencies
    - Identify dependencies with better alternatives
    - Check for lighter or more efficient replacements
    - Analyze feature overlap and consolidation opportunities
@@ -82,13 +87,15 @@ Perform a comprehensive dependency audit for Node.js/TypeScript projects followi
 
 8. **Dependency Conflicts**
 
-   - Check for version conflicts between dependencies using `npm ls` with depth analysis
-   - Identify peer dependency issues and unmet dependencies with `npm ls | grep -E "(UNMET|MISSING|WARN)"`
+   - Check for version conflicts between dependencies using `npm ls`
+   - Identify peer dependency issues and unmet dependencies
+   - Use **semantic search** to find conflicting API usage patterns between different versions
    - Review dependency resolution strategies and overrides in package.json
    - Analyze potential breaking changes in updates
 
 9. **Build and Development Impact**
 
+   - Use **semantic search** to identify build-related configurations and scripts
    - Review dependencies that affect build times
    - Check for development-only dependencies in production
    - Analyze tooling dependencies and alternatives
@@ -126,14 +133,15 @@ Perform a comprehensive dependency audit for Node.js/TypeScript projects followi
     - Include rollback procedures and risk assessments
 
 14. **Cleanup and Optimization**
+    - Use **semantic search** to identify unused imports and dependencies across the codebase
     - Identify and remove unused dependencies using `npx depcheck`
     - Check for missing dependencies that should be declared
     - Review optional dependencies and their necessity
     - Optimize dependency declarations (move dev dependencies, etc.)
-    - Verify production dependency isolation using `npm ls --production` or `npm ls --omit=dev`
+    - Verify production dependency isolation using `npm ls --production`
     - Clean up package.json structure and organize dependencies logically
 
-Use Node.js/npm specific tools and databases for the most accurate results. Focus on actionable recommendations with clear risk assessments. For CLI and server applications, prioritize security, maintainability, and installation experience over bundle size optimization.
+Use Node.js/npm specific tools and databases for the most accurate results. **Prioritize semantic search** for code analysis to understand actual dependency usage patterns. Focus on actionable recommendations with clear risk assessments. For CLI and server applications, prioritize security, maintainability, and installation experience over bundle size optimization.
 
 ## Required Tools and Commands
 
@@ -142,7 +150,6 @@ Execute these commands as part of the audit process:
 ### Security Analysis
 
 ```bash
-npm audit                           # Basic security vulnerability scan
 npm audit --json                    # Detailed vulnerability information
 npm audit signatures                # Package integrity verification
 npm audit fix --dry-run             # Preview potential security fixes
@@ -152,9 +159,7 @@ npm audit fix --dry-run             # Preview potential security fixes
 
 ```bash
 npm ls --depth=0                    # Top-level dependency tree
-npm ls --production                 # Production dependencies only
-npm ls | grep -E "(UNMET|MISSING|WARN)"  # Dependency issues
-npm outdated                        # Check for available updates
+npm ls --omit=dev                   # Production dependencies only
 npm outdated --json                 # Detailed update information
 ```
 
@@ -163,16 +168,9 @@ npm outdated --json                 # Detailed update information
 ```bash
 npx depcheck                        # Find unused dependencies
 npx license-checker --summary       # License compliance overview
-npx license-checker | grep -E "GPL" # Find restrictive licenses
+npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-3-Clause' --failOn 'GPL;AGPL'  # Check restrictive licenses
 du -sh node_modules                 # Check installation size
-du -sh node_modules/* | sort -hr | head -15  # Largest dependencies
-```
-
-### Dependency Integrity
-
-```bash
-find node_modules -name "package.json" -exec grep -l "GPL" {} \;  # Find GPL packages
-npm view <package-name> versions --json  # Check available versions
+du -sh node_modules/* | sort -hr | head -10  # Top 10 largest dependencies
 ```
 
 ## Expected Output Format
@@ -205,6 +203,7 @@ Provide a structured report with the following sections:
 
 ### Technical Details
 
+- Use **semantic search** to analyze actual dependency usage in the codebase
 - Complete dependency inventory with `npm ls --depth=0`
 - License compliance matrix using `npx license-checker`
 - Installation time and disk usage analysis
