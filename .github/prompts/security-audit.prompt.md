@@ -21,26 +21,49 @@ Perform a comprehensive security assessment for Node.js/TypeScript CLI applicati
 Install required security tools:
 
 ```bash
-# Install Semgrep via pipx (recommended)
-if ! command -v pipx &> /dev/null; then
-    sudo apt update && sudo apt install -y pipx
-fi
-
+# Install Semgrep
 if ! command -v semgrep &> /dev/null; then
-    pipx install semgrep
+    # Try snap first on Ubuntu (if available)
+    if command -v snap &> /dev/null && snap list 2>/dev/null | grep -q "core"; then
+        sudo snap install semgrep
+    else
+        # Fallback to pipx installation
+        if ! command -v pipx &> /dev/null; then
+            sudo apt update && sudo apt install -y pipx
+        fi
+        # Check if semgrep is already installed via pipx
+        if ! pipx list --short | grep -q semgrep; then
+            pipx install semgrep
+        fi
+        # Ensure pipx installed tools are in PATH
+        pipx ensurepath
+    fi
 fi
 
 # Install CodeQL (check first to avoid large download)
 if ! command -v codeql &> /dev/null && [ ! -f "./codeql/codeql" ]; then
-    wget -q https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
-    unzip -q codeql-linux64.zip && rm codeql-linux64.zip
+    # Detect architecture and set appropriate download URL
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+        CODEQL_URL="https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux-arm64.zip"
+        CODEQL_ZIP="codeql-linux-arm64.zip"
+    else
+        CODEQL_URL="https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip"
+        CODEQL_ZIP="codeql-linux64.zip"
+    fi
+
+    wget -q "$CODEQL_URL"
+    unzip -q "$CODEQL_ZIP" && rm "$CODEQL_ZIP"
     export PATH=$PATH:$(pwd)/codeql
 fi
 
 # Download JavaScript query pack if needed
 CODEQL_CMD=$(command -v codeql 2>/dev/null || echo "./codeql/codeql")
-if [ -x "$CODEQL_CMD" ] && [ ! -d "./codeql/qlpacks/codeql/javascript-queries" ]; then
-    $CODEQL_CMD pack download codeql/javascript-queries
+if [ -x "$CODEQL_CMD" ]; then
+    # Check if JavaScript queries are available by trying to resolve the pack
+    if ! $CODEQL_CMD resolve queries codeql/javascript-queries &> /dev/null; then
+        $CODEQL_CMD pack download codeql/javascript-queries
+    fi
 fi
 
 # Verify tools
@@ -76,11 +99,9 @@ Analyze npm dependencies for vulnerabilities:
 
 ```bash
 # Required dependency commands
-npm audit                           # Basic vulnerability scan
 npm audit --json                    # Detailed vulnerability data
 npm ls --depth=0                    # Top-level dependencies
 npm ls --production                 # Production dependencies only
-npm outdated                        # Check for updates
 npm outdated --json                 # Detailed update information
 npx depcheck                        # Find unused dependencies
 
