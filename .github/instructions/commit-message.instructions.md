@@ -1,5 +1,4 @@
 ---
-applyTo: '**'
 description: Commit Message Instructions for AI Assistant
 ---
 

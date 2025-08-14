@@ -1,5 +1,4 @@
 ---
-applyTo: '**'
 description: Code Review Instructions for AI Assistant
 ---
 

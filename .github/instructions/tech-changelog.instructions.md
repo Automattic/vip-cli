@@ -38,9 +38,3 @@ The changelog should be structured, clear, and suitable for a technical audience
 - Markdown
 - Use a bullet list or short paragraph(s)
 - Use headings to separate different categories of changes
-
-## Conflict Resolution
-
-- If this file is attached to the context, do not use any other changelog generation instructions.
-- If no instructions are provided, ask the user to clarify whether they want a technical or user-facing changelog.
-- If there are multiple sets of instructions for changelog generation, ask the user to specify which set they would like to use.

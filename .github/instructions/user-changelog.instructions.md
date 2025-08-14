@@ -30,12 +30,14 @@ General users with no technical background.
 ## Examples of acceptable phrasing
 
 **Include these types of changes:**
+
 - “Improves reliability when syncing your local database.”
 - “Prevents errors when running commands in the wrong environment.”
 - “Updates internal tools to ensure better performance and future compatibility.”
 - “Removes outdated options to simplify the setup process.”
 
 **Do NOT include these types of changes:**
+
 - Dependency updates (e.g., "Updates Node.js from v18 to v20")
 - Test improvements (e.g., "Adds unit tests for database module")
 - CI/CD changes (e.g., "Updates GitHub Actions workflow")
