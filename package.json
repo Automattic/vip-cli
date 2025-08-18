@@ -118,8 +118,6 @@
     "@babel/preset-typescript": "7.27.1",
     "@jest/globals": "^30.0.0",
     "@jest/test-sequencer": "^30.0.0",
-    "@types/args": "^5.0.3",
-    "@types/cli-table": "^0.3.4",
     "@types/configstore": "^6.0.2",
     "@types/debug": "^4.1.12",
     "@types/dockerode": "^3.3.23",
@@ -132,7 +130,6 @@
     "@types/shelljs": "^0.8.15",
     "@types/ssh2": "^1.15.4",
     "@types/tar": "^6.1.13",
-    "@types/update-notifier": "^6.0.8",
     "@types/xml2js": "^0.4.14",
     "dockerode": "^4.0.0",
     "eslint": "^8.35.0",
@@ -160,7 +157,6 @@
     "graphql": "15.5.1",
     "graphql-tag": "2.12.6",
     "https-proxy-agent": "^7.0.6",
-    "ini": "5.0.0",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli#4cbdcf85ddd8b7ff53e912b9d9f1fced57ce39b7",
@@ -181,11 +177,6 @@
   },
   "optionalDependencies": {
     "@postman/node-keytar": "~7.9.3"
-  },
-  "overrides": {
-    "node-fetch@^2.6.1": {
-      "whatwg-url": "^14.0.0"
-    }
   },
   "publishConfig": {
     "access": "public"
