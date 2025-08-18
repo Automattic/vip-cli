@@ -10,7 +10,6 @@ import { cp, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
 import { v4 as uuid } from 'uuid';
-import xdgBasedir from 'xdg-basedir';
 
 import {
 	handleCLIException,
@@ -46,6 +45,7 @@ import {
 import { createProxyAgent } from '../http/proxy-agent';
 import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
+import { xdgData } from '../xdg-data';
 
 import type {
 	AppInfo,
@@ -102,16 +102,6 @@ interface WordPressTag {
 export interface PostStartOptions {
 	openVSCode: boolean;
 	openCursor: boolean;
-}
-
-function xdgDataDirectory(): string {
-	if ( xdgBasedir.data ) {
-		return xdgBasedir.data;
-	}
-
-	// This should not happen. If it does, this means that the system was unable to find user's home directory.
-	// If so, this does not leave us many options as to where to store the data.
-	throw new Error( 'Unable to determine data directory.' );
 }
 
 export async function startEnvironment(
@@ -285,7 +275,7 @@ export async function destroyEnvironment(
 	}
 
 	await fs.promises.rm(
-		path.join( xdgDataDirectory(), 'vip', 'lando', 'compose', dockerComposify( slug ) ),
+		path.join( xdgData(), 'vip', 'lando', 'compose', dockerComposify( slug ) ),
 		{
 			force: true,
 			recursive: true,
@@ -610,7 +600,7 @@ async function prepareLandoEnv(
 }
 
 export function getAllEnvironmentNames(): string[] {
-	const mainEnvironmentPath = xdgDataDirectory();
+	const mainEnvironmentPath = xdgData();
 
 	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
 
@@ -634,7 +624,7 @@ export function getEnvironmentPath( name: string ): string {
 		throw new Error( 'Name was not provided' );
 	}
 
-	const mainEnvironmentPath = xdgDataDirectory();
+	const mainEnvironmentPath = xdgData();
 
 	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', String( name ) );
 }
@@ -978,7 +968,7 @@ async function isVersionListExpired( cacheFile: string, ttl: number ): Promise< 
  */
 export async function getVersionList(): Promise< WordPressTag[] > {
 	let res;
-	const mainEnvironmentPath = xdgDataDirectory();
+	const mainEnvironmentPath = xdgData();
 	const cacheFilePath = path.join( mainEnvironmentPath, 'vip' );
 	const cacheFile = path.join( cacheFilePath, DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY );
 	// Handle from cache

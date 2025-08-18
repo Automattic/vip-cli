@@ -4,7 +4,6 @@ import nock from 'nock';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import xdgBaseDir from 'xdg-basedir';
 
 import { CliTest } from './helpers/cli-test';
 import { vipDevEnvShell } from './helpers/commands';
@@ -34,7 +33,7 @@ describe( 'vip dev-env shell', () => {
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
-		xdgBaseDir.data = tmpPath;
+		process.env.XDG_DATA_HOME = tmpPath;
 
 		env = prepareEnvironment( tmpPath );
 	} );

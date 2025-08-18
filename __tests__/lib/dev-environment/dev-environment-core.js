@@ -1,11 +1,8 @@
 import { expect, jest } from '@jest/globals';
 import enquirer from 'enquirer';
-import child from 'node:child_process';
 import fs from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
-import { EventEmitter } from 'node:stream';
-import xdgBasedir from 'xdg-basedir';
 
 import app from '../../../src/lib/api/app';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
@@ -19,12 +16,8 @@ import {
 	resolveImportPath,
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import { bootstrapLando } from '../../../src/lib/dev-environment/dev-environment-lando';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
-
-jest.mock( 'xdg-basedir', () => ( {
-	data: require( 'node:os' ).tmpdir(),
-} ) );
+import { xdgData } from '../../../src/lib/xdg-data';
 
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
@@ -42,22 +35,6 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		jest.restoreAllMocks();
 	} );
 
-	const mockedExec = ( command, options, callback ) => {
-		const emitter = new EventEmitter();
-
-		setImmediate( () => {
-			if ( /docker-compose/.test( command ) ) {
-				callback( null, '2.12.2', '' );
-			} else if ( /docker/.test( command ) ) {
-				callback( null, '{"ServerVersion": "25.0.2"}', '' );
-			} else {
-				callback( new Error(), '', '' );
-			}
-		} );
-
-		return emitter;
-	};
-
 	describe( 'createEnvironment', () => {
 		it( 'should throw for existing folder', () => {
 			const slug = 'foo';
@@ -72,19 +49,19 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		it( 'should throw for NON existing folder', async () => {
 			const slug = 'foo';
 			const expectedPath = getEnvironmentPath( slug );
-			fs._originalExistsSync = fs.existsSync;
+			const _originalExistsSync = fs.existsSync;
 			jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
 				if ( fpath === expectedPath ) {
 					return false;
 				}
 
-				return fs._originalExistsSync( fpath );
+				return _originalExistsSync( fpath );
 			} );
 
-			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
-
-			const lando = await bootstrapLando();
-			const promise = startEnvironment( lando, slug );
+			const promise = startEnvironment( {}, slug, {
+				skipRebuild: false,
+				skipWpVersionsCheck: true,
+			} );
 
 			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
 		} );
@@ -94,19 +71,16 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			delete process.env.DEBUG;
 			const slug = 'foo';
 			const expectedPath = getEnvironmentPath( slug );
-			fs._originalExistsSync = fs.existsSync;
+			const _originalExistsSync = fs.existsSync;
 			jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
 				if ( fpath === expectedPath ) {
 					return false;
 				}
 
-				return fs._originalExistsSync( fpath );
+				return _originalExistsSync( fpath );
 			} );
 
-			jest.spyOn( child, 'exec' ).mockImplementation( mockedExec );
-
-			const lando = await bootstrapLando();
-			const promise = destroyEnvironment( lando, slug );
+			const promise = destroyEnvironment( {}, slug, true );
 
 			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
 		} );
@@ -118,26 +92,12 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 
 		it( 'should return correct location from xdg', () => {
-			xdgBasedir.data = 'bar';
 			const name = 'foo';
 			const filePath = getEnvironmentPath( name );
 
-			const expectedPath = path.normalize( `${ xdgBasedir.data }/vip/dev-environment/${ name }` );
+			const expectedPath = path.normalize( `${ xdgData() }/vip/dev-environment/${ name }` );
 
 			expect( filePath ).toBe( expectedPath );
-		} );
-
-		it( 'should throw if xdg is not available', () => {
-			const originalXDG = xdgBasedir.data;
-			try {
-				xdgBasedir.data = undefined;
-				const name = 'foo';
-				expect( () => getEnvironmentPath( name ) ).toThrow(
-					new Error( 'Unable to determine data directory.' )
-				);
-			} finally {
-				xdgBasedir.data = originalXDG;
-			}
 		} );
 	} );
 	describe( 'getApplicationInformation', () => {

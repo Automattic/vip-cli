@@ -1,5 +1,5 @@
 import { replace } from '@automattic/vip-search-replace';
-import { red } from 'chalk';
+import chalk from 'chalk';
 import debugLib from 'debug';
 import fs from 'fs';
 import { Readable, Writable } from 'node:stream';
@@ -193,7 +193,7 @@ export const searchAndReplace = async (
 		await pipeline( streams );
 	} catch ( error ) {
 		console.log(
-			red(
+			chalk.red(
 				"Oh no! We couldn't write to the output file.  Please check your available disk space and file/folder permissions."
 			)
 		);

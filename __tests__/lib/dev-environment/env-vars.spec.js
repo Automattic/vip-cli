@@ -1,5 +1,4 @@
 import path from 'node:path';
-import xdgBasedir from 'xdg-basedir';
 
 import {
 	getEnvFilePath,
@@ -7,6 +6,7 @@ import {
 	preparseEnvData,
 	quoteEnvValue,
 } from '../../../src/lib/dev-environment/env-vars';
+import { xdgData } from '../../../src/lib/xdg-data';
 
 describe( 'preparseEnvData', () => {
 	it( 'should ignore empty lines', () => {
@@ -80,7 +80,7 @@ describe( 'quoteEnvValue', () => {
 describe( 'getEnvFilePath', () => {
 	it( 'should return the correct path for a given slug', () => {
 		const slug = 'vip-local';
-		const expected = path.join( `${ xdgBasedir.data }`, 'vip', 'dev-environment', slug, '.env' );
+		const expected = path.join( `${ xdgData() }`, 'vip', 'dev-environment', slug, '.env' );
 		const actual = getEnvFilePath( slug, false );
 		return expect( actual ).resolves.toEqual( expected );
 	} );
