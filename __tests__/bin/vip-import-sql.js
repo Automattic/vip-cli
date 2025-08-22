@@ -1,7 +1,12 @@
 import * as enquirer from 'enquirer';
 import path from 'path';
 
-import { validateAndGetTableNames, gates, promptToContinue } from '../../src/bin/vip-import-sql';
+import {
+	validateAndGetTableNames,
+	gates,
+	promptToContinue,
+	parseHeaders,
+} from '../../src/bin/vip-import-sql';
 import * as exit from '../../src/lib/cli/exit';
 
 jest.mock( '../../src/lib/tracker' );
@@ -326,6 +331,88 @@ describe( 'vip-import-sql', () => {
 
 			expect( promptMock ).toHaveBeenCalled();
 			promptMock.mockRestore();
+		} );
+	} );
+
+	describe( 'parseHeaders', () => {
+		beforeEach( () => {
+			mockExitWithError.mockClear();
+		} );
+
+		it( 'returns empty array when no headers provided', () => {
+			expect( parseHeaders( undefined ) ).toEqual( [] );
+			expect( parseHeaders( null ) ).toEqual( [] );
+			expect( parseHeaders( '' ) ).toEqual( [] );
+		} );
+
+		it( 'parses single header correctly', () => {
+			const header = 'Authorization: Bearer token123';
+			const result = parseHeaders( header );
+			expect( result ).toEqual( [ { name: 'Authorization', value: 'Bearer token123' } ] );
+		} );
+
+		it( 'parses multiple headers correctly', () => {
+			const headers = [ 'Authorization: Bearer token123', 'User-Agent: VIP CLI Test' ];
+			const result = parseHeaders( headers );
+			expect( result ).toEqual( [
+				{ name: 'Authorization', value: 'Bearer token123' },
+				{ name: 'User-Agent', value: 'VIP CLI Test' },
+			] );
+		} );
+
+		it( 'trims whitespace from header names and values', () => {
+			const header = '  Content-Type  :   application/json  ';
+			const result = parseHeaders( header );
+			expect( result ).toEqual( [ { name: 'Content-Type', value: 'application/json' } ] );
+		} );
+
+		it( 'handles headers with colons in the value', () => {
+			const header = 'Authorization: Bearer token:with:colons';
+			const result = parseHeaders( header );
+			expect( result ).toEqual( [ { name: 'Authorization', value: 'Bearer token:with:colons' } ] );
+		} );
+
+		it( 'throws error for header without colon', () => {
+			const header = 'InvalidHeaderNoColon';
+			expect( () => parseHeaders( header ) ).toThrow(
+				'Invalid header format: "InvalidHeaderNoColon". Expected format: "Name: Value"'
+			);
+		} );
+
+		it( 'throws error for header with empty name', () => {
+			const header = ': EmptyName';
+			expect( () => parseHeaders( header ) ).toThrow(
+				'Invalid header format: ": EmptyName". Header name cannot be empty.'
+			);
+		} );
+
+		it( 'throws error for header with only whitespace name', () => {
+			const header = '  : EmptyName';
+			expect( () => parseHeaders( header ) ).toThrow(
+				'Invalid header format: "  : EmptyName". Header name cannot be empty.'
+			);
+		} );
+
+		it( 'allows empty values', () => {
+			const header = 'X-Custom-Header:';
+			const result = parseHeaders( header );
+			expect( result ).toEqual( [ { name: 'X-Custom-Header', value: '' } ] );
+		} );
+
+		it( 'handles complex real-world headers', () => {
+			const headers = [
+				'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+				'Content-Type: application/json; charset=utf-8',
+				'User-Agent: VIP-CLI/3.19.3 (darwin; x64)',
+				'X-API-Version: 2.0',
+			];
+			const result = parseHeaders( headers );
+			expect( result ).toEqual( [
+				{ name: 'Authorization', value: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' },
+				{ name: 'Content-Type', value: 'application/json; charset=utf-8' },
+				{ name: 'User-Agent', value: 'VIP-CLI/3.19.3 (darwin; x64)' },
+				{ name: 'X-API-Version', value: '2.0' },
+			] );
 		} );
 	} );
 } );

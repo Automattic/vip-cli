@@ -112,6 +112,38 @@ function isValidMd5( md5 ) {
 }
 
 /**
+ * Parse and validate headers from CLI input
+ * @param {string|string[]} headers - Header(s) in "Name: Value" format
+ * @returns {Array<{name: string, value: string}>} Parsed headers
+ */
+export function parseHeaders( headers ) {
+	if ( ! headers ) {
+		return [];
+	}
+
+	const headerArray = Array.isArray( headers ) ? headers : [ headers ];
+	const parsedHeaders = [];
+
+	for ( const header of headerArray ) {
+		const colonIndex = header.indexOf( ':' );
+		if ( colonIndex === -1 ) {
+			exit.withError( `Invalid header format: "${ header }". Expected format: "Name: Value"` );
+		}
+
+		const name = header.substring( 0, colonIndex ).trim();
+		const value = header.substring( colonIndex + 1 ).trim();
+
+		if ( ! name ) {
+			exit.withError( `Invalid header format: "${ header }". Header name cannot be empty.` );
+		}
+
+		parsedHeaders.push( { name, value } );
+	}
+
+	return parsedHeaders;
+}
+
+/**
  * @param {import('../lib/site-import/db-file-import').AppForImport} app
  * @param {import('../lib/site-import/db-file-import').EnvForImport} env
  * @param {string} fileNameOrURL
@@ -247,6 +279,12 @@ const examples = [
 		description:
 			'Import a remote SQL database backup file from the URL with MD5 hash verification to the develop environment of the "example-app" application.',
 	},
+	// URL import with HTTP Basic Auth
+	{
+		usage: 'vip @example-app.develop import sql https://username:password@example.org/file.sql',
+		description:
+			'Import a remote SQL database backup file from a URL that requires HTTP Basic Authentication.',
+	},
 	// `search-replace` flag
 	{
 		usage:
@@ -267,6 +305,20 @@ const examples = [
 			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --output="updated-file.sql"',
 		description:
 			'Create a copy of the imported file with the completed search and replace operations and save it locally to a file named "updated-file.sql".',
+	},
+	// URL import with headers
+	{
+		usage:
+			'vip @example-app.develop import sql https://example.org/file.sql --header "Authorization: Bearer token"',
+		description:
+			'Import a remote SQL database backup file from a URL with custom authorization header.',
+	},
+	// URL import with multiple headers
+	{
+		usage:
+			'vip @example-app.develop import sql https://example.org/file.sql --header "Authorization: Bearer token" --header "User-Agent: VIP CLI"',
+		description:
+			'Import a remote SQL database backup file from a URL with multiple custom headers.',
 	},
 	// `sql status` subcommand
 	{
@@ -459,15 +511,30 @@ command( {
 		'md5',
 		'MD5 hash of the remote SQL file for verification. If not provided, the verification will not be performed.'
 	)
+	.option(
+		'header',
+		'Add a header to the request when downloading from a URL. Format: "Name: Value". Can be used multiple times.'
+	)
 	.examples( examples )
 	// eslint-disable-next-line complexity
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
-		const { skipValidate, searchReplace, skipMaintenanceMode, md5 } = opts;
+		const { skipValidate, searchReplace, skipMaintenanceMode, md5, header } = opts;
 		const { id: envId, appId } = env;
 		const [ fileNameOrURL ] = arg;
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
 		const isUrl = isValidUrl( fileNameOrURL );
+
+		// Parse and validate headers
+		const headers = parseHeaders( header );
+
+		if ( ! isUrl && headers.length > 0 ) {
+			console.log(
+				chalk.yellowBright(
+					'The --header parameter is only used for URL imports. It will be ignored for local file imports.'
+				)
+			);
+		}
 
 		if ( isUrl && opts.inPlace ) {
 			console.log(
@@ -631,6 +698,7 @@ Processing the SQL import for your environment...
 				url: fileNameOrURL,
 				searchReplace: [],
 				md5,
+				urlHeaders: headers,
 			};
 		} else {
 			progressTracker.stepRunning( 'upload' );
