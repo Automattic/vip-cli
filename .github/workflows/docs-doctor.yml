@@ -1,0 +1,27 @@
+name: Generate Changelog for PR
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: read
+
+jobs:
+  docs-doctor:
+    name: Analyze docs.wpvip.com for inconsistencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    if: >
+      github.event.issue.pull_request &&
+      github.event.comment.body == '/docs-doctor'
+    steps:
+      - name: Generate Report
+        uses: Automattic/vip-actions/docs-doctor@docs-doctor
+        with:
+          url: https://docs.wpvip.com
+          sitemap_url: https://docs.wpvip.com/page-sitemap.xml
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
