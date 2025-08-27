@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { Confirm } from 'enquirer';
 
@@ -20,7 +21,7 @@ describe( 'backup-storage-availability', () => {
 	describe( 'validateAndPromptDiskSpaceWarningForBackupImport', () => {
 		it( "should show a prompt if there's not enough space available", async () => {
 			// backup size is 1 GiB
-			const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
+			const backupStorageAvailability = new BackupStorageAvailability();
 			const getStorageAvailableInVipPathSpy = jest.spyOn(
 				backupStorageAvailability,
 				'getStorageAvailableInVipPath'
@@ -30,7 +31,7 @@ describe( 'backup-storage-availability', () => {
 			getStorageAvailableInVipPathSpy.mockResolvedValue( Math.round( oneGiBInBytes * 0.5 ) );
 
 			await expect(
-				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport()
+				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport( oneGiBInBytes )
 			).resolves.toStrictEqual( { continue: true, isPromptShown: true } );
 
 			expect( confirmRunSpy ).toHaveBeenCalled();
@@ -38,7 +39,7 @@ describe( 'backup-storage-availability', () => {
 
 		it( "should not show a prompt if there's enough space", async () => {
 			// backup size is 1 GiB
-			const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
+			const backupStorageAvailability = new BackupStorageAvailability();
 			const getStorageAvailableInVipPathSpy = jest.spyOn(
 				backupStorageAvailability,
 				'getStorageAvailableInVipPath'
@@ -48,7 +49,7 @@ describe( 'backup-storage-availability', () => {
 			getStorageAvailableInVipPathSpy.mockResolvedValue( Math.round( oneGiBInBytes * 1.1 ) );
 
 			await expect(
-				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport()
+				backupStorageAvailability.validateAndPromptDiskSpaceWarningForBackupImport( oneGiBInBytes )
 			).resolves.toStrictEqual( { continue: true, isPromptShown: false } );
 
 			expect( confirmRunSpy ).not.toHaveBeenCalled();
@@ -66,7 +67,7 @@ describe( 'backup-storage-availability', () => {
 			"should show a prompt if there's not enough space available - dockerSpace: $dockerSpace GiB, vipSpace: $vipSpace GiB",
 			async ( { dockerSpace, vipSpace, timesPrompted } ) => {
 				// backup size is 1 GiB
-				const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
+				const backupStorageAvailability = new BackupStorageAvailability();
 				jest
 					.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
 					.mockResolvedValue( Math.round( vipSpace * oneGiBInBytes ) );
@@ -75,7 +76,9 @@ describe( 'backup-storage-availability', () => {
 					.mockReturnValue( Math.round( dockerSpace * oneGiBInBytes ) );
 
 				await expect(
-					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
+					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+						oneGiBInBytes
+					)
 				).resolves.toStrictEqual( { continue: true, isPromptShown: true } );
 
 				expect( confirmRunSpy ).toHaveBeenCalledTimes( timesPrompted );
@@ -85,7 +88,7 @@ describe( 'backup-storage-availability', () => {
 		it( 'should exit early if we press no on the first prompt', async () => {
 			confirmRunSpy.mockResolvedValueOnce( false );
 			// backup size is 1 GiB
-			const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
+			const backupStorageAvailability = new BackupStorageAvailability();
 			jest
 				.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
 				.mockResolvedValue( Math.round( 0.5 * oneGiBInBytes ) );
@@ -94,7 +97,9 @@ describe( 'backup-storage-availability', () => {
 				.mockReturnValue( Math.round( 0.5 * oneGiBInBytes ) );
 
 			await expect(
-				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
+				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+					oneGiBInBytes
+				)
 			).resolves.toStrictEqual( { continue: false, isPromptShown: true } );
 
 			expect( confirmRunSpy ).toHaveBeenCalledTimes( 1 );
@@ -109,14 +114,16 @@ describe( 'backup-storage-availability', () => {
 			'should not validate Docker Machine storage if the Docker Machine is not available - kiBRaw: $kiBRaw GiB, vipSpace: $vipSpace GiB',
 			async ( { kiBRaw, vipSpace, timesPrompted } ) => {
 				// backup size is 1 GiB
-				const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
+				const backupStorageAvailability = new BackupStorageAvailability();
 				jest
 					.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
 					.mockResolvedValue( Math.round( vipSpace * oneGiBInBytes ) );
 				jest.spyOn( backupStorageAvailability, 'getDockerStorageKiBRaw' ).mockReturnValue( kiBRaw );
 
 				await expect(
-					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
+					backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+						oneGiBInBytes
+					)
 				).resolves.toStrictEqual( { continue: true, isPromptShown: Boolean( timesPrompted ) } );
 
 				expect( confirmRunSpy ).toHaveBeenCalledTimes( timesPrompted );
@@ -125,7 +132,7 @@ describe( 'backup-storage-availability', () => {
 
 		it( "should not show a prompt if there's enough space available", async () => {
 			// backup size is 1 GiB
-			const backupStorageAvailability = new BackupStorageAvailability( oneGiBInBytes );
+			const backupStorageAvailability = new BackupStorageAvailability();
 			jest
 				.spyOn( backupStorageAvailability, 'getStorageAvailableInVipPath' )
 				.mockResolvedValue( Math.round( oneGiBInBytes * 10 ) );
@@ -134,7 +141,9 @@ describe( 'backup-storage-availability', () => {
 				.mockReturnValue( Math.round( oneGiBInBytes * 10 ) );
 
 			await expect(
-				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport()
+				backupStorageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+					oneGiBInBytes
+				)
 			).resolves.toStrictEqual( { continue: true, isPromptShown: false } );
 
 			expect( confirmRunSpy ).not.toHaveBeenCalled();

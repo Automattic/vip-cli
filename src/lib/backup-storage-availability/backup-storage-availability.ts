@@ -4,7 +4,6 @@ import path from 'path';
 import { exec } from 'shelljs';
 
 import { DockerMachineNotFoundError } from './docker-machine-not-found-error';
-import { Job } from '../../graphqlTypes';
 import { formatMetricBytes } from '../cli/format';
 import { xdgData } from '../xdg-data';
 
@@ -16,17 +15,6 @@ export interface PromptStatus {
 }
 
 export class BackupStorageAvailability {
-	constructor( private readonly archiveSize: number ) {}
-
-	public static createFromDbCopyJob( job: Job ): BackupStorageAvailability {
-		const bytesWrittenMeta = job.metadata?.find( meta => meta?.name === 'bytesWritten' );
-		if ( ! bytesWrittenMeta?.value ) {
-			throw new Error( 'Meta not found' );
-		}
-
-		return new BackupStorageAvailability( Number( bytesWrittenMeta.value ) );
-	}
-
 	public getDockerStorageKiBRaw(): string | undefined {
 		return exec( `docker run --rm alpine df -k`, { silent: true } )
 			.grep( /\/dev\/vda1/ )
@@ -60,37 +48,44 @@ export class BackupStorageAvailability {
 		return oneGiBInBytes;
 	}
 
-	public getSqlSize(): number {
+	public getSqlSize( archiveSize: number ): number {
 		// We estimated that it'd be about 3.5x the archive size.
-		return this.archiveSize * 3.5;
+		return archiveSize * 3.5;
 	}
 
-	public getArchiveSize(): number {
-		return this.archiveSize;
+	public getArchiveSize( archiveSize: number ): number {
+		return archiveSize;
 	}
 
-	public getStorageRequiredInMainMachine(): number {
-		return this.getArchiveSize() + this.getSqlSize() + this.getReserveSpace();
+	public getStorageRequiredInMainMachine( archiveSize: number ): number {
+		return (
+			this.getArchiveSize( archiveSize ) + this.getSqlSize( archiveSize ) + this.getReserveSpace()
+		);
 	}
 
-	public getStorageRequiredInDockerMachine(): number {
-		return this.getSqlSize() + this.getReserveSpace();
+	public getStorageRequiredInDockerMachine( archiveSize: number ): number {
+		return this.getSqlSize( archiveSize ) + this.getReserveSpace();
 	}
 
-	public async isStorageAvailableInMainMachine(): Promise< boolean > {
-		return ( await this.getStorageAvailableInVipPath() ) > this.getStorageRequiredInMainMachine();
+	public async isStorageAvailableInMainMachine( archiveSize: number ): Promise< boolean > {
+		return (
+			( await this.getStorageAvailableInVipPath() ) >
+			this.getStorageRequiredInMainMachine( archiveSize )
+		);
 	}
 
-	public isStorageAvailableInDockerMachine(): boolean {
-		return this.getDockerStorageAvailable() > this.getStorageRequiredInDockerMachine();
+	public isStorageAvailableInDockerMachine( archiveSize: number ): boolean {
+		return this.getDockerStorageAvailable() > this.getStorageRequiredInDockerMachine( archiveSize );
 	}
 
 	// eslint-disable-next-line id-length
-	public async validateAndPromptDiskSpaceWarningForBackupImport(): Promise< PromptStatus > {
+	public async validateAndPromptDiskSpaceWarningForBackupImport(
+		archiveSize: number
+	): Promise< PromptStatus > {
 		const isStorageAvailable =
-			( await this.getStorageAvailableInVipPath() ) > this.getArchiveSize();
+			( await this.getStorageAvailableInVipPath() ) > this.getArchiveSize( archiveSize );
 		if ( ! isStorageAvailable ) {
-			const storageRequired = this.getArchiveSize();
+			const storageRequired = this.getArchiveSize( archiveSize );
 			const confirmPrompt = new Confirm( {
 				message: `We recommend that you have at least ${ this.bytesToHuman(
 					storageRequired
@@ -110,14 +105,16 @@ export class BackupStorageAvailability {
 	}
 
 	// eslint-disable-next-line id-length
-	public async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(): Promise< PromptStatus > {
+	public async validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+		archiveSize: number
+	): Promise< PromptStatus > {
 		let storageAvailableInMainMachinePrompted = false;
 
 		// there's two prompts, so as long as one prompt is shown, we need to set isPromptShown
 		let isPromptShown = false;
 
-		if ( ! ( await this.isStorageAvailableInMainMachine() ) ) {
-			const storageRequired = this.getStorageRequiredInMainMachine();
+		if ( ! ( await this.isStorageAvailableInMainMachine( archiveSize ) ) ) {
+			const storageRequired = this.getStorageRequiredInMainMachine( archiveSize );
 			const storageAvailableInVipPath = this.bytesToHuman(
 				await this.getStorageAvailableInVipPath()
 			);
@@ -143,8 +140,8 @@ Do you still want to continue with importing the database backup?
 		}
 
 		try {
-			if ( ! this.isStorageAvailableInDockerMachine() ) {
-				const storageRequired = this.getStorageRequiredInDockerMachine();
+			if ( ! this.isStorageAvailableInDockerMachine( archiveSize ) ) {
+				const storageRequired = this.getStorageRequiredInDockerMachine( archiveSize );
 				const storageAvailableInDockerMachine = this.bytesToHuman(
 					this.getDockerStorageAvailable()
 				);

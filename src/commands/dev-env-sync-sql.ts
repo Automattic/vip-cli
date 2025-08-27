@@ -9,12 +9,13 @@ import { pipeline } from 'node:stream/promises';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { ExportSQLCommand } from './export-sql';
-import { App, AppEnvironment, Job } from '../graphqlTypes';
+import { App, AppEnvironment } from '../graphqlTypes';
 import { TrackFunction } from '../lib/analytics/clients/tracks';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
 
@@ -91,33 +92,31 @@ export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
 	public searchReplaceMap: Record< string, string > = {};
+	public liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
 
 	/**
 	 * Creates a new instance of the command
-	 *
-	 * @param app       The app object
-	 * @param env       The environment object
-	 * @param slug      The site slug
-	 * @param lando     The lando object
-	 * @param trackerFn Function to call for tracking
 	 */
 	constructor(
 		public app: App,
 		public env: AppEnvironment,
 		public slug: string,
 		public lando: Lando,
-		trackerFn: TrackFunction = () => {}
+		trackerFn: TrackFunction = () => {},
+		liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions
 	) {
 		this._track = trackerFn;
 		this.tmpDir = makeTempDir();
+		this.liveBackupCopyCLIOptions = liveBackupCopyCLIOptions;
 	}
 
 	public track( name: string, eventProps: Record< string, unknown > ) {
 		return this._track( name, {
 			...eventProps,
 			sqldump_type: this._sqlDumpType,
+			live_backup_copy: this.liveBackupCopyCLIOptions?.useLiveBackupCopy,
 		} );
 	}
 
@@ -146,9 +145,11 @@ export class DevEnvSyncSQLCommand {
 		this._sqlDumpType = dumpDetails.type;
 	}
 
-	private async confirmEnoughStorage( job: Job ) {
-		const storageAvailability = BackupStorageAvailability.createFromDbCopyJob( job );
-		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport();
+	private async confirmEnoughStorage( archiveSize: number ) {
+		const storageAvailability = new BackupStorageAvailability();
+		return await storageAvailability.validateAndPromptDiskSpaceWarningForDevEnvBackupImport(
+			archiveSize
+		);
 	}
 
 	/**
@@ -159,7 +160,11 @@ export class DevEnvSyncSQLCommand {
 		const exportCommand = new ExportSQLCommand(
 			this.app,
 			this.env,
-			{ outputFile: this.gzFile, confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ) },
+			{
+				outputFile: this.gzFile,
+				confirmEnoughStorageHook: this.confirmEnoughStorage.bind( this ),
+				liveBackupCopyCLIOptions: this.liveBackupCopyCLIOptions,
+			},
 			this.track.bind( this )
 		);
 		await exportCommand.run();

@@ -8,6 +8,7 @@ export type MeQuery = {
 		__typename?: 'Me';
 		id?: number | null;
 		displayName?: string | null;
+		trackingUserId?: string | null;
 		isVIP?: boolean | null;
 		organizationRoles?: {
 			__typename?: 'UserOrganizationRoleList';
