@@ -96,19 +96,20 @@ command( {
 			arg,
 			{ app, env, output, configFile, table, subsiteId, wpcliCommand, generateBackup }
 		) => {
-			const trackerFn = makeCommandTracker( 'export_sql', {
-				app: app.id,
-				env: env.uniqueLabel,
-				generate_backup: generateBackup,
-			} );
-			await trackerFn( 'execute' );
-
 			const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
 				configFile,
 				table,
 				subsiteId,
 				wpcliCommand
 			);
+
+			const trackerFn = makeCommandTracker( 'export_sql', {
+				app: app.id,
+				env: env.uniqueLabel,
+				generate_backup: generateBackup,
+				live_backup_copy: liveBackupCopyCLIOptions?.useLiveBackupCopy,
+			} );
+			await trackerFn( 'execute' );
 
 			const exportCommand = new ExportSQLCommand(
 				app,
