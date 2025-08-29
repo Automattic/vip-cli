@@ -13,7 +13,7 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v5
-      - uses: Automattic/vip-actions/changelog@trunk
+      - uses: Automattic/vip-actions/changelog@a83b38ef1ac701c4d8ca2b27bac2d6ebad17e684
         with:
           endpoint: 'https://docs.wpvip.com/wp-json/wp/v2/changelogs'
           endpoint-token: ${{ secrets.CHANGELOG_DOCS_POST_TOKEN }}
