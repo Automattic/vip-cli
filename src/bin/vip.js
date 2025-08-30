@@ -1,28 +1,15 @@
 #!/usr/bin/env node
 
+import '../lib/node-version-check';
+
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import { satisfies } from 'semver';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
 import Token from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
-
-const { name, engines } = require( '../../package.json' );
-
-const version = engines.node;
-
-if ( version && ! satisfies( process.version, version ) ) {
-	console.warn(
-		`${ chalk.bgYellow( 'WARNING:' ) } The current version of Node (${
-			process.version
-		}) does not meet the minimum requirements; ` +
-			`${ name } requires Node version ${ version }.\n\n` +
-			'Please follow the installation instructions at https://nodejs.org/en/download/ to upgrade.'
-	);
-}
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
