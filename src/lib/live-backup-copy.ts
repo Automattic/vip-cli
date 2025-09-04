@@ -12,7 +12,7 @@ import API from '../lib/api';
 
 export interface LiveBackupCopyCLIOptions {
 	useLiveBackupCopy?: boolean;
-	subsiteIds?: number[];
+	siteIds?: number[];
 	tables?: string[];
 	wpcliCommand?: string;
 	configFile?: string;
@@ -21,20 +21,20 @@ export interface LiveBackupCopyCLIOptions {
 export function parseLiveBackupCopyCLIOptions(
 	configFile?: string,
 	table?: string | string[],
-	subsiteId?: number | number[],
+	siteId?: number | number[],
 	wpcliCommand?: string
 ): LiveBackupCopyCLIOptions {
 	const options: LiveBackupCopyCLIOptions = {};
 
-	if ( configFile && ( table || subsiteId || wpcliCommand ) ) {
+	if ( configFile && ( table || siteId || wpcliCommand ) ) {
 		throw new UserError(
-			'The --config-file option cannot be used with the --table, --subsite-id, or --wpcli-command options. Please use only one of these options at a time.'
+			'The --config-file option cannot be used with the --table, --site-id, or --wpcli-command options. Please use only one of these options at a time.'
 		);
 	}
 
-	if ( wpcliCommand && ( table || subsiteId ) ) {
+	if ( wpcliCommand && ( table || siteId ) ) {
 		throw new UserError(
-			'The --wpcli-command option cannot be used with the --table or --subsite-id options. Please use only one of these options at a time.'
+			'The --wpcli-command option cannot be used with the --table or --site-id options. Please use only one of these options at a time.'
 		);
 	}
 
@@ -51,15 +51,15 @@ export function parseLiveBackupCopyCLIOptions(
 		useLiveBackupCopy = true;
 	}
 
-	if ( subsiteId ) {
-		if ( Array.isArray( subsiteId ) ) {
-			options.subsiteIds = subsiteId.flatMap( id =>
+	if ( siteId ) {
+		if ( Array.isArray( siteId ) ) {
+			options.siteIds = siteId.flatMap( id =>
 				String( id )
 					.split( ',' )
 					.map( idStr => Number( idStr.trim() ) )
 			);
 		} else {
-			options.subsiteIds = String( subsiteId )
+			options.siteIds = String( siteId )
 				.split( ',' )
 				.map( idStr => Number( idStr.trim() ) );
 		}
@@ -108,7 +108,7 @@ export const GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION = gql( `
 export enum BackupLiveCopyType {
 	FULL = 'full',
 	TABLES = 'tables',
-	SUBSITE_IDS = 'subsite_ids',
+	SITE_IDS = 'site_ids',
 	WP_CLI_COMMAND = 'wpcli_command',
 }
 
@@ -121,7 +121,7 @@ export interface DBLiveCopyConfig {
 	tool?: SQLDumpTool;
 	type: BackupLiveCopyType;
 	tables?: Record< string, Record< string, string | boolean > >;
-	subsite_ids?: number[];
+	site_ids?: number[];
 	wpcli_command?: string;
 }
 
@@ -154,7 +154,7 @@ export async function startLiveBackupCopy( {
 	if ( ! result.data?.startLiveBackupCopy.copyId ) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		throw new Error(
-			`Failed to start live backup copy: ${
+			`Failed to start partial database export: ${
 				result.data?.startLiveBackupCopy?.message
 					? result.data?.startLiveBackupCopy?.message
 					: 'Unknown error'
