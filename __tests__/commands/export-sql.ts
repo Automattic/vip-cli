@@ -378,7 +378,7 @@ describe( 'commands/ExportSQLCommand', () => {
 						id: 123,
 						environmentId: 456,
 						config: {
-							subsite_ids: undefined,
+							site_ids: undefined,
 							type: 'tables',
 							tables: {
 								wp_users: {},
@@ -397,7 +397,7 @@ describe( 'commands/ExportSQLCommand', () => {
 			);
 		} );
 
-		it( 'should successfully create backup for specific subsites and download file', async () => {
+		it( 'should successfully create backup for specific network sites and download file', async () => {
 			const app = { id: 123, name: 'test-app' };
 			const env = { id: 456, name: 'test-env' };
 
@@ -406,7 +406,7 @@ describe( 'commands/ExportSQLCommand', () => {
 			const exportCommand = new ExportSQLCommand( app, env, {
 				liveBackupCopyCLIOptions: {
 					useLiveBackupCopy: true,
-					subsiteIds: [ 2, 3 ],
+					siteIds: [ 2, 3 ],
 				},
 				outputFile,
 			} );
@@ -427,8 +427,8 @@ describe( 'commands/ExportSQLCommand', () => {
 						id: 123,
 						environmentId: 456,
 						config: {
-							subsite_ids: [ 2, 3 ],
-							type: 'subsite_ids',
+							site_ids: [ 2, 3 ],
+							type: 'site_ids',
 							tables: undefined,
 							wpcli_command: undefined,
 						},
@@ -473,7 +473,7 @@ describe( 'commands/ExportSQLCommand', () => {
 						id: 123,
 						environmentId: 456,
 						config: {
-							subsite_ids: undefined,
+							site_ids: undefined,
 							type: 'wpcli_command',
 							tables: undefined,
 							wpcli_command: 'custom-db-export-config --include-users --include-posts',
