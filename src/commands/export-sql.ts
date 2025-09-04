@@ -611,16 +611,16 @@ export class ExportSQLCommand {
 
 		let type = BackupLiveCopyType.TABLES;
 		let tables: DBLiveCopyConfig[ 'tables' ];
-		let subsiteIds: DBLiveCopyConfig[ 'subsite_ids' ];
+		let siteIds: DBLiveCopyConfig[ 'site_ids' ];
 		if ( this.liveBackupCopyCLIOptions?.tables ) {
 			tables = Object.fromEntries(
 				this.liveBackupCopyCLIOptions?.tables.map( key => [ key, {} ] )
 			);
 		}
 
-		if ( this.liveBackupCopyCLIOptions?.subsiteIds ) {
-			type = BackupLiveCopyType.SUBSITE_IDS;
-			subsiteIds = this.liveBackupCopyCLIOptions?.subsiteIds.map( id => Number( id ) );
+		if ( this.liveBackupCopyCLIOptions?.siteIds ) {
+			type = BackupLiveCopyType.SITE_IDS;
+			siteIds = this.liveBackupCopyCLIOptions?.siteIds.map( id => Number( id ) );
 		}
 
 		if ( this.liveBackupCopyCLIOptions?.wpcliCommand ) {
@@ -630,7 +630,7 @@ export class ExportSQLCommand {
 		return {
 			type,
 			tables,
-			subsite_ids: subsiteIds,
+			site_ids: siteIds,
 			wpcli_command: this.liveBackupCopyCLIOptions?.wpcliCommand,
 		};
 	}

@@ -2788,7 +2788,7 @@ export type LiveBackupCopy = {
 
 export type LiveBackupCopyConfig = {
 	__typename?: 'LiveBackupCopyConfig';
-	subsiteIds?: Maybe< Array< Scalars[ 'Int' ][ 'output' ] > >;
+	siteIds?: Maybe< Array< Scalars[ 'Int' ][ 'output' ] > >;
 	tables?: Maybe< Array< LiveBackupCopyTableConfig > >;
 	tool: LiveBackupCopyTool;
 	type: LiveBackupCopyType;
@@ -2827,7 +2827,7 @@ export type LiveBackupCopyTableOptionConfigInput = {
 
 export type LiveBackupCopyTool = 'mydumper' | 'mysqldump';
 
-export type LiveBackupCopyType = 'full' | 'subsite_ids' | 'tables' | 'wpcli_command';
+export type LiveBackupCopyType = 'full' | 'site_ids' | 'tables' | 'wpcli_command';
 
 export type ManageIntegrationInput = {
 	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;

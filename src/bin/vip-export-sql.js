@@ -32,14 +32,14 @@ const examples = [
 			'Generate a database backup including only the wp_posts and wp_comments tables using comma-separated syntax, and download a copy of that backup.',
 	},
 	{
-		usage: 'vip @example-app.develop export sql --subsite-id=2 --subsite-id=3',
+		usage: 'vip @example-app.develop export sql --site-id=2 --site-id=3',
 		description:
-			'Generate a database backup including only the tables related to the subsites with IDs 2 and 3, and download a copy of that backup.',
+			'Generate a database backup including only the tables related to the network sites with IDs 2 and 3, and download a copy of that backup.',
 	},
 	{
-		usage: 'vip @example-app.develop export sql --subsite-id=2,3',
+		usage: 'vip @example-app.develop export sql --site-id=2,3',
 		description:
-			'Generate a database backup including only the tables related to the subsites with IDs 2 and 3 using comma-separated syntax, and download a copy of that backup.',
+			'Generate a database backup including only the tables related to the network sites with IDs 2 and 3 using comma-separated syntax, and download a copy of that backup.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --config-file=~/db-export-config.json',
@@ -80,8 +80,8 @@ command( {
 		'A table to export from the remote environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.'
 	)
 	.option(
-		'subsite-id',
-		'The ID of a subsite/network site to export from the remote environment. Multiple subsite IDs can be specified with multiple --subsite-id flags or as a comma-separated list.'
+		'site-id',
+		'The ID of a network site to export from the remote environment. Multiple site IDs can be specified with multiple --site-id flags or as a comma-separated list.'
 	)
 	.option(
 		'wpcli-command',
@@ -94,12 +94,12 @@ command( {
 		process.argv,
 		async (
 			arg,
-			{ app, env, output, configFile, table, subsiteId, wpcliCommand, generateBackup }
+			{ app, env, output, configFile, table, siteId, wpcliCommand, generateBackup }
 		) => {
 			const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
 				configFile,
 				table,
-				subsiteId,
+				siteId,
 				wpcliCommand
 			);
 
