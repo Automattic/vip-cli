@@ -39,3 +39,4 @@ jobs:
           url: https://docs.wpvip.com
           sitemap_url: https://docs.wpvip.com/page-sitemap.xml
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          pr_number: ${{ github.event.issue.number }}
