@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import { ApolloError } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
@@ -56,13 +57,17 @@ const TRIGGER_WP_CLI_COMMAND_MUTATION = gql`
 `;
 
 export class NonZeroExitCodeError extends Error {
+	public guid: string;
 	public exitCode: number;
 
-	constructor( message: string, exitCode: number ) {
+	constructor( message: string, guid: string, exitCode: number ) {
 		super( message );
+		this.guid = guid;
 		this.exitCode = exitCode;
 	}
 }
+
+export class APIError extends Error {}
 
 export class WPCliCommandOverSSH {
 	private readonly track: CommandTracker;
@@ -91,28 +96,28 @@ export class WPCliCommandOverSSH {
 
 		debug( "Requesting SSH authentication for command '%s'", command );
 
-		const sshAuth = await this.getSSHAuthForCommand( command, extraTrackingInfo );
+		try {
+			const sshAuth = await this.getSSHAuthForCommand( command, extraTrackingInfo );
 
-		const data = sshAuth.data?.triggerWPCLICommandOnAppEnvironment;
+			const data = sshAuth.data?.triggerWPCLICommandOnAppEnvironment;
 
-		if ( ! data ) {
-			await this.track( 'error', {
-				error: 'no_ssh_auth_data',
-				message: 'No SSH authentication data received',
-				...extraTrackingInfo,
+			if ( ! data ) {
+				await this.track( 'error', {
+					error: 'no_ssh_auth_data',
+					message: 'No SSH authentication data received',
+					...extraTrackingInfo,
+				} );
+
+				throw new Error( 'WP-CLI SSH Authentication failed' );
+			}
+
+			debug( 'Connecting to SSH', {
+				host: data.sshAuthentication.host,
+				port: data.sshAuthentication.port,
+				username: data.sshAuthentication.username,
+				guid: data.command.guid,
 			} );
 
-			throw new Error( 'WP-CLI SSH Authentication failed' );
-		}
-
-		debug( 'Connecting to SSH', {
-			host: data.sshAuthentication.host,
-			port: data.sshAuthentication.port,
-			username: data.sshAuthentication.username,
-			guid: data.command.guid,
-		} );
-
-		try {
 			await this.executeCommandOverSSH( {
 				host: data.sshAuthentication.host,
 				port: data.sshAuthentication.port,
@@ -127,22 +132,31 @@ export class WPCliCommandOverSSH {
 		} catch ( err ) {
 			if ( err instanceof NonZeroExitCodeError ) {
 				await this.track( 'error', {
-					guid: data?.command.guid,
+					guid: err.guid,
 					error: 'non_zero_exit_code',
 					message: `Command failed with exit code ${ err.exitCode }`,
 					...extraTrackingInfo,
 				} );
 
 				process.exit( err.exitCode );
+			} else if ( err instanceof APIError ) {
+				console.error( `${ chalk.red( 'Error:' ) } ${ err.message }` );
+
+				await this.track( 'error', {
+					error: 'api_error',
+					message: `API Error: ${ err.message }`,
+					...extraTrackingInfo,
+				} );
+
+				process.exit( 1 );
 			}
 			const message = err instanceof Error ? err.message : String( err );
 
 			console.error( `${ chalk.red( 'Error:' ) } ${ message }` );
 
 			await this.track( 'error', {
-				guid: data?.command.guid,
 				error: 'ssh_command_failed',
-				message: 'Error executing command over SSH',
+				message: `Error executing command over SSH: ${ message }`,
 				...extraTrackingInfo,
 			} );
 
@@ -188,7 +202,7 @@ export class WPCliCommandOverSSH {
 
 							stream.on( 'exit', ( exitCode: number ) => {
 								if ( exitCode !== 0 ) {
-									reject( new NonZeroExitCodeError( `Command failed`, exitCode ) );
+									reject( new NonZeroExitCodeError( `Command failed`, guid, exitCode ) );
 								}
 							} );
 
@@ -258,6 +272,16 @@ export class WPCliCommandOverSSH {
 				},
 			} );
 		} catch ( error ) {
+			if ( error instanceof ApolloError ) {
+				const message = error.graphQLErrors
+					.map( err => {
+						return err.message;
+					} )
+					.join( '; ' );
+
+				throw new APIError( message );
+			}
+
 			const message = error instanceof Error ? error.message : String( error );
 
 			await this.track( 'error', {
