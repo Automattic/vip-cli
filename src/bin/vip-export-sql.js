@@ -44,7 +44,7 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop export sql --config-file=~/db-export-config.json',
 		description:
-			'Reference a local configuration file that defines the tables and structure for the partial database export file that is generated and dowloaded.',
+			'Reference a local configuration file that specifies the data to include in the partial database export file that is generated and dowloaded.',
 	},
 ];
 
@@ -77,19 +77,19 @@ command( {
 	)
 	.option(
 		'table',
-		'The name of a table to include in the partial database export. Accepts a string value (can be passed more than once with different values), or multiple string values in a comma-separated list.'
+		'The name of a table to include in the partial database export. Accepts a string value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
 	)
 	.option(
 		'site-id',
-		'The ID of a network site to include in the partial database export. Accepts an integer value (can be passed more than once with different values), or multiple integer values in a comma-separated list.'
+		'The ID of a network site to include in the partial database export. Accepts an integer value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
 	)
 	.option(
 		'wpcli-command',
-		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
+		'Run a custom WP-CLI command that has logic to retrieve specific data for the partial database export.'
 	)
 	.option(
 		'config-file',
-		'A local configuration file that specifies the table data to include in the partial database export. Accepts a relative or absolute path to the file.',
+		'A local configuration file that specifies the data to include in the partial database export. Accepts a relative or absolute path to the file.',
 		undefined
 	)
 	.option(

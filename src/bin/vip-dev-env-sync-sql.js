@@ -42,7 +42,7 @@ const examples = [
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --config-file=~/dev-env-sync-config.json`,
 		description:
-			'Reference a local configuration file that defines which tables to sync to a local environment.',
+			'Reference a local configuration file that specifies the data to sync to a local environment.',
 	},
 ];
 
@@ -85,7 +85,7 @@ command( {
 	)
 	.option(
 		'table',
-		'The name of a table to include in the partial database sync. Accepts a string value (can be passed more than once with different values), or multiple string values in a comma-separated list.'
+		'The name of a table to include in the partial database sync. Accepts a string value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
 	)
 	.option(
 		'site-id',
@@ -93,11 +93,11 @@ command( {
 	)
 	.option(
 		'wpcli-command',
-		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
+		'Run a custom WP-CLI command that has logic to retrieve specific data for the partial database export.'
 	)
 	.option(
 		'config-file',
-		'A local configuration file that specifies the table data to include in the partial database sync. Accepts a relative or absolute path to the file.',
+		'A local configuration file that specifies the data to include in the partial database sync. Accepts a relative or absolute path to the file.',
 		undefined
 	)
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
