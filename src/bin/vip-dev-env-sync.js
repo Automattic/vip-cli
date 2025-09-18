@@ -7,7 +7,7 @@ const examples = [
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site`,
 		description:
-			'Sync the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+			'Sync the entire database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 ];
 

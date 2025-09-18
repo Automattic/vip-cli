@@ -18,32 +18,31 @@ const examples = [
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site`,
 		description:
-			'Sync the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+			'Sync the entire database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --table=wp_posts --table=wp_comments`,
 		description:
-			'Sync only the wp_posts and wp_comments tables from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+			'Sync only the wp_posts and wp_comments tables from the database of the develop environment to a local environment named "example-site".',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --table=wp_posts,wp_comments`,
 		description:
-			'Sync only the wp_posts and wp_comments tables using comma-separated syntax from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+			'Use comma-separated syntax to specify that only the wp_posts and wp_comments tables are synced.',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --site-id=2 --site-id=3`,
-		description:
-			'Sync only the tables for the network sites with IDs 2 and 3 from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+		description: 'Sync only the tables related to network site ID 2 and network site ID 3.',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --site-id=2,3`,
 		description:
-			'Sync only the tables for the network sites with IDs 2 and 3 using comma-separated syntax from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+			'Use comma-separated syntax to specify that only the tables related to network site ID 2 and network site ID 3 are synced.',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --config-file=~/dev-env-sync-config.json`,
 		description:
-			'Use the specified config file to determine what to sync from the database of the develop environment in the "example-app" application to a local environment named "example-site".',
+			'Reference a local configuration file that specifies the data to sync to a local environment.',
 	},
 ];
 
@@ -86,18 +85,21 @@ command( {
 	)
 	.option(
 		'table',
-		'A table to sync from the remote environment to the local environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.'
+		'The name of a table to include in the partial database sync. Accepts a string value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
 	)
 	.option(
 		'site-id',
-
-		'The ID of a network site to sync from the remote environment to the local environment. Multiple site IDs can be specified with multiple --site-id flags or as a comma-separated list.'
+		'The ID of a network site to include in the partial database sync. Accepts an integer value (can be passed more than once with different values), or multiple integer values in a comma-separated list.'
 	)
 	.option(
 		'wpcli-command',
-		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
+		'Run a custom WP-CLI command that has logic to retrieve specific data for the partial database export.'
 	)
-	.option( 'config-file', 'The backup copy config file to use for the sync.', undefined )
+	.option(
+		'config-file',
+		'A local configuration file that specifies the data to include in the partial database sync. Accepts a relative or absolute path to the file.',
+		undefined
+	)
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {

@@ -19,32 +19,32 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop export sql --generate-backup',
 		description:
-			'Generate a fresh database backup for an environment and download a copy of that backup.',
+			'Generate a fresh database backup for an environment and download an archived copy of that backup.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --table=wp_posts --table=wp_comments',
 		description:
-			'Generate a database backup including only the wp_posts and wp_comments tables, and download a copy of that backup.',
+			'Generate and download an archived partial database export file that includes only the wp_posts and wp_comments tables.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --table=wp_posts,wp_comments',
 		description:
-			'Generate a database backup including only the wp_posts and wp_comments tables using comma-separated syntax, and download a copy of that backup.',
+			'Use comma-separated syntax to generate and download a partial database export file that includes only the wp_posts and wp_comments tables.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --site-id=2 --site-id=3',
 		description:
-			'Generate a database backup including only the tables related to the network sites with IDs 2 and 3, and download a copy of that backup.',
+			'Generate and download a partial database export file that includes only the tables related to network site ID 2 and network site ID 3.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --site-id=2,3',
 		description:
-			'Generate a database backup including only the tables related to the network sites with IDs 2 and 3 using comma-separated syntax, and download a copy of that backup.',
+			'Use comma-separated syntax to generate and download a partial database export file that includes only the tables related to the network site ID 2 and network site ID 3.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --config-file=~/db-export-config.json',
 		description:
-			'Generate a database backup using the specified config file, and download a copy of that backup.',
+			'Reference a local configuration file that specifies the data to include in the partial database export file that is generated and dowloaded.',
 	},
 ];
 
@@ -77,18 +77,25 @@ command( {
 	)
 	.option(
 		'table',
-		'A table to export from the remote environment. Multiple tables can be specified with multiple --table flags or as a comma-separated list.'
+		'The name of a table to include in the partial database export. Accepts a string value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
 	)
 	.option(
 		'site-id',
-		'The ID of a network site to export from the remote environment. Multiple site IDs can be specified with multiple --site-id flags or as a comma-separated list.'
+		'The ID of a network site to include in the partial database export. Accepts an integer value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
 	)
 	.option(
 		'wpcli-command',
-		'The WP-CLI command to run on the remote environment to retrieve the database export configuration.'
+		'Run a custom WP-CLI command that has logic to retrieve specific data for the partial database export.'
 	)
-	.option( 'config-file', 'The backup copy config file to use for the export.', undefined )
-	.option( 'generate-backup', 'Generate a fresh database backup and export a copy of that backup.' )
+	.option(
+		'config-file',
+		'A local configuration file that specifies the data to include in the partial database export. Accepts a relative or absolute path to the file.',
+		undefined
+	)
+	.option(
+		'generate-backup',
+		'Generate a fresh database backup and export an archived copy of that backup.'
+	)
 	.examples( examples )
 	.argv(
 		process.argv,
