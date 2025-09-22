@@ -433,7 +433,8 @@ commandWrapper( {
 		};
 
 		if ( isSubShell ) {
-			subShellSettings.prompt = chalk`{bold.yellowBright ${ promptIdentifier }:}{blue ~}$ `;
+			subShellSettings.prompt =
+				chalk.bold.yellowBright( `${ promptIdentifier }:` ) + chalk.blue( '~' ) + '$ ';
 			subShellSettings.historySize = 200;
 		}
 
