@@ -310,7 +310,7 @@ const examples = [
 	// remote URL import with headers
 	{
 		usage:
-			'vip @example-app.develop import sql https://example.com/file.sql --header="Authorization: Bearer-token-value"',
+			'vip @example-app.develop import sql https://example.com/file.sql --header="Authorization: bearer-token-value"',
 		description:
 			'Access and import a SQL database file located at a remote URL by passing a valid authorization header and bearer token.',
 	},
