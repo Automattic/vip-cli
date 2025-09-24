@@ -208,7 +208,9 @@ describe( 'vip-import-sql', () => {
 				).resolves.not.toThrow();
 
 				expect( consoleSpy ).toHaveBeenCalledWith(
-					expect.stringContaining( 'The --md5 parameter is only used for URL imports' )
+					expect.stringContaining(
+						'The --md5 parameter is only valid for imports from a remote URL'
+					)
 				);
 				consoleSpy.mockRestore();
 			} );
