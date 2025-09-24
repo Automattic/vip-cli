@@ -165,7 +165,7 @@ export async function gates( app, env, fileNameOrURL, isUrl = false, md5 = null 
 	if ( ! isUrl && md5 ) {
 		console.log(
 			chalk.yellowBright(
-				'The --md5 parameter is only used for URL imports. It will be ignored for local file imports.'
+				'The --md5 parameter is only valid for imports from a remote URL. This option will be ignored.'
 			)
 		);
 	}
@@ -271,54 +271,48 @@ const examples = [
 	{
 		usage: 'vip @example-app.develop import sql file.sql',
 		description:
-			'Import the local SQL database backup file "file.sql" to the develop environment of the "example-app" application.',
+			'Import a local SQL database file named "file.sql" to the develop environment of the "example-app" application.',
 	},
-	// URL import
-	{
-		usage: 'vip @example-app.develop import sql https://example.org/file.sql',
-		description:
-			'Import a remote SQL database backup file from the URL with MD5 hash verification to the develop environment of the "example-app" application.',
-	},
-	// URL import with HTTP Basic Auth
-	{
-		usage: 'vip @example-app.develop import sql https://username:password@example.org/file.sql',
-		description:
-			'Import a remote SQL database backup file from a URL that requires HTTP Basic Authentication.',
-	},
-	// `search-replace` flag
+	// `search-replace` option
 	{
 		usage:
 			'vip @example-app.develop import sql file.sql --search-replace="from.example.com,to.example.com" --search-replace="example.com/from,example.com/to"',
 		description:
-			'Perform multiple search and replace operations on the SQL database file during the import process.',
+			'Perform multiple search and replace operations on a local SQL database file during the import process.',
 	},
-	// `in-place` flag
+	// `in-place` option
 	{
 		usage:
 			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --in-place',
 		description:
-			'Perform a search and replace operation on "file.sql" locally, save the changes, then import the updated file.',
+			'Perform a search and replace operation on a local file named "file.sql", save the changes to the file, then import the updated file.',
 	},
-	// `output` flag
+	// `output` option
 	{
 		usage:
 			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --output="updated-file.sql"',
 		description:
-			'Create a copy of the imported file with the completed search and replace operations and save it locally to a file named "updated-file.sql".',
+			'At the completion of the import of a local SQL database file that was modified by a search and replace operation, create a copy of the file in its updated state and save it locally to a new file named "updated-file.sql".',
 	},
-	// URL import with headers
+	// remote URL import
 	{
 		usage:
-			'vip @example-app.develop import sql https://example.org/file.sql --header "Authorization: Bearer token"',
+			'vip @example-app.develop import sql https://example.com/file.sql --md5=5d41402abc4b2a76b9719d911017c592',
 		description:
-			'Import a remote SQL database backup file from a URL with custom authorization header.',
+			'Import a SQL database file from a remote URL and verify the integrity of its contents with an MD5 hash.',
 	},
-	// URL import with multiple headers
+	// remote URL import with HTTP basic auth
+	{
+		usage: 'vip @example-app.develop import sql https://username:password@example.com/file.sql',
+		description:
+			'Access and import a remote SQL database file by formatting the URL with valid HTTP basic authentication credentials.',
+	},
+	// remote URL import with headers
 	{
 		usage:
-			'vip @example-app.develop import sql https://example.org/file.sql --header "Authorization: Bearer token" --header "User-Agent: VIP CLI"',
+			'vip @example-app.develop import sql https://example.com/file.sql --header="Authorization: bearer-token-value"',
 		description:
-			'Import a remote SQL database backup file from a URL with multiple custom headers.',
+			'Access and import a SQL database file located at a remote URL by passing a valid authorization header and bearer token.',
 	},
 	// `sql status` subcommand
 	{
@@ -493,27 +487,24 @@ command( {
 	)
 	.option(
 		'search-replace',
-		'Search for a string in the SQL file and replace it with a new string. Separate the values by a comma only; no spaces (e.g. --search-replace="from,to").'
+		'Search for a string in a local or remote SQL database file and replace it with a new string. Separate the values by a comma only; no spaces (e.g. --search-replace="from,to"). Can be passed more than once.'
 	)
 	.option(
 		'in-place',
-		'Overwrite the local input file with the results of the search and replace operation prior to import.'
+		'Overwrite a local SQL database file with the results of a search and replace operation prior to import.'
 	)
 	.option(
 		'output',
-		'The local file path to save a copy of the results from the search and replace operation when the --search-replace option is passed. Ignored when used with the --in-place option.'
+		'Save the results of a --search-replace operation that is run against a local SQL database file to a copy of that file. Accepts a local file path. Ignored when used with the --in-place option.'
 	)
 	.option(
 		'skip-maintenance-mode',
-		'Imports data without putting the environment in maintenance mode. Available only for unlaunched environments. Caution: This may cause site instability during import.'
+		'Prevent an unlaunched environment from going into maintenance mode during the import of a local or remote SQL database file. Skipping maintenance mode can cause site instability during import.'
 	)
-	.option(
-		'md5',
-		'MD5 hash of the remote SQL file for verification. If not provided, the verification will not be performed.'
-	)
+	.option( 'md5', 'Verify the integrity of a remote SQL database file. Accepts an MD5 hash value.' )
 	.option(
 		'header',
-		'Add a header to the request when downloading from a URL. Format: "Name: Value". Can be used multiple times.'
+		'Pass a header name and value (Formatted as "Name: Value") in a request for a remote SQL database file. Can be passed more than once for multiple headers and values.'
 	)
 	.examples( examples )
 	// eslint-disable-next-line complexity
@@ -531,7 +522,7 @@ command( {
 		if ( ! isUrl && headers.length > 0 ) {
 			console.log(
 				chalk.yellowBright(
-					'The --header parameter is only used for URL imports. It will be ignored for local file imports.'
+					'The --header option is only valid for imports from a remote URL. This option will be ignored.'
 				)
 			);
 		}
@@ -539,7 +530,7 @@ command( {
 		if ( isUrl && opts.inPlace ) {
 			console.log(
 				chalk.yellowBright(
-					'The --in-place option is not supported when importing from a URL. This option will be ignored.'
+					'The --in-place option is only valid for imports from a remote URL. This option will be ignored.'
 				)
 			);
 			opts.inPlace = false;
@@ -548,7 +539,7 @@ command( {
 		if ( isUrl && opts.output ) {
 			console.log(
 				chalk.yellowBright(
-					'The --output option is not supported when importing from a URL. This option will be ignored.'
+					'The --output option is only valid for imports of a local file. This option will be ignored.'
 				)
 			);
 			opts.output = undefined;
