@@ -5,11 +5,11 @@ import { prompt } from 'enquirer';
 import { print } from 'graphql';
 import { dockerComposify } from 'lando/lib/utils';
 import fetch from 'node-fetch';
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import { cp, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
-import { v4 as uuid } from 'uuid';
 
 import {
 	handleCLIException,
@@ -233,7 +233,7 @@ function preProcessInstanceData( instanceData: InstanceData ): Required< Instanc
 		cron: Boolean( instanceData.cron ),
 		mailpit: Boolean( instanceData.mailpit ),
 		pullAfter: instanceData.pullAfter ?? 0,
-		autologinKey: uuid(),
+		autologinKey: randomUUID(),
 		adminPassword: instanceData.adminPassword ?? 'password',
 		version: DEV_ENVIRONMENT_VERSION,
 		overrides: instanceData.overrides ?? '',
@@ -1146,7 +1146,7 @@ ${ Object.entries( pathMappings )
   </component>
   <component name="PhpServers">
     <servers>
-      <server host="localhost" id="${ uuid() }" name="localhost" use_path_mappings="true">
+      <server host="localhost" id="${ randomUUID() }" name="localhost" use_path_mappings="true">
         <path_mappings>
           <mapping local-root="$PROJECT_DIR$/wordpress" remote-root="/wp" />
           ${ Object.entries( pathMappings )

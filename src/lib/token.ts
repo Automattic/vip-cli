@@ -1,5 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 import { API_HOST, PRODUCTION_API_HOST } from './api';
 import keychain from './keychain';
@@ -83,7 +83,7 @@ export default class Token {
 
 		let _uuid = await keychain.getPassword( service );
 		if ( ! _uuid ) {
-			_uuid = uuid();
+			_uuid = randomUUID();
 			await keychain.setPassword( service, _uuid );
 		}
 
