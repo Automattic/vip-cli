@@ -401,7 +401,6 @@ vip-cli/
 6. **Check Node version compatibility**
 
    - Use nvm or nodenv to match `.nvmrc`
-   - CI uses LTS (currently Node 20.x)
 
 7. **Never include internal/sensitive info**
 
