@@ -376,7 +376,7 @@ vip-cli/
 
 **Debug Output:**
 
-- Set `DEBUG=@automattic/vip:*` to enable all debug logs
+- Set `DEBUG=*,-modem` to enable all debug logs
 - Or specific module: `DEBUG=@automattic/vip:bin:dev-environment`
 
 ## Common Pitfalls & Gotchas
