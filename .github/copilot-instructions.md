@@ -246,7 +246,6 @@ vip-cli/
 
 - **Use TypeScript for all new code** (files with `.ts` extension)
 - Existing `.js` files can remain JavaScript
-- Both are compiled by Babel to `dist/`
 
 **Style:**
 
