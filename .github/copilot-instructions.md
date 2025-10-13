@@ -392,10 +392,6 @@ vip-cli/
    - Run `npm run build` after ANY code change
 
 3. **Don't edit `dist/` directly**
-
-   - It's auto-generated and git-ignored
-   - Edit `src/` and rebuild
-
 4. **Use TypeScript for new code**
 
    - Project is migrating from JS to TS
