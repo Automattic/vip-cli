@@ -393,10 +393,6 @@ vip-cli/
 
 3. **Don't edit `dist/` directly**
 4. **Use TypeScript for new code**
-
-   - Project is migrating from JS to TS
-   - Add `.ts` extension, not `.js`
-
 5. **Run `npm link` after adding new commands**
 6. **Check Node version compatibility**
 
