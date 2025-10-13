@@ -339,9 +339,7 @@ vip-cli/
 
    ```bash
    npm run build          # Rebuild after changes
-   npm run lint           # Check code style
-   npm run check-types    # Check TypeScript
-   npm run jest           # Run tests
+   npm run test           # Check code style, types, and run tests
    ```
 
 4. **Test locally** (if applicable):
