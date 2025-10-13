@@ -101,7 +101,7 @@ npm run test
 - Run with: `npm run jest`
 - Use Jest framework
 - Takes ~20 seconds
-- Expected: 46 test suites, 416+ tests passing
+- Expected: all tests pass
 
 **E2E Tests:**
 
