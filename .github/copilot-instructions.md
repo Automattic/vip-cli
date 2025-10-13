@@ -398,10 +398,6 @@ vip-cli/
    - Add `.ts` extension, not `.js`
 
 5. **Run `npm link` after adding new commands**
-
-   - Required for local command spawning
-   - Skip this = "Error: spawn vip-command ENOENT"
-
 6. **Check Node version compatibility**
 
    - Use nvm or nodenv to match `.nvmrc`
