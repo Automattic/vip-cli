@@ -39,7 +39,7 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
 	},
 	8.4: {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',
-		label: '8.4 (experimental)',
+		label: '8.4',
 	},
 } as const;
 
@@ -49,4 +49,4 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	phpVersion: Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ],
 } as const;
 
-export const DEV_ENVIRONMENT_VERSION = '2.3.0';
+export const DEV_ENVIRONMENT_VERSION = '2.3.1';
