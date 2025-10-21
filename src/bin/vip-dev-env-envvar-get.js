@@ -13,13 +13,13 @@ import { parseEnvValue, readEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const exampleUsage = 'vip dev-env envvar get';
-const usage = 'vip dev-env envvar get -s vip-local';
+const exampleUsage = 'vip dev-env envvar get --slug=example-site';
+const usage = 'vip dev-env envvar get';
 
 const examples = [
 	{
 		usage: `${ exampleUsage } MY_VARIABLE`,
-		description: 'Retrieve the value of the environment variable "MY_VARIABLE".',
+		description: 'Retrieve the value of the local environment variable "MY_VARIABLE".',
 	},
 ];
 
