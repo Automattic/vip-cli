@@ -16,24 +16,24 @@ import { debug } from '../lib/envvar/logging';
 import { readVariableFromFile } from '../lib/envvar/read-file';
 import { trackEvent } from '../lib/tracker';
 
-const exampleUsage = 'vip dev-env envvar set';
-const usage = 'vip dev-env envvar set -s vip-local';
+const exampleUsage = 'vip dev-env envvar set --slug=example-site';
+const usage = 'vip dev-env envvar set';
 
 const examples = [
 	{
 		usage: `${ exampleUsage } MY_VARIABLE`,
 		description:
-			'Add or update the environment variable "MY_VARIABLE" and assign its value at the prompt.',
+			'Add or update the local environment variable "MY_VARIABLE" and assign its value at the prompt.',
 	},
 	{
 		usage: `${ exampleUsage } MY_VARIABLE MY_VALUE`,
 		description:
-			'Add or update the environment variable "MY_VARIABLE" and assign its value to "MY_VALUE".',
+			'Add or update the local environment variable "MY_VARIABLE" and assign its value to "MY_VALUE".',
 	},
 	{
 		usage: `${ exampleUsage } MULTILINE_ENV_VAR --from-file=envvar-value.txt`,
 		description:
-			'Add or update the environment variable "MULTILINE_ENV_VAR" and assign the multiline contents of local file envvar-value.txt as its value.',
+			'Add or update the local environment variable "MULTILINE_ENV_VAR" and assign the multiline contents of local file envvar-value.txt as its value.',
 	},
 ];
 

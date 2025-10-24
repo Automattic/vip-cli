@@ -14,17 +14,17 @@ import { parseEnvValue, readEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const exampleUsage = 'vip dev-env envvar get-all';
-const usage = 'vip dev-env envvar get-all -s vip-local';
+const exampleUsage = 'vip dev-env envvar get-all --slug=example-site';
+const usage = 'vip dev-env envvar get-all';
 
 const examples = [
 	{
 		usage: exampleUsage,
-		description: 'Retrieve a list of all environment variables in the default table format.',
+		description: 'Retrieve a list of all local environment variables in the default table format.',
 	},
 	{
 		usage: `${ exampleUsage } --format=csv`,
-		description: 'Retrieve a list of all environment variables in CSV format.',
+		description: 'Retrieve a list of all local environment variables in CSV format.',
 	},
 ];
 

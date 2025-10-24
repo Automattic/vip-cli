@@ -13,13 +13,13 @@ import { readEnvFile, updateEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
-const exampleUsage = 'vip dev-env envvar delete';
-const usage = 'vip dev-env envvar delete -s vip-local';
+const exampleUsage = 'vip dev-env envvar delete --slug=example-site';
+const usage = 'vip dev-env envvar delete';
 
 const examples = [
 	{
 		usage: `${ exampleUsage } MY_VARIABLE`,
-		description: 'Delete the environment variable "MY_VARIABLE" from the environment.',
+		description: 'Delete the environment variable "MY_VARIABLE" from the local environment.',
 	},
 ];
 

@@ -18,8 +18,9 @@ const usage = 'vip dev-env envvar list';
 
 const examples = [
 	{
-		usage: 'vip dev-env envvar list -s vip-local',
-		description: 'List the names of all environment variables.',
+		usage: 'vip dev-env envvar list --slug=example-site',
+		description:
+			'List the names of all environment variables on the local environment in table format.',
 	},
 ];
 
