@@ -21,8 +21,10 @@ export type Scalars = {
 	Int: { input: number; output: number };
 	Float: { input: number; output: number };
 	BigInt: { input: any; output: any };
+	/** Date custom scalar type */
 	Date: { input: any; output: any };
 	JSON: { input: any; output: any };
+	/** MediaImportAllowedFileTypes scalar type */
 	MediaImportAllowedFileTypes: { input: any; output: any };
 };
 
@@ -585,6 +587,7 @@ export type AppEnvironmentBackupShippingV2 = {
 	__typename?: 'AppEnvironmentBackupShippingV2';
 	dailyHour?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	enabled: Scalars[ 'Boolean' ][ 'output' ];
+	object_storage_config_azure?: Maybe< CloudShippingObjectStorageConfigAzure >;
 	object_storage_config_gcp?: Maybe< CloudShippingObjectStorageConfigGcp >;
 	object_storage_config_s3?: Maybe< CloudShippingObjectStorageConfigS3 >;
 	path?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -597,6 +600,7 @@ export type AppEnvironmentBackupShippingV2Input = {
 	enabled: Scalars[ 'Boolean' ][ 'input' ];
 	environmentId: Scalars[ 'Int' ][ 'input' ];
 	id: Scalars[ 'Int' ][ 'input' ];
+	object_storage_config_azure?: InputMaybe< CloudShippingObjectStorageConfigAzureInput >;
 	object_storage_config_gcp?: InputMaybe< CloudShippingObjectStorageConfigGcpInput >;
 	object_storage_config_s3?: InputMaybe< CloudShippingObjectStorageConfigS3Input >;
 	path?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
@@ -653,6 +657,11 @@ export type AppEnvironmentBranchesList = {
 	total?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 };
 
+export type AppEnvironmentCompleteElasticsearchUpgradeInput = {
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+	id: Scalars[ 'Int' ][ 'input' ];
+};
+
 /** Input for creating a child environment from a production environment */
 export type AppEnvironmentCreateChildEnvironmentInput = {
 	/** The unique ID of the parent environment */
@@ -661,6 +670,8 @@ export type AppEnvironmentCreateChildEnvironmentInput = {
 	branch?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	/** The name for the new child environment */
 	environmentName: Scalars[ 'String' ][ 'input' ];
+	/** The Node.js version for the child environment */
+	nodejsVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 	/** The PHP version for the child environment */
 	phpVersion?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
@@ -725,6 +736,12 @@ export type AppEnvironmentDisableNewRelicPayload = {
 	success: Scalars[ 'Boolean' ][ 'output' ];
 };
 
+export type AppEnvironmentElasticsearchUpgradePayload = {
+	__typename?: 'AppEnvironmentElasticsearchUpgradePayload';
+	message: Scalars[ 'String' ][ 'output' ];
+	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
 export type AppEnvironmentEnableDisableCustomDeployInput = {
 	appId: Scalars[ 'Int' ][ 'input' ];
 	environmentId: Scalars[ 'Int' ][ 'input' ];
@@ -755,6 +772,12 @@ export type AppEnvironmentEnableNewRelicInput = {
 export type AppEnvironmentEnableNewRelicPayload = {
 	__typename?: 'AppEnvironmentEnableNewRelicPayload';
 	success: Scalars[ 'Boolean' ][ 'output' ];
+};
+
+export type AppEnvironmentEnqueueElasticsearchUpgradeInput = {
+	environmentId: Scalars[ 'Int' ][ 'input' ];
+	id: Scalars[ 'Int' ][ 'input' ];
+	version?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
 export type AppEnvironmentGenerateDbBackupCopyUrlInput = {
@@ -913,6 +936,7 @@ export type AppEnvironmentImportInput = {
 	searchReplace?: InputMaybe< Array< InputMaybe< AppEnvironmentImportSearchReplace > > >;
 	skipMaintenanceMode?: InputMaybe< Scalars[ 'Boolean' ][ 'input' ] >;
 	url?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
+	urlHeaders?: InputMaybe< Array< RequestHeader > >;
 };
 
 export type AppEnvironmentImportPayload = {
@@ -970,7 +994,7 @@ export type AppEnvironmentLiveBackupCopyDownloadUrlInput = {
 export type AppEnvironmentLiveBackupCopyDownloadUrlPayload = {
 	__typename?: 'AppEnvironmentLiveBackupCopyDownloadURLPayload';
 	processing: Scalars[ 'Boolean' ][ 'output' ];
-	size?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	size?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 	success: Scalars[ 'Boolean' ][ 'output' ];
 	url?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
@@ -1027,6 +1051,7 @@ export type AppEnvironmentLogShippingUpdateStatusInput = {
 export type AppEnvironmentLogShippingV2 = {
 	__typename?: 'AppEnvironmentLogShippingV2';
 	enabled: Scalars[ 'Boolean' ][ 'output' ];
+	object_storage_config_azure?: Maybe< CloudShippingObjectStorageConfigAzure >;
 	object_storage_config_gcp?: Maybe< CloudShippingObjectStorageConfigGcp >;
 	object_storage_config_s3?: Maybe< CloudShippingObjectStorageConfigS3 >;
 	path?: Maybe< Scalars[ 'String' ][ 'output' ] >;
@@ -1038,6 +1063,7 @@ export type AppEnvironmentLogShippingV2Input = {
 	enabled: Scalars[ 'Boolean' ][ 'input' ];
 	environmentId: Scalars[ 'Int' ][ 'input' ];
 	id: Scalars[ 'Int' ][ 'input' ];
+	object_storage_config_azure?: InputMaybe< CloudShippingObjectStorageConfigAzureInput >;
 	object_storage_config_gcp?: InputMaybe< CloudShippingObjectStorageConfigGcpInput >;
 	object_storage_config_s3?: InputMaybe< CloudShippingObjectStorageConfigS3Input >;
 	path?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
@@ -1576,7 +1602,7 @@ export type Build = Model & {
 	logs?: Maybe< Array< Maybe< Scalars[ 'String' ][ 'output' ] > > >;
 	queued_date?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 	start_date?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
-	status: BuildStatus;
+	status?: Maybe< BuildStatus >;
 	vendor_id?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 };
 
@@ -1693,8 +1719,22 @@ export type CertificateList = {
 export type CloudShippingLogsType = 'edge';
 
 export type CloudShippingObjectStorageConfig =
+	| CloudShippingObjectStorageConfigAzure
 	| CloudShippingObjectStorageConfigGcp
 	| CloudShippingObjectStorageConfigS3;
+
+export type CloudShippingObjectStorageConfigAzure = {
+	__typename?: 'CloudShippingObjectStorageConfigAzure';
+	azure_account: Scalars[ 'String' ][ 'output' ];
+	azure_container: Scalars[ 'String' ][ 'output' ];
+	azure_sas_token: Scalars[ 'String' ][ 'output' ];
+};
+
+export type CloudShippingObjectStorageConfigAzureInput = {
+	azure_account: Scalars[ 'String' ][ 'input' ];
+	azure_container: Scalars[ 'String' ][ 'input' ];
+	azure_sas_token: Scalars[ 'String' ][ 'input' ];
+};
 
 export type CloudShippingObjectStorageConfigGcp = {
 	__typename?: 'CloudShippingObjectStorageConfigGCP';
@@ -1722,7 +1762,10 @@ export type CloudShippingObjectStorageConfigS3Input = {
 	s3_shipper_role?: InputMaybe< Scalars[ 'String' ][ 'input' ] >;
 };
 
-export type CloudShippingObjectStorageProviders = 'aws_s3' | 'gcp_cloud_storage';
+export type CloudShippingObjectStorageProviders =
+	| 'aws_s3'
+	| 'azure_blob_storage'
+	| 'gcp_cloud_storage';
 
 /** Variables for the CodebaseChangeRepo mutation */
 export type CodebaseChangeRepoInput = {
@@ -2782,13 +2825,13 @@ export type LiveBackupCopy = {
 	error?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	expiresAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
 	finishedAt?: Maybe< Scalars[ 'Date' ][ 'output' ] >;
-	size?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	size?: Maybe< Scalars[ 'BigInt' ][ 'output' ] >;
 	status: LiveBackupCopyStatus;
 };
 
 export type LiveBackupCopyConfig = {
 	__typename?: 'LiveBackupCopyConfig';
-	siteIds?: Maybe< Array< Scalars[ 'Int' ][ 'output' ] > >;
+	subsiteIds?: Maybe< Array< Scalars[ 'Int' ][ 'output' ] > >;
 	tables?: Maybe< Array< LiveBackupCopyTableConfig > >;
 	tool: LiveBackupCopyTool;
 	type: LiveBackupCopyType;
@@ -2827,7 +2870,7 @@ export type LiveBackupCopyTableOptionConfigInput = {
 
 export type LiveBackupCopyTool = 'mydumper' | 'mysqldump';
 
-export type LiveBackupCopyType = 'full' | 'site_ids' | 'tables' | 'wpcli_command';
+export type LiveBackupCopyType = 'full' | 'subsite_ids' | 'tables' | 'wpcli_command';
 
 export type ManageIntegrationInput = {
 	appId?: InputMaybe< Scalars[ 'Int' ][ 'input' ] >;
@@ -3027,6 +3070,7 @@ export type Mutation = {
 	cancelWPCLICommand: CancelWpcliCommandPayload;
 	/** Repository Management */
 	changeRepo: CodebaseChangeRepoResult;
+	completeElasticsearchUpgrade: AppEnvironmentElasticsearchUpgradePayload;
 	createCSR: CreateCsrPayload;
 	/** Create a new non-production environment as a child of a production environment */
 	createChildEnvironment: AppEnvironmentCreateChildEnvironmentPayload;
@@ -3078,6 +3122,7 @@ export type Mutation = {
 	enableLogShipping: AppEnvironmentLogShippingPayload;
 	enableNewRelic?: Maybe< AppEnvironmentEnableNewRelicPayload >;
 	enablePHPMyAdmin?: Maybe< EnablePhpMyAdminPayload >;
+	enqueueElasticsearchUpgrade: AppEnvironmentElasticsearchUpgradePayload;
 	generateCustomDeployAccess?: Maybe< GenerateCustomDeployAccessPayload >;
 	/** Generate a presigned download URL to a previously copied database backup */
 	generateDBBackupCopyUrl?: Maybe< AppEnvironmentGenerateDbBackupCopyUrlPayload >;
@@ -3226,6 +3271,10 @@ export type MutationCancelWpcliCommandArgs = {
 
 export type MutationChangeRepoArgs = {
 	input?: InputMaybe< CodebaseChangeRepoInput >;
+};
+
+export type MutationCompleteElasticsearchUpgradeArgs = {
+	input: AppEnvironmentCompleteElasticsearchUpgradeInput;
 };
 
 export type MutationCreateCsrArgs = {
@@ -3382,6 +3431,10 @@ export type MutationEnableNewRelicArgs = {
 
 export type MutationEnablePhpMyAdminArgs = {
 	input?: InputMaybe< EnablePhpMyAdminInput >;
+};
+
+export type MutationEnqueueElasticsearchUpgradeArgs = {
+	input: AppEnvironmentEnqueueElasticsearchUpgradeInput;
 };
 
 export type MutationGenerateCustomDeployAccessArgs = {
@@ -3722,6 +3775,7 @@ export type NotificationSubscriptionMetaInput = {
 export type NotificationWebhookVersion = 'v0' | 'v1';
 
 export type ObjectStorageConfigInput = {
+	object_storage_config_azure?: InputMaybe< CloudShippingObjectStorageConfigAzureInput >;
 	object_storage_config_gcp?: InputMaybe< CloudShippingObjectStorageConfigGcpInput >;
 	object_storage_config_s3?: InputMaybe< CloudShippingObjectStorageConfigS3Input >;
 	provider: CloudShippingObjectStorageProviders;
@@ -3776,6 +3830,7 @@ export type Organization = Model & {
 	salesforceId?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	serviceStatus?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	slug?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	subscriptions?: Maybe< Array< Maybe< SalesforceSubscription > > >;
 	supportPackage?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	traffic?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	trafficType?: Maybe< TrafficType >;
@@ -3843,6 +3898,10 @@ export type OrganizationPermissionsArgs = {
 export type OrganizationRequestStatsArgs = {
 	from?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
 	to?: InputMaybe< Scalars[ 'Date' ][ 'input' ] >;
+};
+
+export type OrganizationSubscriptionsArgs = {
+	search: Scalars[ 'String' ][ 'input' ];
 };
 
 export type OrganizationUsersArgs = {
@@ -4202,6 +4261,18 @@ export type RollbackInput = {
 export type RollbackPayload = {
 	__typename?: 'RollbackPayload';
 	newDeployment?: Maybe< Deployment >;
+};
+
+export type SalesforceSubscription = {
+	__typename?: 'SalesforceSubscription';
+	applicationId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	endDate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	productCode?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	productFamily?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	productName?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	productType?: Maybe< Scalars[ 'String' ][ 'output' ] >;
+	quantity?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	startDate?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 };
 
 export type SaveIdentityProviderInput = {
@@ -4652,6 +4723,8 @@ export type WpInstallation = {
 	jetpack?: Maybe< WpInstallationJetpackDetails >;
 	/** Details about all plugins installed */
 	plugins?: Maybe< Array< WpInstallationPluginDetails > >;
+	/** Details about Security Boost */
+	securityBoost?: Maybe< WpInstallationSecurityBoostDetails >;
 	/** App Environment / GOOP Site ID */
 	siteId?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	/** Last updated timestamp of the Site Installation Details */
@@ -4698,6 +4771,30 @@ export type WpInstallationPluginDetails = {
 	slug?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	/** WordPress Plugin version */
 	version: Scalars[ 'String' ][ 'output' ];
+};
+
+export type WpInstallationSecurityBoostDetails = {
+	__typename?: 'WPInstallationSecurityBoostDetails';
+	/** Inactive users count across all blogs */
+	inactiveUsersCountAllBlogs?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+	/** Two factor authentication status */
+	twoFactorStatus?: Maybe< WpInstallationTwoFactorStatus >;
+	/** Users without 2FA count across all blogs */
+	usersWithout2faCountAllBlogs?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
+};
+
+export type WpInstallationTwoFactorStatus = {
+	__typename?: 'WPInstallationTwoFactorStatus';
+	/** Has enable two factor filter */
+	hasEnableTwoFactorFilter?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Has two factor forced filter */
+	hasTwoFactorForcedFilter?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is enforced globally */
+	isEnforcedGlobally?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is entirely disabled */
+	isEntirelyDisabled?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
+	/** Is not enforced globally */
+	isNotEnforcedGlobally?: Maybe< Scalars[ 'Boolean' ][ 'output' ] >;
 };
 
 export type WpSite = {
