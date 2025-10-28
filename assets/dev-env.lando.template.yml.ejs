@@ -160,6 +160,10 @@ services:
     services:
       image: elasticsearch:8.18.2
       command: /usr/local/bin/docker-entrypoint.sh
+      deploy:
+        resources:
+          limits:
+            memory: 1GB
       environment:
         ELASTICSEARCH_IS_DEDICATED_NODE: 'no'
         ELASTICSEARCH_CLUSTER_NAME: 'bespin'
