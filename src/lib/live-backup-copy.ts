@@ -221,7 +221,7 @@ export async function getDownloadURL( {
 
 		return {
 			url: result.data.generateLiveBackupCopyDownloadURL.url,
-			size: result.data.generateLiveBackupCopyDownloadURL.size,
+			size: Number( result.data.generateLiveBackupCopyDownloadURL.size ),
 		};
 	} catch ( error ) {
 		if ( error instanceof PollingTimeoutError ) {

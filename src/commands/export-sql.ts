@@ -394,7 +394,7 @@ export class ExportSQLCommand {
 			const result = await this.generateLiveBackupCopy();
 
 			url = result.url;
-			size = result.size;
+			size = Number( result.size );
 		} else {
 			url = await this.runBackup();
 
