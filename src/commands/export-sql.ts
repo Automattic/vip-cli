@@ -414,7 +414,7 @@ export class ExportSQLCommand {
 
 		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
 			async setPromptShown => {
-				const status = await this.confirmEnoughStorage( size );
+				const status = await this.confirmEnoughStorage( Number( size ) );
 				if ( status.isPromptShown ) {
 					setPromptShown();
 				}

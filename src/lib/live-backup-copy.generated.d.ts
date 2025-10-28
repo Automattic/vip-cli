@@ -24,6 +24,6 @@ export type GenerateLiveBackupCopyDownloadUrlMutation = {
 		success: boolean;
 		url?: string | null;
 		processing: boolean;
-		size?: number | null;
+		size?: any | null;
 	} | null;
 };
