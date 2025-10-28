@@ -140,7 +140,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@apollo/client": "3.3.6",
+    "@apollo/client": "4.0.8",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
