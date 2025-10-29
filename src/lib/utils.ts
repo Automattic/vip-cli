@@ -104,3 +104,17 @@ export function parseApiError( err: {
 
 	return null;
 }
+
+export function splitKeyValueString(
+	str: string,
+	delimiter = '='
+): [ key: string, value: string ] {
+	const delimiterIndex = str.indexOf( delimiter );
+	if ( delimiterIndex === -1 ) {
+		return [ str.trim(), '' ];
+	}
+
+	const key = str.slice( 0, delimiterIndex ).trim();
+	const value = str.slice( delimiterIndex + delimiter.length ).trim();
+	return [ key, value ];
+}

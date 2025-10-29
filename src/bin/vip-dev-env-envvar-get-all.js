@@ -13,6 +13,7 @@ import {
 import { parseEnvValue, readEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
+import { splitKeyValueString } from '../lib/utils';
 
 const exampleUsage = 'vip dev-env envvar get-all --slug=example-site';
 const usage = 'vip dev-env envvar get-all';
@@ -43,7 +44,7 @@ async function getAllEnvVarsCommand( args, opt ) {
 	try {
 		const data = await readEnvFile( slug );
 		const envVars = data.map( line => {
-			const [ key, value ] = line.split( '=', 2 ).map( part => part.trim() );
+			const [ key, value ] = splitKeyValueString( line );
 			return { name: key, value: parseEnvValue( value ) };
 		} );
 

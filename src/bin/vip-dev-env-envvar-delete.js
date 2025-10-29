@@ -12,6 +12,7 @@ import {
 import { readEnvFile, updateEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
+import { splitKeyValueString } from '../lib/utils';
 
 const exampleUsage = 'vip dev-env envvar delete --slug=example-site';
 const usage = 'vip dev-env envvar delete';
@@ -39,7 +40,7 @@ async function deleteEnvVarCommand( args, opt ) {
 		const data = await readEnvFile( slug );
 		const envVars = [];
 		data.forEach( line => {
-			const [ key ] = line.split( '=', 2 ).map( part => part.trim() );
+			const [ key ] = splitKeyValueString( line );
 			if ( key !== name ) {
 				envVars.push( line );
 			} else {
