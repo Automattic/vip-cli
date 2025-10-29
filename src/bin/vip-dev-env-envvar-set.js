@@ -15,6 +15,7 @@ import { cancel, promptForValue } from '../lib/envvar/input';
 import { debug } from '../lib/envvar/logging';
 import { readVariableFromFile } from '../lib/envvar/read-file';
 import { trackEvent } from '../lib/tracker';
+import { splitKeyValueString } from '../lib/utils';
 
 const exampleUsage = 'vip dev-env envvar set --slug=example-site';
 const usage = 'vip dev-env envvar set';
@@ -74,7 +75,7 @@ async function deleteEnvVarCommand( args, opt ) {
 		let replaced = false;
 
 		const envVars = data.map( line => {
-			const [ key ] = line.split( '=', 2 ).map( part => part.trim() );
+			const [ key ] = splitKeyValueString( line );
 			if ( key === name ) {
 				replaced = true;
 				return `${ key }=${ newValue }`;

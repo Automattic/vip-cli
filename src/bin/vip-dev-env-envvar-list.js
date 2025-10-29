@@ -13,6 +13,7 @@ import {
 import { readEnvFile } from '../lib/dev-environment/env-vars';
 import { debug } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
+import { splitKeyValueString } from '../lib/utils';
 
 const usage = 'vip dev-env envvar list';
 
@@ -39,7 +40,7 @@ async function listEnvVarsCommand( args, opt ) {
 	try {
 		const data = await readEnvFile( slug );
 		const envVars = data.map( line => {
-			const [ key ] = line.split( '=', 2 );
+			const [ key ] = splitKeyValueString( line );
 			return { name: key.trim() };
 		} );
 
