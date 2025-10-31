@@ -18,6 +18,7 @@ import API from '../lib/api';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
+import { NUMBER_OF_SITE_FROM_SDS } from '../lib/constants/dev-environment';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
@@ -118,7 +119,7 @@ export class DevEnvSyncSQLCommand {
 	public liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
-	private sdsSiteUrls: Maybe< WpSite >[] | null | undefined = null;
+	public sdsSiteUrls: Maybe< WpSite >[] | null | undefined = null;
 
 	/**
 	 * Creates a new instance of the command
@@ -222,11 +223,15 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	public async getSiteUrlsFromSDS(): Promise< Maybe< WpSite >[] > {
-		if ( ! this.env.wpSitesSDS?.nodes || this.env.wpSitesSDS.nodes.length === 500 ) {
+		if (
+			this.env.isMultisite &&
+			( ! this.env.wpSitesSDS?.nodes ||
+				this.env.wpSitesSDS.nodes.length === NUMBER_OF_SITE_FROM_SDS )
+		) {
 			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id as number ) );
 		}
 
-		return this.env.wpSitesSDS.nodes;
+		return this.env.wpSitesSDS?.nodes ?? [];
 	}
 
 	private fetchSitesPage(

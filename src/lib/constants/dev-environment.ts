@@ -22,6 +22,8 @@ export const DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY = 'wordpress-versions.json';
 
 export const DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL = 86400; // once per day
 
+export const NUMBER_OF_SITE_FROM_SDS = 500;
+
 interface PhpImage {
 	image: string;
 	label: string;

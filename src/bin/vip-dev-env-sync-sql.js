@@ -2,6 +2,7 @@
 
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import command from '../lib/cli/command';
+import { NUMBER_OF_SITE_FROM_SDS } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	processBooleanOption,
@@ -59,7 +60,7 @@ const appQuery = `
 		primaryDomain { name }
 		uniqueLabel
 		isMultisite
-		wpSitesSDS(first:500) {
+		wpSitesSDS(first:${ NUMBER_OF_SITE_FROM_SDS }) {
 			nodes {
 				id
 				blogId
@@ -104,6 +105,8 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const { app, env, configFile, table, siteId, wpcliCommand, ...optRest } = opt;
+		console.log( app, env );
+		process.exit( 0 );
 
 		const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
 			configFile,
