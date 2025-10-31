@@ -77,6 +77,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		it( 'should return a map of search-replace values for multisite', () => {
 			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug', lando );
 			cmd.slug = 'test-slug';
+			cmd.sdsSiteUrls = msEnv.wpSitesSDS.nodes;
 			cmd.siteUrls = msEnv.wpSitesSDS.nodes.map( node => node.homeUrl );
 			cmd.generateSearchReplaceMap();
 
@@ -156,6 +157,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	describe( '.run', () => {
 		const syncCommand = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
 		const exportSpy = jest.spyOn( syncCommand, 'generateExport' );
+		const getSiteUrlsFromSDSSpy = jest.spyOn( syncCommand, 'getSiteUrlsFromSDS' );
 		const generateSearchReplaceMapSpy = jest.spyOn( syncCommand, 'generateSearchReplaceMap' );
 		const searchReplaceSpy = jest.spyOn( syncCommand, 'runSearchReplace' );
 		const importSpy = jest.spyOn( syncCommand, 'runImport' );
@@ -170,6 +172,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 				syncCommand.sqlFile
 			);
 			exportSpy.mockResolvedValue();
+			getSiteUrlsFromSDSSpy.mockResolvedValue( [] );
 			searchReplaceSpy.mockResolvedValue();
 			importSpy.mockResolvedValue();
 		} );
@@ -185,6 +188,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 			expect( exportSpy ).toHaveBeenCalled();
 			expect( clientFileUploader.unzipFile ).toHaveBeenCalled();
+			expect( getSiteUrlsFromSDSSpy ).toHaveBeenCalled();
 			expect( generateSearchReplaceMapSpy ).toHaveBeenCalled();
 			expect( searchReplaceSpy ).toHaveBeenCalled();
 			expect( importSpy ).toHaveBeenCalled();
