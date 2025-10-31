@@ -255,7 +255,7 @@ export class DevEnvSyncSQLCommand {
 		const api = API();
 		let after: string | null | undefined = null;
 		const allSites: WpSite[] = [];
-		let total = 0;
+		let total: number;
 
 		console.log( 'Fetching list of sites for database sync...' );
 		do {
