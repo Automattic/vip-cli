@@ -12,7 +12,7 @@ import { pipeline } from 'node:stream/promises';
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
 import { SiteUrlsQueryQuery, SiteUrlsQueryQueryVariables } from './dev-env-sync-sql.generated';
 import { ExportSQLCommand } from './export-sql';
-import { App, AppEnvironment, Maybe, WpSite } from '../graphqlTypes';
+import { App, AppEnvironment, WpSite } from '../graphqlTypes';
 import { TrackFunction } from '../lib/analytics/clients/tracks';
 import API from '../lib/api';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
@@ -118,7 +118,7 @@ export class DevEnvSyncSQLCommand {
 	public liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
-	public sdsSiteUrls: Maybe< WpSite >[] | null | undefined = null;
+	public sdsSiteUrls: WpSite[] = [];
 
 	/**
 	 * Creates a new instance of the command
@@ -221,7 +221,7 @@ export class DevEnvSyncSQLCommand {
 		fs.renameSync( outputFile, this.sqlFile );
 	}
 
-	public async getSiteUrlsFromSDS(): Promise< Maybe< WpSite >[] > {
+	public async getSiteUrlsFromSDS(): Promise< WpSite[] > {
 		if (
 			this.env.isMultisite &&
 			( ! this.env.wpSitesSDS?.nodes ||
@@ -231,7 +231,7 @@ export class DevEnvSyncSQLCommand {
 			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
 		}
 
-		return this.env.wpSitesSDS?.nodes ?? [];
+		return this.env.wpSitesSDS?.nodes?.filter( ( node ): node is WpSite => Boolean( node ) ) ?? [];
 	}
 
 	private fetchSitesPage(
@@ -263,7 +263,11 @@ export class DevEnvSyncSQLCommand {
 			const res = await this.fetchSitesPage( api, appId, environmentId, after );
 			if ( res.data.app?.environments?.[ 0 ]?.wpSitesSDS?.nodes ) {
 				const wpSitesSDS = res.data.app.environments[ 0 ].wpSitesSDS;
-				allSites.push( ...( res.data.app.environments[ 0 ].wpSitesSDS.nodes as WpSite[] ) );
+				allSites.push(
+					...res.data.app.environments[ 0 ].wpSitesSDS.nodes.filter( ( node ): node is WpSite =>
+						Boolean( node )
+					)
+				);
 				after = wpSitesSDS.nextCursor;
 				total = Number( wpSitesSDS.total );
 				console.log( `Fetched ${ allSites.length } of ${ total } sites...` );
@@ -285,7 +289,7 @@ export class DevEnvSyncSQLCommand {
 		}
 
 		const networkSites = this.sdsSiteUrls;
-		if ( ! networkSites ) return;
+		if ( ! networkSites.length ) return;
 
 		const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
 		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
@@ -347,7 +351,7 @@ export class DevEnvSyncSQLCommand {
 
 	private fixBlogsTableQuery() {
 		const networkSites = this.sdsSiteUrls;
-		if ( ! networkSites ) {
+		if ( ! networkSites.length ) {
 			return '';
 		}
 
@@ -446,7 +450,17 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 			exit.withError( `Error extracting site URLs: ${ error.message }` );
 		}
 
-		this.sdsSiteUrls = await this.getSiteUrlsFromSDS();
+		try {
+			this.sdsSiteUrls = await this.getSiteUrlsFromSDS();
+		} catch ( err ) {
+			const error = err as Error;
+			await this.track( 'error', {
+				error_type: 'get_site_urls_from_sds',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error getting site URLs from SDS: ${ error.message }` );
+		}
 
 		console.log( 'Generating search-replace configuration...' );
 		this.generateSearchReplaceMap();
