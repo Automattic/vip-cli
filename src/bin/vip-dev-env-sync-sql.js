@@ -105,8 +105,6 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
 		const { app, env, configFile, table, siteId, wpcliCommand, ...optRest } = opt;
-		console.log( app, env );
-		process.exit( 0 );
 
 		const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
 			configFile,

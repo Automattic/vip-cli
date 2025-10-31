@@ -228,7 +228,7 @@ export class DevEnvSyncSQLCommand {
 			( ! this.env.wpSitesSDS?.nodes ||
 				this.env.wpSitesSDS.nodes.length === NUMBER_OF_SITE_FROM_SDS )
 		) {
-			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id as number ) );
+			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
 		}
 
 		return this.env.wpSitesSDS?.nodes ?? [];
