@@ -2,7 +2,6 @@
 
 import { DevEnvSyncSQLCommand } from '../commands/dev-env-sync-sql';
 import command from '../lib/cli/command';
-import { NUMBER_OF_SITE_FROM_SDS } from '../lib/constants/dev-environment';
 import {
 	getEnvironmentName,
 	processBooleanOption,
@@ -60,7 +59,8 @@ const appQuery = `
 		primaryDomain { name }
 		uniqueLabel
 		isMultisite
-		wpSitesSDS(first:${ NUMBER_OF_SITE_FROM_SDS }) {
+		wpSitesSDS(first:500) {
+			total
 			nodes {
 				id
 				blogId

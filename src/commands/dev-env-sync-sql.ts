@@ -18,7 +18,6 @@ import API from '../lib/api';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
-import { NUMBER_OF_SITE_FROM_SDS } from '../lib/constants/dev-environment';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
@@ -226,7 +225,8 @@ export class DevEnvSyncSQLCommand {
 		if (
 			this.env.isMultisite &&
 			( ! this.env.wpSitesSDS?.nodes ||
-				this.env.wpSitesSDS.nodes.length === NUMBER_OF_SITE_FROM_SDS )
+				! this.env.wpSitesSDS?.total ||
+				this.env.wpSitesSDS.nodes.length < this.env.wpSitesSDS.total )
 		) {
 			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
 		}
