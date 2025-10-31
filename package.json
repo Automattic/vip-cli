@@ -71,7 +71,7 @@
     "typescript:codegen:generate": "graphql-codegen",
     "test": "npm run lint && npm run check-types && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
     "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
-    "clean": "rimraf dist",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "cmd:format": "prettier '**/*.(js|json|jsx|md|ts|tsx|yml|yaml)'",
     "cmd:lint": "eslint --ext 'js,jsx,ts,tsx'",
     "prepare": "npm run clean && npm run build",
@@ -136,7 +136,6 @@
     "jest": "^30.0.0",
     "nock": "13.5.6",
     "prettier": "npm:wp-prettier@2.8.5",
-    "rimraf": "6.1.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
