@@ -24,7 +24,7 @@
         "ejs": "^3.1.8",
         "enquirer": "2.4.1",
         "fetch-retry": "^6.0.0",
-        "graphql": "15.5.1",
+        "graphql": "16.12.0",
         "graphql-tag": "2.12.6",
         "https-proxy-agent": "^7.0.6",
         "js-yaml": "^4.1.0",
@@ -333,7 +333,6 @@
       "integrity": "sha512-e7jT4DxYvIDLk1ZHmU/m/mB19rex9sv0c2ftBtjSBv+kVM/902eh0fINUzD7UwLLNR+jU585GxUJ8/EBfAM5fw==",
       "dev": true,
       "license": "MIT",
-      "peer": true,
       "dependencies": {
         "@babel/code-frame": "^7.27.1",
         "@babel/generator": "^7.28.5",
@@ -4204,7 +4203,6 @@
       "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-7.15.0.tgz",
       "integrity": "sha512-uiNHpyjZtFrLwLDpHnzaDlP3Tt6sGMqTCiqmxaN4n4RP0EfYZDODJyddiFDF44Hjwxr5xAcaYxVKm9QKQFJFLA==",
       "dev": true,
-      "peer": true,
       "dependencies": {
         "@eslint-community/regexpp": "^4.10.0",
         "@typescript-eslint/scope-manager": "7.15.0",
@@ -4238,7 +4236,6 @@
       "resolved": "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-7.15.0.tgz",
       "integrity": "sha512-k9fYuQNnypLFcqORNClRykkGOMOj+pV6V91R4GO/l1FDGwpqmSwoOQrOHo3cGaH63e+D3ZiCAOsuS/D2c99j/A==",
       "dev": true,
-      "peer": true,
       "dependencies": {
         "@typescript-eslint/scope-manager": "7.15.0",
         "@typescript-eslint/types": "7.15.0",
@@ -4718,7 +4715,6 @@
       "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.11.2.tgz",
       "integrity": "sha512-nc0Axzp/0FILLEVsm4fNwLCwMttvhEI263QtVPQcbpfZZ3ts0hLsZGOpE6czNlid7CJ9MlyH8reXkpsf3YUY4w==",
       "dev": true,
-      "peer": true,
       "bin": {
         "acorn": "bin/acorn"
       },
@@ -5440,7 +5436,6 @@
         }
       ],
       "license": "MIT",
-      "peer": true,
       "dependencies": {
         "caniuse-lite": "^1.0.30001726",
         "electron-to-chromium": "^1.5.173",
@@ -6571,7 +6566,6 @@
       "resolved": "https://registry.npmjs.org/eslint/-/eslint-8.57.1.tgz",
       "integrity": "sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==",
       "dev": true,
-      "peer": true,
       "dependencies": {
         "@eslint-community/eslint-utils": "^4.2.0",
         "@eslint-community/regexpp": "^4.6.1",
@@ -6710,7 +6704,6 @@
       "resolved": "https://registry.npmjs.org/eslint-plugin-import/-/eslint-plugin-import-2.29.1.tgz",
       "integrity": "sha512-BbPC0cuExzhiMo4Ff1BTVwHpjjv28C5R+btTOGaCRC7UEz801up0JadwkeSk5Ued6TG34uaczuVuH6qyy5YUxw==",
       "dev": true,
-      "peer": true,
       "dependencies": {
         "array-includes": "^3.1.7",
         "array.prototype.findlastindex": "^1.2.3",
@@ -8012,12 +8005,12 @@
       "dev": true
     },
     "node_modules/graphql": {
-      "version": "15.5.1",
-      "resolved": "https://registry.npmjs.org/graphql/-/graphql-15.5.1.tgz",
-      "integrity": "sha512-FeTRX67T3LoE3LWAxxOlW2K3Bz+rMYAC18rRguK4wgXaTZMiJwSUwDmPFo3UadAKbzirKIg5Qy+sNJXbpPRnQw==",
-      "peer": true,
+      "version": "16.12.0",
+      "resolved": "https://registry.npmjs.org/graphql/-/graphql-16.12.0.tgz",
+      "integrity": "sha512-DKKrynuQRne0PNpEbzuEdHlYOMksHSUI8Zc9Unei5gTsMNA2/vMpoMz/yKba50pejK56qj98qM0SjYxAKi13gQ==",
+      "license": "MIT",
       "engines": {
-        "node": ">= 10.x"
+        "node": "^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0"
       }
     },
     "node_modules/graphql-tag": {
@@ -9032,7 +9025,6 @@
       "integrity": "sha512-F26gjC0yWN8uAA5m5Ss8ZQf5nDHWGlN/xWZIh8S5SRbsEKBovwZhxGd6LJlbZYxBgCYOtreSUyb8hpXyGC5O4A==",
       "dev": true,
       "license": "MIT",
-      "peer": true,
       "dependencies": {
         "@jest/core": "30.2.0",
         "@jest/types": "30.2.0",
@@ -12136,7 +12128,6 @@
       "resolved": "https://registry.npmjs.org/wp-prettier/-/wp-prettier-2.8.5.tgz",
       "integrity": "sha512-gkphzYtVksWV6D7/V530bTehKkhrABUru/Gy4reOLOHJoKH4i9lcE1SxqU2VDxC3gCOx/Nk9alZmWk6xL/IBCw==",
       "dev": true,
-      "peer": true,
       "bin": {
         "prettier": "bin-prettier.js"
       },
@@ -13567,7 +13558,6 @@
       "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
       "dev": true,
       "license": "Apache-2.0",
-      "peer": true,
       "bin": {
         "tsc": "bin/tsc",
         "tsserver": "bin/tsserver"
@@ -14549,7 +14539,6 @@
       "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.28.5.tgz",
       "integrity": "sha512-e7jT4DxYvIDLk1ZHmU/m/mB19rex9sv0c2ftBtjSBv+kVM/902eh0fINUzD7UwLLNR+jU585GxUJ8/EBfAM5fw==",
       "dev": true,
-      "peer": true,
       "requires": {
         "@babel/code-frame": "^7.27.1",
         "@babel/generator": "^7.28.5",
@@ -17288,7 +17277,6 @@
       "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-7.15.0.tgz",
       "integrity": "sha512-uiNHpyjZtFrLwLDpHnzaDlP3Tt6sGMqTCiqmxaN4n4RP0EfYZDODJyddiFDF44Hjwxr5xAcaYxVKm9QKQFJFLA==",
       "dev": true,
-      "peer": true,
       "requires": {
         "@eslint-community/regexpp": "^4.10.0",
         "@typescript-eslint/scope-manager": "7.15.0",
@@ -17306,7 +17294,6 @@
       "resolved": "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-7.15.0.tgz",
       "integrity": "sha512-k9fYuQNnypLFcqORNClRykkGOMOj+pV6V91R4GO/l1FDGwpqmSwoOQrOHo3cGaH63e+D3ZiCAOsuS/D2c99j/A==",
       "dev": true,
-      "peer": true,
       "requires": {
         "@typescript-eslint/scope-manager": "7.15.0",
         "@typescript-eslint/types": "7.15.0",
@@ -17567,8 +17554,7 @@
       "version": "8.11.2",
       "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.11.2.tgz",
       "integrity": "sha512-nc0Axzp/0FILLEVsm4fNwLCwMttvhEI263QtVPQcbpfZZ3ts0hLsZGOpE6czNlid7CJ9MlyH8reXkpsf3YUY4w==",
-      "dev": true,
-      "peer": true
+      "dev": true
     },
     "acorn-jsx": {
       "version": "5.3.2",
@@ -18084,7 +18070,6 @@
       "resolved": "https://registry.npmjs.org/browserslist/-/browserslist-4.25.1.tgz",
       "integrity": "sha512-KGj0KoOMXLpSNkkEI6Z6mShmQy0bc1I+T7K9N81k4WWMrfz+6fQ6es80B/YLAeRoKvjYE1YSHHOW1qe9xIVzHw==",
       "dev": true,
-      "peer": true,
       "requires": {
         "caniuse-lite": "^1.0.30001726",
         "electron-to-chromium": "^1.5.173",
@@ -18877,7 +18862,6 @@
       "resolved": "https://registry.npmjs.org/eslint/-/eslint-8.57.1.tgz",
       "integrity": "sha512-ypowyDxpVSYpkXr9WPv2PAZCtNip1Mv5KTW0SCurXv/9iOpcrH9PaqUElksqEB6pChqHGDRCFTyrZlGhnLNGiA==",
       "dev": true,
-      "peer": true,
       "requires": {
         "@eslint-community/eslint-utils": "^4.2.0",
         "@eslint-community/regexpp": "^4.6.1",
@@ -19101,7 +19085,6 @@
       "resolved": "https://registry.npmjs.org/eslint-plugin-import/-/eslint-plugin-import-2.29.1.tgz",
       "integrity": "sha512-BbPC0cuExzhiMo4Ff1BTVwHpjjv28C5R+btTOGaCRC7UEz801up0JadwkeSk5Ued6TG34uaczuVuH6qyy5YUxw==",
       "dev": true,
-      "peer": true,
       "requires": {
         "array-includes": "^3.1.7",
         "array.prototype.findlastindex": "^1.2.3",
@@ -19887,10 +19870,9 @@
       "dev": true
     },
     "graphql": {
-      "version": "15.5.1",
-      "resolved": "https://registry.npmjs.org/graphql/-/graphql-15.5.1.tgz",
-      "integrity": "sha512-FeTRX67T3LoE3LWAxxOlW2K3Bz+rMYAC18rRguK4wgXaTZMiJwSUwDmPFo3UadAKbzirKIg5Qy+sNJXbpPRnQw==",
-      "peer": true
+      "version": "16.12.0",
+      "resolved": "https://registry.npmjs.org/graphql/-/graphql-16.12.0.tgz",
+      "integrity": "sha512-DKKrynuQRne0PNpEbzuEdHlYOMksHSUI8Zc9Unei5gTsMNA2/vMpoMz/yKba50pejK56qj98qM0SjYxAKi13gQ=="
     },
     "graphql-tag": {
       "version": "2.12.6",
@@ -20552,7 +20534,6 @@
       "resolved": "https://registry.npmjs.org/jest/-/jest-30.2.0.tgz",
       "integrity": "sha512-F26gjC0yWN8uAA5m5Ss8ZQf5nDHWGlN/xWZIh8S5SRbsEKBovwZhxGd6LJlbZYxBgCYOtreSUyb8hpXyGC5O4A==",
       "dev": true,
-      "peer": true,
       "requires": {
         "@jest/core": "30.2.0",
         "@jest/types": "30.2.0",
@@ -22720,8 +22701,7 @@
       "version": "npm:wp-prettier@2.8.5",
       "resolved": "https://registry.npmjs.org/wp-prettier/-/wp-prettier-2.8.5.tgz",
       "integrity": "sha512-gkphzYtVksWV6D7/V530bTehKkhrABUru/Gy4reOLOHJoKH4i9lcE1SxqU2VDxC3gCOx/Nk9alZmWk6xL/IBCw==",
-      "dev": true,
-      "peer": true
+      "dev": true
     },
     "prettier-linter-helpers": {
       "version": "1.0.0",
@@ -23727,8 +23707,7 @@
       "version": "5.9.3",
       "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
       "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
-      "dev": true,
-      "peer": true
+      "dev": true
     },
     "unbox-primitive": {
       "version": "1.0.2",
