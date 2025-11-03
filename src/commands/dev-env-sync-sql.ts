@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 
+import { ApolloQueryResult } from '@apollo/client';
 import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import fs from 'fs';
+import gql from 'graphql-tag';
 import Lando from 'lando';
 import { pipeline } from 'node:stream/promises';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
+import { SiteUrlsQueryQuery, SiteUrlsQueryQueryVariables } from './dev-env-sync-sql.generated';
 import { ExportSQLCommand } from './export-sql';
-import { App, AppEnvironment } from '../graphqlTypes';
+import { App, AppEnvironment, WpSite } from '../graphqlTypes';
 import { TrackFunction } from '../lib/analytics/clients/tracks';
+import API from '../lib/api';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
@@ -88,6 +92,25 @@ async function extractSiteUrls( sqlFile: string ): Promise< string[] > {
 	} );
 }
 
+const SITE_URLS_QUERY = gql`
+	query SiteUrlsQuery($appId: Int!, $environmentId: Int!, $after: String, $first: Int!) {
+		app(id: $appId) {
+			environments(id: $environmentId) {
+				wpSitesSDS(after: $after, first: $first) {
+					total
+					nextCursor
+					nodes {
+						id
+						blogId
+						homeUrl
+						siteUrl
+					}
+				}
+			}
+		}
+	}
+`;
+
 export class DevEnvSyncSQLCommand {
 	public tmpDir: string;
 	public siteUrls: string[] = [];
@@ -95,6 +118,7 @@ export class DevEnvSyncSQLCommand {
 	public liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
+	public sdsSiteUrls: WpSite[] = [];
 
 	/**
 	 * Creates a new instance of the command
@@ -197,6 +221,64 @@ export class DevEnvSyncSQLCommand {
 		fs.renameSync( outputFile, this.sqlFile );
 	}
 
+	public async getSiteUrlsFromSDS(): Promise< WpSite[] > {
+		if (
+			this.env.isMultisite &&
+			( ! this.env.wpSitesSDS?.nodes ||
+				! this.env.wpSitesSDS?.total ||
+				this.env.wpSitesSDS.nodes.length < this.env.wpSitesSDS.total )
+		) {
+			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
+		}
+
+		return this.env.wpSitesSDS?.nodes?.filter( ( node ): node is WpSite => Boolean( node ) ) ?? [];
+	}
+
+	private fetchSitesPage(
+		api: ReturnType< typeof API >,
+		appId: number,
+		environmentId: number,
+		after: string | null
+	): Promise< ApolloQueryResult< SiteUrlsQueryQuery > > {
+		return api.query< SiteUrlsQueryQuery, SiteUrlsQueryQueryVariables >( {
+			query: SITE_URLS_QUERY,
+			variables: {
+				first: 100,
+				after,
+				appId,
+				environmentId,
+			},
+		} );
+	}
+
+	private async fetchAllSites( appId: number, environmentId: number ): Promise< WpSite[] > {
+		const api = API();
+		let after: string | null | undefined = null;
+		const allSites: WpSite[] = [];
+		let total: number;
+
+		console.log( 'Fetching list of sites for database sync...' );
+		do {
+			// eslint-disable-next-line no-await-in-loop
+			const res = await this.fetchSitesPage( api, appId, environmentId, after );
+			if ( res.data.app?.environments?.[ 0 ]?.wpSitesSDS?.nodes ) {
+				const wpSitesSDS = res.data.app.environments[ 0 ].wpSitesSDS;
+				allSites.push(
+					...res.data.app.environments[ 0 ].wpSitesSDS.nodes.filter( ( node ): node is WpSite =>
+						Boolean( node )
+					)
+				);
+				after = wpSitesSDS.nextCursor;
+				total = Number( wpSitesSDS.total );
+				console.log( `Fetched ${ allSites.length } of ${ total } sites...` );
+			} else {
+				after = null;
+			}
+		} while ( after );
+
+		return allSites;
+	}
+
 	public generateSearchReplaceMap(): void {
 		this.searchReplaceMap = {};
 
@@ -206,8 +288,8 @@ export class DevEnvSyncSQLCommand {
 			);
 		}
 
-		const networkSites = this.env.wpSitesSDS?.nodes;
-		if ( ! networkSites ) return;
+		const networkSites = this.sdsSiteUrls;
+		if ( ! networkSites.length ) return;
 
 		const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
 		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
@@ -268,8 +350,8 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	private fixBlogsTableQuery() {
-		const networkSites = this.env.wpSitesSDS?.nodes;
-		if ( ! networkSites ) {
+		const networkSites = this.sdsSiteUrls;
+		if ( ! networkSites.length ) {
 			return '';
 		}
 
@@ -366,6 +448,18 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 				stack: error.stack,
 			} );
 			exit.withError( `Error extracting site URLs: ${ error.message }` );
+		}
+
+		try {
+			this.sdsSiteUrls = await this.getSiteUrlsFromSDS();
+		} catch ( err ) {
+			const error = err as Error;
+			await this.track( 'error', {
+				error_type: 'get_site_urls_from_sds',
+				error_message: error.message,
+				stack: error.stack,
+			} );
+			exit.withError( `Error getting site URLs from SDS: ${ error.message }` );
 		}
 
 		console.log( 'Generating search-replace configuration...' );
