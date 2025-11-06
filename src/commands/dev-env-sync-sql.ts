@@ -119,7 +119,7 @@ export class DevEnvSyncSQLCommand {
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
 	public sdsSiteUrls: WpSite[] = [];
-	private userSearchReplacePairs?: string[];
+	private readonly userSearchReplacePairs?: string[];
 
 	/**
 	 * Creates a new instance of the command
