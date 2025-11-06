@@ -21,6 +21,15 @@ const examples = [
 			'Sync the entire database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --search-replace="example.com,example-site.vipdev.lndo.site"`,
+		description:
+			'Sync the database and perform additional search-replace operations on the local database after import.',
+	},
+	{
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --search-replace="old.com,new.com" --search-replace="foo,bar"`,
+		description: 'Perform multiple search-replace operations after syncing the database.',
+	},
+	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --table=wp_posts --table=wp_comments`,
 		description:
 			'Sync only the wp_posts and wp_comments tables from the database of the develop environment to a local environment named "example-site".',
