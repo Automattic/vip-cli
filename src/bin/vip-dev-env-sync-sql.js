@@ -101,10 +101,14 @@ command( {
 		'A local configuration file that specifies the data to include in the partial database sync. Accepts a relative or absolute path to the file.',
 		undefined
 	)
+	.option(
+		[ 'r', 'search-replace' ],
+		'Search for a string in the database and replace it with a new string after the import. Can be passed multiple times.'
+	)
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const { app, env, configFile, table, siteId, wpcliCommand, ...optRest } = opt;
+		const { app, env, configFile, table, siteId, wpcliCommand, searchReplace, ...optRest } = opt;
 
 		const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
 			configFile,
@@ -112,6 +116,10 @@ command( {
 			siteId,
 			wpcliCommand
 		);
+
+		// Normalize searchReplace to an array
+		const normalizedSearchReplace =
+			searchReplace && ! Array.isArray( searchReplace ) ? [ searchReplace ] : searchReplace;
 
 		const slug = await getEnvironmentName( optRest );
 		const trackerFn = makeCommandTracker( 'dev_env_sync_sql', {
@@ -142,7 +150,8 @@ command( {
 			slug,
 			lando,
 			trackerFn,
-			liveBackupCopyCLIOptions
+			liveBackupCopyCLIOptions,
+			{ searchReplace: normalizedSearchReplace }
 		);
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?
