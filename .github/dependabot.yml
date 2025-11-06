@@ -30,6 +30,11 @@ updates:
           - minor
         patterns:
           - 'types/*'
+      graphql:
+        patterns:
+          - 'graphql'
+          - '@apollo/client'
+          - 'graphql-tag'
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: 'github-actions' # See documentation for possible values
