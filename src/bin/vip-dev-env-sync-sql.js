@@ -21,13 +21,13 @@ const examples = [
 			'Sync the entire database of the develop environment in the "example-app" application to a local environment named "example-site".',
 	},
 	{
-		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --search-replace="example.com,example-site.vipdev.lndo.site"`,
+		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --search-replace="example.com,localhost"`,
 		description:
-			'Sync the database and perform additional search-replace operations on the local database after import.',
+			'Sync the database and perform additional search-replace operations on the SQL file during sync.',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --search-replace="old.com,new.com" --search-replace="foo,bar"`,
-		description: 'Perform multiple search-replace operations after syncing the database.',
+		description: 'Perform multiple search-replace operations during the database sync.',
 	},
 	{
 		usage: `vip @example-app.develop dev-env sync sql --slug=example-site --table=wp_posts --table=wp_comments`,
@@ -112,7 +112,7 @@ command( {
 	)
 	.option(
 		[ 'r', 'search-replace' ],
-		'Search for a string in the database and replace it with a new string after the import. Can be passed multiple times.'
+		'Search for a string in the SQL file and replace it with a new string. Can be passed multiple times.'
 	)
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
@@ -160,7 +160,7 @@ command( {
 			lando,
 			trackerFn,
 			liveBackupCopyCLIOptions,
-			{ searchReplace: normalizedSearchReplace }
+			normalizedSearchReplace
 		);
 		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
 		// We should probably use handleCLIException instead?

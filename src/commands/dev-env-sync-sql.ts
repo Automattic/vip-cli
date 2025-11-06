@@ -19,7 +19,6 @@ import { BackupStorageAvailability } from '../lib/backup-storage-availability/ba
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
-import { exec } from '../lib/dev-environment/dev-environment-core';
 import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
@@ -120,7 +119,7 @@ export class DevEnvSyncSQLCommand {
 	public _track: TrackFunction;
 	private _sqlDumpType?: SqlDumpType;
 	public sdsSiteUrls: WpSite[] = [];
-	public extraSearchReplacePairs: Array< { search: string; replace: string } > = [];
+	private userSearchReplacePairs?: string[];
 
 	/**
 	 * Creates a new instance of the command
@@ -132,14 +131,12 @@ export class DevEnvSyncSQLCommand {
 		public lando: Lando,
 		trackerFn: TrackFunction = () => {},
 		liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions,
-		extraOptions?: { searchReplace?: string[] }
+		userSearchReplace?: string[]
 	) {
 		this._track = trackerFn;
 		this.tmpDir = makeTempDir();
 		this.liveBackupCopyCLIOptions = liveBackupCopyCLIOptions;
-		if ( extraOptions?.searchReplace ) {
-			this.extraSearchReplacePairs = this.normalizeSearchReplace( extraOptions.searchReplace );
-		}
+		this.userSearchReplacePairs = userSearchReplace;
 	}
 
 	public track( name: string, eventProps: Record< string, unknown > ) {
@@ -295,35 +292,66 @@ export class DevEnvSyncSQLCommand {
 		}
 
 		const networkSites = this.sdsSiteUrls;
-		if ( ! networkSites.length ) return;
-
-		const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
-		const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
-		debug(
-			'Network sites: %j, primary URL: %s, primary domain: %s',
-			networkSites.map( site => ( { blogId: site?.blogId, homeUrl: site?.homeUrl } ) ),
-			primaryUrl,
-			primaryDomain
-		);
-
-		for ( const site of networkSites ) {
-			if ( ! site?.blogId || site.blogId === 1 ) continue;
-
-			const url = site?.homeUrl;
-			if ( ! url ) continue;
-
-			const strippedUrl = stripProtocol( url ).replace( /\/$/, '' );
-			if ( ! this.searchReplaceMap[ strippedUrl ] ) continue;
-
-			const domain = new URL( url ).hostname;
-			const newDomain =
-				primaryDomain === domain
-					? this.landoDomain
-					: `${ this.slugifyDomain( domain ) }.${ this.landoDomain }`;
-
-			this.searchReplaceMap[ stripProtocol( url ) ] = stripProtocol(
-				replaceDomain( url, newDomain )
+		if ( networkSites.length ) {
+			const primaryUrl = networkSites.find( site => site?.blogId === 1 )?.homeUrl;
+			const primaryDomain = primaryUrl ? new URL( primaryUrl ).hostname : '';
+			debug(
+				'Network sites: %j, primary URL: %s, primary domain: %s',
+				networkSites.map( site => ( { blogId: site?.blogId, homeUrl: site?.homeUrl } ) ),
+				primaryUrl,
+				primaryDomain
 			);
+
+			for ( const site of networkSites ) {
+				if ( ! site?.blogId || site.blogId === 1 ) continue;
+
+				const url = site?.homeUrl;
+				if ( ! url ) continue;
+
+				const strippedUrl = stripProtocol( url ).replace( /\/$/, '' );
+				if ( ! this.searchReplaceMap[ strippedUrl ] ) continue;
+
+				const domain = new URL( url ).hostname;
+				const newDomain =
+					primaryDomain === domain
+						? this.landoDomain
+						: `${ this.slugifyDomain( domain ) }.${ this.landoDomain }`;
+
+				this.searchReplaceMap[ stripProtocol( url ) ] = stripProtocol(
+					replaceDomain( url, newDomain )
+				);
+			}
+		}
+
+		// Add user-provided search-replace pairs
+		this.addUserSearchReplacePairs();
+	}
+
+	/**
+	 * Adds user-provided search-replace pairs to the searchReplaceMap
+	 */
+	private addUserSearchReplacePairs(): void {
+		if ( ! this.userSearchReplacePairs?.length ) {
+			return;
+		}
+
+		for ( const pair of this.userSearchReplacePairs ) {
+			// Split on first comma only, so replace can contain commas
+			const commaIndex = pair.indexOf( ',' );
+			if ( commaIndex === -1 ) {
+				throw new Error(
+					`Invalid search-replace format: "${ pair }". Expected format: "search,replace"`
+				);
+			}
+
+			const search = pair.substring( 0, commaIndex ).trim();
+			const replaceValue = pair.substring( commaIndex + 1 ).trim();
+
+			if ( ! search ) {
+				throw new Error( 'Search value cannot be empty' );
+			}
+
+			this.searchReplaceMap[ search ] = replaceValue;
 		}
 	}
 
@@ -353,98 +381,6 @@ export class DevEnvSyncSQLCommand {
 		};
 		const importCommand = new DevEnvImportSQLCommand( this.sqlFile, importOptions, this.slug );
 		await importCommand.run();
-	}
-
-	/**
-	 * Normalizes search-replace pairs from CLI format to an array of objects
-	 *
-	 * @param searchReplace Array of strings in format "search,replace"
-	 * @return Array of objects with search and replace properties
-	 */
-	private normalizeSearchReplace(
-		searchReplace: string[]
-	): Array< { search: string; replace: string } > {
-		return searchReplace.map( pair => {
-			// Split on first comma only, so replace can contain commas
-			const commaIndex = pair.indexOf( ',' );
-			if ( commaIndex === -1 ) {
-				throw new Error(
-					`Invalid search-replace format: "${ pair }". Expected format: "search,replace"`
-				);
-			}
-
-			const searchValue = pair.substring( 0, commaIndex ).trim();
-			const replaceValue = pair.substring( commaIndex + 1 ).trim();
-
-			if ( ! searchValue ) {
-				throw new Error( 'Search value cannot be empty' );
-			}
-
-			return { search: searchValue, replace: replaceValue };
-		} );
-	}
-
-	/**
-	 * Builds the base arguments for WP-CLI search-replace command
-	 *
-	 * @return Array of WP-CLI arguments
-	 */
-	public buildSearchReplaceBaseArgs(): string[] {
-		const args = [
-			'wp',
-			'search-replace',
-			'--all-tables',
-			'--precise',
-			'--skip-columns=guid',
-			'--quiet',
-		];
-
-		if ( this.env.isMultisite ) {
-			args.push( '--network' );
-		}
-
-		return args;
-	}
-
-	/**
-	 * Executes WP-CLI search-replace command for each pair
-	 */
-	private async runExtraSearchReplace(): Promise< void > {
-		if ( ! this.extraSearchReplacePairs.length ) {
-			return;
-		}
-
-		await this.track( 'search_replace_start', {
-			pairs_count: this.extraSearchReplacePairs.length,
-		} );
-
-		console.log( 'Running additional search-replace operations on the database:' );
-
-		for ( const { search, replace: replaceValue } of this.extraSearchReplacePairs ) {
-			console.log( `  ${ search } -> ${ replaceValue }` );
-
-			const baseArgs = this.buildSearchReplaceBaseArgs();
-			const args = [ ...baseArgs, search, replaceValue ];
-
-			try {
-				// eslint-disable-next-line no-await-in-loop
-				await exec( this.lando, this.slug, args, { stdio: [ 'ignore', 'pipe', 'pipe' ] } );
-			} catch ( error ) {
-				const err = error as Error;
-				// eslint-disable-next-line no-await-in-loop
-				await this.track( 'search_replace_error', {
-					error_message: err.message,
-					stack: err.stack,
-				} );
-				throw new Error( `Failed to run search-replace for "${ search }": ${ err.message }` );
-			}
-		}
-
-		console.log( `${ chalk.green( '✓' ) } Additional search-replace operations complete` );
-
-		await this.track( 'search_replace_done', {
-			pairs_count: this.extraSearchReplacePairs.length,
-		} );
 	}
 
 	private fixBlogsTableQuery() {
@@ -593,19 +529,6 @@ DROP PROCEDURE vip_sync_update_blog_domains;
 				stack: error.stack,
 			} );
 			exit.withError( `Error importing SQL file: ${ error.message }` );
-		}
-
-		// Run additional search-replace operations after import
-		try {
-			await this.runExtraSearchReplace();
-		} catch ( err ) {
-			const error = err as Error;
-			await this.track( 'error', {
-				error_type: 'post_import_search_replace',
-				error_message: error.message,
-				stack: error.stack,
-			} );
-			exit.withError( `Error running post-import search-replace: ${ error.message }` );
 		}
 
 		return true;

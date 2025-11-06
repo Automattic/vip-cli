@@ -88,6 +88,68 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 				'test.go-vip.com/path': 'test-slug.vipdev.lndo.site/path',
 			} );
 		} );
+
+		it( 'should add user search-replace pairs to the map', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, [
+				'old.com,new.com',
+				'foo,bar',
+			] );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [ 'http://test.go-vip.com' ];
+			cmd.generateSearchReplaceMap();
+
+			expect( cmd.searchReplaceMap ).toEqual( {
+				'test.go-vip.com': 'test-slug.vipdev.lndo.site',
+				'old.com': 'new.com',
+				foo: 'bar',
+			} );
+		} );
+
+		it( 'should allow comma in replace value', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, [
+				'old,new,value',
+			] );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [];
+			cmd.generateSearchReplaceMap();
+
+			expect( cmd.searchReplaceMap ).toEqual( {
+				old: 'new,value',
+			} );
+		} );
+
+		it( 'should allow empty replace value', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, [
+				'old,',
+			] );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [];
+			cmd.generateSearchReplaceMap();
+
+			expect( cmd.searchReplaceMap ).toEqual( {
+				old: '',
+			} );
+		} );
+
+		it( 'should throw error for invalid format', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, [
+				'invalidpair',
+			] );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [];
+
+			expect( () => cmd.generateSearchReplaceMap() ).toThrow( 'Invalid search-replace format' );
+		} );
+
+		it( 'should throw error for empty search value', () => {
+			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, [
+				',replace',
+			] );
+			cmd.slug = 'test-slug';
+			cmd.siteUrls = [];
+
+			expect( () => cmd.generateSearchReplaceMap() ).toThrow( 'Search value cannot be empty' );
+		} );
 	} );
 
 	describe( '.runSearchReplace', () => {
@@ -207,101 +269,5 @@ describe( 'findSiteHomeUrl', () => {
 	] )( 'should return the correct home URL for %s', ( input, expected ) => {
 		const actual = findSiteHomeUrl( input );
 		expect( actual ).toBe( expected );
-	} );
-} );
-
-describe( 'commands/DevEnvSyncSQLCommand - search-replace functionality', () => {
-	const app = { id: 123, name: 'test-app' };
-	const env = { id: 456, name: 'test-env', wpSitesSDS: {}, isMultisite: false };
-	const msEnv = {
-		id: 456,
-		name: 'test-env',
-		isMultisite: true,
-		wpSitesSDS: {
-			nodes: [
-				{
-					blogId: 1,
-					homeUrl: 'https://test.go-vip.com',
-				},
-			],
-		},
-	};
-	const lando = new Lando( { domain: 'vipdev.lndo.site' } );
-
-	describe( 'normalizeSearchReplace', () => {
-		it( 'should parse single search-replace pair', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-				searchReplace: [ 'old,new' ],
-			} );
-			expect( cmd.extraSearchReplacePairs ).toEqual( [ { search: 'old', replace: 'new' } ] );
-		} );
-
-		it( 'should parse multiple search-replace pairs', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-				searchReplace: [ 'old,new', 'foo,bar' ],
-			} );
-			expect( cmd.extraSearchReplacePairs ).toEqual( [
-				{ search: 'old', replace: 'new' },
-				{ search: 'foo', replace: 'bar' },
-			] );
-		} );
-
-		it( 'should allow comma in replace value', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-				searchReplace: [ 'old,new,value' ],
-			} );
-			expect( cmd.extraSearchReplacePairs ).toEqual( [ { search: 'old', replace: 'new,value' } ] );
-		} );
-
-		it( 'should trim whitespace from values', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-				searchReplace: [ '  old  ,  new  ' ],
-			} );
-			expect( cmd.extraSearchReplacePairs ).toEqual( [ { search: 'old', replace: 'new' } ] );
-		} );
-
-		it( 'should allow empty replace value', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-				searchReplace: [ 'old,' ],
-			} );
-			expect( cmd.extraSearchReplacePairs ).toEqual( [ { search: 'old', replace: '' } ] );
-		} );
-
-		it( 'should throw error for missing comma', () => {
-			expect( () => {
-				new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-					searchReplace: [ 'oldnew' ],
-				} );
-			} ).toThrow( 'Invalid search-replace format' );
-		} );
-
-		it( 'should throw error for empty search value', () => {
-			expect( () => {
-				new DevEnvSyncSQLCommand( app, env, 'test-slug', lando, () => {}, undefined, {
-					searchReplace: [ ',new' ],
-				} );
-			} ).toThrow( 'Search value cannot be empty' );
-		} );
-	} );
-
-	describe( 'buildSearchReplaceBaseArgs', () => {
-		it( 'should build base args for single site', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
-			const args = cmd.buildSearchReplaceBaseArgs();
-			expect( args ).toEqual( [
-				'wp',
-				'search-replace',
-				'--all-tables',
-				'--precise',
-				'--skip-columns=guid',
-				'--quiet',
-			] );
-		} );
-
-		it( 'should include --network flag for multisite', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug', lando );
-			const args = cmd.buildSearchReplaceBaseArgs();
-			expect( args ).toContain( '--network' );
-		} );
 	} );
 } );
