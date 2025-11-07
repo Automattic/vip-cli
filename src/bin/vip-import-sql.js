@@ -560,7 +560,7 @@ command( {
 		const formattedEnvironment = formatEnvironment( opts.env.type );
 		const launched = opts.env.launched;
 
-		const fileNameToUpload = fileNameOrURL;
+		let fileNameToUpload = fileNameOrURL;
 
 		// SQL file validations - only for local files
 		let tableNames = [];
@@ -665,6 +665,9 @@ Processing the SQL import for your environment...
 				);
 			}
 
+			// Use the processed file for upload
+			fileNameToUpload = outputFileName;
+
 			progressTracker.stepSuccess( 'replace' );
 		} else {
 			progressTracker.stepSkipped( 'replace' );
@@ -736,7 +739,9 @@ Processing the SQL import for your environment...
 			}
 		}
 
-		if ( searchReplace ) {
+		// For remote URLs, pass search-replace to the API (it will be done server-side)
+		// For local files, search-replace has already been applied to the file, so don't pass it to the API
+		if ( isUrl && searchReplace ) {
 			let pairs = searchReplace;
 			if ( ! Array.isArray( pairs ) ) {
 				pairs = [ searchReplace ];
