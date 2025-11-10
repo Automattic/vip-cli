@@ -19,7 +19,7 @@ import { formatEnvironment, getGlyphForStatus } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import {
 	getFileMeta,
-	uploadImportSqlFileToS3,
+ uploadImportFileToS3,
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
@@ -179,7 +179,7 @@ Processing the file for deployment to your environment...
 			fileMeta: { basename },
 			checksum,
 			result,
-		} = await uploadImportSqlFileToS3( uploadParams );
+ } = await uploadImportFileToS3( uploadParams );
 
 		startDeployVariables.input = {
 			id: appId,

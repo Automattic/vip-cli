@@ -1,6 +1,6 @@
 import { appDeployCmd } from '../../src/bin/vip-app-deploy';
 import * as exit from '../../src/lib/cli/exit';
-import { uploadImportSqlFileToS3 } from '../../src/lib/client-file-uploader';
+import { uploadImportFileToS3 } from '../../src/lib/client-file-uploader';
 import {
 	validateFile,
 	promptToContinue,
@@ -13,7 +13,7 @@ jest.mock( '../../src/lib/client-file-uploader', () => ( {
 	getFileMeta: jest
 		.fn()
 		.mockResolvedValue( { fileName: '/vip/skeleton.zip', basename: 'skeleton.zip' } ),
-	uploadImportSqlFileToS3: jest.fn(),
+ uploadImportFileToS3: jest.fn(),
 } ) );
 
 jest.mock( '../../src/lib/custom-deploy/custom-deploy', () => ( {
@@ -105,7 +105,7 @@ describe( 'vip-app-deploy', () => {
 
 			expect( promptToContinue ).not.toHaveBeenCalled();
 
-			expect( uploadImportSqlFileToS3 ).toHaveBeenCalledTimes( 1 );
+ expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
 		} );
 	} );
 } );

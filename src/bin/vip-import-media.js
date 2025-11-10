@@ -8,8 +8,14 @@ import API from '../lib/api';
 import command from '../lib/cli/command';
 // eslint-disable-next-line no-duplicate-imports
 import { formatEnvironment } from '../lib/cli/format';
+import {
+	getFileMeta,
+	getSignedUploadRequestData,
+	uploadImportFileToS3,
+} from '../lib/client-file-uploader';
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
+import { isLocalArchive } from '../lib/media-import/utils';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const API_VERSION = 'v2';
@@ -46,12 +52,22 @@ const usage = 'vip import media';
 
 const debug = debugLib( 'vip:vip-import-media' );
 
+// Support legacy direct invocation: when users run the built binary directly
+// like `node ./dist/bin/vip-import-media.js @1234.production /path/to/archive.tar.gz --flag`
+// inject the `import media` subcommand into process.argv so the command parser
+// sees the same shape as the full CLI: `vip import media ...`.
+
 // Command examples for the `vip import media` help prompt
 const examples = [
 	{
 		usage: 'vip @example-app.production import media https://example.com/uploads.tar.gz',
 		description:
 			'Import the archived file "uploads.tar.gz" from a publicly accessible URL to a production environment.',
+	},
+	{
+		usage: 'vip @example-app.production import media /path/to/uploads.tar.gz',
+		description:
+			'Import a local archive file (e.g. .tar.gz, .tgz, .zip) from your machine into a production environment. The file will be uploaded temporarily and then imported.',
 	},
 	// Format error logs
 	{
@@ -81,6 +97,8 @@ function isSupportedUrl( urlToTest ) {
 	}
 	return url.protocol === 'http:' || url.protocol === 'https:';
 }
+
+// isLocalArchive is provided by src/lib/media-import/utils.js
 
 command( {
 	appContext: true,
@@ -127,16 +145,71 @@ Are you sure you want to import the contents of the URL?
 			overwriteExistingFiles,
 			importIntermediateImages,
 		} = opts;
-		const [ url ] = args;
+		const [ fileNameOrURL ] = args;
 
-		if ( ! isSupportedUrl( url ) ) {
-			console.log(
-				chalk.red( `
-Error:
-	Invalid URL provided: ${ url }
-	Please make sure that it is a publicly accessible web URL containing an archive of the media files to import.` )
+		let url = '';
+		let sourceIsLocal = false;
+
+		if (
+			String( fileNameOrURL ).startsWith( 'http://' ) ||
+			String( fileNameOrURL ).startsWith( 'https://' )
+		) {
+			url = fileNameOrURL;
+			// validate supported URL
+			if ( ! isSupportedUrl( url ) ) {
+				console.log(
+					chalk.red( `
+	 Error:
+	 Invalid URL provided: ${ url }
+	 Please make sure that it is a publicly accessible web URL containing an archive of the media files to import.` )
+				);
+				return;
+			}
+		} else {
+			// treat as local archive path
+			if ( ! isLocalArchive( fileNameOrURL ) ) {
+				console.log(
+					chalk.red( `
+	 Error:
+	 Invalid local archive provided: ${ fileNameOrURL }
+	 Please make sure the file exists and is one of: .tar.gz, .tgz, .zip` )
+				);
+				return;
+			}
+
+			// upload archive to S3 and get presigned URL for import
+			sourceIsLocal = true;
+			const fileMeta = await getFileMeta( fileNameOrURL );
+			fileMeta.fileName = fileNameOrURL;
+			const {
+				fileMeta: { basename },
+				checksum: uploadedMD5,
+				result,
+			} = await uploadImportFileToS3( {
+				app,
+				env,
+				fileMeta,
+				progressCallback: percentage => {
+					console.log( `Upload progress: ${ percentage }%` );
+				},
+			} );
+
+			// small debug info to keep variables used
+			debug( 'Uploaded file basename:', basename );
+			debug( 'Uploaded checksum:', uploadedMD5 );
+			debug(
+				'Upload result:',
+				result && typeof result === 'object' ? Object.keys( result ) : result
 			);
-			return;
+
+			const presignedRequest = await getSignedUploadRequestData( {
+				appId: app.id,
+				envId: env.id,
+				basename,
+				action: 'GetObject',
+			} );
+
+			url = presignedRequest.url;
 		}
 
 		const track = trackEventWithEnv.bind( null, app.id, env.id );
@@ -154,7 +227,11 @@ Importing Media into your App...
 `;
 
 		console.log();
-		console.log( `Importing archive from: ${ url }` );
+		if ( sourceIsLocal ) {
+			console.log( `Importing local archive: ${ fileNameOrURL } (uploaded to temporary URL)` );
+		} else {
+			console.log( `Importing archive from: ${ url }` );
+		}
 		console.log( `to: ${ env.primaryDomain.name } (${ formatEnvironment( env.type ) })` );
 
 		try {
