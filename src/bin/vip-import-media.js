@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
 
 import API from '../lib/api';
 import command from '../lib/cli/command';
-// eslint-disable-next-line no-duplicate-imports
 import { formatEnvironment } from '../lib/cli/format';
 import {
 	getFileMeta,
@@ -251,8 +251,8 @@ Importing Media into your App...
 				saveErrorLog,
 			} );
 		} catch ( error ) {
-			if ( error.graphQLErrors ) {
-				for ( const err of error.graphQLErrors ) {
+			if ( CombinedGraphQLErrors.is( error ) ) {
+				for ( const err of error.errors ) {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 

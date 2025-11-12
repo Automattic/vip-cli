@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 
@@ -7,7 +8,6 @@ import API from '../lib/api';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { isSupportedApp } from '../lib/media-import/media-file-import';
-// eslint-disable-next-line no-duplicate-imports
 import { MediaImportProgressTracker } from '../lib/media-import/progress';
 import { mediaImportCheckStatus } from '../lib/media-import/status';
 import { trackEventWithEnv } from '../lib/tracker';
@@ -100,8 +100,8 @@ Aborting this media import.
 			} );
 			await mediaImportCheckStatus( { app, env, progressTracker } );
 		} catch ( error ) {
-			if ( error.graphQLErrors ) {
-				for ( const err of error.graphQLErrors ) {
+			if ( CombinedGraphQLErrors.is( error ) ) {
+				for ( const err of error.errors ) {
 					console.log( chalk.red( 'Error:' ), err.message );
 				}
 				return;

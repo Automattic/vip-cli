@@ -357,7 +357,7 @@ const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterf
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
-	const jobs = result.data.app?.environments?.[ 0 ]?.jobs ?? [];
+	const jobs = result.data?.app?.environments?.[ 0 ]?.jobs ?? [];
 
 	if ( jobs.length ) {
 		return jobs.reduce( ( prev, current ) =>

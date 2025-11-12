@@ -56,7 +56,7 @@ export async function getRecentLogs(
 		},
 	} );
 
-	const logs = response.data.app?.environments?.[ 0 ]?.logs;
+	const logs = response.data?.app?.environments?.[ 0 ]?.logs;
 
 	if ( ! logs?.nodes ) {
 		throw new Error( 'Unable to query logs' );

@@ -28,7 +28,7 @@ export async function getCurrentUserInfo( silenceAuthErrors = false ): Promise< 
 	const response = await api.query< IsVipQuery, IsVipQueryVariables >( {
 		query: QUERY_CURRENT_USER,
 	} );
-	const { me } = response.data;
+	const me = response.data?.me;
 	if ( ! me ) {
 		throw new Error( 'The API did not return any information about the user.' );
 	}

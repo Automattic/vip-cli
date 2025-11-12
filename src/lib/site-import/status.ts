@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import { ApolloClient } from '@apollo/client';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
@@ -79,7 +79,7 @@ interface GetStatusResponse {
 }
 
 async function getStatus(
-	api: ApolloClient< NormalizedCacheObject >,
+	api: ApolloClient,
 	appId: number,
 	envId: number
 ): Promise< GetStatusResponse > {
@@ -88,7 +88,7 @@ async function getStatus(
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
-	const environments = response.data.app?.environments ?? [];
+	const environments = response.data?.app?.environments ?? [];
 	if ( ! environments.length ) {
 		throw new Error( 'Unable to determine import status from environment' );
 	}

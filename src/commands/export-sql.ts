@@ -116,11 +116,12 @@ async function fetchLatestBackupAndJobStatusBase(
 		fetchPolicy: 'network-only',
 	} );
 
-	const environments = response.data.app?.environments;
-	const envSqlDumpTool = environments?.[ 0 ]?.backupsSqlDumpTool;
+	const environments = response.data?.app?.environments;
+	const firstEnvironment = environments?.[ 0 ];
+	const envSqlDumpTool = firstEnvironment?.backupsSqlDumpTool;
 
-	const latestBackup: Backup | undefined = environments?.[ 0 ]?.latestBackup as Backup;
-	const jobs: Job[] = ( environments?.[ 0 ]?.jobs || [] ) as Job[];
+	const latestBackup = firstEnvironment?.latestBackup ?? undefined;
+	const jobs = ( firstEnvironment?.jobs || [] ) as Job[];
 
 	return { latestBackup, jobs, envSqlDumpTool };
 }
@@ -175,7 +176,7 @@ async function generateDownloadLink(
 		},
 	} );
 
-	return response.data?.generateDBBackupCopyUrl?.url as string;
+	return response.data?.generateDBBackupCopyUrl?.url ?? '';
 }
 
 /**
