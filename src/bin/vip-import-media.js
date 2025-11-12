@@ -98,8 +98,6 @@ function isSupportedUrl( urlToTest ) {
 	return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
-// isLocalArchive is provided by src/lib/media-import/utils.js
-
 command( {
 	appContext: true,
 	appQuery,
@@ -167,7 +165,7 @@ Are you sure you want to import the contents of the URL?
 			}
 		} else {
 			// treat as local archive path
-			if ( ! isLocalArchive( fileNameOrURL ) ) {
+			if ( ! ( await isLocalArchive( fileNameOrURL ) ) ) {
 				console.log(
 					chalk.red( `
 	 Error:
