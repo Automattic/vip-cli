@@ -58,6 +58,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'AbortMultipartUpload'
 		| 'CreateMultipartUpload'
 		| 'CompleteMultipartUpload'
+		| 'GetObject'
 		| 'ListParts'
 		| 'PutObject'
 		| 'UploadPart';

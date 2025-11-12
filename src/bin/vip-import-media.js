@@ -187,9 +187,7 @@ Are you sure you want to import the contents of the URL?
 				app,
 				env,
 				fileMeta,
-				progressCallback: percentage => {
-					console.log( `Upload progress: ${ percentage }%` );
-				},
+				progressCallback: percentage => console.log( `Upload progress: ${ percentage }%` ),
 			} );
 
 			// small debug info to keep variables used
@@ -200,14 +198,12 @@ Are you sure you want to import the contents of the URL?
 				result && typeof result === 'object' ? Object.keys( result ) : result
 			);
 
-			const presignedRequest = await getSignedUploadRequestData( {
+			( { url } = await getSignedUploadRequestData( {
 				appId: app.id,
 				envId: env.id,
 				basename,
 				action: 'GetObject',
-			} );
-
-			url = presignedRequest.url;
+			} ) );
 		}
 
 		const track = trackEventWithEnv.bind( null, app.id, env.id );
