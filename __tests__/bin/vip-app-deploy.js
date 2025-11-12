@@ -13,7 +13,7 @@ jest.mock( '../../src/lib/client-file-uploader', () => ( {
 	getFileMeta: jest
 		.fn()
 		.mockResolvedValue( { fileName: '/vip/skeleton.zip', basename: 'skeleton.zip' } ),
- uploadImportFileToS3: jest.fn(),
+	uploadImportFileToS3: jest.fn(),
 } ) );
 
 jest.mock( '../../src/lib/custom-deploy/custom-deploy', () => ( {
@@ -105,7 +105,7 @@ describe( 'vip-app-deploy', () => {
 
 			expect( promptToContinue ).not.toHaveBeenCalled();
 
- expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
+			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
 		} );
 	} );
 } );
