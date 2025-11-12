@@ -22,7 +22,7 @@ jobs:
           - 3
     runs-on: ubuntu-latest
     env:
-      NODE_OPTIONS: "--localstorage-file=/tmp/localstorage"
+      NODE_OPTIONS: '--localstorage-file=/tmp/localstorage'
     steps:
       - name: Checkout
         uses: actions/checkout@v5
