@@ -20,3 +20,13 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           PROVENANCE: 'true'
           CONVENTIONAL_COMMITS: 'true'
+
+  changelog:
+    name: Publish docs changelog
+    uses: ./.github/workflows/changelog.yml
+    needs: publish
+
+  publish-docs:
+    name: Publish cli command reference docs
+    uses: ./.github/workflows/publish-docs.yml
+    needs: publish
