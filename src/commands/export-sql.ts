@@ -19,7 +19,7 @@ import {
 	PromptStatus,
 } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
-import { formatBytes, getGlyphForStatus } from '../lib/cli/format';
+import { formatBytes } from '../lib/cli/format';
 import { ProgressTracker } from '../lib/cli/progress';
 import { downloadFile, OnProgressCallback } from '../lib/http/download-file';
 import * as liveBackupCopy from '../lib/live-backup-copy';
@@ -221,6 +221,7 @@ export interface ExportSQLOptions {
 	generateBackup?: boolean;
 	liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 	showMyDumperWarning?: boolean;
+	skipDownload?: boolean;
 }
 
 /**
@@ -243,6 +244,8 @@ export class ExportSQLCommand {
 	private readonly liveBackupCopyCLIOptions?: LiveBackupCopyCLIOptions;
 
 	private readonly showMyDumperWarning: boolean;
+
+	private readonly skipDownload: boolean;
 
 	/**
 	 * Creates an instance of SQLExportCommand
@@ -273,6 +276,7 @@ export class ExportSQLCommand {
 		this.liveBackupCopyCLIOptions = options.liveBackupCopyCLIOptions;
 		this.showMyDumperWarning =
 			options.showMyDumperWarning === undefined ? true : options.showMyDumperWarning;
+		this.skipDownload = options.skipDownload || false;
 	}
 
 	/**
@@ -412,6 +416,17 @@ export class ExportSQLCommand {
 			size = Number( bytesWrittenMeta.value );
 		}
 
+		if ( this.skipDownload ) {
+			this.progressTracker.stepSkipped( this.steps.CONFIRM_ENOUGH_STORAGE );
+			this.progressTracker.stepSkipped( this.steps.DOWNLOAD );
+			this.progressTracker.print();
+			this.progressTracker.stopPrinting();
+
+			console.log( `Download URL: ${ url }` );
+
+			return;
+		}
+
 		const storageConfirmed = await this.progressTracker.handleContinuePrompt(
 			async setPromptShown => {
 				const status = await this.confirmEnoughStorage( Number( size ) );
@@ -478,39 +493,26 @@ export class ExportSQLCommand {
 			exit.withError( `No backup found for site ${ this.app.name }` );
 		}
 
-		if ( ! this.generateBackup ) {
-			console.log(
-				`${ getGlyphForStatus( 'success' ) } Latest backup found with timestamp ${
-					latestBackup.createdAt
-				}`
-			);
-		} else {
-			console.log(
-				`${ getGlyphForStatus( 'success' ) } Backup created with timestamp ${
-					latestBackup.createdAt
-				}`
-			);
-		}
+		const prepareAdditionalInfo = [];
 
 		const showMyDumperWarning =
 			this.showMyDumperWarning && ( latestBackup.sqlDumpTool ?? envSqlDumpTool ) === 'mydumper';
 		if ( showMyDumperWarning ) {
-			console.warn(
-				chalk.yellow.bold( 'WARNING:' ),
-				chalk.yellow(
-					'This is a large or complex database. The backup file for this database is generated with MyDumper. ' +
-						'The file can only be loaded with MyLoader. ' +
-						'For more information: https://github.com/mydumper/mydumper'
-				)
+			prepareAdditionalInfo.push(
+				`${ chalk.yellow.bold(
+					'WARNING:'
+				) } This is a large or complex database. The backup file for this database is generated with MyDumper. The file can only be loaded with MyLoader. For more information: https://github.com/mydumper/mydumper`
 			);
 		}
 
 		if ( await this.getExportJob() ) {
-			console.log(
+			prepareAdditionalInfo.push(
 				`Attaching to an existing export for the backup with timestamp ${ latestBackup.createdAt }`
 			);
 		} else {
-			console.log( `Exporting database backup with timestamp ${ latestBackup.createdAt }` );
+			prepareAdditionalInfo.push(
+				`Exporting database backup with timestamp ${ latestBackup.createdAt }`
+			);
 
 			try {
 				await createExportJob( this.app.id, this.env.id, latestBackup.id );
@@ -545,7 +547,7 @@ export class ExportSQLCommand {
 			this.isPrepared.bind( this )
 		);
 
-		this.progressTracker.stepSuccess( this.steps.PREPARE );
+		this.progressTracker.stepSuccess( this.steps.PREPARE, prepareAdditionalInfo );
 
 		await pollUntil(
 			this.getExportJob.bind( this ),
