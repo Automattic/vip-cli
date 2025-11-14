@@ -2,7 +2,7 @@ name: Publish docs
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Publish to npm (if applicable)"]
+    workflows: ['Publish to npm (if applicable)']
     types:
       - completed
 
