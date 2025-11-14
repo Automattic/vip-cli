@@ -23,8 +23,7 @@ const examples = [
 	},
 	{
 		usage: 'vip @example-app.develop export sql --skip-download',
-		description:
-			'Get the download URL for the most recent database backup without downloading the file.',
+		description: 'Skip downloading the database backup file.',
 	},
 	{
 		usage: 'vip @example-app.develop export sql --table=wp_posts --table=wp_comments',
@@ -101,7 +100,7 @@ command( {
 		'generate-backup',
 		'Generate a fresh database backup and export an archived copy of that backup.'
 	)
-	.option( 'skip-download', 'Skip downloading the file and output the download URL instead.' )
+	.option( 'skip-download', 'Skip downloading the file.' )
 	.examples( examples )
 	.argv(
 		process.argv,
