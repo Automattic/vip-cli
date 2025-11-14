@@ -1,16 +1,17 @@
 name: Publish docs
-
 on:
-  push:
-    tags:
-      - '*.*.*'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Publish to npm (if applicable)"]
+    types:
+      - completed
 
 permissions:
   contents: read
 
 jobs:
   publish-docs:
+    name: Publish docs
     runs-on: ubuntu-latest
     permissions:
       contents: read
