@@ -494,7 +494,7 @@ commandWrapper( {
 			subShellRl.pause();
 
 			let result;
-			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' ).trimEnd();
+			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' );
 			seenWP = false;
 			resetState( commandState );
 

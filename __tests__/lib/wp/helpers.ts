@@ -4,7 +4,7 @@ describe( 'vip-wp helpers', () => {
 	test( 'initState', () => {
 		const actual = initState();
 		expect( actual ).toEqual( {
-			state: 0,
+			state: 'S0',
 			command: '',
 			error: false,
 			done: false,
@@ -13,7 +13,7 @@ describe( 'vip-wp helpers', () => {
 
 	test( 'resetState', () => {
 		const state: CmdState = {
-			state: 3,
+			state: 'S3',
 			command: 'wp some command',
 			error: true,
 			done: true,
@@ -22,7 +22,7 @@ describe( 'vip-wp helpers', () => {
 		resetState( state );
 
 		expect( state ).toEqual( {
-			state: 0,
+			state: 'S0',
 			command: '',
 			error: false,
 			done: false,
@@ -36,7 +36,7 @@ describe( 'vip-wp helpers', () => {
 
 			expect( state ).toEqual(
 				expect.objectContaining( {
-					command: 'wp plugin list\n',
+					command: 'wp plugin list',
 					error: false,
 					done: true,
 				} )
@@ -52,7 +52,7 @@ describe( 'vip-wp helpers', () => {
 
 			expect( state ).toEqual(
 				expect.objectContaining( {
-					command: `wp post create --post_title="John's \\"Great\\" Post" --post_content="This is a test\nNew line here"\n`,
+					command: `wp post create --post_title="John's \\"Great\\" Post" --post_content="This is a test\nNew line here"`,
 					error: false,
 					done: true,
 				} )
@@ -70,7 +70,7 @@ describe( 'vip-wp helpers', () => {
 
 			expect( state ).toEqual(
 				expect.objectContaining( {
-					command: `wp option set test216596 "\naaa\nbb\\"\ncc"\n`,
+					command: `wp option set test216596 "\naaa\nbb\\"\ncc"`,
 					error: false,
 					done: true,
 				} )
