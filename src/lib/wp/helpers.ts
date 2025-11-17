@@ -53,9 +53,6 @@ export function stateMachine( state: CmdState, line: string ): void {
 		state.command += char;
 
 		switch ( stateToAction[ state.state ] ) {
-			default:
-				continue;
-
 			case 'done':
 				state.done = true;
 				return;
@@ -63,6 +60,9 @@ export function stateMachine( state: CmdState, line: string ): void {
 			case 'error': // Unreachable in current implementation
 				state.error = true;
 				return;
+
+			default:
+				continue;
 		}
 	}
 }
