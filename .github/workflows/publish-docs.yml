@@ -1,16 +1,14 @@
 name: Publish docs
-
 on:
-  push:
-    tags:
-      - '*.*.*'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
   publish-docs:
+    name: Publish docs
     runs-on: ubuntu-latest
     permissions:
       contents: read

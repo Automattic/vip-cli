@@ -1,12 +1,14 @@
-name: Public Changelog
+name: Publish changelog
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
-  changelog:
-    name: Public Changelog
+  publish-changelog:
+    name: Publish changelog
     runs-on: ubuntu-latest
     permissions:
       contents: read
