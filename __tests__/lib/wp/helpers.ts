@@ -6,7 +6,6 @@ describe( 'vip-wp helpers', () => {
 		expect( actual ).toEqual( {
 			state: 'S0',
 			command: '',
-			error: false,
 			done: false,
 		} );
 	} );
@@ -15,7 +14,6 @@ describe( 'vip-wp helpers', () => {
 		const state: CmdState = {
 			state: 'S3',
 			command: 'wp some command',
-			error: true,
 			done: true,
 		};
 
@@ -24,7 +22,6 @@ describe( 'vip-wp helpers', () => {
 		expect( state ).toEqual( {
 			state: 'S0',
 			command: '',
-			error: false,
 			done: false,
 		} );
 	} );
@@ -37,7 +34,6 @@ describe( 'vip-wp helpers', () => {
 			expect( state ).toEqual(
 				expect.objectContaining( {
 					command: 'wp plugin list',
-					error: false,
 					done: true,
 				} )
 			);
@@ -47,13 +43,12 @@ describe( 'vip-wp helpers', () => {
 			const state = initState();
 			stateMachine(
 				state,
-				`wp post create --post_title="John's \\"Great\\" Post" --post_content="This is a test\nNew line here"`
+				`wp post create --post_title="John's \\"Great\\" Post" --post_content='This is a test\nNew line here'`
 			);
 
 			expect( state ).toEqual(
 				expect.objectContaining( {
-					command: `wp post create --post_title="John's \\"Great\\" Post" --post_content="This is a test\nNew line here"`,
-					error: false,
+					command: `wp post create --post_title="John's \\"Great\\" Post" --post_content='This is a test\nNew line here'`,
 					done: true,
 				} )
 			);
@@ -65,13 +60,30 @@ describe( 'vip-wp helpers', () => {
 			const state = initState();
 			for ( const part of parts ) {
 				stateMachine( state, part );
-				expect( state.error ).toBe( false );
 			}
 
 			expect( state ).toEqual(
 				expect.objectContaining( {
 					command: `wp option set test216596 "\naaa\nbb\\"\ncc"`,
-					error: false,
+					done: true,
+				} )
+			);
+		} );
+
+		test.each( [
+			[ `wp option set xxx "inner single quote'"`, `wp option set xxx "inner single quote'"` ],
+			[ `wp option set xxx 'inner double quote"'`, `wp option set xxx 'inner double quote"'` ],
+			[
+				`wp option set xxx "escaped double quote\\""`,
+				`wp option set xxx "escaped double quote\\""`,
+			],
+		] )( 'handles nested quotes (%s)', ( input, expected ) => {
+			const state = initState();
+			stateMachine( state, input );
+
+			expect( state ).toEqual(
+				expect.objectContaining( {
+					command: expected,
 					done: true,
 				} )
 			);

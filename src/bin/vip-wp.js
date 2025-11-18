@@ -475,7 +475,7 @@ commandWrapper( {
 
 			if ( seenWP ) {
 				stateMachine( commandState, line );
-				if ( ! commandState.done && ! commandState.error ) {
+				if ( ! commandState.done ) {
 					return;
 				}
 			}
