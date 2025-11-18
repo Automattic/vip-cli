@@ -1,3 +1,31 @@
+/**
+ * DFA parser for WP-CLI commands.
+ *
+ * This file implements a small deterministic finite automaton (DFA) that
+ * accumulates a full WP-CLI command across one or more physical input lines.
+ * It preserves quoted multiline values and does not perform shell-like
+ * unescaping. Call `stateMachine(state, line)` repeatedly with the same
+ * `CmdState` until `state.done === true`; the reconstructed command will be
+ * available in `state.command`.
+ *
+ * Quick example:
+ *
+ * ```ts
+ * const state = initState();
+ * stateMachine(state, 'wp option set mykey "first line');
+ * // still inside double quotes -> state.done === false
+ * stateMachine(state, 'second line"');
+ * // quotes closed and trailing newline finalizes -> state.done === true
+ * console.log(state.command);
+ * // => wp option set mykey "first line\nsecond line"
+ * ```
+ *
+ * Key points:
+ * - Newline outside quotes ends the command; newlines inside quotes are kept.
+ * - Backslashes are preserved literally; they are NOT shell escapes.
+ * - A backslash followed by a newline is NOT treated as a continuation.
+ */
+
 type Action = 'continue' | 'done';
 export type State =
 	| 'S0' /* Normal */
@@ -26,7 +54,7 @@ export function initState(): CmdState {
 }
 
 /**
- * State machine table for parsing WP-CLI commands.
+ * State machine table for parsing WP-CLI commands. This is a matrix of next-states keyed by current state (row) and character class (column).
  *
  * ```mermaid
  * stateDiagram
