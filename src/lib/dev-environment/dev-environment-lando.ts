@@ -297,9 +297,7 @@ export async function landoRebuild( lando: Lando, instancePath: string ): Promis
 async function getBridgeNetwork( lando: Lando ): Promise< NetworkInspectInfo | null > {
 	const networkName = lando.config.networkBridge ?? 'lando_bridge_network';
 	try {
-		return ( await lando.engine
-			.getNetwork( networkName )
-			.inspect() ) as Promise< NetworkInspectInfo | null >;
+		return await lando.engine.getNetwork( networkName ).inspect();
 	} catch ( err ) {
 		debug( 'Error getting network %s: %s', networkName, ( err as Error ).message );
 		return null;
