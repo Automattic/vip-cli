@@ -18,6 +18,7 @@ import { confirm } from '../lib/cli/prompt';
 import { createProxyAgent } from '../lib/http/proxy-agent';
 import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
+import { initState, resetState, stateMachine } from '../lib/wp/helpers';
 
 const debug = debugLib( '@automattic/vip:wp' );
 
@@ -438,6 +439,9 @@ commandWrapper( {
 			subShellSettings.historySize = 200;
 		}
 
+		const commandState = initState();
+		let seenWP = false;
+
 		const subShellRl = readline.createInterface( subShellSettings );
 		subShellRl.on( 'line', async line => {
 			if ( commandRunning ) {
@@ -451,16 +455,31 @@ commandWrapper( {
 			}
 
 			// Check for exit, like SSH (handles both `exit` and `exit;`)
-			if ( line.startsWith( 'exit' ) ) {
+			if ( ! seenWP && line.startsWith( 'exit' ) ) {
 				subShellRl.close();
 				process.exit();
 			}
 
-			const startsWithWp = line.trim().startsWith( 'wp ' );
-			const empty = 0 === line.length;
 			const userCmdCancelled = line === cancelCommandChar;
+			if ( userCmdCancelled ) {
+				seenWP = false;
+				resetState( commandState );
+				subShellRl.prompt();
+				return;
+			}
 
-			if ( ( empty || ! startsWithWp ) && ! userCmdCancelled ) {
+			if ( ! seenWP && line.trimStart().startsWith( 'wp ' ) ) {
+				seenWP = true;
+				resetState( commandState );
+			}
+
+			if ( seenWP ) {
+				stateMachine( commandState, line );
+				if ( ! commandState.done ) {
+					return;
+				}
+			} else {
+				resetState( commandState );
 				console.log(
 					chalk.red( 'Error:' ),
 					'invalid command, please pass a valid WP-CLI command.'
@@ -472,8 +491,12 @@ commandWrapper( {
 			subShellRl.pause();
 
 			let result;
+			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' );
+			seenWP = false;
+			resetState( commandState );
+
 			try {
-				result = await getTokenForCommand( appId, envId, line.replace( 'wp ', '' ) );
+				result = await getTokenForCommand( appId, envId, wpCliCmd );
 			} catch ( error ) {
 				// If this was a GraphQL error, print that to the message to the line
 				if ( error.graphQLErrors ) {
