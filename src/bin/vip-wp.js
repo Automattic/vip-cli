@@ -478,10 +478,7 @@ commandWrapper( {
 				if ( ! commandState.done ) {
 					return;
 				}
-			}
-
-			if ( ! commandState.done ) {
-				seenWP = false;
+			} else {
 				resetState( commandState );
 				console.log(
 					chalk.red( 'Error:' ),
