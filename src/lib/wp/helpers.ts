@@ -71,7 +71,7 @@ export function initState(): CmdState {
  *     S2 --> S0: double-quote
  *     S2 --> S2: [other]
  *     S3 --> S2: [any]
- *     S4 --> S0: '
+ *     S4 --> S0: single-quote
  *     S4 --> S4: [other]
  * ```
  */
