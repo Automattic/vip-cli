@@ -257,7 +257,9 @@ describe( 'commands/ExportSQLCommand', () => {
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare', expect.any( Array ) );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
-			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink' );
+			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink', [
+				'https://test-backup.sql.gz',
+			] );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'download' );
 			expect( downloadMock ).toHaveBeenCalledWith(
 				'https://test-backup.sql.gz',
@@ -287,7 +289,9 @@ describe( 'commands/ExportSQLCommand', () => {
 			expect( downloadMock ).not.toHaveBeenCalled();
 
 			// Should output the download URL
-			expect( consoleLogSpy ).toHaveBeenCalledWith( 'Download URL: https://test-backup.sql.gz' );
+			expect( consoleLogSpy ).toHaveBeenCalledWith(
+				expect.stringContaining( 'https://test-backup.sql.gz' )
+			);
 
 			stepSuccessSpyUrl.mockRestore();
 			stepSkippedSpy.mockRestore();
