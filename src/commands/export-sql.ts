@@ -268,8 +268,8 @@ export class ExportSQLCommand {
 		this.progressTracker = new ProgressTracker( [
 			{ id: this.steps.PREPARE, name: 'Preparing for backup download' },
 			{ id: this.steps.CREATE, name: 'Creating backup copy' },
-			{ id: this.steps.CONFIRM_ENOUGH_STORAGE, name: "Checking if there's enough storage" },
 			{ id: this.steps.DOWNLOAD_LINK, name: 'Requesting download link' },
+			{ id: this.steps.CONFIRM_ENOUGH_STORAGE, name: "Checking if there's enough storage" },
 			{ id: this.steps.DOWNLOAD, name: 'Downloading file' },
 		] );
 		this.track = trackerFn;
@@ -416,14 +416,14 @@ export class ExportSQLCommand {
 			size = Number( bytesWrittenMeta.value );
 		}
 
+		const downloadURLString = `\n${ chalk.green( 'Download URL' ) }:\n${ url }\n\n`;
+
 		if ( this.skipDownload ) {
 			this.progressTracker.stepSkipped( this.steps.CONFIRM_ENOUGH_STORAGE );
 			this.progressTracker.stepSkipped( this.steps.DOWNLOAD );
 			this.progressTracker.print();
 			this.progressTracker.stopPrinting();
-
-			console.log( `Download URL: ${ url }` );
-
+			console.log( downloadURLString );
 			return;
 		}
 
@@ -557,7 +557,7 @@ export class ExportSQLCommand {
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
-		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
+		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK, [ url ] );
 
 		return url;
 	}
@@ -590,7 +590,7 @@ export class ExportSQLCommand {
 			} );
 			this.progressTracker.stepSuccess( this.steps.CREATE );
 
-			this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK );
+			this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK, [ result.url ] );
 
 			return result;
 		} catch ( err ) {
