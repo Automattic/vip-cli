@@ -1,22 +1,20 @@
 name: Publish docs
-
 on:
-  push:
-    tags:
-      - '*.*.*'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
   publish-docs:
+    name: Publish docs
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - run: npm i -g @automattic/vip
       - run: node ./helpers/generate-docs.js > /tmp/docs.json
       - name: Print docs.json

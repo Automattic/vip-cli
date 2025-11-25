@@ -41,6 +41,10 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',
 		label: '8.4',
 	},
+	8.5: {
+		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.5',
+		label: '8.5 (experimental)',
+	},
 } as const;
 
 export const DEV_ENVIRONMENT_DEFAULTS = {

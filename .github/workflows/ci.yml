@@ -28,7 +28,7 @@ jobs:
           - { name: Check formatting, tool: 'format:check' }
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v6
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v6
@@ -86,7 +86,7 @@ jobs:
       NODE_OPTIONS: '--localstorage-file=/tmp/localstorage'
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Node.js environment
         uses: actions/setup-node@v6

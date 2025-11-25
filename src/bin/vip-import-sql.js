@@ -17,7 +17,7 @@ import {
 	getFileSize,
 	getFileMeta,
 	isFile,
-	uploadImportSqlFileToS3,
+	uploadImportFileToS3,
 } from '../lib/client-file-uploader';
 import { searchAndReplace } from '../lib/search-and-replace';
 import {
@@ -707,7 +707,7 @@ Processing the SQL import for your environment...
 					fileMeta: { basename },
 					checksum: uploadedMD5,
 					result,
-				} = await uploadImportSqlFileToS3( {
+				} = await uploadImportFileToS3( {
 					app,
 					env,
 					fileMeta,

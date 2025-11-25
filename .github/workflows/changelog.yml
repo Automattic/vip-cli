@@ -1,18 +1,20 @@
-name: Public Changelog
+name: Publish changelog
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
-  changelog:
-    name: Public Changelog
+  publish-changelog:
+    name: Publish changelog
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: Automattic/vip-actions/changelog@64cb27606455c925183e07065f050846d69b2120
         with:
           endpoint: 'https://docs.wpvip.com/wp-json/wp/v2/changelogs'

@@ -1,0 +1,31 @@
+digraph state_diagram {
+    rankdir=LR;
+
+    start [shape=doublecircle, label="S"];
+    S0 [shape=circle, label="S0"];
+    S1 [shape=circle, label="S1"];
+    S2 [shape=circle, label="S2"];
+    S3 [shape=circle, label="S3"];
+    S4 [shape=circle, label="S4"];
+    end [shape=doublecircle, label="F"];
+
+    start -> S0 [label="wp "];
+
+    S0 -> S1 [label="backslash"];
+    S0 -> S2 [label="double-quote"];
+    S0 -> end [label="newline"];
+    S0 -> S4 [label="single-quote"];
+    S0 -> S0 [label="[other]"];
+
+    S1 -> end [label="newline"];
+    S1 -> S0 [label="[other]"];
+
+    S2 -> S3 [label="backslash"];
+    S2 -> S0 [label="double-quote"];
+    S2 -> S2 [label="[other]"];
+
+    S3 -> S2 [label="[any]"];
+
+    S4 -> S0 [label="single-quote"];
+    S4 -> S4 [label="[other]"];
+}

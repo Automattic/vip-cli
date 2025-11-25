@@ -58,6 +58,7 @@ export interface GetSignedUploadRequestDataArgs {
 		| 'AbortMultipartUpload'
 		| 'CreateMultipartUpload'
 		| 'CompleteMultipartUpload'
+		| 'GetObject'
 		| 'ListParts'
 		| 'PutObject'
 		| 'UploadPart';
@@ -163,7 +164,7 @@ export async function getFileMeta( fileName: string ): Promise< FileMeta > {
 	};
 }
 
-export async function uploadImportSqlFileToS3( {
+export async function uploadImportFileToS3( {
 	app,
 	env,
 	fileMeta,
@@ -411,7 +412,7 @@ async function uploadUsingMultipart( {
 	} );
 }
 
-async function getSignedUploadRequestData( {
+export async function getSignedUploadRequestData( {
 	action,
 	appId,
 	basename,

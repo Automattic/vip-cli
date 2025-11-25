@@ -23,6 +23,10 @@ import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-co
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
+jest.mock( '../../../src/lib/api/user', () => ( {
+	getCurrentUserInfo: jest.fn(),
+} ) );
+
 jest.mock( 'enquirer', () => {
 	const _selectRunMock = jest.fn();
 	const SelectClass = class {};
