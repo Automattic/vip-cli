@@ -254,16 +254,49 @@ describe( 'commands/ExportSQLCommand', () => {
 			const downloadMock = jest.spyOn( downloadFileModule, 'downloadFile' ).mockResolvedValue();
 
 			await exportCommand.run();
-			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare' );
+			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare', expect.any( Array ) );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
-			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink' );
+			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink', [
+				'https://test-backup.sql.gz',
+			] );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'download' );
 			expect( downloadMock ).toHaveBeenCalledWith(
 				'https://test-backup.sql.gz',
 				'exported.sql.gz',
 				expect.any( Function )
 			);
+		} );
+
+		it( 'should return download URL instead of downloading when skipDownload is true', async () => {
+			const exportCommandWithUrl = new ExportSQLCommand( app, env, { skipDownload: true } );
+			const stepSuccessSpyUrl = jest.spyOn( exportCommandWithUrl.progressTracker, 'stepSuccess' );
+			const stepSkippedSpy = jest.spyOn( exportCommandWithUrl.progressTracker, 'stepSkipped' );
+			const confirmEnoughStorageSpyUrl = jest.spyOn( exportCommandWithUrl, 'confirmEnoughStorage' );
+			const downloadMock = jest.spyOn( downloadFileModule, 'downloadFile' ).mockResolvedValue();
+			const consoleLogSpy = jest.spyOn( console, 'log' ).mockImplementation();
+
+			confirmEnoughStorageSpyUrl.mockResolvedValue( { continue: true, isPromptShown: false } );
+
+			await exportCommandWithUrl.run();
+
+			// Should skip confirmEnoughStorage and download steps
+			expect( stepSkippedSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
+			expect( stepSkippedSpy ).toHaveBeenCalledWith( 'download' );
+
+			// Should not call confirmEnoughStorage or download
+			expect( confirmEnoughStorageSpyUrl ).not.toHaveBeenCalled();
+			expect( downloadMock ).not.toHaveBeenCalled();
+
+			// Should output the download URL
+			expect( consoleLogSpy ).toHaveBeenCalledWith(
+				expect.stringContaining( 'https://test-backup.sql.gz' )
+			);
+
+			stepSuccessSpyUrl.mockRestore();
+			stepSkippedSpy.mockRestore();
+			confirmEnoughStorageSpyUrl.mockRestore();
+			consoleLogSpy.mockRestore();
 		} );
 	} );
 

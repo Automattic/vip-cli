@@ -20,7 +20,9 @@ export interface Step {
 	id: string;
 	name: string;
 	status: StepStatus;
-	[ key: string ]: string;
+	percentage?: string;
+	progress?: string;
+	additionalInfo?: string[];
 }
 
 export type StepConstructorParam = Omit< Step, 'status' > & { status?: StepStatus };
@@ -133,20 +135,20 @@ export class ProgressTracker {
 		return steps.find( ( { status } ) => status === StepStatus.RUNNING );
 	}
 
-	public stepRunning( stepId: string ): void {
-		this.setStatusForStepId( stepId, StepStatus.RUNNING );
+	public stepRunning( stepId: string, additionalInfo: string | string[] = [] ): void {
+		this.setStatusForStepId( stepId, StepStatus.RUNNING, additionalInfo );
 	}
 
-	public stepFailed( stepId: string ): void {
-		this.setStatusForStepId( stepId, StepStatus.FAILED );
+	public stepFailed( stepId: string, additionalInfo: string | string[] = [] ): void {
+		this.setStatusForStepId( stepId, StepStatus.FAILED, additionalInfo );
 	}
 
-	public stepSkipped( stepId: string ): void {
-		this.setStatusForStepId( stepId, StepStatus.SKIPPED );
+	public stepSkipped( stepId: string, additionalInfo: string | string[] = [] ): void {
+		this.setStatusForStepId( stepId, StepStatus.SKIPPED, additionalInfo );
 	}
 
-	public stepSuccess( stepId: string ) {
-		this.setStatusForStepId( stepId, StepStatus.SUCCESS );
+	public stepSuccess( stepId: string, additionalInfo: string | string[] = [] ) {
+		this.setStatusForStepId( stepId, StepStatus.SUCCESS, additionalInfo );
 		// The stepSuccess helper automatically sets the next step to "running"
 		const nextStep = this.getNextStep();
 		if ( nextStep ) {
@@ -158,7 +160,11 @@ export class ProgressTracker {
 		return [ ...this.getSteps().values() ].every( ( { status } ) => status === StepStatus.SUCCESS );
 	}
 
-	public setStatusForStepId( stepId: string, status: StepStatus ) {
+	public setStatusForStepId(
+		stepId: string,
+		status: StepStatus,
+		additionalInfo: string | string[] = []
+	) {
 		const step = this.stepsFromCaller.get( stepId );
 		if ( ! step ) {
 			// Only allowed to update existing steps with this method
@@ -176,6 +182,7 @@ export class ProgressTracker {
 		this.stepsFromCaller.set( stepId, {
 			...step,
 			status,
+			additionalInfo: Array.isArray( additionalInfo ) ? additionalInfo : [ additionalInfo ],
 		} );
 	}
 
@@ -249,7 +256,7 @@ export class ProgressTracker {
 		}
 		const stepValues = [ ...this.getSteps().values() ];
 		const logs = stepValues.reduce(
-			( accumulator, { name, id, percentage, status, progress }, stepNumber ) => {
+			( accumulator, { name, id, percentage, status, progress, additionalInfo }, stepNumber ) => {
 				if ( stepNumber < this.displayFromStep ) {
 					return accumulator;
 				}
@@ -263,6 +270,12 @@ export class ProgressTracker {
 				} else if ( progress ) {
 					suffix = progress;
 				}
+
+				if ( additionalInfo && additionalInfo.length > 0 ) {
+					suffix += EOL;
+					suffix += additionalInfo.map( stepInfo => `  - ${ stepInfo }` ).join( EOL );
+				}
+
 				return `${ accumulator }${ statusIcon } ${ name } ${ suffix }\n`;
 			},
 			''

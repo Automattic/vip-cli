@@ -22,6 +22,10 @@ const examples = [
 			'Generate a fresh database backup for an environment and download an archived copy of that backup.',
 	},
 	{
+		usage: 'vip @example-app.develop export sql --skip-download',
+		description: 'Skip downloading the database backup file.',
+	},
+	{
 		usage: 'vip @example-app.develop export sql --table=wp_posts --table=wp_comments',
 		description:
 			'Generate and download an archived partial database export file that includes only the wp_posts and wp_comments tables.',
@@ -96,12 +100,13 @@ command( {
 		'generate-backup',
 		'Generate a fresh database backup and export an archived copy of that backup.'
 	)
+	.option( 'skip-download', 'Skip downloading the file.' )
 	.examples( examples )
 	.argv(
 		process.argv,
 		async (
 			arg,
-			{ app, env, output, configFile, table, siteId, wpcliCommand, generateBackup }
+			{ app, env, output, configFile, table, siteId, wpcliCommand, generateBackup, skipDownload }
 		) => {
 			const liveBackupCopyCLIOptions = parseLiveBackupCopyCLIOptions(
 				configFile,
@@ -121,7 +126,7 @@ command( {
 			const exportCommand = new ExportSQLCommand(
 				app,
 				env,
-				{ outputFile: output, generateBackup, liveBackupCopyCLIOptions },
+				{ outputFile: output, generateBackup, liveBackupCopyCLIOptions, skipDownload },
 				trackerFn
 			);
 			await exportCommand.run();
