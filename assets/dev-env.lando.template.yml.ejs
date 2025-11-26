@@ -138,6 +138,8 @@ services:
 <% if ( phpmyadmin ) { %>
   phpmyadmin:
     type: compose
+    ssl: true
+    sslExpose: false
     services:
       image: phpmyadmin:5
       command: /docker-entrypoint.sh apache2-foreground
@@ -248,6 +250,8 @@ services:
 
 <% if ( mailpit ) { %>
   mailpit:
+    ssl: true
+    sslExpose: false
     type: compose
     services:
       image: axllent/mailpit:latest
