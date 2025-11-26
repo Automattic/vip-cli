@@ -60,19 +60,19 @@ const debug = debugLib( 'vip:vip-import-media' );
 // Command examples for the `vip import media` help prompt
 const examples = [
 	{
+		usage: 'vip @example-app.production import media /path/to/uploads.zip',
+		description:
+			'Import the archived file "uploads.zip" from the user\'s local machine to a production environment.',
+	},
+	{
 		usage: 'vip @example-app.production import media https://example.com/uploads.tar.gz',
 		description:
 			'Import the archived file "uploads.tar.gz" from a publicly accessible URL to a production environment.',
 	},
-	{
-		usage: 'vip @example-app.production import media /path/to/uploads.tar.gz',
-		description:
-			'Import a local archive file (e.g. .tar.gz, .tgz, .zip) from your machine into a production environment. The file will be uploaded temporarily and then imported.',
-	},
 	// Format error logs
 	{
 		usage:
-			'vip @example-app.production import media https://example.com/uploads.tar.gz --overwriteExistingFiles --exportFileErrorsToJson',
+			'vip @example-app.production import media https://example.com/uploads.tgz --overwriteExistingFiles --exportFileErrorsToJson',
 		description:
 			'Overwrite existing files with the imported files if they have the same file path and name, and format the error log for the import in JSON.',
 	},
