@@ -416,14 +416,12 @@ export class ExportSQLCommand {
 			size = Number( bytesWrittenMeta.value );
 		}
 
-		const downloadURLString = `\n${ chalk.green( 'Download URL' ) }:\n${ url }\n\n`;
-
 		if ( this.skipDownload ) {
 			this.progressTracker.stepSkipped( this.steps.CONFIRM_ENOUGH_STORAGE );
 			this.progressTracker.stepSkipped( this.steps.DOWNLOAD );
 			this.progressTracker.print();
 			this.progressTracker.stopPrinting();
-			console.log( downloadURLString );
+
 			return;
 		}
 
@@ -473,6 +471,10 @@ export class ExportSQLCommand {
 			} );
 			exit.withError( `Error downloading exported file: ${ error.message }` );
 		}
+	}
+
+	private generateDownloadURLOutputString( url: string ): string {
+		return `${ chalk.green( 'Download URL' ) }: ${ url }`;
 	}
 
 	private async runBackup() {
@@ -557,7 +559,9 @@ export class ExportSQLCommand {
 		this.progressTracker.stepSuccess( this.steps.CREATE );
 
 		const url = await generateDownloadLink( this.app.id, this.env.id, latestBackup.id );
-		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK, [ url ] );
+		this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK, [
+			this.generateDownloadURLOutputString( url ),
+		] );
 
 		return url;
 	}
@@ -590,7 +594,9 @@ export class ExportSQLCommand {
 			} );
 			this.progressTracker.stepSuccess( this.steps.CREATE );
 
-			this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK, [ result.url ] );
+			this.progressTracker.stepSuccess( this.steps.DOWNLOAD_LINK, [
+				this.generateDownloadURLOutputString( result.url ),
+			] );
 
 			return result;
 		} catch ( err ) {
