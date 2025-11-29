@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import fs from 'fs';
 
 import {
@@ -258,8 +259,9 @@ describe( 'commands/ExportSQLCommand', () => {
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'downloadLink', [
-				'https://test-backup.sql.gz',
+				`${ chalk.green( 'Download URL' ) }: https://test-backup.sql.gz`,
 			] );
+
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'download' );
 			expect( downloadMock ).toHaveBeenCalledWith(
 				'https://test-backup.sql.gz',
@@ -274,7 +276,7 @@ describe( 'commands/ExportSQLCommand', () => {
 			const stepSkippedSpy = jest.spyOn( exportCommandWithUrl.progressTracker, 'stepSkipped' );
 			const confirmEnoughStorageSpyUrl = jest.spyOn( exportCommandWithUrl, 'confirmEnoughStorage' );
 			const downloadMock = jest.spyOn( downloadFileModule, 'downloadFile' ).mockResolvedValue();
-			const consoleLogSpy = jest.spyOn( console, 'log' ).mockImplementation();
+			const stdoutSpy = jest.spyOn( process.stdout, 'write' ).mockImplementation();
 
 			confirmEnoughStorageSpyUrl.mockResolvedValue( { continue: true, isPromptShown: false } );
 
@@ -288,15 +290,14 @@ describe( 'commands/ExportSQLCommand', () => {
 			expect( confirmEnoughStorageSpyUrl ).not.toHaveBeenCalled();
 			expect( downloadMock ).not.toHaveBeenCalled();
 
-			// Should output the download URL
-			expect( consoleLogSpy ).toHaveBeenCalledWith(
-				expect.stringContaining( 'https://test-backup.sql.gz' )
+			expect( stdoutSpy ).toHaveBeenCalledWith(
+				expect.stringContaining( `${ chalk.green( 'Download URL' ) }: https://test-backup.sql.gz` )
 			);
 
 			stepSuccessSpyUrl.mockRestore();
 			stepSkippedSpy.mockRestore();
 			confirmEnoughStorageSpyUrl.mockRestore();
-			consoleLogSpy.mockRestore();
+			stdoutSpy.mockRestore();
 		} );
 	} );
 
