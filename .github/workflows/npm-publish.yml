@@ -28,6 +28,8 @@ jobs:
       pull-requests: read
     uses: ./.github/workflows/changelog.yml
     needs: publish
+    secrets:
+      CHANGELOG_DOCS_POST_TOKEN: ${{ secrets.CHANGELOG_DOCS_POST_TOKEN }}
 
   publish-docs:
     name: Publish cli command reference docs
@@ -35,3 +37,5 @@ jobs:
       contents: read
     uses: ./.github/workflows/publish-docs.yml
     needs: publish
+    secrets:
+      DOCS_SECRET_TOKEN: ${{ secrets.DOCS_SECRET_TOKEN }}

@@ -2,6 +2,9 @@ name: Publish docs
 on:
   workflow_dispatch:
   workflow_call:
+    secrets:
+      DOCS_SECRET_TOKEN:
+        required: true
 
 permissions:
   contents: read
