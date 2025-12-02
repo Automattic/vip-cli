@@ -406,7 +406,6 @@ const displayPlaybook = ( {
 
 	let siteArray = [];
 	if ( isMultiSite ) {
-		// eslint-disable-next-line no-multi-spaces
 		console.log( `  multisite: ${ isMultiSite.toString() }` );
 		const selectedEnvironmentObj = app?.environments?.find(
 			env => unformattedEnvironment === env.type

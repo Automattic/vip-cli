@@ -64,16 +64,14 @@ export async function validateFiles(
 		const isFolder = await isDirectory( file );
 		const fileExtType = getFileExtType(
 			file,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			<MediaImportAllowedFileTypes>mediaImportConfig.allowedFileTypes
+			mediaImportConfig.allowedFileTypes as MediaImportAllowedFileTypes
 		);
 
 		if ( isInvalidFile( fileExtType, isFolder ) ) {
 			validationResult.errorFileTypes.push( file );
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		if ( ! isFileSizeValid( file, <number>mediaImportConfig.fileSizeLimitInBytes ) ) {
+		if ( ! isFileSizeValid( file, mediaImportConfig.fileSizeLimitInBytes as number ) ) {
 			validationResult.errorFileSizes.push( file );
 		}
 
@@ -81,8 +79,7 @@ export async function validateFiles(
 			validationResult.errorFileNames.push( file );
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		if ( ! isFileNameCharCountValid( file, <number>mediaImportConfig?.fileNameCharCount ) ) {
+		if ( ! isFileNameCharCountValid( file, mediaImportConfig?.fileNameCharCount as number ) ) {
 			validationResult.errorFileNamesCharCount.push( file );
 		}
 
@@ -158,7 +155,7 @@ const isFileNameCharCountValid = ( file: string, fileNameCharCount: number ): bo
  */
 
 // Accepted characters in filenames
-// eslint-disable-next-line max-len
+
 const acceptedCharacters = [
 	'Non-English characters',
 	'(',

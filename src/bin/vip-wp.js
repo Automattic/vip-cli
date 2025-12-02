@@ -357,7 +357,6 @@ commandWrapper( {
 			exit.withError( 'WP-CLI commands are not supported on Node.js environments.' );
 		}
 
-		/* eslint-disable camelcase */
 		const commonTrackingParams = {
 			command: commandForAnalytics,
 			app_id: appId,
@@ -365,7 +364,6 @@ commandWrapper( {
 			org_id: orgId,
 			method: isSubShell ? 'subshell' : 'shell',
 		};
-		/* eslint-enable camelcase */
 
 		trackEvent( 'wpcli_command_execute', commonTrackingParams ).catch( () => {} );
 

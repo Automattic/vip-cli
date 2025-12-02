@@ -85,7 +85,7 @@ export class DevEnvImportSQLCommand {
 					isContainerRunning( lando, this.slug, 'php' ),
 					isContainerRunning( lando, this.slug, 'database' ),
 				] )
-			 ).every( Boolean );
+			).every( Boolean );
 
 			if ( ! isUp ) {
 				throw new UserError( 'Environment needs to be started first' );

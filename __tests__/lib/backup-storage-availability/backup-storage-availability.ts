@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { Confirm } from 'enquirer';
 

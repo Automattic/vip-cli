@@ -223,12 +223,14 @@ ${ maybeExitPrompt }
 				try {
 					mediaImportStatus = await getStatus( api, app.id ?? -1, env.id ?? -1 );
 					if ( ! mediaImportStatus ) {
+						// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 						return reject( {
 							error:
 								'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
 						} as ImportFailedError );
 					}
 				} catch ( error ) {
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { error: ( error as Error ).message } as ImportFailedError );
 				}
 
@@ -240,6 +242,7 @@ ${ maybeExitPrompt }
 					progressTracker.setStatus( mediaImportStatus );
 					overallStatus = 'FAILED';
 					setSuffixAndPrint();
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { ...mediaImportStatus, error: 'Import FAILED' } );
 				}
 

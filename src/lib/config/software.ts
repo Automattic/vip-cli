@@ -316,7 +316,6 @@ export const promptForUpdate = async (
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
 	const confirm: boolean =
-		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		opts.force || // NOSONAR
 		( await new Confirm( {
 			message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,

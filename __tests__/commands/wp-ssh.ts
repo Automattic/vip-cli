@@ -11,7 +11,7 @@ import { CommandTracker } from '../../src/lib/tracker';
 
 const processExitMock = jest
 	.spyOn( process, 'exit' )
-	.mockImplementation( ( code?: string | number | null | undefined ) => {
+	.mockImplementation( ( code?: string | number | null ) => {
 		throw new Error( `Process exited with code: ${ code }` );
 	} );
 
@@ -74,7 +74,7 @@ jest.mocked( API ).mockImplementation(
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 		( {
 			mutate: triggerWPCLIMutationMock,
-		} as any )
+		} ) as any
 );
 
 // Mock tracker

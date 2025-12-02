@@ -232,7 +232,6 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	const hasES = integrationsConfig[ 'enterprise-search' ]?.env?.status === 'enabled';
 
 	return {
-		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
 		multisite: Boolean( appInfo.environment?.isMultisite ),
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
@@ -577,7 +576,6 @@ function validateAppCodeLocalPath( providedPath: string ) {
 		}
 	}
 	if ( missingFiles.length > 0 ) {
-		// eslint-disable-next-line max-len
 		const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
 			', '
 		) }. Learn more: https://docs.wpvip.com/wordpress-skeleton/`;

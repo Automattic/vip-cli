@@ -9,7 +9,7 @@ import { ExportSQLCommand } from '../../src/commands/export-sql';
 import * as clientFileUploader from '../../src/lib/client-file-uploader';
 
 jest.mock( '@automattic/vip-search-replace', () => {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const { PassThrough } = require( 'node:stream' ) as typeof import('node:stream');
 	return {
 		replace: jest.fn( ( ...args ) => {

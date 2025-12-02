@@ -9,7 +9,7 @@ const debug = debugLib( '@automattic/vip:keychain' );
 
 try {
 	// Try using Secure keychain ("keytar") first
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const Secure = require( './keychain/secure' ) as KeychainConstructor;
 	keychain = new Secure();
 } catch ( error ) {

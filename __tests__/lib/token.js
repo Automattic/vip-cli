@@ -11,7 +11,6 @@ describe( 'token tests', () => {
 	} );
 
 	it( 'should correctly validate token missing an id', () => {
-		// eslint-disable-next-line max-len
 		const rawToken =
 			'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MTYxMzUyNzYsImV4cCI6MjUyNDYwODAwMCwiYXVkIjoiIiwic3ViIjoiIn0.seD8rBKJS0usjYApigqizitlNcmzcrYlGt9DyCm3I4c';
 		const token = new Token( rawToken );
@@ -19,7 +18,6 @@ describe( 'token tests', () => {
 	} );
 
 	it( 'should error for invalid token', () => {
-		// eslint-disable-next-line max-len
 		const rawToken =
 			'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImp0aSI6IjRhM2RmYjE5LTBhMWQtNDE3YS05ODM2LTdjZWIwZTBkM2Q4NSIsImlhdCI6MTUxNjEyMzU1NywiZXhwIjoxNTE2MTI3zM4fQ.atx1YhxB6SQoW99aL97tXNlyJlXWEPZ3Cf1zyfxizvs';
 		let token;
