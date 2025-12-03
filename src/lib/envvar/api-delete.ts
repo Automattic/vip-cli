@@ -6,7 +6,7 @@ import type {
 	DeleteEnvironmentVariableMutation,
 	DeleteEnvironmentVariableMutationVariables,
 } from './api-delete.generated';
-import type { FetchResult } from '@apollo/client';
+import type { ApolloLink } from '@apollo/client/core';
 
 const mutation = gql`
 	mutation DeleteEnvironmentVariable($appId: Int!, $envId: Int!, $name: String!) {
@@ -27,7 +27,7 @@ export default async function deleteEnvVar(
 	appId: number,
 	envId: number,
 	name: string
-): Promise< FetchResult< DeleteEnvironmentVariableMutation > > {
+): Promise< ApolloLink.Result< DeleteEnvironmentVariableMutation > > {
 	const api = API();
 
 	const variables = {

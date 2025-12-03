@@ -6,7 +6,7 @@ import type {
 	AddEnvironmentVariableMutation,
 	AddEnvironmentVariableMutationVariables,
 } from './api-set.generated';
-import type { FetchResult } from '@apollo/client';
+import type { ApolloLink } from '@apollo/client/core';
 
 const mutation = gql`
 	mutation AddEnvironmentVariable($appId: Int!, $envId: Int!, $name: String!, $value: String!) {
@@ -28,7 +28,7 @@ export default async function setEnvVar(
 	envId: number,
 	name: string,
 	value: string
-): Promise< FetchResult< AddEnvironmentVariableMutation > > {
+): Promise< ApolloLink.Result< AddEnvironmentVariableMutation > > {
 	const api = API();
 
 	const variables = {

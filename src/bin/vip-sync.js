@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { CombinedGraphQLErrors } from '@apollo/client/errors';
+import { CombinedGraphQLErrors } from '@apollo/client/core';
 import { stdout } from '@wwa/single-line-log';
 import chalk from 'chalk';
 import gql from 'graphql-tag';

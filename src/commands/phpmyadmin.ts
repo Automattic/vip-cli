@@ -1,9 +1,8 @@
 /**
  * External dependencies
  */
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import chalk from 'chalk';
-import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 
 /**
@@ -17,7 +16,6 @@ import {
 	PhpMyAdminStatusQuery,
 	PhpMyAdminStatusQueryVariables,
 } from './phpmyadmin.generated';
-import { App, AppEnvironment } from '../graphqlTypes';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
@@ -26,6 +24,9 @@ import * as exit from '../lib/cli/exit';
 import { ProgressTracker } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
 import { pollUntil } from '../lib/utils';
+
+import type { App, AppEnvironment } from '../graphqlTypes';
+import type { DocumentNode, GraphQLFormattedError } from 'graphql';
 
 export const GENERATE_PHP_MY_ADMIN_URL_MUTATION: DocumentNode = gql`
 	mutation GeneratePhpMyAdminAccess($input: GeneratePhpMyAdminAccessInput) {

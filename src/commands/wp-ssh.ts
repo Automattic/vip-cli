@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { CombinedGraphQLErrors } from '@apollo/client/errors';
+import { CombinedGraphQLErrors } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';

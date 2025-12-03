@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';

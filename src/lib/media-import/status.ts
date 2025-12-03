@@ -1,4 +1,4 @@
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';

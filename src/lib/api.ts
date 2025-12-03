@@ -1,6 +1,11 @@
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
-import { ServerError, CombinedGraphQLErrors } from '@apollo/client/errors';
-import { ApolloLink } from '@apollo/client/link';
+import {
+	ApolloClient,
+	HttpLink,
+	InMemoryCache,
+	ServerError,
+	CombinedGraphQLErrors,
+	ApolloLink,
+} from '@apollo/client/core';
 import { ErrorLink } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
 import chalk from 'chalk';

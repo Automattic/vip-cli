@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ApolloClient } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
 import debugLib from 'debug';

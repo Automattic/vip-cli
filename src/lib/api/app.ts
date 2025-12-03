@@ -1,8 +1,9 @@
-import { DocumentNode } from '@apollo/client';
 import gql from 'graphql-tag';
 
-import { App, Exact, Scalars } from '../../graphqlTypes';
 import API from '../../lib/api';
+
+import type { App, Exact, Scalars } from '../../graphqlTypes';
+import type { DocumentNode } from '@apollo/client/core';
 
 type AppQueryVariables = Exact< {
 	name: Scalars[ 'String' ][ 'input' ];

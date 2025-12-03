@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
 
-import { ApolloClient, ApolloLink } from '@apollo/client';
-import { ServerError } from '@apollo/client/errors';
+import { ApolloClient, ApolloLink, ServerError } from '@apollo/client/core';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { OperationTypeNode } from 'graphql';
 import gql from 'graphql-tag';
