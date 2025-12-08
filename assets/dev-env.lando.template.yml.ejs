@@ -7,10 +7,14 @@ proxy:
 <% if ( multisite ) { %>
     - '*.<%= siteSlug %>.<%= domain %>'
 <% } %>
+<% if ( phpmyadmin ) { %>
   phpmyadmin:
     - <%= siteSlug %>-pma.<%= domain %>
+<% } %>
+<% if ( mailpit ) { %>
   mailpit:
     - <%= siteSlug %>-mailpit.<%= domain %>:8025
+<% } %>
 
 keys: false
 
