@@ -1,6 +1,6 @@
-import { stdout as singleLogLine } from '@wwa/single-line-log';
 import { EOL } from 'node:os';
 
+import { stdout as singleLogLine } from './single-log-line';
 import { getGlyphForStatus, RunningSprite } from '../../lib/cli/format';
 
 const PRINT_INTERVAL = process.env.DEBUG ? 5000 : 200; // How often the report is printed. Mainly affects the "spinner" animation.

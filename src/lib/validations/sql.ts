@@ -1,4 +1,4 @@
-import { stdout as log } from '@wwa/single-line-log';
+import { stdout as log } from '../cli/single-log-line';
 import chalk from 'chalk';
 import path from 'node:path';
 

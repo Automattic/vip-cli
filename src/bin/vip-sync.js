@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { stdout } from '@wwa/single-line-log';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
 
@@ -8,6 +7,7 @@ import API from '../lib/api';
 import app from '../lib/api/app';
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
+import { stdout } from '../lib/cli/single-log-line';
 import { trackEvent } from '../lib/tracker';
 
 const appQuery = `id,name,environments{
