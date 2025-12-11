@@ -129,7 +129,7 @@ command( {
 				isContainerRunning( lando, slug, 'php' ),
 				isContainerRunning( lando, slug, 'database' ),
 			] )
-		 ).every( Boolean );
+		).every( Boolean );
 
 		if ( ! isUp && ! opt.force ) {
 			await trackerFn( 'env_not_running_error', { errorMessage: 'Environment was not running' } );

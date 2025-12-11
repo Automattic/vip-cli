@@ -5,7 +5,11 @@ declare class Factory {
 			| {
 					name: string;
 					builder: {
-						new ( id: any, info?: {}, ...sources: any[] ): {
+						new (
+							id: any,
+							info?: {},
+							...sources: any[]
+						): {
 							id: any;
 							info: {};
 							data: any;
@@ -15,7 +19,10 @@ declare class Factory {
 			| {
 					name: string;
 					builder: {
-						new ( id: any, config?: {} ): {
+						new (
+							id: any,
+							config?: {}
+						): {
 							id: any;
 							config: {
 								proxy: any;
@@ -25,13 +32,17 @@ declare class Factory {
 						};
 					};
 			  }
-		 )[]
+		)[]
 	);
 	registry: (
 		| {
 				name: string;
 				builder: {
-					new ( id: any, info?: {}, ...sources: any[] ): {
+					new (
+						id: any,
+						info?: {},
+						...sources: any[]
+					): {
 						id: any;
 						info: {};
 						data: any;
@@ -41,7 +52,10 @@ declare class Factory {
 		| {
 				name: string;
 				builder: {
-					new ( id: any, config?: {} ): {
+					new (
+						id: any,
+						config?: {}
+					): {
 						id: any;
 						config: {
 							proxy: any;
@@ -51,7 +65,7 @@ declare class Factory {
 					};
 				};
 		  }
-	 )[];
+	)[];
 	add( {
 		name,
 		builder,

@@ -36,7 +36,12 @@ export default class Tracks implements AnalyticsClient {
 
 	public static readonly ENDPOINT = 'https://public-api.wordpress.com/rest/v1.1/tracks/record';
 
-	constructor( userId: string, userType: string, private readonly eventPrefix: string, env: Env ) {
+	constructor(
+		userId: string,
+		userType: string,
+		private readonly eventPrefix: string,
+		env: Env
+	) {
 		this.userAgent = env.userAgent;
 
 		this.baseParams = {

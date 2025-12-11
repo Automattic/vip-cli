@@ -655,7 +655,7 @@ declare namespace Enquirer {
 	export namespace internalTypes {
 		export type CommonQuestion<
 			V extends types.Value,
-			A extends types.Answer
+			A extends types.Answer,
 		> = types.QuestionBase &
 			types.Initializer< V, A > &
 			types.Formatter< V, A > &
@@ -878,7 +878,7 @@ declare namespace Enquirer {
 	export namespace ArrayPrompt {
 		export type Question<
 			T extends types.Answer,
-			P extends ArrayPrompt< T > = ArrayPrompt< T >
+			P extends ArrayPrompt< T > = ArrayPrompt< T >,
 		> = Prompt.Question< string, P > & {
 			choices:
 				| ( () => types.ChoiceInput[] | Promise< types.ChoiceInput[] > )
@@ -973,7 +973,7 @@ declare namespace Enquirer {
 	export namespace AutoComplete {
 		export type Question<
 			T extends types.Answer,
-			P extends AutoComplete = AutoComplete
+			P extends AutoComplete = AutoComplete,
 		> = ArrayPrompt.Question< T, P > & {
 			suggest?: (
 				this: AutoComplete,

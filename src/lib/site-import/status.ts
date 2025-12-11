@@ -271,6 +271,7 @@ ${ maybeExitPrompt }
 				try {
 					status = await getStatus( api, app.id ?? -1, env.id ?? -1 );
 				} catch ( error ) {
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { error } );
 				}
 				const { importStatus, launched } = status;
@@ -365,6 +366,7 @@ ${ maybeExitPrompt }
 				}
 
 				if ( ! jobSteps.length ) {
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { error: 'Could not enumerate the import job steps', launched } );
 				}
 
@@ -380,6 +382,7 @@ ${ maybeExitPrompt }
 					overallStatus = 'failed';
 					setSuffixAndPrint();
 
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( {
 						inImportProgress: true,
 						commandOutput: failedImportStep.output,
@@ -394,6 +397,7 @@ ${ maybeExitPrompt }
 				setSuffixAndPrint();
 
 				if ( jobStatus === 'error' ) {
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { error: 'Import job failed', steps: jobSteps, launched } );
 				}
 

@@ -72,7 +72,10 @@ export class APIError extends Error {}
 export class WPCliCommandOverSSH {
 	private readonly track: CommandTracker;
 
-	constructor( private readonly app: App, private readonly env: AppEnvironment ) {
+	constructor(
+		private readonly app: App,
+		private readonly env: AppEnvironment
+	) {
 		this.track = makeCommandTracker( 'wp', {
 			app: app.id,
 			env: env.id,

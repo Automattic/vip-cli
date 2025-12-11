@@ -17,7 +17,7 @@ import { MB_IN_BYTES } from '../lib/constants/file-size';
 // Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promise< Response > =
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports
 	require( 'fetch-retry' )( fetch, {
 		// Set default retry options
 		retries: 3,
@@ -124,10 +124,7 @@ export const unzipFile = async (
 ): Promise< void > => {
 	const mimeType = await detectCompressedMimeType( inputFilename );
 
-	const extractFunctions: Record<
-		string,
-		{ extractor: ( options?: ZlibOptions | undefined ) => Gunzip }
-	> = {
+	const extractFunctions: Record< string, { extractor: ( options?: ZlibOptions ) => Gunzip } > = {
 		'application/gzip': {
 			extractor: createGunzip,
 		},
@@ -135,7 +132,6 @@ export const unzipFile = async (
 
 	const extractionInfo = extractFunctions[ mimeType ];
 
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if ( ! extractionInfo ) {
 		throw new Error( `unsupported file format: ${ mimeType }` );
 	}
@@ -719,6 +715,7 @@ async function completeMultipartUpload( {
 	);
 
 	if ( completeMultipartUploadResponse.status !== 200 ) {
+		// eslint-disable-next-line @typescript-eslint/only-throw-error
 		throw await completeMultipartUploadResponse.text();
 	}
 

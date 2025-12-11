@@ -150,9 +150,7 @@ export async function startLiveBackupCopy( {
 		},
 	} );
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	if ( ! result.data?.startLiveBackupCopy.copyId ) {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		throw new Error(
 			`Failed to start partial database export: ${
 				result.data?.startLiveBackupCopy?.message

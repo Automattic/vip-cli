@@ -436,7 +436,6 @@ const postValidation = async ( options: ValidationOptions ): Promise< void > => 
 
 		errorSummary[ type ] = check.results.length;
 	}
-	// eslint-disable-next-line camelcase
 	errorSummary.problems_found = problemsFound;
 
 	const tableNamesSet = new Set( tableNames );
