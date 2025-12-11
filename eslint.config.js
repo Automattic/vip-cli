@@ -1,7 +1,5 @@
 const { configs } = require( '@automattic/eslint-plugin-wpvip' );
 
-// require( '@automattic/eslint-plugin-wpvip/init' );
-
 const config = [
 	{
 		ignores: [ '*.generated.d.ts', 'dist/**', 'src/graphqlTypes.d.ts', 'codegen.ts' ],
