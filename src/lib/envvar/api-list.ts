@@ -38,7 +38,7 @@ export default async function listEnvVars( appId: number, envId: number ): Promi
 		GetEnvironmentVariablesQueryVariables
 	>( { query, variables } );
 
-	const nodes = data.app?.environments?.[ 0 ]?.environmentVariables?.nodes ?? [];
+	const nodes = data?.app?.environments?.[ 0 ]?.environmentVariables?.nodes ?? [];
 
 	return nodes.map( entry => entry?.name ?? '' );
 }

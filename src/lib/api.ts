@@ -2,22 +2,18 @@ import {
 	ApolloClient,
 	HttpLink,
 	InMemoryCache,
-	type NormalizedCacheObject,
-	type Operation,
+	ServerError,
+	CombinedGraphQLErrors,
+	ApolloLink,
 } from '@apollo/client/core';
-import { setContext } from '@apollo/client/link/context';
-import { ApolloLink } from '@apollo/client/link/core';
-import { ErrorResponse, onError } from '@apollo/client/link/error';
+import { ErrorLink } from '@apollo/client/link/error';
 import { RetryLink } from '@apollo/client/link/retry';
-import { ServerError } from '@apollo/client/link/utils';
 import chalk from 'chalk';
 import debugLib from 'debug';
+import { Kind, OperationTypeNode } from 'graphql';
 import { FetchError } from 'node-fetch';
 
 import http from './api/http';
-import env from './env';
-import Token from './token';
-import { createProxyAgent } from '../lib/http/proxy-agent';
 
 // Config
 export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
@@ -43,7 +39,7 @@ export function enableGlobalGraphQLErrorHandling(): void {
 
 export function shouldRetryRequest(
 	attempt: number,
-	operation: Operation,
+	operation: ApolloLink.Operation,
 	error: unknown
 ): boolean {
 	const debugSuffix = `Operation: ${ operation.operationName }. Attempt: ${ attempt }.`;
@@ -51,7 +47,7 @@ export function shouldRetryRequest(
 	if (
 		! error ||
 		operation.query.definitions.some(
-			def => def.kind === 'OperationDefinition' && def.operation !== 'query'
+			def => def.kind === Kind.OPERATION_DEFINITION && def.operation !== OperationTypeNode.QUERY
 		)
 	) {
 		debug( `Request failed. ${ debugSuffix }` );
@@ -84,15 +80,6 @@ export function shouldRetryRequest(
 	return true;
 }
 
-function isServerError(
-	networkError: ErrorResponse[ 'networkError' ]
-): networkError is ServerError {
-	if ( ! networkError ) {
-		return false;
-	}
-	return 'result' in networkError;
-}
-
 export default function API( {
 	exitOnError = true,
 	silenceAuthErrors = false,
@@ -101,31 +88,34 @@ export default function API( {
 	exitOnError?: boolean;
 	silenceAuthErrors?: boolean;
 	customRetryLink?: RetryLink;
-} = {} ): ApolloClient< NormalizedCacheObject > {
-	const errorLink = onError( ( { networkError, graphQLErrors } ) => {
-		if (
-			! silenceAuthErrors &&
-			networkError &&
-			'statusCode' in networkError &&
-			networkError.statusCode === 401
-		) {
-			let message =
-				'You are not authorized to perform this request; please logout with `vip logout`, then try again.';
-			if (
-				isServerError( networkError ) &&
-				networkError.result?.code === 'token-disabled-inactivity'
-			) {
-				message =
-					'Your token has expired due to inactivity; please log out with `vip logout`, then try again.';
+} = {} ): ApolloClient {
+	const errorLink = new ErrorLink( ( { error } ) => {
+		if ( ! silenceAuthErrors && error instanceof ServerError && error.statusCode === 401 ) {
+			let message;
+			try {
+				const result = JSON.parse( error.bodyText ) as unknown;
+				if (
+					typeof result === 'object' &&
+					result !== null &&
+					'code' in result &&
+					result?.code === 'token-disabled-inactivity'
+				) {
+					message = 'Your token has expired due to inactivity';
+				}
+			} catch {
+				// If we can't parse the body, use the default message
+				message = 'You are not authorized to perform this request';
 			}
+
+			message += '; please log out with `vip logout`, then try again.';
 			console.error( chalk.red( 'Unauthorized:' ), message );
 			process.exit( 1 );
 		}
 
-		if ( graphQLErrors?.length && globalGraphQLErrorHandlingEnabled ) {
-			graphQLErrors.forEach( error => {
-				console.error( chalk.red( 'Error:' ), error.message );
-			} );
+		if ( CombinedGraphQLErrors.is( error ) && globalGraphQLErrorHandlingEnabled ) {
+			for ( const err of error.errors ) {
+				console.error( chalk.red( 'Error:' ), err.message );
+			}
 
 			if ( exitOnError ) {
 				process.exit( 1 );
@@ -133,58 +123,30 @@ export default function API( {
 		}
 	} );
 
-	const withToken = setContext( async (): Promise< { token: string } > => {
-		const token = ( await Token.get() ).raw;
-
-		return { token };
-	} );
-
-	const authLink = new ApolloLink( ( operation, forward ) => {
-		const ctx = operation.getContext();
-
-		const headers = {
-			'User-Agent': env.userAgent,
-			Authorization: `Bearer ${ ctx.token }`,
-			...ctx.headers,
-		} as Record< string, string >;
-
-		operation.setContext( { headers } );
-
-		return forward( operation );
-	} );
-
-	const proxyAgent = createProxyAgent( API_URL );
-
 	const httpLink = new HttpLink( {
 		uri: operation => {
 			// to make it easier to write tests, we'll skip adding x_query for tests
 			if ( process.env.NODE_ENV === 'test' ) {
 				return API_URL;
 			}
-			return `${ API_URL }?x_query=${ decodeURIComponent( operation.operationName ) }`;
+			const operationName = operation.operationName ?? '';
+			return `${ API_URL }?x_query=${ encodeURIComponent( operationName ) }`;
 		},
-		fetch: http,
-		fetchOptions: {
-			agent: proxyAgent,
-		},
+		fetch: http as unknown as typeof globalThis.fetch,
 	} );
 
-	const retryLink = new RetryLink( {
-		delay: {
-			initial: RETRY_LINK_INITIAL_DELAY_MS,
-			max: RETRY_LINK_MAX_DELAY_MS,
-		},
-		attempts: shouldRetryRequest,
-	} );
+	const retryLink =
+		customRetryLink ??
+		new RetryLink( {
+			delay: {
+				initial: RETRY_LINK_INITIAL_DELAY_MS,
+				max: RETRY_LINK_MAX_DELAY_MS,
+			},
+			attempts: shouldRetryRequest,
+		} );
 
-	return new ApolloClient< NormalizedCacheObject >( {
-		link: ApolloLink.from( [
-			withToken,
-			errorLink,
-			customRetryLink ? customRetryLink : retryLink,
-			authLink,
-			httpLink,
-		] ),
+	return new ApolloClient( {
+		link: ApolloLink.from( [ errorLink, retryLink, httpLink ] ),
 		cache: new InMemoryCache( {
 			typePolicies: {
 				WPSite: {

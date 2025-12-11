@@ -42,7 +42,7 @@ export default async function getEnvVars(
 	>( { query, variables } );
 
 	return (
-		( data.app?.environments?.[ 0 ]?.environmentVariables?.nodes as
+		( data?.app?.environments?.[ 0 ]?.environmentVariables?.nodes as
 			| EnvironmentVariable[]
 			| null
 			| undefined ) ?? null

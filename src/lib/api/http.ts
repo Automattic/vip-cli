@@ -14,9 +14,8 @@ import Token from '../../lib/token';
 const debug = debugLib( '@automattic/vip:http' );
 
 export type FetchOptions = Omit< RequestInit, 'body' > & {
-	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 	body?: BodyInit | Record< string, unknown >;
-	headers?: HeadersInit | Record< string, string >;
+	headers?: HeadersInit;
 };
 
 /**
@@ -44,16 +43,25 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 
 	debug( 'running fetch', url );
 
-	return fetch( url, {
+	const headers = new Headers( { ...options.headers } );
+	if ( ! headers.has( 'Authorization' ) ) {
+		headers.set( 'Authorization', `Bearer ${ authToken.raw }` );
+	}
+
+	if ( ! headers.has( 'User-Agent' ) ) {
+		headers.set( 'User-Agent', env.userAgent );
+	}
+
+	if ( ! headers.has( 'Content-Type' ) && options.method !== 'GET' ) {
+		headers.set( 'Content-Type', 'application/json' );
+	}
+
+	const opts = {
 		...options,
 		agent: proxyAgent ?? undefined,
-		headers: {
-			Authorization: `Bearer ${ authToken.raw }`,
-			'User-Agent': env.userAgent,
-			'Content-Type': 'application/json',
-			...( options.headers ?? {} ),
-		},
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		headers,
 		body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
-	} );
+	};
+
+	return fetch( url, opts );
 };

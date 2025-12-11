@@ -48,7 +48,7 @@ export async function getRecentSlowlogs(
 		},
 	} );
 
-	const slowlogs = response.data.app?.environments?.[ 0 ]?.slowlogs;
+	const slowlogs = response.data?.app?.environments?.[ 0 ]?.slowlogs;
 
 	if ( ! slowlogs?.nodes ) {
 		throw new Error( 'Unable to query slowlogs' );

@@ -110,7 +110,8 @@ export async function isMultisitePrimaryDomainMapped(
 		// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 		exit.withError( `StartImport call failed: ${ GraphQlError }` );
 	}
-	if ( ! Array.isArray( res.data.app?.environments ) ) {
+
+	if ( ! Array.isArray( res.data?.app?.environments ) ) {
 		return false;
 	}
 

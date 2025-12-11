@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { ApolloQueryResult } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import { replace } from '@automattic/vip-search-replace';
 import chalk from 'chalk';
 import debugLib from 'debug';
@@ -239,7 +239,7 @@ export class DevEnvSyncSQLCommand {
 		appId: number,
 		environmentId: number,
 		after: string | null
-	): Promise< ApolloQueryResult< SiteUrlsQueryQuery > > {
+	): Promise< ApolloClient.QueryResult< SiteUrlsQueryQuery > > {
 		return api.query< SiteUrlsQueryQuery, SiteUrlsQueryQueryVariables >( {
 			query: SITE_URLS_QUERY,
 			variables: {
@@ -261,7 +261,7 @@ export class DevEnvSyncSQLCommand {
 		do {
 			// eslint-disable-next-line no-await-in-loop
 			const res = await this.fetchSitesPage( api, appId, environmentId, after );
-			if ( res.data.app?.environments?.[ 0 ]?.wpSitesSDS?.nodes ) {
+			if ( res.data?.app?.environments?.[ 0 ]?.wpSitesSDS?.nodes ) {
 				const wpSitesSDS = res.data.app.environments[ 0 ].wpSitesSDS;
 				allSites.push(
 					...res.data.app.environments[ 0 ].wpSitesSDS.nodes.filter( ( node ): node is WpSite =>

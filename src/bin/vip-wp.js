@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { CombinedGraphQLErrors } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
@@ -499,10 +500,10 @@ commandWrapper( {
 				result = await getTokenForCommand( appId, envId, wpCliCmd );
 			} catch ( error ) {
 				// If this was a GraphQL error, print that to the message to the line
-				if ( error.graphQLErrors ) {
-					error.graphQLErrors.forEach( err => {
+				if ( CombinedGraphQLErrors.is( error ) ) {
+					for ( const err of error.errors ) {
 						console.log( chalk.red( 'Error:' ), err.message );
-					} );
+					}
 				} else {
 					// Else, other type of error, just dump it
 					console.log( error );

@@ -1,20 +1,21 @@
 /**
  * External dependencies
  */
-import {
-	ApolloClient,
-	ApolloQueryResult,
-	FetchResult,
-	NormalizedCacheObject,
-} from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import chalk from 'chalk';
-import { DocumentNode, GraphQLFormattedError } from 'graphql';
 import gql from 'graphql-tag';
 
 /**
  * Internal dependencies
  */
-import { App, AppEnvironment } from '../graphqlTypes';
+import {
+	EnablePhpMyAdminMutation,
+	EnablePhpMyAdminMutationVariables,
+	GeneratePhpMyAdminAccessMutation,
+	GeneratePhpMyAdminAccessMutationVariables,
+	PhpMyAdminStatusQuery,
+	PhpMyAdminStatusQueryVariables,
+} from './phpmyadmin.generated';
 import API, {
 	disableGlobalGraphQLErrorHandling,
 	enableGlobalGraphQLErrorHandling,
@@ -23,6 +24,9 @@ import * as exit from '../lib/cli/exit';
 import { ProgressTracker } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
 import { pollUntil } from '../lib/utils';
+
+import type { App, AppEnvironment } from '../graphqlTypes';
+import type { DocumentNode, GraphQLFormattedError } from 'graphql';
 
 export const GENERATE_PHP_MY_ADMIN_URL_MUTATION: DocumentNode = gql`
 	mutation GeneratePhpMyAdminAccess($input: GeneratePhpMyAdminAccessInput) {
@@ -57,9 +61,11 @@ async function generatePhpMyAdminAccess( envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api: ApolloClient< NormalizedCacheObject > = API();
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const resp: FetchResult< any, Record< string, any >, Record< string, any > > = await api.mutate( {
+	const api: ApolloClient = API();
+	const resp = await api.mutate<
+		GeneratePhpMyAdminAccessMutation,
+		GeneratePhpMyAdminAccessMutationVariables
+	>( {
 		mutation: GENERATE_PHP_MY_ADMIN_URL_MUTATION,
 		variables: {
 			input: {
@@ -71,17 +77,15 @@ async function generatePhpMyAdminAccess( envId: number ): Promise< string > {
 	// Re-enable global error handling
 	enableGlobalGraphQLErrorHandling();
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-	return resp?.data?.generatePHPMyAdminAccess?.url as string;
+	return resp.data?.generatePHPMyAdminAccess?.url ?? '';
 }
 
-async function enablePhpMyAdmin( envId: number ): Promise< string > {
+async function enablePhpMyAdmin( envId: number ): Promise< void > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api: ApolloClient< NormalizedCacheObject > = API();
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const resp: FetchResult< any, Record< string, any >, Record< string, any > > = await api.mutate( {
+	const api: ApolloClient = API();
+	await api.mutate< EnablePhpMyAdminMutation, EnablePhpMyAdminMutationVariables >( {
 		mutation: ENABLE_PHP_MY_ADMIN_MUTATION,
 		variables: {
 			input: {
@@ -92,19 +96,15 @@ async function enablePhpMyAdmin( envId: number ): Promise< string > {
 
 	// Re-enable global error handling
 	enableGlobalGraphQLErrorHandling();
-
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-	return resp?.data?.generatePHPMyAdminAccess?.url as string;
 }
 
 async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< string > {
 	// Disable global error handling so that we can handle errors ourselves
 	disableGlobalGraphQLErrorHandling();
 
-	const api: ApolloClient< NormalizedCacheObject > = API();
+	const api: ApolloClient = API();
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const resp: ApolloQueryResult< any > = await api.query( {
+	const resp = await api.query< PhpMyAdminStatusQuery, PhpMyAdminStatusQueryVariables >( {
 		query: GET_PHP_MY_ADMIN_STATUS_QUERY,
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
@@ -113,8 +113,7 @@ async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< str
 	// Re-enable global error handling
 	enableGlobalGraphQLErrorHandling();
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-	return resp?.data?.app?.environments?.[ 0 ]?.phpMyAdminStatus?.status as string;
+	return resp.data?.app?.environments?.[ 0 ]?.phpMyAdminStatus?.status ?? '';
 }
 
 export class PhpMyAdminCommand {
