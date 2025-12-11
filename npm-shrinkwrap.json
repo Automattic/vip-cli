@@ -10,7 +10,7 @@
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
-        "@apollo/client": "4.0.9",
+        "@apollo/client": "4.0.10",
         "@automattic/vip-search-replace": "^2.0.0",
         "@json2csv/plainjs": "^7.0.3",
         "@wwa/single-line-log": "^1.1.4",
@@ -143,9 +143,9 @@
       }
     },
     "node_modules/@apollo/client": {
-      "version": "4.0.9",
-      "resolved": "https://registry.npmjs.org/@apollo/client/-/client-4.0.9.tgz",
-      "integrity": "sha512-Lh2drMzFE9x5jVS8RKmlGL5SORkvpyUJIT+wTErxDUR2HpWePiBfhhcHHRSlZFiCR866ewCv4euTc4IDF0GWxw==",
+      "version": "4.0.10",
+      "resolved": "https://registry.npmjs.org/@apollo/client/-/client-4.0.10.tgz",
+      "integrity": "sha512-xls/1tQq8GjAwn/Zo2LbbwHek7Qn+GrVc6qYgxDknB5xqpa9Lu5+Yt8duRWCUzEAUnf7vh2p61Uvx+C26N4l7g==",
       "license": "MIT",
       "workspaces": [
         "dist",
