@@ -4219,7 +4219,9 @@
       }
     },
     "node_modules/@wwa/single-line-log": {
-      "version": "1.1.4",
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/@wwa/single-line-log/-/single-line-log-1.2.1.tgz",
+      "integrity": "sha512-8sEWvVfdLlR8JJZtZTrxWf4u5whPs3H9VhFMKQI4IpAg7oEpo5WZsaFeLPZ+DM228QfB2kHGFjPb6jXpFxcLkw==",
       "license": "MIT",
       "dependencies": {
         "string-width": "^4.2.2"
