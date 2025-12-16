@@ -357,7 +357,7 @@ export const promptToContinue = async ( {
  * @returns {Promise<boolean>} True if user confirmed both times, false otherwise
  */
 export const confirmSkipBackup = async track => {
-	console.log( chalk.red( chalk.bold.red( '⚠️ WARNING ⚠️' ) ) );
+	console.log( chalk.bold.red( '⚠️ WARNING ⚠️' ) );
 	console.log(
 		chalk.red( chalk.bold.red( 'YOU ARE ABOUT TO SKIP CREATING A BACKUP BEFORE IMPORTING SQL!\n' ) )
 	);
