@@ -185,9 +185,9 @@
       }
     },
     "node_modules/@automattic/eslint-plugin-wpvip": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/@automattic/eslint-plugin-wpvip/-/eslint-plugin-wpvip-1.0.0.tgz",
-      "integrity": "sha512-XDMCNnOgPn/G3yv1RfxWPnuY5bYvIccRZqDAVHZ0JUGetM+i0uC75OzmcPo24EGiMOIViF95NsoGtzKWBe27KQ==",
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@automattic/eslint-plugin-wpvip/-/eslint-plugin-wpvip-1.1.0.tgz",
+      "integrity": "sha512-s+Oo5SES5sEW/2J6vEgHCA0M0GCXVUDLeFwIjx/v/bstPxQWkfdJM1Fcb9cMd+JNkN01tfDbS97CzClHZxmcPg==",
       "dev": true,
       "license": "GPL-2.0+",
       "dependencies": {
