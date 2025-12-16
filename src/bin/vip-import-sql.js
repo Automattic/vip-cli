@@ -351,6 +351,70 @@ export const promptToContinue = async ( {
 };
 
 /**
+ * Show a huge warning and prompt the user to confirm twice when skipping backup
+ *
+ * @param {Function} track - Tracking function
+ * @returns {Promise<boolean>} True if user confirmed both times, false otherwise
+ */
+export const confirmSkipBackup = async track => {
+	console.log( chalk.red( chalk.bold.red( '⚠️ WARNING ⚠️' ) ) );
+	console.log(
+		chalk.red( chalk.bold.red( 'YOU ARE ABOUT TO SKIP CREATING A BACKUP BEFORE IMPORTING SQL!\n' ) )
+	);
+	console.log( chalk.bold.yellow( 'This action is EXTREMELY DANGEROUS and can result in:' ) );
+	console.log( chalk.bold.yellow( '• Permanent data loss' ) );
+	console.log( chalk.bold.yellow( '• Inability to automatically restore your database' ) );
+	console.log( chalk.bold.yellow( '• Complete site failure' ) );
+	console.log( chalk.bold.red( 'There is NO way to undo this action once the import begins!\n' ) );
+
+	const importAbortedMsg = chalk.red( '✗ Import aborted.' );
+
+	try {
+		// First confirmation: y/n prompt
+		const firstConfirm = await prompt( {
+			type: 'confirm',
+			name: 'firstConfirm',
+			message: 'Are you absolutely certain you want to skip the backup?',
+		} ).catch( () => {
+			return { firstConfirm: false };
+		} );
+
+		if ( ! firstConfirm.firstConfirm ) {
+			await track( 'import_sql_skip_backup_cancelled' );
+			console.log( importAbortedMsg );
+			return false;
+		}
+
+		// Second confirmation: requires typing "yes"
+		const secondConfirm = await prompt( {
+			type: 'input',
+			name: 'secondConfirm',
+			message: `Type '${ chalk.yellow(
+				'yes'
+			) }' (without quotes) to proceed WITHOUT creating a backup (this cannot be undone):\n`,
+		} ).catch( () => {
+			return { secondConfirm: '' };
+		} );
+
+		if ( secondConfirm.secondConfirm?.toLowerCase() !== 'yes' ) {
+			await track( 'import_sql_skip_backup_cancelled' );
+			console.error( 'Failed to confirm!' );
+			console.log( importAbortedMsg );
+			return false;
+		}
+	} catch ( error ) {
+		await track( 'import_sql_skip_backup_cancelled' );
+		console.log( importAbortedMsg );
+		console.error( error );
+		return false;
+	}
+
+	await track( 'import_sql_skip_backup_confirmed' );
+	console.log( chalk.red( '⚠️ Backup will be skipped. Proceeding with import...' ) );
+	return true;
+};
+
+/**
  * @returns {Promise<string[]>}
  */
 export async function validateAndGetTableNames( {
@@ -505,11 +569,15 @@ command( {
 		'header',
 		'Pass a header name and value (Formatted as "Name: Value") in a request for a remote SQL database file. Can be passed more than once for multiple headers and values.'
 	)
+	.option(
+		[ 'B', 'skip-backup' ],
+		'Skip creating a backup before importing the SQL file. WARNING: This is extremely dangerous and can result in permanent data loss.'
+	)
 	.examples( examples )
 	// eslint-disable-next-line complexity
 	.argv( process.argv, async ( arg, opts ) => {
 		const { app, env } = opts;
-		const { skipValidate, searchReplace, skipMaintenanceMode, md5, header } = opts;
+		const { skipValidate, searchReplace, skipMaintenanceMode, md5, header, skipBackup } = opts;
 		const { id: envId, appId } = env;
 		const [ fileNameOrURL ] = arg;
 		const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
@@ -596,6 +664,13 @@ command( {
 			tableNames,
 		} );
 
+		if ( skipBackup ) {
+			const confirmed = await confirmSkipBackup( track );
+			if ( ! confirmed ) {
+				process.exit( 0 );
+			}
+		}
+
 		if ( ! isUrl && opts.inPlace ) {
 			const approved = await confirm(
 				[],
@@ -677,6 +752,7 @@ Processing the SQL import for your environment...
 				id: app.id,
 				environmentId: env.id,
 				skipMaintenanceMode,
+				...( skipBackup && { skipBackup: true } ),
 			},
 		};
 
