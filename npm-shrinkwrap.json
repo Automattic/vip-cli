@@ -29,7 +29,7 @@
         "https-proxy-agent": "^7.0.6",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#de65a3a7d2ff252f15d62e65ac7d57162602489c",
+        "lando": "github:automattic/lando-cli#bff037ea318948a1bac623c12ede017928cb99db",
         "node-fetch": "^3.3.2",
         "node-stream-zip": "1.15.0",
         "open": "^11.0.0",
@@ -11269,8 +11269,8 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#de65a3a7d2ff252f15d62e65ac7d57162602489c",
-      "integrity": "sha512-E3J0vcx8up7TdbgeYdQxRNfKloTSyB0tPSP+e9vKY5ylY2abPJTM46J5c293JwHdi0BJnTzPmBG3OW4LhZAsgQ==",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#bff037ea318948a1bac623c12ede017928cb99db",
+      "integrity": "sha512-IR5BopOUjDDlKwu65d7oQ/SxGUFXVkAH4/ljKuT8I0lWbPE+bbTup3IcjMEiXz7pZWEAfIsBANHIhdnmXcF9NQ==",
       "license": "GPL-3.0",
       "dependencies": {
         "axios": "^1.13.2",
@@ -11290,7 +11290,7 @@
         "shelljs": "^0.10.0",
         "string-argv": "0.1.1",
         "through": "^2.3.8",
-        "transliteration": "~2.3.5",
+        "transliteration": "^2.6.0",
         "valid-url": "^1.0.9",
         "winston": "^3.11.0",
         "yargs": "^16.1.0"
@@ -14160,19 +14160,16 @@
       }
     },
     "node_modules/transliteration": {
-      "version": "2.3.5",
-      "resolved": "https://registry.npmjs.org/transliteration/-/transliteration-2.3.5.tgz",
-      "integrity": "sha512-HAGI4Lq4Q9dZ3Utu2phaWgtm3vB6PkLUFqWAScg/UW+1eZ/Tg6Exo4oC0/3VUol/w4BlefLhUUSVBr/9/ZGQOw==",
+      "version": "2.6.0",
+      "resolved": "https://registry.npmjs.org/transliteration/-/transliteration-2.6.0.tgz",
+      "integrity": "sha512-T6frfMj7N5xNK0l+duIzIWKxkc9ewG72uv7NeOs4dIoysqTnYpwxeVEE5qYdKKmy7hby55ah0wNUoMaLsB2Zjw==",
       "license": "MIT",
-      "dependencies": {
-        "yargs": "^17.5.1"
-      },
       "bin": {
         "slugify": "dist/bin/slugify",
         "transliterate": "dist/bin/transliterate"
       },
       "engines": {
-        "node": ">=6.0.0"
+        "node": ">=20.0.0"
       }
     },
     "node_modules/triple-beam": {
