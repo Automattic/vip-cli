@@ -777,7 +777,7 @@ export function validateDockerInstalled( lando: Lando ): void {
 			);
 		}
 
-		if ( ! satisfies( compose, '^2.0.0' ) ) {
+		if ( ! satisfies( compose, '>=2.0.0' ) ) {
 			throw new Error(
 				`docker-compose version ${ compose } is not supported. Please upgrade to version 2.0.0 or higher - https://docs.docker.com/compose/install/`
 			);
