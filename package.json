@@ -157,7 +157,7 @@
     "https-proxy-agent": "^7.0.6",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
-    "lando": "github:automattic/lando-cli#de65a3a7d2ff252f15d62e65ac7d57162602489c",
+    "lando": "github:automattic/lando-cli#bff037ea318948a1bac623c12ede017928cb99db",
     "node-fetch": "^3.3.2",
     "node-stream-zip": "1.15.0",
     "open": "^11.0.0",
