@@ -82,8 +82,6 @@ jobs:
           - 'lts/*'
           - 'lts/-1'
           - current
-    env:
-      NODE_OPTIONS: '--localstorage-file=/tmp/localstorage'
     steps:
       - name: Check out the source code
         uses: actions/checkout@v6
