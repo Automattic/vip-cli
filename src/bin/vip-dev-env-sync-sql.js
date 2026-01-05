@@ -59,14 +59,6 @@ const appQuery = `
 		primaryDomain { name }
 		uniqueLabel
 		isMultisite
-		wpSitesSDS(first:500) {
-			total
-			nodes {
-				id
-				blogId
-				homeUrl
-			}
-		}
 	}
 `;
 

@@ -221,17 +221,8 @@ export class DevEnvSyncSQLCommand {
 		fs.renameSync( outputFile, this.sqlFile );
 	}
 
-	public async getSiteUrlsFromSDS(): Promise< WpSite[] > {
-		if (
-			this.env.isMultisite &&
-			( ! this.env.wpSitesSDS?.nodes ||
-				! this.env.wpSitesSDS?.total ||
-				this.env.wpSitesSDS.nodes.length < this.env.wpSitesSDS.total )
-		) {
-			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
-		}
-
-		return this.env.wpSitesSDS?.nodes?.filter( ( node ): node is WpSite => Boolean( node ) ) ?? [];
+	public getSiteUrlsFromSDS(): Promise< WpSite[] > {
+		return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
 	}
 
 	private fetchSitesPage(
