@@ -226,14 +226,7 @@ export class DevEnvSyncSQLCommand {
 			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
 		}
 
-		return Promise.resolve( [
-			{
-				blogId: 1,
-				homeUrl: this.env.primaryDomain ? `https://${ this.env.primaryDomain.name }` : undefined,
-				siteUrl: this.env.primaryDomain ? `https://${ this.env.primaryDomain.name }` : undefined,
-				id: 1,
-			},
-		] );
+		return Promise.resolve( [] );
 	}
 
 	private fetchSitesPage(
