@@ -2,6 +2,7 @@
 
 import chalk from 'chalk';
 
+import { isAppNodejs } from '../lib/app';
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
@@ -82,7 +83,23 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		}
 	}
 
-	await deleteEnvVar( opt.app.id, opt.env.id, name ).catch( async err => {
+	let reloadManifest = false;
+	if ( ! opt.skipConfirmation ) {
+		if ( isAppNodejs( opt.app.typeId ) ) {
+			console.log(
+				chalk.yellow(
+					`⚠️ Note: ${ chalk.bold(
+						'Reload only applies runtime variable changes.'
+					) } Build-time environment variable changes won't take effect until your next deploy.`
+				)
+			);
+		}
+		reloadManifest = await confirm(
+			'Reload the project configuration now to apply your environment variable changes?'
+		);
+	}
+
+	await deleteEnvVar( opt.app.id, opt.env.id, name, reloadManifest ).catch( async err => {
 		await trackEvent( 'envvar_delete_mutation_error', { ...trackingParams, error: err.message } );
 
 		throw err;
@@ -93,10 +110,10 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		chalk.green( `Successfully deleted environment variable ${ JSON.stringify( name ) }` )
 	);
 
-	if ( ! opt.skipConfirmation ) {
+	if ( ! opt.skipConfirmation && ! reloadManifest ) {
 		console.log(
 			chalk.bgYellow( chalk.bold( 'Important:' ) ),
-			'Updates to environment variables will not be available until the application’s next deploy.'
+			"Updates to environment variables will not be available until the application's next deploy."
 		);
 	}
 }

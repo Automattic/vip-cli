@@ -9,9 +9,20 @@ import type {
 import type { ApolloLink } from '@apollo/client/core';
 
 const mutation = gql`
-	mutation DeleteEnvironmentVariable($appId: Int!, $envId: Int!, $name: String!) {
+	mutation DeleteEnvironmentVariable(
+		$appId: Int!
+		$envId: Int!
+		$name: String!
+		$reloadManifest: Boolean!
+	) {
 		deleteEnvironmentVariable(
-			input: { applicationId: $appId, environmentId: $envId, name: $name, value: "" }
+			input: {
+				applicationId: $appId
+				environmentId: $envId
+				name: $name
+				value: ""
+				reloadManifest: $reloadManifest
+			}
 		) {
 			environmentVariables {
 				total
@@ -26,7 +37,8 @@ const mutation = gql`
 export default async function deleteEnvVar(
 	appId: number,
 	envId: number,
-	name: string
+	name: string,
+	reloadManifest: boolean = false
 ): Promise< ApolloLink.Result< DeleteEnvironmentVariableMutation > > {
 	const api = API();
 
@@ -34,6 +46,7 @@ export default async function deleteEnvVar(
 		appId,
 		envId,
 		name,
+		reloadManifest,
 	};
 
 	return api.mutate<
