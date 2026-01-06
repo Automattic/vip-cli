@@ -222,7 +222,18 @@ export class DevEnvSyncSQLCommand {
 	}
 
 	public getSiteUrlsFromSDS(): Promise< WpSite[] > {
-		return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
+		if ( this.env.isMultisite ) {
+			return this.fetchAllSites( Number( this.app.id ), Number( this.env.id ) );
+		}
+
+		return Promise.resolve( [
+			{
+				blogId: 1,
+				homeUrl: this.env.primaryDomain ? `https://${ this.env.primaryDomain.name }` : undefined,
+				siteUrl: this.env.primaryDomain ? `https://${ this.env.primaryDomain.name }` : undefined,
+				id: 1,
+			},
+		] );
 	}
 
 	private fetchSitesPage(
