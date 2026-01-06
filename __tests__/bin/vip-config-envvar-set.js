@@ -1,6 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 
 import { setEnvVarCommand } from '../../src/bin/vip-config-envvar-set';
+import { isAppNodejs } from '../../src/lib/app';
 import command from '../../src/lib/cli/command';
 import { setEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
 import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
@@ -52,12 +53,17 @@ jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
+jest.mock( '../../src/lib/app', () => ( {
+	isAppNodejs: jest.fn( () => false ),
+} ) );
+
 const mockConfirm = confirm;
 const mockValidateNameWithMessage = validateNameWithMessage;
 const mockPromptForValue = promptForValue;
 const mockSetEnvVar = setEnvVar;
 const mockTrackEvent = trackEvent;
 const mockReadVariableFromFile = readVariableFromFile;
+const mockIsAppNodejs = isAppNodejs;
 
 describe( 'vip config envvar set', () => {
 	it( 'registers as a command', () => {
@@ -78,12 +84,14 @@ describe( 'setEnvVarCommand', () => {
 	 * @param {string} name
 	 * @param {string} fromFile
 	 * @param {string} skipConfirmation
+	 * @param {number} typeId
 	 */
-	function setFixtures( name, fromFile = '', skipConfirmation = '' ) {
+	function setFixtures( name, fromFile = '', skipConfirmation = '', typeId = 1 ) {
 		args = [ name ];
 		opts = {
 			app: {
 				id: 1,
+				typeId,
 				organization: {
 					id: 2,
 				},
@@ -103,6 +111,8 @@ describe( 'setEnvVarCommand', () => {
 		// Restore mock implementations we override in tests.
 		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
 		mockValidateNameWithMessage.mockImplementation( () => true );
+		mockIsAppNodejs.mockImplementation( () => false );
+		mockSetEnvVar.mockImplementation( () => Promise.resolve() );
 	} );
 
 	it( 'validates the name, prompts for confirmation, sets the variable, and prints success', async () => {
@@ -111,14 +121,16 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		// First confirm is for value confirmation, second is for reload manifest
+		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
 
 		await setEnvVarCommand( args, opts );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( readVariableFromFile ).not.toHaveBeenCalled();
-		expect( confirm ).toHaveBeenCalled();
-		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
+		expect( confirm ).toHaveBeenCalledTimes( 2 ); // Value confirmation + reload manifest
+		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value, true );
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Successfully set environment variable' )
 		);
@@ -132,14 +144,15 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name, fromFile );
 		mockReadVariableFromFile.mockImplementation( () => Promise.resolve( value ) );
+		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
 
 		await setEnvVarCommand( args, opts );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
 		expect( readVariableFromFile ).toHaveBeenCalledWith( fromFile );
 		expect( promptForValue ).not.toHaveBeenCalled();
-		expect( confirm ).toHaveBeenCalled();
-		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
+		expect( confirm ).toHaveBeenCalledTimes( 2 ); // Value confirmation + reload manifest
+		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value, true );
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Successfully set environment variable' )
 		);
@@ -160,7 +173,7 @@ describe( 'setEnvVarCommand', () => {
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( readVariableFromFile ).not.toHaveBeenCalled();
 		expect( confirm ).not.toHaveBeenCalled();
-		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
+		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value, false );
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Successfully set environment variable' )
 		);
@@ -174,6 +187,7 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		// First confirm is for value confirmation - return false to cancel
 		mockConfirm.mockImplementation( () => Promise.resolve( false ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( 'EXIT' );
@@ -213,6 +227,7 @@ describe( 'setEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
 		mockSetEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => setEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
@@ -220,7 +235,45 @@ describe( 'setEnvVarCommand', () => {
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
-		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value );
+		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value, true );
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
+	} );
+
+	it( 'passes false for reloadManifest when user declines reload', async () => {
+		const name = 'TEST_VARIABLE';
+		const value = 'test value';
+
+		setFixtures( name );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		// First confirm is for value (true), second is for reload (false)
+		mockConfirm
+			.mockImplementationOnce( () => Promise.resolve( true ) )
+			.mockImplementationOnce( () => Promise.resolve( false ) );
+
+		await setEnvVarCommand( args, opts );
+
+		expect( setEnvVar ).toHaveBeenCalledWith( 1, 3, name, value, false );
+		expect( console.log ).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.stringContaining(
+				"Updates to environment variables will not be available until the application's next deploy."
+			)
+		);
+	} );
+
+	it( 'shows NodeJS warning message when app is NodeJS', async () => {
+		const name = 'TEST_VARIABLE';
+		const value = 'test value';
+		const nodejsTypeId = 2; // Assuming 2 is a NodeJS type ID
+
+		setFixtures( name, '', '', nodejsTypeId );
+		mockIsAppNodejs.mockReturnValue( true );
+		mockPromptForValue.mockImplementation( () => Promise.resolve( value ) );
+		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
+
+		await setEnvVarCommand( args, opts );
+
+		expect( mockIsAppNodejs ).toHaveBeenCalledWith( nodejsTypeId );
+		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( '⚠️ Note:' ) );
 	} );
 } );
