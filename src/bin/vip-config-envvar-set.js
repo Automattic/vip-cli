@@ -2,11 +2,16 @@
 
 import chalk from 'chalk';
 
-import { isAppNodejs } from '../lib/app';
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, setEnvVar, validateNameWithMessage } from '../lib/envvar/api';
-import { cancel, confirm, promptForValue } from '../lib/envvar/input';
+import {
+	cancel,
+	confirm,
+	promptForReloadManifest,
+	promptForValue,
+	showDeployWarning,
+} from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { readVariableFromFile } from '../lib/envvar/read-file';
 import { trackEvent } from '../lib/tracker';
@@ -114,16 +119,7 @@ export async function setEnvVarCommand( arg, opt ) {
 
 	let reloadManifest = false;
 	if ( ! opt.skipConfirmation ) {
-		if ( isAppNodejs( opt.app.typeId ) ) {
-			console.log(
-				chalk.yellow(
-					`⚠️ Note: ${ chalk.bold(
-						'Only applies to runtime variable changes.'
-					) } Build-time environment variable changes won't take effect until your next deploy.`
-				)
-			);
-		}
-		reloadManifest = await confirm( 'Apply this environment variable update now?' );
+		reloadManifest = await promptForReloadManifest( opt.app.typeId );
 	}
 
 	await setEnvVar( opt.app.id, opt.env.id, name, value, reloadManifest ).catch( async err => {
@@ -137,10 +133,7 @@ export async function setEnvVarCommand( arg, opt ) {
 	console.log( chalk.green( 'Environment variable is active and available.' ) );
 
 	if ( ! opt.skipConfirmation && ! reloadManifest ) {
-		console.log(
-			chalk.bgYellow( chalk.bold( 'Important:' ) ),
-			'This environment variable update will not be available until the next code deploy is made to this environment.'
-		);
+		showDeployWarning();
 	}
 }
 

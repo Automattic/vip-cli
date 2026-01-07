@@ -1,10 +1,15 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
 import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
-import { isAppNodejs } from '../../src/lib/app';
 import command from '../../src/lib/cli/command';
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
-import { cancel, confirm, promptForValue } from '../../src/lib/envvar/input';
+import {
+	cancel,
+	confirm,
+	promptForReloadManifest,
+	promptForValue,
+	showDeployWarning,
+} from '../../src/lib/envvar/input';
 import { trackEvent } from '../../src/lib/tracker';
 
 function mockExit() {
@@ -36,7 +41,9 @@ jest.mock( '../../src/lib/envvar/api', () => ( {
 jest.mock( '../../src/lib/envvar/input', () => ( {
 	cancel: jest.fn( mockExit ),
 	confirm: jest.fn( () => Promise.resolve( true ) ),
+	promptForReloadManifest: jest.fn( () => Promise.resolve( true ) ),
 	promptForValue: jest.fn(),
+	showDeployWarning: jest.fn(),
 } ) );
 
 jest.mock( '../../src/lib/envvar/logging', () => ( {
@@ -48,10 +55,6 @@ jest.mock( '../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn(),
 } ) );
 
-jest.mock( '../../src/lib/app', () => ( {
-	isAppNodejs: jest.fn( () => false ),
-} ) );
-
 describe( 'vip config envvar delete', () => {
 	it( 'registers as a command', () => {
 		expect( command ).toHaveBeenCalled();
@@ -61,9 +64,10 @@ describe( 'vip config envvar delete', () => {
 const mockConfirm = confirm;
 const mockValidateNameWithMessage = validateNameWithMessage;
 const mockPromptForValue = promptForValue;
+const mockPromptForReloadManifest = promptForReloadManifest;
 const mockDeleteEnvVar = deleteEnvVar;
 const mockTrackEvent = trackEvent;
-const mockIsAppNodejs = isAppNodejs;
+const mockShowDeployWarning = showDeployWarning;
 
 describe( 'deleteEnvVarCommand', () => {
 	let args;
@@ -98,8 +102,9 @@ describe( 'deleteEnvVarCommand', () => {
 		// Restore mock implementations we override in tests.
 		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
 		mockValidateNameWithMessage.mockImplementation( () => true );
-		mockIsAppNodejs.mockImplementation( () => false );
+		mockPromptForReloadManifest.mockImplementation( () => Promise.resolve( true ) );
 		mockDeleteEnvVar.mockImplementation( () => Promise.resolve() );
+		mockShowDeployWarning.mockImplementation( () => {} );
 	} );
 
 	it( 'validates the name, prompts for confirmation, deletes the variable, and prints success', async () => {
@@ -107,18 +112,20 @@ describe( 'deleteEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
-		// First confirm is for deletion confirmation, second is for reload manifest
 		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
+		mockPromptForReloadManifest.mockImplementation( () => Promise.resolve( true ) );
 
 		await deleteEnvVarCommand( args, opts );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
 		expect( promptForValue ).toHaveBeenCalled();
-		expect( confirm ).toHaveBeenCalledTimes( 2 ); // Deletion confirmation + reload manifest
+		expect( confirm ).toHaveBeenCalledTimes( 1 ); // Deletion confirmation only
+		expect( promptForReloadManifest ).toHaveBeenCalledWith( 1 );
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name, true );
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Successfully deleted environment variable' )
 		);
+		expect( mockShowDeployWarning ).not.toHaveBeenCalled();
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -128,16 +135,19 @@ describe( 'deleteEnvVarCommand', () => {
 
 		setFixtures( name, skipConfirmation );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
+		mockPromptForReloadManifest.mockImplementation( () => Promise.resolve( false ) );
 
 		await deleteEnvVarCommand( args, opts );
 
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
 		expect( promptForValue ).not.toHaveBeenCalled();
 		expect( confirm ).not.toHaveBeenCalled();
+		expect( promptForReloadManifest ).not.toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name, false );
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Successfully deleted environment variable' )
 		);
+		expect( mockShowDeployWarning ).not.toHaveBeenCalled();
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, successEvent ] );
 	} );
 
@@ -186,6 +196,7 @@ describe( 'deleteEnvVarCommand', () => {
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
 		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
+		mockPromptForReloadManifest.mockImplementation( () => Promise.resolve( true ) );
 		mockDeleteEnvVar.mockImplementation( () => Promise.reject( thrownError ) );
 
 		await expect( () => deleteEnvVarCommand( args, opts ) ).rejects.toEqual( thrownError );
@@ -193,6 +204,7 @@ describe( 'deleteEnvVarCommand', () => {
 		expect( validateNameWithMessage ).toHaveBeenCalledWith( name );
 		expect( promptForValue ).toHaveBeenCalled();
 		expect( confirm ).toHaveBeenCalled();
+		expect( promptForReloadManifest ).toHaveBeenCalled();
 		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name, true );
 		expect( mockTrackEvent.mock.calls ).toEqual( [ executeEvent, errorEvent ] );
 	} );
@@ -202,32 +214,13 @@ describe( 'deleteEnvVarCommand', () => {
 
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
-		// First confirm is for deletion (true), second is for reload (false)
-		mockConfirm.mockResolvedValueOnce( true ).mockResolvedValueOnce( false );
-
-		await deleteEnvVarCommand( args, opts );
-
-		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name, false );
-		expect( console.log ).toHaveBeenCalledWith(
-			expect.anything(),
-			expect.stringContaining(
-				"Updates to environment variables will not be available until the application's next deploy."
-			)
-		);
-	} );
-
-	it( 'shows NodeJS warning message when app is NodeJS', async () => {
-		const name = 'TEST_VARIABLE';
-		const nodejsTypeId = 2; // Assuming 2 is a NodeJS type ID
-
-		setFixtures( name, '', nodejsTypeId );
-		mockIsAppNodejs.mockReturnValue( true );
-		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
 		mockConfirm.mockImplementation( () => Promise.resolve( true ) );
+		mockPromptForReloadManifest.mockImplementation( () => Promise.resolve( false ) );
 
 		await deleteEnvVarCommand( args, opts );
 
-		expect( mockIsAppNodejs ).toHaveBeenCalledWith( nodejsTypeId );
-		expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( '⚠️ Note:' ) );
+		expect( promptForReloadManifest ).toHaveBeenCalledWith( 1 );
+		expect( deleteEnvVar ).toHaveBeenCalledWith( 1, 3, name, false );
+		expect( showDeployWarning ).toHaveBeenCalledWith();
 	} );
 } );
