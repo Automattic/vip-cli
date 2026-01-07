@@ -124,7 +124,7 @@ export async function setEnvVarCommand( arg, opt ) {
 			);
 		}
 		reloadManifest = await confirm(
-			'Reload the project configuration now to apply your environment variable changes?'
+			'Reload the configuration now to apply your environment variable changes?'
 		);
 	}
 
