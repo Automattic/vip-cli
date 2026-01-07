@@ -130,9 +130,10 @@ export async function setEnvVarCommand( arg, opt ) {
 
 	await trackEvent( 'envvar_set_command_success', trackingParams );
 	console.log( chalk.green( `Successfully set environment variable ${ JSON.stringify( name ) }` ) );
-	console.log( chalk.green( 'Environment variable is active and available.' ) );
 
-	if ( ! opt.skipConfirmation && ! reloadManifest ) {
+	if ( reloadManifest ) {
+		console.log( chalk.green( 'Environment variable is active and available.' ) );
+	} else if ( ! opt.skipConfirmation ) {
 		showDeployWarning();
 	}
 }
