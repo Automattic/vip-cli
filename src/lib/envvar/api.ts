@@ -14,6 +14,7 @@ export { deleteEnvVar, getEnvVar, getEnvVars, listEnvVars, setEnvVar };
 export const appQuery = `
 	id
 	name
+	typeId
 	environments {
 		id
 		appId

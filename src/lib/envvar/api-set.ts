@@ -9,9 +9,21 @@ import type {
 import type { ApolloLink } from '@apollo/client/core';
 
 const mutation = gql`
-	mutation AddEnvironmentVariable($appId: Int!, $envId: Int!, $name: String!, $value: String!) {
+	mutation AddEnvironmentVariable(
+		$appId: Int!
+		$envId: Int!
+		$name: String!
+		$value: String!
+		$reloadManifest: Boolean!
+	) {
 		addEnvironmentVariable(
-			input: { applicationId: $appId, environmentId: $envId, name: $name, value: $value }
+			input: {
+				applicationId: $appId
+				environmentId: $envId
+				name: $name
+				value: $value
+				reloadManifest: $reloadManifest
+			}
 		) {
 			environmentVariables {
 				total
@@ -27,7 +39,8 @@ export default async function setEnvVar(
 	appId: number,
 	envId: number,
 	name: string,
-	value: string
+	value: string,
+	reloadManifest: boolean = false
 ): Promise< ApolloLink.Result< AddEnvironmentVariableMutation > > {
 	const api = API();
 
@@ -36,6 +49,7 @@ export default async function setEnvVar(
 		envId,
 		name,
 		value,
+		reloadManifest,
 	};
 
 	return api.mutate< AddEnvironmentVariableMutation, AddEnvironmentVariableMutationVariables >( {

@@ -5,7 +5,13 @@ import chalk from 'chalk';
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, deleteEnvVar, validateNameWithMessage } from '../lib/envvar/api';
-import { cancel, confirm, promptForValue } from '../lib/envvar/input';
+import {
+	cancel,
+	confirm,
+	promptForReloadManifest,
+	promptForValue,
+	showDeployWarning,
+} from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { trackEvent } from '../lib/tracker';
 
@@ -82,7 +88,12 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		}
 	}
 
-	await deleteEnvVar( opt.app.id, opt.env.id, name ).catch( async err => {
+	let reloadManifest = false;
+	if ( ! opt.skipConfirmation ) {
+		reloadManifest = await promptForReloadManifest( opt.app.typeId );
+	}
+
+	await deleteEnvVar( opt.app.id, opt.env.id, name, reloadManifest ).catch( async err => {
 		await trackEvent( 'envvar_delete_mutation_error', { ...trackingParams, error: err.message } );
 
 		throw err;
@@ -93,11 +104,8 @@ export async function deleteEnvVarCommand( arg, opt ) {
 		chalk.green( `Successfully deleted environment variable ${ JSON.stringify( name ) }` )
 	);
 
-	if ( ! opt.skipConfirmation ) {
-		console.log(
-			chalk.bgYellow( chalk.bold( 'Important:' ) ),
-			'Updates to environment variables will not be available until the application’s next deploy.'
-		);
+	if ( ! opt.skipConfirmation && ! reloadManifest ) {
+		showDeployWarning();
 	}
 }
 
