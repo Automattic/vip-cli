@@ -203,9 +203,7 @@ describe( 'deleteEnvVarCommand', () => {
 		setFixtures( name );
 		mockPromptForValue.mockImplementation( () => Promise.resolve( name ) );
 		// First confirm is for deletion (true), second is for reload (false)
-		mockConfirm
-			.mockImplementationOnce( () => Promise.resolve( true ) )
-			.mockImplementationOnce( () => Promise.resolve( false ) );
+		mockConfirm.mockResolvedValueOnce( true ).mockResolvedValueOnce( false );
 
 		await deleteEnvVarCommand( args, opts );
 
