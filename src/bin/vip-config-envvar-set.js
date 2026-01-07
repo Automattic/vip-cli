@@ -118,14 +118,12 @@ export async function setEnvVarCommand( arg, opt ) {
 			console.log(
 				chalk.yellow(
 					`⚠️ Note: ${ chalk.bold(
-						'Reload only applies runtime variable changes.'
+						'Only applies to runtime variable changes.'
 					) } Build-time environment variable changes won't take effect until your next deploy.`
 				)
 			);
 		}
-		reloadManifest = await confirm(
-			'Reload the configuration now to apply your environment variable changes?'
-		);
+		reloadManifest = await confirm( 'Apply this environment variable update now?' );
 	}
 
 	await setEnvVar( opt.app.id, opt.env.id, name, value, reloadManifest ).catch( async err => {
@@ -136,11 +134,12 @@ export async function setEnvVarCommand( arg, opt ) {
 
 	await trackEvent( 'envvar_set_command_success', trackingParams );
 	console.log( chalk.green( `Successfully set environment variable ${ JSON.stringify( name ) }` ) );
+	console.log( chalk.green( 'Environment variable is active and available.' ) );
 
 	if ( ! opt.skipConfirmation && ! reloadManifest ) {
 		console.log(
 			chalk.bgYellow( chalk.bold( 'Important:' ) ),
-			"Updates to environment variables will not be available until the application's next deploy."
+			'This environment variable update will not be available until the next code deploy is made to this environment.'
 		);
 	}
 }
