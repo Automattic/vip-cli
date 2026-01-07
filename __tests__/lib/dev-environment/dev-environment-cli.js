@@ -585,9 +585,10 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 	describe( 'resolvePhpVersion', () => {
 		it.each( [
-			[ '8.1', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.1' ].image ],
 			[ '8.2', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.2' ].image ],
 			[ '8.3', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.3' ].image ],
+			[ '8.4', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.4' ].image ],
+			[ '8.5', DEV_ENVIRONMENT_PHP_VERSIONS[ '8.5' ].image ],
 		] )( 'should process versions correctly', async ( input, expected ) => {
 			const actual = resolvePhpVersion( input );
 			expect( actual ).toStrictEqual( expected );
