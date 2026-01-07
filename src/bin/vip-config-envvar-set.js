@@ -132,7 +132,7 @@ export async function setEnvVarCommand( arg, opt ) {
 	console.log( chalk.green( `Successfully set environment variable ${ JSON.stringify( name ) }` ) );
 
 	if ( reloadManifest ) {
-		console.log( chalk.green( 'Environment variable is active and available.' ) );
+		console.log( chalk.yellow( 'Environment variable is active and available.' ) );
 	} else if ( ! opt.skipConfirmation ) {
 		showDeployWarning();
 	}
