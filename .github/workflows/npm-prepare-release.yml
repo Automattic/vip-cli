@@ -1,9 +1,9 @@
 ---
 name: Prepare a new npm release
+
 on:
   workflow_dispatch:
     inputs:
-      # This is copied from npm-publish/action.yml
       npm-version-type:
         description: 'The npm version type we are publishing.'
         required: true
@@ -15,18 +15,15 @@ on:
           - major
 
 jobs:
-  publish:
+  prepare:
     name: Prepare a new npm release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - name: Check out the source code
         uses: actions/checkout@v6
 
       - name: Run npm-prepare-release
-        uses: Automattic/vip-actions/npm-prepare-release@1137b91acf0f5ea4e0db044bcf14ceabed9b068f # trunk
+        uses: Automattic/vip-actions/npm-prepare-release@v0.7.3
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
