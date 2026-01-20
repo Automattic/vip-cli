@@ -6,6 +6,7 @@ import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import { getSqlDumpDetails, SqlDumpDetails, SqlDumpType } from '../lib/database';
 import {
+	getDevEnvLogFile,
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
@@ -17,7 +18,6 @@ import {
 	flushCache,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
-import { getDevEnvLogFile } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
