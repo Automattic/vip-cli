@@ -6,10 +6,12 @@ import { buildConfig } from 'lando/lib/bootstrap';
 import Lando, { type LandoConfig } from 'lando/lib/lando';
 import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
+import { execFile } from 'node:child_process';
 import { lookup } from 'node:dns/promises';
-import { mkdir, rename, unlink } from 'node:fs/promises';
-import { userInfo } from 'node:os';
+import { mkdir, rename, unlink, stat, writeFile } from 'node:fs/promises';
+import { cpus, totalmem, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
+import { promisify } from 'node:util';
 import { satisfies } from 'semver';
 
 import {
@@ -23,6 +25,7 @@ import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
+import env from '../env';
 
 import type { NetworkInspectInfo } from 'dockerode';
 import type Landerode from 'lando/lib/docker';
@@ -42,6 +45,112 @@ interface LandoBootstrapOptions {
 	logFile?: string;
 	logName?: string;
 }
+
+interface LandoConfigWithLogging extends LandoConfig {
+	logFile?: string;
+	logName?: string;
+	logDir?: string;
+	dockerBin?: string;
+	composeBin?: string;
+}
+
+const execFileAsync = promisify( execFile );
+
+const getLogFilePath = ( config: LandoConfigWithLogging ): string | null => {
+	if ( config.logFile ) {
+		return path.isAbsolute( config.logFile )
+			? config.logFile
+			: path.join( config.logDir ?? '', config.logFile );
+	}
+
+	if ( config.logDir && config.logName ) {
+		return path.join( config.logDir, `${ config.logName }.log` );
+	}
+
+	return null;
+};
+
+const formatBytes = ( bytes: number ): string => {
+	const gb = bytes / ( 1024 ** 3 );
+	return `${ gb.toFixed( 1 ) } GB`;
+};
+
+const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
+	const dockerBin = config.dockerBin ?? '';
+	const composeBin = config.composeBin ?? '';
+	let engine = 'unknown';
+	let compose = 'unknown';
+	let composePlugin = 'unknown';
+
+	try {
+		if ( dockerBin ) {
+			const { stdout } = await execFileAsync( dockerBin, [ 'info', '--format', 'json' ] );
+			const dockerData = JSON.parse( stdout );
+			engine = dockerData.ServerVersion ?? engine;
+			const plugins = dockerData.ClientInfo?.Plugins;
+			if ( Array.isArray( plugins ) ) {
+				const composePluginEntry = plugins.find(
+					plugin => plugin.Name === 'compose'
+				);
+				if ( composePluginEntry?.Version ) {
+					composePlugin = composePluginEntry.Version;
+				}
+			}
+		}
+	} catch ( error ) {
+		debug( 'Failed to read docker version info: %O', error );
+	}
+
+	try {
+		if ( composeBin ) {
+			const { stdout } = await execFileAsync( composeBin, [ 'version', '--short' ] );
+			compose = stdout.trim() || compose;
+		}
+	} catch ( error ) {
+		debug( 'Failed to read docker-compose version info: %O', error );
+	}
+
+	return { engine, compose, composePlugin };
+};
+
+const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void > => {
+	const logFilePath = getLogFilePath( config );
+	if ( ! logFilePath ) {
+		return;
+	}
+
+	try {
+		const existing = await stat( logFilePath );
+		if ( existing.size > 0 ) {
+			return;
+		}
+	} catch {
+		// File does not exist yet.
+	}
+
+	await mkdir( path.dirname( logFilePath ), { recursive: true } );
+
+	const dockerVersions = await getDockerVersions( config );
+	const command = process.argv.slice( 1 ).join( ' ' );
+	const bannerLines = [
+		'=== VIP Dev Env Log ===',
+		`command: ${ command }`,
+		`os: ${ env.os.name } ${ env.os.version } ${ env.os.arch }`,
+		`node: ${ env.node.version }`,
+		`vip-cli: ${ env.app.version }`,
+		`docker engine: ${ dockerVersions.engine }`,
+		`docker-compose: ${ dockerVersions.compose }`,
+		`compose plugin: ${ dockerVersions.composePlugin }`,
+		`docker bin: ${ config.dockerBin ?? 'unknown' }`,
+		`compose bin: ${ config.composeBin ?? 'unknown' }`,
+		`ram: ${ formatBytes( totalmem() ) }`,
+		`cpu: ${ cpus().length }`,
+		'===',
+		'',
+	];
+
+	await writeFile( logFilePath, bannerLines.join( '\n' ), { flag: 'a' } );
+};
 
 /**
  * @return {Promise<LandoConfig>} Lando configuration
@@ -208,6 +317,8 @@ export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Pro
 			config.engineConfig = await getEngineConfig( socket );
 			debug( 'Engine config: %j', config.engineConfig );
 		}
+
+		await writeLogBanner( config as LandoConfigWithLogging );
 
 		const lando = new Lando( config );
 		debugLib.log = ( message: string, ...args: unknown[] ) => {
