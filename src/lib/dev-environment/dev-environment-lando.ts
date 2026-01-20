@@ -55,6 +55,9 @@ interface LandoConfigWithLogging extends LandoConfig {
 }
 
 const execFileAsync = promisify( execFile );
+const bannerLabelWidth = 18;
+let logPathRegistered = false;
+let resolvedLogPath: string | null = null;
 
 const getLogFilePath = ( config: LandoConfigWithLogging ): string | null => {
 	if ( config.logFile ) {
@@ -70,8 +73,31 @@ const getLogFilePath = ( config: LandoConfigWithLogging ): string | null => {
 	return null;
 };
 
+const registerLogPathOutput = ( config: LandoConfigWithLogging ): void => {
+	if ( logPathRegistered ) {
+		return;
+	}
+
+	resolvedLogPath = getLogFilePath( config );
+	if ( ! resolvedLogPath ) {
+		return;
+	}
+
+	logPathRegistered = true;
+	process.once( 'exit', () => {
+		if ( resolvedLogPath ) {
+			console.log(
+				`\n ${ formatBannerLine(
+					chalk.cyan( 'COMMAND LOG FILE'.padEnd( bannerLabelWidth ) ),
+					resolvedLogPath
+				) }`
+			);
+		}
+	} );
+};
+
 const formatBytes = ( bytes: number ): string => {
-	const gb = bytes / ( 1024 ** 3 );
+	const gb = bytes / 1024 ** 3;
 	return `${ gb.toFixed( 1 ) } GB`;
 };
 
@@ -89,9 +115,7 @@ const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 			engine = dockerData.ServerVersion ?? engine;
 			const plugins = dockerData.ClientInfo?.Plugins;
 			if ( Array.isArray( plugins ) ) {
-				const composePluginEntry = plugins.find(
-					plugin => plugin.Name === 'compose'
-				);
+				const composePluginEntry = plugins.find( plugin => plugin.Name === 'compose' );
 				if ( composePluginEntry?.Version ) {
 					composePlugin = composePluginEntry.Version;
 				}
@@ -112,6 +136,9 @@ const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 
 	return { engine, compose, composePlugin };
 };
+
+const formatBannerLine = ( label: string, value: string ): string =>
+	`${ label.padEnd( bannerLabelWidth ) } ${ value }`;
 
 const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void > => {
 	const logFilePath = getLogFilePath( config );
@@ -134,18 +161,19 @@ const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void >
 	const command = process.argv.slice( 1 ).join( ' ' );
 	const bannerLines = [
 		'=== VIP Dev Env Log ===',
-		`command: ${ command }`,
-		`os: ${ env.os.name } ${ env.os.version } ${ env.os.arch }`,
-		`node: ${ env.node.version }`,
-		`vip-cli: ${ env.app.version }`,
-		`docker engine: ${ dockerVersions.engine }`,
-		`docker-compose: ${ dockerVersions.compose }`,
-		`compose plugin: ${ dockerVersions.composePlugin }`,
-		`docker bin: ${ config.dockerBin ?? 'unknown' }`,
-		`compose bin: ${ config.composeBin ?? 'unknown' }`,
-		`ram: ${ formatBytes( totalmem() ) }`,
-		`cpu: ${ cpus().length }`,
+		formatBannerLine( 'COMMAND', command ),
+		formatBannerLine( 'OS', `${ env.os.name } ${ env.os.version } ${ env.os.arch }` ),
+		formatBannerLine( 'NODE', env.node.version ),
+		formatBannerLine( 'VIP-CLI', env.app.version ),
+		formatBannerLine( 'DOCKER ENGINE', dockerVersions.engine ),
+		formatBannerLine( 'DOCKER COMPOSE', dockerVersions.compose ),
+		formatBannerLine( 'COMPOSE PLUGIN', dockerVersions.composePlugin ),
+		formatBannerLine( 'DOCKER BIN', config.dockerBin ?? 'unknown' ),
+		formatBannerLine( 'COMPOSE BIN', config.composeBin ?? 'unknown' ),
+		formatBannerLine( 'RAM', formatBytes( totalmem() ) ),
+		formatBannerLine( 'CPU', String( cpus().length ) ),
 		'===',
+		'',
 		'',
 	];
 
@@ -308,6 +336,10 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Promise< Lando > {
 	const started = new Date();
 	try {
+		if ( process.env.DEBUG && ! process.env.DEBUG.includes( '-winston:*' ) ) {
+			process.env.DEBUG = `${ process.env.DEBUG },-winston:*`;
+		}
+
 		const socket = await getDockerSocket();
 		const config = await getLandoConfig( options );
 
@@ -318,6 +350,7 @@ export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Pro
 			debug( 'Engine config: %j', config.engineConfig );
 		}
 
+		registerLogPathOutput( config as LandoConfigWithLogging );
 		await writeLogBanner( config as LandoConfigWithLogging );
 
 		const lando = new Lando( config );
