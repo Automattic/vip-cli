@@ -85,7 +85,7 @@ const registerLogPathOutput = ( config: LandoConfigWithLogging ): void => {
 
 	logPathRegistered = true;
 	process.once( 'exit', () => {
-		if ( resolvedLogPath ) {
+		if ( resolvedLogPath && process.stdout.isTTY ) {
 			console.log(
 				`\n ${ formatBannerLine(
 					chalk.cyan( 'COMMAND LOG FILE'.padEnd( bannerLabelWidth ) ),
