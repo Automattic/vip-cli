@@ -23,9 +23,9 @@ import {
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
+import env from '../env';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
-import env from '../env';
 
 import type { NetworkInspectInfo } from 'dockerode';
 import type Landerode from 'lando/lib/docker';
@@ -101,6 +101,9 @@ const formatBytes = ( bytes: number ): string => {
 	return `${ gb.toFixed( 1 ) } GB`;
 };
 
+const isRecord = ( value: unknown ): value is Record< string, unknown > =>
+	typeof value === 'object' && value !== null;
+
 const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 	const dockerBin = config.dockerBin ?? '';
 	const composeBin = config.composeBin ?? '';
@@ -111,13 +114,27 @@ const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 	try {
 		if ( dockerBin ) {
 			const { stdout } = await execFileAsync( dockerBin, [ 'info', '--format', 'json' ] );
-			const dockerData = JSON.parse( stdout );
-			engine = dockerData.ServerVersion ?? engine;
-			const plugins = dockerData.ClientInfo?.Plugins;
-			if ( Array.isArray( plugins ) ) {
-				const composePluginEntry = plugins.find( plugin => plugin.Name === 'compose' );
-				if ( composePluginEntry?.Version ) {
-					composePlugin = composePluginEntry.Version;
+			const dockerData = JSON.parse( stdout ) as unknown;
+			if ( isRecord( dockerData ) ) {
+				const serverVersion = dockerData[ 'ServerVersion' ];
+				if ( typeof serverVersion === 'string' ) {
+					engine = serverVersion;
+				}
+
+				const clientInfo = dockerData[ 'ClientInfo' ];
+				if ( isRecord( clientInfo ) ) {
+					const plugins = clientInfo[ 'Plugins' ];
+					if ( Array.isArray( plugins ) ) {
+						const composePluginEntry = plugins.find(
+							plugin => isRecord( plugin ) && plugin[ 'Name' ] === 'compose'
+						);
+						if (
+							composePluginEntry &&
+							typeof composePluginEntry[ 'Version' ] === 'string'
+						) {
+							composePlugin = composePluginEntry[ 'Version' ];
+						}
+					}
 				}
 			}
 		}
