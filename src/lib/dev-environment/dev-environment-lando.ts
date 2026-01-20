@@ -101,8 +101,24 @@ const formatBytes = ( bytes: number ): string => {
 	return `${ gb.toFixed( 1 ) } GB`;
 };
 
+type DockerPluginInfo = {
+	Name?: string;
+	Version?: string;
+};
+
+type DockerClientInfo = {
+	Plugins?: DockerPluginInfo[];
+};
+
+type DockerInfo = {
+	ServerVersion?: string;
+	ClientInfo?: DockerClientInfo;
+};
+
 const isRecord = ( value: unknown ): value is Record< string, unknown > =>
 	typeof value === 'object' && value !== null;
+
+const isDockerPluginInfo = ( value: unknown ): value is DockerPluginInfo => isRecord( value );
 
 const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 	const dockerBin = config.dockerBin ?? '';
@@ -114,25 +130,22 @@ const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 	try {
 		if ( dockerBin ) {
 			const { stdout } = await execFileAsync( dockerBin, [ 'info', '--format', 'json' ] );
-			const dockerData = JSON.parse( stdout ) as unknown;
+			const dockerData = JSON.parse( stdout ) as DockerInfo;
 			if ( isRecord( dockerData ) ) {
-				const serverVersion = dockerData[ 'ServerVersion' ];
+				const serverVersion = dockerData.ServerVersion;
 				if ( typeof serverVersion === 'string' ) {
 					engine = serverVersion;
 				}
 
-				const clientInfo = dockerData[ 'ClientInfo' ];
+				const clientInfo = dockerData.ClientInfo;
 				if ( isRecord( clientInfo ) ) {
-					const plugins = clientInfo[ 'Plugins' ];
+					const plugins = clientInfo.Plugins;
 					if ( Array.isArray( plugins ) ) {
 						const composePluginEntry = plugins.find(
-							plugin => isRecord( plugin ) && plugin[ 'Name' ] === 'compose'
+							plugin => isDockerPluginInfo( plugin ) && plugin.Name === 'compose'
 						);
-						if (
-							composePluginEntry &&
-							typeof composePluginEntry[ 'Version' ] === 'string'
-						) {
-							composePlugin = composePluginEntry[ 'Version' ];
+						if ( composePluginEntry && typeof composePluginEntry.Version === 'string' ) {
+							composePlugin = composePluginEntry.Version;
 						}
 					}
 				}
