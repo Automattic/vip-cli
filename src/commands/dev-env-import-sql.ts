@@ -17,6 +17,7 @@ import {
 	flushCache,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
+import { getDevEnvLogFile } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
 import { makeTempDir } from '../lib/utils';
@@ -39,7 +40,7 @@ export class DevEnvImportSQLCommand {
 	) {}
 
 	public async run(): Promise< void > {
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( this.slug ) } );
 		validateDependencies( lando );
 
 		validateImportFileExtension( this.fileName );

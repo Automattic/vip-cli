@@ -4,6 +4,7 @@ import command from '../lib/cli/command';
 import {
 	handleCLIException,
 	validateDependencies,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import { printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -24,7 +25,7 @@ command( {
 } )
 	.examples( examples )
 	.argv( process.argv, async () => {
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile() } );
 		lando.events.constructor.prototype.setMaxListeners( 1024 );
 		validateDependencies( lando );
 

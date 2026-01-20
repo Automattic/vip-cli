@@ -10,6 +10,7 @@ import {
 	handleCLIException,
 	processSlug,
 	validateDependencies,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import { destroyEnvironment } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
@@ -50,7 +51,7 @@ command( {
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
 
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 		validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );

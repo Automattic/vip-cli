@@ -954,6 +954,19 @@ export function processSlug( value: unknown ): string {
 	return ( value ?? '' ).toString().toLowerCase();
 }
 
+export function formatDevEnvLogTimestamp( date: Date ): string {
+	return date.toISOString().replace( /\..*$/, '' ).replace( /[-:]/g, '' ).replace( 'T', '-' );
+}
+
+export function formatDevEnvLogSlug( slug: string ): string {
+	return slug.replace( /[^a-z0-9_-]+/gi, '-' ).toLowerCase();
+}
+
+export function getDevEnvLogFile( slug?: string ): string {
+	const slugPart = slug ? formatDevEnvLogSlug( slug ) : 'all';
+	return `vip-dev-env-${ slugPart }-${ formatDevEnvLogTimestamp( new Date() ) }.log`;
+}
+
 declare function isNaN( value: unknown ): boolean;
 declare function parseFloat( value: unknown ): number;
 
