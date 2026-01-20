@@ -46,7 +46,7 @@ interface LandoBootstrapOptions {
 	logName?: string;
 }
 
-interface LandoConfigWithLogging extends LandoConfig {
+interface LandoConfigWithLogging extends Omit< LandoConfig, 'composeBin' | 'dockerBin' > {
 	logFile?: string;
 	logName?: string;
 	logDir?: string;
