@@ -61,6 +61,7 @@ async function getLandoConfig(): Promise< LandoConfig > {
 	const vipDir = path.join( xdgData(), 'vip' );
 	const landoDir = path.join( vipDir, 'lando' );
 	const fakeHomeDir = path.join( landoDir, 'home' );
+	const logDir = path.join( landoDir, 'logs' );
 
 	try {
 		await mkdir( fakeHomeDir, { recursive: true } );
@@ -70,6 +71,9 @@ async function getLandoConfig(): Promise< LandoConfig > {
 
 	const config = {
 		logLevelConsole,
+		logDir,
+		logFile: 'vip-dev-env.log',
+		logName: 'vip-dev-env',
 		configSources: [ path.join( landoDir, 'config.yml' ) ],
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
@@ -201,6 +205,9 @@ export async function bootstrapLando(): Promise< Lando > {
 		}
 
 		const lando = new Lando( config );
+		debugLib.log = ( message: string, ...args: unknown[] ) => {
+			lando.log.debug( message, ...args );
+		};
 		lando.events.once( 'pre-engine-build', async ( data: App ) => {
 			const instanceData = readEnvironmentData( data.name );
 
