@@ -6,6 +6,7 @@ import {
 	getEnvironmentName,
 	processBooleanOption,
 	processSlug,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import { parseLiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
@@ -114,7 +115,7 @@ command( {
 		} );
 		await trackerFn( 'execute' );
 
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 
 		const isUp = (
 			await Promise.all( [

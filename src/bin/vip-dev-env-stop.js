@@ -9,6 +9,7 @@ import {
 	getEnvironmentName,
 	processSlug,
 	validateDependencies,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getAllEnvironmentNames,
@@ -44,23 +45,27 @@ command( {
 	.option( 'all', 'Stop all local environments.' )
 	.examples( examples )
 	.argv( process.argv, async ( arg, opt ) => {
-		const lando = await bootstrapLando();
-		validateDependencies( lando );
-
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		/** @type {Record< string, unknown >} */
 		let trackingInfo;
 		/** @type {string[]} */
 		let environments;
+		/** @type {string|undefined} */
+		let logSlug;
 		if ( opt.all ) {
 			trackingInfo = { all: true };
 			environments = getAllEnvironmentNames();
+			logSlug = undefined;
 		} else {
 			const slug = await getEnvironmentName( opt );
 			trackingInfo = getEnvTrackingInfo( slug );
 			environments = [ slug ];
+			logSlug = slug;
 		}
+
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( logSlug ) } );
+		validateDependencies( lando );
 
 		await trackEvent( 'dev_env_stop_command_execute', trackingInfo );
 

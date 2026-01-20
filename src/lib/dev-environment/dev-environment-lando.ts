@@ -38,10 +38,15 @@ export interface LandoExecOptions {
 const DEBUG_KEY = '@automattic/vip:bin:dev-environment';
 const debug = debugLib( DEBUG_KEY );
 
+interface LandoBootstrapOptions {
+	logFile?: string;
+	logName?: string;
+}
+
 /**
  * @return {Promise<LandoConfig>} Lando configuration
  */
-async function getLandoConfig(): Promise< LandoConfig > {
+async function getLandoConfig( options: LandoBootstrapOptions = {} ): Promise< LandoConfig > {
 	// The path will be smth like `yarn/global/node_modules/lando/lib/lando.js`; we need the path up to `lando` (inclusive)
 	const landoPath = dirname( dirname( require.resolve( 'lando' ) ) );
 
@@ -72,8 +77,8 @@ async function getLandoConfig(): Promise< LandoConfig > {
 	const config = {
 		logLevelConsole,
 		logDir,
-		logFile: 'vip-dev-env.log',
-		logName: 'vip-dev-env',
+		logFile: options.logFile ?? 'vip-dev-env.log',
+		logName: options.logName ?? 'vip-dev-env',
 		configSources: [ path.join( landoDir, 'config.yml' ) ],
 		landoFile: '.lando.yml',
 		preLandoFiles: [ '.lando.base.yml', '.lando.dist.yml', '.lando.upstream.yml' ],
@@ -191,11 +196,11 @@ async function getLandoApplication( lando: Lando, instancePath: string ): Promis
 	}
 }
 
-export async function bootstrapLando(): Promise< Lando > {
+export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Promise< Lando > {
 	const started = new Date();
 	try {
 		const socket = await getDockerSocket();
-		const config = await getLandoConfig();
+		const config = await getLandoConfig( options );
 
 		debug( 'Docker socket: %j', socket );
 
