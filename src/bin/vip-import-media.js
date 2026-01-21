@@ -187,7 +187,7 @@ Are you sure you want to import the contents of the URL?
 				app,
 				env,
 				fileMeta,
-				progressCallback: percentage => console.log( `Upload progress: ${ percentage }%` ),
+				progressCallback: percentage => console.log( `Upload progress: ${ percentage }` ),
 			} );
 
 			// small debug info to keep variables used

@@ -481,8 +481,18 @@ args.argv = async function ( argv, cb ) {
 				break;
 			}
 
-			case 'import-media':
-				info.push( { key: 'Archive URL', value: chalk.blue.underline( this.sub ) } );
+			case 'import-media': {
+				const isUrl =
+					this.sub &&
+					( String( this.sub ).startsWith( 'http://' ) ||
+						String( this.sub ).startsWith( 'https://' ) );
+				const archiveLabel = isUrl ? 'Archive URL' : 'Archive Path';
+				info.push( { key: archiveLabel, value: chalk.blue.underline( this.sub ) } );
+
+				// Update confirmation message if it's a local path
+				if ( ! isUrl && 'string' === typeof _opts.requireConfirm ) {
+					message = message.replace( /the URL\?/g, 'the path?' ).replace( /the URL/g, 'the path' );
+				}
 
 				options.overwriteExistingFiles =
 					Object.hasOwn( options, 'overwriteExistingFiles' ) &&
@@ -516,6 +526,7 @@ args.argv = async function ( argv, cb ) {
 					value: options.saveErrorLog,
 				} );
 				break;
+			}
 			default:
 		}
 
