@@ -179,6 +179,7 @@ Are you sure you want to import the contents of the URL?
 			sourceIsLocal = true;
 			const fileMeta = await getFileMeta( fileNameOrURL );
 			fileMeta.fileName = fileNameOrURL;
+			let lastProgress = '';
 			const {
 				fileMeta: { basename },
 				checksum: uploadedMD5,
@@ -187,8 +188,15 @@ Are you sure you want to import the contents of the URL?
 				app,
 				env,
 				fileMeta,
-				progressCallback: percentage => console.log( `Upload progress: ${ percentage }%` ),
+				progressCallback: percentage => {
+					if ( percentage === lastProgress ) {
+						return;
+					}
+					lastProgress = percentage;
+					process.stdout.write( `\rUpload progress: ${ percentage }   ` );
+				},
 			} );
+			process.stdout.write( '\n' );
 
 			// small debug info to keep variables used
 			debug( 'Uploaded file basename:', basename );
