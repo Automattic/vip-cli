@@ -491,7 +491,7 @@ args.argv = async function ( argv, cb ) {
 
 				// Update confirmation message if it's a local path
 				if ( ! isUrl && 'string' === typeof _opts.requireConfirm ) {
-					message = message.replace( /the URL\?/g, 'the path?' ).replace( /the URL/g, 'the path' );
+					message = message.replaceAll( 'the URL', 'the path' );
 				}
 
 				options.overwriteExistingFiles =
