@@ -14,16 +14,22 @@ on:
           - minor
           - major
 
+permissions:
+  contents: read
+
 jobs:
   prepare:
     name: Prepare a new npm release
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
         uses: actions/checkout@v6
 
       - name: Run npm-prepare-release
-        uses: Automattic/vip-actions/npm-prepare-release@v0.7.3
+        uses: Automattic/vip-actions/npm-prepare-release@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version-type: ${{ inputs.npm-version-type }}
