@@ -17,6 +17,7 @@ import {
 	promptForArguments,
 	validateDependencies,
 	ensureValidPathsInOptions,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -68,7 +69,7 @@ cmd.examples( examples );
 cmd.argv( process.argv, async ( arg, opt ) => {
 	const slug = await getEnvironmentName( opt );
 
-	const lando = await bootstrapLando();
+	const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 	validateDependencies( lando );
 
 	const trackingInfo = getEnvTrackingInfo( slug );

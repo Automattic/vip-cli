@@ -6,6 +6,7 @@ import * as exit from '../lib/cli/exit';
 import { getFileMeta, unzipFile } from '../lib/client-file-uploader';
 import { getSqlDumpDetails, SqlDumpDetails, SqlDumpType } from '../lib/database';
 import {
+	getDevEnvLogFile,
 	processBooleanOption,
 	validateDependencies,
 } from '../lib/dev-environment/dev-environment-cli';
@@ -39,7 +40,7 @@ export class DevEnvImportSQLCommand {
 	) {}
 
 	public async run(): Promise< void > {
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( this.slug ) } );
 		validateDependencies( lando );
 
 		validateImportFileExtension( this.fileName );

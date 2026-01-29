@@ -15,6 +15,7 @@ import {
 	handleCLIException,
 	validateDependencies,
 	promptForBoolean,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	destroyEnvironment,
@@ -57,7 +58,7 @@ command( {
 		debug( 'Args: ', arg, 'Options: ', opt );
 
 		const allEnvNames = getAllEnvironmentNames();
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile() } );
 
 		if ( allEnvNames.length === 0 ) {
 			console.log( 'No environments to purge!' );

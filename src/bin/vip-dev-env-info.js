@@ -9,6 +9,7 @@ import {
 	handleCLIException,
 	processSlug,
 	validateDependencies,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	printEnvironmentInfo,
@@ -47,16 +48,16 @@ command( {
 	.argv( process.argv, async ( arg, opt ) => {
 		let trackingInfo;
 		let slug;
-		const lando = await bootstrapLando();
 
 		if ( opt.all ) {
 			trackingInfo = { all: true };
-			slug = '';
+			slug = undefined;
 		} else {
 			slug = await getEnvironmentName( opt );
 			trackingInfo = getEnvTrackingInfo( slug );
 		}
 
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 		validateDependencies( lando );
 		await trackEvent( 'dev_env_info_command_execute', trackingInfo );
 
