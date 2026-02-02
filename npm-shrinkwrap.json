@@ -29,7 +29,7 @@
         "https-proxy-agent": "^7.0.6",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#8f198e0f17dec1144efa216bec5a227dfc851900",
+        "lando": "github:automattic/lando-cli#459ac2d44ac3db17719493e879d52178410ff70e",
         "node-fetch": "^3.3.2",
         "node-stream-zip": "1.15.0",
         "open": "^11.0.0",
@@ -121,7 +121,7 @@
         "@types/ejs": "^3.1.5",
         "@types/jest": "^30.0.0",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^24.0.0",
+        "@types/node": "^25.2.0",
         "@types/proxy-from-env": "^1.0.4",
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.10.0",
@@ -4079,9 +4079,9 @@
       "license": "MIT"
     },
     "node_modules/@types/node": {
-      "version": "24.10.4",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.10.4.tgz",
-      "integrity": "sha512-vnDVpYPMzs4wunl27jHrfmwojOGKya0xyM3sH+UE5iv5uPS6vX7UIoh6m+vQc5LGBq52HBKPIn/zcSZVzeDEZg==",
+      "version": "25.2.0",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.2.0.tgz",
+      "integrity": "sha512-DZ8VwRFUNzuqJ5khrvwMXHmvPe+zGayJhr2CDNiKB1WBE1ST8Djl00D0IC4vvNmHMdj6DlbYRIaFE7WHjlDl5w==",
       "license": "MIT",
       "dependencies": {
         "undici-types": "~7.16.0"
@@ -11304,8 +11304,8 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#8f198e0f17dec1144efa216bec5a227dfc851900",
-      "integrity": "sha512-2eM6b+AM2q1W6dP0x718x+X/ITLyXS8QXFiAEoF2wPx9HsKjf5ZhmD1haBRbjh7uDULq1BGKw2t657ojuUetpw==",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#459ac2d44ac3db17719493e879d52178410ff70e",
+      "integrity": "sha512-bjGH8hHuy8+cfpf4/5BOj6L1QfVSbih/wpoXQ6UcJ71BuMcze7xsPz6cpmErdWciPN7qJ3Ltnt/o9rvv9j2Wkw==",
       "license": "GPL-3.0",
       "dependencies": {
         "axios": "^1.13.2",
@@ -11332,6 +11332,9 @@
       },
       "engines": {
         "node": ">=14.0.0"
+      },
+      "peerDependencies": {
+        "debug": "^4.4.3"
       }
     },
     "node_modules/lando/node_modules/ansi-styles": {
