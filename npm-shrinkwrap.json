@@ -33,7 +33,7 @@
         "node-fetch": "^3.3.2",
         "node-stream-zip": "1.15.0",
         "open": "^11.0.0",
-        "proxy-from-env": "^1.1.0",
+        "proxy-from-env": "^2.0.0",
         "semver": "7.7.4",
         "shelljs": "^0.10.0",
         "socket.io-client": "^4.5.3",
@@ -5462,6 +5462,12 @@
         "form-data": "^4.0.5",
         "proxy-from-env": "^1.1.0"
       }
+    },
+    "node_modules/axios/node_modules/proxy-from-env": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-1.1.0.tgz",
+      "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==",
+      "license": "MIT"
     },
     "node_modules/axobject-query": {
       "version": "4.1.0",
@@ -12730,9 +12736,9 @@
       }
     },
     "node_modules/proxy-from-env": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-1.1.0.tgz",
-      "integrity": "sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==",
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.0.0.tgz",
+      "integrity": "sha512-h2lD3OfRraP3R51rNFKIE8nX+qoLr1mE74X91YhVxtDbt+OD6ntoNZv56+JgI4RCdtwQ5eexsOk1KdOQDfvPCQ==",
       "license": "MIT"
     },
     "node_modules/pump": {
