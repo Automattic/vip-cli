@@ -18,7 +18,7 @@ jobs:
       pull-requests: read
     steps:
       - uses: actions/checkout@v6
-      - uses: Automattic/vip-actions/changelog@64cb27606455c925183e07065f050846d69b2120
+      - uses: Automattic/vip-actions/changelog@2bcb000c7bae0a75493afed7cf47f4529cdd2c8e
         with:
           endpoint: 'https://docs.wpvip.com/wp-json/wp/v2/changelogs'
           endpoint-token: ${{ secrets.CHANGELOG_DOCS_POST_TOKEN }}
@@ -29,3 +29,4 @@ jobs:
           tag-id: '115'
           link-to-pr: false
           source: 'last-release'
+          changelog-title: 'VIP-CLI v{version}'
