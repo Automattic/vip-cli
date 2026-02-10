@@ -133,7 +133,7 @@
     "@types/xml2js": "^0.4.14",
     "dockerode": "^4.0.0",
     "jest": "^30.0.0",
-    "nock": "13.5.6",
+    "nock": "14.0.11",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^5.2.2"
   },
