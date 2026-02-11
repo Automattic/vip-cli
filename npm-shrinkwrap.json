@@ -121,7 +121,7 @@
         "@types/ejs": "^3.1.5",
         "@types/jest": "^30.0.0",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^24.0.0",
+        "@types/node": "^25.2.3",
         "@types/proxy-from-env": "^1.0.4",
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.10.0",
@@ -4080,9 +4080,9 @@
       "license": "MIT"
     },
     "node_modules/@types/node": {
-      "version": "24.10.4",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.10.4.tgz",
-      "integrity": "sha512-vnDVpYPMzs4wunl27jHrfmwojOGKya0xyM3sH+UE5iv5uPS6vX7UIoh6m+vQc5LGBq52HBKPIn/zcSZVzeDEZg==",
+      "version": "25.2.3",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.2.3.tgz",
+      "integrity": "sha512-m0jEgYlYz+mDJZ2+F4v8D1AyQb+QzsNqRuI7xg1VQX/KlKS0qT9r1Mo16yo5F/MtifXFgaofIFsdFMox2SxIbQ==",
       "license": "MIT",
       "dependencies": {
         "undici-types": "~7.16.0"
