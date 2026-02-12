@@ -38,6 +38,7 @@ process.on( 'unhandledRejection', uncaughtError );
 let _opts = {};
 
 let alreadyConfirmedDebugAttachment = false;
+const RESERVED_AUTO_SHORT_ALIASES = new Set( [ 'h', 'v', 'd' ] );
 
 function normalizeUsage( program, usage ) {
 	if ( ! usage ) {
@@ -57,12 +58,29 @@ function normalizeUsage( program, usage ) {
 	}
 }
 
-function createOptionDefinition( name, description, defaultValue, parseFn ) {
+function createOptionDefinition( name, description, defaultValue, parseFn, usedShortNames ) {
 	const isArray = Array.isArray( name );
 	const shortName = isArray ? name[ 0 ] : null;
 	const longName = isArray ? name[ 1 ] : name;
 	const normalizedLongName = String( longName ).trim().replace( /^--?/, '' );
-	const normalizedShortName = shortName ? String( shortName ).trim().replace( /^-/, '' ) : null;
+	const explicitShortName = shortName ? String( shortName ).trim().replace( /^-/, '' ) : null;
+	let normalizedShortName = explicitShortName;
+
+	if ( ! normalizedShortName ) {
+		const autoShortName = normalizedLongName.charAt( 0 );
+		const canUseAutoShortName =
+			autoShortName &&
+			! RESERVED_AUTO_SHORT_ALIASES.has( autoShortName ) &&
+			! usedShortNames.has( autoShortName );
+
+		if ( canUseAutoShortName ) {
+			normalizedShortName = autoShortName;
+		}
+	}
+
+	if ( normalizedShortName ) {
+		usedShortNames.add( normalizedShortName );
+	}
 	const isBooleanOption = typeof defaultValue === 'boolean';
 	const usesOptionalValue = ! isBooleanOption;
 	const parseOptionValue = value => {
@@ -113,6 +131,7 @@ class CommanderArgsCompat {
 		};
 		this.sub = [];
 		this.examplesList = [];
+		this.usedShortNames = new Set();
 		this._opts = opts;
 		this.program = new Command();
 		this.program.allowUnknownOption( true );
@@ -122,7 +141,13 @@ class CommanderArgsCompat {
 	}
 
 	option( name, description, defaultValue, parseFn ) {
-		const definition = createOptionDefinition( name, description, defaultValue, parseFn );
+		const definition = createOptionDefinition(
+			name,
+			description,
+			defaultValue,
+			parseFn,
+			this.usedShortNames
+		);
 		const { flags, parser } = definition;
 
 		if ( parser && defaultValue !== undefined ) {
