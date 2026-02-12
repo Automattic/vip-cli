@@ -3,13 +3,11 @@
 import '../lib/node-version-check';
 
 import chalk from 'chalk';
-import { Command } from 'commander';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
 
-import pkg from '../../package.json';
+import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
-import { parseEnvAliasFromArgv } from '../lib/cli/envAlias';
 import Token from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
 
@@ -27,29 +25,8 @@ const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
 
 const runCmd = async function () {
-	const cmd = new Command();
+	const cmd = command();
 	cmd
-		.name( 'vip' )
-		.version(
-			pkg.version,
-			'-v, --version',
-			'Retrieve the version number of VIP-CLI currently installed on the local machine.'
-		)
-		.helpOption(
-			'-h, --help',
-			'Retrieve a description, examples, and available options for a (sub)command.'
-		)
-		.option(
-			'-d, --debug [namespaces]',
-			'Generate verbose output during command execution to help identify or fix errors or bugs.',
-			value => {
-				const namespaces = value || '*';
-				debugLib.enable( namespaces );
-				process.env.DEBUG = namespaces;
-
-				return value || true;
-			}
-		)
 		.command( 'logout', 'Log out the current authenticated VIP-CLI user.' )
 		.command(
 			'app',
@@ -72,7 +49,7 @@ const runCmd = async function () {
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
 
-	await cmd.parseAsync( process.argv );
+	await cmd.argv( process.argv );
 };
 
 /**
@@ -82,18 +59,6 @@ const runCmd = async function () {
  */
 function doesArgvHaveAtLeastOneParam( argv, params ) {
 	return argv.some( arg => params.includes( arg ) );
-}
-
-/**
- * @param {string[]} argv
- * @returns {boolean}
- */
-function containsAppEnvArgument( argv ) {
-	const parsedAlias = parseEnvAliasFromArgv( argv );
-
-	return Boolean(
-		parsedAlias.app || parsedAlias.env || argv.includes( '--app' ) || argv.includes( '--env' )
-	);
 }
 
 const rootCmd = async function () {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { command } from '../lib/cli/command-commander';
+import command from '../lib/cli/command';
 import logout from '../lib/logout';
 
 void command( { usage: 'vip logout' } )

@@ -8,12 +8,13 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - Config required at runtime: `config/config.publish.json` (or `config.local.json` in dev). Missing files cause a hard exit.
 - Babel (not tsc) performs builds; target is Node 18 in `babel.config.js` even though `package.json#engines.node` is 20+. Be cautious using very new Node APIs unless polyfilled.
 
-## Command Anatomy (current `args` DSL)
-- Every bin uses `command()` from `src/lib/cli/command.js`. It mutates the `args` package: `_opts` is module-scoped, and `args.argv` is replaced to add async parsing, validation, telemetry, and app/env lookup before your handler runs.
+## Command Anatomy (current Commander compatibility layer)
+- Every bin uses `command()` from `src/lib/cli/command.js`. It wraps `commander` and keeps the legacy handler contract while preserving app/env context resolution, confirmations, telemetry, and output formatting.
 - Call shape: `command(opts).option(...).command(...sub...).example(...).argv(process.argv, handler)`. `handler` receives `(subArgsArray, optionsObject)` where `subArgsArray` are positional args (alias removed) and `optionsObject` holds flags plus resolved `app`/`env` when requested.
 - `_opts` knobs: `appContext`/`envContext`/`childEnvContext` run GraphQL lookups (using `appQuery` + optional fragments) and interactive prompts when `--app/--env` are missing; `childEnvContext` forbids production. `requiredArgs` enforces positional count; `wildcardCommand` disables subcommand validation. `format` adds `--format` defaulting to table and postprocesses handler results; `requireConfirm` + `--force` gates destructive paths with `enquirer` prompts; `skipConfirmPrompt` bypasses the prompt (used in tests).
 - Alias handling happens before parsing: `@app` or `@app.env` is stripped from `argv` in `envAlias.ts` (only before `--`) and populates `options.app/options.env`. Using both alias and `--app/--env` exits with an error.
 - Global flags injected everywhere: `--help/--version/--debug`. `--debug` enables `debug` namespaces (`*` when boolean). `update-notifier` runs after validation unless `NODE_ENV=test`.
+- Nested subcommands are dispatched by the wrapper to sibling bin scripts (`vip-config` -> `vip-config-envvar` -> `vip-config-envvar-set`) using local `dist/bin` paths when available.
 - Output contract: if handler returns `{header,data}` it prints header as key/value then formats `data`; if it returns an array it strips `__typename` and formats; returning `undefined` skips printing. Formatting uses `formatData` with `table|csv|json`.
 - Caveat: `_opts` is shared. Instantiating multiple command runners in one process (tests, composite commands) can leak settings—avoid or refactor.
 
@@ -26,12 +27,12 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ## CLI Architecture
 - Root executable is `src/bin/vip.js`. It triggers login unless one of: `--help/-h`, `--version/-v`, `logout`, `dev-env` without env args, or `WPVIP_DEPLOY_TOKEN` is set for deploy. Automation that lacks a token should pass `--help` or set `WPVIP_DEPLOY_TOKEN` to avoid interactive prompts that call `open`.
-- Command wiring happens through `src/lib/cli/command.js`, a thin wrapper around `args` with custom validation and telemetry. Options in `_opts` control behavior:
+- Command wiring happens through `src/lib/cli/command.js`, a `commander`-backed compatibility wrapper with custom validation and telemetry. Options in `_opts` control behavior:
   - `appContext`/`envContext`/`childEnvContext` prompt or validate app/env via GraphQL (uses `appQuery` + optional fragments). Child env forbids production.
   - `requiredArgs` forces positional arg count; `wildcardCommand` relaxes subcommand validation; `format` auto-adds `--format` and postformats output.
   - `requireConfirm` + `--force` gate destructive actions with `enquirer` confirmations; tests should set `skipConfirmPrompt` or pass `--force`.
 - Environment aliases like `@app.env` are parsed in `src/lib/cli/envAlias.ts`; aliases are stripped from argv and populate `--app/--env`. Using both alias and explicit flags is rejected.
-- `args.argv` is monkey-patched to add the above behavior; avoid invoking multiple command instances in the same process unless you understand the shared `_opts` state.
+- Subcommand chaining now happens in the wrapper itself (instead of `args`), so behavior changes here impact the entire CLI tree.
 
 ## Auth & Session Flow
 - Auth is centralized in `src/bin/vip.js`. It loads a JWT from keychain (`Token.get()`), checks `id/iat/exp`, and considers the CLI “logged in” when valid. A missing/invalid token triggers an interactive login unless the argv contains help/version/logout, a `dev-env` call without env, or a deploy using `WPVIP_DEPLOY_TOKEN`.
@@ -69,12 +70,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - Babel pathing relies on relative `__dirname` from transpiled files; when moving files adjust import paths with the compiled layout in mind.
 - TypeScript is type-checked separately from the build; Babel will happily emit code that fails `tsc`, so keep `npm run check-types` in the loop during refactors.
 
-## Migration off `args` (e.g., to Commander)
-- Preserve pre-parse alias stripping and the “only consider args before `--`” rule in `parseEnvAliasFromArgv`. Reject mixed alias + `--app/--env`.
-- Reimplement `_opts` behaviors: GraphQL app/env lookup plus prompts, production ban for child envs, positional validation, wildcard subcommand allowance, `--format` processing, `requireConfirm` + `--force`, and module-specific confirmation payloads (import-sql, sync, import-media).
-- Maintain global flags and side effects: help/version/debug on every subcommand; update-notifier (or intentionally suppress); `debug` namespace toggling.
-- Keep telemetry hooks (`trackEvent`, `trackEventWithEnv`, `makeCommandTracker`) and the login-time `aliasUser` de-anonymization.
-- Match handler contracts: handler args `(subArgs, options)`; output formatting expectations (array or `{header,data}`); `__typename` stripping.
-- Respect exit semantics: uncaught exceptions routed to `exit.withError`; GraphQL errors call `process.exit(1)` unless explicitly disabled; 401 auth errors exit with guidance.
-- Watch shared state: current implementation mutates a global; ensure new parser avoids cross-command bleeding when multiple command instances run in-process (tests/CLI wrappers).
-- Login guardrails in `vip.js` let certain commands bypass auth; preserve equivalent shortcuts or add explicit non-interactive flags for CI.
+## Commander Migration Status
+- Core parser migration is active in `src/lib/cli/command.js`; command bins using this wrapper run on Commander semantics.
+- High-risk parity points still worth verifying during further cleanup: help text formatting parity, boolean option edge cases, and deeply nested subcommand/alias combinations.
+- Keep alias stripping behavior (`parseEnvAliasFromArgv`), `_opts` contracts, and telemetry hooks stable while iterating.

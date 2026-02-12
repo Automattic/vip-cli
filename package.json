@@ -142,7 +142,6 @@
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
-    "args": "5.0.3",
     "chalk": "^5.6.2",
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
