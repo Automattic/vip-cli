@@ -2,6 +2,8 @@ import debugLib from 'debug';
 import { readFileSync } from 'node:fs'; // I don't like using synchronous versions, but until we migrate to ESM, we have to.
 import path from 'node:path';
 
+import defaultPublishConfig from '../../../config/config.publish.json';
+
 interface Config {
 	tracksUserType: string;
 	tracksAnonUserType: string;
@@ -11,7 +13,7 @@ interface Config {
 
 const debug = debugLib( '@automattic/vip:lib:cli:config' );
 
-export function loadConfigFile(): Config | null {
+export function loadConfigFile(): Config {
 	const paths = [
 		// Get `local` config first; this will only exist in dev as it's npmignore-d.
 		path.join( __dirname, '../../../config/config.local.json' ),
@@ -30,16 +32,8 @@ export function loadConfigFile(): Config | null {
 		}
 	}
 
-	return null;
+	return defaultPublishConfig as Config;
 }
 
 const configFromFile = loadConfigFile();
-if ( null === configFromFile ) {
-	// This should not happen because `config/config.publish.json` is always present.
-	console.error( 'FATAL ERROR: Could not find a valid configuration file' );
-	process.exit( 1 );
-}
-
-// Without this, TypeScript will export `configFromFile` as `Config | null`
-const exportedConfig: Config = configFromFile;
-export default exportedConfig;
+export default configFromFile;

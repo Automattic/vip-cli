@@ -10,6 +10,7 @@ import path from 'node:path';
 import { isAlias, parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
 import { formatData, formatSearchReplaceValues } from './format';
+import { hasInternalBin, loadInternalBin } from './internal-bin-loader';
 import { confirm } from './prompt';
 import pkg from '../../../package.json';
 import API from '../../lib/api';
@@ -233,7 +234,7 @@ class CommanderArgsCompat {
 		return this.program.opts();
 	}
 
-	executeSubcommand( argv, parsedAlias, subcommand ) {
+	async executeSubcommand( argv, parsedAlias, subcommand ) {
 		const currentScript = argv[ 1 ];
 		const extension = path.extname( currentScript );
 		const baseScriptPath = extension ? currentScript.slice( 0, -extension.length ) : currentScript;
@@ -259,6 +260,17 @@ class CommanderArgsCompat {
 			} );
 		} else {
 			const fallbackCommand = `${ path.basename( baseScriptPath ) }-${ subcommand }`;
+
+			if ( process.env.VIP_CLI_SEA_MODE === '1' && hasInternalBin( fallbackCommand ) ) {
+				process.argv = [ process.argv[ 0 ], process.argv[ 1 ], ...childArgs ];
+				const loaded = await loadInternalBin( fallbackCommand );
+				if ( ! loaded ) {
+					throw new Error( `Unable to load SEA subcommand "${ fallbackCommand }"` );
+				}
+
+				return;
+			}
+
 			runResult = spawnSync( fallbackCommand, childArgs, {
 				stdio: 'inherit',
 				env: process.env,
@@ -293,7 +305,7 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 
 	// If there's a sub-command, run that instead
 	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
-		this.executeSubcommand( argv, parsedAlias, this.sub[ 0 ] );
+		await this.executeSubcommand( argv, parsedAlias, this.sub[ 0 ] );
 		return {};
 	}
 
@@ -333,7 +345,7 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 		exit.withError( error );
 	}
 
-	if ( process.env.NODE_ENV !== 'test' ) {
+	if ( process.env.NODE_ENV !== 'test' && process.env.VIP_CLI_SEA_MODE !== '1' ) {
 		const { default: updateNotifier } = await import( 'update-notifier' );
 		updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify( {
 			isGlobal: true,

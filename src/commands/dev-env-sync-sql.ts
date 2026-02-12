@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 import fs from 'fs';
 import gql from 'graphql-tag';
-import Lando from 'lando';
+import type Lando from 'lando';
 import { pipeline } from 'node:stream/promises';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';

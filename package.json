@@ -78,6 +78,7 @@
     "check-types": "tsc",
     "postinstall": "node ./helpers/check-version.js",
     "build": "babel src -d dist --extensions=\".js,.ts\"",
+    "build:sea": "node ./helpers/build-sea.js",
     "build:watch": "babel src -d dist --watch --source-maps --extensions=\".js,.ts\"",
     "format": "npm run cmd:format -- --write",
     "format:check": "npm run cmd:format -- --check",
@@ -132,8 +133,10 @@
     "@types/tar": "^6.1.13",
     "@types/xml2js": "^0.4.14",
     "dockerode": "^4.0.0",
+    "esbuild": "^0.27.3",
     "jest": "^30.0.0",
     "nock": "13.5.6",
+    "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^5.2.2"
   },

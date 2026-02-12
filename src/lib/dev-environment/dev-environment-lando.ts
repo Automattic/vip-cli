@@ -1,11 +1,6 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
 import Dockerode from 'dockerode';
-import App, { type ScanResult } from 'lando/lib/app';
-import { buildConfig } from 'lando/lib/bootstrap';
-import Lando, { type LandoConfig } from 'lando/lib/lando';
-import landoUtils, { type AppInfo } from 'lando/plugins/lando-core/lib/utils';
-import landoBuildTask from 'lando/plugins/lando-tooling/lib/build';
 import { execFile } from 'node:child_process';
 import { lookup } from 'node:dns/promises';
 import { mkdir, rename, unlink, stat, writeFile } from 'node:fs/promises';
@@ -21,13 +16,20 @@ import {
 	updateEnvironment,
 	writeEnvironmentData,
 } from './dev-environment-core';
+import { loadLandoModule, resolveLandoModule } from './lando-loader';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import env from '../env';
+import { getRuntimeModeLabel } from '../cli/runtime-mode';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
 
 import type { NetworkInspectInfo } from 'dockerode';
+import type App from 'lando/lib/app';
+import type { ScanResult } from 'lando/lib/app';
+import type { LandoConfig } from 'lando/lib/lando';
+import type Lando from 'lando/lib/lando';
+import type { AppInfo } from 'lando/plugins/lando-core/lib/utils';
 import type Landerode from 'lando/lib/docker';
 import type { StdioOptions } from 'node:child_process';
 
@@ -55,6 +57,73 @@ interface LandoConfigWithLogging extends Omit< LandoConfig, 'composeBin' | 'dock
 }
 
 const execFileAsync = promisify( execFile );
+
+type LandoConstructor = new ( config: LandoConfig ) => Lando;
+type LandoBuildTask = (
+	tool: Record< string, unknown >,
+	lando: Lando
+) => {
+	run: ( argv: Record< string, unknown > ) => Promise< void > | void;
+};
+
+const unwrapLandoModuleDefault = < T >( loaded: unknown ): T => {
+	if ( loaded && typeof loaded === 'object' && 'default' in loaded ) {
+		return ( loaded as { default: T } ).default;
+	}
+
+	return loaded as T;
+};
+
+let landoConstructor: LandoConstructor | null = null;
+let landoBuildTaskFn: LandoBuildTask | null = null;
+let landoUtilsModule: { startTable: ( app: App ) => AppInfo } | null = null;
+let buildConfigFn: (( config: Record< string, unknown > ) => LandoConfig) | null = null;
+
+const getLandoConstructor = (): LandoConstructor => {
+	if ( ! landoConstructor ) {
+		landoConstructor = unwrapLandoModuleDefault< LandoConstructor >(
+			loadLandoModule( 'lando/lib/lando' )
+		);
+	}
+
+	return landoConstructor;
+};
+
+const getLandoBuildTask = (): LandoBuildTask => {
+	if ( ! landoBuildTaskFn ) {
+		landoBuildTaskFn = unwrapLandoModuleDefault< LandoBuildTask >(
+			loadLandoModule( 'lando/plugins/lando-tooling/lib/build' )
+		);
+	}
+
+	return landoBuildTaskFn;
+};
+
+const getLandoUtils = (): { startTable: ( app: App ) => AppInfo } => {
+	if ( ! landoUtilsModule ) {
+		landoUtilsModule = unwrapLandoModuleDefault< { startTable: ( app: App ) => AppInfo } >(
+			loadLandoModule( 'lando/plugins/lando-core/lib/utils' )
+		);
+	}
+
+	return landoUtilsModule;
+};
+
+const getLandoBuildConfig = (): (( config: Record< string, unknown > ) => LandoConfig) => {
+	if ( ! buildConfigFn ) {
+		const loaded = loadLandoModule< {
+			buildConfig?: ( config: Record< string, unknown > ) => LandoConfig;
+			default?: { buildConfig?: ( config: Record< string, unknown > ) => LandoConfig };
+		} >( 'lando/lib/bootstrap' );
+
+		buildConfigFn = loaded.buildConfig ?? loaded.default?.buildConfig ?? null;
+		if ( ! buildConfigFn ) {
+			throw new Error( 'Unable to load Lando bootstrap buildConfig.' );
+		}
+	}
+
+	return buildConfigFn;
+};
 const bannerLabelWidth = 18;
 let logPathRegistered = false;
 let resolvedLogPath: string | null = null;
@@ -195,6 +264,7 @@ const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void >
 		formatBannerLine( 'OS', `${ env.os.name } ${ env.os.version } ${ env.os.arch }` ),
 		formatBannerLine( 'NODE', env.node.version ),
 		formatBannerLine( 'VIP-CLI', env.app.version ),
+		formatBannerLine( 'RUNTIME', getRuntimeModeLabel() ),
 		formatBannerLine( 'DOCKER ENGINE', dockerVersions.engine ),
 		formatBannerLine( 'DOCKER COMPOSE', dockerVersions.compose ),
 		formatBannerLine( 'COMPOSE PLUGIN', dockerVersions.composePlugin ),
@@ -215,7 +285,7 @@ const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void >
  */
 async function getLandoConfig( options: LandoBootstrapOptions = {} ): Promise< LandoConfig > {
 	// The path will be smth like `yarn/global/node_modules/lando/lib/lando.js`; we need the path up to `lando` (inclusive)
-	const landoPath = dirname( dirname( require.resolve( 'lando' ) ) );
+	const landoPath = dirname( dirname( resolveLandoModule( 'lando' ) ) );
 
 	debug( `Getting Lando config, using paths '${ landoPath }' for plugins` );
 
@@ -263,7 +333,7 @@ async function getLandoConfig( options: LandoBootstrapOptions = {} ): Promise< L
 		},
 	};
 
-	return buildConfig( config );
+	return getLandoBuildConfig()( config );
 }
 
 const appMap = new Map< string, App >();
@@ -383,7 +453,8 @@ export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Pro
 		registerLogPathOutput( config as LandoConfigWithLogging );
 		await writeLogBanner( config as LandoConfigWithLogging );
 
-		const lando = new Lando( config );
+		const LandoClass = getLandoConstructor();
+		const lando = new LandoClass( config );
 		debugLib.log = ( message: string, ...args: unknown[] ) => {
 			lando.log.debug( message, ...args );
 		};
@@ -565,7 +636,7 @@ export async function landoInfo(
 	try {
 		const app = await getLandoApplication( lando, instancePath );
 
-		const info = landoUtils.startTable( app );
+		const info = getLandoUtils().startTable( app );
 
 		const reachableServices = app.info.filter( service => service.urls.length );
 		reachableServices.forEach( service => ( info[ `${ service.service } urls` ] = service.urls ) );
@@ -859,7 +930,7 @@ export async function landoExec(
 			tool.stdio = options.stdio;
 		}
 
-		const task = landoBuildTask( tool, lando );
+		const task = getLandoBuildTask()( tool, lando );
 
 		const argv = {
 			// eslint-disable-next-line id-length
