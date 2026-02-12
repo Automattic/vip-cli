@@ -135,3 +135,13 @@ powershell.exe -NoProfile -Command "Set-Location '$WIN_REPO_PATH'; signtool sign
 - Apply platform-appropriate signature method.
 - Verify signature/checksum before publishing.
 - Record signing method and timestamp authority in release notes.
+
+## GitHub Actions Automation
+- Workflow: `.github/workflows/sea-build-sign.yml`
+- Trigger: manual `workflow_dispatch`
+- Jobs: native macOS/Linux/Windows SEA builds plus a Windows WSL SEA build
+- Optional signing: set `sign_artifacts=true` and provide signing secrets/vars:
+  - macOS: `MACOS_CERTIFICATE_P12_BASE64`, `MACOS_CERTIFICATE_PASSWORD`, `MACOS_SIGNING_IDENTITY`
+  - Windows: `WINDOWS_CERTIFICATE_PFX_BASE64`, `WINDOWS_CERTIFICATE_PASSWORD`
+  - optional variable: `WINDOWS_TIMESTAMP_URL`
+- Output: uploaded SEA binary + SHA256 artifact per job

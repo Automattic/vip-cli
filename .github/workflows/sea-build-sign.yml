@@ -1,0 +1,169 @@
+name: Build SEA Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      sign_artifacts:
+        description: 'Sign artifacts when signing secrets are configured.'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  NODE_OPTIONS: --unhandled-rejections=warn
+  DO_NOT_TRACK: '1'
+
+jobs:
+  build-sea-native:
+    name: SEA Native (${{ matrix.target.name }})
+    runs-on: ${{ matrix.target.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: macOS
+            runs_on: macos-latest
+            binary_path: dist/sea/vip
+            artifact_name: vip-sea-macos
+          - name: Linux
+            runs_on: ubuntu-latest
+            binary_path: dist/sea/vip
+            artifact_name: vip-sea-linux
+          - name: Windows
+            runs_on: windows-latest
+            binary_path: dist/sea/vip.exe
+            artifact_name: vip-sea-windows
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v6
+
+      - name: Set git to use LF
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.x'
+          cache: npm
+          cache-dependency-path: npm-shrinkwrap.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dist
+        run: npm run build
+
+      - name: Build SEA artifact
+        run: npm run build:sea
+
+      - name: Smoke test executable (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          ${{ matrix.target.binary_path }} --version
+          ${{ matrix.target.binary_path }} whoami --help
+
+      - name: Smoke test executable (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\${{ matrix.target.binary_path }} --version
+          .\${{ matrix.target.binary_path }} whoami --help
+
+      - name: Import macOS signing certificate
+        if: runner.os == 'macOS' && inputs.sign_artifacts && secrets.MACOS_CERTIFICATE_P12_BASE64 != '' && secrets.MACOS_CERTIFICATE_PASSWORD != '' && secrets.MACOS_SIGNING_IDENTITY != ''
+        env:
+          MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          CERT_PATH="$RUNNER_TEMP/macos-cert.p12"
+
+          echo "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          security list-keychains -s "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" "$KEYCHAIN_PATH"
+
+          codesign --remove-signature ${{ matrix.target.binary_path }}
+          codesign --sign "$MACOS_SIGNING_IDENTITY" --force --options runtime ${{ matrix.target.binary_path }}
+          codesign --verify --strict --verbose=2 ${{ matrix.target.binary_path }}
+
+      - name: Sign Windows executable
+        if: runner.os == 'Windows' && inputs.sign_artifacts && secrets.WINDOWS_CERTIFICATE_PFX_BASE64 != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != ''
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE_PFX_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          [System.IO.File]::WriteAllBytes($certPath, [System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_PFX_BASE64))
+          $timestampUrl = if ($env:WINDOWS_TIMESTAMP_URL) { $env:WINDOWS_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
+
+          signtool sign /fd SHA256 /td SHA256 /tr $timestampUrl /f $certPath /p $env:WINDOWS_CERTIFICATE_PASSWORD .\${{ matrix.target.binary_path }}
+          signtool verify /pa /v .\${{ matrix.target.binary_path }}
+
+      - name: Generate checksum (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          shasum -a 256 ${{ matrix.target.binary_path }} > ${{ matrix.target.binary_path }}.sha256
+
+      - name: Generate checksum (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash -Algorithm SHA256 .\${{ matrix.target.binary_path }}).Hash.ToLower()
+          "${hash} *${{ matrix.target.binary_path }}" | Set-Content .\${{ matrix.target.binary_path }}.sha256 -NoNewline
+
+      - name: Upload SEA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target.artifact_name }}
+          path: |
+            ${{ matrix.target.binary_path }}
+            ${{ matrix.target.binary_path }}.sha256
+          if-no-files-found: error
+
+  build-sea-windows-wsl:
+    name: SEA (Windows WSL)
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v6
+
+      - name: Set git to use LF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Build SEA inside WSL
+        shell: pwsh
+        run: |
+          $workspaceWsl = (wsl.exe wslpath -a "$env:GITHUB_WORKSPACE").Trim()
+          if (-not $workspaceWsl) {
+            throw 'Failed to resolve WSL workspace path.'
+          }
+
+          wsl.exe bash -lc "set -euo pipefail; export NVM_DIR=\$HOME/.nvm; if [ ! -s \"\$NVM_DIR/nvm.sh\" ]; then curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash; fi"
+          wsl.exe bash -lc "set -euo pipefail; export NVM_DIR=\$HOME/.nvm; . \"\$NVM_DIR/nvm.sh\"; nvm install 22; nvm use 22; cd \"$workspaceWsl\"; npm ci; npm run build; npm run build:sea; ./dist/sea/vip --version; ./dist/sea/vip whoami --help"
+          wsl.exe bash -lc "set -euo pipefail; cd \"$workspaceWsl\"; sha256sum dist/sea/vip > dist/sea/vip.sha256"
+
+      - name: Upload WSL SEA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vip-sea-windows-wsl
+          path: |
+            dist/sea/vip
+            dist/sea/vip.sha256
+          if-no-files-found: error
