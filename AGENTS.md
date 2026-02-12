@@ -14,6 +14,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - `_opts` knobs: `appContext`/`envContext`/`childEnvContext` run GraphQL lookups (using `appQuery` + optional fragments) and interactive prompts when `--app/--env` are missing; `childEnvContext` forbids production. `requiredArgs` enforces positional count; `wildcardCommand` disables subcommand validation. `format` adds `--format` defaulting to table and postprocesses handler results; `requireConfirm` + `--force` gates destructive paths with `enquirer` prompts; `skipConfirmPrompt` bypasses the prompt (used in tests).
 - Alias handling happens before parsing: `@app` or `@app.env` is stripped from `argv` in `envAlias.ts` (only before `--`) and populates `options.app/options.env`. Using both alias and `--app/--env` exits with an error.
 - Global flags injected everywhere: `--help/--version/--debug`. `--debug` enables `debug` namespaces (`*` when boolean). `update-notifier` runs after validation unless `NODE_ENV=test`.
+- Short-flag parity detail: if an option has no explicit short alias, the wrapper can auto-assign one from the first long-option character (for `args` compatibility), except reserved globals (`h`, `v`, `d`) and already-used short names.
 - Nested subcommands are dispatched by the wrapper to sibling bin scripts (`vip-config` -> `vip-config-envvar` -> `vip-config-envvar-set`) using local `dist/bin` paths when available.
 - Output contract: if handler returns `{header,data}` it prints header as key/value then formats `data`; if it returns an array it strips `__typename` and formats; returning `undefined` skips printing. Formatting uses `formatData` with `table|csv|json`.
 - Caveat: `_opts` is shared. Instantiating multiple command runners in one process (tests, composite commands) can leak settings—avoid or refactor.
@@ -49,6 +50,9 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - Implemented under `src/lib/dev-environment/**`; shells out to Lando and Docker, renders templates from `assets/dev-env.*.ejs`, and writes to per-environment folders inside `xdgData()/vip-cli` (overridden by `XDG_DATA_HOME`). Running these commands mutates local docker networks and may fetch WP/PHP version metadata from GitHub constants.
 - Proxy helpers live in `src/lib/http/proxy-*`; dev-env code constructs agents automatically using `VIP_PROXY`/`SOCKS_PROXY`/`HTTP_PROXY`/`VIP_USE_SYSTEM_PROXY`. Unexpected proxies can break downloads—clear those env vars when debugging.
 - Avoid invoking dev-env logic in unit tests unless you mock `lando`, filesystem, and network; the E2E suite covers the real paths.
+- Runtime resilience safeguards:
+  - `startEnvironment()` performs bounded readiness checks after start/rebuild and attempts one recovery `landoStart` pass if status remains down.
+  - `vip-dev-env-exec` performs bounded readiness polling before failing with "running environment required", reducing false negatives under heavy Docker/Lando load.
 
 ## Import/Export/Sync Commands (high validation)
 - Heavy validators live in `src/lib/site-import/**` and `src/lib/validations/**`. `vip import sql` enforces file name rules, extension checks, size caps (`SQL_IMPORT_FILE_SIZE_LIMIT*`), and detects multisite; it may upload to S3 via `src/lib/client-file-uploader.ts` (expects readable file or URL and optional MD5). These paths also emit analytics; use `NODE_ENV=test` and stubs to avoid network.
