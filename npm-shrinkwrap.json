@@ -19,6 +19,7 @@
         "check-disk-space": "3.4.0",
         "cli-columns": "^4.0.0",
         "cli-table3": "^0.6.3",
+        "commander": "^14.0.3",
         "configstore": "^8.0.0",
         "debug": "4.4.3",
         "ejs": "^4.0.1",
@@ -261,6 +262,15 @@
       },
       "peerDependencies": {
         "@babel/core": "^7.0.0-0"
+      }
+    },
+    "node_modules/@babel/cli/node_modules/commander": {
+      "version": "6.2.1",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-6.2.1.tgz",
+      "integrity": "sha512-U7VdrJFnJgo4xjrHpTzu0yrHPGImdsmD95ZlgYSEajAn2JKzDhDTPG9kBTefmObL2w/ngeZnilk+OV9CG3d7UA==",
+      "dev": true,
+      "engines": {
+        "node": ">= 6"
       }
     },
     "node_modules/@babel/code-frame": {
@@ -6341,13 +6351,12 @@
       }
     },
     "node_modules/commander": {
-      "version": "6.2.1",
-      "resolved": "https://registry.npmjs.org/commander/-/commander-6.2.1.tgz",
-      "integrity": "sha512-U7VdrJFnJgo4xjrHpTzu0yrHPGImdsmD95ZlgYSEajAn2JKzDhDTPG9kBTefmObL2w/ngeZnilk+OV9CG3d7UA==",
-      "dev": true,
+      "version": "14.0.3",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-14.0.3.tgz",
+      "integrity": "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==",
       "license": "MIT",
       "engines": {
-        "node": ">= 6"
+        "node": ">=20"
       }
     },
     "node_modules/comment-parser": {

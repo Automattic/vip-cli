@@ -2,7 +2,7 @@
 
 import { Me } from '../graphqlTypes';
 import { getCurrentUserInfo } from '../lib/api/user';
-import command from '../lib/cli/command';
+import { command } from '../lib/cli/command-commander';
 import * as exit from '../lib/cli/exit';
 import { trackEvent } from '../lib/tracker';
 
