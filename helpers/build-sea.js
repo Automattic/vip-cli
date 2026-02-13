@@ -132,7 +132,7 @@ function injectBlob() {
 		args.push( '--macho-segment-name', 'NODE_SEA' );
 	}
 
-	if ( process.platform === 'windows' ) {
+	if ( process.platform === 'win32' ) {
 		args.push( '--overwrite' );
 	}
 
