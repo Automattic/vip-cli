@@ -47,7 +47,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - On 401, the client prints a custom message and exits; ensure authenticated tests stub the network or set `silenceAuthErrors`/`exitOnError=false` when constructing the client.
 
 ## Dev-Env Subsystem (High Blast Radius)
-- Implemented under `src/lib/dev-environment/**`; shells out to Lando and Docker, renders templates from `assets/dev-env.*.ejs`, and writes to per-environment folders inside `xdgData()/vip-cli` (overridden by `XDG_DATA_HOME`). Running these commands mutates local docker networks and may fetch WP/PHP version metadata from GitHub constants.
+- Implemented under `src/lib/dev-environment/**`; shells out to Lando and Docker, renders templates from `assets/dev-env.*.ejs`, and writes to per-environment folders inside `xdgData()/vip` (overridden by `XDG_DATA_HOME`). Running these commands mutates local docker networks and may fetch WP/PHP version metadata from GitHub constants.
 - Proxy helpers live in `src/lib/http/proxy-*`; dev-env code constructs agents automatically using `VIP_PROXY`/`SOCKS_PROXY`/`HTTP_PROXY`/`VIP_USE_SYSTEM_PROXY`. Unexpected proxies can break downloads—clear those env vars when debugging.
 - Avoid invoking dev-env logic in unit tests unless you mock `lando`, filesystem, and network; the E2E suite covers the real paths.
 - Runtime resilience safeguards:
