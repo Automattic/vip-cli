@@ -16,12 +16,21 @@ import {
 	resolveImportPath,
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
+import {
+	isEnvUp,
+	landoInfo,
+	landoRebuild,
+	landoStart,
+	getProxyContainer,
+} from '../../../src/lib/dev-environment/dev-environment-lando';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
+import UserError from '../../../src/lib/user-error';
 import { xdgData } from '../../../src/lib/xdg-data';
 
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
+jest.mock( '../../../src/lib/dev-environment/dev-environment-lando' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
 	const cleanup = () =>
@@ -64,6 +73,115 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 			} );
 
 			return expect( promise ).rejects.toEqual( new Error( DEV_ENVIRONMENT_NOT_FOUND ) );
+		} );
+
+		describe( 'readiness polling and retry', () => {
+			const slug = 'readiness-test-slug';
+			const instanceData = JSON.stringify( {
+				siteSlug: slug,
+				wpTitle: 'Test',
+				multisite: false,
+				wordpress: { mode: 'image', tag: 'trunk' },
+				muPlugins: { mode: 'image' },
+				appCode: { mode: 'image' },
+				mediaRedirectDomain: '',
+				phpmyadmin: false,
+				xdebug: false,
+				php: 'php:8.2',
+				mailpit: false,
+				photon: false,
+				cron: false,
+				version: '2.3.2',
+			} );
+
+			beforeEach( () => {
+				const expectedPath = getEnvironmentPath( slug );
+				const instanceDataPath = path.join( expectedPath, 'instance_data.json' );
+				const _originalExistsSync = fs.existsSync;
+				const _originalReadFileSync = fs.readFileSync;
+				jest.spyOn( fs, 'existsSync' ).mockImplementation( fpath => {
+					if ( fpath === expectedPath ) {
+						return true;
+					}
+					return _originalExistsSync( fpath );
+				} );
+				jest.spyOn( fs, 'appendFileSync' ).mockReturnValue( undefined );
+				jest.spyOn( fs, 'readFileSync' ).mockImplementation( ( filePath, ...args ) => {
+					if ( filePath === instanceDataPath ) {
+						return instanceData;
+					}
+					return _originalReadFileSync( filePath, ...args );
+				} );
+				jest.spyOn( fs.promises, 'stat' ).mockResolvedValue( { isFile: () => true } );
+
+				getProxyContainer.mockResolvedValue( { State: { Running: true } } );
+				landoRebuild.mockResolvedValue( undefined );
+				landoStart.mockResolvedValue( undefined );
+				landoInfo.mockResolvedValue( {} );
+			} );
+
+			it( 'should succeed without retrying when environment is up on the first readiness check', async () => {
+				isEnvUp.mockResolvedValue( true );
+
+				await startEnvironment( {}, slug, {
+					skipRebuild: false,
+					skipWpVersionsCheck: true,
+				} );
+
+				expect( isEnvUp ).toHaveBeenCalledTimes( 1 );
+				expect( landoRebuild ).toHaveBeenCalledTimes( 1 );
+				expect( landoStart ).not.toHaveBeenCalled();
+			} );
+
+			it( 'should call landoStart retry when first readiness pass times out and succeed on second pass', async () => {
+				// First waitForEnvironmentToBeUp: all 6 attempts return false
+				// Second waitForEnvironmentToBeUp: succeeds on the first attempt
+				isEnvUp
+					.mockResolvedValueOnce( false )
+					.mockResolvedValueOnce( false )
+					.mockResolvedValueOnce( false )
+					.mockResolvedValueOnce( false )
+					.mockResolvedValueOnce( false )
+					.mockResolvedValueOnce( false )
+					.mockResolvedValueOnce( true );
+
+				jest.useFakeTimers();
+				try {
+					const promise = startEnvironment( {}, slug, {
+						skipRebuild: false,
+						skipWpVersionsCheck: true,
+					} );
+					await jest.runAllTimersAsync();
+					await promise;
+				} finally {
+					jest.useRealTimers();
+				}
+
+				expect( landoRebuild ).toHaveBeenCalledTimes( 1 );
+				expect( landoStart ).toHaveBeenCalledTimes( 1 ); // retry pass
+				expect( isEnvUp ).toHaveBeenCalledTimes( 7 ); // 6 failed + 1 success
+			} );
+
+			it( 'should throw UserError when environment never reaches a running state', async () => {
+				isEnvUp.mockResolvedValue( false ); // all attempts fail
+
+				jest.useFakeTimers();
+				try {
+					const promise = startEnvironment( {}, slug, {
+						skipRebuild: false,
+						skipWpVersionsCheck: true,
+					} );
+					// Register rejection handler before timers to prevent unhandled rejection
+					const assertion = expect( promise ).rejects.toThrow( UserError );
+					await jest.runAllTimersAsync();
+					await assertion;
+				} finally {
+					jest.useRealTimers();
+				}
+
+				expect( landoStart ).toHaveBeenCalledTimes( 1 ); // retry pass attempted
+				expect( isEnvUp ).toHaveBeenCalledTimes( 12 ); // 6 + 6 attempts
+			} );
 		} );
 	} );
 	describe( 'destroyEnvironment', () => {
