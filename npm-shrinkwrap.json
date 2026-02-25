@@ -126,7 +126,7 @@
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.10.0",
         "@types/ssh2": "^1.15.4",
-        "@types/tar": "^6.1.13",
+        "@types/tar": "^7.0.87",
         "@types/xml2js": "^0.4.14",
         "dockerode": "^4.0.0",
         "jest": "^30.0.0",
@@ -4151,14 +4151,14 @@
       "license": "MIT"
     },
     "node_modules/@types/tar": {
-      "version": "6.1.13",
-      "resolved": "https://registry.npmjs.org/@types/tar/-/tar-6.1.13.tgz",
-      "integrity": "sha512-IznnlmU5f4WcGTh2ltRu/Ijpmk8wiWXfF0VA4s+HPjHZgvFggk1YaIkbo5krX/zUCzWF8N/l4+W/LNxnvAJ8nw==",
+      "version": "7.0.87",
+      "resolved": "https://registry.npmjs.org/@types/tar/-/tar-7.0.87.tgz",
+      "integrity": "sha512-3IxNBV8LeY5oi2ZFpvAhOtW1+mHswkzM7BuisVrwJgPv67GBO2rkLPQlEKtzfHuLdhDDczhkCZeT+RuizMay4A==",
+      "deprecated": "This is a stub types definition. tar provides its own type definitions, so you do not need this installed.",
       "dev": true,
       "license": "MIT",
       "dependencies": {
-        "@types/node": "*",
-        "minipass": "^4.0.0"
+        "tar": "*"
       }
     },
     "node_modules/@types/triple-beam": {
@@ -11813,16 +11813,6 @@
         "url": "https://github.com/sponsors/ljharb"
       }
     },
-    "node_modules/minipass": {
-      "version": "4.2.8",
-      "resolved": "https://registry.npmjs.org/minipass/-/minipass-4.2.8.tgz",
-      "integrity": "sha512-fNzuVyifolSLFL4NzpF+wEF4qrgqaaKX0haXPQEdQ7NKAN+WecoKMHV09YcuL/DHxrUsYQOK3MiuDf7Ip2OXfQ==",
-      "dev": true,
-      "license": "ISC",
-      "engines": {
-        "node": ">=8"
-      }
-    },
     "node_modules/minizlib": {
       "version": "3.1.0",
       "resolved": "https://registry.npmjs.org/minizlib/-/minizlib-3.1.0.tgz",
@@ -14033,9 +14023,9 @@
       }
     },
     "node_modules/tar": {
-      "version": "7.5.7",
-      "resolved": "https://registry.npmjs.org/tar/-/tar-7.5.7.tgz",
-      "integrity": "sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==",
+      "version": "7.5.9",
+      "resolved": "https://registry.npmjs.org/tar/-/tar-7.5.9.tgz",
+      "integrity": "sha512-BTLcK0xsDh2+PUe9F6c2TlRp4zOOBMTkoQHQIWSIzI0R7KG46uEwq4OPk2W7bZcprBMsuaeFsqwYr7pjh6CuHg==",
       "license": "BlueOak-1.0.0",
       "dependencies": {
         "@isaacs/fs-minipass": "^4.0.0",
