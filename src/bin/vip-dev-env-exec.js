@@ -56,7 +56,7 @@ command( {
 	.option( 'quiet', 'Suppress informational messages.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
-		const slug = await getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt, opt.quiet );
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 		validateDependencies( lando );
 
