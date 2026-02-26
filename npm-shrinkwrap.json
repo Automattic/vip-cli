@@ -121,7 +121,7 @@
         "@types/ejs": "^3.1.5",
         "@types/jest": "^30.0.0",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^24.0.0",
+        "@types/node": "^25.3.2",
         "@types/proxy-from-env": "^1.0.4",
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.10.0",
@@ -4091,12 +4091,12 @@
       "license": "MIT"
     },
     "node_modules/@types/node": {
-      "version": "24.10.15",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.10.15.tgz",
-      "integrity": "sha512-BgjLoRuSr0MTI5wA6gMw9Xy0sFudAaUuvrnjgGx9wZ522fYYLA5SYJ+1Y30vTcJEG+DRCyDHx/gzQVfofYzSdg==",
+      "version": "25.3.2",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.3.2.tgz",
+      "integrity": "sha512-RpV6r/ij22zRRdyBPcxDeKAzH43phWVKEjL2iksqo1Vz3CuBUrgmPpPhALKiRfU7OMCmeeO9vECBMsV0hMTG8Q==",
       "license": "MIT",
       "dependencies": {
-        "undici-types": "~7.16.0"
+        "undici-types": "~7.18.0"
       }
     },
     "node_modules/@types/proxy-from-env": {
@@ -14414,9 +14414,9 @@
       }
     },
     "node_modules/undici-types": {
-      "version": "7.16.0",
-      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.16.0.tgz",
-      "integrity": "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==",
+      "version": "7.18.2",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz",
+      "integrity": "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==",
       "license": "MIT"
     },
     "node_modules/unicode-canonical-property-names-ecmascript": {
