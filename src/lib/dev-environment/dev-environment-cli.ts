@@ -125,7 +125,10 @@ export const validateDependencies = ( lando: Lando ) => {
 	debug( 'Validation checks completed in %d ms', duration );
 };
 
-export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise< string > {
+export async function getEnvironmentName(
+	options: EnvironmentNameOptions,
+	quiet = false
+): Promise< string > {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -146,11 +149,13 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 
 	if ( configurationFileOptions.slug && configurationFileOptions.meta ) {
 		const slug = configurationFileOptions.slug;
-		console.log(
-			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
-				configurationFileOptions.meta[ 'configuration-path' ]
-			) }\n`
-		);
+		if ( ! quiet ) {
+			console.log(
+				`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
+					configurationFileOptions.meta[ 'configuration-path' ]
+				) }\n`
+			);
+		}
 
 		return slug;
 	}
