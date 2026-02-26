@@ -44,6 +44,7 @@ const debug = debugLib( DEBUG_KEY );
 interface LandoBootstrapOptions {
 	logFile?: string;
 	logName?: string;
+	quiet?: boolean;
 }
 
 interface LandoConfigWithLogging extends Omit< LandoConfig, 'composeBin' | 'dockerBin' > {
@@ -73,7 +74,7 @@ const getLogFilePath = ( config: LandoConfigWithLogging ): string | null => {
 	return null;
 };
 
-const registerLogPathOutput = ( config: LandoConfigWithLogging ): void => {
+const registerLogPathOutput = ( config: LandoConfigWithLogging, quiet: boolean ): void => {
 	if ( logPathRegistered ) {
 		return;
 	}
@@ -84,6 +85,10 @@ const registerLogPathOutput = ( config: LandoConfigWithLogging ): void => {
 	}
 
 	logPathRegistered = true;
+	if ( quiet ) {
+		return;
+	}
+
 	process.once( 'exit', () => {
 		if ( resolvedLogPath && process.stdout.isTTY ) {
 			console.log(
@@ -380,7 +385,7 @@ export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Pro
 			debug( 'Engine config: %j', config.engineConfig );
 		}
 
-		registerLogPathOutput( config as LandoConfigWithLogging );
+		registerLogPathOutput( config as LandoConfigWithLogging, Boolean( options.quiet ) );
 		await writeLogBanner( config as LandoConfigWithLogging );
 
 		const lando = new Lando( config );

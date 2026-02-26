@@ -57,7 +57,7 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt, opt.quiet );
-		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ), quiet: opt.quiet } );
 		validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
