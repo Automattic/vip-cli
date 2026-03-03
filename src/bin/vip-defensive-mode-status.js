@@ -21,6 +21,7 @@ const examples = [
 	},
 ];
 
+// eslint-disable-next-line complexity
 export async function defensiveModeStatusCommand( arg, opt = {} ) {
 	const trackingParams = {
 		app_id: opt.app.id,
@@ -72,13 +73,17 @@ export async function defensiveModeStatusCommand( arg, opt = {} ) {
 		if ( config.connectionThresholdPercentage !== undefined ) {
 			const isCustom = stored?.connectionThresholdPercentage !== undefined;
 			console.log(
-				`Threshold:       ${ config.connectionThresholdPercentage }% PHP workers${ isCustom ? '' : ' (default)' }`
+				`Threshold:       ${ config.connectionThresholdPercentage }% PHP workers${
+					isCustom ? '' : ' (default)'
+				}`
 			);
 		}
 		if ( config.connectionThresholdAbsolute !== undefined ) {
 			const isCustom = stored?.connectionThresholdAbsolute !== undefined;
 			console.log(
-				`Threshold:       ${ config.connectionThresholdAbsolute } concurrent requests${ isCustom ? '' : ' (default)' }`
+				`Threshold:       ${ config.connectionThresholdAbsolute } concurrent requests${
+					isCustom ? '' : ' (default)'
+				}`
 			);
 		}
 
@@ -103,7 +108,9 @@ export async function defensiveModeStatusCommand( arg, opt = {} ) {
 		if ( config.keepEnabledUnderThresholdForSeconds !== undefined ) {
 			const isCustomHysteresis = stored?.keepEnabledUnderThresholdForSeconds !== undefined;
 			console.log(
-				`Hysteresis:      ${ config.keepEnabledUnderThresholdForSeconds }s${ isCustomHysteresis ? '' : ' (default)' }`
+				`Hysteresis:      ${ config.keepEnabledUnderThresholdForSeconds }s${
+					isCustomHysteresis ? '' : ' (default)'
+				}`
 			);
 		}
 

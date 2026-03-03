@@ -1,6 +1,3 @@
-import gql from 'graphql-tag';
-
-import API from '../../lib/api';
 import http from './http';
 
 // GraphQL query for app and environment data

@@ -40,7 +40,9 @@ export async function defensiveModeDisableCommand( arg, opt = {} ) {
 		const primaryDomain = opt.env.primaryDomain?.name || opt.app.name;
 		console.log( chalk.yellow( '⚠  Warning' ) );
 		console.log(
-			`You are about to disable Defensive Mode for ${ chalk.bold( opt.app.name ) } (${ chalk.bold( opt.env.name ) })`
+			`You are about to disable Defensive Mode for ${ chalk.bold( opt.app.name ) } (${ chalk.bold(
+				opt.env.name
+			) })`
 		);
 		console.log( `This will remove bot/DDoS protection from https://${ primaryDomain }` );
 		console.log();
@@ -79,7 +81,9 @@ export async function defensiveModeDisableCommand( arg, opt = {} ) {
 	console.log();
 	console.log(
 		chalk.green(
-			`✓ Defensive Mode ${ wasDisabled ? 'already ' : '' }disabled for ${ opt.app.name } (${ opt.env.name })`
+			`✓ Defensive Mode ${ wasDisabled ? 'already ' : '' }disabled for ${ opt.app.name } (${
+				opt.env.name
+			})`
 		)
 	);
 	console.log();

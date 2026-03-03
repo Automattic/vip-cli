@@ -55,7 +55,11 @@ export async function defensiveModeEnableCommand( arg, opt = {} ) {
 	const wasEnabled = result.data.statusUpdated === false;
 
 	console.log(
-		chalk.green( `✓ Defensive Mode ${ wasEnabled ? 'already ' : '' }enabled for ${ opt.app.name } (${ opt.env.name })` )
+		chalk.green(
+			`✓ Defensive Mode ${ wasEnabled ? 'already ' : '' }enabled for ${ opt.app.name } (${
+				opt.env.name
+			})`
+		)
 	);
 	console.log();
 	console.log( `Status:  ${ chalk.bold( 'ACTIVE' ) }` );
