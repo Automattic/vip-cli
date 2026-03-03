@@ -33,7 +33,7 @@ export async function defensiveModeStatusCommand( arg, opt = {} ) {
 
 	let result;
 	try {
-		result = await getDefensiveMode( opt.app.id, opt.env.id );
+		result = await getDefensiveMode( opt.app.id, opt.env.id, opt.env );
 	} catch ( err ) {
 		await trackEvent( 'defensive_mode_status_command_error', {
 			...trackingParams,
@@ -55,7 +55,8 @@ export async function defensiveModeStatusCommand( arg, opt = {} ) {
 	const config = result.data.effective;
 	const stored = result.data.stored;
 
-	console.log( chalk.bold( `Defensive Mode Status: ${ opt.app.name } (${ opt.env.name })` ) );
+	const envName = opt.env.type || opt.env.name;
+	console.log( chalk.bold( `Defensive Mode Status: ${ opt.app.name } (${ envName })` ) );
 	console.log( '━'.repeat( 60 ) );
 	console.log();
 
@@ -69,16 +70,21 @@ export async function defensiveModeStatusCommand( arg, opt = {} ) {
 		console.log( chalk.bold( 'Configuration' ) );
 		console.log( '━'.repeat( 60 ) );
 
-		// Threshold (WordPress vs Node.js)
-		if ( config.connectionThresholdPercentage !== undefined ) {
+		// Threshold (WordPress vs Node.js) - only show the one that's actually set
+		if (
+			config.connectionThresholdPercentage !== undefined &&
+			config.connectionThresholdPercentage !== null
+		) {
 			const isCustom = stored?.connectionThresholdPercentage !== undefined;
 			console.log(
 				`Threshold:       ${ config.connectionThresholdPercentage }% PHP workers${
 					isCustom ? '' : ' (default)'
 				}`
 			);
-		}
-		if ( config.connectionThresholdAbsolute !== undefined ) {
+		} else if (
+			config.connectionThresholdAbsolute !== undefined &&
+			config.connectionThresholdAbsolute !== null
+		) {
 			const isCustom = stored?.connectionThresholdAbsolute !== undefined;
 			console.log(
 				`Threshold:       ${ config.connectionThresholdAbsolute } concurrent requests${

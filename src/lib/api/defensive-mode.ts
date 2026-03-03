@@ -1,4 +1,6 @@
-import http from './http';
+import gql from 'graphql-tag';
+
+import API from '../../lib/api';
 
 // GraphQL query for app and environment data
 export const appQuery = `
@@ -12,6 +14,30 @@ export const appQuery = `
 			name
 		}
 		type
+		defensiveMode {
+			config {
+				stored {
+					enabled
+					disableAtEpoch
+					connectionThresholdPercentage
+					connectionThresholdAbsolute
+					keepEnabledUnderThresholdForSeconds
+					challengeType
+					maxRequestRate
+					priorityBypass
+				}
+				effective {
+					enabled
+					disableAtEpoch
+					connectionThresholdPercentage
+					connectionThresholdAbsolute
+					keepEnabledUnderThresholdForSeconds
+					challengeType
+					maxRequestRate
+					priorityBypass
+				}
+			}
+		}
 	}
 `;
 
@@ -40,20 +66,69 @@ export interface DefensiveModeResponse {
 
 /**
  * Get current Defensive Mode configuration for an environment
+ * Note: Data is fetched via appQuery and passed through opt.env.defensiveMode
  */
 export async function getDefensiveMode(
 	appId: number,
-	envId: number
+	envId: number,
+	envData?: any
 ): Promise< DefensiveModeResponse > {
-	const path = `/v1/sites/${ envId }/defensive-mode`;
-	const response = await http( path, { method: 'GET' } );
-
-	if ( ! response.ok ) {
-		const errorData = ( await response.json() ) as { message?: string };
-		throw new Error( errorData.message || `Failed to get defensive mode status` );
+	// If defensiveMode data was already loaded via appQuery, use it
+	if ( envData?.defensiveMode?.config ) {
+		return {
+			data: envData.defensiveMode.config,
+			status: 'success',
+		};
 	}
 
-	return ( await response.json() ) as DefensiveModeResponse;
+	// Otherwise, query GraphQL directly
+	const query = gql`
+		query GetDefensiveMode($appId: Int!, $envId: Int!) {
+			app(id: $appId) {
+				environments(id: $envId) {
+					defensiveMode {
+						config {
+							stored {
+								enabled
+								disableAtEpoch
+								connectionThresholdPercentage
+								connectionThresholdAbsolute
+								keepEnabledUnderThresholdForSeconds
+								challengeType
+								maxRequestRate
+								priorityBypass
+							}
+							effective {
+								enabled
+								disableAtEpoch
+								connectionThresholdPercentage
+								connectionThresholdAbsolute
+								keepEnabledUnderThresholdForSeconds
+								challengeType
+								maxRequestRate
+								priorityBypass
+							}
+						}
+					}
+				}
+			}
+		}
+	`;
+
+	const api = API();
+	const response = await api.query( {
+		query,
+		variables: { appId, envId },
+	} );
+
+	if ( ! response.data?.app?.environments?.[ 0 ]?.defensiveMode ) {
+		throw new Error( 'Failed to get defensive mode status' );
+	}
+
+	return {
+		data: response.data.app.environments[ 0 ].defensiveMode.config,
+		status: 'success',
+	};
 }
 
 /**
@@ -64,23 +139,72 @@ export async function updateDefensiveMode(
 	envId: number,
 	config: Partial< DefensiveModeConfig >
 ): Promise< DefensiveModeResponse > {
-	const path = `/v1/sites/${ envId }/defensive-mode`;
-	const response = await http( path, {
-		method: 'PATCH',
-		body: config,
+	const mutation = gql`
+		mutation UpdateDefensiveModeConfig($input: AppEnvironmentDefensiveModeConfigInput!) {
+			updateDefensiveModeConfig(input: $input) {
+				success
+				message
+				config {
+					stored {
+						enabled
+						disableAtEpoch
+						connectionThresholdPercentage
+						connectionThresholdAbsolute
+						keepEnabledUnderThresholdForSeconds
+						challengeType
+						maxRequestRate
+						priorityBypass
+					}
+					effective {
+						enabled
+						disableAtEpoch
+						connectionThresholdPercentage
+						connectionThresholdAbsolute
+						keepEnabledUnderThresholdForSeconds
+						challengeType
+						maxRequestRate
+						priorityBypass
+					}
+				}
+			}
+		}
+	`;
+
+	const api = API();
+	const response = await api.mutate( {
+		mutation,
+		variables: {
+			input: {
+				appId,
+				envId,
+				...config,
+			},
+		},
 	} );
 
-	if ( ! response.ok ) {
-		const errorData = ( await response.json() ) as { message?: string; code?: string };
-		if ( errorData.code === 'permission_denied' ) {
+	if ( ! response.data?.updateDefensiveModeConfig?.success ) {
+		const message =
+			response.data?.updateDefensiveModeConfig?.message || 'Failed to update defensive mode';
+		if ( message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( errorData.message || `Failed to update defensive mode configuration` );
+		throw new Error( message );
 	}
 
-	return ( await response.json() ) as DefensiveModeResponse;
+	// Calculate if status was updated
+	const statusUpdated = config.enabled !== undefined;
+
+	return {
+		data: {
+			statusUpdated,
+			configUpdated: true,
+			stored: response.data.updateDefensiveModeConfig.config.stored,
+			effective: response.data.updateDefensiveModeConfig.config.effective,
+		},
+		status: 'success',
+	};
 }
 
 /**
