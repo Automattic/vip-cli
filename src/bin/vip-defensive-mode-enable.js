@@ -53,21 +53,25 @@ export async function defensiveModeEnableCommand( arg, opt = {} ) {
 	// Table output format (default)
 	const config = result.data.effective;
 	const wasEnabled = result.data.statusUpdated === false;
+	const envName = opt.env.type || opt.env.name;
 
 	console.log(
 		chalk.green(
-			`✓ Defensive Mode ${ wasEnabled ? 'already ' : '' }enabled for ${ opt.app.name } (${
-				opt.env.name
-			})`
+			`✓ Defensive Mode ${ wasEnabled ? 'already ' : '' }enabled for ${ opt.app.name } (${ envName })`
 		)
 	);
 	console.log();
 	console.log( `Status:  ${ chalk.bold( 'ACTIVE' ) }` );
 
-	if ( config.connectionThresholdPercentage !== undefined ) {
+	if (
+		config.connectionThresholdPercentage !== undefined &&
+		config.connectionThresholdPercentage !== null
+	) {
 		console.log( `Threshold: ${ config.connectionThresholdPercentage }% PHP workers` );
-	}
-	if ( config.connectionThresholdAbsolute !== undefined ) {
+	} else if (
+		config.connectionThresholdAbsolute !== undefined &&
+		config.connectionThresholdAbsolute !== null
+	) {
 		console.log( `Threshold: ${ config.connectionThresholdAbsolute } concurrent requests` );
 	}
 }
