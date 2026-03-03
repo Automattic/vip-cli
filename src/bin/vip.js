@@ -35,6 +35,8 @@ const runCmd = async function () {
 		.command( 'backup', 'Generate a backup of an environment.' )
 		.command( 'cache', 'Manage page cache for an environment.' )
 		.command( 'config', 'Manage environment configurations.' )
+		.command( 'db', "Access an environment's database." )
+		.command( 'defensive-mode', 'Manage bot and DDoS protection for an environment.' )
 		.command( 'dev-env', 'Create and manage VIP Local Development Environments.' )
 		.command( 'export', 'Export a copy of data associated with an environment.' )
 		.command( 'import', 'Import media or SQL database files to an environment.' )
@@ -44,7 +46,6 @@ const runCmd = async function () {
 			'Search for a string in a local SQL file and replace it with a new string.'
 		)
 		.command( 'slowlogs', 'Retrieve MySQL slow query logs from an environment.' )
-		.command( 'db', "Access an environment's database." )
 		.command( 'sync', 'Sync the database from production to a non-production environment.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
