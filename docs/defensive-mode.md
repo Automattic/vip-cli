@@ -9,12 +9,14 @@
 Defensive Mode is VIP's bot and DDoS protection system that automatically detects and blocks malicious traffic at the edge. These CLI commands allow you to automate Defensive Mode management across your VIP environments.
 
 **What is Defensive Mode?**
+
 - Automatically detects bot and DDoS attack patterns
 - Challenges suspicious requests before they reach your application
 - Reduces server load during attacks
 - Configurable threshold and challenge types
 
 **Use Cases**:
+
 - Enable protection before planned traffic spikes
 - Automate protection for multiple sites
 - Integrate with CI/CD pipelines
@@ -27,21 +29,25 @@ Defensive Mode is VIP's bot and DDoS protection system that automatically detect
 Enable bot and DDoS protection for an environment.
 
 **Syntax**:
+
 ```bash
 vip @app.env defensive-mode enable [options]
 ```
 
 **Options**:
+
 - `--format=json` - Output results in JSON format (for automation)
 
 **Examples**:
 
 Enable defensive mode for a single environment:
+
 ```bash
 vip @example-app.production defensive-mode enable
 ```
 
 Output:
+
 ```
 ✓ Defensive Mode enabled for example-app (production)
 
@@ -50,29 +56,32 @@ Threshold: 90% PHP workers
 ```
 
 Enable with JSON output for automation:
+
 ```bash
 vip @example-app.production defensive-mode enable --format=json
 ```
 
 Output:
+
 ```json
 {
-  "data": {
-    "statusUpdated": true,
-    "configUpdated": false,
-    "effective": {
-      "enabled": true,
-      "connectionThresholdPercentage": 90,
-      "challengeType": 1,
-      "maxRequestRate": 10,
-      "priorityBypass": 3
-    }
-  },
-  "status": "success"
+	"data": {
+		"statusUpdated": true,
+		"configUpdated": false,
+		"effective": {
+			"enabled": true,
+			"connectionThresholdPercentage": 90,
+			"challengeType": 1,
+			"maxRequestRate": 10,
+			"priorityBypass": 3
+		}
+	},
+	"status": "success"
 }
 ```
 
 **Exit Codes**:
+
 - `0` - Success
 - `1` - General error (API failure, network issue)
 - `2` - Permission denied
@@ -84,11 +93,13 @@ Output:
 Disable bot and DDoS protection for an environment.
 
 **Syntax**:
+
 ```bash
 vip @app.env defensive-mode disable [options]
 ```
 
 **Options**:
+
 - `--confirm` - Skip confirmation prompt (for automation)
 - `--format=json` - Output results in JSON format
 
@@ -99,6 +110,7 @@ vip @example-app.production defensive-mode disable
 ```
 
 Output:
+
 ```
 ⚠  Warning
 You are about to disable Defensive Mode for example-app (production)
@@ -108,6 +120,7 @@ Type 'DISABLE' to confirm: _
 ```
 
 After typing "DISABLE":
+
 ```
 ✓ Defensive Mode disabled for example-app (production)
 
@@ -123,6 +136,7 @@ vip @example-app.production defensive-mode disable --confirm
 ⚠️ **Warning**: Use `--confirm` carefully. Disabling protection during an active attack can cause site outages.
 
 **Exit Codes**:
+
 - `0` - Success or cancelled by user
 - `1` - General error
 - `2` - Permission denied
@@ -134,11 +148,13 @@ vip @example-app.production defensive-mode disable --confirm
 Display current Defensive Mode configuration and status.
 
 **Syntax**:
+
 ```bash
 vip @app.env defensive-mode status [options]
 ```
 
 **Options**:
+
 - `--format=json` - Output results in JSON format
 
 **Example** (Active):
@@ -148,6 +164,7 @@ vip @example-app.production defensive-mode status
 ```
 
 Output:
+
 ```
 Defensive Mode Status: example-app (production)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -170,6 +187,7 @@ vip @example-app.develop defensive-mode status
 ```
 
 Output:
+
 ```
 Defensive Mode Status: example-app (develop)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -184,20 +202,21 @@ vip @example-app.production defensive-mode status --format=json
 ```
 
 Output:
+
 ```json
 {
-  "data": {
-    "stored": null,
-    "effective": {
-      "enabled": true,
-      "connectionThresholdPercentage": 90,
-      "challengeType": 1,
-      "maxRequestRate": 10,
-      "keepEnabledUnderThresholdForSeconds": 300,
-      "priorityBypass": 3
-    }
-  },
-  "status": "success"
+	"data": {
+		"stored": null,
+		"effective": {
+			"enabled": true,
+			"connectionThresholdPercentage": 90,
+			"challengeType": 1,
+			"maxRequestRate": 10,
+			"keepEnabledUnderThresholdForSeconds": 300,
+			"priorityBypass": 3
+		}
+	},
+	"status": "success"
 }
 ```
 
@@ -210,11 +229,13 @@ When viewing status, you may see these configuration fields:
 ### Threshold
 
 **WordPress Sites**:
+
 - Shown as: "XX% PHP workers"
 - Meaning: Defensive Mode activates when PHP worker usage exceeds this percentage
 - Default: 90%
 
 **Node.js Sites**:
+
 - Shown as: "XXX concurrent requests"
 - Meaning: Defensive Mode activates when concurrent requests exceed this number
 - Default: 100
@@ -229,18 +250,21 @@ The type of challenge presented to suspicious clients:
 ### Max Request Rate
 
 Maximum requests per second allowed from a single client:
+
 - **Unlimited**: No per-client rate limit
 - **XX req/s per client**: Specific rate limit
 
 ### Hysteresis
 
 Duration (in seconds) that Defensive Mode remains active after traffic drops below threshold:
+
 - Prevents rapid toggling during fluctuating attack patterns
 - Default: 300 seconds (5 minutes)
 
 ### Priority Bypass
 
 Priority level for bypass rules (1-3):
+
 - Affects which requests can bypass Defensive Mode challenges
 - Default: 3
 
@@ -381,13 +405,16 @@ Suggestions:
 ## Permissions
 
 **To view status** (read-only):
+
 - Any authenticated VIP user
 
 **To enable or disable** (write):
+
 - Organization Admin
 - Application Admin
 
 Check your current role:
+
 ```bash
 vip whoami
 ```
@@ -399,6 +426,7 @@ vip whoami
 ### Production Environments
 
 ✅ **DO**:
+
 - Enable Defensive Mode before expected traffic spikes
 - Test automation scripts in non-production environments first
 - Use `status` command to check current state before making changes
@@ -406,6 +434,7 @@ vip whoami
 - Keep confirmation prompts enabled for manual operations
 
 ❌ **DON'T**:
+
 - Disable protection during active attacks without careful assessment
 - Use `--confirm` flag in interactive terminal sessions
 - Toggle defensive mode rapidly (can trigger rate limits)
@@ -414,6 +443,7 @@ vip whoami
 ### Automation Scripts
 
 ✅ **DO**:
+
 - Add `sleep 2` between operations to avoid rate limits
 - Check status before making changes (idempotent operations)
 - Use `--format=json` for reliable parsing
@@ -421,6 +451,7 @@ vip whoami
 - Log all operations for audit trail
 
 ❌ **DON'T**:
+
 - Run parallel operations against the same environment
 - Ignore exit codes in scripts
 - Use `--confirm` without understanding the risks
@@ -436,6 +467,7 @@ bash: vip: command not found
 ```
 
 **Solution**: Install VIP-CLI:
+
 ```bash
 npm install -g @automattic/vip
 ```
@@ -447,6 +479,7 @@ Error: No authentication token found
 ```
 
 **Solution**: Log in to VIP:
+
 ```bash
 vip login
 ```
@@ -472,11 +505,13 @@ Error: Too many requests (429)
 ## Support
 
 For help with Defensive Mode:
+
 - Dashboard: https://dashboard.wpvip.com/
 - VIP Support: Create a ticket in the Dashboard
 - Documentation: https://docs.wpvip.com/
 
 For CLI issues:
+
 - GitHub: https://github.com/Automattic/vip-cli/issues
 - Slack: #vip-cli (Automattic internal)
 
@@ -485,6 +520,7 @@ For CLI issues:
 ## Changelog
 
 ### 3.23.0 (2026-03-03)
+
 - Initial release of defensive-mode commands
 - `enable`, `disable`, and `status` subcommands
 - JSON output support for automation

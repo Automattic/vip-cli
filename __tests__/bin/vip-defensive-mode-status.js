@@ -60,7 +60,7 @@ describe( 'defensiveModeStatusCommand()', () => {
 
 		await defensiveModeStatusCommand( [], opts );
 
-		expect( defensiveModeLib.getDefensiveMode ).toHaveBeenCalledWith( 123, 456 );
+		expect( defensiveModeLib.getDefensiveMode ).toHaveBeenCalledWith( 123, 456, opts.env );
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Defensive Mode Status' )
 		);
