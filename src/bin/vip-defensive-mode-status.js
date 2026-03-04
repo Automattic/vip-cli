@@ -71,20 +71,14 @@ export async function defensiveModeStatusCommand( arg, opt = {} ) {
 		console.log( '━'.repeat( 60 ) );
 
 		// Threshold (WordPress vs Node.js) - only show the one that's actually set
-		if (
-			config.connectionThresholdPercentage !== undefined &&
-			config.connectionThresholdPercentage !== null
-		) {
+		if ( config.connectionThresholdPercentage !== undefined ) {
 			const isCustom = stored?.connectionThresholdPercentage !== undefined;
 			console.log(
 				`Threshold:       ${ config.connectionThresholdPercentage }% PHP workers${
 					isCustom ? '' : ' (default)'
 				}`
 			);
-		} else if (
-			config.connectionThresholdAbsolute !== undefined &&
-			config.connectionThresholdAbsolute !== null
-		) {
+		} else if ( config.connectionThresholdAbsolute !== undefined ) {
 			const isCustom = stored?.connectionThresholdAbsolute !== undefined;
 			console.log(
 				`Threshold:       ${ config.connectionThresholdAbsolute } concurrent requests${

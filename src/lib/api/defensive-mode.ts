@@ -226,11 +226,13 @@ export async function updateDefensiveMode(
 }
 
 /**
- * Enable Defensive Mode for an environment
+ * Internal helper to update defensive mode status
  */
-export async function enableDefensiveMode(
+async function updateDefensiveModeStatus(
 	appId: number,
-	envId: number
+	envId: number,
+	enabled: boolean,
+	operationName: string
 ): Promise< DefensiveModeResponse > {
 	const mutation = gql`
 		mutation UpdateDefensiveModeStatus($input: AppEnvironmentDefensiveModeUpdateStatusInput!) {
@@ -248,14 +250,13 @@ export async function enableDefensiveMode(
 			input: {
 				id: appId,
 				environmentId: envId,
-				enabled: true,
+				enabled,
 			},
 		},
 	} );
 
 	if ( ! response.data?.updateDefensiveModeStatus?.success ) {
-		const message =
-			response.data?.updateDefensiveModeStatus?.message || 'Failed to enable defensive mode';
+		const message = response.data?.updateDefensiveModeStatus?.message || operationName;
 		if ( message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
@@ -264,7 +265,6 @@ export async function enableDefensiveMode(
 		throw new Error( message );
 	}
 
-	// Query for updated config
 	const updatedConfig = await getDefensiveMode( appId, envId );
 
 	return {
@@ -279,54 +279,21 @@ export async function enableDefensiveMode(
 }
 
 /**
+ * Enable Defensive Mode for an environment
+ */
+export async function enableDefensiveMode(
+	appId: number,
+	envId: number
+): Promise< DefensiveModeResponse > {
+	return updateDefensiveModeStatus( appId, envId, true, 'Failed to enable defensive mode' );
+}
+
+/**
  * Disable Defensive Mode for an environment
  */
 export async function disableDefensiveMode(
 	appId: number,
 	envId: number
 ): Promise< DefensiveModeResponse > {
-	const mutation = gql`
-		mutation UpdateDefensiveModeStatus($input: AppEnvironmentDefensiveModeUpdateStatusInput!) {
-			updateDefensiveModeStatus(input: $input) {
-				success
-				message
-			}
-		}
-	`;
-
-	const api = API();
-	const response = await api.mutate< UpdateDefensiveModeStatusResponse >( {
-		mutation,
-		variables: {
-			input: {
-				id: appId,
-				environmentId: envId,
-				enabled: false,
-			},
-		},
-	} );
-
-	if ( ! response.data?.updateDefensiveModeStatus?.success ) {
-		const message =
-			response.data?.updateDefensiveModeStatus?.message || 'Failed to disable defensive mode';
-		if ( message.includes( 'permission' ) ) {
-			throw new Error(
-				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
-			);
-		}
-		throw new Error( message );
-	}
-
-	// Query for updated config
-	const updatedConfig = await getDefensiveMode( appId, envId );
-
-	return {
-		data: {
-			statusUpdated: true,
-			configUpdated: false,
-			stored: updatedConfig.data.stored,
-			effective: updatedConfig.data.effective,
-		},
-		status: 'success',
-	};
+	return updateDefensiveModeStatus( appId, envId, false, 'Failed to disable defensive mode' );
 }

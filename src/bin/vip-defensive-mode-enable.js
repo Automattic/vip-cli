@@ -65,15 +65,9 @@ export async function defensiveModeEnableCommand( arg, opt = {} ) {
 	console.log();
 	console.log( `Status:  ${ chalk.bold( 'ACTIVE' ) }` );
 
-	if (
-		config.connectionThresholdPercentage !== undefined &&
-		config.connectionThresholdPercentage !== null
-	) {
+	if ( config.connectionThresholdPercentage !== undefined ) {
 		console.log( `Threshold: ${ config.connectionThresholdPercentage }% PHP workers` );
-	} else if (
-		config.connectionThresholdAbsolute !== undefined &&
-		config.connectionThresholdAbsolute !== null
-	) {
+	} else if ( config.connectionThresholdAbsolute !== undefined ) {
 		console.log( `Threshold: ${ config.connectionThresholdAbsolute } concurrent requests` );
 	}
 }
