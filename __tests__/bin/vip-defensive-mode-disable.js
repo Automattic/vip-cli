@@ -5,10 +5,10 @@ import * as prompt from '../../src/lib/cli/prompt';
 import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-jest.spyOn( exit, 'withError' ).mockImplementation( msg => {
+jest.spyOn( exit, 'withError' ).mockImplementation( _msg => {
 	throw new Error( 'EXIT DEFENSIVE MODE WITH ERROR' );
 } );
-jest.spyOn( process, 'exit' ).mockImplementation( code => {
+jest.spyOn( process, 'exit' ).mockImplementation( _code => {
 	throw new Error( 'EXIT PROCESS' );
 } );
 

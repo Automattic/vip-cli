@@ -4,7 +4,7 @@ import * as exit from '../../src/lib/cli/exit';
 import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-jest.spyOn( exit, 'withError' ).mockImplementation( msg => {
+jest.spyOn( exit, 'withError' ).mockImplementation( _msg => {
 	throw new Error( 'EXIT DEFENSIVE MODE WITH ERROR' );
 } );
 
