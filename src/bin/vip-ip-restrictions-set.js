@@ -18,7 +18,7 @@ import {
 	getIPRestrictions,
 	updateIPRestrictions,
 	parseIPRestrictionsFile,
-} from '../lib/api/ip-restrictions.ts';
+} from '../lib/api/ip-restrictions';
 import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip ip-restrictions set';

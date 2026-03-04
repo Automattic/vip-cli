@@ -11,7 +11,7 @@ import chalk from 'chalk';
 import command from '../lib/cli/command';
 import { confirm } from '../lib/cli/prompt';
 import { formatEnvironment } from '../lib/cli/format';
-import { appQuery, getIPRestrictions, updateIPRestrictions } from '../lib/api/ip-restrictions.ts';
+import { appQuery, getIPRestrictions, updateIPRestrictions } from '../lib/api/ip-restrictions';
 import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip ip-restrictions remove-group';

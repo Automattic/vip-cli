@@ -10,7 +10,7 @@ import chalk from 'chalk';
  */
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
-import { appQuery, getIPRestrictions } from '../lib/api/ip-restrictions.ts';
+import { appQuery, getIPRestrictions } from '../lib/api/ip-restrictions';
 import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip ip-restrictions list';

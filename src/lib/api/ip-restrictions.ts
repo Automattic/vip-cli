@@ -29,6 +29,11 @@ export const appQuery = `
 			}
 		}
 	}
+	organization {
+		id
+		name
+		salesforceId
+	}
 `;
 
 // Types for IP Restrictions configuration

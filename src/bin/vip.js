@@ -38,6 +38,7 @@ const runCmd = async function () {
 		.command( 'dev-env', 'Create and manage VIP Local Development Environments.' )
 		.command( 'export', 'Export a copy of data associated with an environment.' )
 		.command( 'import', 'Import media or SQL database files to an environment.' )
+		.command( 'ip-restrictions', 'Manage IP access restrictions for an environment.' )
 		.command( 'logs', 'Retrieve Runtime Logs from an environment.' )
 		.command(
 			'search-replace',
