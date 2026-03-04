@@ -7,10 +7,14 @@ proxy:
 <% if ( multisite ) { %>
     - '*.<%= siteSlug %>.<%= domain %>'
 <% } %>
+<% if ( phpmyadmin ) { %>
   phpmyadmin:
     - <%= siteSlug %>-pma.<%= domain %>
+<% } %>
+<% if ( mailpit ) { %>
   mailpit:
     - <%= siteSlug %>-mailpit.<%= domain %>:8025
+<% } %>
 
 keys: false
 
@@ -134,6 +138,8 @@ services:
 <% if ( phpmyadmin ) { %>
   phpmyadmin:
     type: compose
+    ssl: true
+    sslExpose: false
     services:
       image: phpmyadmin:5
       command: /docker-entrypoint.sh apache2-foreground
@@ -244,6 +250,8 @@ services:
 
 <% if ( mailpit ) { %>
   mailpit:
+    ssl: true
+    sslExpose: false
     type: compose
     services:
       image: axllent/mailpit:latest

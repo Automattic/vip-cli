@@ -123,7 +123,6 @@ describe( 'getLogs', () => {
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			/* eslint-disable indent */
 			`[
 	{
 		"timestamp": "2021-11-05T20:18:36.234041811Z",
@@ -134,7 +133,6 @@ describe( 'getLogs', () => {
 		"message": "My container message 2"
 	}
 ]`
-			/* eslint-enable indent */
 		);
 
 		const trackingParams = {
@@ -178,9 +176,7 @@ describe( 'getLogs', () => {
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			/* eslint-disable max-len */
 			`"timestamp","message"\n"2021-11-05T20:18:36.234041811Z","My container message 1"\n"2021-11-09T20:47:07.301221112Z","My container message 2 has ""double quotes"", 'single quotes', commas, multiple${ os.EOL }lines${ os.EOL }, and	tabs"`
-			/* eslint-enable max-len */
 		);
 
 		const trackingParams = {

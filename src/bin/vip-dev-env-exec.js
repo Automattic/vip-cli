@@ -8,6 +8,7 @@ import {
 	processBooleanOption,
 	processSlug,
 	validateDependencies,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import { exec, getEnvironmentPath } from '../lib/dev-environment/dev-environment-core';
 import { bootstrapLando, isEnvUp } from '../lib/dev-environment/dev-environment-lando';
@@ -55,8 +56,8 @@ command( {
 	.option( 'quiet', 'Suppress informational messages.', undefined, processBooleanOption )
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
-		const slug = await getEnvironmentName( opt );
-		const lando = await bootstrapLando();
+		const slug = await getEnvironmentName( opt, opt.quiet );
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ), quiet: opt.quiet } );
 		validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );

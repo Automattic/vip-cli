@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { CombinedGraphQLErrors } from '@apollo/client/core';
 import { stdout } from '@wwa/single-line-log';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
@@ -52,10 +53,10 @@ command( {
 				},
 			} );
 		} catch ( error ) {
-			if ( error.graphQLErrors ) {
+			if ( CombinedGraphQLErrors.is( error ) ) {
 				let bail = false;
 
-				for ( const err of error.graphQLErrors ) {
+				for ( const err of error.errors ) {
 					if ( err.message !== 'Site is already syncing' ) {
 						bail = true;
 						console.log( chalk.red( 'Error:' ), err.message );

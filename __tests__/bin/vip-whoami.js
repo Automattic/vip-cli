@@ -40,10 +40,8 @@ describe( 'whoamiCommand()', () => {
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			/* eslint-disable indent */
 			`- Howdy VIP User!
 - Your user ID is 4`
-			/* eslint-enable indent */
 		);
 
 		const trackingParams = {
@@ -76,11 +74,9 @@ describe( 'whoamiCommand()', () => {
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith(
-			/* eslint-disable indent */
 			`- Howdy VIP User!
 - Your user ID is 4
 - Your account has VIP Staff permissions`
-			/* eslint-enable indent */
 		);
 
 		const trackingParams = {

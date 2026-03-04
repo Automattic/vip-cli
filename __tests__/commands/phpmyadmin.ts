@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return */
 /**
  * External dependencies
  */
@@ -53,7 +53,7 @@ jest.mocked( API ).mockImplementation(
 		( {
 			mutate: generatePMAAccessMutationMock,
 			query: pmaEnabledQueryMockTrue,
-		} as any )
+		} ) as any
 );
 
 describe( 'commands/PhpMyAdminCommand', () => {

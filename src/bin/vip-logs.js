@@ -70,7 +70,6 @@ export async function followLogs( opt ) {
 	// Set an initial default delay
 	let delay = DEFAULT_POLLING_DELAY_IN_SECONDS;
 
-	// eslint-disable-next-line no-constant-condition
 	while ( true ) {
 		const limit = isFirstRequest ? opt.limit : LIMIT_MAX;
 

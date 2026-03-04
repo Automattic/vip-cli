@@ -125,7 +125,10 @@ export const validateDependencies = ( lando: Lando ) => {
 	debug( 'Validation checks completed in %d ms', duration );
 };
 
-export async function getEnvironmentName( options: EnvironmentNameOptions ): Promise< string > {
+export async function getEnvironmentName(
+	options: EnvironmentNameOptions,
+	quiet = false
+): Promise< string > {
 	if ( options.slug ) {
 		return options.slug;
 	}
@@ -146,11 +149,13 @@ export async function getEnvironmentName( options: EnvironmentNameOptions ): Pro
 
 	if ( configurationFileOptions.slug && configurationFileOptions.meta ) {
 		const slug = configurationFileOptions.slug;
-		console.log(
-			`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
-				configurationFileOptions.meta[ 'configuration-path' ]
-			) }\n`
-		);
+		if ( ! quiet ) {
+			console.log(
+				`Using environment ${ chalk.blue.bold( slug ) } from ${ chalk.gray(
+					configurationFileOptions.meta[ 'configuration-path' ]
+				) }\n`
+			);
+		}
 
 		return slug;
 	}
@@ -232,7 +237,6 @@ export function getOptionsFromAppInfo( appInfo: AppInfo ): InstanceOptions {
 	const hasES = integrationsConfig[ 'enterprise-search' ]?.env?.status === 'enabled';
 
 	return {
-		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		title: appInfo.environment?.name || appInfo.name || '', // NOSONAR
 		multisite: Boolean( appInfo.environment?.isMultisite ),
 		mediaRedirectDomain: appInfo.environment?.primaryDomain,
@@ -577,7 +581,6 @@ function validateAppCodeLocalPath( providedPath: string ) {
 		}
 	}
 	if ( missingFiles.length > 0 ) {
-		// eslint-disable-next-line max-len
 		const message = `Provided path "${ providedPath }" is missing following files/folders: ${ missingFiles.join(
 			', '
 		) }. Learn more: https://docs.wpvip.com/wordpress-skeleton/`;
@@ -954,6 +957,19 @@ export function processStringOrBooleanOption( value: string | boolean ): string 
 export function processSlug( value: unknown ): string {
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
 	return ( value ?? '' ).toString().toLowerCase();
+}
+
+export function formatDevEnvLogTimestamp( date: Date ): string {
+	return date.toISOString().replace( /\..*$/, '' ).replace( /[-:]/g, '' ).replace( 'T', '-' );
+}
+
+export function formatDevEnvLogSlug( slug: string ): string {
+	return slug.replace( /[^a-z0-9_-]+/gi, '-' ).toLowerCase();
+}
+
+export function getDevEnvLogFile( slug?: string ): string {
+	const slugPart = slug ? formatDevEnvLogSlug( slug ) : 'all';
+	return `vip-dev-env-${ slugPart }-${ formatDevEnvLogTimestamp( new Date() ) }.log`;
 }
 
 declare function isNaN( value: unknown ): boolean;

@@ -5,7 +5,13 @@ import chalk from 'chalk';
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, setEnvVar, validateNameWithMessage } from '../lib/envvar/api';
-import { cancel, confirm, promptForValue } from '../lib/envvar/input';
+import {
+	cancel,
+	confirm,
+	promptForReloadManifest,
+	promptForValue,
+	showDeployWarning,
+} from '../lib/envvar/input';
 import { debug, getEnvContext } from '../lib/envvar/logging';
 import { readVariableFromFile } from '../lib/envvar/read-file';
 import { trackEvent } from '../lib/tracker';
@@ -111,7 +117,12 @@ export async function setEnvVarCommand( arg, opt ) {
 		}
 	}
 
-	await setEnvVar( opt.app.id, opt.env.id, name, value ).catch( async err => {
+	let reloadManifest = false;
+	if ( ! opt.skipConfirmation ) {
+		reloadManifest = await promptForReloadManifest( opt.app.typeId );
+	}
+
+	await setEnvVar( opt.app.id, opt.env.id, name, value, reloadManifest ).catch( async err => {
 		await trackEvent( 'envvar_set_mutation_error', { ...trackingParams, error: err.message } );
 
 		throw err;
@@ -120,11 +131,10 @@ export async function setEnvVarCommand( arg, opt ) {
 	await trackEvent( 'envvar_set_command_success', trackingParams );
 	console.log( chalk.green( `Successfully set environment variable ${ JSON.stringify( name ) }` ) );
 
-	if ( ! opt.skipConfirmation ) {
-		console.log(
-			chalk.bgYellow( chalk.bold( 'Important:' ) ),
-			'Updates to environment variables will not be available until the application’s next deploy.'
-		);
+	if ( reloadManifest ) {
+		console.log( chalk.yellow( 'Environment variable is active and available.' ) );
+	} else if ( ! opt.skipConfirmation ) {
+		showDeployWarning();
 	}
 }
 

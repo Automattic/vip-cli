@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { ApolloError } from '@apollo/client/core';
+import { CombinedGraphQLErrors } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
@@ -72,7 +72,10 @@ export class APIError extends Error {}
 export class WPCliCommandOverSSH {
 	private readonly track: CommandTracker;
 
-	constructor( private readonly app: App, private readonly env: AppEnvironment ) {
+	constructor(
+		private readonly app: App,
+		private readonly env: AppEnvironment
+	) {
 		this.track = makeCommandTracker( 'wp', {
 			app: app.id,
 			env: env.id,
@@ -272,12 +275,8 @@ export class WPCliCommandOverSSH {
 				},
 			} );
 		} catch ( error ) {
-			if ( error instanceof ApolloError ) {
-				const message = error.graphQLErrors
-					.map( err => {
-						return err.message;
-					} )
-					.join( '; ' );
+			if ( CombinedGraphQLErrors.is( error ) ) {
+				const message = error.errors.map( err => err.message ).join( '; ' );
 
 				throw new APIError( message );
 			}

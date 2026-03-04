@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return */
-
-import { Operation } from '@apollo/client/core';
-import { ServerError } from '@apollo/client/link/utils';
+import { ApolloClient, ApolloLink, ServerError } from '@apollo/client/core';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { OperationTypeNode } from 'graphql';
 import gql from 'graphql-tag';
 import { FetchError } from 'node-fetch';
 
@@ -41,12 +39,14 @@ const dummyQuery = gql`
 
 const mockOperation = {
 	operationName: 'TestQuery',
+	operationType: OperationTypeNode.QUERY,
 	query: dummyQuery,
 	variables: {},
 	extensions: [],
 	setContext: jest.fn(),
 	getContext: jest.fn(),
-} as Operation;
+	client: undefined as unknown as ApolloClient,
+} as ApolloLink.Operation;
 
 describe( 'API Retry Logic', () => {
 	beforeEach( () => {

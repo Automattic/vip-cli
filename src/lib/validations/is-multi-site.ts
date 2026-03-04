@@ -56,7 +56,7 @@ export async function isMultiSiteInSiteMeta( appId: number, envId: number ): Pro
 		exit.withError( `StartImport call failed: ${ GraphQlError }` );
 	}
 
-	if ( Array.isArray( res.data.app?.environments ) ) {
+	if ( Array.isArray( res.data?.app?.environments ) ) {
 		const environments = ( res.data.app as App ).environments;
 		if ( ! environments?.length ) {
 			isMultiSite.set( args, false );

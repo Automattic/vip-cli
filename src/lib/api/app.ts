@@ -1,9 +1,9 @@
-import { DocumentNode } from '@apollo/client';
-import { QueryOptions } from '@apollo/client/core/watchQueryOptions';
 import gql from 'graphql-tag';
 
-import { App, Exact, Scalars } from '../../graphqlTypes';
 import API from '../../lib/api';
+
+import type { App, Exact, Scalars } from '../../graphqlTypes';
+import type { DocumentNode } from '@apollo/client/core';
 
 type AppQueryVariables = Exact< {
 	name: Scalars[ 'String' ][ 'input' ];
@@ -23,7 +23,7 @@ interface AppByIdQueryResult {
 	app?: App;
 }
 
-interface AppQueryOptions extends QueryOptions {
+interface AppQueryOptions {
 	query: DocumentNode;
 	variables: {
 		id: number;
@@ -58,11 +58,7 @@ export default async function (
 			},
 		} );
 
-		if ( ! res.data.apps?.edges?.length ) {
-			return {};
-		}
-
-		return res.data.apps.edges[ 0 ];
+		return res.data?.apps?.edges?.[ 0 ] ?? {};
 	}
 
 	if ( typeof app === 'string' ) {
@@ -91,10 +87,5 @@ export default async function (
 	}
 
 	const res = await api.query< AppByIdQueryResult, AppByIdQueryVariables >( appQuery );
-
-	if ( ! res.data.app ) {
-		return {};
-	}
-
-	return res.data.app;
+	return res.data?.app ?? {};
 }

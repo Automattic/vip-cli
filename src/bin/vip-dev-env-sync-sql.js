@@ -6,6 +6,7 @@ import {
 	getEnvironmentName,
 	processBooleanOption,
 	processSlug,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import { parseLiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
@@ -59,14 +60,6 @@ const appQuery = `
 		primaryDomain { name }
 		uniqueLabel
 		isMultisite
-		wpSitesSDS(first:500) {
-			total
-			nodes {
-				id
-				blogId
-				homeUrl
-			}
-		}
 	}
 `;
 
@@ -122,14 +115,14 @@ command( {
 		} );
 		await trackerFn( 'execute' );
 
-		const lando = await bootstrapLando();
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 
 		const isUp = (
 			await Promise.all( [
 				isContainerRunning( lando, slug, 'php' ),
 				isContainerRunning( lando, slug, 'database' ),
 			] )
-		 ).every( Boolean );
+		).every( Boolean );
 
 		if ( ! isUp && ! opt.force ) {
 			await trackerFn( 'env_not_running_error', { errorMessage: 'Environment was not running' } );

@@ -163,8 +163,8 @@ export async function stopEnvironment( lando: Lando, slug: string ): Promise< vo
 export function createEnvironment(
 	lando: Lando,
 	instanceData: InstanceData,
-	integrationsConfig?: Record< string, IntegrationConfig > | undefined,
-	envVars?: Record< string, string > | undefined
+	integrationsConfig?: Record< string, IntegrationConfig >,
+	envVars?: Record< string, string >
 ): Promise< void > {
 	const slug = instanceData.siteSlug;
 	integrationsConfig ??= {};

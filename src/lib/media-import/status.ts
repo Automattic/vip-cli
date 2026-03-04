@@ -1,4 +1,4 @@
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
@@ -59,7 +59,7 @@ export interface MediaImportCheckStatusInput {
 }
 
 async function getStatus(
-	api: ApolloClient< NormalizedCacheObject >,
+	api: ApolloClient,
 	appId: number,
 	envId: number
 ): Promise< AppEnvironmentMediaImportStatus | null > {
@@ -69,7 +69,7 @@ async function getStatus(
 		fetchPolicy: 'network-only',
 	} );
 
-	const environments = response.data.app?.environments;
+	const environments = response.data?.app?.environments;
 
 	if ( ! environments?.length ) {
 		throw new Error( 'Unable to determine import status from environment' );
@@ -223,12 +223,14 @@ ${ maybeExitPrompt }
 				try {
 					mediaImportStatus = await getStatus( api, app.id ?? -1, env.id ?? -1 );
 					if ( ! mediaImportStatus ) {
+						// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 						return reject( {
 							error:
 								'Requested app/environment is not available for this operation. If you think this is not correct, please contact Support.',
 						} as ImportFailedError );
 					}
 				} catch ( error ) {
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { error: ( error as Error ).message } as ImportFailedError );
 				}
 
@@ -240,6 +242,7 @@ ${ maybeExitPrompt }
 					progressTracker.setStatus( mediaImportStatus );
 					overallStatus = 'FAILED';
 					setSuffixAndPrint();
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					return reject( { ...mediaImportStatus, error: 'Import FAILED' } );
 				}
 

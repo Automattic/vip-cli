@@ -59,11 +59,7 @@ async function getBackupJob( appId: number, envId: number ) {
 		fetchPolicy: 'network-only',
 	} );
 
-	const {
-		data: { app },
-	} = response;
-
-	return app?.environments?.[ 0 ]?.jobs?.[ 0 ] as Job | undefined;
+	return ( response.data?.app?.environments?.[ 0 ]?.jobs?.[ 0 ] ?? undefined ) as Job | undefined;
 }
 
 async function createBackupJob( appId: number, envId: number ) {

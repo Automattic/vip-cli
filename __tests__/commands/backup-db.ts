@@ -56,7 +56,7 @@ jest.mocked( API ).mockImplementation(
 		( {
 			query: queryMock,
 			mutate: mutationMock,
-		} as any )
+		} ) as any
 );
 
 describe( 'commands/BackupDBCommand', () => {

@@ -17,6 +17,7 @@ import {
 	processStringOrBooleanOption,
 	processSlug,
 	ensureValidPathsInOptions,
+	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
 import {
 	getConfigurationFileOptions,
@@ -102,7 +103,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		slug = await getEnvironmentName( environmentNameOptions );
 	}
 
-	const lando = await bootstrapLando();
+	const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
 	validateDependencies( lando );
 
 	debug( 'Args: ', arg, 'Options: ', opt );

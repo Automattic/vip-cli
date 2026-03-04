@@ -316,7 +316,6 @@ export const promptForUpdate = async (
 	const version = await _processComponentVersion( softwareSettings, component, opts.version );
 
 	const confirm: boolean =
-		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		opts.force || // NOSONAR
 		( await new Confirm( {
 			message: `Are you sure you want to upgrade ${ COMPONENT_NAMES[ component ] } to ${ version }?`,
@@ -357,7 +356,7 @@ const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterf
 		variables: { appId, envId },
 		fetchPolicy: 'network-only',
 	} );
-	const jobs = result.data.app?.environments?.[ 0 ]?.jobs ?? [];
+	const jobs = result.data?.app?.environments?.[ 0 ]?.jobs ?? [];
 
 	if ( jobs.length ) {
 		return jobs.reduce( ( prev, current ) =>
