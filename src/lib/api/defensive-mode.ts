@@ -200,12 +200,12 @@ export async function updateDefensiveMode(
 	if ( ! response.data?.updateDefensiveModeConfig?.success ) {
 		const message =
 			response.data?.updateDefensiveModeConfig?.message || 'Failed to update defensive mode';
-		if ( message && message.includes( 'permission' ) ) {
+		if ( message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( message || 'Failed to update defensive mode' );
+		throw new Error( message );
 	}
 
 	// Query for updated config
@@ -256,12 +256,12 @@ export async function enableDefensiveMode(
 	if ( ! response.data?.updateDefensiveModeStatus?.success ) {
 		const message =
 			response.data?.updateDefensiveModeStatus?.message || 'Failed to enable defensive mode';
-		if ( message && message.includes( 'permission' ) ) {
+		if ( message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( message || 'Failed to enable defensive mode' );
+		throw new Error( message );
 	}
 
 	// Query for updated config
@@ -309,12 +309,12 @@ export async function disableDefensiveMode(
 	if ( ! response.data?.updateDefensiveModeStatus?.success ) {
 		const message =
 			response.data?.updateDefensiveModeStatus?.message || 'Failed to disable defensive mode';
-		if ( message && message.includes( 'permission' ) ) {
+		if ( message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( message || 'Failed to disable defensive mode' );
+		throw new Error( message );
 	}
 
 	// Query for updated config
