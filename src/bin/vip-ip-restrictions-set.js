@@ -77,10 +77,9 @@ export async function ipRestrictionsSetCommand( arg, opt ) {
 
 		// Show what will change
 		const currentCount = currentConfig.data.groups?.length || 0;
-		const currentIPCount = currentConfig.data.groups?.reduce(
-			( sum, g ) => sum + g.ips.filter( ip => ip ).length,
-			0
-		) || 0;
+		const currentIPCount =
+			currentConfig.data.groups?.reduce( ( sum, g ) => sum + g.ips.filter( ip => ip ).length, 0 ) ||
+			0;
 		const newCount = newConfig.groups.length;
 		const newIPCount = newConfig.groups.reduce(
 			( sum, g ) => sum + g.ips.filter( ip => ip ).length,
@@ -98,7 +97,9 @@ export async function ipRestrictionsSetCommand( arg, opt ) {
 		console.log( chalk.gray( '─'.repeat( 50 ) ) );
 
 		if ( currentConfig.data.action !== newConfig.action ) {
-			console.log( chalk.yellow( '\n⚠️  Mode is changing! This will affect how IPs are treated.' ) );
+			console.log(
+				chalk.yellow( '\n⚠️  Mode is changing! This will affect how IPs are treated.' )
+			);
 		}
 
 		// Confirmation if not already provided
@@ -127,9 +128,9 @@ export async function ipRestrictionsSetCommand( arg, opt ) {
 
 		console.log(
 			chalk.green(
-				`\n✓ Successfully updated IP restrictions for ${ formatEnvironment(
-					opt.env.type
-				) } - ${ opt.app.name }`
+				`\n✓ Successfully updated IP restrictions for ${ formatEnvironment( opt.env.type ) } - ${
+					opt.app.name
+				}`
 			)
 		);
 		console.log(

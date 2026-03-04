@@ -74,9 +74,9 @@ export async function ipRestrictionsSetModeCommand( arg, opt ) {
 			)
 		);
 		console.log(
-			`Current mode: ${ chalk.bold(
-				currentMode.toUpperCase()
-			) } (${ getModeDescription( currentMode ) })`
+			`Current mode: ${ chalk.bold( currentMode.toUpperCase() ) } (${ getModeDescription(
+				currentMode
+			) })`
 		);
 		console.log(
 			`New mode: ${ chalk.bold( newMode.toUpperCase() ) } (${ getModeDescription( newMode ) })\n`

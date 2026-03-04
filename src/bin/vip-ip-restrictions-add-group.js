@@ -102,9 +102,9 @@ export async function ipRestrictionsAddGroupCommand( arg, opt ) {
 
 		console.log(
 			chalk.green(
-				`\n✓ Successfully added IP restriction group to ${ formatEnvironment(
-					opt.env.type
-				) } - ${ opt.app.name }`
+				`\n✓ Successfully added IP restriction group to ${ formatEnvironment( opt.env.type ) } - ${
+					opt.app.name
+				}`
 			)
 		);
 		console.log(

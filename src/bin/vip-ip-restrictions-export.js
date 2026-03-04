@@ -4,7 +4,11 @@
  * Internal dependencies
  */
 import command from '../lib/cli/command';
-import { appQuery, getIPRestrictions, formatIPRestrictionsFile } from '../lib/api/ip-restrictions.ts';
+import {
+	appQuery,
+	getIPRestrictions,
+	formatIPRestrictionsFile,
+} from '../lib/api/ip-restrictions.ts';
 import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip ip-restrictions export';

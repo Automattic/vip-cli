@@ -115,9 +115,11 @@ export async function ipRestrictionsRemoveGroupCommand( arg, opt ) {
 
 		console.log(
 			chalk.green(
-				`\n✓ Successfully removed ${ groupsToRemove.length } group(s) (${ totalRemovedIPs } IPs) from ${ formatEnvironment(
-					opt.env.type
-				) } - ${ opt.app.name }`
+				`\n✓ Successfully removed ${
+					groupsToRemove.length
+				} group(s) (${ totalRemovedIPs } IPs) from ${ formatEnvironment( opt.env.type ) } - ${
+					opt.app.name
+				}`
 			)
 		);
 		console.log(
