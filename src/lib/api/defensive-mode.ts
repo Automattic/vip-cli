@@ -64,6 +64,43 @@ export interface DefensiveModeResponse {
 	status: string;
 }
 
+// GraphQL response types
+interface DefensiveModeGraphQLConfig {
+	stored: DefensiveModeConfig | null;
+	effective: DefensiveModeConfig;
+}
+
+interface DefensiveModeQueryResponse {
+	app?: {
+		environments?: Array< {
+			defensiveMode?: {
+				config: DefensiveModeGraphQLConfig;
+			};
+		} >;
+	};
+}
+
+interface UpdateDefensiveModeConfigResponse {
+	updateDefensiveModeConfig?: {
+		success: boolean;
+		message?: string;
+	};
+}
+
+interface UpdateDefensiveModeStatusResponse {
+	updateDefensiveModeStatus?: {
+		success: boolean;
+		message?: string;
+	};
+}
+
+// Environment data type
+interface EnvironmentData {
+	defensiveMode?: {
+		config: DefensiveModeGraphQLConfig;
+	};
+}
+
 /**
  * Get current Defensive Mode configuration for an environment
  * Note: Data is fetched via appQuery and passed through opt.env.defensiveMode
@@ -71,7 +108,7 @@ export interface DefensiveModeResponse {
 export async function getDefensiveMode(
 	appId: number,
 	envId: number,
-	envData?: any
+	envData?: EnvironmentData
 ): Promise< DefensiveModeResponse > {
 	// If defensiveMode data was already loaded via appQuery, use it
 	if ( envData?.defensiveMode?.config ) {
@@ -116,7 +153,7 @@ export async function getDefensiveMode(
 	`;
 
 	const api = API();
-	const response = await api.query( {
+	const response = await api.query< DefensiveModeQueryResponse >( {
 		query,
 		variables: { appId, envId },
 	} );
@@ -149,7 +186,7 @@ export async function updateDefensiveMode(
 	`;
 
 	const api = API();
-	const response = await api.mutate( {
+	const response = await api.mutate< UpdateDefensiveModeConfigResponse >( {
 		mutation,
 		variables: {
 			input: {
@@ -163,12 +200,12 @@ export async function updateDefensiveMode(
 	if ( ! response.data?.updateDefensiveModeConfig?.success ) {
 		const message =
 			response.data?.updateDefensiveModeConfig?.message || 'Failed to update defensive mode';
-		if ( message.includes( 'permission' ) ) {
+		if ( message && message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( message );
+		throw new Error( message || 'Failed to update defensive mode' );
 	}
 
 	// Query for updated config
@@ -205,7 +242,7 @@ export async function enableDefensiveMode(
 	`;
 
 	const api = API();
-	const response = await api.mutate( {
+	const response = await api.mutate< UpdateDefensiveModeStatusResponse >( {
 		mutation,
 		variables: {
 			input: {
@@ -219,12 +256,12 @@ export async function enableDefensiveMode(
 	if ( ! response.data?.updateDefensiveModeStatus?.success ) {
 		const message =
 			response.data?.updateDefensiveModeStatus?.message || 'Failed to enable defensive mode';
-		if ( message.includes( 'permission' ) ) {
+		if ( message && message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( message );
+		throw new Error( message || 'Failed to enable defensive mode' );
 	}
 
 	// Query for updated config
@@ -258,7 +295,7 @@ export async function disableDefensiveMode(
 	`;
 
 	const api = API();
-	const response = await api.mutate( {
+	const response = await api.mutate< UpdateDefensiveModeStatusResponse >( {
 		mutation,
 		variables: {
 			input: {
@@ -272,12 +309,12 @@ export async function disableDefensiveMode(
 	if ( ! response.data?.updateDefensiveModeStatus?.success ) {
 		const message =
 			response.data?.updateDefensiveModeStatus?.message || 'Failed to disable defensive mode';
-		if ( message.includes( 'permission' ) ) {
+		if ( message && message.includes( 'permission' ) ) {
 			throw new Error(
 				'Insufficient permissions to manage Defensive Mode. Required role: Org Admin or App Admin'
 			);
 		}
-		throw new Error( message );
+		throw new Error( message || 'Failed to disable defensive mode' );
 	}
 
 	// Query for updated config

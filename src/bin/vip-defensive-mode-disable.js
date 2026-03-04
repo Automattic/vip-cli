@@ -82,7 +82,9 @@ export async function defensiveModeDisableCommand( arg, opt = {} ) {
 	console.log();
 	console.log(
 		chalk.green(
-			`✓ Defensive Mode ${ wasDisabled ? 'already ' : '' }disabled for ${ opt.app.name } (${ envName })`
+			`✓ Defensive Mode ${ wasDisabled ? 'already ' : '' }disabled for ${
+				opt.app.name
+			} (${ envName })`
 		)
 	);
 	console.log();
