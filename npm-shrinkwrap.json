@@ -121,7 +121,7 @@
         "@types/ejs": "^3.1.5",
         "@types/jest": "^30.0.0",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^24.0.0",
+        "@types/node": "^25.3.5",
         "@types/proxy-from-env": "^1.0.4",
         "@types/semver": "^7.5.5",
         "@types/shelljs": "^0.10.0",
@@ -4091,12 +4091,12 @@
       "license": "MIT"
     },
     "node_modules/@types/node": {
-      "version": "24.10.15",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.10.15.tgz",
-      "integrity": "sha512-BgjLoRuSr0MTI5wA6gMw9Xy0sFudAaUuvrnjgGx9wZ522fYYLA5SYJ+1Y30vTcJEG+DRCyDHx/gzQVfofYzSdg==",
+      "version": "25.3.5",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-25.3.5.tgz",
+      "integrity": "sha512-oX8xrhvpiyRCQkG1MFchB09f+cXftgIXb3a7UUa4Y3wpmZPw5tyZGTLWhlESOLq1Rq6oDlc8npVU2/9xiCuXMA==",
       "license": "MIT",
       "dependencies": {
-        "undici-types": "~7.16.0"
+        "undici-types": "~7.18.0"
       }
     },
     "node_modules/@types/proxy-from-env": {
@@ -11691,7 +11691,6 @@
       "version": "10.2.4",
       "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.4.tgz",
       "integrity": "sha512-oRjTw/97aTBN0RHbYCdtF1MQfvusSIBQM0IZEgzl6426+8jSC0nF1a/GmnVLpfB9yyr6g6FTqWqiZVbxrtaCIg==",
-      "dev": true,
       "license": "BlueOak-1.0.0",
       "dependencies": {
         "brace-expansion": "^5.0.2"
@@ -11707,7 +11706,6 @@
       "version": "4.0.4",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz",
       "integrity": "sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==",
-      "dev": true,
       "license": "MIT",
       "engines": {
         "node": "18 || 20 || >=22"
@@ -11717,7 +11715,6 @@
       "version": "5.0.3",
       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.3.tgz",
       "integrity": "sha512-fy6KJm2RawA5RcHkLa1z/ScpBeA762UF9KmZQxwIbDtRJrgLzM10depAiEQ+CXYcoiqW1/m96OAAoke2nE9EeA==",
-      "dev": true,
       "license": "MIT",
       "dependencies": {
         "balanced-match": "^4.0.2"
@@ -14417,9 +14414,9 @@
       }
     },
     "node_modules/undici-types": {
-      "version": "7.16.0",
-      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.16.0.tgz",
-      "integrity": "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==",
+      "version": "7.18.2",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz",
+      "integrity": "sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==",
       "license": "MIT"
     },
     "node_modules/unicode-canonical-property-names-ecmascript": {
