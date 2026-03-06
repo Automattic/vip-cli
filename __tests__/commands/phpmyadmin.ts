@@ -91,5 +91,16 @@ describe( 'commands/PhpMyAdminCommand', () => {
 			} );
 			expect( openUrl ).toHaveBeenCalledWith( 'http://test-url.com' );
 		} );
+
+		it( 'should print the URL to stdout instead of opening browser when print option is set', async () => {
+			const printCmd = new PhpMyAdminCommand( app, env, tracker );
+			const printOpenUrl = jest.spyOn( printCmd, 'openUrl' );
+			printOpenUrl.mockReset();
+			const consoleSpy = jest.spyOn( console, 'log' );
+			await printCmd.run( { print: true } );
+			expect( printOpenUrl ).not.toHaveBeenCalled();
+			expect( consoleSpy ).toHaveBeenCalledWith( 'http://test-url.com' );
+			consoleSpy.mockRestore();
+		} );
 	} );
 } );
