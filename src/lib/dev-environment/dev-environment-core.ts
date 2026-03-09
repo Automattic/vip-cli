@@ -103,7 +103,8 @@ interface WordPressTag {
 const STARTUP_READY_ATTEMPTS = 6;
 const STARTUP_READY_DELAY_MS = 2000;
 
-const sleep = ( ms: number ): Promise< void > => new Promise( resolve => setTimeout( resolve, ms ) );
+const sleep = ( ms: number ): Promise< void > =>
+	new Promise( resolve => setTimeout( resolve, ms ) );
 
 async function waitForEnvironmentToBeUp( lando: Lando, instancePath: string ): Promise< boolean > {
 	for ( let attempt = 1; attempt <= STARTUP_READY_ATTEMPTS; attempt++ ) {
