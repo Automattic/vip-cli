@@ -1,7 +1,7 @@
 # Defensive Mode CLI Commands
 
 **Commands**: `vip defensive-mode enable`, `vip defensive-mode disable`, `vip defensive-mode status`
-**Available in**: VIP-CLI 3.23.0+
+**Available in**: VIP-CLI 3.25.1+
 **Minimum Role**: Org Admin or App Admin (for enable/disable)
 
 ## Overview
