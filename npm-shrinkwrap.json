@@ -21,7 +21,7 @@
         "cli-table3": "^0.6.3",
         "configstore": "^8.0.0",
         "debug": "4.4.3",
-        "ejs": "^4.0.1",
+        "ejs": "^5.0.1",
         "enquirer": "2.4.1",
         "fetch-retry": "^6.0.0",
         "graphql": "16.13.1",
@@ -5470,6 +5470,7 @@
       "version": "1.0.2",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==",
+      "dev": true,
       "license": "MIT"
     },
     "node_modules/base64-js": {
@@ -5645,6 +5646,7 @@
       "version": "2.0.2",
       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.2.tgz",
       "integrity": "sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==",
+      "dev": true,
       "license": "MIT",
       "dependencies": {
         "balanced-match": "^1.0.0"
@@ -6572,13 +6574,10 @@
       "license": "MIT"
     },
     "node_modules/ejs": {
-      "version": "4.0.1",
-      "resolved": "https://registry.npmjs.org/ejs/-/ejs-4.0.1.tgz",
-      "integrity": "sha512-krvQtxc0btwSm/nvnt1UpnaFDFVJpJ0fdckmALpCgShsr/iGYHTnJiUliZTgmzq/UxTX33TtOQVKaNigMQp/6Q==",
+      "version": "5.0.1",
+      "resolved": "https://registry.npmjs.org/ejs/-/ejs-5.0.1.tgz",
+      "integrity": "sha512-COqBPFMxuPTPspXl2DkVYaDS3HtrD1GpzOGkNTJ1IYkifq/r9h8SVEFrjA3D9/VJGOEoMQcrlhpntcSUrM8k6A==",
       "license": "Apache-2.0",
-      "dependencies": {
-        "jake": "^10.9.1"
-      },
       "bin": {
         "ejs": "bin/cli.js"
       },
@@ -7925,27 +7924,6 @@
       },
       "engines": {
         "node": ">=16.0.0"
-      }
-    },
-    "node_modules/filelist": {
-      "version": "1.0.6",
-      "resolved": "https://registry.npmjs.org/filelist/-/filelist-1.0.6.tgz",
-      "integrity": "sha512-5giy2PkLYY1cP39p17Ech+2xlpTRL9HLspOfEgm0L6CwBXBTgsK5ou0JtzYuepxkaQ/tvhCFIJ5uXo0OrM2DxA==",
-      "license": "Apache-2.0",
-      "dependencies": {
-        "minimatch": "^5.0.1"
-      }
-    },
-    "node_modules/filelist/node_modules/minimatch": {
-      "version": "5.1.9",
-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-5.1.9.tgz",
-      "integrity": "sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==",
-      "license": "ISC",
-      "dependencies": {
-        "brace-expansion": "^2.0.1"
-      },
-      "engines": {
-        "node": ">=10"
       }
     },
     "node_modules/fill-range": {
@@ -9465,23 +9443,6 @@
       },
       "optionalDependencies": {
         "@pkgjs/parseargs": "^0.11.0"
-      }
-    },
-    "node_modules/jake": {
-      "version": "10.9.4",
-      "resolved": "https://registry.npmjs.org/jake/-/jake-10.9.4.tgz",
-      "integrity": "sha512-wpHYzhxiVQL+IV05BLE2Xn34zW1S223hvjtqk0+gsPrwd/8JNLXJgZZM/iPFsYc1xyphF+6M6EvdE5E9MBGkDA==",
-      "license": "Apache-2.0",
-      "dependencies": {
-        "async": "^3.2.6",
-        "filelist": "^1.0.4",
-        "picocolors": "^1.1.1"
-      },
-      "bin": {
-        "jake": "bin/cli.js"
-      },
-      "engines": {
-        "node": ">=10"
       }
     },
     "node_modules/jest": {
@@ -12317,6 +12278,7 @@
       "version": "1.1.1",
       "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
       "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+      "dev": true,
       "license": "ISC"
     },
     "node_modules/picomatch": {

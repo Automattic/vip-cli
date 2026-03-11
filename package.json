@@ -149,7 +149,7 @@
     "cli-table3": "^0.6.3",
     "configstore": "^8.0.0",
     "debug": "4.4.3",
-    "ejs": "^4.0.1",
+    "ejs": "^5.0.1",
     "enquirer": "2.4.1",
     "fetch-retry": "^6.0.0",
     "graphql": "16.13.1",
