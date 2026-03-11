@@ -8,11 +8,11 @@ command()
 	.command( 'validate-sql', 'Validate a local SQL database file prior to import.' )
 	.command(
 		'validate-files',
-		'Validate the directory structure and contents of a local media file directory prior to archiving and uploading it to a publicly accessible URL.'
+		'Validate that the directory structure and contents of a local media file directory can be successfully importedß.'
 	)
 	.command(
 		'media',
-		'Import media files to an environment from an archived file located at a publicly accessible URL.'
+		'Import media files to a production environment from an archived file at a local path or a publicly accessible remote URL.'
 	)
 	.example(
 		'vip @example-app.develop import sql example-file.sql',
