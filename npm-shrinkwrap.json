@@ -1,12 +1,12 @@
 {
   "name": "@automattic/vip",
-  "version": "3.25.1-dev.0",
+  "version": "3.25.1",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@automattic/vip",
-      "version": "3.25.1-dev.0",
+      "version": "3.25.1",
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
@@ -21,7 +21,7 @@
         "cli-table3": "^0.6.3",
         "configstore": "^8.0.0",
         "debug": "4.4.3",
-        "ejs": "^4.0.1",
+        "ejs": "^5.0.1",
         "enquirer": "2.4.1",
         "fetch-retry": "^6.0.0",
         "graphql": "16.13.1",
@@ -29,7 +29,7 @@
         "https-proxy-agent": "^7.0.6",
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
-        "lando": "github:automattic/lando-cli#83ccd88dca26aaf244aeaa07ed74b8efc4d463b5",
+        "lando": "github:automattic/lando-cli#c7dd51e8fb341e59e0e51a1aac453aa81dc2faf6",
         "node-fetch": "^3.3.2",
         "node-stream-zip": "1.15.0",
         "open": "^11.0.0",
@@ -5226,9 +5226,9 @@
       }
     },
     "node_modules/axios": {
-      "version": "1.13.5",
-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.13.5.tgz",
-      "integrity": "sha512-cz4ur7Vb0xS4/KUN0tPWe44eqxrIu31me+fbang3ijiNscE129POzipJJA6zniq2C/Z6sJCjMimjS8Lc/GAs8Q==",
+      "version": "1.13.6",
+      "resolved": "https://registry.npmjs.org/axios/-/axios-1.13.6.tgz",
+      "integrity": "sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==",
       "license": "MIT",
       "dependencies": {
         "follow-redirects": "^1.15.11",
@@ -5470,6 +5470,7 @@
       "version": "1.0.2",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==",
+      "dev": true,
       "license": "MIT"
     },
     "node_modules/base64-js": {
@@ -5645,6 +5646,7 @@
       "version": "2.0.2",
       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.2.tgz",
       "integrity": "sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==",
+      "dev": true,
       "license": "MIT",
       "dependencies": {
         "balanced-match": "^1.0.0"
@@ -6572,13 +6574,10 @@
       "license": "MIT"
     },
     "node_modules/ejs": {
-      "version": "4.0.1",
-      "resolved": "https://registry.npmjs.org/ejs/-/ejs-4.0.1.tgz",
-      "integrity": "sha512-krvQtxc0btwSm/nvnt1UpnaFDFVJpJ0fdckmALpCgShsr/iGYHTnJiUliZTgmzq/UxTX33TtOQVKaNigMQp/6Q==",
+      "version": "5.0.1",
+      "resolved": "https://registry.npmjs.org/ejs/-/ejs-5.0.1.tgz",
+      "integrity": "sha512-COqBPFMxuPTPspXl2DkVYaDS3HtrD1GpzOGkNTJ1IYkifq/r9h8SVEFrjA3D9/VJGOEoMQcrlhpntcSUrM8k6A==",
       "license": "Apache-2.0",
-      "dependencies": {
-        "jake": "^10.9.1"
-      },
       "bin": {
         "ejs": "bin/cli.js"
       },
@@ -7925,27 +7924,6 @@
       },
       "engines": {
         "node": ">=16.0.0"
-      }
-    },
-    "node_modules/filelist": {
-      "version": "1.0.6",
-      "resolved": "https://registry.npmjs.org/filelist/-/filelist-1.0.6.tgz",
-      "integrity": "sha512-5giy2PkLYY1cP39p17Ech+2xlpTRL9HLspOfEgm0L6CwBXBTgsK5ou0JtzYuepxkaQ/tvhCFIJ5uXo0OrM2DxA==",
-      "license": "Apache-2.0",
-      "dependencies": {
-        "minimatch": "^5.0.1"
-      }
-    },
-    "node_modules/filelist/node_modules/minimatch": {
-      "version": "5.1.9",
-      "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-5.1.9.tgz",
-      "integrity": "sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==",
-      "license": "ISC",
-      "dependencies": {
-        "brace-expansion": "^2.0.1"
-      },
-      "engines": {
-        "node": ">=10"
       }
     },
     "node_modules/fill-range": {
@@ -9465,23 +9443,6 @@
       },
       "optionalDependencies": {
         "@pkgjs/parseargs": "^0.11.0"
-      }
-    },
-    "node_modules/jake": {
-      "version": "10.9.4",
-      "resolved": "https://registry.npmjs.org/jake/-/jake-10.9.4.tgz",
-      "integrity": "sha512-wpHYzhxiVQL+IV05BLE2Xn34zW1S223hvjtqk0+gsPrwd/8JNLXJgZZM/iPFsYc1xyphF+6M6EvdE5E9MBGkDA==",
-      "license": "Apache-2.0",
-      "dependencies": {
-        "async": "^3.2.6",
-        "filelist": "^1.0.4",
-        "picocolors": "^1.1.1"
-      },
-      "bin": {
-        "jake": "bin/cli.js"
-      },
-      "engines": {
-        "node": ">=10"
       }
     },
     "node_modules/jest": {
@@ -11149,11 +11110,11 @@
     "node_modules/lando": {
       "name": "@lando/cli",
       "version": "3.6.5",
-      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#83ccd88dca26aaf244aeaa07ed74b8efc4d463b5",
-      "integrity": "sha512-2RJ5ZwT4eiHn67mWYNAayGlE1e7hsJBoplPHb+qAg69VttLWHUpXnaoKnHglITe5TDMxBG6+5gInIAaypB0EaQ==",
+      "resolved": "git+ssh://git@github.com/automattic/lando-cli.git#c7dd51e8fb341e59e0e51a1aac453aa81dc2faf6",
+      "integrity": "sha512-nowflXlhDTXXKPwCi2iH0pb7/HGJUmkthG6lqszymLzwR+XIok72F5e8bbaZHKYCftDLoar9BWR3H0JYdDwxLQ==",
       "license": "GPL-3.0",
       "dependencies": {
-        "axios": "^1.13.5",
+        "axios": "^1.13.6",
         "bluebird": "^3.4.1",
         "chalk": "^4.1.2",
         "cli-table3": "^0.6.5",
@@ -12317,6 +12278,7 @@
       "version": "1.1.1",
       "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
       "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+      "dev": true,
       "license": "ISC"
     },
     "node_modules/picomatch": {
