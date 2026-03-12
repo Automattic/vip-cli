@@ -8,7 +8,7 @@ command()
 	.command( 'validate-sql', 'Validate a local SQL database file prior to import.' )
 	.command(
 		'validate-files',
-		'Validate that the directory structure and contents of a local media file directory can be successfully importedß.'
+		'Validate that the directory structure and contents of a local media file directory can be successfully imported.'
 	)
 	.command(
 		'media',
