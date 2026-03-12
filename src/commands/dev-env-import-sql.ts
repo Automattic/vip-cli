@@ -171,7 +171,7 @@ export class DevEnvImportSQLCommand {
 				'--max-threads-for-index-creation=10',
 				'--skip-triggers',
 				'--skip-post',
-				'--innodb-optimize-keys',
+				'--optimize-keys',
 				'--checksum=SKIP',
 				'--metadata-refresh-interval=2000000',
 				'--stream',
