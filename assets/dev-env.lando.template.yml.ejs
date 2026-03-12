@@ -218,6 +218,8 @@ services:
       environment:
         LANDO_NO_SCRIPTS: 1
         LANDO_NEEDS_EXEC: 1
+        LANDO_HOST_UID: ${LANDO_HOST_USER_ID}
+        LANDO_HOST_GID: ${LANDO_HOST_GROUP_ID}
     volumes:
       mu-plugins: {}
     initOnly: true
@@ -237,6 +239,9 @@ services:
         - clientcode_private:/clientcode/private
         - clientcode_themes:/clientcode/themes
         - clientcode_vipconfig:/clientcode/vip-config
+      environment:
+        LANDO_HOST_UID: ${LANDO_HOST_USER_ID}
+        LANDO_HOST_GID: ${LANDO_HOST_GROUP_ID}
     volumes:
       clientcode_clientmuPlugins: {}
       clientcode_images: {}
