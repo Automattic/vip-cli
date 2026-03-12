@@ -166,7 +166,7 @@
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wwa/socket.io-stream@^0.10.0",
-    "socks-proxy-agent": "^8.0.5",
+    "socks-proxy-agent": "^9.0.0",
     "ssh2": "1.17.0",
     "tar": "^7.4.0",
     "update-notifier": "7.3.1",
