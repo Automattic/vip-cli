@@ -1,10 +1,13 @@
-import args from 'args';
 import chalk from 'chalk';
+import { Command } from 'commander';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
-import { parseEnvAliasFromArgv } from './envAlias';
+import { isAlias, parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
 import { formatData, formatSearchReplaceValues } from './format';
 import { confirm } from './prompt';
@@ -35,16 +38,247 @@ process.on( 'unhandledRejection', uncaughtError );
 let _opts = {};
 
 let alreadyConfirmedDebugAttachment = false;
+const RESERVED_AUTO_SHORT_ALIASES = new Set( [ 'h', 'v', 'd' ] );
+
+function normalizeUsage( program, usage ) {
+	if ( ! usage ) {
+		return;
+	}
+
+	const [ rootCommand, ...rest ] = usage.trim().split( /\s+/ );
+	if ( rootCommand ) {
+		program.name( rootCommand );
+	}
+
+	if ( rest.length ) {
+		const usageString = rest.join( ' ' );
+		program.usage(
+			usageString.includes( '[options]' ) ? usageString : `${ usageString } [options]`
+		);
+	}
+}
+
+function createOptionDefinition( name, description, defaultValue, parseFn, usedShortNames ) {
+	const isArray = Array.isArray( name );
+	const shortName = isArray ? name[ 0 ] : null;
+	const longName = isArray ? name[ 1 ] : name;
+	const normalizedLongName = String( longName ).trim().replace( /^--?/, '' );
+	const explicitShortName = shortName ? String( shortName ).trim().replace( /^-/, '' ) : null;
+	let normalizedShortName = explicitShortName;
+
+	if ( ! normalizedShortName ) {
+		const autoShortName = normalizedLongName.charAt( 0 );
+		const canUseAutoShortName =
+			autoShortName &&
+			! RESERVED_AUTO_SHORT_ALIASES.has( autoShortName ) &&
+			! usedShortNames.has( autoShortName );
+
+		if ( canUseAutoShortName ) {
+			normalizedShortName = autoShortName;
+		}
+	}
+
+	if ( normalizedShortName ) {
+		usedShortNames.add( normalizedShortName );
+	}
+	const isBooleanOption = typeof defaultValue === 'boolean';
+	const usesOptionalValue = ! isBooleanOption;
+	const parseOptionValue = value => {
+		if ( parseFn ) {
+			return parseFn( value );
+		}
+
+		return value;
+	};
+
+	let parser;
+	if ( usesOptionalValue ) {
+		parser = ( value, previousValue ) => {
+			const parsedValue = parseOptionValue( value );
+			if ( previousValue === undefined ) {
+				return parsedValue;
+			}
+
+			if ( Array.isArray( previousValue ) ) {
+				return [ ...previousValue, parsedValue ];
+			}
+
+			return [ previousValue, parsedValue ];
+		};
+	}
+
+	let flags = `--${ normalizedLongName }`;
+	if ( usesOptionalValue ) {
+		flags += ' [value]';
+	}
+
+	if ( normalizedShortName ) {
+		flags = `-${ normalizedShortName }, ${ flags }`;
+	}
+
+	return {
+		flags,
+		description,
+		defaultValue,
+		parser,
+	};
+}
+
+class CommanderArgsCompat {
+	constructor( opts ) {
+		this.details = {
+			commands: [],
+		};
+		this.sub = [];
+		this.examplesList = [];
+		this.usedShortNames = new Set();
+		this._opts = opts;
+		this.program = new Command();
+		this.program.allowUnknownOption( true );
+		this.program.allowExcessArguments( true );
+		this.program.helpOption( false );
+		normalizeUsage( this.program, this._opts.usage );
+	}
+
+	option( name, description, defaultValue, parseFn ) {
+		const definition = createOptionDefinition(
+			name,
+			description,
+			defaultValue,
+			parseFn,
+			this.usedShortNames
+		);
+		const { flags, parser } = definition;
+
+		if ( parser && defaultValue !== undefined ) {
+			this.program.option( flags, description, parser, defaultValue );
+		} else if ( parser ) {
+			this.program.option( flags, description, parser );
+		} else if ( defaultValue !== undefined ) {
+			this.program.option( flags, description, defaultValue );
+		} else {
+			this.program.option( flags, description );
+		}
+
+		return this;
+	}
+
+	command( name, description = '' ) {
+		this.details.commands.push( {
+			usage: name,
+			description,
+		} );
+
+		return this;
+	}
+
+	example( usage, description ) {
+		this.examplesList.push( {
+			usage,
+			description,
+		} );
+
+		return this;
+	}
+
+	examples( examples = [] ) {
+		for ( const example of examples ) {
+			this.example( example.usage, example.description );
+		}
+
+		return this;
+	}
+
+	showVersion() {
+		console.log( pkg.version );
+		process.exit( 0 );
+	}
+
+	showHelp() {
+		const lines = [ this.program.helpInformation().trimEnd() ];
+
+		if ( this.details.commands.length ) {
+			lines.push( '' );
+			lines.push( 'Commands:' );
+			for ( const entry of this.details.commands ) {
+				const commandName = entry.usage.padEnd( 26, ' ' );
+				lines.push( `  ${ commandName }${ entry.description }` );
+			}
+		}
+
+		if ( this.examplesList.length ) {
+			lines.push( '' );
+			lines.push( 'Examples:' );
+			for ( const example of this.examplesList ) {
+				lines.push( `  - ${ example.description }` );
+				lines.push( `    $ ${ example.usage }` );
+			}
+		}
+
+		console.log( lines.join( '\n' ) );
+		process.exit( 0 );
+	}
+
+	isDefined( value, key ) {
+		if ( key !== 'commands' ) {
+			return false;
+		}
+
+		return this.details.commands.some( entry => entry.usage === value );
+	}
+
+	parse( argv ) {
+		this.program.parse( argv, { from: 'node' } );
+		this.sub = this.program.args.slice();
+		return this.program.opts();
+	}
+
+	executeSubcommand( argv, parsedAlias, subcommand ) {
+		const currentScript = argv[ 1 ];
+		const extension = path.extname( currentScript );
+		const baseScriptPath = extension ? currentScript.slice( 0, -extension.length ) : currentScript;
+		const childScriptPath = extension
+			? `${ baseScriptPath }-${ subcommand }${ extension }`
+			: `${ baseScriptPath }-${ subcommand }`;
+		const aliasFromRawArgv = argv.slice( 2 ).find( arg => isAlias( arg ) );
+		const subcommandIndex = parsedAlias.argv.findIndex( ( arg, index ) => {
+			return index > 1 && arg === subcommand;
+		} );
+
+		let childArgs = subcommandIndex > -1 ? parsedAlias.argv.slice( subcommandIndex + 1 ) : [];
+
+		if ( aliasFromRawArgv ) {
+			childArgs = [ aliasFromRawArgv, ...childArgs ];
+		}
+
+		let runResult;
+		if ( fs.existsSync( childScriptPath ) ) {
+			runResult = spawnSync( process.execPath, [ childScriptPath, ...childArgs ], {
+				stdio: 'inherit',
+				env: process.env,
+			} );
+		} else {
+			const fallbackCommand = `${ path.basename( baseScriptPath ) }-${ subcommand }`;
+			runResult = spawnSync( fallbackCommand, childArgs, {
+				stdio: 'inherit',
+				env: process.env,
+				shell: process.platform === 'win32',
+			} );
+		}
+
+		if ( runResult.error ) {
+			throw runResult.error;
+		}
+
+		process.exit( runResult.status ?? 1 );
+	}
+}
 
 /**
  * @param {string[]} argv
  */
 // eslint-disable-next-line complexity
-args.argv = async function ( argv, cb ) {
-	if ( process.platform !== 'win32' && argv[ 1 ]?.endsWith( '.js' ) ) {
-		argv[ 1 ] = argv[ 1 ].slice( 0, -3 );
-	}
-
+CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',
@@ -55,25 +289,13 @@ args.argv = async function ( argv, cb ) {
 	}
 	const parsedAlias = parseEnvAliasFromArgv( argv );
 
-	// A usage option allows us to override the default usage text, which isn't
-	// accurate for subcommands. By default, it will display something like (note
-	// the hyphen):
-	//   Usage: vip command-subcommand [options]
-	//
-	// We can pass "vip command subcommand" to the name param for more accurate
-	// usage text:
-	//   Usage: vip command subcommand [options]
-	//
-	// It also allows us to represent required args in usage text:
-	//   Usage: vip command subcommand <arg1> <arg2> [options]
-	const name = _opts.usage || null;
+	const options = this.parse( parsedAlias.argv );
 
-	const options = this.parse( parsedAlias.argv, {
-		help: false,
-		name,
-		version: false,
-		debug: false,
-	} );
+	// If there's a sub-command, run that instead
+	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
+		this.executeSubcommand( argv, parsedAlias, this.sub[ 0 ] );
+		return {};
+	}
 
 	if ( _opts.format && ! options.format ) {
 		options.format = 'table';
@@ -111,11 +333,6 @@ args.argv = async function ( argv, cb ) {
 		exit.withError( error );
 	}
 
-	// If there's a sub-command, run that instead
-	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
-		return {};
-	}
-
 	if ( process.env.NODE_ENV !== 'test' ) {
 		const { default: updateNotifier } = await import( 'update-notifier' );
 		updateNotifier( { pkg, updateCheckInterval: 1000 * 60 * 60 * 24 } ).notify( {
@@ -123,18 +340,7 @@ args.argv = async function ( argv, cb ) {
 		} );
 	}
 
-	// `help` and `version` are always defined as subcommands
-	const customCommands = this.details.commands.filter( command => {
-		switch ( command.usage ) {
-			case 'help':
-			case 'version':
-			case 'debug':
-				return false;
-
-			default:
-				return true;
-		}
-	} );
+	const customCommands = this.details.commands;
 
 	// Show help if no args passed
 	if ( Boolean( customCommands.length ) && ! this.sub.length ) {
@@ -159,6 +365,7 @@ args.argv = async function ( argv, cb ) {
 	if (
 		! _opts.wildcardCommand &&
 		this.sub[ _opts.requiredArgs ] &&
+		subCommands.length &&
 		0 > subCommands.indexOf( this.sub[ _opts.requiredArgs ] )
 	) {
 		const subcommand = this.sub.join( ' ' );
@@ -420,7 +627,7 @@ args.argv = async function ( argv, cb ) {
 					info.push( { key: 'Launched?', value: `${ chalk.cyan( launched ) }` } );
 				}
 
-				if ( this.sub ) {
+				if ( this.sub.length ) {
 					info.push( { key: 'SQL File', value: `${ chalk.blueBright( this.sub ) }` } );
 				}
 
@@ -483,7 +690,7 @@ args.argv = async function ( argv, cb ) {
 
 			case 'import-media': {
 				const isUrl =
-					this.sub &&
+					this.sub.length &&
 					( String( this.sub ).startsWith( 'http://' ) ||
 						String( this.sub ).startsWith( 'https://' ) );
 				const archiveLabel = isUrl ? 'Archive URL' : 'Archive Path';
@@ -603,7 +810,7 @@ function validateOpts( opts ) {
 }
 
 /**
- * @returns {args}
+ * @returns {CommanderArgsCompat}
  */
 export default function ( opts ) {
 	_opts = {
@@ -617,6 +824,8 @@ export default function ( opts ) {
 		wildcardCommand: false,
 		...opts,
 	};
+
+	const args = new CommanderArgsCompat( _opts );
 
 	if ( _opts.appContext || _opts.requireConfirm ) {
 		args.option(
@@ -642,15 +851,17 @@ export default function ( opts ) {
 
 	// Add help and version to all subcommands
 	args.option(
-		'help',
-		'Retrieve a description, examples, and available options for a (sub)command.'
+		[ 'h', 'help' ],
+		'Retrieve a description, examples, and available options for a (sub)command.',
+		false
 	);
 	args.option(
-		'version',
-		'Retrieve the version number of VIP-CLI currently installed on the local machine.'
+		[ 'v', 'version' ],
+		'Retrieve the version number of VIP-CLI currently installed on the local machine.',
+		false
 	);
 	args.option(
-		'debug',
+		[ 'd', 'debug' ],
 		'Generate verbose output during command execution to help identify or fix errors or bugs.'
 	);
 

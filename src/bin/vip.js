@@ -49,7 +49,7 @@ const runCmd = async function () {
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
 
-	cmd.argv( process.argv );
+	await cmd.argv( process.argv );
 };
 
 /**

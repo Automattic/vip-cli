@@ -28,6 +28,7 @@ import {
 	LandoLogsOptions,
 	LandoExecOptions,
 	getProxyContainer,
+	isEnvUp,
 	removeProxyCache,
 } from './dev-environment-lando';
 import { AppEnvironment } from '../../graphqlTypes';
@@ -99,6 +100,26 @@ interface WordPressTag {
 	prerelease: boolean;
 }
 
+const STARTUP_READY_ATTEMPTS = 6;
+const STARTUP_READY_DELAY_MS = 2000;
+
+const sleep = ( ms: number ): Promise< void > =>
+	new Promise( resolve => setTimeout( resolve, ms ) );
+
+async function waitForEnvironmentToBeUp( lando: Lando, instancePath: string ): Promise< boolean > {
+	for ( let attempt = 1; attempt <= STARTUP_READY_ATTEMPTS; attempt++ ) {
+		if ( await isEnvUp( lando, instancePath ) ) {
+			return true;
+		}
+
+		if ( attempt < STARTUP_READY_ATTEMPTS ) {
+			await sleep( STARTUP_READY_DELAY_MS );
+		}
+	}
+
+	return false;
+}
+
 export interface PostStartOptions {
 	openVSCode: boolean;
 	openCursor: boolean;
@@ -139,6 +160,21 @@ export async function startEnvironment(
 		await landoStart( lando, instancePath );
 	} else {
 		await landoRebuild( lando, instancePath );
+	}
+
+	let isEnvironmentUp = await waitForEnvironmentToBeUp( lando, instancePath );
+	if ( ! isEnvironmentUp ) {
+		// A second startup pass helps recover after Docker network auto-cleanup edge cases.
+		await landoStart( lando, instancePath );
+		isEnvironmentUp = await waitForEnvironmentToBeUp( lando, instancePath );
+	}
+
+	if ( ! isEnvironmentUp ) {
+		throw new UserError(
+			`Environment "${ slug }" did not reach a running state. Please try "${ chalk.bold(
+				`vip dev-env start --slug ${ slug }`
+			) }" again.`
+		);
 	}
 
 	await printEnvironmentInfo( lando, slug, { extended: false } );
