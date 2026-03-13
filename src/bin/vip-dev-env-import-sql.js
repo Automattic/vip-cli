@@ -66,7 +66,7 @@ command( {
 	.examples( examples )
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const [ fileName ] = unmatchedArgs;
-		const slug = await getEnvironmentName( opt );
+		const slug = await getEnvironmentName( opt, opt.quiet );
 		if ( opt.searchReplace && ! Array.isArray( opt.searchReplace ) ) {
 			opt.searchReplace = [ opt.searchReplace ];
 		}

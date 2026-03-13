@@ -157,6 +157,8 @@ const renderTemplateFile = async (
 
 	return ejs.renderFile( filePath, templateData );
 };
+const sleep = ( ms: number ): Promise< void > =>
+	new Promise( resolve => setTimeout( resolve, ms ) );
 
 async function waitForEnvironmentToBeUp( lando: Lando, instancePath: string ): Promise< boolean > {
 	for ( let attempt = 1; attempt <= STARTUP_READY_ATTEMPTS; attempt++ ) {
