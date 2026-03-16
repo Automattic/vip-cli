@@ -12548,10 +12548,13 @@
       }
     },
     "node_modules/proxy-from-env": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.0.0.tgz",
-      "integrity": "sha512-h2lD3OfRraP3R51rNFKIE8nX+qoLr1mE74X91YhVxtDbt+OD6ntoNZv56+JgI4RCdtwQ5eexsOk1KdOQDfvPCQ==",
-      "license": "MIT"
+      "version": "2.1.0",
+      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz",
+      "integrity": "sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=10"
+      }
     },
     "node_modules/pump": {
       "version": "3.0.3",
