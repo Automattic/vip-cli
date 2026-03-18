@@ -32,7 +32,6 @@ import {
 import { trackEvent } from '../tracker';
 import UserError from '../user-error';
 
-import type Lando from 'lando';
 import type {
 	AppInfo,
 	ComponentConfig,
@@ -43,6 +42,7 @@ import type {
 	ConfigurationFileOptions,
 	MultisiteKind,
 } from './types';
+import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

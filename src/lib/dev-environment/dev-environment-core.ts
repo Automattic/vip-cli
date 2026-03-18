@@ -16,7 +16,6 @@ import {
 	promptForWordPress,
 	resolvePath,
 } from './dev-environment-cli';
-import { loadLandoModule } from './lando-loader';
 import {
 	landoDestroy,
 	landoInfo,
@@ -31,6 +30,7 @@ import {
 	isEnvUp,
 	removeProxyCache,
 } from './dev-environment-lando';
+import { loadLandoModule } from './lando-loader';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
@@ -105,7 +105,7 @@ interface WordPressTag {
 const STARTUP_READY_ATTEMPTS = 6;
 const STARTUP_READY_DELAY_MS = 2000;
 
-let dockerComposifyFromLando: (( value: string ) => string) | null = null;
+let dockerComposifyFromLando: ( ( value: string ) => string ) | null = null;
 
 const dockerComposify = ( value: string ): string => {
 	if ( ! dockerComposifyFromLando ) {
@@ -156,7 +156,7 @@ const renderTemplateFile = async (
 	}
 
 	return ejs.renderFile( filePath, templateData );
-}
+};
 
 async function waitForEnvironmentToBeUp( lando: Lando, instancePath: string ): Promise< boolean > {
 	for ( let attempt = 1; attempt <= STARTUP_READY_ATTEMPTS; attempt++ ) {

@@ -16,21 +16,21 @@ import {
 	updateEnvironment,
 	writeEnvironmentData,
 } from './dev-environment-core';
-import { loadLandoModule, resolveLandoModule } from './lando-loader';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
+import { loadLandoModule, resolveLandoModule } from './lando-loader';
+import { getRuntimeModeLabel } from '../cli/runtime-mode';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import env from '../env';
-import { getRuntimeModeLabel } from '../cli/runtime-mode';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
 
 import type { NetworkInspectInfo } from 'dockerode';
 import type App from 'lando/lib/app';
 import type { ScanResult } from 'lando/lib/app';
+import type Landerode from 'lando/lib/docker';
 import type { LandoConfig } from 'lando/lib/lando';
 import type Lando from 'lando/lib/lando';
 import type { AppInfo } from 'lando/plugins/lando-core/lib/utils';
-import type Landerode from 'lando/lib/docker';
 import type { StdioOptions } from 'node:child_process';
 
 export interface LandoExecOptions {
@@ -78,7 +78,7 @@ const unwrapLandoModuleDefault = < T >( loaded: unknown ): T => {
 let landoConstructor: LandoConstructor | null = null;
 let landoBuildTaskFn: LandoBuildTask | null = null;
 let landoUtilsModule: { startTable: ( app: App ) => AppInfo } | null = null;
-let buildConfigFn: (( config: Record< string, unknown > ) => LandoConfig) | null = null;
+let buildConfigFn: ( ( config: Record< string, unknown > ) => LandoConfig ) | null = null;
 
 const getLandoConstructor = (): LandoConstructor => {
 	if ( ! landoConstructor ) {
@@ -110,7 +110,7 @@ const getLandoUtils = (): { startTable: ( app: App ) => AppInfo } => {
 	return landoUtilsModule;
 };
 
-const getLandoBuildConfig = (): (( config: Record< string, unknown > ) => LandoConfig) => {
+const getLandoBuildConfig = (): ( ( config: Record< string, unknown > ) => LandoConfig ) => {
 	if ( ! buildConfigFn ) {
 		const loaded = loadLandoModule< {
 			buildConfig?: ( config: Record< string, unknown > ) => LandoConfig;

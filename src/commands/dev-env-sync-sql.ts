@@ -6,7 +6,6 @@ import chalk from 'chalk';
 import debugLib from 'debug';
 import fs from 'fs';
 import gql from 'graphql-tag';
-import type Lando from 'lando';
 import { pipeline } from 'node:stream/promises';
 
 import { DevEnvImportSQLCommand, DevEnvImportSQLOptions } from './dev-env-import-sql';
@@ -22,6 +21,8 @@ import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/dat
 import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
+
+import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 

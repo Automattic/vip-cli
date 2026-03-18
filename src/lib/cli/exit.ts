@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import debug from 'debug';
 
-import env from '../../lib/env';
 import { getRuntimeModeLabel } from './runtime-mode';
+import env from '../../lib/env';
 
 export function withError( message: Error | string ): never {
 	const msg = message instanceof Error ? message.message : message;
