@@ -45,12 +45,18 @@ void command( {
 	usage: 'vip db phpmyadmin',
 } )
 	.option( 'print', 'Print the phpMyAdmin URL to stdout instead of opening it in a browser.' )
+	.option( 'silent', 'Do not print any output to the console.' )
 	.examples( examples )
 	.argv(
 		process.argv,
 		async (
 			arg: string[],
-			{ app, env, print: printUrl }: { app: App; env: AppEnvironment; print: boolean }
+			{
+				app,
+				env,
+				print: printUrl,
+				silent,
+			}: { app: App; env: AppEnvironment; print: boolean; silent: boolean }
 		) => {
 			const trackerFn = makeCommandTracker( 'phpmyadmin', {
 				app: app.id,
@@ -58,7 +64,7 @@ void command( {
 			} );
 			await trackerFn( 'execute' );
 
-			const cmd = new PhpMyAdminCommand( app, env, trackerFn );
+			const cmd = new PhpMyAdminCommand( app, env, trackerFn, silent );
 			await cmd.run( { print: printUrl } );
 
 			await trackerFn( 'success' );

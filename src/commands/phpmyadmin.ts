@@ -4,6 +4,7 @@
 import { ApolloClient } from '@apollo/client/core';
 import chalk from 'chalk';
 import gql from 'graphql-tag';
+import { setTimeout } from 'node:timers/promises';
 
 /**
  * Internal dependencies
@@ -21,7 +22,7 @@ import API, {
 	enableGlobalGraphQLErrorHandling,
 } from '../lib/api';
 import * as exit from '../lib/cli/exit';
-import { ProgressTracker } from '../lib/cli/progress';
+import { ProgressTracker, StepConstructorParam } from '../lib/cli/progress';
 import { CommandTracker } from '../lib/tracker';
 import { pollUntil } from '../lib/utils';
 
@@ -116,30 +117,83 @@ async function getPhpMyAdminStatus( appId: number, envId: number ): Promise< str
 	return resp.data?.app?.environments?.[ 0 ]?.phpMyAdminStatus?.status ?? '';
 }
 
+class MyProgressTracker extends ProgressTracker {
+	public constructor(
+		steps: StepConstructorParam[],
+		private silent: boolean
+	) {
+		super( steps );
+	}
+
+	public setSilent( silent: boolean ): void {
+		this.silent = silent;
+	}
+
+	public print(): void {
+		if ( ! this.silent ) {
+			super.print();
+		}
+	}
+
+	public startPrinting( prePrintCallback?: () => unknown ): void {
+		if ( ! this.silent ) {
+			super.startPrinting( prePrintCallback );
+		}
+	}
+
+	public stopPrinting(): void {
+		if ( ! this.silent ) {
+			super.stopPrinting();
+		}
+	}
+
+	public stepRunning( stepId: string, additionalInfo?: string | string[] ): void {
+		if ( ! this.silent ) {
+			super.stepRunning( stepId, additionalInfo );
+		}
+	}
+
+	public stepSuccess( stepId: string, additionalInfo?: string | string[] ): void {
+		if ( ! this.silent ) {
+			super.stepSuccess( stepId, additionalInfo );
+		}
+	}
+
+	public stepFailed( stepId: string, additionalInfo?: string | string[] ): void {
+		if ( ! this.silent ) {
+			super.stepFailed( stepId, additionalInfo );
+		}
+	}
+}
+
 export class PhpMyAdminCommand {
 	private silent?: boolean;
 	private readonly steps = {
 		ENABLE: 'enable',
 		GENERATE: 'generate',
 	};
-	private readonly progressTracker: ProgressTracker;
+	private readonly progressTracker: MyProgressTracker;
 
 	constructor(
 		private readonly app: App,
 		private readonly env: AppEnvironment,
-		private readonly track: CommandTracker = async () => {}
+		private readonly track: CommandTracker = async () => {},
+		silent = false
 	) {
-		this.progressTracker = new ProgressTracker( [
-			{ id: this.steps.ENABLE, name: 'Enabling PHPMyAdmin for this environment' },
-			{ id: this.steps.GENERATE, name: 'Generating access link' },
-		] );
+		this.silent = silent;
+		this.progressTracker = new MyProgressTracker(
+			[
+				{ id: this.steps.ENABLE, name: 'Enabling phpMyAdmin for this environment' },
+				{ id: this.steps.GENERATE, name: 'Generating access link' },
+			],
+			silent
+		);
 	}
 
 	private log( msg: string ): void {
-		if ( this.silent ) {
-			return;
+		if ( ! this.silent ) {
+			console.log( msg );
 		}
-		console.log( msg );
 	}
 
 	private stopProgressTracker(): void {
@@ -163,13 +217,11 @@ export class PhpMyAdminCommand {
 			await pollUntil( this.getStatus.bind( this ), 1000, ( sts: string ) => sts === 'running' );
 
 			// Additional 30s for LB routing to be updated
-			await new Promise( resolve => setTimeout( resolve, 30000 ) );
+			await setTimeout( 30_000 );
 		}
 	}
 
-	public async run( { silent = false, print = false } = {} ): Promise< void > {
-		this.silent = silent;
-
+	public async run( { print = false } = {} ): Promise< void > {
 		if ( ! this.app.id ) {
 			exit.withError( 'No app was specified' );
 		}
@@ -178,9 +230,11 @@ export class PhpMyAdminCommand {
 			exit.withError( 'No environment was specified' );
 		}
 
-		const message =
-			'Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
-		console.log( chalk.yellow( message ) );
+		if ( ! this.silent ) {
+			const message =
+				'Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+			console.log( chalk.yellow( message ) );
+		}
 
 		this.progressTracker.startPrinting();
 		try {
@@ -206,7 +260,7 @@ export class PhpMyAdminCommand {
 			}
 
 			exit.withError(
-				'Failed to enable PhpMyAdmin. Please try again. If the problem persists, please contact support.'
+				'Failed to enable phpMyAdmin. Please try again. If the problem persists, please contact support.'
 			);
 		}
 
@@ -226,7 +280,7 @@ export class PhpMyAdminCommand {
 				stack: error.stack,
 			} );
 			this.stopProgressTracker();
-			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
+			exit.withError( `Failed to generate phpMyAdmin URL: ${ error.message }` );
 		}
 
 		this.stopProgressTracker();
@@ -236,7 +290,7 @@ export class PhpMyAdminCommand {
 			console.log( url );
 		} else {
 			void this.openUrl( url );
-			this.log( 'PhpMyAdmin is opened in your default browser.' );
+			this.log( 'phpMyAdmin is opened in your default browser.' );
 		}
 	}
 }
