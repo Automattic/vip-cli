@@ -167,7 +167,7 @@ export class PhpMyAdminCommand {
 		}
 	}
 
-	public async run( silent = false ): Promise< void > {
+	public async run( { silent = false, print = false } = {} ): Promise< void > {
 		this.silent = silent;
 
 		if ( ! this.app.id ) {
@@ -229,8 +229,14 @@ export class PhpMyAdminCommand {
 			exit.withError( `Failed to generate PhpMyAdmin URL: ${ error.message }` );
 		}
 
-		void this.openUrl( url );
 		this.stopProgressTracker();
-		this.log( 'PhpMyAdmin is opened in your default browser.' );
+
+		if ( print ) {
+			// Output only the URL to stdout for scripting/automation use
+			console.log( url );
+		} else {
+			void this.openUrl( url );
+			this.log( 'PhpMyAdmin is opened in your default browser.' );
+		}
 	}
 }
