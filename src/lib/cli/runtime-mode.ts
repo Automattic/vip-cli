@@ -1,6 +1,10 @@
+import { createRequire } from 'node:module';
+
 type SeaModule = {
 	isSea?: () => boolean;
 };
+
+const runtimeRequire = createRequire( __filename );
 
 export function isStandaloneExecutableRuntime(): boolean {
 	if ( process.env.VIP_CLI_SEA_MODE === '1' ) {
@@ -8,7 +12,7 @@ export function isStandaloneExecutableRuntime(): boolean {
 	}
 
 	try {
-		const sea = require( 'node:sea' ) as SeaModule;
+		const sea = runtimeRequire( 'node:sea' ) as SeaModule;
 		return Boolean( sea?.isSea?.() );
 	} catch {
 		return false;

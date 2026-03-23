@@ -9,10 +9,11 @@ const SEA_RUNTIME_DIR_NAME = 'sea-runtime';
 
 let cachedRequire: NodeJS.Require | null = null;
 let didResolveRequire = false;
+const baseRequire = createRequire( __filename );
 
 function isSeaRuntime(): boolean {
 	try {
-		const sea = require( 'node:sea' ) as {
+		const sea = baseRequire( 'node:sea' ) as {
 			isSea?: () => boolean;
 		};
 		return Boolean( sea?.isSea?.() );
@@ -41,7 +42,7 @@ function getRuntimeRequire(): NodeJS.Require {
 		}
 	}
 
-	cachedRequire = require;
+	cachedRequire = baseRequire;
 	return cachedRequire;
 }
 

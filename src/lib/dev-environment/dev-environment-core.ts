@@ -159,17 +159,24 @@ const renderTemplateFile = async (
 };
 
 async function waitForEnvironmentToBeUp( lando: Lando, instancePath: string ): Promise< boolean > {
-	for ( let attempt = 1; attempt <= STARTUP_READY_ATTEMPTS; attempt++ ) {
-		if ( await isEnvUp( lando, instancePath ) ) {
-			return true;
-		}
+	return pollEnvironmentUpStatus( lando, instancePath, 1 );
+}
 
-		if ( attempt < STARTUP_READY_ATTEMPTS ) {
-			await sleep( STARTUP_READY_DELAY_MS );
-		}
+async function pollEnvironmentUpStatus(
+	lando: Lando,
+	instancePath: string,
+	attempt: number
+): Promise< boolean > {
+	if ( await isEnvUp( lando, instancePath ) ) {
+		return true;
 	}
 
-	return false;
+	if ( attempt >= STARTUP_READY_ATTEMPTS ) {
+		return false;
+	}
+
+	await sleep( STARTUP_READY_DELAY_MS );
+	return pollEnvironmentUpStatus( lando, instancePath, attempt + 1 );
 }
 
 export interface PostStartOptions {
