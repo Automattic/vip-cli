@@ -73,6 +73,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - `helpers/prepublishOnly.js` enforces branch `trunk` for `npm publish --tag latest` and optionally reruns `npm test`. Release flows expect a clean node version that satisfies `engines.node`.
 
 ## Standalone SEA Packaging
+
 - Canonical runbook for standalone executable build/signing is in `docs/SEA-BUILD-SIGNING.md`. Use it for macOS, Linux, Windows native, and WSL-mediated Windows builds.
 - SEA builds are Node 22 only (enforced in `helpers/build-sea.js`); always verify `node -v` before `npm run build:sea`.
 - The executable is self-contained for Node runtime + JS deps, but `dev-env` commands still require host Docker/Compose availability.

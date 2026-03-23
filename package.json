@@ -72,7 +72,7 @@
     "test": "npm run lint && npm run check-types && jest --coverage --testPathIgnorePatterns __tests__/devenv-e2e/",
     "test:e2e:dev-env": "jest -c __tests__/devenv-e2e/jest/jest.config.js",
     "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
-    "cmd:format": "prettier '**/*.(js|json|jsx|md|ts|tsx|yml|yaml)'",
+    "cmd:format": "prettier \"**/*.{js,json,jsx,md,ts,tsx,yml,yaml}\"",
     "cmd:lint": "eslint --ext 'js,jsx,ts,tsx'",
     "prepare": "npm run clean && npm run build",
     "check-types": "tsc",
