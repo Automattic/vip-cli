@@ -24,18 +24,20 @@ const sleep = ms => new Promise( resolve => setTimeout( resolve, ms ) );
 
 async function waitForEnvironmentReadiness( lando, slug ) {
 	const instancePath = getEnvironmentPath( slug );
+	return pollEnvironmentReadiness( lando, instancePath, 1 );
+}
 
-	for ( let attempt = 1; attempt <= ENV_UP_CHECK_ATTEMPTS; attempt++ ) {
-		if ( await isEnvUp( lando, instancePath ) ) {
-			return true;
-		}
-
-		if ( attempt < ENV_UP_CHECK_ATTEMPTS ) {
-			await sleep( ENV_UP_CHECK_DELAY_MS );
-		}
+async function pollEnvironmentReadiness( lando, instancePath, attempt ) {
+	if ( await isEnvUp( lando, instancePath ) ) {
+		return true;
 	}
 
-	return false;
+	if ( attempt >= ENV_UP_CHECK_ATTEMPTS ) {
+		return false;
+	}
+
+	await sleep( ENV_UP_CHECK_DELAY_MS );
+	return pollEnvironmentReadiness( lando, instancePath, attempt + 1 );
 }
 
 const examples = [

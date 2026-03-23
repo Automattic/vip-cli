@@ -2,8 +2,6 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import debugLib from 'debug';
 import { prompt, Confirm, Select } from 'enquirer';
-import Lando from 'lando';
-import formatters from 'lando/lib/formatters';
 import { existsSync, lstatSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'path';
@@ -19,6 +17,7 @@ import {
 	generatePHPStormWorkspace,
 } from './dev-environment-core';
 import { validateDockerInstalled } from './dev-environment-lando';
+import { loadLandoModule } from './lando-loader';
 import { getCurrentUserInfo } from '../api/user';
 import { Args } from '../cli/command';
 import {
@@ -43,6 +42,7 @@ import type {
 	ConfigurationFileOptions,
 	MultisiteKind,
 } from './types';
+import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -50,6 +50,24 @@ export const DEFAULT_SLUG = 'vip-local';
 export const CONFIGURATION_FOLDER = '.wpvip';
 
 let isStdinTTY: boolean = Boolean( process.stdin.isTTY );
+
+type LandoFormatters = {
+	formatData: (
+		data: Record< string, unknown >,
+		options: Record< string, unknown >,
+		style: Record< string, unknown >
+	) => string;
+};
+
+let landoFormatters: LandoFormatters | null = null;
+
+const getLandoFormatters = (): LandoFormatters => {
+	if ( ! landoFormatters ) {
+		landoFormatters = loadLandoModule< LandoFormatters >( 'lando/lib/formatters' );
+	}
+
+	return landoFormatters;
+};
 
 /**
  * Used internally for tests
@@ -189,7 +207,11 @@ export function getEnvironmentStartCommand(
 }
 
 export function printTable( data: Record< string, unknown > ) {
-	const formattedData = formatters.formatData( data, { format: 'table' }, { border: false } );
+	const formattedData = getLandoFormatters().formatData(
+		data,
+		{ format: 'table' },
+		{ border: false }
+	);
 
 	console.log( formattedData );
 }
