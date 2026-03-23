@@ -1,5 +1,5 @@
 import debugLib from 'debug';
-import { readFileSync } from 'node:fs'; // I don't like using synchronous versions, but until we migrate to ESM, we have to.
+import fs from 'node:fs'; // I don't like using synchronous versions, but until we migrate to ESM, we have to.
 import path from 'node:path';
 
 interface Config {
@@ -20,7 +20,7 @@ export function loadConfigFile(): Config | null {
 
 	for ( const filePath of paths ) {
 		try {
-			const data = readFileSync( filePath, 'utf-8' );
+			const data = fs.readFileSync( filePath, 'utf-8' );
 			debug( `Found config file at ${ filePath }` );
 			return JSON.parse( data ) as Config;
 		} catch ( err ) {
