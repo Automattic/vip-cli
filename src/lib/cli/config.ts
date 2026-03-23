@@ -13,12 +13,13 @@ interface Config {
 
 const debug = debugLib( '@automattic/vip:lib:cli:config' );
 
-export function loadConfigFile(): Config {
+export function loadConfigFile(): Config | null {
 	const paths = [
 		// Get `local` config first; this will only exist in dev as it's npmignore-d.
 		path.join( __dirname, '../../../config/config.local.json' ),
 		path.join( __dirname, '../../../config/config.publish.json' ),
 	];
+	let hasNonEnoentError = false;
 
 	for ( const filePath of paths ) {
 		try {
@@ -26,14 +27,28 @@ export function loadConfigFile(): Config {
 			debug( `Found config file at ${ filePath }` );
 			return JSON.parse( data ) as Config;
 		} catch ( err ) {
-			if ( ! ( err instanceof Error ) || ! ( 'code' in err ) || err.code !== 'ENOENT' ) {
+			const isEnoent = err instanceof Error && 'code' in err && err.code === 'ENOENT';
+			if ( ! isEnoent ) {
+				hasNonEnoentError = true;
 				debug( `Error reading config file at ${ filePath }:`, err );
 			}
 		}
 	}
 
-	return defaultPublishConfig as Config;
+	// SEA builds can miss on-disk config files, so use the bundled publish config only for ENOENT.
+	if ( ! hasNonEnoentError ) {
+		return defaultPublishConfig as Config;
+	}
+
+	return null;
 }
 
 const configFromFile = loadConfigFile();
-export default configFromFile;
+if ( null === configFromFile ) {
+	console.error( 'FATAL ERROR: Could not find a valid configuration file' );
+	process.exit( 1 );
+}
+
+// Without this, TypeScript will export `configFromFile` as `Config | null`.
+const exportedConfig: Config = configFromFile;
+export default exportedConfig;
