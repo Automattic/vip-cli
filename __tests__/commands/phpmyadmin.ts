@@ -63,7 +63,7 @@ describe( 'commands/PhpMyAdminCommand', () => {
 		const app = { id: 123 };
 		const env = { id: 456, jobs: [] };
 		const tracker = jest.fn() as CommandTracker;
-		const cmd = new PhpMyAdminCommand( app, env, tracker );
+		const cmd = new PhpMyAdminCommand( app, env, tracker, true );
 		const openUrl = jest.spyOn( cmd, 'openUrl' );
 
 		beforeEach( () => {
@@ -90,6 +90,20 @@ describe( 'commands/PhpMyAdminCommand', () => {
 				},
 			} );
 			expect( openUrl ).toHaveBeenCalledWith( 'http://test-url.com' );
+		} );
+
+		it( 'should print the URL to stdout instead of opening browser when print option is set', async () => {
+			const printCmd = new PhpMyAdminCommand( app, env, tracker, true );
+			const printOpenUrl = jest.spyOn( printCmd, 'openUrl' );
+			printOpenUrl.mockReset();
+			const consoleSpy = jest.spyOn( console, 'log' );
+			try {
+				await printCmd.run( { print: true } );
+				expect( printOpenUrl ).not.toHaveBeenCalled();
+				expect( consoleSpy ).toHaveBeenCalledWith( 'http://test-url.com' );
+			} finally {
+				consoleSpy.mockRestore();
+			}
 		} );
 	} );
 } );

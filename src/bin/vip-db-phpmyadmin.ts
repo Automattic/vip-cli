@@ -18,6 +18,10 @@ const examples = [
 		description:
 			"Generate access to a read-only phpMyAdmin web interface for the environment's database.",
 	},
+	{
+		usage: 'vip @example-app.develop db phpmyadmin --print',
+		description: 'Print the phpMyAdmin URL to stdout instead of opening it in a browser.',
+	},
 ];
 
 const appQuery = `
@@ -40,16 +44,29 @@ void command( {
 	requiredArgs: 0,
 	usage: 'vip db phpmyadmin',
 } )
+	.option( 'print', 'Print the phpMyAdmin URL to stdout instead of opening it in a browser.' )
+	.option( 'silent', 'Do not print any output to the console.' )
 	.examples( examples )
-	.argv( process.argv, async ( arg: string[], { app, env }: { app: App; env: AppEnvironment } ) => {
-		const trackerFn = makeCommandTracker( 'phpmyadmin', {
-			app: app.id,
-			env: env.uniqueLabel,
-		} );
-		await trackerFn( 'execute' );
+	.argv(
+		process.argv,
+		async (
+			arg: string[],
+			{
+				app,
+				env,
+				print: printUrl,
+				silent,
+			}: { app: App; env: AppEnvironment; print: boolean; silent: boolean }
+		) => {
+			const trackerFn = makeCommandTracker( 'phpmyadmin', {
+				app: app.id,
+				env: env.uniqueLabel,
+			} );
+			await trackerFn( 'execute' );
 
-		const cmd = new PhpMyAdminCommand( app, env, trackerFn );
-		await cmd.run();
+			const cmd = new PhpMyAdminCommand( app, env, trackerFn, silent );
+			await cmd.run( { print: printUrl } );
 
-		await trackerFn( 'success' );
-	} );
+			await trackerFn( 'success' );
+		}
+	);
