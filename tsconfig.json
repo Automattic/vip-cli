@@ -7,6 +7,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "nodenext",
+    "types": ["node", "jest"],
 
     // Target latest version of ECMAScript.
     "target": "ES2022",
