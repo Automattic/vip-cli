@@ -6,7 +6,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "nodenext",
-    "types": ["node", "jest"],
+    "types": [ "node", "jest" ],
 
     "target": "ES2022",
     // Don't emit; allow Babel to transform files.
