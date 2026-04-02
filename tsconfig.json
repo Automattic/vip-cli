@@ -3,24 +3,17 @@
     "lib": [ "ES2022" ],
     "module": "nodenext",
     "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "nodenext",
     "types": ["node", "jest"],
 
-    // Target latest version of ECMAScript.
     "target": "ES2022",
-    // Don't parse types from JS as TS doesn't play well with Flow-ish JS.
-    "allowJs": false,
     // Don't emit; allow Babel to transform files.
     "noEmit": true,
-    // Can't checkJs if we don't allowJs, so this remains false
-    "checkJs": false,
     // Disallow features that require cross-file information for emit as we're using Babel
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
     "paths": {
       "*": [ "./types/*", "./node_modules/@types/node/*" ]
     },
