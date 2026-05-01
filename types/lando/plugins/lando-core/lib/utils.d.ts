@@ -1,10 +1,9 @@
 import App from 'lando/lib/app';
 
-export interface AppInfo {
+export interface AppInfo extends Record< string, unknown > {
 	name: string;
 	location: string;
-	services: string[];
-	[ key: string ]: unknown;
+	services: string;
 }
 
 export function getHostPath( mount: any ): any;

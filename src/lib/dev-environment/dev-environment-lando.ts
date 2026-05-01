@@ -341,7 +341,7 @@ async function landoRecovery( lando: Lando, instancePath: string, error: unknown
 	}
 }
 
-async function getLandoApplication( lando: Lando, instancePath: string ): Promise< App > {
+export async function getLandoApplication( lando: Lando, instancePath: string ): Promise< App > {
 	const started = new Date();
 	try {
 		if ( appMap.has( instancePath ) ) {

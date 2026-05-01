@@ -29,6 +29,7 @@ import {
 	LandoExecOptions,
 	getProxyContainer,
 	removeProxyCache,
+	getLandoApplication,
 } from './dev-environment-lando';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
@@ -344,15 +345,14 @@ export async function showLogs(
 
 	const instancePath = getEnvironmentPath( slug );
 
-	debug( 'Instance path for', slug, 'is:', instancePath );
+	debug( 'Instance path for %s is %s', slug, instancePath );
 
 	if ( options.service ) {
-		const appInfo = await landoInfo( lando, instancePath );
-		if ( ! appInfo.services.includes( options.service ) ) {
+		const application = await getLandoApplication( lando, instancePath );
+		const services = application.info.map( service => service.service );
+		if ( ! services.includes( options.service ) ) {
 			throw new UserError(
-				`Service '${
-					options.service
-				}' not found. Please choose from one: ${ appInfo.services.toString() }`
+				`Service '${ options.service }' not found. Please choose from: ${ services.join( ', ' ) }`
 			);
 		}
 	}
