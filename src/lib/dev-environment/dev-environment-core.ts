@@ -89,6 +89,7 @@ const integrationsConfigPathString = 'integrations-config';
 interface StartEnvironmentOptions {
 	skipRebuild: boolean;
 	skipWpVersionsCheck: boolean;
+	autofixDomains: boolean;
 }
 
 interface WordPressTag {
@@ -136,9 +137,9 @@ export async function startEnvironment(
 	}
 
 	if ( options.skipRebuild && ! updated ) {
-		await landoStart( lando, instancePath );
+		await landoStart( lando, instancePath, options.autofixDomains );
 	} else {
-		await landoRebuild( lando, instancePath );
+		await landoRebuild( lando, instancePath, options.autofixDomains );
 	}
 
 	await printEnvironmentInfo( lando, slug, { extended: false } );
