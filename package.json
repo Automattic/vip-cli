@@ -153,6 +153,7 @@
     "debug": "4.4.3",
     "ejs": "^5.0.1",
     "enquirer": "2.4.1",
+    "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
     "graphql": "16.13.2",
     "graphql-tag": "2.12.6",
