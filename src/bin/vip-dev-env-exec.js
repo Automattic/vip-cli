@@ -17,6 +17,28 @@ import UserError from '../lib/user-error';
 
 const exampleUsage = 'vip dev-env exec';
 const usage = 'vip dev-env exec';
+const ENV_UP_CHECK_ATTEMPTS = 5;
+const ENV_UP_CHECK_DELAY_MS = 1500;
+
+const sleep = ms => new Promise( resolve => setTimeout( resolve, ms ) );
+
+async function waitForEnvironmentReadiness( lando, slug ) {
+	const instancePath = getEnvironmentPath( slug );
+	return pollEnvironmentReadiness( lando, instancePath, 1 );
+}
+
+async function pollEnvironmentReadiness( lando, instancePath, attempt ) {
+	if ( await isEnvUp( lando, instancePath ) ) {
+		return true;
+	}
+
+	if ( attempt >= ENV_UP_CHECK_ATTEMPTS ) {
+		return false;
+	}
+
+	await sleep( ENV_UP_CHECK_DELAY_MS );
+	return pollEnvironmentReadiness( lando, instancePath, attempt + 1 );
+}
 
 const examples = [
 	{
@@ -80,7 +102,7 @@ command( {
 			}
 
 			if ( ! opt.force ) {
-				const isUp = await isEnvUp( lando, getEnvironmentPath( slug ) );
+				const isUp = await waitForEnvironmentReadiness( lando, slug );
 				if ( ! isUp ) {
 					throw new UserError(
 						'A WP-CLI command can only be executed on a running local environment.'

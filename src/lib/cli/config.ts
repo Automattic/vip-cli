@@ -1,6 +1,8 @@
 import debugLib from 'debug';
-import { readFileSync } from 'node:fs'; // I don't like using synchronous versions, but until we migrate to ESM, we have to.
+import fs from 'node:fs'; // I don't like using synchronous versions, but until we migrate to ESM, we have to.
 import path from 'node:path';
+
+import defaultPublishConfig from '../../../config/config.publish.json';
 
 interface Config {
 	tracksUserType: string;
@@ -17,17 +19,25 @@ export function loadConfigFile(): Config | null {
 		path.join( __dirname, '../../../config/config.local.json' ),
 		path.join( __dirname, '../../../config/config.publish.json' ),
 	];
+	let hasNonEnoentError = false;
 
 	for ( const filePath of paths ) {
 		try {
-			const data = readFileSync( filePath, 'utf-8' );
+			const data = fs.readFileSync( filePath, 'utf-8' );
 			debug( `Found config file at ${ filePath }` );
 			return JSON.parse( data ) as Config;
 		} catch ( err ) {
-			if ( ! ( err instanceof Error ) || ! ( 'code' in err ) || err.code !== 'ENOENT' ) {
+			const isEnoent = err instanceof Error && 'code' in err && err.code === 'ENOENT';
+			if ( ! isEnoent ) {
+				hasNonEnoentError = true;
 				debug( `Error reading config file at ${ filePath }:`, err );
 			}
 		}
+	}
+
+	// SEA builds can miss on-disk config files, so use the bundled publish config only for ENOENT.
+	if ( ! hasNonEnoentError ) {
+		return defaultPublishConfig as Config;
 	}
 
 	return null;
@@ -35,11 +45,10 @@ export function loadConfigFile(): Config | null {
 
 const configFromFile = loadConfigFile();
 if ( null === configFromFile ) {
-	// This should not happen because `config/config.publish.json` is always present.
 	console.error( 'FATAL ERROR: Could not find a valid configuration file' );
 	process.exit( 1 );
 }
 
-// Without this, TypeScript will export `configFromFile` as `Config | null`
+// Without this, TypeScript will export `configFromFile` as `Config | null`.
 const exportedConfig: Config = configFromFile;
 export default exportedConfig;
