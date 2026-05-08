@@ -126,7 +126,7 @@ jobs:
           "${hash} *${{ matrix.target.binary_path }}" | Set-Content .\${{ matrix.target.binary_path }}.sha256 -NoNewline
 
       - name: Upload SEA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.target.artifact_name }}
           path: |
@@ -160,7 +160,7 @@ jobs:
           wsl.exe bash -lc "set -euo pipefail; cd \"$workspaceWsl\"; sha256sum dist/sea/vip > dist/sea/vip.sha256"
 
       - name: Upload WSL SEA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vip-sea-windows-wsl
           path: |
