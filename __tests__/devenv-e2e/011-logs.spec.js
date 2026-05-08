@@ -93,7 +93,7 @@ describe( 'vip dev-env logs', () => {
 			);
 			expect( result.rc ).toBeGreaterThan( 0 );
 			expect( result.stderr ).toContain(
-				"Error:  Service 'foobar' not found. Please choose from one:"
+				"Error:  Service 'foobar' not found. Please choose from:"
 			);
 		} );
 
