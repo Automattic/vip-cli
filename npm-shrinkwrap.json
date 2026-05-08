@@ -212,9 +212,9 @@
       }
     },
     "node_modules/@automattic/vip-search-replace": {
-      "version": "2.0.0",
-      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-2.0.0.tgz",
-      "integrity": "sha512-i1d3/KCK0sVgNjsJAV4UlMnC51AypLDfX8iEWTDLBiSR3wEvSWMSftF3f7yK46VdbBXB5zDvnVM48kFvASW9Ig==",
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/@automattic/vip-search-replace/-/vip-search-replace-2.0.1.tgz",
+      "integrity": "sha512-awcVa6V9RDc2vCd2UpqNDtmgJb51U3788A9QgLoiFahhztgR8ngV11e9gqhYOG5CtI/CGSv7X9KIrr6hazzCjg==",
       "cpu": [
         "ia32",
         "x64",
