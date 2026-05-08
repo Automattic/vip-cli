@@ -125,6 +125,10 @@ function createOptionDefinition( name, description, defaultValue, parseFn, usedS
 	};
 }
 
+function isOptionToken( arg ) {
+	return arg !== '-' && arg.startsWith( '-' );
+}
+
 class CommanderArgsCompat {
 	constructor( opts ) {
 		this.details = {
@@ -234,19 +238,46 @@ class CommanderArgsCompat {
 		return this.program.opts();
 	}
 
+	findSubcommand( argv ) {
+		const dashDashIndex = argv.indexOf( '--', 2 );
+		const searchEnd = dashDashIndex === -1 ? argv.length : dashDashIndex;
+
+		for ( let index = 2; index < searchEnd; index++ ) {
+			const arg = argv[ index ];
+			if ( this.isDefined( arg, 'commands' ) ) {
+				return { index, name: arg };
+			}
+
+			if ( ! isOptionToken( arg ) ) {
+				return null;
+			}
+
+			const nextArg = argv[ index + 1 ];
+			const optionHasInlineValue = arg.includes( '=' );
+			const nextArgCouldBeOptionValue =
+				nextArg && ! isOptionToken( nextArg ) && ! this.isDefined( nextArg, 'commands' );
+
+			if ( ! optionHasInlineValue && nextArgCouldBeOptionValue ) {
+				index++;
+			}
+		}
+
+		return null;
+	}
+
 	async executeSubcommand( argv, parsedAlias, subcommand ) {
 		const currentScript = argv[ 1 ];
+		const subcommandName = subcommand.name;
 		const extension = path.extname( currentScript );
 		const baseScriptPath = extension ? currentScript.slice( 0, -extension.length ) : currentScript;
 		const childScriptPath = extension
-			? `${ baseScriptPath }-${ subcommand }${ extension }`
-			: `${ baseScriptPath }-${ subcommand }`;
+			? `${ baseScriptPath }-${ subcommandName }${ extension }`
+			: `${ baseScriptPath }-${ subcommandName }`;
 		const aliasFromRawArgv = argv.slice( 2 ).find( arg => isAlias( arg ) );
-		const subcommandIndex = parsedAlias.argv.findIndex( ( arg, index ) => {
-			return index > 1 && arg === subcommand;
-		} );
-
-		let childArgs = subcommandIndex > -1 ? parsedAlias.argv.slice( subcommandIndex + 1 ) : [];
+		let childArgs = [
+			...parsedAlias.argv.slice( 2, subcommand.index ),
+			...parsedAlias.argv.slice( subcommand.index + 1 ),
+		];
 
 		if ( aliasFromRawArgv ) {
 			childArgs = [ aliasFromRawArgv, ...childArgs ];
@@ -259,7 +290,7 @@ class CommanderArgsCompat {
 				env: process.env,
 			} );
 		} else {
-			const fallbackCommand = `${ path.basename( baseScriptPath ) }-${ subcommand }`;
+			const fallbackCommand = `${ path.basename( baseScriptPath ) }-${ subcommandName }`;
 
 			if ( process.env.VIP_CLI_SEA_MODE === '1' && hasInternalBin( fallbackCommand ) ) {
 				process.argv = [ process.argv[ 0 ], process.argv[ 1 ], ...childArgs ];
@@ -304,8 +335,9 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	const options = this.parse( parsedAlias.argv );
 
 	// If there's a sub-command, run that instead
-	if ( this.isDefined( this.sub[ 0 ], 'commands' ) ) {
-		await this.executeSubcommand( argv, parsedAlias, this.sub[ 0 ] );
+	const dispatchSubcommand = this.findSubcommand( parsedAlias.argv );
+	if ( dispatchSubcommand ) {
+		await this.executeSubcommand( argv, parsedAlias, dispatchSubcommand );
 		return {};
 	}
 
