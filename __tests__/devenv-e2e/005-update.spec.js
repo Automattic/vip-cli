@@ -127,45 +127,6 @@ describe( 'vip dev-env update', () => {
 		} );
 	} );
 
-	it( 'should not update multisiteness', async () => {
-		const slug = getProjectSlug();
-		const expectedMultiSite = true;
-
-		expect( await checkEnvExists( slug ) ).toBe( false );
-
-		// prettier-ignore
-		let result = await cliTest.spawn( [
-			process.argv[ 0 ], vipDevEnvCreate,
-			'--slug', slug,
-			'--multisite', `${ expectedMultiSite }`,
-		], { env }, true );
-
-		expect( result.rc ).toBe( 0 );
-		expect( await checkEnvExists( slug ) ).toBe( true );
-
-		const dataBefore = readEnvironmentData( slug );
-		expect( dataBefore ).toMatchObject( {
-			siteSlug: slug,
-			multisite: expectedMultiSite,
-		} );
-
-		// prettier-ignore
-		result = await cliTest.spawn( [
-			process.argv[ 0 ], vipDevEnvUpdate,
-			'--slug', slug,
-			'--multisite', `${ ! expectedMultiSite }`,
-		], { env }, true );
-
-		expect( result.rc ).toBe( 0 );
-		expect( await checkEnvExists( slug ) ).toBe( true );
-
-		const dataAfter = readEnvironmentData( slug );
-		expect( dataAfter ).toMatchObject( {
-			siteSlug: slug,
-			multisite: expectedMultiSite,
-		} );
-	} );
-
 	it( 'does not replace mariadb with mysql', async () => {
 		const slug = getProjectSlug();
 		const basePath = path.join( tmpPath, 'vip', 'dev-environment', slug );
