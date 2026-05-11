@@ -83,7 +83,9 @@ command( {
 	)
 	.option(
 		'site-id',
-		'The ID of a network site to include in the partial database sync. Accepts an integer value (can be passed more than once with different values), or multiple integer values in a comma-separated list.'
+		'The ID of a network site to include in the partial database sync. Accepts an integer value (can be passed more than once with different values), or multiple integer values in a comma-separated list.',
+		undefined,
+		Number.parseInt
 	)
 	.option(
 		'wpcli-command',

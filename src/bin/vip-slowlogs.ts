@@ -186,6 +186,8 @@ export const appQuery = `
 	}
 `;
 
+const parseLimit = ( value: unknown ): number => Number.parseInt( String( value ), 10 );
+
 void command( {
 	appContext: true,
 	appQuery,
@@ -197,7 +199,8 @@ void command( {
 	.option(
 		'limit',
 		'Set the maximum number of log entries. Accepts an integer value between 1 and 500.',
-		500
+		500,
+		parseLimit
 	)
 	.examples( [
 		{
