@@ -41,6 +41,21 @@ describe( 'utils/cli/command', () => {
 	} );
 
 	describe( 'subcommand dispatch', () => {
+		it( 'allows wp option-only invocations without separator', async () => {
+			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
+			const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );
+
+			const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+
+			await cmd.argv( [ process.execPath, parentScript, 'wp', '--help' ] );
+
+			expect( spawnSync ).toHaveBeenCalledWith( process.execPath, [ childScript, '--help' ], {
+				stdio: 'inherit',
+				env: process.env,
+			} );
+			expect( process.exit ).toHaveBeenCalledWith( 0 );
+		} );
+
 		it( 'dispatches when child options appear before -- and subcommand follows separator', async () => {
 			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
 			const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );

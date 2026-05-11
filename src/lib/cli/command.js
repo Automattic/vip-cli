@@ -407,8 +407,9 @@ class CommanderArgsCompat {
 		const hasSeparatorBeforeSubcommand = rawArgsBeforeSubcommand.includes( '--' );
 		const argsBeforeSubcommand = rawArgsBeforeSubcommand.filter( arg => arg !== '--' );
 		const subcommandArgs = parsedAlias.argv.slice( subcommand.index + 1 );
+		const hasWpCommandPayload = subcommandArgs.some( arg => ! isOptionToken( arg ) );
 		const hasSeparator = argv.includes( '--' );
-		if ( subcommandName === 'wp' && subcommandArgs.length && ! hasSeparator ) {
+		if ( subcommandName === 'wp' && hasWpCommandPayload && ! hasSeparator ) {
 			exit.withError(
 				'A double dash ("--") must separate the arguments of "vip" from those of "wp". Run "vip wp --help" for examples.'
 			);
