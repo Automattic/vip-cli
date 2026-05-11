@@ -136,7 +136,6 @@
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
-    "nock": "13.5.6",
     "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^6.0.2"
@@ -163,7 +162,6 @@
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-    "node-fetch": "^3.3.2",
     "node-stream-zip": "1.15.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
@@ -174,6 +172,7 @@
     "socks-proxy-agent": "^10.0.0",
     "ssh2": "1.17.0",
     "tar": "^7.4.0",
+    "undici": "^8.2.0",
     "update-notifier": "7.3.1",
     "xml2js": "^0.6.2"
   },

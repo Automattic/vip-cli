@@ -1,6 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import Docker from 'dockerode';
-import nock from 'nock';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -24,13 +23,8 @@ describe( 'vip dev-env info', () => {
 	let tmpPath;
 
 	beforeAll( () => {
-		nock.cleanAll();
-		nock.enableNetConnect();
-
 		cliTest = new CliTest();
 	} );
-
-	afterAll( () => nock.restore() );
 
 	beforeEach( async () => {
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );

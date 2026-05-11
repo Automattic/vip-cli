@@ -2,7 +2,6 @@ import { ApolloClient, ApolloLink, ServerError } from '@apollo/client/core';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { OperationTypeNode } from 'graphql';
 import gql from 'graphql-tag';
-import { FetchError } from 'node-fetch';
 
 import { shouldRetryRequest } from '../../src/lib/api';
 
@@ -88,7 +87,7 @@ describe( 'API Retry Logic', () => {
 		it( 'should retry on ECONNREFUSED errors', () => {
 			const error = Object.assign( new Error( 'Connection refused' ), {
 				code: 'ECONNREFUSED',
-			} ) as FetchError;
+			} );
 
 			const result = shouldRetryRequest( 1, mockOperation, error );
 
@@ -153,7 +152,7 @@ describe( 'API Retry Logic', () => {
 		it( 'should handle FetchError without ECONNREFUSED code', () => {
 			const error = Object.assign( new Error( 'Network error' ), {
 				code: 'ENOTFOUND',
-			} ) as FetchError;
+			} );
 
 			const result = shouldRetryRequest( 1, mockOperation, error );
 

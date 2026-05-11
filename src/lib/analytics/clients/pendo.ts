@@ -1,5 +1,4 @@
 import debugLib from 'debug';
-import { Response } from 'node-fetch';
 
 import http from '../../../lib/api/http';
 import { type Env } from '../../env';

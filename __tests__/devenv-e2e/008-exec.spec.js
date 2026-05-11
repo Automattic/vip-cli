@@ -1,6 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import Docker from 'dockerode';
-import nock from 'nock';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -27,9 +26,6 @@ describe( 'vip dev-env exec', () => {
 	let tmpPath;
 
 	beforeAll( async () => {
-		nock.cleanAll();
-		nock.enableNetConnect();
-
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
@@ -39,7 +35,6 @@ describe( 'vip dev-env exec', () => {
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
-	afterAll( () => nock.restore() );
 
 	describe( 'if the environment does not exist', () => {
 		it( 'should fail', async () => {

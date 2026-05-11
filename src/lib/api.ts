@@ -11,7 +11,6 @@ import { RetryLink } from '@apollo/client/link/retry';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
-import { FetchError } from 'node-fetch';
 
 import http from './api/http';
 
@@ -61,7 +60,7 @@ export function shouldRetryRequest(
 		return false;
 	}
 
-	if ( error instanceof FetchError && error.code === 'ECONNREFUSED' ) {
+	if ( ( error as { code?: string } )?.code === 'ECONNREFUSED' ) {
 		debug( `Request failed. Retrying request due to connection refused error. ${ debugSuffix }` );
 
 		return true;

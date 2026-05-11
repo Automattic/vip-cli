@@ -4,7 +4,6 @@
 
 import searchReplaceLib from '@automattic/vip-search-replace';
 import fs from 'fs';
-import fetch, { Response } from 'node-fetch';
 import path from 'path';
 
 import * as prompt from '../../src/lib/cli/prompt';
@@ -16,9 +15,6 @@ global.console = { log: jest.fn(), error: jest.fn() };
 
 const fixtureDir = path.resolve( __dirname, '..', '..', '__fixtures__' );
 const testFilePath = path.resolve( fixtureDir, 'client-file-uploader', 'tinyfile.txt' );
-
-jest.mock( 'node-fetch' );
-fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 
 let searchReplaceBinaryFilename = `go-search-replace-test-${ process.platform }-${ process.arch }`;
 if ( 'win32' === process.platform ) {

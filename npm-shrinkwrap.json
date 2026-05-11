@@ -31,7 +31,6 @@
         "js-yaml": "^4.1.0",
         "jwt-decode": "4.0.0",
         "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-        "node-fetch": "^3.3.2",
         "node-stream-zip": "1.15.0",
         "open": "^11.0.0",
         "proxy-from-env": "^2.0.0",
@@ -42,6 +41,7 @@
         "socks-proxy-agent": "^10.0.0",
         "ssh2": "1.17.0",
         "tar": "^7.4.0",
+        "undici": "^8.2.0",
         "update-notifier": "7.3.1",
         "xml2js": "^0.6.2"
       },
@@ -132,7 +132,6 @@
         "@types/xml2js": "^0.4.14",
         "dockerode": "^5.0.0",
         "jest": "^30.0.0",
-        "nock": "13.5.6",
         "postject": "^1.0.0-alpha.6",
         "prettier": "npm:wp-prettier@3.0.3",
         "typescript": "^6.0.2"
@@ -6658,15 +6657,6 @@
       "dev": true,
       "license": "BSD-2-Clause"
     },
-    "node_modules/data-uri-to-buffer": {
-      "version": "4.0.1",
-      "resolved": "https://registry.npmjs.org/data-uri-to-buffer/-/data-uri-to-buffer-4.0.1.tgz",
-      "integrity": "sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==",
-      "license": "MIT",
-      "engines": {
-        "node": ">= 12"
-      }
-    },
     "node_modules/data-view-buffer": {
       "version": "1.0.2",
       "resolved": "https://registry.npmjs.org/data-view-buffer/-/data-view-buffer-1.0.2.tgz",
@@ -8387,29 +8377,6 @@
       "integrity": "sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw==",
       "license": "MIT"
     },
-    "node_modules/fetch-blob": {
-      "version": "3.2.0",
-      "resolved": "https://registry.npmjs.org/fetch-blob/-/fetch-blob-3.2.0.tgz",
-      "integrity": "sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==",
-      "funding": [
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/jimmywarting"
-        },
-        {
-          "type": "paypal",
-          "url": "https://paypal.me/jimmywarting"
-        }
-      ],
-      "license": "MIT",
-      "dependencies": {
-        "node-domexception": "^1.0.0",
-        "web-streams-polyfill": "^3.0.3"
-      },
-      "engines": {
-        "node": "^12.20 || >= 14.13"
-      }
-    },
     "node_modules/fetch-retry": {
       "version": "6.0.0",
       "resolved": "https://registry.npmjs.org/fetch-retry/-/fetch-retry-6.0.0.tgz",
@@ -8576,18 +8543,6 @@
       },
       "engines": {
         "node": ">= 6"
-      }
-    },
-    "node_modules/formdata-polyfill": {
-      "version": "4.0.10",
-      "resolved": "https://registry.npmjs.org/formdata-polyfill/-/formdata-polyfill-4.0.10.tgz",
-      "integrity": "sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==",
-      "license": "MIT",
-      "dependencies": {
-        "fetch-blob": "^3.1.2"
-      },
-      "engines": {
-        "node": ">=12.20.0"
       }
     },
     "node_modules/fs-constants": {
@@ -11548,13 +11503,6 @@
       "license": "MIT",
       "peer": true
     },
-    "node_modules/json-stringify-safe": {
-      "version": "5.0.1",
-      "resolved": "https://registry.npmjs.org/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz",
-      "integrity": "sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==",
-      "dev": true,
-      "license": "ISC"
-    },
     "node_modules/json5": {
       "version": "2.2.3",
       "resolved": "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz",
@@ -12197,21 +12145,6 @@
       "dev": true,
       "license": "MIT"
     },
-    "node_modules/nock": {
-      "version": "13.5.6",
-      "resolved": "https://registry.npmjs.org/nock/-/nock-13.5.6.tgz",
-      "integrity": "sha512-o2zOYiCpzRqSzPj0Zt/dQ/DqZeYoaQ7TUonc/xUPjCGl9WeHpNbxgVvOquXYAaJzI0M9BXV3HTzG0p8IUAbBTQ==",
-      "dev": true,
-      "license": "MIT",
-      "dependencies": {
-        "debug": "^4.1.0",
-        "json-stringify-safe": "^5.0.1",
-        "propagate": "^2.0.0"
-      },
-      "engines": {
-        "node": ">= 10.13"
-      }
-    },
     "node_modules/node-abi": {
       "version": "3.89.0",
       "resolved": "https://registry.npmjs.org/node-abi/-/node-abi-3.89.0.tgz",
@@ -12244,26 +12177,6 @@
         "node": ">= 8.0.0"
       }
     },
-    "node_modules/node-domexception": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/node-domexception/-/node-domexception-1.0.0.tgz",
-      "integrity": "sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==",
-      "deprecated": "Use your platform's native DOMException instead",
-      "funding": [
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/jimmywarting"
-        },
-        {
-          "type": "github",
-          "url": "https://paypal.me/jimmywarting"
-        }
-      ],
-      "license": "MIT",
-      "engines": {
-        "node": ">=10.5.0"
-      }
-    },
     "node_modules/node-exports-info": {
       "version": "1.6.0",
       "resolved": "https://registry.npmjs.org/node-exports-info/-/node-exports-info-1.6.0.tgz",
@@ -12291,24 +12204,6 @@
       "license": "ISC",
       "bin": {
         "semver": "bin/semver.js"
-      }
-    },
-    "node_modules/node-fetch": {
-      "version": "3.3.2",
-      "resolved": "https://registry.npmjs.org/node-fetch/-/node-fetch-3.3.2.tgz",
-      "integrity": "sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==",
-      "license": "MIT",
-      "dependencies": {
-        "data-uri-to-buffer": "^4.0.0",
-        "fetch-blob": "^3.1.4",
-        "formdata-polyfill": "^4.0.10"
-      },
-      "engines": {
-        "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
-      },
-      "funding": {
-        "type": "opencollective",
-        "url": "https://opencollective.com/node-fetch"
       }
     },
     "node_modules/node-int64": {
@@ -13036,16 +12931,6 @@
       "integrity": "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==",
       "dev": true,
       "license": "MIT"
-    },
-    "node_modules/propagate": {
-      "version": "2.0.1",
-      "resolved": "https://registry.npmjs.org/propagate/-/propagate-2.0.1.tgz",
-      "integrity": "sha512-vGrhOavPSTz4QVNuBNdcNXePNdNMaO1xj9yBeH1ScQPjk/rhg9sSlCXPhMkFuaNNW/syTvYqsnbIJxMBfRbbag==",
-      "dev": true,
-      "license": "MIT",
-      "engines": {
-        "node": ">= 8"
-      }
     },
     "node_modules/proto-list": {
       "version": "1.2.4",
@@ -14854,6 +14739,15 @@
         "url": "https://github.com/sponsors/ljharb"
       }
     },
+    "node_modules/undici": {
+      "version": "8.2.0",
+      "resolved": "https://registry.npmjs.org/undici/-/undici-8.2.0.tgz",
+      "integrity": "sha512-Z+4Hx9GE26Lh9Upwfnc8C7SsrpBPGaM/Gm6kMFtiG7c+5IvQKlXi/t+9x9DrrCh29cww5TSP9YdVaBcnLDs5fQ==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=22.19.0"
+      }
+    },
     "node_modules/undici-types": {
       "version": "7.24.6",
       "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.24.6.tgz",
@@ -15130,15 +15024,6 @@
       "license": "Apache-2.0",
       "dependencies": {
         "makeerror": "1.0.12"
-      }
-    },
-    "node_modules/web-streams-polyfill": {
-      "version": "3.3.3",
-      "resolved": "https://registry.npmjs.org/web-streams-polyfill/-/web-streams-polyfill-3.3.3.tgz",
-      "integrity": "sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==",
-      "license": "MIT",
-      "engines": {
-        "node": ">= 8"
       }
     },
     "node_modules/when-exit": {

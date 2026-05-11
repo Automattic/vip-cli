@@ -1,5 +1,4 @@
 import debugLib from 'debug';
-import fetch, { Response } from 'node-fetch';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -19,12 +18,9 @@ jest.spyOn( global.console, 'log' );
 const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 const ERROR_CODE = 1;
 
-jest.mock( 'node-fetch' );
 jest.mock( '../../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn().mockResolvedValue( [] ),
 } ) );
-fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
-
 describe( 'lib/validations/sql', () => {
 	describe( 'it validates SQL for dev-env without false-positive USE statements', () => {
 		let tempDir;

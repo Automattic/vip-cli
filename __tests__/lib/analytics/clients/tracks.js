@@ -1,14 +1,14 @@
-import nock from 'nock';
-
 import Tracks from '../../../../src/lib/analytics/clients/tracks';
 import * as apiConfig from '../../../../src/lib/cli/apiConfig';
+import { getUndiciMockPool, resetUndiciMockAgent } from '../../../../test-utils/undici-mock';
 
 describe( 'lib/analytics/tracks', () => {
 	const url = new URL( Tracks.ENDPOINT );
+	const pool = getUndiciMockPool( url.origin );
 
-	const buildNock = () => nock( url.origin ).post( url.pathname );
+	const buildMockRequest = () => pool.intercept( { method: 'POST', path: url.pathname } );
 
-	afterEach( nock.cleanAll );
+	afterEach( resetUndiciMockAgent );
 
 	describe( '.send()', () => {
 		it( 'should correctly construct remote request', () => {
@@ -24,13 +24,22 @@ describe( 'lib/analytics/tracks', () => {
 				'&commonProps%5B_via_ua%5D=vip-cli' +
 				'&extra=param';
 
-			buildNock()
-				// No arrow function because we need `this`
-				.reply( 200, function ( uri, requestBody ) {
-					expect( this.req.headers[ 'user-agent' ] ).toEqual( 'vip-cli' ); // The header value is returned as a string
+			buildMockRequest().reply( options => {
+				const headers = Object.fromEntries(
+					Object.entries( options.headers ?? {} ).map( ( [ key, value ] ) => [
+						key.toLowerCase(),
+						String( value ),
+					] )
+				);
 
-					expect( requestBody ).toEqual( expectedBody );
-				} );
+				expect( headers[ 'user-agent' ] ).toEqual( 'vip-cli' );
+				expect( String( options.body ) ).toEqual( expectedBody );
+
+				return {
+					statusCode: 200,
+					data: 'ok',
+				};
+			} );
 
 			return tracksClient.send( params );
 		} );
@@ -53,8 +62,13 @@ describe( 'lib/analytics/tracks', () => {
 				'&events%5B0%5D%5BbuttonName%5D=deploy' +
 				'&events%5B0%5D%5Bis_vip%5D=true';
 
-			buildNock().reply( 200, ( uri, requestBody ) => {
-				expect( requestBody ).toContain( expectedBodyMatch );
+			buildMockRequest().reply( options => {
+				expect( String( options.body ) ).toContain( expectedBodyMatch );
+
+				return {
+					statusCode: 200,
+					data: 'ok',
+				};
 			} );
 
 			return tracksClient.trackEvent( eventName, eventDetails );
@@ -67,8 +81,13 @@ describe( 'lib/analytics/tracks', () => {
 
 			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=existingprefix_clickButton';
 
-			buildNock().reply( 200, ( uri, requestBody ) => {
-				expect( requestBody ).toContain( expectedBodyMatch );
+			buildMockRequest().reply( options => {
+				expect( String( options.body ) ).toContain( expectedBodyMatch );
+
+				return {
+					statusCode: 200,
+					data: 'ok',
+				};
 			} );
 
 			return tracksClient.trackEvent( eventName, {} );
@@ -79,7 +98,7 @@ describe( 'lib/analytics/tracks', () => {
 
 			const eventName = 'existingprefix_clickButton';
 
-			buildNock().replyWithError( 'Connection reset' );
+			buildMockRequest().replyWithError( 'Connection reset' );
 
 			// We expect that the promise resolves to false instead of rejecting and throwing errors with async/await
 			await expect( tracksClient.trackEvent( eventName, {} ) ).resolves.toBe( false );
