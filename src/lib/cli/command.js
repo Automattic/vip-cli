@@ -394,6 +394,52 @@ class CommanderArgsCompat {
 		return null;
 	}
 
+	hasWpCommandPayload( subcommandArgs ) {
+		const wpFlagsWithoutValue = new Set( [ '--help', '-h', '--version', '-v', '--yes', '-y' ] );
+		let expectOptionValue = false;
+
+		for ( const arg of subcommandArgs ) {
+			if ( expectOptionValue ) {
+				if ( ! isOptionToken( arg ) ) {
+					expectOptionValue = false;
+					continue;
+				}
+
+				expectOptionValue = false;
+			}
+
+			if ( ! isOptionToken( arg ) ) {
+				return true;
+			}
+
+			if ( arg.startsWith( '--' ) ) {
+				if ( arg.includes( '=' ) || wpFlagsWithoutValue.has( arg ) ) {
+					continue;
+				}
+
+				expectOptionValue = true;
+				continue;
+			}
+
+			if ( /^-[A-Za-z0-9]$/.test( arg ) ) {
+				if ( wpFlagsWithoutValue.has( arg ) ) {
+					continue;
+				}
+
+				expectOptionValue = true;
+				continue;
+			}
+
+			if ( /^-[A-Za-z0-9]+=/.test( arg ) ) {
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	async executeSubcommand( argv, parsedAlias, subcommand ) {
 		const currentScript = argv[ 1 ];
 		const subcommandName = subcommand.name;
@@ -407,7 +453,7 @@ class CommanderArgsCompat {
 		const hasSeparatorBeforeSubcommand = rawArgsBeforeSubcommand.includes( '--' );
 		const argsBeforeSubcommand = rawArgsBeforeSubcommand.filter( arg => arg !== '--' );
 		const subcommandArgs = parsedAlias.argv.slice( subcommand.index + 1 );
-		const hasWpCommandPayload = subcommandArgs.some( arg => ! isOptionToken( arg ) );
+		const hasWpCommandPayload = this.hasWpCommandPayload( subcommandArgs );
 		const hasSeparator = argv.includes( '--' );
 		if ( subcommandName === 'wp' && hasWpCommandPayload && ! hasSeparator ) {
 			exit.withError(
