@@ -122,6 +122,7 @@ function createOptionDefinition( name, description, defaultValue, parseFn, usedS
 		description,
 		defaultValue,
 		parser,
+		normalizedShortName,
 	};
 }
 
@@ -137,12 +138,17 @@ class CommanderArgsCompat {
 		this.sub = [];
 		this.examplesList = [];
 		this.usedShortNames = new Set();
+		this.shortOptionsExpectingValue = new Set();
+		this.longOptionsExpectingValue = new Set();
+		this.knownShortOptions = new Set();
+		this.knownLongOptions = new Set();
 		this._opts = opts;
 		this.program = new Command();
 		this.program.allowUnknownOption( true );
 		this.program.allowExcessArguments( true );
 		this.program.helpOption( false );
 		normalizeUsage( this.program, this._opts.usage );
+		this.optionDefaults = new Map();
 	}
 
 	option( name, description, defaultValue, parseFn ) {
@@ -153,10 +159,30 @@ class CommanderArgsCompat {
 			parseFn,
 			this.usedShortNames
 		);
-		const { flags, parser } = definition;
+		const { flags, parser, normalizedShortName } = definition;
+		const normalizedLongName = String( Array.isArray( name ) ? name[ 1 ] : name )
+			.trim()
+			.replace( /^--?/, '' );
+		const isValueOption = typeof defaultValue !== 'boolean';
+		this.knownLongOptions.add( normalizedLongName );
 
+		if ( normalizedShortName ) {
+			this.knownShortOptions.add( normalizedShortName );
+		}
+
+		if ( isValueOption && normalizedShortName ) {
+			this.shortOptionsExpectingValue.add( normalizedShortName );
+		}
+
+		if ( isValueOption ) {
+			this.longOptionsExpectingValue.add( normalizedLongName );
+		}
+
+		// When there's a parser, track the default separately and don't pass it to Commander.
+		// This prevents the parser from incorrectly accumulating the default value with the first explicit value.
 		if ( parser && defaultValue !== undefined ) {
-			this.program.option( flags, description, parser, defaultValue );
+			this.optionDefaults.set( normalizedLongName, defaultValue );
+			this.program.option( flags, description, parser );
 		} else if ( parser ) {
 			this.program.option( flags, description, parser );
 		} else if ( defaultValue !== undefined ) {
@@ -233,16 +259,50 @@ class CommanderArgsCompat {
 	}
 
 	parse( argv ) {
-		this.program.parse( argv, { from: 'node' } );
+		this.program.parse( this.normalizeShortOptionEqualsSyntax( argv ), { from: 'node' } );
 		this.sub = this.program.args.slice();
-		return this.program.opts();
+		const opts = this.program.opts();
+
+		// Apply tracked defaults for options with parsers
+		for ( const [ optionName, defaultValue ] of this.optionDefaults ) {
+			if ( opts[ optionName ] === undefined ) {
+				opts[ optionName ] = defaultValue;
+			}
+		}
+
+		return opts;
+	}
+
+	normalizeShortOptionEqualsSyntax( argv ) {
+		const normalizedArgv = argv.slice( 0, 2 );
+
+		for ( const arg of argv.slice( 2 ) ) {
+			const shortOptionEqualsMatch = /^-([A-Za-z0-9])=(.*)$/.exec( arg );
+			if ( ! shortOptionEqualsMatch ) {
+				normalizedArgv.push( arg );
+				continue;
+			}
+
+			const shortOptionName = shortOptionEqualsMatch[ 1 ];
+			const optionValue = shortOptionEqualsMatch[ 2 ];
+
+			if ( ! this.shortOptionsExpectingValue.has( shortOptionName ) ) {
+				normalizedArgv.push( arg );
+				continue;
+			}
+
+			normalizedArgv.push( `-${ shortOptionName }`, optionValue );
+		}
+
+		return normalizedArgv;
 	}
 
 	findSubcommand( argv ) {
-		const dashDashIndex = argv.indexOf( '--', 2 );
+		const searchStart = argv[ 2 ] === '--' ? 3 : 2;
+		const dashDashIndex = argv.indexOf( '--', searchStart );
 		const searchEnd = dashDashIndex === -1 ? argv.length : dashDashIndex;
 
-		for ( let index = 2; index < searchEnd; index++ ) {
+		for ( let index = searchStart; index < searchEnd; index++ ) {
 			const arg = argv[ index ];
 			if ( this.isDefined( arg, 'commands' ) ) {
 				return { index, name: arg };
@@ -262,6 +322,75 @@ class CommanderArgsCompat {
 			}
 		}
 
+		if ( dashDashIndex > -1 && this.isDefined( argv[ dashDashIndex + 1 ], 'commands' ) ) {
+			return { index: dashDashIndex + 1, name: argv[ dashDashIndex + 1 ] };
+		}
+
+		return null;
+	}
+
+	findUnknownOption( argv ) {
+		const dashDashIndex = argv.indexOf( '--', 2 );
+		const searchEnd = dashDashIndex === -1 ? argv.length : dashDashIndex;
+
+		for ( let index = 2; index < searchEnd; index++ ) {
+			const arg = argv[ index ];
+			if ( ! isOptionToken( arg ) ) {
+				continue;
+			}
+
+			if ( arg.startsWith( '--' ) ) {
+				const [ tokenName ] = arg.slice( 2 ).split( '=' );
+				if ( ! this.knownLongOptions.has( tokenName ) ) {
+					return tokenName;
+				}
+
+				const hasInlineValue = arg.includes( '=' );
+				const nextArg = argv[ index + 1 ];
+				if (
+					this.longOptionsExpectingValue.has( tokenName ) &&
+					! hasInlineValue &&
+					nextArg &&
+					! isOptionToken( nextArg )
+				) {
+					index++;
+				}
+
+				continue;
+			}
+
+			const shortEqualsMatch = /^-([A-Za-z0-9])=(.*)$/.exec( arg );
+			if ( shortEqualsMatch ) {
+				const shortName = shortEqualsMatch[ 1 ];
+				if ( ! this.knownShortOptions.has( shortName ) ) {
+					return shortName;
+				}
+
+				continue;
+			}
+
+			const shortMatch = /^-([A-Za-z0-9])$/.exec( arg );
+			if ( shortMatch ) {
+				const shortName = shortMatch[ 1 ];
+				if ( ! this.knownShortOptions.has( shortName ) ) {
+					return shortName;
+				}
+
+				const nextArg = argv[ index + 1 ];
+				if (
+					this.shortOptionsExpectingValue.has( shortName ) &&
+					nextArg &&
+					! isOptionToken( nextArg )
+				) {
+					index++;
+				}
+
+				continue;
+			}
+
+			return arg.replace( /^-+/, '' );
+		}
+
 		return null;
 	}
 
@@ -274,9 +403,21 @@ class CommanderArgsCompat {
 			? `${ baseScriptPath }-${ subcommandName }${ extension }`
 			: `${ baseScriptPath }-${ subcommandName }`;
 		const aliasFromRawArgv = argv.slice( 2 ).find( arg => isAlias( arg ) );
+		const rawArgsBeforeSubcommand = parsedAlias.argv.slice( 2, subcommand.index );
+		const hasSeparatorBeforeSubcommand = rawArgsBeforeSubcommand.includes( '--' );
+		const argsBeforeSubcommand = rawArgsBeforeSubcommand.filter( arg => arg !== '--' );
+		const subcommandArgs = parsedAlias.argv.slice( subcommand.index + 1 );
+		const hasSeparator = argv.includes( '--' );
+		if ( subcommandName === 'wp' && subcommandArgs.length && ! hasSeparator ) {
+			exit.withError(
+				'A double dash ("--") must separate the arguments of "vip" from those of "wp". Run "vip wp --help" for examples.'
+			);
+		}
+
 		let childArgs = [
-			...parsedAlias.argv.slice( 2, subcommand.index ),
-			...parsedAlias.argv.slice( subcommand.index + 1 ),
+			...argsBeforeSubcommand,
+			...( hasSeparatorBeforeSubcommand ? [ '--' ] : [] ),
+			...subcommandArgs,
 		];
 
 		if ( aliasFromRawArgv ) {
@@ -339,6 +480,19 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	if ( dispatchSubcommand ) {
 		await this.executeSubcommand( argv, parsedAlias, dispatchSubcommand );
 		return {};
+	}
+
+	if ( ! _opts.wildcardCommand ) {
+		const unknownOption = this.findUnknownOption( parsedAlias.argv );
+		if ( unknownOption ) {
+			await trackEvent( 'command_validation_error', {
+				error: `Unknown option: ${ unknownOption }`,
+			} );
+
+			exit.withError(
+				`The option "${ unknownOption }" is unknown. Did you mean the following one?\n-h, --help  Retrieve a description, examples, and available options for a (sub)command.`
+			);
+		}
 	}
 
 	if ( _opts.format && ! options.format ) {

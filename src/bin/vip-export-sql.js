@@ -85,7 +85,9 @@ command( {
 	)
 	.option(
 		'site-id',
-		'The ID of a network site to include in the partial database export. Accepts an integer value and can be passed more than once with a different value, or add multiple values in a comma-separated list.'
+		'The ID of a network site to include in the partial database export. Accepts an integer value and can be passed more than once with a different value, or add multiple values in a comma-separated list.',
+		undefined,
+		parseInt
 	)
 	.option(
 		'wpcli-command',

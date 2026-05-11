@@ -197,7 +197,8 @@ void command( {
 	.option(
 		'limit',
 		'Set the maximum number of log entries. Accepts an integer value between 1 and 500.',
-		500
+		500,
+		parseInt
 	)
 	.examples( [
 		{
