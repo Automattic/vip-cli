@@ -155,7 +155,7 @@
     "enquirer": "2.4.1",
     "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
-    "graphql": "16.13.2",
+    "graphql": "16.14.0",
     "graphql-tag": "2.12.6",
     "https-proxy-agent": "^9.0.0",
     "js-yaml": "^4.1.0",
