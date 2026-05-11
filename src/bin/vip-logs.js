@@ -248,7 +248,7 @@ command( {
 		'limit',
 		`The maximum number of entries to return. Accepts an integer value between 1 and 5000 (defaults to ${ LIMIT_DEFAULT }).`,
 		undefined,
-		parseInt
+		Number.parseInt
 	)
 	.option( 'follow', 'Output new entries as they are generated.' )
 	.option(
