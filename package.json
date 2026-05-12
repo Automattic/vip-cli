@@ -130,7 +130,6 @@
     "@types/semver": "^7.5.5",
     "@types/shelljs": "^0.10.0",
     "@types/ssh2": "^1.15.4",
-    "@types/tar": "^7.0.87",
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
