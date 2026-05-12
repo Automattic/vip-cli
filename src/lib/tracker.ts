@@ -8,6 +8,7 @@ import config from '../lib/cli/config';
 import Token from '../lib/token';
 
 import type { AnalyticsClient } from './analytics/clients/client';
+import type { Response } from 'undici';
 
 const debug = debugLib( '@automattic/vip:analytics' );
 

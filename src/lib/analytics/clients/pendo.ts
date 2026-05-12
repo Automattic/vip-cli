@@ -1,4 +1,5 @@
 import debugLib from 'debug';
+import { type Response } from 'undici';
 
 import http from '../../../lib/api/http';
 import { type Env } from '../../env';

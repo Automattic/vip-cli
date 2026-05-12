@@ -1,4 +1,4 @@
-import { MockAgent, setGlobalDispatcher } from 'undici';
+import { fetch, MockAgent, setGlobalDispatcher } from 'undici';
 
 process.env.API_HOST = 'http://localhost:4000';
 
@@ -20,5 +20,6 @@ delete process.env.VIP_USE_SYSTEM_PROXY;
 const mockAgent = new MockAgent();
 mockAgent.disableNetConnect();
 setGlobalDispatcher( mockAgent );
+globalThis.fetch = fetch;
 
 global.__UNDICI_MOCK_AGENT__ = mockAgent;

@@ -15,6 +15,22 @@ import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 import http, { type FetchOptions } from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
 
+export function parseEtagHeader( etag: string ): string {
+	const normalizedEtag = etag.replace( /^W\//u, '' ).trim();
+
+	if ( normalizedEtag.startsWith( '"' ) && normalizedEtag.endsWith( '"' ) ) {
+		try {
+			return JSON.parse( normalizedEtag ) as string;
+		} catch ( err ) {
+			debug(
+				`Unable to JSON.parse ETag header, falling back to raw value: ${ ( err as Error ).message }`
+			);
+		}
+	}
+
+	return normalizedEtag.replace( /^"(.*)"$/u, '$1' );
+}
+
 async function fetchWithRetry(
 	input: string | URL,
 	init?: RequestInit,
@@ -656,7 +672,7 @@ async function uploadPart( {
 				throw new Error( 'Unable to upload file part. Missing ETag response header.' );
 			}
 
-			return JSON.parse( etag ) as string;
+			return parseEtagHeader( etag );
 		}
 
 		const result = await fetchResponse.text();

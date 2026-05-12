@@ -1,5 +1,12 @@
 import debugLib from 'debug';
-import { fetch, Headers, type BodyInit, type HeadersInit, type RequestInit } from 'undici';
+import {
+	fetch,
+	Headers,
+	type BodyInit,
+	type HeadersInit,
+	type RequestInit,
+	type Response,
+} from 'undici';
 
 import { API_HOST } from '../../lib/api';
 import env from '../../lib/env';
@@ -11,6 +18,15 @@ const debug = debugLib( '@automattic/vip:http' );
 export type FetchOptions = Omit< RequestInit, 'body' > & {
 	body?: BodyInit | Record< string, unknown >;
 	headers?: HeadersInit;
+};
+
+const isPlainObjectBody = ( value: FetchOptions[ 'body' ] ): value is Record< string, unknown > => {
+	if ( ! value || typeof value !== 'object' ) {
+		return false;
+	}
+
+	const prototype = Object.getPrototypeOf( value ) as unknown;
+	return prototype === Object.prototype || prototype === null;
 };
 
 /**
@@ -32,10 +48,11 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 
 	const authToken = await Token.get();
 	const proxyDispatcher = createProxyDispatcher( url );
+	const shouldSerializeJsonBody = isPlainObjectBody( options.body );
 
 	debug( 'running fetch', url );
 
-	const headers = new Headers( { ...options.headers } );
+	const headers = new Headers( options.headers );
 	if ( ! headers.has( 'Authorization' ) ) {
 		headers.set( 'Authorization', `Bearer ${ authToken.raw }` );
 	}
@@ -44,14 +61,18 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 		headers.set( 'User-Agent', env.userAgent );
 	}
 
-	if ( ! headers.has( 'Content-Type' ) && options.method !== 'GET' ) {
+	if ( ! headers.has( 'Content-Type' ) && options.method !== 'GET' && shouldSerializeJsonBody ) {
 		headers.set( 'Content-Type', 'application/json' );
 	}
+
+	const requestBody: BodyInit | undefined = shouldSerializeJsonBody
+		? JSON.stringify( options.body )
+		: ( options.body as BodyInit | undefined );
 
 	return fetch( url, {
 		...options,
 		dispatcher: proxyDispatcher ?? undefined,
 		headers,
-		body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
+		body: requestBody,
 	} );
 };

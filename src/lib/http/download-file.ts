@@ -1,6 +1,9 @@
 import * as fs from 'fs';
 import { Readable } from 'stream';
 import { finished } from 'stream/promises';
+import { fetch } from 'undici';
+
+import { createProxyDispatcher } from './proxy-dispatcher';
 
 export type OnProgressCallback = ( bytesDownloaded: number, totalBytes: number | null ) => void;
 
@@ -10,8 +13,9 @@ export const downloadFile = async (
 	onProgress?: OnProgressCallback
 ): Promise< void > => {
 	let response;
+	const proxyDispatcher = createProxyDispatcher( fileUrl );
 	try {
-		response = await fetch( fileUrl );
+		response = await fetch( fileUrl, { dispatcher: proxyDispatcher ?? undefined } );
 	} catch ( error ) {
 		throw new Error(
 			`Request to ${ fileUrl } failed: ${
