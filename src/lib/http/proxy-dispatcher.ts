@@ -38,6 +38,17 @@ function resolveProxyUrl( url: string ): string | null {
 	return null;
 }
 
+let listeners: ReturnType< typeof process.rawListeners< 'warning' > > | null = null;
+
+// Suppress ExperimentalWarning: SOCKS5 proxy support is experimental and subject to change
+function suppressExperimentalSocksWarning( warning: Error ): void {
+	listeners?.forEach( listener => process.on( 'warning', listener as NodeJS.WarningListener ) );
+
+	if ( warning.name !== 'ExperimentalWarning' || ! /Socks5ProxyAgent/u.test( warning.message ) ) {
+		process.emitWarning( warning );
+	}
+}
+
 /**
  * Build an undici dispatcher from the existing proxy resolution logic.
  *
@@ -54,6 +65,12 @@ export function createProxyDispatcher( url: string ): Dispatcher | null {
 	if ( ! proxyDispatchers.has( proxyUrl ) ) {
 		debug( `Enabling fetch dispatcher proxy support using config: ${ proxyUrl }` );
 		proxyDispatchers.set( proxyUrl, new ProxyAgent( proxyUrl ) );
+	}
+
+	if ( listeners === null ) {
+		listeners = process.rawListeners( 'warning' );
+		process.removeAllListeners( 'warning' );
+		process.once( 'warning', suppressExperimentalSocksWarning );
 	}
 
 	return proxyDispatchers.get( proxyUrl ) ?? null;
