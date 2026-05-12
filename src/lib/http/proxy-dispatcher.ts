@@ -82,7 +82,7 @@ let listeners: ReturnType< typeof process.rawListeners< 'warning' > > | null = n
 function suppressExperimentalSocksWarning( warning: Error ): void {
 	listeners?.forEach( listener => process.on( 'warning', listener as NodeJS.WarningListener ) );
 
-	if ( warning.name !== 'ExperimentalWarning' || ! /Socks5ProxyAgent/u.test( warning.message ) ) {
+	if ( warning.name !== 'ExperimentalWarning' || ! /SOCKS5 proxy/u.test( warning.message ) ) {
 		listeners?.forEach( listener => ( listener as NodeJS.WarningListener )( warning ) );
 	}
 }
