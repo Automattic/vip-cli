@@ -46,7 +46,7 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS = {
 	},
 } as const satisfies Record< string, PhpImage >;
 
-export const DEV_ENVIRONMENT_DEFAULT_PHP_VERSION: keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS = '8.3';
+export const DEV_ENVIRONMENT_DEFAULT_PHP_VERSION: keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS = '8.4';
 
 export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
