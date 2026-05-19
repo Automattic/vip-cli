@@ -322,8 +322,7 @@ function preProcessInstanceData( instanceData: InstanceData ): Required< Instanc
 		mariadb: instanceData.mariadb ?? '',
 		elasticsearch: instanceData.elasticsearch || false, // NOSONAR
 		php:
-			instanceData.php ??
-			DEV_ENVIRONMENT_PHP_VERSIONS[ DEV_ENVIRONMENT_DEFAULT_PHP_VERSION ].image,
+			instanceData.php ?? DEV_ENVIRONMENT_PHP_VERSIONS[ DEV_ENVIRONMENT_DEFAULT_PHP_VERSION ].image,
 		xdebug: Boolean( instanceData.xdebug ),
 		phpmyadmin: Boolean( instanceData.phpmyadmin ),
 		photon: Boolean( instanceData.photon ),

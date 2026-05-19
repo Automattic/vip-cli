@@ -785,7 +785,8 @@ export function resolvePhpVersion( version: string ): string {
 			throw new UserError( `Unknown or unsupported PHP version: ${ version }.` );
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
+		result =
+			DEV_ENVIRONMENT_PHP_VERSIONS[ version as keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS ].image;
 	}
 
 	debug( 'Resolved PHP image: %j', result );
@@ -798,7 +799,9 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 	let answer = initialValue;
 	if ( isStdinTTY ) {
 		const choices = [];
-		Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).forEach( version => {
+		(
+			Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ) as ( keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS )[]
+		 ).forEach( version => {
 			const phpImage = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
 			const label =
 				version === DEV_ENVIRONMENT_DEFAULT_PHP_VERSION
