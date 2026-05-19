@@ -23,6 +23,7 @@ import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
+	DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
@@ -799,7 +800,11 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 		const choices = [];
 		Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).forEach( version => {
 			const phpImage = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
-			choices.push( { message: phpImage.label, value: version } );
+			const label =
+				version === DEV_ENVIRONMENT_DEFAULT_PHP_VERSION
+					? `${ phpImage.label } (recommended)`
+					: phpImage.label;
+			choices.push( { message: label, value: version } );
 		} );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		let initial = images.findIndex( version => version.image === initialValue );

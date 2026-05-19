@@ -27,14 +27,16 @@ interface PhpImage {
 	label: string;
 }
 
+export const DEV_ENVIRONMENT_DEFAULT_PHP_VERSION = '8.3' as const;
+
 export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
-	8.3: {
-		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.3',
-		label: '8.3 (recommended)',
-	},
 	8.2: {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
 		label: '8.2',
+	},
+	8.3: {
+		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.3',
+		label: '8.3',
 	},
 	8.4: {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',
@@ -49,7 +51,7 @@ export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
 export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
-	phpVersion: Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ],
+	phpVersion: DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 } as const;
 
 export const DEV_ENVIRONMENT_VERSION = '2.3.3';
