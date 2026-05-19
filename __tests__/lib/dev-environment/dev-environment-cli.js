@@ -594,13 +594,14 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			expect( actual ).toStrictEqual( expected );
 		} );
 
-		it.each( [ [ '7.4' ], [ 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:7.3' ] ] )(
-			'should throw an error for invalid version',
-			async version => {
-				expect( () => resolvePhpVersion( version ) ).toThrow(
-					`Unknown or unsupported PHP version: ${ version }`
-				);
-			}
-		);
+		it.each( [
+			[ '7.4' ],
+			[ 'ghcr.io/automattic/vip-container-images/php-fpm-ubuntu:7.3' ],
+			[ 'toString' ],
+		] )( 'should throw an error for invalid version', async version => {
+			expect( () => resolvePhpVersion( version ) ).toThrow(
+				`Unknown or unsupported PHP version: ${ version }`
+			);
+		} );
 	} );
 } );
