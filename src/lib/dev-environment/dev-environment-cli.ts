@@ -776,7 +776,7 @@ export function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version %j`, version );
 
 	let result: string;
-	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
+	if ( ! Object.hasOwn( DEV_ENVIRONMENT_PHP_VERSIONS, version ) ) {
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value.image === version );
 		if ( image ) {
