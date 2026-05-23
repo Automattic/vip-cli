@@ -208,16 +208,12 @@ export class DevEnvSyncSQLCommand {
 		const replacedStream = await replace( readStream, replacements );
 
 		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
-		const streams: ( NodeJS.ReadableStream | NodeJS.WritableStream | NodeJS.ReadWriteStream )[] = [
-			replacedStream,
-		];
+		const transforms: NodeJS.ReadWriteStream[] = [];
 		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
-			streams.push( fixMyDumperTransform() );
+			transforms.push( fixMyDumperTransform() );
 		}
 
-		streams.push( fs.createWriteStream( outputFile ) );
-
-		await pipeline( streams );
+		await pipeline( replacedStream, ...transforms, fs.createWriteStream( outputFile ) );
 
 		fs.renameSync( outputFile, this.sqlFile );
 	}
