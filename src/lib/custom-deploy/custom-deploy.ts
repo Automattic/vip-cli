@@ -22,9 +22,7 @@ type CustomDeployInfo = {
 };
 
 type ValidateMutationPayload = {
-	data?: {
-		validateCustomDeployAccess: CustomDeployInfo;
-	} | null;
+	validateCustomDeployAccess: CustomDeployInfo;
 };
 
 export async function validateCustomDeployKey(
@@ -51,7 +49,7 @@ export async function validateCustomDeployKey(
 
 	const api = API( { exitOnError: true } );
 	try {
-		const result: ValidateMutationPayload = await api.mutate( {
+		const result = await api.mutate< ValidateMutationPayload >( {
 			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
 			context: {
 				headers: {
