@@ -670,7 +670,7 @@ export async function landoInfo(
 
 		// Add login information
 		if ( frontEndUrl ) {
-			let loginUrl = `${ frontEndUrl }wp-admin/`;
+			let loginUrl = `${ frontEndUrl.replace( /^http:/, 'https:' ) }wp-admin/`;
 			if ( options.autologinKey ) {
 				loginUrl += `?vip-dev-autologin=${ options.autologinKey }`;
 			}
