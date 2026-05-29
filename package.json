@@ -147,7 +147,7 @@
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "configstore": "^8.0.0",
     "debug": "4.4.3",
     "ejs": "^6.0.1",

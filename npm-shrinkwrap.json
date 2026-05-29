@@ -18,7 +18,7 @@
         "check-disk-space": "3.4.0",
         "cli-columns": "^4.0.0",
         "cli-table3": "^0.6.3",
-        "commander": "^14.0.3",
+        "commander": "^15.0.0",
         "configstore": "^8.0.0",
         "debug": "4.4.3",
         "ejs": "^6.0.1",
@@ -6509,12 +6509,12 @@
       }
     },
     "node_modules/commander": {
-      "version": "14.0.3",
-      "resolved": "https://registry.npmjs.org/commander/-/commander-14.0.3.tgz",
-      "integrity": "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==",
+      "version": "15.0.0",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-15.0.0.tgz",
+      "integrity": "sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg==",
       "license": "MIT",
       "engines": {
-        "node": ">=20"
+        "node": ">=22.12.0"
       }
     },
     "node_modules/comment-parser": {
