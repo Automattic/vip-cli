@@ -4,7 +4,7 @@ import Dockerode from 'dockerode';
 import { execFile } from 'node:child_process';
 import { lookup } from 'node:dns/promises';
 import { mkdir, rename, unlink, stat, writeFile } from 'node:fs/promises';
-import { cpus, totalmem, userInfo } from 'node:os';
+import { cpus, EOL, totalmem, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { promisify } from 'node:util';
 import { satisfies } from 'semver';
@@ -670,12 +670,18 @@ export async function landoInfo(
 
 		// Add login information
 		if ( frontEndUrl ) {
-			let loginUrl = `${ frontEndUrl }wp-admin/`;
+			const loginURL = new URL( `${ frontEndUrl }wp-admin/` );
 			if ( options.autologinKey ) {
-				loginUrl += `?vip-dev-autologin=${ options.autologinKey }`;
+				loginURL.searchParams.set( 'vip-dev-autologin', options.autologinKey );
 			}
 
-			appInfo[ 'Login URL' ] = loginUrl;
+			loginURL.protocol = 'http:';
+			const httpLoginUrl = loginURL.toString();
+
+			loginURL.protocol = 'https:';
+			const httpsLoginUrl = loginURL.toString();
+
+			appInfo[ 'Login URL' ] = [ httpsLoginUrl, httpLoginUrl ].join( EOL );
 			appInfo[ 'Default username' ] = 'vipgo';
 
 			// Get the stored password from instance data
