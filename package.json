@@ -150,7 +150,7 @@
     "commander": "^14.0.3",
     "configstore": "^8.0.0",
     "debug": "4.4.3",
-    "ejs": "^5.0.1",
+    "ejs": "^6.0.1",
     "enquirer": "2.4.1",
     "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
