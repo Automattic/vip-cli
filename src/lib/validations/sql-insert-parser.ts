@@ -249,6 +249,16 @@ export interface SqlCommentStripState {
 	inBlockComment: boolean;
 }
 
+interface SqlTextSegment {
+	text: string;
+	nextIndex: number;
+}
+
+interface SqlBlockCommentSkipResult {
+	inBlockComment: boolean;
+	nextIndex: number;
+}
+
 const isSqlQuoteStart = ( char: string ): boolean => "'" === char || '"' === char;
 
 const isSqlBlockCommentStart = ( line: string, index: number ): boolean =>
@@ -266,6 +276,9 @@ const isSqlDashCommentStart = ( line: string, index: number ): boolean => {
 	return undefined === afterCommentMarker || /\s/.test( afterCommentMarker );
 };
 
+const isSqlLineCommentStart = ( line: string, index: number ): boolean =>
+	'#' === line[ index ] || isSqlDashCommentStart( line, index );
+
 const setSqlCommentStripState = (
 	state: SqlCommentStripState | undefined,
 	inBlockComment: boolean
@@ -275,76 +288,83 @@ const setSqlCommentStripState = (
 	}
 };
 
+const readSqlQuotedSegment = ( line: string, startIndex: number ): SqlTextSegment | undefined => {
+	if ( ! isSqlQuoteStart( line[ startIndex ] ) ) {
+		return undefined;
+	}
+
+	const endIndex = skipSqlDelimitedSegment( line, startIndex );
+	if ( undefined === endIndex ) {
+		return undefined;
+	}
+
+	return {
+		text: line.slice( startIndex, endIndex + 1 ),
+		nextIndex: endIndex + 1,
+	};
+};
+
+const skipSqlBlockComment = (
+	line: string,
+	startIndex: number,
+	uncommentedLine: string,
+	state?: SqlCommentStripState
+): SqlBlockCommentSkipResult => {
+	for ( let index = startIndex; index < line.length; index += 1 ) {
+		if ( ! isSqlBlockCommentEnd( line, index ) ) {
+			continue;
+		}
+
+		setSqlCommentStripState( state, false );
+		const nextIndex = index + 2;
+		return {
+			inBlockComment: false,
+			nextIndex: '' === uncommentedLine ? skipSqlWhitespace( line, nextIndex ) : nextIndex,
+		};
+	}
+
+	setSqlCommentStripState( state, true );
+	return {
+		inBlockComment: true,
+		nextIndex: line.length,
+	};
+};
+
 export const stripSqlCommentsOutsideQuotedStrings = (
 	line: string,
 	state?: SqlCommentStripState
 ): string => {
 	let uncommentedLine = '';
-	let quote: string | undefined;
 	let inBlockComment = state?.inBlockComment ?? false;
 
 	let index = 0;
 	while ( index < line.length ) {
-		const char = line[ index ];
-		const nextChar = line[ index + 1 ];
-
 		if ( inBlockComment ) {
-			if ( isSqlBlockCommentEnd( line, index ) ) {
-				inBlockComment = false;
-				setSqlCommentStripState( state, false );
-				index += 2;
-				if ( '' === uncommentedLine ) {
-					index = skipSqlWhitespace( line, index );
-				}
-				continue;
-			}
-
-			index += 1;
+			const blockComment = skipSqlBlockComment( line, index, uncommentedLine, state );
+			inBlockComment = blockComment.inBlockComment;
+			index = blockComment.nextIndex;
 			continue;
 		}
 
-		if ( quote ) {
-			uncommentedLine += char;
-
-			if ( char === quote ) {
-				if ( nextChar === quote ) {
-					uncommentedLine += nextChar;
-					index += 2;
-					continue;
-				}
-
-				if ( ! isEscapedByBackslash( line, index ) ) {
-					quote = undefined;
-				}
-			}
-
-			index += 1;
+		const quotedSegment = readSqlQuotedSegment( line, index );
+		if ( quotedSegment ) {
+			uncommentedLine += quotedSegment.text;
+			index = quotedSegment.nextIndex;
 			continue;
 		}
 
-		if ( isSqlQuoteStart( char ) ) {
-			quote = char;
-			uncommentedLine += char;
-			index += 1;
-			continue;
-		}
-
-		if ( isSqlDashCommentStart( line, index ) ) {
-			return uncommentedLine.trimEnd();
-		}
-
-		if ( '#' === char ) {
+		if ( isSqlLineCommentStart( line, index ) ) {
 			return uncommentedLine.trimEnd();
 		}
 
 		if ( isSqlBlockCommentStart( line, index ) ) {
-			inBlockComment = true;
-			setSqlCommentStripState( state, true );
-			index += 2;
+			const blockComment = skipSqlBlockComment( line, index + 2, uncommentedLine, state );
+			inBlockComment = blockComment.inBlockComment;
+			index = blockComment.nextIndex;
 			continue;
 		}
 
-		uncommentedLine += char;
+		uncommentedLine += line[ index ];
 		index += 1;
 	}
 
