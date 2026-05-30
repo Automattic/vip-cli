@@ -169,20 +169,71 @@ export interface SqlTupleRowsParseResult {
 	remainder?: string;
 }
 
-export const stripSqlCommentsOutsideQuotedStrings = ( line: string ): string => {
+export interface SqlCommentStripState {
+	inBlockComment: boolean;
+}
+
+const isSqlQuoteStart = ( char: string ): boolean => "'" === char || '"' === char;
+
+const isSqlBlockCommentStart = ( line: string, index: number ): boolean =>
+	'/' === line[ index ] && '*' === line[ index + 1 ];
+
+const isSqlBlockCommentEnd = ( line: string, index: number ): boolean =>
+	'*' === line[ index ] && '/' === line[ index + 1 ];
+
+const isSqlDashCommentStart = ( line: string, index: number ): boolean => {
+	if ( '-' !== line[ index ] || '-' !== line[ index + 1 ] ) {
+		return false;
+	}
+
+	const afterCommentMarker = line[ index + 2 ];
+	return undefined === afterCommentMarker || /\s/.test( afterCommentMarker );
+};
+
+const setSqlCommentStripState = (
+	state: SqlCommentStripState | undefined,
+	inBlockComment: boolean
+): void => {
+	if ( state ) {
+		state.inBlockComment = inBlockComment;
+	}
+};
+
+export const stripSqlCommentsOutsideQuotedStrings = (
+	line: string,
+	state?: SqlCommentStripState
+): string => {
 	let uncommentedLine = '';
 	let quote: string | undefined;
+	let inBlockComment = state?.inBlockComment ?? false;
 
-	for ( let index = 0; index < line.length; index += 1 ) {
+	let index = 0;
+	while ( index < line.length ) {
 		const char = line[ index ];
+		const nextChar = line[ index + 1 ];
+
+		if ( inBlockComment ) {
+			if ( isSqlBlockCommentEnd( line, index ) ) {
+				inBlockComment = false;
+				setSqlCommentStripState( state, false );
+				index += 2;
+				if ( '' === uncommentedLine ) {
+					index = skipSqlWhitespace( line, index );
+				}
+				continue;
+			}
+
+			index += 1;
+			continue;
+		}
 
 		if ( quote ) {
 			uncommentedLine += char;
 
 			if ( char === quote ) {
-				if ( line[ index + 1 ] === quote ) {
-					uncommentedLine += line[ index + 1 ];
-					index += 1;
+				if ( nextChar === quote ) {
+					uncommentedLine += nextChar;
+					index += 2;
 					continue;
 				}
 
@@ -191,37 +242,38 @@ export const stripSqlCommentsOutsideQuotedStrings = ( line: string ): string => 
 				}
 			}
 
+			index += 1;
 			continue;
 		}
 
-		if ( "'" === char || '"' === char ) {
+		if ( isSqlQuoteStart( char ) ) {
 			quote = char;
 			uncommentedLine += char;
+			index += 1;
 			continue;
 		}
 
-		if ( '-' === char && '-' === line[ index + 1 ] ) {
-			const nextChar = line[ index + 2 ];
-			if ( undefined === nextChar || /\s/.test( nextChar ) ) {
-				return uncommentedLine.trimEnd();
-			}
+		if ( isSqlDashCommentStart( line, index ) ) {
+			return uncommentedLine.trimEnd();
 		}
 
 		if ( '#' === char ) {
 			return uncommentedLine.trimEnd();
 		}
 
-		if ( '/' === char && '*' === line[ index + 1 ] ) {
-			const blockCommentEndIndex = line.indexOf( '*/', index + 2 );
-			if ( -1 === blockCommentEndIndex ) {
-				return uncommentedLine.trimEnd();
-			}
-
-			index = blockCommentEndIndex + 1;
+		if ( isSqlBlockCommentStart( line, index ) ) {
+			inBlockComment = true;
+			setSqlCommentStripState( state, true );
+			index += 2;
 			continue;
 		}
 
 		uncommentedLine += char;
+		index += 1;
+	}
+
+	if ( inBlockComment ) {
+		return uncommentedLine.trimEnd();
 	}
 
 	return uncommentedLine;

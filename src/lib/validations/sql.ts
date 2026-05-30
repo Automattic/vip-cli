@@ -19,6 +19,7 @@ import {
 	parseInsertColumnList,
 	parseInsertColumnListSegment,
 	parseSqlTupleRows,
+	type SqlCommentStripState,
 	stripSqlCommentsOutsideQuotedStrings,
 } from '../../lib/validations/sql-insert-parser';
 import { OmitIndexSignature } from '../types';
@@ -31,7 +32,7 @@ let currentInsertStatementColumns: string[] | undefined;
 let currentInsertStatementColumnList: string | undefined;
 let currentInsertStatementHasValues = false;
 let currentInsertStatementRowBuffer: string | undefined;
-let currentInsertStatementInBlockComment = false;
+let currentSqlCommentStripState: SqlCommentStripState = { inBlockComment: false };
 
 function formatError( message: string ): string {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
@@ -573,30 +574,7 @@ const collectInsertColumnList = ( line: string, startIndex: number ): string[] |
 };
 
 const isSqlCommentOnlyLine = ( line: string ): boolean => {
-	const trimmedLine = line.trim();
-
-	if ( currentInsertStatementInBlockComment ) {
-		if ( trimmedLine.includes( '*/' ) ) {
-			currentInsertStatementInBlockComment = false;
-		}
-		return true;
-	}
-
-	if ( /^--(?:\s|$)/.test( trimmedLine ) || trimmedLine.startsWith( '#' ) ) {
-		return true;
-	}
-
-	if ( ! trimmedLine.startsWith( '/*' ) ) {
-		return false;
-	}
-
-	const blockCommentEndIndex = trimmedLine.indexOf( '*/' );
-	if ( -1 === blockCommentEndIndex ) {
-		currentInsertStatementInBlockComment = true;
-		return true;
-	}
-
-	return '' === trimmedLine.slice( blockCommentEndIndex + 2 ).trim();
+	return '' === line.trim();
 };
 
 const collectOptionUrlMatchesFromRows = ( rows: string[][] ): string[][] => {
@@ -615,16 +593,14 @@ const collectOptionsInsertRows = ( line: string, startIndex: number ): string[][
 	return collectOptionUrlMatchesFromRows( rows );
 };
 
-const collectOptionsInsertMatches = ( line: string, isCommentOnlyLine: boolean ): string[][] => {
+const collectOptionsInsertMatches = ( uncommentedLine: string ): string[][] => {
 	if ( ! isWordPressOptionsTable( currentInsertStatementTableName ) ) {
 		return [];
 	}
 
-	if ( isCommentOnlyLine ) {
+	if ( isSqlCommentOnlyLine( uncommentedLine ) ) {
 		return [];
 	}
-
-	const uncommentedLine = stripSqlCommentsOutsideQuotedStrings( line );
 
 	if ( ! currentInsertStatementHasValues ) {
 		currentInsertStatementColumns =
@@ -658,20 +634,22 @@ const perLineValidations = (
 
 	checkForTableName( line );
 
-	const insertStatementInfo = getInsertStatementInfo( line );
+	const uncommentedLine = stripSqlCommentsOutsideQuotedStrings( line, currentSqlCommentStripState );
+
+	const insertStatementInfo = getInsertStatementInfo( uncommentedLine );
 	if ( insertStatementInfo ) {
 		currentInsertStatementTableName = insertStatementInfo.tableName;
 		currentInsertStatementColumns = parseInsertColumnList(
-			line,
+			uncommentedLine,
 			insertStatementInfo.tableEndIndex
 		);
 		currentInsertStatementColumnList = undefined;
 		currentInsertStatementHasValues = false;
 		currentInsertStatementRowBuffer = undefined;
-		currentInsertStatementInBlockComment = false;
 	}
-	const isCommentOnlyLine = currentInsertStatementTableName ? isSqlCommentOnlyLine( line ) : false;
-	const optionsInsertMatches = collectOptionsInsertMatches( line, isCommentOnlyLine );
+	const optionsInsertMatches = currentInsertStatementTableName
+		? collectOptionsInsertMatches( uncommentedLine )
+		: [];
 
 	const checkKeys = Object.keys( checks ).filter(
 		checkItem => ! options.skipChecks.includes( checkItem )
@@ -695,15 +673,14 @@ const perLineValidations = (
 
 	if (
 		currentInsertStatementTableName &&
-		! isCommentOnlyLine &&
-		stripSqlCommentsOutsideQuotedStrings( line ).trimEnd().endsWith( ';' )
+		uncommentedLine &&
+		uncommentedLine.trimEnd().endsWith( ';' )
 	) {
 		currentInsertStatementTableName = undefined;
 		currentInsertStatementColumns = undefined;
 		currentInsertStatementColumnList = undefined;
 		currentInsertStatementHasValues = false;
 		currentInsertStatementRowBuffer = undefined;
-		currentInsertStatementInBlockComment = false;
 	}
 
 	lineNum += 1;
@@ -735,7 +712,7 @@ export const validate = async (
 	currentInsertStatementColumnList = undefined;
 	currentInsertStatementHasValues = false;
 	currentInsertStatementRowBuffer = undefined;
-	currentInsertStatementInBlockComment = false;
+	currentSqlCommentStripState = { inBlockComment: false };
 
 	const fileMeta = await getFileMeta( filename );
 

@@ -397,6 +397,24 @@ describe( 'sql-insert-parser', () => {
 			expect( result ).toBe( 'foo  bar' );
 		} );
 
+		it( 'carries block-comment state across lines when a state object is provided', () => {
+			const state = { inBlockComment: false };
+
+			expect( stripSqlCommentsOutsideQuotedStrings( 'foo /* start', state ) ).toBe( 'foo' );
+			expect( state ).toEqual( { inBlockComment: true } );
+
+			expect(
+				stripSqlCommentsOutsideQuotedStrings(
+					"('siteurl', 'https://commented.example', 'yes'),",
+					state
+				)
+			).toBe( '' );
+			expect( state ).toEqual( { inBlockComment: true } );
+
+			expect( stripSqlCommentsOutsideQuotedStrings( '*/ bar', state ) ).toBe( 'bar' );
+			expect( state ).toEqual( { inBlockComment: false } );
+		} );
+
 		it( 'treats an unterminated /* as the start of a comment that runs to end of line', () => {
 			expect( stripSqlCommentsOutsideQuotedStrings( 'foo /* unterminated' ) ).toBe( 'foo' );
 		} );
@@ -411,8 +429,18 @@ describe( 'sql-insert-parser', () => {
 			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
 		} );
 
+		it( 'does not treat # inside single-quoted strings as a comment', () => {
+			const input = "'foo # inside' bar";
+			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
+		} );
+
 		it( 'does not treat -- inside double-quoted strings as a comment', () => {
 			const input = '"foo -- not a comment"';
+			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
+		} );
+
+		it( 'does not treat block-comment markers inside double-quoted strings as comments', () => {
+			const input = '"before /* inside */ after"';
 			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
 		} );
 

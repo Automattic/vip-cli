@@ -3,6 +3,10 @@ CREATE DATABASE automatticians;
 -- for dev-env you should not switch database
 USE automatticians;
 
+/*
+INSERT INTO wp_options (option_name, option_value, autoload) VALUES ('siteurl', 'https://top-level-commented-insert.example', 'yes');
+*/ INSERT INTO wp_options (option_name, option_value, autoload) VALUES ('siteurl', 'https://after-top-level-block.example', 'yes');
+
 INSERT INTO wp_options (option_name, option_value, autoload)
     VALUES
         ('siteurl', 'https://super-employees-go.vip.net', 'yes'),
@@ -48,6 +52,14 @@ VALUES
     ('blogdescription', 'https://comment-control.example', 'yes'), -- ('siteurl', 'https://dash-inline-comment.example', 'yes'),
     ('blogdescription', 'https://hash-inline-control.example', 'yes'), # ('home', 'https://hash-inline-comment.example', 'yes'),
     ('blogdescription', 'https://block-inline-control.example', 'yes') /* ('siteurl', 'https://block-inline-comment.example', 'yes') */;
+
+INSERT INTO wp_options (option_name, option_value, autoload)
+VALUES
+    ('blogdescription', 'https://multiline-block-control.example', 'yes') /*
+    INSERT INTO wp_options (option_name, option_value, autoload) VALUES ('siteurl', 'https://commented-insert.example', 'yes');
+    ('siteurl', 'https://multiline-block-comment.example', 'yes'),
+    ('home', 'https://multiline-block-home-comment.example', 'yes')
+    */ , ('siteurl', 'https://after-multiline-block.example', 'yes');
 
 INSERT INTO wp_postmeta (meta_key, meta_value)
     VALUES
