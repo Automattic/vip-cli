@@ -6,6 +6,7 @@ import {
 	DEFAULT_OPTIONS_INSERT_COLUMNS,
 	INSERT_STATEMENT_MODIFIERS,
 	checkRequiresOptionsInsertContext,
+	findValuesKeyword,
 	findValuesKeywordIndex,
 	getInsertStatementInfo,
 	getOptionUrlMatchResults,
@@ -265,17 +266,76 @@ describe( 'sql-insert-parser', () => {
 			expect( findValuesKeywordIndex( line ) ).toBe( line.indexOf( 'VALUES' ) );
 		} );
 
+		it( 'returns the index of the VALUE keyword', () => {
+			const line = 'INSERT INTO wp_options VALUE (1)';
+			expect( findValuesKeywordIndex( line ) ).toBe( line.indexOf( 'VALUE' ) );
+		} );
+
 		it( 'returns -1 when VALUES is absent', () => {
 			expect( findValuesKeywordIndex( 'INSERT INTO wp_options (option_name)' ) ).toBe( -1 );
 		} );
 
-		it( 'matches lowercase and mixed-case VALUES', () => {
+		it( 'matches lowercase and mixed-case VALUE and VALUES', () => {
+			expect( findValuesKeywordIndex( 'insert into wp_options value (1)' ) ).toBeGreaterThan( -1 );
+			expect( findValuesKeywordIndex( 'INSERT INTO wp_options Value (1)' ) ).toBeGreaterThan( -1 );
 			expect( findValuesKeywordIndex( 'insert into wp_options values (1)' ) ).toBeGreaterThan( -1 );
 			expect( findValuesKeywordIndex( 'INSERT INTO wp_options Values (1)' ) ).toBeGreaterThan( -1 );
 		} );
 
-		it( 'enforces word boundaries and does not match substrings like MYVALUES', () => {
+		it( 'enforces word boundaries and does not match substrings inside larger tokens', () => {
 			expect( findValuesKeywordIndex( 'NOVALUES' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( 'value_backup' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( 'MYVALUE' ) ).toBe( -1 );
+		} );
+
+		it( 'does not match VALUE when adjacent to SQL identifier characters', () => {
+			expect( findValuesKeywordIndex( 'aVALUE' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( '1VALUE' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( '_VALUE' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( '$VALUE' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( 'VALUEa' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( 'VALUE1' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( 'VALUE_backup' ) ).toBe( -1 );
+			expect( findValuesKeywordIndex( 'VALUE$backup' ) ).toBe( -1 );
+		} );
+
+		it( 'matches standalone VALUE and VALUES with punctuation boundaries', () => {
+			expect( findValuesKeywordIndex( '(VALUE)' ) ).toBe( 1 );
+			expect( findValuesKeywordIndex( ',VALUES;' ) ).toBe( 1 );
+		} );
+
+		it( 'returns the real VALUES index after an earlier identifier false positive', () => {
+			const line = 'value$db.wp_options VALUES (1)';
+			expect( findValuesKeywordIndex( line ) ).toBe( line.indexOf( 'VALUES' ) );
+		} );
+
+		it( 'skips backtick identifiers and quoted strings before a real VALUES keyword', () => {
+			const line = '`VALUES` "VALUE" VALUES (1)';
+			expect( findValuesKeywordIndex( line ) ).toBe( line.lastIndexOf( 'VALUES' ) );
+		} );
+	} );
+
+	describe( 'findValuesKeyword', () => {
+		it( 'returns keyword bounds for singular VALUE', () => {
+			const line = 'INSERT INTO wp_options VALUE (1)';
+			const index = line.indexOf( 'VALUE' );
+			expect( findValuesKeyword( line ) ).toEqual( {
+				index,
+				endIndex: index + 'VALUE'.length,
+			} );
+		} );
+
+		it( 'returns keyword bounds for plural VALUES', () => {
+			const line = 'INSERT INTO wp_options VALUES (1)';
+			const index = line.indexOf( 'VALUES' );
+			expect( findValuesKeyword( line ) ).toEqual( {
+				index,
+				endIndex: index + 'VALUES'.length,
+			} );
+		} );
+
+		it( 'returns undefined when VALUE(S) is absent', () => {
+			expect( findValuesKeyword( 'INSERT INTO wp_options (option_name)' ) ).toBeUndefined();
 		} );
 	} );
 
@@ -292,6 +352,24 @@ describe( 'sql-insert-parser', () => {
 
 		it( 'returns undefined when the opening parenthesis is after the VALUES keyword', () => {
 			const line = 'INSERT INTO wp_options VALUES (1, 2, 3)';
+			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
+			expect( parseInsertColumnList( line, startIndex ) ).toBeUndefined();
+		} );
+
+		it( 'returns the lowercased column list before the VALUE keyword', () => {
+			const line =
+				'INSERT INTO wp_options (option_id, option_name, option_value, autoload) VALUE (1,2,3,4)';
+			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
+			expect( parseInsertColumnList( line, startIndex ) ).toEqual( [
+				'option_id',
+				'option_name',
+				'option_value',
+				'autoload',
+			] );
+		} );
+
+		it( 'returns undefined when the opening parenthesis is after the VALUE keyword', () => {
+			const line = 'INSERT INTO wp_options VALUE (1, 2, 3, 4)';
 			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
 			expect( parseInsertColumnList( line, startIndex ) ).toBeUndefined();
 		} );

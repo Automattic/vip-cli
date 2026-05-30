@@ -12,6 +12,7 @@ import {
 } from '../../lib/validations/line-by-line';
 import {
 	checkRequiresOptionsInsertContext,
+	findValuesKeyword,
 	findValuesKeywordIndex,
 	getInsertStatementInfo,
 	getOptionUrlMatchResults,
@@ -606,13 +607,13 @@ const collectOptionsInsertMatches = ( uncommentedLine: string ): string[][] => {
 		currentInsertStatementColumns =
 			currentInsertStatementColumns ?? collectInsertColumnList( uncommentedLine, 0 );
 
-		const valuesIndex = findValuesKeywordIndex( uncommentedLine );
-		if ( -1 === valuesIndex ) {
+		const valuesKeyword = findValuesKeyword( uncommentedLine );
+		if ( ! valuesKeyword ) {
 			return [];
 		}
 
 		currentInsertStatementHasValues = true;
-		return collectOptionsInsertRows( uncommentedLine, valuesIndex + 'VALUES'.length );
+		return collectOptionsInsertRows( uncommentedLine, valuesKeyword.endIndex );
 	}
 
 	return collectOptionsInsertRows( uncommentedLine, 0 );

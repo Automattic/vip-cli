@@ -17,10 +17,17 @@ INSERT INTO wp_options (option_name, option_value, autoload)
 INSERT INTO wp_options VALUES
         (1, 'siteurl', 'https://full-order.example', 'yes');
 
+INSERT INTO wp_options VALUE
+        (2, 'siteurl', 'https://singular-default.example', 'yes');
+
 INSERT INTO wp_options
     (option_name, option_value, autoload)
 VALUES
     ('siteurl', 'https://split-header.example', 'yes');
+
+INSERT INTO wp_options (option_id, option_name, option_value, autoload)
+VALUE
+    (3, 'home', 'https://singular-explicit.example', 'yes');
 
 INSERT INTO wp_options (
     option_name,
