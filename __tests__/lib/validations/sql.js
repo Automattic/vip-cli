@@ -256,6 +256,26 @@ describe( 'lib/validations/sql', () => {
 				'Use \'--search-replace="block-inline-comment.example,test.domain"\' switch to replace the domain'
 			);
 		} );
+		it( 'should not suggest replacements from multiline block comment option rows', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="top-level-commented-insert.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="after-top-level-block.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="commented-insert.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="multiline-block-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="multiline-block-home-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="after-multiline-block.example,test.domain"\' switch to replace the domain'
+			);
+		} );
 		it( 'should preserve comment markers inside quoted option values', () => {
 			expect( output ).toContain(
 				'Use \'--search-replace="quoted-dash.example/path--kept,test.domain"\' switch to replace the domain'
