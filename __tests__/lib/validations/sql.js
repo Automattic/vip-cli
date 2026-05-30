@@ -186,6 +186,92 @@ describe( 'lib/validations/sql', () => {
 				'Use \'--search-replace="home,test.domain"\' switch to replace the domain'
 			);
 		} );
+		it( 'should not suggest to replace home strings from non-options tables', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="unrelated-table.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should not suggest replacements for unrelated options rows containing quoted home URL text', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="embedded.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should suggest replacements for option rows inserted with supported statement variants', () => {
+			expect( output ).toContain(
+				'Use \'--search-replace="full-order.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="split-header.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="replace.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="ignore.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="qualified.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="network.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should suggest replacements for explicit option column lists split across multiple lines', () => {
+			expect( output ).toContain(
+				'Use \'--search-replace="multi-line-columns.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should pair option values by explicit column name instead of fixed position', () => {
+			expect( output ).toContain(
+				'Use \'--search-replace="reordered.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="unpaired-neighbor.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should suggest replacements for option tuples split across multiple lines', () => {
+			expect( output ).toContain(
+				'Use \'--search-replace="multi-line-tuple.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should not suggest replacements from comment-shaped option rows', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="dash-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="hash-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="block-comment.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should not suggest replacements from trailing inline comment option rows', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="dash-inline-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="hash-inline-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
+				'Use \'--search-replace="block-inline-comment.example,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should preserve comment markers inside quoted option values', () => {
+			expect( output ).toContain(
+				'Use \'--search-replace="quoted-dash.example/path--kept,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="quoted-hash.example/path#kept,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="quoted-block.example/path/*kept*/,test.domain"\' switch to replace the domain'
+			);
+		} );
+		it( 'should not suggest replacements for non-numeric pseudo-options tables', () => {
+			expect( output ).not.toContain(
+				'Use \'--search-replace="pseudo.example,test.domain"\' switch to replace the domain'
+			);
+		} );
 	} );
 
 	describe( 'it fails when the import file is compressed', () => {
