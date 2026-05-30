@@ -15,6 +15,15 @@ export interface InsertStatementInfo {
 	tableEndIndex: number;
 }
 
+export interface SqlValuesKeywordMatch {
+	index: number;
+	endIndex: number;
+}
+
+const SQL_IDENTIFIER_REGEX = /^[a-z0-9_$]+/i;
+const SQL_IDENTIFIER_CHAR_REGEX = /^[a-z0-9_$]$/i;
+const VALUES_KEYWORD_REGEX = /^VALUES?/i;
+
 export const DEFAULT_OPTIONS_INSERT_COLUMNS = [
 	'option_id',
 	'option_name',
@@ -47,7 +56,7 @@ export const readSqlIdentifier = (
 		return { name: line.slice( index + 1, endIndex ), endIndex: endIndex + 1 };
 	}
 
-	const matches = /^[a-z0-9_$]+/i.exec( line.slice( index ) );
+	const matches = SQL_IDENTIFIER_REGEX.exec( line.slice( index ) );
 	if ( ! matches ) {
 		return undefined;
 	}
@@ -115,9 +124,78 @@ export const normalizeSqlIdentifier = ( identifier: string ): string => {
 	return identifier.replace( /^`|`$/g, '' ).toLowerCase();
 };
 
+const isSqlIdentifierChar = ( char: string | undefined ): boolean => {
+	return undefined !== char && SQL_IDENTIFIER_CHAR_REGEX.test( char );
+};
+
+export const findValuesKeyword = ( line: string ): SqlValuesKeywordMatch | undefined => {
+	let quote: string | undefined;
+	let inBacktickIdentifier = false;
+
+	for ( let index = 0; index < line.length; index += 1 ) {
+		const char = line[ index ];
+		const nextChar = line[ index + 1 ];
+
+		if ( inBacktickIdentifier ) {
+			if ( '`' === char ) {
+				if ( '`' === nextChar ) {
+					index += 1;
+					continue;
+				}
+
+				inBacktickIdentifier = false;
+			}
+
+			continue;
+		}
+
+		if ( quote ) {
+			if ( char === quote ) {
+				if ( nextChar === quote ) {
+					index += 1;
+					continue;
+				}
+
+				if ( ! isEscapedByBackslash( line, index ) ) {
+					quote = undefined;
+				}
+			}
+
+			continue;
+		}
+
+		if ( '`' === char ) {
+			inBacktickIdentifier = true;
+			continue;
+		}
+
+		if ( "'" === char || '"' === char ) {
+			quote = char;
+			continue;
+		}
+
+		const valuesMatches = VALUES_KEYWORD_REGEX.exec( line.slice( index ) );
+		if ( ! valuesMatches ) {
+			continue;
+		}
+
+		const endIndex = index + valuesMatches[ 0 ].length;
+		if ( isSqlIdentifierChar( line[ index - 1 ] ) || isSqlIdentifierChar( line[ endIndex ] ) ) {
+			index = endIndex - 1;
+			continue;
+		}
+
+		return {
+			index,
+			endIndex,
+		};
+	}
+
+	return undefined;
+};
+
 export const findValuesKeywordIndex = ( line: string ): number => {
-	const valuesMatches = /\bVALUES\b/i.exec( line );
-	return valuesMatches?.index ?? -1;
+	return findValuesKeyword( line )?.index ?? -1;
 };
 
 export const parseInsertColumnList = ( line: string, startIndex: number ): string[] | undefined => {

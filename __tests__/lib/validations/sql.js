@@ -201,6 +201,12 @@ describe( 'lib/validations/sql', () => {
 				'Use \'--search-replace="full-order.example,test.domain"\' switch to replace the domain'
 			);
 			expect( output ).toContain(
+				'Use \'--search-replace="singular-default.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="singular-explicit.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
 				'Use \'--search-replace="split-header.example,test.domain"\' switch to replace the domain'
 			);
 			expect( output ).toContain(
