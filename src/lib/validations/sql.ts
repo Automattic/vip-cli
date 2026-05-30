@@ -674,7 +674,7 @@ const perLineValidations = (
 
 	if (
 		currentInsertStatementTableName &&
-		uncommentedLine &&
+		uncommentedLine.length > 0 &&
 		uncommentedLine.trimEnd().endsWith( ';' )
 	) {
 		currentInsertStatementTableName = undefined;
