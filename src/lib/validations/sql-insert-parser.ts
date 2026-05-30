@@ -128,67 +128,65 @@ const isSqlIdentifierChar = ( char: string | undefined ): boolean => {
 	return undefined !== char && SQL_IDENTIFIER_CHAR_REGEX.test( char );
 };
 
-export const findValuesKeyword = ( line: string ): SqlValuesKeywordMatch | undefined => {
-	let quote: string | undefined;
-	let inBacktickIdentifier = false;
+const skipSqlDelimitedSegment = ( line: string, startIndex: number ): number | undefined => {
+	const delimiter = line[ startIndex ];
+	if ( '`' !== delimiter && "'" !== delimiter && '"' !== delimiter ) {
+		return undefined;
+	}
 
-	for ( let index = 0; index < line.length; index += 1 ) {
+	for ( let index = startIndex + 1; index < line.length; index += 1 ) {
 		const char = line[ index ];
 		const nextChar = line[ index + 1 ];
 
-		if ( inBacktickIdentifier ) {
-			if ( '`' === char ) {
-				if ( '`' === nextChar ) {
-					index += 1;
-					continue;
-				}
-
-				inBacktickIdentifier = false;
-			}
-
+		if ( char !== delimiter ) {
 			continue;
 		}
 
-		if ( quote ) {
-			if ( char === quote ) {
-				if ( nextChar === quote ) {
-					index += 1;
-					continue;
-				}
-
-				if ( ! isEscapedByBackslash( line, index ) ) {
-					quote = undefined;
-				}
-			}
-
+		if ( nextChar === delimiter ) {
+			index += 1;
 			continue;
 		}
 
-		if ( '`' === char ) {
-			inBacktickIdentifier = true;
+		if ( '`' === delimiter || ! isEscapedByBackslash( line, index ) ) {
+			return index;
+		}
+	}
+
+	return line.length - 1;
+};
+
+const getValuesKeywordMatchAt = (
+	line: string,
+	index: number
+): SqlValuesKeywordMatch | undefined => {
+	const valuesMatches = VALUES_KEYWORD_REGEX.exec( line.slice( index ) );
+	if ( ! valuesMatches ) {
+		return undefined;
+	}
+
+	const endIndex = index + valuesMatches[ 0 ].length;
+	if ( isSqlIdentifierChar( line[ index - 1 ] ) || isSqlIdentifierChar( line[ endIndex ] ) ) {
+		return undefined;
+	}
+
+	return {
+		index,
+		endIndex,
+	};
+};
+
+export const findValuesKeyword = ( line: string ): SqlValuesKeywordMatch | undefined => {
+	for ( let index = 0; index < line.length; index += 1 ) {
+		const segmentEndIndex = skipSqlDelimitedSegment( line, index );
+		if ( undefined !== segmentEndIndex ) {
+			index = segmentEndIndex;
 			continue;
 		}
 
-		if ( "'" === char || '"' === char ) {
-			quote = char;
-			continue;
+		const valuesKeyword = getValuesKeywordMatchAt( line, index );
+		if ( valuesKeyword ) {
+			return valuesKeyword;
 		}
-
-		const valuesMatches = VALUES_KEYWORD_REGEX.exec( line.slice( index ) );
-		if ( ! valuesMatches ) {
-			continue;
-		}
-
-		const endIndex = index + valuesMatches[ 0 ].length;
-		if ( isSqlIdentifierChar( line[ index - 1 ] ) || isSqlIdentifierChar( line[ endIndex ] ) ) {
-			index = endIndex - 1;
-			continue;
-		}
-
-		return {
-			index,
-			endIndex,
-		};
 	}
 
 	return undefined;
