@@ -1,10 +1,8 @@
-/**
- * @format
- */
-
 import debugLib from 'debug';
 import fetch, { Response } from 'node-fetch';
-import path from 'path';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 import { validate } from '../../../src/lib/validations/sql';
 
@@ -22,9 +20,68 @@ const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 const ERROR_CODE = 1;
 
 jest.mock( 'node-fetch' );
+jest.mock( '../../../src/lib/tracker', () => ( {
+	trackEvent: jest.fn().mockResolvedValue( [] ),
+} ) );
 fetch.mockReturnValue( Promise.resolve( new Response( 'ok' ) ) );
 
 describe( 'lib/validations/sql', () => {
+	describe( 'it validates SQL for dev-env without false-positive USE statements', () => {
+		let tempDir;
+		let sqlBytes;
+
+		beforeAll( async () => {
+			tempDir = await mkdtemp( path.join( os.tmpdir(), 'vip-cli-sql-validation-' ) );
+			const sqlFilePath = path.join( tempDir, 'u2028-use-string.sql' );
+			sqlBytes = Buffer.concat( [
+				Buffer.from(
+					'DROP TABLE IF EXISTS `wp_options`;\n' +
+						'CREATE TABLE `wp_options` (\n' +
+						'  `option_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n' +
+						"  `option_name` varchar(191) NOT NULL DEFAULT '',\n" +
+						'  `option_value` longtext NOT NULL,\n' +
+						"  `autoload` varchar(20) NOT NULL DEFAULT 'yes',\n" +
+						'  PRIMARY KEY (`option_id`)\n' +
+						') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n' +
+						"INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('siteurl', 'http://test.domain', 'yes');\n" +
+						"INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('home', 'http://test.domain', 'yes');\n" +
+						"INSERT INTO `wp_options` (`option_name`, `option_value`, `autoload`) VALUES ('description', 'Line separator ",
+					'utf8'
+				),
+				Buffer.from( [ 0xe2, 0x80, 0xa8 ] ),
+				Buffer.from( "Use Cases for VIP CLI', 'yes');\n", 'utf8' ),
+			] );
+
+			await writeFile( sqlFilePath, sqlBytes );
+
+			output = '';
+			mockExit.mockClear();
+
+			let isolatedValidate;
+			jest.isolateModules( () => {
+				( { validate: isolatedValidate } = require( '../../../src/lib/validations/sql' ) );
+			} );
+
+			await isolatedValidate( sqlFilePath, {
+				isImport: false,
+				skipChecks: [],
+				extraCheckParams: { siteHomeUrlLando: 'test.domain' },
+			} );
+		} );
+
+		afterAll( async () => {
+			if ( tempDir ) {
+				await rm( tempDir, { recursive: true, force: true } );
+			}
+		} );
+
+		it( 'does not reject text after U+2028 inside an INSERT value as a USE statement', () => {
+			expect( sqlBytes.includes( Buffer.from( [ 0xe2, 0x80, 0xa8 ] ) ) ).toBe( true );
+			expect( mockExit ).not.toHaveBeenCalled();
+			expect( output ).not.toContain( 'USE <DATABASE_NAME> statement on' );
+		} );
+	} );
+
 	describe( 'it fails when the SQL has (using bad-sql-dump.sql)', () => {
 		beforeAll( async () => {
 			try {
