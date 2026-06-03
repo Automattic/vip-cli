@@ -95,7 +95,6 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 		};
 
 		const configurationFileOptions = await getConfigurationFileOptions();
-		const thereAreOptionsFromConfigFile = Object.keys( configurationFileOptions ).length > 0;
 		const finalPreselectedOptions = mergeConfigurationFileOptions(
 			preselectedOptions,
 			configurationFileOptions
@@ -122,11 +121,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			adminPassword: currentInstanceData.adminPassword,
 		};
 
-		const providedOptions = Object.keys( opt )
-			.filter( option => option.length > 1 ) // Filter out single letter aliases
-			.filter( option => ! [ 'debug', 'help', 'slug' ].includes( option ) ); // Filter out options that are not related to instance configuration
-
-		const suppressPrompts = providedOptions.length > 0 || thereAreOptionsFromConfigFile;
+		const suppressPrompts = ! process.stdin.isTTY;
 		const instanceData = await promptForArguments(
 			finalPreselectedOptions,
 			defaultOptions,
