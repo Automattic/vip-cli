@@ -91,9 +91,9 @@ describe( 'rechallenge token cache', () => {
 	it( 'resets and purges keychain when stored blob is malformed JSON', async () => {
 		// Force a corrupt blob to land in the mock store. We need the
 		// keychain mock to return invalid JSON on the next read.
-		const keychainMock = keychain as typeof keychain & {
-			getPassword: jest.Mock;
-			deletePassword: jest.Mock;
+		const keychainMock = keychain as unknown as {
+			getPassword: jest.Mock< ( service: string ) => Promise< string | null > >;
+			deletePassword: jest.Mock< ( service: string ) => Promise< boolean > >;
 		};
 		keychainMock.getPassword.mockResolvedValueOnce( 'not-valid-json{' );
 		tokenCache._resetInMemoryForTests();
