@@ -1,0 +1,159 @@
+import chalk from 'chalk';
+import debugLib from 'debug';
+
+import { trackEvent } from '../tracker';
+import * as client from './client';
+import {
+	RechallengeAbortedError,
+	RechallengeTerminalError,
+	RechallengeUnsupportedVersionError,
+} from './errors';
+import { openBrowser } from './open-browser';
+import tokenCache from './token-cache';
+import { RECHALLENGE_VERSION } from './types';
+
+import type { ElevatedToken, RechallengeExtension, RechallengeStatus } from './types';
+
+const debug = debugLib( '@automattic/vip:rechallenge:flow' );
+
+const TERMINAL: ReadonlySet< RechallengeStatus > = new Set( [
+	'verified',
+	'expired',
+	'failed',
+	'cancelled',
+] );
+
+export interface RunRechallengeOptions {
+	requestedOperation: string;
+	rechallenge: RechallengeExtension;
+	interactive: boolean;
+	signal?: AbortSignal;
+}
+
+function sleep( ms: number, signal?: AbortSignal ): Promise< void > {
+	return new Promise( ( resolve, reject ) => {
+		if ( signal?.aborted ) {
+			reject( new Error( 'aborted' ) );
+			return;
+		}
+		const timer = setTimeout( () => {
+			signal?.removeEventListener( 'abort', onAbort );
+			resolve();
+		}, ms );
+		function onAbort() {
+			clearTimeout( timer );
+			reject( new Error( 'aborted' ) );
+		}
+		signal?.addEventListener( 'abort', onAbort, { once: true } );
+	} );
+}
+
+export async function runRechallenge( opts: RunRechallengeOptions ): Promise< ElevatedToken > {
+	const { requestedOperation, rechallenge, interactive, signal } = opts;
+
+	if ( rechallenge.version !== RECHALLENGE_VERSION ) {
+		throw new RechallengeUnsupportedVersionError( rechallenge.version, requestedOperation );
+	}
+
+	await trackEvent( 'rechallenge_required', { scope: requestedOperation } );
+
+	const session = await client.createSession( {
+		path: rechallenge.createSessionPath,
+		requestedOperation,
+	} );
+	await trackEvent( 'rechallenge_session_created', { scope: requestedOperation } );
+
+	const verificationUrl = session.verificationUrl;
+	const expiresIso = session.expiresAt;
+	if ( interactive ) {
+		await openBrowser( verificationUrl );
+		console.warn(
+			chalk.yellow( '⚠' ),
+			`Step-up verification required for ${ chalk.bold( requestedOperation ) }.`
+		);
+		console.warn( `  Opened ${ chalk.cyan( verificationUrl ) }` );
+		console.warn(
+			`  If your browser did not open, copy and paste the URL above. Expires at ${ expiresIso }.`
+		);
+	} else {
+		console.warn(
+			`Step-up verification required for ${ requestedOperation }. ` +
+				`Complete it at: ${ verificationUrl } (expires at ${ expiresIso }).`
+		);
+	}
+
+	const interval = Math.max( session.pollIntervalSeconds, 0 ) * 1000;
+	const deadline = Date.parse( session.expiresAt );
+	if ( Number.isNaN( deadline ) ) {
+		throw new RechallengeTerminalError(
+			'expired',
+			requestedOperation,
+			'server returned unparseable expiresAt'
+		);
+	}
+
+	while ( true ) {
+		if ( signal?.aborted ) {
+			throw new RechallengeAbortedError( requestedOperation );
+		}
+
+		try {
+			await sleep( interval, signal );
+		} catch {
+			throw new RechallengeAbortedError( requestedOperation );
+		}
+
+		if ( ! Number.isNaN( deadline ) && Date.now() > deadline ) {
+			throw new RechallengeTerminalError(
+				'expired',
+				requestedOperation,
+				'session window elapsed before completion'
+			);
+		}
+
+		const status = await client.getSessionStatus( {
+			template: rechallenge.statusPathTemplate,
+			challengeId: session.challengeId,
+			scope: requestedOperation,
+		} );
+
+		if ( ! TERMINAL.has( status.status ) ) {
+			debug( 'still %s; polling again', status.status );
+			continue;
+		}
+
+		if ( status.status === 'verified' ) {
+			const { elevatedToken } = await client.exchange( {
+				template: rechallenge.exchangePathTemplate,
+				challengeId: session.challengeId,
+				scope: requestedOperation,
+			} );
+			await trackEvent( 'rechallenge_exchanged', { scope: requestedOperation } );
+			await tokenCache.set( requestedOperation, elevatedToken );
+			await trackEvent( 'rechallenge_verified', {
+				scope: requestedOperation,
+				provider: status.provider ?? 'unknown',
+			} );
+			return elevatedToken;
+		}
+
+		await trackEvent( `rechallenge_${ status.status }`, {
+			scope: requestedOperation,
+		} );
+		throw new RechallengeTerminalError(
+			status.status,
+			requestedOperation,
+			status.statusReason?.message
+		);
+	}
+}
+
+export function isInteractiveContext( argvOrFlags: string[] = process.argv ): boolean {
+	if ( process.env.VIP_NON_INTERACTIVE === '1' ) {
+		return false;
+	}
+	if ( argvOrFlags.includes( '--non-interactive' ) ) {
+		return false;
+	}
+	return Boolean( process.stdout.isTTY );
+}
