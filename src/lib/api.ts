@@ -13,8 +13,8 @@ import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
 import { FetchError } from 'node-fetch';
 
-import http from './api/http';
 import { API_URL } from './api/constants';
+import http from './api/http';
 
 // Config — re-exported from ./api/constants so modules in the rechallenge tree
 // can import them without pulling in the full api.ts graph (which would create
@@ -151,16 +151,14 @@ export default function API( {
 	// api.ts → link.ts → client.ts), preventing jest.mock('../api/http') from
 	// intercepting the http reference captured inside client.ts.  A require()
 	// call inside the function body is resolved after all mocks are registered.
+
+	type RechallengeLinkModule = typeof import('./rechallenge/link');
 	// eslint-disable-next-line @typescript-eslint/no-require-imports
-	const createRechallengeLink = ( require( './rechallenge/link' ) as typeof import( './rechallenge/link' ) ).default;
+	const linkMod = require( './rechallenge/link' ) as RechallengeLinkModule;
+	const createRechallengeLink = linkMod.default;
 
 	return new ApolloClient( {
-		link: ApolloLink.from( [
-			errorLink,
-			createRechallengeLink(),
-			retryLink,
-			httpLink,
-		] ),
+		link: ApolloLink.from( [ errorLink, createRechallengeLink(), retryLink, httpLink ] ),
 		cache: new InMemoryCache( {
 			typePolicies: {
 				WPSite: {
