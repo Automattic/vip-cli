@@ -129,7 +129,10 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 				scope: requestedOperation,
 			} );
 			await trackEvent( 'rechallenge_exchanged', { scope: requestedOperation } );
-			await tokenCache.set( requestedOperation, elevatedToken );
+			await tokenCache.set( requestedOperation, {
+				...elevatedToken,
+				headerName: rechallenge.elevatedHeaderName,
+			} );
 			await trackEvent( 'rechallenge_verified', {
 				scope: requestedOperation,
 				provider: status.provider ?? 'unknown',

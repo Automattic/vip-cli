@@ -42,4 +42,5 @@ export interface ElevatedToken {
 	token: string;
 	expiresAt: string; // ISO-8601
 	purpose: string;
+	headerName?: string;
 }
