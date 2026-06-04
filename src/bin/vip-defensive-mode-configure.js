@@ -6,6 +6,7 @@ import { prompt } from 'enquirer';
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, updateDefensiveModeConfig } from '../lib/defensive-mode/api';
+import { isInteractive, reportMutationResult } from '../lib/defensive-mode/cli-helpers';
 import { confirm } from '../lib/envvar/input';
 import { trackEvent } from '../lib/tracker';
 
@@ -22,16 +23,6 @@ const examples = [
 		description: 'Update with explicit thresholds.',
 	},
 ];
-
-function isInteractive( opt ) {
-	if ( process.env.VIP_NON_INTERACTIVE === '1' ) {
-		return false;
-	}
-	if ( opt.nonInteractive ) {
-		return false;
-	}
-	return Boolean( process.stdout.isTTY );
-}
 
 function parseBoolean( raw ) {
 	if ( raw === true || raw === false ) {
@@ -230,19 +221,15 @@ export async function defensiveModeConfigureCommand( _args, opt ) {
 
 	const result = await updateDefensiveModeConfig( input );
 
-	if ( ! result.success ) {
-		await trackEvent( 'defensive_mode_configure_command_error', {
-			...trackingParams,
-			error: result.message,
-		} );
-		console.error( chalk.red( `Failed to update defensive mode config: ${ result.message }` ) );
-		process.exit( 1 );
-	}
-
-	await trackEvent( 'defensive_mode_configure_command_success', trackingParams );
-	console.log(
-		chalk.green( '✓' ),
-		`Defensive mode configuration updated for ${ opt.app.name }.${ opt.env.type } — ${ result.message }`
+	await reportMutationResult(
+		result,
+		trackingParams,
+		'configure',
+		opt.app.name,
+		opt.env.type,
+		'configuration updated',
+		'update defensive mode config',
+		trackEvent
 	);
 }
 

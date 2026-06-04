@@ -44,7 +44,13 @@ function extractElevatedPermission( result: ApolloLink.Result ): ElevatedPermiss
 			continue;
 		}
 		const rechallenge = ext.rechallenge as RechallengeExtension | undefined;
-		if ( rechallenge && typeof rechallenge.createSessionPath === 'string' ) {
+		if (
+			rechallenge &&
+			typeof rechallenge.createSessionPath === 'string' &&
+			typeof rechallenge.statusPathTemplate === 'string' &&
+			typeof rechallenge.exchangePathTemplate === 'string' &&
+			typeof rechallenge.elevatedHeaderName === 'string'
+		) {
 			return { rechallenge };
 		}
 	}

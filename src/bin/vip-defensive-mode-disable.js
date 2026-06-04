@@ -1,18 +1,11 @@
 #!/usr/bin/env node
 
-import chalk from 'chalk';
-
 import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { appQuery, updateDefensiveModeStatus } from '../lib/defensive-mode/api';
+import { guardProductionMutation, reportMutationResult } from '../lib/defensive-mode/cli-helpers';
 import { confirm } from '../lib/envvar/input';
 import { trackEvent } from '../lib/tracker';
-
-function isInteractive( opt ) {
-	if ( process.env.VIP_NON_INTERACTIVE === '1' ) return false;
-	if ( opt.nonInteractive ) return false;
-	return Boolean( process.stdout.isTTY );
-}
 
 const baseUsage = 'vip defensive-mode disable';
 const exampleUsage = 'vip @example-app.production defensive-mode disable';
@@ -36,26 +29,14 @@ export async function defensiveModeDisableCommand( _args, opt ) {
 
 	await trackEvent( 'defensive_mode_disable_command_execute', trackingParams );
 
-	if ( ! opt.skipConfirmation && opt.env.type === 'production' ) {
-		if ( ! isInteractive( opt ) ) {
-			console.error(
-				chalk.red(
-					'Refusing to disable defensive mode on production without confirmation. ' +
-						'Pass --skip-confirmation to proceed non-interactively.'
-				)
-			);
-			await trackEvent( 'defensive_mode_disable_command_cancelled', trackingParams );
-			process.exit( 1 );
-		}
-		const yes = await confirm(
-			`Disable defensive mode on ${ formatEnvironment( opt.env.type ) } for ${ opt.app.name }?`
-		);
-		if ( ! yes ) {
-			await trackEvent( 'defensive_mode_disable_command_cancelled', trackingParams );
-			console.log( 'Command cancelled' );
-			process.exit();
-		}
-	}
+	await guardProductionMutation(
+		opt,
+		'disable',
+		trackingParams,
+		confirm,
+		trackEvent,
+		formatEnvironment
+	);
 
 	const result = await updateDefensiveModeStatus( {
 		appId: opt.app.id,
@@ -63,19 +44,15 @@ export async function defensiveModeDisableCommand( _args, opt ) {
 		enabled: false,
 	} );
 
-	if ( ! result.success ) {
-		await trackEvent( 'defensive_mode_disable_command_error', {
-			...trackingParams,
-			error: result.message,
-		} );
-		console.error( chalk.red( `Failed to disable defensive mode: ${ result.message }` ) );
-		process.exit( 1 );
-	}
-
-	await trackEvent( 'defensive_mode_disable_command_success', trackingParams );
-	console.log(
-		chalk.green( '✓' ),
-		`Defensive mode disabled for ${ opt.app.name }.${ opt.env.type } — ${ result.message }`
+	await reportMutationResult(
+		result,
+		trackingParams,
+		'disable',
+		opt.app.name,
+		opt.env.type,
+		'disabled',
+		'disable defensive mode',
+		trackEvent
 	);
 }
 

@@ -84,6 +84,11 @@ export async function updateDefensiveModeStatus(
 			input: { id: input.appId, environmentId: input.envId, enabled: input.enabled },
 		},
 	} );
+	if ( ! result.data ) {
+		throw new Error(
+			'updateDefensiveModeStatus returned no data; the API may have rejected the request.'
+		);
+	}
 	return (
 		result.data as {
 			updateDefensiveModeStatus: { success: boolean; message: string };
@@ -111,6 +116,11 @@ export async function updateDefensiveModeConfig(
 		mutation: CONFIG_MUTATION,
 		variables: { input: mutationInput },
 	} );
+	if ( ! result.data ) {
+		throw new Error(
+			'updateDefensiveModeConfig returned no data; the API may have rejected the request.'
+		);
+	}
 	return (
 		result.data as {
 			updateDefensiveModeConfig: { success: boolean; message: string };
