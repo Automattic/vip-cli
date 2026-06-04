@@ -17,7 +17,9 @@ function jsonResponse( status: number, body: unknown ) {
 }
 
 describe( 'rechallenge client.createSession', () => {
-	beforeEach( () => mockHttp.mockReset() );
+	beforeEach( () => {
+		mockHttp.mockReset();
+	} );
 
 	it( 'POSTs the create-session path with clientType and requestedOperation', async () => {
 		mockHttp.mockReturnValueOnce(
@@ -60,7 +62,9 @@ describe( 'rechallenge client.createSession', () => {
 } );
 
 describe( 'rechallenge client.getSessionStatus', () => {
-	beforeEach( () => mockHttp.mockReset() );
+	beforeEach( () => {
+		mockHttp.mockReset();
+	} );
 
 	it( 'GETs the status template with challengeId substituted', async () => {
 		mockHttp.mockReturnValueOnce(
@@ -96,7 +100,9 @@ describe( 'rechallenge client.getSessionStatus', () => {
 } );
 
 describe( 'rechallenge client.exchange', () => {
-	beforeEach( () => mockHttp.mockReset() );
+	beforeEach( () => {
+		mockHttp.mockReset();
+	} );
 
 	it( 'POSTs the exchange template and returns elevatedToken', async () => {
 		mockHttp.mockReturnValueOnce(
