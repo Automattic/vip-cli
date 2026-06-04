@@ -1,3 +1,5 @@
+import { RECHALLENGE_VERSION } from './types';
+
 import type { RechallengeStatus } from './types';
 
 export class RechallengeError extends Error {
@@ -12,7 +14,7 @@ export class RechallengeError extends Error {
 export class RechallengeUnsupportedVersionError extends RechallengeError {
 	constructor( version: string, scope: string ) {
 		super(
-			`Server requested rechallenge version "${ version }" but this CLI only supports v2. Update vip-cli.`,
+			`Server requested rechallenge version "${ version }" but this CLI only supports ${ RECHALLENGE_VERSION }. Update vip-cli.`,
 			scope
 		);
 		this.name = 'RechallengeUnsupportedVersionError';
