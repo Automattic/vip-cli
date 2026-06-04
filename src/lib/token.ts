@@ -1,7 +1,7 @@
 import { jwtDecode } from 'jwt-decode';
 import { randomUUID } from 'node:crypto';
 
-import { API_HOST, PRODUCTION_API_HOST } from './api';
+import { API_HOST, PRODUCTION_API_HOST } from './api/constants';
 import keychain from './keychain';
 
 interface Payload {

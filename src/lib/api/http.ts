@@ -6,7 +6,7 @@ import fetch, {
 	type HeadersInit,
 } from 'node-fetch';
 
-import { API_HOST } from '../../lib/api';
+import { API_HOST } from './constants';
 import env from '../../lib/env';
 import { createProxyAgent } from '../../lib/http/proxy-agent';
 import Token from '../../lib/token';
