@@ -123,6 +123,12 @@ describe( 'lib/validations/sql', () => {
 		it( 'instances of ENGINE != InnoDB', () => {
 			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
 		} );
+		it( 'no ENGINE != InnoDB false positives on row data containing "engine =" strings', () => {
+			// Lines 43-44 are an INSERT statement and a mydumper-style `,(...)` VALUES row
+			// whose *content* mentions non-InnoDB engines; they must not be flagged. The
+			// trailing period asserts line 14 is the *only* flagged line.
+			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14.' );
+		} );
 		it( 'use statement should be ok', () => {
 			expect( output ).not.toContain(
 				"'USE <DATABASE_NAME>' should not be present (case-insensitive)"
