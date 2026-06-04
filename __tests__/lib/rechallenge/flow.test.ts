@@ -110,8 +110,17 @@ describe( 'runRechallenge', () => {
 			expect.objectContaining( { token: 'jwt.payload.sig' } )
 		);
 		expect( trackEvent ).toHaveBeenCalledWith(
+			'rechallenge_verified',
+			expect.objectContaining( { scope: 'updateDefensiveModeStatus' } )
+		);
+		expect( trackEvent ).toHaveBeenCalledWith(
 			'rechallenge_exchanged',
 			expect.objectContaining( { scope: 'updateDefensiveModeStatus' } )
+		);
+		// verified fires before exchanged
+		const calls = trackEvent.mock.calls.map( ( [ name ] ) => name );
+		expect( calls.indexOf( 'rechallenge_verified' ) ).toBeLessThan(
+			calls.indexOf( 'rechallenge_exchanged' )
 		);
 	} );
 

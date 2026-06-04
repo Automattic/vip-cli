@@ -207,6 +207,14 @@ export async function defensiveModeConfigureCommand( _args, opt ) {
 		input.connectionThresholdPercentage = percentage;
 	}
 
+	const currentConfig = opt.env.defensiveMode?.config?.effective ?? null;
+	if ( currentConfig ) {
+		console.log( chalk.bold( 'Current defensive-mode configuration:' ) );
+		console.log( JSON.stringify( currentConfig, null, 2 ) );
+	}
+	console.log( chalk.bold( 'Proposed defensive-mode configuration:' ) );
+	console.log( JSON.stringify( input, null, 2 ) );
+
 	if ( interactive && ! opt.skipConfirmation && opt.env.type === 'production' ) {
 		const yes = await confirm(
 			`Apply this configuration to ${ formatEnvironment( opt.env.type ) } for ${
@@ -227,7 +235,7 @@ export async function defensiveModeConfigureCommand( _args, opt ) {
 			...trackingParams,
 			error: result.message,
 		} );
-		console.log( chalk.red( `Failed to update defensive mode config: ${ result.message }` ) );
+		console.error( chalk.red( `Failed to update defensive mode config: ${ result.message }` ) );
 		process.exit( 1 );
 	}
 

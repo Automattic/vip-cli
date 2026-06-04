@@ -74,7 +74,8 @@ export default function createRechallengeLink(): ApolloLink {
 		return new Observable< ApolloLink.Result >( observer => {
 			let retrying = false;
 			let cancelled = false;
-			let innerSub: { unsubscribe(): void } | null = null;
+			let firstSub: { unsubscribe(): void } | null = null;
+			let retrySub: { unsubscribe(): void } | null = null;
 
 			const preflight = async () => {
 				if ( ! eligible || ! scope ) {
@@ -92,7 +93,7 @@ export default function createRechallengeLink(): ApolloLink {
 					if ( cancelled || observer.closed ) {
 						return;
 					}
-					innerSub = forward( operation ).subscribe( {
+					firstSub = forward( operation ).subscribe( {
 						next: result => {
 							if ( retrying || ! eligible || ! scope ) {
 								observer.next( result );
@@ -117,7 +118,7 @@ export default function createRechallengeLink(): ApolloLink {
 										return;
 									}
 									attachElevatedHeader( operation, headerName, token );
-									innerSub = forward( operation ).subscribe( {
+									retrySub = forward( operation ).subscribe( {
 										next: res => observer.next( res ),
 										error: err => observer.error( err ),
 										complete: () => observer.complete(),
@@ -145,7 +146,8 @@ export default function createRechallengeLink(): ApolloLink {
 
 			return () => {
 				cancelled = true;
-				innerSub?.unsubscribe();
+				firstSub?.unsubscribe();
+				retrySub?.unsubscribe();
 			};
 		} );
 	} );

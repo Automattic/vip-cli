@@ -9,6 +9,7 @@ function mockExit() {
 	throw 'EXIT';
 }
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+jest.spyOn( console, 'error' ).mockImplementation( () => {} );
 jest.spyOn( process, 'exit' ).mockImplementation( mockExit );
 
 jest.mock( '../../src/lib/cli/command', () => {
@@ -56,6 +57,21 @@ describe( 'defensiveModeDisableCommand', () => {
 		} );
 		expect( trackEvent ).toHaveBeenCalledWith(
 			'defensive_mode_disable_command_success',
+			expect.any( Object )
+		);
+	} );
+
+	it( 'exits with error on production without skip-confirmation in non-interactive mode', async () => {
+		const opts = {
+			app: { id: 7, name: 'demo', organization: { id: 1, salesforceId: 'X' } },
+			env: { id: 9, type: 'production' },
+			skipConfirmation: false,
+			nonInteractive: true,
+		};
+		await expect( defensiveModeDisableCommand( [], opts ) ).rejects.toBe( 'EXIT' );
+		expect( updateDefensiveModeStatus ).not.toHaveBeenCalled();
+		expect( trackEvent ).toHaveBeenCalledWith(
+			'defensive_mode_disable_command_cancelled',
 			expect.any( Object )
 		);
 	} );
