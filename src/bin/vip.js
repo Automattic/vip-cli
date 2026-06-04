@@ -73,6 +73,7 @@ const runCmd = async function () {
 		)
 		.command( 'slowlogs', 'Retrieve MySQL slow query logs from an environment.' )
 		.command( 'db', "Access an environment's database." )
+		.command( 'defensive-mode', 'Manage VIP defensive mode for an environment.' )
 		.command( 'sync', 'Sync the database from production to a non-production environment.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
