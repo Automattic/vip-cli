@@ -1,7 +1,7 @@
 import debugLib from 'debug';
 
-import { API_HOST, PRODUCTION_API_HOST } from '../api';
-import keychain from '../keychain';
+import { API_HOST, PRODUCTION_API_HOST } from '../api/constants';
+import { getKeychain } from '../keychain';
 
 import type { ElevatedToken } from './types';
 
@@ -24,11 +24,14 @@ async function read(): Promise< Blob > {
 	if ( inMemory ) {
 		return inMemory;
 	}
+
+	const keychain = await getKeychain();
 	const raw = await keychain.getPassword( serviceName() );
 	if ( ! raw ) {
 		inMemory = {};
 		return inMemory;
 	}
+
 	try {
 		const parsed = JSON.parse( raw ) as Blob;
 		inMemory = typeof parsed === 'object' && parsed !== null ? parsed : {};
@@ -37,16 +40,18 @@ async function read(): Promise< Blob > {
 		inMemory = {};
 		await keychain.deletePassword( serviceName() );
 	}
+
 	return inMemory;
 }
 
 async function write( blob: Blob ): Promise< void > {
 	inMemory = blob;
+	const keychain = await getKeychain();
 	if ( Object.keys( blob ).length === 0 ) {
 		await keychain.deletePassword( serviceName() );
-		return;
+	} else {
+		await keychain.setPassword( serviceName(), JSON.stringify( blob ) );
 	}
-	await keychain.setPassword( serviceName(), JSON.stringify( blob ) );
 }
 
 function isExpired( token: ElevatedToken ): boolean {
@@ -89,6 +94,7 @@ async function clearScope( scope: string ): Promise< void > {
 
 async function clearAll(): Promise< void > {
 	inMemory = {};
+	const keychain = await getKeychain();
 	await keychain.deletePassword( serviceName() );
 }
 

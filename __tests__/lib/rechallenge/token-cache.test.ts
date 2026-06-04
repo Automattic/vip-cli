@@ -1,28 +1,29 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
-import keychain from '../../../src/lib/keychain';
+import * as keychain from '../../../src/lib/keychain';
 import tokenCache from '../../../src/lib/rechallenge/token-cache';
 
+import type { Keychain } from '../../../src/lib/keychain/keychain';
 import type { ElevatedToken } from '../../../src/lib/rechallenge/types';
 
 jest.mock( '../../../src/lib/keychain', () => {
 	const store = new Map< string, string >();
+	const mockedKeychain = {
+		getPassword: jest.fn( ( service: string ) => Promise.resolve( store.get( service ) ?? null ) ),
+		setPassword: jest.fn( ( service: string, password: string ) => {
+			store.set( service, password );
+			return Promise.resolve( true );
+		} ),
+		deletePassword: jest.fn( ( service: string ) => {
+			const had = store.delete( service );
+			return Promise.resolve( had );
+		} ),
+		__store: store,
+	};
+
 	return {
 		__esModule: true,
-		default: {
-			getPassword: jest.fn( ( service: string ) =>
-				Promise.resolve( store.get( service ) ?? null )
-			),
-			setPassword: jest.fn( ( service: string, password: string ) => {
-				store.set( service, password );
-				return Promise.resolve( true );
-			} ),
-			deletePassword: jest.fn( ( service: string ) => {
-				const had = store.delete( service );
-				return Promise.resolve( had );
-			} ),
-			__store: store,
-		},
+		getKeychain: jest.fn( () => Promise.resolve( mockedKeychain ) ),
 	};
 } );
 
@@ -68,8 +69,10 @@ describe( 'rechallenge token cache', () => {
 		await tokenCache.set( 'updateDefensiveModeStatus', expired );
 		expect( await tokenCache.get( 'updateDefensiveModeStatus' ) ).toBeNull();
 		// Eviction writes through to keychain so the expired entry can't reappear.
+
+		const kc = await keychain.getKeychain();
 		// eslint-disable-next-line @typescript-eslint/unbound-method
-		expect( keychain.deletePassword ).toHaveBeenCalled();
+		expect( kc.deletePassword ).toHaveBeenCalled();
 	} );
 
 	it( 'clearAll removes every scope', async () => {
@@ -91,14 +94,13 @@ describe( 'rechallenge token cache', () => {
 	it( 'resets and purges keychain when stored blob is malformed JSON', async () => {
 		// Force a corrupt blob to land in the mock store. We need the
 		// keychain mock to return invalid JSON on the next read.
-		const keychainMock = keychain as unknown as {
-			getPassword: jest.Mock< ( service: string ) => Promise< string | null > >;
-			deletePassword: jest.Mock< ( service: string ) => Promise< boolean > >;
-		};
-		keychainMock.getPassword.mockResolvedValueOnce( 'not-valid-json{' );
+		const kc = ( await keychain.getKeychain() ) as Keychain & jest.Mocked< Keychain >;
+		kc.getPassword.mockResolvedValueOnce( 'not-valid-json{' );
 		tokenCache._resetInMemoryForTests();
 
 		expect( await tokenCache.get( 'updateDefensiveModeStatus' ) ).toBeNull();
-		expect( keychainMock.deletePassword ).toHaveBeenCalled();
+
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		expect( kc.deletePassword ).toHaveBeenCalled();
 	} );
 } );

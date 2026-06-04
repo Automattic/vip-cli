@@ -8,7 +8,7 @@ import {
 	type Response,
 } from 'undici';
 
-import { API_HOST } from '../../lib/api';
+import { API_HOST } from './constants';
 import env from '../../lib/env';
 import { createProxyDispatcher } from '../../lib/http/proxy-dispatcher';
 import Token from '../../lib/token';

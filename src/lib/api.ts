@@ -13,12 +13,12 @@ import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
 
 import http from './api/http';
+import { API_URL } from './api/constants';
 
-// Config
-export const PRODUCTION_API_HOST = 'https://api.wpvip.com';
-
-export const API_HOST = process.env.API_HOST || PRODUCTION_API_HOST; // NOSONAR
-export const API_URL = `${ API_HOST }/graphql`;
+// Config — re-exported from ./api/constants so modules in the rechallenge tree
+// can import them without pulling in the full api.ts graph (which would create
+// a circular dependency via the rechallenge link).
+export { API_HOST, API_URL, PRODUCTION_API_HOST } from './api/constants';
 
 let globalGraphQLErrorHandlingEnabled = true;
 
@@ -144,8 +144,22 @@ export default function API( {
 			attempts: shouldRetryRequest,
 		} );
 
+	// Lazy-require the rechallenge link to avoid a circular-dependency issue in
+	// Jest tests.  Importing at module top-level would cause rechallenge/client.ts
+	// to be loaded during jest.setupMocks.js (via apiConfig → feature-flags →
+	// api.ts → link.ts → client.ts), preventing jest.mock('../api/http') from
+	// intercepting the http reference captured inside client.ts.  A require()
+	// call inside the function body is resolved after all mocks are registered.
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const createRechallengeLink = ( require( './rechallenge/link' ) as typeof import( './rechallenge/link' ) ).default;
+
 	return new ApolloClient( {
-		link: ApolloLink.from( [ errorLink, retryLink, httpLink ] ),
+		link: ApolloLink.from( [
+			errorLink,
+			createRechallengeLink(),
+			retryLink,
+			httpLink,
+		] ),
 		cache: new InMemoryCache( {
 			typePolicies: {
 				WPSite: {
