@@ -10,7 +10,7 @@ import {
 } from './errors';
 import { openBrowser } from './open-browser';
 import tokenCache from './token-cache';
-import { RECHALLENGE_VERSION } from './types';
+import { CLIENT_TYPE, RECHALLENGE_VERSION } from './types';
 
 import type { ElevatedToken, RechallengeExtension, RechallengeStatus } from './types';
 
@@ -55,7 +55,10 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		throw new RechallengeUnsupportedVersionError( rechallenge.version, requestedOperation );
 	}
 
-	await trackEvent( 'rechallenge_required', { scope: requestedOperation } );
+	await trackEvent( 'rechallenge_required', {
+		scope: requestedOperation,
+		clientType: CLIENT_TYPE,
+	} );
 
 	const session = await client.createSession( {
 		path: rechallenge.createSessionPath,
@@ -123,6 +126,10 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		}
 
 		if ( status.status === 'verified' ) {
+			await trackEvent( 'rechallenge_verified', {
+				scope: requestedOperation,
+				provider: status.provider ?? 'unknown',
+			} );
 			const { elevatedToken } = await client.exchange( {
 				template: rechallenge.exchangePathTemplate,
 				challengeId: session.challengeId,
@@ -132,10 +139,6 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 			await tokenCache.set( requestedOperation, {
 				...elevatedToken,
 				headerName: rechallenge.elevatedHeaderName,
-			} );
-			await trackEvent( 'rechallenge_verified', {
-				scope: requestedOperation,
-				provider: status.provider ?? 'unknown',
 			} );
 			return elevatedToken;
 		}

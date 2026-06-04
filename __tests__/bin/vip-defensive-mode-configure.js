@@ -116,4 +116,20 @@ describe( 'defensiveModeConfigureCommand', () => {
 			expect.any( Object )
 		);
 	} );
+
+	it( 'logs the proposed configuration before mutating', async () => {
+		const consoleSpy = jest.spyOn( console, 'log' );
+		await defensiveModeConfigureCommand( [], {
+			...baseOpts(),
+			enabled: 'true',
+			challengeType: '2',
+		} );
+		const allArgs = consoleSpy.mock.calls.flat();
+		const inputJson = JSON.stringify(
+			{ appId: 7, envId: 9, enabled: true, challengeType: 2 },
+			null,
+			2
+		);
+		expect( allArgs.some( arg => typeof arg === 'string' && arg === inputJson ) ).toBe( true );
+	} );
 } );

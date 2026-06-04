@@ -6,6 +6,11 @@ import { getKeychain } from '../keychain';
 import type { ElevatedToken } from './types';
 
 const debug = debugLib( '@automattic/vip:rechallenge:cache' );
+// Storage strategy: a single keychain entry holds a JSON map { [scope]: ElevatedToken }.
+// The vip-cli Keychain interface (src/lib/keychain/keychain.ts) is service-only — there
+// is no separate account argument — so per-scope entries under the keytar model would
+// require a different keying scheme. The single-blob approach also keeps clearAll() cheap.
+// This is marked subject-to-change in the spec pending security review.
 const BASE_SERVICE = 'vip-go-cli:elevated';
 
 function serviceName(): string {
