@@ -20,6 +20,10 @@ command( { requiredArgs: 1, format: true } )
 		'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip',
 		'Deploy a local archived file named "file.zip" that contains application code to a VIP Platform environment that has Custom Deployment enabled.'
 	)
+	.example(
+		'vip @example-app.develop app deploy-token generate --format=json',
+		'Generate a custom deploy token for the environment and print it in JSON format for use with tools like jq.'
+	)
 	.command(
 		'list',
 		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'
@@ -27,6 +31,10 @@ command( { requiredArgs: 1, format: true } )
 	.command(
 		'deploy',
 		'Deploy an archived file of application code to an environment that has Custom Deployment enabled.'
+	)
+	.command(
+		'deploy-token',
+		'Generate and manage custom deploy access tokens for environments that have Custom Deployment enabled.'
 	)
 	.argv( process.argv, async arg => {
 		await trackEvent( 'app_command_execute' );
