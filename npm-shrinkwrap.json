@@ -49,6 +49,8 @@
         "vip": "dist/bin/vip.js",
         "vip-app": "dist/bin/vip-app.js",
         "vip-app-deploy": "dist/bin/vip-app-deploy.js",
+        "vip-app-deploy-token": "dist/bin/vip-app-deploy-token.js",
+        "vip-app-deploy-token-generate": "dist/bin/vip-app-deploy-token-generate.js",
         "vip-app-deploy-validate": "dist/bin/vip-app-deploy-validate.js",
         "vip-app-list": "dist/bin/vip-app-list.js",
         "vip-backup": "dist/bin/vip-backup.js",
