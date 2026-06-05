@@ -35,7 +35,7 @@
         "node-stream-zip": "1.15.0",
         "open": "^11.0.0",
         "proxy-from-env": "^2.0.0",
-        "semver": "7.8.1",
+        "semver": "7.8.2",
         "shelljs": "^0.10.0",
         "socket.io-client": "^4.5.3",
         "socket.io-stream": "npm:@wwa/socket.io-stream@^0.10.0",
@@ -13584,9 +13584,9 @@
       }
     },
     "node_modules/semver": {
-      "version": "7.8.1",
-      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.1.tgz",
-      "integrity": "sha512-rkVq3IXh+4FDGch+KwzX3aV9W3kO54GyEgpvBzSyctDA6Xtd7RJQV1xmXbeQp5v7+VzLOfVqiutSE6GICgPFvg==",
+      "version": "7.8.2",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.2.tgz",
+      "integrity": "sha512-c8jsqUZm3omBOI66G90z1Dyw5z622G8oLG+omfsHBJf3CWQTlOcwOjvOG6wtiNfW6anKm/eA39LMwMtMez2TiQ==",
       "license": "ISC",
       "bin": {
         "semver": "bin/semver.js"
