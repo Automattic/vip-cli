@@ -1,5 +1,5 @@
 import debugLib from 'debug';
-import { Response } from 'node-fetch';
+import { type Response } from 'undici';
 
 import http from '../../../lib/api/http';
 import { type Env } from '../../env';

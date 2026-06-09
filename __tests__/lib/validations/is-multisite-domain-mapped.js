@@ -2,8 +2,6 @@
  * @format
  */
 
-import nock from 'nock';
-
 import { API_URL } from '../../../src/lib/api';
 import {
 	getPrimaryDomainFromSQL,
@@ -11,6 +9,7 @@ import {
 	getPrimaryDomain,
 	isMultisitePrimaryDomainMapped,
 } from '../../../src/lib/validations/is-multisite-domain-mapped';
+import { getUndiciMockPool, resetUndiciMockAgent } from '../../../test-utils/undici-mock';
 
 describe( 'is-multisite-domain-mapped', () => {
 	const capturedStatement = [
@@ -80,29 +79,28 @@ describe( 'is-multisite-domain-mapped', () => {
 	describe( 'isMultisitePrimaryDomainMapped', () => {
 		beforeEach( () => {
 			const url = new URL( API_URL );
+			const pool = getUndiciMockPool( url.origin );
 
-			nock( url.origin )
-				.post( url.pathname )
-				.reply( 200, {
-					data: {
-						app: {
-							environments: [
-								{
-									domains: {
-										nodes: [
-											{
-												name: 'www.example.com',
-											},
-										],
-									},
+			pool.intercept( { method: 'POST', path: url.pathname } ).reply( 200, {
+				data: {
+					app: {
+						environments: [
+							{
+								domains: {
+									nodes: [
+										{
+											name: 'www.example.com',
+										},
+									],
 								},
-							],
-						},
+							},
+						],
 					},
-				} );
+				},
+			} );
 		} );
 
-		afterEach( nock.cleanAll );
+		afterEach( resetUndiciMockAgent );
 
 		it( 'should return true if the domain is mapped to the environment', async () => {
 			const isMapped = await isMultisitePrimaryDomainMapped( 1, 1, 'www.example.com' );

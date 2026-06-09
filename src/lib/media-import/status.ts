@@ -4,6 +4,7 @@ import { prompt } from 'enquirer';
 import gql from 'graphql-tag';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { fetch } from 'undici';
 
 import { AppQuery, AppQueryVariables } from './status.generated';
 import {
@@ -20,6 +21,7 @@ import {
 	currentUserCanImportForApp,
 } from '../../lib/media-import/media-file-import';
 import { MediaImportProgressTracker } from '../../lib/media-import/progress';
+import { createProxyDispatcher } from '../http/proxy-dispatcher';
 
 const IMPORT_MEDIA_PROGRESS_POLL_INTERVAL = 1000;
 const ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
@@ -300,7 +302,10 @@ Downloading errors details from ${ fileErrorsUrl }
 \n`;
 		progressTracker.print( { clearAfter: true } );
 		try {
-			const response = await fetch( fileErrorsUrl );
+			const proxyDispatcher = createProxyDispatcher( fileErrorsUrl );
+			const response = await fetch( fileErrorsUrl, {
+				dispatcher: proxyDispatcher ?? undefined,
+			} );
 			return ( await response.json() ) as AppEnvironmentMediaImportStatusFailureDetailsFileErrors[];
 		} catch ( err ) {
 			progressTracker.suffix += `${ chalk.red(

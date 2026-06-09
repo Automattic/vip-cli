@@ -3,7 +3,7 @@ import debugLib from 'debug';
 import env from '../env';
 
 import type { AnalyticsClient } from './clients/client';
-import type { Response } from 'node-fetch';
+import type { Response } from 'undici';
 
 const debug = debugLib( '@automattic/vip:analytics' );
 

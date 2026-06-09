@@ -1,6 +1,6 @@
 import debugLib from 'debug';
-import fetch, { type Response } from 'node-fetch';
 import querystring from 'querystring';
+import { fetch, type Response } from 'undici';
 
 import { checkIfUserIsVip } from '../../cli/apiConfig';
 

@@ -1,14 +1,16 @@
 import debugLib from 'debug';
-import fetch, {
+import {
+	fetch,
+	Headers,
 	type BodyInit,
-	type Response,
-	type RequestInit,
 	type HeadersInit,
-} from 'node-fetch';
+	type RequestInit,
+	type Response,
+} from 'undici';
 
 import { API_HOST } from '../../lib/api';
 import env from '../../lib/env';
-import { createProxyAgent } from '../../lib/http/proxy-agent';
+import { createProxyDispatcher } from '../../lib/http/proxy-dispatcher';
 import Token from '../../lib/token';
 
 const debug = debugLib( '@automattic/vip:http' );
@@ -18,11 +20,18 @@ export type FetchOptions = Omit< RequestInit, 'body' > & {
 	headers?: HeadersInit;
 };
 
+const isPlainObjectBody = ( value: FetchOptions[ 'body' ] ): value is Record< string, unknown > => {
+	if ( ! value || typeof value !== 'object' ) {
+		return false;
+	}
+
+	const prototype = Object.getPrototypeOf( value ) as unknown;
+	return prototype === Object.prototype || prototype === null;
+};
+
 /**
  * Call the Public API with an arbitrary path (e.g. to connect to REST endpoints).
  * This will include the token in an Authorization header so requests are "logged-in."
- *
- * This is simply a wrapper around node-fetch
  *
  * @param {string} path    API path to pass to `fetch` -- will be prefixed by the API_HOST
  * @param {Object} options options to pass to `fetch`
@@ -38,12 +47,12 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 	}
 
 	const authToken = await Token.get();
-
-	const proxyAgent = createProxyAgent( url );
+	const proxyDispatcher = createProxyDispatcher( url );
+	const shouldSerializeJsonBody = isPlainObjectBody( options.body );
 
 	debug( 'running fetch', url );
 
-	const headers = new Headers( { ...options.headers } );
+	const headers = new Headers( options.headers );
 	if ( ! headers.has( 'Authorization' ) ) {
 		headers.set( 'Authorization', `Bearer ${ authToken.raw }` );
 	}
@@ -52,16 +61,18 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 		headers.set( 'User-Agent', env.userAgent );
 	}
 
-	if ( ! headers.has( 'Content-Type' ) && options.method !== 'GET' ) {
+	if ( ! headers.has( 'Content-Type' ) && options.method !== 'GET' && shouldSerializeJsonBody ) {
 		headers.set( 'Content-Type', 'application/json' );
 	}
 
-	const opts = {
-		...options,
-		agent: proxyAgent ?? undefined,
-		headers,
-		body: typeof options.body === 'object' ? JSON.stringify( options.body ) : options.body,
-	};
+	const requestBody: BodyInit | undefined = shouldSerializeJsonBody
+		? JSON.stringify( options.body )
+		: ( options.body as BodyInit | undefined );
 
-	return fetch( url, opts );
+	return fetch( url, {
+		...options,
+		dispatcher: proxyDispatcher ?? undefined,
+		headers,
+		body: requestBody,
+	} );
 };
