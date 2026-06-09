@@ -166,7 +166,7 @@
     "node-stream-zip": "1.15.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
-    "semver": "7.8.2",
+    "semver": "7.8.3",
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wwa/socket.io-stream@^0.10.0",
