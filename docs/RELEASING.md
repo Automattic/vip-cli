@@ -51,6 +51,8 @@ A few steps should be completed before releasing:
 
 1. You have completed [final testing before deployment](TESTING.md#final-testing-before-releasing).
 
+1. Run the release smoke tests to verify high-risk CLI parser/dispatch commands. First ensure the binaries are built (`npm run build`), then run `npm run smoke:release`. This tests option parsing, short-option equals syntax, and command routing against the built binaries.
+
 1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
 1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version).

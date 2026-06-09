@@ -89,7 +89,8 @@
     "lint": "npm run cmd:lint .",
     "lint:fix": "npm run cmd:lint . -- --fix",
     "publish-please": "publish-please",
-    "prepublishOnly": "node ./helpers/prepublishOnly.js"
+    "prepublishOnly": "node ./helpers/prepublishOnly.js",
+    "smoke:release": "node ./helpers/release-smoke-test.js"
   },
   "repository": {
     "type": "git",
