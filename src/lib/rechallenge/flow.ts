@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 import { trackEvent } from '../tracker';
 import * as client from './client';
@@ -28,24 +29,6 @@ export interface RunRechallengeOptions {
 	rechallenge: RechallengeExtension;
 	interactive: boolean;
 	signal?: AbortSignal;
-}
-
-function sleep( ms: number, signal?: AbortSignal ): Promise< void > {
-	return new Promise( ( resolve, reject ) => {
-		if ( signal?.aborted ) {
-			reject( new Error( 'aborted' ) );
-			return;
-		}
-		const timer = setTimeout( () => {
-			signal?.removeEventListener( 'abort', onAbort );
-			resolve();
-		}, ms );
-		function onAbort() {
-			clearTimeout( timer );
-			reject( new Error( 'aborted' ) );
-		}
-		signal?.addEventListener( 'abort', onAbort, { once: true } );
-	} );
 }
 
 export async function runRechallenge( opts: RunRechallengeOptions ): Promise< ElevatedToken > {
@@ -101,7 +84,7 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		}
 
 		try {
-			await sleep( interval, signal );
+			await sleep( interval, undefined, { signal } );
 		} catch {
 			throw new RechallengeAbortedError( requestedOperation );
 		}
