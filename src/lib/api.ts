@@ -112,6 +112,13 @@ export default function API( {
 		}
 
 		if ( CombinedGraphQLErrors.is( error ) && globalGraphQLErrorHandlingEnabled ) {
+			// The full error objects carry `path`/`extensions` pinpointing the field
+			// that failed server-side, plus whatever partial data survived.
+			debug( 'GraphQL errors in response: %s', JSON.stringify( error.errors, null, 2 ) );
+			if ( error.data ) {
+				debug( 'Partial response data: %s', JSON.stringify( error.data, null, 2 ) );
+			}
+
 			for ( const err of error.errors ) {
 				console.error( chalk.red( 'Error:' ), err.message );
 			}

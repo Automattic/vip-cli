@@ -65,6 +65,7 @@ const runCmd = async function () {
 		.command( 'cache', 'Manage page cache for an environment.' )
 		.command( 'config', 'Manage environment configurations.' )
 		.command( 'dev-env', 'Create and manage VIP Local Development Environments.' )
+		.command( 'edge-workers', 'Scaffold, compile, and deploy WASM edge workers.' )
 		.command( 'export', 'Export a copy of data associated with an environment.' )
 		.command( 'import', 'Import media or SQL database files to an environment.' )
 		.command( 'logs', 'Retrieve Runtime Logs from an environment.' )
