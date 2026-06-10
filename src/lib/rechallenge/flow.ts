@@ -78,6 +78,7 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		);
 	}
 
+	/* eslint-disable no-await-in-loop -- polling loop; each iteration must complete before the next */
 	while ( true ) {
 		if ( signal?.aborted ) {
 			throw new RechallengeAbortedError( requestedOperation );
@@ -135,6 +136,7 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 			status.statusReason?.message
 		);
 	}
+	/* eslint-enable no-await-in-loop */
 }
 
 export function isInteractiveContext( argvOrFlags: string[] = process.argv ): boolean {
