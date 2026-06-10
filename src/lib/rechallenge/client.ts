@@ -10,7 +10,10 @@ import type {
 	RechallengeSession,
 	RechallengeSessionStatus,
 } from './types';
-import type { Response } from 'node-fetch';
+
+// Derived from http() rather than imported from a fetch library, so this module
+// keeps compiling across the node-fetch -> undici migration (trunk #2837).
+type HttpResponse = Awaited< ReturnType< typeof http > >;
 
 const debug = debugLib( '@automattic/vip:rechallenge:client' );
 
@@ -18,7 +21,7 @@ function fillTemplate( template: string, challengeId: string ): string {
 	return template.replaceAll( '{challengeId}', encodeURIComponent( challengeId ) );
 }
 
-async function parseOrThrow< T >( response: Response, scope: string ): Promise< T > {
+async function parseOrThrow< T >( response: HttpResponse, scope: string ): Promise< T > {
 	if ( ! response.ok ) {
 		const text = await response.text();
 		throw new RechallengeHttpError( response.status, text, scope );
