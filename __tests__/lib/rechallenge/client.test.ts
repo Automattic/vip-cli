@@ -4,7 +4,7 @@ import http from '../../../src/lib/api/http';
 import * as client from '../../../src/lib/rechallenge/client';
 import { RechallengeHttpError } from '../../../src/lib/rechallenge/errors';
 
-import type { Response } from 'node-fetch';
+type Response = Awaited< ReturnType< typeof http > >;
 
 jest.mock( '../../../src/lib/api/http' );
 const mockHttp = http as unknown as jest.Mock;
