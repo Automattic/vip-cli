@@ -1,4 +1,5 @@
 // copied over from our internal lib
+import { setTimeout } from 'node:timers/promises';
 
 export const EXPONENTIAL_BACKOFF_STARTING_IN_50_MS = exponentialBackoff( 50 );
 export const EXPONENTIAL_BACKOFF_STARTING_IN_100_MS = exponentialBackoff( 100 );
@@ -148,7 +149,7 @@ function isValidInterval( interval: Interval ): boolean {
 	);
 }
 
-async function awaitInterval( interval: Interval, attemptNumber: number ): Promise< void > {
+function awaitInterval( interval: Interval, attemptNumber: number ): Promise< void > {
 	let newInterval: number;
 
 	if ( typeof interval === 'function' ) {
@@ -163,7 +164,7 @@ async function awaitInterval( interval: Interval, attemptNumber: number ): Promi
 		newInterval = interval;
 	}
 
-	return new Promise( resolve => setTimeout( resolve, newInterval ) );
+	return setTimeout( newInterval );
 }
 
 function validateTask< T >( task: T ): asserts task is NonNullable< T > {

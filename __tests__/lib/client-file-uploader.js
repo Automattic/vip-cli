@@ -2,7 +2,12 @@
  * @format
  */
 
-import { getFileHash, getFileMeta, getPartBoundaries } from '../../src/lib/client-file-uploader';
+import {
+	getFileHash,
+	getFileMeta,
+	getPartBoundaries,
+	parseEtagHeader,
+} from '../../src/lib/client-file-uploader';
 
 describe( 'client-file-uploader', () => {
 	describe( 'getFileMeta()', () => {
@@ -88,6 +93,20 @@ describe( 'client-file-uploader', () => {
 				{ end: 67108863, index: 3, partSize: 16777216, start: 50331648 },
 				{ end: 67921764, index: 4, partSize: 812901, start: 67108864 },
 			] );
+		} );
+	} );
+
+	describe( 'parseEtagHeader()', () => {
+		it( 'should parse a quoted ETag header', () => {
+			expect( parseEtagHeader( '"abc123"' ) ).toBe( 'abc123' );
+		} );
+
+		it( 'should strip a weak ETag prefix', () => {
+			expect( parseEtagHeader( 'W/"abc123"' ) ).toBe( 'abc123' );
+		} );
+
+		it( 'should return an unquoted ETag value as-is', () => {
+			expect( parseEtagHeader( 'abc123' ) ).toBe( 'abc123' );
 		} );
 	} );
 } );

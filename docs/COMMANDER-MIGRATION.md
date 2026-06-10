@@ -16,6 +16,7 @@ Goal: remove the abandoned `args` package, keep CLI behavior stable, and support
 - `_opts` controls are still honored: app/env context fetch, confirmation gating, output formatting, wildcard command handling, required positional args.
 - Shared formatting/output and telemetry hooks are still in the wrapper path.
 - Local nested subcommand dispatch still works via sibling executable resolution.
+- Short-option equals normalization: `-x=value` is rewritten to `-x value` for short options expecting values before parsing; boolean short flags are not affected. Tracked option defaults are applied after parsing when the option remains undefined post-parse, preserving default+parser parity.
 
 ## Post-Migration Hardening
 

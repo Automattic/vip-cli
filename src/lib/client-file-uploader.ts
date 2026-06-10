@@ -2,29 +2,54 @@ import chalk from 'chalk';
 import { createHash } from 'crypto';
 import debugLib from 'debug';
 import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
-import fetch, { HeadersInit, RequestInfo, RequestInit, Response } from 'node-fetch';
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
+import { setTimeout } from 'node:timers/promises';
 import os from 'os';
 import path from 'path';
 import { PassThrough } from 'stream';
+import { fetch, type HeadersInit, type RequestInit, type Response } from 'undici';
 import { Parser as XmlParser } from 'xml2js';
 import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 
 import http, { type FetchOptions } from '../lib/api/http';
 import { MB_IN_BYTES } from '../lib/constants/file-size';
 
-// Need to use CommonJS imports here as the `fetch-retry` typedefs are messed up and throwing TypeJS errors when using `import`
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const fetchWithRetry: ( input: RequestInfo | URL, init?: RequestInit ) => Promise< Response > =
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports
-	require( 'fetch-retry' )( fetch, {
-		// Set default retry options
-		retries: 3,
-		retryDelay: ( attempt: number ) => {
-			return Math.pow( 2, attempt ) * 1000; // 1000, 2000, 4000
-		},
-	} );
+export function parseEtagHeader( etag: string ): string {
+	const normalizedEtag = etag.replace( /^W\//u, '' ).trim();
+
+	if ( normalizedEtag.startsWith( '"' ) && normalizedEtag.endsWith( '"' ) ) {
+		try {
+			return JSON.parse( normalizedEtag ) as string;
+		} catch ( err ) {
+			debug(
+				`Unable to JSON.parse ETag header, falling back to raw value: ${ ( err as Error ).message }`
+			);
+		}
+	}
+
+	return normalizedEtag.replace( /^"(.*)"$/u, '$1' );
+}
+
+async function fetchWithRetry(
+	input: string | URL,
+	init?: RequestInit,
+	retries = 3
+): Promise< Response > {
+	for ( let attempt = 0; attempt <= retries; attempt++ ) {
+		try {
+			// eslint-disable-next-line no-await-in-loop
+			return await fetch( input, init );
+		} catch ( err ) {
+			if ( attempt === retries ) {
+				throw err;
+			}
+			// eslint-disable-next-line no-await-in-loop
+			await setTimeout( Math.pow( 2, attempt ) * 1000 ); // 1000, 2000, 4000
+		}
+	}
+	throw new Error( 'unreachable' );
+}
 
 const debug = debugLib( 'vip:lib/client-file-uploader' );
 
@@ -641,9 +666,13 @@ async function uploadPart( {
 
 		const fetchResponse = await fetchWithRetry( partUploadRequestData.url, fetchOptions );
 		if ( fetchResponse.status === 200 ) {
-			const responseHeaders = fetchResponse.headers.raw();
-			const [ etag ] = responseHeaders.etag;
-			return JSON.parse( etag ) as string;
+			const etag = fetchResponse.headers.get( 'etag' );
+
+			if ( ! etag ) {
+				throw new Error( 'Unable to upload file part. Missing ETag response header.' );
+			}
+
+			return parseEtagHeader( etag );
 		}
 
 		const result = await fetchResponse.text();

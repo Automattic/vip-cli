@@ -164,7 +164,9 @@ export class DevEnvImportSQLCommand {
 
 			importArg = [
 				'db-myloader',
-				'--overwrite-tables',
+				// Drop existing tables before restoring. Do not use the long form:
+				// `--overwrite-tables` is a silent no-op on myloader >= 0.20.
+				'-o',
 				...( dumpDetails.sourceDb ? [ `--source-db=${ dumpDetails.sourceDb }` ] : [] ),
 				`--threads=${ threadCount }`,
 				'--max-threads-for-schema-creation=10',
