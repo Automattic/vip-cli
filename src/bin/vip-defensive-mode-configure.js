@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { prompt } from 'enquirer';
 
 import command from '../lib/cli/command';
-import { formatEnvironment } from '../lib/cli/format';
+import { formatEnvironment, table } from '../lib/cli/format';
 import { appQuery, updateDefensiveModeConfig } from '../lib/defensive-mode/api';
 import { isInteractive, reportMutationResult } from '../lib/defensive-mode/cli-helpers';
 import { confirm } from '../lib/envvar/input';
@@ -42,7 +42,12 @@ function parseBoolean( raw ) {
 }
 
 function parsePositiveInt( raw ) {
-	if ( raw === undefined || raw === null || raw === '' ) {
+	// A bare flag (e.g. `--challenge-type` with no value) arrives as boolean true,
+	// which Number() would silently coerce to 1.
+	if ( raw === undefined || raw === null || typeof raw === 'boolean' ) {
+		return null;
+	}
+	if ( typeof raw === 'string' && raw.trim() === '' ) {
 		return null;
 	}
 	const num = Number( raw );
@@ -89,6 +94,35 @@ function validateFlags( opt ) {
 	}
 
 	return { enabled, challengeType, absolute, percentage, errors };
+}
+
+function formatSettingValue( value ) {
+	return value === undefined || value === null ? '-' : String( value );
+}
+
+function buildSettingRows( currentConfig, { enabled, challengeType, absolute, percentage } ) {
+	return [
+		{
+			setting: 'Enabled',
+			current: formatSettingValue( currentConfig?.enabled ),
+			proposed: formatSettingValue( enabled ),
+		},
+		{
+			setting: 'Challenge type',
+			current: formatSettingValue( currentConfig?.challengeType ),
+			proposed: formatSettingValue( challengeType ),
+		},
+		{
+			setting: 'Connection threshold (absolute)',
+			current: formatSettingValue( currentConfig?.connectionThresholdAbsolute ),
+			proposed: absolute === undefined ? '(not specified)' : formatSettingValue( absolute ),
+		},
+		{
+			setting: 'Connection threshold (percentage)',
+			current: formatSettingValue( currentConfig?.connectionThresholdPercentage ),
+			proposed: percentage === undefined ? '(not specified)' : formatSettingValue( percentage ),
+		},
+	];
 }
 
 async function resolveRequiredViaPrompt( missing, enabled, challengeType ) {
@@ -199,18 +233,24 @@ export async function defensiveModeConfigureCommand( _args, opt ) {
 	}
 
 	const currentConfig = opt.env.defensiveMode?.config?.effective ?? null;
-	if ( currentConfig ) {
-		console.log( chalk.bold( 'Current defensive-mode configuration:' ) );
-		console.log( JSON.stringify( currentConfig, null, 2 ) );
-	}
-	console.log( chalk.bold( 'Proposed defensive-mode configuration:' ) );
-	console.log( JSON.stringify( input, null, 2 ) );
+	const settingRows = buildSettingRows( currentConfig, {
+		enabled,
+		challengeType,
+		absolute,
+		percentage,
+	} );
+	console.log(
+		`Defensive mode configuration for ${ chalk.bold( opt.app.name ) } (${ formatEnvironment(
+			opt.env.type
+		) }):`
+	);
+	console.log( table( settingRows ) );
 
 	if ( interactive && ! opt.skipConfirmation && opt.env.type === 'production' ) {
 		const yes = await confirm(
-			`Apply this configuration to ${ formatEnvironment( opt.env.type ) } for ${
+			`Apply the proposed configuration to ${ formatEnvironment( opt.env.type ) } for ${
 				opt.app.name
-			}?\n${ JSON.stringify( input, null, 2 ) }`
+			}?`
 		);
 		if ( ! yes ) {
 			await trackEvent( 'defensive_mode_configure_command_cancelled', trackingParams );

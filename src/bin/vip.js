@@ -14,6 +14,7 @@ import {
 	resolveInternalBinFromArgv,
 	isSeaRuntime,
 } from '../lib/cli/sea-dispatch';
+import tokenCache from '../lib/rechallenge/token-cache';
 import Token from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
 
@@ -169,6 +170,10 @@ async function runLoginFlow() {
 
 		throw err;
 	}
+
+	// Elevated tokens are keyed by API host + scope, not by user identity. Drop any
+	// cached elevation from a previous login so it cannot carry across identities.
+	await tokenCache.clearAll();
 
 	// De-anonymize user for tracking
 	await aliasUser( token.id );

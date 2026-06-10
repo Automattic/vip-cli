@@ -124,12 +124,25 @@ describe( 'defensiveModeConfigureCommand', () => {
 			enabled: 'true',
 			challengeType: '2',
 		} );
-		const allArgs = consoleSpy.mock.calls.flat();
-		const inputJson = JSON.stringify(
-			{ appId: 7, envId: 9, enabled: true, challengeType: 2 },
-			null,
-			2
-		);
-		expect( allArgs.some( arg => typeof arg === 'string' && arg === inputJson ) ).toBe( true );
+		const allArgs = consoleSpy.mock.calls.flat().filter( arg => typeof arg === 'string' );
+		const settingsTable = allArgs.find( arg => arg.includes( 'Challenge type' ) );
+		expect( settingsTable ).toBeDefined();
+		expect( settingsTable ).toContain( 'Enabled' );
+		expect( settingsTable ).toContain( 'true' );
+		expect( settingsTable ).toContain( '2' );
+		expect( settingsTable ).toContain( '(not specified)' );
+	} );
+
+	it( 'rejects bare threshold flags (boolean true)', async () => {
+		await expect(
+			defensiveModeConfigureCommand( [], {
+				...baseOpts(),
+				enabled: 'true',
+				challengeType: '1',
+				connectionThresholdAbsolute: true,
+				nonInteractive: true,
+			} )
+		).rejects.toBe( 'EXIT' );
+		expect( updateDefensiveModeConfig ).not.toHaveBeenCalled();
 	} );
 } );
