@@ -6,7 +6,12 @@ import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 
-import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from './database';
+import {
+	MyDumperSectionSizeTransform,
+	getSqlDumpDetails,
+	patchMyDumperSectionSizes,
+	SqlDumpType,
+} from './database';
 import { makeTempDir } from './utils';
 import * as exit from '../lib/cli/exit';
 import { confirm } from '../lib/cli/prompt';
@@ -122,6 +127,14 @@ export const searchAndReplace = async (
 	}: SearchReplaceOptions,
 	binary: string | null = null
 ): Promise< SearchReplaceOutput > => {
+	// The replacement operates on raw bytes: a compressed file would pass through with no
+	// replacements applied and no indication of failure.
+	if ( fileName.toLowerCase().endsWith( '.gz' ) ) {
+		throw new Error(
+			'Compressed files are not supported. Please decompress the file first (e.g. `gunzip -k file.sql.gz`) and run the operation on the .sql file.'
+		);
+	}
+
 	const dumpDetails = await getSqlDumpDetails( fileName );
 	const isMyDumper = dumpDetails.type === SqlDumpType.MYDUMPER;
 
@@ -181,8 +194,10 @@ export const searchAndReplace = async (
 
 	const transforms: NodeJS.ReadWriteStream[] = [];
 
+	let myDumperTransform: MyDumperSectionSizeTransform | undefined;
 	if ( isMyDumper ) {
-		transforms.push( fixMyDumperTransform() );
+		myDumperTransform = new MyDumperSectionSizeTransform();
+		transforms.push( myDumperTransform );
 	}
 
 	try {
@@ -194,6 +209,19 @@ export const searchAndReplace = async (
 			)
 		);
 		throw error;
+	}
+
+	if ( myDumperTransform ) {
+		if ( outputFileName ) {
+			// Replace the size placeholders in the section headers with the recomputed
+			// sizes; myloader needs them to parse the stream correctly.
+			await patchMyDumperSectionSizes( outputFileName, myDumperTransform );
+		} else {
+			console.error(
+				chalk.yellow( 'Warning:' ),
+				'Output was not written to a file, so mydumper section header sizes were left as placeholders. The result is not directly importable with myloader.'
+			);
+		}
 	}
 
 	const endTime = process.hrtime( startTime );

@@ -17,7 +17,12 @@ import API from '../lib/api';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
 import { unzipFile } from '../lib/client-file-uploader';
-import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
+import {
+	MyDumperSectionSizeTransform,
+	getSqlDumpDetails,
+	patchMyDumperSectionSizes,
+	SqlDumpType,
+} from '../lib/database';
 import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
 import { makeTempDir } from '../lib/utils';
 import { getReadInterface } from '../lib/validations/line-by-line';
@@ -209,11 +214,19 @@ export class DevEnvSyncSQLCommand {
 
 		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
 		const transforms: NodeJS.ReadWriteStream[] = [];
+		let myDumperTransform: MyDumperSectionSizeTransform | undefined;
 		if ( this.getSqlDumpType() === SqlDumpType.MYDUMPER ) {
-			transforms.push( fixMyDumperTransform() );
+			myDumperTransform = new MyDumperSectionSizeTransform();
+			transforms.push( myDumperTransform );
 		}
 
 		await pipeline( replacedStream, ...transforms, fs.createWriteStream( outputFile ) );
+
+		if ( myDumperTransform ) {
+			// Replace the size placeholders in the section headers with the recomputed
+			// sizes; myloader needs them to parse the stream correctly.
+			await patchMyDumperSectionSizes( outputFile, myDumperTransform );
+		}
 
 		fs.renameSync( outputFile, this.sqlFile );
 	}
