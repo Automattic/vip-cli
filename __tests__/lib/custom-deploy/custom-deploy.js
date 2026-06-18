@@ -16,7 +16,6 @@ const exitSpy = jest.spyOn( exit, 'withError' );
 jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-const consoleWarnSpy = jest.spyOn( console, 'warn' ).mockImplementation( () => {} );
 
 describe( 'custom deploy large archive file validation', () => {
 	beforeEach( () => {
@@ -31,12 +30,11 @@ describe( 'custom deploy large archive file validation', () => {
 			basename: 'skeleton.zip',
 		} );
 
-		expect( consoleWarnSpy ).not.toHaveBeenCalled();
 		expect( exitSpy ).not.toHaveBeenCalled();
 		expect( trackEventWithEnv ).not.toHaveBeenCalled();
 	} );
 
-	it( 'warns and exits when the deploy archive has archive files over 50 MB', async () => {
+	it( 'exits when the deploy archive has archive files over 50 MB', async () => {
 		findLargeArchiveFilesInDeployArchive.mockResolvedValue( [
 			{
 				path: 'mysite/plugins/big-plugin.tar.gz',
@@ -53,14 +51,13 @@ describe( 'custom deploy large archive file validation', () => {
 			error_type: 'large-archive-files',
 			large_archive_files: [ 'mysite/plugins/big-plugin.tar.gz' ],
 		} );
-		expect( consoleWarnSpy.mock.calls[ 0 ][ 0 ] ).toContain(
-			'Found archive file(s) larger than 50.0 MB in the deploy archive'
+		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain(
+			'Deploy archive contains archive file(s) larger than 50.0 MB in the deploy archive'
 		);
-		expect( consoleWarnSpy.mock.calls[ 0 ][ 0 ] ).toContain(
+		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain(
 			'mysite/plugins/big-plugin.tar.gz (51.0 MB)'
 		);
-		expect( consoleWarnSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-verify' );
-		expect( exitSpy ).toHaveBeenCalledWith( 'Large archive file verification failed.' );
+		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-verify' );
 	} );
 
 	it( 'exits with skip instructions when large file verification fails', async () => {

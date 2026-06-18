@@ -43,7 +43,7 @@ function getLargeArchiveFilesMessage( largeArchiveFiles: LargeArchiveFile[] ): s
 		.map( file => `- ${ file.path } (${ formatFileSize( file.size ) })` )
 		.join( '\n' );
 
-	return `Found archive file(s) larger than ${ formatFileSize(
+	return `Deploy archive contains archive file(s) larger than ${ formatFileSize(
 		LARGE_ARCHIVE_FILE_SIZE_LIMIT
 	) } in the deploy archive:\n${ fileList }\nRemove these files from the repository, or rerun with ${ chalk.bold(
 		SKIP_LARGE_FILE_VERIFY_FLAG
@@ -190,8 +190,5 @@ export async function validateLargeArchiveFiles(
 		large_archive_files: largeArchiveFiles.map( file => file.path ),
 	} );
 
-	console.warn(
-		`${ chalk.yellow( 'Warning:' ) } ${ getLargeArchiveFilesMessage( largeArchiveFiles ) }`
-	);
-	return exit.withError( 'Large archive file verification failed.' );
+	return exit.withError( getLargeArchiveFilesMessage( largeArchiveFiles ) );
 }
