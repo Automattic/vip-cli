@@ -18,7 +18,7 @@ import type { LargeArchiveFile } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
-const SKIP_LARGE_FILE_VERIFY_FLAG = '--skip-large-file-verify';
+const SKIP_LARGE_FILE_VALIDATION_FLAG = '--skip-large-file-validation';
 
 type CustomDeployInfo = {
 	success: boolean;
@@ -46,7 +46,7 @@ function getLargeArchiveFilesMessage( largeArchiveFiles: LargeArchiveFile[] ): s
 	return `Deploy archive contains archive file(s) larger than ${ formatFileSize(
 		LARGE_ARCHIVE_FILE_SIZE_LIMIT
 	) } in the deploy archive:\n${ fileList }\nRemove these files from the repository, or rerun with ${ chalk.bold(
-		SKIP_LARGE_FILE_VERIFY_FLAG
+		SKIP_LARGE_FILE_VALIDATION_FLAG
 	) } to skip this check.`;
 }
 
@@ -177,7 +177,7 @@ export async function validateLargeArchiveFiles(
 		return exit.withError(
 			`Unable to verify large archive files in the deploy archive: ${
 				( error as Error ).message
-			}. Rerun with ${ SKIP_LARGE_FILE_VERIFY_FLAG } to skip this check.`
+			}. Rerun with ${ SKIP_LARGE_FILE_VALIDATION_FLAG } to skip this check.`
 		);
 	}
 

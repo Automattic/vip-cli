@@ -99,7 +99,7 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	debug( 'Validating file...' );
 	await validateFile( appId, envId, fileMeta );
 
-	if ( ! opts.skipLargeFileVerify ) {
+	if ( ! opts.skipLargeFileValidation ) {
 		await validateLargeArchiveFiles( appId, envId, fileMeta );
 	}
 
@@ -279,7 +279,7 @@ const examples = [
 	},
 	{
 		usage:
-			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip --skip-large-file-verify',
+			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip --skip-large-file-validation',
 		description: 'Skip checking the deploy archive for repository archive files larger than 20 MB.',
 	},
 ];
@@ -293,7 +293,7 @@ void command( {
 	.option( 'message', 'Add a description of a deployment.' )
 	.option( 'skip-confirmation', 'Skip the confirmation prompt.' )
 	.option(
-		'skip-large-file-verify',
+		'skip-large-file-validation',
 		'Skip checking for repository archive files over 20 MB.',
 		false
 	)

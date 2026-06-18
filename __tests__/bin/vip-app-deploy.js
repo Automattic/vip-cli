@@ -117,7 +117,7 @@ describe( 'vip-app-deploy', () => {
 		} );
 
 		it( 'skips large file verification when requested', async () => {
-			await appDeployCmd( args, { ...opts, skipLargeFileVerify: true } );
+			await appDeployCmd( args, { ...opts, skipLargeFileValidation: true } );
 
 			expect( validateFile ).toHaveBeenCalledTimes( 1 );
 			expect( validateLargeArchiveFiles ).not.toHaveBeenCalled();

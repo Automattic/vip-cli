@@ -57,7 +57,7 @@ describe( 'custom deploy large archive file validation', () => {
 		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain(
 			'mysite/plugins/big-plugin.tar.gz (21.0 MB)'
 		);
-		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-verify' );
+		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-validation' );
 	} );
 
 	it( 'exits with skip instructions when large file verification fails', async () => {
@@ -75,6 +75,6 @@ describe( 'custom deploy large archive file validation', () => {
 		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain(
 			'Unable to verify large archive files in the deploy archive: invalid archive'
 		);
-		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-verify' );
+		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-validation' );
 	} );
 } );
