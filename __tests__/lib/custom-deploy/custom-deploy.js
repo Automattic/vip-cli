@@ -34,11 +34,11 @@ describe( 'custom deploy large archive file validation', () => {
 		expect( trackEventWithEnv ).not.toHaveBeenCalled();
 	} );
 
-	it( 'exits when the deploy archive has archive files over 50 MB', async () => {
+	it( 'exits when the deploy archive has archive files over 20 MB', async () => {
 		findLargeArchiveFilesInDeployArchive.mockResolvedValue( [
 			{
 				path: 'mysite/plugins/big-plugin.tar.gz',
-				size: 51 * 1024 * 1024,
+				size: 21 * 1024 * 1024,
 			},
 		] );
 
@@ -52,10 +52,10 @@ describe( 'custom deploy large archive file validation', () => {
 			large_archive_files: [ 'mysite/plugins/big-plugin.tar.gz' ],
 		} );
 		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain(
-			'Deploy archive contains archive file(s) larger than 50.0 MB in the deploy archive'
+			'Deploy archive contains archive file(s) larger than 20.0 MB in the deploy archive'
 		);
 		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain(
-			'mysite/plugins/big-plugin.tar.gz (51.0 MB)'
+			'mysite/plugins/big-plugin.tar.gz (21.0 MB)'
 		);
 		expect( exitSpy.mock.calls[ 0 ][ 0 ] ).toContain( '--skip-large-file-verify' );
 	} );

@@ -280,7 +280,7 @@ const examples = [
 	{
 		usage:
 			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip --skip-large-file-verify',
-		description: 'Skip checking the deploy archive for repository archive files larger than 50 MB.',
+		description: 'Skip checking the deploy archive for repository archive files larger than 20 MB.',
 	},
 ];
 
@@ -294,7 +294,7 @@ void command( {
 	.option( 'skip-confirmation', 'Skip the confirmation prompt.' )
 	.option(
 		'skip-large-file-verify',
-		'Skip checking for repository archive files over 50 MB.',
+		'Skip checking for repository archive files over 20 MB.',
 		false
 	)
 	.option( 'force', 'Skip confirmation prompt (deprecated)' )

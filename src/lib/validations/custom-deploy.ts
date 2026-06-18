@@ -28,7 +28,7 @@ const errorMessages = {
 };
 const symlinkIgnorePattern = /\/node_modules\/[^/]+\/\.bin\//;
 const macosxDir = '__MACOSX';
-export const LARGE_ARCHIVE_FILE_SIZE_LIMIT = 50 * MB_IN_BYTES;
+export const LARGE_ARCHIVE_FILE_SIZE_LIMIT = 20 * MB_IN_BYTES;
 
 function getDeployFileExt( filename: string ): string {
 	const lower = filename.toLowerCase();
