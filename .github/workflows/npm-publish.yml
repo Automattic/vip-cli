@@ -26,6 +26,7 @@ jobs:
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           CONVENTIONAL_COMMITS: 'true'
+          node-version: lts/jod
 
   changelog:
     name: Publish docs changelog
@@ -62,3 +63,4 @@ jobs:
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           NPM_TAG: ${{ inputs.npm_tag }}
+          node-version: lts/jod
