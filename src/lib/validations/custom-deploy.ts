@@ -31,13 +31,21 @@ const macosxDir = '__MACOSX';
 export const LARGE_ARCHIVE_FILE_SIZE_LIMIT = 50 * MB_IN_BYTES;
 
 function getDeployFileExt( filename: string ): string {
-	let ext = path.extname( filename ).toLowerCase();
+	const lower = filename.toLowerCase();
 
-	if ( ext === '.gz' && path.extname( path.basename( filename, ext ) ) === '.tar' ) {
-		ext = '.tar.gz';
+	if ( lower.endsWith( '.tar.gz' ) ) {
+		return '.tar.gz';
 	}
 
-	return ext;
+	if ( lower.endsWith( '.tgz' ) ) {
+		return '.tgz';
+	}
+
+	if ( lower.endsWith( '.zip' ) ) {
+		return '.zip';
+	}
+
+	return path.extname( lower );
 }
 
 function isDeployArchiveFile( filename: string ): boolean {
