@@ -177,9 +177,13 @@
     "xml2js": "^0.6.2"
   },
   "optionalDependencies": {
-    "@postman/node-keytar": "~7.9.3"
+    "@github/keytar": "^7.10.6"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "allowScripts": {
+    "ssh2@1.17.0": true,
+    "@github/keytar@7.10.6": true
   }
 }

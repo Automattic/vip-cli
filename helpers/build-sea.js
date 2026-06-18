@@ -83,8 +83,8 @@ function buildBundle() {
 		format: 'cjs',
 		outfile: bundlePath,
 		external: [
-			'@postman/node-keytar',
-			'@postman/node-keytar/*',
+			'@github/keytar',
+			'@github/keytar/*',
 			'cpu-features',
 			'cpu-features/*',
 			'lando',
