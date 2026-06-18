@@ -141,7 +141,7 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@apollo/client": "4.2.2",
+    "@apollo/client": "4.2.3",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
@@ -156,8 +156,8 @@
     "enquirer": "2.4.1",
     "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
-    "graphql": "16.14.1",
-    "graphql-tag": "2.12.6",
+    "graphql": "17.0.1",
+    "graphql-tag": "2.12.7",
     "https-proxy-agent": "^9.0.0",
     "js-yaml": "^4.1.0",
     "jwt-decode": "4.0.0",
