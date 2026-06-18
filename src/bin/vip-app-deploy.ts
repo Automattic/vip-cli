@@ -23,7 +23,11 @@ import {
 	WithId,
 	UploadArguments,
 } from '../lib/client-file-uploader';
-import { validateCustomDeployKey, validateFile } from '../lib/custom-deploy/custom-deploy';
+import {
+	validateCustomDeployKey,
+	validateFile,
+	validateLargeArchiveFiles,
+} from '../lib/custom-deploy/custom-deploy';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const START_DEPLOY_MUTATION = gql`
@@ -94,6 +98,10 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 
 	debug( 'Validating file...' );
 	await validateFile( appId, envId, fileMeta );
+
+	if ( ! opts.skipLargeFileVerify ) {
+		await validateLargeArchiveFiles( appId, envId, fileMeta );
+	}
 
 	await track( 'deploy_app_command_execute' );
 
@@ -269,6 +277,11 @@ const examples = [
 		description:
 			'Skip the confirmation prompt for the Custom Deployment of the archived file named "file.tar.gz" to the environment.',
 	},
+	{
+		usage:
+			'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip --skip-large-file-verify',
+		description: 'Skip checking the deploy archive for repository archive files larger than 50 MB.',
+	},
 ];
 
 void command( {
@@ -279,6 +292,11 @@ void command( {
 	.examples( examples )
 	.option( 'message', 'Add a description of a deployment.' )
 	.option( 'skip-confirmation', 'Skip the confirmation prompt.' )
+	.option(
+		'skip-large-file-verify',
+		'Skip checking for repository archive files over 50 MB.',
+		false
+	)
 	.option( 'force', 'Skip confirmation prompt (deprecated)' )
 	.option(
 		'app',

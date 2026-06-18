@@ -4,11 +4,18 @@ import path from 'path';
 import * as tar from 'tar';
 
 import * as exit from '../../lib/cli/exit';
+import { MB_IN_BYTES } from '../../lib/constants/file-size';
 
 interface TarEntry {
 	path: string;
 	type: string;
 	mode: number | undefined;
+	size?: number;
+}
+
+export interface LargeArchiveFile {
+	path: string;
+	size: number;
 }
 
 const errorMessages = {
@@ -21,6 +28,85 @@ const errorMessages = {
 };
 const symlinkIgnorePattern = /\/node_modules\/[^/]+\/\.bin\//;
 const macosxDir = '__MACOSX';
+export const LARGE_ARCHIVE_FILE_SIZE_LIMIT = 50 * MB_IN_BYTES;
+
+function getDeployFileExt( filename: string ): string {
+	let ext = path.extname( filename ).toLowerCase();
+
+	if ( ext === '.gz' && path.extname( path.basename( filename, ext ) ) === '.tar' ) {
+		ext = '.tar.gz';
+	}
+
+	return ext;
+}
+
+function isDeployArchiveFile( filename: string ): boolean {
+	return [ '.zip', '.tar.gz', '.tgz' ].includes( getDeployFileExt( filename ) );
+}
+
+async function findLargeArchiveFilesInZipArchive(
+	filePath: string
+): Promise< LargeArchiveFile[] > {
+	const zipFile = new StreamZip.async( { file: filePath } );
+
+	try {
+		const zipEntries = await zipFile.entries();
+
+		return Object.values( zipEntries )
+			.filter(
+				entry =>
+					! entry.isDirectory &&
+					isDeployArchiveFile( entry.name ) &&
+					entry.size > LARGE_ARCHIVE_FILE_SIZE_LIMIT
+			)
+			.map( entry => ( {
+				path: entry.name,
+				size: entry.size,
+			} ) );
+	} finally {
+		await zipFile.close();
+	}
+}
+
+async function findLargeArchiveFilesInTarArchive(
+	filePath: string
+): Promise< LargeArchiveFile[] > {
+	const largeArchiveFiles: LargeArchiveFile[] = [];
+
+	await tar.list( {
+		file: filePath,
+		onReadEntry: entry => {
+			if (
+				entry.type === 'File' &&
+				isDeployArchiveFile( entry.path ) &&
+				entry.size > LARGE_ARCHIVE_FILE_SIZE_LIMIT
+			) {
+				largeArchiveFiles.push( {
+					path: entry.path,
+					size: entry.size,
+				} );
+			}
+		},
+	} );
+
+	return largeArchiveFiles;
+}
+
+export async function findLargeArchiveFilesInDeployArchive(
+	filePath: string
+): Promise< LargeArchiveFile[] > {
+	const ext = getDeployFileExt( filePath );
+
+	if ( ext === '.zip' ) {
+		return findLargeArchiveFilesInZipArchive( filePath );
+	}
+
+	if ( ext === '.tar.gz' || ext === '.tgz' ) {
+		return findLargeArchiveFilesInTarArchive( filePath );
+	}
+
+	return [];
+}
 
 /**
  * Check if a file has a valid extension
@@ -29,11 +115,7 @@ const macosxDir = '__MACOSX';
  * @returns {boolean} True if the extension is valid
  */
 export function validateDeployFileExt( filename: string ): void {
-	let ext = path.extname( filename ).toLowerCase();
-
-	if ( ext === '.gz' && path.extname( path.basename( filename, ext ) ) === '.tar' ) {
-		ext = '.tar.gz';
-	}
+	const ext = getDeployFileExt( filename );
 
 	if ( ! [ '.zip', '.tar.gz', '.tgz' ].includes( ext ) ) {
 		exit.withError( errorMessages.invalidExt );
