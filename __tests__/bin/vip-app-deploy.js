@@ -3,6 +3,7 @@ import * as exit from '../../src/lib/cli/exit';
 import { uploadImportFileToS3 } from '../../src/lib/client-file-uploader';
 import {
 	validateFile,
+	validateLargeArchiveFiles,
 	promptToContinue,
 	validateCustomDeployKey,
 } from '../../src/lib/custom-deploy/custom-deploy';
@@ -18,6 +19,7 @@ jest.mock( '../../src/lib/client-file-uploader', () => ( {
 
 jest.mock( '../../src/lib/custom-deploy/custom-deploy', () => ( {
 	validateFile: jest.fn(),
+	validateLargeArchiveFiles: jest.fn(),
 	renameFile: jest.fn(),
 	promptToContinue: jest.fn().mockResolvedValue( true ),
 	validateCustomDeployKey: jest.fn().mockResolvedValue( {
@@ -96,6 +98,10 @@ describe( 'vip-app-deploy', () => {
 	} );
 
 	describe( 'appDeployCmd', () => {
+		beforeEach( () => {
+			jest.clearAllMocks();
+		} );
+
 		it( 'should call expected functions', async () => {
 			await appDeployCmd( args, opts );
 
@@ -103,9 +109,18 @@ describe( 'vip-app-deploy', () => {
 
 			expect( validateFile ).toHaveBeenCalledTimes( 1 );
 
+			expect( validateLargeArchiveFiles ).toHaveBeenCalledTimes( 1 );
+
 			expect( promptToContinue ).not.toHaveBeenCalled();
 
 			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'skips large file verification when requested', async () => {
+			await appDeployCmd( args, { ...opts, skipLargeFileValidation: true } );
+
+			expect( validateFile ).toHaveBeenCalledTimes( 1 );
+			expect( validateLargeArchiveFiles ).not.toHaveBeenCalled();
 		} );
 	} );
 } );
