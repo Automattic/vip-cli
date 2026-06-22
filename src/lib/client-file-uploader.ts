@@ -4,6 +4,7 @@ import debugLib from 'debug';
 import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
+import { clearInterval, setInterval } from 'node:timers';
 import { setTimeout } from 'node:timers/promises';
 import os from 'os';
 import path from 'path';
@@ -31,7 +32,7 @@ export function parseEtagHeader( etag: string ): string {
 	return normalizedEtag.replace( /^"(.*)"$/u, '$1' );
 }
 
-type BodyFactory = () => RequestInit[ 'body' ];
+export type BodyFactory = () => RequestInit[ 'body' ];
 
 /**
  * Wraps `fetch` with exponential-backoff retries.
@@ -580,8 +581,8 @@ export async function uploadParts( {
 	progressCallback,
 }: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
-	let totalBytesRead = 0;
 	const partPercentages = new Array< number >( parts.length ).fill( 0 );
+	const partBytesRead = new Array< number >( parts.length ).fill( 0 );
 
 	const readyForPartUpload = () =>
 		new Promise< void >( resolve => {
@@ -595,6 +596,7 @@ export async function uploadParts( {
 		} );
 
 	const updateProgress = () => {
+		const totalBytesRead = partBytesRead.reduce( ( sum, bytes ) => sum + bytes, 0 );
 		const percentage = `${ Math.floor( ( 100 * totalBytesRead ) / fileMeta.fileSize ) }%`;
 
 		if ( typeof progressCallback === 'function' ) {
@@ -619,15 +621,25 @@ export async function uploadParts( {
 
 	const allDone = await Promise.all(
 		parts.map( async part => {
-			const { index, partSize } = part;
-			const progressPassThrough = new PassThrough();
+			const { index, partSize, start, end } = part;
 
-			let partBytesRead = 0;
-			progressPassThrough.on( 'data', ( data: Buffer | string ) => {
-				totalBytesRead += data.length;
-				partBytesRead += data.length;
-				partPercentages[ index ] = Math.floor( ( 100 * partBytesRead ) / partSize );
-			} );
+			// Build a fresh request body for every attempt. A stream can only be
+			// consumed once, so recreating the ranged read stream (and its progress
+			// PassThrough) per attempt lets `fetchWithRetry` retry without reusing a
+			// disturbed/locked stream. Reset this part's progress counters so a retry
+			// re-streams the part without double-counting bytes.
+			const createBody = (): RequestInit[ 'body' ] => {
+				partBytesRead[ index ] = 0;
+				partPercentages[ index ] = 0;
+
+				const progressPassThrough = new PassThrough();
+				progressPassThrough.on( 'data', ( data: Buffer | string ) => {
+					partBytesRead[ index ] += data.length;
+					partPercentages[ index ] = Math.floor( ( 100 * partBytesRead[ index ] ) / partSize );
+				} );
+
+				return createReadStream( fileMeta.fileName, { start, end } ).pipe( progressPassThrough );
+			};
 
 			await readyForPartUpload();
 
@@ -636,7 +648,7 @@ export async function uploadParts( {
 				env,
 				fileMeta,
 				part,
-				progressPassThrough,
+				createBody,
 				uploadId,
 			} );
 
@@ -657,18 +669,18 @@ export interface UploadPartArgs {
 	env: WithId;
 	fileMeta: FileMeta;
 	part: Part;
-	progressPassThrough: PassThrough;
+	createBody: BodyFactory;
 	uploadId: string;
 }
 async function uploadPart( {
 	app,
 	env,
-	fileMeta: { basename, fileName },
+	fileMeta: { basename },
 	part,
-	progressPassThrough,
+	createBody,
 	uploadId,
 }: UploadPartArgs ) {
-	const { end, index, partSize, start } = part;
+	const { index, partSize } = part;
 	const s3PartNumber = index + 1; // S3 multipart is indexed from 1
 
 	// TODO: handle failures / retries, etc.
@@ -694,9 +706,12 @@ async function uploadPart( {
 			 */
 		};
 
-		fetchOptions.body = createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
-
-		const fetchResponse = await fetchWithRetry( partUploadRequestData.url, fetchOptions );
+		const fetchResponse = await fetchWithRetry(
+			partUploadRequestData.url,
+			fetchOptions,
+			3,
+			createBody
+		);
 		if ( fetchResponse.status === 200 ) {
 			const etag = fetchResponse.headers.get( 'etag' );
 
