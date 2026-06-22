@@ -55,7 +55,7 @@ beforeEach( () => {
 		challengeId: 'rch_abc',
 		status: 'pending',
 		verificationUrl: 'https://example.com/verify',
-		pollIntervalSeconds: 0, // tight loop for tests
+		pollIntervalSeconds: 0, // floored to MIN_POLL_INTERVAL_SECONDS; tests drive fake timers
 		expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
 	} );
 	mockExchange.mockResolvedValue( {
@@ -80,6 +80,40 @@ describe( 'runRechallenge', () => {
 				interactive: false,
 			} )
 		).rejects.toBeInstanceOf( RechallengeUnsupportedVersionError );
+	} );
+
+	it( 'floors an unusable poll interval instead of tight-looping or producing NaN', async () => {
+		// Server returns NaN: without the guard this would make the interval NaN
+		// (Math.max returns NaN) and 0 would tight-loop. The floor must apply.
+		mockCreate.mockResolvedValueOnce( {
+			challengeId: 'rch_abc',
+			status: 'pending',
+			verificationUrl: 'https://example.com/verify',
+			pollIntervalSeconds: Number.NaN,
+			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
+		} );
+		mockGetStatus.mockResolvedValueOnce( {
+			challengeId: 'rch_abc',
+			status: 'verified',
+			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
+			pollIntervalSeconds: 0,
+		} );
+
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
+			requestedOperation: 'updateDefensiveModeStatus',
+			rechallenge: rechallenge(),
+			interactive: false,
+		} );
+
+		// Just below the 2s floor: the first status poll must not have fired yet.
+		await jest.advanceTimersByTimeAsync( 1999 );
+		expect( mockGetStatus ).not.toHaveBeenCalled();
+
+		// Crossing the floor triggers exactly one poll, which resolves the flow.
+		await jest.advanceTimersByTimeAsync( 1 );
+		await pending;
+		expect( mockGetStatus ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'polls until verified then exchanges and caches the token', async () => {
