@@ -4,6 +4,7 @@ import debugLib from 'debug';
 import { constants, createReadStream, createWriteStream, type ReadStream } from 'fs';
 import { access, mkdtemp, open, stat } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
+import { clearInterval, setInterval } from 'node:timers';
 import { setTimeout } from 'node:timers/promises';
 import os from 'os';
 import path from 'path';
@@ -31,17 +32,40 @@ export function parseEtagHeader( etag: string ): string {
 	return normalizedEtag.replace( /^"(.*)"$/u, '$1' );
 }
 
-async function fetchWithRetry(
+export type BodyFactory = () => RequestInit[ 'body' ];
+
+/**
+ * Wraps `fetch` with exponential-backoff retries.
+ *
+ * A request body that is a Node stream can only be consumed once. If the body
+ * is a stream and we retried with the same `init`, the second attempt would
+ * pass an already-consumed (disturbed/locked) stream to `fetch`, which throws
+ * the misleading `Response body object should not be disturbed or locked` error
+ * and masks the original network failure.
+ *
+ * To retry safely, callers that send a stream body should pass `createBody`,
+ * which is invoked to produce a fresh body for every attempt. If a stream body
+ * is supplied without a `createBody` factory, the request is attempted only
+ * once so the underlying error surfaces instead of the misleading undici one.
+ */
+export async function fetchWithRetry(
 	input: string | URL,
-	init?: RequestInit,
-	retries = 3
+	init: RequestInit = {},
+	retries = 3,
+	createBody?: BodyFactory
 ): Promise< Response > {
-	for ( let attempt = 0; attempt <= retries; attempt++ ) {
+	const bodyIsStream =
+		typeof ( init.body as { pipe?: unknown } | null | undefined )?.pipe === 'function';
+	// Only retry when we can hand `fetch` a fresh, replayable body each attempt.
+	const maxAttempts = createBody || ! bodyIsStream ? retries : 0;
+
+	for ( let attempt = 0; attempt <= maxAttempts; attempt++ ) {
+		const requestInit = createBody ? { ...init, body: createBody() } : init;
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			return await fetch( input, init );
+			return await fetch( input, requestInit );
 		} catch ( err ) {
-			if ( attempt === retries ) {
+			if ( attempt === maxAttempts ) {
 				throw err;
 			}
 			// eslint-disable-next-line no-await-in-loop
@@ -298,21 +322,30 @@ async function uploadUsingPutObject( {
 		'Content-Length': `${ fileSize }`, // This has to be a string
 	};
 
-	let readBytes = 0;
-	const progressPassThrough = new PassThrough();
-	progressPassThrough.on( 'data', ( data: Buffer | string ) => {
-		readBytes += data.length;
-		const percentage = `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%`;
-		debug( percentage );
-		if ( typeof progressCallback === 'function' ) {
-			progressCallback( percentage );
+	// Build a fresh request body for every attempt. The upload streams the file
+	// from disk, and a stream can only be consumed once; recreating it per
+	// attempt lets `fetchWithRetry` retry without reusing a consumed stream
+	// (which would otherwise throw `... should not be disturbed or locked`).
+	const createBody = (): RequestInit[ 'body' ] => {
+		if ( fileContent ) {
+			return fileContent;
 		}
-	} );
 
-	const response = await fetchWithRetry( presignedRequest.url, {
-		...fetchOptions,
-		body: fileContent ?? createReadStream( fileName ).pipe( progressPassThrough ),
-	} );
+		let readBytes = 0;
+		const progressPassThrough = new PassThrough();
+		progressPassThrough.on( 'data', ( data: Buffer | string ) => {
+			readBytes += data.length;
+			const percentage = `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%`;
+			debug( percentage );
+			if ( typeof progressCallback === 'function' ) {
+				progressCallback( percentage );
+			}
+		} );
+
+		return createReadStream( fileName ).pipe( progressPassThrough );
+	};
+
+	const response = await fetchWithRetry( presignedRequest.url, fetchOptions, 3, createBody );
 
 	if ( response.status === 200 ) {
 		return 'ok';
@@ -548,8 +581,8 @@ export async function uploadParts( {
 	progressCallback,
 }: UploadPartsArgs ) {
 	let uploadsInProgress = 0;
-	let totalBytesRead = 0;
 	const partPercentages = new Array< number >( parts.length ).fill( 0 );
+	const partBytesRead = new Array< number >( parts.length ).fill( 0 );
 
 	const readyForPartUpload = () =>
 		new Promise< void >( resolve => {
@@ -563,6 +596,7 @@ export async function uploadParts( {
 		} );
 
 	const updateProgress = () => {
+		const totalBytesRead = partBytesRead.reduce( ( sum, bytes ) => sum + bytes, 0 );
 		const percentage = `${ Math.floor( ( 100 * totalBytesRead ) / fileMeta.fileSize ) }%`;
 
 		if ( typeof progressCallback === 'function' ) {
@@ -587,15 +621,25 @@ export async function uploadParts( {
 
 	const allDone = await Promise.all(
 		parts.map( async part => {
-			const { index, partSize } = part;
-			const progressPassThrough = new PassThrough();
+			const { index, partSize, start, end } = part;
 
-			let partBytesRead = 0;
-			progressPassThrough.on( 'data', ( data: Buffer | string ) => {
-				totalBytesRead += data.length;
-				partBytesRead += data.length;
-				partPercentages[ index ] = Math.floor( ( 100 * partBytesRead ) / partSize );
-			} );
+			// Build a fresh request body for every attempt. A stream can only be
+			// consumed once, so recreating the ranged read stream (and its progress
+			// PassThrough) per attempt lets `fetchWithRetry` retry without reusing a
+			// disturbed/locked stream. Reset this part's progress counters so a retry
+			// re-streams the part without double-counting bytes.
+			const createBody = (): RequestInit[ 'body' ] => {
+				partBytesRead[ index ] = 0;
+				partPercentages[ index ] = 0;
+
+				const progressPassThrough = new PassThrough();
+				progressPassThrough.on( 'data', ( data: Buffer | string ) => {
+					partBytesRead[ index ] += data.length;
+					partPercentages[ index ] = Math.floor( ( 100 * partBytesRead[ index ] ) / partSize );
+				} );
+
+				return createReadStream( fileMeta.fileName, { start, end } ).pipe( progressPassThrough );
+			};
 
 			await readyForPartUpload();
 
@@ -604,7 +648,7 @@ export async function uploadParts( {
 				env,
 				fileMeta,
 				part,
-				progressPassThrough,
+				createBody,
 				uploadId,
 			} );
 
@@ -625,18 +669,18 @@ export interface UploadPartArgs {
 	env: WithId;
 	fileMeta: FileMeta;
 	part: Part;
-	progressPassThrough: PassThrough;
+	createBody: BodyFactory;
 	uploadId: string;
 }
 async function uploadPart( {
 	app,
 	env,
-	fileMeta: { basename, fileName },
+	fileMeta: { basename },
 	part,
-	progressPassThrough,
+	createBody,
 	uploadId,
 }: UploadPartArgs ) {
-	const { end, index, partSize, start } = part;
+	const { index, partSize } = part;
 	const s3PartNumber = index + 1; // S3 multipart is indexed from 1
 
 	// TODO: handle failures / retries, etc.
@@ -662,9 +706,12 @@ async function uploadPart( {
 			 */
 		};
 
-		fetchOptions.body = createReadStream( fileName, { start, end } ).pipe( progressPassThrough );
-
-		const fetchResponse = await fetchWithRetry( partUploadRequestData.url, fetchOptions );
+		const fetchResponse = await fetchWithRetry(
+			partUploadRequestData.url,
+			fetchOptions,
+			3,
+			createBody
+		);
 		if ( fetchResponse.status === 200 ) {
 			const etag = fetchResponse.headers.get( 'etag' );
 
