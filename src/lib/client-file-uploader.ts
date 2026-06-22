@@ -34,6 +34,11 @@ export function parseEtagHeader( etag: string ): string {
 
 export type BodyFactory = () => RequestInit[ 'body' ];
 
+type RequestInitWithDuplex = RequestInit & { duplex?: 'half' };
+
+const isStreamBody = ( body: RequestInit[ 'body' ] ): boolean =>
+	typeof ( body as { pipe?: unknown } | null | undefined )?.pipe === 'function';
+
 /**
  * Wraps `fetch` with exponential-backoff retries.
  *
@@ -54,13 +59,17 @@ export async function fetchWithRetry(
 	retries = 3,
 	createBody?: BodyFactory
 ): Promise< Response > {
-	const bodyIsStream =
-		typeof ( init.body as { pipe?: unknown } | null | undefined )?.pipe === 'function';
+	const bodyIsStream = isStreamBody( init.body );
 	// Only retry when we can hand `fetch` a fresh, replayable body each attempt.
 	const maxAttempts = createBody || ! bodyIsStream ? retries : 0;
 
 	for ( let attempt = 0; attempt <= maxAttempts; attempt++ ) {
-		const requestInit = createBody ? { ...init, body: createBody() } : init;
+		const requestInit: RequestInitWithDuplex = createBody
+			? { ...init, body: createBody() }
+			: { ...init };
+		if ( isStreamBody( requestInit.body ) && ! requestInit.duplex ) {
+			requestInit.duplex = 'half';
+		}
 		try {
 			// eslint-disable-next-line no-await-in-loop
 			return await fetch( input, requestInit );
