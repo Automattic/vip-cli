@@ -17,6 +17,11 @@ import type { ElevatedToken, RechallengeExtension, RechallengeStatus } from './t
 
 const debug = debugLib( '@automattic/vip:rechallenge:flow' );
 
+// Floor for the server-provided poll interval. Guards against a missing/0/NaN
+// value (which would otherwise produce a tight status-poll loop) and clamps
+// implausibly small values so a misbehaving server cannot make us hammer the API.
+const MIN_POLL_INTERVAL_SECONDS = 2;
+
 const TERMINAL: ReadonlySet< RechallengeStatus > = new Set( [
 	'verified',
 	'expired',
@@ -68,7 +73,12 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		);
 	}
 
-	const interval = Math.max( session.pollIntervalSeconds, 0 ) * 1000;
+	const requestedInterval = Number( session.pollIntervalSeconds );
+	const interval =
+		Math.max(
+			Number.isFinite( requestedInterval ) ? requestedInterval : MIN_POLL_INTERVAL_SECONDS,
+			MIN_POLL_INTERVAL_SECONDS
+		) * 1000;
 	const deadline = Date.parse( session.expiresAt );
 	if ( Number.isNaN( deadline ) ) {
 		throw new RechallengeTerminalError(

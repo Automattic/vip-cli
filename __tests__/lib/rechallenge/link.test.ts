@@ -161,6 +161,30 @@ describe( 'rechallengeLink', () => {
 		expect( result.errors?.[ 0 ].extensions?.code ).toBe( 'elevated-permission-required' );
 	} );
 
+	it( 'aborts the in-flight rechallenge flow when the operation is unsubscribed', async () => {
+		let capturedSignal: AbortSignal | undefined;
+		runRechallenge.mockImplementationOnce( opts => {
+			capturedSignal = opts.signal;
+			// Never resolves: the flow is still polling when we tear down.
+			return new Promise< ElevatedToken >( () => {} );
+		} );
+		const { link: downstream } = makeDownstream( [ elevatedRequiredResult() ] );
+		const link = ApolloLink.from( [ createRechallengeLink(), downstream ] );
+
+		const subscription = ApolloLink.execute( link, { query: MUTATION }, EXEC_CTX ).subscribe( {
+			next: () => {},
+			error: () => {},
+		} );
+
+		// Let preflight + first forward + the rechallenge dispatch settle.
+		await new Promise( resolve => setTimeout( resolve, 0 ) );
+		expect( capturedSignal ).toBeDefined();
+		expect( capturedSignal?.aborted ).toBe( false );
+
+		subscription.unsubscribe();
+		expect( capturedSignal?.aborted ).toBe( true );
+	} );
+
 	it( 'passes the second elevated-permission-required upstream without retrying again', async () => {
 		runRechallenge.mockResolvedValueOnce( ELEVATED_TOKEN );
 		const { link: downstream } = makeDownstream( [

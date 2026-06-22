@@ -68,6 +68,10 @@ beforeEach( () => {
 } );
 
 describe( 'runRechallenge', () => {
+	afterEach( () => {
+		jest.useRealTimers();
+	} );
+
 	it( 'rejects v1 with RechallengeUnsupportedVersionError', async () => {
 		await expect(
 			runRechallenge( {
@@ -94,11 +98,14 @@ describe( 'runRechallenge', () => {
 				provider: 'passkeys',
 			} );
 
-		const token = await runRechallenge( {
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
 		} );
+		await jest.runAllTimersAsync();
+		const token = await pending;
 
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const { trackEvent } = require( '../../../src/lib/tracker' ) as { trackEvent: jest.Mock };
@@ -133,13 +140,16 @@ describe( 'runRechallenge', () => {
 			statusReason: { code: 'expired', message: 'session expired' },
 		} );
 
-		await expect(
-			runRechallenge( {
-				requestedOperation: 'updateDefensiveModeStatus',
-				rechallenge: rechallenge(),
-				interactive: false,
-			} )
-		).rejects.toBeInstanceOf( RechallengeTerminalError );
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
+			requestedOperation: 'updateDefensiveModeStatus',
+			rechallenge: rechallenge(),
+			interactive: false,
+		} );
+		await Promise.all( [
+			expect( pending ).rejects.toBeInstanceOf( RechallengeTerminalError ),
+			jest.runAllTimersAsync(),
+		] );
 	} );
 
 	it( 'aborts when the abort signal fires', async () => {
@@ -178,11 +188,14 @@ describe( 'runRechallenge', () => {
 			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
 			pollIntervalSeconds: 0,
 		} );
-		await runRechallenge( {
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
 		} );
+		await jest.runAllTimersAsync();
+		await pending;
 		expect( mockOpenBrowser ).not.toHaveBeenCalled();
 	} );
 
@@ -193,11 +206,14 @@ describe( 'runRechallenge', () => {
 			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
 			pollIntervalSeconds: 0,
 		} );
-		await runRechallenge( {
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: true,
 		} );
+		await jest.runAllTimersAsync();
+		await pending;
 		expect( mockOpenBrowser ).toHaveBeenCalledWith( 'https://example.com/verify' );
 	} );
 } );

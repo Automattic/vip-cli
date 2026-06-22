@@ -6,7 +6,11 @@ import { prompt } from 'enquirer';
 import command from '../lib/cli/command';
 import { formatEnvironment, table } from '../lib/cli/format';
 import { appQuery, updateDefensiveModeConfig } from '../lib/defensive-mode/api';
-import { isInteractive, reportMutationResult } from '../lib/defensive-mode/cli-helpers';
+import {
+	guardProductionMutation,
+	isInteractive,
+	reportMutationResult,
+} from '../lib/defensive-mode/cli-helpers';
 import { confirm } from '../lib/envvar/input';
 import { trackEvent } from '../lib/tracker';
 
@@ -246,18 +250,17 @@ export async function defensiveModeConfigureCommand( _args, opt ) {
 	);
 	console.log( table( settingRows ) );
 
-	if ( interactive && ! opt.skipConfirmation && opt.env.type === 'production' ) {
-		const yes = await confirm(
-			`Apply the proposed configuration to ${ formatEnvironment( opt.env.type ) } for ${
-				opt.app.name
-			}?`
-		);
-		if ( ! yes ) {
-			await trackEvent( 'defensive_mode_configure_command_cancelled', trackingParams );
-			console.log( 'Command cancelled' );
-			process.exit();
-		}
-	}
+	// Production mutations require confirmation. In non-interactive contexts this
+	// hard-errors unless --skip-confirmation is passed, so unattended/CI runs fail
+	// fast rather than silently mutating production — matching enable/disable.
+	await guardProductionMutation(
+		opt,
+		'configure',
+		trackingParams,
+		confirm,
+		trackEvent,
+		formatEnvironment
+	);
 
 	const result = await updateDefensiveModeConfig( input );
 

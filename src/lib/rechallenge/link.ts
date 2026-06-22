@@ -82,6 +82,7 @@ export default function createRechallengeLink(): ApolloLink {
 			let cancelled = false;
 			let firstSub: { unsubscribe(): void } | null = null;
 			let retrySub: { unsubscribe(): void } | null = null;
+			const abortController = new AbortController();
 
 			const preflight = async () => {
 				if ( ! eligible || ! scope ) {
@@ -118,6 +119,7 @@ export default function createRechallengeLink(): ApolloLink {
 								requestedOperation: scope,
 								rechallenge: elevated.rechallenge,
 								interactive: isInteractiveContext(),
+								signal: abortController.signal,
 							} )
 								.then( token => {
 									if ( cancelled || observer.closed ) {
@@ -152,6 +154,9 @@ export default function createRechallengeLink(): ApolloLink {
 
 			return () => {
 				cancelled = true;
+				// Abort any in-flight rechallenge polling so the loop, its tracking
+				// events, and the token-cache write stop instead of running to expiry.
+				abortController.abort();
 				firstSub?.unsubscribe();
 				retrySub?.unsubscribe();
 			};
