@@ -2,12 +2,21 @@
  * @format
  */
 
+import { PassThrough } from 'stream';
+import { fetch } from 'undici';
+
 import {
+	fetchWithRetry,
 	getFileHash,
 	getFileMeta,
 	getPartBoundaries,
 	parseEtagHeader,
 } from '../../src/lib/client-file-uploader';
+
+jest.mock( 'undici', () => {
+	const actual = jest.requireActual( 'undici' );
+	return { ...actual, fetch: jest.fn() };
+} );
 
 describe( 'client-file-uploader', () => {
 	describe( 'getFileMeta()', () => {
@@ -107,6 +116,85 @@ describe( 'client-file-uploader', () => {
 
 		it( 'should return an unquoted ETag value as-is', () => {
 			expect( parseEtagHeader( 'abc123' ) ).toBe( 'abc123' );
+		} );
+	} );
+
+	describe( 'fetchWithRetry()', () => {
+		beforeEach( () => {
+			fetch.mockReset();
+		} );
+
+		afterEach( () => {
+			jest.useRealTimers();
+		} );
+
+		it( 'should return the response without retrying on success', async () => {
+			const response = { status: 200 };
+			fetch.mockResolvedValueOnce( response );
+
+			await expect( fetchWithRetry( 'https://example.com', { method: 'PUT' } ) ).resolves.toBe(
+				response
+			);
+			expect( fetch ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should recreate the body for each attempt when a factory is provided', async () => {
+			jest.useFakeTimers();
+			const response = { status: 200 };
+			fetch.mockRejectedValueOnce( new Error( 'ECONNRESET' ) ).mockResolvedValueOnce( response );
+
+			let calls = 0;
+			const createBody = jest.fn( () => `body-${ ++calls }` );
+
+			const promise = fetchWithRetry( 'https://example.com', { method: 'PUT' }, 3, createBody );
+			await jest.advanceTimersByTimeAsync( 1000 );
+
+			await expect( promise ).resolves.toBe( response );
+			expect( fetch ).toHaveBeenCalledTimes( 2 );
+			expect( createBody ).toHaveBeenCalledTimes( 2 );
+			// Each attempt must receive a fresh body, never a reused/consumed one.
+			expect( fetch.mock.calls[ 0 ][ 1 ].body ).toBe( 'body-1' );
+			expect( fetch.mock.calls[ 1 ][ 1 ].body ).toBe( 'body-2' );
+		} );
+
+		it( 'should not retry a one-shot stream body without a factory', async () => {
+			const err = new Error( 'socket hang up' );
+			fetch.mockRejectedValue( err );
+
+			// A stream body can only be consumed once; retrying it would throw the
+			// misleading "Response body object should not be disturbed or locked".
+			await expect(
+				fetchWithRetry( 'https://example.com', { method: 'PUT', body: new PassThrough() } )
+			).rejects.toThrow( 'socket hang up' );
+			expect( fetch ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should retry a non-stream body using the same init', async () => {
+			jest.useFakeTimers();
+			const response = { status: 200 };
+			fetch.mockRejectedValueOnce( new Error( 'flaky' ) ).mockResolvedValueOnce( response );
+
+			const promise = fetchWithRetry( 'https://example.com', {
+				method: 'PUT',
+				body: 'plain-string',
+			} );
+			await jest.advanceTimersByTimeAsync( 1000 );
+
+			await expect( promise ).resolves.toBe( response );
+			expect( fetch ).toHaveBeenCalledTimes( 2 );
+		} );
+
+		it( 'should throw the last error after exhausting retries', async () => {
+			jest.useFakeTimers();
+			fetch.mockRejectedValue( new Error( 'persistent failure' ) );
+
+			const settled = fetchWithRetry( 'https://example.com', { method: 'GET' }, 2 ).catch(
+				err => err
+			);
+			await jest.advanceTimersByTimeAsync( 1000 + 2000 );
+
+			await expect( settled ).resolves.toThrow( 'persistent failure' );
+			expect( fetch ).toHaveBeenCalledTimes( 3 ); // initial attempt + 2 retries
 		} );
 	} );
 } );

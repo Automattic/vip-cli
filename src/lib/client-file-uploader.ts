@@ -31,17 +31,40 @@ export function parseEtagHeader( etag: string ): string {
 	return normalizedEtag.replace( /^"(.*)"$/u, '$1' );
 }
 
-async function fetchWithRetry(
+type BodyFactory = () => RequestInit[ 'body' ];
+
+/**
+ * Wraps `fetch` with exponential-backoff retries.
+ *
+ * A request body that is a Node stream can only be consumed once. If the body
+ * is a stream and we retried with the same `init`, the second attempt would
+ * pass an already-consumed (disturbed/locked) stream to `fetch`, which throws
+ * the misleading `Response body object should not be disturbed or locked` error
+ * and masks the original network failure.
+ *
+ * To retry safely, callers that send a stream body should pass `createBody`,
+ * which is invoked to produce a fresh body for every attempt. If a stream body
+ * is supplied without a `createBody` factory, the request is attempted only
+ * once so the underlying error surfaces instead of the misleading undici one.
+ */
+export async function fetchWithRetry(
 	input: string | URL,
-	init?: RequestInit,
-	retries = 3
+	init: RequestInit = {},
+	retries = 3,
+	createBody?: BodyFactory
 ): Promise< Response > {
-	for ( let attempt = 0; attempt <= retries; attempt++ ) {
+	const bodyIsStream =
+		typeof ( init.body as { pipe?: unknown } | null | undefined )?.pipe === 'function';
+	// Only retry when we can hand `fetch` a fresh, replayable body each attempt.
+	const maxAttempts = createBody || ! bodyIsStream ? retries : 0;
+
+	for ( let attempt = 0; attempt <= maxAttempts; attempt++ ) {
+		const requestInit = createBody ? { ...init, body: createBody() } : init;
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			return await fetch( input, init );
+			return await fetch( input, requestInit );
 		} catch ( err ) {
-			if ( attempt === retries ) {
+			if ( attempt === maxAttempts ) {
 				throw err;
 			}
 			// eslint-disable-next-line no-await-in-loop
@@ -298,21 +321,30 @@ async function uploadUsingPutObject( {
 		'Content-Length': `${ fileSize }`, // This has to be a string
 	};
 
-	let readBytes = 0;
-	const progressPassThrough = new PassThrough();
-	progressPassThrough.on( 'data', ( data: Buffer | string ) => {
-		readBytes += data.length;
-		const percentage = `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%`;
-		debug( percentage );
-		if ( typeof progressCallback === 'function' ) {
-			progressCallback( percentage );
+	// Build a fresh request body for every attempt. The upload streams the file
+	// from disk, and a stream can only be consumed once; recreating it per
+	// attempt lets `fetchWithRetry` retry without reusing a consumed stream
+	// (which would otherwise throw `... should not be disturbed or locked`).
+	const createBody = (): RequestInit[ 'body' ] => {
+		if ( fileContent ) {
+			return fileContent;
 		}
-	} );
 
-	const response = await fetchWithRetry( presignedRequest.url, {
-		...fetchOptions,
-		body: fileContent ?? createReadStream( fileName ).pipe( progressPassThrough ),
-	} );
+		let readBytes = 0;
+		const progressPassThrough = new PassThrough();
+		progressPassThrough.on( 'data', ( data: Buffer | string ) => {
+			readBytes += data.length;
+			const percentage = `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%`;
+			debug( percentage );
+			if ( typeof progressCallback === 'function' ) {
+				progressCallback( percentage );
+			}
+		} );
+
+		return createReadStream( fileName ).pipe( progressPassThrough );
+	};
+
+	const response = await fetchWithRetry( presignedRequest.url, fetchOptions, 3, createBody );
 
 	if ( response.status === 200 ) {
 		return 'ok';
