@@ -15,6 +15,7 @@ import {
 	getFileMeta,
 	getPartBoundaries,
 	parseEtagHeader,
+	uploadImportFileToS3,
 	uploadParts,
 } from '../../src/lib/client-file-uploader';
 
@@ -205,6 +206,102 @@ describe( 'client-file-uploader', () => {
 
 			await expect( settled ).resolves.toThrow( 'persistent failure' );
 			expect( fetch ).toHaveBeenCalledTimes( 3 ); // initial attempt + 2 retries
+		} );
+
+		it( 'should include the underlying fetch cause after exhausting retries', async () => {
+			jest.useFakeTimers();
+			const cause = new Error( 'write ECONNRESET' );
+			const err = new TypeError( 'fetch failed' );
+			err.cause = cause;
+			fetch.mockRejectedValue( err );
+
+			const settled = fetchWithRetry( 'https://example.com', { method: 'GET' }, 1 ).catch(
+				fetchErr => fetchErr
+			);
+			await jest.advanceTimersByTimeAsync( 1000 );
+
+			await expect( settled ).resolves.toThrow( 'fetch failed: write ECONNRESET' );
+			await expect( settled ).resolves.toHaveProperty( 'cause', err );
+			expect( fetch ).toHaveBeenCalledTimes( 2 ); // initial attempt + 1 retry
+		} );
+
+		it( 'should omit unsupported expect headers before sending fetch requests', async () => {
+			const response = { status: 200 };
+			fetch.mockResolvedValueOnce( response );
+
+			await expect(
+				fetchWithRetry( 'https://example.com', {
+					method: 'POST',
+					headers: { Expect: '100-continue', 'Content-Type': 'application/xml' },
+					body: '<xml />',
+				} )
+			).resolves.toBe( response );
+
+			expect( fetch ).toHaveBeenCalledTimes( 1 );
+			const headers = fetch.mock.calls[ 0 ][ 1 ].headers;
+			expect( headers.get( 'expect' ) ).toBeNull();
+			expect( headers.get( 'content-type' ) ).toBe( 'application/xml' );
+		} );
+	} );
+
+	describe( 'uploadImportFileToS3()', () => {
+		let tmpDir;
+
+		const presignedResponse = () => ( {
+			status: 200,
+			json: async () => ( {
+				url: 'https://s3.example.com/put-object',
+				options: { method: 'PUT', headers: {} },
+			} ),
+		} );
+
+		const writeTempFile = ( name, size ) => {
+			const fileName = path.join( tmpDir, name );
+			writeFileSync( fileName, Buffer.alloc( size, 'a' ) );
+			return fileName;
+		};
+
+		beforeAll( () => {
+			tmpDir = mkdtempSync( path.join( os.tmpdir(), 'vip-cli-upload-import-' ) );
+		} );
+
+		afterAll( () => {
+			rmSync( tmpDir, { recursive: true, force: true } );
+		} );
+
+		beforeEach( () => {
+			fetch.mockReset();
+			http.mockReset();
+		} );
+
+		it( 'should stream exactly Content-Length bytes for single-PUT uploads', async () => {
+			const fileSize = 256;
+			const fileName = writeTempFile( 'single-put.zip', fileSize );
+			const progress = [];
+			let uploadedBytes = 0;
+
+			http.mockResolvedValue( presignedResponse() );
+			fetch.mockImplementation( async ( _url, init ) => {
+				expect( init.headers.get( 'content-length' ) ).toBe( `${ fileSize }` );
+
+				for await ( const chunk of init.body ) {
+					uploadedBytes += chunk.length;
+				}
+
+				return { status: 200 };
+			} );
+
+			const result = await uploadImportFileToS3( {
+				app: { id: 1 },
+				env: { id: 2 },
+				fileMeta: { basename: 'single-put.zip', fileName, fileSize, isCompressed: true },
+				progressCallback: percentage => progress.push( percentage ),
+			} );
+
+			expect( result.result ).toBe( 'ok' );
+			expect( uploadedBytes ).toBe( fileSize );
+			expect( progress[ progress.length - 1 ] ).toBe( '100%' );
+			expect( fetch ).toHaveBeenCalledTimes( 1 );
 		} );
 	} );
 
