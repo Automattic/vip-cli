@@ -20,6 +20,7 @@ import { createProxyAgent } from '../lib/http/proxy-agent';
 import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
 import { initState, resetState, stateMachine } from '../lib/wp/helpers';
+import { safePause, safePrompt, safeResume, safeWrite, trackReadline } from '../lib/wp/readline';
 
 const debug = debugLib( '@automattic/vip:wp' );
 
@@ -114,8 +115,8 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 			subShellRl.close();
 			process.exit();
 		}
-		subShellRl.resume();
-		subShellRl.prompt();
+		safeResume( subShellRl );
+		safePrompt( subShellRl );
 	} );
 };
 
@@ -239,7 +240,7 @@ const bindReconnectEvents = ( {
 		bindReconnectEvents( { cliCommand, inputToken, subShellRl, commonTrackingParams, isSubShell } );
 
 		// Resume readline interface
-		subShellRl.resume();
+		safeResume( subShellRl );
 	} );
 
 	currentJob.socket.on( 'retry', async () => {
@@ -442,6 +443,7 @@ commandWrapper( {
 		let seenWP = false;
 
 		const subShellRl = readline.createInterface( subShellSettings );
+		trackReadline( subShellRl );
 		subShellRl.on( 'line', async line => {
 			if ( commandRunning ) {
 				return;
@@ -449,7 +451,7 @@ commandWrapper( {
 
 			// Handle plain return / newline
 			if ( ! line ) {
-				subShellRl.prompt();
+				safePrompt( subShellRl );
 				return;
 			}
 
@@ -463,7 +465,7 @@ commandWrapper( {
 			if ( userCmdCancelled ) {
 				seenWP = false;
 				resetState( commandState );
-				subShellRl.prompt();
+				safePrompt( subShellRl );
 				return;
 			}
 
@@ -483,11 +485,11 @@ commandWrapper( {
 					chalk.red( 'Error:' ),
 					'invalid command, please pass a valid WP-CLI command.'
 				);
-				subShellRl.prompt();
+				safePrompt( subShellRl );
 				return;
 			}
 
-			subShellRl.pause();
+			safePause( subShellRl );
 
 			let result;
 			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' );
@@ -512,7 +514,7 @@ commandWrapper( {
 					process.exit( 1 );
 				}
 
-				subShellRl.prompt();
+				safePrompt( subShellRl );
 				return;
 			}
 
@@ -591,10 +593,10 @@ commandWrapper( {
 
 		if ( ! isSubShell ) {
 			mutableStdout.muted = true;
-			subShellRl.write( `wp ${ cmd }\n` );
+			safeWrite( subShellRl, `wp ${ cmd }\n` );
 			mutableStdout.muted = false;
 			return;
 		}
 
-		subShellRl.prompt();
+		safePrompt( subShellRl );
 	} );
