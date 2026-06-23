@@ -8,8 +8,8 @@ import { clearInterval, setInterval } from 'node:timers';
 import { setTimeout } from 'node:timers/promises';
 import os from 'os';
 import path from 'path';
-import { PassThrough } from 'stream';
-import { fetch, type HeadersInit, type RequestInit, type Response } from 'undici';
+import { Transform } from 'stream';
+import { fetch, Headers, type HeadersInit, type RequestInit, type Response } from 'undici';
 import { Parser as XmlParser } from 'xml2js';
 import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 
@@ -38,6 +38,47 @@ type RequestInitWithDuplex = RequestInit & { duplex?: 'half' };
 
 const isStreamBody = ( body: RequestInit[ 'body' ] ): boolean =>
 	typeof ( body as { pipe?: unknown } | null | undefined )?.pipe === 'function';
+
+function createProgressTransform( onChunk: ( data: Buffer ) => void ): Transform {
+	return new Transform( {
+		transform( chunk: Buffer, _encoding, callback ) {
+			onChunk( chunk );
+			callback( null, chunk );
+		},
+	} );
+}
+
+function omitUnsupportedFetchHeaders( init: RequestInitWithDuplex ): RequestInitWithDuplex {
+	if ( ! init.headers ) {
+		return init;
+	}
+
+	const headers = new Headers( init.headers );
+	headers.delete( 'expect' );
+
+	return { ...init, headers };
+}
+
+function withCauseMessage( err: unknown ): unknown {
+	if ( ! ( err instanceof Error ) ) {
+		return err;
+	}
+
+	const cause = ( err as Error & { cause?: unknown } ).cause;
+	let causeMessage: string | undefined;
+
+	if ( cause instanceof Error ) {
+		causeMessage = cause.message;
+	} else if ( typeof cause === 'string' ) {
+		causeMessage = cause;
+	}
+
+	if ( ! causeMessage || err.message.includes( causeMessage ) ) {
+		return err;
+	}
+
+	return new Error( `${ err.message }: ${ causeMessage }`, { cause: err } );
+}
 
 /**
  * Wraps `fetch` with exponential-backoff retries.
@@ -72,10 +113,10 @@ export async function fetchWithRetry(
 		}
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			return await fetch( input, requestInit );
+			return await fetch( input, omitUnsupportedFetchHeaders( requestInit ) );
 		} catch ( err ) {
 			if ( attempt === maxAttempts ) {
-				throw err;
+				throw withCauseMessage( err );
 			}
 			// eslint-disable-next-line no-await-in-loop
 			await setTimeout( Math.pow( 2, attempt ) * 1000 ); // 1000, 2000, 4000
@@ -341,8 +382,7 @@ async function uploadUsingPutObject( {
 		}
 
 		let readBytes = 0;
-		const progressPassThrough = new PassThrough();
-		progressPassThrough.on( 'data', ( data: Buffer | string ) => {
+		const progressTransform = createProgressTransform( data => {
 			readBytes += data.length;
 			const percentage = `${ Math.floor( ( 100 * readBytes ) / fileSize ) }%`;
 			debug( percentage );
@@ -351,7 +391,7 @@ async function uploadUsingPutObject( {
 			}
 		} );
 
-		return createReadStream( fileName ).pipe( progressPassThrough );
+		return createReadStream( fileName ).pipe( progressTransform );
 	};
 
 	const response = await fetchWithRetry( presignedRequest.url, fetchOptions, 3, createBody );
@@ -641,13 +681,12 @@ export async function uploadParts( {
 				partBytesRead[ index ] = 0;
 				partPercentages[ index ] = 0;
 
-				const progressPassThrough = new PassThrough();
-				progressPassThrough.on( 'data', ( data: Buffer | string ) => {
+				const progressTransform = createProgressTransform( data => {
 					partBytesRead[ index ] += data.length;
 					partPercentages[ index ] = Math.floor( ( 100 * partBytesRead[ index ] ) / partSize );
 				} );
 
-				return createReadStream( fileMeta.fileName, { start, end } ).pipe( progressPassThrough );
+				return createReadStream( fileMeta.fileName, { start, end } ).pipe( progressTransform );
 			};
 
 			await readyForPartUpload();
