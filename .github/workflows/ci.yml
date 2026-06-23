@@ -79,8 +79,8 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
-          - '22.19.0'
           - 'lts/*'
+          - 'lts/-1'
           - current
     steps:
       - name: Check out the source code
