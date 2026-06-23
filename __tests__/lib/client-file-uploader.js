@@ -15,6 +15,7 @@ import {
 	getFileMeta,
 	getPartBoundaries,
 	parseEtagHeader,
+	uploadImportFileToS3,
 	uploadParts,
 } from '../../src/lib/client-file-uploader';
 
@@ -331,5 +332,68 @@ describe( 'client-file-uploader', () => {
 			expect( progress.every( pct => parseInt( pct, 10 ) <= 100 ) ).toBe( true );
 			expect( progress[ progress.length - 1 ] ).toBe( '100%' );
 		}, 15000 );
+	} );
+
+	describe( 'uploadImportFileToS3()', () => {
+		let tmpDir;
+
+		const uploadOkResponse = {
+			status: 200,
+			text: async () => '',
+		};
+
+		const writeTempFile = ( name, contents ) => {
+			const fileName = path.join( tmpDir, name );
+			writeFileSync( fileName, contents );
+			return fileName;
+		};
+
+		beforeAll( () => {
+			tmpDir = mkdtempSync( path.join( os.tmpdir(), 'vip-cli-upload-import-' ) );
+		} );
+
+		afterAll( () => {
+			rmSync( tmpDir, { recursive: true, force: true } );
+		} );
+
+		beforeEach( () => {
+			fetch.mockReset();
+			http.mockReset();
+		} );
+
+		it( 'should strip unsupported Expect headers from presigned PutObject uploads', async () => {
+			const fileName = writeTempFile( 'small-deploy.zip', 'zip contents' );
+			const fileMeta = {
+				...( await getFileMeta( fileName ) ),
+				fileContent: Buffer.from( 'zip contents' ),
+			};
+
+			http.mockResolvedValue( {
+				status: 200,
+				json: async () => ( {
+					url: 'https://s3.example.com/upload',
+					options: {
+						method: 'PUT',
+						headers: {
+							Expect: '100-continue',
+							'x-amz-server-side-encryption': 'AES256',
+						},
+					},
+				} ),
+			} );
+			fetch.mockResolvedValue( uploadOkResponse );
+
+			await uploadImportFileToS3( {
+				app: { id: 1 },
+				env: { id: 2 },
+				fileMeta,
+			} );
+
+			expect( fetch ).toHaveBeenCalledTimes( 1 );
+			expect( fetch.mock.calls[ 0 ][ 1 ].headers ).toEqual( {
+				'Content-Length': `${ fileMeta.fileSize }`,
+				'x-amz-server-side-encryption': 'AES256',
+			} );
+		} );
 	} );
 } );

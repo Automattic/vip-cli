@@ -9,7 +9,7 @@ import { setTimeout } from 'node:timers/promises';
 import os from 'os';
 import path from 'path';
 import { PassThrough } from 'stream';
-import { fetch, type HeadersInit, type RequestInit, type Response } from 'undici';
+import { fetch, Headers, type HeadersInit, type RequestInit, type Response } from 'undici';
 import { Parser as XmlParser } from 'xml2js';
 import { createGunzip, createGzip, Gunzip, ZlibOptions } from 'zlib';
 
@@ -39,6 +39,28 @@ type RequestInitWithDuplex = RequestInit & { duplex?: 'half' };
 const isStreamBody = ( body: RequestInit[ 'body' ] ): boolean =>
 	typeof ( body as { pipe?: unknown } | null | undefined )?.pipe === 'function';
 
+const stripUndiciUnsupportedHeaders = ( headers?: HeadersInit ): HeadersInit | undefined => {
+	if ( ! headers ) {
+		return headers;
+	}
+
+	const isSupportedHeader = ( name: string ) => name.toLowerCase() !== 'expect';
+
+	if ( headers instanceof Headers ) {
+		const sanitized = new Headers( headers );
+		sanitized.delete( 'expect' );
+		return sanitized;
+	}
+
+	if ( Array.isArray( headers ) ) {
+		return headers.filter( ( [ name ] ) => isSupportedHeader( name ) );
+	}
+
+	return Object.fromEntries(
+		Object.entries( headers ).filter( ( [ name ] ) => isSupportedHeader( name ) )
+	);
+};
+
 /**
  * Wraps `fetch` with exponential-backoff retries.
  *
@@ -67,6 +89,7 @@ export async function fetchWithRetry(
 		const requestInit: RequestInitWithDuplex = createBody
 			? { ...init, body: createBody() }
 			: { ...init };
+		requestInit.headers = stripUndiciUnsupportedHeaders( requestInit.headers );
 		if ( isStreamBody( requestInit.body ) && ! requestInit.duplex ) {
 			requestInit.duplex = 'half';
 		}
