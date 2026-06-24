@@ -188,31 +188,34 @@ describe( 'runRechallenge', () => {
 
 	it( 'aborts when the abort signal fires', async () => {
 		const ac = new AbortController();
-		mockGetStatus.mockImplementation(
-			() =>
-				new Promise( resolve => {
-					setTimeout(
-						() =>
-							resolve( {
-								challengeId: 'rch_abc',
-								status: 'pending',
-								expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
-								pollIntervalSeconds: 0,
-							} ),
-						5
-					);
-				} )
-		);
+		// Never reaches a terminal state, so the flow stays in its poll/sleep loop
+		// until the abort signal fires.
+		mockGetStatus.mockResolvedValue( {
+			challengeId: 'rch_abc',
+			status: 'pending',
+			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
+			pollIntervalSeconds: 0,
+		} );
 
+		jest.useFakeTimers();
 		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
 			signal: ac.signal,
 		} );
-		setTimeout( () => ac.abort(), 10 );
-
-		await expect( pending ).rejects.toBeInstanceOf( RechallengeAbortedError );
+		// Enter the first inter-poll sleep, then abort mid-wait so the abortable
+		// sleep rejects (exercises the signal path, not just the top-of-loop check).
+		// Driven by fake timers because Node's `current` line leaves the real global
+		// `setTimeout` undefined after a prior test's useFakeTimers/useRealTimers cycle.
+		await Promise.all( [
+			expect( pending ).rejects.toBeInstanceOf( RechallengeAbortedError ),
+			( async () => {
+				await jest.advanceTimersByTimeAsync( 1000 );
+				ac.abort();
+				await jest.advanceTimersByTimeAsync( 0 );
+			} )(),
+		] );
 	} );
 
 	it( 'does not call open() when interactive=false', async () => {
