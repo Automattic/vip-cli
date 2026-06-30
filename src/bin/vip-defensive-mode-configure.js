@@ -298,5 +298,10 @@ command( {
 		false
 	)
 	.option( 'skip-confirmation', 'Skip the confirmation prompt for production envs.', false )
+	.option(
+		'rechallenge-wait',
+		'When step-up verification is required non-interactively, print the URL and wait for verification on another device instead of failing fast.',
+		false
+	)
 	.examples( examples )
 	.argv( process.argv, defensiveModeConfigureCommand );

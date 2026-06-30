@@ -3,10 +3,15 @@ import { afterEach, describe, expect, it, jest, beforeEach } from '@jest/globals
 import * as clientModule from '../../../src/lib/rechallenge/client';
 import {
 	RechallengeAbortedError,
+	RechallengeInteractionRequiredError,
 	RechallengeTerminalError,
 	RechallengeUnsupportedVersionError,
 } from '../../../src/lib/rechallenge/errors';
-import { isInteractiveContext, runRechallenge } from '../../../src/lib/rechallenge/flow';
+import {
+	isInteractiveContext,
+	runRechallenge,
+	shouldWaitForRechallenge,
+} from '../../../src/lib/rechallenge/flow';
 import * as openBrowserModule from '../../../src/lib/rechallenge/open-browser';
 import tokenCache from '../../../src/lib/rechallenge/token-cache';
 
@@ -78,8 +83,21 @@ describe( 'runRechallenge', () => {
 				requestedOperation: 'updateDefensiveModeStatus',
 				rechallenge: { ...rechallenge(), version: 'v1' },
 				interactive: false,
+				wait: false,
 			} )
 		).rejects.toBeInstanceOf( RechallengeUnsupportedVersionError );
+	} );
+
+	it( 'fails fast in non-interactive mode without wait, before creating a session', async () => {
+		await expect(
+			runRechallenge( {
+				requestedOperation: 'updateDefensiveModeStatus',
+				rechallenge: rechallenge(),
+				interactive: false,
+				wait: false,
+			} )
+		).rejects.toBeInstanceOf( RechallengeInteractionRequiredError );
+		expect( mockCreate ).not.toHaveBeenCalled();
 	} );
 
 	it( 'floors an unusable poll interval instead of tight-looping or producing NaN', async () => {
@@ -104,6 +122,7 @@ describe( 'runRechallenge', () => {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 		} );
 
 		// Just below the 2s floor: the first status poll must not have fired yet.
@@ -137,6 +156,7 @@ describe( 'runRechallenge', () => {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 		} );
 		await jest.runAllTimersAsync();
 		const token = await pending;
@@ -179,6 +199,7 @@ describe( 'runRechallenge', () => {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 		} );
 		await Promise.all( [
 			expect( pending ).rejects.toBeInstanceOf( RechallengeTerminalError ),
@@ -202,6 +223,7 @@ describe( 'runRechallenge', () => {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 			signal: ac.signal,
 		} );
 		// Enter the first inter-poll sleep, then abort mid-wait so the abortable
@@ -230,6 +252,7 @@ describe( 'runRechallenge', () => {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 		} );
 		await jest.runAllTimersAsync();
 		await pending;
@@ -248,6 +271,7 @@ describe( 'runRechallenge', () => {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: true,
+			wait: false,
 		} );
 		await jest.runAllTimersAsync();
 		await pending;
@@ -310,5 +334,37 @@ describe( 'isInteractiveContext', () => {
 			configurable: true,
 		} );
 		expect( isInteractiveContext( [] ) ).toBe( true );
+	} );
+} );
+
+describe( 'shouldWaitForRechallenge', () => {
+	const originalEnv = process.env.VIP_RECHALLENGE_WAIT;
+
+	afterEach( () => {
+		if ( originalEnv === undefined ) {
+			delete process.env.VIP_RECHALLENGE_WAIT;
+		} else {
+			process.env.VIP_RECHALLENGE_WAIT = originalEnv;
+		}
+	} );
+
+	it( 'returns true when VIP_RECHALLENGE_WAIT=1', () => {
+		process.env.VIP_RECHALLENGE_WAIT = '1';
+		expect( shouldWaitForRechallenge( [] ) ).toBe( true );
+	} );
+
+	it( 'returns false for non-"1" values of VIP_RECHALLENGE_WAIT', () => {
+		process.env.VIP_RECHALLENGE_WAIT = '0';
+		expect( shouldWaitForRechallenge( [] ) ).toBe( false );
+	} );
+
+	it( 'returns true when --rechallenge-wait is in argv', () => {
+		delete process.env.VIP_RECHALLENGE_WAIT;
+		expect( shouldWaitForRechallenge( [ '--rechallenge-wait' ] ) ).toBe( true );
+	} );
+
+	it( 'returns false when neither flag nor env var is set', () => {
+		delete process.env.VIP_RECHALLENGE_WAIT;
+		expect( shouldWaitForRechallenge( [] ) ).toBe( false );
 	} );
 } );

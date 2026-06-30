@@ -52,3 +52,15 @@ export class RechallengeHttpError extends RechallengeError {
 		this.bodyText = bodyText;
 	}
 }
+
+export class RechallengeInteractionRequiredError extends RechallengeError {
+	constructor( scope: string ) {
+		super(
+			`Step-up verification is required for ${ scope }, but this is a non-interactive session. ` +
+				'Re-run the command interactively, or pass --rechallenge-wait (or set VIP_RECHALLENGE_WAIT=1) ' +
+				'to print the verification URL and wait for you to complete it on another device.',
+			scope
+		);
+		this.name = 'RechallengeInteractionRequiredError';
+	}
+}

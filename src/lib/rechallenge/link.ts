@@ -2,7 +2,7 @@ import { ApolloLink, Observable } from '@apollo/client/core';
 import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
 
-import { isInteractiveContext, runRechallenge } from './flow';
+import { isInteractiveContext, runRechallenge, shouldWaitForRechallenge } from './flow';
 import tokenCache from './token-cache';
 import { ELEVATED_PERMISSION_ERROR_CODE } from './types';
 
@@ -119,6 +119,7 @@ export default function createRechallengeLink(): ApolloLink {
 								requestedOperation: scope,
 								rechallenge: elevated.rechallenge,
 								interactive: isInteractiveContext(),
+								wait: shouldWaitForRechallenge(),
 								signal: abortController.signal,
 							} )
 								.then( token => {

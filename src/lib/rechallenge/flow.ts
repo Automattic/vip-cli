@@ -6,6 +6,7 @@ import { trackEvent } from '../tracker';
 import * as client from './client';
 import {
 	RechallengeAbortedError,
+	RechallengeInteractionRequiredError,
 	RechallengeTerminalError,
 	RechallengeUnsupportedVersionError,
 } from './errors';
@@ -33,11 +34,12 @@ export interface RunRechallengeOptions {
 	requestedOperation: string;
 	rechallenge: RechallengeExtension;
 	interactive: boolean;
+	wait: boolean;
 	signal?: AbortSignal;
 }
 
 export async function runRechallenge( opts: RunRechallengeOptions ): Promise< ElevatedToken > {
-	const { requestedOperation, rechallenge, interactive, signal } = opts;
+	const { requestedOperation, rechallenge, interactive, wait, signal } = opts;
 
 	if ( rechallenge.version !== RECHALLENGE_VERSION ) {
 		throw new RechallengeUnsupportedVersionError( rechallenge.version, requestedOperation );
@@ -47,6 +49,14 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		scope: requestedOperation,
 		clientType: CLIENT_TYPE,
 	} );
+
+	// In a non-interactive session with no opt-in to wait, fail fast instead of
+	// creating a verification session no human can complete — automation would
+	// otherwise block until the session expires.
+	if ( ! interactive && ! wait ) {
+		await trackEvent( 'rechallenge_interaction_required', { scope: requestedOperation } );
+		throw new RechallengeInteractionRequiredError( requestedOperation );
+	}
 
 	const session = await client.createSession( {
 		path: rechallenge.createSessionPath,
@@ -157,4 +167,15 @@ export function isInteractiveContext( argvOrFlags: string[] = process.argv ): bo
 		return false;
 	}
 	return Boolean( process.stdout.isTTY );
+}
+
+// Opt-in for waiting on step-up in a non-interactive session: the operator can
+// complete browser verification on another device while the command polls.
+// Mirrors isInteractiveContext's argv/env detection because the rechallenge link
+// is instantiated globally and cannot read a command's parsed options.
+export function shouldWaitForRechallenge( argvOrFlags: string[] = process.argv ): boolean {
+	if ( process.env.VIP_RECHALLENGE_WAIT === '1' ) {
+		return true;
+	}
+	return argvOrFlags.includes( '--rechallenge-wait' );
 }

@@ -12,6 +12,7 @@ import type { ElevatedToken } from '../../../src/lib/rechallenge/types';
 jest.mock( '../../../src/lib/rechallenge/flow', () => ( {
 	runRechallenge: jest.fn(),
 	isInteractiveContext: () => false,
+	shouldWaitForRechallenge: () => true,
 } ) );
 jest.mock( '../../../src/lib/rechallenge/token-cache', () => ( {
 	__esModule: true,
@@ -149,6 +150,7 @@ describe( 'rechallengeLink', () => {
 		expect( runRechallenge ).toHaveBeenCalledWith(
 			expect.objectContaining( {
 				requestedOperation: 'updateDefensiveModeStatus',
+				wait: true,
 			} )
 		);
 	} );
