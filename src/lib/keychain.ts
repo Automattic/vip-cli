@@ -13,7 +13,7 @@ export async function getKeychain(): Promise< Keychain > {
 			const { Secure } = await import( './keychain/secure.js' );
 			const kc = new Secure();
 			// We don't know if the secure keychain is actually usable until we try to communicate with it.
-			await kc.getPassword( 'non-existant-password-fraude-perit-virtus' );
+			await kc.getPassword( 'non-existent-password-fraude-perit-virtus' );
 			debug( 'Using Secure keychain' );
 			keychain = kc;
 		} catch ( error ) {
