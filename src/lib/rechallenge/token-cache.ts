@@ -38,9 +38,14 @@ async function read(): Promise< Blob > {
 	}
 
 	try {
-		const parsed = JSON.parse( raw ) as Blob;
-		inMemory =
-			typeof parsed === 'object' && parsed !== null && ! Array.isArray( parsed ) ? parsed : {};
+		const parsed = JSON.parse( raw ) as unknown;
+		if ( typeof parsed === 'object' && parsed !== null && ! Array.isArray( parsed ) ) {
+			inMemory = parsed as Blob;
+		} else {
+			debug( 'Elevated token blob had unexpected shape; resetting' );
+			inMemory = {};
+			await keychain.deletePassword( serviceName() );
+		}
 	} catch ( err ) {
 		debug( 'Failed to parse elevated token blob; resetting (%o)', err );
 		inMemory = {};

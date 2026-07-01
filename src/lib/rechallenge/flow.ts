@@ -166,7 +166,10 @@ export function isInteractiveContext( argvOrFlags: string[] = process.argv ): bo
 
 	if (
 		argvOrFlags.some(
-			item => item === '--non-interactive' || item.startsWith( '--non-interactive=' )
+			item =>
+				item === '--non-interactive' ||
+				( item.startsWith( '--non-interactive=' ) &&
+					! /^--non-interactive=(0|false|no|off)$/i.test( item ) )
 		)
 	) {
 		return false;
@@ -185,6 +188,9 @@ export function shouldWaitForRechallenge( argvOrFlags: string[] = process.argv )
 	}
 
 	return argvOrFlags.some(
-		item => item === '--rechallenge-wait' || item.startsWith( '--rechallenge-wait=' )
+		item =>
+			item === '--rechallenge-wait' ||
+			( item.startsWith( '--rechallenge-wait=' ) &&
+				! /^--rechallenge-wait=(0|false|no|off)$/i.test( item ) )
 	);
 }
