@@ -39,7 +39,8 @@ async function read(): Promise< Blob > {
 
 	try {
 		const parsed = JSON.parse( raw ) as Blob;
-		inMemory = typeof parsed === 'object' && parsed !== null ? parsed : {};
+		inMemory =
+			typeof parsed === 'object' && parsed !== null && ! Array.isArray( parsed ) ? parsed : {};
 	} catch ( err ) {
 		debug( 'Failed to parse elevated token blob; resetting (%o)', err );
 		inMemory = {};
