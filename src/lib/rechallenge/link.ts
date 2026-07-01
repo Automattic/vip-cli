@@ -65,7 +65,7 @@ function attachElevatedHeader(
 	const ctx = operation.getContext() as {
 		headers?: Record< string, string >;
 	};
-	const headers = { ...( ctx.headers ?? {} ) };
+	const headers = { ...ctx.headers };
 	headers[ headerName ] = token.token;
 	operation.setContext( { ...ctx, headers } );
 }
