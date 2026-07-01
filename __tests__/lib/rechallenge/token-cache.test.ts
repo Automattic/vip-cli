@@ -54,10 +54,10 @@ describe( 'rechallenge token cache', () => {
 	} );
 
 	it( 'keeps tokens isolated by scope', async () => {
-		const a = makeToken( { token: 'A' } );
-		const b = makeToken( { token: 'B' } );
-		await tokenCache.set( 'updateDefensiveModeStatus', a );
-		await tokenCache.set( 'updateDefensiveModeConfig', b );
+		const tokenA = makeToken( { token: 'A' } );
+		const tokenB = makeToken( { token: 'B' } );
+		await tokenCache.set( 'updateDefensiveModeStatus', tokenA );
+		await tokenCache.set( 'updateDefensiveModeConfig', tokenB );
 		expect( ( await tokenCache.get( 'updateDefensiveModeStatus' ) )?.token ).toBe( 'A' );
 		expect( ( await tokenCache.get( 'updateDefensiveModeConfig' ) )?.token ).toBe( 'B' );
 	} );

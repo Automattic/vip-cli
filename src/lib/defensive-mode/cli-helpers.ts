@@ -17,8 +17,8 @@ export interface ProductionGuardOptions {
 	nonInteractive?: boolean;
 }
 
-function capitalize( s: string ): string {
-	return s.charAt( 0 ).toUpperCase() + s.slice( 1 );
+function capitalize( str: string ): string {
+	return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
 }
 
 /**
@@ -34,10 +34,11 @@ export async function guardProductionMutation(
 	confirmFn: ( message: string ) => Promise< boolean >,
 	trackEventFn: ( event: string, props: Record< string, unknown > ) => Promise< void >,
 	formatEnvironment: ( type: string ) => string
-): Promise< boolean > {
+): Promise< void > {
 	if ( opt.skipConfirmation || opt.env.type !== 'production' ) {
-		return true;
+		return;
 	}
+
 	if ( ! isInteractive( opt ) ) {
 		console.error(
 			chalk.red(
@@ -48,17 +49,18 @@ export async function guardProductionMutation(
 		await trackEventFn( `defensive_mode_${ action }_command_cancelled`, trackingParams );
 		process.exit( 1 );
 	}
+
 	const yes = await confirmFn(
 		`${ capitalize( action ) } defensive mode on ${ formatEnvironment( opt.env.type ) } for ${
 			opt.app.name
 		}?`
 	);
+
 	if ( ! yes ) {
 		await trackEventFn( `defensive_mode_${ action }_command_cancelled`, trackingParams );
 		console.log( 'Command cancelled' );
 		process.exit();
 	}
-	return true;
 }
 
 /**
