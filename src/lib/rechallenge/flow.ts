@@ -72,7 +72,7 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 			chalk.yellow( '⚠' ),
 			`Step-up verification required for ${ chalk.bold( requestedOperation ) }.`
 		);
-		console.warn( `  Opened ${ chalk.cyan( verificationUrl ) }` );
+		console.warn( `  Open ${ chalk.cyan( verificationUrl ) }` );
 		console.warn(
 			`  If your browser did not open, copy and paste the URL above. Expires at ${ expiresIso }.`
 		);
