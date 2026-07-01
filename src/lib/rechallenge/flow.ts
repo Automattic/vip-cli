@@ -163,9 +163,15 @@ export function isInteractiveContext( argvOrFlags: string[] = process.argv ): bo
 	if ( process.env.VIP_NON_INTERACTIVE === '1' ) {
 		return false;
 	}
-	if ( argvOrFlags.includes( '--non-interactive' ) ) {
+
+	if (
+		argvOrFlags.some(
+			item => item === '--non-interactive' || item.startsWith( '--non-interactive=' )
+		)
+	) {
 		return false;
 	}
+
 	return Boolean( process.stdout.isTTY );
 }
 
@@ -177,5 +183,8 @@ export function shouldWaitForRechallenge( argvOrFlags: string[] = process.argv )
 	if ( process.env.VIP_RECHALLENGE_WAIT === '1' ) {
 		return true;
 	}
-	return argvOrFlags.includes( '--rechallenge-wait' );
+
+	return argvOrFlags.some(
+		item => item === '--rechallenge-wait' || item.startsWith( '--rechallenge-wait=' )
+	);
 }

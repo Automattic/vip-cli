@@ -22,8 +22,8 @@ function capitalize( str: string ): string {
 }
 
 /**
- * Guards production mutations that require confirmation. Returns true if the
- * command should proceed. In non-interactive contexts without
+ * Guards production mutations that require confirmation.
+ * Returns when the command should proceed. In non-interactive contexts without
  * --skip-confirmation it emits an error and calls process.exit(1) directly.
  * If the user declines the interactive prompt it calls process.exit() directly.
  */
@@ -46,6 +46,7 @@ export async function guardProductionMutation(
 					'Pass --skip-confirmation to proceed non-interactively.'
 			)
 		);
+
 		await trackEventFn( `defensive_mode_${ action }_command_cancelled`, trackingParams );
 		process.exit( 1 );
 	}
