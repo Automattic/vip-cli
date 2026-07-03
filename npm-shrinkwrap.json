@@ -25,7 +25,7 @@
         "enquirer": "2.4.1",
         "esbuild": "^0.28.0",
         "fetch-retry": "^6.0.0",
-        "graphql": "17.0.1",
+        "graphql": "17.0.2",
         "graphql-tag": "2.12.7",
         "https-proxy-agent": "^9.0.0",
         "js-yaml": "^5.0.0",
@@ -8886,9 +8886,9 @@
       "license": "ISC"
     },
     "node_modules/graphql": {
-      "version": "17.0.1",
-      "resolved": "https://registry.npmjs.org/graphql/-/graphql-17.0.1.tgz",
-      "integrity": "sha512-8eWbg5Zcv/8o20nzEjHUGPTj20MLFJjc5kagbIPxbaeGxvFwpitJhemEC/k17n5+UD4M/9ea5rTuce78mELujQ==",
+      "version": "17.0.2",
+      "resolved": "https://registry.npmjs.org/graphql/-/graphql-17.0.2.tgz",
+      "integrity": "sha512-FRWbddMxfkjiB7z+aQDWIR+E34xo9I8c9mtK2RPv8PmMzKRvrdsreHL/Ui/TmwHJfhHChEtsFPyMHKI+xuarQQ==",
       "license": "MIT",
       "engines": {
         "node": "^22.0.0 || ^24.0.0 || ^25.0.0 || >=26.0.0"
