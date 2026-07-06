@@ -263,7 +263,7 @@ async function findConfigurationFile(): Promise<
 		if ( template ) {
 			const rendered = contents.replace( ALLOWED_CONFIG_DIR_TEMPLATE, () => dir );
 			if ( EJS_TEMPLATE_TAG.test( rendered ) ) {
-				throw new Error(
+				exit.withError(
 					`EJS JavaScript is not supported in dev-env configuration file ${ file }. ` +
 						'Use plain YAML, or only the supported <%= configDir %> placeholder.'
 				);
