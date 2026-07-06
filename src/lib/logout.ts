@@ -4,10 +4,12 @@ import Token from '../lib/token';
 import { trackEvent } from '../lib/tracker';
 
 export default async (): Promise< void > => {
-	await http( '/logout', { method: 'post' } );
-
-	await Token.purge();
-	await tokenCache.clearAll();
+	try {
+		await http( '/logout', { method: 'post' } );
+	} finally {
+		await Token.purge();
+		await tokenCache.clearAll();
+	}
 
 	await trackEvent( 'logout_command_execute' );
 };

@@ -2,7 +2,7 @@ import { ApolloLink, Observable } from '@apollo/client/core';
 import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
 
-import { isInteractiveContext, runRechallenge } from './flow';
+import { isInteractiveContext, runRechallenge, shouldWaitForRechallenge } from './flow';
 import tokenCache from './token-cache';
 import { ELEVATED_PERMISSION_ERROR_CODE } from './types';
 
@@ -65,7 +65,7 @@ function attachElevatedHeader(
 	const ctx = operation.getContext() as {
 		headers?: Record< string, string >;
 	};
-	const headers = { ...( ctx.headers ?? {} ) };
+	const headers = { ...ctx.headers };
 	headers[ headerName ] = token.token;
 	operation.setContext( { ...ctx, headers } );
 }
@@ -82,6 +82,7 @@ export default function createRechallengeLink(): ApolloLink {
 			let cancelled = false;
 			let firstSub: { unsubscribe(): void } | null = null;
 			let retrySub: { unsubscribe(): void } | null = null;
+			const abortController = new AbortController();
 
 			const preflight = async () => {
 				if ( ! eligible || ! scope ) {
@@ -93,12 +94,65 @@ export default function createRechallengeLink(): ApolloLink {
 				}
 			};
 
-			void preflight()
-				.catch( err => debug( 'preflight error: %o', err ) )
-				.then( () => {
+			const handleRetry = async (
+				result: ApolloLink.Result,
+				elevated: ElevatedPermissionPayload
+			): Promise< void > => {
+				retrying = true;
+				const headerName = elevated.rechallenge.elevatedHeaderName || DEFAULT_HEADER;
+
+				let token: ElevatedToken;
+				try {
+					token = await runRechallenge( {
+						requestedOperation: scope as string,
+						rechallenge: elevated.rechallenge,
+						interactive: isInteractiveContext(),
+						wait: shouldWaitForRechallenge(),
+						signal: abortController.signal,
+					} );
+				} catch ( err ) {
+					debug( 'rechallenge flow failed: %o', err );
 					if ( cancelled || observer.closed ) {
 						return;
 					}
+					// Surface the original elevated-permission error to upstream
+					// so errorLink and consumers see it.
+					observer.next( result );
+					observer.complete();
+					return;
+				}
+
+				if ( cancelled || observer.closed ) {
+					return;
+				}
+
+				attachElevatedHeader( operation, headerName, token );
+				try {
+					retrySub = forward( operation ).subscribe( {
+						next: res => observer.next( res ),
+						error: err => observer.error( err ),
+						complete: () => observer.complete(),
+					} );
+				} catch ( err ) {
+					if ( cancelled || observer.closed ) {
+						return;
+					}
+					observer.error( err );
+				}
+			};
+
+			const start = async (): Promise< void > => {
+				try {
+					await preflight();
+				} catch ( err ) {
+					debug( 'preflight error: %o', err );
+				}
+
+				if ( cancelled || observer.closed ) {
+					return;
+				}
+
+				try {
 					firstSub = forward( operation ).subscribe( {
 						next: result => {
 							if ( retrying || ! eligible || ! scope ) {
@@ -111,35 +165,7 @@ export default function createRechallengeLink(): ApolloLink {
 								return;
 							}
 
-							retrying = true;
-							const headerName = elevated.rechallenge.elevatedHeaderName || DEFAULT_HEADER;
-
-							void runRechallenge( {
-								requestedOperation: scope,
-								rechallenge: elevated.rechallenge,
-								interactive: isInteractiveContext(),
-							} )
-								.then( token => {
-									if ( cancelled || observer.closed ) {
-										return;
-									}
-									attachElevatedHeader( operation, headerName, token );
-									retrySub = forward( operation ).subscribe( {
-										next: res => observer.next( res ),
-										error: err => observer.error( err ),
-										complete: () => observer.complete(),
-									} );
-								} )
-								.catch( err => {
-									debug( 'rechallenge flow failed: %o', err );
-									if ( cancelled || observer.closed ) {
-										return;
-									}
-									// Surface the original elevated-permission error to upstream
-									// so errorLink and consumers see it.
-									observer.next( result );
-									observer.complete();
-								} );
+							void handleRetry( result, elevated );
 						},
 						error: err => observer.error( err ),
 						complete: () => {
@@ -148,10 +174,26 @@ export default function createRechallengeLink(): ApolloLink {
 							}
 						},
 					} );
-				} );
+				} catch ( err ) {
+					if ( cancelled || observer.closed ) {
+						return;
+					}
+					observer.error( err );
+				}
+			};
+
+			void start().catch( err => {
+				if ( cancelled || observer.closed ) {
+					return;
+				}
+				observer.error( err );
+			} );
 
 			return () => {
 				cancelled = true;
+				// Abort any in-flight rechallenge polling so the loop, its tracking
+				// events, and the token-cache write stop instead of running to expiry.
+				abortController.abort();
 				firstSub?.unsubscribe();
 				retrySub?.unsubscribe();
 			};

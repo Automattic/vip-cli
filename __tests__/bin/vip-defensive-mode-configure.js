@@ -145,4 +145,32 @@ describe( 'defensiveModeConfigureCommand', () => {
 		).rejects.toBe( 'EXIT' );
 		expect( updateDefensiveModeConfig ).not.toHaveBeenCalled();
 	} );
+
+	it( 'refuses production mutation in non-interactive mode without --skip-confirmation', async () => {
+		await expect(
+			defensiveModeConfigureCommand( [], {
+				...baseOpts(),
+				env: { id: 9, type: 'production' },
+				skipConfirmation: false,
+				nonInteractive: true,
+				enabled: 'false',
+				challengeType: '1',
+			} )
+		).rejects.toBe( 'EXIT' );
+		expect( updateDefensiveModeConfig ).not.toHaveBeenCalled();
+	} );
+
+	it( 'allows production mutation in non-interactive mode with --skip-confirmation', async () => {
+		await defensiveModeConfigureCommand( [], {
+			...baseOpts(),
+			env: { id: 9, type: 'production' },
+			skipConfirmation: true,
+			nonInteractive: true,
+			enabled: 'false',
+			challengeType: '1',
+		} );
+		expect( updateDefensiveModeConfig ).toHaveBeenCalledWith(
+			expect.objectContaining( { envId: 9, enabled: false, challengeType: 1 } )
+		);
+	} );
 } );

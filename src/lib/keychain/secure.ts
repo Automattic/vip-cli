@@ -1,8 +1,8 @@
-import keytar from '@postman/node-keytar';
+import keytar from '@github/keytar';
 
 import type { Keychain } from './keychain';
 
-export default class Secure implements Keychain {
+export class Secure implements Keychain {
 	public getPassword( service: string ): Promise< string | null > {
 		return keytar.getPassword( service, service );
 	}

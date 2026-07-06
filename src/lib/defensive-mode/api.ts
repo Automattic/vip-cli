@@ -38,6 +38,7 @@ export const appQuery = `
 	organization {
 		id
 		name
+		salesforceId
 	}
 `;
 

@@ -2,7 +2,7 @@ import { jwtDecode } from 'jwt-decode';
 import { randomUUID } from 'node:crypto';
 
 import { API_HOST, PRODUCTION_API_HOST } from './api/constants';
-import keychain from './keychain';
+import { getKeychain } from './keychain';
 
 interface Payload {
 	id?: number;
@@ -81,6 +81,7 @@ export default class Token {
 	public static async uuid(): Promise< string > {
 		const service = Token.getServiceName( '-uuid' );
 
+		const keychain = await getKeychain();
 		let _uuid = await keychain.getPassword( service );
 		if ( ! _uuid ) {
 			_uuid = randomUUID();
@@ -92,25 +93,26 @@ export default class Token {
 
 	public static async setUuid( _uuid: string ): Promise< void > {
 		const service = Token.getServiceName( '-uuid' );
+		const keychain = await getKeychain();
 		await keychain.setPassword( service, _uuid );
 	}
 
-	public static set( token: string ): Promise< boolean > {
+	public static async set( token: string ): Promise< boolean > {
 		const service = Token.getServiceName();
-
+		const keychain = await getKeychain();
 		return keychain.setPassword( service, token );
 	}
 
 	public static async get(): Promise< Token > {
 		const service = Token.getServiceName();
-
-		const token = ( await keychain.getPassword( service ) ) ?? '';
-		return new Token( token );
+		const keychain = await getKeychain();
+		const token = await keychain.getPassword( service );
+		return new Token( token ?? '' );
 	}
 
-	public static purge(): Promise< boolean > {
+	public static async purge(): Promise< boolean > {
 		const service = Token.getServiceName();
-
+		const keychain = await getKeychain();
 		return keychain.deletePassword( service );
 	}
 

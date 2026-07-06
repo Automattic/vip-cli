@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto';
 
-import Insecure from '../../src/lib/keychain/insecure';
+import { Insecure } from '../../src/lib/keychain/insecure';
 
 const account = 'vip-cli-test';
 const password = randomBytes( 256 ).toString();

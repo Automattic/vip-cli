@@ -72,5 +72,10 @@ command( {
 		'Disable prompts; error if a production mutation is attempted without --skip-confirmation.',
 		false
 	)
+	.option(
+		'rechallenge-wait',
+		'When step-up verification is required non-interactively, print the URL and wait for verification on another device instead of failing fast.',
+		false
+	)
 	.examples( examples )
 	.argv( process.argv, defensiveModeEnableCommand );

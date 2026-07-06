@@ -12,6 +12,7 @@ import type { ElevatedToken } from '../../../src/lib/rechallenge/types';
 jest.mock( '../../../src/lib/rechallenge/flow', () => ( {
 	runRechallenge: jest.fn(),
 	isInteractiveContext: () => false,
+	shouldWaitForRechallenge: () => true,
 } ) );
 jest.mock( '../../../src/lib/rechallenge/token-cache', () => ( {
 	__esModule: true,
@@ -109,6 +110,46 @@ function executeLink(
 	} );
 }
 
+function expectExecutionError(
+	link: ApolloLink,
+	request: Parameters< typeof ApolloLink.execute >[ 1 ]
+): Promise< Error > {
+	return new Promise< Error >( ( resolve, reject ) => {
+		const timeout = setTimeout( () => {
+			reject( new Error( 'expected operation error but execution hung' ) );
+		}, 250 );
+
+		ApolloLink.execute( link, request, EXEC_CTX ).subscribe( {
+			next: result => {
+				clearTimeout( timeout );
+				reject(
+					new Error( `expected operation error but got result: ${ JSON.stringify( result ) }` )
+				);
+			},
+			error: err => {
+				clearTimeout( timeout );
+				resolve( err as Error );
+			},
+			complete: () => {
+				clearTimeout( timeout );
+				reject( new Error( 'expected operation error but stream completed' ) );
+			},
+		} );
+	} );
+}
+
+function deferred< T >(): {
+	promise: Promise< T >;
+	resolve: ( value: T ) => void;
+} {
+	let resolve!: ( value: T ) => void;
+	const promise = new Promise< T >( _resolve => {
+		resolve = _resolve;
+	} );
+
+	return { promise, resolve };
+}
+
 beforeEach( () => {
 	jest.clearAllMocks();
 	tokenGet.mockResolvedValue( null );
@@ -149,6 +190,7 @@ describe( 'rechallengeLink', () => {
 		expect( runRechallenge ).toHaveBeenCalledWith(
 			expect.objectContaining( {
 				requestedOperation: 'updateDefensiveModeStatus',
+				wait: true,
 			} )
 		);
 	} );
@@ -161,6 +203,30 @@ describe( 'rechallengeLink', () => {
 		expect( result.errors?.[ 0 ].extensions?.code ).toBe( 'elevated-permission-required' );
 	} );
 
+	it( 'aborts the in-flight rechallenge flow when the operation is unsubscribed', async () => {
+		let capturedSignal: AbortSignal | undefined;
+		runRechallenge.mockImplementationOnce( opts => {
+			capturedSignal = opts.signal;
+			// Never resolves: the flow is still polling when we tear down.
+			return new Promise< ElevatedToken >( () => {} );
+		} );
+		const { link: downstream } = makeDownstream( [ elevatedRequiredResult() ] );
+		const link = ApolloLink.from( [ createRechallengeLink(), downstream ] );
+
+		const subscription = ApolloLink.execute( link, { query: MUTATION }, EXEC_CTX ).subscribe( {
+			next: () => {},
+			error: () => {},
+		} );
+
+		// Let preflight + first forward + the rechallenge dispatch settle.
+		await new Promise( resolve => setTimeout( resolve, 0 ) );
+		expect( capturedSignal ).toBeDefined();
+		expect( capturedSignal?.aborted ).toBe( false );
+
+		subscription.unsubscribe();
+		expect( capturedSignal?.aborted ).toBe( true );
+	} );
+
 	it( 'passes the second elevated-permission-required upstream without retrying again', async () => {
 		runRechallenge.mockResolvedValueOnce( ELEVATED_TOKEN );
 		const { link: downstream } = makeDownstream( [
@@ -171,5 +237,64 @@ describe( 'rechallengeLink', () => {
 		const result = await executeLink( link, { query: MUTATION } );
 		expect( result.errors?.[ 0 ].extensions?.code ).toBe( 'elevated-permission-required' );
 		expect( runRechallenge ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'propagates synchronous downstream setup errors on the initial request', async () => {
+		const downstream = new ApolloLink( () => {
+			throw new Error( 'initial downstream setup failed' );
+		} );
+		const link = ApolloLink.from( [ createRechallengeLink(), downstream ] );
+
+		const err = await expectExecutionError( link, { query: MUTATION } );
+		expect( err.message ).toContain( 'initial downstream setup failed' );
+		expect( runRechallenge ).not.toHaveBeenCalled();
+	} );
+
+	it( 'propagates synchronous downstream setup errors on the retry request', async () => {
+		runRechallenge.mockResolvedValueOnce( ELEVATED_TOKEN );
+
+		let attempts = 0;
+		const downstream = new ApolloLink( () => {
+			attempts += 1;
+			if ( attempts === 1 ) {
+				return new Observable< ApolloLink.Result >( observer => {
+					observer.next( elevatedRequiredResult() );
+					observer.complete();
+				} );
+			}
+
+			throw new Error( 'retry downstream setup failed' );
+		} );
+		const link = ApolloLink.from( [ createRechallengeLink(), downstream ] );
+
+		const err = await expectExecutionError( link, { query: MUTATION } );
+		expect( attempts ).toBe( 2 );
+		expect( err.message ).toContain( 'retry downstream setup failed' );
+	} );
+
+	it( 'does not forward when unsubscribed before preflight resolves', async () => {
+		const waitForToken = deferred< ElevatedToken | null >();
+		tokenGet.mockImplementationOnce( () => waitForToken.promise );
+
+		const downstreamSpy = jest.fn(
+			() =>
+				new Observable< ApolloLink.Result >( observer => {
+					observer.next( successResult() );
+					observer.complete();
+				} )
+		);
+		const downstream = new ApolloLink( downstreamSpy );
+		const link = ApolloLink.from( [ createRechallengeLink(), downstream ] );
+
+		const subscription = ApolloLink.execute( link, { query: MUTATION }, EXEC_CTX ).subscribe( {
+			next: () => {},
+			error: () => {},
+		} );
+
+		subscription.unsubscribe();
+		waitForToken.resolve( null );
+		await new Promise( resolve => setTimeout( resolve, 0 ) );
+
+		expect( downstreamSpy ).not.toHaveBeenCalled();
 	} );
 } );

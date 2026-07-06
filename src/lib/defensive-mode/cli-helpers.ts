@@ -17,13 +17,13 @@ export interface ProductionGuardOptions {
 	nonInteractive?: boolean;
 }
 
-function capitalize( s: string ): string {
-	return s.charAt( 0 ).toUpperCase() + s.slice( 1 );
+function capitalize( str: string ): string {
+	return str.charAt( 0 ).toUpperCase() + str.slice( 1 );
 }
 
 /**
- * Guards production mutations that require confirmation. Returns true if the
- * command should proceed. In non-interactive contexts without
+ * Guards production mutations that require confirmation.
+ * Returns when the command should proceed. In non-interactive contexts without
  * --skip-confirmation it emits an error and calls process.exit(1) directly.
  * If the user declines the interactive prompt it calls process.exit() directly.
  */
@@ -34,10 +34,11 @@ export async function guardProductionMutation(
 	confirmFn: ( message: string ) => Promise< boolean >,
 	trackEventFn: ( event: string, props: Record< string, unknown > ) => Promise< void >,
 	formatEnvironment: ( type: string ) => string
-): Promise< boolean > {
+): Promise< void > {
 	if ( opt.skipConfirmation || opt.env.type !== 'production' ) {
-		return true;
+		return;
 	}
+
 	if ( ! isInteractive( opt ) ) {
 		console.error(
 			chalk.red(
@@ -45,20 +46,22 @@ export async function guardProductionMutation(
 					'Pass --skip-confirmation to proceed non-interactively.'
 			)
 		);
+
 		await trackEventFn( `defensive_mode_${ action }_command_cancelled`, trackingParams );
 		process.exit( 1 );
 	}
+
 	const yes = await confirmFn(
 		`${ capitalize( action ) } defensive mode on ${ formatEnvironment( opt.env.type ) } for ${
 			opt.app.name
 		}?`
 	);
+
 	if ( ! yes ) {
 		await trackEventFn( `defensive_mode_${ action }_command_cancelled`, trackingParams );
 		console.log( 'Command cancelled' );
 		process.exit();
 	}
-	return true;
 }
 
 /**

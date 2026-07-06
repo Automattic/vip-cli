@@ -1,7 +1,7 @@
 import debugLib from 'debug';
 
 import { API_HOST, PRODUCTION_API_HOST } from '../api/constants';
-import keychain from '../keychain';
+import { getKeychain } from '../keychain';
 
 import type { ElevatedToken } from './types';
 
@@ -29,29 +29,40 @@ async function read(): Promise< Blob > {
 	if ( inMemory ) {
 		return inMemory;
 	}
+
+	const keychain = await getKeychain();
 	const raw = await keychain.getPassword( serviceName() );
 	if ( ! raw ) {
 		inMemory = {};
 		return inMemory;
 	}
+
 	try {
-		const parsed = JSON.parse( raw ) as Blob;
-		inMemory = typeof parsed === 'object' && parsed !== null ? parsed : {};
+		const parsed = JSON.parse( raw ) as unknown;
+		if ( typeof parsed === 'object' && parsed !== null && ! Array.isArray( parsed ) ) {
+			inMemory = parsed as Blob;
+		} else {
+			debug( 'Elevated token blob had unexpected shape; resetting' );
+			inMemory = {};
+			await keychain.deletePassword( serviceName() );
+		}
 	} catch ( err ) {
 		debug( 'Failed to parse elevated token blob; resetting (%o)', err );
 		inMemory = {};
 		await keychain.deletePassword( serviceName() );
 	}
+
 	return inMemory;
 }
 
 async function write( blob: Blob ): Promise< void > {
 	inMemory = blob;
+	const keychain = await getKeychain();
 	if ( Object.keys( blob ).length === 0 ) {
 		await keychain.deletePassword( serviceName() );
-		return;
+	} else {
+		await keychain.setPassword( serviceName(), JSON.stringify( blob ) );
 	}
-	await keychain.setPassword( serviceName(), JSON.stringify( blob ) );
 }
 
 function isExpired( token: ElevatedToken ): boolean {
@@ -94,6 +105,7 @@ async function clearScope( scope: string ): Promise< void > {
 
 async function clearAll(): Promise< void > {
 	inMemory = {};
+	const keychain = await getKeychain();
 	await keychain.deletePassword( serviceName() );
 }
 

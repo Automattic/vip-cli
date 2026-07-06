@@ -3,10 +3,15 @@ import { afterEach, describe, expect, it, jest, beforeEach } from '@jest/globals
 import * as clientModule from '../../../src/lib/rechallenge/client';
 import {
 	RechallengeAbortedError,
+	RechallengeInteractionRequiredError,
 	RechallengeTerminalError,
 	RechallengeUnsupportedVersionError,
 } from '../../../src/lib/rechallenge/errors';
-import { isInteractiveContext, runRechallenge } from '../../../src/lib/rechallenge/flow';
+import {
+	isInteractiveContext,
+	runRechallenge,
+	shouldWaitForRechallenge,
+} from '../../../src/lib/rechallenge/flow';
 import * as openBrowserModule from '../../../src/lib/rechallenge/open-browser';
 import tokenCache from '../../../src/lib/rechallenge/token-cache';
 
@@ -55,7 +60,7 @@ beforeEach( () => {
 		challengeId: 'rch_abc',
 		status: 'pending',
 		verificationUrl: 'https://example.com/verify',
-		pollIntervalSeconds: 0, // tight loop for tests
+		pollIntervalSeconds: 0, // floored to MIN_POLL_INTERVAL_SECONDS; tests drive fake timers
 		expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
 	} );
 	mockExchange.mockResolvedValue( {
@@ -68,14 +73,66 @@ beforeEach( () => {
 } );
 
 describe( 'runRechallenge', () => {
+	afterEach( () => {
+		jest.useRealTimers();
+	} );
+
 	it( 'rejects v1 with RechallengeUnsupportedVersionError', async () => {
 		await expect(
 			runRechallenge( {
 				requestedOperation: 'updateDefensiveModeStatus',
 				rechallenge: { ...rechallenge(), version: 'v1' },
 				interactive: false,
+				wait: false,
 			} )
 		).rejects.toBeInstanceOf( RechallengeUnsupportedVersionError );
+	} );
+
+	it( 'fails fast in non-interactive mode without wait, before creating a session', async () => {
+		await expect(
+			runRechallenge( {
+				requestedOperation: 'updateDefensiveModeStatus',
+				rechallenge: rechallenge(),
+				interactive: false,
+				wait: false,
+			} )
+		).rejects.toBeInstanceOf( RechallengeInteractionRequiredError );
+		expect( mockCreate ).not.toHaveBeenCalled();
+	} );
+
+	it( 'floors an unusable poll interval instead of tight-looping or producing NaN', async () => {
+		// Server returns NaN: without the guard this would make the interval NaN
+		// (Math.max returns NaN) and 0 would tight-loop. The floor must apply.
+		mockCreate.mockResolvedValueOnce( {
+			challengeId: 'rch_abc',
+			status: 'pending',
+			verificationUrl: 'https://example.com/verify',
+			pollIntervalSeconds: Number.NaN,
+			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
+		} );
+		mockGetStatus.mockResolvedValueOnce( {
+			challengeId: 'rch_abc',
+			status: 'verified',
+			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
+			pollIntervalSeconds: 0,
+		} );
+
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
+			requestedOperation: 'updateDefensiveModeStatus',
+			rechallenge: rechallenge(),
+			interactive: false,
+			wait: true,
+		} );
+
+		// Just below the 2s floor: the first status poll must not have fired yet.
+		await jest.advanceTimersByTimeAsync( 1999 );
+		expect( mockGetStatus ).not.toHaveBeenCalled();
+
+		// Crossing the floor triggers exactly one poll, which resolves the flow.
+		await jest.advanceTimersByTimeAsync( 1 );
+		await pending;
+		expect( mockGetStatus ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'polls until verified then exchanges and caches the token', async () => {
@@ -94,11 +151,15 @@ describe( 'runRechallenge', () => {
 				provider: 'passkeys',
 			} );
 
-		const token = await runRechallenge( {
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 		} );
+		await jest.runAllTimersAsync();
+		const token = await pending;
 
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const { trackEvent } = require( '../../../src/lib/tracker' ) as { trackEvent: jest.Mock };
@@ -133,42 +194,50 @@ describe( 'runRechallenge', () => {
 			statusReason: { code: 'expired', message: 'session expired' },
 		} );
 
-		await expect(
-			runRechallenge( {
-				requestedOperation: 'updateDefensiveModeStatus',
-				rechallenge: rechallenge(),
-				interactive: false,
-			} )
-		).rejects.toBeInstanceOf( RechallengeTerminalError );
-	} );
-
-	it( 'aborts when the abort signal fires', async () => {
-		const ac = new AbortController();
-		mockGetStatus.mockImplementation(
-			() =>
-				new Promise( resolve => {
-					setTimeout(
-						() =>
-							resolve( {
-								challengeId: 'rch_abc',
-								status: 'pending',
-								expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
-								pollIntervalSeconds: 0,
-							} ),
-						5
-					);
-				} )
-		);
-
+		jest.useFakeTimers();
 		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
+		} );
+		await Promise.all( [
+			expect( pending ).rejects.toBeInstanceOf( RechallengeTerminalError ),
+			jest.runAllTimersAsync(),
+		] );
+	} );
+
+	it( 'aborts when the abort signal fires', async () => {
+		const ac = new AbortController();
+		// Never reaches a terminal state, so the flow stays in its poll/sleep loop
+		// until the abort signal fires.
+		mockGetStatus.mockResolvedValue( {
+			challengeId: 'rch_abc',
+			status: 'pending',
+			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
+			pollIntervalSeconds: 0,
+		} );
+
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
+			requestedOperation: 'updateDefensiveModeStatus',
+			rechallenge: rechallenge(),
+			interactive: false,
+			wait: true,
 			signal: ac.signal,
 		} );
-		setTimeout( () => ac.abort(), 10 );
-
-		await expect( pending ).rejects.toBeInstanceOf( RechallengeAbortedError );
+		// Enter the first inter-poll sleep, then abort mid-wait so the abortable
+		// sleep rejects (exercises the signal path, not just the top-of-loop check).
+		// Driven by fake timers because Node's `current` line leaves the real global
+		// `setTimeout` undefined after a prior test's useFakeTimers/useRealTimers cycle.
+		await Promise.all( [
+			expect( pending ).rejects.toBeInstanceOf( RechallengeAbortedError ),
+			( async () => {
+				await jest.advanceTimersByTimeAsync( 1000 );
+				ac.abort();
+				await jest.advanceTimersByTimeAsync( 0 );
+			} )(),
+		] );
 	} );
 
 	it( 'does not call open() when interactive=false', async () => {
@@ -178,11 +247,15 @@ describe( 'runRechallenge', () => {
 			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
 			pollIntervalSeconds: 0,
 		} );
-		await runRechallenge( {
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: false,
+			wait: true,
 		} );
+		await jest.runAllTimersAsync();
+		await pending;
 		expect( mockOpenBrowser ).not.toHaveBeenCalled();
 	} );
 
@@ -193,11 +266,15 @@ describe( 'runRechallenge', () => {
 			expiresAt: new Date( Date.now() + 60_000 ).toISOString(),
 			pollIntervalSeconds: 0,
 		} );
-		await runRechallenge( {
+		jest.useFakeTimers();
+		const pending = runRechallenge( {
 			requestedOperation: 'updateDefensiveModeStatus',
 			rechallenge: rechallenge(),
 			interactive: true,
+			wait: false,
 		} );
+		await jest.runAllTimersAsync();
+		await pending;
 		expect( mockOpenBrowser ).toHaveBeenCalledWith( 'https://example.com/verify' );
 	} );
 } );
@@ -257,5 +334,37 @@ describe( 'isInteractiveContext', () => {
 			configurable: true,
 		} );
 		expect( isInteractiveContext( [] ) ).toBe( true );
+	} );
+} );
+
+describe( 'shouldWaitForRechallenge', () => {
+	const originalEnv = process.env.VIP_RECHALLENGE_WAIT;
+
+	afterEach( () => {
+		if ( originalEnv === undefined ) {
+			delete process.env.VIP_RECHALLENGE_WAIT;
+		} else {
+			process.env.VIP_RECHALLENGE_WAIT = originalEnv;
+		}
+	} );
+
+	it( 'returns true when VIP_RECHALLENGE_WAIT=1', () => {
+		process.env.VIP_RECHALLENGE_WAIT = '1';
+		expect( shouldWaitForRechallenge( [] ) ).toBe( true );
+	} );
+
+	it( 'returns false for non-"1" values of VIP_RECHALLENGE_WAIT', () => {
+		process.env.VIP_RECHALLENGE_WAIT = '0';
+		expect( shouldWaitForRechallenge( [] ) ).toBe( false );
+	} );
+
+	it( 'returns true when --rechallenge-wait is in argv', () => {
+		delete process.env.VIP_RECHALLENGE_WAIT;
+		expect( shouldWaitForRechallenge( [ '--rechallenge-wait' ] ) ).toBe( true );
+	} );
+
+	it( 'returns false when neither flag nor env var is set', () => {
+		delete process.env.VIP_RECHALLENGE_WAIT;
+		expect( shouldWaitForRechallenge( [] ) ).toBe( false );
 	} );
 } );

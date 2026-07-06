@@ -6,6 +6,7 @@ import { trackEvent } from '../tracker';
 import * as client from './client';
 import {
 	RechallengeAbortedError,
+	RechallengeInteractionRequiredError,
 	RechallengeTerminalError,
 	RechallengeUnsupportedVersionError,
 } from './errors';
@@ -16,6 +17,11 @@ import { CLIENT_TYPE, RECHALLENGE_VERSION } from './types';
 import type { ElevatedToken, RechallengeExtension, RechallengeStatus } from './types';
 
 const debug = debugLib( '@automattic/vip:rechallenge:flow' );
+
+// Floor for the server-provided poll interval. Guards against a missing/0/NaN
+// value (which would otherwise produce a tight status-poll loop) and clamps
+// implausibly small values so a misbehaving server cannot make us hammer the API.
+const MIN_POLL_INTERVAL_SECONDS = 2;
 
 const TERMINAL: ReadonlySet< RechallengeStatus > = new Set( [
 	'verified',
@@ -28,11 +34,12 @@ export interface RunRechallengeOptions {
 	requestedOperation: string;
 	rechallenge: RechallengeExtension;
 	interactive: boolean;
+	wait: boolean;
 	signal?: AbortSignal;
 }
 
 export async function runRechallenge( opts: RunRechallengeOptions ): Promise< ElevatedToken > {
-	const { requestedOperation, rechallenge, interactive, signal } = opts;
+	const { requestedOperation, rechallenge, interactive, wait, signal } = opts;
 
 	if ( rechallenge.version !== RECHALLENGE_VERSION ) {
 		throw new RechallengeUnsupportedVersionError( rechallenge.version, requestedOperation );
@@ -42,6 +49,14 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		scope: requestedOperation,
 		clientType: CLIENT_TYPE,
 	} );
+
+	// In a non-interactive session with no opt-in to wait, fail fast instead of
+	// creating a verification session no human can complete — automation would
+	// otherwise block until the session expires.
+	if ( ! interactive && ! wait ) {
+		await trackEvent( 'rechallenge_interaction_required', { scope: requestedOperation } );
+		throw new RechallengeInteractionRequiredError( requestedOperation );
+	}
 
 	const session = await client.createSession( {
 		path: rechallenge.createSessionPath,
@@ -57,7 +72,7 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 			chalk.yellow( '⚠' ),
 			`Step-up verification required for ${ chalk.bold( requestedOperation ) }.`
 		);
-		console.warn( `  Opened ${ chalk.cyan( verificationUrl ) }` );
+		console.warn( `  Open ${ chalk.cyan( verificationUrl ) }` );
 		console.warn(
 			`  If your browser did not open, copy and paste the URL above. Expires at ${ expiresIso }.`
 		);
@@ -68,7 +83,12 @@ export async function runRechallenge( opts: RunRechallengeOptions ): Promise< El
 		);
 	}
 
-	const interval = Math.max( session.pollIntervalSeconds, 0 ) * 1000;
+	const requestedInterval = Number( session.pollIntervalSeconds );
+	const interval =
+		Math.max(
+			Number.isFinite( requestedInterval ) ? requestedInterval : MIN_POLL_INTERVAL_SECONDS,
+			MIN_POLL_INTERVAL_SECONDS
+		) * 1000;
 	const deadline = Date.parse( session.expiresAt );
 	if ( Number.isNaN( deadline ) ) {
 		throw new RechallengeTerminalError(
@@ -143,8 +163,34 @@ export function isInteractiveContext( argvOrFlags: string[] = process.argv ): bo
 	if ( process.env.VIP_NON_INTERACTIVE === '1' ) {
 		return false;
 	}
-	if ( argvOrFlags.includes( '--non-interactive' ) ) {
+
+	if (
+		argvOrFlags.some(
+			item =>
+				item === '--non-interactive' ||
+				( item.startsWith( '--non-interactive=' ) &&
+					! /^--non-interactive=(0|false|no|off)$/i.test( item ) )
+		)
+	) {
 		return false;
 	}
+
 	return Boolean( process.stdout.isTTY );
+}
+
+// Opt-in for waiting on step-up in a non-interactive session: the operator can
+// complete browser verification on another device while the command polls.
+// Mirrors isInteractiveContext's argv/env detection because the rechallenge link
+// is instantiated globally and cannot read a command's parsed options.
+export function shouldWaitForRechallenge( argvOrFlags: string[] = process.argv ): boolean {
+	if ( process.env.VIP_RECHALLENGE_WAIT === '1' ) {
+		return true;
+	}
+
+	return argvOrFlags.some(
+		item =>
+			item === '--rechallenge-wait' ||
+			( item.startsWith( '--rechallenge-wait=' ) &&
+				! /^--rechallenge-wait=(0|false|no|off)$/i.test( item ) )
+	);
 }
