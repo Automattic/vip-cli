@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import debugLib from 'debug';
-import ejs from 'ejs';
 import yaml, { FAILSAFE_SCHEMA } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -23,6 +22,8 @@ const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
 export const CONFIGURATION_FILE_NAME = 'vip-dev-env.yml';
 export const CONFIGURATION_TEMPLATE_FILE_NAME = 'vip-dev-env.yml.ejs';
+const ALLOWED_CONFIG_DIR_TEMPLATE = /<%=\s*configDir\s*%>/g;
+const EJS_TEMPLATE_TAG = /<%[\s\S]*?%>/;
 
 export async function getConfigurationFileOptions(): Promise< ConfigurationFileOptions > {
 	const configurationFile = await findConfigurationFile();
@@ -249,19 +250,29 @@ async function findConfigurationFile(): Promise<
 	}
 
 	for ( const { dir, file, template } of locations ) {
+		let contents: string;
 		try {
 			// eslint-disable-next-line no-await-in-loop
-			const contents = await readFile( file, 'utf8' );
-			if ( template ) {
-				const rendered = ejs.render( contents, { configDir: dir } );
-				return { configurationPath: file, configurationContents: rendered };
-			}
-
-			return { configurationPath: file, configurationContents: contents };
+			contents = await readFile( file, 'utf8' );
 		} catch ( error ) {
 			const err = error instanceof Error ? error : new Error( 'Unknown error' );
-			debug( `Error reading or rendering file ${ file }: ${ err.message }` );
+			debug( `Error reading file ${ file }: ${ err.message }` );
+			continue;
 		}
+
+		if ( template ) {
+			const rendered = contents.replace( ALLOWED_CONFIG_DIR_TEMPLATE, () => dir );
+			if ( EJS_TEMPLATE_TAG.test( rendered ) ) {
+				throw new Error(
+					`EJS JavaScript is not supported in dev-env configuration file ${ file }. ` +
+						'Use plain YAML, or only the supported <%= configDir %> placeholder.'
+				);
+			}
+
+			return { configurationPath: file, configurationContents: rendered };
+		}
+
+		return { configurationPath: file, configurationContents: contents };
 	}
 
 	return false;
