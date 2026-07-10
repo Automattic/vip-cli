@@ -5,7 +5,7 @@ Goal: remove the abandoned `args` package, keep CLI behavior stable, and support
 ## Migration Outcome
 
 - `src/lib/cli/command.js` is the active Commander-backed compatibility wrapper for all bins that call `command()`.
-- `args` has been removed from `package.json` and `npm-shrinkwrap.json`.
+- `args` has been removed from `package.json` and `package-lock.json`.
 - Root command flow (`src/bin/vip.js`) now dispatches via the shared Commander wrapper again, preserving login gating and subcommand chaining.
 - Temporary side-path wrapper work has been removed (`src/lib/cli/command-commander.ts` deleted).
 

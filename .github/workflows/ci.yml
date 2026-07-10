@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 'lts/*'
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -61,7 +61,7 @@ jobs:
         with:
           node-version: lts/*
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -88,7 +88,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
