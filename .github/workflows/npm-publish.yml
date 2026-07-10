@@ -20,9 +20,10 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
+      - uses: Automattic/vip-actions/npm-publish@2aaa92147b086cb0ce2f6b2ea4208bd2489c6509
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm-version: '11'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           CONVENTIONAL_COMMITS: 'true'
@@ -56,9 +57,10 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
+      - uses: Automattic/vip-actions/npm-publish-prerelease@2aaa92147b086cb0ce2f6b2ea4208bd2489c6509
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm-version: '11'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           NPM_TAG: ${{ inputs.npm_tag }}
