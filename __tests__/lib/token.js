@@ -1,4 +1,11 @@
-import Token, { SERVICE } from '../../src/lib/token';
+import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
+
+import * as keychain from '../../src/lib/keychain';
+import Token, { SERVICE, ENV_TOKEN_NAME, EnvTokenError } from '../../src/lib/token';
+
+// A valid, non-expiring token (id: 7).
+const VALID_RAW_TOKEN =
+	'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA';
 
 describe( 'token tests', () => {
 	it( 'should correctly validate token', () => {
@@ -56,6 +63,95 @@ describe( 'token tests', () => {
 			return Token.uuid().then( uuid2 => {
 				expect( uuid1 ).toBe( uuid2 );
 			} );
+		} );
+	} );
+
+	describe( 'get() with VIP_CLI_TOKEN', () => {
+		const originalEnvToken = process.env[ ENV_TOKEN_NAME ];
+		let getKeychainSpy;
+
+		beforeEach( () => {
+			delete process.env[ ENV_TOKEN_NAME ];
+
+			// token.ts is loaded during the jest setup files (via apiConfig), so
+			// it has already bound the real keychain module. Spying on the shared
+			// module object still intercepts its calls because token.ts reads
+			// getKeychain at call time. A plain jest.mock() would not, since it
+			// only rebinds future imports.
+			getKeychainSpy = jest.spyOn( keychain, 'getKeychain' ).mockResolvedValue( {
+				getPassword: jest.fn( () => Promise.resolve( null ) ),
+				setPassword: jest.fn( () => Promise.resolve( true ) ),
+				deletePassword: jest.fn( () => Promise.resolve( true ) ),
+			} );
+		} );
+
+		afterEach( () => {
+			getKeychainSpy.mockRestore();
+
+			if ( originalEnvToken === undefined ) {
+				delete process.env[ ENV_TOKEN_NAME ];
+			} else {
+				process.env[ ENV_TOKEN_NAME ] = originalEnvToken;
+			}
+		} );
+
+		it( 'returns a token built from the env var without touching the keychain', async () => {
+			process.env[ ENV_TOKEN_NAME ] = VALID_RAW_TOKEN;
+
+			const token = await Token.get();
+
+			expect( token.raw ).toBe( VALID_RAW_TOKEN );
+			expect( token.valid() ).toBe( true );
+			expect( getKeychainSpy ).not.toHaveBeenCalled();
+		} );
+
+		it( 'trims surrounding whitespace on the env var token', async () => {
+			process.env[ ENV_TOKEN_NAME ] = `  ${ VALID_RAW_TOKEN }  `;
+
+			const token = await Token.get();
+
+			expect( token.raw ).toBe( VALID_RAW_TOKEN );
+			expect( getKeychainSpy ).not.toHaveBeenCalled();
+		} );
+
+		it( 'throws an EnvTokenError naming the variable for a malformed env token', async () => {
+			process.env[ ENV_TOKEN_NAME ] = 'not-a-jwt';
+
+			await expect( Token.get() ).rejects.toThrow( EnvTokenError );
+			await expect( Token.get() ).rejects.toThrow( ENV_TOKEN_NAME );
+			expect( getKeychainSpy ).not.toHaveBeenCalled();
+		} );
+
+		it( 'falls back to the keychain when the env var is unset', async () => {
+			await Token.get();
+
+			expect( getKeychainSpy ).toHaveBeenCalled();
+		} );
+
+		it( 'falls back to the keychain when the env var is empty', async () => {
+			process.env[ ENV_TOKEN_NAME ] = '';
+
+			await Token.get();
+
+			expect( getKeychainSpy ).toHaveBeenCalled();
+		} );
+
+		it( 'falls back to the keychain when the env var is only whitespace', async () => {
+			process.env[ ENV_TOKEN_NAME ] = '   ';
+
+			await Token.get();
+
+			expect( getKeychainSpy ).toHaveBeenCalled();
+		} );
+
+		it( 'reports whether the env var is set via isEnvTokenSet()', () => {
+			expect( Token.isEnvTokenSet() ).toBe( false );
+
+			process.env[ ENV_TOKEN_NAME ] = '   ';
+			expect( Token.isEnvTokenSet() ).toBe( false );
+
+			process.env[ ENV_TOKEN_NAME ] = VALID_RAW_TOKEN;
+			expect( Token.isEnvTokenSet() ).toBe( true );
 		} );
 	} );
 

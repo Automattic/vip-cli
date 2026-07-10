@@ -107,6 +107,7 @@ TODO: Update description of the variables.
 - `SOCKS_PROXY`:
 - `HTTP_PROXY`:
 - `NO_PROXY`:
+- `VIP_CLI_TOKEN`: A [Personal Access Token](https://dashboard.wpvip.com/me/cli/token) used to authenticate directly, bypassing OS keychain storage. Useful for SSH sessions, CI, and other non-graphical environments. Takes precedence over stored credentials.
 - `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
 - `VIP_RECHALLENGE_WAIT`: set to `1` to print the verification URL and wait for rechallenge completion on another device.
 - `VIP_USE_SYSTEM_PROXY`:
