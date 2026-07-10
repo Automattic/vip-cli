@@ -8,12 +8,14 @@ import { prompt } from 'enquirer';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
+import * as exit from '../lib/cli/exit';
 import { loadInternalBin } from '../lib/cli/internal-bin-loader';
 import {
 	rewriteArgvForInternalBin,
 	resolveInternalBinFromArgv,
 	isSeaRuntime,
 } from '../lib/cli/sea-dispatch';
+import { doesArgvHaveAtLeastOneParam, isTokenReadRequired } from '../lib/cli/startup-args';
 import tokenCache from '../lib/rechallenge/token-cache';
 import Token from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
@@ -81,15 +83,6 @@ const runCmd = async function () {
 
 	await cmd.argv( process.argv );
 };
-
-/**
- * @param {any[]} argv
- * @param {any[]} params
- * @returns {boolean}
- */
-function doesArgvHaveAtLeastOneParam( argv, params ) {
-	return argv.some( arg => params.includes( arg ) );
-}
 
 async function runLoginFlow() {
 	console.log();
@@ -183,6 +176,40 @@ async function runLoginFlow() {
 	return token;
 }
 
+/**
+ * Reads the stored auth token, but only for commands whose branch decision
+ * actually depends on it.
+ *
+ * Commands like `vip -h` / `vip -v` / `logout` never consult the token, so we
+ * skip the keychain entirely for them. This matters over SSH / non-graphical
+ * sessions where the OS keychain may be locked or unable to show an
+ * authorization prompt: reading the stored credential there throws a bare
+ * native error that would otherwise crash the CLI before argument parsing.
+ *
+ * @param {Object} flags Precomputed argv classification flags.
+ * @returns {Promise<Token | undefined>} The stored token, or undefined when not needed.
+ */
+async function resolveToken( flags ) {
+	if ( ! isTokenReadRequired( flags ) ) {
+		return undefined;
+	}
+
+	try {
+		return await Token.get();
+	} catch ( err ) {
+		debug( 'Failed to read token from keychain:', err );
+
+		exit.withError(
+			'Unable to read VIP-CLI credentials from the system keychain: ' +
+				`${ err instanceof Error ? err.message : String( err ) }\n` +
+				'If you are connected over SSH or a non-graphical session, the OS keychain may be ' +
+				'locked or unable to show an authorization prompt. Try running VIP-CLI from a local, ' +
+				'graphical session, or unlock the keychain first.\n' +
+				'Re-run with the environment variable DEBUG=@automattic/vip:* for full details.'
+		);
+	}
+}
+
 const rootCmd = async function () {
 	if ( isSeaRuntime() && ! process.env.VIP_CLI_TARGET_BIN ) {
 		const resolution = resolveInternalBinFromArgv( process.argv );
@@ -192,8 +219,6 @@ const rootCmd = async function () {
 			process.env.VIP_CLI_TARGET_LENGTH = String( resolution.length );
 		}
 	}
-
-	let token = await Token.get();
 
 	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
 	const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
@@ -206,6 +231,15 @@ const rootCmd = async function () {
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'deploy' ] ) && Boolean( customDeployToken );
 
 	debug( 'Argv:', process.argv );
+
+	let token = await resolveToken( {
+		isLoginCommand,
+		isLogoutCommand,
+		isHelpCommand,
+		isVersionCommand,
+		isDevEnvCommandWithoutEnv,
+		isCustomDeployCmdWithKey,
+	} );
 
 	if (
 		! isLoginCommand &&

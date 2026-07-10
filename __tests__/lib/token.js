@@ -1,3 +1,6 @@
+import { jest } from '@jest/globals';
+
+import * as keychain from '../../src/lib/keychain';
 import Token, { SERVICE } from '../../src/lib/token';
 
 describe( 'token tests', () => {
@@ -56,6 +59,26 @@ describe( 'token tests', () => {
 			return Token.uuid().then( uuid2 => {
 				expect( uuid1 ).toBe( uuid2 );
 			} );
+		} );
+	} );
+
+	describe( 'uuid() keychain resilience', () => {
+		let getKeychainSpy;
+
+		afterEach( () => {
+			getKeychainSpy?.mockRestore();
+		} );
+
+		it( 'degrades to a stable per-process UUID when the keychain is unavailable', async () => {
+			getKeychainSpy = jest
+				.spyOn( keychain, 'getKeychain' )
+				.mockRejectedValue( new Error( 'keychain locked' ) );
+
+			const uuid1 = await Token.uuid();
+			const uuid2 = await Token.uuid();
+
+			expect( uuid1 ).toMatch( /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ );
+			expect( uuid2 ).toBe( uuid1 );
 		} );
 	} );
 
