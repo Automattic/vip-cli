@@ -22,6 +22,7 @@ jobs:
     steps:
       - uses: Automattic/vip-actions/npm-publish@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
         env:
+          # npm@12 no longer supports npm-shrinkwrap.json with npm ci in this repository.
           NPM_CONFIG_TAG: next-11
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,6 +61,7 @@ jobs:
     steps:
       - uses: Automattic/vip-actions/npm-publish-prerelease@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
         env:
+          # npm@12 no longer supports npm-shrinkwrap.json with npm ci in this repository.
           NPM_CONFIG_TAG: next-11
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
