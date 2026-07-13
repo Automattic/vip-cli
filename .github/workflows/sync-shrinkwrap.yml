@@ -35,6 +35,16 @@ jobs:
         env:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
+          set -euo pipefail
+
+          for f in package-lock.json npm-shrinkwrap.json; do
+            if [ -L "$f" ]; then
+              echo "$f must not be a symlink"
+              exit 1
+            fi
+          done
+
+          rm -f npm-shrinkwrap.json
           cp package-lock.json npm-shrinkwrap.json
 
           if git diff --quiet -- npm-shrinkwrap.json; then
