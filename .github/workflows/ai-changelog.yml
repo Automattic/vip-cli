@@ -34,7 +34,7 @@ jobs:
       github.event.comment.body == '/docs-doctor'
     steps:
       - name: Generate Report
-        uses: Automattic/vip-actions/docs-doctor@63b6eb29cdcf8f55d7f0910c82356f34f8f997c4 # trunk
+        uses: Automattic/vip-actions/docs-doctor@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
         with:
           url: https://docs.wpvip.com
           sitemap_url: https://docs.wpvip.com/page-sitemap.xml
