@@ -32,6 +32,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync npm-shrinkwrap.json
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           cp package-lock.json npm-shrinkwrap.json
 
@@ -44,4 +46,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add npm-shrinkwrap.json
           git commit -m "chore: sync npm shrinkwrap"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git push origin "HEAD:${PR_HEAD_REF}"
