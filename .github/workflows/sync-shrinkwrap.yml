@@ -11,10 +11,13 @@ on:
       - package-lock.json
       - npm-shrinkwrap.json
 
+concurrency:
+  group: sync-shrinkwrap-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: read
-
 jobs:
   sync:
     name: Sync npm-shrinkwrap.json
