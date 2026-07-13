@@ -1,0 +1,59 @@
+name: Sync npm shrinkwrap
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - package.json
+      - package-lock.json
+      - npm-shrinkwrap.json
+
+concurrency:
+  group: sync-shrinkwrap-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: read
+jobs:
+  sync:
+    name: Sync npm-shrinkwrap.json
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull request branch
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync npm-shrinkwrap.json
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          for f in package-lock.json npm-shrinkwrap.json; do
+            if [ -L "$f" ]; then
+              echo "$f must not be a symlink"
+              exit 1
+            fi
+          done
+
+          rm -f npm-shrinkwrap.json
+          cp package-lock.json npm-shrinkwrap.json
+
+          if git diff --quiet -- npm-shrinkwrap.json; then
+            echo "npm-shrinkwrap.json already matches package-lock.json"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add npm-shrinkwrap.json
+          git commit -m "chore: sync npm shrinkwrap"
+          git push origin "HEAD:${PR_HEAD_REF}"
