@@ -20,7 +20,7 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@2aaa92147b086cb0ce2f6b2ea4208bd2489c6509
+      - uses: Automattic/vip-actions/npm-publish@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version: '11'
@@ -57,7 +57,7 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@2aaa92147b086cb0ce2f6b2ea4208bd2489c6509
+      - uses: Automattic/vip-actions/npm-publish-prerelease@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version: '11'
