@@ -23,6 +23,7 @@ jobs:
       - uses: Automattic/vip-actions/npm-publish@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm-version: '11'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           CONVENTIONAL_COMMITS: 'true'
@@ -59,6 +60,7 @@ jobs:
       - uses: Automattic/vip-actions/npm-publish-prerelease@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm-version: '11'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           NPM_TAG: ${{ inputs.npm_tag }}
