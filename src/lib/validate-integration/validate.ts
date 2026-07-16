@@ -595,9 +595,12 @@ function checkCompatibilityMatrix( ctx: Context ): CheckResult {
 	if ( ! /\b6\.9\b/.test( ctx.workflowsText ) ) {
 		missing.push( 'WordPress 6.9' );
 	}
-	// WP 7.0 in CI is often expressed as "latest"; accept either, but only from
-	// the workflow matrix.
-	if ( ! /\b7\.0\b/.test( ctx.workflowsText ) && ! /\blatest\b/.test( ctx.workflowsText ) ) {
+	// WP 7.0 in CI is often expressed as "latest" against a WordPress version
+	// key (e.g. `wp: latest`). Match that form specifically so unrelated
+	// `latest` tokens — `runs-on: ubuntu-latest`, `mariadb:latest` — are not
+	// mistaken for WordPress version evidence.
+	const wpLatest = /\bw(?:p|ordpress)(?:[-_]version)?['":= ]+latest\b/i;
+	if ( ! /\b7\.0\b/.test( ctx.workflowsText ) && ! wpLatest.test( ctx.workflowsText ) ) {
 		missing.push( 'WordPress 7.0' );
 	}
 	for ( const php of [ '8.2', '8.3', '8.4', '8.5' ] ) {

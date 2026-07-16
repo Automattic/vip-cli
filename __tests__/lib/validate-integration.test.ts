@@ -217,6 +217,58 @@ describe( 'validateIntegration', () => {
 		expect( statusById( root )[ 'compatibility-matrix' ] ).toBe( 'fail' );
 	} );
 
+	it( 'does not count `runs-on: ubuntu-latest` as WordPress 7.0 evidence', () => {
+		const root = join( dir, 'ubuntu-latest' );
+		mkdirSync( root, { recursive: true } );
+		scaffoldConformant( root );
+		// A matrix that covers 6.9 and the PHP range but expresses no WP 7.0 or
+		// `wp: latest` — only an unrelated `runs-on: ubuntu-latest` runner label.
+		writeFileSync(
+			join( root, '.github', 'workflows', 'unit-tests.yml' ),
+			[
+				'jobs:',
+				'  test:',
+				'    runs-on: ubuntu-latest',
+				'    strategy:',
+				'      matrix:',
+				'        config:',
+				"          - { wp: 6.9.x, php: '8.2' }",
+				"          - { wp: 6.9.x, php: '8.3' }",
+				"          - { wp: 6.9.x, php: '8.4' }",
+				"          - { wp: 6.9.x, php: '8.5' }",
+			].join( '\n' )
+		);
+
+		const rule7 = validateIntegration( root ).results.find(
+			result => result.id === 'compatibility-matrix'
+		);
+		expect( rule7?.status ).toBe( 'fail' );
+		expect( rule7?.message ).toMatch( /WordPress 7\.0/ );
+	} );
+
+	it( 'accepts `wp: latest` in the matrix as WordPress 7.0 evidence', () => {
+		const root = join( dir, 'wp-latest' );
+		mkdirSync( root, { recursive: true } );
+		scaffoldConformant( root );
+		writeFileSync(
+			join( root, '.github', 'workflows', 'unit-tests.yml' ),
+			[
+				'jobs:',
+				'  test:',
+				'    runs-on: ubuntu-latest',
+				'    strategy:',
+				'      matrix:',
+				'        config:',
+				"          - { wp: 6.9.x, php: '8.2' }",
+				"          - { wp: latest, php: '8.3' }",
+				"          - { wp: latest, php: '8.4' }",
+				"          - { wp: latest, php: '8.5' }",
+			].join( '\n' )
+		);
+
+		expect( statusById( root )[ 'compatibility-matrix' ] ).toBe( 'pass' );
+	} );
+
 	it( 'distinguishes a malformed composer.json from a missing one', () => {
 		const root = join( dir, 'malformed' );
 		mkdirSync( root, { recursive: true } );
