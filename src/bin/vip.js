@@ -204,8 +204,13 @@ const rootCmd = async function () {
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
 		! containsAppEnvArgument( process.argv );
 	// `integration` inspects local files only and never calls the API, so it
-	// does not require authentication (same as `dev-env`).
-	const isIntegrationCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'integration' ] );
+	// does not require authentication (same as `dev-env`). Require the absence
+	// of an app/env argument so that `integration` appearing as an argument to
+	// another command (e.g. `vip @app.env -- wp option get integration`) still
+	// prompts for login instead of silently skipping it.
+	const isIntegrationCommand =
+		doesArgvHaveAtLeastOneParam( process.argv, [ 'integration' ] ) &&
+		! containsAppEnvArgument( process.argv );
 	const isCustomDeployCmdWithKey =
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'deploy' ] ) && Boolean( customDeployToken );
 
