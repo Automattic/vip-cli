@@ -76,6 +76,7 @@ const runCmd = async function () {
 		.command( 'db', "Access an environment's database." )
 		.command( 'defensive-mode', 'Manage VIP defensive mode for an environment.' )
 		.command( 'sync', 'Sync the database from production to a non-production environment.' )
+		.command( 'integration', 'Check a VIP integration for conformance before submitting it.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
 
@@ -202,6 +203,9 @@ const rootCmd = async function () {
 	const isDevEnvCommandWithoutEnv =
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'dev-env' ] ) &&
 		! containsAppEnvArgument( process.argv );
+	// `integration` inspects local files only and never calls the API, so it
+	// does not require authentication (same as `dev-env`).
+	const isIntegrationCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'integration' ] );
 	const isCustomDeployCmdWithKey =
 		doesArgvHaveAtLeastOneParam( process.argv, [ 'deploy' ] ) && Boolean( customDeployToken );
 
@@ -213,6 +217,7 @@ const rootCmd = async function () {
 			isHelpCommand ||
 			isVersionCommand ||
 			isDevEnvCommandWithoutEnv ||
+			isIntegrationCommand ||
 			token?.valid() ||
 			isCustomDeployCmdWithKey )
 	) {

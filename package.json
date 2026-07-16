@@ -64,6 +64,8 @@
     "vip-import-sql-status": "dist/bin/vip-import-sql-status.js",
     "vip-import-validate-files": "dist/bin/vip-import-validate-files.js",
     "vip-import-validate-sql": "dist/bin/vip-import-validate-sql.js",
+    "vip-integration": "dist/bin/vip-integration.js",
+    "vip-integration-validate": "dist/bin/vip-integration-validate.js",
     "vip-logs": "dist/bin/vip-logs.js",
     "vip-search-replace": "dist/bin/vip-search-replace.js",
     "vip-slowlogs": "dist/bin/vip-slowlogs.js",
