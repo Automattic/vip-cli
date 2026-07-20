@@ -106,26 +106,15 @@ const getSqlFileStreamFromCompressedFile = async ( filePath: string ): Promise< 
 	throw new Error( 'Not a supported compressed file' );
 };
 
+// Replaces the byte-size value that mydumper embeds in chunk header comments (e.g. `-- tablename 1234`)
+// with -1. mydumper exports the original file size in those headers, but since we modify the dump,
+// the size is no longer accurate — setting it to -1 tells mydumper to ignore it.
+// Lines starting with `-- metadata` are left untouched as they use the same format but are not chunk headers.
 export const fixMyDumperTransform = () => {
-	const regex = /^-- ([^ ]+) \d+$/;
+	const regex = /^-- (?!metadata)([^ ]+) \d+$/gm;
 	return new Transform( {
 		transform( chunk: string, _encoding: BufferEncoding, callback: TransformCallback ) {
-			const chunkString = chunk.toString();
-			const lineEnding = chunkString.includes( '\r\n' ) ? '\r\n' : '\n';
-			const lines = chunk
-				.toString()
-				.split( lineEnding )
-				.map( line => {
-					const match = regex.exec( line );
-
-					if ( ! match ) {
-						return line;
-					}
-
-					const tablePart = match[ 1 ];
-					return `-- ${ tablePart } -1`;
-				} );
-			callback( null, lines.join( lineEnding ) );
+			callback( null, chunk.toString().replace( regex, '-- $1 -1' ) );
 		},
 	} );
 };

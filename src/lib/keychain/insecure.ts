@@ -2,7 +2,7 @@ import Configstore from 'configstore';
 
 import type { Keychain } from './keychain';
 
-export default class Insecure implements Keychain {
+export class Insecure implements Keychain {
 	private readonly configstore: Configstore;
 
 	constructor( private readonly file: string ) {

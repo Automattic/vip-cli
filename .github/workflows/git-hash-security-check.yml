@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check for short git hashes in package.json
-        uses: Automattic/vip-actions/git-hash-security-check@7b98dcb98d652bf02037977b1b85abb971c345d0
+        uses: Automattic/vip-actions/git-hash-security-check@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk

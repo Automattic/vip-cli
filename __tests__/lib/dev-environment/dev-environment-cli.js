@@ -2,7 +2,6 @@
 
 import chalk from 'chalk';
 import { prompt, selectRunMock, confirmRunMock } from 'enquirer';
-import nock from 'nock';
 import os from 'os';
 
 import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-environment';
@@ -47,25 +46,24 @@ jest.mock( 'enquirer', () => {
 
 const testReleaseWP = '5.9';
 
-const scope = nock( 'https://raw.githubusercontent.com' )
-	.get( '/Automattic/vip-container-images/master/wordpress/versions.json' )
-	.reply( 200, [
-		{
-			ref: '3ae9f9ffe311e546b0fd5f82d456b3539e3b8e74',
-			tag: '5.9.1',
-			cacheable: true,
-			locked: false,
-			prerelease: true,
-		},
-		{
-			ref: '5.9',
-			tag: '5.9',
-			cacheable: true,
-			locked: false,
-			prerelease: false,
-		},
-	] );
-scope.persist( true );
+const mockedWordPressVersions = [
+	{
+		ref: '3ae9f9ffe311e546b0fd5f82d456b3539e3b8e74',
+		tag: '5.9.1',
+		cacheable: true,
+		locked: false,
+		prerelease: true,
+	},
+	{
+		ref: '5.9',
+		tag: '5.9',
+		cacheable: true,
+		locked: false,
+		prerelease: false,
+	},
+];
+
+const getVersionListMock = jest.spyOn( devEnvCore, 'getVersionList' );
 
 jest.mock( '../../../src/lib/constants/dev-environment', () => {
 	const devEnvironmentConstants = jest.requireActual(
@@ -86,6 +84,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	beforeEach( () => {
 		prompt.mockReset();
 		confirmRunMock.mockReset();
+		getVersionListMock.mockResolvedValue( mockedWordPressVersions );
 	} );
 	describe( 'getEnvironmentName with no environments present', () => {
 		beforeEach( () => {

@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import fs from 'fs';
 import gql from 'graphql-tag';
 
@@ -6,10 +7,18 @@ import * as exit from '../../lib/cli/exit';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
 import { trackEventWithEnv } from '../../lib/tracker';
-import { validateDeployFileExt, validateFilename } from '../../lib/validations/custom-deploy';
+import {
+	findLargeArchiveFilesInDeployArchive,
+	LARGE_ARCHIVE_FILE_SIZE_LIMIT,
+	validateDeployFileExt,
+	validateFilename,
+} from '../../lib/validations/custom-deploy';
+
+import type { LargeArchiveFile } from '../../lib/validations/custom-deploy';
 
 const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
+const SKIP_LARGE_FILE_VALIDATION_FLAG = '--skip-large-file-validation';
 
 type CustomDeployInfo = {
 	success: boolean;
@@ -22,10 +31,24 @@ type CustomDeployInfo = {
 };
 
 type ValidateMutationPayload = {
-	data?: {
-		validateCustomDeployAccess: CustomDeployInfo;
-	} | null;
+	validateCustomDeployAccess: CustomDeployInfo;
 };
+
+function formatFileSize( bytes: number ): string {
+	return `${ ( bytes / ( 1024 * 1024 ) ).toFixed( 1 ) } MB`;
+}
+
+function getLargeArchiveFilesMessage( largeArchiveFiles: LargeArchiveFile[] ): string {
+	const fileList = largeArchiveFiles
+		.map( file => `- ${ file.path } (${ formatFileSize( file.size ) })` )
+		.join( '\n' );
+
+	return `Deploy archive contains archive file(s) larger than ${ formatFileSize(
+		LARGE_ARCHIVE_FILE_SIZE_LIMIT
+	) } in the deploy archive:\n${ fileList }\nRemove these files from the repository, or rerun with ${ chalk.bold(
+		SKIP_LARGE_FILE_VALIDATION_FLAG
+	) } to skip this check.`;
+}
 
 export async function validateCustomDeployKey(
 	app: string | number,
@@ -51,7 +74,7 @@ export async function validateCustomDeployKey(
 
 	const api = API( { exitOnError: true } );
 	try {
-		const result: ValidateMutationPayload = await api.mutate( {
+		const result = await api.mutate< ValidateMutationPayload >( {
 			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
 			context: {
 				headers: {
@@ -128,4 +151,44 @@ export async function validateFile( appId: number, envId: number, fileMeta: File
 			`The deploy file size (${ fileSize } bytes) exceeds the limit (${ DEPLOY_MAX_FILE_SIZE } bytes).`
 		);
 	}
+}
+
+/**
+ * @param {number} appId
+ * @param {number} envId
+ * @param {FileMeta} fileMeta
+ */
+export async function validateLargeArchiveFiles(
+	appId: number,
+	envId: number,
+	fileMeta: FileMeta
+) {
+	const track = trackEventWithEnv.bind( null, appId, envId );
+	let largeArchiveFiles: LargeArchiveFile[];
+
+	try {
+		largeArchiveFiles = await findLargeArchiveFilesInDeployArchive( fileMeta.fileName );
+	} catch ( error ) {
+		await track( 'deploy_app_command_error', {
+			error_type: 'large-archive-file-verify-failed',
+			verify_error: ( error as Error ).message,
+		} );
+
+		return exit.withError(
+			`Unable to verify large archive files in the deploy archive: ${
+				( error as Error ).message
+			}. Rerun with ${ SKIP_LARGE_FILE_VALIDATION_FLAG } to skip this check.`
+		);
+	}
+
+	if ( ! largeArchiveFiles.length ) {
+		return;
+	}
+
+	await track( 'deploy_app_command_error', {
+		error_type: 'large-archive-files',
+		large_archive_files: largeArchiveFiles.map( file => file.path ),
+	} );
+
+	return exit.withError( getLargeArchiveFilesMessage( largeArchiveFiles ) );
 }

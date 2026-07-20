@@ -14,6 +14,7 @@ import {
 	resolveInternalBinFromArgv,
 	isSeaRuntime,
 } from '../lib/cli/sea-dispatch';
+import tokenCache from '../lib/rechallenge/token-cache';
 import Token from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
 
@@ -73,6 +74,7 @@ const runCmd = async function () {
 		)
 		.command( 'slowlogs', 'Retrieve MySQL slow query logs from an environment.' )
 		.command( 'db', "Access an environment's database." )
+		.command( 'defensive-mode', 'Manage VIP defensive mode for an environment.' )
 		.command( 'sync', 'Sync the database from production to a non-production environment.' )
 		.command( 'whoami', 'Retrieve details about the current authenticated VIP-CLI user.' )
 		.command( 'wp', 'Execute a WP-CLI command against an environment.' );
@@ -168,6 +170,10 @@ async function runLoginFlow() {
 
 		throw err;
 	}
+
+	// Elevated tokens are keyed by API host + scope, not by user identity. Drop any
+	// cached elevation from a previous login so it cannot carry across identities.
+	await tokenCache.clearAll();
 
 	// De-anonymize user for tracking
 	await aliasUser( token.id );

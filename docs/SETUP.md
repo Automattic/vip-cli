@@ -63,7 +63,7 @@ npm run build
 
 ## Usage
 
-The software runs as standalone CLI and relies on environmental variables for configuration and a few configuration files.
+The software runs as standalone CLI and relies on environment variables for configuration and a few configuration files.
 
 ### Starting up locally
 
@@ -85,15 +85,15 @@ By default, we record information about the usage of this tool using an in-house
 
 Install the software locally, run and follow the instructions to configure the access token.
 
-### Environmental variables
+### Environment variables
 
-#### Configuring environmental variables
+#### Configuring environment variables
 
-Environmental variables are configured in the shell. Use normal shell commands to set them.
+Environment variables are configured in the shell. Use normal shell commands to set them.
 
-#### List of environmental variables
+#### List of environment variables
 
-This application uses environmental variables for vital configuration information. Find a partial list below.
+This application uses environment variables for vital configuration information. Find a partial list below.
 
 TODO: Update description of the variables.
 
@@ -108,6 +108,7 @@ TODO: Update description of the variables.
 - `HTTP_PROXY`:
 - `NO_PROXY`:
 - `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
+- `VIP_RECHALLENGE_WAIT`: set to `1` to print the verification URL and wait for rechallenge completion on another device.
 - `VIP_USE_SYSTEM_PROXY`:
 - `WPVIP_DEPLOY_TOKEN`: For use with `vip app deploy` on sites that have custom deploys enabled.
 

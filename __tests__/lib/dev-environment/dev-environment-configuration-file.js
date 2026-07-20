@@ -4,7 +4,9 @@
 
 import { jest } from '@jest/globals';
 import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 
+import * as exit from '../../../src/lib/cli/exit';
 import { getConfigurationFileOptions } from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 
 // Mock fs operations
@@ -18,9 +20,12 @@ jest.mock( '../../../src/lib/cli/exit', () => ( {
 } ) );
 
 const mockedReadFile = readFile;
+const mockedExitWithError = exit.withError;
 
 describe( 'dev-environment-configuration-file', () => {
 	describe( 'multisite configuration sanitization', () => {
+		const templateConfigDir = path.join( '/test/dir', '.wpvip' );
+		const templateConfigPath = path.join( templateConfigDir, 'vip-dev-env.yml.ejs' );
 		const createConfigContent = multisiteValue => `
 configuration-version: 1
 slug: test-site
@@ -32,6 +37,9 @@ app-code: demo
 		beforeEach( () => {
 			jest.clearAllMocks();
 			jest.resetAllMocks();
+			mockedExitWithError.mockImplementation( message => {
+				throw new Error( message );
+			} );
 			// Mock process.cwd() to return a known directory
 			jest.spyOn( process, 'cwd' ).mockReturnValue( '/test/dir' );
 			// Default mock to reject all file reads
@@ -125,6 +133,39 @@ app-code: demo
 			const result = await getConfigurationFileOptions();
 
 			expect( result ).toEqual( {} );
+		} );
+
+		it( 'should replace supported configDir placeholders in template configuration files', async () => {
+			const configContent = `
+configuration-version: 1
+slug: test-site
+overrides: |
+  services:
+    php:
+      volumes:
+        - <%= configDir %>/..:/wp/wp-content/plugins/my-integration
+`;
+
+			mockedReadFile.mockResolvedValueOnce( configContent );
+
+			const result = await getConfigurationFileOptions();
+
+			expect( result.overrides ).toContain(
+				`${ templateConfigDir }/..:/wp/wp-content/plugins/my-integration`
+			);
+		} );
+
+		it( 'should reject arbitrary EJS syntax in template configuration files', async () => {
+			const configContent = `
+configuration-version: 1
+slug: <%= process.env.SLUG %>
+`;
+
+			mockedReadFile.mockResolvedValueOnce( configContent );
+
+			await expect( getConfigurationFileOptions() ).rejects.toThrow(
+				`EJS JavaScript is not supported in dev-env configuration file ${ templateConfigPath }`
+			);
 		} );
 	} );
 } );

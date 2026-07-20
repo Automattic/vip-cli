@@ -57,12 +57,6 @@ const appQuery = `
 			dbOperationInProgress
 			importInProgress
 		}
-		wpSitesSDS {
-			nodes {
-				homeUrl
-				id
-			}
-		}
 	}
 `;
 
@@ -450,7 +444,6 @@ const displayPlaybook = ( {
 	fileName,
 	domain,
 	formattedEnvironment,
-	unformattedEnvironment,
 	isMultiSite,
 	app,
 } ) => {
@@ -468,13 +461,8 @@ const displayPlaybook = ( {
 		formatSearchReplaceValues( searchReplace, output );
 	}
 
-	let siteArray = [];
 	if ( isMultiSite ) {
 		console.log( `  multisite: ${ isMultiSite.toString() }` );
-		const selectedEnvironmentObj = app?.environments?.find(
-			env => unformattedEnvironment === env.type
-		);
-		siteArray = selectedEnvironmentObj?.wpSitesSDS?.nodes;
 	}
 
 	if ( ! tableNames.length ) {
@@ -482,56 +470,15 @@ const displayPlaybook = ( {
 	} else {
 		// output the table names
 		console.log();
-		if ( ! isMultiSite ) {
-			console.log( 'Tables that will be imported by this process:' );
-			console.log( columns( tableNames ) );
-		} else {
-			// we have siteArray from the API, use it and the table names together
-			if ( siteArray === 'undefined' || ! siteArray ) {
-				console.log(
-					chalk.yellowBright(
-						'Unable to determine the network sites affected by this import. Please proceed only if you are confident that the contents of the file are valid for import.'
-					)
-				);
-				return;
-			} else if ( ! siteArray?.length ) {
-				throw new Error( 'There were no sites in your multisite installation.' );
-			}
-
-			const multiSiteBreakdown = siteArray.map( wpSite => {
-				let siteRegex;
-				if ( wpSite.id === 1 ) {
-					siteRegex = /^wp_[a-z]+/i;
-				} else {
-					// eslint-disable-next-line security/detect-non-literal-regexp
-					siteRegex = new RegExp( `^wp_${ parseInt( wpSite.id, 10 ) }_[a-z]+`, 'i' );
-				}
-				const tableNamesInGroup = tableNames.filter( name => siteRegex.test( name ) );
-				return {
-					id: wpSite.id,
-					url: wpSite.homeUrl,
-					tables: tableNamesInGroup,
-				};
-			} );
-
-			if ( launched ) {
-				console.log(
-					chalk.yellowBright(
-						'You are updating tables in a launched multisite environment. The performance of sites on the network might be impacted by this operation.'
-					)
-				);
-			}
-			console.log( chalk.yellow( 'The following sites will be affected by the import:' ) );
-			multiSiteBreakdown.forEach( siteObject => {
-				console.log();
-				console.log(
-					chalk.blueBright(
-						`Blog with ID ${ siteObject.id } and URL ${ siteObject.url } will import the following tables:`
-					)
-				);
-				console.log( columns( siteObject.tables ) );
-			} );
+		if ( isMultiSite && launched ) {
+			console.log(
+				chalk.yellowBright(
+					'You are updating tables in a launched multisite environment. The performance of sites on the network might be impacted by this operation.'
+				)
+			);
 		}
+		console.log( 'Tables that will be imported by this process:' );
+		console.log( columns( tableNames ) );
 	}
 };
 
@@ -649,7 +596,6 @@ command( {
 			fileName: fileNameOrURL,
 			domain,
 			formattedEnvironment,
-			unformattedEnvironment: opts.env.type,
 			isMultiSite,
 			app,
 		} );

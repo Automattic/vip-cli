@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "4.0.4-dev.0",
+  "version": "4.1.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -8,6 +8,8 @@
     "vip-app": "dist/bin/vip-app.js",
     "vip-app-list": "dist/bin/vip-app-list.js",
     "vip-app-deploy": "dist/bin/vip-app-deploy.js",
+    "vip-app-deploy-token": "dist/bin/vip-app-deploy-token.js",
+    "vip-app-deploy-token-generate": "dist/bin/vip-app-deploy-token-generate.js",
     "vip-app-deploy-validate": "dist/bin/vip-app-deploy-validate.js",
     "vip-backup": "dist/bin/vip-backup.js",
     "vip-backup-db": "dist/bin/vip-backup-db.js",
@@ -25,6 +27,10 @@
     "vip-config-software-update": "dist/bin/vip-config-software-update.js",
     "vip-db": "dist/bin/vip-db.js",
     "vip-db-phpmyadmin": "dist/bin/vip-db-phpmyadmin.js",
+    "vip-defensive-mode": "dist/bin/vip-defensive-mode.js",
+    "vip-defensive-mode-configure": "dist/bin/vip-defensive-mode-configure.js",
+    "vip-defensive-mode-disable": "dist/bin/vip-defensive-mode-disable.js",
+    "vip-defensive-mode-enable": "dist/bin/vip-defensive-mode-enable.js",
     "vip-dev-env": "dist/bin/vip-dev-env.js",
     "vip-dev-env-create": "dist/bin/vip-dev-env-create.js",
     "vip-dev-env-update": "dist/bin/vip-dev-env-update.js",
@@ -82,12 +88,16 @@
     "build:watch": "babel src -d dist --watch --source-maps --extensions=\".js,.ts\"",
     "format": "npm run cmd:format -- --write",
     "format:check": "npm run cmd:format -- --check",
+    "check:shrinkwrap": "node ./helpers/sync-shrinkwrap.js --check",
+    "sync:shrinkwrap": "node ./helpers/sync-shrinkwrap.js",
     "jest": "jest --testPathIgnorePatterns __tests__/devenv-e2e/",
     "jest:debug": "NODE_ENV=test node --inspect-brk=0.0.0.0:9252 ./node_modules/.bin/jest --forceExit --runInBand --testTimeout=100000000",
     "lint": "npm run cmd:lint .",
     "lint:fix": "npm run cmd:lint . -- --fix",
     "publish-please": "publish-please",
-    "prepublishOnly": "node ./helpers/prepublishOnly.js"
+    "prepublishOnly": "node ./helpers/prepublishOnly.js",
+    "smoke:release": "node ./helpers/release-smoke-test.js",
+    "version": "npm run sync:shrinkwrap"
   },
   "repository": {
     "type": "git",
@@ -104,7 +114,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": "^20.19.0 || ^22.12.0 || >=23.0.0",
+    "node": ">=22.19.0",
     "npm": ">=8"
   },
   "bugs": {
@@ -113,10 +123,10 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "@automattic/eslint-plugin-wpvip": "^1.0.0",
-    "@babel/cli": "7.28.6",
-    "@babel/core": "7.29.0",
-    "@babel/preset-env": "7.29.5",
-    "@babel/preset-typescript": "7.28.5",
+    "@babel/cli": "7.29.7",
+    "@babel/core": "7.29.7",
+    "@babel/preset-env": "7.29.7",
+    "@babel/preset-typescript": "7.29.7",
     "@jest/globals": "^30.0.0",
     "@jest/test-sequencer": "^30.0.0",
     "@types/configstore": "^6.0.2",
@@ -125,7 +135,7 @@
     "@types/ejs": "^3.1.5",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.0.0",
     "@types/proxy-from-env": "^1.0.4",
     "@types/semver": "^7.5.5",
     "@types/shelljs": "^0.10.0",
@@ -133,13 +143,12 @@
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
-    "nock": "13.5.6",
     "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@apollo/client": "4.1.9",
+    "@apollo/client": "4.2.5",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
@@ -147,37 +156,41 @@
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "configstore": "^8.0.0",
     "debug": "4.4.3",
-    "ejs": "^5.0.1",
+    "ejs": "^6.0.1",
     "enquirer": "2.4.1",
     "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
-    "graphql": "16.14.0",
-    "graphql-tag": "2.12.6",
+    "graphql": "17.0.2",
+    "graphql-tag": "2.12.7",
     "https-proxy-agent": "^9.0.0",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^5.0.0",
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-    "node-fetch": "^3.3.2",
     "node-stream-zip": "1.15.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
-    "semver": "7.8.0",
+    "semver": "7.8.5",
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
     "socket.io-stream": "npm:@wwa/socket.io-stream@^0.10.0",
     "socks-proxy-agent": "^10.0.0",
     "ssh2": "1.17.0",
     "tar": "^7.4.0",
+    "undici": "^8.5.0",
     "update-notifier": "7.3.1",
     "xml2js": "^0.6.2"
   },
   "optionalDependencies": {
-    "@postman/node-keytar": "~7.9.3"
+    "@github/keytar": "^7.10.6"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "allowScripts": {
+    "ssh2@1.17.0": true,
+    "@github/keytar@7.10.6": true
   }
 }

@@ -179,18 +179,14 @@ export const searchAndReplace = async (
 		exit.withError( replaceError as string | Error );
 	}
 
-	const streams: ( NodeJS.ReadableStream | NodeJS.ReadWriteStream | NodeJS.WritableStream )[] = [
-		replacedStream,
-	];
+	const transforms: NodeJS.ReadWriteStream[] = [];
 
 	if ( isMyDumper ) {
-		streams.push( fixMyDumperTransform() );
+		transforms.push( fixMyDumperTransform() );
 	}
 
-	streams.push( writeStream );
-
 	try {
-		await pipeline( streams );
+		await pipeline( replacedStream, ...transforms, writeStream );
 	} catch ( error ) {
 		console.log(
 			chalk.red(

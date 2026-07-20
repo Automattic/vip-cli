@@ -65,11 +65,19 @@ const parseOutput = output => {
 		}
 
 		if ( currentSection === SECTION_COMMAND ) {
-			const [ , command, description ] = line.match( COMMAND_REGEXP );
-			result.commands.push( {
-				command,
-				description,
-			} );
+			const match = line.match( COMMAND_REGEXP );
+			if ( match ) {
+				const [ , command, description ] = match;
+				result.commands.push( {
+					command,
+					description,
+				} );
+			} else if ( result.commands.length ) {
+				// Continuation of a wrapped command description.
+				result.commands[ result.commands.length - 1 ].description += ' ' + line;
+			} else {
+				console.error( 'Unknown command line', line );
+			}
 			continue;
 		}
 		if ( currentSection === SECTION_OPTIONS ) {
@@ -79,8 +87,11 @@ const parseOutput = output => {
 					option,
 					description,
 				} );
+			} else if ( result.options.length ) {
+				// Continuation of a wrapped option description.
+				result.options[ result.options.length - 1 ].description += ' ' + line;
 			} else {
-				console.log( 'Unknown option', line );
+				console.error( 'Unknown option', line );
 			}
 			continue;
 		}

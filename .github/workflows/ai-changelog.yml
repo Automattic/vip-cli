@@ -20,7 +20,7 @@ jobs:
       github.event.comment.body == '/changelog'
     steps:
       - name: Generate changelog for PR
-        uses: Automattic/vip-actions/ai-changelog-generator@64cb27606455c925183e07065f050846d69b2120 # trunk
+        uses: Automattic/vip-actions/ai-changelog-generator@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
   docs-doctor:
@@ -34,7 +34,7 @@ jobs:
       github.event.comment.body == '/docs-doctor'
     steps:
       - name: Generate Report
-        uses: Automattic/vip-actions/docs-doctor@64cb27606455c925183e07065f050846d69b2120 # trunk
+        uses: Automattic/vip-actions/docs-doctor@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
         with:
           url: https://docs.wpvip.com
           sitemap_url: https://docs.wpvip.com/page-sitemap.xml

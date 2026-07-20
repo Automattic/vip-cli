@@ -5,7 +5,7 @@ Goal: remove the abandoned `args` package, keep CLI behavior stable, and support
 ## Migration Outcome
 
 - `src/lib/cli/command.js` is the active Commander-backed compatibility wrapper for all bins that call `command()`.
-- `args` has been removed from `package.json` and `npm-shrinkwrap.json`.
+- `args` has been removed from `package.json` and `package-lock.json`.
 - Root command flow (`src/bin/vip.js`) now dispatches via the shared Commander wrapper again, preserving login gating and subcommand chaining.
 - Temporary side-path wrapper work has been removed (`src/lib/cli/command-commander.ts` deleted).
 
@@ -16,6 +16,7 @@ Goal: remove the abandoned `args` package, keep CLI behavior stable, and support
 - `_opts` controls are still honored: app/env context fetch, confirmation gating, output formatting, wildcard command handling, required positional args.
 - Shared formatting/output and telemetry hooks are still in the wrapper path.
 - Local nested subcommand dispatch still works via sibling executable resolution.
+- Short-option equals normalization: `-x=value` is rewritten to `-x value` for short options expecting values before parsing; boolean short flags are not affected. Tracked option defaults are applied after parsing when the option remains undefined post-parse, preserving default+parser parity.
 
 ## Post-Migration Hardening
 

@@ -3,12 +3,12 @@ import debugLib from 'debug';
 import ejs from 'ejs';
 import { prompt } from 'enquirer';
 import { print } from 'graphql';
-import fetch from 'node-fetch';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import { cp, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import semver from 'semver';
+import { fetch } from 'undici';
 
 import {
 	handleCLIException,
@@ -45,7 +45,7 @@ import {
 	DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
-import { createProxyAgent } from '../http/proxy-agent';
+import { createProxyDispatcher } from '../http/proxy-dispatcher';
 import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
@@ -1041,8 +1041,8 @@ async function maybeUpdateVersion( lando: Lando, slug: string ): Promise< boolea
  */
 export function fetchVersionList(): Promise< WordPressTag[] > {
 	const url = `https://${ DEV_ENVIRONMENT_RAW_GITHUB_HOST }${ DEV_ENVIRONMENT_WORDPRESS_VERSIONS_URI }`;
-	const proxyAgent = createProxyAgent( url );
-	return fetch( url, { agent: proxyAgent ?? undefined } ).then(
+	const proxyDispatcher = createProxyDispatcher( url );
+	return fetch( url, { dispatcher: proxyDispatcher ?? undefined } ).then(
 		res => res.json() as Promise< WordPressTag[] >
 	);
 }

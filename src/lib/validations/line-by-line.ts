@@ -1,7 +1,6 @@
 import debugLib from 'debug';
-import { createReadStream } from 'node:fs';
+import { once } from 'node:events';
 import { open } from 'node:fs/promises';
-import { type Interface, createInterface } from 'node:readline';
 
 import * as exit from '../../lib/cli/exit';
 
@@ -20,7 +19,9 @@ export interface PostLineExecutionProcessingParams {
 	searchReplace?: string | string[];
 }
 
-export async function getReadInterface( filename: string ): Promise< Interface > {
+export async function getReadInterface(
+	filename: string
+): Promise< ReturnType< Awaited< ReturnType< typeof open > >[ 'readLines' ] > > {
 	let fd;
 	try {
 		fd = await open( filename );
@@ -30,9 +31,8 @@ export async function getReadInterface( filename: string ): Promise< Interface >
 		);
 	}
 
-	return createInterface( {
-		input: createReadStream( '', { fd } ),
-		output: undefined,
+	return fd.readLines( {
+		encoding: 'binary',
 	} );
 }
 
@@ -59,8 +59,7 @@ export async function fileLineValidations(
 	} );
 
 	// Block until the processing completes
-	await new Promise( resolve => readInterface.on( 'close', resolve ) );
-	readInterface.close();
+	await once( readInterface, 'close' );
 
 	return Promise.all(
 		validations.map( ( validation: PerLineValidationObject ) => {

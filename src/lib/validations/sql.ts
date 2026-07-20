@@ -1,5 +1,6 @@
 import { stdout as log } from '@wwa/single-line-log';
 import chalk from 'chalk';
+import { once } from 'node:events';
 import path from 'node:path';
 
 import * as exit from '../../lib/cli/exit';
@@ -585,8 +586,7 @@ export const validate = async (
 	} );
 
 	// Block until the processing completes
-	await new Promise( resolve => readInterface.on( 'close', resolve ) );
-	readInterface.close();
+	await once( readInterface, 'close' );
 
 	await postLineExecutionProcessing( {
 		isImport: options.isImport,
