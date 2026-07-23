@@ -169,7 +169,7 @@
     "js-yaml": "^5.0.0",
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-    "node-stream-zip": "1.15.0",
+    "node-stream-zip": "1.16.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
     "semver": "7.8.5",
