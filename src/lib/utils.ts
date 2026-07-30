@@ -79,23 +79,64 @@ export function getAbsolutePath( filePath: string ): string {
 }
 
 /**
- * Parse error object and return probable error.
+ * Extract a message from a raw HTTP response body (Apollo's `ServerError.bodyText`).
  *
- * @param {Error} Error object
- *
- * @return {string|null} Error string when error was found, otherwise null.
+ * The body may be either `{"status":"error","message":"..."}` (e.g. a 413 whose
+ * top-level message is only `Received status code 413`) or a GraphQL
+ * `{"errors":[{"message":"..."}]}` payload.
  */
-export function parseApiError( err: {
+function parseJSONBodyErrorMessage( bodyText: string ): string | null {
+	try {
+		const body = JSON.parse( bodyText ) as {
+			message?: string;
+			errors?: { message?: string }[];
+		};
+
+		if ( body?.errors?.[ 0 ]?.message ) {
+			return body.errors[ 0 ].message;
+		}
+
+		if ( body?.message ) {
+			return body.message;
+		}
+	} catch {
+		// Body wasn't JSON; nothing to extract.
+	}
+
+	return null;
+}
+
+interface ApiError {
+	bodyText?: string;
 	networkError?: { message?: string };
 	message?: string;
 	graphQLErrors?: { message?: string }[];
-} ): string | null {
+}
+
+/**
+ * Parse error object and return probable error.
+ *
+ * Accepts either a known API error shape or an `unknown` value (e.g. a caught
+ * error), so callers do not need to cast before passing it in.
+ */
+export function parseApiError( error: unknown ): string | null {
+	const err = error as ApiError;
+
 	if ( err?.networkError?.message ) {
 		return err?.networkError?.message;
 	}
 
 	if ( err?.graphQLErrors?.[ 0 ]?.message ) {
 		return err.graphQLErrors[ 0 ].message;
+	}
+
+	// Apollo's `ServerError` exposes the raw HTTP response body as `bodyText`,
+	// which often holds a more specific message than the generic top-level one.
+	if ( typeof err?.bodyText === 'string' ) {
+		const bodyTextMessage = parseJSONBodyErrorMessage( err.bodyText );
+		if ( bodyTextMessage ) {
+			return bodyTextMessage;
+		}
 	}
 
 	if ( err?.message ) {
