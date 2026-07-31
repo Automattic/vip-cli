@@ -649,11 +649,21 @@ export class ExportSQLCommand {
 	}
 
 	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {
-		if ( ! fs.existsSync( configFile ) ) {
-			throw new UserError( `Configuration file not found: ${ configFile }` );
+		// Read the file exactly once and derive existence, size, and contents from
+		// that single read to avoid a time-of-check/time-of-use race condition.
+		let fileContents: string;
+		try {
+			fileContents = fs.readFileSync( configFile, 'utf-8' );
+		} catch ( err ) {
+			if ( ( err as NodeJS.ErrnoException )?.code === 'ENOENT' ) {
+				throw new UserError( `Configuration file not found: ${ configFile }` );
+			}
+
+			const errMessage = err instanceof Error ? err.message : 'Unknown error';
+			throw new UserError( `Error reading configuration file: ${ configFile } - ${ errMessage }` );
 		}
 
-		const { size } = fs.statSync( configFile );
+		const size = Buffer.byteLength( fileContents, 'utf-8' );
 		if ( size > MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES ) {
 			throw new UserError(
 				`Configuration file is too large (${ formatBytes(
@@ -665,7 +675,7 @@ export class ExportSQLCommand {
 		}
 
 		try {
-			return JSON.parse( fs.readFileSync( configFile, 'utf-8' ) ) as DBLiveCopyConfig;
+			return JSON.parse( fileContents ) as DBLiveCopyConfig;
 		} catch ( err ) {
 			const errMessage = err instanceof Error ? err.message : 'Unknown error';
 			if ( err instanceof SyntaxError ) {
