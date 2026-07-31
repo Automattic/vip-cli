@@ -649,34 +649,27 @@ export class ExportSQLCommand {
 	}
 
 	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {
-		// Read the file exactly once and derive existence, size, and contents from
-		// that single read to avoid a time-of-check/time-of-use race condition.
-		let fileContents: string;
 		try {
-			fileContents = fs.readFileSync( configFile, 'utf-8' );
-		} catch ( err ) {
-			if ( ( err as NodeJS.ErrnoException )?.code === 'ENOENT' ) {
-				throw new UserError( `Configuration file not found: ${ configFile }` );
+			// Read the file once to avoid a check-then-use race condition.
+			const fileContents = fs.readFileSync( configFile, 'utf-8' );
+
+			const size = Buffer.byteLength( fileContents );
+			if ( size > MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES ) {
+				throw new UserError(
+					`Configuration file is too large (${ formatBytes(
+						size
+					) }); the maximum allowed size is ${ formatBytes(
+						MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES
+					) }. For large or complex exports, use the \`--wpcli-command\` option instead.`
+				);
 			}
 
-			const errMessage = err instanceof Error ? err.message : 'Unknown error';
-			throw new UserError( `Error reading configuration file: ${ configFile } - ${ errMessage }` );
-		}
-
-		const size = Buffer.byteLength( fileContents, 'utf-8' );
-		if ( size > MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES ) {
-			throw new UserError(
-				`Configuration file is too large (${ formatBytes(
-					size
-				) }); the maximum allowed size is ${ formatBytes(
-					MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES
-				) }. For large or complex exports, use the \`--wpcli-command\` option instead.`
-			);
-		}
-
-		try {
 			return JSON.parse( fileContents ) as DBLiveCopyConfig;
 		} catch ( err ) {
+			if ( err instanceof UserError ) {
+				throw err;
+			}
+
 			const errMessage = err instanceof Error ? err.message : 'Unknown error';
 			if ( err instanceof SyntaxError ) {
 				throw new UserError(
