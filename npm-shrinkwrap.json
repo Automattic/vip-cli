@@ -31,7 +31,7 @@
         "js-yaml": "^5.0.0",
         "jwt-decode": "4.0.0",
         "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-        "node-stream-zip": "1.15.0",
+        "node-stream-zip": "1.16.0",
         "open": "^11.0.0",
         "proxy-from-env": "^2.0.0",
         "semver": "7.8.5",
@@ -12223,9 +12223,9 @@
       "license": "MIT"
     },
     "node_modules/node-stream-zip": {
-      "version": "1.15.0",
-      "resolved": "https://registry.npmjs.org/node-stream-zip/-/node-stream-zip-1.15.0.tgz",
-      "integrity": "sha512-LN4fydt9TqhZhThkZIVQnF9cwjU3qmUH9h78Mx/K7d3VvfRqqwthLwJEUOEL0QPZ0XQmNN7be5Ggit5+4dq3Bw==",
+      "version": "1.16.0",
+      "resolved": "https://registry.npmjs.org/node-stream-zip/-/node-stream-zip-1.16.0.tgz",
+      "integrity": "sha512-ObaRrRoR8T68wF6suxHd7R4XQNamij6ZQHrwG7Dx1D2zeHcDNLsIOBcWrIwtDm7AsCXBguaPHgXhcjxDa2szrg==",
       "license": "MIT",
       "engines": {
         "node": ">=0.12.0"
