@@ -186,6 +186,7 @@
   "publishConfig": {
     "access": "public"
   },
+  "bundleDependencies": true,
   "allowScripts": {
     "ssh2@1.17.0": true,
     "@github/keytar@7.10.6": true,
