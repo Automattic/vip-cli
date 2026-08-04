@@ -193,7 +193,7 @@
     "ssh2@1.17.0": true,
     "@github/keytar@7.10.6": true,
     "cpu-features@0.0.10": true,
-    "protobufjs@7.6.1": true,
+    "protobufjs@7.6.5": true,
     "unrs-resolver@1.11.1": true,
     "esbuild@0.28.1": true
   }
