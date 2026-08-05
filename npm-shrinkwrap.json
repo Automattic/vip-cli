@@ -10,7 +10,7 @@
       "hasInstallScript": true,
       "license": "MIT",
       "dependencies": {
-        "@apollo/client": "4.2.5",
+        "@apollo/client": "4.2.9",
         "@automattic/vip-search-replace": "^2.0.0",
         "@json2csv/plainjs": "^7.0.3",
         "@wwa/single-line-log": "^1.1.4",
@@ -149,9 +149,9 @@
       }
     },
     "node_modules/@apollo/client": {
-      "version": "4.2.5",
-      "resolved": "https://registry.npmjs.org/@apollo/client/-/client-4.2.5.tgz",
-      "integrity": "sha512-1VyJ4eAriUFCfK2Btc09PQtxxgrnmoO1Dbg2A1O7MQbsK1ri5GSWBzc7/P6A0KJrkWll/Ojf9HC6ptIET8yv3g==",
+      "version": "4.2.9",
+      "resolved": "https://registry.npmjs.org/@apollo/client/-/client-4.2.9.tgz",
+      "integrity": "sha512-miiAhuhnjZjdYvSYNckvBGHyM8N4McGyrDyf7yIMDHzpt85FlS7k7JgixHqkAy1+MXGl9vYlTDfKS7alEDGbvQ==",
       "license": "MIT",
       "dependencies": {
         "@graphql-typed-document-node/core": "^3.1.1",
