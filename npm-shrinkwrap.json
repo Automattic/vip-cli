@@ -4142,19 +4142,19 @@
       }
     },
     "node_modules/@json2csv/formatters": {
-      "version": "7.0.7",
-      "resolved": "https://registry.npmjs.org/@json2csv/formatters/-/formatters-7.0.7.tgz",
-      "integrity": "sha512-Sm0F11FKnTouBVYqW0Sp+/P7ECapfAEw0p0L6lz0z6q3I6CVQjFnQ8m20g3KlJvYq+y4G9m56QZHAWiUxIJlRA==",
+      "version": "7.0.8",
+      "resolved": "https://registry.npmjs.org/@json2csv/formatters/-/formatters-7.0.8.tgz",
+      "integrity": "sha512-YYpeZF7qKSX55FMYEl0m7Hn188l050k171/KwDHSMPHLHvWxDbzjmH1qVfXyV7XO7MMpDx1P7xksd/jXqlLxDw==",
       "license": "MIT"
     },
     "node_modules/@json2csv/plainjs": {
-      "version": "7.0.7",
-      "resolved": "https://registry.npmjs.org/@json2csv/plainjs/-/plainjs-7.0.7.tgz",
-      "integrity": "sha512-aJWN+HrOp1YQaA/fnYtTDlc24ZNRfUlu5ercUPyggxE8tq90Pd88dCdX/aj+BRiLB+/6UZyRbCIkFj0/iBPMgw==",
+      "version": "7.0.8",
+      "resolved": "https://registry.npmjs.org/@json2csv/plainjs/-/plainjs-7.0.8.tgz",
+      "integrity": "sha512-bxsdb7tcHFyq6SGvDdHrxgSLxc8ScNyX+6B1aT+Anp8PEieZIenf6lPIJ2CnB4MQkrNANfFj6mXJlK9f8Bh5wg==",
       "license": "MIT",
       "dependencies": {
-        "@json2csv/formatters": "^7.0.7",
-        "@streamparser/json": "^0.0.22"
+        "@json2csv/formatters": "^7.0.8",
+        "@streamparser/json": "^0.0.23"
       }
     },
     "node_modules/@napi-rs/wasm-runtime": {
@@ -4409,9 +4409,9 @@
       "license": "MIT"
     },
     "node_modules/@streamparser/json": {
-      "version": "0.0.22",
-      "resolved": "https://registry.npmjs.org/@streamparser/json/-/json-0.0.22.tgz",
-      "integrity": "sha512-b6gTSBjJ8G8SuO3Gbbj+zXbVx8NSs1EbpbMKpzGLWMdkR+98McH9bEjSz3+0mPJf68c5nxa3CrJHp5EQNXM6zQ==",
+      "version": "0.0.23",
+      "resolved": "https://registry.npmjs.org/@streamparser/json/-/json-0.0.23.tgz",
+      "integrity": "sha512-givIVGxVGwP2oh5wiGdjQBKLZAS6LMkvnOxKybKTZDWP9LCO20eAzAL8OkUg8iR7u28cB2Ti7lFfLHnAAZGN6A==",
       "license": "MIT"
     },
     "node_modules/@tybys/wasm-util": {
