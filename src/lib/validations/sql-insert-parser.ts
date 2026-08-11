@@ -102,19 +102,10 @@ export const getInsertStatementInfo = ( line: string ): InsertStatementInfo | un
 	};
 };
 
-export const isWordPressOptionsTable = ( tableName: string | undefined ): boolean => {
-	const normalizedTableName = tableName?.toLowerCase() ?? '';
-	if ( 'wp_options' === normalizedTableName ) {
-		return true;
-	}
-
-	if ( ! normalizedTableName.startsWith( 'wp_' ) || ! normalizedTableName.endsWith( '_options' ) ) {
-		return false;
-	}
-
-	const tableId = normalizedTableName.slice( 'wp_'.length, -'_options'.length );
-	return tableId.length > 0 && [ ...tableId ].every( char => char >= '0' && char <= '9' );
-};
+export const isWordPressOptionsTable = ( tableName: string | undefined ): boolean =>
+	tableName
+		? /^wp_\d+_options$/i.test( tableName ) || 'wp_options' === tableName.toLowerCase()
+		: false;
 
 export const checkRequiresOptionsInsertContext = ( checkKey: string ): boolean => {
 	return 'siteHomeUrl' === checkKey || 'siteHomeUrlLando' === checkKey;
