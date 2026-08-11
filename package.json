@@ -88,16 +88,13 @@
     "build:watch": "babel src -d dist --watch --source-maps --extensions=\".js,.ts\"",
     "format": "npm run cmd:format -- --write",
     "format:check": "npm run cmd:format -- --check",
-    "check:shrinkwrap": "node ./helpers/sync-shrinkwrap.js --check",
-    "sync:shrinkwrap": "node ./helpers/sync-shrinkwrap.js",
     "jest": "jest --testPathIgnorePatterns __tests__/devenv-e2e/",
     "jest:debug": "NODE_ENV=test node --inspect-brk=0.0.0.0:9252 ./node_modules/.bin/jest --forceExit --runInBand --testTimeout=100000000",
     "lint": "npm run cmd:lint .",
     "lint:fix": "npm run cmd:lint . -- --fix",
     "publish-please": "publish-please",
     "prepublishOnly": "node ./helpers/prepublishOnly.js",
-    "smoke:release": "node ./helpers/release-smoke-test.js",
-    "version": "npm run sync:shrinkwrap"
+    "smoke:release": "node ./helpers/release-smoke-test.js"
   },
   "repository": {
     "type": "git",
@@ -142,6 +139,7 @@
     "@types/ssh2": "^1.15.4",
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
+    "esbuild": "^0.28.0",
     "jest": "^30.0.0",
     "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
@@ -161,10 +159,10 @@
     "debug": "4.4.3",
     "ejs": "^6.0.1",
     "enquirer": "2.4.1",
-    "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
     "graphql": "17.0.2",
     "graphql-tag": "2.12.7",
+    "graphql-ws": "^6.2.0",
     "https-proxy-agent": "^9.0.0",
     "js-yaml": "^5.0.0",
     "jwt-decode": "4.0.0",
@@ -172,6 +170,7 @@
     "node-stream-zip": "1.16.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
+    "rxjs": "^7.8.2",
     "semver": "7.8.5",
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
@@ -189,6 +188,7 @@
   "publishConfig": {
     "access": "public"
   },
+  "bundleDependencies": true,
   "allowScripts": {
     "ssh2@1.17.0": true,
     "@github/keytar@7.10.6": true,
