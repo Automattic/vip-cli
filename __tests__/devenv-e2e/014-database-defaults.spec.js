@@ -5,14 +5,21 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { CliTest } from './helpers/cli-test';
-import { vipDevEnvExec, vipDevEnvStart } from './helpers/commands';
+import {
+	vipDevEnvCreate,
+	vipDevEnvExec,
+	vipDevEnvStart,
+	vipDevEnvUpdate,
+} from './helpers/commands';
 import { killProjectContainers } from './helpers/docker-utils';
 import {
+	checkEnvExists,
 	createAndStartEnvironment,
 	destroyEnvironment,
 	getProjectSlug,
 	prepareEnvironment,
 } from './helpers/utils';
+import { DEV_ENVIRONMENT_VERSION } from '../../src/lib/constants/dev-environment';
 
 jest.setTimeout( 600 * 1000 ).retryTimes( 1, { logErrorsBeforeRetry: true } );
 
@@ -26,6 +33,8 @@ const STOCK_REDO_LOG_CAPACITY = 104857600; // ~100M
 const OLD_VERSION = '2.3.3';
 const OLD_DB_COMMAND =
 	'docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --mysql-native-password=ON';
+const OLD_MARIADB_COMMAND =
+	'docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M';
 
 describe( 'dev-env database performance defaults', () => {
 	/** @type {CliTest} */
@@ -38,17 +47,20 @@ describe( 'dev-env database performance defaults', () => {
 	let docker;
 	/** @type {string} */
 	let slug;
+	/** @type {string|undefined} */
+	let mariaDbSlug;
 
 	/**
-	 * @param {string} query
+	 * @param {string} query       SQL query
+	 * @param {string} projectSlug Environment slug
 	 */
-	const dbQuery = async query => {
+	const dbQuery = async ( query, projectSlug = slug ) => {
 		const result = await cliTest.spawn(
 			[
 				process.argv[ 0 ],
 				vipDevEnvExec,
 				'--slug',
-				slug,
+				projectSlug,
 				'--quiet',
 				'--',
 				'wp',
@@ -93,11 +105,28 @@ describe( 'dev-env database performance defaults', () => {
 		await createAndStartEnvironment( cliTest, slug, env );
 	} );
 
+	/**
+	 * @param {string|undefined} projectSlug Environment slug
+	 */
+	const destroyProject = async projectSlug => {
+		if ( ! projectSlug ) {
+			return;
+		}
+
+		try {
+			if ( await checkEnvExists( projectSlug ) ) {
+				await destroyEnvironment( cliTest, projectSlug, env );
+			}
+		} finally {
+			await killProjectContainers( docker, projectSlug );
+		}
+	};
+
 	afterAll( async () => {
 		try {
-			await destroyEnvironment( cliTest, slug, env );
+			await destroyProject( slug );
 		} finally {
-			await killProjectContainers( docker, slug );
+			await destroyProject( mariaDbSlug );
 		}
 	} );
 
@@ -155,17 +184,19 @@ describe( 'dev-env database performance defaults', () => {
 		// Starting with the current CLI must detect the old version, re-render the
 		// template, and rebuild the environment without prompting.
 		const result = await cliTest.spawn(
-			[ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '-w' ],
+			[ process.argv[ 0 ], vipDevEnvStart, '--slug', slug, '--skip-rebuild', '-w' ],
 			{ env },
 			true
 		);
 		expect( result.rc ).toBe( 0 );
 		expect( result.stdout ).toContain( `Current local environment version is: ${ OLD_VERSION }` );
-		expect( result.stdout ).toContain( 'Local environment version updated to:' );
+		expect( result.stdout ).toContain(
+			`Local environment version updated to: ${ DEV_ENVIRONMENT_VERSION }`
+		);
 		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
 
 		const updatedInstanceData = JSON.parse( await readFile( instanceDataPath, 'utf8' ) );
-		expect( updatedInstanceData.version ).not.toBe( OLD_VERSION );
+		expect( updatedInstanceData.version ).toBe( DEV_ENVIRONMENT_VERSION );
 
 		// The tuned defaults apply to the pre-existing data directory...
 		await assertTunedDatabaseDefaults();
@@ -183,6 +214,119 @@ describe( 'dev-env database performance defaults', () => {
 				'option',
 				'get',
 				'upgrade_e2e_marker',
+			],
+			{ env },
+			true
+		);
+		expect( markerValue.rc ).toBe( 0 );
+		expect( markerValue.stdout.trim() ).toBe( 'survived' );
+	} );
+
+	it( 'should upgrade an existing MariaDB 10.3 environment without losing data', async () => {
+		mariaDbSlug = getProjectSlug();
+		const instancePath = path.join( tmpPath, 'vip', 'dev-environment', mariaDbSlug );
+		const instanceDataPath = path.join( instancePath, 'instance_data.json' );
+		const landoFilePath = path.join( instancePath, '.lando.yml' );
+
+		let result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvCreate, '--slug', mariaDbSlug ],
+			{ env },
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+
+		const instanceData = JSON.parse( await readFile( instanceDataPath, 'utf8' ) );
+		instanceData.mariadb = '10.3';
+		await writeFile( instanceDataPath, JSON.stringify( instanceData, null, 2 ) );
+
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvUpdate, '--slug', mariaDbSlug ],
+			{ env },
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+
+		const landoFile = await readFile( landoFilePath, 'utf8' );
+		const oldLandoFile = landoFile.replace(
+			/command: docker-entrypoint\.sh mysqld[^\n]*/,
+			`command: ${ OLD_MARIADB_COMMAND }`
+		);
+		expect( oldLandoFile ).not.toBe( landoFile );
+		await writeFile( landoFilePath, oldLandoFile );
+
+		// Initialize the data directory with the old MariaDB command before
+		// exercising the version-triggered rebuild.
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvStart, '--slug', mariaDbSlug, '-w' ],
+			{ env },
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+
+		const marker = await cliTest.spawn(
+			[
+				process.argv[ 0 ],
+				vipDevEnvExec,
+				'--slug',
+				mariaDbSlug,
+				'--quiet',
+				'--',
+				'wp',
+				'option',
+				'add',
+				'mariadb_upgrade_e2e_marker',
+				'survived',
+			],
+			{ env },
+			true
+		);
+		expect( marker.rc ).toBe( 0 );
+
+		const oldInstanceData = JSON.parse( await readFile( instanceDataPath, 'utf8' ) );
+		oldInstanceData.version = OLD_VERSION;
+		await writeFile( instanceDataPath, JSON.stringify( oldInstanceData, null, 2 ) );
+
+		result = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvStart, '--slug', mariaDbSlug, '--skip-rebuild', '-w' ],
+			{ env },
+			true
+		);
+		expect( result.rc ).toBe( 0 );
+		expect( result.stdout ).toContain( `Current local environment version is: ${ OLD_VERSION }` );
+		expect( result.stdout ).toContain(
+			`Local environment version updated to: ${ DEV_ENVIRONMENT_VERSION }`
+		);
+		expect( result.stdout ).toMatch( /STATUS\s+UP/u );
+
+		const updatedInstanceData = JSON.parse( await readFile( instanceDataPath, 'utf8' ) );
+		expect( updatedInstanceData.version ).toBe( DEV_ENVIRONMENT_VERSION );
+		expect( updatedInstanceData.mariadb ).toBe( '10.3' );
+
+		const row = await dbQuery(
+			'SELECT @@log_bin, @@innodb_buffer_pool_size, @@innodb_log_file_size, @@innodb_log_files_in_group, @@innodb_flush_log_at_trx_commit',
+			mariaDbSlug
+		);
+		const [ logBin, bufferPoolSize, logFileSize, logFileCount, flushMode ] = row
+			.split( /\s+/ )
+			.map( Number );
+		expect( logBin ).toBe( 0 );
+		expect( bufferPoolSize ).toBeGreaterThan( STOCK_BUFFER_POOL_SIZE );
+		expect( logFileSize * logFileCount ).toBeGreaterThan( STOCK_REDO_LOG_CAPACITY );
+		expect( flushMode ).not.toBe( 1 );
+
+		const markerValue = await cliTest.spawn(
+			[
+				process.argv[ 0 ],
+				vipDevEnvExec,
+				'--slug',
+				mariaDbSlug,
+				'--quiet',
+				'--',
+				'wp',
+				'option',
+				'get',
+				'mariadb_upgrade_e2e_marker',
 			],
 			{ env },
 			true
