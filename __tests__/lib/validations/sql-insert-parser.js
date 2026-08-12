@@ -393,22 +393,59 @@ describe( 'sql-insert-parser', () => {
 	} );
 
 	describe( 'stripSqlCommentsOutsideQuotedStrings', () => {
-		it( 'returns a plain line without comments unchanged', () => {
-			expect( stripSqlCommentsOutsideQuotedStrings( 'foo bar' ) ).toBe( 'foo bar' );
-		} );
-
-		it( 'strips a -- line comment and trims trailing whitespace before it', () => {
-			expect( stripSqlCommentsOutsideQuotedStrings( 'foo -- comment' ) ).toBe( 'foo' );
-		} );
-
-		it( 'strips a # line comment', () => {
-			expect( stripSqlCommentsOutsideQuotedStrings( 'foo # comment' ) ).toBe( 'foo' );
-		} );
-
-		it( 'strips a /* ... */ block comment while preserving surrounding text', () => {
-			const result = stripSqlCommentsOutsideQuotedStrings( 'foo /* block */ bar' );
-			expect( result ).not.toContain( 'block' );
-			expect( result ).toBe( 'foo  bar' );
+		it.each( [
+			[ 'returns a plain line without comments unchanged', 'foo bar', 'foo bar' ],
+			[
+				'strips a -- line comment and trims trailing whitespace before it',
+				'foo -- comment',
+				'foo',
+			],
+			[ 'strips a # line comment', 'foo # comment', 'foo' ],
+			[
+				'strips a /* ... */ block comment while preserving surrounding text',
+				'foo /* block */ bar',
+				'foo  bar',
+			],
+			[
+				'treats an unterminated /* as the start of a comment that runs to end of line',
+				'foo /* unterminated',
+				'foo',
+			],
+			[
+				'does not treat -- inside single-quoted strings as a comment',
+				"'foo -- inside' bar",
+				"'foo -- inside' bar",
+			],
+			[
+				'does not treat block-comment markers inside single-quoted strings as comments',
+				"'before /* inside */ after'",
+				"'before /* inside */ after'",
+			],
+			[
+				'does not treat # inside single-quoted strings as a comment',
+				"'foo # inside' bar",
+				"'foo # inside' bar",
+			],
+			[
+				'does not treat -- inside double-quoted strings as a comment',
+				'"foo -- not a comment"',
+				'"foo -- not a comment"',
+			],
+			[
+				'does not treat block-comment markers inside double-quoted strings as comments',
+				'"before /* inside */ after"',
+				'"before /* inside */ after"',
+			],
+			[ "handles a doubled '' SQL quote escape inside a string", "'it''s'", "'it''s'" ],
+			[ 'handles a backslash-escaped quote inside a string', "'it\\'s'", "'it\\'s'" ],
+			[
+				'does not treat -- without trailing whitespace or end-of-string as a comment',
+				'foo--bar',
+				'foo--bar',
+			],
+			[ 'returns the empty string unchanged', '', '' ],
+		] )( '%s', ( _name, input, expected ) => {
+			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( expected );
 		} );
 
 		it( 'carries block-comment state across lines when a state object is provided', () => {
@@ -427,53 +464,6 @@ describe( 'sql-insert-parser', () => {
 
 			expect( stripSqlCommentsOutsideQuotedStrings( '*/ bar', state ) ).toBe( 'bar' );
 			expect( state ).toEqual( { inBlockComment: false } );
-		} );
-
-		it( 'treats an unterminated /* as the start of a comment that runs to end of line', () => {
-			expect( stripSqlCommentsOutsideQuotedStrings( 'foo /* unterminated' ) ).toBe( 'foo' );
-		} );
-
-		it( 'does not treat -- inside single-quoted strings as a comment', () => {
-			const input = "'foo -- inside' bar";
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( 'does not treat block-comment markers inside single-quoted strings as comments', () => {
-			const input = "'before /* inside */ after'";
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( 'does not treat # inside single-quoted strings as a comment', () => {
-			const input = "'foo # inside' bar";
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( 'does not treat -- inside double-quoted strings as a comment', () => {
-			const input = '"foo -- not a comment"';
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( 'does not treat block-comment markers inside double-quoted strings as comments', () => {
-			const input = '"before /* inside */ after"';
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( "handles a doubled '' SQL quote escape inside a string", () => {
-			const input = "'it''s'";
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( 'handles a backslash-escaped quote inside a string', () => {
-			const input = "'it\\'s'";
-			expect( stripSqlCommentsOutsideQuotedStrings( input ) ).toBe( input );
-		} );
-
-		it( 'does not treat -- without trailing whitespace or end-of-string as a comment', () => {
-			expect( stripSqlCommentsOutsideQuotedStrings( 'foo--bar' ) ).toBe( 'foo--bar' );
-		} );
-
-		it( 'returns the empty string unchanged', () => {
-			expect( stripSqlCommentsOutsideQuotedStrings( '' ) ).toBe( '' );
 		} );
 	} );
 
