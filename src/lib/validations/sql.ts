@@ -352,7 +352,7 @@ const checks: Checks = {
 		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
 	},
 	siteHomeUrl: {
-		matcher: `['"](siteurl|home)['"]\\s*,\\s*['"]([^'"]*)['"]`,
+		matcher: String.raw`['"](siteurl|home)['"]\s*,\s*['"]([^'"]*)['"]`,
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] + ' ' + results[ 2 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
@@ -361,7 +361,7 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: `['"](siteurl|home)['"]\\s*,\\s*['"]([^'"]+)['"]`,
+		matcher: String.raw`['"](siteurl|home)['"]\s*,\s*['"]([^'"]+)['"]`,
 		matchHandler: ( lineNumber, results, expectedDomain ) => {
 			let foundDomain = results[ 2 ];
 			if ( ! /^https?:\/\//i.test( foundDomain ) ) {
