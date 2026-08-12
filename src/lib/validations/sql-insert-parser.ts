@@ -170,7 +170,7 @@ export const findValuesKeyword = ( line: string ): SqlValuesKeywordMatch | undef
 	for ( let index = 0; index < line.length; index += 1 ) {
 		const segmentEndIndex = skipSqlDelimitedSegment( line, index );
 		if ( undefined !== segmentEndIndex ) {
-			index = segmentEndIndex;
+			index = segmentEndIndex; // NOSONAR
 			continue;
 		}
 
