@@ -1,6 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import Docker from 'dockerode';
-import nock from 'nock';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -40,6 +39,9 @@ describe( 'dev-env database performance defaults', () => {
 	/** @type {string} */
 	let slug;
 
+	/**
+	 * @param {string} query
+	 */
 	const dbQuery = async query => {
 		const result = await cliTest.spawn(
 			[
@@ -79,9 +81,6 @@ describe( 'dev-env database performance defaults', () => {
 	};
 
 	beforeAll( async () => {
-		nock.cleanAll();
-		nock.enableNetConnect();
-
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
@@ -103,7 +102,6 @@ describe( 'dev-env database performance defaults', () => {
 	} );
 
 	afterAll( () => rm( tmpPath, { recursive: true, force: true } ) );
-	afterAll( () => nock.restore() );
 
 	// eslint-disable-next-line jest/expect-expect -- assertions live in assertTunedDatabaseDefaults
 	it( 'should run the database with tuned (non-stock) defaults', async () => {
