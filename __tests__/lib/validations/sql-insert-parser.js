@@ -45,62 +45,63 @@ describe( 'sql-insert-parser', () => {
 	} );
 
 	describe( 'skipSqlWhitespace', () => {
-		it( 'returns startIndex when the current character is non-whitespace', () => {
-			expect( skipSqlWhitespace( 'abc', 0 ) ).toBe( 0 );
-			expect( skipSqlWhitespace( 'abc', 1 ) ).toBe( 1 );
-		} );
-
-		it( 'skips a run of plain spaces', () => {
-			expect( skipSqlWhitespace( '   abc', 0 ) ).toBe( 3 );
-		} );
-
-		it( 'skips a run of mixed whitespace including tabs and newlines', () => {
-			expect( skipSqlWhitespace( ' \t\n abc', 0 ) ).toBe( 4 );
-		} );
-
-		it( 'returns line.length when whitespace runs to end of string', () => {
-			const line = '   \t\n';
-			expect( skipSqlWhitespace( line, 0 ) ).toBe( line.length );
-		} );
-
-		it( 'returns startIndex when startIndex is at or past end of line', () => {
-			expect( skipSqlWhitespace( 'abc', 3 ) ).toBe( 3 );
-			expect( skipSqlWhitespace( 'abc', 10 ) ).toBe( 10 );
+		it.each( [
+			[ 'returns startIndex when the current character is non-whitespace', 'abc', 0, 0 ],
+			[ 'returns startIndex when the current character is non-whitespace', 'abc', 1, 1 ],
+			[ 'skips a run of plain spaces', '   abc', 0, 3 ],
+			[ 'skips a run of mixed whitespace including tabs and newlines', ' \t\n abc', 0, 4 ],
+			[
+				'returns line.length when whitespace runs to end of string',
+				'   \t\n',
+				0,
+				'   \t\n'.length,
+			],
+			[ 'returns startIndex when startIndex is at or past end of line', 'abc', 3, 3 ],
+			[ 'returns startIndex when startIndex is at or past end of line', 'abc', 10, 10 ],
+		] )( '%s', ( _name, line, startIndex, expected ) => {
+			expect( skipSqlWhitespace( line, startIndex ) ).toBe( expected );
 		} );
 	} );
 
 	describe( 'readSqlIdentifier', () => {
-		it( 'returns undefined when only whitespace remains', () => {
-			expect( readSqlIdentifier( '   ', 0 ) ).toBeUndefined();
-		} );
-
-		it( 'reads a bare identifier and returns endIndex past its last char', () => {
-			expect( readSqlIdentifier( 'wp_options foo', 0 ) ).toEqual( {
-				name: 'wp_options',
-				endIndex: 10,
-			} );
-		} );
-
-		it( 'reads a backtick-quoted identifier and returns endIndex past the closing backtick', () => {
-			expect( readSqlIdentifier( '`my db`.tbl', 0 ) ).toEqual( {
-				name: 'my db',
-				endIndex: 7,
-			} );
-		} );
-
-		it( 'returns undefined when an opening backtick is not closed', () => {
-			expect( readSqlIdentifier( '`unterminated', 0 ) ).toBeUndefined();
-		} );
-
-		it( 'returns undefined when the next non-whitespace char is non-identifier punctuation', () => {
-			expect( readSqlIdentifier( '(foo)', 0 ) ).toBeUndefined();
-		} );
-
-		it( 'skips leading whitespace before reading the identifier', () => {
-			expect( readSqlIdentifier( '   wp_options', 0 ) ).toEqual( {
-				name: 'wp_options',
-				endIndex: 13,
-			} );
+		it.each( [
+			[ 'returns undefined when only whitespace remains', '   ', 0, undefined ],
+			[
+				'reads a bare identifier and returns endIndex past its last char',
+				'wp_options foo',
+				0,
+				{
+					name: 'wp_options',
+					endIndex: 10,
+				},
+			],
+			[
+				'reads a backtick-quoted identifier and returns endIndex past the closing backtick',
+				'`my db`.tbl',
+				0,
+				{
+					name: 'my db',
+					endIndex: 7,
+				},
+			],
+			[ 'returns undefined when an opening backtick is not closed', '`unterminated', 0, undefined ],
+			[
+				'returns undefined when the next non-whitespace char is non-identifier punctuation',
+				'(foo)',
+				0,
+				undefined,
+			],
+			[
+				'skips leading whitespace before reading the identifier',
+				'   wp_options',
+				0,
+				{
+					name: 'wp_options',
+					endIndex: 13,
+				},
+			],
+		] )( '%s', ( _name, line, startIndex, expected ) => {
+			expect( readSqlIdentifier( line, startIndex ) ).toEqual( expected );
 		} );
 	} );
 
@@ -109,154 +110,125 @@ describe( 'sql-insert-parser', () => {
 			expect( getInsertStatementInfo( 'SELECT * FROM wp_options' ) ).toBeUndefined();
 		} );
 
-		it( 'recognizes a plain INSERT INTO statement', () => {
-			const line = 'INSERT INTO wp_options (option_name) VALUES ("home")';
-			expect( getInsertStatementInfo( line ) ).toEqual( {
-				tableName: 'wp_options',
-				tableEndIndex: 'INSERT INTO wp_options'.length,
-			} );
-		} );
-
-		it( 'recognizes REPLACE INTO statements', () => {
-			const line = 'REPLACE INTO wp_options (option_name) VALUES ("home")';
-			expect( getInsertStatementInfo( line ) ).toEqual( {
-				tableName: 'wp_options',
-				tableEndIndex: 'REPLACE INTO wp_options'.length,
-			} );
-		} );
-
-		it( 'skips a single modifier before INTO', () => {
-			const result = getInsertStatementInfo(
-				'INSERT IGNORE INTO wp_options (option_name) VALUES ("home")'
-			);
-			expect( result?.tableName ).toBe( 'wp_options' );
-		} );
-
-		it( 'skips chained modifiers before INTO', () => {
-			const result = getInsertStatementInfo(
-				'INSERT LOW_PRIORITY IGNORE INTO wp_options (option_name) VALUES ("home")'
-			);
-			expect( result?.tableName ).toBe( 'wp_options' );
-		} );
-
-		it( 'recognizes DELAYED and HIGH_PRIORITY modifiers', () => {
-			expect(
-				getInsertStatementInfo( 'INSERT DELAYED INTO wp_options VALUES ("home")' )?.tableName
-			).toBe( 'wp_options' );
-			expect(
-				getInsertStatementInfo( 'INSERT HIGH_PRIORITY INTO wp_options VALUES ("home")' )?.tableName
-			).toBe( 'wp_options' );
-		} );
-
-		it( 'handles missing INTO keyword by treating the next identifier as the table', () => {
-			const line = 'INSERT wp_options VALUES ("home")';
-			expect( getInsertStatementInfo( line ) ).toEqual( {
-				tableName: 'wp_options',
-				tableEndIndex: 17,
-			} );
-		} );
-
-		it( 'resolves a qualified db.table reference to the table identifier', () => {
-			const result = getInsertStatementInfo(
-				'INSERT INTO db.wp_options (option_name) VALUES ("home")'
-			);
-			expect( result?.tableName ).toBe( 'wp_options' );
-		} );
-
-		it( 'resolves a backtick-qualified `db`.`table` reference to the table identifier', () => {
-			const result = getInsertStatementInfo(
-				'INSERT INTO `db`.`wp_options` (option_name) VALUES ("home")'
-			);
-			expect( result?.tableName ).toBe( 'wp_options' );
-		} );
-
-		it( 'returns table info when the line ends right after the table name', () => {
-			const line = 'INSERT INTO wp_options';
-			expect( getInsertStatementInfo( line ) ).toEqual( {
-				tableName: 'wp_options',
-				tableEndIndex: line.length,
-			} );
-		} );
-
-		it( 'is case-insensitive on the INSERT INTO keywords', () => {
-			expect(
-				getInsertStatementInfo( 'insert into wp_options (option_name) VALUES ("home")' )?.tableName
-			).toBe( 'wp_options' );
+		it.each( [
+			[
+				'INSERT INTO wp_options (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT INTO wp_options'.length,
+				},
+			],
+			[
+				'REPLACE INTO wp_options (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'REPLACE INTO wp_options'.length,
+				},
+			],
+			[
+				'INSERT IGNORE INTO wp_options (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT IGNORE INTO wp_options'.length,
+				},
+			],
+			[
+				'INSERT LOW_PRIORITY IGNORE INTO wp_options (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT LOW_PRIORITY IGNORE INTO wp_options'.length,
+				},
+			],
+			[
+				'INSERT DELAYED INTO wp_options VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT DELAYED INTO wp_options'.length,
+				},
+			],
+			[
+				'INSERT HIGH_PRIORITY INTO wp_options VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT HIGH_PRIORITY INTO wp_options'.length,
+				},
+			],
+			[
+				'INSERT INTO db.wp_options (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT INTO db.wp_options'.length,
+				},
+			],
+			[
+				'INSERT INTO `db`.`wp_options` (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT INTO `db`.`wp_options`'.length,
+				},
+			],
+			[
+				'insert into wp_options (option_name) VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'insert into wp_options'.length,
+				},
+			],
+			[
+				'INSERT wp_options VALUES ("home")',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 17,
+				},
+			],
+			[
+				'INSERT INTO wp_options',
+				{
+					tableName: 'wp_options',
+					tableEndIndex: 'INSERT INTO wp_options'.length,
+				},
+			],
+		] )( 'resolves table info in %s', ( line, expected ) => {
+			expect( getInsertStatementInfo( line ) ).toEqual( expected );
 		} );
 	} );
 
 	describe( 'isWordPressOptionsTable', () => {
-		it( 'returns true for the canonical wp_options table', () => {
-			expect( isWordPressOptionsTable( 'wp_options' ) ).toBe( true );
-		} );
-
-		it( 'is case-insensitive on the table name', () => {
-			expect( isWordPressOptionsTable( 'WP_Options' ) ).toBe( true );
-		} );
-
-		it( 'returns true for multisite wp_<id>_options variants', () => {
-			expect( isWordPressOptionsTable( 'wp_2_options' ) ).toBe( true );
-			expect( isWordPressOptionsTable( 'wp_12_options' ) ).toBe( true );
-		} );
-
-		it( 'returns false when the site id segment is empty', () => {
-			expect( isWordPressOptionsTable( 'wp__options' ) ).toBe( false );
-		} );
-
-		it( 'returns false when the site id segment is non-numeric', () => {
-			expect( isWordPressOptionsTable( 'wp_a_options' ) ).toBe( false );
-		} );
-
-		it( 'returns false when the site id segment mixes letters and digits', () => {
-			expect( isWordPressOptionsTable( 'wp_2a_options' ) ).toBe( false );
-		} );
-
-		it( 'returns false for unrelated wp_ tables', () => {
-			expect( isWordPressOptionsTable( 'wp_posts' ) ).toBe( false );
-		} );
-
-		it( 'returns false for an unprefixed options table', () => {
-			expect( isWordPressOptionsTable( 'options' ) ).toBe( false );
-		} );
-
-		it( 'returns false for an undefined table name', () => {
-			expect( isWordPressOptionsTable( undefined ) ).toBe( false );
+		it.each( [
+			[ true, 'wp_options' ],
+			[ true, 'WP_Options' ],
+			[ true, 'wp_2_options' ],
+			[ true, 'wp_12_options' ],
+			[ false, 'wp__options' ],
+			[ false, 'wp_a_options' ],
+			[ false, 'wp_2a_options' ],
+			[ false, 'wp_posts' ],
+			[ false, 'options' ],
+			[ false, undefined ],
+		] )( 'returns %s for table %s', ( expected, tableName ) => {
+			expect( isWordPressOptionsTable( tableName ) ).toBe( expected );
 		} );
 	} );
 
 	describe( 'checkRequiresOptionsInsertContext', () => {
-		it( 'returns true for siteHomeUrl', () => {
-			expect( checkRequiresOptionsInsertContext( 'siteHomeUrl' ) ).toBe( true );
-		} );
-
-		it( 'returns true for siteHomeUrlLando', () => {
-			expect( checkRequiresOptionsInsertContext( 'siteHomeUrlLando' ) ).toBe( true );
-		} );
-
-		it( 'returns false for unrelated check keys', () => {
-			expect( checkRequiresOptionsInsertContext( 'binaryLogging' ) ).toBe( false );
-		} );
-
-		it( 'returns false for the empty string', () => {
-			expect( checkRequiresOptionsInsertContext( '' ) ).toBe( false );
+		it.each( [
+			[ 'returns true for siteHomeUrl', 'siteHomeUrl', true ],
+			[ 'returns true for siteHomeUrlLando', 'siteHomeUrlLando', true ],
+			[ 'returns false for unrelated check keys', 'binaryLogging', false ],
+			[ 'returns false for the empty string', '', false ],
+		] )( '%s', ( _name, checkKey, expected ) => {
+			expect( checkRequiresOptionsInsertContext( checkKey ) ).toBe( expected );
 		} );
 	} );
 
 	describe( 'normalizeSqlIdentifier', () => {
-		it( 'returns a bare lowercase identifier unchanged', () => {
-			expect( normalizeSqlIdentifier( 'option_name' ) ).toBe( 'option_name' );
-		} );
-
-		it( 'strips surrounding backticks', () => {
-			expect( normalizeSqlIdentifier( '`option_name`' ) ).toBe( 'option_name' );
-		} );
-
-		it( 'lowercases uppercase identifiers', () => {
-			expect( normalizeSqlIdentifier( 'OPTION_NAME' ) ).toBe( 'option_name' );
-		} );
-
-		it( 'strips backticks and lowercases together', () => {
-			expect( normalizeSqlIdentifier( '`Option_Name`' ) ).toBe( 'option_name' );
+		it.each( [
+			[ 'returns a bare lowercase identifier unchanged', 'option_name', 'option_name' ],
+			[ 'strips surrounding backticks', '`option_name`', 'option_name' ],
+			[ 'lowercases uppercase identifiers', 'OPTION_NAME', 'option_name' ],
+			[ 'strips backticks and lowercases together', '`Option_Name`', 'option_name' ],
+		] )( '%s', ( _name, identifier, expected ) => {
+			expect( normalizeSqlIdentifier( identifier ) ).toBe( expected );
 		} );
 	} );
 
@@ -316,143 +288,107 @@ describe( 'sql-insert-parser', () => {
 	} );
 
 	describe( 'findValuesKeyword', () => {
-		it( 'returns keyword bounds for singular VALUE', () => {
-			const line = 'INSERT INTO wp_options VALUE (1)';
-			const index = line.indexOf( 'VALUE' );
-			expect( findValuesKeyword( line ) ).toEqual( {
-				index,
-				endIndex: index + 'VALUE'.length,
-			} );
-		} );
-
-		it( 'returns keyword bounds for plural VALUES', () => {
-			const line = 'INSERT INTO wp_options VALUES (1)';
-			const index = line.indexOf( 'VALUES' );
-			expect( findValuesKeyword( line ) ).toEqual( {
-				index,
-				endIndex: index + 'VALUES'.length,
-			} );
-		} );
-
-		it( 'returns undefined when VALUE(S) is absent', () => {
-			expect( findValuesKeyword( 'INSERT INTO wp_options (option_name)' ) ).toBeUndefined();
+		it.each( [
+			[ 'returns keyword bounds for singular VALUE', 'INSERT INTO wp_options VALUE (1)', 'VALUE' ],
+			[ 'returns keyword bounds for plural VALUES', 'INSERT INTO wp_options VALUES (1)', 'VALUES' ],
+			[
+				'returns undefined when VALUE(S) is absent',
+				'INSERT INTO wp_options (option_name)',
+				undefined,
+			],
+		] )( '%s', ( _name, line, keyword ) => {
+			const result = findValuesKeyword( line );
+			const expected =
+				undefined === keyword
+					? undefined
+					: {
+							index: line.indexOf( keyword ),
+							endIndex: line.indexOf( keyword ) + keyword.length,
+					  };
+			expect( result ).toEqual( expected );
 		} );
 	} );
 
 	describe( 'parseInsertColumnList', () => {
-		it( 'returns the lowercased column list following the table name', () => {
-			const line = 'INSERT INTO wp_options (option_name, option_value, autoload) VALUES (1,2,3)';
+		it.each( [
+			[
+				'returns the lowercased column list following the table name',
+				'INSERT INTO wp_options (option_name, option_value, autoload) VALUES (1,2,3)',
+				[ 'option_name', 'option_value', 'autoload' ],
+			],
+			[
+				'returns undefined when the opening parenthesis is after the VALUES keyword',
+				'INSERT INTO wp_options VALUES (1, 2, 3)',
+				undefined,
+			],
+			[
+				'returns the lowercased column list before the VALUE keyword',
+				'INSERT INTO wp_options (option_id, option_name, option_value, autoload) VALUE (1,2,3,4)',
+				[ 'option_id', 'option_name', 'option_value', 'autoload' ],
+			],
+			[
+				'returns undefined when the opening parenthesis is after the VALUE keyword',
+				'INSERT INTO wp_options VALUE (1, 2, 3, 4)',
+				undefined,
+			],
+			[
+				'returns undefined when no opening parenthesis is between startIndex and VALUES',
+				'INSERT INTO wp_options VALUES 1, 2, 3',
+				undefined,
+			],
+			[
+				'returns undefined when the column list opens but does not close on the same line',
+				'INSERT INTO wp_options (option_name',
+				undefined,
+			],
+			[
+				'strips backticks from the column list',
+				'INSERT INTO wp_options (`option_name`, `option_value`) VALUES (1,2)',
+				[ 'option_name', 'option_value' ],
+			],
+			[
+				'filters out empty entries produced by trailing commas',
+				'INSERT INTO wp_options (option_name, option_value,) VALUES (1,2)',
+				[ 'option_name', 'option_value' ],
+			],
+		] )( '%s', ( _name, line, expected ) => {
 			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toEqual( [
-				'option_name',
-				'option_value',
-				'autoload',
-			] );
-		} );
-
-		it( 'returns undefined when the opening parenthesis is after the VALUES keyword', () => {
-			const line = 'INSERT INTO wp_options VALUES (1, 2, 3)';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toBeUndefined();
-		} );
-
-		it( 'returns the lowercased column list before the VALUE keyword', () => {
-			const line =
-				'INSERT INTO wp_options (option_id, option_name, option_value, autoload) VALUE (1,2,3,4)';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toEqual( [
-				'option_id',
-				'option_name',
-				'option_value',
-				'autoload',
-			] );
-		} );
-
-		it( 'returns undefined when the opening parenthesis is after the VALUE keyword', () => {
-			const line = 'INSERT INTO wp_options VALUE (1, 2, 3, 4)';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toBeUndefined();
-		} );
-
-		it( 'returns undefined when no opening parenthesis is between startIndex and VALUES', () => {
-			const line = 'INSERT INTO wp_options VALUES 1, 2, 3';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toBeUndefined();
-		} );
-
-		it( 'returns undefined when the column list opens but does not close on the same line', () => {
-			const line = 'INSERT INTO wp_options (option_name';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toBeUndefined();
-		} );
-
-		it( 'strips backticks from the column list', () => {
-			const line = 'INSERT INTO wp_options (`option_name`, `option_value`) VALUES (1,2)';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toEqual( [
-				'option_name',
-				'option_value',
-			] );
-		} );
-
-		it( 'filters out empty entries produced by trailing commas', () => {
-			const line = 'INSERT INTO wp_options (option_name, option_value,) VALUES (1,2)';
-			const startIndex = line.indexOf( 'wp_options' ) + 'wp_options'.length;
-			expect( parseInsertColumnList( line, startIndex ) ).toEqual( [
-				'option_name',
-				'option_value',
-			] );
+			expect( parseInsertColumnList( line, startIndex ) ).toEqual( expected );
 		} );
 	} );
 
 	describe( 'parseInsertColumnListSegment', () => {
-		it( 'parses a comma-separated segment into normalized columns', () => {
-			expect( parseInsertColumnListSegment( 'option_name, option_value, autoload' ) ).toEqual( [
-				'option_name',
-				'option_value',
-				'autoload',
-			] );
-		} );
-
-		it( 'handles a multi-line column list with embedded newlines', () => {
-			expect( parseInsertColumnListSegment( 'option_name,\noption_value,\nautoload' ) ).toEqual( [
-				'option_name',
-				'option_value',
-				'autoload',
-			] );
-		} );
-
-		it( 'returns undefined for empty input', () => {
-			expect( parseInsertColumnListSegment( '' ) ).toBeUndefined();
-		} );
-
-		it( 'strips backticks and lowercases entries', () => {
-			expect( parseInsertColumnListSegment( '`Option_Name`, `Option_Value`' ) ).toEqual( [
-				'option_name',
-				'option_value',
-			] );
+		it.each( [
+			[
+				'parses a comma-separated segment into normalized columns',
+				'option_name, option_value, autoload',
+				[ 'option_name', 'option_value', 'autoload' ],
+			],
+			[
+				'handles a multi-line column list with embedded newlines',
+				'option_name,\noption_value,\nautoload',
+				[ 'option_name', 'option_value', 'autoload' ],
+			],
+			[ 'returns undefined for empty input', '', undefined ],
+			[
+				'strips backticks and lowercases entries',
+				'`Option_Name`, `Option_Value`',
+				[ 'option_name', 'option_value' ],
+			],
+		] )( '%s', ( _name, input, expected ) => {
+			expect( parseInsertColumnListSegment( input ) ).toEqual( expected );
 		} );
 	} );
 
 	describe( 'isEscapedByBackslash', () => {
-		it( 'returns true when a single backslash immediately precedes the index', () => {
-			expect( isEscapedByBackslash( "\\'", 1 ) ).toBe( true );
-		} );
-
-		it( 'returns false when two backslashes precede the index', () => {
-			expect( isEscapedByBackslash( "\\\\'", 2 ) ).toBe( false );
-		} );
-
-		it( 'returns true when an odd run of backslashes precedes the index', () => {
-			expect( isEscapedByBackslash( "\\\\\\'", 3 ) ).toBe( true );
-		} );
-
-		it( 'returns false when no backslash precedes the index', () => {
-			expect( isEscapedByBackslash( "abc'", 3 ) ).toBe( false );
-		} );
-
-		it( 'returns false when index is 0 (no characters before it)', () => {
-			expect( isEscapedByBackslash( "'abc", 0 ) ).toBe( false );
+		it.each( [
+			[ 'returns true when a single backslash immediately precedes the index', "\\'", 1, true ],
+			[ 'returns false when two backslashes precede the index', "\\\\'", 2, false ],
+			[ 'returns true when an odd run of backslashes precedes the index', "\\\\\\'", 3, true ],
+			[ 'returns false when no backslash precedes the index', "abc'", 3, false ],
+			[ 'returns false when index is 0 (no characters before it)', "'abc", 0, false ],
+		] )( '%s', ( _name, input, index, expected ) => {
+			expect( isEscapedByBackslash( input, index ) ).toBe( expected );
 		} );
 	} );
 
@@ -542,21 +478,52 @@ describe( 'sql-insert-parser', () => {
 	} );
 
 	describe( 'parseSqlTupleRows', () => {
-		it( 'parses a single tuple and keeps surrounding quotes on each value', () => {
-			expect( parseSqlTupleRows( "('a', 'b', 'c')", 0 ) ).toEqual( {
-				rows: [ [ "'a'", "'b'", "'c'" ] ],
-				remainder: undefined,
-			} );
-		} );
-
-		it( 'parses multiple tuples on one line', () => {
-			expect( parseSqlTupleRows( "('a','b'),('c','d')", 0 ) ).toEqual( {
-				rows: [
-					[ "'a'", "'b'" ],
-					[ "'c'", "'d'" ],
-				],
-				remainder: undefined,
-			} );
+		it.each( [
+			[
+				'parses a single tuple and keeps surrounding quotes on each value',
+				"('a', 'b', 'c')",
+				{ rows: [ [ "'a'", "'b'", "'c'" ] ], remainder: undefined },
+			],
+			[
+				'parses multiple tuples on one line',
+				"('a','b'),('c','d')",
+				{
+					rows: [
+						[ "'a'", "'b'" ],
+						[ "'c'", "'d'" ],
+					],
+					remainder: undefined,
+				},
+			],
+			[
+				'does not split a value at a quoted comma',
+				"('a,b','c')",
+				{ rows: [ [ "'a,b'", "'c'" ] ], remainder: undefined },
+			],
+			[
+				'does not close a tuple at a quoted parenthesis',
+				"('a)b','c')",
+				{ rows: [ [ "'a)b'", "'c'" ] ], remainder: undefined },
+			],
+			[
+				"handles a doubled '' quote escape inside a value",
+				"('it''s','x')",
+				{ rows: [ [ "'it''s'", "'x'" ] ], remainder: undefined },
+			],
+			[
+				'handles a backslash-escaped quote inside a value',
+				"('a\\'b','c')",
+				{ rows: [ [ "'a\\'b'", "'c'" ] ], remainder: undefined },
+			],
+			[ 'returns empty rows for an empty input', '', { rows: [], remainder: undefined } ],
+			[ 'returns empty rows for whitespace-only input', '   ', { rows: [], remainder: undefined } ],
+			[
+				'skips garbage before the first opening parenthesis',
+				"... ('a','b')",
+				{ rows: [ [ "'a'", "'b'" ] ], remainder: undefined },
+			],
+		] )( '%s', ( _name, input, expected ) => {
+			expect( parseSqlTupleRows( input, 0 ) ).toEqual( expected );
 		} );
 
 		it( 'returns completed rows plus a remainder slice for an unterminated trailing tuple', () => {
@@ -565,135 +532,79 @@ describe( 'sql-insert-parser', () => {
 			expect( result.rows ).toEqual( [ [ "'a'", "'b'" ] ] );
 			expect( result.remainder ).toBe( line.slice( line.lastIndexOf( '(' ) ) );
 		} );
-
-		it( 'does not split a value at a quoted comma', () => {
-			expect( parseSqlTupleRows( "('a,b','c')", 0 ) ).toEqual( {
-				rows: [ [ "'a,b'", "'c'" ] ],
-				remainder: undefined,
-			} );
-		} );
-
-		it( 'does not close a tuple at a quoted parenthesis', () => {
-			expect( parseSqlTupleRows( "('a)b','c')", 0 ) ).toEqual( {
-				rows: [ [ "'a)b'", "'c'" ] ],
-				remainder: undefined,
-			} );
-		} );
-
-		it( "handles a doubled '' quote escape inside a value", () => {
-			expect( parseSqlTupleRows( "('it''s','x')", 0 ) ).toEqual( {
-				rows: [ [ "'it''s'", "'x'" ] ],
-				remainder: undefined,
-			} );
-		} );
-
-		it( 'handles a backslash-escaped quote inside a value', () => {
-			expect( parseSqlTupleRows( "('a\\'b','c')", 0 ) ).toEqual( {
-				rows: [ [ "'a\\'b'", "'c'" ] ],
-				remainder: undefined,
-			} );
-		} );
-
-		it( 'returns empty rows for an empty input', () => {
-			expect( parseSqlTupleRows( '', 0 ) ).toEqual( { rows: [], remainder: undefined } );
-		} );
-
-		it( 'returns empty rows for whitespace-only input', () => {
-			expect( parseSqlTupleRows( '   ', 0 ) ).toEqual( { rows: [], remainder: undefined } );
-		} );
-
-		it( 'skips garbage before the first opening parenthesis', () => {
-			expect( parseSqlTupleRows( "... ('a','b')", 0 ) ).toEqual( {
-				rows: [ [ "'a'", "'b'" ] ],
-				remainder: undefined,
-			} );
-		} );
 	} );
 
 	describe( 'unquoteSqlValue', () => {
-		it( 'unwraps a single-quoted value', () => {
-			expect( unquoteSqlValue( "'foo'" ) ).toBe( 'foo' );
-		} );
-
-		it( 'unwraps a double-quoted value', () => {
-			expect( unquoteSqlValue( '"foo"' ) ).toBe( 'foo' );
-		} );
-
-		it( 'passes through an unquoted bare value', () => {
-			expect( unquoteSqlValue( 'foo' ) ).toBe( 'foo' );
-		} );
-
-		it( 'returns the trimmed value (not unwrapped) when the surrounding quotes do not match', () => {
-			expect( unquoteSqlValue( '\'foo"' ) ).toBe( '\'foo"' );
-		} );
-
-		it( "collapses doubled '' quote escapes inside a quoted value", () => {
-			expect( unquoteSqlValue( "'it''s'" ) ).toBe( "it's" );
-		} );
-
-		it( 'collapses backslash-escaped quotes inside a quoted value', () => {
-			expect( unquoteSqlValue( "'it\\'s'" ) ).toBe( "it's" );
-		} );
-
-		it( 'returns the empty string for undefined input', () => {
-			expect( unquoteSqlValue( undefined ) ).toBe( '' );
-		} );
-
-		it( 'trims surrounding whitespace before unwrapping', () => {
-			expect( unquoteSqlValue( "  'foo'  " ) ).toBe( 'foo' );
+		it.each( [
+			[ 'unwraps a single-quoted value', "'foo'", 'foo' ],
+			[ 'unwraps a double-quoted value', '"foo"', 'foo' ],
+			[ 'passes through an unquoted bare value', 'foo', 'foo' ],
+			[
+				'returns the trimmed value (not unwrapped) when the surrounding quotes do not match',
+				'\'foo"',
+				'\'foo"',
+			],
+			[ "collapses doubled '' quote escapes inside a quoted value", "'it''s'", "it's" ],
+			[ 'collapses backslash-escaped quotes inside a quoted value', "'it\\'s'", "it's" ],
+			[ 'returns the empty string for undefined input', undefined, '' ],
+			[ 'trims surrounding whitespace before unwrapping', "  'foo'  ", 'foo' ],
+		] )( '%s', ( _name, input, expected ) => {
+			expect( unquoteSqlValue( input ) ).toBe( expected );
 		} );
 	} );
 
 	describe( 'getOptionUrlMatchResults', () => {
-		it( 'returns a siteurl match using the default columns and a full row', () => {
-			expect(
-				getOptionUrlMatchResults( [ '1', "'siteurl'", "'https://example.com'", "'yes'" ] )
-			).toEqual( [ '', 'siteurl', 'https://example.com' ] );
-		} );
-
-		it( 'returns a home match using the default columns', () => {
-			expect(
-				getOptionUrlMatchResults( [ '1', "'home'", "'https://example.com'", "'yes'" ] )
-			).toEqual( [ '', 'home', 'https://example.com' ] );
-		} );
-
-		it( 'returns undefined when option_name is unrelated', () => {
-			expect(
-				getOptionUrlMatchResults( [ '1', "'blogdescription'", "'https://example.com'", "'yes'" ] )
-			).toBeUndefined();
-		} );
-
-		it( 'returns undefined when option_value is not a URL', () => {
-			expect(
-				getOptionUrlMatchResults( [ '1', "'siteurl'", "'plain-text'", "'yes'" ] )
-			).toBeUndefined();
-		} );
-
-		it( 'matches an uppercase HTTPS scheme (case-insensitive)', () => {
-			expect(
-				getOptionUrlMatchResults( [ '1', "'siteurl'", "'HTTPS://Example.com'", "'yes'" ] )
-			).toEqual( [ '', 'siteurl', 'HTTPS://Example.com' ] );
-		} );
-
-		it( 'honours an explicit reordered columns argument', () => {
-			expect(
-				getOptionUrlMatchResults(
-					[ "'https://reordered.example'", "'siteurl'", "'yes'" ],
-					[ 'option_value', 'option_name', 'autoload' ]
-				)
-			).toEqual( [ '', 'siteurl', 'https://reordered.example' ] );
-		} );
-
-		it( 'returns undefined when the columns array lacks option_name or option_value', () => {
-			expect(
-				getOptionUrlMatchResults( [ "'siteurl'", "'https://example.com'" ], [ 'foo', 'bar' ] )
-			).toBeUndefined();
-		} );
-
-		it( "passes a doubled '' quote escape through unquoting before the URL test", () => {
-			expect(
-				getOptionUrlMatchResults( [ '1', "'siteurl'", "'https://it''s.example'", "'yes'" ] )
-			).toEqual( [ '', 'siteurl', "https://it's.example" ] );
+		it.each( [
+			[
+				'returns a siteurl match using the default columns and a full row',
+				[ '1', "'siteurl'", "'https://example.com'", "'yes'" ],
+				undefined,
+				[ '', 'siteurl', 'https://example.com' ],
+			],
+			[
+				'returns a home match using the default columns',
+				[ '1', "'home'", "'https://example.com'", "'yes'" ],
+				undefined,
+				[ '', 'home', 'https://example.com' ],
+			],
+			[
+				'returns undefined when option_name is unrelated',
+				[ '1', "'blogdescription'", "'https://example.com'", "'yes'" ],
+				undefined,
+				undefined,
+			],
+			[
+				'returns undefined when option_value is not a URL',
+				[ '1', "'siteurl'", "'plain-text'", "'yes'" ],
+				undefined,
+				undefined,
+			],
+			[
+				'matches an uppercase HTTPS scheme (case-insensitive)',
+				[ '1', "'siteurl'", "'HTTPS://Example.com'", "'yes'" ],
+				undefined,
+				[ '', 'siteurl', 'HTTPS://Example.com' ],
+			],
+			[
+				'honours an explicit reordered columns argument',
+				[ "'https://reordered.example'", "'siteurl'", "'yes'" ],
+				[ 'option_value', 'option_name', 'autoload' ],
+				[ '', 'siteurl', 'https://reordered.example' ],
+			],
+			[
+				'returns undefined when the columns array lacks option_name or option_value',
+				[ "'siteurl'", "'https://example.com'" ],
+				[ 'foo', 'bar' ],
+				undefined,
+			],
+			[
+				"passes a doubled '' quote escape through unquoting before the URL test",
+				[ '1', "'siteurl'", "'https://it''s.example'", "'yes'" ],
+				undefined,
+				[ '', 'siteurl', "https://it's.example" ],
+			],
+		] )( '%s', ( _name, rows, columns, expected ) => {
+			expect( getOptionUrlMatchResults( rows, columns ) ).toEqual( expected );
 		} );
 	} );
 } );
