@@ -215,6 +215,8 @@ vip @example-app.develop edge-workers get security-headers --source
 vip @example-app.develop edge-workers enable security-headers
 # Send controlled requests and observe application behavior.
 vip @example-app.develop edge-workers disable security-headers
+# Confirm permanent deletion when prompted.
+vip @example-app.develop edge-workers delete security-headers
 ```
 
 Do not enable the deployed worker until the inactive-create guarantee in section 1 has owner

@@ -47,7 +47,7 @@ export async function edgeWorkersNewCommand( args = [], opt = {} ) {
 	try {
 		validateWorkerName( name );
 		// Parse up front so a bad --location doesn't leave a half-created worker behind.
-		const location = opt.location ? parseLocationOption( opt.location ) : undefined;
+		const location = opt.location !== undefined ? parseLocationOption( opt.location ) : undefined;
 		const projectDir = resolveProjectDir( { path: opt.path } );
 		const descriptor = readProjectDescriptor( projectDir );
 		getToolchain( descriptor.type ).scaffoldWorker( projectDir, name );

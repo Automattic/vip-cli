@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { edgeWorkersBuildCommand } from '../../src/bin/vip-edge-workers-build';
 import * as exit from '../../src/lib/cli/exit';
 import * as lib from '../../src/lib/edge-workers';
@@ -106,7 +108,9 @@ describe( 'edgeWorkersBuildCommand()', () => {
 	it( 'prints the relative artifact path and byte size', async () => {
 		await edgeWorkersBuildCommand( [ 'alpha' ] );
 
-		expect( console.log ).toHaveBeenCalledWith( '✓ Built "alpha" → build/alpha.wasm (5 bytes)' );
+		expect( console.log ).toHaveBeenCalledWith(
+			`✓ Built "alpha" → ${ path.relative( '/project', '/project/build/alpha.wasm' ) } (5 bytes)`
+		);
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_build_command_success', {
 			count: 1,
 		} );

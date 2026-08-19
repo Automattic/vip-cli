@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { edgeWorkersNewCommand } from '../../src/bin/vip-edge-workers-new';
 import * as exit from '../../src/lib/cli/exit';
 import * as project from '../../src/lib/edge-workers/project';
@@ -63,12 +65,28 @@ describe( 'edgeWorkersNewCommand()', () => {
 	it( 'writes and reports an explicit request scope', async () => {
 		await edgeWorkersNewCommand( [ 'demo' ], { location: 'starts_with:/api/' } );
 
-		expect( project.writeWorkerManifest ).toHaveBeenCalledWith( '/project/workers/demo', {
-			name: 'demo',
-			entry: 'assembly/index.ts',
-			location: { operator: 'starts_with', value: '/api/' },
-		} );
+		expect( project.writeWorkerManifest ).toHaveBeenCalledWith(
+			path.join( '/project', 'workers', 'demo' ),
+			{
+				name: 'demo',
+				entry: 'assembly/index.ts',
+				location: { operator: 'starts_with', value: '/api/' },
+			}
+		);
 		expect( console.log ).toHaveBeenCalledWith( 'Scope: starts_with "/api/".' );
+	} );
+
+	it( 'rejects an explicitly empty location before resolving or modifying a project', async () => {
+		await expect( edgeWorkersNewCommand( [ 'demo' ], { location: '' } ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( project.resolveProjectDir ).not.toHaveBeenCalled();
+		expect( scaffoldWorker ).not.toHaveBeenCalled();
+		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_new_command_error', {
+			name: 'demo',
+			error: expect.stringContaining( 'Invalid location ""' ),
+		} );
 	} );
 
 	it( 'reports that an omitted location applies to all requests', async () => {
