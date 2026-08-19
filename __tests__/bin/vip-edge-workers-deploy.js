@@ -1,7 +1,7 @@
 import { edgeWorkersDeployCommand } from '../../src/bin/vip-edge-workers-deploy';
-import * as api from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
-import * as lib from '../../src/lib/edge-workers';
+import * as format from '../../src/lib/cli/format';
+import * as deployment from '../../src/lib/edge-workers/deployment';
 import * as project from '../../src/lib/edge-workers/project';
 import * as tracker from '../../src/lib/tracker';
 
@@ -19,19 +19,19 @@ jest.mock( '../../src/lib/cli/command', () => {
 	return jest.fn( () => commandMock );
 } );
 
-jest.mock( '../../src/lib/api/edge-workers', () => ( {
-	appQuery: '',
-	findEdgeWorkerByName: jest.fn(),
-	createEdgeWorker: jest.fn(),
-	updateEdgeWorker: jest.fn(),
-	validateEdgeWorker: jest.fn(),
+jest.mock( '../../src/lib/cli/format', () => ( {
+	formatData: jest.fn(),
 } ) );
 
-jest.mock( '../../src/lib/edge-workers', () => ( {
-	buildWorker: jest.fn(),
-	readPrebuiltWorker: jest.fn(),
-	readWorkerSource: jest.fn(),
-} ) );
+jest.mock( '../../src/lib/edge-workers/deployment', () => {
+	const actual = jest.requireActual( '../../src/lib/edge-workers/deployment' );
+	return {
+		...actual,
+		prepareEdgeWorkerDeploymentPlan: jest.fn(),
+		deploymentPlanRows: jest.fn(),
+		applyEdgeWorkerDeploymentPlan: jest.fn(),
+	};
+} );
 
 jest.mock( '../../src/lib/edge-workers/project', () => ( {
 	resolveProjectDir: jest.fn(),
@@ -47,179 +47,191 @@ const opts = {
 	app: { id: 1 },
 	env: { id: 3 },
 	skipBuild: true,
+	skipValidate: false,
+	skipSource: false,
 };
 
-const worker = {
-	dir: '/proj/workers/my-worker',
-	manifest: { name: 'my-worker', entry: 'assembly/index.ts', on_failure: 'continue' },
-};
+const worker = name => ( {
+	dir: `/project/workers/${ name }`,
+	manifest: { name, entry: 'assembly/index.ts' },
+} );
+
+const planItem = ( name, action = 'create' ) => ( {
+	action,
+	worker: worker( name ),
+	existing: action === 'update' ? { id: 42, name, active: true } : null,
+	artifact: {
+		wasmPath: `/project/build/${ name }.wasm`,
+		base64: `binary-${ name }`,
+		sizeBytes: name.length,
+	},
+	validation: 'passed',
+	phases: [ 'client_response' ],
+	input: { name, wasmBinary: `binary-${ name }` },
+	currentLocation: null,
+	proposedLocation: null,
+	sourceMode: 'store',
+} );
 
 describe( 'edgeWorkersDeployCommand()', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
-		project.resolveProjectDir.mockReturnValue( '/proj' );
-		project.findWorker.mockReturnValue( worker );
-		lib.readPrebuiltWorker.mockReturnValue( {
-			wasmPath: '/proj/build/my-worker.wasm',
-			base64: 'V0FTTQ==',
-			sizeBytes: 5,
-		} );
-		lib.readWorkerSource.mockReturnValue( 'source code' );
-		api.validateEdgeWorker.mockResolvedValue( {
-			valid: true,
-			phases: [ 'client_response' ],
-			errors: [],
+		project.resolveProjectDir.mockReturnValue( '/project' );
+		project.findWorker.mockImplementation( ( _projectDir, name ) => worker( name ) );
+		project.discoverWorkers.mockReturnValue( [ worker( 'alpha' ), worker( 'beta' ) ] );
+		deployment.prepareEdgeWorkerDeploymentPlan.mockResolvedValue( [ planItem( 'headers' ) ] );
+		deployment.deploymentPlanRows.mockReturnValue( [ { worker: 'headers' } ] );
+		format.formatData.mockReturnValue( 'PLAN TABLE' );
+		deployment.applyEdgeWorkerDeploymentPlan.mockResolvedValue();
+	} );
+
+	it( 'prepares the selected worker with the command options', async () => {
+		await edgeWorkersDeployCommand( [ 'headers' ], opts );
+
+		expect( project.findWorker ).toHaveBeenCalledWith( '/project', 'headers' );
+		expect( project.discoverWorkers ).not.toHaveBeenCalled();
+		expect( deployment.prepareEdgeWorkerDeploymentPlan ).toHaveBeenCalledWith( {
+			appId: 1,
+			envId: 3,
+			projectDir: '/project',
+			workers: [
+				expect.objectContaining( { manifest: expect.objectContaining( { name: 'headers' } ) } ),
+			],
+			skipBuild: true,
+			skipValidate: false,
+			skipSource: false,
 		} );
 	} );
 
-	it( 'creates a worker when none exists with that name', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( null );
-		api.createEdgeWorker.mockResolvedValue( { id: 7, phases: [ 'response' ] } );
+	it( 'prepares every discovered worker for --all', async () => {
+		await edgeWorkersDeployCommand( [], { ...opts, all: true } );
 
-		await edgeWorkersDeployCommand( [ 'my-worker' ], opts );
-
-		expect( api.createEdgeWorker ).toHaveBeenCalledWith( 3, {
-			name: 'my-worker',
-			wasmBinary: 'V0FTTQ==',
-			onFailure: 'continue',
-			source: 'source code',
-		} );
-		expect( api.updateEdgeWorker ).not.toHaveBeenCalled();
+		expect( project.discoverWorkers ).toHaveBeenCalledWith( '/project' );
+		expect( project.findWorker ).not.toHaveBeenCalled();
+		expect( deployment.prepareEdgeWorkerDeploymentPlan ).toHaveBeenCalledWith(
+			expect.objectContaining( {
+				workers: [
+					expect.objectContaining( { manifest: expect.objectContaining( { name: 'alpha' } ) } ),
+					expect.objectContaining( { manifest: expect.objectContaining( { name: 'beta' } ) } ),
+				],
+			} )
+		);
 	} );
 
-	it( 'updates the worker when one already exists with that name', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( { id: 42 } );
-		api.updateEdgeWorker.mockResolvedValue( { id: 42, phases: [ 'response' ] } );
-
-		await edgeWorkersDeployCommand( [ 'my-worker' ], opts );
-
-		expect( api.updateEdgeWorker ).toHaveBeenCalledWith( 3, 42, {
-			name: 'my-worker',
-			wasmBinary: 'V0FTTQ==',
-			onFailure: 'continue',
-			source: 'source code',
-			location: null,
-		} );
-		expect( api.createEdgeWorker ).not.toHaveBeenCalled();
-	} );
-
-	it( 'does not report deployment success when create rejects', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( null );
-		api.createEdgeWorker.mockRejectedValue( new Error( 'createEdgeWorker returned no result.' ) );
-
-		await expect( edgeWorkersDeployCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
+	it( 'rejects a worker name combined with --all before project resolution', async () => {
+		await expect( edgeWorkersDeployCommand( [ 'headers' ], { ...opts, all: true } ) ).rejects.toBe(
 			'EXIT_WITH_ERROR'
 		);
 
-		expect( console.log ).not.toHaveBeenCalledWith( expect.stringContaining( '✓ created' ) );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Failed to deploy edge worker: Supply either a worker name or --all, not both.'
+		);
+		expect( project.resolveProjectDir ).not.toHaveBeenCalled();
+		expect( deployment.prepareEdgeWorkerDeploymentPlan ).not.toHaveBeenCalled();
+		expect( deployment.applyEdgeWorkerDeploymentPlan ).not.toHaveBeenCalled();
+	} );
+
+	it( 'prints the complete plan before applying the same items', async () => {
+		const plan = [ planItem( 'alpha' ), planItem( 'beta', 'update' ) ];
+		const rows = [ { worker: 'alpha' }, { worker: 'beta' } ];
+		const order = [];
+		deployment.prepareEdgeWorkerDeploymentPlan.mockResolvedValue( plan );
+		deployment.deploymentPlanRows.mockImplementation( received => {
+			expect( received ).toBe( plan );
+			order.push( 'rows' );
+			return rows;
+		} );
+		format.formatData.mockImplementation( ( received, outputFormat ) => {
+			expect( received ).toBe( rows );
+			expect( outputFormat ).toBe( 'table' );
+			order.push( 'format' );
+			return 'PLAN TABLE';
+		} );
+		console.log.mockImplementationOnce( value => {
+			expect( value ).toBe( 'PLAN TABLE' );
+			order.push( 'preview' );
+		} );
+		deployment.applyEdgeWorkerDeploymentPlan.mockImplementation( async ( envId, received ) => {
+			expect( envId ).toBe( 3 );
+			expect( received ).toBe( plan );
+			order.push( 'apply' );
+		} );
+
+		await edgeWorkersDeployCommand( [], { ...opts, all: true } );
+
+		expect( order ).toEqual( [ 'rows', 'format', 'preview', 'apply' ] );
+	} );
+
+	it( 'prints success output only from the applied callback and then tracks success', async () => {
+		const item = planItem( 'headers', 'update' );
+		deployment.prepareEdgeWorkerDeploymentPlan.mockResolvedValue( [ item ] );
+		deployment.applyEdgeWorkerDeploymentPlan.mockImplementation(
+			async ( _envId, items, onApplied ) => {
+				expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+					1,
+					3,
+					'edge_workers_deploy_command_success',
+					expect.anything()
+				);
+				await onApplied( items[ 0 ], {
+					id: 42,
+					name: 'headers',
+					phases: [ 'client_response' ],
+				} );
+			}
+		);
+
+		await edgeWorkersDeployCommand( [ 'headers' ], opts );
+
+		expect( console.log ).toHaveBeenCalledWith(
+			'✓ updated "headers" (7 bytes, phases: client_response)'
+		);
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_deploy_command_success',
+			{ count: 1 }
+		);
+		const outputOrder = console.log.mock.invocationCallOrder.at( -1 );
+		const telemetryOrder = tracker.trackEventWithEnv.mock.invocationCallOrder.at( -1 );
+		expect( outputOrder ).toBeLessThan( telemetryOrder );
+	} );
+
+	it( 'does not preview or apply when preparation fails', async () => {
+		deployment.prepareEdgeWorkerDeploymentPlan.mockRejectedValue(
+			new Error( 'worker "beta" failed validation' )
+		);
+
+		await expect( edgeWorkersDeployCommand( [], { ...opts, all: true } ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( deployment.deploymentPlanRows ).not.toHaveBeenCalled();
+		expect( format.formatData ).not.toHaveBeenCalled();
+		expect( deployment.applyEdgeWorkerDeploymentPlan ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Failed to deploy edge worker: worker "beta" failed validation'
+		);
+	} );
+
+	it( 'reports exact progress and the original cause after a partial failure', async () => {
+		const cause = new Error( 'request timed out' );
+		deployment.applyEdgeWorkerDeploymentPlan.mockRejectedValue(
+			new deployment.DeploymentApplyError( [ 'alpha' ], 'beta', [ 'gamma' ], cause )
+		);
+
+		await expect( edgeWorkersDeployCommand( [], { ...opts, all: true } ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Deployment stopped at "beta". Applied: alpha. Not applied: gamma. Cause: request timed out'
+		);
 		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
 			1,
 			3,
 			'edge_workers_deploy_command_success',
 			expect.anything()
-		);
-	} );
-
-	it( 'does not report deployment success when update rejects', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( { id: 42 } );
-		api.updateEdgeWorker.mockRejectedValue( new Error( 'updateEdgeWorker returned no result.' ) );
-
-		await expect( edgeWorkersDeployCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
-			'EXIT_WITH_ERROR'
-		);
-
-		expect( console.log ).not.toHaveBeenCalledWith( expect.stringContaining( '✓ updated' ) );
-		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
-			1,
-			3,
-			'edge_workers_deploy_command_success',
-			expect.anything()
-		);
-	} );
-
-	it( 'sends the manifest location on update, clearing it when absent', async () => {
-		const location = { operator: 'starts_with', value: '/api/' };
-		project.findWorker.mockReturnValue( {
-			...worker,
-			manifest: { ...worker.manifest, location },
-		} );
-		api.findEdgeWorkerByName.mockResolvedValue( { id: 42 } );
-		api.updateEdgeWorker.mockResolvedValue( { id: 42, phases: [ 'response' ] } );
-
-		await edgeWorkersDeployCommand( [ 'my-worker' ], opts );
-
-		expect( api.updateEdgeWorker ).toHaveBeenCalledWith(
-			3,
-			42,
-			expect.objectContaining( { location } )
-		);
-	} );
-
-	it( 'omits location on create when the manifest has none', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( null );
-		api.createEdgeWorker.mockResolvedValue( { id: 7, phases: [] } );
-
-		await edgeWorkersDeployCommand( [ 'my-worker' ], opts );
-
-		expect( api.createEdgeWorker ).toHaveBeenCalledWith(
-			3,
-			expect.not.objectContaining( { location: expect.anything() } )
-		);
-	} );
-
-	it( 'omits source when --skip-source is set', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( null );
-		api.createEdgeWorker.mockResolvedValue( { id: 7, phases: [] } );
-
-		await edgeWorkersDeployCommand( [ 'my-worker' ], { ...opts, skipSource: true } );
-
-		expect( lib.readWorkerSource ).not.toHaveBeenCalled();
-		expect( api.createEdgeWorker ).toHaveBeenCalledWith(
-			3,
-			expect.not.objectContaining( { source: expect.anything() } )
-		);
-	} );
-
-	it( 'validates against the env before uploading', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( null );
-		api.createEdgeWorker.mockResolvedValue( { id: 7, phases: [] } );
-
-		await edgeWorkersDeployCommand( [ 'my-worker' ], opts );
-
-		expect( api.validateEdgeWorker ).toHaveBeenCalledWith( 3, 'V0FTTQ==' );
-	} );
-
-	it( 'aborts the upload when validation fails', async () => {
-		api.validateEdgeWorker.mockResolvedValue( {
-			valid: false,
-			phases: [],
-			errors: [ 'missing alloc export' ],
-		} );
-
-		await expect( edgeWorkersDeployCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
-			'EXIT_WITH_ERROR'
-		);
-		expect( api.createEdgeWorker ).not.toHaveBeenCalled();
-		expect( api.updateEdgeWorker ).not.toHaveBeenCalled();
-		expect( exit.withError ).toHaveBeenCalledWith(
-			expect.stringContaining( 'missing alloc export' )
-		);
-	} );
-
-	it( 'skips validation when --skip-validate is set', async () => {
-		api.findEdgeWorkerByName.mockResolvedValue( null );
-		api.createEdgeWorker.mockResolvedValue( { id: 7, phases: [] } );
-
-		await edgeWorkersDeployCommand( [ 'my-worker' ], { ...opts, skipValidate: true } );
-
-		expect( api.validateEdgeWorker ).not.toHaveBeenCalled();
-		expect( api.createEdgeWorker ).toHaveBeenCalled();
-	} );
-
-	it( 'errors when no worker name and no --all is given', async () => {
-		await expect( edgeWorkersDeployCommand( [], opts ) ).rejects.toBe( 'EXIT_WITH_ERROR' );
-		expect( exit.withError ).toHaveBeenCalledWith(
-			expect.stringContaining( 'supply a worker name' )
 		);
 	} );
 } );

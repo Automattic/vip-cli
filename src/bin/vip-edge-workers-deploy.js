@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-import {
-	appQuery,
-	createEdgeWorker,
-	findEdgeWorkerByName,
-	updateEdgeWorker,
-	validateEdgeWorker,
-} from '../lib/api/edge-workers';
+import { appQuery } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
-import { buildWorker, readPrebuiltWorker, readWorkerSource } from '../lib/edge-workers';
+import { formatData } from '../lib/cli/format';
+import {
+	applyEdgeWorkerDeploymentPlan,
+	DeploymentApplyError,
+	deploymentPlanRows,
+	prepareEdgeWorkerDeploymentPlan,
+} from '../lib/edge-workers/deployment';
 import { discoverWorkers, findWorker, resolveProjectDir } from '../lib/edge-workers/project';
 import { trackEventWithEnv } from '../lib/tracker';
 
@@ -30,51 +30,17 @@ const examples = [
 	},
 ];
 
-async function deployWorker( app, env, projectDir, worker, opt ) {
-	const artifact = opt.skipBuild
-		? readPrebuiltWorker( projectDir, worker )
-		: buildWorker( projectDir, worker );
+function errorMessage( error ) {
+	return error instanceof Error ? error.message : String( error );
+}
 
-	const { name, location, on_failure: onFailure } = worker.manifest;
-
-	// Server-side dry-run validation before the real upload: persists nothing and
-	// fails fast with structured errors. The create/update below validates again,
-	// so `--skip-validate` just trades the early check for a slightly later one.
-	if ( ! opt.skipValidate ) {
-		const validation = await validateEdgeWorker( env.id, artifact.base64 );
-		if ( validation && ! validation.valid ) {
-			const errors = ( validation.errors || [] ).join( '; ' ) || 'unknown error';
-			throw new Error( `worker "${ name }" failed validation: ${ errors }` );
-		}
-	}
-
-	const source = opt.skipSource ? undefined : readWorkerSource( worker );
-
-	const existing = await findEdgeWorkerByName( app.id, env.id, name );
-
-	const input = {
-		wasmBinary: artifact.base64,
-		...( onFailure ? { onFailure } : {} ),
-		...( source ? { source } : {} ),
-	};
-
-	if ( existing ) {
-		// Location is always sent on update: null clears the rule, so removing
-		// `location` from the manifest reverts the worker to running everywhere.
-		const result = await updateEdgeWorker( env.id, existing.id, {
-			name,
-			...input,
-			location: location ?? null,
-		} );
-		return { action: 'updated', worker: result, sizeBytes: artifact.sizeBytes };
-	}
-
-	const result = await createEdgeWorker( env.id, {
-		name,
-		...input,
-		...( location ? { location } : {} ),
-	} );
-	return { action: 'created', worker: result, sizeBytes: artifact.sizeBytes };
+function partialFailureMessage( error ) {
+	return (
+		`Deployment stopped at "${ error.failedName }". ` +
+		`Applied: ${ error.appliedNames.join( ', ' ) || 'none' }. ` +
+		`Not applied: ${ error.unappliedNames.join( ', ' ) || 'none' }. ` +
+		`Cause: ${ errorMessage( error.cause ) }`
+	);
 }
 
 export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
@@ -87,41 +53,58 @@ export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 	} );
 
 	try {
+		if ( name && opt.all ) {
+			throw new Error( 'Supply either a worker name or --all, not both.' );
+		}
+
 		const projectDir = resolveProjectDir( { path: opt.path } );
 
 		let workers;
 		if ( opt.all ) {
 			workers = discoverWorkers( projectDir );
 			if ( ! workers.length ) {
-				exit.withError( 'No workers found in this project.' );
+				throw new Error( 'No workers found in this project.' );
 			}
 		} else if ( name ) {
 			workers = [ findWorker( projectDir, name ) ];
 		} else {
-			exit.withError( 'Please supply a worker name to deploy, or pass `--all`.' );
+			throw new Error( 'Please supply a worker name to deploy, or pass `--all`.' );
 		}
 
-		// Deploy sequentially for clear, ordered output and to avoid hammering the API.
-		for ( const worker of workers ) {
-			// eslint-disable-next-line no-await-in-loop
-			const result = await deployWorker( app, env, projectDir, worker, opt );
-			const { action, worker: deployed, sizeBytes } = result;
-			const phases = deployed?.phases;
-			const phasesNote = phases ? `, phases: ${ phases.join( ', ' ) || 'none' }` : '';
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			appId: app.id,
+			envId: env.id,
+			projectDir,
+			workers,
+			skipBuild: Boolean( opt.skipBuild ),
+			skipValidate: Boolean( opt.skipValidate ),
+			skipSource: Boolean( opt.skipSource ),
+		} );
+
+		console.log( formatData( deploymentPlanRows( plan ), 'table' ) );
+
+		await applyEdgeWorkerDeploymentPlan( env.id, plan, ( item, deployed ) => {
+			const action = item.action === 'create' ? 'created' : 'updated';
+			const phasesNote = `, phases: ${ deployed.phases.join( ', ' ) || 'none' }`;
 			console.log(
-				`✓ ${ action } "${ worker.manifest.name }" (${ sizeBytes } bytes${ phasesNote })`
+				`✓ ${ action } "${ item.worker.manifest.name }" ` +
+					`(${ item.artifact.sizeBytes } bytes${ phasesNote })`
 			);
-		}
+		} );
 
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_deploy_command_success', {
-			count: workers.length,
+			count: plan.length,
 		} );
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_deploy_command_error', {
 			name,
-			error: err.message,
+			error: errorMessage( err ),
 		} );
-		exit.withError( `Failed to deploy edge worker: ${ err.message }` );
+		exit.withError(
+			err instanceof DeploymentApplyError
+				? partialFailureMessage( err )
+				: `Failed to deploy edge worker: ${ errorMessage( err ) }`
+		);
 	}
 }
 
