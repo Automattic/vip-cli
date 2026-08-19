@@ -122,6 +122,7 @@ describe( 'edgeWorkersValidateCommand()', () => {
 			'edge_workers_validate_command_success',
 			expect.anything()
 		);
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'validates every worker with --all', async () => {

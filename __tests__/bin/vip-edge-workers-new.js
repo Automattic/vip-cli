@@ -114,6 +114,7 @@ describe( 'edgeWorkersNewCommand()', () => {
 			expect.anything()
 		);
 		expect( console.log ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'prints safe success guidance for a non-production environment', async () => {

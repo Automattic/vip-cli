@@ -66,6 +66,7 @@ describe( 'edgeWorkersInitCommand()', () => {
 			expect.anything()
 		);
 		expect( console.log ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'reports a scaffold collision without success telemetry or output', async () => {
