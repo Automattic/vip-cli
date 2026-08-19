@@ -42,12 +42,12 @@ export async function edgeWorkersValidateCommand( args = [], opt = {} ) {
 		if ( opt.all ) {
 			workers = discoverWorkers( projectDir );
 			if ( ! workers.length ) {
-				exit.withError( 'No workers found in this project.' );
+				throw new Error( 'No workers found in this project.' );
 			}
 		} else if ( name ) {
 			workers = [ findWorker( projectDir, name ) ];
 		} else {
-			exit.withError( 'Please supply a worker name to validate, or pass `--all`.' );
+			throw new Error( 'Please supply a worker name to validate, or pass `--all`.' );
 		}
 
 		// Validate sequentially for clear, ordered output.
@@ -69,6 +69,10 @@ export async function edgeWorkersValidateCommand( args = [], opt = {} ) {
 			}
 		}
 
+		if ( invalidCount > 0 ) {
+			throw new Error( `${ invalidCount } worker(s) failed validation.` );
+		}
+
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_validate_command_success', {
 			count: workers.length,
 			invalid: invalidCount,
@@ -79,10 +83,6 @@ export async function edgeWorkersValidateCommand( args = [], opt = {} ) {
 			error: err.message,
 		} );
 		exit.withError( `Failed to validate edge worker: ${ err.message }` );
-	}
-
-	if ( invalidCount > 0 ) {
-		exit.withError( `${ invalidCount } worker(s) failed validation.` );
 	}
 }
 

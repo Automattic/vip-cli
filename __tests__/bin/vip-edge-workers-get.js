@@ -67,6 +67,9 @@ describe( 'edgeWorkersGetCommand()', () => {
 			'edge_workers_get_command_success',
 			{ name: 'headers' }
 		);
+		const apiOrder = edgeWorkersApi.getEdgeWorker.mock.invocationCallOrder[ 0 ];
+		const successOrder = tracker.trackEventWithEnv.mock.invocationCallOrder.at( -1 );
+		expect( apiOrder ).toBeLessThan( successOrder );
 	} );
 
 	it( 'requests and prints stored source only for --source', async () => {
@@ -100,6 +103,8 @@ describe( 'edgeWorkersGetCommand()', () => {
 		expect( exit.withError ).toHaveBeenCalledWith(
 			'No edge worker named "missing" is deployed to this environment.'
 		);
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
 		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
 			1,
 			3,

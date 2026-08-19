@@ -77,6 +77,8 @@ describe( 'edgeWorkersEnableCommand()', () => {
 
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( edgeWorkersApi.setEdgeWorkerActive ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
 		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
 			1,
 			3,

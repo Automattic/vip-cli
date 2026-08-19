@@ -68,6 +68,9 @@ describe( 'edgeWorkersValidateCommand()', () => {
 		expect( lib.buildWorker ).toHaveBeenCalledWith( '/proj', worker );
 		expect( api.validateEdgeWorker ).toHaveBeenCalledWith( 3, 'V0FTTQ==' );
 		expect( exit.withError ).not.toHaveBeenCalled();
+		const validationOrder = api.validateEdgeWorker.mock.invocationCallOrder[ 0 ];
+		const successOrder = tracker.trackEventWithEnv.mock.invocationCallOrder.at( -1 );
+		expect( validationOrder ).toBeLessThan( successOrder );
 	} );
 
 	it( 'uses the prebuilt artifact with --skip-build', async () => {
@@ -93,6 +96,14 @@ describe( 'edgeWorkersValidateCommand()', () => {
 			'EXIT_WITH_ERROR'
 		);
 		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( 'failed validation' ) );
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_validate_command_success',
+			expect.anything()
+		);
 	} );
 
 	it( 'does not report validation success when the API rejects', async () => {
@@ -126,6 +137,7 @@ describe( 'edgeWorkersValidateCommand()', () => {
 
 	it( 'errors when no worker name and no --all is given', async () => {
 		await expect( edgeWorkersValidateCommand( [], opts ) ).rejects.toBe( 'EXIT_WITH_ERROR' );
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 		expect( exit.withError ).toHaveBeenCalledWith(
 			expect.stringContaining( 'supply a worker name' )
 		);

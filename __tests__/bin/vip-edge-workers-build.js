@@ -103,6 +103,8 @@ describe( 'edgeWorkersBuildCommand()', () => {
 			'edge_workers_build_command_success',
 			expect.anything()
 		);
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'prints the relative artifact path and byte size', async () => {
@@ -114,5 +116,8 @@ describe( 'edgeWorkersBuildCommand()', () => {
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_build_command_success', {
 			count: 1,
 		} );
+		const buildOrder = lib.buildWorker.mock.invocationCallOrder[ 0 ];
+		const successOrder = tracker.trackEvent.mock.invocationCallOrder.at( -1 );
+		expect( buildOrder ).toBeLessThan( successOrder );
 	} );
 } );

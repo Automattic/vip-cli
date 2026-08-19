@@ -125,5 +125,8 @@ describe( 'edgeWorkersNewCommand()', () => {
 			name: 'demo',
 			type: 'assemblyscript',
 		} );
+		const scaffoldOrder = scaffoldWorker.mock.invocationCallOrder[ 0 ];
+		const successOrder = tracker.trackEvent.mock.invocationCallOrder.at( -1 );
+		expect( scaffoldOrder ).toBeLessThan( successOrder );
 	} );
 } );

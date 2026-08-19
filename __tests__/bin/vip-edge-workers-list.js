@@ -1,6 +1,7 @@
 import { edgeWorkersListCommand } from '../../src/bin/vip-edge-workers-list';
 import * as api from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
@@ -56,6 +57,15 @@ describe( 'edgeWorkersListCommand()', () => {
 				modified: '2026-06-04',
 			},
 		] );
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_list_command_success',
+			{ count: 1 }
+		);
+		const apiOrder = api.listEdgeWorkers.mock.invocationCallOrder[ 0 ];
+		const successOrder = tracker.trackEventWithEnv.mock.invocationCallOrder.at( -1 );
+		expect( apiOrder ).toBeLessThan( successOrder );
 	} );
 
 	it( 'shows a friendly message and returns an empty array when there are none', async () => {
@@ -69,10 +79,27 @@ describe( 'edgeWorkersListCommand()', () => {
 		);
 	} );
 
+	it( 'returns empty JSON data without friendly prose when there are no workers', async () => {
+		api.listEdgeWorkers.mockResolvedValue( [] );
+
+		const rows = await edgeWorkersListCommand( [], { ...opts, format: 'json' } );
+
+		expect( rows ).toEqual( [] );
+		expect( console.log ).not.toHaveBeenCalled();
+	} );
+
 	it( 'reports a friendly error when the API call fails', async () => {
 		api.listEdgeWorkers.mockRejectedValue( new Error( 'boom' ) );
 
 		await expect( edgeWorkersListCommand( [], opts ) ).rejects.toBe( 'EXIT_WITH_ERROR' );
 		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to list edge workers: boom' );
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_list_command_success',
+			expect.anything()
+		);
 	} );
 } );

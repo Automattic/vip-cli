@@ -65,6 +65,14 @@ describe( 'edgeWorkersDisableCommand()', () => {
 
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( edgeWorkersApi.setEdgeWorkerActive ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_disable_command_success',
+			expect.anything()
+		);
 	} );
 
 	it( 'reports API rejection without success output or telemetry', async () => {

@@ -68,6 +68,14 @@ describe( 'edgeWorkersDeleteCommand()', () => {
 		expect( edgeWorkersApi.findEdgeWorkerByName ).toHaveBeenCalledWith( 1, 3, 'missing' );
 		expect( confirm ).not.toHaveBeenCalled();
 		expect( edgeWorkersApi.deleteEdgeWorker ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_delete_command_success',
+			expect.anything()
+		);
 	} );
 
 	it( 'confirms the exact resolved target before deleting', async () => {

@@ -25,7 +25,7 @@ export async function edgeWorkersDeleteCommand( args = [], opt = {} ) {
 	try {
 		const worker = await findEdgeWorkerByName( app.id, env.id, name );
 		if ( ! worker ) {
-			exit.withError( `No edge worker named "${ name }" is deployed to this environment.` );
+			throw new Error( `No edge worker named "${ name }" is deployed to this environment.` );
 		}
 
 		await confirmEdgeWorkerDeletion(

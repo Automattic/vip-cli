@@ -288,6 +288,14 @@ describe( 'edgeWorkersDeployCommand()', () => {
 		expect( exit.withError ).toHaveBeenCalledWith(
 			'Failed to deploy edge worker: worker "beta" failed validation'
 		);
+		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringMatching( /^✓/ ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_deploy_command_success',
+			expect.anything()
+		);
 	} );
 
 	it( 'reports exact progress and the original cause after a partial failure', async () => {

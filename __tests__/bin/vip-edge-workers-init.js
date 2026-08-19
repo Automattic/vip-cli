@@ -46,6 +46,9 @@ describe( 'edgeWorkersInitCommand()', () => {
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Created a new assemblyscript edge-workers project' )
 		);
+		const scaffoldOrder = scaffoldProject.mock.invocationCallOrder[ 0 ];
+		const successOrder = tracker.trackEvent.mock.invocationCallOrder.at( -1 );
+		expect( scaffoldOrder ).toBeLessThan( successOrder );
 	} );
 
 	it( 'reports an unsupported type without scaffolding or success telemetry', async () => {
