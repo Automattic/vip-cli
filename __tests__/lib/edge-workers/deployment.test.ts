@@ -157,6 +157,16 @@ describe( 'prepareEdgeWorkerDeploymentPlan()', () => {
 		expect( plan[ 0 ].input ).not.toHaveProperty( 'source' );
 	} );
 
+	it( 'stores an empty source file on update when source storage is enabled', async () => {
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [ remoteWorker() ] );
+		jest.mocked( readWorkerSource ).mockReturnValue( '' );
+
+		const plan = await prepareEdgeWorkerDeploymentPlan( options() );
+
+		expect( plan[ 0 ].sourceMode ).toBe( 'store' );
+		expect( plan[ 0 ].input ).toHaveProperty( 'source', '' );
+	} );
+
 	it( 'aborts preparation when source cannot be read', async () => {
 		jest.mocked( readWorkerSource ).mockImplementation( () => {
 			throw new Error( 'Could not read worker source.' );

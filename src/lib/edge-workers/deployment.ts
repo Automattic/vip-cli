@@ -111,7 +111,7 @@ function prepareInput(
 	if ( worker.manifest.on_failure ) {
 		input.onFailure = worker.manifest.on_failure;
 	}
-	if ( source ) {
+	if ( source !== undefined ) {
 		input.source = source;
 	}
 	if ( existing && hasLocation ) {
