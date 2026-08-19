@@ -1,6 +1,7 @@
 import {
 	createEdgeWorker,
 	listEdgeWorkers,
+	setEdgeWorkerActive,
 	updateEdgeWorker,
 	validateEdgeWorker,
 } from '../api/edge-workers';
@@ -22,6 +23,8 @@ export interface EdgeWorkerDeploymentPlanItem {
 	currentLocation: EdgeWorkerLocation | null;
 	proposedLocation: EdgeWorkerLocation | null;
 	sourceMode: 'store' | 'omit' | 'preserve';
+	enableAfterDeploy: boolean;
+	intendedActive: boolean;
 }
 
 export interface EdgeWorkerDeploymentPlanOptions {
@@ -32,6 +35,7 @@ export interface EdgeWorkerDeploymentPlanOptions {
 	skipBuild: boolean;
 	skipValidate: boolean;
 	skipSource: boolean;
+	enableAfterDeploy: boolean;
 }
 
 export type EdgeWorkerAppliedCallback = (
@@ -43,18 +47,29 @@ export class DeploymentApplyError extends Error {
 	public readonly appliedNames: string[];
 	public readonly failedName: string;
 	public readonly unappliedNames: string[];
+	public readonly stage: 'upload' | 'enable';
+	public readonly uploadCompleted: boolean;
+	public readonly activeAfterUpload: boolean | null;
 
 	constructor(
 		appliedNames: string[],
 		failedName: string,
 		unappliedNames: string[],
-		cause: unknown
+		cause: unknown,
+		state: {
+			stage: 'upload' | 'enable';
+			uploadCompleted: boolean;
+			activeAfterUpload: boolean | null;
+		}
 	) {
 		super( `Failed to apply edge worker "${ failedName }".`, { cause } );
 		this.name = 'DeploymentApplyError';
 		this.appliedNames = appliedNames;
 		this.failedName = failedName;
 		this.unappliedNames = unappliedNames;
+		this.stage = state.stage;
+		this.uploadCompleted = state.uploadCompleted;
+		this.activeAfterUpload = state.activeAfterUpload;
 	}
 }
 
@@ -143,6 +158,7 @@ async function preparePlanItem(
 	const source = options.skipSource ? undefined : readWorkerSource( worker );
 	const hasLocation = Object.hasOwn( worker.manifest, 'location' );
 	const currentLocation = existing?.location ?? null;
+	const intendedActive = options.enableAfterDeploy || Boolean( existing?.active );
 
 	return {
 		action: existing ? 'update' : 'create',
@@ -155,6 +171,8 @@ async function preparePlanItem(
 		currentLocation,
 		proposedLocation: proposedLocationFor( worker, existing, hasLocation, currentLocation ),
 		sourceMode: sourceModeFor( options.skipSource, existing ),
+		enableAfterDeploy: options.enableAfterDeploy,
+		intendedActive,
 	};
 }
 
@@ -180,13 +198,21 @@ function formatLocation( location: EdgeWorkerLocation | null ): string {
 		: 'all requests';
 }
 
+function currentActiveLabel( item: EdgeWorkerDeploymentPlanItem ): string {
+	if ( ! item.existing ) {
+		return 'new';
+	}
+	return item.existing.active ? 'active' : 'inactive';
+}
+
 export function deploymentPlanRows(
 	items: readonly EdgeWorkerDeploymentPlanItem[]
 ): Record< string, string >[] {
 	return items.map( item => ( {
 		worker: escapeTerminalText( item.worker.manifest.name ),
 		action: item.action,
-		active: item.existing?.active ? 'yes' : 'no',
+		current_active: currentActiveLabel( item ),
+		final_active: item.intendedActive ? 'active' : 'inactive',
 		current_scope: formatLocation( item.currentLocation ),
 		proposed_scope: formatLocation( item.proposedLocation ),
 		validation: item.validation,
@@ -227,12 +253,33 @@ export async function applyEdgeWorkerDeploymentPlan(
 				[ ...appliedNames ],
 				name,
 				items.slice( index + 1 ).map( remaining => remaining.worker.manifest.name ),
-				cause
+				cause,
+				{ stage: 'upload', uploadCompleted: false, activeAfterUpload: null }
 			);
+		}
+
+		let finalResult = result;
+		if ( item.enableAfterDeploy && ! result.active ) {
+			try {
+				// eslint-disable-next-line no-await-in-loop
+				finalResult = await setEdgeWorkerActive( envId, result.id, true );
+			} catch ( cause ) {
+				throw new DeploymentApplyError(
+					[ ...appliedNames ],
+					name,
+					items.slice( index + 1 ).map( remaining => remaining.worker.manifest.name ),
+					cause,
+					{
+						stage: 'enable',
+						uploadCompleted: true,
+						activeAfterUpload: result.active,
+					}
+				);
+			}
 		}
 
 		appliedNames.push( name );
 		// eslint-disable-next-line no-await-in-loop
-		await onApplied( item, result );
+		await onApplied( item, finalResult );
 	}
 }

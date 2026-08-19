@@ -1,6 +1,7 @@
 import {
 	createEdgeWorker,
 	listEdgeWorkers,
+	setEdgeWorkerActive,
 	updateEdgeWorker,
 	validateEdgeWorker,
 } from '../../../src/lib/api/edge-workers';
@@ -17,6 +18,7 @@ import type { EdgeWorker } from '../../../src/lib/edge-workers/types';
 jest.mock( '../../../src/lib/api/edge-workers', () => ( {
 	createEdgeWorker: jest.fn(),
 	listEdgeWorkers: jest.fn(),
+	setEdgeWorkerActive: jest.fn(),
 	updateEdgeWorker: jest.fn(),
 	validateEdgeWorker: jest.fn(),
 } ) );
@@ -60,6 +62,7 @@ const options = ( workers = [ localWorker() ] ) => ( {
 	skipBuild: false,
 	skipValidate: false,
 	skipSource: false,
+	enableAfterDeploy: false,
 } );
 
 describe( 'prepareEdgeWorkerDeploymentPlan()', () => {
@@ -285,7 +288,8 @@ describe( 'deploymentPlanRows()', () => {
 			{
 				worker: 'headers',
 				action: 'update',
-				active: 'yes',
+				current_active: 'active',
+				final_active: 'active',
 				current_scope: 'starts_with "/api/"',
 				proposed_scope: 'all requests',
 				validation: 'passed',
@@ -313,7 +317,8 @@ describe( 'deploymentPlanRows()', () => {
 			{
 				worker: 'headers',
 				action: 'create',
-				active: 'no',
+				current_active: 'new',
+				final_active: 'inactive',
 				current_scope: 'all requests',
 				proposed_scope: 'all requests',
 				validation: 'passed',
@@ -322,7 +327,63 @@ describe( 'deploymentPlanRows()', () => {
 				source: 'omit',
 			},
 		] );
+		expect( plan[ 0 ] ).toMatchObject( {
+			enableAfterDeploy: false,
+			intendedActive: false,
+		} );
 		expect( plan[ 0 ] ).toEqual( itemBeforePreview );
+	} );
+
+	it( 'renders an active final state for a create when enable is requested', async () => {
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [] );
+
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options(),
+			enableAfterDeploy: true,
+		} );
+		const rows = deploymentPlanRows( plan );
+
+		expect( plan[ 0 ] ).toMatchObject( { enableAfterDeploy: true, intendedActive: true } );
+		expect( rows ).toEqual( [
+			expect.objectContaining( {
+				current_active: 'new',
+				final_active: 'active',
+			} ),
+		] );
+	} );
+
+	it( 'renders an active final state for an inactive update when enable is requested', async () => {
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [ remoteWorker( { active: false } ) ] );
+
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options(),
+			enableAfterDeploy: true,
+		} );
+		const rows = deploymentPlanRows( plan );
+
+		expect( plan[ 0 ] ).toMatchObject( { enableAfterDeploy: true, intendedActive: true } );
+		expect( rows ).toEqual( [
+			expect.objectContaining( {
+				current_active: 'inactive',
+				final_active: 'active',
+			} ),
+		] );
+	} );
+
+	it( 'keeps an already-active update active when enable is requested', async () => {
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options(),
+			enableAfterDeploy: true,
+		} );
+		const rows = deploymentPlanRows( plan );
+
+		expect( plan[ 0 ] ).toMatchObject( { enableAfterDeploy: true, intendedActive: true } );
+		expect( rows ).toEqual( [
+			expect.objectContaining( {
+				current_active: 'active',
+				final_active: 'active',
+			} ),
+		] );
 	} );
 
 	it( 'neutralizes terminal controls in remote preview fields', async () => {
@@ -387,8 +448,83 @@ describe( 'applyEdgeWorkerDeploymentPlan()', () => {
 
 		expect( createEdgeWorker ).toHaveBeenCalledWith( 3, plan[ 0 ].input );
 		expect( updateEdgeWorker ).toHaveBeenCalledWith( 3, 84, plan[ 1 ].input );
+		expect( setEdgeWorkerActive ).not.toHaveBeenCalled();
 		expect( order ).toEqual( [ 'create', 'applied:headers:7', 'update', 'applied:redirects:84' ] );
 		expect( plan ).toEqual( planBeforeApply );
+	} );
+
+	it( 'enables an inactive create after upload and reports the activated worker', async () => {
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [] );
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options(),
+			enableAfterDeploy: true,
+		} );
+		const uploaded = remoteWorker( { id: 7, location: null, active: false } );
+		const enabled = remoteWorker( { id: 7, location: null, active: true } );
+		const order: string[] = [];
+		jest.mocked( createEdgeWorker ).mockImplementation( () => {
+			order.push( 'create' );
+			return Promise.resolve( uploaded );
+		} );
+		jest.mocked( setEdgeWorkerActive ).mockImplementation( () => {
+			order.push( 'enable' );
+			return Promise.resolve( enabled );
+		} );
+		const onApplied = jest.fn( ( _item: unknown, result: EdgeWorker ) => {
+			order.push( `applied:headers:${ result.active }` );
+		} );
+
+		await applyEdgeWorkerDeploymentPlan( 3, plan, onApplied );
+
+		expect( setEdgeWorkerActive ).toHaveBeenCalledWith( 3, 7, true );
+		expect( onApplied ).toHaveBeenCalledWith( plan[ 0 ], enabled );
+		expect( order ).toEqual( [ 'create', 'enable', 'applied:headers:true' ] );
+	} );
+
+	it( 'enables an inactive update after upload and reports the activated worker', async () => {
+		const existing = remoteWorker( { active: false } );
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [ existing ] );
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options(),
+			enableAfterDeploy: true,
+		} );
+		const uploaded = remoteWorker( { active: false } );
+		const enabled = remoteWorker( { active: true } );
+		const order: string[] = [];
+		jest.mocked( updateEdgeWorker ).mockImplementation( () => {
+			order.push( 'update' );
+			return Promise.resolve( uploaded );
+		} );
+		jest.mocked( setEdgeWorkerActive ).mockImplementation( () => {
+			order.push( 'enable' );
+			return Promise.resolve( enabled );
+		} );
+		const onApplied = jest.fn( ( _item: unknown, result: EdgeWorker ) => {
+			order.push( `applied:headers:${ result.active }` );
+		} );
+
+		await applyEdgeWorkerDeploymentPlan( 3, plan, onApplied );
+
+		expect( setEdgeWorkerActive ).toHaveBeenCalledWith( 3, 42, true );
+		expect( onApplied ).toHaveBeenCalledWith( plan[ 0 ], enabled );
+		expect( order ).toEqual( [ 'update', 'enable', 'applied:headers:true' ] );
+	} );
+
+	it( 'does not redundantly enable an update that remains active after upload', async () => {
+		const existing = remoteWorker( { active: true } );
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [ existing ] );
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options(),
+			enableAfterDeploy: true,
+		} );
+		const uploaded = remoteWorker( { active: true } );
+		jest.mocked( updateEdgeWorker ).mockResolvedValue( uploaded );
+		const onApplied = jest.fn();
+
+		await applyEdgeWorkerDeploymentPlan( 3, plan, onApplied );
+
+		expect( setEdgeWorkerActive ).not.toHaveBeenCalled();
+		expect( onApplied ).toHaveBeenCalledWith( plan[ 0 ], uploaded );
 	} );
 
 	it( 'reports applied, failed, and unapplied names without retry or rollback', async () => {
@@ -406,17 +542,59 @@ describe( 'applyEdgeWorkerDeploymentPlan()', () => {
 
 		await expect( application ).rejects.toBeInstanceOf( DeploymentApplyError );
 		await expect( application ).rejects.toMatchObject( {
+			stage: 'upload',
 			appliedNames: [ 'alpha' ],
 			failedName: 'beta',
 			unappliedNames: [ 'gamma' ],
+			uploadCompleted: false,
+			activeAfterUpload: null,
 			cause,
 		} );
 		expect( createEdgeWorker ).toHaveBeenCalledTimes( 2 );
 		expect( updateEdgeWorker ).not.toHaveBeenCalled();
+		expect( setEdgeWorkerActive ).not.toHaveBeenCalled();
 		expect( onApplied ).toHaveBeenCalledTimes( 1 );
 		expect( onApplied ).toHaveBeenCalledWith(
 			plan[ 0 ],
 			expect.objectContaining( { name: 'alpha' } )
 		);
+	} );
+
+	it( 'reports an ambiguous enable failure after upload and stops later workers', async () => {
+		const workers = [ 'alpha', 'beta', 'gamma' ].map( name => localWorker( { name } ) );
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [] );
+		const plan = await prepareEdgeWorkerDeploymentPlan( {
+			...options( workers ),
+			enableAfterDeploy: true,
+		} );
+		const alphaUploaded = remoteWorker( { id: 1, name: 'alpha', active: false } );
+		const alphaEnabled = remoteWorker( { id: 1, name: 'alpha', active: true } );
+		const betaUploaded = remoteWorker( { id: 2, name: 'beta', active: false } );
+		const cause = new Error( 'request timed out' );
+		jest
+			.mocked( createEdgeWorker )
+			.mockResolvedValueOnce( alphaUploaded )
+			.mockResolvedValueOnce( betaUploaded );
+		jest
+			.mocked( setEdgeWorkerActive )
+			.mockResolvedValueOnce( alphaEnabled )
+			.mockRejectedValueOnce( cause );
+		const onApplied = jest.fn();
+
+		const application = applyEdgeWorkerDeploymentPlan( 3, plan, onApplied );
+
+		await expect( application ).rejects.toMatchObject( {
+			stage: 'enable',
+			appliedNames: [ 'alpha' ],
+			failedName: 'beta',
+			unappliedNames: [ 'gamma' ],
+			uploadCompleted: true,
+			activeAfterUpload: false,
+			cause,
+		} );
+		expect( createEdgeWorker ).toHaveBeenCalledTimes( 2 );
+		expect( setEdgeWorkerActive ).toHaveBeenCalledTimes( 2 );
+		expect( onApplied ).toHaveBeenCalledTimes( 1 );
+		expect( onApplied ).toHaveBeenCalledWith( plan[ 0 ], alphaEnabled );
 	} );
 } );
