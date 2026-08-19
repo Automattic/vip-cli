@@ -3,6 +3,7 @@ import * as api from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import * as lib from '../../src/lib/edge-workers';
 import * as project from '../../src/lib/edge-workers/project';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
@@ -92,6 +93,24 @@ describe( 'edgeWorkersValidateCommand()', () => {
 			'EXIT_WITH_ERROR'
 		);
 		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( 'failed validation' ) );
+	} );
+
+	it( 'does not report validation success when the API rejects', async () => {
+		api.validateEdgeWorker.mockRejectedValue(
+			new Error( 'validateEdgeWorker returned no result.' )
+		);
+
+		await expect( edgeWorkersValidateCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringContaining( 'is valid' ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_validate_command_success',
+			expect.anything()
+		);
 	} );
 
 	it( 'validates every worker with --all', async () => {

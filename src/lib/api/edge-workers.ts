@@ -13,6 +13,7 @@
 import gql from 'graphql-tag';
 
 import API from '../../lib/api';
+import UserError from '../user-error';
 
 import type {
 	EdgeWorker,
@@ -64,6 +65,13 @@ interface EdgeWorkersQueryResult {
 function pickEnvWorkers( result: EdgeWorkersQueryResult | undefined, envId: number ): EdgeWorker[] {
 	const env = result?.app?.environments?.find( candidate => candidate.id === envId );
 	return env?.edgeWorkers ?? [];
+}
+
+function requireMutationPayload< T >( operation: string, value: T | null | undefined ): T {
+	if ( value === null || value === undefined ) {
+		throw new UserError( `${ operation } returned no result.` );
+	}
+	return value;
 }
 
 /** List the edge workers deployed to an environment (without source/wasm). */
@@ -143,7 +151,7 @@ export interface EdgeWorkerWriteInput {
 export async function createEdgeWorker(
 	envId: number,
 	input: EdgeWorkerWriteInput & { name: string; wasmBinary: string }
-): Promise< EdgeWorker | null > {
+): Promise< EdgeWorker > {
 	const api = API();
 	const response = await api.mutate< { createEdgeWorker: EdgeWorker | null } >( {
 		mutation: gql`
@@ -156,14 +164,14 @@ export async function createEdgeWorker(
 		variables: { input: { environmentId: envId, ...input } },
 	} );
 
-	return response.data?.createEdgeWorker ?? null;
+	return requireMutationPayload( 'createEdgeWorker', response.data?.createEdgeWorker );
 }
 
 export async function updateEdgeWorker(
 	envId: number,
 	edgeWorkerId: number,
 	input: EdgeWorkerWriteInput
-): Promise< EdgeWorker | null > {
+): Promise< EdgeWorker > {
 	const api = API();
 	const response = await api.mutate< { updateEdgeWorker: EdgeWorker | null } >( {
 		mutation: gql`
@@ -176,7 +184,7 @@ export async function updateEdgeWorker(
 		variables: { input: { environmentId: envId, edgeWorkerId, ...input } },
 	} );
 
-	return response.data?.updateEdgeWorker ?? null;
+	return requireMutationPayload( 'updateEdgeWorker', response.data?.updateEdgeWorker );
 }
 
 export interface EdgeWorkerValidationResult {
@@ -187,13 +195,12 @@ export interface EdgeWorkerValidationResult {
 
 /**
  * Server-side dry-run validation of a compiled worker. Persists nothing — used
- * to fail fast before the real create/update upload. Returns null when the
- * mutation yields no result.
+ * to fail fast before the real create/update upload.
  */
 export async function validateEdgeWorker(
 	envId: number,
 	wasmBinary: string
-): Promise< EdgeWorkerValidationResult | null > {
+): Promise< EdgeWorkerValidationResult > {
 	const api = API();
 	const response = await api.mutate< {
 		validateEdgeWorker: EdgeWorkerValidationResult | null;
@@ -210,14 +217,14 @@ export async function validateEdgeWorker(
 		variables: { input: { environmentId: envId, wasmBinary } },
 	} );
 
-	return response.data?.validateEdgeWorker ?? null;
+	return requireMutationPayload( 'validateEdgeWorker', response.data?.validateEdgeWorker );
 }
 
 export async function setEdgeWorkerActive(
 	envId: number,
 	edgeWorkerId: number,
 	active: boolean
-): Promise< EdgeWorker | null > {
+): Promise< EdgeWorker > {
 	const api = API();
 	const response = await api.mutate< { setEdgeWorkerActive: EdgeWorker | null } >( {
 		mutation: gql`
@@ -230,10 +237,10 @@ export async function setEdgeWorkerActive(
 		variables: { input: { environmentId: envId, edgeWorkerId, active } },
 	} );
 
-	return response.data?.setEdgeWorkerActive ?? null;
+	return requireMutationPayload( 'setEdgeWorkerActive', response.data?.setEdgeWorkerActive );
 }
 
-export async function deleteEdgeWorker( envId: number, edgeWorkerId: number ): Promise< boolean > {
+export async function deleteEdgeWorker( envId: number, edgeWorkerId: number ): Promise< void > {
 	const api = API();
 	const response = await api.mutate< { deleteEdgeWorker: boolean | null } >( {
 		mutation: gql`
@@ -244,5 +251,7 @@ export async function deleteEdgeWorker( envId: number, edgeWorkerId: number ): P
 		variables: { input: { environmentId: envId, edgeWorkerId } },
 	} );
 
-	return response.data?.deleteEdgeWorker ?? false;
+	if ( response.data?.deleteEdgeWorker !== true ) {
+		throw new UserError( 'deleteEdgeWorker did not confirm deletion.' );
+	}
 }

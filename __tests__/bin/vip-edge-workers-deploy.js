@@ -3,6 +3,7 @@ import * as api from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import * as lib from '../../src/lib/edge-workers';
 import * as project from '../../src/lib/edge-workers/project';
+import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 jest.spyOn( exit, 'withError' ).mockImplementation( () => {
@@ -100,6 +101,40 @@ describe( 'edgeWorkersDeployCommand()', () => {
 			location: null,
 		} );
 		expect( api.createEdgeWorker ).not.toHaveBeenCalled();
+	} );
+
+	it( 'does not report deployment success when create rejects', async () => {
+		api.findEdgeWorkerByName.mockResolvedValue( null );
+		api.createEdgeWorker.mockRejectedValue( new Error( 'createEdgeWorker returned no result.' ) );
+
+		await expect( edgeWorkersDeployCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringContaining( '✓ created' ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_deploy_command_success',
+			expect.anything()
+		);
+	} );
+
+	it( 'does not report deployment success when update rejects', async () => {
+		api.findEdgeWorkerByName.mockResolvedValue( { id: 42 } );
+		api.updateEdgeWorker.mockRejectedValue( new Error( 'updateEdgeWorker returned no result.' ) );
+
+		await expect( edgeWorkersDeployCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( console.log ).not.toHaveBeenCalledWith( expect.stringContaining( '✓ updated' ) );
+		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_deploy_command_success',
+			expect.anything()
+		);
 	} );
 
 	it( 'sends the manifest location on update, clearing it when absent', async () => {
