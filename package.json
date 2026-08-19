@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "4.0.12-dev.0",
+  "version": "4.1.2-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -150,17 +150,18 @@
     "@types/ssh2": "^1.15.4",
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
+    "esbuild": "^0.28.0",
     "jest": "^30.0.0",
     "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@apollo/client": "4.2.5",
+    "@apollo/client": "4.2.10",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
-    "chalk": "^5.6.2",
+    "chalk": "^6.0.0",
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
@@ -169,17 +170,18 @@
     "debug": "4.4.3",
     "ejs": "^6.0.1",
     "enquirer": "2.4.1",
-    "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
     "graphql": "17.0.2",
     "graphql-tag": "2.12.7",
+    "graphql-ws": "^6.2.0",
     "https-proxy-agent": "^9.0.0",
     "js-yaml": "^5.0.0",
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-    "node-stream-zip": "1.15.0",
+    "node-stream-zip": "1.16.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
+    "rxjs": "^7.8.2",
     "semver": "7.8.5",
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
@@ -197,8 +199,13 @@
   "publishConfig": {
     "access": "public"
   },
+  "bundleDependencies": true,
   "allowScripts": {
     "ssh2@1.17.0": true,
-    "@github/keytar@7.10.6": true
+    "@github/keytar@7.10.6": true,
+    "cpu-features@0.0.10": true,
+    "protobufjs@7.6.5": true,
+    "unrs-resolver@1.11.1": true,
+    "esbuild@0.28.1": true
   }
 }

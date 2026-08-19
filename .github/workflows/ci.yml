@@ -31,11 +31,11 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -47,7 +47,7 @@ jobs:
     name: Dependaban
     runs-on: ubuntu-latest
     steps:
-      - uses: Automattic/vip-actions/dependaban@63b6eb29cdcf8f55d7f0910c82356f34f8f997c4 # trunk
+      - uses: Automattic/vip-actions/dependaban@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
 
   audit:
     name: Verify signatures and provenance statements
@@ -57,14 +57,11 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
-
-      - name: Install latest npm
-        run: npm install -g npm@latest
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -87,11 +84,11 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci

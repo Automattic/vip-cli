@@ -103,12 +103,19 @@ services:
   database:
     type: compose
     services:
+      # Bulk-import friendly settings (local dev only, durability is not a concern):
+      # - skip-log-bin (MySQL): binary logging is on by default in MySQL 8 and doubles the
+      #   write volume of large SQL imports for no benefit locally. MariaDB has it off by default.
+      # - innodb-buffer-pool-size: the 128M default forces constant flushing on multi-GB imports.
+      # - innodb-redo-log-capacity (MySQL) / innodb-log-file-size (MariaDB): the ~100M default
+      #   causes "Redo log writer is waiting for a new redo log file" stalls during imports.
+      # - innodb-flush-log-at-trx-commit=2: no fsync per commit; at most ~1s of writes lost on crash.
 <% if ( mariadb ) { %>
       image: mariadb:<%= mariadb %>
-      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --innodb-buffer-pool-size=1G --innodb-log-file-size=1G --innodb-flush-log-at-trx-commit=2
 <% } else { %>
       image: mysql:8.4
-      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --mysql-native-password=ON
+      command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --mysql-native-password=ON --skip-log-bin --innodb-buffer-pool-size=1G --innodb-redo-log-capacity=1G --innodb-flush-log-at-trx-commit=2
 <% } %>
       ports:
         - ":3306"

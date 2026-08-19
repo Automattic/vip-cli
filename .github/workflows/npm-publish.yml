@@ -20,9 +20,15 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
+      - uses: Automattic/vip-actions/npm-publish@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
+        env:
+          # The action captures `npm version` stdout to build the next-dev branch name.
+          # Keep lifecycle script banners from polluting that value while still allowing
+          # the `version` script to sync npm-shrinkwrap.json.
+          NPM_CONFIG_LOGLEVEL: silent
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm-version: '11'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           CONVENTIONAL_COMMITS: 'true'
@@ -56,9 +62,10 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@c8022b66e78461df4f802b935dc0dbb8399f96bc # v0.7.4
+      - uses: Automattic/vip-actions/npm-publish-prerelease@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm-version: '11'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           NPM_TAG: ${{ inputs.npm_tag }}

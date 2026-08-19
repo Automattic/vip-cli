@@ -90,8 +90,7 @@ export async function appDeployTokenGenerateCmd(
 			},
 		} );
 	} catch ( err ) {
-		const message =
-			parseApiError( err as Parameters< typeof parseApiError >[ 0 ] ) ?? 'Unknown error';
+		const message = parseApiError( err ) ?? 'Unknown error';
 		await trackerFn( 'error', { error: message } );
 		exit.withError( `Failed to generate deploy token: ${ message }` );
 		return;

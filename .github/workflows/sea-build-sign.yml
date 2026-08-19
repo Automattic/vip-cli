@@ -56,11 +56,11 @@ jobs:
           git config --global core.eol lf
 
       - name: Set up Node.js 22
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: npm
-          cache-dependency-path: npm-shrinkwrap.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
