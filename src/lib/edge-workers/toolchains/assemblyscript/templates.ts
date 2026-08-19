@@ -55,6 +55,9 @@ vip edge-workers new my-worker    # scaffold a new worker
 vip @my-site.develop edge-workers deploy my-worker
 \`\`\`
 
+Commit the generated \`package-lock.json\` after \`npm install\` so installs use the
+reviewed dependency tree in local development and automation.
+
 Shared AssemblyScript modules go in \`lib/\` and can be imported from any worker.
 
 ## Parsing JSON
@@ -65,36 +68,24 @@ transform automatically when the package is present.
 `;
 
 export function starterWorker(): string {
-	return `import {
-	Request,
-	Response,
-	onClientRequest,
-	onOriginRequest,
-	onClientResponse,
-	onOriginResponse,
-} from '${ SDK_PACKAGE }';
+	return `import { Response, onClientResponse } from '${ SDK_PACKAGE }';
 
-// A worker re-exports \`alloc\` plus the host entrypoints for each phase it
-// handles. Drop the ones you don't use (and their hooks below).
-export {
-	alloc,
-	on_client_request,
-	on_origin_request,
-	on_client_response,
-	on_origin_response,
-} from '${ SDK_PACKAGE }/assembly/index';
-
-// Client request: runs before the cache lookup, on every request.
-onClientRequest( ( req: Request ): void => {} );
-
-// Origin request: runs on a cache miss, before forwarding to origin.
-onOriginRequest( ( req: Request ): void => {} );
+export { alloc, on_client_response } from '${ SDK_PACKAGE }/assembly/index';
 
 // Client response: runs before the response reaches the client.
-onClientResponse( ( res: Response ): void => {} );
+onClientResponse( ( response: Response ): void => {} );
 
-// Origin response: runs after origin responds (cache miss); what you set here
-// governs what the host caches.
-onOriginResponse( ( res: Response ): void => {} );
+// Other available phases are intentionally inactive. To activate one, add its
+// SDK type and hook to the import above, its host entrypoint to the export above,
+// and its handler below. Do not export a phase without implementing its hook.
+//
+// Client request: Request, onClientRequest, on_client_request
+// onClientRequest( ( request: Request ): void => {} );
+//
+// Origin request: Request, onOriginRequest, on_origin_request
+// onOriginRequest( ( request: Request ): void => {} );
+//
+// Origin response: Response, onOriginResponse, on_origin_response
+// onOriginResponse( ( response: Response ): void => {} );
 `;
 }

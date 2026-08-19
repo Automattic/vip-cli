@@ -33,8 +33,11 @@ describe( 'edge-workers toolchains', () => {
 			expect( fs.existsSync( path.join( project, 'workers' ) ) ).toBe( true );
 
 			const pkg = JSON.parse( fs.readFileSync( path.join( project, 'package.json' ), 'utf8' ) );
-			expect( pkg.dependencies ).toHaveProperty( '@automattic/vip-edge-workers-sdk' );
-			expect( pkg.devDependencies ).toHaveProperty( 'assemblyscript' );
+			expect( pkg.dependencies[ '@automattic/vip-edge-workers-sdk' ] ).toBe( '0.3.0' );
+			expect( pkg.devDependencies.assemblyscript ).toBe( '0.27.0' );
+
+			const readme = fs.readFileSync( path.join( project, 'README.md' ), 'utf8' );
+			expect( readme ).toContain( 'Commit the generated `package-lock.json`' );
 		} );
 
 		it( 'scaffolds a project in an existing empty directory', () => {
@@ -77,6 +80,12 @@ describe( 'edge-workers toolchains', () => {
 				entry: 'assembly/index.ts',
 			} );
 			expect( fs.existsSync( path.join( workerDir, 'assembly', 'index.ts' ) ) ).toBe( true );
+
+			const source = fs.readFileSync( path.join( workerDir, 'assembly', 'index.ts' ), 'utf8' );
+			expect( source ).toContain( 'on_client_response' );
+			expect( source ).not.toMatch( /^\s*on_client_request,?$/m );
+			expect( source ).not.toMatch( /^\s*on_origin_request,?$/m );
+			expect( source ).not.toMatch( /^\s*on_origin_response,?$/m );
 		} );
 
 		it( 'refuses to scaffold a worker that already exists', () => {

@@ -1,4 +1,5 @@
 import { edgeWorkersDeployCommand } from '../../src/bin/vip-edge-workers-deploy';
+import command from '../../src/lib/cli/command';
 import * as exit from '../../src/lib/cli/exit';
 import * as format from '../../src/lib/cli/format';
 import * as confirmation from '../../src/lib/edge-workers/confirmation';
@@ -13,12 +14,18 @@ jest.spyOn( exit, 'withError' ).mockImplementation( () => {
 } );
 
 jest.mock( '../../src/lib/cli/command', () => {
+	const options = [];
 	const commandMock = {
 		argv: () => commandMock,
 		examples: () => commandMock,
-		option: () => commandMock,
+		option: ( ...args ) => {
+			options.push( args );
+			return commandMock;
+		},
 	};
-	return jest.fn( () => commandMock );
+	const createCommand = jest.fn( () => commandMock );
+	createCommand.options = options;
+	return createCommand;
 } );
 
 jest.mock( '../../src/lib/cli/format', () => ( {
@@ -118,6 +125,14 @@ describe( 'edgeWorkersDeployCommand()', () => {
 			skipValidate: false,
 			skipSource: false,
 		} );
+	} );
+
+	it( 'explains create and update source behavior in --skip-source help', () => {
+		expect( command.options ).toContainEqual( [
+			'skip-source',
+			'Do not store source on create; preserve stored source on update.',
+			false,
+		] );
 	} );
 
 	it( 'prepares every discovered worker for --all', async () => {

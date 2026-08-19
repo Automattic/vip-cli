@@ -135,7 +135,11 @@ command( {
 	.option( 'all', 'Deploy every worker in the project.', false )
 	.option( 'skip-build', 'Deploy a previously compiled artifact without recompiling.', false )
 	.option( 'skip-validate', 'Skip server-side dry-run validation before uploading.', false )
-	.option( 'skip-source', 'Do not store the worker source alongside the binary.', false )
+	.option(
+		'skip-source',
+		'Do not store source on create; preserve stored source on update.',
+		false
+	)
 	.option( 'skip-confirmation', 'Skip the production deployment confirmation.', false )
 	.examples( examples )
 	.argv( process.argv, edgeWorkersDeployCommand );

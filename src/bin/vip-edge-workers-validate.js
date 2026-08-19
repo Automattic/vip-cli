@@ -12,7 +12,8 @@ const usage = 'vip edge-workers validate';
 const examples = [
 	{
 		usage: 'vip @example-app.develop edge-workers validate my-worker',
-		description: 'Compile a worker and validate it against the environment without deploying.',
+		description:
+			'Validate the local manifest and compiled WASM without deploying or executing requests.',
 	},
 	{
 		usage: 'vip @example-app.develop edge-workers validate --all',

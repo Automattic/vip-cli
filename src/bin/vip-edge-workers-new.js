@@ -14,6 +14,7 @@ import {
 } from '../lib/edge-workers/project';
 import { getToolchain } from '../lib/edge-workers/toolchains';
 import { EDGE_WORKER_LOCATION_OPERATORS } from '../lib/edge-workers/types';
+import { validateWorkerName } from '../lib/edge-workers/validation';
 import { trackEvent } from '../lib/tracker';
 
 const usage = 'vip edge-workers new';
@@ -44,6 +45,7 @@ export async function edgeWorkersNewCommand( args = [], opt = {} ) {
 	}
 
 	try {
+		validateWorkerName( name );
 		// Parse up front so a bad --location doesn't leave a half-created worker behind.
 		const location = opt.location ? parseLocationOption( opt.location ) : undefined;
 		const projectDir = resolveProjectDir( { path: opt.path } );
@@ -59,6 +61,11 @@ export async function edgeWorkersNewCommand( args = [], opt = {} ) {
 
 		const entryDir = path.join( WORKERS_DIR, name );
 		console.log( `✓ Created worker "${ name }" in ${ path.join( projectDir, entryDir ) }` );
+		console.log(
+			location
+				? `Scope: ${ location.operator } "${ location.value }".`
+				: 'Scope: all requests. Set location in worker.json before deployment to narrow it.'
+		);
 		console.log( '\nEdit the worker, then deploy it with:' );
 		console.log( `  vip @my-site.develop edge-workers deploy ${ name }` );
 	} catch ( err ) {

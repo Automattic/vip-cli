@@ -7,6 +7,7 @@ import * as exit from '../lib/cli/exit';
 import { buildWorker } from '../lib/edge-workers';
 import { discoverWorkers, findWorker, resolveProjectDir } from '../lib/edge-workers/project';
 import { trackEvent } from '../lib/tracker';
+import UserError from '../lib/user-error';
 
 const usage = 'vip edge-workers build';
 
@@ -33,7 +34,9 @@ export async function edgeWorkersBuildCommand( args = [], opt = {} ) {
 			name && ! opt.all ? [ findWorker( projectDir, name ) ] : discoverWorkers( projectDir );
 
 		if ( ! workers.length ) {
-			exit.withError( 'No workers found in this project. Create one with `vip edge-workers new`.' );
+			throw new UserError(
+				'No workers found in this project. Create one with `vip edge-workers new`.'
+			);
 		}
 
 		for ( const worker of workers ) {
