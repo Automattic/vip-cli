@@ -83,22 +83,29 @@ describe( 'edgeWorkersBuildCommand()', () => {
 		);
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_build_command_error', {
 			name: undefined,
-			error: 'No workers found in this project. Create one with `vip edge-workers new`.',
+			error: 'build_failed',
 		} );
 		expect( lib.buildWorker ).not.toHaveBeenCalled();
 	} );
 
-	it( 'reports a build failure without success telemetry', async () => {
+	it( 'keeps compiler diagnostics local and out of analytics', async () => {
+		const secret = 'SENTINEL_BUILD_SECRET';
+		const sourcePath = '/private/customer/project/workers/alpha/assembly/index.ts';
+		const diagnostic = `Compilation failed at ${ sourcePath }: const token = "${ secret }";\n\u001b[31merror`;
 		lib.buildWorker.mockImplementation( () => {
-			throw new Error( 'compiler failed' );
+			throw new Error( diagnostic );
 		} );
 
 		await expect( edgeWorkersBuildCommand( [ 'alpha' ] ) ).rejects.toBe( 'EXIT_WITH_ERROR' );
 
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_build_command_error', {
 			name: 'alpha',
-			error: 'compiler failed',
+			error: 'build_failed',
 		} );
+		expect( JSON.stringify( tracker.trackEvent.mock.calls ) ).not.toContain( secret );
+		expect( JSON.stringify( tracker.trackEvent.mock.calls ) ).not.toContain( sourcePath );
+		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( secret ) );
+		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( sourcePath ) );
 		expect( tracker.trackEvent ).not.toHaveBeenCalledWith(
 			'edge_workers_build_command_success',
 			expect.anything()

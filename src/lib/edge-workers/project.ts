@@ -172,9 +172,9 @@ export function discoverWorkers( projectDir: string ): DiscoveredWorker[] {
  */
 export function findWorker( projectDir: string, name: string ): DiscoveredWorker {
 	const workers = discoverWorkers( projectDir );
-	const match = workers.find(
-		worker => worker.manifest.name === name || path.basename( worker.dir ) === name
-	);
+	const match =
+		workers.find( worker => worker.manifest.name === name ) ??
+		workers.find( worker => path.basename( worker.dir ) === name );
 
 	if ( ! match ) {
 		const available = workers.map( worker => worker.manifest.name ).join( ', ' ) || '(none)';

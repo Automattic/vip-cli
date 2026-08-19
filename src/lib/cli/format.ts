@@ -24,7 +24,7 @@ export function formatData(
 	format: OutputFormat
 ): string {
 	if ( ! data.length ) {
-		return '';
+		return format === 'json' ? '[]' : '';
 	}
 
 	switch ( format ) {
@@ -32,7 +32,7 @@ export function formatData(
 			return ids( data as Record< string, unknown >[] );
 
 		case 'json':
-			return JSON.stringify( data, null, '\t' );
+			return json( data );
 
 		case 'csv':
 			return csv( data as Record< string, unknown >[] );
@@ -44,6 +44,14 @@ export function formatData(
 		default:
 			return table( data as Record< string, Stringable >[] );
 	}
+}
+
+function json( data: Record< string, unknown >[] | Tuple[] ): string {
+	return JSON.stringify( data, null, '\t' ).replace(
+		// JSON.stringify already escapes C0 controls, but not DEL or C1 controls.
+		/[\u007f-\u009f]/g,
+		character => `\\u${ character.charCodeAt( 0 ).toString( 16 ).padStart( 4, '0' ) }`
+	);
 }
 
 export function formatEnvironment( environment: string ): string {

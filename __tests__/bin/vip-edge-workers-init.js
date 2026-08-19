@@ -80,7 +80,7 @@ describe( 'edgeWorkersInitCommand()', () => {
 
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_init_command_error', {
 			type: 'assemblyscript',
-			error: 'target is not empty',
+			error: 'init_failed',
 		} );
 		expect( tracker.trackEvent ).not.toHaveBeenCalledWith(
 			'edge_workers_init_command_success',

@@ -148,6 +148,12 @@ describe( 'edgeWorkersEnableCommand()', () => {
 		expect( exit.withError ).toHaveBeenCalledWith(
 			'Failed to enable edge worker: API unavailable'
 		);
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_enable_command_error',
+			{ name: 'headers', error: 'enable_failed' }
+		);
 		expect( console.log ).not.toHaveBeenCalledWith( '✓ Enabled edge worker "headers".' );
 		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
 			1,

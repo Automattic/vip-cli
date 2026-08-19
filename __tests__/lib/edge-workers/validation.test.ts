@@ -120,6 +120,22 @@ describe( 'parseWorkerManifest', () => {
 		).toThrow( /invalid location/ );
 	} );
 
+	it.each( [ '\u001b[31m/admin', '/safe\nforged output' ] )(
+		'rejects control characters in location value %p',
+		value => {
+			expect( () =>
+				parseWorkerManifest(
+					{
+						name: 'demo',
+						entry: 'assembly/index.ts',
+						location: { operator: 'starts_with', value },
+					},
+					file
+				)
+			).toThrow( /invalid location value/ );
+		}
+	);
+
 	it( 'rejects invalid failure behavior', () => {
 		expect( () =>
 			parseWorkerManifest(

@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -5,11 +6,21 @@ import path from 'node:path';
 import { readProjectDescriptor, readWorkerManifest } from '../../../src/lib/edge-workers/project';
 import { getToolchain } from '../../../src/lib/edge-workers/toolchains';
 
+jest.mock( 'node:child_process', () => ( {
+	spawnSync: jest.fn(),
+} ) );
+
 describe( 'edge-workers toolchains', () => {
 	let tmp;
 
 	beforeEach( () => {
 		tmp = fs.mkdtempSync( path.join( os.tmpdir(), 'ew-tc-' ) );
+		spawnSync.mockClear();
+		spawnSync.mockImplementation( ( _command, args ) => {
+			const outFile = args[ args.indexOf( '--outFile' ) + 1 ];
+			fs.writeFileSync( outFile, 'compiled wasm' );
+			return { status: 0, stderr: '', stdout: '' };
+		} );
 	} );
 
 	afterEach( () => {
@@ -112,6 +123,24 @@ describe( 'edge-workers toolchains', () => {
 			expect( () => tc.compile( project, worker ) ).toThrow( /Worker entry must stay within/ );
 		} );
 
+		it( 'rejects an entry symlink that escapes the worker directory before compiling', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const workerDir = path.join( project, 'workers', 'demo' );
+			const entryDir = path.join( workerDir, 'assembly' );
+			const outside = path.join( tmp, 'secret.ts' );
+			fs.mkdirSync( entryDir, { recursive: true } );
+			fs.writeFileSync( outside, 'TOP_SECRET_SOURCE' );
+			fs.symlinkSync( outside, path.join( entryDir, 'index.ts' ), 'file' );
+			const worker = {
+				dir: workerDir,
+				manifest: { name: 'demo', entry: 'assembly/index.ts' },
+			};
+
+			expect( () => tc.compile( project, worker ) ).toThrow( /Worker entry must stay within/ );
+			expect( spawnSync ).not.toHaveBeenCalled();
+		} );
+
 		it( 'rejects a worker name that escapes the build directory', () => {
 			const project = path.join( tmp, 'proj' );
 			tc.scaffoldProject( project );
@@ -124,6 +153,96 @@ describe( 'edge-workers toolchains', () => {
 			};
 			expect( () => tc.compile( project, worker ) ).toThrow( /Invalid worker name/ );
 			expect( fs.existsSync( path.join( tmp, 'outside.wasm' ) ) ).toBe( false );
+		} );
+
+		it( 'rejects a symlinked build root before the compiler can write outside the project', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const workerDir = path.join( project, 'workers', 'demo' );
+			const entry = path.join( workerDir, 'assembly', 'index.ts' );
+			const outsideBuild = path.join( tmp, 'outside-build' );
+			fs.mkdirSync( path.dirname( entry ), { recursive: true } );
+			fs.writeFileSync( entry, 'export {};' );
+			fs.mkdirSync( outsideBuild );
+			fs.symlinkSync(
+				outsideBuild,
+				path.join( project, 'build' ),
+				process.platform === 'win32' ? 'junction' : 'dir'
+			);
+
+			expect( () =>
+				tc.compile( project, {
+					dir: workerDir,
+					manifest: { name: 'demo', entry: 'assembly/index.ts' },
+				} )
+			).toThrow( /Worker build directory must not be a symbolic link/ );
+			expect( spawnSync ).not.toHaveBeenCalled();
+			expect( fs.existsSync( path.join( outsideBuild, 'demo.wasm' ) ) ).toBe( false );
+		} );
+
+		it( 'rejects a symlinked build output before the compiler can overwrite its target', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const workerDir = path.join( project, 'workers', 'demo' );
+			const entry = path.join( workerDir, 'assembly', 'index.ts' );
+			const buildDir = path.join( project, 'build' );
+			const outside = path.join( tmp, 'outside.wasm' );
+			fs.mkdirSync( path.dirname( entry ), { recursive: true } );
+			fs.writeFileSync( entry, 'export {};' );
+			fs.mkdirSync( buildDir );
+			fs.writeFileSync( outside, 'DO NOT OVERWRITE' );
+			fs.symlinkSync( outside, path.join( buildDir, 'demo.wasm' ), 'file' );
+
+			expect( () =>
+				tc.compile( project, {
+					dir: workerDir,
+					manifest: { name: 'demo', entry: 'assembly/index.ts' },
+				} )
+			).toThrow( /Worker build artifact must not be a symbolic link/ );
+			expect( spawnSync ).not.toHaveBeenCalled();
+			expect( fs.readFileSync( outside, 'utf8' ) ).toBe( 'DO NOT OVERWRITE' );
+		} );
+
+		it( 'rejects a dangling build-output symlink before the compiler can create its target', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const workerDir = path.join( project, 'workers', 'demo' );
+			const entry = path.join( workerDir, 'assembly', 'index.ts' );
+			const buildDir = path.join( project, 'build' );
+			const outside = path.join( tmp, 'not-yet-created.wasm' );
+			fs.mkdirSync( path.dirname( entry ), { recursive: true } );
+			fs.writeFileSync( entry, 'export {};' );
+			fs.mkdirSync( buildDir );
+			fs.symlinkSync( outside, path.join( buildDir, 'demo.wasm' ), 'file' );
+
+			expect( () =>
+				tc.compile( project, {
+					dir: workerDir,
+					manifest: { name: 'demo', entry: 'assembly/index.ts' },
+				} )
+			).toThrow( /Worker build artifact must not be a symbolic link/ );
+			expect( spawnSync ).not.toHaveBeenCalled();
+			expect( fs.existsSync( outside ) ).toBe( false );
+		} );
+
+		it( 'creates a real build directory inside the canonical project root', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const workerDir = path.join( project, 'workers', 'demo' );
+			const entry = path.join( workerDir, 'assembly', 'index.ts' );
+			fs.mkdirSync( path.dirname( entry ), { recursive: true } );
+			fs.writeFileSync( entry, 'export {};' );
+
+			const output = tc.compile( project, {
+				dir: workerDir,
+				manifest: { name: 'demo', entry: 'assembly/index.ts' },
+			} );
+
+			expect( fs.lstatSync( path.join( project, 'build' ) ).isDirectory() ).toBe( true );
+			expect( fs.lstatSync( path.join( project, 'build' ) ).isSymbolicLink() ).toBe( false );
+			expect( fs.realpathSync( output ) ).toBe(
+				path.join( fs.realpathSync( project ), 'build', 'demo.wasm' )
+			);
 		} );
 
 		it( 'ensureAvailable throws when the compiler is missing', () => {

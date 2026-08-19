@@ -6,6 +6,7 @@ import {
 } from '../api/edge-workers';
 import UserError from '../user-error';
 import { buildWorker, readPrebuiltWorker, readWorkerSource } from './index';
+import { escapeTerminalText } from './output';
 
 import type { DiscoveredWorker, EdgeWorker, EdgeWorkerLocation, EdgeWorkerPhase } from './types';
 import type { EdgeWorkerWriteInput } from '../api/edge-workers';
@@ -174,20 +175,22 @@ export async function prepareEdgeWorkerDeploymentPlan(
 }
 
 function formatLocation( location: EdgeWorkerLocation | null ): string {
-	return location ? `${ location.operator } "${ location.value }"` : 'all requests';
+	return location
+		? `${ escapeTerminalText( location.operator ) } "${ escapeTerminalText( location.value ) }"`
+		: 'all requests';
 }
 
 export function deploymentPlanRows(
 	items: readonly EdgeWorkerDeploymentPlanItem[]
 ): Record< string, string >[] {
 	return items.map( item => ( {
-		worker: item.worker.manifest.name,
+		worker: escapeTerminalText( item.worker.manifest.name ),
 		action: item.action,
 		active: item.existing?.active ? 'yes' : 'no',
 		current_scope: formatLocation( item.currentLocation ),
 		proposed_scope: formatLocation( item.proposedLocation ),
 		validation: item.validation,
-		phases: item.phases.join( ', ' ) || 'none',
+		phases: item.phases.map( escapeTerminalText ).join( ', ' ) || 'none',
 		bytes: String( item.artifact.sizeBytes ),
 		source: item.sourceMode,
 	} ) );

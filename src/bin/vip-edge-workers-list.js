@@ -3,6 +3,7 @@
 import { appQuery, listEdgeWorkers } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const usage = 'vip edge-workers list';
@@ -14,12 +15,12 @@ const examples = [
 	},
 ];
 
-function formatLocation( location ) {
+function formatLocation( location, escape ) {
 	if ( ! location ) {
 		return 'all requests';
 	}
 
-	return `${ location.operator } "${ location.value }"`;
+	return `${ escape( location.operator ) } "${ escape( location.value ) }"`;
 }
 
 export async function edgeWorkersListCommand( _args = [], opt = {} ) {
@@ -32,9 +33,9 @@ export async function edgeWorkersListCommand( _args = [], opt = {} ) {
 		workers = await listEdgeWorkers( app.id, env.id );
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_list_command_error', {
-			error: err.message,
+			error: 'list_failed',
 		} );
-		exit.withError( `Failed to list edge workers: ${ err.message }` );
+		exit.withError( `Failed to list edge workers: ${ escapeTerminalText( err.message ) }` );
 	}
 
 	await trackEventWithEnv( app.id, env.id, 'edge_workers_list_command_success', {
@@ -46,14 +47,16 @@ export async function edgeWorkersListCommand( _args = [], opt = {} ) {
 		return [];
 	}
 
+	const escape = opt.format === 'json' ? value => value : escapeTerminalText;
+
 	return workers.map( worker => ( {
 		id: worker.id,
-		name: worker.name,
+		name: escape( worker.name ),
 		active: worker.active ? 'yes' : 'no',
-		phases: ( worker.phases || [] ).join( ', ' ),
-		location: formatLocation( worker.location ),
-		on_failure: worker.onFailure,
-		modified: worker.updatedAt,
+		phases: ( worker.phases || [] ).map( escape ).join( ', ' ),
+		location: formatLocation( worker.location, escape ),
+		on_failure: escape( worker.onFailure ),
+		modified: escape( worker.updatedAt ),
 	} ) );
 }
 

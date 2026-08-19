@@ -125,6 +125,29 @@ describe( 'edgeWorkersValidateCommand()', () => {
 		expect( exit.withError ).toHaveBeenCalledTimes( 1 );
 	} );
 
+	it( 'keeps compiler diagnostics local and out of analytics', async () => {
+		const secret = 'SENTINEL_VALIDATE_SECRET';
+		const sourcePath = '/private/customer/project/workers/my-worker/assembly/index.ts';
+		lib.buildWorker.mockImplementation( () => {
+			throw new Error( `Compiler printed ${ sourcePath }: ${ secret }\n\u001b[31merror` );
+		} );
+
+		await expect( edgeWorkersValidateCommand( [ 'my-worker' ], opts ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_validate_command_error',
+			{ name: 'my-worker', error: 'validate_failed' }
+		);
+		expect( JSON.stringify( tracker.trackEventWithEnv.mock.calls ) ).not.toContain( secret );
+		expect( JSON.stringify( tracker.trackEventWithEnv.mock.calls ) ).not.toContain( sourcePath );
+		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( secret ) );
+		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( sourcePath ) );
+	} );
+
 	it( 'validates every worker with --all', async () => {
 		project.discoverWorkers.mockReturnValue( [
 			worker,

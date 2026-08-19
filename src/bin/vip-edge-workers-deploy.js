@@ -14,6 +14,7 @@ import {
 	deploymentPlanRows,
 	prepareEdgeWorkerDeploymentPlan,
 } from '../lib/edge-workers/deployment';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { discoverWorkers, findWorker, resolveProjectDir } from '../lib/edge-workers/project';
 import { confirm } from '../lib/envvar/input';
 import { trackEventWithEnv } from '../lib/tracker';
@@ -36,14 +37,14 @@ const examples = [
 ];
 
 function errorMessage( error ) {
-	return error instanceof Error ? error.message : String( error );
+	return escapeTerminalText( error instanceof Error ? error.message : String( error ) );
 }
 
 function partialFailureMessage( error ) {
 	return (
-		`Deployment stopped at "${ error.failedName }". ` +
-		`Applied: ${ error.appliedNames.join( ', ' ) || 'none' }. ` +
-		`Not applied: ${ error.unappliedNames.join( ', ' ) || 'none' }. ` +
+		`Deployment stopped at "${ escapeTerminalText( error.failedName ) }". ` +
+		`Applied: ${ error.appliedNames.map( escapeTerminalText ).join( ', ' ) || 'none' }. ` +
+		`Not applied: ${ error.unappliedNames.map( escapeTerminalText ).join( ', ' ) || 'none' }. ` +
 		`Cause: ${ errorMessage( error.cause ) }`
 	);
 }
@@ -102,9 +103,11 @@ export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 
 		await applyEdgeWorkerDeploymentPlan( env.id, plan, ( item, deployed ) => {
 			const action = item.action === 'create' ? 'created' : 'updated';
-			const phasesNote = `, phases: ${ deployed.phases.join( ', ' ) || 'none' }`;
+			const phasesNote = `, phases: ${
+				deployed.phases.map( escapeTerminalText ).join( ', ' ) || 'none'
+			}`;
 			console.log(
-				`✓ ${ action } "${ item.worker.manifest.name }" ` +
+				`✓ ${ action } "${ escapeTerminalText( item.worker.manifest.name ) }" ` +
 					`(${ item.artifact.sizeBytes } bytes${ phasesNote })`
 			);
 		} );
@@ -115,7 +118,7 @@ export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_deploy_command_error', {
 			name,
-			error: errorMessage( err ),
+			error: 'deploy_failed',
 		} );
 		exit.withError(
 			err instanceof DeploymentApplyError

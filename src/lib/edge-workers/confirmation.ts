@@ -1,4 +1,5 @@
 import UserError from '../user-error';
+import { escapeTerminalText } from './output';
 
 export interface ProductionMutationConfirmationRequest {
 	action: 'deploy' | 'enable';
@@ -45,8 +46,16 @@ export async function confirmProductionEdgeWorkerMutation(
 		request.action === 'deploy'
 			? `Deploy ${ request.workerNames.length } edge worker${
 					request.workerNames.length === 1 ? '' : 's'
-			  } (${ request.workerNames.join( ', ' ) }) to ${ request.appName }.${ request.envType }?`
-			: `Enable edge worker "${ request.workerNames[ 0 ] }" on ${ request.appName }.${ request.envType }?`;
+			  } (${ request.workerNames
+					.map( escapeTerminalText )
+					.join( ', ' ) }) to ${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
+					request.envType
+			  ) }?`
+			: `Enable edge worker "${ escapeTerminalText(
+					request.workerNames[ 0 ]
+			  ) }" on ${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
+					request.envType
+			  ) }?`;
 
 	if ( ! ( await confirmFn( message ) ) ) {
 		throw new UserError( 'Command cancelled by user.' );
@@ -62,7 +71,11 @@ export async function confirmEdgeWorkerDeletion(
 	}
 
 	const confirmed = await confirmFn(
-		`Permanently delete edge worker "${ request.workerName }" from ${ request.appName }.${ request.envType }?`
+		`Permanently delete edge worker "${ escapeTerminalText(
+			request.workerName
+		) }" from ${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
+			request.envType
+		) }?`
 	);
 	if ( ! confirmed ) {
 		throw new UserError( 'Command cancelled by user.' );

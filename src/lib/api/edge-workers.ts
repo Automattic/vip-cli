@@ -62,9 +62,32 @@ interface EdgeWorkersQueryResult {
 	} | null;
 }
 
+function isObject( value: unknown ): value is Record< string, unknown > {
+	return typeof value === 'object' && value !== null && ! Array.isArray( value );
+}
+
+function invalidReadResponse(): never {
+	throw new UserError( 'EdgeWorkers query returned an invalid response.' );
+}
+
 function pickEnvWorkers( result: EdgeWorkersQueryResult | undefined, envId: number ): EdgeWorker[] {
-	const env = result?.app?.environments?.find( candidate => candidate.id === envId );
-	return env?.edgeWorkers ?? [];
+	if ( ! isObject( result ) || ! isObject( result.app ) ) {
+		return invalidReadResponse();
+	}
+	const environments = result.app.environments;
+	if ( ! Array.isArray( environments ) ) {
+		return invalidReadResponse();
+	}
+	if (
+		! environments.every( candidate => isObject( candidate ) && typeof candidate.id === 'number' )
+	) {
+		return invalidReadResponse();
+	}
+	const env = environments.find( candidate => candidate.id === envId );
+	if ( ! env || ! Array.isArray( env.edgeWorkers ) ) {
+		return invalidReadResponse();
+	}
+	return env.edgeWorkers;
 }
 
 function requireMutationPayload< T >( operation: string, value: T | null | undefined ): T {

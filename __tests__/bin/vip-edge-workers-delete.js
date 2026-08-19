@@ -130,6 +130,12 @@ describe( 'edgeWorkersDeleteCommand()', () => {
 		expect( exit.withError ).toHaveBeenCalledWith(
 			'Failed to delete edge worker: API unavailable'
 		);
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_delete_command_error',
+			{ name: 'headers', error: 'delete_failed' }
+		);
 		expect( console.log ).not.toHaveBeenCalledWith( '✓ Deleted edge worker "headers".' );
 		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
 			1,

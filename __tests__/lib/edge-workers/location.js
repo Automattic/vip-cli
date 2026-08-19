@@ -18,4 +18,11 @@ describe( 'parseLocationOption()', () => {
 			expect( () => parseLocationOption( raw ) ).toThrow( 'Invalid location' );
 		}
 	);
+
+	it.each( [ 'starts_with:/api/\u001b[2J', 'equals:/safe\nforged output' ] )(
+		'rejects control characters in %p',
+		raw => {
+			expect( () => parseLocationOption( raw ) ).toThrow( 'Invalid location' );
+		}
+	);
 } );

@@ -6,10 +6,12 @@ import {
 	createEdgeWorker,
 	deleteEdgeWorker,
 	getEdgeWorker,
+	listEdgeWorkers,
 	setEdgeWorkerActive,
 	updateEdgeWorker,
 	validateEdgeWorker,
 } from '../../src/lib/api/edge-workers';
+import UserError from '../../src/lib/user-error';
 
 import type { DocumentNode } from 'graphql';
 
@@ -58,6 +60,39 @@ describe( 'edge worker read query contracts', () => {
 
 		expect( query ).toContain( 'source' );
 		expect( query ).not.toContain( 'wasmBinary' );
+	} );
+
+	it.each( [
+		[ 'missing data', undefined ],
+		[ 'null app', { app: null } ],
+		[ 'non-object app', { app: 'not-an-app' } ],
+		[ 'missing environments', { app: {} } ],
+		[ 'null environments', { app: { environments: null } } ],
+		[ 'non-array environments', { app: { environments: {} } } ],
+		[ 'malformed environment', { app: { environments: [ null ] } } ],
+		[
+			'wrongly typed target environment id',
+			{ app: { environments: [ { id: '3', edgeWorkers: [] } ] } },
+		],
+		[ 'missing target environment', { app: { environments: [ { id: 4, edgeWorkers: [] } ] } } ],
+		[ 'missing edgeWorkers', { app: { environments: [ { id: 3 } ] } } ],
+		[ 'null edgeWorkers', { app: { environments: [ { id: 3, edgeWorkers: null } ] } } ],
+		[ 'non-array edgeWorkers', { app: { environments: [ { id: 3, edgeWorkers: {} } ] } } ],
+	] )( 'fails closed for %s', async ( _label, data ) => {
+		mockQuery.mockResolvedValueOnce( { data: data as never } );
+
+		const read = listEdgeWorkers( 1, 3 );
+
+		await expect( read ).rejects.toBeInstanceOf( UserError );
+		await expect( read ).rejects.toThrow( /EdgeWorkers query returned an invalid response/ );
+	} );
+
+	it( 'preserves a legitimate empty edgeWorkers array', async () => {
+		mockQuery.mockResolvedValueOnce( {
+			data: { app: { environments: [ { id: 3, edgeWorkers: [] } ] } },
+		} );
+
+		await expect( listEdgeWorkers( 1, 3 ) ).resolves.toEqual( [] );
 	} );
 } );
 

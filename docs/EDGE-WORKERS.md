@@ -144,8 +144,10 @@ worker, unless the operator deliberately passes `--skip-confirmation`. A worker 
 cannot be combined. `--skip-build`, `--skip-validate`, and `--skip-confirmation` remove safety
 checks and should be used only when the omitted step has separate, current evidence.
 
-Subject to the unresolved inactive-create guarantee in section 1, creating or updating a worker
-does not enable it. Enabling is a separate command.
+Subject to the unresolved inactive-create guarantee in section 1, a newly created worker is
+inactive and must be enabled separately. Updating preserves the worker's current active state: an
+update to an already-active worker therefore applies the uploaded code and configuration live
+immediately. Disable an active worker first when the update must not become live on deployment.
 
 ## 8. Source storage and `--skip-source`
 

@@ -58,7 +58,7 @@ describe( 'edgeWorkersNewCommand()', () => {
 		expect( scaffoldWorker ).not.toHaveBeenCalled();
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_new_command_error', {
 			name: 'bad/name',
-			error: 'Invalid worker name "bad/name".',
+			error: 'new_failed',
 		} );
 	} );
 
@@ -85,7 +85,7 @@ describe( 'edgeWorkersNewCommand()', () => {
 		expect( scaffoldWorker ).not.toHaveBeenCalled();
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_new_command_error', {
 			name: 'demo',
-			error: expect.stringContaining( 'Invalid location ""' ),
+			error: 'new_failed',
 		} );
 	} );
 
@@ -107,7 +107,7 @@ describe( 'edgeWorkersNewCommand()', () => {
 
 		expect( tracker.trackEvent ).toHaveBeenCalledWith( 'edge_workers_new_command_error', {
 			name: 'demo',
-			error: 'scaffold failed',
+			error: 'new_failed',
 		} );
 		expect( tracker.trackEvent ).not.toHaveBeenCalledWith(
 			'edge_workers_new_command_success',

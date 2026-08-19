@@ -4,12 +4,11 @@
  */
 
 import fs from 'node:fs';
-import path from 'node:path';
 
 import UserError from '../user-error';
 import { readProjectDescriptor } from './project';
 import { getToolchain } from './toolchains';
-import { resolvePathWithin, validateWorkerName } from './validation';
+import { resolveExistingPathWithin, resolvePathWithin, validateWorkerName } from './validation';
 
 import type { DiscoveredWorker } from './types';
 
@@ -36,17 +35,27 @@ function encodeArtifact( wasmPath: string ): BuiltArtifact {
 /** Read a previously compiled artifact without recompiling (used by `deploy --skip-build`). */
 export function readPrebuiltWorker( projectDir: string, worker: DiscoveredWorker ): BuiltArtifact {
 	const name = validateWorkerName( worker.manifest.name );
-	const wasmPath = resolvePathWithin(
-		path.join( projectDir, BUILD_DIR ),
-		`${ name }.wasm`,
-		'Worker build artifact'
-	);
-	if ( ! fs.existsSync( wasmPath ) ) {
+	const buildRoot = resolvePathWithin( projectDir, BUILD_DIR, 'Worker build directory' );
+	const candidate = resolvePathWithin( buildRoot, `${ name }.wasm`, 'Worker build artifact' );
+	if ( ! fs.existsSync( candidate ) ) {
 		throw new UserError(
-			`No compiled artifact found for "${ worker.manifest.name }" at "${ wasmPath }". ` +
+			`No compiled artifact found for "${ worker.manifest.name }" at "${ candidate }". ` +
 				'Run `vip edge-workers build` first, or deploy without `--skip-build`.'
 		);
 	}
+	if ( fs.lstatSync( buildRoot ).isSymbolicLink() ) {
+		throw new UserError( 'Worker build directory must not be a symbolic link.' );
+	}
+	const canonicalBuildRoot = resolveExistingPathWithin(
+		projectDir,
+		BUILD_DIR,
+		'Worker build directory'
+	);
+	const wasmPath = resolveExistingPathWithin(
+		canonicalBuildRoot,
+		`${ name }.wasm`,
+		'Worker build artifact'
+	);
 
 	return encodeArtifact( wasmPath );
 }
@@ -64,7 +73,11 @@ export function buildWorker( projectDir: string, worker: DiscoveredWorker ): Bui
 
 /** Read the entry source of a worker, for storing alongside the binary. */
 export function readWorkerSource( worker: DiscoveredWorker ): string {
-	const entry = resolvePathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
+	const candidate = resolvePathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
+	if ( ! fs.existsSync( candidate ) ) {
+		throw new UserError( `Could not read worker source at "${ candidate }".` );
+	}
+	const entry = resolveExistingPathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
 	try {
 		return fs.readFileSync( entry, 'utf8' );
 	} catch {

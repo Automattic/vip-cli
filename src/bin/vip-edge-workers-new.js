@@ -5,6 +5,7 @@ import path from 'node:path';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { parseLocationOption } from '../lib/edge-workers/location';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import {
 	readProjectDescriptor,
 	readWorkerManifest,
@@ -60,17 +61,23 @@ export async function edgeWorkersNewCommand( args = [], opt = {} ) {
 		await trackEvent( 'edge_workers_new_command_success', { name, type: descriptor.type } );
 
 		const entryDir = path.join( WORKERS_DIR, name );
-		console.log( `✓ Created worker "${ name }" in ${ path.join( projectDir, entryDir ) }` );
+		console.log(
+			`✓ Created worker "${ escapeTerminalText( name ) }" in ${ escapeTerminalText(
+				path.join( projectDir, entryDir )
+			) }`
+		);
 		console.log(
 			location
-				? `Scope: ${ location.operator } "${ location.value }".`
+				? `Scope: ${ escapeTerminalText( location.operator ) } "${ escapeTerminalText(
+						location.value
+				  ) }".`
 				: 'Scope: all requests. Set location in worker.json before deployment to narrow it.'
 		);
 		console.log( '\nEdit the worker, then deploy it with:' );
-		console.log( `  vip @my-site.develop edge-workers deploy ${ name }` );
+		console.log( `  vip @my-site.develop edge-workers deploy ${ escapeTerminalText( name ) }` );
 	} catch ( err ) {
-		await trackEvent( 'edge_workers_new_command_error', { name, error: err.message } );
-		exit.withError( err.message );
+		await trackEvent( 'edge_workers_new_command_error', { name, error: 'new_failed' } );
+		exit.withError( escapeTerminalText( err.message ) );
 	}
 }
 

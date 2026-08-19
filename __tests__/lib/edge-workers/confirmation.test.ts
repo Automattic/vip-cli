@@ -134,6 +134,26 @@ describe( 'confirmProductionEdgeWorkerMutation()', () => {
 		);
 	} );
 
+	it( 'neutralizes terminal controls in production confirmation identities', async () => {
+		const confirmFn = jest.fn< Promise< boolean >, [ string ] >().mockResolvedValue( true );
+
+		await confirmProductionEdgeWorkerMutation(
+			{
+				...productionRequest,
+				appName: 'example\u001b[2J',
+				envType: 'production',
+				workerNames: [ 'headers\nforged' ],
+			},
+			confirmFn
+		);
+
+		const message = confirmFn.mock.calls[ 0 ][ 0 ];
+		// eslint-disable-next-line no-control-regex
+		expect( message ).not.toMatch( /[\u0000-\u001f\u007f-\u009f]/ );
+		expect( message ).toContain( String.raw`\u001b` );
+		expect( message ).toContain( String.raw`\u000a` );
+	} );
+
 	it( 'rejects non-interactive production without bypass', async () => {
 		const confirmFn = jest.fn< Promise< boolean >, [ string ] >();
 
@@ -193,6 +213,25 @@ describe( 'confirmEdgeWorkerDeletion()', () => {
 		expect( confirmFn ).toHaveBeenCalledWith(
 			'Permanently delete edge worker "headers" from example-app.production?'
 		);
+	} );
+
+	it( 'neutralizes terminal controls in deletion confirmation identities', async () => {
+		const confirmFn = jest.fn< Promise< boolean >, [ string ] >().mockResolvedValue( true );
+
+		await confirmEdgeWorkerDeletion(
+			{
+				...request,
+				appName: 'example\u001b[2J',
+				workerName: 'headers\nforged',
+			},
+			confirmFn
+		);
+
+		const message = confirmFn.mock.calls[ 0 ][ 0 ];
+		// eslint-disable-next-line no-control-regex
+		expect( message ).not.toMatch( /[\u0000-\u001f\u007f-\u009f]/ );
+		expect( message ).toContain( String.raw`\u001b` );
+		expect( message ).toContain( String.raw`\u000a` );
 	} );
 
 	it( 'throws UserError when the user declines deletion', async () => {

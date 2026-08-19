@@ -3,6 +3,7 @@
 import { appQuery, findEdgeWorkerByName, setEdgeWorkerActive } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const usage = 'vip edge-workers disable';
@@ -29,13 +30,13 @@ export async function edgeWorkersDisableCommand( args = [], opt = {} ) {
 		await setEdgeWorkerActive( env.id, worker.id, false );
 
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_disable_command_success', { name } );
-		console.log( `✓ Disabled edge worker "${ name }".` );
+		console.log( `✓ Disabled edge worker "${ escapeTerminalText( name ) }".` );
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_disable_command_error', {
 			name,
-			error: err.message,
+			error: 'disable_failed',
 		} );
-		exit.withError( `Failed to disable edge worker: ${ err.message }` );
+		exit.withError( `Failed to disable edge worker: ${ escapeTerminalText( err.message ) }` );
 	}
 }
 

@@ -7,6 +7,7 @@ import {
 	confirmProductionEdgeWorkerMutation,
 	isInteractiveEdgeWorkers,
 } from '../lib/edge-workers/confirmation';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { confirm } from '../lib/envvar/input';
 import { trackEventWithEnv } from '../lib/tracker';
 
@@ -46,13 +47,13 @@ export async function edgeWorkersEnableCommand( args = [], opt = {} ) {
 		await setEdgeWorkerActive( env.id, worker.id, true );
 
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_enable_command_success', { name } );
-		console.log( `✓ Enabled edge worker "${ name }".` );
+		console.log( `✓ Enabled edge worker "${ escapeTerminalText( name ) }".` );
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_enable_command_error', {
 			name,
-			error: err.message,
+			error: 'enable_failed',
 		} );
-		exit.withError( `Failed to enable edge worker: ${ err.message }` );
+		exit.withError( `Failed to enable edge worker: ${ escapeTerminalText( err.message ) }` );
 	}
 }
 

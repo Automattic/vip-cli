@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { CONVENTIONAL_PROJECT_DIR } from '../lib/edge-workers/project';
 import { getToolchain } from '../lib/edge-workers/toolchains';
 import { DEFAULT_EDGE_WORKER_TYPE, SUPPORTED_EDGE_WORKER_TYPES } from '../lib/edge-workers/types';
@@ -32,24 +33,28 @@ export async function edgeWorkersInitCommand( args = [], opt = {} ) {
 	if ( ! SUPPORTED_EDGE_WORKER_TYPES.includes( type ) ) {
 		await trackEvent( 'edge_workers_init_command_error', { type, error: 'Unsupported type' } );
 		exit.withError(
-			`Unsupported type "${ type }". Supported types: ${ SUPPORTED_EDGE_WORKER_TYPES.join(
-				', '
-			) }.`
+			`Unsupported type "${ escapeTerminalText(
+				type
+			) }". Supported types: ${ SUPPORTED_EDGE_WORKER_TYPES.join( ', ' ) }.`
 		);
 	}
 
 	try {
 		getToolchain( type ).scaffoldProject( projectDir );
 	} catch ( err ) {
-		await trackEvent( 'edge_workers_init_command_error', { type, error: err.message } );
-		exit.withError( err.message );
+		await trackEvent( 'edge_workers_init_command_error', { type, error: 'init_failed' } );
+		exit.withError( escapeTerminalText( err.message ) );
 	}
 
 	await trackEvent( 'edge_workers_init_command_success', { type } );
 
-	console.log( `✓ Created a new ${ type } edge-workers project in ${ projectDir }` );
+	console.log(
+		`✓ Created a new ${ escapeTerminalText( type ) } edge-workers project in ${ escapeTerminalText(
+			projectDir
+		) }`
+	);
 	console.log( '\nNext steps:' );
-	console.log( `  cd ${ targetArg }` );
+	console.log( `  cd ${ escapeTerminalText( targetArg ) }` );
 	console.log( '  npm install' );
 	console.log( '  vip edge-workers new my-worker' );
 }

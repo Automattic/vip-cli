@@ -95,6 +95,31 @@ describe( 'edgeWorkersGetCommand()', () => {
 		expect( console.log ).toHaveBeenCalledWith( '(no source stored)' );
 	} );
 
+	it( 'neutralizes terminal controls in remote details and stored source', async () => {
+		edgeWorkersApi.getEdgeWorker.mockResolvedValue( {
+			...worker,
+			name: 'headers\u001b[2J',
+			location: { operator: 'starts_with', value: '/api/\u001b[31m' },
+			phases: [ 'client_response\nforged' ],
+			onFailure: 'continue\u0007',
+			createdAt: '2026-08-18\rforged',
+			updatedAt: '2026-08-19\u009b31m',
+			source: 'export {};\n\u001b[2JSECRET',
+		} );
+
+		await edgeWorkersGetCommand( [ 'headers' ], { ...opts, source: true } );
+
+		const output = console.log.mock.calls
+			.flat()
+			.filter( value => value !== '\nSource:' )
+			.join( '|' );
+		// eslint-disable-next-line no-control-regex
+		expect( output ).not.toMatch( /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/ );
+		expect( output ).not.toContain( 'client_response\nforged' );
+		expect( output ).toContain( String.raw`\u001b` );
+		expect( output ).toContain( String.raw`\u000a` );
+	} );
+
 	it( 'reports a missing worker without false success', async () => {
 		edgeWorkersApi.getEdgeWorker.mockResolvedValue( null );
 
@@ -119,6 +144,12 @@ describe( 'edgeWorkersGetCommand()', () => {
 		await expect( edgeWorkersGetCommand( [ 'headers' ], opts ) ).rejects.toBe( 'EXIT_WITH_ERROR' );
 
 		expect( exit.withError ).toHaveBeenCalledWith( 'Failed to get edge worker: API unavailable' );
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_get_command_error',
+			{ name: 'headers', error: 'get_failed' }
+		);
 		expect( console.log ).not.toHaveBeenCalled();
 		expect( tracker.trackEventWithEnv ).not.toHaveBeenCalledWith(
 			1,

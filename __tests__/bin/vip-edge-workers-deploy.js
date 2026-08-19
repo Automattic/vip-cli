@@ -298,6 +298,29 @@ describe( 'edgeWorkersDeployCommand()', () => {
 		);
 	} );
 
+	it( 'keeps preparation diagnostics local and out of analytics', async () => {
+		const secret = 'SENTINEL_DEPLOY_SECRET';
+		const sourcePath = '/private/customer/project/workers/headers/assembly/index.ts';
+		deployment.prepareEdgeWorkerDeploymentPlan.mockRejectedValue(
+			new Error( `Compiler printed ${ sourcePath }: ${ secret }\n\u001b[31merror` )
+		);
+
+		await expect( edgeWorkersDeployCommand( [ 'headers' ], opts ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( tracker.trackEventWithEnv ).toHaveBeenCalledWith(
+			1,
+			3,
+			'edge_workers_deploy_command_error',
+			{ name: 'headers', error: 'deploy_failed' }
+		);
+		expect( JSON.stringify( tracker.trackEventWithEnv.mock.calls ) ).not.toContain( secret );
+		expect( JSON.stringify( tracker.trackEventWithEnv.mock.calls ) ).not.toContain( sourcePath );
+		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( secret ) );
+		expect( exit.withError ).toHaveBeenCalledWith( expect.stringContaining( sourcePath ) );
+	} );
+
 	it( 'reports exact progress and the original cause after a partial failure', async () => {
 		const cause = new Error( 'request timed out' );
 		deployment.applyEdgeWorkerDeploymentPlan.mockRejectedValue(

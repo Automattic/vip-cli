@@ -5,6 +5,7 @@ import path from 'node:path';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { buildWorker } from '../lib/edge-workers';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { discoverWorkers, findWorker, resolveProjectDir } from '../lib/edge-workers/project';
 import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
@@ -42,17 +43,16 @@ export async function edgeWorkersBuildCommand( args = [], opt = {} ) {
 		for ( const worker of workers ) {
 			const { wasmPath, sizeBytes } = buildWorker( projectDir, worker );
 			console.log(
-				`✓ Built "${ worker.manifest.name }" → ${ path.relative(
-					projectDir,
-					wasmPath
+				`✓ Built "${ escapeTerminalText( worker.manifest.name ) }" → ${ escapeTerminalText(
+					path.relative( projectDir, wasmPath )
 				) } (${ sizeBytes } bytes)`
 			);
 		}
 
 		await trackEvent( 'edge_workers_build_command_success', { count: workers.length } );
 	} catch ( err ) {
-		await trackEvent( 'edge_workers_build_command_error', { name, error: err.message } );
-		exit.withError( err.message );
+		await trackEvent( 'edge_workers_build_command_error', { name, error: 'build_failed' } );
+		exit.withError( escapeTerminalText( err.message ) );
 	}
 }
 

@@ -5,6 +5,7 @@
  */
 
 import UserError from '../user-error';
+import { hasTerminalControlCharacters } from './output';
 import { EDGE_WORKER_LOCATION_OPERATORS } from './types';
 
 import type { EdgeWorkerLocation, EdgeWorkerLocationOperator } from './types';
@@ -15,7 +16,11 @@ export function parseLocationOption( raw: string ): EdgeWorkerLocation {
 	const operator = separator > 0 ? raw.slice( 0, separator ) : '';
 	const value = separator > 0 ? raw.slice( separator + 1 ) : '';
 
-	if ( ! ( EDGE_WORKER_LOCATION_OPERATORS as string[] ).includes( operator ) || ! value ) {
+	if (
+		! ( EDGE_WORKER_LOCATION_OPERATORS as string[] ).includes( operator ) ||
+		! value ||
+		hasTerminalControlCharacters( value )
+	) {
 		throw new UserError(
 			`Invalid location "${ raw }". Use "<operator>:<value>", where <operator> is one of: ` +
 				`${ EDGE_WORKER_LOCATION_OPERATORS.join( ', ' ) } (e.g. "starts_with:/api/").`

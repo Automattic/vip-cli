@@ -4,6 +4,7 @@ import { appQuery, validateEdgeWorker } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { buildWorker, readPrebuiltWorker } from '../lib/edge-workers';
+import { escapeTerminalText } from '../lib/edge-workers/output';
 import { discoverWorkers, findWorker, resolveProjectDir } from '../lib/edge-workers/project';
 import { trackEventWithEnv } from '../lib/tracker';
 
@@ -61,11 +62,16 @@ export async function edgeWorkersValidateCommand( args = [], opt = {} ) {
 
 			if ( result && ! result.valid ) {
 				invalidCount++;
-				const errors = ( result.errors || [] ).join( '; ' ) || 'unknown error';
-				console.log( `✕ "${ worker.manifest.name }" is invalid: ${ errors }` );
+				const errors =
+					( result.errors || [] ).map( escapeTerminalText ).join( '; ' ) || 'unknown error';
+				console.log(
+					`✕ "${ escapeTerminalText( worker.manifest.name ) }" is invalid: ${ errors }`
+				);
 			} else {
-				const phases = ( result?.phases || [] ).join( ', ' ) || 'none';
-				console.log( `✓ "${ worker.manifest.name }" is valid (phases: ${ phases })` );
+				const phases = ( result?.phases || [] ).map( escapeTerminalText ).join( ', ' ) || 'none';
+				console.log(
+					`✓ "${ escapeTerminalText( worker.manifest.name ) }" is valid (phases: ${ phases })`
+				);
 			}
 		}
 
@@ -80,9 +86,9 @@ export async function edgeWorkersValidateCommand( args = [], opt = {} ) {
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_validate_command_error', {
 			name,
-			error: err.message,
+			error: 'validate_failed',
 		} );
-		exit.withError( `Failed to validate edge worker: ${ err.message }` );
+		exit.withError( `Failed to validate edge worker: ${ escapeTerminalText( err.message ) }` );
 	}
 }
 

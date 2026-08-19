@@ -222,6 +222,22 @@ describe( 'prepareEdgeWorkerDeploymentPlan()', () => {
 		expect( updateEdgeWorker ).not.toHaveBeenCalled();
 	} );
 
+	it( 'does no preparation or mutation when the remote read state is malformed', async () => {
+		jest
+			.mocked( listEdgeWorkers )
+			.mockRejectedValue( new Error( 'EdgeWorkers query returned an invalid response.' ) );
+
+		await expect( prepareEdgeWorkerDeploymentPlan( options() ) ).rejects.toThrow(
+			/invalid response/
+		);
+		expect( buildWorker ).not.toHaveBeenCalled();
+		expect( readPrebuiltWorker ).not.toHaveBeenCalled();
+		expect( validateEdgeWorker ).not.toHaveBeenCalled();
+		expect( readWorkerSource ).not.toHaveBeenCalled();
+		expect( createEdgeWorker ).not.toHaveBeenCalled();
+		expect( updateEdgeWorker ).not.toHaveBeenCalled();
+	} );
+
 	it( 'uses prebuilt artifacts and records skipped validation when requested', async () => {
 		jest.mocked( readPrebuiltWorker ).mockReturnValue( {
 			wasmPath: '/project/build/headers.wasm',
@@ -307,6 +323,25 @@ describe( 'deploymentPlanRows()', () => {
 			},
 		] );
 		expect( plan[ 0 ] ).toEqual( itemBeforePreview );
+	} );
+
+	it( 'neutralizes terminal controls in remote preview fields', async () => {
+		jest.mocked( listEdgeWorkers ).mockResolvedValue( [
+			remoteWorker( {
+				location: { operator: 'starts_with', value: '/api/\u001b[2J' },
+			} ),
+		] );
+		jest.mocked( validateEdgeWorker ).mockResolvedValue( {
+			valid: true,
+			phases: [ 'client_response\u001b[31m' as never ],
+			errors: [],
+		} );
+
+		const [ row ] = deploymentPlanRows( await prepareEdgeWorkerDeploymentPlan( options() ) );
+		const rendered = Object.values( row ).join( '|' );
+
+		expect( rendered ).not.toContain( '\u001b' );
+		expect( rendered ).toContain( String.raw`\u001b` );
 	} );
 } );
 

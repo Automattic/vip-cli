@@ -18,7 +18,12 @@ import { BUILD_DIR, DEFAULT_ENTRY, SDK_PACKAGE, SDK_VERSION } from './constants'
 import { GITIGNORE, PACKAGE_JSON, README, starterWorker, TSCONFIG_JSON } from './templates';
 import UserError from '../../../user-error';
 import { WORKERS_DIR, writeProjectDescriptor, writeWorkerManifest } from '../../project';
-import { resolvePathWithin, validateWorkerName } from '../../validation';
+import {
+	resolveExistingPathWithin,
+	resolveOutputPathWithin,
+	resolvePathWithin,
+	validateWorkerName,
+} from '../../validation';
 
 import type { DiscoveredWorker } from '../../types';
 import type { Toolchain } from '../index';
@@ -97,19 +102,20 @@ const toolchain: Toolchain = {
 
 	compile( projectDir: string, worker: DiscoveredWorker ): string {
 		const asc = ascBinaryPath( projectDir );
-		const entry = resolvePathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
-		if ( ! fs.existsSync( entry ) ) {
-			throw new UserError( `Worker entry file not found: "${ entry }".` );
+		const entryCandidate = resolvePathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
+		if ( ! fs.existsSync( entryCandidate ) ) {
+			throw new UserError( `Worker entry file not found: "${ entryCandidate }".` );
 		}
+		const entry = resolveExistingPathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
 
 		const nodeModules = path.join( projectDir, 'node_modules' );
 		const workerName = validateWorkerName( worker.manifest.name );
-		const outFile = resolvePathWithin(
-			path.join( projectDir, BUILD_DIR ),
-			`${ workerName }.wasm`,
-			'Worker build artifact'
+		const outFile = resolveOutputPathWithin(
+			projectDir,
+			path.join( BUILD_DIR, `${ workerName }.wasm` ),
+			'Worker build artifact',
+			'Worker build directory'
 		);
-		fs.mkdirSync( path.dirname( outFile ), { recursive: true } );
 
 		const args = [
 			entry,
@@ -151,7 +157,12 @@ const toolchain: Toolchain = {
 			);
 		}
 
-		return outFile;
+		return resolveOutputPathWithin(
+			projectDir,
+			path.join( BUILD_DIR, `${ workerName }.wasm` ),
+			'Worker build artifact',
+			'Worker build directory'
+		);
 	},
 };
 

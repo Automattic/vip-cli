@@ -144,6 +144,14 @@ describe( 'edge-workers project', () => {
 			expect( findWorker( project, 'alpha' ).manifest.name ).toBe( 'alpha' );
 		} );
 
+		it( 'prefers an exact manifest name over a directory-name fallback', () => {
+			const project = makeProject( path.join( tmp, 'proj' ) );
+			makeWorker( project, 'target', { name: 'directory-fallback' } );
+			makeWorker( project, 'other-directory', { name: 'target' } );
+
+			expect( findWorker( project, 'target' ).manifest.name ).toBe( 'target' );
+		} );
+
 		it( 'throws listing available workers when not found', () => {
 			const project = makeProject( path.join( tmp, 'proj' ) );
 			makeWorker( project, 'alpha' );
@@ -160,6 +168,22 @@ describe( 'edge-workers project', () => {
 			expect( () => readWorkerSource( worker ) ).toThrow( /Could not read worker source/ );
 		} );
 
+		it( 'rejects an entry symlink that escapes the worker directory', () => {
+			const workerDir = path.join( tmp, 'worker' );
+			const entryDir = path.join( workerDir, 'assembly' );
+			const outside = path.join( tmp, 'secret.ts' );
+			fs.mkdirSync( entryDir, { recursive: true } );
+			fs.writeFileSync( outside, 'TOP_SECRET_SOURCE' );
+			fs.symlinkSync( outside, path.join( entryDir, 'index.ts' ), 'file' );
+
+			const worker = {
+				dir: workerDir,
+				manifest: { name: 'demo', entry: 'assembly/index.ts' },
+			};
+
+			expect( () => readWorkerSource( worker ) ).toThrow( /Worker entry must stay within/ );
+		} );
+
 		it( 'rejects traversal in prebuilt artifact names', () => {
 			const worker = {
 				dir: path.join( tmp, 'worker' ),
@@ -167,6 +191,42 @@ describe( 'edge-workers project', () => {
 			};
 			expect( () => readPrebuiltWorker( path.join( tmp, 'project' ), worker ) ).toThrow(
 				/Invalid worker name/
+			);
+		} );
+
+		it( 'rejects a prebuilt artifact symlink that escapes the project', () => {
+			const project = makeProject( path.join( tmp, 'project' ) );
+			const buildDir = path.join( project, 'build' );
+			const outside = path.join( tmp, 'secret.wasm' );
+			fs.mkdirSync( buildDir );
+			fs.writeFileSync( outside, 'TOP_SECRET_WASM' );
+			fs.symlinkSync( outside, path.join( buildDir, 'demo.wasm' ), 'file' );
+
+			const worker = {
+				dir: path.join( project, 'workers', 'demo' ),
+				manifest: { name: 'demo', entry: 'assembly/index.ts' },
+			};
+
+			expect( () => readPrebuiltWorker( project, worker ) ).toThrow(
+				/Worker build artifact must stay within/
+			);
+		} );
+
+		it( 'rejects a prebuilt artifact symlink that escapes the build directory', () => {
+			const project = makeProject( path.join( tmp, 'project' ) );
+			const buildDir = path.join( project, 'build' );
+			const outsideBuild = path.join( project, 'project-secret.wasm' );
+			fs.mkdirSync( buildDir );
+			fs.writeFileSync( outsideBuild, 'PROJECT_SECRET_WASM' );
+			fs.symlinkSync( outsideBuild, path.join( buildDir, 'demo.wasm' ), 'file' );
+
+			const worker = {
+				dir: path.join( project, 'workers', 'demo' ),
+				manifest: { name: 'demo', entry: 'assembly/index.ts' },
+			};
+
+			expect( () => readPrebuiltWorker( project, worker ) ).toThrow(
+				/Worker build artifact must stay within/
 			);
 		} );
 	} );
