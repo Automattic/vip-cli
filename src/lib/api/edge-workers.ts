@@ -2,9 +2,9 @@
  * GraphQL access for edge workers.
  *
  * The schema exposes workers under `app.environments[].edgeWorkers`, with
- * `source`/`wasmBinary` as on-demand fields, plus create/update/setActive/delete
- * mutations keyed by `environmentId`. Worker names are unique per environment, so
- * the CLI reconciles create-vs-update by matching on `name`.
+ * `source` as an on-demand read field, plus create/update/setActive/delete mutations
+ * keyed by `environmentId`. Worker names are unique per environment, so the CLI
+ * reconciles create-vs-update by matching on `name`.
  *
  * NOTE: these types are hand-written rather than codegen'd because the edge
  * worker schema is not part of the public schema bundle the codegen runs against.
@@ -74,7 +74,7 @@ function requireMutationPayload< T >( operation: string, value: T | null | undef
 	return value;
 }
 
-/** List the edge workers deployed to an environment (without source/wasm). */
+/** List the edge workers deployed to an environment without source. */
 export async function listEdgeWorkers( appId: number, envId: number ): Promise< EdgeWorker[] > {
 	const api = API();
 	const response = await api.query< EdgeWorkersQueryResult >( {
@@ -98,16 +98,19 @@ export async function listEdgeWorkers( appId: number, envId: number ): Promise< 
 }
 
 /**
- * Fetch a single worker by name, including the on-demand `source` and
- * `wasmBinary` fields. The schema has no single-worker query, so this requests
- * those fields across the environment's workers and filters client-side.
+ * Fetch a single worker by name. The schema has no single-worker query, so this
+ * requests the environment's workers and filters client-side. Source is fetched
+ * only when explicitly requested.
  */
 export async function getEdgeWorker(
 	appId: number,
 	envId: number,
-	name: string
+	name: string,
+	options: { includeSource?: boolean } = {}
 ): Promise< EdgeWorker | null > {
 	const api = API();
+	const fields =
+		options.includeSource === true ? `${ EDGE_WORKER_FIELDS }\nsource` : EDGE_WORKER_FIELDS;
 	const response = await api.query< EdgeWorkersQueryResult >( {
 		query: gql`
 			query EdgeWorkerDetail($appId: Int!) {
@@ -115,9 +118,7 @@ export async function getEdgeWorker(
 					environments {
 						id
 						edgeWorkers {
-							${ EDGE_WORKER_FIELDS }
-							source
-							wasmBinary
+							${ fields }
 						}
 					}
 				}

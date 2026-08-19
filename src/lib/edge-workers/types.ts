@@ -87,6 +87,4 @@ export interface EdgeWorker {
 	updatedAt: string;
 	/** Only present when explicitly requested (on-demand field). */
 	source?: string | null;
-	/** Only present when explicitly requested (on-demand field). */
-	wasmBinary?: string | null;
 }

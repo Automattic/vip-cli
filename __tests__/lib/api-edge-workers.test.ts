@@ -1,23 +1,64 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { print } from 'graphql';
 
 import * as apiModule from '../../src/lib/api';
 import {
 	createEdgeWorker,
 	deleteEdgeWorker,
+	getEdgeWorker,
 	setEdgeWorkerActive,
 	updateEdgeWorker,
 	validateEdgeWorker,
 } from '../../src/lib/api/edge-workers';
 
+import type { DocumentNode } from 'graphql';
+
 jest.mock( '../../src/lib/api' );
 
 const mockMutate =
 	jest.fn< ( options: unknown ) => Promise< { data?: Record< string, unknown > } > >();
+const mockQuery =
+	jest.fn<
+		( options: { query: DocumentNode } ) => Promise< { data?: Record< string, unknown > } >
+	>();
 const mockedAPI = apiModule as unknown as { default: jest.Mock };
 
 beforeEach( () => {
 	mockMutate.mockReset();
-	mockedAPI.default = jest.fn().mockReturnValue( { mutate: mockMutate } );
+	mockQuery.mockReset();
+	mockedAPI.default = jest.fn().mockReturnValue( { mutate: mockMutate, query: mockQuery } );
+} );
+
+describe( 'edge worker read query contracts', () => {
+	beforeEach( () => {
+		mockQuery.mockResolvedValue( {
+			data: {
+				app: {
+					environments: [ { id: 3, edgeWorkers: [ { id: 5, name: 'headers' } ] } ],
+				},
+			},
+		} );
+	} );
+
+	it( 'omits source and wasmBinary from the default detail query', async () => {
+		await getEdgeWorker( 1, 3, 'headers' );
+
+		const queryDocument = mockQuery.mock.calls[ 0 ][ 0 ].query;
+		const query = print( queryDocument );
+
+		expect( query ).not.toContain( 'source' );
+		expect( query ).not.toContain( 'wasmBinary' );
+	} );
+
+	it( 'requests source but never wasmBinary when source is explicitly included', async () => {
+		await getEdgeWorker( 1, 3, 'headers', { includeSource: true } );
+
+		const queryDocument = mockQuery.mock.calls[ 0 ][ 0 ].query;
+		const query = print( queryDocument );
+
+		expect( query ).toContain( 'source' );
+		expect( query ).not.toContain( 'wasmBinary' );
+	} );
 } );
 
 describe( 'edge worker mutation result contracts', () => {

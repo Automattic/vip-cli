@@ -22,6 +22,7 @@ const examples = [
 export async function edgeWorkersGetCommand( args = [], opt = {} ) {
 	const { app, env } = opt;
 	const name = args[ 0 ];
+	const includeSource = opt.source === true;
 
 	await trackEventWithEnv( app.id, env.id, 'edge_workers_get_command_execute', { name } );
 
@@ -31,7 +32,7 @@ export async function edgeWorkersGetCommand( args = [], opt = {} ) {
 
 	let worker;
 	try {
-		worker = await getEdgeWorker( app.id, env.id, name );
+		worker = await getEdgeWorker( app.id, env.id, name, { includeSource } );
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_get_command_error', {
 			name,
@@ -67,7 +68,7 @@ export async function edgeWorkersGetCommand( args = [], opt = {} ) {
 		] )
 	);
 
-	if ( opt.source ) {
+	if ( includeSource ) {
 		console.log( '\nSource:' );
 		console.log( worker.source ?? '(no source stored)' );
 	}
