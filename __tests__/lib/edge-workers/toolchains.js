@@ -37,10 +37,33 @@ describe( 'edge-workers toolchains', () => {
 			expect( pkg.devDependencies ).toHaveProperty( 'assemblyscript' );
 		} );
 
-		it( 'refuses to scaffold over an existing project', () => {
-			const project = path.join( tmp, 'proj' );
+		it( 'scaffolds a project in an existing empty directory', () => {
+			const project = path.join( tmp, 'empty-proj' );
+			fs.mkdirSync( project );
+
 			tc.scaffoldProject( project );
-			expect( () => tc.scaffoldProject( project ) ).toThrow( /already exists/ );
+
+			expect( fs.existsSync( path.join( project, 'edge-workers.json' ) ) ).toBe( true );
+		} );
+
+		it( 'refuses a non-empty target before replacing files', () => {
+			const project = path.join( tmp, 'existing-app' );
+			fs.mkdirSync( project );
+			fs.writeFileSync( path.join( project, 'package.json' ), '{"name":"customer-app"}\n' );
+
+			expect( () => tc.scaffoldProject( project ) ).toThrow( /not empty/ );
+			expect( fs.readFileSync( path.join( project, 'package.json' ), 'utf8' ) ).toBe(
+				'{"name":"customer-app"}\n'
+			);
+			expect( fs.existsSync( path.join( project, 'edge-workers.json' ) ) ).toBe( false );
+		} );
+
+		it( 'refuses a file target', () => {
+			const project = path.join( tmp, 'not-a-directory' );
+			fs.writeFileSync( project, 'customer content\n' );
+
+			expect( () => tc.scaffoldProject( project ) ).toThrow( /not a directory/ );
+			expect( fs.readFileSync( project, 'utf8' ) ).toBe( 'customer content\n' );
 		} );
 
 		it( 'scaffolds a worker with a manifest and entry file', () => {

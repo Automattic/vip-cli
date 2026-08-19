@@ -17,12 +17,7 @@ import path from 'node:path';
 import { BUILD_DIR, DEFAULT_ENTRY, SDK_PACKAGE, SDK_VERSION } from './constants';
 import { GITIGNORE, PACKAGE_JSON, README, starterWorker, TSCONFIG_JSON } from './templates';
 import UserError from '../../../user-error';
-import {
-	PROJECT_DESCRIPTOR_FILE,
-	WORKERS_DIR,
-	writeProjectDescriptor,
-	writeWorkerManifest,
-} from '../../project';
+import { WORKERS_DIR, writeProjectDescriptor, writeWorkerManifest } from '../../project';
 import { resolvePathWithin, validateWorkerName } from '../../validation';
 
 import type { DiscoveredWorker } from '../../types';
@@ -34,6 +29,20 @@ function writeFileEnsuringDir( filePath: string, contents: string ): void {
 	fs.writeFileSync( filePath, contents );
 }
 
+function assertScaffoldTargetAvailable( projectDir: string ): void {
+	if ( ! fs.existsSync( projectDir ) ) return;
+	if ( ! fs.statSync( projectDir ).isDirectory() ) {
+		throw new UserError(
+			`Cannot create an edge-workers project at "${ projectDir }": target is not a directory.`
+		);
+	}
+	if ( fs.readdirSync( projectDir ).length > 0 ) {
+		throw new UserError(
+			`Cannot create an edge-workers project at "${ projectDir }": target is not empty.`
+		);
+	}
+}
+
 function ascBinaryPath( projectDir: string ): string {
 	const binName = process.platform === 'win32' ? 'asc.cmd' : 'asc';
 	return path.join( projectDir, 'node_modules', '.bin', binName );
@@ -43,11 +52,7 @@ const toolchain: Toolchain = {
 	type: 'assemblyscript',
 
 	scaffoldProject( projectDir: string ): void {
-		if ( fs.existsSync( path.join( projectDir, PROJECT_DESCRIPTOR_FILE ) ) ) {
-			throw new UserError(
-				`An edge-workers project already exists at "${ projectDir }" (found ${ PROJECT_DESCRIPTOR_FILE }).`
-			);
-		}
+		assertScaffoldTargetAvailable( projectDir );
 
 		// Every write below ensures its own parent directory, so no standalone
 		// mkdir is needed up front.
