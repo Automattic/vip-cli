@@ -23,6 +23,7 @@ import {
 	writeProjectDescriptor,
 	writeWorkerManifest,
 } from '../../project';
+import { resolvePathWithin, validateWorkerName } from '../../validation';
 
 import type { DiscoveredWorker } from '../../types';
 import type { Toolchain } from '../index';
@@ -69,6 +70,7 @@ const toolchain: Toolchain = {
 	},
 
 	scaffoldWorker( projectDir: string, name: string ): void {
+		validateWorkerName( name );
 		const workerDir = path.join( projectDir, WORKERS_DIR, name );
 		if ( fs.existsSync( workerDir ) ) {
 			throw new UserError( `A worker directory already exists at "${ workerDir }".` );
@@ -90,13 +92,18 @@ const toolchain: Toolchain = {
 
 	compile( projectDir: string, worker: DiscoveredWorker ): string {
 		const asc = ascBinaryPath( projectDir );
-		const entry = path.resolve( worker.dir, worker.manifest.entry || DEFAULT_ENTRY );
+		const entry = resolvePathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
 		if ( ! fs.existsSync( entry ) ) {
 			throw new UserError( `Worker entry file not found: "${ entry }".` );
 		}
 
 		const nodeModules = path.join( projectDir, 'node_modules' );
-		const outFile = path.join( projectDir, BUILD_DIR, `${ worker.manifest.name }.wasm` );
+		const workerName = validateWorkerName( worker.manifest.name );
+		const outFile = resolvePathWithin(
+			path.join( projectDir, BUILD_DIR ),
+			`${ workerName }.wasm`,
+			'Worker build artifact'
+		);
 		fs.mkdirSync( path.dirname( outFile ), { recursive: true } );
 
 		const args = [

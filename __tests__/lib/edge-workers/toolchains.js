@@ -63,6 +63,37 @@ describe( 'edge-workers toolchains', () => {
 			expect( () => tc.scaffoldWorker( project, 'dup' ) ).toThrow( /already exists/ );
 		} );
 
+		it( 'rejects a worker name that escapes the workers directory', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			expect( () => tc.scaffoldWorker( project, '../outside' ) ).toThrow( /Invalid worker name/ );
+			expect( fs.existsSync( path.join( tmp, 'outside' ) ) ).toBe( false );
+		} );
+
+		it( 'rejects an entry that escapes the worker directory before compiling', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const worker = {
+				dir: path.join( project, 'workers', 'demo' ),
+				manifest: { name: 'demo', entry: '../outside.ts' },
+			};
+			expect( () => tc.compile( project, worker ) ).toThrow( /Worker entry must stay within/ );
+		} );
+
+		it( 'rejects a worker name that escapes the build directory', () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			const workerDir = path.join( project, 'workers', 'demo' );
+			fs.mkdirSync( path.join( workerDir, 'assembly' ), { recursive: true } );
+			fs.writeFileSync( path.join( workerDir, 'assembly', 'index.ts' ), 'export {};' );
+			const worker = {
+				dir: workerDir,
+				manifest: { name: '../outside', entry: 'assembly/index.ts' },
+			};
+			expect( () => tc.compile( project, worker ) ).toThrow( /Invalid worker name/ );
+			expect( fs.existsSync( path.join( tmp, 'outside.wasm' ) ) ).toBe( false );
+		} );
+
 		it( 'ensureAvailable throws when the compiler is missing', () => {
 			const project = path.join( tmp, 'proj' );
 			tc.scaffoldProject( project );

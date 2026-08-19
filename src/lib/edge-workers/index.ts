@@ -9,6 +9,7 @@ import path from 'node:path';
 import UserError from '../user-error';
 import { readProjectDescriptor } from './project';
 import { getToolchain } from './toolchains';
+import { resolvePathWithin, validateWorkerName } from './validation';
 
 import type { DiscoveredWorker } from './types';
 
@@ -16,6 +17,7 @@ export * from './types';
 export * from './project';
 export * from './location';
 export { getToolchain } from './toolchains';
+export * from './validation';
 
 /** Conventional output directory for compiled artifacts, relative to the project root. */
 export const BUILD_DIR = 'build';
@@ -33,7 +35,12 @@ function encodeArtifact( wasmPath: string ): BuiltArtifact {
 
 /** Read a previously compiled artifact without recompiling (used by `deploy --skip-build`). */
 export function readPrebuiltWorker( projectDir: string, worker: DiscoveredWorker ): BuiltArtifact {
-	const wasmPath = path.join( projectDir, BUILD_DIR, `${ worker.manifest.name }.wasm` );
+	const name = validateWorkerName( worker.manifest.name );
+	const wasmPath = resolvePathWithin(
+		path.join( projectDir, BUILD_DIR ),
+		`${ name }.wasm`,
+		'Worker build artifact'
+	);
 	if ( ! fs.existsSync( wasmPath ) ) {
 		throw new UserError(
 			`No compiled artifact found for "${ worker.manifest.name }" at "${ wasmPath }". ` +
@@ -56,11 +63,11 @@ export function buildWorker( projectDir: string, worker: DiscoveredWorker ): Bui
 }
 
 /** Read the entry source of a worker, for storing alongside the binary. */
-export function readWorkerSource( worker: DiscoveredWorker ): string | undefined {
-	const entry = path.resolve( worker.dir, worker.manifest.entry );
+export function readWorkerSource( worker: DiscoveredWorker ): string {
+	const entry = resolvePathWithin( worker.dir, worker.manifest.entry, 'Worker entry' );
 	try {
 		return fs.readFileSync( entry, 'utf8' );
 	} catch {
-		return undefined;
+		throw new UserError( `Could not read worker source at "${ entry }".` );
 	}
 }

@@ -64,7 +64,7 @@ export interface WorkerManifest {
 	name: string;
 	/** Entry source file, relative to the worker directory. Defaults per toolchain. */
 	entry: string;
-	location?: EdgeWorkerLocation;
+	location?: EdgeWorkerLocation | null;
 	on_failure?: EdgeWorkerOnFailure;
 }
 

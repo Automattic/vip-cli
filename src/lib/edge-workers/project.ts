@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import UserError from '../user-error';
+import { parseProjectDescriptor, parseWorkerManifest } from './validation';
 
 import type { DiscoveredWorker, ProjectDescriptor, WorkerManifest } from './types';
 
@@ -90,18 +91,14 @@ export function readProjectDescriptor( projectDir: string ): ProjectDescriptor {
 		throw new UserError( `Could not read project descriptor at "${ file }".` );
 	}
 
-	let parsed: ProjectDescriptor;
+	let parsed: unknown;
 	try {
-		parsed = JSON.parse( raw ) as ProjectDescriptor;
+		parsed = JSON.parse( raw ) as unknown;
 	} catch {
 		throw new UserError( `Project descriptor at "${ file }" is not valid JSON.` );
 	}
 
-	if ( ! parsed.type ) {
-		throw new UserError( `Project descriptor at "${ file }" is missing a "type" field.` );
-	}
-
-	return parsed;
+	return parseProjectDescriptor( parsed, file );
 }
 
 export function writeProjectDescriptor( projectDir: string, descriptor: ProjectDescriptor ): void {
@@ -119,18 +116,14 @@ export function readWorkerManifest( workerDir: string ): WorkerManifest {
 		throw new UserError( `Could not read worker manifest at "${ file }".` );
 	}
 
-	let parsed: WorkerManifest;
+	let parsed: unknown;
 	try {
-		parsed = JSON.parse( raw ) as WorkerManifest;
+		parsed = JSON.parse( raw ) as unknown;
 	} catch {
 		throw new UserError( `Worker manifest at "${ file }" is not valid JSON.` );
 	}
 
-	if ( ! parsed.name ) {
-		throw new UserError( `Worker manifest at "${ file }" is missing a "name" field.` );
-	}
-
-	return parsed;
+	return parseWorkerManifest( parsed, file );
 }
 
 export function writeWorkerManifest( workerDir: string, manifest: WorkerManifest ): void {
@@ -148,6 +141,7 @@ export function discoverWorkers( projectDir: string ): DiscoveredWorker[] {
 
 	const entries = fs.readdirSync( workersRoot, { withFileTypes: true } );
 	const workers: DiscoveredWorker[] = [];
+	const workersByName = new Map< string, DiscoveredWorker >();
 	for ( const entry of entries ) {
 		if ( ! entry.isDirectory() ) {
 			continue;
@@ -158,7 +152,15 @@ export function discoverWorkers( projectDir: string ): DiscoveredWorker[] {
 			continue;
 		}
 
-		workers.push( { dir, manifest: readWorkerManifest( dir ) } );
+		const worker = { dir, manifest: readWorkerManifest( dir ) };
+		const normalizedName = worker.manifest.name.toLocaleLowerCase( 'en-US' );
+		if ( workersByName.has( normalizedName ) ) {
+			throw new UserError(
+				`Duplicate worker name "${ worker.manifest.name }" found in this project.`
+			);
+		}
+		workersByName.set( normalizedName, worker );
+		workers.push( worker );
 	}
 
 	return workers.sort( ( left, right ) => left.manifest.name.localeCompare( right.manifest.name ) );

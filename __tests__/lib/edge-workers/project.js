@@ -2,11 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { readPrebuiltWorker, readWorkerSource } from '../../../src/lib/edge-workers';
 import {
 	CONVENTIONAL_PROJECT_DIR,
 	discoverWorkers,
 	findWorker,
 	readProjectDescriptor,
+	readWorkerManifest,
 	resolveProjectDir,
 	writeProjectDescriptor,
 	writeWorkerManifest,
@@ -78,6 +80,39 @@ describe( 'edge-workers project', () => {
 			fs.writeFileSync( path.join( project, 'edge-workers.json' ), '{}' );
 			expect( () => readProjectDescriptor( project ) ).toThrow( /missing a "type"/ );
 		} );
+
+		it( 'rejects an unsupported descriptor type', () => {
+			const project = path.join( tmp, 'proj' );
+			fs.mkdirSync( project, { recursive: true } );
+			fs.writeFileSync( path.join( project, 'edge-workers.json' ), '{"type":"rust"}' );
+			expect( () => readProjectDescriptor( project ) ).toThrow( /invalid "type"/ );
+		} );
+
+		it( 'rejects a null descriptor', () => {
+			const project = path.join( tmp, 'proj' );
+			fs.mkdirSync( project, { recursive: true } );
+			fs.writeFileSync( path.join( project, 'edge-workers.json' ), 'null' );
+			expect( () => readProjectDescriptor( project ) ).toThrow( /invalid "type"/ );
+		} );
+	} );
+
+	describe( 'worker manifests', () => {
+		it( 'rejects a null manifest', () => {
+			const worker = path.join( tmp, 'worker' );
+			fs.mkdirSync( worker, { recursive: true } );
+			fs.writeFileSync( path.join( worker, 'worker.json' ), 'null' );
+			expect( () => readWorkerManifest( worker ) ).toThrow( /must be an object/ );
+		} );
+
+		it( 'rejects an entry outside the worker directory', () => {
+			const worker = path.join( tmp, 'worker' );
+			fs.mkdirSync( worker, { recursive: true } );
+			fs.writeFileSync(
+				path.join( worker, 'worker.json' ),
+				'{"name":"demo","entry":"../outside.ts"}'
+			);
+			expect( () => readWorkerManifest( worker ) ).toThrow( /Worker entry must stay within/ );
+		} );
 	} );
 
 	describe( 'discoverWorkers / findWorker', () => {
@@ -96,6 +131,13 @@ describe( 'edge-workers project', () => {
 			expect( discoverWorkers( project ) ).toEqual( [] );
 		} );
 
+		it( 'rejects case-insensitive duplicate manifest names', () => {
+			const project = makeProject( path.join( tmp, 'proj' ) );
+			makeWorker( project, 'first', { name: 'Headers' } );
+			makeWorker( project, 'second', { name: 'headers' } );
+			expect( () => discoverWorkers( project ) ).toThrow( /Duplicate worker name/ );
+		} );
+
 		it( 'finds a worker by name', () => {
 			const project = makeProject( path.join( tmp, 'proj' ) );
 			makeWorker( project, 'alpha' );
@@ -106,6 +148,26 @@ describe( 'edge-workers project', () => {
 			const project = makeProject( path.join( tmp, 'proj' ) );
 			makeWorker( project, 'alpha' );
 			expect( () => findWorker( project, 'nope' ) ).toThrow( /Available workers: alpha/ );
+		} );
+	} );
+
+	describe( 'worker source and artifacts', () => {
+		it( 'throws when worker source cannot be read', () => {
+			const worker = {
+				dir: path.join( tmp, 'worker' ),
+				manifest: { name: 'demo', entry: 'assembly/index.ts' },
+			};
+			expect( () => readWorkerSource( worker ) ).toThrow( /Could not read worker source/ );
+		} );
+
+		it( 'rejects traversal in prebuilt artifact names', () => {
+			const worker = {
+				dir: path.join( tmp, 'worker' ),
+				manifest: { name: '../outside', entry: 'assembly/index.ts' },
+			};
+			expect( () => readPrebuiltWorker( path.join( tmp, 'project' ), worker ) ).toThrow(
+				/Invalid worker name/
+			);
 		} );
 	} );
 } );
