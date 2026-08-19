@@ -3,6 +3,8 @@
 import { appQuery, deleteEdgeWorker, findEdgeWorkerByName } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import { confirmEdgeWorkerDeletion } from '../lib/edge-workers/confirmation';
+import { confirm } from '../lib/envvar/input';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const usage = 'vip edge-workers delete';
@@ -26,6 +28,16 @@ export async function edgeWorkersDeleteCommand( args = [], opt = {} ) {
 			exit.withError( `No edge worker named "${ name }" is deployed to this environment.` );
 		}
 
+		await confirmEdgeWorkerDeletion(
+			{
+				appName: app.name,
+				envType: env.type,
+				workerName: worker.name,
+				force: Boolean( opt.force ),
+			},
+			confirm
+		);
+
 		await deleteEdgeWorker( env.id, worker.id );
 
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_delete_command_success', { name } );
@@ -44,8 +56,8 @@ command( {
 	appQuery,
 	envContext: true,
 	requiredArgs: 1,
-	requireConfirm: 'Are you sure you want to permanently delete this edge worker?',
 	usage,
 } )
+	.option( 'force', 'Skip confirmation.', false )
 	.examples( examples )
 	.argv( process.argv, edgeWorkersDeleteCommand );

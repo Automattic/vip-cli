@@ -5,12 +5,17 @@ import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { formatData } from '../lib/cli/format';
 import {
+	confirmProductionEdgeWorkerMutation,
+	isInteractiveEdgeWorkers,
+} from '../lib/edge-workers/confirmation';
+import {
 	applyEdgeWorkerDeploymentPlan,
 	DeploymentApplyError,
 	deploymentPlanRows,
 	prepareEdgeWorkerDeploymentPlan,
 } from '../lib/edge-workers/deployment';
 import { discoverWorkers, findWorker, resolveProjectDir } from '../lib/edge-workers/project';
+import { confirm } from '../lib/envvar/input';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const usage = 'vip edge-workers deploy';
@@ -83,6 +88,18 @@ export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 
 		console.log( formatData( deploymentPlanRows( plan ), 'table' ) );
 
+		await confirmProductionEdgeWorkerMutation(
+			{
+				action: 'deploy',
+				appName: app.name,
+				envType: env.type,
+				workerNames: plan.map( item => item.worker.manifest.name ),
+				skipConfirmation: Boolean( opt.skipConfirmation ),
+				nonInteractive: ! isInteractiveEdgeWorkers( opt ),
+			},
+			confirm
+		);
+
 		await applyEdgeWorkerDeploymentPlan( env.id, plan, ( item, deployed ) => {
 			const action = item.action === 'create' ? 'created' : 'updated';
 			const phasesNote = `, phases: ${ deployed.phases.join( ', ' ) || 'none' }`;
@@ -119,5 +136,6 @@ command( {
 	.option( 'skip-build', 'Deploy a previously compiled artifact without recompiling.', false )
 	.option( 'skip-validate', 'Skip server-side dry-run validation before uploading.', false )
 	.option( 'skip-source', 'Do not store the worker source alongside the binary.', false )
+	.option( 'skip-confirmation', 'Skip the production deployment confirmation.', false )
 	.examples( examples )
 	.argv( process.argv, edgeWorkersDeployCommand );

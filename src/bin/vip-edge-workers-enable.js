@@ -3,6 +3,11 @@
 import { appQuery, findEdgeWorkerByName, setEdgeWorkerActive } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
+import {
+	confirmProductionEdgeWorkerMutation,
+	isInteractiveEdgeWorkers,
+} from '../lib/edge-workers/confirmation';
+import { confirm } from '../lib/envvar/input';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const usage = 'vip edge-workers enable';
@@ -26,6 +31,18 @@ export async function edgeWorkersEnableCommand( args = [], opt = {} ) {
 			exit.withError( `No edge worker named "${ name }" is deployed to this environment.` );
 		}
 
+		await confirmProductionEdgeWorkerMutation(
+			{
+				action: 'enable',
+				appName: app.name,
+				envType: env.type,
+				workerNames: [ worker.name ],
+				skipConfirmation: Boolean( opt.skipConfirmation ),
+				nonInteractive: ! isInteractiveEdgeWorkers( opt ),
+			},
+			confirm
+		);
+
 		await setEdgeWorkerActive( env.id, worker.id, true );
 
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_enable_command_success', { name } );
@@ -46,5 +63,6 @@ command( {
 	requiredArgs: 1,
 	usage,
 } )
+	.option( 'skip-confirmation', 'Skip the production enable confirmation.', false )
 	.examples( examples )
 	.argv( process.argv, edgeWorkersEnableCommand );

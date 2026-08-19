@@ -1,8 +1,10 @@
 import { edgeWorkersDeployCommand } from '../../src/bin/vip-edge-workers-deploy';
 import * as exit from '../../src/lib/cli/exit';
 import * as format from '../../src/lib/cli/format';
+import * as confirmation from '../../src/lib/edge-workers/confirmation';
 import * as deployment from '../../src/lib/edge-workers/deployment';
 import * as project from '../../src/lib/edge-workers/project';
+import { confirm } from '../../src/lib/envvar/input';
 import * as tracker from '../../src/lib/tracker';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
@@ -22,6 +24,18 @@ jest.mock( '../../src/lib/cli/command', () => {
 jest.mock( '../../src/lib/cli/format', () => ( {
 	formatData: jest.fn(),
 } ) );
+
+jest.mock( '../../src/lib/envvar/input', () => ( {
+	confirm: jest.fn(),
+} ) );
+
+jest.mock( '../../src/lib/edge-workers/confirmation', () => {
+	const actual = jest.requireActual( '../../src/lib/edge-workers/confirmation' );
+	return {
+		...actual,
+		isInteractiveEdgeWorkers: jest.fn(),
+	};
+} );
 
 jest.mock( '../../src/lib/edge-workers/deployment', () => {
 	const actual = jest.requireActual( '../../src/lib/edge-workers/deployment' );
@@ -44,11 +58,12 @@ jest.mock( '../../src/lib/tracker', () => ( {
 } ) );
 
 const opts = {
-	app: { id: 1 },
-	env: { id: 3 },
+	app: { id: 1, name: 'example-app' },
+	env: { id: 3, type: 'production' },
 	skipBuild: true,
 	skipValidate: false,
 	skipSource: false,
+	skipConfirmation: false,
 };
 
 const worker = name => ( {
@@ -83,6 +98,8 @@ describe( 'edgeWorkersDeployCommand()', () => {
 		deployment.deploymentPlanRows.mockReturnValue( [ { worker: 'headers' } ] );
 		format.formatData.mockReturnValue( 'PLAN TABLE' );
 		deployment.applyEdgeWorkerDeploymentPlan.mockResolvedValue();
+		confirmation.isInteractiveEdgeWorkers.mockReturnValue( true );
+		confirm.mockResolvedValue( true );
 	} );
 
 	it( 'prepares the selected worker with the command options', async () => {
@@ -131,7 +148,7 @@ describe( 'edgeWorkersDeployCommand()', () => {
 		expect( deployment.applyEdgeWorkerDeploymentPlan ).not.toHaveBeenCalled();
 	} );
 
-	it( 'prints the complete plan before applying the same items', async () => {
+	it( 'prepares, previews, confirms exact production targets, then applies the same items', async () => {
 		const plan = [ planItem( 'alpha' ), planItem( 'beta', 'update' ) ];
 		const rows = [ { worker: 'alpha' }, { worker: 'beta' } ];
 		const order = [];
@@ -151,6 +168,11 @@ describe( 'edgeWorkersDeployCommand()', () => {
 			expect( value ).toBe( 'PLAN TABLE' );
 			order.push( 'preview' );
 		} );
+		confirm.mockImplementation( async message => {
+			expect( message ).toBe( 'Deploy 2 edge workers (alpha, beta) to example-app.production?' );
+			order.push( 'confirm' );
+			return true;
+		} );
 		deployment.applyEdgeWorkerDeploymentPlan.mockImplementation( async ( envId, received ) => {
 			expect( envId ).toBe( 3 );
 			expect( received ).toBe( plan );
@@ -159,7 +181,46 @@ describe( 'edgeWorkersDeployCommand()', () => {
 
 		await edgeWorkersDeployCommand( [], { ...opts, all: true } );
 
-		expect( order ).toEqual( [ 'rows', 'format', 'preview', 'apply' ] );
+		expect( order ).toEqual( [ 'rows', 'format', 'preview', 'confirm', 'apply' ] );
+		expect( confirmation.isInteractiveEdgeWorkers ).toHaveBeenCalledWith( {
+			...opts,
+			all: true,
+		} );
+	} );
+
+	it( 'previews and applies non-production deployments without prompting', async () => {
+		await edgeWorkersDeployCommand( [ 'headers' ], {
+			...opts,
+			env: { id: 3, type: 'develop' },
+		} );
+
+		expect( console.log ).toHaveBeenCalledWith( 'PLAN TABLE' );
+		expect( confirm ).not.toHaveBeenCalled();
+		expect( deployment.applyEdgeWorkerDeploymentPlan ).toHaveBeenCalled();
+	} );
+
+	it( 'previews but refuses non-interactive production before applying', async () => {
+		confirmation.isInteractiveEdgeWorkers.mockReturnValue( false );
+
+		await expect( edgeWorkersDeployCommand( [ 'headers' ], opts ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( console.log ).toHaveBeenCalledWith( 'PLAN TABLE' );
+		expect( confirm ).not.toHaveBeenCalled();
+		expect( deployment.applyEdgeWorkerDeploymentPlan ).not.toHaveBeenCalled();
+		expect( exit.withError ).toHaveBeenCalledWith(
+			expect.stringMatching( /Refusing to deploy.*production/ )
+		);
+	} );
+
+	it( 'allows explicit production confirmation bypass without prompting', async () => {
+		confirmation.isInteractiveEdgeWorkers.mockReturnValue( false );
+
+		await edgeWorkersDeployCommand( [ 'headers' ], { ...opts, skipConfirmation: true } );
+
+		expect( confirm ).not.toHaveBeenCalled();
+		expect( deployment.applyEdgeWorkerDeploymentPlan ).toHaveBeenCalled();
 	} );
 
 	it( 'prints success output only from the applied callback and then tracks success', async () => {
