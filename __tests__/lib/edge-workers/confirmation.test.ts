@@ -10,6 +10,7 @@ const productionRequest = {
 	appName: 'example-app',
 	envType: 'production',
 	workerNames: [ 'headers', 'redirects' ],
+	enableAfterDeploy: false,
 	skipConfirmation: false,
 	nonInteractive: false,
 };
@@ -121,6 +122,20 @@ describe( 'confirmProductionEdgeWorkerMutation()', () => {
 		);
 	} );
 
+	it( 'prompts once for upload and activation when deploy enable is requested', async () => {
+		const confirmFn = jest.fn< Promise< boolean >, [ string ] >().mockResolvedValue( true );
+
+		await confirmProductionEdgeWorkerMutation(
+			{ ...productionRequest, enableAfterDeploy: true },
+			confirmFn
+		);
+
+		expect( confirmFn ).toHaveBeenCalledWith(
+			'Deploy and enable 2 edge workers (headers, redirects) on example-app.production?'
+		);
+		expect( confirmFn ).toHaveBeenCalledTimes( 1 );
+	} );
+
 	it( 'prompts with the exact worker identity for interactive production enables', async () => {
 		const confirmFn = jest.fn< Promise< boolean >, [ string ] >().mockResolvedValue( true );
 
@@ -163,6 +178,23 @@ describe( 'confirmProductionEdgeWorkerMutation()', () => {
 				confirmFn
 			)
 		).rejects.toThrow( /Refusing to deploy.*production/ );
+		expect( confirmFn ).not.toHaveBeenCalled();
+	} );
+
+	it( 'rejects non-interactive production activation with only the existing bypass guidance', async () => {
+		const confirmFn = jest.fn< Promise< boolean >, [ string ] >();
+
+		await expect(
+			confirmProductionEdgeWorkerMutation(
+				{ ...productionRequest, enableAfterDeploy: true, nonInteractive: true },
+				confirmFn
+			)
+		).rejects.toEqual(
+			new UserError(
+				'Refusing to deploy and enable edge workers in production without confirmation. ' +
+					'Pass --skip-confirmation to proceed non-interactively.'
+			)
+		);
 		expect( confirmFn ).not.toHaveBeenCalled();
 	} );
 

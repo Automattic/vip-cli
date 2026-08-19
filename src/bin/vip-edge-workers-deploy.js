@@ -41,6 +41,24 @@ function errorMessage( error ) {
 }
 
 function partialFailureMessage( error ) {
+	if ( error.stage === 'enable' ) {
+		const failedName = escapeTerminalText( error.failedName );
+		let activeAfterUpload = 'unknown';
+		if ( error.activeAfterUpload === true ) {
+			activeAfterUpload = 'active';
+		} else if ( error.activeAfterUpload === false ) {
+			activeAfterUpload = 'inactive';
+		}
+		return (
+			`Deployment uploaded "${ failedName }" and its last confirmed state was ${ activeAfterUpload }, ` +
+			'but the enable request failed. Final active state is unknown; verify with ' +
+			`\`vip edge-workers get ${ failedName }\` or \`vip edge-workers list\`. ` +
+			`Completed: ${ error.appliedNames.map( escapeTerminalText ).join( ', ' ) || 'none' }. ` +
+			`Not attempted: ${
+				error.unappliedNames.map( escapeTerminalText ).join( ', ' ) || 'none'
+			}. Cause: ${ errorMessage( error.cause ) }`
+		);
+	}
 	return (
 		`Deployment stopped at "${ escapeTerminalText( error.failedName ) }". ` +
 		`Applied: ${ error.appliedNames.map( escapeTerminalText ).join( ', ' ) || 'none' }. ` +
@@ -49,9 +67,39 @@ function partialFailureMessage( error ) {
 	);
 }
 
+function appliedResultMessage( item, deployed ) {
+	const name = escapeTerminalText( item.worker.manifest.name );
+	let result;
+	if ( item.action === 'create' ) {
+		result = deployed.active
+			? `created "${ name }" and enabled it`
+			: `created "${ name }"; inactive`;
+	} else if ( deployed.active ) {
+		result = item.existing?.active
+			? `updated "${ name }"; remains active`
+			: `updated "${ name }" and enabled it`;
+	} else {
+		result = `updated "${ name }"; remains inactive`;
+	}
+
+	const phasesNote = `, phases: ${
+		deployed.phases.map( escapeTerminalText ).join( ', ' ) || 'none'
+	}`;
+	return `✓ ${ result } (${ item.artifact.sizeBytes } bytes${ phasesNote })`;
+}
+
+function inactiveCreateGuidance( workerNames ) {
+	const names = workerNames.map( name => `"${ escapeTerminalText( name ) }"` ).join( ', ' );
+	if ( workerNames.length === 1 ) {
+		return `Review created inactive edge worker ${ names }, then run \`vip edge-workers enable <name>\` when ready.`;
+	}
+	return `Review created inactive edge workers ${ names }, then run \`vip edge-workers enable <name>\` for each one when ready.`;
+}
+
 export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 	const { app, env } = opt;
 	const name = args[ 0 ];
+	const enableAfterDeploy = Boolean( opt.enable );
 
 	await trackEventWithEnv( app.id, env.id, 'edge_workers_deploy_command_execute', {
 		name,
@@ -85,6 +133,7 @@ export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 			skipBuild: Boolean( opt.skipBuild ),
 			skipValidate: Boolean( opt.skipValidate ),
 			skipSource: Boolean( opt.skipSource ),
+			enableAfterDeploy,
 		} );
 
 		console.log( formatData( deploymentPlanRows( plan ), 'table' ) );
@@ -95,25 +144,30 @@ export async function edgeWorkersDeployCommand( args = [], opt = {} ) {
 				appName: app.name,
 				envType: env.type,
 				workerNames: plan.map( item => item.worker.manifest.name ),
+				enableAfterDeploy,
 				skipConfirmation: Boolean( opt.skipConfirmation ),
 				nonInteractive: ! isInteractiveEdgeWorkers( opt ),
 			},
 			confirm
 		);
 
+		const finalResults = [];
+		const createdInactiveNames = [];
 		await applyEdgeWorkerDeploymentPlan( env.id, plan, ( item, deployed ) => {
-			const action = item.action === 'create' ? 'created' : 'updated';
-			const phasesNote = `, phases: ${
-				deployed.phases.map( escapeTerminalText ).join( ', ' ) || 'none'
-			}`;
-			console.log(
-				`✓ ${ action } "${ escapeTerminalText( item.worker.manifest.name ) }" ` +
-					`(${ item.artifact.sizeBytes } bytes${ phasesNote })`
-			);
+			finalResults.push( deployed );
+			if ( ! enableAfterDeploy && item.action === 'create' && ! deployed.active ) {
+				createdInactiveNames.push( item.worker.manifest.name );
+			}
+			console.log( appliedResultMessage( item, deployed ) );
 		} );
+		if ( createdInactiveNames.length ) {
+			console.log( inactiveCreateGuidance( createdInactiveNames ) );
+		}
 
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_deploy_command_success', {
 			count: plan.length,
+			enable: enableAfterDeploy,
+			activeCount: finalResults.filter( worker => worker.active ).length,
 		} );
 	} catch ( err ) {
 		await trackEventWithEnv( app.id, env.id, 'edge_workers_deploy_command_error', {
@@ -143,6 +197,7 @@ command( {
 		'Do not store source on create; preserve stored source on update.',
 		false
 	)
+	.option( 'enable', 'Enable each deployed worker after a successful upload.', false )
 	.option( 'skip-confirmation', 'Skip the production deployment confirmation.', false )
 	.examples( examples )
 	.argv( process.argv, edgeWorkersDeployCommand );

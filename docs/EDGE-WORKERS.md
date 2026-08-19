@@ -8,11 +8,10 @@ edge workers with VIP-CLI.
 Use Node.js 22.19.0 or newer, npm 8 or newer, an authenticated VIP-CLI session, and access to the
 target application and environment. Start in a non-production environment.
 
-The safe lifecycle depends on `createEdgeWorker` creating every new worker with `active: false`.
-That is a required platform contract, not a behavior this repository can prove. Release remains
-blocked until Task 8 records authoritative evidence from the API owner that inactive creation is
-guaranteed. Do not deploy or publish this CLI feature on the basis of the client implementation
-alone.
+The platform API creates every new worker with `active: false`; create does not accept an active
+input. The API also applies a database default of inactive as defense in depth. VIP-CLI relies on
+this enforced contract: deploy uploads a new worker first, confirms the returned inactive state,
+and enables it only when the operator explicitly passes `--enable`.
 
 ## 2. Project layout and exact dependency versions
 
@@ -133,7 +132,7 @@ Deploy prepares every selected worker before applying any remote mutation. Prepa
 the name as a create or update, builds or reads the artifact, validates it unless
 `--skip-validate` is passed, determines location and source behavior, and then prints a plan with:
 
-- `worker`, `action`, and current `active` state;
+- `worker`, `action`, `current_active`, and `final_active`;
 - `current_scope` and `proposed_scope`;
 - `validation` and detected `phases`;
 - compiled `bytes`; and
@@ -144,10 +143,15 @@ worker, unless the operator deliberately passes `--skip-confirmation`. A worker 
 cannot be combined. `--skip-build`, `--skip-validate`, and `--skip-confirmation` remove safety
 checks and should be used only when the omitted step has separate, current evidence.
 
-Subject to the unresolved inactive-create guarantee in section 1, a newly created worker is
-inactive and must be enabled separately. Updating preserves the worker's current active state: an
-update to an already-active worker therefore applies the uploaded code and configuration live
-immediately. Disable an active worker first when the update must not become live on deployment.
+Deploy is upload-only by default. A newly created worker remains inactive, and an update to an
+inactive worker remains inactive. Pass `--enable` to enable a newly created or currently inactive
+worker after its upload succeeds. An update to an already-active worker stays active and skips the
+redundant enable request, even when `--enable` is present; the uploaded code and configuration
+therefore become live immediately. Disable an active worker first when the update must not become
+live on deployment.
+
+The plan and the single deployment confirmation cover both the upload and requested enable phase.
+For `--all`, every worker's planned final state is visible before any remote mutation begins.
 
 ## 8. Source storage and `--skip-source`
 
@@ -173,24 +177,34 @@ source/artifact or delete the worker if permanent removal is intended. Do not de
 as a rollback unless the exact prior source, manifest, dependencies, and compiled artifact are
 available and verified.
 
+If the enable phase of `deploy --enable` fails or times out, the worker's final active state is
+unknown. The command reports the last confirmed upload result and does not retry, roll back,
+disable, or delete the worker automatically. Use `edge-workers list` and `edge-workers get <name>`
+to verify the remote state before taking another action. Do not assume the worker remained
+inactive.
+
 ## 10. `--all` and partial failures
 
 `build` with no name, `build --all`, `validate --all`, and `deploy --all` operate on workers in
 stable name order. Deploy preparation completes for all selected workers before remote writes
 begin, so a preparation or validation failure applies none of them.
 
-Application is sequential. If a create or update fails, deployment stops immediately and reports
-the workers already applied, the failed worker, the workers not applied, and the original cause.
-It does not retry or roll back already-applied workers. Reconcile the reported names with `list`
-and `get` before retrying.
+Application is sequential. Each worker's upload completes before its enable phase can begin. If a
+create or update fails, deployment stops immediately and reports the workers already applied, the
+failed worker, the workers not applied, and the original cause. If an enable fails, deployment
+reports that worker's confirmed upload state, treats its final active state as unknown, and stops
+before later workers. It does not retry, roll back, disable, or delete already-applied workers.
+Reconcile the reported names with `list` and `get` before retrying.
 
 ## 11. Automation flags and `VIP_NON_INTERACTIVE=1`
 
 Automation should provide an explicit `@app.environment` alias (or equivalent app/environment
 options), an explicit worker name or `--all`, and `--path` when the working directory is not inside
 the project. Relevant bypasses are `--skip-build`, `--skip-validate`, `--skip-source`, and
-`--skip-confirmation` for deploy; `--skip-build` for validate; `--skip-confirmation` for enable;
-and `--force` for delete. `list` supports the global `--format` output option.
+`--skip-confirmation` for deploy. Deploy also accepts `--enable`, which is an action request rather
+than a safety bypass and defaults to false. Validate accepts `--skip-build`; enable accepts
+`--skip-confirmation`; delete accepts `--force`. `list` supports the global `--format` output
+option. There is no edge-workers `--non-interactive` flag or other confirmation bypass.
 
 Set `VIP_NON_INTERACTIVE=1` to prevent interactive edge-worker production confirmation. In that
 mode, production `deploy` and `enable` fail closed unless `--skip-confirmation` is also supplied.
@@ -217,11 +231,18 @@ vip @example-app.develop edge-workers get security-headers --source
 vip @example-app.develop edge-workers enable security-headers
 # Send controlled requests and observe application behavior.
 vip @example-app.develop edge-workers disable security-headers
+# Update the source while inactive, then upload and explicitly enable after the upload.
+vip @example-app.develop edge-workers deploy security-headers --enable
+# An update while already active becomes live on upload and skips a redundant enable request.
+vip @example-app.develop edge-workers deploy security-headers --enable
+vip @example-app.develop edge-workers disable security-headers
+# Set location to null in worker.json and deploy to clear the stored location.
+# Omit location on a later update to preserve the stored location.
 # Confirm permanent deletion when prompted.
 vip @example-app.develop edge-workers delete security-headers
 ```
 
-Do not enable the deployed worker until the inactive-create guarantee in section 1 has owner
-evidence and the printed deployment plan matches the reviewed artifact, phases, scope, source
-mode, and byte size. Promote to production only after the non-production lifecycle and a separate
-production change review succeed.
+Before each enable, verify that the printed deployment plan matches the reviewed artifact, phases,
+scope, source mode, byte size, and final active state. If enable does not return a confirmed
+result, stop and verify with `list` and `get`; do not infer the final state. Promote to production
+only after the non-production lifecycle and a separate production change review succeed.

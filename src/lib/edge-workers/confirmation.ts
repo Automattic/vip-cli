@@ -6,6 +6,7 @@ export interface ProductionMutationConfirmationRequest {
 	appName: string;
 	envType: string;
 	workerNames: readonly string[];
+	enableAfterDeploy: boolean;
 	skipConfirmation: boolean;
 	nonInteractive: boolean;
 }
@@ -36,21 +37,25 @@ export async function confirmProductionEdgeWorkerMutation(
 	}
 
 	if ( request.nonInteractive ) {
+		const action =
+			request.action === 'deploy' && request.enableAfterDeploy
+				? 'deploy and enable'
+				: request.action;
 		throw new UserError(
-			`Refusing to ${ request.action } edge workers in production without confirmation. ` +
+			`Refusing to ${ action } edge workers in production without confirmation. ` +
 				'Pass --skip-confirmation to proceed non-interactively.'
 		);
 	}
 
 	const message =
 		request.action === 'deploy'
-			? `Deploy ${ request.workerNames.length } edge worker${
-					request.workerNames.length === 1 ? '' : 's'
-			  } (${ request.workerNames
+			? `${ request.enableAfterDeploy ? 'Deploy and enable' : 'Deploy' } ${
+					request.workerNames.length
+			  } edge worker${ request.workerNames.length === 1 ? '' : 's' } (${ request.workerNames
 					.map( escapeTerminalText )
-					.join( ', ' ) }) to ${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
-					request.envType
-			  ) }?`
+					.join( ', ' ) }) ${ request.enableAfterDeploy ? 'on' : 'to' } ${ escapeTerminalText(
+					request.appName
+			  ) }.${ escapeTerminalText( request.envType ) }?`
 			: `Enable edge worker "${ escapeTerminalText(
 					request.workerNames[ 0 ]
 			  ) }" on ${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
