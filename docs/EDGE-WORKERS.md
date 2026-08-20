@@ -32,7 +32,7 @@ edge-workers/
 ```
 
 `build/` is created when a worker is compiled and is ignored by Git. The generated direct
-dependencies are exact: `@automattic/vip-edge-workers-sdk` is `0.3.0` and `assemblyscript` is
+dependencies are exact: `@automattic/vip-edge-workers-sdk` is `0.3.2` and `assemblyscript` is
 `0.27.0`. The starter exports only `alloc` and `on_client_response`; the other request phases are
 commented examples and are not active WASM exports.
 
@@ -43,7 +43,7 @@ The project descriptor selects the toolchain for every worker in the project:
 ```json
 {
 	"type": "assemblyscript",
-	"sdk": "@automattic/vip-edge-workers-sdk@0.3.0"
+	"sdk": "@automattic/vip-edge-workers-sdk@0.3.2"
 }
 ```
 
