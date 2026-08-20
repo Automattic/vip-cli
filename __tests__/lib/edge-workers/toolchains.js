@@ -240,8 +240,8 @@ describe( 'edge-workers toolchains', () => {
 
 			expect( fs.lstatSync( path.join( project, 'build' ) ).isDirectory() ).toBe( true );
 			expect( fs.lstatSync( path.join( project, 'build' ) ).isSymbolicLink() ).toBe( false );
-			expect( fs.realpathSync( output ) ).toBe(
-				path.join( fs.realpathSync( project ), 'build', 'demo.wasm' )
+			expect( fs.realpathSync.native( output ) ).toBe(
+				path.join( fs.realpathSync.native( project ), 'build', 'demo.wasm' )
 			);
 		} );
 

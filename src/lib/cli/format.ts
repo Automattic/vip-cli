@@ -46,11 +46,19 @@ export function formatData(
 	}
 }
 
+function escapeControlCharacter( character: string ): string {
+	const codePoint = character.codePointAt( 0 );
+	if ( codePoint === undefined ) {
+		return '';
+	}
+	return String.raw`\u${ codePoint.toString( 16 ).padStart( 4, '0' ) }`;
+}
+
 function json( data: Record< string, unknown >[] | Tuple[] ): string {
 	return JSON.stringify( data, null, '\t' ).replace(
 		// JSON.stringify already escapes C0 controls, but not DEL or C1 controls.
 		/[\u007f-\u009f]/g,
-		character => `\\u${ character.charCodeAt( 0 ).toString( 16 ).padStart( 4, '0' ) }`
+		escapeControlCharacter
 	);
 }
 

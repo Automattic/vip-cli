@@ -86,6 +86,40 @@ function lstatIfExists( target: string ): fs.Stats | undefined {
 	}
 }
 
+function assertCanonicalPathWithin( root: string, candidate: string, label: string ): void {
+	if ( ! isPathWithin( root, candidate ) ) {
+		throw new UserError( `${ label } must stay within "${ root }".` );
+	}
+}
+
+function ensureOutputDirectory( target: string, label: string ): void {
+	const stat = lstatIfExists( target );
+	if ( ! stat ) {
+		fs.mkdirSync( target );
+		return;
+	}
+	if ( stat.isSymbolicLink() ) {
+		throw new UserError( `${ label } must not be a symbolic link.` );
+	}
+	if ( ! stat.isDirectory() ) {
+		throw new UserError( `${ label } must be a directory.` );
+	}
+}
+
+function validateExistingOutput( outputPath: string, canonicalRoot: string, label: string ): void {
+	const stat = lstatIfExists( outputPath );
+	if ( ! stat ) {
+		return;
+	}
+	if ( stat.isSymbolicLink() ) {
+		throw new UserError( `${ label } must not be a symbolic link.` );
+	}
+	if ( ! stat.isFile() ) {
+		throw new UserError( `${ label } must be a regular file.` );
+	}
+	assertCanonicalPathWithin( canonicalRoot, realpath( outputPath, label ), label );
+}
+
 /** Resolve an existing input and require its canonical target to remain below the canonical root. */
 export function resolveExistingPathWithin(
 	root: string,
@@ -123,39 +157,13 @@ export function resolveOutputPathWithin(
 
 	for ( const component of components ) {
 		current = path.join( current, component );
-		const stat = lstatIfExists( current );
-		if ( stat ) {
-			if ( stat.isSymbolicLink() ) {
-				throw new UserError( `${ directoryLabel } must not be a symbolic link.` );
-			}
-			if ( ! stat.isDirectory() ) {
-				throw new UserError( `${ directoryLabel } must be a directory.` );
-			}
-		} else {
-			fs.mkdirSync( current );
-		}
-
-		const canonicalDirectory = realpath( current, directoryLabel );
-		if ( ! isPathWithin( canonicalRoot, canonicalDirectory ) ) {
-			throw new UserError( `${ directoryLabel } must stay within "${ canonicalRoot }".` );
-		}
+		ensureOutputDirectory( current, directoryLabel );
+		assertCanonicalPathWithin( canonicalRoot, realpath( current, directoryLabel ), directoryLabel );
 	}
 
 	const canonicalParent = realpath( path.dirname( resolvedPath ), directoryLabel );
 	const outputPath = path.join( canonicalParent, path.basename( resolvedPath ) );
-	const outputStat = lstatIfExists( outputPath );
-	if ( outputStat ) {
-		if ( outputStat.isSymbolicLink() ) {
-			throw new UserError( `${ label } must not be a symbolic link.` );
-		}
-		if ( ! outputStat.isFile() ) {
-			throw new UserError( `${ label } must be a regular file.` );
-		}
-		const canonicalOutput = realpath( outputPath, label );
-		if ( ! isPathWithin( canonicalRoot, canonicalOutput ) ) {
-			throw new UserError( `${ label } must stay within "${ canonicalRoot }".` );
-		}
-	}
+	validateExistingOutput( outputPath, canonicalRoot, label );
 
 	return outputPath;
 }

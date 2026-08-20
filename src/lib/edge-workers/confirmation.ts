@@ -28,6 +28,26 @@ export function isInteractiveEdgeWorkers( options: { nonInteractive?: boolean } 
 	);
 }
 
+function productionMutationConfirmationMessage(
+	request: ProductionMutationConfirmationRequest
+): string {
+	const target = `${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
+		request.envType
+	) }`;
+	if ( request.action === 'enable' ) {
+		return `Enable edge worker "${ escapeTerminalText(
+			request.workerNames[ 0 ]
+		) }" on ${ target }?`;
+	}
+
+	const action = request.enableAfterDeploy ? 'Deploy and enable' : 'Deploy';
+	const workerLabel = request.workerNames.length === 1 ? 'edge worker' : 'edge workers';
+	const preposition = request.enableAfterDeploy ? 'on' : 'to';
+	const workerNames = request.workerNames.map( escapeTerminalText ).join( ', ' );
+
+	return `${ action } ${ request.workerNames.length } ${ workerLabel } (${ workerNames }) ${ preposition } ${ target }?`;
+}
+
 export async function confirmProductionEdgeWorkerMutation(
 	request: ProductionMutationConfirmationRequest,
 	confirmFn: EdgeWorkerConfirmFunction
@@ -47,20 +67,7 @@ export async function confirmProductionEdgeWorkerMutation(
 		);
 	}
 
-	const message =
-		request.action === 'deploy'
-			? `${ request.enableAfterDeploy ? 'Deploy and enable' : 'Deploy' } ${
-					request.workerNames.length
-			  } edge worker${ request.workerNames.length === 1 ? '' : 's' } (${ request.workerNames
-					.map( escapeTerminalText )
-					.join( ', ' ) }) ${ request.enableAfterDeploy ? 'on' : 'to' } ${ escapeTerminalText(
-					request.appName
-			  ) }.${ escapeTerminalText( request.envType ) }?`
-			: `Enable edge worker "${ escapeTerminalText(
-					request.workerNames[ 0 ]
-			  ) }" on ${ escapeTerminalText( request.appName ) }.${ escapeTerminalText(
-					request.envType
-			  ) }?`;
+	const message = productionMutationConfirmationMessage( request );
 
 	if ( ! ( await confirmFn( message ) ) ) {
 		throw new UserError( 'Command cancelled by user.' );

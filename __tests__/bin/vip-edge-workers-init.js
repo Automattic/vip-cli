@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { edgeWorkersInitCommand } from '../../src/bin/vip-edge-workers-init';
 import * as exit from '../../src/lib/cli/exit';
 import * as toolchains from '../../src/lib/edge-workers/toolchains';
@@ -36,7 +38,9 @@ describe( 'edgeWorkersInitCommand()', () => {
 	it( 'scaffolds the requested project and prints next steps', async () => {
 		await edgeWorkersInitCommand( [ './infra/edge' ], { type: 'assemblyscript' } );
 
-		expect( scaffoldProject ).toHaveBeenCalledWith( expect.stringMatching( /infra\/edge$/ ) );
+		expect( scaffoldProject ).toHaveBeenCalledWith(
+			path.resolve( process.cwd(), 'infra', 'edge' )
+		);
 		expect( tracker.trackEvent ).toHaveBeenNthCalledWith( 1, 'edge_workers_init_command_execute', {
 			type: 'assemblyscript',
 		} );
