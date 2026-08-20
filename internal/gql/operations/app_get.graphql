@@ -1,0 +1,43 @@
+query AppGetByName($name: String!) {
+  apps(first: 1, name: $name) {
+    edges {
+      id
+      name
+      repo
+      environments {
+        id
+        appId
+        name
+        type
+        branch
+        currentCommit
+        primaryDomain {
+          name
+        }
+        launched
+        deploymentStrategy
+      }
+    }
+  }
+}
+
+query AppGetByID($id: Int!) {
+  app(id: $id) {
+    id
+    name
+    repo
+    environments {
+      id
+      appId
+      name
+      type
+      branch
+      currentCommit
+      primaryDomain {
+        name
+      }
+      launched
+      deploymentStrategy
+    }
+  }
+}

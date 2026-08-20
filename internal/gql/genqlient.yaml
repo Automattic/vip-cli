@@ -1,0 +1,20 @@
+schema: schema.gql
+operations:
+  - operations/*.graphql
+generated: generated.go
+package: gql
+use_struct_references: true
+optional: pointer
+bindings:
+  Int:
+    type: int64
+  ID:
+    type: string
+  BigInt:
+    type: int64
+  JSON:
+    type: encoding/json.RawMessage
+  # Free-form {ext: type-label} map returned by mediaImportConfig
+  # (media-import/config.ts) — same raw-JSON treatment as JSON.
+  MediaImportAllowedFileTypes:
+    type: encoding/json.RawMessage

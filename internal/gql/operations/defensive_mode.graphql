@@ -1,0 +1,13 @@
+mutation UpdateDefensiveModeStatus($input: AppEnvironmentDefensiveModeUpdateStatusInput!) {
+  updateDefensiveModeStatus(input: $input) {
+    success
+    message
+  }
+}
+
+mutation UpdateDefensiveModeConfig($input: AppEnvironmentDefensiveModeConfigInput!) {
+  updateDefensiveModeConfig(input: $input) {
+    success
+    message
+  }
+}
