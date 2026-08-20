@@ -1,0 +1,21 @@
+#!/bin/sh
+# This file is `source`'d before `buildkite-agent pipeline upload`, so the
+# variables below get interpolated into pipeline.yml before it is uploaded.
+# (Same mechanism as Automattic/download's .buildkite/shared-pipeline-vars.)
+
+# a8c CI toolkit Buildkite plugin — provides install_gems, secret injection, and
+# GitHub status helpers on the macOS agent.
+export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#5.3.1"   # ← infra: confirm current version
+
+# Go toolchain the build scripts require. encoding/json/v2 is standard in Go 1.27.
+export GO_VERSION="1.27"                                     # ← infra: match your agent provisioning
+
+# Binary base name + macOS signing identities (team PZYM8XX95Q = Automattic, Inc.).
+export BIN_BASE="vip-next"
+export MACOS_TEAM_ID="PZYM8XX95Q"
+export MACOS_SIGN_IDENTITY="Developer ID Application: Automattic, Inc. (PZYM8XX95Q)"
+export MACOS_INSTALLER_IDENTITY="Developer ID Installer: Automattic, Inc. (PZYM8XX95Q)"  # ← infra: confirm this cert exists
+
+# NOTE: unlike the reference we set no Xcode IMAGE_ID / .xcode-version — this is a
+# plain Go build, no fyne/Xcode. If your mac queue requires a specific VM image,
+# add:  export IMAGE_ID="<image>"   # ← infra
