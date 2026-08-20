@@ -1,0 +1,113 @@
+name: ci-go
+
+on:
+  push:
+    branches: [trunk, feature/go-rewrite]
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Makefile'
+      - '.github/workflows/ci-go.yml'
+      - 'testdata/parity/**'
+      - 'testdata/parity-local/**'
+      - 'internal/gql/schema.gql'
+      - 'internal/gql/operations/**.graphql'
+      - 'internal/gql/generated.go'
+      # The Node CLI is a build input now: this job diffs vip-next against it.
+      # A change to Node's behaviour, or to how dist/ is produced, can break
+      # parity, so it has to retrigger this workflow.
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'babel.config.js'
+      - '.nvmrc'
+  pull_request:
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Makefile'
+      - '.github/workflows/ci-go.yml'
+      - 'testdata/parity/**'
+      - 'testdata/parity-local/**'
+      - 'internal/gql/schema.gql'
+      - 'internal/gql/operations/**.graphql'
+      - 'internal/gql/generated.go'
+      # See above.
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'babel.config.js'
+      - '.nvmrc'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          check-latest: true
+          cache: true
+
+      # The Node CLI is the reference implementation the differential parity
+      # scenarios diff vip-next against. Without it, every Node-vs-Go scenario
+      # skips and this job goes green having compared nothing — which is
+      # exactly how ~90 parity divergences reached a review unnoticed.
+      #
+      # Version comes from .nvmrc (lts/*), the same source ci.yml pins by hand.
+      # It must satisfy package.json#engines (>=22.19.0 on trunk 4.1.0) or the
+      # `postinstall` guard (helpers/check-version.js) aborts the install with
+      # exit 1.
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # `npm ci` runs the `prepare` lifecycle script (clean + babel build),
+      # which is what produces dist/bin/vip.js. No separate build step needed.
+      - name: Install Node dependencies and build the Node CLI
+        run: npm ci
+
+      # Fail loudly if the above did not actually yield a runnable Node CLI.
+      # `make test-parity-unit` only WARNS in that case, on purpose, so that a
+      # contributor without node_modules is not hard-failed. CI has no such
+      # excuse: here a skipped differential is a broken build.
+      - name: Assert the Node-vs-Go differential can actually run
+        run: make require-node-vip-bin
+
+      - name: go mod download
+        run: go mod download
+
+      - name: Verify generated GraphQL code is fresh
+        run: make verify-gql-stale
+
+      # Via make, not bare `go vet ./...` / `go test ./...`: now that `npm ci`
+      # has run, node_modules is inside the module and a bare `./...` would
+      # compile and vet an npm dependency's vendored Go package
+      # (node_modules/flatted/golang/pkg/flatted). The make targets discover
+      # the package list and drop node_modules from it.
+      - name: go vet
+        run: make lint
+
+      - name: go test
+        run: make test
+
+      # This is the step the Node CLI was installed for. On a Linux runner the
+      # credential the Node CLI reads comes from configstore rather than a
+      # system keyring (see internal/parity/keychain.go); the harness seeds
+      # through Node's own getKeychain(), so it lands in whichever store Node
+      # itself would read, and a store that cannot be driven at all produces a
+      # loud skip rather than a hang or a false pass.
+      - name: Offline compatibility and parity-harness tests
+        run: make test-parity-unit
+
+      - name: make build
+        run: make build
+
+      - name: smoke
+        run: ./bin/vip-next --version
