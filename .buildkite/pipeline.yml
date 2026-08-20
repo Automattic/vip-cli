@@ -8,10 +8,10 @@
 # run only on TAG builds — gated on $BUILDKITE_TAG inside each build script.
 
 env:
-  DO_NOT_TRACK: "1"
+  DO_NOT_TRACK: '1'
 
 steps:
-  - label: ":macos: Build & sign (macOS)"
+  - label: ':macos: Build & sign (macOS)'
     command: .buildkite/build-macos.sh
     plugins:
       - $CI_TOOLKIT_PLUGIN
@@ -19,26 +19,26 @@ steps:
       queue: mac
     notify:
       - github_commit_status:
-          context: "Build & sign (macOS)"
+          context: 'Build & sign (macOS)'
     artifact_paths:
-      - "dist/vip-next-darwin-*"
+      - 'dist/vip-next-darwin-*'
 
-  - label: ":windows: Build & sign (Windows)"
+  - label: ':windows: Build & sign (Windows)'
     command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite/build-windows.ps1
     agents:
-      queue: windows          # ← infra: confirm Windows agent queue name
+      queue: windows # ← infra: confirm Windows agent queue name
     notify:
       - github_commit_status:
-          context: "Build & sign (Windows)"
+          context: 'Build & sign (Windows)'
     artifact_paths:
-      - "dist/vip-next-windows-amd64.exe*"
+      - 'dist/vip-next-windows-amd64.exe*'
 
-  - label: ":linux: Build (Linux)"
+  - label: ':linux: Build (Linux)'
     command: .buildkite/build-linux.sh
     agents:
-      queue: default          # ← infra: confirm Linux agent queue name
+      queue: default # ← infra: confirm Linux agent queue name
     notify:
       - github_commit_status:
-          context: "Build (Linux)"
+          context: 'Build (Linux)'
     artifact_paths:
-      - "dist/vip-next-linux-*"
+      - 'dist/vip-next-linux-*'

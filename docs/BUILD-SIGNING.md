@@ -4,7 +4,7 @@ Purpose: build and sign the standalone `vip-next` executable for each supported
 platform.
 
 The binary is a statically linked Go program (`CGO_ENABLED=0`), so **one host can
-cross-compile every target**. Only *signing* is platform-specific: Authenticode
+cross-compile every target**. Only _signing_ is platform-specific: Authenticode
 (`signtool`) runs on Windows, `codesign` runs on macOS, and Linux has no
 OS-enforced executable signature (publish checksums/detached signatures
 instead).
@@ -232,7 +232,7 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
 - **Pipeline:** `.buildkite/pipeline.yml` — three independent steps (macOS,
   Windows, Linux), each building and signing on its own native agent.
   `.buildkite/shared-pipeline-vars` is `source`'d before `buildkite-agent
-  pipeline upload` to supply shared values (toolkit plugin version, Go version,
+pipeline upload` to supply shared values (toolkit plugin version, Go version,
   signing identities).
 - **Build scripts:** `.buildkite/build-macos.sh`, `.buildkite/build-windows.ps1`,
   `.buildkite/build-linux.sh`.
@@ -267,7 +267,7 @@ are wired, run a **tag build** and confirm:
   `spctl -a -t exec -vv <binary>` assesses as accepted.
 - macOS installer: `pkgutil --check-signature <pkg>` shows the Developer ID
   Installer chain; `spctl -a -t install -vv <pkg>` accepts; `xcrun stapler
-  validate <pkg>` confirms the staple is present (offline).
+validate <pkg>` confirms the staple is present (offline).
 - Windows: `signtool verify /pa /v <exe>` passes.
 - Every artifact has a matching `.sha256`.
 
@@ -280,7 +280,6 @@ are wired, run a **tag build** and confirm:
 - Record the signing method and timestamp authority in the release notes.
 
 ---
-
 
 ## Bundling `go-search-replace`
 
@@ -345,6 +344,7 @@ Apple Silicon), previously unsupported, is covered with no self-building.
 3. **macOS — this is the one that will bite.** `go-search-replace` is a nested
    Mach-O executable inside our distributable. Under the hardened runtime,
    notarization **fails** unless every nested executable is signed. So:
+
    - sign `go-search-replace` with the same Developer ID Application identity as
      `vip-next`, with `--options runtime --timestamp`,
    - sign it **before** the enclosing `.pkg`/archive is built and submitted,

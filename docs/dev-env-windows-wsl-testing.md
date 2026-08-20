@@ -14,7 +14,7 @@ There are two unrelated "signing" ideas; don't conflate them:
    **For testing this feature, skip signing entirely.**
 
 2. **The local dev CA** ("WPVIP Local CA") — a self-signed certificate the dev-env
-   *generates and trusts automatically* so HTTPS to `*.vipdev.site` is trusted by
+   _generates and trusts automatically_ so HTTPS to `*.vipdev.site` is trusted by
    your browser. **You don't do this by hand.** When you run `dev-env start`, the
    CLI adds that CA to the Windows **Root** store and writes the hosts file — both
    under **one UAC prompt** (`certutil -addstore Root` + the hosts edit). That UAC
@@ -41,6 +41,7 @@ This exercises the real WSL→Windows bridge: a Linux binary that detects WSL an
 edits the **Windows** hosts file + Windows cert store via `powershell.exe`.
 
 ### 1. Install Go 1.27 in your WSL distro
+
 ```bash
 # in WSL (Ubuntu etc.)
 cd /tmp
@@ -51,29 +52,36 @@ go version   # go1.27.x linux/amd64
 ```
 
 ### 2. Enable Docker Desktop WSL integration
+
 Docker Desktop → Settings → Resources → WSL Integration → enable your distro.
 Confirm in WSL: `docker version` shows both client and server.
 
 ### 3. Confirm the WSL→Windows bridge works (the feature depends on it)
+
 ```bash
 powershell.exe -NoProfile -Command "Write-Output ok"   # must print: ok
 ```
+
 If `powershell.exe` isn't found, WSL interop is disabled — enable it in
 `/etc/wsl.conf` (`[interop] enabled=true`) and `wsl --shutdown` from Windows.
 
 ### 4. Build
+
 ```bash
 cd /path/to/vip
 CGO_ENABLED=0 go build -buildvcs=false -o bin/vip-next ./cmd/vip-next
 ./bin/vip-next --version
 ```
+
 (`make build` also works if you have `make`; it additionally bundles the
 `go-search-replace` helper, which this feature does not need.)
 
 ### 5. Run it
+
 ```bash
 ./bin/vip-next dev-env create --slug wintest --start
 ```
+
 When it reaches the hosts/CA step (after WordPress install), a **UAC prompt pops
 on the Windows desktop**. Approve it. Behind it: the WPVIP Local CA is added to
 the Windows Root store and `wintest.vipdev.site` (+ `-pma`/`-mailpit` if enabled)
@@ -89,22 +97,27 @@ The binary is a native `.exe` (`GOOS=windows`) → same Windows-hosts/cert path,
 just without the WSL bridge.
 
 ### 1. Install Go 1.27 for Windows
+
 From <https://go.dev/dl/> (the `.msi`), or `winget install GoLang.Go`. Open a
 **new** PowerShell so `go` is on PATH. `go version` → 1.27.x.
 
 ### 2. Build (PowerShell)
+
 ```powershell
 cd C:\path\to\vip
 $env:CGO_ENABLED  = "0"
 go build -buildvcs=false -o vip-next.exe .\cmd\vip-next
 .\vip-next.exe --version
 ```
+
 (`make` usually isn't present on Windows — use the raw `go build` above.)
 
 ### 3. Run it
+
 ```powershell
 .\vip-next.exe dev-env create --slug wintest --start
 ```
+
 Run from an **ordinary** (non-admin) PowerShell — the tool raises its own UAC
 prompt for the hosts/cert step. Env data lands at
 `C:\Users\<you>\.local\share\vip\dev-environment\`.
@@ -125,18 +138,21 @@ ping wintest.vipdev.site            # -> 127.0.0.1
 # then open https://wintest.vipdev.site:<port>/ in a browser (no cert warning)
 ```
 
-From **WSL**, confirm it edited the *Windows* file (not WSL's `/etc/hosts`):
+From **WSL**, confirm it edited the _Windows_ file (not WSL's `/etc/hosts`):
+
 ```bash
 grep -A6 "BEGIN vip-dev-env" /mnt/c/Windows/System32/drivers/etc/hosts
 ```
 
 ### The actual offline test
+
 1. Start the env (hosts written).
 2. Turn off Wi-Fi / pull the network (or block DNS).
 3. Reload `https://wintest.vipdev.site:<port>/` — it must still resolve, because
    the hosts file (not public DNS) is doing the work now. That's the whole point.
 
 ### Re-prompt behavior
+
 Re-running `dev-env start` on an unchanged env should **not** prompt for UAC again
 (the CA is already trusted and the hosts entries already present — the
 context-aware `CATrusted` + `HostsPresent` checks short-circuit). If it prompts
@@ -154,6 +170,7 @@ notepad C:\Windows\System32\drivers\etc\hosts      # run elevated
 # Remove the CA from the Root store (elevated):
 certutil -delstore Root "WPVIP Local CA"
 ```
+
 Or just `vip-next dev-env destroy --slug wintest`, which tears down containers and
 recomputes the hosts block (one more UAC prompt).
 
@@ -164,7 +181,7 @@ recomputes the hosts block (one more UAC prompt).
 - The dev-env stack (compose, Traefik proxy, setup.sh) was developed and exercised
   primarily on macOS. The hosts/CA elevation path is new and Windows/WSL-aware, but
   **other** parts of the stack may hit Windows path/permission quirks not yet seen.
-  If `create`/`start` fails *before* the UAC step, capture the per-env log
+  If `create`/`start` fails _before_ the UAC step, capture the per-env log
   (`…\dev-environment\wintest\logs\*.log`) — that's a separate issue from this
   feature, worth reporting.
 - `Start-Process -Verb RunAs` cannot run non-interactively (no desktop session) —

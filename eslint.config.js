@@ -2,7 +2,18 @@ const { configs } = require( '@automattic/eslint-plugin-wpvip' );
 
 const config = [
 	{
-		ignores: [ '*.generated.d.ts', 'dist/**', 'src/graphqlTypes.d.ts', 'codegen.ts' ],
+		ignores: [
+			'*.generated.d.ts',
+			'dist/**',
+			'src/graphqlTypes.d.ts',
+			'codegen.ts',
+			// Go tree: fixtures for Go tests, not Node CLI source.
+			'internal/**',
+			'cmd/**',
+			'scripts/**',
+			'testdata/**',
+			'third_party/**',
+		],
 	},
 	...configs.recommended,
 	...configs.cli,
