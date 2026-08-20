@@ -1,0 +1,14 @@
+name: app-deploy-completed
+description: |
+  Happy-path deploy with --skip-confirmation: validate access (deploy
+  token), file gates, sha256 upload, StartCustomDeploy, success block
+  with the dashboard deployments URL. Exit 0.
+argv: ["app", "deploy", "../../testdata/parity/recordings/app-deploy-validate/clean.tar.gz", "--skip-confirmation", "--app=parityapp", "--env=develop"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  WPVIP_DEPLOY_TOKEN: "deploy-tok"
+recording: app-deploy-completed
+expect:
+  exit_code: 0

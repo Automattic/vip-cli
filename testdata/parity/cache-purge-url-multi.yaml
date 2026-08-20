@@ -1,0 +1,19 @@
+name: cache-purge-url-multi
+description: |
+  Three positional URLs. The mutation echoes all three back; stdout has
+  one `- Purged URL: <u>` line per URL.
+argv:
+  - "@parityapp.develop"
+  - "cache"
+  - "purge-url"
+  - "https://example-app.go-vip.co/page-a/"
+  - "https://example-app.go-vip.co/page-b/"
+  - "https://example-app.go-vip.co/page-c/"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: cache-purge-url-multi
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

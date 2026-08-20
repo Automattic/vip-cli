@@ -1,0 +1,17 @@
+name: import-sql-status-completed
+description: |
+  `vip import sql status` against a completed sql_import job renders the
+  final Status/Site block with Success and exits 0.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "status"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_IMPORT_SQL_INTERVAL_MS: "5"
+recording: import-sql-status-completed
+expect:
+  exit_code: 0

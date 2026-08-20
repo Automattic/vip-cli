@@ -1,0 +1,14 @@
+name: wp-production-confirm-decline
+description: |
+  Production environment + VIP_NON_INTERACTIVE=1, no --yes flag. The production
+  confirmation prompt cannot prompt so it declines: "Command cancelled". Exit 0.
+  TriggerWPCLICommand must NOT fire.
+argv: ["@parityapp.production", "wp", "user", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+recording: wp-production-confirm-decline
+expect:
+  exit_code: 0

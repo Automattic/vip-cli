@@ -1,0 +1,27 @@
+name: envvar-delete-prod-cancel
+description: |
+  Production env, no --skip-confirmation, non-interactive context →
+  prod-gate Confirm returns ErrNonInteractive → handler prints
+  "Command cancelled" → exit 0. delete.json is INTENTIONALLY omitted
+  so the test fails if the mutation fires anyway.
+argv:
+  - "@parityapp.production"
+  - "config"
+  - "envvar"
+  - "delete"
+  - "MY_VAR"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  VIP_NON_INTERACTIVE: "1"
+recording: envvar-delete-prod-cancel
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "2dc833815290656f61d099a3a78425e52f6d604b023a56e7a0f1e7265b80bc78"
+  reason: >-
+    parity register 1.24 (KEEP): in a non-TTY vip-next explicitly reports that
+    it cannot prompt and cancels without mutating; Node emits enquirer's raw
+    ANSI prompt before its unresolved prompt exits without mutating.
+normalize:
+  stdout: []

@@ -1,0 +1,20 @@
+name: envvar-set-prod-confirm-skipped
+description: |
+  Production env but --skip-confirmation present → no prompt → success.
+  Verifies the prod-gate respects the skip flag.
+argv:
+  - "@parityapp.production"
+  - "config"
+  - "envvar"
+  - "set"
+  - "MY_VAR"
+  - "--from-file=../../testdata/parity/recordings/envvar-set-prod-confirm-skipped/value.txt"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-set-prod-confirm-skipped
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

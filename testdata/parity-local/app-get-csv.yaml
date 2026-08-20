@@ -1,0 +1,8 @@
+name: local-parker-app-get-csv
+description: Compare Node and Go CSV app metadata for the discovered local Parker app.
+argv: ['app', '{{app_id}}', '--format=csv']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

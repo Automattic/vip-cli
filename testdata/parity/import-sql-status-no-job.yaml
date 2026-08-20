@@ -1,0 +1,17 @@
+name: import-sql-status-no-job
+description: |
+  `vip import sql status` with no import job returns fast with
+  "No import job found" (status.ts:329) and exits 0.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "status"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_IMPORT_SQL_INTERVAL_MS: "5"
+recording: import-sql-status-no-job
+expect:
+  exit_code: 0

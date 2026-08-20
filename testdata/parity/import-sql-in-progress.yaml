@@ -1,0 +1,26 @@
+name: import-sql-in-progress
+description: |
+  Env info reports importInProgress=true: the gate aborts with
+  "There is already an import in progress." + the status-command hint
+  (vip-import-sql.js:258). Exit 1.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "../../testdata/parity/recordings/import-sql-noninteractive-abort/clean.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-sql-in-progress
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "33749d4e42c34bcf3256bab862e40dcae5f3e9bee8a2c0a6dce442e8de421fa7"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

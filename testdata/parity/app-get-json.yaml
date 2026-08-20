@@ -1,0 +1,14 @@
+name: app-get-json
+description: |
+  `vip app example-app --format=json` against the same payload as
+  app-get-baseline. Verifies JSON rendering of the HeaderData shape
+  (header section + envs array with flattened primaryDomain).
+argv: ["app", "example-app", "--format=json"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-get-json
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

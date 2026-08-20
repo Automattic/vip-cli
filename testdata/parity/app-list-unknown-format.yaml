@@ -1,0 +1,29 @@
+name: app-list-unknown-format
+description: |
+  `vip app list --format=bogus` against the app-list-baseline payload.
+
+  Node does not validate the format string on `app list`: src/lib/cli/format.ts
+  `formatData()` has `case 'table': default:`, so an unrecognised value falls
+  through to the table renderer and exits 0. vip-next rejects it and exits 1.
+
+  Arguably vip-next is the better behaviour, but it is a breaking change against
+  the shipping CLI: a script passing a typo'd or newly-added format keeps
+  working on Node and starts failing on vip-next. The repo owner has decided to
+  keep the rejection (parity register 1.2, KEEP); the call belongs in the
+  cutover breaking-changes doc.
+
+  expect.exit_code records NODE's behaviour.
+argv: ["app", "list", "--format=bogus"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-list-baseline
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "e7be0803b0617d8d3744ba91062f5e2dae58d3d99ebbab120250c1990e306ccf"
+  reason: >-
+    parity register 1.2 (KEEP): vip-next rejects an unknown --format value with
+    exit 1, where Node silently falls through to the table renderer and exits 0.
+normalize:
+  stdout: []

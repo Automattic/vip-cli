@@ -1,0 +1,24 @@
+name: logs-batch
+description: |
+  `vip @parityapp.develop logs --type=batch` returns batch-job log
+  entries (cron tasks, WP-CLI commands). Verifies Node parity on the
+  `type` flag and that the same table rendering applies regardless of
+  log stream.
+argv: ["@parityapp.develop", "logs", "--type=batch"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: logs-batch
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "a8b366d140d6c8c647f205cd90dda8d3e085f65d75c454d6119f016e577894d6"
+  reason: >-
+    parity register section 3 (KEEP): `vip logs` renders lowercase "timestamp"
+    / "message" headers via the shared table renderer, where Node hand-rolls the
+    table in src/bin/vip-logs.js with head [ "Timestamp", "Message" ]. Frame,
+    widths, wrapping and cell contents match byte-for-byte; only the header
+    casing differs.
+normalize:
+  stdout: []

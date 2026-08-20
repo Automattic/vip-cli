@@ -1,0 +1,21 @@
+name: envvar-set-baseline
+description: |
+  `vip @parityapp.develop config envvar set MY_VAR --from-file=... --skip-confirmation`.
+  Non-prod + skip-confirmation = no prompt. value.txt content is trimmed
+  (Node parity: data.trim()) so the wire-level value is "hello".
+argv:
+  - "@parityapp.develop"
+  - "config"
+  - "envvar"
+  - "set"
+  - "MY_VAR"
+  - "--from-file=../../testdata/parity/recordings/envvar-set-baseline/value.txt"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-set-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

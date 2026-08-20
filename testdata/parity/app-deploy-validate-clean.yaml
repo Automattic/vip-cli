@@ -1,0 +1,11 @@
+name: app-deploy-validate-clean
+description: |
+  `vip app deploy validate` against a clean tar.gz (single root +
+  themes/): green success line. Exit 0. Local-only.
+argv: ["app", "deploy", "validate", "../../testdata/parity/recordings/app-deploy-validate/clean.tar.gz"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 0

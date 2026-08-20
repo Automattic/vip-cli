@@ -1,0 +1,28 @@
+name: envvar-set-prod-cancel
+description: |
+  Production env, no --skip-confirmation, non-interactive context →
+  prod-gate Confirm returns ErrNonInteractive → handler prints
+  "Command cancelled" → exit 0. The add.json fixture is INTENTIONALLY
+  omitted so the test fails loudly if the mutation is fired anyway.
+argv:
+  - "@parityapp.production"
+  - "config"
+  - "envvar"
+  - "set"
+  - "MY_VAR"
+  - "--from-file=../../testdata/parity/recordings/envvar-set-prod-cancel/value.txt"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  VIP_NON_INTERACTIVE: "1"
+recording: envvar-set-prod-cancel
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "d09bb7084ed631325f61378e0736ab4f1e09d264d6b46aaff1c66a2183502bb8"
+  reason: >-
+    parity register 1.24 (KEEP): in a non-TTY vip-next explicitly reports that
+    it cannot prompt and cancels without mutating; Node emits enquirer's raw
+    ANSI prompt before its unresolved prompt exits without mutating.
+normalize:
+  stdout: []

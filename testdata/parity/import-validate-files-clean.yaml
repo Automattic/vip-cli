@@ -1,0 +1,18 @@
+name: import-validate-files-clean
+description: |
+  Clean uploads/2020/06 fixture: file checks pass (jpg/png allowed,
+  small files, short sane names), summary renders PASS lines, exit 0.
+  The folder-structure block may be RECOMMENDED because the fixture's
+  absolute path doesn't start at `uploads` — Node behaves identically
+  for absolute inputs.
+argv:
+  - "import"
+  - "validate-files"
+  - "../../testdata/parity/recordings/import-validate-files-clean/uploads"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-validate-files-clean
+expect:
+  exit_code: 0

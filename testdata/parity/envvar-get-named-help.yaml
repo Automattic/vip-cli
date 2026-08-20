@@ -1,0 +1,24 @@
+name: envvar-get-named-help
+description: |
+  `vip @parityapp.develop config envvar get help` — end-to-end reproduction of
+  cutover item 2.13 through the shipped binary.
+
+  Both CLIs decide "run the login flow or not" with a FLAT scan of the whole
+  argv (src/bin/vip.js:192, `argv.some(arg => params.includes(arg))`), so the
+  positional "help" here takes the bypass branch on Node too. That is harmless
+  in Node because bypassing only skips the PROMPT: runCmd() still calls the API,
+  with src/lib/api/http.ts re-reading the token per request. vip-next used to
+  treat the same branch as "no API setup at all" and exited 1 with
+  "appctx: GraphQL client not configured" before a single request was made.
+
+  Exit 0 plus the variable's value on stdout is the assertion; a regression
+  makes this scenario exit 1 without touching the mock server.
+argv: ["@parityapp.develop", "config", "envvar", "get", "help"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-get-named-help
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

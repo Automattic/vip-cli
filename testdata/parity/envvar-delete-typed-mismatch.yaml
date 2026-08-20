@@ -1,0 +1,30 @@
+name: envvar-delete-typed-mismatch
+description: |
+  `vip @parityapp.develop config envvar delete MY_VAR` WITHOUT
+  --skip-confirmation, with VIP_NON_INTERACTIVE=1 forcing appctx.Input to
+  return ErrNonInteractive in the typed-name confirm gate. Handler treats
+  it as decline -> yellow "Command cancelled by user." to stdout -> exit 0.
+  The DeleteEnvironmentVariable mutation MUST NOT fire (wire-level
+  assertion via envvarCancelScenarios in envvar_mutation_scenario_test.go).
+argv:
+  - "@parityapp.develop"
+  - "config"
+  - "envvar"
+  - "delete"
+  - "MY_VAR"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+recording: envvar-delete-typed-mismatch
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "4f16dc7c468e5222a42ae40bf6e78a2c17f16f584654fb51762d49ac33c4b396"
+  reason: >-
+    parity register 1.24 (KEEP): in a non-TTY vip-next explicitly cancels the
+    typed-name gate without mutating; Node emits enquirer's raw ANSI prompt
+    before its unresolved prompt exits without mutating.
+normalize:
+  stdout: []

@@ -1,0 +1,1 @@
+{"data":{"app":{"id":42,"environments":[{"id":7,"slowlogs":{"nodes":[{"timestamp":"2024-01-01T00:00:00.000000000Z","rowsSent":"50","rowsExamined":"5000","queryTime":"3.456","requestUri":"/wp-cron.php","query":"SELECT * FROM wp_postmeta WHERE meta_key = 'view_count'"}],"nextCursor":null,"pollingDelaySeconds":30}}]}}}

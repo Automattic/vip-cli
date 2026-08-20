@@ -1,0 +1,27 @@
+name: import-sql-invalid-md5
+description: |
+  Remote-URL import with a malformed --md5 fails the md5 gate:
+  "The provided MD5 hash is invalid. It should be a 32-character
+  hexadecimal string." (vip-import-sql.js:161). Exit 1.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "https://example.com/file.sql"
+  - "--md5=not-a-hash"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-sql-invalid-md5
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "e959faf0d34f029f4dd087159f0cf06683fdf6041310c2ed2d7d40e85a75f774"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

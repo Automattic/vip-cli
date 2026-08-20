@@ -1,0 +1,22 @@
+name: envvar-list-keyvalue
+description: |
+  `vip @parityapp.develop config envvar list --format=keyValue`. Verifies
+  Node parity: the column key flips from "name" to "key" when keyValue
+  format is requested (src/bin/vip-config-envvar-list.js).
+argv: ["@parityapp.develop", "config", "envvar", "list", "--format=keyValue"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-list-keyvalue
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "8c3b9ffc1918cf0b8c69e1827e351635901b9e5ca3bb1ad219148d52f554c811"
+  reason: >-
+    parity register section 3 (KEEP): vip-next renders --format=keyValue as bare
+    "key=value" lines, where Node (src/lib/cli/format.ts keyValue()) brackets the
+    block in "===" banners and prefixes each line with "+ ". For `envvar list`,
+    which supplies no value, Node additionally prints the literal string
+    "undefined" as the value.
+normalize:
+  stdout: []

@@ -1,0 +1,21 @@
+name: export-sql-config-conflict
+description: |
+  --config-file combined with --table fails fast with the exclusivity
+  message (live-backup-copy.ts:30). Exit 1, no network calls.
+argv: ["@parityapp.develop", "export", "sql", "--config-file=cfg.json", "--table=wp_posts"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: export-sql-config-conflict
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "a3c50a651ee932b630704796645ebb44a4b4066a2ecb4ee389177285694a85fa"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

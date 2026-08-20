@@ -1,0 +1,21 @@
+name: app-deploy-missing-token
+description: |
+  `vip app deploy file.tar.gz` without WPVIP_DEPLOY_TOKEN: "Valid custom
+  deploy key is required." (custom-deploy.ts:33). Exit 1. The archive
+  fixture is created by the scenario test.
+argv: ["app", "deploy", "../../testdata/parity/recordings/app-deploy-validate/clean.tar.gz"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "1a07eac4c95795ef66f54fc5ed09f30a87c52c9e78608203f7f1296325ceefc9"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

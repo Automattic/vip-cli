@@ -1,0 +1,20 @@
+name: defensive-mode-enable-with-rechallenge
+description: |
+  Server returns elevated-permission-required on the first mutation;
+  Parker mock completes step-up; retry succeeds with elevated header.
+  This is the M3 acceptance scenario.
+argv: ["defensive-mode", "enable", "--app=parityapp", "--env=develop", "--skip-confirmation", "--non-interactive"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  # --non-interactive now refuses step-up before CreateSession: a challenge
+  # nobody can approve is unsatisfiable, and polling it to session expiry hung
+  # CI. This scenario still needs the challenge to COMPLETE, so it takes the
+  # documented opt-in that prints the verification URL and waits — the same
+  # escape hatch the new error message tells users about.
+  VIP_RECHALLENGE_WAIT: "1"
+recording: defensive-mode-enable-rechallenge
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

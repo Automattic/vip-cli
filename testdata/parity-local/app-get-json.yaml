@@ -1,0 +1,8 @@
+name: local-parker-app-get-json
+description: Compare Node and Go JSON app metadata for the discovered local Parker app.
+argv: ['app', '{{app_id}}', '--format=json']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

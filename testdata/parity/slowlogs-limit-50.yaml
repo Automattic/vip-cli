@@ -1,0 +1,16 @@
+name: slowlogs-limit-50
+description: |
+  `vip @parityapp.develop slowlogs --limit=50` requests a smaller
+  batch (max 500 vs logs' 5000). Verifies the limit flag forwards to
+  the GraphQL `limit` argument and that the smaller ceiling enforced
+  in validateSlowlogsInputs doesn't reject 50.
+argv: ["@parityapp.develop", "slowlogs", "--limit=50"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: slowlogs-limit-50
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
