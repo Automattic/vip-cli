@@ -21,3 +21,19 @@ coverage
 *.iml
 
 schema.gql
+
+# Keep the checked-in GraphQL schema despite the blanket schema.gql rule above
+!internal/gql/schema.gql
+
+# Go build artifacts
+/bin/
+*.exe
+coverage.out
+go.work
+go.work.sum
+
+# Vendored go-search-replace binaries: fetched + checksum-verified by
+# `make vendor-search-replace` from the pinned release in
+# third_party/go-search-replace/MANIFEST (which IS tracked). Binaries stay out
+# of git so the repo does not carry ~19 MB of executables per upgrade.
+third_party/go-search-replace/*/
