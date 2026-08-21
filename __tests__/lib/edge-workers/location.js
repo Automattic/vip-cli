@@ -25,4 +25,10 @@ describe( 'parseLocationOption()', () => {
 			expect( () => parseLocationOption( raw ) ).toThrow( 'Invalid location' );
 		}
 	);
+
+	it( 'rejects a --location flag passed without a value', () => {
+		// A value-less `--location` arrives as boolean true from the arg parser;
+		// guard so it does not throw a TypeError from `.indexOf()`.
+		expect( () => parseLocationOption( true ) ).toThrow( /--location flag requires a value/ );
+	} );
 } );

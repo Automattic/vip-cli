@@ -1,7 +1,7 @@
 /**
  * GraphQL access for edge workers.
  *
- * The schema exposes workers under `app.environments[].edgeWorkers`, with
+ * The schema exposes workers under `app.environments(id:).edgeWorkers`, with
  * `source` as an on-demand read field, plus create/update/setActive/delete mutations
  * keyed by `environmentId`. Worker names are unique per environment, so the CLI
  * reconciles create-vs-update by matching on `name`.
@@ -78,13 +78,13 @@ function pickEnvWorkers( result: EdgeWorkersQueryResult | undefined, envId: numb
 	if ( ! Array.isArray( environments ) ) {
 		return invalidReadResponse();
 	}
-	if (
-		! environments.every( candidate => isObject( candidate ) && typeof candidate.id === 'number' )
-	) {
+	// The query filters by environment id server-side, so we expect the single
+	// matching environment (or none). Confirm the returned id matches before use.
+	const env = environments[ 0 ];
+	if ( ! isObject( env ) || typeof env.id !== 'number' || env.id !== envId ) {
 		return invalidReadResponse();
 	}
-	const env = environments.find( candidate => candidate.id === envId );
-	if ( ! env || ! Array.isArray( env.edgeWorkers ) ) {
+	if ( ! Array.isArray( env.edgeWorkers ) ) {
 		return invalidReadResponse();
 	}
 	return env.edgeWorkers;
@@ -99,12 +99,12 @@ function requireMutationPayload< T >( operation: string, value: T | null | undef
 
 /** List the edge workers deployed to an environment without source. */
 export async function listEdgeWorkers( appId: number, envId: number ): Promise< EdgeWorker[] > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const response = await api.query< EdgeWorkersQueryResult >( {
 		query: gql`
-			query EdgeWorkers($appId: Int!) {
+			query EdgeWorkers($appId: Int!, $envId: Int!) {
 				app(id: $appId) {
-					environments {
+					environments(id: $envId) {
 						id
 						edgeWorkers {
 							${ EDGE_WORKER_FIELDS }
@@ -113,7 +113,7 @@ export async function listEdgeWorkers( appId: number, envId: number ): Promise< 
 				}
 			}
 		`,
-		variables: { appId },
+		variables: { appId, envId },
 		fetchPolicy: 'no-cache',
 	} );
 
@@ -122,8 +122,8 @@ export async function listEdgeWorkers( appId: number, envId: number ): Promise< 
 
 /**
  * Fetch a single worker by name. The schema has no single-worker query, so this
- * requests the environment's workers and filters client-side. Source is fetched
- * only when explicitly requested.
+ * requests the target environment's workers and matches by name. Source is
+ * fetched only when explicitly requested.
  */
 export async function getEdgeWorker(
 	appId: number,
@@ -131,14 +131,14 @@ export async function getEdgeWorker(
 	name: string,
 	options: { includeSource?: boolean } = {}
 ): Promise< EdgeWorker | null > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const fields =
 		options.includeSource === true ? `${ EDGE_WORKER_FIELDS }\nsource` : EDGE_WORKER_FIELDS;
 	const response = await api.query< EdgeWorkersQueryResult >( {
 		query: gql`
-			query EdgeWorkerDetail($appId: Int!) {
+			query EdgeWorkerDetail($appId: Int!, $envId: Int!) {
 				app(id: $appId) {
-					environments {
+					environments(id: $envId) {
 						id
 						edgeWorkers {
 							${ fields }
@@ -147,7 +147,7 @@ export async function getEdgeWorker(
 				}
 			}
 		`,
-		variables: { appId },
+		variables: { appId, envId },
 		fetchPolicy: 'no-cache',
 	} );
 
@@ -176,7 +176,7 @@ export async function createEdgeWorker(
 	envId: number,
 	input: EdgeWorkerWriteInput & { name: string; wasmBinary: string }
 ): Promise< EdgeWorker > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const response = await api.mutate< { createEdgeWorker: EdgeWorker | null } >( {
 		mutation: gql`
 			mutation CreateEdgeWorker($input: CreateEdgeWorkerInput!) {
@@ -196,7 +196,7 @@ export async function updateEdgeWorker(
 	edgeWorkerId: number,
 	input: EdgeWorkerWriteInput
 ): Promise< EdgeWorker > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const response = await api.mutate< { updateEdgeWorker: EdgeWorker | null } >( {
 		mutation: gql`
 			mutation UpdateEdgeWorker($input: UpdateEdgeWorkerInput!) {
@@ -225,7 +225,7 @@ export async function validateEdgeWorker(
 	envId: number,
 	wasmBinary: string
 ): Promise< EdgeWorkerValidationResult > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const response = await api.mutate< {
 		validateEdgeWorker: EdgeWorkerValidationResult | null;
 	} >( {
@@ -249,7 +249,7 @@ export async function setEdgeWorkerActive(
 	edgeWorkerId: number,
 	active: boolean
 ): Promise< EdgeWorker > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const response = await api.mutate< { setEdgeWorkerActive: EdgeWorker | null } >( {
 		mutation: gql`
 			mutation SetEdgeWorkerActive($input: SetEdgeWorkerActiveInput!) {
@@ -265,7 +265,7 @@ export async function setEdgeWorkerActive(
 }
 
 export async function deleteEdgeWorker( envId: number, edgeWorkerId: number ): Promise< void > {
-	const api = API();
+	const api = API( { exitOnError: false } );
 	const response = await api.mutate< { deleteEdgeWorker: boolean | null } >( {
 		mutation: gql`
 			mutation DeleteEdgeWorker($input: DeleteEdgeWorkerInput!) {

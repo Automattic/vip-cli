@@ -73,6 +73,19 @@ describe( 'edgeWorkersBuildCommand()', () => {
 		expect( lib.buildWorker ).toHaveBeenCalledTimes( 2 );
 	} );
 
+	it( 'rejects a worker name together with --all', async () => {
+		await expect( edgeWorkersBuildCommand( [ 'alpha' ], { all: true } ) ).rejects.toBe(
+			'EXIT_WITH_ERROR'
+		);
+
+		expect( exit.withError ).toHaveBeenCalledWith(
+			'Supply either a worker name or --all, not both.'
+		);
+		expect( project.findWorker ).not.toHaveBeenCalled();
+		expect( project.discoverWorkers ).not.toHaveBeenCalled();
+		expect( lib.buildWorker ).not.toHaveBeenCalled();
+	} );
+
 	it( 'reports when the project has no workers', async () => {
 		project.discoverWorkers.mockReturnValue( [] );
 

@@ -29,10 +29,13 @@ export async function edgeWorkersBuildCommand( args = [], opt = {} ) {
 	await trackEvent( 'edge_workers_build_command_execute', { name, all: Boolean( opt.all ) } );
 
 	try {
+		if ( name && opt.all ) {
+			throw new UserError( 'Supply either a worker name or --all, not both.' );
+		}
+
 		const projectDir = resolveProjectDir( { path: opt.path } );
 
-		const workers =
-			name && ! opt.all ? [ findWorker( projectDir, name ) ] : discoverWorkers( projectDir );
+		const workers = name ? [ findWorker( projectDir, name ) ] : discoverWorkers( projectDir );
 
 		if ( ! workers.length ) {
 			throw new UserError(

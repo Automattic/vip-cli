@@ -62,6 +62,22 @@ describe( 'edge worker read query contracts', () => {
 		expect( query ).not.toContain( 'wasmBinary' );
 	} );
 
+	it( 'filters the environment server-side by id rather than client-side', async () => {
+		await listEdgeWorkers( 1, 3 );
+
+		const call = mockQuery.mock.calls[ 0 ][ 0 ] as { query: DocumentNode; variables?: unknown };
+		const query = print( call.query );
+
+		expect( query ).toContain( 'environments(id: $envId)' );
+		expect( call.variables ).toMatchObject( { appId: 1, envId: 3 } );
+	} );
+
+	it( 'requests reads with exitOnError disabled so failures can be caught', async () => {
+		await listEdgeWorkers( 1, 3 );
+
+		expect( mockedAPI.default ).toHaveBeenCalledWith( { exitOnError: false } );
+	} );
+
 	it.each( [
 		[ 'missing data', undefined ],
 		[ 'null app', { app: null } ],
@@ -112,5 +128,21 @@ describe( 'edge worker mutation result contracts', () => {
 		mockMutate.mockResolvedValueOnce( { data: { deleteEdgeWorker: false } } );
 
 		await expect( deleteEdgeWorker( 3, 7 ) ).rejects.toThrow( /did not confirm deletion/ );
+	} );
+
+	it.each( [
+		[ 'validateEdgeWorker', () => validateEdgeWorker( 3, 'V0FTTQ==' ) ],
+		[ 'createEdgeWorker', () => createEdgeWorker( 3, { name: 'demo', wasmBinary: 'V0FTTQ==' } ) ],
+		[ 'updateEdgeWorker', () => updateEdgeWorker( 3, 7, { wasmBinary: 'V0FTTQ==' } ) ],
+		[ 'setEdgeWorkerActive', () => setEdgeWorkerActive( 3, 7, true ) ],
+		[ 'deleteEdgeWorker', () => deleteEdgeWorker( 3, 7 ) ],
+	] )( 'requests %s with exitOnError disabled so failures can be caught', async ( key, call ) => {
+		mockMutate.mockResolvedValueOnce( {
+			data: { [ key ]: key === 'deleteEdgeWorker' ? true : { id: 7 } },
+		} );
+
+		await call();
+
+		expect( mockedAPI.default ).toHaveBeenCalledWith( { exitOnError: false } );
 	} );
 } );

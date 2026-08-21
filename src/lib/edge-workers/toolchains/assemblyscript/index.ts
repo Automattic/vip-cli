@@ -14,10 +14,10 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { BUILD_DIR, DEFAULT_ENTRY, SDK_PACKAGE, SDK_VERSION } from './constants';
+import { DEFAULT_ENTRY, SDK_PACKAGE, SDK_VERSION } from './constants';
 import { GITIGNORE, PACKAGE_JSON, README, starterWorker, TSCONFIG_JSON } from './templates';
 import UserError from '../../../user-error';
-import { WORKERS_DIR, writeProjectDescriptor, writeWorkerManifest } from '../../project';
+import { BUILD_DIR, WORKERS_DIR, writeProjectDescriptor, writeWorkerManifest } from '../../project';
 import {
 	resolveExistingPathWithin,
 	resolveOutputPathWithin,
@@ -36,7 +36,8 @@ function writeFileEnsuringDir( filePath: string, contents: string ): void {
 
 function assertScaffoldTargetAvailable( projectDir: string ): void {
 	if ( ! fs.existsSync( projectDir ) ) return;
-	if ( ! fs.statSync( projectDir ).isDirectory() ) {
+	// lstatSync (not statSync) so a symlink to a directory is rejected rather than followed.
+	if ( ! fs.lstatSync( projectDir ).isDirectory() ) {
 		throw new UserError(
 			`Cannot create an edge-workers project at "${ projectDir }": target is not a directory.`
 		);

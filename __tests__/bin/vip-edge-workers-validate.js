@@ -166,4 +166,15 @@ describe( 'edgeWorkersValidateCommand()', () => {
 			expect.stringContaining( 'supply a worker name' )
 		);
 	} );
+
+	it( 'rejects a worker name together with --all', async () => {
+		await expect(
+			edgeWorkersValidateCommand( [ 'my-worker' ], { ...opts, all: true } )
+		).rejects.toBe( 'EXIT_WITH_ERROR' );
+		expect( exit.withError ).toHaveBeenCalledWith(
+			expect.stringContaining( 'Supply either a worker name or --all, not both.' )
+		);
+		expect( project.discoverWorkers ).not.toHaveBeenCalled();
+		expect( api.validateEdgeWorker ).not.toHaveBeenCalled();
+	} );
 } );

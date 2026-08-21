@@ -66,6 +66,13 @@ describe( 'edge-workers project', () => {
 		it( 'throws with guidance when nothing is found', () => {
 			expect( () => resolveProjectDir( {}, tmp ) ).toThrow( /vip edge-workers init/ );
 		} );
+
+		it( 'rejects a --path flag passed without a value', () => {
+			// A value-less `--path` arrives as boolean true from the arg parser.
+			expect( () => resolveProjectDir( { path: true }, tmp ) ).toThrow(
+				/--path flag requires a path/
+			);
+		} );
 	} );
 
 	describe( 'descriptor', () => {
@@ -94,6 +101,17 @@ describe( 'edge-workers project', () => {
 			fs.writeFileSync( path.join( project, 'edge-workers.json' ), 'null' );
 			expect( () => readProjectDescriptor( project ) ).toThrow( /invalid "type"/ );
 		} );
+
+		it( 'rejects a symlinked descriptor', () => {
+			const project = path.join( tmp, 'proj' );
+			fs.mkdirSync( project, { recursive: true } );
+			const outside = path.join( tmp, 'outside.json' );
+			fs.writeFileSync( outside, '{"type":"assemblyscript"}' );
+			fs.symlinkSync( outside, path.join( project, 'edge-workers.json' ), 'file' );
+			expect( () => readProjectDescriptor( project ) ).toThrow(
+				/project descriptor at .* must not be a symbolic link/
+			);
+		} );
 	} );
 
 	describe( 'worker manifests', () => {
@@ -112,6 +130,17 @@ describe( 'edge-workers project', () => {
 				'{"name":"demo","entry":"../outside.ts"}'
 			);
 			expect( () => readWorkerManifest( worker ) ).toThrow( /Worker entry must stay within/ );
+		} );
+
+		it( 'rejects a symlinked manifest', () => {
+			const worker = path.join( tmp, 'worker' );
+			fs.mkdirSync( worker, { recursive: true } );
+			const outside = path.join( tmp, 'outside-manifest.json' );
+			fs.writeFileSync( outside, '{"name":"demo","entry":"assembly/index.ts"}' );
+			fs.symlinkSync( outside, path.join( worker, 'worker.json' ), 'file' );
+			expect( () => readWorkerManifest( worker ) ).toThrow(
+				/worker manifest at .* must not be a symbolic link/
+			);
 		} );
 	} );
 
@@ -208,7 +237,7 @@ describe( 'edge-workers project', () => {
 			};
 
 			expect( () => readPrebuiltWorker( project, worker ) ).toThrow(
-				/Worker build artifact must stay within/
+				/Worker build artifact must not be a symbolic link/
 			);
 		} );
 
@@ -226,7 +255,7 @@ describe( 'edge-workers project', () => {
 			};
 
 			expect( () => readPrebuiltWorker( project, worker ) ).toThrow(
-				/Worker build artifact must stay within/
+				/Worker build artifact must not be a symbolic link/
 			);
 		} );
 	} );

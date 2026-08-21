@@ -11,6 +11,15 @@ import { EDGE_WORKER_LOCATION_OPERATORS } from './types';
 import type { EdgeWorkerLocation, EdgeWorkerLocationOperator } from './types';
 
 export function parseLocationOption( raw: string ): EdgeWorkerLocation {
+	// `--location` passed without a value arrives as a boolean, not a string;
+	// guard so we surface a clear error instead of a TypeError from `.indexOf()`.
+	if ( typeof raw !== 'string' ) {
+		throw new UserError(
+			'The --location flag requires a value in the form "<operator>:<value>" ' +
+				`(e.g. "starts_with:/api/"). Operators: ${ EDGE_WORKER_LOCATION_OPERATORS.join( ', ' ) }.`
+		);
+	}
+
 	// Split on the first colon only: the value may itself contain colons.
 	const separator = raw.indexOf( ':' );
 	const operator = separator > 0 ? raw.slice( 0, separator ) : '';

@@ -5,14 +5,8 @@
  * there's a single source of truth.
  */
 
-import {
-	ASSEMBLYSCRIPT_VERSION,
-	BUILD_DIR,
-	DEFAULT_ENTRY,
-	SDK_PACKAGE,
-	SDK_VERSION,
-} from './constants';
-import { WORKERS_DIR } from '../../project';
+import { ASSEMBLYSCRIPT_VERSION, DEFAULT_ENTRY, SDK_PACKAGE, SDK_VERSION } from './constants';
+import { BUILD_DIR, WORKERS_DIR } from '../../project';
 
 export const PACKAGE_JSON = {
 	name: 'edge-workers',

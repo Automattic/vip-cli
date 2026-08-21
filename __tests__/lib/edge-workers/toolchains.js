@@ -80,6 +80,16 @@ describe( 'edge-workers toolchains', () => {
 			expect( fs.readFileSync( project, 'utf8' ) ).toBe( 'customer content\n' );
 		} );
 
+		it( 'refuses a symlinked directory target', () => {
+			const realDir = path.join( tmp, 'real-dir' );
+			fs.mkdirSync( realDir );
+			const project = path.join( tmp, 'linked-app' );
+			fs.symlinkSync( realDir, project, 'dir' );
+
+			expect( () => tc.scaffoldProject( project ) ).toThrow( /not a directory/ );
+			expect( fs.existsSync( path.join( realDir, 'edge-workers.json' ) ) ).toBe( false );
+		} );
+
 		it( 'scaffolds a worker with a manifest and entry file', () => {
 			const project = path.join( tmp, 'proj' );
 			tc.scaffoldProject( project );

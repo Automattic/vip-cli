@@ -24,11 +24,34 @@ import type { DiscoveredWorker, ProjectDescriptor, WorkerManifest } from './type
 export const PROJECT_DESCRIPTOR_FILE = 'edge-workers.json';
 export const WORKER_MANIFEST_FILE = 'worker.json';
 export const WORKERS_DIR = 'workers';
+/** Conventional output directory for compiled artifacts, relative to the project root. */
+export const BUILD_DIR = 'build';
 /** Conventional subfolder checked when resolving from a site-repo root. */
 export const CONVENTIONAL_PROJECT_DIR = 'edge-workers';
 
 function isProjectRoot( dir: string ): boolean {
 	return fs.existsSync( path.join( dir, PROJECT_DESCRIPTOR_FILE ) );
+}
+
+/**
+ * Read a project file as UTF-8, rejecting symlinks before opening so a symlinked
+ * descriptor/manifest can't redirect the read outside the project tree.
+ */
+function readProjectFile( file: string, label: string ): string {
+	let stat: fs.Stats;
+	try {
+		stat = fs.lstatSync( file );
+	} catch {
+		throw new UserError( `Could not read ${ label } at "${ file }".` );
+	}
+	if ( stat.isSymbolicLink() ) {
+		throw new UserError( `${ label } at "${ file }" must not be a symbolic link.` );
+	}
+	try {
+		return fs.readFileSync( file, 'utf8' );
+	} catch {
+		throw new UserError( `Could not read ${ label } at "${ file }".` );
+	}
 }
 
 /**
@@ -44,7 +67,13 @@ export function resolveProjectDir(
 	opts: { path?: string } = {},
 	cwd: string = process.cwd()
 ): string {
-	if ( opts.path ) {
+	if ( opts.path !== undefined ) {
+		// `--path` passed without a value arrives as a boolean, not a string;
+		// guard so we surface a clear error instead of a throw from path.resolve().
+		if ( typeof opts.path !== 'string' || opts.path === '' ) {
+			throw new UserError( 'The --path flag requires a path to the edge-workers project.' );
+		}
+
 		const explicit = path.resolve( cwd, opts.path );
 		if ( ! isProjectRoot( explicit ) ) {
 			throw new UserError(
@@ -84,12 +113,7 @@ export function resolveProjectDir(
 
 export function readProjectDescriptor( projectDir: string ): ProjectDescriptor {
 	const file = path.join( projectDir, PROJECT_DESCRIPTOR_FILE );
-	let raw: string;
-	try {
-		raw = fs.readFileSync( file, 'utf8' );
-	} catch {
-		throw new UserError( `Could not read project descriptor at "${ file }".` );
-	}
+	const raw = readProjectFile( file, 'project descriptor' );
 
 	let parsed: unknown;
 	try {
@@ -109,12 +133,7 @@ export function writeProjectDescriptor( projectDir: string, descriptor: ProjectD
 
 export function readWorkerManifest( workerDir: string ): WorkerManifest {
 	const file = path.join( workerDir, WORKER_MANIFEST_FILE );
-	let raw: string;
-	try {
-		raw = fs.readFileSync( file, 'utf8' );
-	} catch {
-		throw new UserError( `Could not read worker manifest at "${ file }".` );
-	}
+	const raw = readProjectFile( file, 'worker manifest' );
 
 	let parsed: unknown;
 	try {

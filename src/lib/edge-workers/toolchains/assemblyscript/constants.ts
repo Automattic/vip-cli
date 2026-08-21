@@ -8,4 +8,3 @@ export const SDK_PACKAGE = '@automattic/vip-edge-workers-sdk';
 export const SDK_VERSION = '0.3.2';
 export const ASSEMBLYSCRIPT_VERSION = '0.27.0';
 export const DEFAULT_ENTRY = 'assembly/index.ts';
-export const BUILD_DIR = 'build';

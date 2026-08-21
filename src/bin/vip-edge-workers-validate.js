@@ -37,6 +37,10 @@ export async function edgeWorkersValidateCommand( args = [], opt = {} ) {
 
 	let invalidCount = 0;
 	try {
+		if ( name && opt.all ) {
+			throw new Error( 'Supply either a worker name or --all, not both.' );
+		}
+
 		const projectDir = resolveProjectDir( { path: opt.path } );
 
 		let workers;

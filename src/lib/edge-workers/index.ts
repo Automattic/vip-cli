@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 
 import UserError from '../user-error';
-import { readProjectDescriptor } from './project';
+import { BUILD_DIR, readProjectDescriptor } from './project';
 import { getToolchain } from './toolchains';
 import { resolveExistingPathWithin, resolvePathWithin, validateWorkerName } from './validation';
 
@@ -17,9 +17,6 @@ export * from './project';
 export * from './location';
 export { getToolchain } from './toolchains';
 export * from './validation';
-
-/** Conventional output directory for compiled artifacts, relative to the project root. */
-export const BUILD_DIR = 'build';
 
 interface BuiltArtifact {
 	wasmPath: string;
@@ -45,6 +42,9 @@ export function readPrebuiltWorker( projectDir: string, worker: DiscoveredWorker
 	}
 	if ( fs.lstatSync( buildRoot ).isSymbolicLink() ) {
 		throw new UserError( 'Worker build directory must not be a symbolic link.' );
+	}
+	if ( fs.lstatSync( candidate ).isSymbolicLink() ) {
+		throw new UserError( 'Worker build artifact must not be a symbolic link.' );
 	}
 	const canonicalBuildRoot = resolveExistingPathWithin(
 		projectDir,
