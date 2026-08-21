@@ -17,6 +17,38 @@ type DiffResult struct {
 	StderrDelta   string
 }
 
+// ambientStderrRules strip environment-dependent noise from stderr before any
+// comparison. This is not the same thing as a scenario's own normalize rules:
+// those describe output a scenario chose to ignore, whereas these describe
+// output that depends only on where the harness happens to be running.
+//
+// Keep this list tiny and each pattern anchored to a whole line. Every entry
+// here is output the harness has been made blind to, so a pattern that is one
+// character too broad silently stops catching real divergences.
+var ambientStderrRules = []NormalizeRule{
+	// On a headless Linux runner there is no D-Bus secret service, so vip-next
+	// reports that it fell back to a 0600 credentials file. The Node CLI uses
+	// configstore and has no equivalent concept, so it says nothing. Left in,
+	// this one line failed 32 differential scenarios on Linux that all passed
+	// on macOS, where a keychain is always available.
+	//
+	// The difference is real and user-visible on headless Linux; it is recorded
+	// in docs/CUTOVER-BREAKING-CHANGES.md rather than here, because a divergence
+	// that appears in every single scenario is a property of the environment,
+	// not of any one command.
+	{Pattern: `(?m)^warning: OS keyring unavailable; storing credentials in .*\n?`, Replacement: ""},
+}
+
+// normalizeStderr applies the ambient rules before the scenario's own, so that
+// no scenario has to restate environment noise it never asked about.
+func normalizeStderr(s string, rules []NormalizeRule) (string, error) {
+	s, err := ApplyNormalizers(s, ambientStderrRules)
+	if err != nil {
+		return "", err
+	}
+	return ApplyNormalizers(s, rules)
+}
+
 func ApplyNormalizers(s string, rules []NormalizeRule) (string, error) {
 	for _, r := range rules {
 		re, err := regexp.Compile(r.Pattern)
@@ -37,11 +69,11 @@ func Diff(s *Scenario, a, b *RunResult) (*DiffResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	aErr, err := ApplyNormalizers(a.Stderr, s.Normalize.Stderr)
+	aErr, err := normalizeStderr(a.Stderr, s.Normalize.Stderr)
 	if err != nil {
 		return nil, err
 	}
-	bErr, err := ApplyNormalizers(b.Stderr, s.Normalize.Stderr)
+	bErr, err := normalizeStderr(b.Stderr, s.Normalize.Stderr)
 	if err != nil {
 		return nil, err
 	}

@@ -211,6 +211,31 @@ manually unsetting color variables.
 
 ---
 
+## 4d. Headless Linux: the keychain fallback notice
+
+On a host with no D-Bus secret service — a container, a CI runner, a bare SSH
+session — `vip-next` cannot reach an OS keyring and stores credentials in a
+0600 file instead, announcing it once on stderr:
+
+```
+warning: OS keyring unavailable; storing credentials in ~/.config/vip/credentials.json (0600)
+```
+
+The Node CLI uses `configstore` unconditionally and has no equivalent notion,
+so it prints nothing. Anyone scripting against `vip` on a headless Linux box
+and asserting on empty stderr will see this line appear after cutover.
+
+Announce it; do not "fix" it by removing the warning. Storing a credential in
+a plaintext file is worth saying out loud, and the file backend is a genuine
+fallback rather than the intended path.
+
+The parity harness normalizes this one line away globally
+(`ambientStderrRules` in `internal/parity/diff.go`). It has to: the notice
+appears in every scenario on Linux and in none on macOS, so left in place it
+fails 32 differential scenarios on one platform and zero on the other. That is
+a property of the environment, not of any command, which is why it is recorded
+here once rather than as 32 per-scenario `expected_drift` entries.
+
 ## 5. Known-broken, carried forward (not cutover blockers)
 
 - dev-env `sync sql --force` is registered but never read, and sync has no running-environment
