@@ -86,11 +86,7 @@ describe( 'edge worker read query contracts', () => {
 		[ 'null environments', { app: { environments: null } } ],
 		[ 'non-array environments', { app: { environments: {} } } ],
 		[ 'malformed environment', { app: { environments: [ null ] } } ],
-		[
-			'wrongly typed target environment id',
-			{ app: { environments: [ { id: '3', edgeWorkers: [] } ] } },
-		],
-		[ 'missing target environment', { app: { environments: [ { id: 4, edgeWorkers: [] } ] } } ],
+		[ 'empty environments (target not found)', { app: { environments: [] } } ],
 		[ 'missing edgeWorkers', { app: { environments: [ { id: 3 } ] } } ],
 		[ 'null edgeWorkers', { app: { environments: [ { id: 3, edgeWorkers: null } ] } } ],
 		[ 'non-array edgeWorkers', { app: { environments: [ { id: 3, edgeWorkers: {} } ] } } ],

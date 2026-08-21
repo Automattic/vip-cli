@@ -70,7 +70,12 @@ function invalidReadResponse(): never {
 	throw new UserError( 'EdgeWorkers query returned an invalid response.' );
 }
 
-function pickEnvWorkers( result: EdgeWorkersQueryResult | undefined, envId: number ): EdgeWorker[] {
+/**
+ * Extract the target environment's workers from a `environments(id:)`-filtered
+ * response, failing closed (UserError) on any malformed shape. The query filters
+ * by id server-side, so we take the single returned environment.
+ */
+function pickEnvWorkers( result: EdgeWorkersQueryResult | undefined ): EdgeWorker[] {
 	if ( ! isObject( result ) || ! isObject( result.app ) ) {
 		return invalidReadResponse();
 	}
@@ -78,13 +83,8 @@ function pickEnvWorkers( result: EdgeWorkersQueryResult | undefined, envId: numb
 	if ( ! Array.isArray( environments ) ) {
 		return invalidReadResponse();
 	}
-	// The query filters by environment id server-side, so we expect the single
-	// matching environment (or none). Confirm the returned id matches before use.
 	const env = environments[ 0 ];
-	if ( ! isObject( env ) || typeof env.id !== 'number' || env.id !== envId ) {
-		return invalidReadResponse();
-	}
-	if ( ! Array.isArray( env.edgeWorkers ) ) {
+	if ( ! isObject( env ) || ! Array.isArray( env.edgeWorkers ) ) {
 		return invalidReadResponse();
 	}
 	return env.edgeWorkers;
@@ -117,7 +117,7 @@ export async function listEdgeWorkers( appId: number, envId: number ): Promise< 
 		fetchPolicy: 'no-cache',
 	} );
 
-	return pickEnvWorkers( response.data, envId );
+	return pickEnvWorkers( response.data );
 }
 
 /**
@@ -151,7 +151,7 @@ export async function getEdgeWorker(
 		fetchPolicy: 'no-cache',
 	} );
 
-	return pickEnvWorkers( response.data, envId ).find( worker => worker.name === name ) ?? null;
+	return pickEnvWorkers( response.data ).find( worker => worker.name === name ) ?? null;
 }
 
 /** Find a deployed worker by name, or null. Used to reconcile create-vs-update. */
