@@ -19,18 +19,24 @@ recording: envvar-set-prod-cancel
 expect:
   exit_code: 0
 expected_drift:
-  signature: "d09bb7084ed631325f61378e0736ab4f1e09d264d6b46aaff1c66a2183502bb8"
+  signature: "1e44b3a584444dd18ab5e960f5df46a757ee337a0ac16526383a2a075b26381b"
   reason: >-
     parity register 1.24 (KEEP): in a non-TTY vip-next explicitly reports that
     it cannot prompt and cancels without mutating; Node emits enquirer's raw
     ANSI prompt before its unresolved prompt exits without mutating.
 normalize:
-  stdout: []
-  # Node renders this prompt through enquirer, whose ANSI differs between
-  # macOS and a headless Linux runner. Without stripping it the drift
-  # signature below is platform-specific and can only ever match on one of
-  # the two. The prompt's text survives, so the divergence this scenario
-  # exists to record is still compared.
-  stderr:
+  # Node renders this prompt through enquirer, which writes it to stdout with
+  # colour and cursor control. Those sequences differ between macOS and a
+  # headless Linux runner, so without stripping them the drift signature below
+  # is platform-specific and can only ever match on one of the two.
+  #
+  # enquirer also picks its pointer glyph by platform: U+203A on macOS,
+  # U+2023 on Linux. That is the difference that actually broke this scenario
+  # in CI; the ANSI rule above alone was not enough.
+  #
+  # The prompt's text survives, so the divergence this scenario exists to
+  # record - Node prompting where vip-next refuses to - is still compared.
+  stdout:
     - '\x1b\[[0-9;?]*[a-zA-Z] -> '
-    - '\x1b[78] -> '
+    - '[\x{2023}\x{203A}] -> <POINTER>'
+  stderr: []
