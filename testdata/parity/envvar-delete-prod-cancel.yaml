@@ -25,3 +25,11 @@ expected_drift:
     ANSI prompt before its unresolved prompt exits without mutating.
 normalize:
   stdout: []
+  # Node renders this prompt through enquirer, whose ANSI differs between
+  # macOS and a headless Linux runner. Without stripping it the drift
+  # signature below is platform-specific and can only ever match on one of
+  # the two. The prompt's text survives, so the divergence this scenario
+  # exists to record is still compared.
+  stderr:
+    - '\x1b\[[0-9;?]*[a-zA-Z] -> '
+    - '\x1b[78] -> '

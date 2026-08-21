@@ -94,7 +94,19 @@ func Diff(s *Scenario, a, b *RunResult) (*DiffResult, error) {
 	if !res.Equal && s.ExpectedDrift != nil {
 		got := driftSignature(a.ExitCode, aOut, aErr, b.ExitCode, bOut, bErr)
 		if got != s.ExpectedDrift.Signature {
-			return nil, fmt.Errorf("expected_drift signature mismatch: recorded=%s actual=%s", s.ExpectedDrift.Signature, got)
+			// Print what actually diverged, not just the hashes. A bare pair of
+			// signatures tells you a blessed drift moved but not how, which turns
+			// every mismatch into a bisect. This is the normalized output the
+			// signature was taken over, so what you read here is exactly what was
+			// hashed.
+			return nil, fmt.Errorf(
+				"expected_drift signature mismatch: recorded=%s actual=%s\n"+
+					"normalized a (Node): exit=%d\n--- stdout\n%s\n--- stderr\n%q\n"+
+					"normalized b (Go):   exit=%d\n--- stdout\n%s\n--- stderr\n%q",
+				s.ExpectedDrift.Signature, got,
+				a.ExitCode, aOut, aErr,
+				b.ExitCode, bOut, bErr,
+			)
 		}
 	}
 	return res, nil
