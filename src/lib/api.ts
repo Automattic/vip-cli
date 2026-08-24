@@ -13,6 +13,7 @@ import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
 
 import { API_URL } from './api/constants';
+import { safeGraphQLErrorDebugInfo } from './api/error-debug';
 import http from './api/http';
 
 // Config — re-exported from ./api/constants so modules in the rechallenge tree
@@ -88,7 +89,7 @@ export default function API( {
 	silenceAuthErrors?: boolean;
 	customRetryLink?: RetryLink;
 } = {} ): ApolloClient {
-	const errorLink = new ErrorLink( ( { error } ) => {
+	const errorLink = new ErrorLink( ( { error, operation } ) => {
 		if ( ! silenceAuthErrors && error instanceof ServerError && error.statusCode === 401 ) {
 			let message;
 			try {
@@ -112,6 +113,15 @@ export default function API( {
 		}
 
 		if ( CombinedGraphQLErrors.is( error ) && globalGraphQLErrorHandlingEnabled ) {
+			debug(
+				'GraphQL errors in response: %s',
+				JSON.stringify(
+					safeGraphQLErrorDebugInfo( operation.operationName ?? '', error.errors ),
+					null,
+					2
+				)
+			);
+
 			for ( const err of error.errors ) {
 				console.error( chalk.red( 'Error:' ), err.message );
 			}
