@@ -37,5 +37,15 @@ jobs:
       - name: Unit Tests
         run: npm run jest
 
+      # Work around intermittent hosted-runner Docker startup failures:
+      # https://github.com/actions/runner-images/issues/13729
+      - name: Ensure Docker is running
+        shell: powershell
+        run: |
+          $dockerService = Get-Service -Name "docker"
+          if ($dockerService.Status -ne "Running") {
+            Start-Service -Name "docker"
+          }
+
       - name: Test Command line
         run: ./__tests__/e2e_test.bat
