@@ -1,0 +1,67 @@
+# frozen_string_literal: true
+
+UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Helper.bundler?
+
+PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
+
+# fastlane match cert storage (S3) — the shared a8c bucket.  # ← infra: confirm
+CODE_SIGNING_STORAGE_OPTIONS = {
+  storage_mode: 's3',
+  s3_bucket: 'a8c-fastlane-match',
+  s3_region: 'us-east-2'
+}.freeze
+
+# app_store_connect_api_key reads these to build the ASC key.
+ASC_API_KEY_ENV_VARS = %w[
+  APP_STORE_CONNECT_API_KEY_KEY_ID
+  APP_STORE_CONNECT_API_KEY_ISSUER_ID
+  APP_STORE_CONNECT_API_KEY_KEY
+].freeze
+
+require_relative 'lib/env_manager'
+
+APP_IDENTIFIER = 'com.automattic.vip-cli' # ← infra: reuse team Dev ID cert vs a new match entry
+TEAM_ID = 'PZYM8XX95Q'
+
+before_all do
+  setup_ci # required for match to work in CI; harmless locally
+  EnvManager.set_up(env_file_name: 'vip-cli.env')
+  check_for_toolkit_updates unless is_ci || ENV['FASTLANE_SKIP_TOOLKIT_UPDATE_CHECK']
+end
+
+# Places the Developer ID Application cert (and — see the infra note — the Installer
+# cert) into the keychain so `codesign` / `productsign` can find them.
+lane :configure_code_signing do |readonly: true|
+  EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS)
+  api_key = app_store_connect_api_key
+
+  # Developer ID *Application* cert — signs the binaries (codesign).
+  sync_code_signing(
+    app_identifier: APP_IDENTIFIER, platform: 'macos', type: 'developer_id',
+    api_key: api_key, team_id: TEAM_ID, readonly: readonly,
+    **CODE_SIGNING_STORAGE_OPTIONS
+  )
+
+  # ← infra: ALSO provision the Developer ID *Installer* cert (for productsign on the
+  # .pkg). The reference doesn't need it. Depending on your match setup this is likely:
+  #   sync_code_signing(app_identifier: APP_IDENTIFIER, platform: 'macos', type: 'developer_id',
+  #                     additional_cert_types: ['developer_id_installer'], api_key: api_key,
+  #                     team_id: TEAM_ID, readonly: readonly, **CODE_SIGNING_STORAGE_OPTIONS)
+  # Confirm the exact option/flow, then enable it.
+end
+
+# Notarize a .zip (bare binary) or .pkg. Lane args arrive as strings, so an explicit
+# `skip_stapling:false` is the ONLY thing that turns stapling on (bare binaries can't
+# be stapled → default true; the .pkg passes false so it gets stapled → offline-verified).
+lane :notarize_artifact do |options|
+  UI.user_error!('notarize_artifact requires path:') unless options[:path]
+  EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS)
+
+  skip_stapling = options[:skip_stapling].to_s != 'false'
+  notarize(
+    package: options[:path],
+    api_key: app_store_connect_api_key,
+    skip_stapling: skip_stapling,
+    print_log: true
+  )
+end

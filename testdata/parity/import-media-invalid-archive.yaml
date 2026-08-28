@@ -1,0 +1,18 @@
+name: import-media-invalid-archive
+description: |
+  A non-archive local path prints the red "Invalid local archive
+  provided" block and exits 0 (vip-import-media.js:169-176 — console.log
+  + return). StartMediaImport MUST NOT fire.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "media"
+  - "../../testdata/parity/recordings/import-media-invalid-archive/file.sql"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-media-invalid-archive
+expect:
+  exit_code: 0

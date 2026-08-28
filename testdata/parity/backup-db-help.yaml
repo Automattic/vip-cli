@@ -1,0 +1,10 @@
+name: backup-db-help
+description: |
+  `vip backup db --help` renders usage. No network. Exit 0.
+argv: ["backup", "db", "--help"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 0

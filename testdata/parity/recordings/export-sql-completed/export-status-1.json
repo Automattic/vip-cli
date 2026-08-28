@@ -1,0 +1,1 @@
+{"data":{"app":{"id":42,"environments":[{"id":7,"backupsSqlDumpTool":"mysqldump","latestBackup":{"id":11,"type":"daily","size":1024,"filename":"backup.sql.gz","sqlDumpTool":"mysqldump","createdAt":"2026-06-11 10:00:00"},"jobs":[]}]}}}

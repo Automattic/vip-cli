@@ -1,0 +1,13 @@
+query Me {
+  me {
+    id
+    displayName
+    isVIP
+    organizationRoles {
+      nodes {
+        organizationId
+        roleId
+      }
+    }
+  }
+}

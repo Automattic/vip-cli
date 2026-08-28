@@ -1,0 +1,19 @@
+name: sync-baseline
+description: |
+  `vip @parityapp.develop sync --skip-confirmation`. Non-prod target
+  (develop), --skip-confirmation bypasses the "Are you sure..." prompt,
+  the mutation succeeds, then the poll loop transitions from "running"
+  to "success" and exits 0.
+argv:
+  - "@parityapp.develop"
+  - "sync"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  VIP_SYNC_INTERVAL_MS: "5"
+recording: sync-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

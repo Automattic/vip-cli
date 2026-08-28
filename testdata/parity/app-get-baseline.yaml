@@ -1,0 +1,14 @@
+name: app-get-baseline
+description: |
+  `vip app example-app` returns a header (id/name/repo) + table of environments.
+  Node-parity post-processing: 7-char currentCommit, flattened primaryDomain,
+  hidden deploymentStrategy column, "-" branch for custom-deploy envs.
+argv: ["app", "example-app"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-get-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

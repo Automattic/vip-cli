@@ -1,0 +1,34 @@
+# go-search-replace — pinned upstream release
+#
+# vip-next shells out to this binary; it never reimplements it. See
+# internal/searchreplace/searchreplace.go (ResolveBinary) and
+# docs/BUILD-SIGNING.md.
+#
+# Source: https://github.com/Automattic/go-search-replace/releases
+#
+# The digests below are NOT computed by us. They are the subject digests from
+# the release's SLSA provenance attestation (go-search-replace.intoto.jsonl),
+# produced by:
+#
+#   https://github.com/Automattic/go-search-replace/.github/workflows/release.yml@refs/tags/0.0.11
+#
+# IMPORTANT: upstream ships each asset gzipped (<name>.gz) but the provenance
+# subjects are the UNCOMPRESSED binaries. Verify by gunzipping first, then
+# sha256. `make vendor-search-replace` does exactly that and refuses to install
+# anything that does not match.
+#
+# To upgrade: `make vendor-search-replace TAG=<new-tag>` rewrites this file, so
+# an upgrade is one reviewable commit whose diff is the tag and the digests.
+#
+# Format: <goos>/<goarch> <sha256-of-uncompressed-binary>
+
+TAG 0.0.11
+
+darwin/amd64   84c06c7372f8485ee62d51f0ae1cfa580432830e2d756d728b8e8b3415fd49eb
+darwin/arm64   dad680dbd24af5c455d2af49ba97563f07f5f86f9b609be8c91abd38c4772448
+linux/386      de65a0bcdc0907c5a5ede2804e602330819e497258679dad1676a8931d484a06
+linux/amd64    d5b5a3a5e9b76bf5bd07d579ae931f192ba01236f92ef54898b8f0d7d5548109
+linux/arm64    df32ee7aa1bc611a6bfe6bc2945abc0f755219da441299ffd2d9add64da95bda
+windows/386    92d32fbcb6ea0548f8b70f8d6e57d0efd01b849800f3d814c369a8f65b19583b
+windows/amd64  db7b116593b5369e033c43bd46a207e8fc9761ef87c5f16cbb3abd34c8d8a858
+windows/arm64  e26c342cc95bc0a28656d30b52f2f1c1e1c034a6d672690bdb7e9ffcc334eb4f

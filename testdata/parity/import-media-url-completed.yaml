@@ -1,0 +1,18 @@
+name: import-media-url-completed
+description: |
+  URL import happy path: StartMediaImport fires once with apiVersion v2,
+  polling reaches COMPLETED, exit 0.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "media"
+  - "https://example.com/uploads.zip"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_IMPORT_MEDIA_INTERVAL_MS: "5"
+recording: import-media-url-completed
+expect:
+  exit_code: 0

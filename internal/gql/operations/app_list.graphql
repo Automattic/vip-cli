@@ -1,0 +1,9 @@
+query AppList($first: Int, $after: String) {
+  apps(first: $first, after: $after) {
+    total
+    nextCursor
+    edges {
+      ...AppBasic
+    }
+  }
+}

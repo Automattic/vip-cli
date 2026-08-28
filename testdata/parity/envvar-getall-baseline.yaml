@@ -1,0 +1,14 @@
+name: envvar-getall-baseline
+description: |
+  `vip @parityapp.develop config envvar get-all` returns the default-format
+  table of (name, value) for three env vars. Verifies column ordering and
+  table rendering.
+argv: ["@parityapp.develop", "config", "envvar", "get-all"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-getall-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

@@ -2,3 +2,12 @@
 /__fixtures__/
 /dist/
 /npm-shrinkwrap.json
+
+# Go tree: source, fixtures and recorded parity payloads.
+# The parity recordings must stay byte-exact — reformatting them changes the
+# payloads the harness replays and invalidates expected_drift signatures.
+/testdata/
+/internal/
+/cmd/
+/scripts/
+/third_party/

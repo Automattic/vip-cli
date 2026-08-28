@@ -1,0 +1,18 @@
+name: import-sql-validation-failure
+description: |
+  Local dump containing DROP DATABASE + ENGINE=MyISAM fails the static
+  SQL validation in import mode: the joined error report ends with the
+  "SQL validation failed due to N error(s)" footer and the
+  --skip-validate advice (vip-import-sql.js:436). Exit 1.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "../../testdata/parity/recordings/import-sql-validation-failure/dirty.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-sql-validation-failure
+expect:
+  exit_code: 1

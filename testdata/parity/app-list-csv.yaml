@@ -1,0 +1,13 @@
+name: app-list-csv
+description: |
+  `vip app list --format=csv` against a mock GraphQL server returning two
+  apps. Verifies Node-parity CSV column ordering (id,name,repo) and header.
+argv: ["app", "list", "--format=csv"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-list-csv
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

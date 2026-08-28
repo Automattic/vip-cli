@@ -1,0 +1,8 @@
+name: local-parker-whoami
+description: Compare Node and Go whoami output for local Parker user 10000.
+argv: ['whoami']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

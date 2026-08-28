@@ -1,0 +1,14 @@
+name: envvar-get-baseline
+description: |
+  `vip @parityapp.develop config envvar get FOO`. Verifies the resolved
+  value prints to stdout with no other formatting (Node parity:
+  `console.log( envvar.value )` in src/bin/vip-config-envvar-get.js).
+argv: ["@parityapp.develop", "config", "envvar", "get", "FOO"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-get-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

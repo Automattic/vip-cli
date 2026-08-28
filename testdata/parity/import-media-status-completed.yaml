@@ -1,0 +1,19 @@
+name: import-media-status-completed
+description: |
+  `vip import media status` against a COMPLETED import renders the final
+  Status/App block and exits 0. saveErrorLog=false skips the download
+  prompt path.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "media"
+  - "status"
+  - "--saveErrorLog=false"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_IMPORT_MEDIA_INTERVAL_MS: "5"
+recording: import-media-status-completed
+expect:
+  exit_code: 0

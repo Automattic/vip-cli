@@ -1,0 +1,14 @@
+name: wp-websocket-redirect
+description: |
+  WPEnvInfo returns wpcliStrategy:"websocket" for a develop environment.
+  The command must redirect with "requires the Node CLI" and exit 1.
+  TriggerWPCLICommand must NOT fire. This is the intended WP1 behavior,
+  not drift.
+argv: ["@parityapp.develop", "wp", "site", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: wp-websocket-redirect
+expect:
+  exit_code: 1

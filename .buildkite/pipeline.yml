@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/buildkite/pipeline-schema/main/schema.json
+---
+# Shared vars (CI_TOOLKIT_PLUGIN, GO_VERSION, BIN_BASE, signing identities) come
+# from .buildkite/shared-pipeline-vars, which our setup source's before
+# `buildkite-agent pipeline upload` interpolates this file.
+#
+# Every commit builds + smoke-tests all three platforms. Signing + notarization
+# run only on TAG builds — gated on $BUILDKITE_TAG inside each build script.
+
+env:
+  DO_NOT_TRACK: '1'
+
+steps:
+  - label: ':macos: Build & sign (macOS)'
+    command: .buildkite/build-macos.sh
+    plugins:
+      - $CI_TOOLKIT_PLUGIN
+    agents:
+      queue: mac
+    notify:
+      - github_commit_status:
+          context: 'Build & sign (macOS)'
+    artifact_paths:
+      - 'dist/vip-next-darwin-*'
+
+  - label: ':windows: Build & sign (Windows)'
+    command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite/build-windows.ps1
+    agents:
+      queue: windows # ← infra: confirm Windows agent queue name
+    notify:
+      - github_commit_status:
+          context: 'Build & sign (Windows)'
+    artifact_paths:
+      - 'dist/vip-next-windows-amd64.exe*'
+
+  - label: ':linux: Build (Linux)'
+    command: .buildkite/build-linux.sh
+    agents:
+      queue: default # ← infra: confirm Linux agent queue name
+    notify:
+      - github_commit_status:
+          context: 'Build (Linux)'
+    artifact_paths:
+      - 'dist/vip-next-linux-*'

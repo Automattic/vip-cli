@@ -1,0 +1,8 @@
+name: local-parker-app-list-table
+description: Compare Node and Go table app-list output for local Parker user 10000.
+argv: ['app', 'list']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

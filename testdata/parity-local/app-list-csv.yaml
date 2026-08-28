@@ -1,0 +1,8 @@
+name: local-parker-app-list-csv
+description: Compare Node and Go CSV app-list output for local Parker user 10000.
+argv: ['app', 'list', '--format=csv']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

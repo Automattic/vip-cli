@@ -1,0 +1,8 @@
+{"data":{"apps":{"edges":[{
+  "id":42,"name":"x","repo":"wpcomvip/x",
+  "environments":[
+    {"id":9,"appId":42,"name":"production","type":"production","branch":"main",
+     "currentCommit":"1234567890abcdef","primaryDomain":{"name":"x.example.com"},
+     "launched":true,"deploymentStrategy":"custom-deploy"}
+  ]
+}]}}}

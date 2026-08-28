@@ -1,0 +1,14 @@
+name: envvar-list-ids
+description: |
+  `vip @parityapp.develop config envvar list --format=ids`. Verifies
+  Node parity: the column key flips from "name" to "id" (used by the
+  Node `ids` renderer for space-separated output).
+argv: ["@parityapp.develop", "config", "envvar", "list", "--format=ids"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-list-ids
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

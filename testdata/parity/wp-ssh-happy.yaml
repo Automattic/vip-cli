@@ -1,0 +1,15 @@
+name: wp-ssh-happy
+description: |
+  Develop environment, ssh strategy. TriggerWPCLICommand returns SSH auth
+  credentials pointing at an in-process echo server (constructed dynamically
+  in the test — not from a static recording file). The echo server writes the
+  exec preamble to stdout. Exit 0. Output contains "GUID=parity-guid-001".
+  TriggerWPCLICommand fires exactly once.
+argv: ["@parityapp.develop", "--yes", "wp", "option", "get", "home"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: wp-ssh-happy
+expect:
+  exit_code: 0

@@ -1,0 +1,41 @@
+name: envvar-delete-prod-cancel
+description: |
+  Production env, no --skip-confirmation, non-interactive context →
+  prod-gate Confirm returns ErrNonInteractive → handler prints
+  "Command cancelled" → exit 0. delete.json is INTENTIONALLY omitted
+  so the test fails if the mutation fires anyway.
+argv:
+  - "@parityapp.production"
+  - "config"
+  - "envvar"
+  - "delete"
+  - "MY_VAR"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  VIP_NON_INTERACTIVE: "1"
+recording: envvar-delete-prod-cancel
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "18421938ea6a2bbceadf9dcb48cd1d6adbcc7bc793582ac6621567887474390b"
+  reason: >-
+    parity register 1.24 (KEEP): in a non-TTY vip-next explicitly reports that
+    it cannot prompt and cancels without mutating; Node emits enquirer's raw
+    ANSI prompt before its unresolved prompt exits without mutating.
+normalize:
+  # Node renders this prompt through enquirer, which writes it to stdout with
+  # colour and cursor control. Those sequences differ between macOS and a
+  # headless Linux runner, so without stripping them the drift signature below
+  # is platform-specific and can only ever match on one of the two.
+  #
+  # enquirer also picks its pointer glyph by platform: U+203A on macOS,
+  # U+2023 on Linux. That is the difference that actually broke this scenario
+  # in CI; the ANSI rule above alone was not enough.
+  #
+  # The prompt's text survives, so the divergence this scenario exists to
+  # record - Node prompting where vip-next refuses to - is still compared.
+  stdout:
+    - '\x1b\[[0-9;?]*[a-zA-Z] -> '
+    - '[\x{2023}\x{203A}] -> <POINTER>'
+  stderr: []

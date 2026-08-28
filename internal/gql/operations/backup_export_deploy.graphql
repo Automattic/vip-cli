@@ -1,0 +1,123 @@
+# Backup / export / deploy operations. Node sources:
+#   TriggerDatabaseBackup / AppBackupJobStatus — src/commands/backup-db.ts:20,28
+#   AppBackupAndJobStatus                      — src/commands/export-sql.ts:36
+#   GenerateDBBackupCopyUrl / BackupDBCopy     — src/commands/export-sql.ts:77,87
+#   StartLiveBackupCopy / download URL         — src/lib/live-backup-copy.ts:85,95
+#   StartCustomDeploy                          — src/bin/vip-app-deploy.ts:29
+#   ValidateCustomDeployAccess                 — src/lib/custom-deploy/custom-deploy.ts:36
+
+mutation TriggerDatabaseBackup($input: AppEnvironmentTriggerDBBackupInput) {
+  triggerDatabaseBackup(input: $input) {
+    success
+  }
+}
+
+query AppBackupJobStatus($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      jobs(jobTypes: [db_backup]) {
+        id
+        type
+        completedAt
+        createdAt
+        inProgressLock
+        metadata {
+          name
+          value
+        }
+        progress {
+          status
+        }
+      }
+    }
+  }
+}
+
+query AppBackupAndJobStatus($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      backupsSqlDumpTool
+      latestBackup {
+        id
+        type
+        size
+        filename
+        sqlDumpTool
+        createdAt
+      }
+      jobs(jobTypes: [db_backup_copy]) {
+        id
+        type
+        completedAt
+        createdAt
+        inProgressLock
+        metadata {
+          name
+          value
+        }
+        progress {
+          status
+          steps {
+            id
+            name
+            step
+            status
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation GenerateDBBackupCopyUrl($input: AppEnvironmentGenerateDBBackupCopyUrlInput) {
+  generateDBBackupCopyUrl(input: $input) {
+    url
+    success
+  }
+}
+
+mutation BackupDBCopy($input: AppEnvironmentStartDBBackupCopyInput) {
+  startDBBackupCopy(input: $input) {
+    message
+    success
+  }
+}
+
+mutation StartLiveBackupCopy($input: LiveBackupCopyConfigInput!) {
+  startLiveBackupCopy(input: $input) {
+    message
+    copyId
+  }
+}
+
+mutation GenerateLiveBackupCopyDownloadURL($input: AppEnvironmentLiveBackupCopyDownloadURLInput!) {
+  generateLiveBackupCopyDownloadURL(input: $input) {
+    success
+    url
+    processing
+    size
+  }
+}
+
+mutation StartCustomDeploy($input: AppEnvironmentCustomDeployInput) {
+  startCustomDeploy(input: $input) {
+    success
+    message
+  }
+}
+
+mutation ValidateCustomDeployAccess($input: ValidateCustomDeployAccessInput!) {
+  validateCustomDeployAccess(input: $input) {
+    success
+    appId
+    envId
+    envType
+    envUniqueLabel
+    primaryDomainName
+    launched
+  }
+}

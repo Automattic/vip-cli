@@ -1,0 +1,52 @@
+query GetEnvironmentVariables($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      environmentVariables {
+        total
+        nodes {
+          name
+        }
+      }
+    }
+  }
+}
+
+query GetEnvironmentVariablesWithValues($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      environmentVariables {
+        total
+        nodes {
+          name
+          value
+        }
+      }
+    }
+  }
+}
+
+mutation AddEnvironmentVariable($input: EnvironmentVariableInput!) {
+  addEnvironmentVariable(input: $input) {
+    environmentVariables {
+      total
+      nodes {
+        name
+      }
+    }
+  }
+}
+
+mutation DeleteEnvironmentVariable($input: EnvironmentVariableInput!) {
+  deleteEnvironmentVariable(input: $input) {
+    environmentVariables {
+      total
+      nodes {
+        name
+      }
+    }
+  }
+}

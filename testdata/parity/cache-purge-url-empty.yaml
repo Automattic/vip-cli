@@ -1,0 +1,26 @@
+name: cache-purge-url-empty
+description: |
+  No positional URLs and no --from-file. The handler prints
+  "Please supply at least one URL." and exits 1 BEFORE issuing the
+  mutation. purge.json is intentionally omitted from the recording so
+  any unexpected mutation call surfaces loudly via the hit-counter
+  assertion in the parity test.
+argv:
+  - "@parityapp.develop"
+  - "cache"
+  - "purge-url"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: cache-purge-url-empty
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "8875113c6fa956e8622ccce15a6f4041352607f428e1158f5606dfdf4ce569db"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'
