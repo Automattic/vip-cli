@@ -1,0 +1,8 @@
+name: edge-workers-init-invalid-type
+description: edge workers init invalid type
+argv: ["edge-workers", "init", "--type=rust"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 1

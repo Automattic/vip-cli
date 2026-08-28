@@ -8,6 +8,11 @@ edge workers with VIP-CLI.
 Use Node.js 22.19.0 or newer, npm 8 or newer, an authenticated VIP-CLI session, and access to the
 target application and environment. Start in a non-production environment.
 
+The Go CLI exposes the same commands under `vip-next edge-workers`. Local AssemblyScript
+builds still require Node.js and the project's npm dependencies; the Go CLI invokes the
+installed compiler directly. Use `--skip-build` only when the existing artifact has been
+separately reviewed against the intended source.
+
 The platform API creates every new worker with `active: false`; create does not accept an active
 input. The API also applies a database default of inactive as defense in depth. VIP-CLI relies on
 this enforced contract: deploy uploads a new worker first, confirms the returned inactive state,

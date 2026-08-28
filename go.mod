@@ -32,5 +32,5 @@ require (
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/text v0.38.0
 )

@@ -1,0 +1,8 @@
+name: edge-workers-deploy-upload-failure
+description: edge workers deploy upload failure
+argv: ["edge-workers", "deploy", "--all", "--skip-build", "--app=42", "--env=develop"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 1

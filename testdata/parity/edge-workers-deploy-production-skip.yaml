@@ -1,0 +1,8 @@
+name: edge-workers-deploy-production-skip
+description: edge workers deploy production skip
+argv: ["edge-workers", "deploy", "headers", "--skip-build", "--skip-confirmation", "--app=42", "--env=production"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 0

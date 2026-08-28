@@ -1,0 +1,16 @@
+{
+	"name": "edge-workers",
+	"version": "0.0.0",
+	"private": true,
+	"description": "VIP edge workers",
+	"type": "module",
+	"scripts": {
+		"build": "vip edge-workers build --all"
+	},
+	"dependencies": {
+		"@automattic/vip-edge-workers-sdk": "0.3.2"
+	},
+	"devDependencies": {
+		"assemblyscript": "0.27.0"
+	}
+}

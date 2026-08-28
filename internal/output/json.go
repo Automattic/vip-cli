@@ -6,6 +6,7 @@ import (
 	json "encoding/json/v2"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // renderJSON writes data as tab-indented JSON via encoding/json/v2.
@@ -23,12 +24,13 @@ import (
 // encoding/json/v2 would alphabetize map keys, matching Node's
 // JSON.stringify(arrayOfObjects) insertion-order behavior.
 func renderJSON(w io.Writer, data any) error {
+	var encoded bytes.Buffer
 	switch v := data.(type) {
 	case HeaderData:
 		// Node parity: drop header in JSON mode; emit only the data payload.
 		return renderJSON(w, v.Data)
 	case OrderedRows:
-		if err := writeOrderedRowsJSON(w, v); err != nil {
+		if err := writeOrderedRowsJSON(&encoded, v); err != nil {
 			return err
 		}
 	default:
@@ -36,11 +38,22 @@ func renderJSON(w io.Writer, data any) error {
 			json.Deterministic(true),
 			jsontext.WithIndent("\t"),
 		}
-		if err := json.MarshalWrite(w, data, opts...); err != nil {
+		if err := json.MarshalWrite(&encoded, data, opts...); err != nil {
 			return err
 		}
 	}
-	_, err := io.WriteString(w, "\n")
+	// Node's formatData escapes DEL/C1 after JSON.stringify. Preserve the
+	// decoded values while preventing terminal control bytes in JSON output.
+	var safe strings.Builder
+	for _, r := range encoded.String() {
+		if r >= 0x7f && r <= 0x9f {
+			fmt.Fprintf(&safe, `\u%04x`, r)
+		} else {
+			safe.WriteRune(r)
+		}
+	}
+	safe.WriteByte('\n')
+	_, err := io.WriteString(w, safe.String())
 	return err
 }
 

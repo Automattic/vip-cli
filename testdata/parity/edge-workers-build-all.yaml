@@ -1,0 +1,8 @@
+name: edge-workers-build-all
+description: edge workers build all
+argv: ["edge-workers", "build", "--all"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 0

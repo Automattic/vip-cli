@@ -1,0 +1,8 @@
+name: edge-workers-short-equals
+description: edge workers short equals
+argv: ["edge-workers", "new", "new-worker", "-p=PROJECT_DIR", "-l=equals:/x"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 0

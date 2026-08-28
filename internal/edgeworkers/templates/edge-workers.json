@@ -1,0 +1,4 @@
+{
+	"type": "assemblyscript",
+	"sdk": "@automattic/vip-edge-workers-sdk@0.3.2"
+}

@@ -61,6 +61,7 @@ func newRootCmd(rc *rootContext) *cobra.Command {
 	root.AddCommand(commands.LogoutCmd())
 	root.AddCommand(commands.NewWhoamiCmd())
 	root.AddCommand(commands.NewDefensiveModeCmd())
+	root.AddCommand(commands.NewEdgeWorkersCmd())
 	root.AddCommand(commands.LogsCmd())
 	root.AddCommand(commands.SlowlogsCmd())
 

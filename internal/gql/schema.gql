@@ -478,7 +478,7 @@ type Mutation {
     input: AppEnvironmentCreateChildEnvironmentInput!
   ): AppEnvironmentCreateChildEnvironmentPayload!
 
-  """Create a new WASM edge worker on an environment."""
+  """Create and upload a new inactive WASM edge worker. Use setEdgeWorkerActive to enable it after review."""
   createEdgeWorker(
     """The edge worker to create."""
     input: CreateEdgeWorkerInput!
@@ -741,6 +741,12 @@ type Mutation {
     """The edge worker changes to apply."""
     input: UpdateEdgeWorkerInput!
   ): EdgeWorker
+
+  """Validate a WASM edge worker without persisting it, to check it before uploading."""
+  validateEdgeWorker(
+    """The edge worker binary to validate."""
+    input: ValidateEdgeWorkerInput!
+  ): EdgeWorkerValidationResult
 
   """Update a multisite subsite domain."""
   updateEnvironmentSubsiteDomain(
@@ -9308,4 +9314,24 @@ input LiveBackupCopyTableConfigInput {
 
   """The table-specific options."""
   options: [LiveBackupCopyTableOptionConfigInput!]
+}
+
+
+"Input for validating an edge worker without persisting it."
+input ValidateEdgeWorkerInput {
+	"The environment to validate the worker against."
+	environmentId: Int!
+	"The base64-encoded compiled WASM binary to validate."
+	wasmBinary: String!
+}
+
+
+"The result of validating an edge worker's WASM binary without persisting it."
+type EdgeWorkerValidationResult {
+	"Whether the WASM binary passed validation."
+	valid: Boolean!
+	"The request lifecycle phases the worker would run in. Empty when invalid."
+	phases: [EdgeWorkerPhase!]!
+	"Validation error messages. Empty when the worker is valid."
+	errors: [String!]!
 }

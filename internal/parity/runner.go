@@ -10,6 +10,7 @@ import (
 
 type RunSpec struct {
 	Binary string
+	Dir    string // empty inherits the caller's working directory
 	Argv   []string
 	Env    []string // KEY=VALUE
 	Stdin  []byte
@@ -27,6 +28,7 @@ type RunResult struct {
 // (binary not found, etc.) are returned as errors.
 func Run(spec RunSpec) (*RunResult, error) {
 	cmd := exec.Command(spec.Binary, spec.Argv...)
+	cmd.Dir = spec.Dir
 	cmd.Env = spec.Env
 	if len(spec.Stdin) > 0 {
 		cmd.Stdin = bytes.NewReader(spec.Stdin)
