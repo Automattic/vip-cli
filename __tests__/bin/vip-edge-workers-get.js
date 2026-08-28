@@ -87,6 +87,31 @@ describe( 'edgeWorkersGetCommand()', () => {
 		expect( console.log ).toHaveBeenCalledWith( 'export default {};' );
 	} );
 
+	it.each( [
+		[
+			'newlines and tabs',
+			'// café\n\nexport function run(): void {\n\treturn;\n}\n',
+			'// café\n\nexport function run(): void {\n\treturn;\n}\n',
+		],
+		[ 'Windows line endings', 'export {};\r\n\t// comment\r\n', 'export {};\n\t// comment\n' ],
+		[
+			'terminal controls',
+			'\u0000\u0007\b\v\f\r\u001b[2J\u007f\u0085\u009b31m',
+			String.raw`\u0000\u0007\u0008\u000b\u000c\u000d\u001b[2J\u007f\u0085\u009b31m`,
+		],
+		[
+			'literal escape sequences',
+			String.raw`// literal \u000a and \t`,
+			String.raw`// literal \u000a and \t`,
+		],
+	] )( 'renders stored source with safe %s', async ( _name, source, expected ) => {
+		edgeWorkersApi.getEdgeWorker.mockResolvedValue( { ...worker, source } );
+
+		await edgeWorkersGetCommand( [ 'headers' ], { ...opts, source: true } );
+
+		expect( console.log ).toHaveBeenLastCalledWith( expected );
+	} );
+
 	it( 'reports when explicitly requested source was not stored', async () => {
 		edgeWorkersApi.getEdgeWorker.mockResolvedValue( { ...worker, source: null } );
 

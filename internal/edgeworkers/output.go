@@ -9,9 +9,21 @@ import (
 )
 
 func EscapeTerminalText(s string) string {
+	return escapeTerminalControls(s, false)
+}
+
+// EscapeTerminalSource preserves source layout. CRLF becomes LF; standalone
+// carriage returns remain escaped so source cannot overwrite terminal output.
+func EscapeTerminalSource(s string) string {
+	return escapeTerminalControls(strings.ReplaceAll(s, "\r\n", "\n"), true)
+}
+
+func escapeTerminalControls(s string, source bool) string {
 	var out strings.Builder
 	for _, r := range s {
-		if r <= 31 || r >= 127 && r <= 159 {
+		if source && (r == '\n' || r == '\t') {
+			out.WriteRune(r)
+		} else if r <= 31 || r >= 127 && r <= 159 {
 			fmt.Fprintf(&out, `\u%04x`, r)
 		} else {
 			out.WriteRune(r)
@@ -59,7 +71,7 @@ func DetailText(w Worker, source bool) string {
 	if source {
 		value := "(no source stored)"
 		if w.Source != nil {
-			value = EscapeTerminalText(*w.Source)
+			value = EscapeTerminalSource(*w.Source)
 		}
 		text += "\n\nSource:\n" + value
 	}

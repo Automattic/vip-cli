@@ -4,7 +4,7 @@ import { appQuery, getEdgeWorker } from '../lib/api/edge-workers';
 import command from '../lib/cli/command';
 import * as exit from '../lib/cli/exit';
 import { keyValue } from '../lib/cli/format';
-import { escapeTerminalText } from '../lib/edge-workers/output';
+import { escapeTerminalSource, escapeTerminalText } from '../lib/edge-workers/output';
 import { trackEventWithEnv } from '../lib/tracker';
 
 const usage = 'vip edge-workers get';
@@ -78,7 +78,7 @@ export async function edgeWorkersGetCommand( args = [], opt = {} ) {
 		console.log(
 			worker.source === null || worker.source === undefined
 				? '(no source stored)'
-				: escapeTerminalText( worker.source )
+				: escapeTerminalSource( worker.source )
 		);
 	}
 }

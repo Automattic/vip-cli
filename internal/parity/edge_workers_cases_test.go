@@ -23,7 +23,7 @@ var edgeWorkerScenarios = map[string]edgeWorkerCase{
 	"edge-workers-list-empty":                     {Fixture: "basic", State: "empty", WantPersistentOps: []string{}, WantExit: 0},
 	"edge-workers-list-empty-json":                {Fixture: "basic", State: "empty", WantPersistentOps: []string{}, WantExit: 0},
 	"edge-workers-get":                            {Fixture: "basic", State: "inactive", WantPersistentOps: []string{}, WantExit: 0},
-	"edge-workers-get-source":                     {Fixture: "basic", State: "inactive", WantPersistentOps: []string{}, WantExit: 0},
+	"edge-workers-get-source":                     {Fixture: "basic", State: "formatted-source", WantPersistentOps: []string{}, WantExit: 0},
 	"edge-workers-get-empty-source":               {Fixture: "basic", State: "empty-source", WantPersistentOps: []string{}, WantExit: 0},
 	"edge-workers-get-missing":                    {Fixture: "basic", State: "inactive", WantPersistentOps: []string{}, WantExit: 1},
 	"edge-workers-read-null":                      {Fixture: "basic", State: "null-read", WantPersistentOps: []string{}, WantExit: 1},

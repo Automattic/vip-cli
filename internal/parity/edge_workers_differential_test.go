@@ -86,8 +86,11 @@ func edgeRemoteWorker(name string, active bool) map[string]any {
 func newEdgeFixtureAPI(state string) *edgeFixtureAPI {
 	a := &edgeFixtureAPI{state: state, ops: []string{}, requests: []edgeObservation{}, workers: []map[string]any{}}
 	switch state {
-	case "inactive", "active", "empty-source", "no-source", "null-mutation", "false-delete", "graphql-error", "control-name":
+	case "inactive", "active", "empty-source", "no-source", "formatted-source", "null-mutation", "false-delete", "graphql-error", "control-name":
 		w := edgeRemoteWorker("headers", state == "active")
+		if state == "formatted-source" {
+			w["source"] = "// café\nexport function run(): void {\r\n\t// controls: \x1b[2J\x00\b\r\x7f\u0085\u009b31m\n}\n// literal: \\u000a\n"
+		}
 		if state == "empty-source" {
 			w["source"] = ""
 		}
@@ -393,6 +396,14 @@ func TestEdgeWorkersDifferentialParity(t *testing.T) {
 				result.Stdout = strings.ReplaceAll(result.Stdout, dir, "PROJECT_DIR")
 				result.Stderr = strings.ReplaceAll(result.Stderr, dir, "PROJECT_DIR")
 				results[side] = result
+				if name == "edge-workers-get-source" {
+					// Check readability independently: matching runtimes can share a bug.
+					_, source, found := strings.Cut(result.Stdout, "\nSource:\n")
+					want := "// café\nexport function run(): void {\n\t// controls: \\u001b[2J\\u0000\\u0008\\u000d\\u007f\\u0085\\u009b31m\n}\n// literal: \\u000a\n\n"
+					if !found || source != want {
+						t.Errorf("side %d source = %q, want %q", side, source, want)
+					}
+				}
 				ops, observations := api.snapshot()
 				for _, observation := range observations {
 					if observation.Operation == "EdgeWorkerDetail" {

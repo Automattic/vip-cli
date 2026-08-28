@@ -164,6 +164,9 @@ By default, deploy stores the worker's UTF-8 entry file alongside the WASM binar
 archive the full project or shared modules. `get` omits source by default; pass `--source` to make
 the additional on-demand source query and print the stored value.
 
+Source output preserves newlines and tabs, converts CRLF line endings to LF, and escapes other
+terminal control characters. This display formatting does not change the stored source.
+
 `--skip-source` means: do not store source on create; preserve stored source on update. Without
 the flag, an update replaces the stored source with the current entry file, including an empty
 file. The plan's `source` column shows the selected behavior before mutation.

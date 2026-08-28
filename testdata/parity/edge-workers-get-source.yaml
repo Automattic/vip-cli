@@ -1,5 +1,5 @@
 name: edge-workers-get-source
-description: edge workers get source
+description: Preserve source formatting and literal escapes while neutralizing terminal controls
 argv: ["edge-workers", "get", "headers", "--source", "--app=42", "--env=develop"]
 env:
   NO_COLOR: "1"

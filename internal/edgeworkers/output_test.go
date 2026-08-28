@@ -24,6 +24,26 @@ func TestListJSONPreservesControlValues(t *testing.T) {
 	}
 }
 
+func TestDetailSourcePreservesFormatting(t *testing.T) {
+	for _, tc := range []struct{ name, source, want string }{
+		{"newlines and tabs", "// café\n\nexport function run(): void {\n\treturn;\n}\n", "// café\n\nexport function run(): void {\n\treturn;\n}\n"},
+		{"Windows line endings", "export {};\r\n\t// comment\r\n", "export {};\n\t// comment\n"},
+		{"terminal controls", "\x00\a\b\v\f\r\x1b[2J\x7f\u0085\u009b31m", `\u0000\u0007\u0008\u000b\u000c\u000d\u001b[2J\u007f\u0085\u009b31m`},
+		{"literal escape sequences", `// literal \u000a and \t`, `// literal \u000a and \t`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			text := DetailText(Worker{Name: "headers\n\tforged", Source: &tc.source}, true)
+			metadata, source, found := strings.Cut(text, "\n\nSource:\n")
+			if !found || source != tc.want {
+				t.Fatalf("source = %q, want %q", source, tc.want)
+			}
+			if !strings.Contains(metadata, `+ Name: headers\u000a\u0009forged`) {
+				t.Fatalf("metadata escaping changed: %q", metadata)
+			}
+		})
+	}
+}
+
 func TestOutputAndConfirmation(t *testing.T) {
 	if got := EscapeTerminalText("a\n\x1b\x7f\u009b"); got != `a\u000a\u001b\u007f\u009b` {
 		t.Fatalf("escaped %q", got)
