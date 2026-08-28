@@ -120,7 +120,7 @@ func edgeCommandConfig(t *testing.T) {
 }
 func runEdgeCommand(t *testing.T, deps edgeWorkersDeps, args ...string) (string, error) {
 	t.Helper()
-	root := &cobra.Command{Use: "vip", SilenceUsage: true, SilenceErrors: true}
+	root := &cobra.Command{Use: "vip-next", SilenceUsage: true, SilenceErrors: true}
 	root.PersistentFlags().Bool("non-interactive", false, "Disable prompts")
 	root.AddCommand(newEdgeWorkersCmd(deps))
 	var out bytes.Buffer
@@ -157,9 +157,15 @@ func TestEdgeWorkersLocalCommands(t *testing.T) {
 	if err != nil || !strings.Contains(out, "✓ Created a new assemblyscript") {
 		t.Fatalf("%s %v", out, err)
 	}
+	if !strings.Contains(out, "\n  vip-next edge-workers new my-worker\n") {
+		t.Fatalf("init guidance invokes another runtime: %s", out)
+	}
 	out, err = runEdgeCommand(t, deps, "new", "headers", "-l=starts_with:/api/")
 	if err != nil || !strings.Contains(out, `Scope: starts_with "/api/".`) {
 		t.Fatalf("%s %v", out, err)
+	}
+	if !strings.Contains(out, "\n  vip-next @my-site.develop edge-workers deploy headers\n") {
+		t.Fatalf("new guidance invokes another runtime: %s", out)
 	}
 	out, err = runEdgeCommand(t, deps, "build", "headers")
 	if err != nil || out != "✓ Built \"headers\" → build/headers.wasm (8 bytes)\n" {

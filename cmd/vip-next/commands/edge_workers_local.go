@@ -11,7 +11,7 @@ import (
 )
 
 func newEdgeWorkersInitCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "init [path]", Short: "Scaffold a new edge-workers project.", Example: "  vip edge-workers init\n  vip edge-workers init ./infra/edge --type=assemblyscript"}
+	c := &cobra.Command{Use: "init [path]", Short: "Scaffold a new edge-workers project.", Example: "  vip-next edge-workers init\n  vip-next edge-workers init ./infra/edge --type=assemblyscript"}
 	kind := edgeStringFlag(c, "type", "t", `The worker toolchain to scaffold. Accepts assemblyscript. Default is "assemblyscript".`)
 	c.RunE = func(c *cobra.Command, args []string) error {
 		value := edgeWorkersOptionValue(kind)
@@ -40,13 +40,13 @@ func newEdgeWorkersInitCmd(deps edgeWorkersDeps) *cobra.Command {
 			return errors.New(edgeworkers.EscapeTerminalText(err.Error()))
 		}
 		edgeWorkersTrack(c, "init_command_success", props)
-		_, err = fmt.Fprintf(c.OutOrStdout(), "✓ Created a new %s edge-workers project in %s\n\nNext steps:\n  cd %s\n  npm install\n  vip edge-workers new my-worker\n", kindText, edgeworkers.EscapeTerminalText(dir), edgeworkers.EscapeTerminalText(target))
+		_, err = fmt.Fprintf(c.OutOrStdout(), "✓ Created a new %s edge-workers project in %s\n\nNext steps:\n  cd %s\n  npm install\n  vip-next edge-workers new my-worker\n", kindText, edgeworkers.EscapeTerminalText(dir), edgeworkers.EscapeTerminalText(target))
 		return err
 	}
 	return c
 }
 func newEdgeWorkersNewCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "new <name>", Short: "Add a new worker to an edge-workers project.", Example: "  vip edge-workers new add-security-headers\n  vip edge-workers new my-worker --path ./infra/edge\n  vip edge-workers new api-auth --location starts_with:/api/"}
+	c := &cobra.Command{Use: "new <name>", Short: "Add a new worker to an edge-workers project.", Example: "  vip-next edge-workers new add-security-headers\n  vip-next edge-workers new my-worker --path ./infra/edge\n  vip-next edge-workers new api-auth --location starts_with:/api/"}
 	path := edgePathFlag(c)
 	location := edgeStringFlag(c, "location", "l", `Only run the worker on matching request paths, as "<operator>:<value>". Operators: `+edgeworkers.LocationOperators+".")
 	return appctx.Build(c, appctx.WithRequiredArgs(1)).WithRun(func(c *cobra.Command, args []string) error {
@@ -86,7 +86,7 @@ func newEdgeWorkersNewCmd(deps edgeWorkersDeps) *cobra.Command {
 			} else {
 				fmt.Fprintf(c.OutOrStdout(), "Scope: %s \"%s\".\n", edgeworkers.EscapeTerminalText(loc.Operator), edgeworkers.EscapeTerminalText(loc.Value))
 			}
-			_, err = fmt.Fprintf(c.OutOrStdout(), "\nEdit the worker, then deploy it with:\n  vip @my-site.develop edge-workers deploy %s\n", edgeworkers.EscapeTerminalText(name))
+			_, err = fmt.Fprintf(c.OutOrStdout(), "\nEdit the worker, then deploy it with:\n  vip-next @my-site.develop edge-workers deploy %s\n", edgeworkers.EscapeTerminalText(name))
 			return err
 		}
 		if err := run(); err != nil {
@@ -96,7 +96,7 @@ func newEdgeWorkersNewCmd(deps edgeWorkersDeps) *cobra.Command {
 	})
 }
 func newEdgeWorkersBuildCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "build [name]", Short: "Compile worker(s) to WebAssembly locally.", Example: "  vip edge-workers build\n  vip edge-workers build my-worker"}
+	c := &cobra.Command{Use: "build [name]", Short: "Compile worker(s) to WebAssembly locally.", Example: "  vip-next edge-workers build\n  vip-next edge-workers build my-worker"}
 	path := edgePathFlag(c)
 	c.Flags().BoolP("all", "a", false, "Compile every worker in the project.")
 	c.RunE = func(c *cobra.Command, args []string) error {

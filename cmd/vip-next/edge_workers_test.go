@@ -80,3 +80,29 @@ func TestEdgeWorkersHelpDoesNotExposeBareFlagMarker(t *testing.T) {
 		t.Fatalf("internal marker exposed in help: %q", out.String())
 	}
 }
+
+func TestEdgeWorkersHelpUsesGoExecutable(t *testing.T) {
+	parent, _, _ := newRootCmd(&rootContext{}).Find([]string{"edge-workers"})
+	for _, command := range parent.Commands() {
+		t.Run(command.Name(), func(t *testing.T) {
+			root := newRootCmd(&rootContext{})
+			var out bytes.Buffer
+			root.SetOut(&out)
+			root.SetErr(&out)
+			root.SetArgs([]string{"edge-workers", command.Name(), "--help"})
+			if err := root.Execute(); err != nil {
+				t.Fatal(err)
+			}
+			_, examples, found := strings.Cut(out.String(), "Examples:\n")
+			if !found {
+				t.Fatalf("missing examples: %s", out.String())
+			}
+			examples, _, _ = strings.Cut(examples, "\n\n")
+			for _, example := range strings.Split(strings.TrimSpace(examples), "\n") {
+				if !strings.HasPrefix(strings.TrimSpace(example), "vip-next ") {
+					t.Errorf("example invokes another runtime: %q", example)
+				}
+			}
+		})
+	}
+}

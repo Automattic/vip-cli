@@ -10,7 +10,7 @@ import (
 )
 
 func newEdgeWorkersListCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "list", Short: "List the edge workers deployed to an environment.", Example: "  vip @example-app.production edge-workers list"}
+	c := &cobra.Command{Use: "list", Short: "List the edge workers deployed to an environment.", Example: "  vip-next @example-app.production edge-workers list"}
 	addFormatFlagWithShort(c)
 	return buildAppEnvRenderableCmd(c, "table", []string{"table", "csv", "json"}, func(c *cobra.Command, args []string) (any, error) {
 		edgeWorkersTrack(c, "list_command_execute", nil)
@@ -30,7 +30,7 @@ func newEdgeWorkersListCmd(deps edgeWorkersDeps) *cobra.Command {
 	})
 }
 func newEdgeWorkersGetCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "get <name>", Short: "Retrieve details for a single deployed edge worker.", Example: "  vip @example-app.production edge-workers get my-worker\n  vip @example-app.production edge-workers get my-worker --source"}
+	c := &cobra.Command{Use: "get <name>", Short: "Retrieve details for a single deployed edge worker.", Example: "  vip-next @example-app.production edge-workers get my-worker\n  vip-next @example-app.production edge-workers get my-worker --source"}
 	c.Flags().BoolP("source", "s", false, "Print the stored source code for the worker.")
 	return edgeRemote(c, true, func(c *cobra.Command, args []string) error {
 		props := edgeNameProps(args)
@@ -52,7 +52,7 @@ func newEdgeWorkersGetCmd(deps edgeWorkersDeps) *cobra.Command {
 	})
 }
 func newEdgeWorkersValidateCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "validate [name]", Short: "Validate worker(s) against an environment without deploying.", Example: "  vip @example-app.develop edge-workers validate my-worker\n  vip @example-app.develop edge-workers validate --all\n  vip @example-app.develop edge-workers validate my-worker --skip-build"}
+	c := &cobra.Command{Use: "validate [name]", Short: "Validate worker(s) against an environment without deploying.", Example: "  vip-next @example-app.develop edge-workers validate my-worker\n  vip-next @example-app.develop edge-workers validate --all\n  vip-next @example-app.develop edge-workers validate my-worker --skip-build"}
 	path := edgePathFlag(c)
 	c.Flags().Bool("all", false, "Validate every worker in the project.")
 	c.Flags().BoolP("skip-build", "s", false, "Validate a previously compiled artifact without recompiling.")

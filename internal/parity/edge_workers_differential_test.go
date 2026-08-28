@@ -374,8 +374,8 @@ func TestEdgeWorkersDifferentialParity(t *testing.T) {
 				t.Fatal("Edge Workers must not broaden accepted drift")
 			}
 			// Preserve the existing cutover contract, docs/CUTOVER-BREAKING-CHANGES.md
-			// section 1.10. Only the known runtime banner and prefix spacing differ;
-			// command messages, request payloads, and every other byte still compare.
+			// section 1.10 for the known runtime banner and error-prefix spacing.
+			// The approved executable-name difference is checked separately below.
 			s.Normalize.Stdout = []NormalizeRule{{Pattern: `(?m)^Debug:  VIP-CLI v[^,\n]+, Node v[^,\n]+, [^,\n]+, Runtime node-script\n`, Replacement: ""}}
 			s.Normalize.Stderr = []NormalizeRule{{Pattern: `(?m)^Error:  `, Replacement: "Error: "}}
 			results := make([]*RunResult, 2)
@@ -395,6 +395,28 @@ func TestEdgeWorkersDifferentialParity(t *testing.T) {
 				}
 				result.Stdout = strings.ReplaceAll(result.Stdout, dir, "PROJECT_DIR")
 				result.Stderr = strings.ReplaceAll(result.Stderr, dir, "PROJECT_DIR")
+				// Each runtime's init/new guidance must invoke that runtime. Only
+				// normalize these known prefixes after checking the actual output.
+				// See CUTOVER-BREAKING-CHANGES.md section 1.28.
+				guidance := ""
+				if result.ExitCode == 0 && s.Argv[1] == "init" {
+					guidance = "edge-workers new my-worker\n"
+				} else if result.ExitCode == 0 && s.Argv[1] == "new" {
+					guidance = "@my-site.develop edge-workers deploy "
+				}
+				if guidance != "" {
+					executable := "vip"
+					if side == 1 {
+						executable = "vip-next"
+					}
+					prefix := "\n  " + executable + " " + guidance
+					if !strings.Contains(result.Stdout, prefix) {
+						t.Errorf("side %d missing runtime-specific guidance %q: %s", side, prefix, result.Stdout)
+					}
+					if side == 1 {
+						result.Stdout = strings.Replace(result.Stdout, prefix, "\n  vip "+guidance, 1)
+					}
+				}
 				results[side] = result
 				if name == "edge-workers-get-source" {
 					// Check readability independently: matching runtimes can share a bug.

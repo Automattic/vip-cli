@@ -10,7 +10,7 @@ import (
 )
 
 func newEdgeWorkersDeployCmd(deps edgeWorkersDeps) *cobra.Command {
-	c := &cobra.Command{Use: "deploy [name]", Short: "Compile and deploy a worker to an environment.", Example: "  vip @example-app.develop edge-workers deploy my-worker\n  vip @example-app.develop edge-workers deploy --all\n  vip @example-app.develop edge-workers deploy my-worker --skip-build"}
+	c := &cobra.Command{Use: "deploy [name]", Short: "Compile and deploy a worker to an environment.", Example: "  vip-next @example-app.develop edge-workers deploy my-worker\n  vip-next @example-app.develop edge-workers deploy --all\n  vip-next @example-app.develop edge-workers deploy my-worker --skip-build"}
 	path := edgePathFlag(c)
 	c.Flags().Bool("all", false, "Deploy every worker in the project.")
 	c.Flags().BoolP("skip-build", "s", false, "Deploy a previously compiled artifact without recompiling.")
@@ -74,7 +74,7 @@ func newEdgeWorkersDeployCmd(deps edgeWorkersDeps) *cobra.Command {
 }
 func newEdgeWorkersLifecycleCmd(deps edgeWorkersDeps, action string) *cobra.Command {
 	verb := map[string]string{"enable": "Enable", "disable": "Disable", "delete": "Permanently delete"}[action]
-	c := &cobra.Command{Use: action + " <name>", Short: verb + " a deployed edge worker.", Example: "  vip @example-app.production edge-workers " + action + " my-worker"}
+	c := &cobra.Command{Use: action + " <name>", Short: verb + " a deployed edge worker.", Example: "  vip-next @example-app.production edge-workers " + action + " my-worker"}
 	if action == "enable" {
 		c.Flags().BoolP("skip-confirmation", "s", false, "Skip the production enable confirmation.")
 	}
