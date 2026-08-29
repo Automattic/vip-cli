@@ -42,6 +42,7 @@ import {
 	DEV_ENVIRONMENT_WORDPRESS_CACHE_KEY,
 	DEV_ENVIRONMENT_WORDPRESS_VERSION_TTL,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
+	DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 	DEV_ENVIRONMENT_VERSION,
 } from '../constants/dev-environment';
 import { createProxyDispatcher } from '../http/proxy-dispatcher';
@@ -321,8 +322,7 @@ function preProcessInstanceData( instanceData: InstanceData ): Required< Instanc
 		mariadb: instanceData.mariadb ?? '',
 		elasticsearch: instanceData.elasticsearch || false, // NOSONAR
 		php:
-			instanceData.php ??
-			DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image,
+			instanceData.php ?? DEV_ENVIRONMENT_PHP_VERSIONS[ DEV_ENVIRONMENT_DEFAULT_PHP_VERSION ].image,
 		xdebug: Boolean( instanceData.xdebug ),
 		phpmyadmin: Boolean( instanceData.phpmyadmin ),
 		photon: Boolean( instanceData.photon ),

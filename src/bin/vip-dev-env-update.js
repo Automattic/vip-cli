@@ -6,6 +6,7 @@ import debugLib from 'debug';
 import command from '../lib/cli/command';
 import {
 	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 	DEV_ENVIRONMENT_PHP_VERSIONS,
 } from '../lib/constants/dev-environment';
 import {
@@ -108,7 +109,7 @@ cmd.argv( process.argv, async ( arg, opt ) => {
 			elasticsearch: currentInstanceData.elasticsearch,
 			php:
 				currentInstanceData.php ||
-				DEV_ENVIRONMENT_PHP_VERSIONS[ Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ] ].image,
+				DEV_ENVIRONMENT_PHP_VERSIONS[ DEV_ENVIRONMENT_DEFAULT_PHP_VERSION ].image,
 			mariadb: currentInstanceData.mariadb,
 			phpmyadmin: currentInstanceData.phpmyadmin,
 			xdebug: currentInstanceData.xdebug,

@@ -27,29 +27,31 @@ interface PhpImage {
 	label: string;
 }
 
-export const DEV_ENVIRONMENT_PHP_VERSIONS: Record< string, PhpImage > = {
-	8.2: {
+export const DEV_ENVIRONMENT_PHP_VERSIONS = {
+	'8.2': {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.2',
-		label: '8.2 (recommended)',
+		label: '8.2',
 	},
-	8.3: {
+	'8.3': {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.3',
 		label: '8.3',
 	},
-	8.4: {
+	'8.4': {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',
 		label: '8.4',
 	},
-	8.5: {
+	'8.5': {
 		image: 'ghcr.io/automattic/vip-container-images/php-fpm:8.5',
 		label: '8.5 (experimental)',
 	},
-} as const;
+} as const satisfies Record< string, PhpImage >;
+
+export const DEV_ENVIRONMENT_DEFAULT_PHP_VERSION: keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS = '8.4';
 
 export const DEV_ENVIRONMENT_DEFAULTS = {
 	title: 'VIP Dev',
 	multisite: false,
-	phpVersion: Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS )[ 0 ],
+	phpVersion: DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 } as const;
 
 export const DEV_ENVIRONMENT_VERSION = '2.3.4';
