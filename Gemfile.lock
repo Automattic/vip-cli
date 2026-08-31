@@ -335,7 +335,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  fastlane (~> 2.237)
+  fastlane (~> 2.238)
   fastlane-plugin-wpmreleasetoolkit (~> 15.0)
   openssl (~> 4.0)
 
