@@ -26,7 +26,8 @@ VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 build() {
-  local goarch="$1" out="dist/${BIN_BASE}-darwin-${goarch}"
+  local goarch="$1"
+  local out="dist/${BIN_BASE}-darwin-${goarch}"
   echo "--- :go: build darwin/${goarch}"
   CGO_ENABLED=0 GOOS=darwin GOARCH="${goarch}" \
     go build -buildvcs=false -trimpath \
