@@ -231,9 +231,8 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
 
 - **Pipeline:** `.buildkite/pipeline.yml` — three independent steps (macOS,
   Windows, Linux), each building on its own native agent.
-  `.buildkite/shared-pipeline-vars` is `source`'d before `buildkite-agent
-  pipeline upload` to supply the CI toolkit plugin pin, `BIN_BASE`, and
-  `IMAGE_ID`.
+  Setup sources `.buildkite/shared-pipeline-vars` before pipeline upload
+  (CI toolkit plugin pin, `BIN_BASE`, `IMAGE_ID`).
 - **Build scripts:** `.buildkite/build-macos.sh`, `.buildkite/build-windows.ps1`,
   `.buildkite/build-linux.sh`.
 - **Trigger / gating:** every commit builds and smoke-tests all three
@@ -242,8 +241,8 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
 - **macOS certs:** fastlane `match` (`fastlane/Fastfile` →
   `configure_code_signing`), `type: developer_id`, stored in S3
   (`a8c-fastlane-match`). Signing and notarization are the
-  `sign_and_notarize` lane (Developer ID Application, `--identifier
-  com.automattic.vip-cli`, no staple on a bare Mach-O).
+  `sign_and_notarize` lane: Developer ID Application, identifier
+  `com.automattic.vip-cli`, no staple on a bare Mach-O.
 - **macOS artifacts:** two signed + notarized bare binaries (arm64, amd64;
   online-verified).
 - **Windows / Linux artifacts:** signed `.exe` (Azure Trusted Signing via
