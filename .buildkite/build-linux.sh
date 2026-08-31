@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Build the Linux vip-next binaries + checksums on a Buildkite Linux agent.
-# Linux has no OS-enforced executable signature; we publish checksums (a detached
-# GPG/cosign signature is optional — see the bottom of this file).
+# Linux has no OS-enforced executable signature; we publish checksums.
 
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"
 
-# Any Go will do: go.mod's `toolchain` directive makes it fetch go1.27.0 itself.
 if ! command -v go >/dev/null 2>&1; then
   echo "--- :package: install go"
-  sudo dnf install -y golang
+  version="$(awk '/^toolchain / { print $2; exit }' go.mod)"
+  version="${version#go}"
+  [ -n "${version}" ] || { echo "no toolchain directive in go.mod" >&2; exit 1; }
+  case "$(uname -m)" in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *) echo "unsupported arch $(uname -m)" >&2; exit 1 ;;
+  esac
+  # Not `$HOME/go` — that is GOPATH.
+  prefix="${HOME}/.local"
+  mkdir -p "${prefix}"
+  curl -fsSL "https://go.dev/dl/go${version}.linux-${arch}.tar.gz" | tar -C "${prefix}" -xz
+  export PATH="${prefix}/go/bin:${PATH}"
 fi
 go version
 
