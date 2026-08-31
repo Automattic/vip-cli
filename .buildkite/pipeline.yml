@@ -5,7 +5,8 @@
 # `buildkite-agent pipeline upload` interpolates this file.
 #
 # Every commit builds + smoke-tests all three platforms. macOS signs and
-# notarizes on every build so the path is not tag-only.
+# notarizes, and Windows Authenticode-signs, on every build so those paths
+# are not tag-only.
 
 env:
   DO_NOT_TRACK: '1'
@@ -27,8 +28,10 @@ steps:
 
   - label: ':windows: Build & sign (Windows)'
     command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite/build-windows.ps1
+    plugins:
+      - $CI_TOOLKIT_PLUGIN
     agents:
-      queue: windows # ← infra: confirm Windows agent queue name
+      queue: windows
     notify:
       - github_commit_status:
           context: 'Build & sign (Windows)'
