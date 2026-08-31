@@ -1,75 +1,138 @@
 # frozen_string_literal: true
 
+require 'shellwords'
+require 'fileutils'
+
 UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Helper.bundler?
 
-# fastlane match cert storage (S3) — the shared a8c bucket.  # ← infra: confirm
+PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
+
+APPLE_TEAM_ID = 'PZYM8XX95Q'
+SIGNING_IDENTITY = "Developer ID Application: Automattic, Inc. (#{APPLE_TEAM_ID})"
+
+# The signature's designated requirement embeds this identifier, and the Keychain ACL
+# guarding the master key is bound to that requirement. `codesign` otherwise derives it
+# from the file name (`vip-next-darwin-arm64`), so a rename would read as a different app.
+SIGNING_IDENTIFIER = 'com.automattic.vip-cli'
+
 CODE_SIGNING_STORAGE_OPTIONS = {
   storage_mode: 's3',
   s3_bucket: 'a8c-fastlane-match',
   s3_region: 'us-east-2'
 }.freeze
 
-# `match` reads these to pull the certs out of the S3 bucket and decrypt them.
 CODE_SIGNING_ENV_VARS = %w[
   MATCH_S3_ACCESS_KEY
   MATCH_S3_SECRET_ACCESS_KEY
   MATCH_PASSWORD
 ].freeze
 
-# app_store_connect_api_key reads these to build the ASC key.
 ASC_API_KEY_ENV_VARS = %w[
   APP_STORE_CONNECT_API_KEY_KEY_ID
   APP_STORE_CONNECT_API_KEY_ISSUER_ID
   APP_STORE_CONNECT_API_KEY_KEY
 ].freeze
 
-TEAM_ID = 'PZYM8XX95Q'
-
 before_all do
   # Ensures `match` works on CI by setting up a temporary keychain. No-op locally.
   setup_ci
 end
 
-# Places the Developer ID Application cert (and — see the infra note — the Installer
-# cert) into the keychain so `codesign` / `productsign` can find them.
+# Fetch the Developer ID Application certificate into the keychain.
+#
+# @param readonly [Boolean] Use `true` to only fetch the existing certificate from S3 via
+#   `match`. Use `false` to create or renew it on App Store Connect.
+#
 lane :configure_code_signing do |readonly: true|
   require_env_vars!(*CODE_SIGNING_ENV_VARS)
-  # A readonly fetch only reads the bucket; creating or renewing a cert is the
-  # only thing that talks to App Store Connect.
   require_env_vars!(*ASC_API_KEY_ENV_VARS) unless readonly
 
-  # Developer ID *Application* cert — signs the binaries (codesign).
-  # No app identifier: a Developer ID cert is not app-scoped, and naming one
-  # makes `match` look for a provisioning profile that does not exist.
   sync_code_signing(
-    app_identifier: [], platform: 'macos', type: 'developer_id',
+    type: 'developer_id',
+    platform: 'macos',
+    team_id: APPLE_TEAM_ID,
+    # A CLI has no bundle to carry a provisioning profile, so there is no app identifier
+    # to key storage on.
+    app_identifier: [],
     api_key: readonly ? nil : app_store_connect_api_key,
-    team_id: TEAM_ID, readonly: readonly,
+    readonly: readonly,
     **CODE_SIGNING_STORAGE_OPTIONS
   )
-
-  # ← infra: ALSO provision the Developer ID *Installer* cert (for productsign on the
-  # .pkg). The reference doesn't need it. Depending on your match setup this is likely:
-  #   sync_code_signing(app_identifier: [], platform: 'macos', type: 'developer_id',
-  #                     additional_cert_types: ['developer_id_installer'],
-  #                     team_id: TEAM_ID, readonly: readonly, **CODE_SIGNING_STORAGE_OPTIONS)
-  # Confirm the exact option/flow, then enable it.
 end
 
-# Notarize a .zip (bare binary) or .pkg. Lane args arrive as strings, so an explicit
-# `skip_stapling:false` is the ONLY thing that turns stapling on (bare binaries can't
-# be stapled → default true; the .pkg passes false so it gets stapled → offline-verified).
-lane :notarize_artifact do |options|
-  UI.user_error!('notarize_artifact requires path:') unless options[:path]
+# Sign a built CLI binary with the Developer ID certificate and submit it for notarization.
+#
+# Run `configure_code_signing` first, or run this on a machine that already holds the
+# certificate.
+#
+# @param binary [String] Path to the binary to sign, e.g. `dist/vip-next-darwin-arm64`.
+#
+lane :sign_and_notarize do |binary:|
+  binary = resolve_from_project_root(binary)
+  UI.user_error!("No binary at '#{binary}'") unless File.exist?(binary)
   require_env_vars!(*ASC_API_KEY_ENV_VARS)
 
-  skip_stapling = options[:skip_stapling].to_s != 'false'
+  sh(
+    'codesign',
+    '--sign', SIGNING_IDENTITY,
+    '--identifier', SIGNING_IDENTIFIER,
+    # The hardened runtime is a precondition for notarization.
+    '--options', 'runtime',
+    '--timestamp',
+    '--force',
+    binary
+  )
+
+  verify_code_signing(binary: binary)
+
+  # `notarytool` takes only .zip/.dmg/.pkg, and fastlane's `notarize` compresses `.app`
+  # bundles and nothing else, so a bare binary has to be archived here.
+  archive = "#{binary}.zip"
+  sh('ditto', '-c', '-k', '--keepParent', binary, archive)
+
   notarize(
-    package: options[:path],
+    package: archive,
+    # Only bundles and disk images can carry a stapled ticket. A bare binary relies on
+    # the online Gatekeeper check.
+    skip_stapling: true,
     api_key: app_store_connect_api_key,
-    skip_stapling: skip_stapling,
     print_log: true
   )
+
+  FileUtils.rm_f(archive)
+end
+
+# Verify that a binary carries an intact signature from our Developer ID, so a wrongly
+# signed build fails CI instead of shipping.
+#
+# Gatekeeper acceptance (`spctl --assess`) is deliberately not asserted: a bare binary
+# cannot be stapled, so that check needs an online lookup that lags a fresh submission.
+#
+# @param binary [String] Path to the binary to verify.
+#
+lane :verify_code_signing do |binary:|
+  binary = resolve_from_project_root(binary)
+
+  sh('codesign', '--verify', '--strict', '--verbose=2', binary)
+
+  # `codesign --display` reports on stderr, which `sh` does not capture.
+  details = sh("codesign --display --verbose=2 #{binary.shellescape} 2>&1", log: false)
+
+  unless details.include?("Authority=#{SIGNING_IDENTITY}")
+    UI.user_error!("#{binary} is not signed by '#{SIGNING_IDENTITY}':\n#{details}")
+  end
+
+  unless details.include?("Identifier=#{SIGNING_IDENTIFIER}")
+    UI.user_error!("#{binary} has the wrong signing identifier, expected '#{SIGNING_IDENTIFIER}':\n#{details}")
+  end
+
+  UI.success("#{binary} is signed by #{SIGNING_IDENTITY}")
+end
+
+# fastlane runs lanes from the `fastlane/` directory, so a path a caller wrote
+# relative to the repo root would otherwise resolve one level too deep.
+def resolve_from_project_root(path)
+  File.absolute_path(path, PROJECT_ROOT_FOLDER)
 end
 
 def require_env_vars!(*names)

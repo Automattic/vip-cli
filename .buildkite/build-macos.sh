@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Build, and on tag builds sign + notarize, the macOS vip-next artifacts, on a
-# Buildkite macOS agent (queue: mac):
-#   - two bare per-arch binaries: codesigned + notarized (online-verified; a bare
-#     Mach-O can't be stapled)
-#   - one universal .pkg installer: codesigned + productsigned + notarized + STAPLED
-#     (offline-verified)
-# Checksums are written AFTER signing (signing changes the bytes).
+# Build, and on tag builds sign + notarize, the macOS vip-next artifacts on a
+# Buildkite macOS agent (queue: mac).
+# Two bare per-arch binaries: codesigned + notarized (online-verified; a bare
+# Mach-O can't be stapled). Checksums are written AFTER signing (signing
+# changes the bytes).
 
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"
@@ -21,6 +19,9 @@ if ! command -v go >/dev/null 2>&1; then
   brew install go
 fi
 go version
+
+# Bundler installs to `vendor/bundle`, which makes Go take `-mod=vendor`.
+export GOFLAGS="${GOFLAGS:--mod=mod}"
 
 VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -63,40 +64,9 @@ fi
 echo "--- :closed_lock_with_key: fetch signing certs (fastlane match)"
 bundle exec fastlane configure_code_signing
 
-# Build the universal binary from the UNSIGNED arches, then sign all three once.
-uni="dist/${BIN_BASE}-darwin-universal"
-lipo -create -output "${uni}" "dist/${BIN_BASE}-darwin-arm64" "dist/${BIN_BASE}-darwin-amd64"
-
-for bin in "dist/${BIN_BASE}-darwin-arm64" "dist/${BIN_BASE}-darwin-amd64" "${uni}"; do
-  echo "--- :closed_lock_with_key: codesign ${bin}"
-  codesign --remove-signature "${bin}" 2>/dev/null || true # drop Go's ad-hoc sig
-  codesign --sign "${MACOS_SIGN_IDENTITY}" --options runtime --timestamp --force "${bin}"
-  codesign --verify --strict --verbose=2 "${bin}"
-done
-
-# Bare binaries: notarize (no staple — nothing to hold the ticket), then checksum.
 for arch in arm64 amd64; do
   bin="dist/${BIN_BASE}-darwin-${arch}"
-  echo "--- :cloud: notarize ${arch} (no staple)"
-  ditto -c -k --keepParent "${bin}" "${bin}.zip"
-  bundle exec fastlane notarize_artifact path:"${bin}.zip"
-  rm -f "${bin}.zip"
+  echo "--- :closed_lock_with_key: sign and notarize ${arch}"
+  bundle exec fastlane sign_and_notarize binary:"${bin}"
   checksum "${bin}"
 done
-
-# Universal .pkg: package the signed universal binary → sign the pkg → notarize + staple.
-echo "--- :package: build + sign universal .pkg"
-pkgroot="$(mktemp -d)"
-cp "${uni}" "${pkgroot}/${BIN_BASE}"
-pkg="dist/${BIN_BASE}-darwin-universal.pkg"
-pkgbuild --root "${pkgroot}" --identifier com.automattic.vip-cli --version "${VERSION}" \
-  --install-location /usr/local/bin "${pkg}.unsigned"
-productsign --sign "${MACOS_INSTALLER_IDENTITY}" "${pkg}.unsigned" "${pkg}"
-rm -f "${pkg}.unsigned"
-rm -rf "${pkgroot}"
-
-echo "--- :cloud: notarize + staple .pkg"
-bundle exec fastlane notarize_artifact path:"${pkg}" skip_stapling:false
-xcrun stapler validate "${pkg}"
-checksum "${uni}"
-checksum "${pkg}"
