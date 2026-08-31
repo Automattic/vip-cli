@@ -11,6 +11,13 @@ CODE_SIGNING_STORAGE_OPTIONS = {
   s3_region: 'us-east-2'
 }.freeze
 
+# `match` reads these to pull the certs out of the S3 bucket and decrypt them.
+CODE_SIGNING_ENV_VARS = %w[
+  MATCH_S3_ACCESS_KEY
+  MATCH_S3_SECRET_ACCESS_KEY
+  MATCH_PASSWORD
+].freeze
+
 # app_store_connect_api_key reads these to build the ASC key.
 ASC_API_KEY_ENV_VARS = %w[
   APP_STORE_CONNECT_API_KEY_KEY_ID
@@ -34,20 +41,23 @@ end
 # Places the Developer ID Application cert (and — see the infra note — the Installer
 # cert) into the keychain so `codesign` / `productsign` can find them.
 lane :configure_code_signing do |readonly: true|
-  EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS)
-  api_key = app_store_connect_api_key
+  EnvManager.require_env_vars!(*CODE_SIGNING_ENV_VARS)
+  # A readonly fetch only reads the bucket; creating or renewing a cert is the
+  # only thing that talks to App Store Connect.
+  EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS) unless readonly
 
   # Developer ID *Application* cert — signs the binaries (codesign).
   sync_code_signing(
     app_identifier: APP_IDENTIFIER, platform: 'macos', type: 'developer_id',
-    api_key: api_key, team_id: TEAM_ID, readonly: readonly,
+    api_key: readonly ? nil : app_store_connect_api_key,
+    team_id: TEAM_ID, readonly: readonly,
     **CODE_SIGNING_STORAGE_OPTIONS
   )
 
   # ← infra: ALSO provision the Developer ID *Installer* cert (for productsign on the
   # .pkg). The reference doesn't need it. Depending on your match setup this is likely:
   #   sync_code_signing(app_identifier: APP_IDENTIFIER, platform: 'macos', type: 'developer_id',
-  #                     additional_cert_types: ['developer_id_installer'], api_key: api_key,
+  #                     additional_cert_types: ['developer_id_installer'],
   #                     team_id: TEAM_ID, readonly: readonly, **CODE_SIGNING_STORAGE_OPTIONS)
   # Confirm the exact option/flow, then enable it.
 end
