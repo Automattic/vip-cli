@@ -18,7 +18,9 @@ ASC_API_KEY_ENV_VARS = %w[
   APP_STORE_CONNECT_API_KEY_KEY
 ].freeze
 
-require_relative 'lib/env_manager'
+require 'fastlane/plugin/wpmreleasetoolkit'
+
+EnvManager = Fastlane::Wpmreleasetoolkit::EnvManager
 
 APP_IDENTIFIER = 'com.automattic.vip-cli' # ← infra: reuse team Dev ID cert vs a new match entry
 TEAM_ID = 'PZYM8XX95Q'
