@@ -29,7 +29,6 @@ require 'fastlane/plugin/wpmreleasetoolkit'
 
 EnvManager = Fastlane::Wpmreleasetoolkit::EnvManager
 
-APP_IDENTIFIER = 'com.automattic.vip-cli' # ← infra: reuse team Dev ID cert vs a new match entry
 TEAM_ID = 'PZYM8XX95Q'
 
 before_all do
@@ -47,8 +46,10 @@ lane :configure_code_signing do |readonly: true|
   EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS) unless readonly
 
   # Developer ID *Application* cert — signs the binaries (codesign).
+  # No app identifier: a Developer ID cert is not app-scoped, and naming one
+  # makes `match` look for a provisioning profile that does not exist.
   sync_code_signing(
-    app_identifier: APP_IDENTIFIER, platform: 'macos', type: 'developer_id',
+    app_identifier: [], platform: 'macos', type: 'developer_id',
     api_key: readonly ? nil : app_store_connect_api_key,
     team_id: TEAM_ID, readonly: readonly,
     **CODE_SIGNING_STORAGE_OPTIONS
@@ -56,7 +57,7 @@ lane :configure_code_signing do |readonly: true|
 
   # ← infra: ALSO provision the Developer ID *Installer* cert (for productsign on the
   # .pkg). The reference doesn't need it. Depending on your match setup this is likely:
-  #   sync_code_signing(app_identifier: APP_IDENTIFIER, platform: 'macos', type: 'developer_id',
+  #   sync_code_signing(app_identifier: [], platform: 'macos', type: 'developer_id',
   #                     additional_cert_types: ['developer_id_installer'],
   #                     team_id: TEAM_ID, readonly: readonly, **CODE_SIGNING_STORAGE_OPTIONS)
   # Confirm the exact option/flow, then enable it.
