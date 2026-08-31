@@ -5,7 +5,7 @@
 
 # a8c CI toolkit Buildkite plugin — provides install_gems, secret injection, and
 # GitHub status helpers on the macOS agent.
-export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#5.3.1"   # ← infra: confirm current version
+export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#6.3.0"
 
 # Go toolchain the build scripts require. encoding/json/v2 is standard in Go 1.27.
 export GO_VERSION="1.27"                                     # ← infra: match your agent provisioning
