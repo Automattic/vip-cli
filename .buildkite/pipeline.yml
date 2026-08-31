@@ -17,6 +17,8 @@ steps:
       - $CI_TOOLKIT_PLUGIN
     agents:
       queue: mac
+    env:
+      IMAGE_ID: $IMAGE_ID
     notify:
       - github_commit_status:
           context: 'Build & sign (macOS)'
