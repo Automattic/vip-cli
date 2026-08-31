@@ -2,8 +2,6 @@
 
 UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Helper.bundler?
 
-PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
-
 # fastlane match cert storage (S3) — the shared a8c bucket.  # ← infra: confirm
 CODE_SIGNING_STORAGE_OPTIONS = {
   storage_mode: 's3',
