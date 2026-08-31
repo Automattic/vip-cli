@@ -41,7 +41,7 @@ steps:
   - label: ':linux: Build (Linux)'
     command: .buildkite/build-linux.sh
     agents:
-      queue: default # ← infra: confirm Linux agent queue name
+      queue: default
     notify:
       - github_commit_status:
           context: 'Build (Linux)'

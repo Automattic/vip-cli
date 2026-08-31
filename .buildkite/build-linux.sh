@@ -44,5 +44,4 @@ if [ -n "${native}" ]; then
   "dist/${BIN_BASE}-linux-${native}" whoami --help
 fi
 
-# Optional detached signature (needs an infra-owned key); checksums-only by default.
-# gpg --armor --detach-sign "dist/${BIN_BASE}-linux-amd64"   # ← infra: enable if desired
+
