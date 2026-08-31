@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Build, and on tag builds sign + notarize, the macOS vip-next artifacts on a
-# Buildkite macOS agent (queue: mac).
-# Two bare per-arch binaries: codesigned + notarized (online-verified; a bare
-# Mach-O can't be stapled). Checksums are written AFTER signing (signing
-# changes the bytes).
+# Build, sign, and notarize the macOS vip-next artifacts on a Buildkite macOS
+# agent (queue: mac). Two bare per-arch binaries: codesigned + notarized
+# (online-verified; a bare Mach-O can't be stapled). Checksums are written
+# AFTER signing (signing changes the bytes).
 
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"
@@ -52,13 +51,6 @@ if [ -n "${native}" ]; then
   echo "--- :test_tube: smoke darwin/${native}"
   "dist/${BIN_BASE}-darwin-${native}" --version
   "dist/${BIN_BASE}-darwin-${native}" whoami --help
-fi
-
-if [ -z "${BUILDKITE_TAG:-}" ]; then
-  echo "--- not a tag build; skipping sign/notarize (unsigned checksums only)"
-  checksum "dist/${BIN_BASE}-darwin-arm64"
-  checksum "dist/${BIN_BASE}-darwin-amd64"
-  exit 0
 fi
 
 echo "--- :closed_lock_with_key: fetch signing certs (fastlane match)"

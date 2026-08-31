@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/buildkite/pipeline-schema/main/schema.json
 ---
-# Shared vars (CI_TOOLKIT_PLUGIN, BIN_BASE, signing identities) come
-# from .buildkite/shared-pipeline-vars, which our setup source's before
+# Shared vars (CI_TOOLKIT_PLUGIN, BIN_BASE) come from
+# .buildkite/shared-pipeline-vars, which our setup source's before
 # `buildkite-agent pipeline upload` interpolates this file.
 #
-# Every commit builds + smoke-tests all three platforms. Signing + notarization
-# run only on TAG builds — gated on $BUILDKITE_TAG inside each build script.
+# Every commit builds + smoke-tests all three platforms. macOS signs and
+# notarizes on every build so the path is not tag-only.
 
 env:
   DO_NOT_TRACK: '1'
