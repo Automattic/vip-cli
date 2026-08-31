@@ -15,6 +15,17 @@ $commit  = Get-GitOr @('rev-parse','--short','HEAD') 'unknown'
 New-Item -ItemType Directory -Force -Path dist | Out-Null
 $out = "dist/$binBase-windows-amd64.exe"
 
+# Any Go will do: go.mod's `toolchain` directive makes it fetch go1.27.0 itself.
+if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
+  Write-Host "--- :package: install go"
+  choco install golang -y --no-progress
+  if ($LASTEXITCODE -ne 0) { throw 'choco install golang failed' }
+  # choco updates the machine PATH, not this process's.
+  $env:PATH = "$env:PATH;$env:ProgramFiles\Go\bin"
+}
+go version
+if ($LASTEXITCODE -ne 0) { throw 'go not usable after install' }
+
 Write-Host "--- :go: build windows/amd64"
 $env:CGO_ENABLED = '0'; $env:GOOS = 'windows'; $env:GOARCH = 'amd64'
 $ldflags = "-s -w -X github.com/Automattic/vip/internal/version.Version=$version -X github.com/Automattic/vip/internal/version.Commit=$commit"

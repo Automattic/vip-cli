@@ -7,7 +7,11 @@ set -euo pipefail
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"
 
-command -v go >/dev/null 2>&1 || { echo "go not found; agent must provide Go ${GO_VERSION:-1.27}+" >&2; exit 1; }
+# Any Go will do: go.mod's `toolchain` directive makes it fetch go1.27.0 itself.
+if ! command -v go >/dev/null 2>&1; then
+  echo "--- :package: install go"
+  sudo dnf install -y golang
+fi
 go version
 
 VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"

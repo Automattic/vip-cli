@@ -7,9 +7,6 @@
 # GitHub status helpers on the macOS agent.
 export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#6.3.0"
 
-# Go toolchain the build scripts require. encoding/json/v2 is standard in Go 1.27.
-export GO_VERSION="1.27"                                     # ← infra: match your agent provisioning
-
 # Binary base name + macOS signing identities (team PZYM8XX95Q = Automattic, Inc.).
 export BIN_BASE="vip-next"
 export MACOS_TEAM_ID="PZYM8XX95Q"

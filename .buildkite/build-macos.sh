@@ -15,7 +15,11 @@ echo "--- :ruby: install gems"
 if command -v install_gems >/dev/null 2>&1; then install_gems; else bundle install; fi
 
 echo "--- :go: toolchain"
-command -v go >/dev/null 2>&1 || { echo "go not found; agent must provide Go ${GO_VERSION:-1.27}+" >&2; exit 1; }
+# Any Go will do: go.mod's `toolchain` directive makes it fetch go1.27.0 itself.
+if ! command -v go >/dev/null 2>&1; then
+  echo "--- :package: install go"
+  brew install go
+fi
 go version
 
 VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"

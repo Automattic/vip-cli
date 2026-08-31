@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/buildkite/pipeline-schema/main/schema.json
 ---
-# Shared vars (CI_TOOLKIT_PLUGIN, GO_VERSION, BIN_BASE, signing identities) come
+# Shared vars (CI_TOOLKIT_PLUGIN, BIN_BASE, signing identities) come
 # from .buildkite/shared-pipeline-vars, which our setup source's before
 # `buildkite-agent pipeline upload` interpolates this file.
 #
