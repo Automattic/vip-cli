@@ -23,25 +23,20 @@ ASC_API_KEY_ENV_VARS = %w[
   APP_STORE_CONNECT_API_KEY_KEY
 ].freeze
 
-require 'fastlane/plugin/wpmreleasetoolkit'
-
-EnvManager = Fastlane::Wpmreleasetoolkit::EnvManager
-
 TEAM_ID = 'PZYM8XX95Q'
 
 before_all do
-  setup_ci # required for match to work in CI; harmless locally
-  EnvManager.set_up(env_file_name: 'vip-cli.env')
-  check_for_toolkit_updates unless is_ci || ENV['FASTLANE_SKIP_TOOLKIT_UPDATE_CHECK']
+  # Ensures `match` works on CI by setting up a temporary keychain. No-op locally.
+  setup_ci
 end
 
 # Places the Developer ID Application cert (and — see the infra note — the Installer
 # cert) into the keychain so `codesign` / `productsign` can find them.
 lane :configure_code_signing do |readonly: true|
-  EnvManager.require_env_vars!(*CODE_SIGNING_ENV_VARS)
+  require_env_vars!(*CODE_SIGNING_ENV_VARS)
   # A readonly fetch only reads the bucket; creating or renewing a cert is the
   # only thing that talks to App Store Connect.
-  EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS) unless readonly
+  require_env_vars!(*ASC_API_KEY_ENV_VARS) unless readonly
 
   # Developer ID *Application* cert — signs the binaries (codesign).
   # No app identifier: a Developer ID cert is not app-scoped, and naming one
@@ -66,7 +61,7 @@ end
 # be stapled → default true; the .pkg passes false so it gets stapled → offline-verified).
 lane :notarize_artifact do |options|
   UI.user_error!('notarize_artifact requires path:') unless options[:path]
-  EnvManager.require_env_vars!(*ASC_API_KEY_ENV_VARS)
+  require_env_vars!(*ASC_API_KEY_ENV_VARS)
 
   skip_stapling = options[:skip_stapling].to_s != 'false'
   notarize(
@@ -75,4 +70,9 @@ lane :notarize_artifact do |options|
     skip_stapling: skip_stapling,
     print_log: true
   )
+end
+
+def require_env_vars!(*names)
+  missing = names.select { |name| ENV[name].to_s.empty? }
+  UI.user_error!("Missing required environment variable(s): #{missing.join(', ')}") unless missing.empty?
 end
