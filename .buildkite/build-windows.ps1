@@ -38,23 +38,37 @@ Write-Host "--- :test_tube: smoke"
 & $out --version
 & $out whoami --help
 
+Write-Host "--- :package: fetch go-search-replace"
+bash .buildkite/fetch-search-replace.sh windows/amd64
+if ($LASTEXITCODE -ne 0) { throw 'fetch-search-replace.sh failed' }
+$helper = 'third_party/go-search-replace/windows-amd64/go-search-replace.exe'
+
 Write-Host "--- :closed_lock_with_key: Azure Trusted Signing"
 $setupScript = (Get-Command setup_azure_trusted_signing.ps1 -ErrorAction Stop).Source
 & $setupScript
 if ($LASTEXITCODE -ne 0) { throw 'setup_azure_trusted_signing.ps1 failed' }
 
-Write-Host "--- :closed_lock_with_key: Authenticode sign"
-& $env:SIGNTOOL_PATH sign /v `
-  /fd $env:AZURE_FILE_DIGEST `
-  /tr $env:AZURE_TIMESTAMP_SERVER `
-  /td $env:AZURE_TIMESTAMP_DIGEST `
-  /dlib $env:AZURE_CODE_SIGNING_DLIB `
-  /dmdf $env:AZURE_METADATA_JSON `
-  $out
-if ($LASTEXITCODE -ne 0) { throw 'signtool sign failed' }
-& $env:SIGNTOOL_PATH verify /pa /v $out
-if ($LASTEXITCODE -ne 0) { throw 'signtool verify failed' }
+function Sign-File([string]$path) {
+  Write-Host "--- :closed_lock_with_key: Authenticode sign $path"
+  & $env:SIGNTOOL_PATH sign /v `
+    /fd $env:AZURE_FILE_DIGEST `
+    /tr $env:AZURE_TIMESTAMP_SERVER `
+    /td $env:AZURE_TIMESTAMP_DIGEST `
+    /dlib $env:AZURE_CODE_SIGNING_DLIB `
+    /dmdf $env:AZURE_METADATA_JSON `
+    $path
+  if ($LASTEXITCODE -ne 0) { throw "signtool sign failed for $path" }
+  & $env:SIGNTOOL_PATH verify /pa /v $path
+  if ($LASTEXITCODE -ne 0) { throw "signtool verify failed for $path" }
+}
 
-Write-Host "--- checksum"
-$hash = (Get-FileHash -Algorithm SHA256 $out).Hash.ToLower()
-"$hash *$(Split-Path $out -Leaf)" | Set-Content "$out.sha256" -NoNewline
+Sign-File $out
+Sign-File $helper
+
+Write-Host "--- :package: tarball"
+bash .buildkite/pack-release.sh windows amd64 $out $helper
+if ($LASTEXITCODE -ne 0) { throw 'pack-release.sh failed' }
+$tar = "dist/$binBase-windows-amd64.tar.gz"
+$hash = (Get-FileHash -Algorithm SHA256 $tar).Hash.ToLower()
+"$hash *$(Split-Path $tar -Leaf)" | Set-Content "$tar.sha256" -NoNewline
+Remove-Item $out -Force

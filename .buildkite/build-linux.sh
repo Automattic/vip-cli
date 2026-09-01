@@ -24,6 +24,9 @@ if ! command -v go >/dev/null 2>&1; then
 fi
 go version
 
+echo "--- :package: fetch go-search-replace"
+.buildkite/fetch-search-replace.sh linux/amd64 linux/arm64
+
 VERSION="$(go run -mod=mod ./cmd/stamp-version)"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
@@ -35,14 +38,14 @@ build() {
     go build -buildvcs=false -trimpath \
     -ldflags="-s -w -X github.com/Automattic/vip/internal/version.Version=${VERSION} -X github.com/Automattic/vip/internal/version.Commit=${COMMIT}" \
     -o "${out}" ./cmd/vip-next
-  shasum -a 256 "${out}" > "${out}.sha256"
 }
+
+checksum() { shasum -a 256 "$1" > "$1.sha256"; }
 
 mkdir -p dist
 build amd64
 build arm64
 
-# Smoke-test only the arch matching this agent (a cross-built slice won't run here).
 case "$(uname -m)" in
   x86_64|amd64) native=amd64 ;;
   aarch64|arm64) native=arm64 ;;
@@ -53,5 +56,15 @@ if [ -n "${native}" ]; then
   "dist/${BIN_BASE}-linux-${native}" --version
   "dist/${BIN_BASE}-linux-${native}" whoami --help
 fi
+
+for arch in amd64 arm64; do
+  bin="dist/${BIN_BASE}-linux-${arch}"
+  helper="third_party/go-search-replace/linux-${arch}/go-search-replace"
+  echo "--- :package: tarball linux/${arch}"
+  .buildkite/pack-release.sh linux "${arch}" "${bin}" "${helper}"
+  checksum "dist/${BIN_BASE}-linux-${arch}.tar.gz"
+  rm -f "${bin}"
+done
+
 
 
