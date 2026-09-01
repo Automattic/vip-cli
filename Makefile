@@ -56,8 +56,8 @@ GSR_REPO := Automattic/go-search-replace
 # assets GZIPPED but attests the UNCOMPRESSED binaries, so we gunzip first and
 # then hash — verified against release 0.0.11.
 #
-# Binaries are gitignored; only MANIFEST is tracked. Upgrade with
-# `make vendor-search-replace TAG=<tag>` and commit the MANIFEST diff.
+# Binaries are gitignored; only MANIFEST is tracked. Upgrade by editing
+# MANIFEST (tag + digests) then `make vendor-search-replace`.
 #
 # ALL is the release build's entry point: bundling every platform is what makes
 # the shipped tarball self-contained.
