@@ -3,7 +3,7 @@
 GO           ?= go
 GOFLAGS      ?=
 LDFLAGS   := -s -w \
-             -X github.com/Automattic/vip/internal/version.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev) \
+             -X github.com/Automattic/vip/internal/version.Version=$(shell GOFLAGS=-mod=mod $(GO) run ./cmd/stamp-version) \
              -X github.com/Automattic/vip/internal/version.Commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 
 BIN_DIR   := bin

@@ -9,8 +9,6 @@ function Get-GitOr($cmd, $fallback) {
   try { $v = & git @cmd 2>$null; if ($LASTEXITCODE -eq 0 -and $v) { return $v.Trim() } } catch {}
   return $fallback
 }
-$version = Get-GitOr @('describe','--tags','--always','--dirty') 'dev'
-$commit  = Get-GitOr @('rev-parse','--short','HEAD') 'unknown'
 
 New-Item -ItemType Directory -Force -Path dist | Out-Null
 $out = "dist/$binBase-windows-amd64.exe"
@@ -25,6 +23,10 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
 }
 go version
 if ($LASTEXITCODE -ne 0) { throw 'go not usable after install' }
+
+$version = (& go run -mod=mod ./cmd/stamp-version | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or -not $version) { throw 'stamp-version failed' }
+$commit = Get-GitOr @('rev-parse','--short','HEAD') 'unknown'
 
 Write-Host "--- :go: build windows/amd64"
 $env:CGO_ENABLED = '0'; $env:GOOS = 'windows'; $env:GOARCH = 'amd64'

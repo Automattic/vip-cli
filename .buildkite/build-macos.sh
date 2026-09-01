@@ -22,7 +22,7 @@ go version
 # Bundler installs to `vendor/bundle`, which makes Go take `-mod=vendor`.
 export GOFLAGS="${GOFLAGS:--mod=mod}"
 
-VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+VERSION="$(go run -mod=mod ./cmd/stamp-version)"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 build() {

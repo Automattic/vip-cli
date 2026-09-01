@@ -24,7 +24,7 @@ if ! command -v go >/dev/null 2>&1; then
 fi
 go version
 
-VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+VERSION="$(go run -mod=mod ./cmd/stamp-version)"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 build() {
