@@ -66,5 +66,3 @@ for arch in amd64 arm64; do
   rm -f "${bin}"
 done
 
-
-
