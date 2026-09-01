@@ -66,6 +66,7 @@ Sign-File $out
 Sign-File $helper
 
 Write-Host "--- :package: tarball"
+$env:BIN_BASE = $binBase
 bash .buildkite/pack-release.sh windows amd64 $out $helper
 if ($LASTEXITCODE -ne 0) { throw 'pack-release.sh failed' }
 $tar = "dist/$binBase-windows-amd64.tar.gz"
