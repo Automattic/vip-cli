@@ -75,6 +75,26 @@ func TestVerifyDownloadsRejectsMalformedChecksum(t *testing.T) {
 	}
 }
 
+func TestVerifyDownloadsRejectsChecksumForAnotherFile(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	writeCompleteArtifactSet(t, root)
+	archiveName := "vip-next-darwin-amd64.tar.gz"
+	contents, err := os.ReadFile(filepath.Join(root, archiveName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := fmt.Sprintf("%x", sha256.Sum256(contents))
+	checksumPath := filepath.Join(root, archiveName+".sha256")
+	if err := os.WriteFile(checksumPath, []byte(digest+"  dist/not-the-archive.tar.gz\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := VerifyDownloads(root); err == nil || !strings.Contains(err.Error(), "filename") {
+		t.Fatalf("VerifyDownloads() error = %v, want checksum filename error", err)
+	}
+}
+
 func writeCompleteArtifactSet(t *testing.T, root string) {
 	t.Helper()
 	archiveNumber := 0

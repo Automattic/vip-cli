@@ -66,6 +66,11 @@ func verifyChecksum(archivePath, checksumPath string) error {
 	if len(fields) != 2 || len(fields[0]) != sha256.Size*2 {
 		return fmt.Errorf("checksum file must contain a SHA-256 digest and filename")
 	}
+	checksumName := strings.TrimPrefix(fields[1], "*")
+	checksumName = strings.TrimPrefix(checksumName, "dist/")
+	if checksumName != filepath.Base(archivePath) {
+		return fmt.Errorf("checksum filename %q does not match archive %q", fields[1], filepath.Base(archivePath))
+	}
 	expected, err := hex.DecodeString(fields[0])
 	if err != nil || len(expected) != sha256.Size {
 		return fmt.Errorf("checksum file contains an invalid SHA-256 digest")

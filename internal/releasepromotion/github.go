@@ -35,6 +35,14 @@ type Release struct {
 	Assets     []ReleaseAsset `json:"assets"`
 }
 
+type gitReference struct {
+	Ref    string `json:"ref"`
+	Object struct {
+		Type string `json:"type"`
+		SHA  string `json:"sha"`
+	} `json:"object"`
+}
+
 type GitHubClient struct {
 	BaseURL    string
 	UploadsURL string
@@ -56,19 +64,8 @@ func (c *GitHubClient) EnsureDraft(ctx context.Context, version, commit string) 
 		if release.TagName != version {
 			return Release{}, fmt.Errorf("release tag %q does not match requested version %q", release.TagName, version)
 		}
-		commitEndpoint := fmt.Sprintf("%s/repos/%s/commits/%s", c.baseURL(), GitHubRepository, url.PathEscape(version))
-		var resolved struct {
-			SHA string `json:"sha"`
-		}
-		commitStatus, err := c.getJSON(ctx, commitEndpoint, &resolved)
-		if err != nil {
+		if err := c.verifyTag(ctx, version, commit, false); err != nil {
 			return Release{}, err
-		}
-		if commitStatus != http.StatusOK {
-			return Release{}, fmt.Errorf("resolve tag %q: HTTP %d", version, commitStatus)
-		}
-		if resolved.SHA != commit {
-			return Release{}, fmt.Errorf("tag %q points to a different commit %q; expected %q", version, resolved.SHA, commit)
 		}
 		return release, nil
 	}
@@ -97,13 +94,20 @@ func (c *GitHubClient) EnsureDraft(ctx context.Context, version, commit string) 
 }
 
 func (c *GitHubClient) ensureTag(ctx context.Context, version, commit string) error {
+	return c.verifyTag(ctx, version, commit, true)
+}
+
+func (c *GitHubClient) verifyTag(ctx context.Context, version, commit string, createIfMissing bool) error {
 	refEndpoint := fmt.Sprintf("%s/repos/%s/git/ref/tags/%s", c.baseURL(), GitHubRepository, url.PathEscape(version))
-	var ref map[string]any
+	var ref gitReference
 	status, err := c.getJSON(ctx, refEndpoint, &ref)
 	if err != nil {
 		return err
 	}
 	if status == http.StatusNotFound {
+		if !createIfMissing {
+			return fmt.Errorf("draft release %q has no tag", version)
+		}
 		createEndpoint := fmt.Sprintf("%s/repos/%s/git/refs", c.baseURL(), GitHubRepository)
 		body := map[string]any{"ref": "refs/tags/" + version, "sha": commit}
 		if err := c.sendJSON(ctx, http.MethodPost, createEndpoint, body, http.StatusCreated, nil); err != nil {
@@ -114,20 +118,15 @@ func (c *GitHubClient) ensureTag(ctx context.Context, version, commit string) er
 	if status != http.StatusOK {
 		return fmt.Errorf("look up tag %q: HTTP %d", version, status)
 	}
-
-	commitEndpoint := fmt.Sprintf("%s/repos/%s/commits/%s", c.baseURL(), GitHubRepository, url.PathEscape(version))
-	var resolved struct {
-		SHA string `json:"sha"`
+	expectedRef := "refs/tags/" + version
+	if ref.Ref != expectedRef {
+		return fmt.Errorf("tag reference %q does not match expected %q", ref.Ref, expectedRef)
 	}
-	commitStatus, err := c.getJSON(ctx, commitEndpoint, &resolved)
-	if err != nil {
-		return err
+	if ref.Object.Type != "commit" {
+		return fmt.Errorf("tag %q must be a lightweight tag pointing directly to a commit; object type is %q", version, ref.Object.Type)
 	}
-	if commitStatus != http.StatusOK {
-		return fmt.Errorf("resolve tag %q: HTTP %d", version, commitStatus)
-	}
-	if resolved.SHA != commit {
-		return fmt.Errorf("tag %q points to a different commit %q; expected %q", version, resolved.SHA, commit)
+	if ref.Object.SHA != commit {
+		return fmt.Errorf("tag %q points to a different commit %q; expected %q", version, ref.Object.SHA, commit)
 	}
 	return nil
 }
@@ -181,7 +180,35 @@ func (c *GitHubClient) PublishPrerelease(ctx context.Context, release Release) e
 	}
 	endpoint := fmt.Sprintf("%s/repos/%s/releases/%d", c.baseURL(), GitHubRepository, release.ID)
 	body := map[string]any{"draft": false, "prerelease": true, "make_latest": "false"}
-	return c.sendJSON(ctx, http.MethodPatch, endpoint, body, http.StatusOK, &Release{})
+	if err := c.sendJSON(ctx, http.MethodPatch, endpoint, body, http.StatusOK, nil); err != nil {
+		if release.TagName != "" {
+			current, reconciled := c.reconcilePublished(ctx, release)
+			if reconciled {
+				return nil
+			}
+			if current != nil {
+				return fmt.Errorf("publish release %q: %w; reconciliation failed: %v", release.TagName, err, current)
+			}
+		}
+		return fmt.Errorf("publish release %q: %w", release.TagName, err)
+	}
+	return nil
+}
+
+func (c *GitHubClient) reconcilePublished(ctx context.Context, release Release) (error, bool) {
+	endpoint := fmt.Sprintf("%s/repos/%s/releases/tags/%s", c.baseURL(), GitHubRepository, url.PathEscape(release.TagName))
+	var current Release
+	status, err := c.getJSON(ctx, endpoint, &current)
+	if err != nil {
+		return err, false
+	}
+	if status != http.StatusOK {
+		return fmt.Errorf("look up release after publish: HTTP %d", status), false
+	}
+	if current.ID == release.ID && current.TagName == release.TagName && !current.Draft && current.Prerelease {
+		return nil, true
+	}
+	return fmt.Errorf("release state is id=%d tag=%q draft=%t prerelease=%t", current.ID, current.TagName, current.Draft, current.Prerelease), false
 }
 
 func (c *GitHubClient) uploadAsset(ctx context.Context, uploadBase, name, filePath string) error {
@@ -268,6 +295,9 @@ func (c *GitHubClient) sendJSON(ctx context.Context, method, endpoint string, va
 	defer response.Body.Close()
 	if response.StatusCode != wantStatus {
 		return httpStatusError(response)
+	}
+	if target == nil {
+		return nil
 	}
 	responseBody, err := io.ReadAll(response.Body)
 	if err != nil {
