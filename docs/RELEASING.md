@@ -70,6 +70,53 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 You can release either using GitHub Actions or locally.
 
+### VIP CLI 5 Go prereleases
+
+VIP CLI 5 releases contain only the Go `vip-next` and `go-search-replace`
+binaries. The Node/npm CLI remains on 4.x and this workflow does not build or
+publish it.
+
+Before the first run, complete the
+[Buildkite prerelease promotion setup](BUILD-SIGNING.md#github-prerelease-promotion-setup).
+To publish a prerelease:
+
+1. Open the
+   [`Publish VIP Next prerelease` workflow](https://github.com/Automattic/vip-cli/actions/workflows/vip-next-prerelease.yml).
+2. Select `trunk` in the **Run workflow** branch selector.
+3. Enter an unprefixed version such as `5.0.0-beta.1`, then run the workflow.
+4. The workflow creates the tag at the selected full commit and creates a draft
+   release. The tag triggers Buildkite's native signing jobs.
+5. Wait while the workflow finds the Buildkite build with that exact tag and
+   commit, downloads all five archives and checksums, validates the archive
+   contents, and uploads the verified files.
+6. The release becomes public only after all verification and uploads succeed.
+
+If a run fails, its tag and draft release remain in place. Fix the cause and
+rerun the same version from the same commit. Never move the tag or reuse that
+version for another commit. The helper rejects a tag that resolves elsewhere
+and refuses to modify a published release.
+
+After publication, download the archive and checksum for one native platform,
+verify the checksum, and run the binary:
+
+```bash
+# macOS example
+test "$(shasum -a 256 vip-next-darwin-arm64.tar.gz | awk '{print $1}')" = \
+  "$(awk '{print $1}' vip-next-darwin-arm64.tar.gz.sha256)"
+tar -xzf vip-next-darwin-arm64.tar.gz
+./vip-next --version
+
+# Linux example
+test "$(sha256sum vip-next-linux-amd64.tar.gz | awk '{print $1}')" = \
+  "$(awk '{print $1}' vip-next-linux-amd64.tar.gz.sha256)"
+tar -xzf vip-next-linux-amd64.tar.gz
+./vip-next --version
+```
+
+The reported version must exactly match the prerelease tag. Windows users can
+verify with `Get-FileHash -Algorithm SHA256` before extracting and running
+`vip-next.exe --version`.
+
 ### Publishing via GitHub Actions (preferred)
 
 This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
