@@ -16,7 +16,7 @@ func TestScaffoldDoesNotOverwriteOrInstall(t *testing.T) {
 		t.Fatal(err)
 	}
 	before, _ := os.ReadFile(filepath.Join(dir, "package.json"))
-	if !strings.Contains(string(before), `"0.3.2"`) || !strings.Contains(string(before), `"0.27.0"`) {
+	if !strings.Contains(string(before), `"0.4.0"`) || !strings.Contains(string(before), `"0.27.0"`) {
 		t.Fatalf("dependencies: %s", before)
 	}
 	if err := ScaffoldProject(dir, "assemblyscript"); err == nil {
