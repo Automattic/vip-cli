@@ -26,6 +26,15 @@ func TestEnsureDraftCreatesReleaseAndTagAtCommit(t *testing.T) {
 			http.NotFound(w, r)
 		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/git/ref/tags/"):
 			http.NotFound(w, r)
+		case r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/git/refs"):
+			mutations = append(mutations, "tag")
+			var body map[string]any
+			decodeJSONBody(t, r, &body)
+			if body["ref"] != "refs/tags/"+version || body["sha"] != commit {
+				t.Fatalf("tag body = %#v", body)
+			}
+			w.WriteHeader(http.StatusCreated)
+			writeJSON(t, w, map[string]any{"ref": "refs/tags/" + version})
 		case r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/releases"):
 			mutations = append(mutations, "create")
 			var body map[string]any
@@ -45,7 +54,7 @@ func TestEnsureDraftCreatesReleaseAndTagAtCommit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if release.ID != 12 || len(mutations) != 1 {
+	if release.ID != 12 || strings.Join(mutations, ",") != "tag,create" {
 		t.Fatalf("release = %#v, mutations = %v", release, mutations)
 	}
 }
@@ -105,23 +114,31 @@ func TestEnsureDraftRejectsPublishedRelease(t *testing.T) {
 	}
 }
 
-func TestEnsureDraftRejectsExistingTagWithoutRelease(t *testing.T) {
+func TestEnsureDraftResumesExistingMatchingTagWithoutRelease(t *testing.T) {
 	t.Parallel()
-	var mutations int
+	const version = "5.0.0-beta.1"
+	const commit = "0123456789abcdef0123456789abcdef01234567"
+	var mutations []string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			mutations++
-		}
-		if strings.Contains(r.URL.Path, "/releases/tags/") {
+		switch {
+		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/releases/tags/"):
 			http.NotFound(w, r)
-			return
+		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/git/ref/tags/"):
+			writeJSON(t, w, map[string]any{"ref": "refs/tags/" + version})
+		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/commits/"):
+			writeJSON(t, w, map[string]string{"sha": commit})
+		case r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/releases"):
+			mutations = append(mutations, "create")
+			w.WriteHeader(http.StatusCreated)
+			writeJSON(t, w, Release{ID: 13, TagName: version, Draft: true, Prerelease: true})
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.Path)
 		}
-		writeJSON(t, w, map[string]any{"ref": "refs/tags/5.0.0-beta.1"})
 	}))
 	defer server.Close()
-	_, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), "5.0.0-beta.1", strings.Repeat("b", 40))
-	if err == nil || !strings.Contains(err.Error(), "without a release") || mutations != 0 {
-		t.Fatalf("error = %v, mutations = %d", err, mutations)
+	release, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, commit)
+	if err != nil || release.ID != 13 || strings.Join(mutations, ",") != "create" {
+		t.Fatalf("release = %#v, error = %v, mutations = %v", release, err, mutations)
 	}
 }
 

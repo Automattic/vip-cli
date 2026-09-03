@@ -74,17 +74,8 @@ func (c *GitHubClient) EnsureDraft(ctx context.Context, version, commit string) 
 		return Release{}, fmt.Errorf("look up release %q: HTTP %d", version, status)
 	}
 
-	refEndpoint := fmt.Sprintf("%s/repos/%s/git/ref/tags/%s", c.baseURL(), GitHubRepository, url.PathEscape(version))
-	var ref map[string]any
-	refStatus, err := c.getJSON(ctx, refEndpoint, &ref)
-	if err != nil {
+	if err := c.ensureTag(ctx, version, commit); err != nil {
 		return Release{}, err
-	}
-	if refStatus == http.StatusOK {
-		return Release{}, fmt.Errorf("tag %q already exists without a release; refusing to reuse it", version)
-	}
-	if refStatus != http.StatusNotFound {
-		return Release{}, fmt.Errorf("look up tag %q: HTTP %d", version, refStatus)
 	}
 
 	body := map[string]any{
@@ -101,6 +92,42 @@ func (c *GitHubClient) EnsureDraft(ctx context.Context, version, commit string) 
 		return Release{}, err
 	}
 	return release, nil
+}
+
+func (c *GitHubClient) ensureTag(ctx context.Context, version, commit string) error {
+	refEndpoint := fmt.Sprintf("%s/repos/%s/git/ref/tags/%s", c.baseURL(), GitHubRepository, url.PathEscape(version))
+	var ref map[string]any
+	status, err := c.getJSON(ctx, refEndpoint, &ref)
+	if err != nil {
+		return err
+	}
+	if status == http.StatusNotFound {
+		createEndpoint := fmt.Sprintf("%s/repos/%s/git/refs", c.baseURL(), GitHubRepository)
+		body := map[string]any{"ref": "refs/tags/" + version, "sha": commit}
+		if err := c.sendJSON(ctx, http.MethodPost, createEndpoint, body, http.StatusCreated, nil); err != nil {
+			return fmt.Errorf("create tag %q: %w", version, err)
+		}
+		return nil
+	}
+	if status != http.StatusOK {
+		return fmt.Errorf("look up tag %q: HTTP %d", version, status)
+	}
+
+	commitEndpoint := fmt.Sprintf("%s/repos/%s/commits/%s", c.baseURL(), GitHubRepository, url.PathEscape(version))
+	var resolved struct {
+		SHA string `json:"sha"`
+	}
+	commitStatus, err := c.getJSON(ctx, commitEndpoint, &resolved)
+	if err != nil {
+		return err
+	}
+	if commitStatus != http.StatusOK {
+		return fmt.Errorf("resolve tag %q: HTTP %d", version, commitStatus)
+	}
+	if resolved.SHA != commit {
+		return fmt.Errorf("tag %q points to a different commit %q; expected %q", version, resolved.SHA, commit)
+	}
+	return nil
 }
 
 func (c *GitHubClient) ReplaceAssets(ctx context.Context, release Release, root string) error {
