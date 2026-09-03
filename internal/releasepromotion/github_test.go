@@ -176,6 +176,9 @@ func TestReplaceAssetsDeletesKnownAssetsAndUploadsVerifiedFiles(t *testing.T) {
 			deleted = append(deleted, filepath.Base(r.URL.Path))
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodPost:
+			if r.ContentLength <= 0 {
+				t.Errorf("upload Content-Length = %d, want positive", r.ContentLength)
+			}
 			uploaded = append(uploaded, r.URL.Query().Get("name"))
 			w.WriteHeader(http.StatusCreated)
 		default:

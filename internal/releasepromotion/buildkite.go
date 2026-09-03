@@ -37,7 +37,12 @@ type BuildkiteClient struct {
 
 func (c *BuildkiteClient) WaitForTaggedBuild(ctx context.Context, tag, commit string) (Build, error) {
 	for {
-		query := url.Values{"branch": {tag}, "per_page": {"30"}}
+		query := url.Values{
+			"branch":       {tag},
+			"commit":       {commit},
+			"exclude_jobs": {"true"},
+			"per_page":     {"30"},
+		}
 		endpoint := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds?%s", c.baseURL(), BuildkiteOrganization, BuildkitePipeline, query.Encode())
 		var builds []Build
 		if err := c.getJSON(ctx, endpoint, &builds); err != nil {
@@ -56,7 +61,7 @@ func (c *BuildkiteClient) WaitForTaggedBuild(ctx context.Context, tag, commit st
 			switch build.State {
 			case "passed":
 				return build, nil
-			case "scheduled", "running", "blocked":
+			case "creating", "scheduled", "waiting", "running", "failing", "canceling", "blocked":
 				// Wait below.
 			default:
 				return Build{}, fmt.Errorf("Buildkite build %d ended in state %q: %s", build.Number, build.State, build.WebURL)
@@ -70,7 +75,7 @@ func (c *BuildkiteClient) WaitForTaggedBuild(ctx context.Context, tag, commit st
 }
 
 func (c *BuildkiteClient) GetBuild(ctx context.Context, number int) (Build, error) {
-	endpoint := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%d", c.baseURL(), BuildkiteOrganization, BuildkitePipeline, number)
+	endpoint := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%d?exclude_jobs=true", c.baseURL(), BuildkiteOrganization, BuildkitePipeline, number)
 	var build Build
 	if err := c.getJSON(ctx, endpoint, &build); err != nil {
 		return Build{}, err

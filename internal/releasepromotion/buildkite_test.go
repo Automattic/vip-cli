@@ -23,6 +23,12 @@ func TestWaitForTaggedBuildSelectsExactTagAndCommit(t *testing.T) {
 		if got := r.URL.Query().Get("branch"); got != tag {
 			t.Errorf("branch query = %q, want %q", got, tag)
 		}
+		if got := r.URL.Query().Get("commit"); got != commit {
+			t.Errorf("commit query = %q, want %q", got, commit)
+		}
+		if got := r.URL.Query().Get("exclude_jobs"); got != "true" {
+			t.Errorf("exclude_jobs query = %q, want true", got)
+		}
 		writeJSON(t, w, []Build{
 			{Number: 1, Branch: "trunk", Commit: commit, State: "passed", CreatedAt: time.Unix(1, 0)},
 			{Number: 2, Branch: tag, Commit: strings.Repeat("a", 40), State: "passed", CreatedAt: time.Unix(2, 0)},
@@ -68,7 +74,7 @@ func TestWaitForTaggedBuildIgnoresStaleCommitBuild(t *testing.T) {
 
 func TestWaitForTaggedBuildWaitsThroughScheduledAndRunning(t *testing.T) {
 	t.Parallel()
-	states := []string{"scheduled", "running", "passed"}
+	states := []string{"creating", "scheduled", "waiting", "running", "failing", "canceling", "blocked", "passed"}
 	var requests atomic.Int32
 	server := newBuildkiteServer(t, func(w http.ResponseWriter, _ *http.Request) {
 		index := int(requests.Add(1)) - 1
@@ -82,7 +88,7 @@ func TestWaitForTaggedBuildWaitsThroughScheduledAndRunning(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if build.State != "passed" || requests.Load() != 3 {
+	if build.State != "passed" || requests.Load() != int32(len(states)) {
 		t.Fatalf("build state = %q, requests = %d", build.State, requests.Load())
 	}
 }

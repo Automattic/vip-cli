@@ -190,6 +190,10 @@ func (c *GitHubClient) uploadAsset(ctx context.Context, uploadBase, name, filePa
 		return err
 	}
 	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
 	endpoint, err := url.Parse(uploadBase)
 	if err != nil {
 		return fmt.Errorf("parse release upload URL: %w", err)
@@ -201,6 +205,7 @@ func (c *GitHubClient) uploadAsset(ctx context.Context, uploadBase, name, filePa
 	if err != nil {
 		return err
 	}
+	request.ContentLength = info.Size()
 	c.authorize(request)
 	if strings.HasSuffix(name, ".sha256") {
 		request.Header.Set("Content-Type", "text/plain")
