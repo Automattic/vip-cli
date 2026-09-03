@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/Automattic/vip/internal/httpproxy"
 )
 
 const defaultBuildkiteBaseURL = "https://api.buildkite.com/v2"
@@ -181,7 +183,7 @@ func (c *BuildkiteClient) httpClient() *http.Client {
 	if c.HTTPClient != nil {
 		return c.HTTPClient
 	}
-	return &http.Client{Timeout: 30 * time.Second}
+	return httpproxy.ClientWithTimeout(30 * time.Second)
 }
 
 func (c *BuildkiteClient) pollInterval() time.Duration {
