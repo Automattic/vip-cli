@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Build the Linux vip-next binaries + checksums on a Buildkite Linux agent.
-# Linux has no OS-enforced executable signature; we publish checksums (a detached
-# GPG/cosign signature is optional — see the bottom of this file).
+# Linux has no OS-enforced executable signature; we publish checksums.
 
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"
 
-command -v go >/dev/null 2>&1 || { echo "go not found; agent must provide Go ${GO_VERSION:-1.27}+" >&2; exit 1; }
+if ! command -v go >/dev/null 2>&1; then
+  echo "--- :package: install go"
+  version="$(awk '/^toolchain / { print $2; exit }' go.mod)"
+  version="${version#go}"
+  [ -n "${version}" ] || { echo "no toolchain directive in go.mod" >&2; exit 1; }
+  case "$(uname -m)" in
+    x86_64|amd64) arch=amd64 ;;
+    aarch64|arm64) arch=arm64 ;;
+    *) echo "unsupported arch $(uname -m)" >&2; exit 1 ;;
+  esac
+  # Not `$HOME/go` — that is GOPATH.
+  prefix="${HOME}/.local"
+  mkdir -p "${prefix}"
+  curl -fsSL "https://go.dev/dl/go${version}.linux-${arch}.tar.gz" | tar -C "${prefix}" -xz
+  export PATH="${prefix}/go/bin:${PATH}"
+fi
 go version
 
-VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo dev)"
+VERSION="$(go run -mod=mod ./cmd/stamp-version)"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 build() {
-  local goarch="$1" out="dist/${BIN_BASE}-linux-${goarch}"
+  local goarch="$1"
+  local out="dist/${BIN_BASE}-linux-${goarch}"
   echo "--- :go: build linux/${goarch}"
   CGO_ENABLED=0 GOOS=linux GOARCH="${goarch}" \
     go build -buildvcs=false -trimpath \
@@ -39,5 +54,4 @@ if [ -n "${native}" ]; then
   "dist/${BIN_BASE}-linux-${native}" whoami --help
 fi
 
-# Optional detached signature (needs an infra-owned key); checksums-only by default.
-# gpg --armor --detach-sign "dist/${BIN_BASE}-linux-amd64"   # ← infra: enable if desired
+
