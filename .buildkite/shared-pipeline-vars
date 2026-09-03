@@ -5,17 +5,12 @@
 
 # a8c CI toolkit Buildkite plugin — provides install_gems, secret injection, and
 # GitHub status helpers on the macOS agent.
-export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#5.3.1"   # ← infra: confirm current version
+export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#6.3.0"
 
-# Go toolchain the build scripts require. encoding/json/v2 is standard in Go 1.27.
-export GO_VERSION="1.27"                                     # ← infra: match your agent provisioning
-
-# Binary base name + macOS signing identities (team PZYM8XX95Q = Automattic, Inc.).
 export BIN_BASE="vip-next"
-export MACOS_TEAM_ID="PZYM8XX95Q"
-export MACOS_SIGN_IDENTITY="Developer ID Application: Automattic, Inc. (PZYM8XX95Q)"
-export MACOS_INSTALLER_IDENTITY="Developer ID Installer: Automattic, Inc. (PZYM8XX95Q)"  # ← infra: confirm this cert exists
 
-# NOTE: unlike the reference we set no Xcode IMAGE_ID / .xcode-version — this is a
-# plain Go build, no fyne/Xcode. If your mac queue requires a specific VM image,
-# add:  export IMAGE_ID="<image>"   # ← infra
+# The macOS VM to run on. The `mac` queue's command hook aborts when IMAGE_ID is
+# unset, and the signing step needs `codesign` and `xcrun notarytool`
+# regardless of Go being the compiler.
+XCODE_VERSION=$(grep -Ev '^[[:space:]]*(#|$)' .xcode-version | head -n1 | sed -E 's/^[[:space:]]*//; s/^~> ?//; s/[[:space:]]*$//')
+export IMAGE_ID="xcode-$XCODE_VERSION"
