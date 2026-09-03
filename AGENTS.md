@@ -8,12 +8,12 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - Node.js shared logic sits under `src/lib`; GraphQL command wrappers in `src/commands`; fixtures/tests in `__fixtures__` and `__tests__` (E2E lives in `__tests__/devenv-e2e`).
 - Go entrypoint and command registration live in `cmd/vip-next/main.go` and `cmd/vip-next/root.go`; Cobra command implementations live in `cmd/vip-next/commands`, shared logic in `internal`, and tests alongside the Go source. Build `bin/vip-next` with `make build`.
 - Cross-runtime parity tests live in `internal/parity`, with scenarios in `testdata/parity`.
-- Node.js configuration is loaded by `src/lib/cli/config.ts`: prefer `config/config.local.json`, then `config/config.publish.json`. SEA can fall back to the bundled publish config when on-disk lookups return only `ENOENT`; other read/parse failures with no usable file remain fatal. Go uses configuration wired in `cmd/vip-next/main.go` and constants such as `internal/telemetry/config.go`, not this Node.js file loader.
+- Node.js configuration is loaded by `src/lib/cli/config.ts`: prefer `config/config.local.json`, then `config/config.publish.json`; missing or invalid files remain fatal. Go uses configuration wired in `cmd/vip-next/main.go` and constants such as `internal/telemetry/config.go`, not this Node.js file loader.
 
 ## Command Changes: Both Runtimes Required
 
 - Implement every new command, command enhancement, and command bug fix in both the Node.js and Go runtimes in the same change. A command change is not complete when only one runtime supports it. If one runtime cannot support the change, surface the blocker and get explicit approval for an exception before treating the work as complete.
-- Trace and update both command registrations and implementations. For new Node.js bins, update `package.json#bin`, the parent command, and the applicable registry in `src/lib/cli/internal-bin-loader.js` for SEA dispatch. Wire Go commands into their parent Cobra command or `cmd/vip-next/root.go`; do not assume a shared API change updates both clients.
+- Trace and update both command registrations and implementations. For new Node.js bins, update `package.json#bin` and the parent command. Wire Go commands into their parent Cobra command or `cmd/vip-next/root.go`; do not assume a shared API change updates both clients.
 - Preserve parity for command names, aliases, positional arguments, flags, defaults, parsing (including `-x=value` and the `--` boundary), help, and examples. Match app/env resolution, validation, authentication, confirmation prompts, production safeguards, and non-interactive behavior.
 - Match observable results: stdout/stderr, output formats and fields, errors and exit codes, API requests, filesystem effects, and telemetry. Reuse each runtime's existing helpers rather than bypassing its safety or middleware contracts.
 - Add or update tests in both runtimes and extend the relevant differential scenarios in `internal/parity` and `testdata/parity`. Cover successful execution and applicable validation, error, and confirmation paths using equivalent inputs and fixtures.
@@ -42,7 +42,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ## Build, Test, Tooling
 
-- Node.js requires `>=22.19.0` (`package.json#engines.node`); follow `.nvmrc` for development and check `node -v`. Postinstall runs `helpers/check-version.js` and rejects unsupported versions. Node SEA builds have a separate Node 22.x requirement below.
+- Node.js requires `>=22.19.0` (`package.json#engines.node`); follow `.nvmrc` for development and check `node -v`. Postinstall runs `helpers/check-version.js` and rejects unsupported versions.
 - Babel, not TypeScript, emits `dist`; `babel.config.js` still targets Node 18. That syntax target does not polyfill newer Node APIs or lower the supported runtime minimum. Run `npm run check-types` as well as builds when changing Node.js code, and preserve paths relative to the compiled layout.
 - Go requires 1.27 (`go.mod`); the tree uses standard-library `encoding/json/v2`. Do not add the obsolete `GOEXPERIMENT=jsonv2` setting.
 - `npm test` runs lint, type-checking, and Jest, excluding dev-env E2E. Use `npm run jest -- --runTestsByPath <test-path>` while iterating; still run relevant lint and type checks before completing code changes.
@@ -88,14 +88,13 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ## Telemetry, Credentials, and Temporary Data
 
-- Node.js analytics sending is disabled by `DO_NOT_TRACK=1`, not `NODE_ENV=test`; tracker initialization can still access/create the credential-backed analytics UUID, so mock it in unit tests. Node's update notifier is suppressed by `NODE_ENV=test` or `VIP_CLI_SEA_MODE=1`. Go telemetry is disabled by `DO_NOT_TRACK` or `GO_ENV=test`/`NODE_ENV=test`.
+- Node.js analytics sending is disabled by `DO_NOT_TRACK=1`, not `NODE_ENV=test`; tracker initialization can still access/create the credential-backed analytics UUID, so mock it in unit tests. Node's update notifier is suppressed by `NODE_ENV=test`. Go telemetry is disabled by `DO_NOT_TRACK` or `GO_ENV=test`/`NODE_ENV=test`.
 - Node.js normally stores tokens/UUIDs in the OS keychain, falling back to Configstore when unavailable. Go uses the OS keyring, with a headless-Linux fallback to `credentials.json` under `os.UserConfigDir()/vip` (mode 0600). Do not print credentials, merge runtime namespaces, or broadly delete stores/caches to debug state; identify the exact entry and obtain approval before deleting user data.
 - Node.js `makeTempDir()` registers cleanup on process exit; Go callers use explicit/deferred cleanup for temporary files. Abrupt termination can leave artifacts, and process exits can bypass Go defers. Use isolated test directories and only clean up artifacts owned by the current operation.
 
 ## Release & Packaging
 
 - **Node.js npm:** `prepare` runs `npm run clean && npm run build`; package bins point to `dist`. `helpers/prepublishOnly.js` requires `trunk` for the `latest` tag, checks the supported Node version, and runs tests outside CI. Rebuild before publishing.
-- **Node.js SEA:** use `docs/SEA-BUILD-SIGNING.md` and `helpers/build-sea.js`. `npm run build:sea` requires Node 22.x, embeds the Node runtime, and relies on the internal-bin registry for dispatch. This is separate from the Go executable.
 - **Go:** use `make build` and `docs/BUILD-SIGNING.md` for `bin/vip-next`, version stamping, cross-compilation, and platform-specific signing. Go builds use `CGO_ENABLED=0`; they do not embed Node.js. Check the current `.buildkite/build-*` scripts when changing packaging.
 - Go search-replace bundling prefers verified binaries under `third_party/go-search-replace`, then fixtures under `__fixtures__/search-replace-binaries`; `make build` fails if none is available unless an explicit override is supplied. `make vendor-search-replace` verifies the pinned manifest checksums. Preserve bundling/signing of this companion executable; a successful Go compile alone does not prove the distributable is complete.
 - Standalone packaging does not eliminate host Docker/Compose requirements for dev-env. Publishing, deploying, or enabling remote changes requires explicit user approval; building/testing locally does not authorize release actions.

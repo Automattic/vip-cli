@@ -9,9 +9,9 @@ cross-compile every target**. Only _signing_ is platform-specific: Authenticode
 OS-enforced executable signature (publish checksums/detached signatures
 instead).
 
-> This replaces the old Node Single-Executable-Application (SEA) flow. There is
-> no `npm run build:sea`, no Node runtime to embed, and no WSL-mediated Windows
-> build — Go cross-compiles the `.exe` directly.
+This is the repository's only standalone executable flow. The Node CLI remains
+an npm package; Go cross-compiles the Windows `.exe` directly without embedding
+Node or requiring WSL.
 
 ## Prerequisites
 
