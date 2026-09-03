@@ -8,6 +8,7 @@ import { prompt } from 'enquirer';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
+import * as exit from '../lib/cli/exit';
 import { loadInternalBin } from '../lib/cli/internal-bin-loader';
 import {
 	rewriteArgvForInternalBin,
@@ -15,7 +16,7 @@ import {
 	isSeaRuntime,
 } from '../lib/cli/sea-dispatch';
 import tokenCache from '../lib/rechallenge/token-cache';
-import Token from '../lib/token';
+import Token, { EnvTokenError, ENV_TOKEN_NAME, TOKEN_URL } from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
@@ -28,7 +29,7 @@ if ( config && config.environment !== 'production' ) {
 }
 
 // Config
-const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
+const tokenURL = TOKEN_URL;
 const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
 
 async function maybeExecuteSeaTargetCommand() {
@@ -108,6 +109,16 @@ async function runLoginFlow() {
 			tokenURL
 	);
 	console.log();
+
+	if ( Token.isEnvTokenSet() ) {
+		console.log(
+			chalk.yellow(
+				`  Note: ${ ENV_TOKEN_NAME } is set and takes precedence over the stored credentials. ` +
+					`The token you log in with will not be used until you unset ${ ENV_TOKEN_NAME }.`
+			)
+		);
+		console.log();
+	}
 
 	await trackEvent( 'login_command_execute' );
 
@@ -194,7 +205,18 @@ const rootCmd = async function () {
 		}
 	}
 
-	let token = await Token.get();
+	let token;
+	try {
+		token = await Token.get();
+	} catch ( err ) {
+		// A malformed VIP_CLI_TOKEN already carries an actionable message that
+		// names the env var; surface it directly instead of crashing.
+		if ( err instanceof EnvTokenError ) {
+			exit.withError( err.message );
+		}
+
+		throw err;
+	}
 
 	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
 	const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );

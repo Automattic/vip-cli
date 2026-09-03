@@ -17,7 +17,9 @@ jest.mock( '../../src/lib/token', () => ( {
 	__esModule: true,
 	default: {
 		purge: jest.fn( () => Promise.resolve( true ) ),
+		isEnvTokenSet: jest.fn( () => false ),
 	},
+	ENV_TOKEN_NAME: 'VIP_CLI_TOKEN',
 } ) );
 
 jest.mock( '../../src/lib/rechallenge/token-cache', () => ( {
@@ -35,17 +37,22 @@ jest.mock( '../../src/lib/tracker', () => ( {
 } ) );
 
 const mockHttpApiFn = jest.mocked( http );
-// eslint-disable-next-line @typescript-eslint/unbound-method
+/* eslint-disable @typescript-eslint/unbound-method */
 const mockTokenPurgeFn = jest.mocked( Token.purge );
+const mockIsEnvTokenSetFn = jest.mocked( Token.isEnvTokenSet );
+/* eslint-enable @typescript-eslint/unbound-method */
 
 describe( 'logout', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		mockTokenPurgeFn.mockResolvedValue( true );
+		mockIsEnvTokenSetFn.mockReturnValue( false );
 	} );
 
 	it( 'purges primary token, clears elevated-token cache, and emits telemetry', async () => {
 		mockHttpApiFn.mockResolvedValueOnce( { ok: true } as unknown as Response );
 		await logout();
+		expect( mockHttpApiFn ).toHaveBeenCalledTimes( 1 );
 		expect( mockTokenPurgeFn ).toHaveBeenCalledTimes( 1 );
 		expect( tokenCache.clearAll ).toHaveBeenCalledTimes( 1 );
 		expect( trackEvent ).toHaveBeenCalledWith( 'logout_command_execute' );
@@ -56,5 +63,21 @@ describe( 'logout', () => {
 		await expect( logout() ).rejects.toThrow();
 		expect( mockTokenPurgeFn ).toHaveBeenCalledTimes( 1 );
 		expect( tokenCache.clearAll ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'does not invalidate a user-managed VIP_CLI_TOKEN server-side', async () => {
+		const consoleLogSpy = jest.spyOn( console, 'log' ).mockImplementation( () => undefined );
+		mockIsEnvTokenSetFn.mockReturnValue( true );
+		try {
+			await logout();
+			expect( mockHttpApiFn ).not.toHaveBeenCalled();
+			expect( mockTokenPurgeFn ).toHaveBeenCalledTimes( 1 );
+			expect( tokenCache.clearAll ).toHaveBeenCalledTimes( 1 );
+			expect( consoleLogSpy ).toHaveBeenCalledWith(
+				expect.stringContaining( 'VIP_CLI_TOKEN is still set' )
+			);
+		} finally {
+			consoleLogSpy.mockRestore();
+		}
 	} );
 } );

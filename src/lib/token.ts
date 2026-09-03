@@ -1,8 +1,11 @@
+import debugLib from 'debug';
 import { jwtDecode } from 'jwt-decode';
 import { randomUUID } from 'node:crypto';
 
 import { API_HOST, PRODUCTION_API_HOST } from './api/constants';
 import { getKeychain } from './keychain';
+
+const debug = debugLib( '@automattic/vip:token' );
 
 interface Payload {
 	id?: number;
@@ -12,6 +15,21 @@ interface Payload {
 
 // Config
 export const SERVICE = 'vip-go-cli';
+
+// Environment variable that supplies the auth token directly, bypassing the
+// OS keychain. Precedent: gh's GH_TOKEN and this repo's WPVIP_DEPLOY_TOKEN.
+export const ENV_TOKEN_NAME = 'VIP_CLI_TOKEN';
+
+export const TOKEN_URL = 'https://dashboard.wpvip.com/me/cli/token';
+
+/**
+ * Thrown when the token supplied via the VIP_CLI_TOKEN environment variable
+ * cannot be decoded. Distinct from a keychain read failure so callers can
+ * surface an actionable message that names the env var rather than the
+ * keychain.
+ */
+export class EnvTokenError extends Error {}
+
 export default class Token {
 	private readonly _raw?: string;
 	private readonly _id?: number;
@@ -103,7 +121,30 @@ export default class Token {
 		return keychain.setPassword( service, token );
 	}
 
+	/**
+	 * Returns true when a non-empty VIP_CLI_TOKEN is set in the environment.
+	 * When set, it takes precedence over any keychain-stored token.
+	 */
+	public static isEnvTokenSet(): boolean {
+		return Boolean( process.env[ ENV_TOKEN_NAME ]?.trim() );
+	}
+
 	public static async get(): Promise< Token > {
+		const envToken = process.env[ ENV_TOKEN_NAME ];
+		if ( envToken?.trim() ) {
+			// The env var supplies the token directly; never touch the keychain.
+			try {
+				return new Token( envToken );
+			} catch ( err ) {
+				debug( 'Failed to decode token from %s: %o', ENV_TOKEN_NAME, err );
+				throw new EnvTokenError(
+					`The token in the ${ ENV_TOKEN_NAME } environment variable is malformed. ` +
+						`Provide a valid Personal Access Token from ${ TOKEN_URL }, ` +
+						`or unset ${ ENV_TOKEN_NAME } to use the token stored in the keychain.`
+				);
+			}
+		}
+
 		const service = Token.getServiceName();
 		const keychain = await getKeychain();
 		const token = await keychain.getPassword( service );
