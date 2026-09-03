@@ -24,7 +24,7 @@ steps:
       - github_commit_status:
           context: 'Build & sign (macOS)'
     artifact_paths:
-      - 'dist/vip-next-darwin-*'
+      - 'dist/vip-next-darwin-*.tar.gz*'
 
   - label: ':windows: Build & sign (Windows)'
     command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite/build-windows.ps1
@@ -36,7 +36,7 @@ steps:
       - github_commit_status:
           context: 'Build & sign (Windows)'
     artifact_paths:
-      - 'dist/vip-next-windows-amd64.exe*'
+      - 'dist/vip-next-windows-amd64.tar.gz*'
 
   - label: ':linux: Build (Linux)'
     command: .buildkite/build-linux.sh
@@ -46,4 +46,4 @@ steps:
       - github_commit_status:
           context: 'Build (Linux)'
     artifact_paths:
-      - 'dist/vip-next-linux-*'
+      - 'dist/vip-next-linux-*.tar.gz*'

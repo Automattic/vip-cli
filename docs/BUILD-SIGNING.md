@@ -243,11 +243,10 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
   (`a8c-fastlane-match`). Signing and notarization are the
   `sign_and_notarize` lane: Developer ID Application, identifier
   `com.automattic.vip-cli`, no staple on a bare Mach-O.
-- **macOS artifacts:** two signed + notarized bare binaries (arm64, amd64;
-  online-verified).
-- **Windows / Linux artifacts:** signed `.exe` (Azure Trusted Signing via
-  `setup_azure_trusted_signing.ps1`) and the two Linux binaries with
-  `.sha256` checksums.
+- **macOS artifacts:** per-arch `.tar.gz` of `vip-next` + `go-search-replace`,
+  both signed and notarized (online-verified).
+- **Windows / Linux artifacts:** the same tarball layout. Windows Authenticode-
+  signs both PEs via Azure Trusted Signing; Linux checksums only.
 
 ### Verifying a real run
 
@@ -318,42 +317,13 @@ Upstream 0.0.11 publishes `darwin_{amd64,arm64}`, `linux_{386,amd64,arm64}`,
 `windows_{386,amd64,arm64}` — so `linux/arm64` (Graviton, ARM CI, Docker on
 Apple Silicon), previously unsupported, is covered with no self-building.
 
-### Still needed in the signing pipeline
+CI fetches the helper with `.buildkite/fetch-search-replace.sh` (curl of the
+public GitHub release, then the MANIFEST sha256). Each arch is packed as
+`vip-next` + `go-search-replace` in a `.tar.gz` after signing.
 
-1. **Build agents need the `gh` CLI, authenticated**, for
-   `make vendor-search-replace`. Alternatively pre-populate
-   `third_party/go-search-replace/` from an internal mirror — but whatever
-   supplies it, the MANIFEST check must still run.
-
-2. **Release builds must run `ALL=1 make vendor-search-replace` before
-   packaging**, so the tarball is self-contained. Add it ahead of the build step
-   in `.buildkite/build-*.{sh,ps1}`.
-
-3. **macOS — this is the one that will bite.** `go-search-replace` is a nested
-   Mach-O executable inside our distributable. Under the hardened runtime,
-   notarization **fails** unless every nested executable is signed. So:
-
-   - sign `go-search-replace` with the same Developer ID Application identity as
-     `vip-next`, with `--options runtime --timestamp`,
-   - sign it **before** the enclosing `.pkg`/archive is built and submitted,
-   - staple only the outer artifact.
-
-   Re-signing a third-party binary with our identity is expected for bundled
-   helpers, but it is a deliberate supply-chain decision: we are attesting a
-   binary we did not build. The MANIFEST checksum + upstream SLSA provenance is
-   what makes that defensible — do not weaken either.
-
-4. **Windows.** Authenticode-signing the bundled helper is optional; nothing
-   blocks execution if it is unsigned, but SmartScreen reputation is per-binary.
-   Recommendation: sign it, same cert as `vip-next`.
-
-5. **Linux.** Nothing extra — the existing checksum/detached-signature step
-   should cover the bundled helper as well as the main binary.
-
-6. **Verify after a real run:** the artifact contains
-   `go-search-replace[.exe]` next to `vip-next`, `codesign -vvv --deep` passes
-   on macOS, and `vip-next search-replace` works on a machine that never had the
-   binary on `PATH`.
+Re-signing the upstream helper with our Developer ID is expected. The MANIFEST
+checksum plus upstream SLSA provenance is what makes that defensible — do not
+weaken either.
 
 ### Open
 
