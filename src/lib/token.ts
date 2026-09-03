@@ -1,8 +1,11 @@
+import debugLib from 'debug';
 import { jwtDecode } from 'jwt-decode';
 import { randomUUID } from 'node:crypto';
 
 import { API_HOST, PRODUCTION_API_HOST } from './api/constants';
 import { getKeychain } from './keychain';
+
+const debug = debugLib( '@automattic/vip:token' );
 
 interface Payload {
 	id?: number;
@@ -78,17 +81,29 @@ export default class Token {
 		return this._raw ?? '';
 	}
 
+	// Per-process fallback used when the keychain cannot be reached (e.g. a
+	// locked OS keychain over SSH). Keeps analytics working anonymously for the
+	// lifetime of the process instead of crashing a command that would
+	// otherwise succeed.
+	private static ephemeralUuid?: string;
+
 	public static async uuid(): Promise< string > {
 		const service = Token.getServiceName( '-uuid' );
 
-		const keychain = await getKeychain();
-		let _uuid = await keychain.getPassword( service );
-		if ( ! _uuid ) {
-			_uuid = randomUUID();
-			await keychain.setPassword( service, _uuid );
-		}
+		try {
+			const keychain = await getKeychain();
+			let _uuid = await keychain.getPassword( service );
+			if ( ! _uuid ) {
+				_uuid = randomUUID();
+				await keychain.setPassword( service, _uuid );
+			}
 
-		return _uuid;
+			return _uuid;
+		} catch ( err ) {
+			debug( 'Failed to read/write analytics UUID from keychain; using an ephemeral UUID', err );
+			Token.ephemeralUuid ??= randomUUID();
+			return Token.ephemeralUuid;
+		}
 	}
 
 	public static async setUuid( _uuid: string ): Promise< void > {
