@@ -2,6 +2,8 @@ module github.com/Automattic/vip
 
 go 1.27
 
+toolchain go1.27.0
+
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Khan/genqlient v0.8.1

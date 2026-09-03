@@ -44,7 +44,7 @@ describe( 'edge-workers toolchains', () => {
 			expect( fs.existsSync( path.join( project, 'workers' ) ) ).toBe( true );
 
 			const pkg = JSON.parse( fs.readFileSync( path.join( project, 'package.json' ), 'utf8' ) );
-			expect( pkg.dependencies[ '@automattic/vip-edge-workers-sdk' ] ).toBe( '0.3.2' );
+			expect( pkg.dependencies[ '@automattic/vip-edge-workers-sdk' ] ).toBe( '0.4.0' );
 			expect( pkg.devDependencies.assemblyscript ).toBe( '0.27.0' );
 
 			const readme = fs.readFileSync( path.join( project, 'README.md' ), 'utf8' );

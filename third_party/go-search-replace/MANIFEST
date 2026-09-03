@@ -17,8 +17,7 @@
 # sha256. `make vendor-search-replace` does exactly that and refuses to install
 # anything that does not match.
 #
-# To upgrade: `make vendor-search-replace TAG=<new-tag>` rewrites this file, so
-# an upgrade is one reviewable commit whose diff is the tag and the digests.
+# To upgrade: edit this file (tag + digests) then `make vendor-search-replace`.
 #
 # Format: <goos>/<goarch> <sha256-of-uncompressed-binary>
 

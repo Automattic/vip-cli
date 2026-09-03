@@ -251,7 +251,7 @@ here once rather than as 32 per-scenario `expected_drift` entries.
 - dev-env WordPress version validation unported — porting Node's naively would reject every
   valid version offline.
 - `make test-parity` build agents / `gh` auth for `make vendor-search-replace`, and the macOS
-  nested-binary signing step — see the `← infra:` items in `docs/BUILD-SIGNING.md`.
+  nested-binary signing step — see `docs/BUILD-SIGNING.md`.
 
 _Fixed since this list was written:_ the `--search-replace` double-apply (now 1.23), the
 unconditional table ANSI (`internal/output/table.go` now gates on `terminalTableIsTTY`, which is

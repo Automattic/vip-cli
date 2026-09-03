@@ -230,44 +230,31 @@ Release builds run on **Buildkite** (Automattic's signing stack), not GitHub
 Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
 
 - **Pipeline:** `.buildkite/pipeline.yml` — three independent steps (macOS,
-  Windows, Linux), each building and signing on its own native agent.
-  `.buildkite/shared-pipeline-vars` is `source`'d before `buildkite-agent
-pipeline upload` to supply shared values (toolkit plugin version, Go version,
-  signing identities).
+  Windows, Linux), each building on its own native agent.
+  Setup sources `.buildkite/shared-pipeline-vars` before pipeline upload
+  (CI toolkit plugin pin, `BIN_BASE`, `IMAGE_ID`).
 - **Build scripts:** `.buildkite/build-macos.sh`, `.buildkite/build-windows.ps1`,
   `.buildkite/build-linux.sh`.
-- **Trigger / gating:** every commit builds + smoke-tests all three platforms;
-  **signing + notarization run only on tag builds** (gated on `$BUILDKITE_TAG`
-  inside each script), so notary quota and real certs aren't touched on PRs.
-- **macOS certs:** fastlane `match` (`fastlane/Fastfile` → `configure_code_signing`),
-  `type: developer_id`, stored in S3 (`a8c-fastlane-match`), authenticated with an
-  App Store Connect API key. Two certs are needed: **Developer ID Application**
-  (signs the binaries) and **Developer ID Installer** (signs the `.pkg`).
-- **macOS artifacts:** two signed + notarized bare binaries (arm64, amd64;
-  online-verified) **plus** one signed + notarized + **stapled** universal `.pkg`
-  installer (offline-verified, installs `vip-next` to `/usr/local/bin`).
-- **Windows / Linux artifacts:** signed `.exe` (Authenticode via `signtool`) and
-  the two Linux binaries with `.sha256` checksums.
+- **Trigger / gating:** every commit builds and smoke-tests all three
+  platforms. macOS signs and notarizes, and Windows Authenticode-signs, on
+  every build.
+- **macOS certs:** fastlane `match` (`fastlane/Fastfile` →
+  `configure_code_signing`), `type: developer_id`, stored in S3
+  (`a8c-fastlane-match`). Signing and notarization are the
+  `sign_and_notarize` lane: Developer ID Application, identifier
+  `com.automattic.vip-cli`, no staple on a bare Mach-O.
+- **macOS artifacts:** per-arch `.tar.gz` of `vip-next` + `go-search-replace`,
+  both signed and notarized (online-verified).
+- **Windows / Linux artifacts:** the same tarball layout. Windows Authenticode-
+  signs both PEs via Azure Trusted Signing; Linux checksums only.
 
-### Secrets & values infra owns (`# ← infra:` in the files)
+### Verifying a real run
 
-Buildkite agent queues (`windows`/`default` names), the a8c-ci-toolkit plugin
-version, the App Store Connect API key + `match` S3 credentials, the Developer ID
-**Installer** certificate (net-new vs the reference — the `.pkg` half depends on
-it), and the Windows certificate mechanism (PFX secret vs Azure Trusted Signing
-vs hardware token — EV certs can no longer use a plain PFX).
-
-### Verifying a real run (infra manual gate)
-
-After the repo is registered in Buildkite, agents are provisioned, and secrets
-are wired, run a **tag build** and confirm:
+On a Buildkite build, confirm:
 
 - `notarytool` result **Accepted** for every submission.
-- macOS binaries: `codesign --verify --strict --verbose=2` passes;
-  `spctl -a -t exec -vv <binary>` assesses as accepted.
-- macOS installer: `pkgutil --check-signature <pkg>` shows the Developer ID
-  Installer chain; `spctl -a -t install -vv <pkg>` accepts; `xcrun stapler
-validate <pkg>` confirms the staple is present (offline).
+- macOS binaries: `codesign --verify --strict --verbose=2` passes and
+  `codesign --display` shows `Identifier=com.automattic.vip-cli`.
 - Windows: `signtool verify /pa /v <exe>` passes.
 - Every artifact has a matching `.sha256`.
 
@@ -330,42 +317,13 @@ Upstream 0.0.11 publishes `darwin_{amd64,arm64}`, `linux_{386,amd64,arm64}`,
 `windows_{386,amd64,arm64}` — so `linux/arm64` (Graviton, ARM CI, Docker on
 Apple Silicon), previously unsupported, is covered with no self-building.
 
-### ← infra: what changes in the signing pipeline
+CI fetches the helper with `.buildkite/fetch-search-replace.sh` (curl of the
+public GitHub release, then the MANIFEST sha256). Each arch is packed as
+`vip-next` + `go-search-replace` in a `.tar.gz` after signing.
 
-1. **Build agents need the `gh` CLI, authenticated**, for
-   `make vendor-search-replace`. Alternatively pre-populate
-   `third_party/go-search-replace/` from an internal mirror — but whatever
-   supplies it, the MANIFEST check must still run.
-
-2. **Release builds must run `ALL=1 make vendor-search-replace` before
-   packaging**, so the tarball is self-contained. Add it ahead of the build step
-   in `.buildkite/build-*.{sh,ps1}`.
-
-3. **macOS — this is the one that will bite.** `go-search-replace` is a nested
-   Mach-O executable inside our distributable. Under the hardened runtime,
-   notarization **fails** unless every nested executable is signed. So:
-
-   - sign `go-search-replace` with the same Developer ID Application identity as
-     `vip-next`, with `--options runtime --timestamp`,
-   - sign it **before** the enclosing `.pkg`/archive is built and submitted,
-   - staple only the outer artifact.
-
-   Re-signing a third-party binary with our identity is expected for bundled
-   helpers, but it is a deliberate supply-chain decision: we are attesting a
-   binary we did not build. The MANIFEST checksum + upstream SLSA provenance is
-   what makes that defensible — do not weaken either.
-
-4. **Windows.** Authenticode-signing the bundled helper is optional; nothing
-   blocks execution if it is unsigned, but SmartScreen reputation is per-binary.
-   Recommendation: sign it, same cert as `vip-next`.
-
-5. **Linux.** Nothing extra — the existing checksum/detached-signature step
-   should cover the bundled helper as well as the main binary.
-
-6. **Verify after a real run:** the artifact contains
-   `go-search-replace[.exe]` next to `vip-next`, `codesign -vvv --deep` passes
-   on macOS, and `vip-next search-replace` works on a machine that never had the
-   binary on `PATH`.
+Re-signing the upstream helper with our Developer ID is expected. The MANIFEST
+checksum plus upstream SLSA provenance is what makes that defensible — do not
+weaken either.
 
 ### Open
 

@@ -3,7 +3,7 @@
 GO           ?= go
 GOFLAGS      ?=
 LDFLAGS   := -s -w \
-             -X github.com/Automattic/vip/internal/version.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev) \
+             -X github.com/Automattic/vip/internal/version.Version=$(shell GOFLAGS=-mod=mod $(GO) run ./cmd/stamp-version) \
              -X github.com/Automattic/vip/internal/version.Commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 
 BIN_DIR   := bin
@@ -56,42 +56,20 @@ GSR_REPO := Automattic/go-search-replace
 # assets GZIPPED but attests the UNCOMPRESSED binaries, so we gunzip first and
 # then hash — verified against release 0.0.11.
 #
-# Binaries are gitignored; only MANIFEST is tracked. Upgrade with
-# `make vendor-search-replace TAG=<tag>` and commit the MANIFEST diff.
+# Binaries are gitignored; only MANIFEST is tracked. Upgrade by editing
+# MANIFEST (tag + digests) then `make vendor-search-replace`.
 #
 # ALL is the release build's entry point: bundling every platform is what makes
 # the shipped tarball self-contained.
 vendor-search-replace:
-	@tag="$${TAG:-$$(awk '$$1=="TAG"{print $$2}' $(GSR_DIR)/MANIFEST)}"; \
-	if [ -z "$$tag" ]; then echo "no TAG in $(GSR_DIR)/MANIFEST" >&2; exit 1; fi; \
-	if [ -n "$$ALL" ]; then \
-		targets=$$(awk '/^(darwin|linux|windows)\//{print $$1}' $(GSR_DIR)/MANIFEST); \
+	@if [ -n "$$ALL" ]; then \
+		set -- $$(awk '/^(darwin|linux|windows)\//{print $$1}' $(GSR_DIR)/MANIFEST); \
+	elif [ -n "$$TARGETS" ]; then \
+		set -- $$TARGETS; \
 	else \
-		targets="$$($(GO) env GOOS)/$$($(GO) env GOARCH)"; \
+		set -- "$$($(GO) env GOOS)/$$($(GO) env GOARCH)"; \
 	fi; \
-	tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
-	for t in $$targets; do \
-		os=$${t%%/*}; arch=$${t##*/}; \
-		want=$$(awk -v k="$$t" '$$1==k{print $$2}' $(GSR_DIR)/MANIFEST); \
-		if [ -z "$$want" ]; then echo "ERROR: $$t is not pinned in $(GSR_DIR)/MANIFEST" >&2; exit 1; fi; \
-		name=go-search-replace_$${os}_$${arch}; \
-		if [ "$$os" = "windows" ]; then name=$$name.exe; fi; \
-		echo "  fetching $$name ($$tag)"; \
-		if ! gh release download "$$tag" --repo $(GSR_REPO) --pattern "$$name.gz" --dir "$$tmp" --clobber >/dev/null 2>&1; then \
-			echo "ERROR: could not download $$name.gz from $(GSR_REPO)@$$tag" >&2; \
-			echo "  needs the gh CLI, authenticated. See docs/BUILD-SIGNING.md." >&2; exit 1; fi; \
-		gunzip -f "$$tmp/$$name.gz"; \
-		got=$$(shasum -a 256 "$$tmp/$$name" | cut -d' ' -f1); \
-		if [ "$$got" != "$$want" ]; then \
-			echo "ERROR: checksum mismatch for $$t" >&2; \
-			echo "  expected (from upstream SLSA provenance): $$want" >&2; \
-			echo "  got:                                      $$got" >&2; \
-			echo "  Refusing to install. Do not bypass this." >&2; exit 1; fi; \
-		out=$(GSR_DIR)/$${os}-$${arch}; mkdir -p "$$out"; \
-		d=$$out/go-search-replace; if [ "$$os" = "windows" ]; then d=$$d.exe; fi; \
-		mv "$$tmp/$$name" "$$d"; chmod +x "$$d"; \
-		echo "  verified + installed $$d"; \
-	done
+	.buildkite/fetch-search-replace.sh "$$@"
 
 search-replace-bin:
 	@os=$$($(GO) env GOOS); arch=$$($(GO) env GOARCH); \
