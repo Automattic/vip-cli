@@ -31,6 +31,8 @@ func TestEnsureDraftCreatesReleaseAndTagAtCommit(t *testing.T) {
 		switch {
 		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/releases/tags/"):
 			http.NotFound(w, r)
+		case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/releases"):
+			writeJSON(t, w, []Release{})
 		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/git/ref/tags/"):
 			http.NotFound(w, r)
 		case r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/git/refs"):
@@ -89,6 +91,49 @@ func TestEnsureDraftResumesSameCommitDraft(t *testing.T) {
 	}
 	if release.ID != 44 {
 		t.Fatalf("release ID = %d", release.ID)
+	}
+}
+
+func TestEnsureDraftFindsDraftWhenTagEndpointOmitsDraft(t *testing.T) {
+	t.Parallel()
+	const version = "5.0.0-rc.1"
+	const commit = "0123456789abcdef0123456789abcdef01234567"
+	var mutations int
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			mutations++
+		}
+		switch {
+		case r.URL.Path == "/repos/Automattic/vip-cli/releases/tags/"+version:
+			http.NotFound(w, r)
+		case r.URL.Path == "/repos/Automattic/vip-cli/releases":
+			if r.URL.Query().Get("per_page") != "100" {
+				t.Fatalf("per_page = %q", r.URL.Query().Get("per_page"))
+			}
+			writeJSON(t, w, []Release{{
+				ID:         44,
+				TagName:    version,
+				Draft:      true,
+				Prerelease: true,
+				UploadURL:  serverURL(r) + "/uploads/44{?name,label}",
+			}})
+		case r.URL.Path == "/repos/Automattic/vip-cli/git/ref/tags/"+version:
+			writeJSON(t, w, map[string]any{
+				"ref":    "refs/tags/" + version,
+				"object": map[string]string{"type": "commit", "sha": commit},
+			})
+		default:
+			t.Fatalf("unexpected request %s %s", r.Method, r.URL.String())
+		}
+	}))
+	defer server.Close()
+
+	release, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, commit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if release.ID != 44 || mutations != 0 {
+		t.Fatalf("release = %#v, mutations = %d", release, mutations)
 	}
 }
 
@@ -182,6 +227,8 @@ func TestEnsureDraftResumesExistingMatchingTagWithoutRelease(t *testing.T) {
 		switch {
 		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/releases/tags/"):
 			http.NotFound(w, r)
+		case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/releases"):
+			writeJSON(t, w, []Release{})
 		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/git/ref/tags/"):
 			writeJSON(t, w, map[string]any{
 				"ref":    "refs/tags/" + version,
