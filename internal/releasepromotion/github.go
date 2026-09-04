@@ -72,6 +72,16 @@ func (c *GitHubClient) EnsureDraft(ctx context.Context, version, commit string) 
 	if status != http.StatusNotFound {
 		return Release{}, fmt.Errorf("look up release %q: HTTP %d", version, status)
 	}
+	existingDraft, err := c.findDraft(ctx, version)
+	if err != nil {
+		return Release{}, err
+	}
+	if existingDraft != nil {
+		if err := c.verifyTag(ctx, version, commit, false); err != nil {
+			return Release{}, err
+		}
+		return *existingDraft, nil
+	}
 
 	if err := c.ensureTag(ctx, version, commit); err != nil {
 		return Release{}, err
@@ -91,6 +101,24 @@ func (c *GitHubClient) EnsureDraft(ctx context.Context, version, commit string) 
 		return Release{}, err
 	}
 	return release, nil
+}
+
+func (c *GitHubClient) findDraft(ctx context.Context, version string) (*Release, error) {
+	endpoint := fmt.Sprintf("%s/repos/%s/releases?per_page=100", c.baseURL(), GitHubRepository)
+	var releases []Release
+	status, err := c.getJSON(ctx, endpoint, &releases)
+	if err != nil {
+		return nil, fmt.Errorf("list releases: %w", err)
+	}
+	if status != http.StatusOK {
+		return nil, fmt.Errorf("list releases: HTTP %d", status)
+	}
+	for i := range releases {
+		if releases[i].Draft && releases[i].TagName == version {
+			return &releases[i], nil
+		}
+	}
+	return nil, nil
 }
 
 func (c *GitHubClient) ensureTag(ctx context.Context, version, commit string) error {
