@@ -64,8 +64,9 @@ func ValidateArtifactManifest(artifacts []Artifact) (map[string]Artifact, error)
 	var unfinished []string
 	var duplicates []string
 	for _, artifact := range artifacts {
-		artifactPath := path.Clean(artifact.Path)
-		if artifactPath != artifact.Path {
+		normalizedPath := strings.ReplaceAll(artifact.Path, `\`, "/")
+		artifactPath := path.Clean(normalizedPath)
+		if artifactPath != normalizedPath {
 			unexpected = append(unexpected, artifact.Path)
 			continue
 		}
@@ -77,6 +78,7 @@ func ValidateArtifactManifest(artifacts []Artifact) (map[string]Artifact, error)
 			duplicates = append(duplicates, artifactPath)
 			continue
 		}
+		artifact.Path = artifactPath
 		manifest[artifactPath] = artifact
 		if artifact.State != "finished" {
 			unfinished = append(unfinished, artifactPath)

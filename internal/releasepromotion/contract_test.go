@@ -62,6 +62,34 @@ func TestValidateArtifactManifest(t *testing.T) {
 	}
 }
 
+func TestValidateArtifactManifestNormalizesWindowsSeparators(t *testing.T) {
+	t.Parallel()
+	expected := ExpectedArtifactPaths()
+	artifacts := make([]Artifact, 0, len(expected))
+	for _, artifactPath := range expected {
+		buildkitePath := artifactPath
+		if strings.Contains(artifactPath, "-windows-") {
+			buildkitePath = strings.ReplaceAll(artifactPath, "/", `\`)
+		}
+		artifacts = append(artifacts, Artifact{Path: buildkitePath, State: "finished"})
+	}
+
+	manifest, err := ValidateArtifactManifest(artifacts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, artifactPath := range expected {
+		artifact, ok := manifest[artifactPath]
+		if !ok {
+			t.Errorf("manifest missing normalized path %q", artifactPath)
+			continue
+		}
+		if artifact.Path != artifactPath {
+			t.Errorf("artifact path = %q, want normalized %q", artifact.Path, artifactPath)
+		}
+	}
+}
+
 func TestValidateArtifactManifestRejectsInvalidSets(t *testing.T) {
 	t.Parallel()
 	valid := func() []Artifact {
@@ -106,6 +134,14 @@ func TestValidateArtifactManifestRejectsInvalidSets(t *testing.T) {
 				return artifacts
 			},
 			want: []string{"not finished", ExpectedArtifactPaths()[0]},
+		},
+		{
+			name: "windows traversal",
+			mutate: func(artifacts []Artifact) []Artifact {
+				artifacts[0].Path = `dist\..\vip-next-darwin-amd64.tar.gz`
+				return artifacts
+			},
+			want: []string{"unexpected", `dist\..\vip-next-darwin-amd64.tar.gz`},
 		},
 	}
 
