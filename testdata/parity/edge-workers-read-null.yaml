@@ -1,0 +1,8 @@
+name: edge-workers-read-null
+description: edge workers read null
+argv: ["edge-workers", "list", "--app=42", "--env=develop"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 1

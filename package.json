@@ -95,7 +95,6 @@
     "check-types": "tsc",
     "postinstall": "node ./helpers/check-version.js",
     "build": "babel src -d dist --extensions=\".js,.ts\"",
-    "build:sea": "node ./helpers/build-sea.js",
     "build:watch": "babel src -d dist --watch --source-maps --extensions=\".js,.ts\"",
     "format": "npm run cmd:format -- --write",
     "format:check": "npm run cmd:format -- --check",
@@ -150,9 +149,7 @@
     "@types/ssh2": "^1.15.4",
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
-    "esbuild": "^0.28.0",
     "jest": "^30.0.0",
-    "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^6.0.2"
   },
@@ -205,7 +202,6 @@
     "@github/keytar@7.10.6": true,
     "cpu-features@0.0.10": true,
     "protobufjs@7.6.5": true,
-    "unrs-resolver@1.11.1": true,
-    "esbuild@0.28.1": true
+    "unrs-resolver@1.11.1": true
   }
 }

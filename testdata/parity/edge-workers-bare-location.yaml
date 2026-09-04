@@ -1,0 +1,8 @@
+name: edge-workers-bare-location
+description: edge workers bare location
+argv: ["edge-workers", "new", "new-worker", "--location"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 1

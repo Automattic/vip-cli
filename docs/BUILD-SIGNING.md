@@ -9,9 +9,9 @@ cross-compile every target**. Only _signing_ is platform-specific: Authenticode
 OS-enforced executable signature (publish checksums/detached signatures
 instead).
 
-> This replaces the old Node Single-Executable-Application (SEA) flow. There is
-> no `npm run build:sea`, no Node runtime to embed, and no WSL-mediated Windows
-> build — Go cross-compiles the `.exe` directly.
+This is the repository's only standalone executable flow. The Node CLI remains
+an npm package; Go cross-compiles the Windows `.exe` directly without embedding
+Node or requiring WSL.
 
 ## Prerequisites
 
@@ -247,6 +247,32 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
   both signed and notarized (online-verified).
 - **Windows / Linux artifacts:** the same tarball layout. Windows Authenticode-
   signs both PEs via Azure Trusted Signing; Linux checksums only.
+
+### GitHub prerelease promotion setup
+
+Buildkite produces and signs the binaries. The manual GitHub Actions workflow
+`.github/workflows/vip-next-prerelease.yml` creates the release tag, waits for
+the exact tag build, verifies its artifacts, and publishes a GitHub prerelease.
+Configure the connection once:
+
+1. Open the `vip-cli` pipeline settings in Buildkite.
+2. In the GitHub repository provider settings, enable builds for pushed tags.
+3. Push a disposable test `5.x` prerelease tag and confirm its Buildkite build
+   uses that tag as the build branch rather than `trunk`. Delete the disposable
+   tag after the check; do not use a version intended for release.
+4. Create a Buildkite API access token with only `read_builds` and
+   `read_artifacts`.
+5. Save that token as the GitHub Actions repository secret
+   `BUILDKITE_API_TOKEN`.
+
+Buildkite API tokens are capability-scoped. The promotion helper further fixes
+all requests to organization `automattic` and pipeline `vip-cli`; neither value
+is an operator input. The GitHub workflow's token has `contents: write` only and
+is used to create the exact-SHA tag, manage the draft, upload assets, and publish
+the prerelease.
+
+Normal trunk and pull-request builds remain private Buildkite artifacts. They do
+not create a moving public `trunk` release.
 
 ### Verifying a real run
 

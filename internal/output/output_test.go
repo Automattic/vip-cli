@@ -2,9 +2,27 @@ package output
 
 import (
 	"bytes"
+	json "encoding/json/v2"
 	"strings"
 	"testing"
 )
+
+func TestRenderJSONControlCharacters(t *testing.T) {
+	value := "safe\u007f\u009b[31m"
+	for _, data := range []any{Rows{{"value": value}}, OrderedRows{{{Key: "value", Value: value}}}} {
+		var buf bytes.Buffer
+		if err := Render(&buf, FormatJSON, data); err != nil {
+			t.Fatal(err)
+		}
+		if strings.ContainsAny(buf.String(), "\u007f\u009b") || !strings.Contains(buf.String(), `safe\u007f\u009b[31m`) {
+			t.Fatalf("control bytes: %q", buf.String())
+		}
+		var decoded []map[string]string
+		if err := json.Unmarshal(buf.Bytes(), &decoded); err != nil || decoded[0]["value"] != value {
+			t.Fatalf("decoded %v (%v)", decoded, err)
+		}
+	}
+}
 
 func TestRenderJSONRows(t *testing.T) {
 	data := Rows{

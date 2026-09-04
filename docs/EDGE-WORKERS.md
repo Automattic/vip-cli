@@ -8,6 +8,11 @@ edge workers with VIP-CLI.
 Use Node.js 22.19.0 or newer, npm 8 or newer, an authenticated VIP-CLI session, and access to the
 target application and environment. Start in a non-production environment.
 
+The Go CLI exposes the same commands under `vip-next edge-workers`. Local AssemblyScript
+builds still require Node.js and the project's npm dependencies; the Go CLI invokes the
+installed compiler directly. Use `--skip-build` only when the existing artifact has been
+separately reviewed against the intended source.
+
 The platform API creates every new worker with `active: false`; create does not accept an active
 input. The API also applies a database default of inactive as defense in depth. VIP-CLI relies on
 this enforced contract: deploy uploads a new worker first, confirms the returned inactive state,
@@ -158,6 +163,9 @@ For `--all`, every worker's planned final state is visible before any remote mut
 By default, deploy stores the worker's UTF-8 entry file alongside the WASM binary. It does not
 archive the full project or shared modules. `get` omits source by default; pass `--source` to make
 the additional on-demand source query and print the stored value.
+
+Source output preserves newlines and tabs, converts CRLF line endings to LF, and escapes other
+terminal control characters. This display formatting does not change the stored source.
 
 `--skip-source` means: do not store source on create; preserve stored source on update. Without
 the flag, an update replaces the stored source with the current entry file, including an empty

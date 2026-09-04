@@ -6,6 +6,12 @@ package: gql
 use_struct_references: true
 optional: pointer
 bindings:
+  Date:
+    type: string
+  CreateEdgeWorkerInput:
+    type: github.com/Automattic/vip/internal/gql/edgeworkerinput.Create
+  UpdateEdgeWorkerInput:
+    type: github.com/Automattic/vip/internal/gql/edgeworkerinput.Update
   Int:
     type: int64
   ID:

@@ -3,6 +3,9 @@
 const TERMINAL_CONTROL_CHARACTER = /[\u0000-\u001f\u007f-\u009f]/;
 // eslint-disable-next-line no-control-regex
 const TERMINAL_CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/g;
+// Source may contain horizontal tabs and line feeds, but no other terminal controls.
+// eslint-disable-next-line no-control-regex
+const SOURCE_CONTROL_CHARACTERS = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
 
 function escapeControlCharacter( character: string ): string {
 	const codePoint = character.codePointAt( 0 );
@@ -19,4 +22,11 @@ export function hasTerminalControlCharacters( value: string ): boolean {
 /** Render untrusted text without allowing it to emit terminal control characters. */
 export function escapeTerminalText( value: unknown ): string {
 	return String( value ).replace( TERMINAL_CONTROL_CHARACTERS, escapeControlCharacter );
+}
+
+/** Preserve source layout; normalize CRLF while escaping standalone carriage returns. */
+export function escapeTerminalSource( value: string ): string {
+	return value
+		.replace( /\r\n/g, '\n' )
+		.replace( SOURCE_CONTROL_CHARACTERS, escapeControlCharacter );
 }

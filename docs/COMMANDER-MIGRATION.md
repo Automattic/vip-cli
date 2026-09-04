@@ -1,6 +1,6 @@
 # Commander Migration Status
 
-Goal: remove the abandoned `args` package, keep CLI behavior stable, and support packaging to a single bundled executable (Node SEA or similar). See `AGENTS.md` for broader architecture traps.
+Goal: remove the abandoned `args` package and keep CLI behavior stable. See `AGENTS.md` for broader architecture traps.
 
 ## Migration Outcome
 
@@ -38,18 +38,8 @@ Goal: remove the abandoned `args` package, keep CLI behavior stable, and support
 - `npm run test:e2e:dev-env -- --runInBand __tests__/devenv-e2e/001-create.spec.js __tests__/devenv-e2e/005-update.spec.js`
 - `npm run test:e2e:dev-env -- --runInBand __tests__/devenv-e2e/008-exec.spec.js __tests__/devenv-e2e/010-import-sql.spec.js`
 
-## Single-Bundle Direction
-
-- Preferred: `esbuild` bundle rooted at `src/bin/vip.js`.
-- Keep native deps external (`@postman/node-keytar`) for SEA/packaging workflows.
-- Candidate build target:
-  - `dist/vip.bundle.cjs` for SEA ingestion or launcher wrapping.
-- Example command:
-  - `esbuild src/bin/vip.js --bundle --platform=node --target=node20 --format=cjs --outfile=dist/vip.bundle.cjs --banner:js="#!/usr/bin/env node" --external:@postman/node-keytar`
-
 ## Next Refactor Steps
 
 1. Remove global `_opts` state from `src/lib/cli/command.js` by moving to per-instance configuration.
 2. Add parser contract tests for aliasing, wildcard behavior, and short/long boolean coercion.
 3. Add stable startup/readiness integration checks around dev-env commands in CI environments with Docker.
-4. Add bundling script(s) and SEA config proof-of-concept for a single-file executable artifact.

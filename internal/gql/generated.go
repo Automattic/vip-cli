@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Automattic/vip/internal/gql/edgeworkerinput"
 	"github.com/Khan/genqlient/graphql"
 )
 
@@ -1966,6 +1967,143 @@ func (v *BackupDBCopyStartDBBackupCopyAppEnvironmentStartDBBackupCopyPayload) Ge
 	return v.Success
 }
 
+// CreateEdgeWorkerCreateEdgeWorker includes the requested fields of the GraphQL type EdgeWorker.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type CreateEdgeWorkerCreateEdgeWorker struct {
+	EdgeWorkerFields `json:"-"`
+}
+
+// GetId returns CreateEdgeWorkerCreateEdgeWorker.Id, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetId() int64 { return v.EdgeWorkerFields.Id }
+
+// GetName returns CreateEdgeWorkerCreateEdgeWorker.Name, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetName() string { return v.EdgeWorkerFields.Name }
+
+// GetLocation returns CreateEdgeWorkerCreateEdgeWorker.Location, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.EdgeWorkerFields.Location
+}
+
+// GetPhases returns CreateEdgeWorkerCreateEdgeWorker.Phases, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetPhases() []EdgeWorkerPhase {
+	return v.EdgeWorkerFields.Phases
+}
+
+// GetOnFailure returns CreateEdgeWorkerCreateEdgeWorker.OnFailure, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetOnFailure() EdgeWorkerOnFailure {
+	return v.EdgeWorkerFields.OnFailure
+}
+
+// GetActive returns CreateEdgeWorkerCreateEdgeWorker.Active, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetActive() bool { return v.EdgeWorkerFields.Active }
+
+// GetCreatedAt returns CreateEdgeWorkerCreateEdgeWorker.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetCreatedAt() string { return v.EdgeWorkerFields.CreatedAt }
+
+// GetUpdatedAt returns CreateEdgeWorkerCreateEdgeWorker.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerCreateEdgeWorker) GetUpdatedAt() string { return v.EdgeWorkerFields.UpdatedAt }
+
+func (v *CreateEdgeWorkerCreateEdgeWorker) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*CreateEdgeWorkerCreateEdgeWorker
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.CreateEdgeWorkerCreateEdgeWorker = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EdgeWorkerFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalCreateEdgeWorkerCreateEdgeWorker struct {
+	Id int64 `json:"id"`
+
+	Name string `json:"name"`
+
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+
+	Phases []EdgeWorkerPhase `json:"phases"`
+
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+
+	Active bool `json:"active"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *CreateEdgeWorkerCreateEdgeWorker) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *CreateEdgeWorkerCreateEdgeWorker) __premarshalJSON() (*__premarshalCreateEdgeWorkerCreateEdgeWorker, error) {
+	var retval __premarshalCreateEdgeWorkerCreateEdgeWorker
+
+	retval.Id = v.EdgeWorkerFields.Id
+	retval.Name = v.EdgeWorkerFields.Name
+	retval.Location = v.EdgeWorkerFields.Location
+	retval.Phases = v.EdgeWorkerFields.Phases
+	retval.OnFailure = v.EdgeWorkerFields.OnFailure
+	retval.Active = v.EdgeWorkerFields.Active
+	retval.CreatedAt = v.EdgeWorkerFields.CreatedAt
+	retval.UpdatedAt = v.EdgeWorkerFields.UpdatedAt
+	return &retval, nil
+}
+
+// CreateEdgeWorkerResponse is returned by CreateEdgeWorker on success.
+type CreateEdgeWorkerResponse struct {
+	// Create and upload a new inactive WASM edge worker. Use setEdgeWorkerActive to enable it after review.
+	CreateEdgeWorker *CreateEdgeWorkerCreateEdgeWorker `json:"createEdgeWorker"`
+}
+
+// GetCreateEdgeWorker returns CreateEdgeWorkerResponse.CreateEdgeWorker, and is useful for accessing the field via an interface.
+func (v *CreateEdgeWorkerResponse) GetCreateEdgeWorker() *CreateEdgeWorkerCreateEdgeWorker {
+	return v.CreateEdgeWorker
+}
+
+// Input for deleting an edge worker.
+type DeleteEdgeWorkerInput struct {
+	// The identifier of the edge worker to delete.
+	EdgeWorkerId int64 `json:"edgeWorkerId"`
+	// The environment the worker belongs to.
+	EnvironmentId int64 `json:"environmentId"`
+}
+
+// GetEdgeWorkerId returns DeleteEdgeWorkerInput.EdgeWorkerId, and is useful for accessing the field via an interface.
+func (v *DeleteEdgeWorkerInput) GetEdgeWorkerId() int64 { return v.EdgeWorkerId }
+
+// GetEnvironmentId returns DeleteEdgeWorkerInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *DeleteEdgeWorkerInput) GetEnvironmentId() int64 { return v.EnvironmentId }
+
+// DeleteEdgeWorkerResponse is returned by DeleteEdgeWorker on success.
+type DeleteEdgeWorkerResponse struct {
+	// Permanently delete a WASM edge worker.
+	DeleteEdgeWorker *bool `json:"deleteEdgeWorker"`
+}
+
+// GetDeleteEdgeWorker returns DeleteEdgeWorkerResponse.DeleteEdgeWorker, and is useful for accessing the field via an interface.
+func (v *DeleteEdgeWorkerResponse) GetDeleteEdgeWorker() *bool { return v.DeleteEdgeWorker }
+
 // DeleteEnvironmentVariableDeleteEnvironmentVariableEnvironmentVariablesPayload includes the requested fields of the GraphQL type EnvironmentVariablesPayload.
 // The GraphQL type's documentation follows.
 //
@@ -2321,6 +2459,600 @@ type DevEnvSyncSitesResponse struct {
 
 // GetApp returns DevEnvSyncSitesResponse.App, and is useful for accessing the field via an interface.
 func (v *DevEnvSyncSitesResponse) GetApp() *DevEnvSyncSitesApp { return v.App }
+
+// EdgeWorkerDetailApp includes the requested fields of the GraphQL type App.
+// The GraphQL type's documentation follows.
+//
+// An application managed in WordPress VIP. This is the primary entry point for traversing into environment-level operational reads.
+type EdgeWorkerDetailApp struct {
+	// The environments that belong to this application. Use this for environment discovery by ID, name, or type before selecting nested operational fields.
+	Environments []*EdgeWorkerDetailAppEnvironmentsAppEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns EdgeWorkerDetailApp.Environments, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailApp) GetEnvironments() []*EdgeWorkerDetailAppEnvironmentsAppEnvironment {
+	return v.Environments
+}
+
+// EdgeWorkerDetailAppEnvironmentsAppEnvironment includes the requested fields of the GraphQL type AppEnvironment.
+// The GraphQL type's documentation follows.
+//
+// An application environment in WordPress VIP. This type is the main operational read surface and includes commands, logs, events, backups, deployments, metrics, integrations, and security controls.
+type EdgeWorkerDetailAppEnvironmentsAppEnvironment struct {
+	// The unique identifier for the environment.
+	Id *int64 `json:"id"`
+	// The WASM edge workers deployed to the environment.
+	EdgeWorkers []*EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker `json:"edgeWorkers"`
+}
+
+// GetId returns EdgeWorkerDetailAppEnvironmentsAppEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironment) GetId() *int64 { return v.Id }
+
+// GetEdgeWorkers returns EdgeWorkerDetailAppEnvironmentsAppEnvironment.EdgeWorkers, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironment) GetEdgeWorkers() []*EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker {
+	return v.EdgeWorkers
+}
+
+// EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker includes the requested fields of the GraphQL type EdgeWorker.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker struct {
+	EdgeWorkerFields `json:"-"`
+}
+
+// GetId returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetId() int64 {
+	return v.EdgeWorkerFields.Id
+}
+
+// GetName returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Name, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetName() string {
+	return v.EdgeWorkerFields.Name
+}
+
+// GetLocation returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Location, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.EdgeWorkerFields.Location
+}
+
+// GetPhases returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Phases, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetPhases() []EdgeWorkerPhase {
+	return v.EdgeWorkerFields.Phases
+}
+
+// GetOnFailure returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.OnFailure, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetOnFailure() EdgeWorkerOnFailure {
+	return v.EdgeWorkerFields.OnFailure
+}
+
+// GetActive returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Active, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetActive() bool {
+	return v.EdgeWorkerFields.Active
+}
+
+// GetCreatedAt returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.CreatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetCreatedAt() string {
+	return v.EdgeWorkerFields.CreatedAt
+}
+
+// GetUpdatedAt returns EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetUpdatedAt() string {
+	return v.EdgeWorkerFields.UpdatedAt
+}
+
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EdgeWorkerFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker struct {
+	Id int64 `json:"id"`
+
+	Name string `json:"name"`
+
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+
+	Phases []EdgeWorkerPhase `json:"phases"`
+
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+
+	Active bool `json:"active"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) __premarshalJSON() (*__premarshalEdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker, error) {
+	var retval __premarshalEdgeWorkerDetailAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker
+
+	retval.Id = v.EdgeWorkerFields.Id
+	retval.Name = v.EdgeWorkerFields.Name
+	retval.Location = v.EdgeWorkerFields.Location
+	retval.Phases = v.EdgeWorkerFields.Phases
+	retval.OnFailure = v.EdgeWorkerFields.OnFailure
+	retval.Active = v.EdgeWorkerFields.Active
+	retval.CreatedAt = v.EdgeWorkerFields.CreatedAt
+	retval.UpdatedAt = v.EdgeWorkerFields.UpdatedAt
+	return &retval, nil
+}
+
+// EdgeWorkerDetailResponse is returned by EdgeWorkerDetail on success.
+type EdgeWorkerDetailResponse struct {
+	// Retrieve a single application.
+	App *EdgeWorkerDetailApp `json:"app"`
+}
+
+// GetApp returns EdgeWorkerDetailResponse.App, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailResponse) GetApp() *EdgeWorkerDetailApp { return v.App }
+
+// EdgeWorkerDetailWithSourceApp includes the requested fields of the GraphQL type App.
+// The GraphQL type's documentation follows.
+//
+// An application managed in WordPress VIP. This is the primary entry point for traversing into environment-level operational reads.
+type EdgeWorkerDetailWithSourceApp struct {
+	// The environments that belong to this application. Use this for environment discovery by ID, name, or type before selecting nested operational fields.
+	Environments []*EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns EdgeWorkerDetailWithSourceApp.Environments, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceApp) GetEnvironments() []*EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment {
+	return v.Environments
+}
+
+// EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment includes the requested fields of the GraphQL type AppEnvironment.
+// The GraphQL type's documentation follows.
+//
+// An application environment in WordPress VIP. This type is the main operational read surface and includes commands, logs, events, backups, deployments, metrics, integrations, and security controls.
+type EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment struct {
+	// The unique identifier for the environment.
+	Id *int64 `json:"id"`
+	// The WASM edge workers deployed to the environment.
+	EdgeWorkers []*EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker `json:"edgeWorkers"`
+}
+
+// GetId returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment) GetId() *int64 { return v.Id }
+
+// GetEdgeWorkers returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment.EdgeWorkers, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironment) GetEdgeWorkers() []*EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker {
+	return v.EdgeWorkers
+}
+
+// EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker includes the requested fields of the GraphQL type EdgeWorker.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker struct {
+	EdgeWorkerFields `json:"-"`
+	// The original source code, if it was stored. Fetched on demand.
+	Source *string `json:"source"`
+}
+
+// GetSource returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Source, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetSource() *string {
+	return v.Source
+}
+
+// GetId returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetId() int64 {
+	return v.EdgeWorkerFields.Id
+}
+
+// GetName returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Name, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetName() string {
+	return v.EdgeWorkerFields.Name
+}
+
+// GetLocation returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Location, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.EdgeWorkerFields.Location
+}
+
+// GetPhases returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Phases, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetPhases() []EdgeWorkerPhase {
+	return v.EdgeWorkerFields.Phases
+}
+
+// GetOnFailure returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.OnFailure, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetOnFailure() EdgeWorkerOnFailure {
+	return v.EdgeWorkerFields.OnFailure
+}
+
+// GetActive returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Active, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetActive() bool {
+	return v.EdgeWorkerFields.Active
+}
+
+// GetCreatedAt returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.CreatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetCreatedAt() string {
+	return v.EdgeWorkerFields.CreatedAt
+}
+
+// GetUpdatedAt returns EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetUpdatedAt() string {
+	return v.EdgeWorkerFields.UpdatedAt
+}
+
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EdgeWorkerFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker struct {
+	Source *string `json:"source"`
+
+	Id int64 `json:"id"`
+
+	Name string `json:"name"`
+
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+
+	Phases []EdgeWorkerPhase `json:"phases"`
+
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+
+	Active bool `json:"active"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) __premarshalJSON() (*__premarshalEdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker, error) {
+	var retval __premarshalEdgeWorkerDetailWithSourceAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker
+
+	retval.Source = v.Source
+	retval.Id = v.EdgeWorkerFields.Id
+	retval.Name = v.EdgeWorkerFields.Name
+	retval.Location = v.EdgeWorkerFields.Location
+	retval.Phases = v.EdgeWorkerFields.Phases
+	retval.OnFailure = v.EdgeWorkerFields.OnFailure
+	retval.Active = v.EdgeWorkerFields.Active
+	retval.CreatedAt = v.EdgeWorkerFields.CreatedAt
+	retval.UpdatedAt = v.EdgeWorkerFields.UpdatedAt
+	return &retval, nil
+}
+
+// EdgeWorkerDetailWithSourceResponse is returned by EdgeWorkerDetailWithSource on success.
+type EdgeWorkerDetailWithSourceResponse struct {
+	// Retrieve a single application.
+	App *EdgeWorkerDetailWithSourceApp `json:"app"`
+}
+
+// GetApp returns EdgeWorkerDetailWithSourceResponse.App, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerDetailWithSourceResponse) GetApp() *EdgeWorkerDetailWithSourceApp { return v.App }
+
+// EdgeWorkerFields includes the GraphQL fields of EdgeWorker requested by the fragment EdgeWorkerFields.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type EdgeWorkerFields struct {
+	// The unique identifier for the edge worker.
+	Id int64 `json:"id"`
+	// The human-readable name of the edge worker.
+	Name string `json:"name"`
+	// An optional rule scoping which requests the worker runs on. Runs on all requests when null.
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+	// The request lifecycle phases the worker runs in.
+	Phases []EdgeWorkerPhase `json:"phases"`
+	// The behavior to apply when the worker errors at runtime.
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+	// Whether the worker is currently active.
+	Active bool `json:"active"`
+	// When the worker was created.
+	CreatedAt string `json:"createdAt"`
+	// When the worker was last modified.
+	UpdatedAt string `json:"updatedAt"`
+}
+
+// GetId returns EdgeWorkerFields.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetId() int64 { return v.Id }
+
+// GetName returns EdgeWorkerFields.Name, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetName() string { return v.Name }
+
+// GetLocation returns EdgeWorkerFields.Location, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.Location
+}
+
+// GetPhases returns EdgeWorkerFields.Phases, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetPhases() []EdgeWorkerPhase { return v.Phases }
+
+// GetOnFailure returns EdgeWorkerFields.OnFailure, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetOnFailure() EdgeWorkerOnFailure { return v.OnFailure }
+
+// GetActive returns EdgeWorkerFields.Active, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetActive() bool { return v.Active }
+
+// GetCreatedAt returns EdgeWorkerFields.CreatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetCreatedAt() string { return v.CreatedAt }
+
+// GetUpdatedAt returns EdgeWorkerFields.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFields) GetUpdatedAt() string { return v.UpdatedAt }
+
+// EdgeWorkerFieldsLocationEdgeWorkerLocation includes the requested fields of the GraphQL type EdgeWorkerLocation.
+// The GraphQL type's documentation follows.
+//
+// A rule scoping which requests an edge worker runs on.
+type EdgeWorkerFieldsLocationEdgeWorkerLocation struct {
+	// The operator used to match the request path.
+	Operator EdgeWorkerLocationOperator `json:"operator"`
+	// The value to compare the request path against.
+	Value string `json:"value"`
+}
+
+// GetOperator returns EdgeWorkerFieldsLocationEdgeWorkerLocation.Operator, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFieldsLocationEdgeWorkerLocation) GetOperator() EdgeWorkerLocationOperator {
+	return v.Operator
+}
+
+// GetValue returns EdgeWorkerFieldsLocationEdgeWorkerLocation.Value, and is useful for accessing the field via an interface.
+func (v *EdgeWorkerFieldsLocationEdgeWorkerLocation) GetValue() string { return v.Value }
+
+// The operators available for matching an edge worker location.
+type EdgeWorkerLocationOperator string
+
+const (
+	// Match when the path contains the value.
+	EdgeWorkerLocationOperatorContains EdgeWorkerLocationOperator = "contains"
+	// Match when the path exactly equals the value.
+	EdgeWorkerLocationOperatorEquals EdgeWorkerLocationOperator = "equals"
+	// Match when the path starts with the value.
+	EdgeWorkerLocationOperatorStartsWith EdgeWorkerLocationOperator = "starts_with"
+	// Match when the path ends with the value.
+	EdgeWorkerLocationOperatorEndsWith EdgeWorkerLocationOperator = "ends_with"
+)
+
+var AllEdgeWorkerLocationOperator = []EdgeWorkerLocationOperator{
+	EdgeWorkerLocationOperatorContains,
+	EdgeWorkerLocationOperatorEquals,
+	EdgeWorkerLocationOperatorStartsWith,
+	EdgeWorkerLocationOperatorEndsWith,
+}
+
+// The behavior to apply when an edge worker errors at runtime.
+type EdgeWorkerOnFailure string
+
+const (
+	// Continue serving the request as if the worker had not run.
+	EdgeWorkerOnFailureContinue EdgeWorkerOnFailure = "continue"
+	// Fail the request when the worker errors.
+	EdgeWorkerOnFailureError EdgeWorkerOnFailure = "error"
+)
+
+var AllEdgeWorkerOnFailure = []EdgeWorkerOnFailure{
+	EdgeWorkerOnFailureContinue,
+	EdgeWorkerOnFailureError,
+}
+
+// The request lifecycle phases an edge worker can run in.
+type EdgeWorkerPhase string
+
+const (
+	// Run while the request is being processed.
+	EdgeWorkerPhaseRequest EdgeWorkerPhase = "request"
+	// Run while the response is being processed.
+	EdgeWorkerPhaseResponse EdgeWorkerPhase = "response"
+)
+
+var AllEdgeWorkerPhase = []EdgeWorkerPhase{
+	EdgeWorkerPhaseRequest,
+	EdgeWorkerPhaseResponse,
+}
+
+// EdgeWorkersApp includes the requested fields of the GraphQL type App.
+// The GraphQL type's documentation follows.
+//
+// An application managed in WordPress VIP. This is the primary entry point for traversing into environment-level operational reads.
+type EdgeWorkersApp struct {
+	// The environments that belong to this application. Use this for environment discovery by ID, name, or type before selecting nested operational fields.
+	Environments []*EdgeWorkersAppEnvironmentsAppEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns EdgeWorkersApp.Environments, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersApp) GetEnvironments() []*EdgeWorkersAppEnvironmentsAppEnvironment {
+	return v.Environments
+}
+
+// EdgeWorkersAppEnvironmentsAppEnvironment includes the requested fields of the GraphQL type AppEnvironment.
+// The GraphQL type's documentation follows.
+//
+// An application environment in WordPress VIP. This type is the main operational read surface and includes commands, logs, events, backups, deployments, metrics, integrations, and security controls.
+type EdgeWorkersAppEnvironmentsAppEnvironment struct {
+	// The unique identifier for the environment.
+	Id *int64 `json:"id"`
+	// The WASM edge workers deployed to the environment.
+	EdgeWorkers []*EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker `json:"edgeWorkers"`
+}
+
+// GetId returns EdgeWorkersAppEnvironmentsAppEnvironment.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironment) GetId() *int64 { return v.Id }
+
+// GetEdgeWorkers returns EdgeWorkersAppEnvironmentsAppEnvironment.EdgeWorkers, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironment) GetEdgeWorkers() []*EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker {
+	return v.EdgeWorkers
+}
+
+// EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker includes the requested fields of the GraphQL type EdgeWorker.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker struct {
+	EdgeWorkerFields `json:"-"`
+}
+
+// GetId returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Id, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetId() int64 {
+	return v.EdgeWorkerFields.Id
+}
+
+// GetName returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Name, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetName() string {
+	return v.EdgeWorkerFields.Name
+}
+
+// GetLocation returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Location, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.EdgeWorkerFields.Location
+}
+
+// GetPhases returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Phases, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetPhases() []EdgeWorkerPhase {
+	return v.EdgeWorkerFields.Phases
+}
+
+// GetOnFailure returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.OnFailure, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetOnFailure() EdgeWorkerOnFailure {
+	return v.EdgeWorkerFields.OnFailure
+}
+
+// GetActive returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.Active, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetActive() bool {
+	return v.EdgeWorkerFields.Active
+}
+
+// GetCreatedAt returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.CreatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetCreatedAt() string {
+	return v.EdgeWorkerFields.CreatedAt
+}
+
+// GetUpdatedAt returns EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) GetUpdatedAt() string {
+	return v.EdgeWorkerFields.UpdatedAt
+}
+
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EdgeWorkerFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalEdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker struct {
+	Id int64 `json:"id"`
+
+	Name string `json:"name"`
+
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+
+	Phases []EdgeWorkerPhase `json:"phases"`
+
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+
+	Active bool `json:"active"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *EdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker) __premarshalJSON() (*__premarshalEdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker, error) {
+	var retval __premarshalEdgeWorkersAppEnvironmentsAppEnvironmentEdgeWorkersEdgeWorker
+
+	retval.Id = v.EdgeWorkerFields.Id
+	retval.Name = v.EdgeWorkerFields.Name
+	retval.Location = v.EdgeWorkerFields.Location
+	retval.Phases = v.EdgeWorkerFields.Phases
+	retval.OnFailure = v.EdgeWorkerFields.OnFailure
+	retval.Active = v.EdgeWorkerFields.Active
+	retval.CreatedAt = v.EdgeWorkerFields.CreatedAt
+	retval.UpdatedAt = v.EdgeWorkerFields.UpdatedAt
+	return &retval, nil
+}
+
+// EdgeWorkersResponse is returned by EdgeWorkers on success.
+type EdgeWorkersResponse struct {
+	// Retrieve a single application.
+	App *EdgeWorkersApp `json:"app"`
+}
+
+// GetApp returns EdgeWorkersResponse.App, and is useful for accessing the field via an interface.
+func (v *EdgeWorkersResponse) GetApp() *EdgeWorkersApp { return v.App }
 
 // EnablePhpMyAdminEnablePHPMyAdminEnablePhpMyAdminPayload includes the requested fields of the GraphQL type EnablePhpMyAdminPayload.
 // The GraphQL type's documentation follows.
@@ -4140,6 +4872,149 @@ type ResolveAppByNameResponse struct {
 // GetApps returns ResolveAppByNameResponse.Apps, and is useful for accessing the field via an interface.
 func (v *ResolveAppByNameResponse) GetApps() *ResolveAppByNameAppsAppList { return v.Apps }
 
+// Input for enabling or disabling an edge worker.
+type SetEdgeWorkerActiveInput struct {
+	// Whether the worker should be active.
+	Active bool `json:"active"`
+	// The identifier of the edge worker to toggle.
+	EdgeWorkerId int64 `json:"edgeWorkerId"`
+	// The environment the worker belongs to.
+	EnvironmentId int64 `json:"environmentId"`
+}
+
+// GetActive returns SetEdgeWorkerActiveInput.Active, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveInput) GetActive() bool { return v.Active }
+
+// GetEdgeWorkerId returns SetEdgeWorkerActiveInput.EdgeWorkerId, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveInput) GetEdgeWorkerId() int64 { return v.EdgeWorkerId }
+
+// GetEnvironmentId returns SetEdgeWorkerActiveInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveInput) GetEnvironmentId() int64 { return v.EnvironmentId }
+
+// SetEdgeWorkerActiveResponse is returned by SetEdgeWorkerActive on success.
+type SetEdgeWorkerActiveResponse struct {
+	// Enable or disable an existing WASM edge worker.
+	SetEdgeWorkerActive *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker `json:"setEdgeWorkerActive"`
+}
+
+// GetSetEdgeWorkerActive returns SetEdgeWorkerActiveResponse.SetEdgeWorkerActive, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveResponse) GetSetEdgeWorkerActive() *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker {
+	return v.SetEdgeWorkerActive
+}
+
+// SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker includes the requested fields of the GraphQL type EdgeWorker.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker struct {
+	EdgeWorkerFields `json:"-"`
+}
+
+// GetId returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.Id, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetId() int64 {
+	return v.EdgeWorkerFields.Id
+}
+
+// GetName returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.Name, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetName() string {
+	return v.EdgeWorkerFields.Name
+}
+
+// GetLocation returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.Location, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.EdgeWorkerFields.Location
+}
+
+// GetPhases returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.Phases, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetPhases() []EdgeWorkerPhase {
+	return v.EdgeWorkerFields.Phases
+}
+
+// GetOnFailure returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.OnFailure, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetOnFailure() EdgeWorkerOnFailure {
+	return v.EdgeWorkerFields.OnFailure
+}
+
+// GetActive returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.Active, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetActive() bool {
+	return v.EdgeWorkerFields.Active
+}
+
+// GetCreatedAt returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.CreatedAt, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetCreatedAt() string {
+	return v.EdgeWorkerFields.CreatedAt
+}
+
+// GetUpdatedAt returns SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) GetUpdatedAt() string {
+	return v.EdgeWorkerFields.UpdatedAt
+}
+
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EdgeWorkerFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalSetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker struct {
+	Id int64 `json:"id"`
+
+	Name string `json:"name"`
+
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+
+	Phases []EdgeWorkerPhase `json:"phases"`
+
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+
+	Active bool `json:"active"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *SetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker) __premarshalJSON() (*__premarshalSetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker, error) {
+	var retval __premarshalSetEdgeWorkerActiveSetEdgeWorkerActiveEdgeWorker
+
+	retval.Id = v.EdgeWorkerFields.Id
+	retval.Name = v.EdgeWorkerFields.Name
+	retval.Location = v.EdgeWorkerFields.Location
+	retval.Phases = v.EdgeWorkerFields.Phases
+	retval.OnFailure = v.EdgeWorkerFields.OnFailure
+	retval.Active = v.EdgeWorkerFields.Active
+	retval.CreatedAt = v.EdgeWorkerFields.CreatedAt
+	retval.UpdatedAt = v.EdgeWorkerFields.UpdatedAt
+	return &retval, nil
+}
+
 // SoftwareNode includes the GraphQL fields of AppEnvironmentSoftwareSettingsSoftware requested by the fragment SoftwareNode.
 // The GraphQL type's documentation follows.
 //
@@ -5744,6 +6619,120 @@ func (v *UpdateDefensiveModeStatusUpdateDefensiveModeStatusAppEnvironmentDefensi
 	return v.Message
 }
 
+// UpdateEdgeWorkerResponse is returned by UpdateEdgeWorker on success.
+type UpdateEdgeWorkerResponse struct {
+	// Update an existing WASM edge worker.
+	UpdateEdgeWorker *UpdateEdgeWorkerUpdateEdgeWorker `json:"updateEdgeWorker"`
+}
+
+// GetUpdateEdgeWorker returns UpdateEdgeWorkerResponse.UpdateEdgeWorker, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerResponse) GetUpdateEdgeWorker() *UpdateEdgeWorkerUpdateEdgeWorker {
+	return v.UpdateEdgeWorker
+}
+
+// UpdateEdgeWorkerUpdateEdgeWorker includes the requested fields of the GraphQL type EdgeWorker.
+// The GraphQL type's documentation follows.
+//
+// A WASM edge worker deployed to an environment.
+type UpdateEdgeWorkerUpdateEdgeWorker struct {
+	EdgeWorkerFields `json:"-"`
+}
+
+// GetId returns UpdateEdgeWorkerUpdateEdgeWorker.Id, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetId() int64 { return v.EdgeWorkerFields.Id }
+
+// GetName returns UpdateEdgeWorkerUpdateEdgeWorker.Name, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetName() string { return v.EdgeWorkerFields.Name }
+
+// GetLocation returns UpdateEdgeWorkerUpdateEdgeWorker.Location, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetLocation() *EdgeWorkerFieldsLocationEdgeWorkerLocation {
+	return v.EdgeWorkerFields.Location
+}
+
+// GetPhases returns UpdateEdgeWorkerUpdateEdgeWorker.Phases, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetPhases() []EdgeWorkerPhase {
+	return v.EdgeWorkerFields.Phases
+}
+
+// GetOnFailure returns UpdateEdgeWorkerUpdateEdgeWorker.OnFailure, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetOnFailure() EdgeWorkerOnFailure {
+	return v.EdgeWorkerFields.OnFailure
+}
+
+// GetActive returns UpdateEdgeWorkerUpdateEdgeWorker.Active, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetActive() bool { return v.EdgeWorkerFields.Active }
+
+// GetCreatedAt returns UpdateEdgeWorkerUpdateEdgeWorker.CreatedAt, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetCreatedAt() string { return v.EdgeWorkerFields.CreatedAt }
+
+// GetUpdatedAt returns UpdateEdgeWorkerUpdateEdgeWorker.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) GetUpdatedAt() string { return v.EdgeWorkerFields.UpdatedAt }
+
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*UpdateEdgeWorkerUpdateEdgeWorker
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.UpdateEdgeWorkerUpdateEdgeWorker = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(
+		b, &v.EdgeWorkerFields)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type __premarshalUpdateEdgeWorkerUpdateEdgeWorker struct {
+	Id int64 `json:"id"`
+
+	Name string `json:"name"`
+
+	Location *EdgeWorkerFieldsLocationEdgeWorkerLocation `json:"location"`
+
+	Phases []EdgeWorkerPhase `json:"phases"`
+
+	OnFailure EdgeWorkerOnFailure `json:"onFailure"`
+
+	Active bool `json:"active"`
+
+	CreatedAt string `json:"createdAt"`
+
+	UpdatedAt string `json:"updatedAt"`
+}
+
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *UpdateEdgeWorkerUpdateEdgeWorker) __premarshalJSON() (*__premarshalUpdateEdgeWorkerUpdateEdgeWorker, error) {
+	var retval __premarshalUpdateEdgeWorkerUpdateEdgeWorker
+
+	retval.Id = v.EdgeWorkerFields.Id
+	retval.Name = v.EdgeWorkerFields.Name
+	retval.Location = v.EdgeWorkerFields.Location
+	retval.Phases = v.EdgeWorkerFields.Phases
+	retval.OnFailure = v.EdgeWorkerFields.OnFailure
+	retval.Active = v.EdgeWorkerFields.Active
+	retval.CreatedAt = v.EdgeWorkerFields.CreatedAt
+	retval.UpdatedAt = v.EdgeWorkerFields.UpdatedAt
+	return &retval, nil
+}
+
 // UpdateSoftwareSettingsResponse is returned by UpdateSoftwareSettings on success.
 type UpdateSoftwareSettingsResponse struct {
 	// Update software settings for an application environment.
@@ -6227,6 +7216,59 @@ func (v *ValidateCustomDeployAccessValidateCustomDeployAccessValidateCustomDeplo
 	return v.Launched
 }
 
+// Input for validating an edge worker without persisting it.
+type ValidateEdgeWorkerInput struct {
+	// The environment to validate the worker against.
+	EnvironmentId int64 `json:"environmentId"`
+	// The base64-encoded compiled WASM binary to validate.
+	WasmBinary string `json:"wasmBinary"`
+}
+
+// GetEnvironmentId returns ValidateEdgeWorkerInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *ValidateEdgeWorkerInput) GetEnvironmentId() int64 { return v.EnvironmentId }
+
+// GetWasmBinary returns ValidateEdgeWorkerInput.WasmBinary, and is useful for accessing the field via an interface.
+func (v *ValidateEdgeWorkerInput) GetWasmBinary() string { return v.WasmBinary }
+
+// ValidateEdgeWorkerResponse is returned by ValidateEdgeWorker on success.
+type ValidateEdgeWorkerResponse struct {
+	// Validate a WASM edge worker without persisting it, to check it before uploading.
+	ValidateEdgeWorker *ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult `json:"validateEdgeWorker"`
+}
+
+// GetValidateEdgeWorker returns ValidateEdgeWorkerResponse.ValidateEdgeWorker, and is useful for accessing the field via an interface.
+func (v *ValidateEdgeWorkerResponse) GetValidateEdgeWorker() *ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult {
+	return v.ValidateEdgeWorker
+}
+
+// ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult includes the requested fields of the GraphQL type EdgeWorkerValidationResult.
+// The GraphQL type's documentation follows.
+//
+// The result of validating an edge worker's WASM binary without persisting it.
+type ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult struct {
+	// Whether the WASM binary passed validation.
+	Valid bool `json:"valid"`
+	// The request lifecycle phases the worker would run in. Empty when invalid.
+	Phases []EdgeWorkerPhase `json:"phases"`
+	// Validation error messages. Empty when the worker is valid.
+	Errors []string `json:"errors"`
+}
+
+// GetValid returns ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult.Valid, and is useful for accessing the field via an interface.
+func (v *ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult) GetValid() bool {
+	return v.Valid
+}
+
+// GetPhases returns ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult.Phases, and is useful for accessing the field via an interface.
+func (v *ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult) GetPhases() []EdgeWorkerPhase {
+	return v.Phases
+}
+
+// GetErrors returns ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult.Errors, and is useful for accessing the field via an interface.
+func (v *ValidateEdgeWorkerValidateEdgeWorkerEdgeWorkerValidationResult) GetErrors() []string {
+	return v.Errors
+}
+
 // WPEnvInfoApp includes the requested fields of the GraphQL type App.
 // The GraphQL type's documentation follows.
 //
@@ -6418,6 +7460,22 @@ type __BackupDBCopyInput struct {
 // GetInput returns __BackupDBCopyInput.Input, and is useful for accessing the field via an interface.
 func (v *__BackupDBCopyInput) GetInput() *AppEnvironmentStartDBBackupCopyInput { return v.Input }
 
+// __CreateEdgeWorkerInput is used internally by genqlient
+type __CreateEdgeWorkerInput struct {
+	Input *edgeworkerinput.Create `json:"input,omitempty"`
+}
+
+// GetInput returns __CreateEdgeWorkerInput.Input, and is useful for accessing the field via an interface.
+func (v *__CreateEdgeWorkerInput) GetInput() *edgeworkerinput.Create { return v.Input }
+
+// __DeleteEdgeWorkerInput is used internally by genqlient
+type __DeleteEdgeWorkerInput struct {
+	Input *DeleteEdgeWorkerInput `json:"input,omitempty"`
+}
+
+// GetInput returns __DeleteEdgeWorkerInput.Input, and is useful for accessing the field via an interface.
+func (v *__DeleteEdgeWorkerInput) GetInput() *DeleteEdgeWorkerInput { return v.Input }
+
 // __DeleteEnvironmentVariableInput is used internally by genqlient
 type __DeleteEnvironmentVariableInput struct {
 	Input *EnvironmentVariableInput `json:"input,omitempty"`
@@ -6453,6 +7511,42 @@ func (v *__DevEnvSyncSitesInput) GetAfter() *string { return v.After }
 
 // GetFirst returns __DevEnvSyncSitesInput.First, and is useful for accessing the field via an interface.
 func (v *__DevEnvSyncSitesInput) GetFirst() int64 { return v.First }
+
+// __EdgeWorkerDetailInput is used internally by genqlient
+type __EdgeWorkerDetailInput struct {
+	AppId int64 `json:"appId"`
+	EnvId int64 `json:"envId"`
+}
+
+// GetAppId returns __EdgeWorkerDetailInput.AppId, and is useful for accessing the field via an interface.
+func (v *__EdgeWorkerDetailInput) GetAppId() int64 { return v.AppId }
+
+// GetEnvId returns __EdgeWorkerDetailInput.EnvId, and is useful for accessing the field via an interface.
+func (v *__EdgeWorkerDetailInput) GetEnvId() int64 { return v.EnvId }
+
+// __EdgeWorkerDetailWithSourceInput is used internally by genqlient
+type __EdgeWorkerDetailWithSourceInput struct {
+	AppId int64 `json:"appId"`
+	EnvId int64 `json:"envId"`
+}
+
+// GetAppId returns __EdgeWorkerDetailWithSourceInput.AppId, and is useful for accessing the field via an interface.
+func (v *__EdgeWorkerDetailWithSourceInput) GetAppId() int64 { return v.AppId }
+
+// GetEnvId returns __EdgeWorkerDetailWithSourceInput.EnvId, and is useful for accessing the field via an interface.
+func (v *__EdgeWorkerDetailWithSourceInput) GetEnvId() int64 { return v.EnvId }
+
+// __EdgeWorkersInput is used internally by genqlient
+type __EdgeWorkersInput struct {
+	AppId int64 `json:"appId"`
+	EnvId int64 `json:"envId"`
+}
+
+// GetAppId returns __EdgeWorkersInput.AppId, and is useful for accessing the field via an interface.
+func (v *__EdgeWorkersInput) GetAppId() int64 { return v.AppId }
+
+// GetEnvId returns __EdgeWorkersInput.EnvId, and is useful for accessing the field via an interface.
+func (v *__EdgeWorkersInput) GetEnvId() int64 { return v.EnvId }
 
 // __EnablePhpMyAdminInput is used internally by genqlient
 type __EnablePhpMyAdminInput struct {
@@ -6630,6 +7724,14 @@ type __ResolveAppByNameInput struct {
 // GetName returns __ResolveAppByNameInput.Name, and is useful for accessing the field via an interface.
 func (v *__ResolveAppByNameInput) GetName() string { return v.Name }
 
+// __SetEdgeWorkerActiveInput is used internally by genqlient
+type __SetEdgeWorkerActiveInput struct {
+	Input *SetEdgeWorkerActiveInput `json:"input,omitempty"`
+}
+
+// GetInput returns __SetEdgeWorkerActiveInput.Input, and is useful for accessing the field via an interface.
+func (v *__SetEdgeWorkerActiveInput) GetInput() *SetEdgeWorkerActiveInput { return v.Input }
+
 // __SoftwareSettingsInput is used internally by genqlient
 type __SoftwareSettingsInput struct {
 	AppId int64 `json:"appId"`
@@ -6756,6 +7858,14 @@ func (v *__UpdateDefensiveModeStatusInput) GetInput() *AppEnvironmentDefensiveMo
 	return v.Input
 }
 
+// __UpdateEdgeWorkerInput is used internally by genqlient
+type __UpdateEdgeWorkerInput struct {
+	Input *edgeworkerinput.Update `json:"input,omitempty"`
+}
+
+// GetInput returns __UpdateEdgeWorkerInput.Input, and is useful for accessing the field via an interface.
+func (v *__UpdateEdgeWorkerInput) GetInput() *edgeworkerinput.Update { return v.Input }
+
 // __UpdateSoftwareSettingsInput is used internally by genqlient
 type __UpdateSoftwareSettingsInput struct {
 	AppId     int64  `json:"appId"`
@@ -6785,6 +7895,14 @@ type __ValidateCustomDeployAccessInput struct {
 func (v *__ValidateCustomDeployAccessInput) GetInput() *ValidateCustomDeployAccessInput {
 	return v.Input
 }
+
+// __ValidateEdgeWorkerInput is used internally by genqlient
+type __ValidateEdgeWorkerInput struct {
+	Input *ValidateEdgeWorkerInput `json:"input,omitempty"`
+}
+
+// GetInput returns __ValidateEdgeWorkerInput.Input, and is useful for accessing the field via an interface.
+func (v *__ValidateEdgeWorkerInput) GetInput() *ValidateEdgeWorkerInput { return v.Input }
 
 // __WPEnvInfoInput is used internally by genqlient
 type __WPEnvInfoInput struct {
@@ -7274,6 +8392,85 @@ func BackupDBCopy(
 	return data_, err_
 }
 
+// The mutation executed by CreateEdgeWorker.
+const CreateEdgeWorker_Operation = `
+mutation CreateEdgeWorker ($input: CreateEdgeWorkerInput!) {
+	createEdgeWorker(input: $input) {
+		... EdgeWorkerFields
+	}
+}
+fragment EdgeWorkerFields on EdgeWorker {
+	id
+	name
+	location {
+		operator
+		value
+	}
+	phases
+	onFailure
+	active
+	createdAt
+	updatedAt
+}
+`
+
+func CreateEdgeWorker(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *edgeworkerinput.Create,
+) (data_ *CreateEdgeWorkerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "CreateEdgeWorker",
+		Query:  CreateEdgeWorker_Operation,
+		Variables: &__CreateEdgeWorkerInput{
+			Input: input,
+		},
+	}
+
+	data_ = &CreateEdgeWorkerResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by DeleteEdgeWorker.
+const DeleteEdgeWorker_Operation = `
+mutation DeleteEdgeWorker ($input: DeleteEdgeWorkerInput!) {
+	deleteEdgeWorker(input: $input)
+}
+`
+
+func DeleteEdgeWorker(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *DeleteEdgeWorkerInput,
+) (data_ *DeleteEdgeWorkerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "DeleteEdgeWorker",
+		Query:  DeleteEdgeWorker_Operation,
+		Variables: &__DeleteEdgeWorkerInput{
+			Input: input,
+		},
+	}
+
+	data_ = &DeleteEdgeWorkerResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by DeleteEnvironmentVariable.
 const DeleteEnvironmentVariable_Operation = `
 mutation DeleteEnvironmentVariable ($input: EnvironmentVariableInput!) {
@@ -7419,6 +8616,169 @@ func DevEnvSyncSites(
 	}
 
 	data_ = &DevEnvSyncSitesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by EdgeWorkerDetail.
+const EdgeWorkerDetail_Operation = `
+query EdgeWorkerDetail ($appId: Int!, $envId: Int!) {
+	app(id: $appId) {
+		environments(id: $envId) {
+			id
+			edgeWorkers {
+				... EdgeWorkerFields
+			}
+		}
+	}
+}
+fragment EdgeWorkerFields on EdgeWorker {
+	id
+	name
+	location {
+		operator
+		value
+	}
+	phases
+	onFailure
+	active
+	createdAt
+	updatedAt
+}
+`
+
+func EdgeWorkerDetail(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	appId int64,
+	envId int64,
+) (data_ *EdgeWorkerDetailResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "EdgeWorkerDetail",
+		Query:  EdgeWorkerDetail_Operation,
+		Variables: &__EdgeWorkerDetailInput{
+			AppId: appId,
+			EnvId: envId,
+		},
+	}
+
+	data_ = &EdgeWorkerDetailResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by EdgeWorkerDetailWithSource.
+const EdgeWorkerDetailWithSource_Operation = `
+query EdgeWorkerDetailWithSource ($appId: Int!, $envId: Int!) {
+	app(id: $appId) {
+		environments(id: $envId) {
+			id
+			edgeWorkers {
+				... EdgeWorkerFields
+				source
+			}
+		}
+	}
+}
+fragment EdgeWorkerFields on EdgeWorker {
+	id
+	name
+	location {
+		operator
+		value
+	}
+	phases
+	onFailure
+	active
+	createdAt
+	updatedAt
+}
+`
+
+func EdgeWorkerDetailWithSource(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	appId int64,
+	envId int64,
+) (data_ *EdgeWorkerDetailWithSourceResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "EdgeWorkerDetailWithSource",
+		Query:  EdgeWorkerDetailWithSource_Operation,
+		Variables: &__EdgeWorkerDetailWithSourceInput{
+			AppId: appId,
+			EnvId: envId,
+		},
+	}
+
+	data_ = &EdgeWorkerDetailWithSourceResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by EdgeWorkers.
+const EdgeWorkers_Operation = `
+query EdgeWorkers ($appId: Int!, $envId: Int!) {
+	app(id: $appId) {
+		environments(id: $envId) {
+			id
+			edgeWorkers {
+				... EdgeWorkerFields
+			}
+		}
+	}
+}
+fragment EdgeWorkerFields on EdgeWorker {
+	id
+	name
+	location {
+		operator
+		value
+	}
+	phases
+	onFailure
+	active
+	createdAt
+	updatedAt
+}
+`
+
+func EdgeWorkers(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	appId int64,
+	envId int64,
+) (data_ *EdgeWorkersResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "EdgeWorkers",
+		Query:  EdgeWorkers_Operation,
+		Variables: &__EdgeWorkersInput{
+			AppId: appId,
+			EnvId: envId,
+		},
+	}
+
+	data_ = &EdgeWorkersResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
@@ -8190,6 +9550,53 @@ func ResolveAppByName(
 	return data_, err_
 }
 
+// The mutation executed by SetEdgeWorkerActive.
+const SetEdgeWorkerActive_Operation = `
+mutation SetEdgeWorkerActive ($input: SetEdgeWorkerActiveInput!) {
+	setEdgeWorkerActive(input: $input) {
+		... EdgeWorkerFields
+	}
+}
+fragment EdgeWorkerFields on EdgeWorker {
+	id
+	name
+	location {
+		operator
+		value
+	}
+	phases
+	onFailure
+	active
+	createdAt
+	updatedAt
+}
+`
+
+func SetEdgeWorkerActive(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *SetEdgeWorkerActiveInput,
+) (data_ *SetEdgeWorkerActiveResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "SetEdgeWorkerActive",
+		Query:  SetEdgeWorkerActive_Operation,
+		Variables: &__SetEdgeWorkerActiveInput{
+			Input: input,
+		},
+	}
+
+	data_ = &SetEdgeWorkerActiveResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The query executed by SoftwareSettings.
 const SoftwareSettings_Operation = `
 query SoftwareSettings ($appId: Int!, $envId: Int!) {
@@ -8772,6 +10179,53 @@ func UpdateDefensiveModeStatus(
 	return data_, err_
 }
 
+// The mutation executed by UpdateEdgeWorker.
+const UpdateEdgeWorker_Operation = `
+mutation UpdateEdgeWorker ($input: UpdateEdgeWorkerInput!) {
+	updateEdgeWorker(input: $input) {
+		... EdgeWorkerFields
+	}
+}
+fragment EdgeWorkerFields on EdgeWorker {
+	id
+	name
+	location {
+		operator
+		value
+	}
+	phases
+	onFailure
+	active
+	createdAt
+	updatedAt
+}
+`
+
+func UpdateEdgeWorker(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *edgeworkerinput.Update,
+) (data_ *UpdateEdgeWorkerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "UpdateEdgeWorker",
+		Query:  UpdateEdgeWorker_Operation,
+		Variables: &__UpdateEdgeWorkerInput{
+			Input: input,
+		},
+	}
+
+	data_ = &UpdateEdgeWorkerResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
 // The mutation executed by UpdateSoftwareSettings.
 const UpdateSoftwareSettings_Operation = `
 mutation UpdateSoftwareSettings ($appId: Int!, $envId: Int!, $component: String!, $version: String!) {
@@ -8875,6 +10329,42 @@ func ValidateCustomDeployAccess(
 	}
 
 	data_ = &ValidateCustomDeployAccessResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The mutation executed by ValidateEdgeWorker.
+const ValidateEdgeWorker_Operation = `
+mutation ValidateEdgeWorker ($input: ValidateEdgeWorkerInput!) {
+	validateEdgeWorker(input: $input) {
+		valid
+		phases
+		errors
+	}
+}
+`
+
+func ValidateEdgeWorker(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	input *ValidateEdgeWorkerInput,
+) (data_ *ValidateEdgeWorkerResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ValidateEdgeWorker",
+		Query:  ValidateEdgeWorker_Operation,
+		Variables: &__ValidateEdgeWorkerInput{
+			Input: input,
+		},
+	}
+
+	data_ = &ValidateEdgeWorkerResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

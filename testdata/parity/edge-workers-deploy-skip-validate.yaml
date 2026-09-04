@@ -1,0 +1,8 @@
+name: edge-workers-deploy-skip-validate
+description: edge workers deploy skip validate
+argv: ["edge-workers", "deploy", "headers", "--skip-build", "--skip-validate", "--app=42", "--env=develop"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 0

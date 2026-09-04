@@ -50,6 +50,7 @@ describe( 'edgeWorkersInitCommand()', () => {
 		expect( console.log ).toHaveBeenCalledWith(
 			expect.stringContaining( 'Created a new assemblyscript edge-workers project' )
 		);
+		expect( console.log ).toHaveBeenCalledWith( '  vip edge-workers new my-worker' );
 		const scaffoldOrder = scaffoldProject.mock.invocationCallOrder[ 0 ];
 		const successOrder = tracker.trackEvent.mock.invocationCallOrder.at( -1 );
 		expect( scaffoldOrder ).toBeLessThan( successOrder );

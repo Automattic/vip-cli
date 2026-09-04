@@ -452,6 +452,9 @@ func TestEverySurfaceScenarioIsClassified(t *testing.T) {
 		if isM5Scenario(base) {
 			continue // m5_differential_test.go owns these
 		}
+		if _, ok := edgeWorkerScenarios[base]; ok {
+			continue // edge_workers_differential_test.go runs both roots
+		}
 		seen++
 		if _, ok := surfaceDifferentialScenarios[base]; ok {
 			continue

@@ -3,9 +3,33 @@
 package parity
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestRunSetsWorkingDirectory(t *testing.T) {
+	dir := t.TempDir()
+	// Do not spawn this test binary as a helper: its TestMain credential sweep
+	// would delete the parent process's live differential credential.
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/parity-cwd\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	canonical, err := filepath.EvalSymlinks(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(canonical, "go.mod")
+	result, err := Run(RunSpec{Binary: "go", Dir: dir, Argv: []string{"env", "GOMOD"}, Env: FixtureEnv(nil)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := filepath.EvalSymlinks(strings.TrimSpace(result.Stdout))
+	if err != nil || result.ExitCode != 0 || got != want {
+		t.Fatalf("result %#v error %v", result, err)
+	}
+}
 
 func TestRunCapturesStdoutAndExit(t *testing.T) {
 	// Use `go env GOVERSION` as a trivially available command that prints

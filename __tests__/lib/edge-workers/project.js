@@ -189,6 +189,19 @@ describe( 'edge-workers project', () => {
 	} );
 
 	describe( 'worker source and artifacts', () => {
+		it.each( [
+			[ [ 0xff, 0xff ], '\ufffd\ufffd' ],
+			[ [ 0xe1, 0x80 ], '\ufffd' ],
+			[ [ 0xe1, 0x80, 0xff ], '\ufffd\ufffd' ],
+		] )( 'replaces malformed UTF-8 source sequences %j', ( bytes, expected ) => {
+			const worker = {
+				dir: tmp,
+				manifest: { name: 'headers', entry: 'source.ts' },
+			};
+			fs.writeFileSync( path.join( tmp, 'source.ts' ), Buffer.from( bytes ) );
+			expect( readWorkerSource( worker ) ).toBe( expected );
+		} );
+
 		it( 'throws when worker source cannot be read', () => {
 			const worker = {
 				dir: path.join( tmp, 'worker' ),

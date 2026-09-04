@@ -1,0 +1,8 @@
+name: edge-workers-enable-production-refused
+description: edge workers enable production refused
+argv: ["edge-workers", "enable", "headers", "--app=42", "--env=production"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 1

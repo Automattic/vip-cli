@@ -1,0 +1,45 @@
+name: Publish VIP Next prerelease
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Unprefixed Go prerelease version, for example 5.0.0-beta.1'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vip-next-prerelease
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, verify, and publish Go prerelease
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out the selected trunk commit
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Publish signed Buildkite artifacts
+        env:
+          BUILDKITE_API_TOKEN: ${{ secrets.BUILDKITE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: >-
+          go run ./cmd/vip-next-prerelease publish
+          --version "$RELEASE_VERSION"
+          --ref "$GITHUB_REF"
+          --commit "$GITHUB_SHA"

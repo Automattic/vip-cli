@@ -43,4 +43,19 @@ describe( 'utils/cli/config', () => {
 		const actual = loadConfigFile();
 		expect( actual ).toStrictEqual( expected );
 	} );
+
+	it( 'should return null when both config files are missing with ENOENT', () => {
+		const origReadFileSync = fs.readFileSync;
+		jest.spyOn( fs, 'readFileSync' ).mockImplementation( ( filePath, ...params ) => {
+			if ( typeof filePath !== 'string' || ! filePath.includes( 'config.' ) ) {
+				return origReadFileSync( filePath, ...params );
+			}
+
+			const error = new Error( 'File not found' );
+			error.code = 'ENOENT';
+			throw error;
+		} );
+
+		expect( loadConfigFile() ).toBeNull();
+	} );
 } );

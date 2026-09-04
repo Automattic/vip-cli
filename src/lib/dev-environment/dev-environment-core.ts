@@ -68,7 +68,6 @@ const landoFileTemplatePath = path.join(
 	'assets',
 	'dev-env.lando.template.yml.ejs'
 );
-const landoTemplateAssetKey = 'dev-env.lando.template.yml.ejs';
 const nginxFileTemplatePath = path.join(
 	__dirname,
 	'..',
@@ -77,7 +76,6 @@ const nginxFileTemplatePath = path.join(
 	'assets',
 	'dev-env.nginx.template.conf.ejs'
 );
-const nginxTemplateAssetKey = 'dev-env.nginx.template.conf.ejs';
 const landoFileName = '.lando.yml';
 const landoOverridesFileName = '.lando.local.yml';
 const landoBackupFileName = '.lando.backup.yml';
@@ -122,42 +120,10 @@ const dockerComposify = ( value: string ): string => {
 const sleep = ( ms: number ): Promise< void > =>
 	new Promise( resolve => setTimeout( resolve, ms ) );
 
-type SeaModule = {
-	isSea?: () => boolean;
-	getAsset?: ( key: string, encoding?: BufferEncoding ) => string | ArrayBuffer;
-};
-
-let seaModulePromise: Promise< SeaModule | null > | null = null;
-
-const getSeaModule = async (): Promise< SeaModule | null > => {
-	if ( ! seaModulePromise ) {
-		seaModulePromise = ( async () => {
-			try {
-				return ( await import( 'node:sea' ) ) as SeaModule;
-			} catch {
-				return null;
-			}
-		} )();
-	}
-
-	return seaModulePromise;
-};
-
 const renderTemplateFile = async (
 	filePath: string,
-	assetKey: string,
 	templateData: Record< string, unknown >
-): Promise< string > => {
-	const sea = await getSeaModule();
-	if ( sea?.isSea?.() && sea.getAsset ) {
-		const template = sea.getAsset( assetKey, 'utf8' );
-		if ( typeof template === 'string' ) {
-			return ejs.render( template, templateData );
-		}
-	}
-
-	return ejs.renderFile( filePath, templateData );
-};
+): Promise< string > => ejs.renderFile( filePath, templateData );
 
 async function waitForEnvironmentToBeUp( lando: Lando, instancePath: string ): Promise< boolean > {
 	return pollEnvironmentUpStatus( lando, instancePath, 1 );
@@ -639,16 +605,8 @@ async function prepareLandoEnv(
 		domain: lando.config.domain,
 	};
 
-	const landoFile = await renderTemplateFile(
-		landoFileTemplatePath,
-		landoTemplateAssetKey,
-		templateData
-	);
-	const nginxFile = await renderTemplateFile(
-		nginxFileTemplatePath,
-		nginxTemplateAssetKey,
-		templateData
-	);
+	const landoFile = await renderTemplateFile( landoFileTemplatePath, templateData );
+	const nginxFile = await renderTemplateFile( nginxFileTemplatePath, templateData );
 	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );

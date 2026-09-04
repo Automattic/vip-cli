@@ -40,8 +40,19 @@ var nodeShortFlags = map[string]map[string]string{
 	"vip-next defensive-mode disable":   {"app": "a", "env": "e"},
 	"vip-next defensive-mode configure": {"app": "a", "env": "e"},
 
-	"vip-next logout": {}, // src/bin/vip-logout.ts
-	"vip-next whoami": {}, // src/bin/vip-whoami.ts
+	"vip-next logout":                {}, // src/bin/vip-logout.ts
+	"vip-next whoami":                {}, // src/bin/vip-whoami.ts
+	"vip-next edge-workers":          {},
+	"vip-next edge-workers init":     {"type": "t"},
+	"vip-next edge-workers new":      {"path": "p", "location": "l"},
+	"vip-next edge-workers build":    {"path": "p", "all": "a"},
+	"vip-next edge-workers validate": {"app": "a", "env": "e", "path": "p", "skip-build": "s"},
+	"vip-next edge-workers list":     {"app": "a", "env": "e", "format": "f"},
+	"vip-next edge-workers get":      {"app": "a", "env": "e", "source": "s"},
+	"vip-next edge-workers deploy":   {"app": "a", "env": "e", "path": "p", "skip-build": "s"},
+	"vip-next edge-workers enable":   {"app": "a", "env": "e", "skip-confirmation": "s"},
+	"vip-next edge-workers disable":  {"app": "a", "env": "e"},
+	"vip-next edge-workers delete":   {"app": "a", "env": "e", "force": "f"},
 
 	// src/bin/vip-logs.js:241-257 — type, limit, follow, format (f taken).
 	"vip-next logs": {"app": "a", "env": "e", "type": "t", "limit": "l", "follow": "f"},
