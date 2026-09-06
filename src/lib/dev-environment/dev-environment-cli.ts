@@ -23,6 +23,7 @@ import { Args } from '../cli/command';
 import {
 	DEV_ENVIRONMENT_FULL_COMMAND,
 	DEV_ENVIRONMENT_DEFAULTS,
+	DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 	DEV_ENVIRONMENT_PROMPT_INTRO,
 	DEV_ENVIRONMENT_COMPONENTS,
 	DEV_ENVIRONMENT_NOT_FOUND,
@@ -775,7 +776,7 @@ export function resolvePhpVersion( version: string ): string {
 	debug( `Resolving PHP version %j`, version );
 
 	let result: string;
-	if ( ! ( version in DEV_ENVIRONMENT_PHP_VERSIONS ) ) {
+	if ( ! Object.hasOwn( DEV_ENVIRONMENT_PHP_VERSIONS, version ) ) {
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		const image = images.find( value => value.image === version );
 		if ( image ) {
@@ -784,7 +785,8 @@ export function resolvePhpVersion( version: string ): string {
 			throw new UserError( `Unknown or unsupported PHP version: ${ version }.` );
 		}
 	} else {
-		result = DEV_ENVIRONMENT_PHP_VERSIONS[ version ].image;
+		result =
+			DEV_ENVIRONMENT_PHP_VERSIONS[ version as keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS ].image;
 	}
 
 	debug( 'Resolved PHP image: %j', result );
@@ -797,9 +799,15 @@ export async function promptForPhpVersion( initialValue: string ): Promise< stri
 	let answer = initialValue;
 	if ( isStdinTTY ) {
 		const choices = [];
-		Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ).forEach( version => {
+		(
+			Object.keys( DEV_ENVIRONMENT_PHP_VERSIONS ) as ( keyof typeof DEV_ENVIRONMENT_PHP_VERSIONS )[]
+		 ).forEach( version => {
 			const phpImage = DEV_ENVIRONMENT_PHP_VERSIONS[ version ];
-			choices.push( { message: phpImage.label, value: version } );
+			const label =
+				version === DEV_ENVIRONMENT_DEFAULT_PHP_VERSION
+					? `${ phpImage.label } (recommended)`
+					: phpImage.label;
+			choices.push( { message: label, value: version } );
 		} );
 		const images = Object.values( DEV_ENVIRONMENT_PHP_VERSIONS );
 		let initial = images.findIndex( version => version.image === initialValue );
