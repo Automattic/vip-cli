@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -31,7 +32,7 @@ func newRunner(ctx context.Context) (*dockercli.Runner, error) {
 	if _, err := dockercli.DockerSocket(); err != nil {
 		return nil, err
 	}
-	return &dockercli.Runner{Log: devlog.FromContext(ctx)}, nil
+	return &dockercli.Runner{Log: devlog.FromContext(ctx), DockerBin: dockercli.DockerBin(exec.LookPath)}, nil
 }
 
 func goos() string { return runtime.GOOS }

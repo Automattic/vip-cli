@@ -16,7 +16,7 @@ import {
 	updateEnvironment,
 	writeEnvironmentData,
 } from './dev-environment-core';
-import { getDockerSocket, getEngineConfig } from './docker-utils';
+import { getDockerBin, getDockerSocket, getEngineConfig } from './docker-utils';
 import {
 	composeRequirement,
 	detectEngine,
@@ -312,6 +312,11 @@ async function getLandoConfig( options: LandoBootstrapOptions = {} ): Promise< L
 			LANDO_HOST_GROUP_ID: process.platform === 'win32' ? '1000' : `${ userInfo().gid }`,
 		},
 	};
+
+	const dockerBin = await getDockerBin();
+	if ( dockerBin ) {
+		( config as Record< string, unknown > ).dockerBin = dockerBin;
+	}
 
 	return getLandoBuildConfig()( config );
 }

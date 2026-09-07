@@ -118,3 +118,34 @@ func TestPodmanMachineSocketPathPropagatesInspectError(t *testing.T) {
 		t.Fatal("PodmanMachineSocketPath should propagate a genuine inspect failure")
 	}
 }
+
+func TestDockerBinKeepsTodaysResolutionUnchangedWhenDockerIsPresent(t *testing.T) {
+	lookPath := func(name string) (string, error) {
+		if name == "docker" {
+			return "/usr/local/bin/docker", nil
+		}
+		return "", errors.New("not found")
+	}
+	if got := DockerBin(lookPath); got != "" {
+		t.Fatalf("got %q, want empty so the default docker resolution is untouched", got)
+	}
+}
+
+func TestDockerBinResolvesPodmanWhenNoDockerBinaryExists(t *testing.T) {
+	lookPath := func(name string) (string, error) {
+		if name == "podman" {
+			return "/opt/homebrew/bin/podman", nil
+		}
+		return "", errors.New("not found")
+	}
+	if got := DockerBin(lookPath); got != "podman" {
+		t.Fatalf("got %q, want %q", got, "podman")
+	}
+}
+
+func TestDockerBinEmptyWhenNeitherBinaryExists(t *testing.T) {
+	lookPath := func(string) (string, error) { return "", errors.New("not found") }
+	if got := DockerBin(lookPath); got != "" {
+		t.Fatalf("got %q, want empty, preserving the could-not-be-located error path", got)
+	}
+}
