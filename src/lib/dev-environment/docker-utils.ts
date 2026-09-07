@@ -1,8 +1,14 @@
 /* eslint-disable no-await-in-loop */
+import { execFile } from 'node:child_process';
 import { constants } from 'node:fs';
 import { access, readFile, stat } from 'node:fs/promises';
 import { homedir, platform } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify( execFile );
+
+type ExecFn = typeof execFileAsync;
 
 /**
  * Reads a Certificate Authority file and returns it as an array of certificates
@@ -42,7 +48,48 @@ async function canReadWrite( what: string ): Promise< boolean > {
 	}
 }
 
-export async function getDockerSocket(): Promise< string | null > {
+async function checkSocketCandidate( socketPath: string ): Promise< boolean > {
+	try {
+		const stats = await stat( socketPath );
+		return stats.isSocket() && ( await canReadWrite( socketPath ) );
+	} catch {
+		return false;
+	}
+}
+
+async function findPodmanMachineSocket( exec: ExecFn ): Promise< string | null > {
+	try {
+		await exec( 'podman', [ '--version' ] );
+	} catch {
+		return null;
+	}
+
+	try {
+		const { stdout } = await exec( 'podman', [ 'machine', 'inspect' ] );
+		const parsed: unknown = JSON.parse( String( stdout ) );
+		if ( ! Array.isArray( parsed ) ) {
+			return null;
+		}
+
+		for ( const machine of parsed ) {
+			const socketPath = (
+				machine as {
+					ConnectionInfo?: { PodmanSocket?: { Path?: string } };
+				}
+			 )?.ConnectionInfo?.PodmanSocket?.Path;
+
+			if ( typeof socketPath === 'string' && ( await checkSocketCandidate( socketPath ) ) ) {
+				return socketPath;
+			}
+		}
+	} catch {
+		return null;
+	}
+
+	return null;
+}
+
+export async function getDockerSocket( exec: ExecFn = execFileAsync ): Promise< string | null > {
 	if ( platform() !== 'win32' ) {
 		const possibleSocket = process.env.DOCKER_HOST ?? '';
 		// If `DOCKER_HOST` is set and not empty, and if it does not point to a unix socket, return - not much that we can do here.
@@ -65,16 +112,24 @@ export async function getDockerSocket(): Promise< string | null > {
 		paths.push( join( homedir(), '.colima', 'default', 'docker.sock' ) );
 		paths.push( join( homedir(), '.orbstack', 'run', 'docker.sock' ) );
 
+		paths.push(
+			join( homedir(), '.local', 'share', 'containers', 'podman', 'machine', 'podman.sock' )
+		);
+		if ( process.env.XDG_RUNTIME_DIR ) {
+			paths.push( join( process.env.XDG_RUNTIME_DIR, 'podman', 'podman.sock' ) );
+		}
+
 		for ( const socketPath of paths ) {
-			try {
-				const stats = await stat( socketPath );
-				if ( stats.isSocket() && ( await canReadWrite( socketPath ) ) ) {
-					process.env.DOCKER_HOST = `unix://${ socketPath }`;
-					return socketPath;
-				}
-			} catch {
-				// Do nothing
+			if ( await checkSocketCandidate( socketPath ) ) {
+				process.env.DOCKER_HOST = `unix://${ socketPath }`;
+				return socketPath;
 			}
+		}
+
+		const podmanMachineSocket = await findPodmanMachineSocket( exec );
+		if ( podmanMachineSocket ) {
+			process.env.DOCKER_HOST = `unix://${ podmanMachineSocket }`;
+			return podmanMachineSocket;
 		}
 	}
 

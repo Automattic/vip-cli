@@ -130,6 +130,91 @@ if ( platform() !== 'win32' ) {
 			process.env = { DOCKER_HOST: 'unix://mother/mary/this/is/scary' };
 			return expect( getDockerSocket() ).resolves.toBe( expectedPath );
 		} );
+
+		it( 'a podman machine socket on mac is found when no docker candidate exists', () => {
+			const expectedPath = path.join(
+				homedir(),
+				'.local',
+				'share',
+				'containers',
+				'podman',
+				'machine',
+				'podman.sock'
+			);
+
+			jest.spyOn( promises, 'stat' ).mockImplementation( fpath => {
+				if ( fpath !== expectedPath ) {
+					throw new Error( 'ENOENT' );
+				}
+				return { isSocket: () => true };
+			} );
+
+			jest.spyOn( promises, 'access' ).mockResolvedValueOnce( undefined );
+
+			process.env = {};
+			return expect( getDockerSocket() ).resolves.toBe( expectedPath );
+		} );
+
+		it( 'a podman rootless socket under XDG_RUNTIME_DIR is found when no earlier candidate exists', () => {
+			const runtimeDir = '/run/user/1000';
+			const expectedPath = path.join( runtimeDir, 'podman', 'podman.sock' );
+
+			jest.spyOn( promises, 'stat' ).mockImplementation( fpath => {
+				if ( fpath !== expectedPath ) {
+					throw new Error( 'ENOENT' );
+				}
+				return { isSocket: () => true };
+			} );
+
+			jest.spyOn( promises, 'access' ).mockResolvedValueOnce( undefined );
+
+			process.env = { XDG_RUNTIME_DIR: runtimeDir };
+			return expect( getDockerSocket() ).resolves.toBe( expectedPath );
+		} );
+
+		it( 'the podman machine inspect fallback is used only when a podman binary is present', async () => {
+			jest.spyOn( promises, 'stat' ).mockRejectedValue( new Error( 'ENOENT' ) );
+			process.env = {};
+
+			const exec = jest.fn().mockRejectedValue( new Error( 'ENOENT' ) );
+
+			await expect( getDockerSocket( exec ) ).resolves.toBeNull();
+			expect( exec ).toHaveBeenCalledWith( 'podman', [ '--version' ] );
+			expect( exec ).not.toHaveBeenCalledWith( 'podman', [ 'machine', 'inspect' ] );
+		} );
+
+		it( 'a socket resolved via podman machine inspect is returned when no static candidate exists', () => {
+			const expectedPath =
+				'/Users/tester/.local/share/containers/podman/machine/podman-machine-default/podman.sock';
+
+			jest.spyOn( promises, 'stat' ).mockImplementation( fpath => {
+				if ( fpath !== expectedPath ) {
+					throw new Error( 'ENOENT' );
+				}
+				return { isSocket: () => true };
+			} );
+			jest.spyOn( promises, 'access' ).mockResolvedValueOnce( undefined );
+
+			process.env = {};
+
+			const exec = jest.fn().mockImplementation( ( bin, args ) => {
+				if ( args[ 0 ] === '--version' ) {
+					return Promise.resolve( { stdout: 'podman version 5.0.0' } );
+				}
+
+				return Promise.resolve( {
+					stdout: JSON.stringify( [
+						{
+							ConnectionInfo: {
+								PodmanSocket: { Path: expectedPath },
+							},
+						},
+					] ),
+				} );
+			} );
+
+			return expect( getDockerSocket( exec ) ).resolves.toBe( expectedPath );
+		} );
 	} );
 }
 
