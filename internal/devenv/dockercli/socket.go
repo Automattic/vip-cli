@@ -65,6 +65,16 @@ func podmanSocketCandidates(home string) []string {
 	return candidates
 }
 
+func DockerBin(lookPath func(string) (string, error)) string {
+	if _, err := lookPath("docker"); err == nil {
+		return ""
+	}
+	if _, err := lookPath("podman"); err == nil {
+		return "podman"
+	}
+	return ""
+}
+
 func PodmanMachineSocketPath(inspect func() (string, error)) (string, error) {
 	path, err := inspect()
 	if err != nil {

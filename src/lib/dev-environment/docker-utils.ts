@@ -136,6 +136,27 @@ export async function getDockerSocket( exec: ExecFn = execFileAsync ): Promise< 
 	return null;
 }
 
+async function isBinaryUsable( command: string, exec: ExecFn ): Promise< boolean > {
+	try {
+		await exec( command, [ '--version' ] );
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+export async function getDockerBin( exec: ExecFn = execFileAsync ): Promise< string | null > {
+	if ( await isBinaryUsable( 'docker', exec ) ) {
+		return null;
+	}
+
+	if ( await isBinaryUsable( 'podman', exec ) ) {
+		return 'podman';
+	}
+
+	return null;
+}
+
 export async function getEngineConfig( dockerHost: string ): Promise< Record< string, unknown > > {
 	const opts: Record< string, unknown > = {};
 	if ( dockerHost.startsWith( 'tcp://' ) ) {

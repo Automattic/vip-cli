@@ -4,6 +4,7 @@ import { homedir, platform } from 'node:os';
 import path from 'node:path';
 
 import {
+	getDockerBin,
 	getDockerSocket,
 	getEngineConfig,
 	splitca,
@@ -217,6 +218,36 @@ if ( platform() !== 'win32' ) {
 		} );
 	} );
 }
+
+describe( 'getDockerBin', () => {
+	it( "a machine with a docker binary keeps today's resolution unchanged", async () => {
+		const exec = jest.fn().mockResolvedValue( { stdout: 'Docker version 27.0.0' } );
+
+		await expect( getDockerBin( exec ) ).resolves.toBeNull();
+		expect( exec ).toHaveBeenCalledWith( 'docker', [ '--version' ] );
+		expect( exec ).not.toHaveBeenCalledWith( 'podman', [ '--version' ] );
+	} );
+
+	it( 'vip-cli resolves the podman binary as its docker CLI when no docker binary exists', async () => {
+		const exec = jest.fn().mockImplementation( bin => {
+			if ( bin === 'docker' ) {
+				return Promise.reject( new Error( 'ENOENT' ) );
+			}
+
+			return Promise.resolve( { stdout: 'podman version 5.0.0' } );
+		} );
+
+		await expect( getDockerBin( exec ) ).resolves.toBe( 'podman' );
+		expect( exec ).toHaveBeenCalledWith( 'docker', [ '--version' ] );
+		expect( exec ).toHaveBeenCalledWith( 'podman', [ '--version' ] );
+	} );
+
+	it( 'a machine with neither docker nor podman resolves to null, preserving the could-not-be-located error path', async () => {
+		const exec = jest.fn().mockRejectedValue( new Error( 'ENOENT' ) );
+
+		await expect( getDockerBin( exec ) ).resolves.toBeNull();
+	} );
+} );
 
 describe( 'getEngineConfig', () => {
 	const env = { ...process.env };
