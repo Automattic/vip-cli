@@ -12,10 +12,13 @@ env:
 
 jobs:
   test:
-    name: Run E2E Tests, shard ${{ matrix.shard }}
+    name: Run E2E Tests, ${{ matrix.engine }}, shard ${{ matrix.shard }}
     strategy:
       fail-fast: false
       matrix:
+        engine:
+          - docker
+          - podman
         shard:
           - 1
           - 2
@@ -23,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: '--localstorage-file=/tmp/localstorage'
+      VIP_DEV_ENV_TEST_ENGINE: ${{ matrix.engine }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -45,6 +49,15 @@ jobs:
           REPO="docker/compose"
           LATEST_RELEASE=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" --silent "https://api.github.com/repos/${REPO}/releases/latest" | jq -r .tag_name)
           sudo curl -L "https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose && sudo chmod 0755 /usr/local/bin/docker-compose
+
+      - name: Install rootless podman
+        if: matrix.engine == 'podman'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+          sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80
+          systemctl --user enable --now podman.socket
+          echo "DOCKER_HOST=unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')" >> "$GITHUB_ENV"
 
       - name: Preload Docker images
         run: |

@@ -1,11 +1,18 @@
 /* eslint-disable id-length */
 
+import Docker from 'dockerode';
 import { dockerComposify } from 'lando/lib/utils';
 
+import { getDockerSocket } from '../../../src/lib/dev-environment/docker-utils';
+
 /**
- * @typedef {import('dockerode')} Docker
  * @typedef {import('dockerode').ContainerInfo} ContainerInfo
  */
+
+export async function createDockerClient() {
+	const socketPath = await getDockerSocket();
+	return socketPath ? new Docker( { socketPath } ) : new Docker();
+}
 
 /**
  * @param {Docker} docker  Docker instance
