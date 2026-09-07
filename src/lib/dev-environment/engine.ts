@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
 import { satisfies } from 'semver';
 
@@ -171,6 +172,45 @@ const macMachineUnprivilegedPortRemedy = () =>
 
 const linuxHostUnprivilegedPortRemedy = () =>
 	`Run on this host: sudo sysctl -w ${ UNPRIVILEGED_PORT_SYSCTL_KEY }=80 (persist it in /etc/sysctl.d/)`;
+
+export type ProxyPublishAddress = '127.0.0.1' | '0.0.0.0';
+
+export interface ProxySocketMount {
+	source: string;
+	target: '/var/run/docker.sock';
+	selinuxLabelDisable: boolean;
+}
+
+const DOCKER_DEFAULT_SOCKET_PATH = '/var/run/docker.sock';
+const PROXY_SOCKET_MOUNT_TARGET = '/var/run/docker.sock';
+const SELINUX_ENFORCE_STATUS_PATH = '/sys/fs/selinux/enforce';
+const SELINUX_ENFORCING_STATUS_VALUE = '1';
+
+export function proxyPublishAddress( info: EngineInfo ): ProxyPublishAddress {
+	return info.engine === 'podman' ? '0.0.0.0' : '127.0.0.1';
+}
+
+const isSelinuxEnforcingHost = (): boolean => {
+	if ( process.platform !== 'linux' ) {
+		return false;
+	}
+
+	try {
+		return (
+			readFileSync( SELINUX_ENFORCE_STATUS_PATH, 'utf8' ).trim() === SELINUX_ENFORCING_STATUS_VALUE
+		);
+	} catch {
+		return false;
+	}
+};
+
+export function proxySocketMount( info: EngineInfo ): ProxySocketMount {
+	return {
+		source: info.socketPath || DOCKER_DEFAULT_SOCKET_PATH,
+		target: PROXY_SOCKET_MOUNT_TARGET,
+		selinuxLabelDisable: info.engine === 'podman' && isSelinuxEnforcingHost(),
+	};
+}
 
 export function podmanPreflight( info: EngineInfo, probes: PreflightProbes ): PreflightFinding[] {
 	if ( info.engine !== 'podman' ) {

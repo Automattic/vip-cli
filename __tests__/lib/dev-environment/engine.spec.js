@@ -2,7 +2,11 @@ import { describe, expect, it } from '@jest/globals';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { detectEngine } from '../../../src/lib/dev-environment/engine';
+import {
+	detectEngine,
+	proxyPublishAddress,
+	proxySocketMount,
+} from '../../../src/lib/dev-environment/engine';
 
 const fixturesDir = path.join( __dirname, '..', '..', '..', '__fixtures__', 'dev-environment' );
 const podmanInfoJson = readFileSync( path.join( fixturesDir, 'podman-info.json' ), 'utf8' );
@@ -78,5 +82,80 @@ describe( 'detectEngine', () => {
 			socketPath: '/var/run/docker.sock',
 			rootless: false,
 		} );
+	} );
+} );
+
+describe( 'proxyPublishAddress', () => {
+	it( 'publishes the proxy on 0.0.0.0 under podman', () => {
+		expect(
+			proxyPublishAddress( {
+				engine: 'podman',
+				serverVersion: '6.1.1',
+				socketPath: '/run/user/501/podman/podman.sock',
+				rootless: true,
+			} )
+		).toBe( '0.0.0.0' );
+	} );
+
+	it( 'keeps publishing the proxy on 127.0.0.1 under docker', () => {
+		expect(
+			proxyPublishAddress( {
+				engine: 'docker',
+				serverVersion: '27.3.1',
+				socketPath: '/var/run/docker.sock',
+				rootless: false,
+			} )
+		).toBe( '127.0.0.1' );
+	} );
+} );
+
+describe( 'proxySocketMount', () => {
+	it( 'mounts the real podman socket for the proxy under podman', () => {
+		const mount = proxySocketMount( {
+			engine: 'podman',
+			serverVersion: '6.1.1',
+			socketPath: '/run/user/501/podman/podman.sock',
+			rootless: true,
+		} );
+
+		expect( mount.source ).toBe( '/run/user/501/podman/podman.sock' );
+		expect( mount.target ).toBe( '/var/run/docker.sock' );
+	} );
+
+	it( 'never marks the socket mount selinux-disabled off a non-selinux host, even under podman', () => {
+		const mount = proxySocketMount( {
+			engine: 'podman',
+			serverVersion: '6.1.1',
+			socketPath: '/run/user/501/podman/podman.sock',
+			rootless: true,
+		} );
+
+		expect( mount.selinuxLabelDisable ).toBe( false );
+	} );
+
+	it( 'keeps mounting the existing docker socket unchanged under docker', () => {
+		const mount = proxySocketMount( {
+			engine: 'docker',
+			serverVersion: '27.3.1',
+			socketPath: '/var/run/docker.sock',
+			rootless: false,
+		} );
+
+		expect( mount ).toEqual( {
+			source: '/var/run/docker.sock',
+			target: '/var/run/docker.sock',
+			selinuxLabelDisable: false,
+		} );
+	} );
+
+	it( 'falls back to the default docker socket path when none was discovered', () => {
+		const mount = proxySocketMount( {
+			engine: 'docker',
+			serverVersion: 'unknown',
+			socketPath: '',
+			rootless: false,
+		} );
+
+		expect( mount.source ).toBe( '/var/run/docker.sock' );
 	} );
 } );

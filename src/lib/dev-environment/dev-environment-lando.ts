@@ -17,7 +17,13 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
-import { composeRequirement, detectEngine, podmanPreflight } from './engine';
+import {
+	composeRequirement,
+	detectEngine,
+	podmanPreflight,
+	proxyPublishAddress,
+	proxySocketMount,
+} from './engine';
 import { loadLandoModule, resolveLandoModule } from './lando-loader';
 import { getRuntimeModeLabel } from '../cli/runtime-mode';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
@@ -25,7 +31,7 @@ import env from '../env';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
 
-import type { PreflightProbes } from './engine';
+import type { PreflightProbes, ProxyPublishAddress, ProxySocketMount } from './engine';
 import type { NetworkInspectInfo } from 'dockerode';
 import type App from 'lando/lib/app';
 import type { ScanResult } from 'lando/lib/app';
@@ -58,6 +64,8 @@ interface LandoConfigWithLogging extends Omit< LandoConfig, 'composeBin' | 'dock
 	dockerBin?: string;
 	composeBin?: string;
 	socketPath?: string;
+	proxyPublishAddress?: ProxyPublishAddress;
+	proxySocket?: ProxySocketMount;
 }
 
 const execFileAsync = promisify( execFile );
@@ -1072,6 +1080,9 @@ export async function validateDockerInstalled( lando: Lando ): Promise< void > {
 		configWithLogging.dockerBin ?? '',
 		configWithLogging.socketPath ?? ''
 	);
+
+	configWithLogging.proxyPublishAddress = proxyPublishAddress( engineInfo );
+	configWithLogging.proxySocket = proxySocketMount( engineInfo );
 
 	const composeCheck = composeRequirement( { ...engineInfo, composeBinaryVersion: compose } );
 	if ( ! composeCheck.ok ) {
