@@ -1,0 +1,193 @@
+{
+    "host": {
+        "arch": "arm64",
+        "buildahVersion": "1.45.0",
+        "cgroupManager": "systemd",
+        "cgroupVersion": "v2",
+        "cgroupControllers": [
+            "cpu",
+            "io",
+            "memory",
+            "pids"
+        ],
+        "cdiSpecDirs": [
+            "/etc/cdi",
+            "/var/run/cdi"
+        ],
+        "conmon": {
+            "package": "conmon-2.2.1-2.fc44.aarch64",
+            "path": "/usr/bin/conmon",
+            "version": "conmon version 2.2.1, commit: "
+        },
+        "cpus": 6,
+        "cpuUtilization": {
+            "userPercent": 2.69,
+            "systemPercent": 1.95,
+            "idlePercent": 95.35
+        },
+        "databaseBackend": "sqlite",
+        "distribution": {
+            "distribution": "fedora",
+            "variant": "podman-machine-os",
+            "version": "44"
+        },
+        "eventLogger": "journald",
+        "freeLocks": 2009,
+        "hostname": "localhost.localdomain",
+        "idMappings": {
+            "gidmap": [
+                {
+                    "container_id": 0,
+                    "host_id": 1000,
+                    "size": 1
+                },
+                {
+                    "container_id": 1,
+                    "host_id": 100000,
+                    "size": 1000000
+                }
+            ],
+            "uidmap": [
+                {
+                    "container_id": 0,
+                    "host_id": 501,
+                    "size": 1
+                },
+                {
+                    "container_id": 1,
+                    "host_id": 100000,
+                    "size": 1000000
+                }
+            ]
+        },
+        "kernel": "7.1.8-200.fc44.aarch64",
+        "logDriver": "journald",
+        "memFree": 267460608,
+        "memAvailable": 9067139072,
+        "memTotal": 12495929344,
+        "networkBackend": "netavark",
+        "networkBackendInfo": {
+            "backend": "netavark",
+            "version": "netavark 2.1.0",
+            "package": "netavark-2.1.0-1.fc44.aarch64",
+            "path": "/usr/libexec/podman/netavark",
+            "dns": {
+                "version": "aardvark-dns 2.1.0",
+                "package": "aardvark-dns-2.1.0-1.fc44.aarch64",
+                "path": "/usr/libexec/podman/aardvark-dns"
+            },
+            "defaultNetwork": "podman"
+        },
+        "ociRuntime": {
+            "name": "crun",
+            "package": "crun-1.29.1-1.fc44.aarch64",
+            "path": "/usr/bin/crun",
+            "version": "crun version 1.29.1\ncommit: f0d911de5587342cfeb16473bf32ecdfeaf25957\nrundir: /run/user/501/crun\nspec: 1.0.0\n+SYSTEMD +SELINUX +APPARMOR +CAP +SECCOMP +EBPF +CRIU +LIBKRUN +WASM:wasmedge +JSON_C"
+        },
+        "os": "linux",
+        "remoteSocket": {
+            "path": "unix:///run/user/501/podman/podman.sock",
+            "exists": true
+        },
+        "rootlessNetworkCmd": "pasta",
+        "rootlessPortForwarder": "rootlessport",
+        "serviceIsRemote": true,
+        "security": {
+            "apparmorEnabled": false,
+            "capabilities": "CAP_CHOWN,CAP_DAC_OVERRIDE,CAP_FOWNER,CAP_FSETID,CAP_KILL,CAP_NET_BIND_SERVICE,CAP_SETFCAP,CAP_SETGID,CAP_SETPCAP,CAP_SETUID,CAP_SYS_CHROOT",
+            "rootless": true,
+            "seccompEnabled": true,
+            "seccompProfilePath": "/usr/share/containers/seccomp.json",
+            "selinuxEnabled": true
+        },
+        "pasta": {
+            "executable": "/usr/bin/pasta",
+            "package": "passt-0^20260728.gf8df3f1-2.fc44.aarch64",
+            "version": "pasta 0^20260728.gf8df3f1-2.fc44.aarch64-pasta\nCopyright Red Hat\nGNU General Public License, version 2 or later\n  <https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>\nThis is free software: you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.\n"
+        },
+        "swapFree": 0,
+        "swapTotal": 0,
+        "uptime": "2h 13m 10.00s (Approximately 0.08 days)",
+        "variant": "v8",
+        "linkmode": "dynamic",
+        "emulatedArchitectures": [
+            "linux/386",
+            "linux/amd64",
+            "linux/arm64be"
+        ]
+    },
+    "store": {
+        "containerStore": {
+            "number": 18,
+            "paused": 0,
+            "running": 16,
+            "stopped": 2
+        },
+        "graphDriverName": "overlay",
+        "graphOptions": {
+            "overlay.mountopt": "nodev"
+        },
+        "graphRoot": "/var/home/core/.local/share/containers/storage",
+        "graphRootAllocated": 106769133568,
+        "graphRootUsed": 13860491264,
+        "graphStatus": {
+            "Backing Filesystem": "xfs",
+            "Native Overlay Diff": "true",
+            "Supports d_type": "true",
+            "Supports shifting": "false",
+            "Supports volatile": "true",
+            "Using metacopy": "false"
+        },
+        "imageCopyTmpDir": "/var/tmp",
+        "imageStore": {
+            "number": 49
+        },
+        "runRoot": "/run/user/501/containers",
+        "volumePath": "/var/home/core/.local/share/containers/storage/volumes",
+        "transientStore": false
+    },
+    "registries": {
+        "search": [
+            "docker.io"
+        ]
+    },
+    "plugins": {
+        "volume": [
+            "local"
+        ],
+        "network": [
+            "bridge",
+            "macvlan",
+            "ipvlan"
+        ],
+        "log": [
+            "k8s-file",
+            "none",
+            "passthrough",
+            "journald"
+        ],
+        "authorization": null
+    },
+    "version": {
+        "APIVersion": "6.1.1",
+        "Version": "6.1.1",
+        "GoVersion": "go1.26.7-X:nodwarf5",
+        "GitCommit": "8303f2e25b675ea7f82099d615c60969aec15870",
+        "BuiltTime": "Wed Sep  2 08:00:00 2026",
+        "Built": 1788307200,
+        "BuildOrigin": "Copr: packit/podman-container-tools-podman-29700",
+        "OsArch": "linux/arm64",
+        "Os": "linux"
+    },
+    "Client": {
+        "APIVersion": "6.1.1",
+        "Version": "6.1.1",
+        "GoVersion": "go1.27.1",
+        "GitCommit": "",
+        "BuiltTime": "Wed Sep  2 21:12:23 2026",
+        "Built": 1788354743,
+        "BuildOrigin": "brew",
+        "OsArch": "darwin/arm64",
+        "Os": "darwin"
+    }
+}

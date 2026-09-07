@@ -17,6 +17,7 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
+import { detectEngine } from './engine';
 import { loadLandoModule, resolveLandoModule } from './lando-loader';
 import { getRuntimeModeLabel } from '../cli/runtime-mode';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
@@ -55,6 +56,7 @@ interface LandoConfigWithLogging extends Omit< LandoConfig, 'composeBin' | 'dock
 	logDir?: string;
 	dockerBin?: string;
 	composeBin?: string;
+	socketPath?: string;
 }
 
 const execFileAsync = promisify( execFile );
@@ -175,59 +177,12 @@ const formatBytes = ( bytes: number ): string => {
 	return `${ gb.toFixed( 1 ) } GB`;
 };
 
-type DockerPluginInfo = {
-	Name?: string;
-	Version?: string;
-};
-
-type DockerClientInfo = {
-	Plugins?: DockerPluginInfo[];
-};
-
-type DockerInfo = {
-	ServerVersion?: string;
-	ClientInfo?: DockerClientInfo;
-};
-
-const isRecord = ( value: unknown ): value is Record< string, unknown > =>
-	typeof value === 'object' && value !== null;
-
-const isDockerPluginInfo = ( value: unknown ): value is DockerPluginInfo => isRecord( value );
-
 const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 	const dockerBin = config.dockerBin ?? '';
 	const composeBin = config.composeBin ?? '';
-	let engine = 'unknown';
 	let compose = 'unknown';
-	let composePlugin = 'unknown';
 
-	try {
-		if ( dockerBin ) {
-			const { stdout } = await execFileAsync( dockerBin, [ 'info', '--format', 'json' ] );
-			const dockerData = JSON.parse( stdout ) as DockerInfo;
-			if ( isRecord( dockerData ) ) {
-				const serverVersion = dockerData.ServerVersion;
-				if ( typeof serverVersion === 'string' ) {
-					engine = serverVersion;
-				}
-
-				const clientInfo = dockerData.ClientInfo;
-				if ( isRecord( clientInfo ) ) {
-					const plugins = clientInfo.Plugins;
-					if ( Array.isArray( plugins ) ) {
-						const composePluginEntry = plugins.find(
-							plugin => isDockerPluginInfo( plugin ) && plugin.Name === 'compose'
-						);
-						if ( composePluginEntry && typeof composePluginEntry.Version === 'string' ) {
-							composePlugin = composePluginEntry.Version;
-						}
-					}
-				}
-			}
-		}
-	} catch ( error ) {
-		debug( 'Failed to read docker version info: %O', error );
-	}
+	const engineInfo = await detectEngine( dockerBin, config.socketPath ?? '' );
 
 	try {
 		if ( composeBin ) {
@@ -238,7 +193,12 @@ const getDockerVersions = async ( config: LandoConfigWithLogging ) => {
 		debug( 'Failed to read docker-compose version info: %O', error );
 	}
 
-	return { engine, compose, composePlugin };
+	return {
+		engine: engineInfo.serverVersion,
+		compose,
+		composePlugin: engineInfo.composePlugin ?? 'unknown',
+		engineName: engineInfo.engine,
+	};
 };
 
 const formatBannerLine = ( label: string, value: string ): string =>
@@ -263,6 +223,10 @@ const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void >
 
 	const dockerVersions = await getDockerVersions( config );
 	const command = process.argv.slice( 1 ).join( ' ' );
+	const engineBannerLine =
+		dockerVersions.engineName === 'podman'
+			? formatBannerLine( 'ENGINE', `podman ${ dockerVersions.engine }` )
+			: formatBannerLine( 'DOCKER ENGINE', dockerVersions.engine );
 	const bannerLines = [
 		'=== VIP Dev Env Log ===',
 		formatBannerLine( 'COMMAND', command ),
@@ -270,7 +234,7 @@ const writeLogBanner = async ( config: LandoConfigWithLogging ): Promise< void >
 		formatBannerLine( 'NODE', env.node.version ),
 		formatBannerLine( 'VIP-CLI', env.app.version ),
 		formatBannerLine( 'RUNTIME', getRuntimeModeLabel() ),
-		formatBannerLine( 'DOCKER ENGINE', dockerVersions.engine ),
+		engineBannerLine,
 		formatBannerLine( 'DOCKER COMPOSE', dockerVersions.compose ),
 		formatBannerLine( 'COMPOSE PLUGIN', dockerVersions.composePlugin ),
 		formatBannerLine( 'DOCKER BIN', config.dockerBin ?? 'unknown' ),
@@ -455,8 +419,11 @@ export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Pro
 			debug( 'Engine config: %j', config.engineConfig );
 		}
 
-		registerLogPathOutput( config as LandoConfigWithLogging, Boolean( options.quiet ) );
-		await writeLogBanner( config as LandoConfigWithLogging );
+		const configWithLogging = config as LandoConfigWithLogging;
+		configWithLogging.socketPath = socket ?? '';
+
+		registerLogPathOutput( configWithLogging, Boolean( options.quiet ) );
+		await writeLogBanner( configWithLogging );
 
 		const LandoClass = getLandoConstructor();
 		const lando = new LandoClass( config );

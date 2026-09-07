@@ -1,0 +1,112 @@
+{
+	"ID": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+	"Containers": 3,
+	"ContainersRunning": 2,
+	"ContainersPaused": 0,
+	"ContainersStopped": 1,
+	"Images": 12,
+	"Driver": "overlay2",
+	"SystemStatus": null,
+	"Plugins": {
+		"Volume": [ "local" ],
+		"Network": [ "bridge", "host", "ipvlan", "macvlan", "null", "overlay" ],
+		"Authorization": null,
+		"Log": [ "awslogs", "fluentd", "gcplogs", "gelf", "journald", "json-file", "local", "splunk", "syslog" ]
+	},
+	"MemoryLimit": true,
+	"SwapLimit": true,
+	"KernelMemory": false,
+	"KernelMemoryTCP": false,
+	"CpuCfsPeriod": true,
+	"CpuCfsQuota": true,
+	"CPUShares": true,
+	"CPUSet": true,
+	"OomKillDisable": true,
+	"IPv4Forwarding": true,
+	"BridgeNfIptables": false,
+	"BridgeNfIp6tables": false,
+	"Debug": false,
+	"NFd": 42,
+	"OomScoreAdj": 0,
+	"NGoroutines": 60,
+	"SystemTime": "2026-09-07T12:00:00.000000000Z",
+	"LoggingDriver": "json-file",
+	"CgroupDriver": "cgroupfs",
+	"CgroupVersion": "2",
+	"NEventsListener": 0,
+	"KernelVersion": "6.6.87.2-microsoft-standard-WSL2",
+	"OperatingSystem": "Docker Desktop",
+	"OSVersion": "",
+	"OSType": "linux",
+	"Architecture": "aarch64",
+	"IndexServerAddress": "https://index.docker.io/v1/",
+	"RegistryConfig": {
+		"AllowNondistributableArtifactsCIDRs": [],
+		"AllowNondistributableArtifactsHostnames": [],
+		"InsecureRegistryCIDRs": [ "127.0.0.0/8" ],
+		"IndexConfigs": {
+			"docker.io": {
+				"Name": "docker.io",
+				"Mirrors": [],
+				"Secure": true,
+				"Official": true
+			}
+		},
+		"Mirrors": []
+	},
+	"NCPU": 6,
+	"MemTotal": 8221151232,
+	"GenericResources": null,
+	"DockerRootDir": "/var/lib/docker",
+	"HttpProxy": "",
+	"HttpsProxy": "",
+	"NoProxy": "",
+	"Name": "docker-desktop",
+	"Labels": [],
+	"ExperimentalBuild": false,
+	"ServerVersion": "27.3.1",
+	"ClusterStore": "",
+	"Runtimes": {
+		"io.containerd.runc.v2": { "path": "runc" },
+		"runc": { "path": "runc" }
+	},
+	"DefaultRuntime": "runc",
+	"Swarm": {
+		"NodeID": "",
+		"NodeAddr": "",
+		"LocalNodeState": "inactive",
+		"ControlAvailable": false,
+		"Error": "",
+		"RemoteManagers": null
+	},
+	"LiveRestoreEnabled": false,
+	"Isolation": "",
+	"InitBinary": "docker-init",
+	"ContainerdCommit": { "ID": "8a1c8f22e59f43deed918b7d1006ec7f0e1a1c50" },
+	"RuncCommit": { "ID": "v1.1.14-0-g2c9f560" },
+	"InitCommit": { "ID": "de40ad0" },
+	"SecurityOptions": [ "name=seccomp,profile=builtin" ],
+	"ProductLicense": "Community Engine",
+	"Warnings": null,
+	"ServerErrors": null,
+	"ClientInfo": {
+		"Debug": false,
+		"Plugins": [
+			{
+				"SchemaVersion": "0.1.0",
+				"Vendor": "Docker Inc.",
+				"Version": "v2.29.7",
+				"Name": "compose",
+				"Path": "/usr/libexec/docker/cli-plugins/docker-compose"
+			},
+			{
+				"SchemaVersion": "0.1.0",
+				"Vendor": "Docker Inc.",
+				"Version": "v0.19.0",
+				"Name": "buildx",
+				"Path": "/usr/libexec/docker/cli-plugins/docker-buildx"
+			}
+		],
+		"Warnings": null
+	}
+}
