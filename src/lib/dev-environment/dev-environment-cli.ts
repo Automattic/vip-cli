@@ -135,10 +135,10 @@ export async function handleCLIException(
 	}
 }
 
-export const validateDependencies = ( lando: Lando ) => {
+export const validateDependencies = async ( lando: Lando ) => {
 	const now = new Date();
 
-	validateDockerInstalled( lando );
+	await validateDockerInstalled( lando );
 	const duration = new Date().getTime() - now.getTime();
 	debug( 'Validation checks completed in %d ms', duration );
 };

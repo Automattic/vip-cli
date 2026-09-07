@@ -17,7 +17,7 @@ import {
 	writeEnvironmentData,
 } from './dev-environment-core';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
-import { detectEngine } from './engine';
+import { composeRequirement, detectEngine, podmanPreflight } from './engine';
 import { loadLandoModule, resolveLandoModule } from './lando-loader';
 import { getRuntimeModeLabel } from '../cli/runtime-mode';
 import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
@@ -25,6 +25,7 @@ import env from '../env';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
 
+import type { PreflightProbes } from './engine';
 import type { NetworkInspectInfo } from 'dockerode';
 import type App from 'lando/lib/app';
 import type { ScanResult } from 'lando/lib/app';
@@ -60,6 +61,8 @@ interface LandoConfigWithLogging extends Omit< LandoConfig, 'composeBin' | 'dock
 }
 
 const execFileAsync = promisify( execFile );
+
+type ExecFn = typeof execFileAsync;
 
 type LandoConstructor = new ( config: LandoConfig ) => Lando;
 type LandoBuildTask = (
@@ -983,16 +986,62 @@ async function ensureNoOrphantProxyContainer( lando: Lando ): Promise< void > {
 	}
 }
 
-export function validateDockerInstalled( lando: Lando ): void {
+const PODMAN_DOCS_LINK =
+	'https://github.com/Automattic/vip-cli/blob/trunk/docs/dev-environment-podman.md';
+
+const formatSteeredMessage = ( why: string, remedy: string ): string =>
+	`${ why }\n\nRemedy: ${ remedy }\n\nDocs: ${ PODMAN_DOCS_LINK }`;
+
+const UNPRIVILEGED_PORT_SYSCTL_KEY = 'net.ipv4.ip_unprivileged_port_start';
+
+async function readUnprivilegedPortStart(
+	isPodmanMacMachine: boolean,
+	exec: ExecFn
+): Promise< number | null > {
+	try {
+		const { stdout } = isPodmanMacMachine
+			? await exec( 'podman', [
+					'machine',
+					'ssh',
+					'--',
+					'sysctl',
+					'-n',
+					UNPRIVILEGED_PORT_SYSCTL_KEY,
+			  ] )
+			: await exec( 'sysctl', [ '-n', UNPRIVILEGED_PORT_SYSCTL_KEY ] );
+
+		const value = Number.parseInt( stdout.trim(), 10 );
+		return Number.isNaN( value ) ? null : value;
+	} catch ( error ) {
+		debug( 'Failed to read %s: %O', UNPRIVILEGED_PORT_SYSCTL_KEY, error );
+		return null;
+	}
+}
+
+async function gatherPodmanPreflightProbes(
+	exec: ExecFn = execFileAsync
+): Promise< PreflightProbes > {
+	const isPodmanMacMachine = process.platform === 'darwin';
+	const unprivilegedPortStart = await readUnprivilegedPortStart( isPodmanMacMachine, exec );
+
+	return {
+		unprivilegedPortStartAllowsPort80:
+			unprivilegedPortStart !== null && unprivilegedPortStart <= 80,
+		isPodmanMacMachine,
+	};
+}
+
+export async function validateDockerInstalled( lando: Lando ): Promise< void > {
 	const { engine, composePlugin, compose } = lando.config.versions as {
 		engine: string;
 		composePlugin: string;
 		compose: string;
 	};
+	const configWithLogging = lando.config as LandoConfigWithLogging;
 
 	lando.log.verbose( 'docker-engine version: %s', engine );
 	if ( ! engine ) {
-		if ( ! lando.config.dockerBin ) {
+		if ( ! configWithLogging.dockerBin ) {
 			throw new UserError(
 				'docker binary could not be located! Please follow the following instructions to install it - https://docs.docker.com/engine/install/'
 			);
@@ -1018,6 +1067,21 @@ export function validateDockerInstalled( lando: Lando ): void {
 			);
 		}
 	}
+
+	const engineInfo = await detectEngine(
+		configWithLogging.dockerBin ?? '',
+		configWithLogging.socketPath ?? ''
+	);
+
+	const composeCheck = composeRequirement( { ...engineInfo, composeBinaryVersion: compose } );
+	if ( ! composeCheck.ok ) {
+		throw new UserError( formatSteeredMessage( composeCheck.reason, composeCheck.remedy ) );
+	}
+
+	const probes = await gatherPodmanPreflightProbes();
+	podmanPreflight( engineInfo, probes ).forEach( finding => {
+		lando.log.warn( formatSteeredMessage( finding.message, finding.remedy ) );
+	} );
 }
 
 export async function isContainerRunning(

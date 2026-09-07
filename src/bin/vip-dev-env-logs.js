@@ -53,7 +53,7 @@ command( {
 		const slug = await getEnvironmentName( opt );
 
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_logs_command_execute', trackingInfo );

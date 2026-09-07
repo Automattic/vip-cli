@@ -78,7 +78,7 @@ command( {
 	.argv( process.argv, async ( arg, opt ) => {
 		const slug = await getEnvironmentName( opt );
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 
 		const startProcessing = new Date();
 

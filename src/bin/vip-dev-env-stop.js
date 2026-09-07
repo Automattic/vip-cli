@@ -65,7 +65,7 @@ command( {
 		}
 
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( logSlug ) } );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 
 		await trackEvent( 'dev_env_stop_command_execute', trackingInfo );
 

@@ -80,7 +80,7 @@ command( {
 	.argv( process.argv, async ( unmatchedArgs, opt ) => {
 		const slug = await getEnvironmentName( opt, opt.quiet );
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ), quiet: opt.quiet } );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 
 		const trackingInfo = getEnvTrackingInfo( slug );
 		await trackEvent( 'dev_env_exec_command_execute', trackingInfo );

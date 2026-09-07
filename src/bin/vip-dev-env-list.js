@@ -27,7 +27,7 @@ command( {
 	.argv( process.argv, async () => {
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile() } );
 		lando.events.constructor.prototype.setMaxListeners( 1024 );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 
 		const trackingInfo = { all: true };
 		await trackEvent( 'dev_env_list_command_execute', trackingInfo );

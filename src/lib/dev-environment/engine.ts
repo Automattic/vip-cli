@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { satisfies } from 'semver';
 
 const execFileAsync = promisify( execFile );
 
@@ -9,8 +10,24 @@ export interface EngineInfo {
 	engine: ContainerEngine;
 	serverVersion: string;
 	composePlugin?: string;
+	composeBinaryVersion?: string;
 	socketPath: string;
 	rootless: boolean;
+}
+
+export type ComposeRequirementResult = { ok: true } | { ok: false; reason: string; remedy: string };
+
+export interface PreflightProbes {
+	unprivilegedPortStartAllowsPort80: boolean;
+	isPodmanMacMachine: boolean;
+}
+
+export type PreflightSeverity = 'error' | 'warning';
+
+export interface PreflightFinding {
+	severity: PreflightSeverity;
+	message: string;
+	remedy: string;
 }
 
 type ExecFn = typeof execFileAsync;
@@ -116,4 +133,61 @@ export async function detectEngine(
 	} catch {
 		return fallbackEngineInfo( socketPath );
 	}
+}
+
+const DOCKER_COMPOSE_INSTALL_REMEDY =
+	'Install the standalone docker-compose v2 binary: https://docs.docker.com/compose/install/';
+
+export function composeRequirement( info: EngineInfo ): ComposeRequirementResult {
+	if ( info.engine !== 'podman' ) {
+		return { ok: true };
+	}
+
+	const composeBinaryVersion = info.composeBinaryVersion;
+	if ( ! composeBinaryVersion ) {
+		return {
+			ok: false,
+			reason:
+				'podman does not ship a Compose v2-compatible docker-compose, and no standalone docker-compose binary was found',
+			remedy: DOCKER_COMPOSE_INSTALL_REMEDY,
+		};
+	}
+
+	if ( ! satisfies( composeBinaryVersion, '>=2.0.0' ) ) {
+		return {
+			ok: false,
+			reason: `docker-compose version ${ composeBinaryVersion } is not Compose v2`,
+			remedy: DOCKER_COMPOSE_INSTALL_REMEDY,
+		};
+	}
+
+	return { ok: true };
+}
+
+const UNPRIVILEGED_PORT_SYSCTL_KEY = 'net.ipv4.ip_unprivileged_port_start';
+
+const macMachineUnprivilegedPortRemedy = () =>
+	`Run inside the podman machine: podman machine ssh -- sudo sysctl -w ${ UNPRIVILEGED_PORT_SYSCTL_KEY }=80`;
+
+const linuxHostUnprivilegedPortRemedy = () =>
+	`Run on this host: sudo sysctl -w ${ UNPRIVILEGED_PORT_SYSCTL_KEY }=80 (persist it in /etc/sysctl.d/)`;
+
+export function podmanPreflight( info: EngineInfo, probes: PreflightProbes ): PreflightFinding[] {
+	if ( info.engine !== 'podman' ) {
+		return [];
+	}
+
+	if ( probes.unprivilegedPortStartAllowsPort80 ) {
+		return [];
+	}
+
+	return [
+		{
+			severity: 'error',
+			message: `podman cannot publish port 80 until ${ UNPRIVILEGED_PORT_SYSCTL_KEY } allows unprivileged ports below 1024`,
+			remedy: probes.isPodmanMacMachine
+				? macMachineUnprivilegedPortRemedy()
+				: linuxHostUnprivilegedPortRemedy(),
+		},
+	];
 }

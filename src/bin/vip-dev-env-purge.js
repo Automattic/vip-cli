@@ -78,7 +78,7 @@ command( {
 
 		const trackingInfo = { all: true };
 		await trackEvent( 'dev_env_purge_command_execute', trackingInfo );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 		const removeFiles = ! ( opt.soft || false );
 
 		try {

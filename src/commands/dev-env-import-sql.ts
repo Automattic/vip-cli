@@ -41,7 +41,7 @@ export class DevEnvImportSQLCommand {
 
 	public async run(): Promise< void > {
 		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( this.slug ) } );
-		validateDependencies( lando );
+		await validateDependencies( lando );
 
 		validateImportFileExtension( this.fileName );
 
