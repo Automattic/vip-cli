@@ -67,7 +67,7 @@ services:
           condition: service_completed_successfully
 <% if ( muPlugins.mode == 'image' ) { %>
         vip-mu-plugins:
-          condition: service_started
+          condition: service_completed_successfully
 <% } %>
 <% if ( appCode.mode == 'image' ) { %>
         demo-app-code:
@@ -204,7 +204,7 @@ services:
         - devtools:/dev-tools
         - scripts:/scripts
     initOnly: true
-    entrypoint: /bin/sh -c '/usr/bin/rsync -ac --delete --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
+    entrypoint: /bin/sh -c '/usr/bin/rsync -ac --delete <%= wpSiblingMountExcludes() %> --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
     volumes:
       devtools:
       scripts:
@@ -311,65 +311,63 @@ tooling:
     cmd:
       - mysql -hdatabase -uwordpress -pwordpress -Dwordpress
 
+<%
+	function wpSubMounts() {
+		const mounts = [
+			{ target: 'config', source: './config' },
+			{ target: 'log', source: './log' },
+			{ target: 'wp-content/uploads', source: './uploads' },
+			{ target: 'config/integrations-config', source: './integrations-config' },
+		];
+
+		if ( muPlugins.mode == 'image' ) {
+			mounts.push( { target: 'wp-content/mu-plugins', volume: 'mu-plugins' } );
+		} else {
+			mounts.push( { target: 'wp-content/mu-plugins', source: muPlugins.dir } );
+		}
+
+		if ( appCode.mode == 'image' ) {
+			mounts.push(
+				{ target: 'wp-content/client-mu-plugins', volume: 'clientcode_clientmuPlugins' },
+				{ target: 'wp-content/images', volume: 'clientcode_images' },
+				{ target: 'wp-content/languages', volume: 'clientcode_languages' },
+				{ target: 'wp-content/plugins', volume: 'clientcode_plugins' },
+				{ target: 'wp-content/private', volume: 'clientcode_private' },
+				{ target: 'wp-content/themes', volume: 'clientcode_themes' },
+				{ target: 'vip-config', volume: 'clientcode_vipconfig' }
+			);
+		} else {
+			mounts.push(
+				{ target: 'wp-content/client-mu-plugins', source: `${ appCode.dir }/client-mu-plugins` },
+				{ target: 'wp-content/images', source: `${ appCode.dir }/images` },
+				{ target: 'wp-content/languages', source: `${ appCode.dir }/languages` },
+				{ target: 'wp-content/plugins', source: `${ appCode.dir }/plugins` },
+				{ target: 'wp-content/private', source: `${ appCode.dir }/private` },
+				{ target: 'wp-content/themes', source: `${ appCode.dir }/themes` },
+				{ target: 'vip-config', source: `${ appCode.dir }/vip-config` }
+			);
+		}
+
+		return mounts;
+	}
+
+	function wpSiblingMountExcludes() {
+		return wpSubMounts()
+			.map( mount => `--exclude=/${ mount.target }` )
+			.join( ' ' );
+	}
+%>
 <% function wpVolumes() { %>
-        - ./config:/wp/config
-        - ./log:/wp/log
-        - ./uploads:/wp/wp-content/uploads
         - ./wordpress:/wp
-        - ./integrations-config:/wp/config/integrations-config
-<% if ( muPlugins.mode == 'image' ) { %>
+<% wpSubMounts().forEach( function ( mount ) { %>
+<% if ( mount.volume ) { %>
         - type: volume
-          source: mu-plugins
-          target: /wp/wp-content/mu-plugins
+          source: <%= mount.volume %>
+          target: /wp/<%= mount.target %>
           volume:
             nocopy: true
 <% } else { %>
-        - <%= muPlugins.dir %>:/wp/wp-content/mu-plugins
+        - <%= mount.source %>:/wp/<%= mount.target %>
 <% } %>
-<% if ( appCode.mode == 'image' ) { %>
-        - type: volume
-          source: clientcode_clientmuPlugins
-          target: /wp/wp-content/client-mu-plugins
-          volume:
-            nocopy: true
-        - type: volume
-          source: clientcode_images
-          target: /wp/wp-content/images
-          volume:
-            nocopy: true
-        - type: volume
-          source: clientcode_languages
-          target: /wp/wp-content/languages
-          volume:
-            nocopy: true
-        - type: volume
-          source: clientcode_plugins
-          target: /wp/wp-content/plugins
-          volume:
-            nocopy: true
-        - type: volume
-          source: clientcode_private
-          # FIXME: Do we need this to be out of /wp for local development?
-          target: /wp/wp-content/private
-          volume:
-            nocopy: true
-        - type: volume
-          source: clientcode_themes
-          target: /wp/wp-content/themes
-          volume:
-            nocopy: true
-        - type: volume
-          source: clientcode_vipconfig
-          target: /wp/vip-config
-          volume:
-            nocopy: true
-<% } else { %>
-        - <%= appCode.dir %>/client-mu-plugins:/wp/wp-content/client-mu-plugins
-        - <%= appCode.dir %>/images:/wp/wp-content/images
-        - <%= appCode.dir %>/languages:/wp/wp-content/languages
-        - <%= appCode.dir %>/plugins:/wp/wp-content/plugins
-        - <%= appCode.dir %>/private:/wp/wp-content/private
-        - <%= appCode.dir %>/themes:/wp/wp-content/themes
-        - <%= appCode.dir %>/vip-config:/wp/vip-config
-<% } %>
+<% } ); %>
 <% } %>
