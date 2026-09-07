@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 )
 
 // EnsureOptions configures an Ensure call. Domain is used in Traefik env vars.
@@ -11,6 +13,7 @@ import (
 // production falls back to ListenProbe.
 type EnsureOptions struct {
 	Domain string
+	Engine dockercli.EngineInfo
 	free   func(int) bool
 }
 
@@ -64,7 +67,7 @@ func Ensure(ctx context.Context, r DockerRunner, opts EnsureOptions) (Ports, err
 			continue
 		}
 		ports := Ports{HTTP: hp, HTTPS: httpsPort}
-		if err := r.Docker(ctx, proxyRunArgs(ports, opts.Domain)...); err != nil {
+		if err := r.Docker(ctx, proxyRunArgs(ports, opts.Domain, opts.Engine)...); err != nil {
 			lastErr = err
 			// Clean up the name-collision / partial container before retrying.
 			_ = r.Docker(ctx, "rm", "-f", ProxyContainerName)

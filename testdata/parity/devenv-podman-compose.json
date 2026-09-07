@@ -1,0 +1,10 @@
+{
+  "name": "devenv-podman-compose",
+  "description": "ComposeRequirement is always OK for docker; refuses podman without a real docker-compose v2 binary and passes with one.",
+  "cases": [
+    { "name": "docker-always-ok", "engine": "docker", "docker_compose_version": null, "expected": { "ok": true } },
+    { "name": "podman-with-compose-v2", "engine": "podman", "docker_compose_version": "v2.29.7", "expected": { "ok": true } },
+    { "name": "podman-without-compose-binary", "engine": "podman", "docker_compose_version": null, "expected": { "ok": false, "reason": "podman requires a real docker-compose v2 binary; podman-compose is not supported" } },
+    { "name": "podman-with-compose-v1", "engine": "podman", "docker_compose_version": "1.29.2", "expected": { "ok": false, "reason": "podman requires a real docker-compose v2 binary; podman-compose is not supported" } }
+  ]
+}

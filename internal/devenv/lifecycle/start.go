@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Automattic/vip/internal/devenv/compose"
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 	"github.com/Automattic/vip/internal/devenv/hostops"
 	"github.com/Automattic/vip/internal/devenv/proxy"
 )
@@ -23,6 +24,7 @@ type StartParams struct {
 	SkipRebuild  bool // omit --force-recreate (only start non-running services)
 	GOOS         string
 	PollEvery    time.Duration // 0 => default; tests pass tiny
+	Engine       dockercli.EngineInfo
 }
 
 // nonWildcard drops wildcard SANs — valid for TLS, invalid as /etc/hosts entries.
@@ -41,7 +43,7 @@ func nonWildcard(hosts []string) []string {
 // write /etc/hosts under ONE elevation (after setup, so wp_blogs is queryable
 // for subdomain-multisite subsites). Returns the bound proxy ports.
 func Start(ctx context.Context, deps Deps, p StartParams) (proxy.Ports, error) {
-	ports, err := deps.Proxy.Ensure(ctx, proxy.EnsureOptions{Domain: p.View.Domain})
+	ports, err := deps.Proxy.Ensure(ctx, proxy.EnsureOptions{Domain: p.View.Domain, Engine: p.Engine})
 	if err != nil {
 		return proxy.Ports{}, err
 	}

@@ -1,0 +1,24 @@
+{
+  "name": "devenv-podman-preflight",
+  "description": "Preflight is pure and never mutates the host: docker gets zero findings regardless of probes; podman surfaces the unprivileged-port sysctl remedy only when the probed value exceeds 80, with a machine-aware remedy string.",
+  "cases": [
+    { "name": "docker-no-findings", "engine": "docker", "probes": { "unprivileged_port_start": 1024, "runs_inside_machine": false }, "expected_findings": [] },
+    {
+      "name": "podman-rootless-linux-needs-sysctl",
+      "engine": "podman",
+      "probes": { "unprivileged_port_start": 1024, "runs_inside_machine": false },
+      "expected_findings": [
+        { "remedy": "sudo sysctl net.ipv4.ip_unprivileged_port_start=80 (persist via /etc/sysctl.d/99-podman-rootless-ports.conf)" }
+      ]
+    },
+    {
+      "name": "podman-mac-machine-needs-ssh-sysctl",
+      "engine": "podman",
+      "probes": { "unprivileged_port_start": 1024, "runs_inside_machine": true },
+      "expected_findings": [
+        { "remedy": "podman machine ssh -- sudo sysctl net.ipv4.ip_unprivileged_port_start=80" }
+      ]
+    },
+    { "name": "podman-already-permits-port-80", "engine": "podman", "probes": { "unprivileged_port_start": 80, "runs_inside_machine": false }, "expected_findings": [] }
+  ]
+}

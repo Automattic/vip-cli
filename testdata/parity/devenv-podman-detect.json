@@ -1,0 +1,21 @@
+{
+  "name": "devenv-podman-detect",
+  "description": "DetectEngine classifies a real podman `info --format json` shape as podman, with server version and rootless carried through; a docker shape still classifies as docker.",
+  "cases": [
+    {
+      "name": "docker-info",
+      "info_fixture": "internal/devenv/dockercli/testdata/docker-info.json",
+      "expected": { "engine": "docker", "server_version": "27.3.1", "compose_plugin": true, "rootless": false }
+    },
+    {
+      "name": "podman-info",
+      "info_fixture": "internal/devenv/dockercli/testdata/podman-info.json",
+      "expected": { "engine": "podman", "server_version": "5.5.2", "compose_plugin": false, "rootless": true }
+    },
+    {
+      "name": "unrecognized-info-falls-back-to-docker",
+      "info_fixture": "internal/devenv/dockercli/testdata/unrecognized-info.json",
+      "expected": { "engine": "docker", "server_version": "unknown", "compose_plugin": false, "rootless": false }
+    }
+  ]
+}

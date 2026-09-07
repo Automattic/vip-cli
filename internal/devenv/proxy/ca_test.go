@@ -4,10 +4,12 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 )
 
 func TestProxyRunArgsMountsCertsVolume(t *testing.T) {
-	joined := strings.Join(proxyRunArgs(Ports{HTTP: 80, HTTPS: 443}, "vipdev.lndo.site"), " ")
+	joined := strings.Join(proxyRunArgs(Ports{HTTP: 80, HTTPS: 443}, "vipdev.lndo.site", dockercli.EngineInfo{}), " ")
 	if !strings.Contains(joined, ProxyCertsVolume+":/certs") {
 		t.Fatalf("proxy run args missing certs volume mount:\n%s", joined)
 	}

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os/exec"
+	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,10 +18,42 @@ import (
 	"github.com/Automattic/vip/internal/devenv"
 	"github.com/Automattic/vip/internal/devenv/compose"
 	"github.com/Automattic/vip/internal/devenv/devlog"
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 	"github.com/Automattic/vip/internal/devenv/instancedata"
+	"github.com/Automattic/vip/internal/devenv/proxy"
 	"github.com/Automattic/vip/internal/httpproxy"
 	"github.com/Automattic/vip/internal/nodeflags"
 )
+
+func validateDockerEngine(cmd *cobra.Command) error {
+	r := &dockercli.Runner{}
+	socketPath, _ := dockercli.DockerSocket()
+	info, err := r.DetectEngine(socketPath)
+	if err != nil {
+		return nil
+	}
+	requirement := dockercli.ComposeRequirement(info, dockercli.DockerComposeVersionProbe)
+	if !requirement.OK {
+		return fmt.Errorf("%s\nRemedy: %s", requirement.Reason, requirement.Remedy)
+	}
+	findings := proxy.Preflight(info, podmanPreflightProbes())
+	for _, f := range findings {
+		fmt.Fprintf(cmd.ErrOrStderr(), "podman preflight: %s\nRemedy: %s\n", f.Message, f.Remedy)
+	}
+	return nil
+}
+
+func podmanPreflightProbes() proxy.PreflightProbes {
+	out, err := exec.Command("sysctl", "-n", "net.ipv4.ip_unprivileged_port_start").Output()
+	if err != nil {
+		return proxy.PreflightProbes{}
+	}
+	start, err := strconv.Atoi(strings.TrimSpace(string(out)))
+	if err != nil {
+		return proxy.PreflightProbes{}
+	}
+	return proxy.PreflightProbes{UnprivilegedPortStart: start, RunsInsideMachine: runtime.GOOS == "darwin"}
+}
 
 // openDevEnvLog opens a per-env, per-invocation session log, points its footer
 // at stdout, and returns a context carrying the logger plus a finish func that
@@ -300,6 +335,9 @@ func parseWordPressTags(body []byte) []string {
 }
 
 func runDevEnvCreate(cmd *cobra.Command, _ []string) error {
+	if err := validateDockerEngine(cmd); err != nil {
+		return err
+	}
 	// When invoked as `@app.env dev-env create`, seed the wizard from the app's
 	// environment (Node parity: getApplicationInformation + getOptionsFromAppInfo).
 	// Best-effort: a nil result (no alias, or a failed fetch) falls back to the
@@ -575,6 +613,9 @@ func devEnvStartCmd() *cobra.Command {
 	c := &cobra.Command{Use: "start", Short: "Start a local environment", SilenceUsage: true, SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			_ = skipWPVersions // accepted for Node parity; the Go port has no WP-version prompt to skip.
+			if err := validateDockerEngine(cmd); err != nil {
+				return err
+			}
 			slug, err := ResolveSlug(cmd)
 			if err != nil {
 				return err

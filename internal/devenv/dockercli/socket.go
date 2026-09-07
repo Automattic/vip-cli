@@ -41,6 +41,7 @@ func DockerSocket() (string, error) {
 		filepath.Join(home, ".colima", "default", "docker.sock"),
 		filepath.Join(home, ".orbstack", "run", "docker.sock"),
 	)
+	candidates = append(candidates, podmanSocketCandidates(home)...)
 
 	for _, p := range candidates {
 		info, err := os.Stat(p)
@@ -53,4 +54,29 @@ func DockerSocket() (string, error) {
 		}
 	}
 	return "", nil
+}
+
+func podmanSocketCandidates(home string) []string {
+	var candidates []string
+	if runtimeDir := os.Getenv("XDG_RUNTIME_DIR"); runtimeDir != "" {
+		candidates = append(candidates, filepath.Join(runtimeDir, "podman", "podman.sock"))
+	}
+	candidates = append(candidates, filepath.Join(home, ".local", "share", "containers", "podman", "machine", "podman.sock"))
+	return candidates
+}
+
+func PodmanMachineSocketPath(inspect func() (string, error)) (string, error) {
+	path, err := inspect()
+	if err != nil {
+		return "", err
+	}
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "", nil
+	}
+	info, err := os.Stat(path)
+	if err != nil || info.Mode()&os.ModeSocket == 0 {
+		return "", nil
+	}
+	return path, nil
 }

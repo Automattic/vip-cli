@@ -1,0 +1,9 @@
+{
+  "ServerVersion": "27.3.1",
+  "ClientInfo": {
+    "Plugins": [
+      { "Name": "compose", "Version": "v2.29.7" },
+      { "Name": "buildx", "Version": "v0.17.1" }
+    ]
+  }
+}

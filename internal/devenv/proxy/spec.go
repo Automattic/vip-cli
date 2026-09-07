@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Automattic/vip/internal/devenv/compose"
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 )
 
 // ProxyContainerName is the shared proxy container (parity: dev-environment-lando.ts:330).
@@ -31,19 +32,50 @@ var proxyCommand = []string{
 	"--providers.file.watch=true",
 }
 
+func ProxyBindAddressFor(info dockercli.EngineInfo) string {
+	if info.Engine == dockercli.EnginePodman {
+		return "0.0.0.0"
+	}
+	return ProxyBindAddress
+}
+
+type ProxySocketMount struct {
+	Source                  string
+	Target                  string
+	SecurityOptDisableLabel bool
+}
+
+func ProxySocketMountFor(info dockercli.EngineInfo) ProxySocketMount {
+	if info.Engine == dockercli.EnginePodman {
+		source := info.SocketPath
+		if source == "" {
+			source = "/run/podman/podman.sock"
+		}
+		return ProxySocketMount{Source: source, Target: "/var/run/docker.sock", SecurityOptDisableLabel: true}
+	}
+	return ProxySocketMount{Source: "/var/run/docker.sock", Target: "/var/run/docker.sock"}
+}
+
 // proxyRunArgs builds the `docker run` argv for the shared proxy. The cert
 // volume + boot-script mounts are appended per Task 1 findings (see Task 7);
 // this builder establishes the network, ports, socket mount, env, and command.
-func proxyRunArgs(ports Ports, domain string) []string {
+func proxyRunArgs(ports Ports, domain string, info dockercli.EngineInfo) []string {
+	bindAddress := ProxyBindAddressFor(info)
+	socketMount := ProxySocketMountFor(info)
 	args := []string{
 		"run", "-d",
 		"--name", ProxyContainerName,
 		"--network", compose.ProxyNetwork,
 		"--restart", "unless-stopped",
-		"-p", fmt.Sprintf("%s:%d:80", ProxyBindAddress, ports.HTTP),
-		"-p", fmt.Sprintf("%s:%d:443", ProxyBindAddress, ports.HTTPS),
-		"-p", fmt.Sprintf("%s::8080", ProxyBindAddress),
-		"-v", "/var/run/docker.sock:/var/run/docker.sock",
+		"-p", fmt.Sprintf("%s:%d:80", bindAddress, ports.HTTP),
+		"-p", fmt.Sprintf("%s:%d:443", bindAddress, ports.HTTPS),
+		"-p", fmt.Sprintf("%s::8080", bindAddress),
+		"-v", fmt.Sprintf("%s:%s", socketMount.Source, socketMount.Target),
+	}
+	if socketMount.SecurityOptDisableLabel {
+		args = append(args, "--security-opt", "label=disable")
+	}
+	args = append(args,
 		"-v", ProxyConfigVolume + ":/proxy_config",
 		"-v", ProxyCertsVolume + ":/certs",
 		// The four LANDO_* vars below are retained for Lando image parity but are
@@ -54,7 +86,7 @@ func proxyRunArgs(ports Ports, domain string) []string {
 		"-e", "LANDO_PROXY_CONFIG_FILE=/proxy_config/proxy.yaml",
 		"-e", "LANDO_PROXY_PASSTHRU=true",
 		ProxyImage,
-	}
+	)
 	args = append(args, proxyCommand...)
 	return args
 }

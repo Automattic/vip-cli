@@ -1,0 +1,24 @@
+{
+  "name": "devenv-podman-proxy-spec",
+  "description": "Proxy publish address, socket mount, and security-opt derived from EngineInfo. Docker keeps 127.0.0.1 + the existing /var/run/docker.sock mount unchanged; podman publishes on 0.0.0.0, mounts the real podman socket path, and disables the SELinux label.",
+  "cases": [
+    {
+      "name": "docker-unchanged",
+      "engine": "docker",
+      "socket_path": "/var/run/docker.sock",
+      "expected": { "bind_address": "127.0.0.1", "socket_mount_source": "/var/run/docker.sock", "socket_mount_target": "/var/run/docker.sock", "security_opt_disable_label": false }
+    },
+    {
+      "name": "podman-wildcard-and-real-socket",
+      "engine": "podman",
+      "socket_path": "/run/user/1000/podman/podman.sock",
+      "expected": { "bind_address": "0.0.0.0", "socket_mount_source": "/run/user/1000/podman/podman.sock", "socket_mount_target": "/var/run/docker.sock", "security_opt_disable_label": true }
+    },
+    {
+      "name": "podman-missing-socket-path-falls-back-to-default",
+      "engine": "podman",
+      "socket_path": "",
+      "expected": { "bind_address": "0.0.0.0", "socket_mount_source": "/run/podman/podman.sock", "socket_mount_target": "/var/run/docker.sock", "security_opt_disable_label": true }
+    }
+  ]
+}

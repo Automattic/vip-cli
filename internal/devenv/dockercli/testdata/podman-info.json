@@ -1,0 +1,16 @@
+{
+  "version": {
+    "Version": "5.5.2"
+  },
+  "host": {
+    "remoteSocket": {
+      "path": "/run/user/1000/podman/podman.sock"
+    },
+    "security": {
+      "rootless": true
+    }
+  },
+  "store": {
+    "graphDriverName": "overlay"
+  }
+}

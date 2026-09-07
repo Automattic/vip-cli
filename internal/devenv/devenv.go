@@ -148,6 +148,11 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 		d.PullAfter = &now
 		_ = instancedata.Write(slug, d) // best-effort: pull succeeded; a stale timestamp only re-pulls next time
 	}
+	socketPath, _ := dockercli.DockerSocket()
+	engineInfo, err := r.DetectEngine(socketPath)
+	if err != nil {
+		engineInfo = dockercli.EngineInfo{Engine: dockercli.EngineDocker, ServerVersion: "unknown", SocketPath: socketPath}
+	}
 	_, err = lifecycle.Start(ctx, deps, lifecycle.StartParams{
 		Project:      slug,
 		View:         view,
@@ -158,6 +163,7 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 		Pull:         pull,
 		SkipRebuild:  opts.SkipRebuild,
 		GOOS:         goos(),
+		Engine:       engineInfo,
 	})
 	return err
 }
