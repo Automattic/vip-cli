@@ -107,6 +107,7 @@ TODO: Update description of the variables.
 - `SOCKS_PROXY`:
 - `HTTP_PROXY`:
 - `NO_PROXY`:
+- `VIP_NO_UPDATE_NOTIFIER`: Set to `1` to disable automatic update checks and notices in the Go CLI. Explicit `vip-next update` commands remain available. See [Go CLI updates](GO-UPDATES.md).
 - `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
 - `VIP_USE_SYSTEM_PROXY`:
 - `WPVIP_DEPLOY_TOKEN`: For use with `vip app deploy` on sites that have custom deploys enabled.
