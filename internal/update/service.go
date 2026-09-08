@@ -2,6 +2,7 @@ package update
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -41,11 +42,12 @@ func NewService() *Service {
 	s := &Service{Installed: version.Version, Platform: Platform{runtime.GOOS, runtime.GOARCH}, Now: time.Now, Executable: os.Executable, Fetch: (GitHub{}).Releases, Stage: (Downloader{}).Stage}
 	s.State = State{CacheDir: filepath.Join(cache, "vip", "update"), ConfigDir: filepath.Join(config, "vip")}
 	if e1 != nil {
-		s.initErr = e1
+		e1 = fmt.Errorf("update cache directory: %w", e1)
 	}
 	if e2 != nil {
-		s.initErr = e2
+		e2 = fmt.Errorf("update config directory: %w", e2)
 	}
+	s.initErr = errors.Join(e1, e2)
 	return s
 }
 func (s Service) Run(ctx context.Context, r Request, progress func(Step)) (out Outcome, err error) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -61,5 +62,18 @@ func TestServiceRejectsInstallationChangedDuringDiscovery(t *testing.T) {
 	}, Installer: Installer{InspectOwnership: func(context.Context, Layout) (Ownership, error) { return Ownership{}, nil }}}
 	if _, err := s.Run(context.Background(), Request{}, nil); err == nil {
 		t.Fatal("changed executable accepted")
+	}
+}
+
+func TestServiceReportsBothDirectoryFailures(t *testing.T) {
+	// Restore all environment changes after this test; no filesystem or network
+	// operations should run when the standard user directories are unavailable.
+	for _, name := range []string{"HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "LocalAppData", "AppData"} {
+		t.Setenv(name, "")
+	}
+	s := NewService()
+	_, err := s.Run(context.Background(), Request{CheckOnly: true}, nil)
+	if err == nil || !strings.Contains(err.Error(), "update cache directory:") || !strings.Contains(err.Error(), "update config directory:") {
+		t.Fatalf("missing directory failure details: %v", err)
 	}
 }

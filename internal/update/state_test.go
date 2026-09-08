@@ -106,3 +106,27 @@ func TestNotifierWithoutFetcherUsesCachedRelease(t *testing.T) {
 		t.Fatalf("missing fetcher recorded as failed request: %+v, %v", cached, err)
 	}
 }
+
+func TestStateOverwritesCacheAndChannel(t *testing.T) {
+	s := State{CacheDir: t.TempDir(), ConfigDir: t.TempDir()}
+	c := Cache{Schema: 1, Platform: Platform{"windows", "amd64"}, Channel: Stable}
+	for _, v := range []string{"5.0.1", "5.0.2"} {
+		c.Releases = []Release{release(v)}
+		if err := s.WriteCache(c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cached, err := s.ReadCache(Stable, c.Platform)
+	if err != nil || len(cached.Releases) != 1 || cached.Releases[0].Tag != "5.0.2" {
+		t.Fatalf("cache was not replaced: %+v, %v", cached, err)
+	}
+	for _, ch := range []Channel{Preview, Stable} {
+		if err := s.WriteChannel(ch); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ch, err := s.ReadChannel()
+	if err != nil || ch != Stable {
+		t.Fatalf("channel was not replaced: %q, %v", ch, err)
+	}
+}
