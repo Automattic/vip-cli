@@ -5,6 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/Automattic/vip/cmd/vip-next/commands"
 	"github.com/Automattic/vip/internal/auth"
 	"github.com/Automattic/vip/internal/keychain"
 	"github.com/Automattic/vip/internal/telemetry"
@@ -104,9 +107,11 @@ func isNonInteractiveArgv(argv []string) bool {
 }
 
 type runDeps struct {
-	Tracker     *telemetry.Tracker
-	NewKeychain func(apiHost string) *keychain.Keychain
-	NewLogin    func(store *auth.Store) func() (*auth.Token, error)
+	UpdateRunner      commands.UpdateRunner
+	StartUpdateNotice func(*cobra.Command) func()
+	Tracker           *telemetry.Tracker
+	NewKeychain       func(apiHost string) *keychain.Keychain
+	NewLogin          func(store *auth.Store) func() (*auth.Token, error)
 }
 
 type telemetryLoginTracker struct {
@@ -119,8 +124,9 @@ func (a telemetryLoginTracker) Track(name string, props map[string]any) {
 
 func productionRunDeps(tracker *telemetry.Tracker) runDeps {
 	return runDeps{
-		Tracker:     tracker,
-		NewKeychain: keychain.New,
+		Tracker:           tracker,
+		StartUpdateNotice: startUpdateNotice,
+		NewKeychain:       keychain.New,
 		NewLogin: func(store *auth.Store) func() (*auth.Token, error) {
 			flow := auth.NewProductionLoginFlow(
 				store,

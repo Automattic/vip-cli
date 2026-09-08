@@ -7,15 +7,17 @@ import (
 
 	"github.com/Automattic/vip/cmd/vip-next/commands"
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/update"
 	"github.com/Automattic/vip/internal/version"
 )
 
 type rootContext struct {
-	aliasApp string
-	aliasEnv string
+	updateRunner commands.UpdateRunner
+	aliasApp     string
+	aliasEnv     string
 }
 
-func newRootCmd(rc *rootContext) *cobra.Command {
+func newRootBase(rc *rootContext) *cobra.Command {
 	root := &cobra.Command{
 		Use:           "vip-next",
 		Short:         "WordPress VIP command-line interface (Go edition)",
@@ -57,6 +59,16 @@ func newRootCmd(rc *rootContext) *cobra.Command {
 		return nil
 	}
 
+	return root
+}
+
+func newRootCmd(rc *rootContext) *cobra.Command {
+	root := newRootBase(rc)
+	runner := rc.updateRunner
+	if runner == nil {
+		runner = update.NewService()
+	}
+	root.AddCommand(commands.NewUpdateCmd(runner))
 	root.AddCommand(commands.LoginCmd())
 	root.AddCommand(commands.LogoutCmd())
 	root.AddCommand(commands.NewWhoamiCmd())

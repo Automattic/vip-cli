@@ -111,3 +111,27 @@ jobs:
 
       - name: smoke
         run: ./bin/vip-next --version
+
+  updater-native:
+    name: Go updater (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    env:
+      DO_NOT_TRACK: '1'
+      GO_ENV: test
+      VIP_NO_UPDATE_NOTIFIER: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+          cache: true
+      - name: Test native self-replacement and recovery
+        run: go test -count=1 -v ./internal/update
+      - name: Test update command bootstrap
+        run: go test -count=1 -v ./cmd/vip-next -run Update

@@ -29,6 +29,7 @@ import (
 	"github.com/Automattic/vip/internal/nodeflags"
 	"github.com/Automattic/vip/internal/rechallenge"
 	"github.com/Automattic/vip/internal/telemetry"
+	"github.com/Automattic/vip/internal/update"
 )
 
 func main() {
@@ -100,11 +101,27 @@ func runWithDeps(argv []string, deps runDeps) error {
 	// rootRef is guaranteed non-nil by the time the closure runs in
 	// production. The closure falls back to env-only detection if the
 	// closure somehow fires pre-Execute (shouldn't happen, but defensive).
+	// Probe only the local update route; ordinary commands must be constructed
+	// after configureAuthenticated/configureBypassed has supplied API context.
+	probe := newRootBase(&rootContext{aliasApp: app, aliasEnv: env})
+	runner := deps.UpdateRunner
+	if runner == nil {
+		runner = update.NewService()
+	}
+	probe.AddCommand(commands.NewUpdateCmd(runner))
+	preparedUpdate := prepareArgs(probe, rewritten)
+	if isUpdateInvocation(probe, preparedUpdate) {
+		probe.SetArgs(preparedUpdate)
+		return probe.Execute()
+	}
+
 	var rootRef *cobra.Command
 	executeRoot := func() error {
 		rc := &rootContext{aliasApp: app, aliasEnv: env}
 		rootRef = newRootCmd(rc)
 		rootRef.SetArgs(prepareArgs(rootRef, rewritten))
+		finish := installUpdateNotifier(rootRef, deps.StartUpdateNotice)
+		defer finish()
 		return rootRef.Execute()
 	}
 
