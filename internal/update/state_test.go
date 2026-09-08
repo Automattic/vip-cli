@@ -88,3 +88,21 @@ func TestNotifierDoesNotWaitAndReevaluatesCache(t *testing.T) {
 		t.Fatal("stale notice", notice)
 	}
 }
+
+func TestNotifierWithoutFetcherUsesCachedRelease(t *testing.T) {
+	n := Notifier{State: State{CacheDir: t.TempDir(), ConfigDir: t.TempDir()}, Installed: "5.0.0", Platform: Platform{"linux", "amd64"}}
+	if notice := n.Start(context.Background())(); notice != nil {
+		t.Fatalf("unexpected notice: %+v", notice)
+	}
+	if err := n.State.WriteCache(Cache{Schema: 1, Platform: n.Platform, Channel: Stable, LastCheckedAt: time.Now().Add(-48 * time.Hour), Releases: []Release{release("5.0.1")}}); err != nil {
+		t.Fatal(err)
+	}
+	notice := n.Start(context.Background())()
+	if notice == nil || notice.Version != "5.0.1" {
+		t.Fatalf("missing cached notice: %+v", notice)
+	}
+	cached, err := n.State.ReadCache(Stable, n.Platform)
+	if err != nil || !cached.LastFailedAt.IsZero() {
+		t.Fatalf("missing fetcher recorded as failed request: %+v, %v", cached, err)
+	}
+}

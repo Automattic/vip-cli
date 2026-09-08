@@ -42,7 +42,7 @@ func (n Notifier) Start(parent context.Context) func() *Notice {
 		}
 		return &Notice{Version: candidate.Version, Channel: ch}
 	}
-	if !Due(cached, n.Now()) {
+	if n.Fetch == nil || !Due(cached, n.Now()) {
 		return func() *Notice { return selectNotice(cached) }
 	}
 	ctx, cancel := context.WithTimeout(parent, 5*time.Second)

@@ -100,7 +100,16 @@ func (d Downloader) fetch(ctx context.Context, a Asset, limit int64) ([]byte, er
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, fmt.Errorf("download %s failed", a.Name)
+		// Client.Do wraps transport failures with a URL that may contain a
+		// signed CDN query. Retain the cause without that URL wrapper.
+		for {
+			urlErr, ok := err.(*url.Error)
+			if !ok {
+				break
+			}
+			err = urlErr.Err
+		}
+		return nil, fmt.Errorf("download %s failed: %w", a.Name, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {

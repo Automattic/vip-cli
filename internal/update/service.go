@@ -81,7 +81,7 @@ func (s Service) Run(ctx context.Context, r Request, progress func(Step)) (out O
 		if e != nil {
 			return out, e
 		}
-		initial, e = os.Stat(path)
+		initial, e = fileIdentity(path)
 		if e != nil {
 			return out, e
 		}
@@ -181,4 +181,15 @@ func (s Service) Run(ctx context.Context, r Request, progress func(Step)) (out O
 		return out, nil
 	}
 	return out, nil
+}
+
+// fileIdentity captures the ID immediately. On Windows, os.Stat defers reading
+// the ID until os.SameFile, which may run after the path has been replaced.
+func fileIdentity(path string) (os.FileInfo, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return f.Stat()
 }
