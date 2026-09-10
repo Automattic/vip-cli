@@ -116,7 +116,9 @@ Announce these explicitly; they fail at parse time, not at runtime.
 - `--help` is rendered by Cobra rather than commander: usage and option layout differ, and
   Node's appended `Examples` block is not reproduced
 - `vip wp` supports only the `@app.env` alias — explicit `--app`/`--env` are ignored (known WP1 limitation)
-- No update-notifier: vip-next ships as a signed binary, so there is no in-CLI update channel
+- Go now has an invocation-driven update notifier and a Go-only `vip-next update` command.
+  See [Updating the standalone Go CLI](GO-UPDATES.md) for channels and recovery.
+  This runtime difference is explicitly approved; Node retains its npm notifier.
 
 **Restored during remediation — no longer breaking, remove from migration notes:**
 `--xdebug_config` (underscore form is canonical again), `dev-env start --vscode`,

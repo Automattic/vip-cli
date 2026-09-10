@@ -28,6 +28,8 @@ import (
 // Keys are Go command paths; values map the Go flag name to Node's short.
 // Where vip-next renamed a flag, the Node source line is called out.
 var nodeShortFlags = map[string]map[string]string{
+	// Explicitly approved Go-only standalone updater; no command-specific short flags.
+	"vip-next update": {},
 	// src/bin/vip.js — only the three globals.
 	"vip-next": {"debug": "d"},
 
