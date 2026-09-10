@@ -118,7 +118,7 @@ command( {
 				api
 					.query( {
 						query: gql`
-							query App($id: Int, $sync: Int) {
+							query App($id: Int) {
 								app(id: $id) {
 									id
 									name
@@ -128,7 +128,7 @@ command( {
 										defaultDomain
 										branch
 										datacenter
-										syncProgress(sync: $sync) {
+										syncProgress {
 											status
 											sync
 											steps {
@@ -143,7 +143,6 @@ command( {
 						fetchPolicy: 'network-only',
 						variables: {
 							id: opts.app.id,
-							sync: environment.syncProgress.sync,
 						},
 					} )
 					.then( res => res.data.app )
