@@ -33,18 +33,10 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
-        env:
-          # The action captures `npm version` stdout to build the next-dev branch name.
-          # Keep lifecycle script banners from polluting that value while still allowing
-          # the `version` script to sync npm-shrinkwrap.json.
-          NPM_CONFIG_LOGLEVEL: silent
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/npm-release
         with:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm-version: '11'
-          USE_TRUSTED_PUBLISHING: 'true'
-          PROVENANCE: 'true'
-          CONVENTIONAL_COMMITS: 'true'
+          mode: stable
 
   recover-stable:
     name: Recover stable release
@@ -74,6 +66,17 @@ jobs:
           jq -e --arg version "$RELEASE_VERSION" \
             '.tagName == $version and .isDraft == false and .isPrerelease == false' \
             "$RUNNER_TEMP/recovery-release.json"
+
+      - name: Check out release tooling from the workflow revision
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Preserve release tooling before checking out the old tag
+        run: |
+          tools_dir=$(mktemp -d "$RUNNER_TEMP/vip-release-tools.XXXXXXXX")
+          cp -R "$GITHUB_WORKSPACE/.github/scripts/npm-release/." "$tools_dir/"
+          printf 'VIP_RELEASE_TOOLS=%s\n' "$tools_dir" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7
         with:
@@ -118,10 +121,23 @@ jobs:
           npm rebuild
           npm run prepare --if-present
           npm test
-          npm publish --access public --tag latest --dry-run
+
+      - name: Stage, pack and validate release
+        id: package
+        run: |
+          output_dir=$(mktemp -d "$RUNNER_TEMP/npm-artifact.XXXXXXXX")
+          tarball=$(bash "$VIP_RELEASE_TOOLS/pack.sh" "$GITHUB_WORKSPACE" "$output_dir" latest smoke:release)
+          printf 'tarball=%s\n' "$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Verify publishing the staged tarball
+        env:
+          PACKAGE_TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$PACKAGE_TARBALL" --access public --tag latest --dry-run --ignore-scripts --loglevel error
 
       - name: Publish existing release to npm
-        run: npm publish --access public --tag latest --provenance --loglevel error
+        env:
+          PACKAGE_TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$PACKAGE_TARBALL" --access public --tag latest --provenance --ignore-scripts --loglevel error
 
   changelog:
     name: Publish docs changelog
@@ -154,10 +170,8 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/npm-release
         with:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm-version: '11'
-          USE_TRUSTED_PUBLISHING: 'true'
-          PROVENANCE: 'true'
-          NPM_TAG: ${{ inputs.npm_tag }}
+          mode: prerelease
+          npm-tag: ${{ inputs.npm_tag }}

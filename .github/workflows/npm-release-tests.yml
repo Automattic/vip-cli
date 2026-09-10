@@ -1,0 +1,28 @@
+name: Test npm release packaging
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/npm-release/**'
+      - '.github/actions/npm-release/**'
+      - '.github/workflows/npm-publish.yml'
+      - '.github/workflows/npm-release-tests.yml'
+  push:
+    branches: [trunk]
+    paths:
+      - '.github/scripts/npm-release/**'
+      - '.github/actions/npm-release/**'
+      - '.github/workflows/npm-publish.yml'
+      - '.github/workflows/npm-release-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm install --global npm@11
+      - run: shellcheck .github/scripts/npm-release/*.sh
+      - run: python3 -m unittest discover -s .github/scripts/npm-release/tests -v
