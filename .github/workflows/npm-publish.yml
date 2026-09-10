@@ -33,15 +33,10 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@a21de3c167c01a17bde269771490fda0b8fdbb9c # staged npm artifacts
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/npm-release
         with:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm-version: '11'
-          STAGE_PACKAGE: 'true'
-          SMOKE_SCRIPT: 'smoke:release'
-          USE_TRUSTED_PUBLISHING: 'true'
-          PROVENANCE: 'true'
-          CONVENTIONAL_COMMITS: 'true'
+          mode: stable
 
   recover-stable:
     name: Recover stable release
@@ -71,6 +66,17 @@ jobs:
           jq -e --arg version "$RELEASE_VERSION" \
             '.tagName == $version and .isDraft == false and .isPrerelease == false' \
             "$RUNNER_TEMP/recovery-release.json"
+
+      - name: Check out release tooling from the workflow revision
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Preserve release tooling before checking out the old tag
+        run: |
+          tools_dir=$(mktemp -d "$RUNNER_TEMP/vip-release-tools.XXXXXXXX")
+          cp -R "$GITHUB_WORKSPACE/.github/scripts/npm-release/." "$tools_dir/"
+          printf 'VIP_RELEASE_TOOLS=%s\n' "$tools_dir" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7
         with:
@@ -115,12 +121,13 @@ jobs:
           npm rebuild
           npm run prepare --if-present
           npm test
+
       - name: Stage, pack and validate release
         id: package
-        uses: Automattic/vip-actions/npm-pack-staged@a21de3c167c01a17bde269771490fda0b8fdbb9c # staged npm artifacts
-        with:
-          tag: latest
-          smoke-script: smoke:release
+        run: |
+          output_dir=$(mktemp -d "$RUNNER_TEMP/npm-artifact.XXXXXXXX")
+          tarball=$(bash "$VIP_RELEASE_TOOLS/pack.sh" "$GITHUB_WORKSPACE" "$output_dir" latest smoke:release)
+          printf 'tarball=%s\n' "$tarball" >> "$GITHUB_OUTPUT"
 
       - name: Verify publishing the staged tarball
         env:
@@ -163,12 +170,8 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@a21de3c167c01a17bde269771490fda0b8fdbb9c # staged npm artifacts
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/npm-release
         with:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm-version: '11'
-          STAGE_PACKAGE: 'true'
-          SMOKE_SCRIPT: 'smoke:release'
-          USE_TRUSTED_PUBLISHING: 'true'
-          PROVENANCE: 'true'
-          NPM_TAG: ${{ inputs.npm_tag }}
+          mode: prerelease
+          npm-tag: ${{ inputs.npm_tag }}

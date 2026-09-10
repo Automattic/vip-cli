@@ -27,11 +27,14 @@ documentation job fails, rerun only the failed jobs.
 
 ## How the release artifact is prepared
 
-Stable releases, prereleases and recovery use the shared `npm-pack-staged`
-helper in `Automattic/vip-actions`. After building and testing, it runs the
+Stable releases, prereleases and recovery use the local
+[release tooling](../.github/scripts/npm-release/README.md) in this repository.
+No `vip-actions` changes are required. After building and testing, it runs the
 prepublish/pack preparation hooks in the source checkout and uses `rsync -a`
 without `-H` to copy into a fresh staging directory. This turns native dependency
-hard links into independent files without changing the source checkout's links.
+hard links into independent files without changing the source checkout's links. The workflow saves the current
+release tools before checking out an old tag, so that tag need not contain the
+new helper.
 
 The helper packs with lifecycle scripts disabled, validates the archive and runs
 `smoke:release` inside an extraction of that exact tarball. Validation rejects
