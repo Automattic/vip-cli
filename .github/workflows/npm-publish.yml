@@ -33,15 +33,12 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
-        env:
-          # The action captures `npm version` stdout to build the next-dev branch name.
-          # Keep lifecycle script banners from polluting that value while still allowing
-          # the `version` script to sync npm-shrinkwrap.json.
-          NPM_CONFIG_LOGLEVEL: silent
+      - uses: Automattic/vip-actions/npm-publish@a21de3c167c01a17bde269771490fda0b8fdbb9c # staged npm artifacts
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version: '11'
+          STAGE_PACKAGE: 'true'
+          SMOKE_SCRIPT: 'smoke:release'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           CONVENTIONAL_COMMITS: 'true'
@@ -118,10 +115,22 @@ jobs:
           npm rebuild
           npm run prepare --if-present
           npm test
-          npm publish --access public --tag latest --dry-run
+      - name: Stage, pack and validate release
+        id: package
+        uses: Automattic/vip-actions/npm-pack-staged@a21de3c167c01a17bde269771490fda0b8fdbb9c # staged npm artifacts
+        with:
+          tag: latest
+          smoke-script: smoke:release
+
+      - name: Verify publishing the staged tarball
+        env:
+          PACKAGE_TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$PACKAGE_TARBALL" --access public --tag latest --dry-run --ignore-scripts --loglevel error
 
       - name: Publish existing release to npm
-        run: npm publish --access public --tag latest --provenance --loglevel error
+        env:
+          PACKAGE_TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$PACKAGE_TARBALL" --access public --tag latest --provenance --ignore-scripts --loglevel error
 
   changelog:
     name: Publish docs changelog
@@ -154,10 +163,12 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
+      - uses: Automattic/vip-actions/npm-publish-prerelease@a21de3c167c01a17bde269771490fda0b8fdbb9c # staged npm artifacts
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm-version: '11'
+          STAGE_PACKAGE: 'true'
+          SMOKE_SCRIPT: 'smoke:release'
           USE_TRUSTED_PUBLISHING: 'true'
           PROVENANCE: 'true'
           NPM_TAG: ${{ inputs.npm_tag }}

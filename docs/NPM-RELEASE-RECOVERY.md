@@ -24,3 +24,21 @@ Recovery does not create the next development-version PR that the regular
 publishing action normally opens after publication. Handle that version bump
 separately once recovery succeeds. If npm publication succeeds but a downstream
 documentation job fails, rerun only the failed jobs.
+
+## How the release artifact is prepared
+
+Stable releases, prereleases and recovery use the shared `npm-pack-staged`
+helper in `Automattic/vip-actions`. After building and testing, it runs the
+prepublish/pack preparation hooks in the source checkout and uses `rsync -a`
+without `-H` to copy into a fresh staging directory. This turns native dependency
+hard links into independent files without changing the source checkout's links.
+
+The helper packs with lifecycle scripts disabled, validates the archive and runs
+`smoke:release` inside an extraction of that exact tarball. Validation rejects
+links and unsafe archive entries and verifies the package name/version. Both
+the dry run and real publication use the same validated `.tgz` with
+`--ignore-scripts`, so another build cannot recreate hard links after validation.
+
+For `4.1.2`, the Linux builds of bundled `cpu-features` and `ssh2` created three
+hard links that npm rejected with `E415: Hard link is not allowed`. Staging fixes
+the archive while preserving dependency bundling and the existing release tag.
