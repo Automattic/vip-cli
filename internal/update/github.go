@@ -64,24 +64,26 @@ func (g GitHub) Releases(ctx context.Context) ([]Release, error) {
 		}
 		releases = append(releases, batch...)
 		next := 0
-		for _, part := range strings.Split(resp.Header.Get("Link"), ",") {
-			if !strings.Contains(part, `rel="next"`) {
-				continue
+		for _, value := range resp.Header.Values("Link") {
+			for _, part := range strings.Split(value, ",") {
+				if !strings.Contains(part, `rel="next"`) {
+					continue
+				}
+				left, right := strings.Index(part, "<"), strings.Index(part, ">")
+				if left < 0 || right <= left {
+					return nil, fmt.Errorf("invalid release pagination")
+				}
+				u, err := url.Parse(part[left+1 : right])
+				if err != nil {
+					return nil, fmt.Errorf("invalid release pagination")
+				}
+				u = origin.ResolveReference(u)
+				n, err := strconv.Atoi(u.Query().Get("page"))
+				if err != nil || n <= page || u.Scheme != origin.Scheme || u.Host != origin.Host || !isReleasePaginationPath(u.Path) || u.User != nil || next != 0 {
+					return nil, fmt.Errorf("invalid release pagination")
+				}
+				next = n
 			}
-			left, right := strings.Index(part, "<"), strings.Index(part, ">")
-			if left < 0 || right <= left {
-				return nil, fmt.Errorf("invalid release pagination")
-			}
-			u, err := url.Parse(part[left+1 : right])
-			if err != nil {
-				return nil, fmt.Errorf("invalid release pagination")
-			}
-			u = origin.ResolveReference(u)
-			n, err := strconv.Atoi(u.Query().Get("page"))
-			if err != nil || n <= page || u.Scheme != origin.Scheme || u.Host != origin.Host || u.Path != "/repos/"+Repository+"/releases" || u.User != nil || next != 0 {
-				return nil, fmt.Errorf("invalid release pagination")
-			}
-			next = n
 		}
 		if next == 0 {
 			return releases, nil
@@ -90,6 +92,23 @@ func (g GitHub) Releases(ctx context.Context) ([]Release, error) {
 	}
 	return nil, fmt.Errorf("GitHub release pagination limit exceeded")
 }
+
+func isReleasePaginationPath(path string) bool {
+	if path == "/repos/"+Repository+"/releases" {
+		return true
+	}
+	repositoryID, ok := strings.CutPrefix(path, "/repositories/")
+	if !ok {
+		return false
+	}
+	repositoryID, ok = strings.CutSuffix(repositoryID, "/releases")
+	if !ok {
+		return false
+	}
+	id, err := strconv.ParseUint(repositoryID, 10, 64)
+	return err == nil && id > 0
+}
+
 func readBounded(r io.Reader, max int64) ([]byte, error) {
 	b, err := io.ReadAll(io.LimitReader(r, max+1))
 	if err != nil {
