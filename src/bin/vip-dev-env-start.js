@@ -52,7 +52,7 @@ const examples = [
 	},
 ];
 
-command( {
+const cmd = command( {
 	usage,
 } )
 	.option(
@@ -73,43 +73,52 @@ command( {
 	.option(
 		'editor',
 		'Generate a workspace file for the specified editor (supports: vscode, cursor, windsurf, phpstorm).'
-	)
-	.examples( examples )
-	.argv( process.argv, async ( arg, opt ) => {
-		const slug = await getEnvironmentName( opt );
-		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
-		validateDependencies( lando );
+	);
 
-		const startProcessing = new Date();
+if ( process.platform !== 'win32' ) {
+	cmd.option(
+		'autofix-domain-resolution',
+		'Automatically fix domain resolution issues by updating the hosts file [UNSAFE].'
+	);
+}
 
-		const trackingInfo = getEnvTrackingInfo( slug );
-		trackingInfo.editor = opt.editor || ( opt.vscode ? 'vscode' : undefined );
-		trackingInfo.vscode = Boolean( opt.vscode );
-		trackingInfo.docker = lando.config.versions.engine;
-		trackingInfo.docker_compose = lando.config.versions.compose;
-		trackingInfo.compose_plugin = lando.config.versions.composePlugin;
+cmd.examples( examples ).argv( process.argv, async ( arg, opt ) => {
+	const slug = await getEnvironmentName( opt );
+	const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
+	validateDependencies( lando );
 
-		await trackEvent( 'dev_env_start_command_execute', trackingInfo );
+	const startProcessing = new Date();
 
-		debug( 'Args: ', arg, 'Options: ', opt );
+	const trackingInfo = getEnvTrackingInfo( slug );
+	trackingInfo.editor = opt.editor || ( opt.vscode ? 'vscode' : undefined );
+	trackingInfo.vscode = Boolean( opt.vscode );
+	trackingInfo.docker = lando.config.versions.engine;
+	trackingInfo.docker_compose = lando.config.versions.compose;
+	trackingInfo.compose_plugin = lando.config.versions.composePlugin;
 
-		const options = {
-			skipRebuild: Boolean( opt.skipRebuild ),
-			skipWpVersionsCheck: Boolean( opt.skipWpVersionsCheck ),
-		};
-		try {
-			await startEnvironment( lando, slug, options );
+	await trackEvent( 'dev_env_start_command_execute', trackingInfo );
 
-			const processingTime = Math.ceil( ( new Date() - startProcessing ) / 1000 ); // in seconds
-			const successTrackingInfo = { ...trackingInfo, processing_time: processingTime };
-			await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
-		} catch ( error ) {
-			await handleCLIException( error, 'dev_env_start_command_error', trackingInfo );
-			process.exitCode = 1;
-		}
+	debug( 'Args: ', arg, 'Options: ', opt );
 
-		postStart( slug, {
-			editor: opt.editor,
-			vscode: Boolean( opt.vscode ),
-		} );
+	const options = {
+		skipRebuild: Boolean( opt.skipRebuild ),
+		skipWpVersionsCheck: Boolean( opt.skipWpVersionsCheck ),
+		autofixDomains: Boolean( opt.autofixDomainResolution ),
+	};
+
+	try {
+		await startEnvironment( lando, slug, options );
+
+		const processingTime = Math.ceil( ( new Date() - startProcessing ) / 1000 ); // in seconds
+		const successTrackingInfo = { ...trackingInfo, processing_time: processingTime };
+		await trackEvent( 'dev_env_start_command_success', successTrackingInfo );
+	} catch ( error ) {
+		await handleCLIException( error, 'dev_env_start_command_error', trackingInfo );
+		process.exitCode = 1;
+	}
+
+	postStart( slug, {
+		editor: opt.editor,
+		vscode: Boolean( opt.vscode ),
 	} );
+} );
