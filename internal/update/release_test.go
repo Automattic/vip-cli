@@ -87,33 +87,57 @@ func TestSelectRejectsIncompleteAndInconsistentReleases(t *testing.T) {
 	}
 }
 func TestGitHubPagination(t *testing.T) {
+	for _, tc := range []struct {
+		name, nextPath string
+	}{{"named repository", "/repos/Automattic/vip-cli/releases"}, {"numeric repository ID", "/repositories/116313791/releases"}} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				if r.Header.Get("Authorization") != "" {
+					t.Error("credentials")
+				}
+				if r.URL.Path != "/repos/Automattic/vip-cli/releases" {
+					t.Error(r.URL.Path)
+				}
+				if r.URL.Query().Get("page") == "1" {
+					w.Header().Set("Link", "<http://"+r.Host+tc.nextPath+"?per_page=100&page=2>; rel=\"next\"")
+					fmt.Fprint(w, `[{"tag_name":"4.9.0"}]`)
+				} else {
+					fmt.Fprint(w, `[{"tag_name":"5.0.0"}]`)
+				}
+			}))
+			defer s.Close()
+			rs, err := (GitHub{Client: s.Client(), BaseURL: s.URL}).Releases(context.Background())
+			if err != nil || len(rs) != 2 || calls != 2 {
+				t.Fatal(rs, err, calls)
+			}
+		})
+	}
+}
+
+func TestGitHubRejectsDuplicateNextLinkHeaders(t *testing.T) {
 	calls := 0
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		if r.Header.Get("Authorization") != "" {
-			t.Error("credentials")
-		}
-		if r.URL.Path != "/repos/Automattic/vip-cli/releases" {
-			t.Error(r.URL.Path)
-		}
 		if r.URL.Query().Get("page") == "1" {
-			w.Header().Set("Link", "<http://"+r.Host+"/repos/Automattic/vip-cli/releases?per_page=100&page=2>; rel=\"next\"")
-			fmt.Fprint(w, `[{"tag_name":"4.9.0"}]`)
-		} else {
-			fmt.Fprint(w, `[{"tag_name":"5.0.0"}]`)
+			w.Header().Add("Link", "<http://"+r.Host+"/repositories/116313791/releases?page=2>; rel=\"next\"")
+			w.Header().Add("Link", "<http://"+r.Host+"/repositories/116313791/releases?page=3>; rel=\"next\"")
 		}
+		fmt.Fprint(w, `[]`)
 	}))
 	defer s.Close()
-	rs, err := (GitHub{Client: s.Client(), BaseURL: s.URL}).Releases(context.Background())
-	if err != nil || len(rs) != 2 || calls != 2 {
-		t.Fatal(rs, err, calls)
+	_, err := (GitHub{Client: s.Client(), BaseURL: s.URL}).Releases(context.Background())
+	if err == nil || calls != 1 {
+		t.Fatal(err, calls)
 	}
 }
+
 func TestGitHubErrors(t *testing.T) {
 	for _, tc := range []struct {
 		status     int
 		body, link string
-	}{{429, `{}`, ""}, {200, `broken`, ""}, {200, `[]`, `<https://evil.invalid/next>; rel="next"`}, {200, `[]`, `</repos/Automattic/vip-cli/releases?page=1>; rel="next"`}} {
+	}{{429, `{}`, ""}, {200, `broken`, ""}, {200, `[]`, `<https://evil.invalid/next>; rel="next"`}, {200, `[]`, `</repositories/not-a-number/releases?page=2>; rel="next"`}, {200, `[]`, `</repos/Automattic/vip-cli/releases?page=1>; rel="next"`}} {
 		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Link", tc.link)
 			w.WriteHeader(tc.status)
