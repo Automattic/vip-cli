@@ -9,6 +9,9 @@ on:
       - 'go.sum'
       - 'Makefile'
       - '.github/workflows/ci-go.yml'
+      - 'packaging/**'
+      - '.buildkite/**'
+      - 'fastlane/**'
       - 'testdata/parity/**'
       - 'testdata/parity-local/**'
       - 'internal/gql/schema.gql'
@@ -29,6 +32,9 @@ on:
       - 'go.sum'
       - 'Makefile'
       - '.github/workflows/ci-go.yml'
+      - 'packaging/**'
+      - '.buildkite/**'
+      - 'fastlane/**'
       - 'testdata/parity/**'
       - 'testdata/parity-local/**'
       - 'internal/gql/schema.gql'
@@ -135,3 +141,22 @@ jobs:
         run: go test -count=1 -v ./internal/update
       - name: Test update command bootstrap
         run: go test -count=1 -v ./cmd/vip-next -run Update
+      - name: Set up Windows installer build tooling
+        if: runner.os == 'Windows'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test macOS package contents
+        if: runner.os == 'macOS'
+        run: python3 -m unittest discover -s packaging/macos -p 'test_package.py'
+      - name: Test macOS installer lifecycle on disposable runner
+        if: runner.os == 'macOS'
+        env:
+          VIP_INSTALLER_E2E: '1'
+        run: bash packaging/macos/test-install.sh
+      - name: Test Windows installer lifecycle on disposable runner
+        if: runner.os == 'Windows'
+        env:
+          VIP_INSTALLER_E2E: '1'
+        shell: powershell
+        run: ./packaging/windows/test-msi.ps1

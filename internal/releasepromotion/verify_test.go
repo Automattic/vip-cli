@@ -34,6 +34,32 @@ func TestVerifyDownloads(t *testing.T) {
 	}
 }
 
+func TestVerifyInstallerDownloads(t *testing.T) {
+	for _, name := range []string{"vip-next-darwin-amd64.pkg", "vip-next-darwin-arm64.pkg", "vip-next-windows-amd64.msi"} {
+		for _, mutation := range []string{"checksum", "format", "truncated"} {
+			t.Run(name+"/"+mutation, func(t *testing.T) {
+				root := t.TempDir()
+				writeCompleteArtifactSet(t, root)
+				file := filepath.Join(root, name)
+				if err := os.WriteFile(file, []byte("invalid installer"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				if mutation == "truncated" {
+					if err := os.WriteFile(file, []byte("xar!"), 0600); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if mutation != "checksum" {
+					writeChecksum(t, root, name, false, false)
+				}
+				if err := VerifyDownloads(root); err == nil || !strings.Contains(err.Error(), name) {
+					t.Fatalf("invalid installer accepted: %v", err)
+				}
+			})
+		}
+	}
+}
+
 func TestVerifyDownloadsRejectsInvalidArtifacts(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -103,6 +129,20 @@ func writeCompleteArtifactSet(t *testing.T, root string) {
 			continue
 		}
 		archiveName := filepath.Base(artifactPath)
+		if strings.HasSuffix(archiveName, ".pkg") || strings.HasSuffix(archiveName, ".msi") {
+			// Container checks only; platform-native tests validate real payloads.
+			data := make([]byte, 512)
+			if strings.HasSuffix(archiveName, ".pkg") {
+				copy(data, "xar!")
+			} else {
+				copy(data, []byte{0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1})
+			}
+			if err := os.WriteFile(filepath.Join(root, archiveName), data, 0600); err != nil {
+				t.Fatal(err)
+			}
+			writeChecksum(t, root, archiveName, false, false)
+			continue
+		}
 		entries := []archiveEntry{{name: "vip-next", typeflag: tar.TypeReg}, {name: "go-search-replace", typeflag: tar.TypeReg}}
 		if strings.Contains(archiveName, "windows") {
 			entries = []archiveEntry{{name: "vip-next.exe", typeflag: tar.TypeReg}, {name: "go-search-replace.exe", typeflag: tar.TypeReg}}

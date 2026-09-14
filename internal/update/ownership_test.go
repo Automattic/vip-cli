@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -36,6 +37,49 @@ func TestOwnershipUsesReceiptsAndFailsClosed(t *testing.T) {
 	o, err = inspectOwnership(context.Background(), Layout{"/usr/local/bin/vip-next", "/usr/local/bin/go-search-replace"}, "darwin", q)
 	if err != nil || o.Managed {
 		t.Fatal("bare /usr/local/bin misclassified", o, err)
+	}
+}
+
+func TestNativeInstallerOwnership(t *testing.T) {
+	for _, platform := range []struct{ os, manager, extension string }{{"darwin", "pkg", ".pkg"}, {"windows", "msi", ".msi"}} {
+		t.Run(platform.os, func(t *testing.T) {
+			for _, helperMarker := range []bool{false, true} {
+				dir := t.TempDir()
+				helperDir := filepath.Join(dir, "bin")
+				if err := os.Mkdir(helperDir, 0755); err != nil {
+					t.Fatal(err)
+				}
+				l := Layout{filepath.Join(dir, "vip-next"), filepath.Join(helperDir, "go-search-replace")}
+				markerDir := dir
+				if helperMarker {
+					markerDir = helperDir
+				}
+				q := func(context.Context, string, ...string) ([]byte, error) {
+					t.Fatal("unexpected external query")
+					return nil, nil
+				}
+				o, err := inspectOwnership(context.Background(), l, platform.os, q)
+				if err != nil || o.Managed {
+					t.Fatal("portable install misclassified", o, err)
+				}
+				marker := filepath.Join(markerDir, ".vip-next-installer.json")
+				if err := os.WriteFile(marker, []byte(`{"schema":1,"manager":"`+platform.manager+`"}`), 0644); err != nil {
+					t.Fatal(err)
+				}
+				o, err = inspectOwnership(context.Background(), l, platform.os, q)
+				if err != nil || !o.Managed || !strings.Contains(o.Instructions, platform.extension) || !strings.Contains(o.Instructions, ReleasesURL) {
+					t.Fatal(o, err)
+				}
+				for _, contents := range []string{"{", `{"schema":2,"manager":"pkg"}`, `{"schema":1,"manager":"unknown"}`} {
+					if err := os.WriteFile(marker, []byte(contents), 0644); err != nil {
+						t.Fatal(err)
+					}
+					if _, err := inspectOwnership(context.Background(), l, platform.os, q); err == nil {
+						t.Fatal("invalid marker accepted", contents)
+					}
+				}
+			}
+		})
 	}
 }
 func TestResolveLayoutPreservesEntrypointSymlink(t *testing.T) {

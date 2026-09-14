@@ -45,3 +45,6 @@ vendor/bundle/
 # same lane summary as the README.
 fastlane/README.md
 fastlane/report.xml
+
+# Python installer validation caches
+__pycache__/

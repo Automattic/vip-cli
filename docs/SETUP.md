@@ -107,6 +107,7 @@ TODO: Update description of the variables.
 - `SOCKS_PROXY`:
 - `HTTP_PROXY`:
 - `NO_PROXY`:
+- `VIP_INSTALLER_E2E`: Set to `1` only for native installer lifecycle tests on disposable GitHub-hosted runners. The tests also require `GITHUB_ACTIONS=true` and `RUNNER_ENVIRONMENT=github-hosted`; they install and uninstall system-wide fixture packages. See [installer tests](BUILD-SIGNING.md#installer-tests).
 - `VIP_NO_UPDATE_NOTIFIER`: Set to `1` to disable automatic update checks and notices in the Go CLI. Explicit `vip-next update` commands remain available. See [Go CLI updates](GO-UPDATES.md).
 - `VIP_PROXY`: [For internal VIP use](TESTING.md#local-testing).
 - `VIP_USE_SYSTEM_PROXY`:

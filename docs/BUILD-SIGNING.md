@@ -240,13 +240,107 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
   every build.
 - **macOS certs:** fastlane `match` (`fastlane/Fastfile` →
   `configure_code_signing`), `type: developer_id`, stored in S3
-  (`a8c-fastlane-match`). Signing and notarization are the
+  (`a8c-fastlane-match`), also fetches `developer_id_installer` in readonly
+  mode. Signing and notarization are the
   `sign_and_notarize` lane: Developer ID Application, identifier
   `com.automattic.vip-cli`, no staple on a bare Mach-O.
 - **macOS artifacts:** per-arch `.tar.gz` of `vip-next` + `go-search-replace`,
-  both signed and notarized (online-verified).
+  both signed and notarized (online-verified), plus a signed, notarized,
+  stapled `.pkg` for each architecture.
 - **Windows / Linux artifacts:** the same tarball layout. Windows Authenticode-
-  signs both PEs via Azure Trusted Signing; Linux checksums only.
+  signs both PEs and the x64 `.msi` via Azure Trusted Signing; Linux checksums only.
+
+### Native installers
+
+The existing macOS and Windows Buildkite jobs create native installers after
+signing the binaries. Archives remain available for portable installations and
+`vip-next update`. No Node.js runtime is installed or required by these packages.
+
+| Platform | Package | Installation |
+| --- | --- | --- |
+| macOS Apple Silicon | `vip-next-darwin-arm64.pkg` | `/usr/local/lib/vip-cli/bin` |
+| macOS Intel | `vip-next-darwin-amd64.pkg` | `/usr/local/lib/vip-cli/bin` |
+| Windows x64 | `vip-next-windows-amd64.msi` | `%ProgramFiles%\Automattic\VIP CLI` |
+
+Run the package to install or upgrade; administrative privileges are required.
+Open a new terminal afterward, then run `vip-next --version`. The macOS package
+adds `/etc/paths.d/vip-cli`; Windows adds its directory to the system PATH and
+removes that entry on uninstall. Neither package creates a `vip` alias or
+replaces the Node/npm installation. Existing earlier PATH entries can still
+select a different `vip-next`; use `command -v vip-next` (macOS) or
+`where.exe vip-next` (Windows) to identify the active installation.
+
+Installer-owned directories contain `.vip-next-installer.json`. The Go updater
+recognizes this file and directs users to download the appropriate installer
+instead of replacing package-managed binaries. Keep this metadata intact.
+`vip-next update --check` still checks for available releases. Portable tarballs
+do not contain this marker and retain their existing self-update behavior.
+
+On Windows, uninstall **VIP CLI** through Installed apps or `msiexec /x` with
+the installed package. On macOS, run:
+
+```sh
+sudo /usr/local/lib/vip-cli/uninstall.sh
+```
+
+The macOS uninstaller removes only package-owned files, the matching PATH entry,
+and its receipt (`com.automattic.vip-cli`); it preserves other files in the
+installation directory. Neither uninstaller deletes user configuration or
+credentials. Uninstall first if deliberately moving to an older version.
+
+#### Build prerequisites
+
+- **macOS:** `configure_code_signing` retrieves both **Developer ID Application**
+  and **Developer ID Installer** certificates from the existing fastlane match
+  S3 storage in readonly mode. If the Installer certificate and its private key
+  are already stored there, no provisioning is needed. Otherwise, add them
+  through the team's existing certificate provisioning process. The repository
+  configuration alone does not establish which certificates are in that store;
+  builds do not create or renew them. Xcode command-line tools provide `pkgbuild`, `productbuild`,
+  `productsign`, `notarytool`, and `stapler`.
+- **Windows:** the build uses .NET SDK 8 and pinned WiX 5.0.2, with a matching
+  UI extension, as build-only tools. WiX is restored into a temporary build
+  directory. This pin does not adopt WiX 6+ sponsorship requirements. Existing
+  Azure Trusted Signing credentials/signing tools sign the final MSI.
+- Missing signing prerequisites fail the production build; there is no
+  unsigned fallback. Checksums are generated after final signing/stapling.
+
+The promotion helper requires all five archive/checksum pairs and all three
+installer/checksum pairs (16 assets). It verifies every checksum, the exact
+two-binary tar layout, and the installer container type. Native jobs verify
+signatures; the Linux promotion job does not independently verify Apple or
+Authenticode signatures. Before checksumming/uploading, macOS expands the final
+PKG and Windows performs a temporary administrative extraction of the signed
+MSI to verify the packaged executable hashes, license, and ownership metadata.
+These checks do not install the CLI on the Buildkite host.
+
+#### Package version ordering
+
+MSI requires three numeric version fields. Both installer formats use
+`major.minor.(patch * 1000 + stage)` from `cmd/installer-version`: development
+builds use stage 0; alpha.N uses 100+N; beta.N uses 300+N; rc.N uses 500+N;
+stable uses 999. For example, `5.0.0-beta.1` becomes `5.0.301` and `5.0.0`
+becomes `5.0.999`. The binaries retain their full semantic version.
+
+Major/minor are limited to 255, patch to 64, and prerelease sequence to 199.
+Unsupported values fail explicitly, including before prerelease tagging.
+Development builds of the same semantic base share a package version and may
+require uninstalling the previous development MSI before installing another.
+
+#### Installer tests
+
+`python3 -m unittest discover -s packaging/macos -p 'test_package.py'` creates
+and expands real unsigned packages in temporary directories. It verifies
+payload bytes and runs preinstall conflict/downgrade checks against a temporary
+volume tree; it does not install on the host.
+
+The existing Go CI native matrix also runs `packaging/macos/test-install.sh`
+and `packaging/windows/test-msi.ps1` on disposable GitHub-hosted runners. These
+tests require `VIP_INSTALLER_E2E=1`, check for pre-existing installations, and
+exercise actual install, upgrade, downgrade refusal, executable versions, PATH,
+updater ownership, and uninstall using unsigned fixture packages. They are not
+run on shared Buildkite agents. Signature/notarization validation happens in
+the production Buildkite build and must also pass before a release is promoted.
 
 ### GitHub prerelease promotion setup
 
@@ -282,6 +376,9 @@ On a Buildkite build, confirm:
 - macOS binaries: `codesign --verify --strict --verbose=2` passes and
   `codesign --display` shows `Identifier=com.automattic.vip-cli`.
 - Windows: `signtool verify /pa /v <exe>` passes.
+- macOS installers: `pkgutil --check-signature <pkg>`, `xcrun stapler validate
+  <pkg>`, and `spctl --assess --type install <pkg>` pass.
+- Windows installer: `signtool verify /pa /v <msi>` passes.
 - Every artifact has a matching `.sha256`.
 
 ## Release checklist

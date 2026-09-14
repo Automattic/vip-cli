@@ -24,6 +24,28 @@ func inspectOwnership(ctx context.Context, l Layout, goos string, query ownershi
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	for _, target := range []string{l.CLI, l.Helper} {
+		if goos == "darwin" || goos == "windows" {
+			markerPath := filepath.Join(filepath.Dir(target), ".vip-next-installer.json")
+			if _, err := regularFile(markerPath); err == nil {
+				var marker struct {
+					Schema  int    `json:"schema"`
+					Manager string `json:"manager"`
+				}
+				if err := readJSON(markerPath, 4096, &marker); err != nil {
+					return Ownership{}, fmt.Errorf("read installer ownership: %w", err)
+				}
+				manager := "pkg"
+				if goos == "windows" {
+					manager = "msi"
+				}
+				if marker.Schema != 1 || marker.Manager != manager {
+					return Ownership{}, fmt.Errorf("invalid installer ownership record: %s", markerPath)
+				}
+				return Ownership{true, "This installation is managed by the VIP CLI installer. Download and run the latest ." + manager + " installer for your platform from " + ReleasesURL}, nil
+			} else if !os.IsNotExist(err) {
+				return Ownership{}, fmt.Errorf("inspect installer ownership: %w", err)
+			}
+		}
 		normalized := filepath.ToSlash(target)
 		switch goos {
 		case "darwin":

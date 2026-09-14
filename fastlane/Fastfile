@@ -9,6 +9,7 @@ PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
 
 APPLE_TEAM_ID = 'PZYM8XX95Q'
 SIGNING_IDENTITY = "Developer ID Application: Automattic, Inc. (#{APPLE_TEAM_ID})"
+INSTALLER_SIGNING_IDENTITY = "Developer ID Installer: Automattic, Inc. (#{APPLE_TEAM_ID})"
 
 # The signature's designated requirement embeds this identifier, and the Keychain ACL
 # guarding the master key is bound to that requirement. `codesign` otherwise derives it
@@ -38,7 +39,7 @@ before_all do
   setup_ci
 end
 
-# Fetch the Developer ID Application certificate into the keychain.
+# Fetch the Developer ID Application and Installer certificates into the keychain.
 #
 # @param readonly [Boolean] Use `true` to only fetch the existing certificate from S3 via
 #   `match`. Use `false` to create or renew it on App Store Connect.
@@ -49,6 +50,7 @@ lane :configure_code_signing do |readonly: true|
 
   sync_code_signing(
     type: 'developer_id',
+    additional_cert_types: ['developer_id_installer'],
     platform: 'macos',
     team_id: APPLE_TEAM_ID,
     # A CLI has no bundle to carry a provisioning profile, so there is no app identifier
@@ -58,6 +60,29 @@ lane :configure_code_signing do |readonly: true|
     readonly: readonly,
     **CODE_SIGNING_STORAGE_OPTIONS
   )
+end
+
+# The PKG has its own signing identity and stapled notarization ticket. Fetch
+# the Installer certificate via configure_code_signing before invoking this.
+lane :sign_and_notarize_installer do |package:|
+  package = resolve_from_project_root(package)
+  UI.user_error!("No installer at '#{package}'") unless File.file?(package)
+  require_env_vars!(*ASC_API_KEY_ENV_VARS)
+  signed = "#{package}.signed.pkg"
+  begin
+    sh('productsign', '--sign', INSTALLER_SIGNING_IDENTITY, '--timestamp', package, signed)
+    details = sh('pkgutil', '--check-signature', signed, log: false)
+    unless details.include?(INSTALLER_SIGNING_IDENTITY)
+      UI.user_error!("Installer is not signed by '#{INSTALLER_SIGNING_IDENTITY}'")
+    end
+    notarize(package: signed, skip_stapling: true, api_key: app_store_connect_api_key, print_log: true)
+    sh('xcrun', 'stapler', 'staple', signed)
+    sh('xcrun', 'stapler', 'validate', signed)
+    sh('spctl', '--assess', '--type', 'install', '--verbose=2', signed)
+    FileUtils.mv(signed, package)
+  ensure
+    FileUtils.rm_f(signed)
+  end
 end
 
 # Sign a built CLI binary with the Developer ID certificate and submit it for notarization.
@@ -92,8 +117,8 @@ lane :sign_and_notarize do |binary:|
 
   notarize(
     package: archive,
-    # Only bundles and disk images can carry a stapled ticket. A bare binary relies on
-    # the online Gatekeeper check.
+    # A bare binary cannot carry a stapled ticket and relies on the online
+    # Gatekeeper check. The separate PKG lane staples the installer instead.
     skip_stapling: true,
     api_key: app_store_connect_api_key,
     print_log: true

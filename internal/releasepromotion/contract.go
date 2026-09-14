@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/Automattic/vip/internal/installer"
 )
 
 const (
@@ -18,6 +20,12 @@ const (
 var prereleaseVersionPattern = regexp.MustCompile(`^5\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-(alpha|beta|rc)\.(0|[1-9][0-9]*)$`)
 
 var expectedArtifactPaths = []string{
+	"dist/vip-next-darwin-amd64.pkg",
+	"dist/vip-next-darwin-amd64.pkg.sha256",
+	"dist/vip-next-darwin-arm64.pkg",
+	"dist/vip-next-darwin-arm64.pkg.sha256",
+	"dist/vip-next-windows-amd64.msi",
+	"dist/vip-next-windows-amd64.msi.sha256",
 	"dist/vip-next-darwin-amd64.tar.gz",
 	"dist/vip-next-darwin-amd64.tar.gz.sha256",
 	"dist/vip-next-darwin-arm64.tar.gz",
@@ -45,6 +53,9 @@ func ValidateRequest(version, ref string) error {
 	}
 	if ref != TrunkRef {
 		return fmt.Errorf("invalid workflow ref %q; prereleases must run from %s", ref, TrunkRef)
+	}
+	if _, err := installer.NumericVersion(version); err != nil {
+		return err
 	}
 	return nil
 }

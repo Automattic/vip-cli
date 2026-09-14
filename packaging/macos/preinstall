@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+# Installer supplies the target volume as $3. This also permits safe tests
+# against a temporary volume tree without touching system paths.
+target="${3:?missing target volume}"
+target="${target%/}"
+base="$target/usr/local/lib/vip-cli"
+pathfile="$target/etc/paths.d/vip-cli"
+fail() { echo "VIP CLI: $*" >&2; exit 1; }
+for dir in "$target/usr" "$target/usr/local" "$target/usr/local/lib" "$base" "$base/bin" "$target/etc/paths.d"; do
+  [ ! -L "$dir" ] || fail "Refusing symlinked installation path: $dir"
+done
+# /etc is a system symlink on macOS, so it is intentionally allowed above.
+if [ -e "$base" ]; then
+  marker="$base/bin/.vip-next-installer.json"
+  [ -f "$marker" ] && [ ! -L "$marker" ] || fail 'Existing directory is not owned by the VIP CLI installer.'
+  [ "$(cat "$marker")" = '{"schema":1,"manager":"pkg"}' ] || fail 'Invalid installer ownership record.'
+  [ -f "$base/package-version" ] && [ ! -L "$base/package-version" ] || fail 'Missing installed package version.'
+  old="$(cat "$base/package-version")"
+  # Reject malformed records and downgrades before overwriting any files.
+  awk -v old="$old" -v new='@PACKAGE_VERSION@' 'BEGIN {
+    if (old !~ /^[0-9]+\.[0-9]+\.[0-9]+$/) exit 1
+    split(old, a, "."); split(new, b, ".")
+    for (i=1;i<=3;i++) { if (a[i]+0>b[i]+0) exit 1; if (a[i]+0<b[i]+0) exit 0 }
+  }' || fail 'A newer version is installed or its version record is invalid. Uninstall it before installing this version.'
+fi
+if [ -e "$pathfile" ] || [ -L "$pathfile" ]; then
+  [ -f "$pathfile" ] && [ ! -L "$pathfile" ] || fail 'Refusing to replace the existing PATH entry.'
+  [ "$(cat "$pathfile")" = '/usr/local/lib/vip-cli/bin' ] || fail 'Existing PATH entry belongs to another installation.'
+fi
+for file in "$base/bin/vip-next" "$base/bin/go-search-replace" "$base/LICENSE" "$base/uninstall.sh"; do
+  [ ! -L "$file" ] || fail "Refusing to overwrite symlink: $file"
+done
