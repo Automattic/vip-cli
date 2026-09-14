@@ -39,7 +39,7 @@ before_all do
   setup_ci
 end
 
-# Fetch the Developer ID Application and Installer certificates into the keychain.
+# Fetch only the Developer ID Application certificate into the keychain.
 #
 # @param readonly [Boolean] Use `true` to only fetch the existing certificate from S3 via
 #   `match`. Use `false` to create or renew it on App Store Connect.
@@ -50,7 +50,6 @@ lane :configure_code_signing do |readonly: true|
 
   sync_code_signing(
     type: 'developer_id',
-    additional_cert_types: ['developer_id_installer'],
     platform: 'macos',
     team_id: APPLE_TEAM_ID,
     # A CLI has no bundle to carry a provisioning profile, so there is no app identifier
@@ -62,8 +61,23 @@ lane :configure_code_signing do |readonly: true|
   )
 end
 
+# Installer signing is deliberately independent of binary signing. A missing
+# Installer certificate must not prevent publishing portable binary archives.
+lane :configure_installer_signing do
+  require_env_vars!(*CODE_SIGNING_ENV_VARS)
+  sync_code_signing(
+    type: 'developer_id_installer',
+    platform: 'macos',
+    team_id: APPLE_TEAM_ID,
+    app_identifier: [],
+    skip_provisioning_profiles: true,
+    readonly: true,
+    **CODE_SIGNING_STORAGE_OPTIONS
+  )
+end
+
 # The PKG has its own signing identity and stapled notarization ticket. Fetch
-# the Installer certificate via configure_code_signing before invoking this.
+# the Installer certificate via configure_installer_signing before invoking this.
 lane :sign_and_notarize_installer do |package:|
   package = resolve_from_project_root(package)
   UI.user_error!("No installer at '#{package}'") unless File.file?(package)

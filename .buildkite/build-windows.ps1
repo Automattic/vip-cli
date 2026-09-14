@@ -43,24 +43,7 @@ bash .buildkite/fetch-search-replace.sh windows/amd64
 if ($LASTEXITCODE -ne 0) { throw 'fetch-search-replace.sh failed' }
 $helper = 'third_party/go-search-replace/windows-amd64/go-search-replace.exe'
 
-Write-Host "--- :closed_lock_with_key: Azure Trusted Signing"
-$setupScript = (Get-Command setup_azure_trusted_signing.ps1 -ErrorAction Stop).Source
-& $setupScript
-if ($LASTEXITCODE -ne 0) { throw 'setup_azure_trusted_signing.ps1 failed' }
-
-function Sign-File([string]$path) {
-  Write-Host "--- :closed_lock_with_key: Authenticode sign $path"
-  & $env:SIGNTOOL_PATH sign /v `
-    /fd $env:AZURE_FILE_DIGEST `
-    /tr $env:AZURE_TIMESTAMP_SERVER `
-    /td $env:AZURE_TIMESTAMP_DIGEST `
-    /dlib $env:AZURE_CODE_SIGNING_DLIB `
-    /dmdf $env:AZURE_METADATA_JSON `
-    $path
-  if ($LASTEXITCODE -ne 0) { throw "signtool sign failed for $path" }
-  & $env:SIGNTOOL_PATH verify /pa /v $path
-  if ($LASTEXITCODE -ne 0) { throw "signtool verify failed for $path" }
-}
+. "$PSScriptRoot/sign-windows.ps1"
 
 Sign-File $out
 Sign-File $helper
@@ -73,27 +56,4 @@ $tar = "dist/$binBase-windows-amd64.tar.gz"
 $hash = (Get-FileHash -Algorithm SHA256 $tar).Hash.ToLower()
 "$hash *$(Split-Path $tar -Leaf)" | Set-Content "$tar.sha256" -NoNewline
 
-Write-Host "--- :package: MSI"
-$dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
-$dotnetMajor = 0
-if ($dotnet) {
-  $dotnetVersion = (& $dotnet.Source --version | Out-String).Trim()
-  if ($LASTEXITCODE -eq 0 -and $dotnetVersion -match '^(\d+)\.') {
-    $dotnetMajor = [int]$Matches[1]
-  }
-}
-if ($dotnetMajor -lt 8) {
-  choco install dotnet-8.0-sdk -y --no-progress
-  if ($LASTEXITCODE -ne 0) { throw 'choco install dotnet-8.0-sdk failed' }
-  $env:PATH = "$env:PATH;$env:ProgramFiles\dotnet"
-}
-
-$msi = "dist/$binBase-windows-amd64.msi"
-& ./packaging/windows/build-msi.ps1 -Version $version -CLI $out -Helper $helper -Output $msi
-if ($LASTEXITCODE -ne 0) { throw 'build-msi.ps1 failed' }
-Sign-File $msi
-& ./packaging/windows/verify-msi.ps1 -MSI $msi -CLI $out -Helper $helper
-if ($LASTEXITCODE -ne 0) { throw 'verify-msi.ps1 failed' }
-$msiHash = (Get-FileHash -Algorithm SHA256 $msi).Hash.ToLower()
-"$msiHash *$(Split-Path $msi -Leaf)" | Set-Content "$msi.sha256" -NoNewline -Encoding ascii
 Remove-Item $out -Force

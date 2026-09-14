@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Build, sign, and notarize the macOS vip-next artifacts on a Buildkite macOS
-# agent (queue: mac). Each arch has a portable tarball and a native PKG.
-# Both binaries are codesigned/notarized; PKGs are also signed and stapled.
-# Checksums are written AFTER signing and stapling.
+# Build, sign, and notarize portable macOS binary archives.
+# Native installers consume these archives in a separate downstream job.
 
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"
@@ -65,10 +63,5 @@ for arch in arm64 amd64; do
   bundle exec fastlane sign_and_notarize binary:"${helper}"
   .buildkite/pack-release.sh darwin "${arch}" "${bin}" "${helper}"
   checksum "dist/${BIN_BASE}-darwin-${arch}.tar.gz"
-  pkg="dist/${BIN_BASE}-darwin-${arch}.pkg"
-  bash packaging/macos/build-pkg.sh "$VERSION" "$arch" "$bin" "$helper" "$pkg"
-  bundle exec fastlane sign_and_notarize_installer package:"${pkg}"
-  python3 packaging/macos/verify-pkg.py "$pkg" "$(go run -mod=mod ./cmd/installer-version "$VERSION")" "$arch" "$bin" "$helper"
-  checksum "$pkg"
   rm -f "${bin}"
 done

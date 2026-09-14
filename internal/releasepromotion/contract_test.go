@@ -16,8 +16,8 @@ func TestValidateRequest(t *testing.T) {
 		{"5.0.0-beta.1", "refs/heads/trunk", true},
 		{"5.12.3-alpha.10", "refs/heads/trunk", true},
 		{"5.1.0-rc.2", "refs/heads/trunk", true},
-		{"5.0.0-beta.200", "refs/heads/trunk", false},
-		{"5.0.65-alpha.1", "refs/heads/trunk", false},
+		{"5.0.0-beta.200", "refs/heads/trunk", true},
+		{"5.0.65-alpha.1", "refs/heads/trunk", true},
 		{"5.0.0", "refs/heads/trunk", false},
 		{"v5.0.0-beta.1", "refs/heads/trunk", false},
 		{"4.9.0-beta.1", "refs/heads/trunk", false},
@@ -36,7 +36,23 @@ func TestValidateRequest(t *testing.T) {
 	}
 }
 
-func TestManifestRequiresNativeInstallers(t *testing.T) {
+func TestManifestAllowsMissingInstallerPairs(t *testing.T) {
+	var artifacts []Artifact
+	for _, p := range ExpectedArtifactPaths() {
+		if strings.Contains(p, ".tar.gz") {
+			artifacts = append(artifacts, Artifact{Path: p, State: "finished"})
+		}
+	}
+	if _, err := ValidateArtifactManifest(artifacts); err != nil {
+		t.Fatal(err)
+	}
+	artifacts = append(artifacts, Artifact{Path: "dist/vip-next-windows-amd64.msi", State: "finished"}, Artifact{Path: "dist/vip-next-windows-amd64.msi.sha256", State: "finished"})
+	if _, err := ValidateArtifactManifest(artifacts); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestManifestRejectsPartialInstallerPairs(t *testing.T) {
 	for _, missing := range []string{
 		"dist/vip-next-darwin-amd64.pkg", "dist/vip-next-darwin-amd64.pkg.sha256",
 		"dist/vip-next-darwin-arm64.pkg", "dist/vip-next-darwin-arm64.pkg.sha256",

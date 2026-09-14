@@ -97,8 +97,19 @@ func (c *BuildkiteClient) DownloadArtifacts(ctx context.Context, build Build, ro
 		return fmt.Errorf("create artifact directory: %w", err)
 	}
 
+	existing, err := os.ReadDir(root)
+	if err != nil {
+		return fmt.Errorf("read artifact directory: %w", err)
+	}
+	if len(existing) != 0 {
+		return fmt.Errorf("artifact directory must be empty; refusing to mix artifacts from different builds")
+	}
+
 	for _, artifactPath := range expectedArtifactPaths {
-		artifact := manifest[artifactPath]
+		artifact, ok := manifest[artifactPath]
+		if !ok {
+			continue
+		}
 		if artifact.DownloadURL == "" {
 			return fmt.Errorf("artifact %q has no download URL", artifactPath)
 		}

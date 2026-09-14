@@ -172,14 +172,9 @@ func (c *GitHubClient) ReplaceAssets(ctx context.Context, release Release, root 
 			return fmt.Errorf("unexpected existing asset %q on draft release", asset.Name)
 		}
 	}
-	for name := range expectedNames {
-		info, err := os.Stat(filepath.Join(root, name))
-		if err != nil {
-			return fmt.Errorf("read replacement asset %q: %w", name, err)
-		}
-		if !info.Mode().IsRegular() {
-			return fmt.Errorf("replacement asset %q is not a regular file", name)
-		}
+	paths, err := localArtifactPaths(root)
+	if err != nil {
+		return fmt.Errorf("read replacement assets: %w", err)
 	}
 
 	for _, asset := range release.Assets {
@@ -193,8 +188,7 @@ func (c *GitHubClient) ReplaceAssets(ctx context.Context, release Release, root 
 	if uploadBase == "" {
 		uploadBase = fmt.Sprintf("%s/repos/%s/releases/%d/assets", c.uploadsURL(), GitHubRepository, release.ID)
 	}
-	for _, artifactPath := range expectedArtifactPaths {
-		name := filepath.Base(artifactPath)
+	for _, name := range paths {
 		if err := c.uploadAsset(ctx, uploadBase, name, filepath.Join(root, name)); err != nil {
 			return err
 		}

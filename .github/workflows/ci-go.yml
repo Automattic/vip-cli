@@ -146,6 +146,11 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
+      - name: Test binary and installer signing isolation
+        if: runner.os == 'macOS'
+        run: |
+          python3 -m unittest discover -s .buildkite -p 'test_pipeline.py'
+          ruby fastlane/test_signing.rb
       - name: Test macOS package contents
         if: runner.os == 'macOS'
         run: python3 -m unittest discover -s packaging/macos -p 'test_package.py'
