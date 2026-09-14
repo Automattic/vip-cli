@@ -19,7 +19,9 @@ if ($LASTEXITCODE -ne 0 -or -not $version) { throw 'stamp-version failed' }
 $stage = Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $stage | Out-Null
 try {
-  buildkite-agent artifact download "dist/$binBase-windows-amd64.tar.gz*" $stage --step binaries-windows
+  # Agent v3 stores Windows artifact paths with backslashes; v4 uses slashes.
+  # Match either prefix while retaining the exact upstream step and platform.
+  buildkite-agent artifact download "*$binBase-windows-amd64.tar.gz*" $stage --step binaries-windows
   if ($LASTEXITCODE -ne 0) { throw 'binary artifact download failed' }
   $payload = Join-Path $stage 'payload'
   go run -mod=mod ./cmd/installer-payload windows "$stage/dist/$binBase-windows-amd64.tar.gz" $payload

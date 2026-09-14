@@ -141,6 +141,10 @@ jobs:
         run: go test -count=1 -v ./internal/update
       - name: Test update command bootstrap
         run: go test -count=1 -v ./cmd/vip-next -run Update
+      - name: Test Windows installer artifact lookup
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./.buildkite/test-windows-installer-download.ps1
       - name: Set up Windows installer build tooling
         if: runner.os == 'Windows'
         uses: actions/setup-dotnet@v5
