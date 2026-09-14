@@ -133,6 +133,22 @@ func TestGitHubRejectsDuplicateNextLinkHeaders(t *testing.T) {
 	}
 }
 
+func TestGitHubRejectsEncodedReleasePaginationSeparator(t *testing.T) {
+	calls := 0
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if r.URL.Query().Get("page") == "1" {
+			w.Header().Set("Link", "<http://"+r.Host+"/repositories/116313791%2Freleases?page=2>; rel=\"next\"")
+		}
+		fmt.Fprint(w, `[]`)
+	}))
+	defer s.Close()
+	_, err := (GitHub{Client: s.Client(), BaseURL: s.URL}).Releases(context.Background())
+	if err == nil || calls != 1 {
+		t.Fatal(err, calls)
+	}
+}
+
 func TestGitHubErrors(t *testing.T) {
 	for _, tc := range []struct {
 		status     int

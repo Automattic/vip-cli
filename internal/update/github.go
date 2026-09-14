@@ -79,7 +79,7 @@ func (g GitHub) Releases(ctx context.Context) ([]Release, error) {
 				}
 				u = origin.ResolveReference(u)
 				n, err := strconv.Atoi(u.Query().Get("page"))
-				if err != nil || n <= page || u.Scheme != origin.Scheme || u.Host != origin.Host || !isReleasePaginationPath(u.Path) || u.User != nil || next != 0 {
+				if err != nil || n <= page || u.Scheme != origin.Scheme || u.Host != origin.Host || !isReleasePaginationPath(u.EscapedPath()) || u.User != nil || next != 0 {
 					return nil, fmt.Errorf("invalid release pagination")
 				}
 				next = n
