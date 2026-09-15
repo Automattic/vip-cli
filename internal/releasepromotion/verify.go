@@ -3,6 +3,7 @@ package releasepromotion
 import (
 	"archive/tar"
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
 	"crypto/subtle"
@@ -20,14 +21,24 @@ var unixEntries = map[string]struct{}{"vip-next": {}, "go-search-replace": {}}
 var windowsEntries = map[string]struct{}{"vip-next.exe": {}, "go-search-replace.exe": {}}
 
 func VerifyDownloads(root string) error {
-	for _, artifactPath := range expectedArtifactPaths {
-		if !strings.HasSuffix(artifactPath, ".tar.gz") {
+	paths, err := localArtifactPaths(root)
+	if err != nil {
+		return err
+	}
+	for _, artifactPath := range paths {
+		if strings.HasSuffix(artifactPath, ".sha256") {
 			continue
 		}
 		archivePath := filepath.Join(root, filepath.Base(artifactPath))
 		checksumPath := archivePath + ".sha256"
 		if err := verifyChecksum(archivePath, checksumPath); err != nil {
 			return fmt.Errorf("verify %s: %w", filepath.Base(archivePath), err)
+		}
+		if !strings.HasSuffix(artifactPath, ".tar.gz") {
+			if err := verifyInstallerContainer(archivePath); err != nil {
+				return fmt.Errorf("verify %s: %w", filepath.Base(archivePath), err)
+			}
+			continue
 		}
 		expected := unixEntries
 		if strings.Contains(filepath.Base(archivePath), "-windows-") {
@@ -36,6 +47,33 @@ func VerifyDownloads(root string) error {
 		if err := verifyArchive(archivePath, expected); err != nil {
 			return fmt.Errorf("verify %s: %w", filepath.Base(archivePath), err)
 		}
+	}
+	return nil
+}
+
+// Platform builders verify the actual payload and platform signature before
+// upload. This portable gate checks the container type as well as its checksum;
+// it is deliberately not a replacement for native PKG/MSI validation.
+func verifyInstallerContainer(name string) error {
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	magic, minSize := []byte("xar!"), int64(28)
+	if strings.HasSuffix(name, ".msi") {
+		magic, minSize = []byte{0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1}, 512
+	}
+	info, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	header := make([]byte, len(magic))
+	if _, err := io.ReadFull(f, header); err != nil {
+		return fmt.Errorf("truncated installer: %w", err)
+	}
+	if info.Size() < minSize || !bytes.Equal(header, magic) {
+		return fmt.Errorf("invalid installer container")
 	}
 	return nil
 }
@@ -139,4 +177,63 @@ func verifyArchive(archivePath string, expected map[string]struct{}) error {
 		return fmt.Errorf("archive entries are incomplete; missing: %s", strings.Join(missing, ", "))
 	}
 	return nil
+}
+
+// ExtractBinaryArchive verifies the checksum and strict two-file archive
+// contract before writing signed payload bytes for a downstream installer job.
+// The destination must be new; no existing installation can be overwritten.
+func ExtractBinaryArchive(platform, archivePath, destination string) error {
+	expected := unixEntries
+	switch platform {
+	case "darwin":
+	case "windows":
+		expected = windowsEntries
+	default:
+		return fmt.Errorf("unsupported installer platform %q", platform)
+	}
+	if err := verifyChecksum(archivePath, archivePath+".sha256"); err != nil {
+		return err
+	}
+	if err := verifyArchive(archivePath, expected); err != nil {
+		return err
+	}
+	if err := os.Mkdir(destination, 0700); err != nil {
+		return err
+	}
+	file, err := os.Open(archivePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	gz, err := gzip.NewReader(file)
+	if err != nil {
+		return err
+	}
+	defer gz.Close()
+	reader := tar.NewReader(gz)
+	for {
+		header, err := reader.Next()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		// Recheck names/types on the extraction pass as well.
+		if _, ok := expected[header.Name]; !ok || (header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA) {
+			return fmt.Errorf("invalid payload entry %q", header.Name)
+		}
+		out, err := os.OpenFile(filepath.Join(destination, header.Name), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0755)
+		if err != nil {
+			return err
+		}
+		_, copyErr := io.Copy(out, reader)
+		closeErr := out.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+	}
 }

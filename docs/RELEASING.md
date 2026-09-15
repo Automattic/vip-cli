@@ -87,8 +87,9 @@ To publish a prerelease:
 4. The workflow creates the tag at the selected full commit and creates a draft
    release. The tag triggers Buildkite's native signing jobs.
 5. Wait while the workflow finds the Buildkite build with that exact tag and
-   commit, downloads all five archives and checksums, validates the archive
-   contents, and uploads the verified files.
+   commit, downloads all five archives, any available native installers, and their
+   checksums, validates the archive contents and installer containers, and
+   uploads the verified files. See [native installers](BUILD-SIGNING.md#native-installers).
 6. The release becomes public only after all verification and uploads succeed.
 
 If a run fails, its tag and draft release remain in place. Fix the cause and

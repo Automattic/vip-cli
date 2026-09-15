@@ -251,3 +251,34 @@ func writeJSON(t *testing.T, w http.ResponseWriter, value any) {
 		t.Fatal(err)
 	}
 }
+
+func TestDownloadArtifactsRejectsStaleOptionalInstallers(t *testing.T) {
+	server := newBuildkiteServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/artifacts") {
+			t.Errorf("unexpected download into nonempty directory: %s", r.URL)
+			w.WriteHeader(500)
+			return
+		}
+		var artifacts []Artifact
+		for _, p := range ExpectedArtifactPaths() {
+			if strings.Contains(p, ".tar.gz") {
+				artifacts = append(artifacts, Artifact{Path: p, State: "finished", DownloadURL: "https://example.invalid/download"})
+			}
+		}
+		writeJSON(t, w, artifacts)
+	})
+	defer server.Close()
+	root := t.TempDir()
+	stale := filepath.Join(root, "vip-next-darwin-amd64.pkg")
+	if err := os.WriteFile(stale, []byte("previous build"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	err := testBuildkiteClient(server.URL).DownloadArtifacts(context.Background(), Build{Number: 28}, root)
+	if err == nil || !strings.Contains(err.Error(), "must be empty") {
+		t.Fatalf("accepted stale artifact: %v", err)
+	}
+	got, err := os.ReadFile(stale)
+	if err != nil || string(got) != "previous build" {
+		t.Fatalf("changed existing artifact: %q %v", got, err)
+	}
+}

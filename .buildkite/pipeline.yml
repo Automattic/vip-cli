@@ -13,6 +13,7 @@ env:
 
 steps:
   - label: ':macos: Build & sign (macOS)'
+    key: binaries-macos
     command: .buildkite/build-macos.sh
     plugins:
       - $CI_TOOLKIT_PLUGIN
@@ -27,6 +28,7 @@ steps:
       - 'dist/vip-next-darwin-*.tar.gz*'
 
   - label: ':windows: Build & sign (Windows)'
+    key: binaries-windows
     command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite/build-windows.ps1
     plugins:
       - $CI_TOOLKIT_PLUGIN
@@ -47,3 +49,33 @@ steps:
           context: 'Build (Linux)'
     artifact_paths:
       - 'dist/vip-next-linux-*.tar.gz*'
+
+  # Installer failures remain visible but cannot fail the binary release build.
+  # Scripts explicitly upload only fully signed and verified installer pairs.
+  - label: ':macos: Package & sign installer (macOS)'
+    key: installer-macos
+    depends_on: binaries-macos
+    soft_fail: true
+    command: bash .buildkite/build-macos-installer.sh
+    plugins:
+      - $CI_TOOLKIT_PLUGIN
+    agents:
+      queue: mac
+    env:
+      IMAGE_ID: $IMAGE_ID
+    notify:
+      - github_commit_status:
+          context: 'Package & sign installer (macOS)'
+
+  - label: ':windows: Package & sign installer (Windows)'
+    key: installer-windows
+    depends_on: binaries-windows
+    soft_fail: true
+    command: powershell -NoProfile -ExecutionPolicy Bypass -File .buildkite/build-windows-installer.ps1
+    plugins:
+      - $CI_TOOLKIT_PLUGIN
+    agents:
+      queue: windows
+    notify:
+      - github_commit_status:
+          context: 'Package & sign installer (Windows)'
