@@ -61,20 +61,30 @@ lane :configure_code_signing do |readonly: true|
   )
 end
 
-# Installer signing is deliberately independent of binary signing. A missing
-# Installer certificate must not prevent publishing portable binary archives.
-lane :configure_installer_signing do |readonly: true|
+# Fetch the Developer ID Installer certificate into the keychain.
+#
+# Separate from `configure_code_signing` so a missing Installer certificate cannot stop the
+# binary jobs publishing portable archives.
+#
+# Do not collapse this into match's top-level `type: 'developer_id_installer'`: match maps only
+# `developer_id_application` through to the certificate generator, so the installer type
+# silently resolves to an Apple Distribution certificate (`match/lib/match/generator.rb`).
+#
+# Readonly with no override, because creating this certificate needs Apple Account Holder
+# access that an App Store Connect API key does not grant. Provision it out of band with
+# `fastlane match import --type developer_id_installer`.
+#
+lane :configure_installer_signing do
   require_env_vars!(*CODE_SIGNING_ENV_VARS)
-  require_env_vars!(*ASC_API_KEY_ENV_VARS) unless readonly
 
   sync_code_signing(
-    type: 'developer_id_installer',
+    type: 'developer_id',
+    additional_cert_types: ['developer_id_installer'],
     platform: 'macos',
     team_id: APPLE_TEAM_ID,
     app_identifier: [],
     skip_provisioning_profiles: true,
-    api_key: readonly ? nil : app_store_connect_api_key,
-    readonly: readonly,
+    readonly: true,
     **CODE_SIGNING_STORAGE_OPTIONS
   )
 end

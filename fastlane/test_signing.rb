@@ -39,4 +39,20 @@ class SigningConfigurationTest < Minitest::Test
     assert_equal true, @calls.last[:skip_provisioning_profiles]
     @lanes.fetch(:configure_code_signing).call
   end
+
+  # Match's top-level `developer_id_installer` type silently resolves to an Apple Distribution
+  # certificate, so the supported route is pinned rather than left to preference.
+  def test_installer_lane_requests_the_installer_certificate_as_an_additional_type
+    assert_raises(RuntimeError) { @lanes.fetch(:configure_installer_signing).call }
+
+    assert_equal 'developer_id', @calls.last[:type]
+    assert_equal ['developer_id_installer'], @calls.last[:additional_cert_types]
+  end
+
+  def test_installer_lane_never_creates_certificates
+    assert_raises(RuntimeError) { @lanes.fetch(:configure_installer_signing).call }
+
+    assert_equal true, @calls.last[:readonly]
+    assert_nil @calls.last[:api_key]
+  end
 end
