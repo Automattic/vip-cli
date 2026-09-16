@@ -82,6 +82,9 @@ end
 # The PKG has its own signing identity and stapled notarization ticket. Fetch
 # the Installer certificate via configure_installer_signing before invoking this.
 lane :sign_and_notarize_installer do |package:|
+  # Test: run it in the lane in case setup_ci overrides
+  configure_installer_signing
+
   package = resolve_from_project_root(package)
   UI.user_error!("No installer at '#{package}'") unless File.file?(package)
   require_env_vars!(*ASC_API_KEY_ENV_VARS)
