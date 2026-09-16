@@ -63,7 +63,7 @@ end
 
 # Installer signing is deliberately independent of binary signing. A missing
 # Installer certificate must not prevent publishing portable binary archives.
-lane :configure_installer_signing do
+lane :configure_installer_signing do |readonly: true|
   require_env_vars!(*CODE_SIGNING_ENV_VARS)
   sync_code_signing(
     type: 'developer_id_installer',
@@ -71,7 +71,7 @@ lane :configure_installer_signing do
     team_id: APPLE_TEAM_ID,
     app_identifier: [],
     skip_provisioning_profiles: true,
-    readonly: true,
+    readonly: readonly,
     **CODE_SIGNING_STORAGE_OPTIONS
   )
 end
