@@ -24,7 +24,7 @@ const examples = [
 	},
 ];
 
-async function getEnvVarsCommand( args, opt ) {
+async function getEnvVarCommand( args, opt ) {
 	debug( 'args: %o, opt: %o', args, opt );
 
 	const slug = await getEnvironmentName( opt );
@@ -70,4 +70,4 @@ command( {
 		processSlug
 	)
 	.examples( examples )
-	.argv( process.argv, getEnvVarsCommand );
+	.argv( process.argv, getEnvVarCommand );
